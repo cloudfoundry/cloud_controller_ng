@@ -1,6 +1,8 @@
 source :rubygems
 
 gem "rake"
+gem "eventmachine", "~> 0.12.11.cloudfoundry.3"
+gem "vcap-concurrency"
 
 group :development do
   gem "ruby-debug19"
