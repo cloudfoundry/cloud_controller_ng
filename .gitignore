@@ -1,0 +1,13 @@
+*~
+.idea
+\#*\#
+.\#*
+.bundle
+bundler
+spec/artifacts
+ci-artifacts-dir
+ci-working-dir
+*.rbc
+*.swp
+.rvmrc
+*.pid
