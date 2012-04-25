@@ -1,8 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 require 'rake'
 
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'lib'))
-
 environments = %w(test development production)
 
 desc "Run specs"
