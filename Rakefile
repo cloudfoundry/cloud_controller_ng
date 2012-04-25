@@ -1,5 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-require 'rake'
+require "rake"
 
 environments = %w(test development production)
 
@@ -12,14 +12,14 @@ task "spec:rcov" => ["bundler:install:test", "test:spec:rcov"]
 namespace "bundler" do
   desc "install gems"
   task "install" do
-    sh('bundle install')
+    sh("bundle install")
   end
 
   environments = %w(test development production)
   environments.each do |env|
     desc "Install gems for #{env}"
     task "install:#{env}" do
-      sh("bundle install --local --without #{(environments - [env]).join(' ')}")
+      sh("bundle install --local --without #{(environments - [env]).join(" ")}")
     end
   end
 end
@@ -37,7 +37,7 @@ namespace :db do
 
   desc "Create a Sequel migration in ./db/migrate"
   task :create_migration do
-    name = ENV['NAME']
+    name = ENV["NAME"]
     abort("no NAME specified. use `rake db:create_migration NAME=add_users`") if !name
 
     migrations_dir = File.join("db", "migrations")
@@ -45,7 +45,7 @@ namespace :db do
     filename = "#{version}_#{name}.rb"
     FileUtils.mkdir_p(migrations_dir)
 
-    open(File.join(migrations_dir, filename), 'w') do |f|
+    open(File.join(migrations_dir, filename), "w") do |f|
       f.write <<-EOF
 # Copyright (c) 2009-2012 VMware, Inc.
 
