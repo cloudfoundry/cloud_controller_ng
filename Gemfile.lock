@@ -37,6 +37,7 @@ GEM
     vcap-concurrency (0.0.1)
     vcap_logging (1.0.0)
       rake
+    yajl-ruby (1.1.0)
 
 PLATFORMS
   ruby
@@ -52,3 +53,4 @@ DEPENDENCIES
   sqlite3
   vcap-concurrency
   vcap_logging
+  yajl-ruby
