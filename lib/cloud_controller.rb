@@ -8,3 +8,4 @@ module VCAP
 end
 
 require 'cloud_controller/db'
+require "sequel_plugins/vcap_validations"

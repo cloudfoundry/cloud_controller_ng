@@ -2,6 +2,7 @@ source :rubygems
 
 gem "rake"
 gem "eventmachine", "~> 0.12.11.cloudfoundry.3"
+gem "rfc822"
 gem "sequel"
 gem "vcap-concurrency"
 gem "vcap_logging"
