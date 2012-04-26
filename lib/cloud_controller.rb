@@ -9,3 +9,4 @@ end
 
 require 'cloud_controller/db'
 require "sequel_plugins/vcap_validations"
+require "sequel_plugins/vcap_serialization"
