@@ -1,6 +1,7 @@
 source :rubygems
 
 gem "rake"
+gem "bcrypt-ruby"
 gem "eventmachine", "~> 0.12.11.cloudfoundry.3"
 gem "rfc822"
 gem "sequel"
@@ -18,4 +19,5 @@ group :test do
   gem "rspec"
   gem "simplecov"
   gem "sqlite3"
+  gem "machinist", "~> 1.0.6"
 end
