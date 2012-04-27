@@ -5,6 +5,8 @@ require "rubygems"
 require "bundler"
 require "bundler/setup"
 
+require "machinist/sequel"
+
 require "cloud_controller"
 
 def spec_dir
@@ -80,3 +82,11 @@ RSpec.configure do |rspec_config|
     reset_database db
   end
 end
+
+RSpec::Matchers.define :be_recent do |expected|
+  match do |actual|
+    actual.should be_within(1).of(Time.now)
+  end
+end
+
+require 'blueprints'
