@@ -28,6 +28,7 @@ GEM
       columnize (>= 0.3.1)
       linecache19 (>= 0.5.11)
       ruby-debug-base19 (>= 0.11.19)
+    ruby-graphviz (1.0.5)
     ruby_core_source (0.1.5)
       archive-tar-minitar (>= 0.5.2)
     sequel (3.32.0)
@@ -52,6 +53,7 @@ DEPENDENCIES
   rfc822
   rspec
   ruby-debug19
+  ruby-graphviz
   sequel
   simplecov
   sqlite3
