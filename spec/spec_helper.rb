@@ -6,6 +6,7 @@ require "bundler"
 require "bundler/setup"
 
 require "machinist/sequel"
+require "rack/test"
 
 require "cloud_controller"
 
@@ -77,6 +78,7 @@ end
 
 RSpec.configure do |rspec_config|
   rspec_config.include VCAP::CloudController
+  rspec_config.include Rack::Test::Methods
 
   rspec_config.before(:each) do |example|
     reset_database db
