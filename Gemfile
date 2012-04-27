@@ -12,6 +12,7 @@ gem "vcap_logging"
 group :development do
   gem "ruby-debug19"
   gem "sqlite3"
+  gem "ruby-graphviz"
 end
 
 group :test do
