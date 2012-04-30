@@ -9,6 +9,7 @@ gem "sinatra"
 gem "sinatra-contrib"
 gem "yajl-ruby"
 gem "vcap-concurrency"
+gem "vcap_common"
 gem "vcap_logging"
 
 group :development do
