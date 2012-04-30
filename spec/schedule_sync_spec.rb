@@ -16,7 +16,6 @@ describe "EventMachine#schdule_sync" do
         EM.reactor_thread?.should == false
       end
       EM.reactor_thread?.should == true
-      EM.stop
     end
   end
 
@@ -27,6 +26,7 @@ describe "EventMachine#schdule_sync" do
         "sync return from the reactor thread"
       end
       result.should == "sync return from the reactor thread"
+      EM.next_tick { EM.stop }
     end
   end
 
@@ -38,6 +38,7 @@ describe "EventMachine#schdule_sync" do
         }
       end
       result.should == "async return from the reactor thread"
+      EM.next_tick { EM.stop }
     end
   end
 
@@ -49,8 +50,8 @@ describe "EventMachine#schdule_sync" do
           raise "blowup"
         end
       }.should raise_error(Exception, /blowup/)
+      result.should == nil
+      EM.next_tick { EM.stop }
     end
-    result.should == nil
   end
-
 end
