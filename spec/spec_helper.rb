@@ -111,4 +111,5 @@ shared_examples "a vcap rest error response" do |description_match|
   end
 end
 
+require "cloud_controller/models"
 require "blueprints"
