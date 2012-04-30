@@ -6,7 +6,7 @@ require "sequel"
 require "vcap/logging"
 
 require "cloud_controller/db"
-require "sinatra/consumes"
+require "sinatra/vcap"
 
 module VCAP
   module CloudController;
