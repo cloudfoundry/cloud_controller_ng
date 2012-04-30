@@ -1,0 +1,17 @@
+---
+port: 8080
+pid_filename: /var/vcap/sys/run/cloud_controller.pid
+nats_uri: nats://127.0.0.1:4222
+
+logging:
+  level: debug2
+
+db:
+  database: "sqlite:///cloud_controller.db"
+  max_connections: 32
+  pool_timeout: 10
+
+secrets:
+  user_token:
+    key: 'token key goes here'
+    duration: 604800            # 7 * 24 * 60 * 60 (= 1week)
