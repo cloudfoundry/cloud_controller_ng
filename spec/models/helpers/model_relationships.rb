@@ -37,6 +37,7 @@ module VCAP::CloudController::ModelSpecHelper
           related = create_for.call(obj)
           obj.send(add_attribute, related)
           obj.save
+          related.reload
 
           if cardinality_other =~ /or_more/
             obj.send(association).should include(related)
