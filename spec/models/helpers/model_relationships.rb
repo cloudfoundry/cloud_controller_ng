@@ -37,6 +37,10 @@ module VCAP::CloudController::ModelSpecHelper
           related = create_for.call(obj)
           obj.send(add_attribute, related)
           obj.save
+          # Reload the record to reconcile potential difference in time
+          # resolution between the Ruby interpreter and the underlying
+          # Database.
+          related.reload
 
           if cardinality_other =~ /or_more/
             obj.send(association).should include(related)
