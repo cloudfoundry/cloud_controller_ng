@@ -46,7 +46,7 @@ module Sinatra
                        "#{exception.response_code} error code: " +
                        "#{exception.error_code} error: #{exception.message}")
           status(exception.response_code)
-          body_from_exception(exception)
+          body_from_vcap_exception(exception)
         else
           msg = ["#{exception.class} - #{exception.message}"]
           msg[0] = msg[0] + ":"

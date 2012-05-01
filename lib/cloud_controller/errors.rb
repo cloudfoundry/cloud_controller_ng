@@ -1,0 +1,99 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
+module VCAP::CloudController
+  # TODO: normalize the error codes
+  # make all the Takens be "UniqueViolation", make all the
+  # invalids be the same lower digit, etc
+  [
+    ["UserInvalid", HTTP::BAD_REQUEST, 20001, "The user info is invalid: %s"],
+    ["EmailTaken",  HTTP::BAD_REQUEST, 20002, "The email is taken: %s"],
+    ["UserNotFound", HTTP::BAD_REQUEST, 20003, "The user could not be found: %s"],
+
+    ["OrganizationInvalid",
+     HTTP::BAD_REQUEST, 30001,
+     "The organization info is invalid: %s"],
+    ["OrganizationNameTaken",
+     HTTP::BAD_REQUEST, 30002,
+     "The organization name is taken: %s"],
+    ["OrganizationNotFound",
+     HTTP::BAD_REQUEST, 30003,
+     "The organization could not be found: %s"],
+
+    ["AppSpaceInvalid",
+     HTTP::BAD_REQUEST, 40001, "The app space info is invalid: %s"],
+    ["AppSpaceNameTaken",
+     HTTP::BAD_REQUEST, 40002, "The app space name is taken: %s"],
+    ["AppSpaceUserNotInOrg",
+     HTTP::BAD_REQUEST, 40003,
+     "The app space and the user are not in the same org: %s"],
+    ["AppSpaceNotFound",
+     HTTP::BAD_REQUEST, 40004,
+     "The app space could not be found: %s"],
+
+     ["ServiceAuthTokenInvalid",
+      HTTP::BAD_REQUEST, 50001, "The service auth token is invalid: %s"],
+     ["ServiceAuthTokenLabelTaken",
+      HTTP::BAD_REQUEST, 50002, "The service auth token label is taken: %s"],
+     ["ServiceAuthTokenNotFound",
+       HTTP::BAD_REQUEST, 50003, "The service auth token could not be found: %s"],
+
+     ["ServiceInstanceNameInvalid",
+      HTTP::BAD_REQUEST, 60001, "The service instance name is taken: %s"],
+     ["ServiceInstanceNameTaken",
+      HTTP::BAD_REQUEST, 60002, "The service instance name is taken: %s"],
+     ["ServiceInstanceServiceBindingWrongAppSpace", HTTP::BAD_REQUEST, 60003,
+      "The service instance and the service binding are in different app spaces: %s"],
+     ["ServiceInstanceInvalid",
+      HTTP::BAD_REQUEST, 60003, "The service instance is invalid: %s"],
+     ["ServiceInstanceNotFound",
+      HTTP::BAD_REQUEST, 60004, "The service instance can not be found: %s"],
+
+     ["RuntimeInvalid",
+      HTTP::BAD_REQUEST, 70001, "The runtime is invalid: %s"],
+     ["RuntimeNameTaken",
+      HTTP::BAD_REQUEST, 70002, "The runtime name is taken: %s"],
+     ["RuntimeNotFound",
+      HTTP::BAD_REQUEST, 80003, "The runtime can not be found: %s"],
+
+     ["FrameworkInvalid",
+      HTTP::BAD_REQUEST, 80001, "The framework is invalid: %s"],
+     ["FrameworkNameTaken",
+      HTTP::BAD_REQUEST, 80002, "The framework name is taken: %s"],
+     ["FrameworkNotFound",
+      HTTP::BAD_REQUEST, 80003, "The framework can not be found: %s"],
+
+     ["ServiceBindingInvalid",
+      HTTP::BAD_REQUEST, 90001, "The service binding is invalid: %s"],
+     ["ServiceBindingDifferentAppSpaces",
+      HTTP::BAD_REQUEST, 90002,
+      "The app and the service are not in the same app space: %s"],
+     ["ServiceBindingAppServiceTaken",
+      HTTP::BAD_REQUEST, 90003, "The app space binding to service is taken: %s"],
+     ["ServiceBindingNotFound",
+      HTTP::BAD_REQUEST, 90004, "The service binding can not be found: %s"],
+
+     ["AppInvalid",
+      HTTP::BAD_REQUEST, 100001, "The app is invalid: %s"],
+     ["AppNameTaken",
+      HTTP::BAD_REQUEST, 100002, "The app name is taken: %s"],
+     ["AppNotFound",
+      HTTP::BAD_REQUEST, 100004, "The app name could not be found: %s"],
+
+     ["ServicePlanInvalid",
+      HTTP::BAD_REQUEST, 110001, "The service plan is invalid: %s"],
+     ["ServicePlanNameTaken",
+      HTTP::BAD_REQUEST, 110002, "The service plan name is taken: %s"],
+     ["ServicePlanNotFound",
+      HTTP::BAD_REQUEST, 110003, "The service plan could not be found: %s"],
+
+     ["ServiceInvalid",
+      HTTP::BAD_REQUEST, 120001, "The service invalid: %s"],
+     ["ServiceLabelTaken",
+      HTTP::BAD_REQUEST, 120002, "The service lable is taken: %s"],
+     ["ServiceNotFound",
+      HTTP::BAD_REQUEST, 120003, "The service could not be found: %s"],
+
+  ].each do |e|
+    VCAP::RestAPI.define_error *e
+  end
+end

@@ -74,11 +74,16 @@ module VCAP::CloudController
 
     def run!
       db = setup_db
+      run_migrations = @run_migrations
+      development = @development
+
+      DB.apply_migrations(db) if run_migrations
+
       @thin_server = Thin::Server.new("0.0.0.0", @config[:port],
                                       :signals => false) do
         use Rack::CommonLogger
         map "/" do
-          DB.apply_migrations(@db) if @run_migrations && @development
+          DB.apply_migrations(db) if (run_migrations && development)
           run VCAP::CloudController::Controller.new
         end
       end
