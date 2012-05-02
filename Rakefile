@@ -1,36 +1,28 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-require "rake"
+require "rspec"
+require "rspec/core/rake_task"
 
 environments = %w(test development production)
 
 desc "Run specs"
-task "spec" => ["bundler:install:test", "test:spec"]
+RSpec::Core::RakeTask.new do |t|
+  t.rspec_opts = ["--format", "documentation", "--colour"]
+end
 
 desc "Run specs with code coverage"
-task "spec:rcov" => ["bundler:install:test", "test:spec:rcov"]
+task :coverage do
+  require "simplecov"
 
-namespace "bundler" do
-  desc "install gems"
-  task "install" do
-    sh("bundle install")
-  end
-
-  environments = %w(test development production)
-  environments.each do |env|
-    desc "Install gems for #{env}"
-    task "install:#{env}" do
-      sh("bundle install --local --without #{(environments - [env]).join(" ")}")
-    end
+  SimpleCov.coverage_dir(File.join("spec", "artifacts", "coverage"))
+  SimpleCov.start do
+    add_filter "/spec/"
+    add_filter "/migrations/"
+    RSpec::Core::Runner.disable_autorun!
+    RSpec::Core::Runner.run(['.'])
   end
 end
 
-namespace "test" do
-  ["spec", "spec:rcov"].each do |task_name|
-    task task_name do
-      sh("cd spec && rake #{task_name}")
-    end
-  end
-end
+task "spec:rcov" => :coverage
 
 namespace :db do
   # TODO: add migration support
