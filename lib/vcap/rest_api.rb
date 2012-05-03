@@ -2,3 +2,4 @@
 
 require "vcap/rest_api/http_constants"
 require "vcap/rest_api/errors"
+require "vcap/rest_api/attributes"
