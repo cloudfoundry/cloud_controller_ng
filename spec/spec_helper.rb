@@ -113,3 +113,5 @@ end
 
 require "cloud_controller/models"
 require "blueprints"
+
+require "models/spec_helper.rb"
