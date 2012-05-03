@@ -10,7 +10,7 @@ module Sequel::Plugins::VcapSerialization
     # Return a hash of the model instance containing only the parameters
     # specified by export_attributes.
     #
-    # @option [Array<String>] :only Only export an attribute if it is both
+    # @option opts [Array<String>] :only Only export an attribute if it is both
     # included in export_attributes and in the :only option.
     #
     # @return [Hash] The hash representation of the instance only containing
@@ -28,7 +28,7 @@ module Sequel::Plugins::VcapSerialization
     # Return a json serialization of the model instance containing only
     # the parameters specified by export_attributes.
     #
-    # @option [Array<String>] :only Only export an attribute if it is both
+    # @option opts [Array<String>] :only Only export an attribute if it is both
     # included in export_attributes and in the :only option.
     #
     # @return [String] The json serialization of the instance only containing
@@ -43,7 +43,7 @@ module Sequel::Plugins::VcapSerialization
     #
     # @param [String] Json encoded representation of the updated attributes.
     #
-    # @option [Array<String>] :only Only import an attribute if it is both
+    # @option opts [Array<String>] :only Only import an attribute if it is both
     # included in import_attributes and in the :only option.
     def update_from_json(json, opts = {})
       parsed = Yajl::Parser.new.parse(json)
@@ -55,7 +55,7 @@ module Sequel::Plugins::VcapSerialization
     #
     # @param [Hash] Hash of the updated attributes.
     #
-    # @option [Array<String>] :only Only import an attribute if it is both
+    # @option opts [Array<String>] :only Only import an attribute if it is both
     # included in import_attributes and in the :only option.
     def update_from_hash(hash, opts = {})
       update_opts = self.class.update_or_create_options(hash, opts)
@@ -68,7 +68,7 @@ module Sequel::Plugins::VcapSerialization
     # Return a json serialization of data set containing only
     # the parameters specified by export_attributes.
     #
-    # @option [Array<String>] :only Only export an attribute if it is both
+    # @option opts [Array<String>] :only Only export an attribute if it is both
     # included in export_attributes and in the :only option.
     #
     # @return [String] The json serialization of the data set only containing
@@ -87,8 +87,8 @@ module Sequel::Plugins::VcapSerialization
     #
     # @param [String] Json encoded representation attributes.
     #
-    # @option [Array<String>] :only Only include an attribute if it is both
-    # included in import_attributes and in the :only option.
+    # @option opts [Array<String>] :only Only include an attribute if it is
+    # both included in import_attributes and in the :only option.
     #
     # @return [Sequel::Model] The created model.
     def create_from_json(json, opts = {})
@@ -101,8 +101,8 @@ module Sequel::Plugins::VcapSerialization
     #
     # @param [Hash] Hash of the attributes.
     #
-    # @option [Array<String>] :only Only include an attribute if it is both
-    # included in import_attributes and in the :only option.
+    # @option opts [Array<String>] :only Only include an attribute if it is
+    # both included in import_attributes and in the :only option.
     #
     # @return [Sequel::Model] The created model.
     def create_from_hash(hash, opts = {})
