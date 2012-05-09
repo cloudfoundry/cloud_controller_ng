@@ -10,9 +10,8 @@ module VCAP::CloudController::Models
 
     default_order_by  :id
 
-    export_attributes :id, :name, :credentials, :service_plan_id,
-                      :app_space_id, :vendor_data, :service_binding_ids,
-                      :created_at, :updated_at
+    export_attributes :name, :credentials, :service_plan_id,
+                      :app_space_id, :vendor_data, :service_binding_ids
 
     import_attributes :name, :credentials, :service_plan_id,
                       :app_space_id, :vendor_data
