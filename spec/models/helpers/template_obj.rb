@@ -14,7 +14,9 @@ module VCAP::CloudController::ModelSpecHelper
               else
                 attr
               end
-        @attributes[key] = @obj.send(attr)
+        rel_attr = attr.to_s.chomp("_id")
+        attr = rel_attr if @klass.associations.include?(rel_attr.to_sym)
+        @attributes[key] = @obj.send(attr) if @obj.respond_to?(attr)
       end
       hash
     end
