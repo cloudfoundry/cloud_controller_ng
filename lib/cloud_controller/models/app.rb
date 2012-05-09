@@ -9,10 +9,10 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :id, :name, :app_space_id, :framework_id, :runtime_id,
+    export_attributes :name, :app_space_id, :framework_id, :runtime_id,
                       :service_binding_ids, :environment_json, :memory,
                       :instances, :file_descriptors, :disk_quota,
-                      :state, :created_at, :updated_at
+                      :state
 
     import_attributes :name, :app_space_id, :framework_id, :runtime_id,
                       :environment_json, :memory, :instances,
