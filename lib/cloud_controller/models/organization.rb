@@ -9,9 +9,7 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :id, :name, :user_ids, :app_space_ids,
-                      :created_at, :updated_at
-
+    export_attributes :name
     import_attributes :name, :user_ids
 
     def validate
