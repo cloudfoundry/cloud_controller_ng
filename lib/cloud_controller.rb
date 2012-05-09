@@ -26,6 +26,7 @@ end
 require "cloud_controller/config"
 require "cloud_controller/db"
 require "cloud_controller/runner"
+require "cloud_controller/permissions"
 
 module VCAP::CloudController
   class Controller < Sinatra::Base
