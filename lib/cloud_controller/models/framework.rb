@@ -5,7 +5,7 @@ module VCAP::CloudController::Models
     one_to_many :apps
 
     default_order_by  :name
-    export_attributes :id, :name, :description, :created_at, :updated_at
+    export_attributes :name, :description
     import_attributes :name, :description
 
     strip_attributes  :name
