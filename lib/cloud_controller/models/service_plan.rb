@@ -7,8 +7,8 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :id, :name, :description, :service_id,
-                      :service_instance_ids, :created_at, :updated_at
+    export_attributes :name, :description, :service_id,
+                      :service_instance_ids
 
     import_attributes :name, :description, :service_id
 
