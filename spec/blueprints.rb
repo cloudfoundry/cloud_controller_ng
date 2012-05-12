@@ -15,12 +15,12 @@ Sham.define do
   description         { |index| "desc-#{index}" }
   version             { |index| "version-#{index}" }
   service_credentials { |index| "service-creds-#{index}" }
+  uaa_id              { |index| "uaa-id-#{index}" }
 end
 
 module VCAP::CloudController::Models
   User.blueprint do
-    email             { Sham.email }
-    crypted_password  { Sham.crypted_password }
+    id                { Sham.uaa_id }
   end
 
   Organization.blueprint do
