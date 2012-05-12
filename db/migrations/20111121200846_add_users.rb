@@ -3,10 +3,8 @@
 Sequel.migration do
   change do
     create_table :users do
-      primary_key :id
+      String :id, :null => false, :primary_key => true
 
-      String  :email,            :null => false, :index => true, :unique => true
-      String  :crypted_password, :null => false
       Boolean :admin,            :default => false
       Boolean :active,           :default => false
 

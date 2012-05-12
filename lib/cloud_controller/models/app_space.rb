@@ -11,8 +11,7 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :id, :name, :organization_id, :app_ids,
-                      :user_ids, :created_at, :updated_at
+    export_attributes :name, :organization_id
 
     import_attributes :name, :organization_id, :user_ids
 
@@ -28,7 +27,7 @@ module VCAP::CloudController::Models
       unless organization && organization.users.include?(user)
         # TODO: unlike most other validations, this is *NOT* being enforced by
         # the db
-        raise InvalidUserRelation.new(user.email)
+        raise InvalidUserRelation.new(user.id)
       end
     end
   end

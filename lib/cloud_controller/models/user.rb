@@ -2,16 +2,22 @@
 
 module VCAP::CloudController::Models
   class User < Sequel::Model
+    unrestrict_primary_key
+
     many_to_many      :organizations
     many_to_many      :app_spaces
 
-    default_order_by  :email
+    default_order_by  :id
 
-    export_attributes :id, :email, :admin, :active, :organization_ids,
-                      :app_space_ids, :created_at, :updated_at
+    export_attributes :id, :admin, :active
 
-    import_attributes :email, :admin, :active, :password,
+    import_attributes :id, :admin, :active,
                       :organization_ids, :app_space_ids
+
+    def validate
+      validates_presence :id
+      validates_unique :id
+    end
 
     def admin?
       admin
@@ -19,25 +25,6 @@ module VCAP::CloudController::Models
 
     def active?
       active
-    end
-
-    def validate
-      validates_presence :email
-      validates_presence :crypted_password
-      validates_email    :email
-      validates_unique   :email
-    end
-
-    def email=(email)
-      email = email.downcase.strip if email
-      super(email)
-    end
-
-    def password=(unencrypted_password)
-      # nil is a valid argument to bcrypt::pw.create, hence the explict
-      # nil check
-      return if unencrypted_password.nil?
-      self.crypted_password = BCrypt::Password.create(unencrypted_password)
     end
   end
 end
