@@ -1,6 +1,22 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController::ApiSpecHelper
+  def self.description_for_inline_depth(depth)
+    if depth
+      "?inline-relations-depth=#{depth}"
+    else
+      ""
+    end
+  end
+
+  def query_params_for_inline_depth(depth)
+    if depth
+      { "inline-relations-depth" => depth }
+    else
+      { }
+    end
+  end
+
   shared_context "collections" do |opts, attr, make|
     before do
       @opts = opts
@@ -32,6 +48,109 @@ module VCAP::CloudController::ApiSpecHelper
       @obj.refresh
       @obj.send(@get_method).length.should == expected_children.length
       expected_children.each { |c| @obj.send(@get_method).should include(c) }
+    end
+  end
+
+  shared_context "inlined_relations_context" do |opts, attr, make, depth|
+    include_context "collections", opts, attr, make
+
+    before do
+      query_parms = query_params_for_inline_depth(depth)
+      get "#{opts[:path]}/#{@obj.id}", query_parms, @headers
+      @uri = entity["#{attr}_url"]
+    end
+  end
+
+  shared_examples "inlined_relations" do |attr, depth|
+    attr = attr.to_s
+
+    it "should return a relative uri in the #{attr}_url field" do
+      @uri.should_not be_nil
+    end
+
+    if depth.nil? || depth == 0
+      it "should not return a #{attr} field" do
+        entity.should_not have_key(attr)
+      end
+    else
+      it "should return a #{attr} field" do
+        entity.should have_key(attr)
+      end
+    end
+  end
+
+  shared_examples "get to_many attr url" do |opts, attr, make|
+    describe "GET on the #{attr}_url" do
+      describe "with no associated #{attr}" do
+        before do
+          get @uri, {}, @headers
+        end
+
+        it "should return 200" do
+          last_response.status.should == 200
+        end
+
+        it "should return total_results => 0" do
+          decoded_response["total_results"].should == 0
+        end
+
+        it "should return prev_url => nil" do
+          decoded_response.should have_key("prev_url")
+          decoded_response["prev_url"].should be_nil
+        end
+
+        it "should return next_url => nil" do
+          decoded_response["next_url"].should be_nil
+        end
+
+        it "should return resources => []" do
+          decoded_response["resources"].should == []
+        end
+      end
+
+      describe "with 2 associated #{attr}" do
+        before do
+          @obj.send(@add_method, @child1)
+          @obj.send(@add_method, @child2)
+          @obj.save
+
+          get @uri, {}, @headers
+        end
+
+        it "should return 200" do
+          last_response.status.should == 200
+        end
+
+        it "should return total_results => 2" do
+          decoded_response["total_results"].should == 2
+        end
+
+        it "should return prev_url => nil" do
+          decoded_response.should have_key("prev_url")
+          decoded_response["prev_url"].should be_nil
+        end
+
+        it "should return next_url => nil" do
+          decoded_response["next_url"].should be_nil
+        end
+
+        it "should return resources => [child1, child2]" do
+          os = VCAP::CloudController::RestController::ObjectSerialization
+          name ="#{attr.to_s.singularize.camelize}"
+          child_controller = VCAP::CloudController.const_get(name)
+
+          c1 = os.to_hash(child_controller, @child1, {})
+          c2 = os.to_hash(child_controller, @child2, {})
+
+          [c1, c2].each do |c|
+            m = c["metadata"]
+            m["created_at"] = m["created_at"].to_s
+            m["updated_at"] = m["updated_at"].to_s if m["updated_at"]
+          end
+
+          decoded_response["resources"].should == [c1, c2]
+        end
+      end
     end
   end
 
@@ -111,93 +230,78 @@ module VCAP::CloudController::ApiSpecHelper
       end
 
       describe "reading collections" do
-        include VCAP::CloudController::RestController
+        describe "many_to_one" do
+          opts[:many_to_one_collection_ids].each do |attr, make|
+            path = "#{opts[:path]}/:id"
 
-        opts[:many_to_many_collection_ids].merge(opts[:one_to_many_collection_ids]).each do |attr, make|
-          path = "#{opts[:path]}/:id"
+            [nil, 0, 1].each do |inline_relations_depth|
+              desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(inline_relations_depth)
+              describe "GET #{path}#{desc}" do
+                include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
 
-          describe "GET #{path} and extract #{attr}_url" do
-            include_context "collections", opts, attr, make
+                include_examples "inlined_relations", attr, inline_relations_depth
 
-            before do
-              get "#{opts[:path]}/#{@obj.id}", {}, @headers
-              @uri = entity["#{attr}_url"]
-            end
-
-            it "should return a relative uri in the #{attr}_url field" do
-              @uri.should_not be_nil
-            end
-
-            describe "gets on the #{attr}_url with no associated #{attr}" do
-              before do
-                get @uri, {}, @headers
-              end
-
-              it "should return 200" do
-                last_response.status.should == 200
-              end
-
-              it "should return total_results => 0" do
-                decoded_response["total_results"].should == 0
-              end
-
-              it "should return prev_url => nil" do
-                decoded_response.should have_key("prev_url")
-                decoded_response["prev_url"].should be_nil
-              end
-
-              it "should return next_url => nil" do
-                decoded_response["next_url"].should be_nil
-              end
-
-              it "should return resources => []" do
-                decoded_response["resources"].should == []
-              end
-            end
-
-            describe "gets on the #{attr}_url with 2 associated #{attr}" do
-              before do
-                @obj.send(@add_method, @child1)
-                @obj.send(@add_method, @child2)
-                @obj.save
-
-                get @uri, {}, @headers
-              end
-
-              it "should return 200" do
-                last_response.status.should == 200
-              end
-
-              it "should return total_results => 2" do
-                decoded_response["total_results"].should == 2
-              end
-
-              # TODO: these are both nil for now because we aren't doing
-              # full pagination yet
-              it "should return prev_url => nil" do
-                decoded_response.should have_key("prev_url")
-                decoded_response["prev_url"].should be_nil
-              end
-
-              it "should return next_url => nil" do
-                decoded_response["next_url"].should be_nil
-              end
-
-              it "should return resources => [child1, child2]" do
-                os = VCAP::CloudController::RestController::ObjectSerialization
-                name ="#{attr.to_s.singularize.camelize}"
-                child_controller = VCAP::CloudController.const_get(name)
-
-                c1 = os.to_hash(child_controller, @child1)
-                c2 = os.to_hash(child_controller, @child2)
-
-                [c1, c2].each do |c|
-                  m = c["metadata"]
-                  m["created_at"] = m["created_at"].to_s
-                  m["updated_at"] = m["updated_at"].to_s if m["updated_at"]
+                it "should return a #{attr}_id field" do
+                  entity.should have_key("#{attr}_id")
                 end
 
-                decoded_response["resources"].should == [c1, c2]
+                # this is basically the read api, so we'll do most of the
+                # detailed read testing there
+                desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(inline_relations_depth)
+                describe "GET on the #{attr}_url" do
+                  before do
+                    get @uri, {}, @headers
+                  end
+
+                  it "should return 200" do
+                    last_response.status.should == 200
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        describe "n_to_many" do
+          # this is basically the read api, so we'll do most of the
+          # detailed read testing there
+
+          to_many_attrs = opts[:many_to_many_collection_ids].merge(opts[:one_to_many_collection_ids])
+          to_many_attrs.each do |attr, make|
+            path = "#{opts[:path]}/:id"
+
+            [nil, 0, 1].each do |inline_relations_depth|
+              desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(inline_relations_depth)
+              describe "GET #{path}#{desc}" do
+                include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
+                include_examples "inlined_relations", attr, inline_relations_depth
+                include_examples "get to_many attr url", opts, attr, make
+              end
+            end
+
+            describe "with 50 associated #{attr}" do
+              depth = 1
+              desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(depth)
+              describe "GET #{path}#{desc}" do
+                include_context "collections", opts, attr, make
+
+                before do
+                  100.times do
+                    child = make.call(@obj)
+                    @obj.send(@add_method, child)
+                  end
+
+                  query_parms = query_params_for_inline_depth(depth)
+                  get "#{opts[:path]}/#{@obj.id}", query_parms, @headers
+                  @uri = entity["#{attr}_url"]
+                end
+
+                # we want to make sure to only limit the assocation that
+                # has too many results yet still inline the others
+                include_examples "inlined_relations", attr
+                (to_many_attrs.keys - [attr]).each do |other_attr|
+                  include_examples "inlined_relations", other_attr, 1
+                end
               end
             end
           end
