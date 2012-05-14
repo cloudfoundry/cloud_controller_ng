@@ -16,4 +16,12 @@ module VCAP::CloudController
       define_routes
     end
   end
+
+  def self.controller_from_name(name)
+    VCAP::CloudController.const_get(name.to_s.singularize.camelize)
+  end
+
+  def self.controller_from_model(model)
+    controller_from_name(model.class.name.split("::").last)
+  end
 end
