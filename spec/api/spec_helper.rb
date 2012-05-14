@@ -34,7 +34,8 @@ module VCAP::CloudController::ApiSpecHelper
       opts[k].map! { |v| v.to_s }
     end
 
-    [:many_to_many_collection_ids, :one_to_many_collection_ids].each do |k|
+    [:many_to_many_collection_ids, :one_to_many_collection_ids,
+     :many_to_one_collection_ids].each do |k|
       opts[k] ||= {}
     end
 
@@ -89,5 +90,6 @@ module VCAP::CloudController::ApiSpecHelper
 end
 
 RSpec.configure do |conf|
+  conf.include VCAP::CloudController::RestController
   conf.include VCAP::CloudController::ApiSpecHelper
 end
