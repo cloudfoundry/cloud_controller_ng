@@ -14,9 +14,23 @@ module VCAP::CloudController::RestController
     define_permitted_operation :delete
     define_permitted_operation :enumerate
 
-    def initialize(user, logger)
-      @user   = user
-      @logger = logger
+    def initialize(user, logger, request)
+      @user    = user
+      @logger  = logger
+      @opts    = request_opts(request)
+    end
+
+    def request_opts(request)
+      res = {}
+      res.merge!(inline_relations_opts(request.params))
+      res
+    end
+
+    def inline_relations_opts(params)
+      param_val = params["inline-relations-depth"]
+      res = {}
+      res = { :inline_relations_depth => param_val.to_i } if param_val
+      res
     end
 
     def dispatch(method, *args)
@@ -42,14 +56,14 @@ module VCAP::CloudController::RestController
       obj = model.create_from_hash(attributes)
       [HTTP::CREATED,
        { "Location" => "#{self.class.path}/#{obj.id}" },
-      ObjectSerialization.render_json(self.class, obj)]
+      ObjectSerialization.render_json(self.class, obj, @opts)]
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, attributes)
     end
 
     def read(id)
       obj = find_id(id)
-      ObjectSerialization.render_json(self.class, obj)
+      ObjectSerialization.render_json(self.class, obj, @opts)
     end
 
     def update(id, json)
@@ -57,7 +71,7 @@ module VCAP::CloudController::RestController
       attributes = Yajl::Parser.new.parse(json)
       obj.update_from_hash(attributes)
       obj.save
-      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj)]
+      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, attributes)
     end
@@ -75,7 +89,7 @@ module VCAP::CloudController::RestController
       ds = QueryStringParser.data_set_from_query_params(model, query_params)
       resources = []
       ds.all.each do |m|
-        resources << ObjectSerialization.to_hash(self.class, m)
+        resources << ObjectSerialization.to_hash(self.class, m, @opts)
       end
 
       res = {}
