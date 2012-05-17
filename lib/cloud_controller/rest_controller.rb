@@ -3,6 +3,7 @@
 require "cloud_controller/rest_controller/controller_dsl"
 require "cloud_controller/rest_controller/messages"
 require "cloud_controller/rest_controller/object_serialization"
+require "cloud_controller/rest_controller/paginator"
 require "cloud_controller/rest_controller/routes"
 require "cloud_controller/rest_controller/base"
 
