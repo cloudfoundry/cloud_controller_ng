@@ -9,6 +9,8 @@ module VCAP::CloudController::RestController
   # passed into it?
   module ObjectSerialization
     PRETTY_DEFAULT = true
+    MAX_INLINE_DEFAULT = 50
+    INLINE_RELATIONS_DEFAULT = 0
 
     # Render an object to json, using export and security properties
     # set by its controller.
@@ -75,8 +77,8 @@ module VCAP::CloudController::RestController
     private
 
     def self.relations_hash(controller, obj, opts, depth, parents)
-      target_depth = opts[:inline_relations_depth] || 0
-      max_inline = opts[:max_inline] || 50
+      target_depth = opts[:inline_relations_depth] || INLINE_RELATIONS_DEFAULT
+      max_inline = opts[:max_inline] || MAX_INLINE_DEFAULT
       res = {}
 
       parents.push(controller)
@@ -84,7 +86,7 @@ module VCAP::CloudController::RestController
       controller.to_many_relationships.each do |name, attr|
         other_controller = VCAP::CloudController.controller_from_name(name)
         q_key = "#{controller.class_basename.underscore}_id"
-        res["#{name}_url"] = "/v2/#{name}?q=#{q_key}:#{obj.id}"
+        res["#{name}_url"] = "#{other_controller.path}?q=#{q_key}:#{obj.id}"
 
         others = obj.send(name)
 
@@ -101,7 +103,7 @@ module VCAP::CloudController::RestController
       controller.to_one_relationships.each do |name, attr|
         other_controller = VCAP::CloudController.controller_from_name(name)
         other_id = obj.send("#{name}_id")
-        res["#{name}_url"] = "/v2/#{name.to_s.pluralize}/#{other_id}"
+        res["#{name}_url"] = other_controller.url_for_id(other_id)
         if depth < target_depth && !parents.include?(other_controller)
           other = obj.send(name)
           other_controller = VCAP::CloudController.controller_from_model(other)

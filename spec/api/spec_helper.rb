@@ -56,6 +56,12 @@ module VCAP::CloudController::ApiSpecHelper
       decoded_response["entity"]
     end
 
+    before do
+      # force creation of the admin user used in the headers
+      admin_headers
+    end
+
+    include_examples "enumerating objects", opts
     include_examples "creating and updating", opts
     include_examples "reading a valid object", opts
     include_examples "deleting a valid object", opts

@@ -302,6 +302,36 @@ module VCAP::CloudController::ApiSpecHelper
                 (to_many_attrs.keys - [attr]).each do |other_attr|
                   include_examples "inlined_relations", other_attr, 1
                 end
+
+                describe "GET on the #{attr}_url" do
+                  before do
+                    get @uri, {}, @headers
+                  end
+
+                  it "should return 200" do
+                    last_response.status.should == 200
+                  end
+
+                  it "should return total_results => 51" do
+                    decoded_response["total_results"].should == 51
+                  end
+
+                  it "should return prev_url => nil" do
+                    decoded_response.should have_key("prev_url")
+                    decoded_response["prev_url"].should be_nil
+                  end
+
+                  it "should return next_url" do
+                    decoded_response.should have_key("next_url")
+                    next_url = decoded_response["next_url"]
+                    uri = @uri.gsub("?", "\\?")
+                    next_url.should match /#{uri}&page=2&results-per-page=50/
+                  end
+
+                  it "should return resources => []" do
+                    decoded_response["resources"].count.should == 50
+                  end
+                end
               end
             end
           end

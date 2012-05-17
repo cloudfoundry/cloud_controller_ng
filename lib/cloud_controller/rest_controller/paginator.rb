@@ -1,0 +1,99 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
+module VCAP::CloudController::RestController
+
+  # Paginates a dataset
+  class Paginator
+    # Paginate and render a dataset to json.
+    #
+    # @param [RestController] controller Controller for the
+    # dataset being paginated.
+    #
+    # @param [Sequel::Dataset] ds Dataset to paginate.
+    #
+    # @option opts [Integer] :page Page number to start at.  Defaults to 1.
+    #
+    # @option opts [Integer] :results_per_page Number of results to include
+    # per page.  Defaults to 50.
+    #
+    # @option opts [Boolean] :pretty Controlls pretty formating of the encoded
+    # json.  Defaults to true.
+    #
+    # @option opts [Integer] :inline_relations_depth Depth to recursively
+    # exapend relationships in addition to providing the URLs.
+    #
+    # @option opts [Integer] :max_inline Maximum number of objects to
+    # expand inline in a relationship.
+    #
+    # @return [String] Json encoding pagination of the dataset.
+    def self.render_json(controller, ds, opts)
+      self.new(controller, ds, opts).render_json
+    end
+
+    # Create a paginator.
+    #
+    # @param [RestController] controller Controller for the
+    # dataset being paginated.
+    #
+    # @param [Sequel::Dataset] ds Dataset to paginate.
+    #
+    # @option opts [Integer] :page Page number to start at.  Defaults to 1.
+    #
+    # @option opts [Integer] :results_per_page Number of results to include
+    # per page.  Defaults to 50.
+    #
+    # @option opts [Boolean] :pretty Controlls pretty formating of the encoded
+    # json.  Defaults to true.
+    #
+    # @option opts [Integer] :inline_relations_depth Depth to recursively
+    # exapend relationships in addition to providing the URLs.
+    #
+    # @option opts [Integer] :max_inline Maximum number of objects to
+    # expand inline in a relationship.
+    def initialize(controller, ds, opts)
+      page       = opts[:page] || 1
+      page_size  = opts[:results_per_page] || 50
+      @paginated = ds.paginate(page, page_size)
+
+      @controller = controller
+      @opts = opts
+    end
+
+    # Pagination
+    #
+    # @return [String] Json encoding pagination of the dataset.
+    def render_json
+      res = {
+        :total_results => @paginated.pagination_record_count,
+        :total_pages   => @paginated.page_count,
+        :prev_url      => prev_page_url,
+        :next_url      => next_page_url,
+        :resources     => resources,
+      }
+
+      Yajl::Encoder.encode(res, :pretty => true)
+    end
+
+    private
+
+    def resources
+      @paginated.all.map do |m|
+        ObjectSerialization.to_hash(@controller, m, @opts)
+      end
+    end
+
+    def prev_page_url
+      @paginated.prev_page ? url(@paginated.prev_page) : nil
+    end
+
+    def next_page_url
+      @paginated.next_page ? url(@paginated.next_page) : nil
+    end
+
+    def url(page)
+      res = "#{@controller.path}?"
+      res += "q=#{@opts[:q]}&" if @opts[:q]
+      res += "page=#{page}&results-per-page=#{@paginated.page_size}"
+    end
+  end
+end
