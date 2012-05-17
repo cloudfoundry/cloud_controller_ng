@@ -26,6 +26,8 @@ module VCAP::CloudController::RestController
       # than an array (which we might have for q)
       res = {}
       [ [ "inline-relations-depth", Integer ],
+        [ "page",                   Integer ],
+        [ "results-per-page",       Integer ],
         [ "q",                      String  ]
       ].each do |key, klass|
         val = params[key]
@@ -86,19 +88,9 @@ module VCAP::CloudController::RestController
     end
 
     def enumerate
+      # TODO: filter the ds by what the user can see
       ds = QueryStringParser.data_set_from_query_params(model, @opts)
-      resources = []
-      ds.all.each do |m|
-        resources << ObjectSerialization.to_hash(self.class, m, @opts)
-      end
-
-      res = {}
-      res[:total_results] = ds.count
-      res[:prev_url] = nil
-      res[:next_url] = nil
-      res[:resources] = resources
-
-      Yajl::Encoder.encode(res, :pretty => true)
+      Paginator.render_json(self.class, ds, @opts)
     end
 
     def find_id(id)
