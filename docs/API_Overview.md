@@ -105,6 +105,7 @@ A paginated reponse contains the following attributes:
 | Attribute     | Description                                                                                       |
 | ---------     | -----------                                                                                       |
 | total_results | Total number of results in the entire data set.                                                   |
+| total_pages   | Total number of pages in the entire dataset.                                                      |
 | prev_url      | URL used to fetch the previous set of results in the paginated response.  null on the first call. |
 | next_url      | URL used to fetch the next set of ressults in the paginated response.  null on the last call.     |
 | resources     | Array of resources as returned by a GET on the resource id.                                       |
@@ -117,19 +118,19 @@ common use cases.
 The following optional parameters may be specified in the initial GET, or
 included in the query string to `prev_url` or `next_url`.
 
-| Parameter   | Description                                                          |
-| ---------   | -----------                                                          |
-| limit       | Maximum number of results to return.                                 |
-| offset      | Offset from which to start iteration.                                |
-| urls-only   | If 1, only return a list of urls; do not expand metadata or resource attributues |
+| Parameter        | Description                                                                      |
+| ---------        | -----------                                                                      |
+| page             | Page from which to start iteration                                               |
+| results-per-page | Results to return per page                                                       |
+| urls-only        | If 1, only return a list of urls; do not expand metadata or resource attributues |
 
 If the client is going to iterate through the entire dataset, they are
-encouraged to follow `next_url` rather than iterating by setting offset
-to the last offset + limit.
+encouraged to follow `next_url` rather than iterating by setting
+page and results-per-page.
 
 Example:
 
-Request: `GET /v2/foo_bars?limit=2`
+Request: `GET /v2/foo_bars?results-per-page=2`
 
 Response:
 
