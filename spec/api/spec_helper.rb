@@ -26,6 +26,18 @@ module VCAP::CloudController::ApiSpecHelper
     headers.merge({ "CONTENT_TYPE" => "application/json"})
   end
 
+  def decoded_response
+    Yajl::Parser.parse(last_response.body)
+  end
+
+  def metadata
+    decoded_response["metadata"]
+  end
+
+  def entity
+    decoded_response["entity"]
+  end
+
   shared_examples "a CloudController API" do |opts|
     [:required_attributes, :unique_attributes, :basic_attributes,
      :extra_attributes, :sensitive_attributes].each do |k|
@@ -42,18 +54,6 @@ module VCAP::CloudController::ApiSpecHelper
     let(:admin_headers) do
       user = VCAP::CloudController::Models::User.make(:admin => true)
       headers_for(user)
-    end
-
-    def decoded_response
-      Yajl::Parser.parse(last_response.body)
-    end
-
-    def metadata
-      decoded_response["metadata"]
-    end
-
-    def entity
-      decoded_response["entity"]
     end
 
     before do

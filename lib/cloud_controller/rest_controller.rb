@@ -24,6 +24,10 @@ module VCAP::CloudController
   end
 
   def self.controller_from_model(model)
-    controller_from_name(model.class.name.split("::").last)
+    controller_from_model_name(model.class.name)
+  end
+
+  def self.controller_from_model_name(model_name)
+    controller_from_name(model_name.split("::").last)
   end
 end
