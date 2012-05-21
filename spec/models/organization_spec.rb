@@ -9,6 +9,7 @@ describe VCAP::CloudController::Models::Organization do
     :stripped_string_attributes   => :name,
     :many_to_zero_or_more => {
       :users      => lambda { |org| VCAP::CloudController::Models::User.make },
+      :managers   => lambda { |org| VCAP::CloudController::Models::User.make },
     },
     :one_to_zero_or_more => {
       :app_spaces => lambda { |org| VCAP::CloudController::Models::AppSpace.make }

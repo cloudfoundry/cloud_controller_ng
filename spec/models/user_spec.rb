@@ -10,6 +10,7 @@ describe VCAP::CloudController::Models::User do
     :extra_json_attributes        => :password,
     :many_to_zero_or_more => {
       :organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
+      :managed_organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
       :app_spaces    => lambda { |user|
         org = VCAP::CloudController::Models::Organization.make
         user.add_organization(org)
