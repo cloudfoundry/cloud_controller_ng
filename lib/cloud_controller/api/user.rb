@@ -13,7 +13,8 @@ module VCAP::CloudController
       attribute :admin,         Message::Boolean
     end
 
-    query_parameters :app_space_id, :organization_id
+    query_parameters :app_space_id, :organization_id,
+                     :managed_organization_id
 
     def self.translate_validation_exception(e, attributes)
       id_errors = e.errors.on(:id)

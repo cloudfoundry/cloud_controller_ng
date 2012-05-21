@@ -36,8 +36,8 @@ module VCAP::CloudController::RestController
       res
     end
 
-    def dispatch(method, *args)
-      send(method, *args)
+    def dispatch(op, *args)
+      send(op, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_and_log_exception(@logger, e)
     rescue Sequel::DatabaseError => e
@@ -73,15 +73,16 @@ module VCAP::CloudController::RestController
 
     def delete(id)
       obj = find_id_and_validate_access(:delete, id)
-      obj.delete
+      obj.destroy
       [HTTP::NO_CONTENT, nil]
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, attributes)
     end
 
     def enumerate
-      # TODO: filter the ds by what the user can see
-      ds = Query.dataset_from_query_params(model, self.class.query_parameters, @opts)
+      raise NotAuthenticated unless @user
+      authz_filter = admin_enumeration_filter
+      ds = Query.dataset_from_query_params(model, authz_filter, self.class.query_parameters, @opts)
       Paginator.render_json(self.class, ds, @opts)
     end
 
@@ -105,6 +106,18 @@ module VCAP::CloudController::RestController
         raise NotAuthenticated unless user
         raise NotAuthorized
       end
+    end
+
+    def admin_enumeration_filter
+      if @user.admin
+        { }
+      else
+        enumeration_filter
+      end
+    end
+
+    def enumeration_filter
+      { }
     end
 
     def model
