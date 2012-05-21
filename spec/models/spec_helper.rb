@@ -13,6 +13,7 @@ end
 def make_user_for_org(org)
   user = VCAP::CloudController::Models::User.make
   user.add_organization org
+  org.refresh
   user
 end
 
