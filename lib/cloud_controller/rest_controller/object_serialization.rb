@@ -1,6 +1,8 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController::RestController
+
+  # FIXME: add authz checks to attribures and inlined relations
   module ObjectSerialization
     def self.render_json(controller, obj, opts)
       Yajl::Encoder.encode(to_hash(controller, obj, opts), :pretty => true)
@@ -28,9 +30,16 @@ module VCAP::CloudController::RestController
       parents.push(controller)
 
       controller.to_many_relationships.each do |name, attr|
-        other_controller = VCAP::CloudController.controller_from_name(name)
-        q_key = "#{controller.class_basename.underscore}_id"
-        res["#{name}_url"] = "/v2/#{name}?q=#{q_key}:#{obj.id}"
+        ar = controller.model.association_reflection(name)
+        other_model = ar.associated_class
+        other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
+        q_key = if ar[:reciprocol]
+                  "#{ar[:reciprocol].to_s.singularize}_id"
+                else
+                  "#{controller.class_basename.underscore}_id"
+                end
+        route_name = other_model.name.split("::").last.underscore.pluralize
+        res["#{name}_url"] = "/v2/#{route_name}?q=#{q_key}:#{obj.id}"
 
         others = obj.send(name)
 
