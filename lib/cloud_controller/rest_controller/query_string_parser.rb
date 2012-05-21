@@ -2,11 +2,9 @@
 
 module VCAP::CloudController::RestController
   module QueryStringParser
-    def self.data_set_from_query_params(model, opts)
-      query_params = opts[:q]
-      return model.dataset unless query_params
-
-      filter_args = filter_args_from_query_params(model, query_params)
+    def self.data_set_from_query_params(model, access_filter, opts)
+      filter_args = filter_args_from_query_params(model, opts[:q])
+      filter_args.merge!(access_filter)
       ds = model.filter(filter_args)
     end
 
@@ -16,6 +14,7 @@ module VCAP::CloudController::RestController
     end
 
     def self.filter_args_from_query_params(model, query_params)
+      return {} unless query_params
       validate_query_params(query_params)
 
       key, value = query_params.split(":")
@@ -34,7 +33,8 @@ module VCAP::CloudController::RestController
         end
 
         if attr_key
-          attr_model = VCAP::CloudController::Models.const_get(attr.camelize)
+          ar = model.association_reflection(attr_key)
+          attr_model = ar.associated_class
           attr_val = attr_model.filter(:id => value)
           filter_args = { attr_key => attr_val }
         end
