@@ -7,6 +7,9 @@ module VCAP::CloudController::RestController
   # TODO: migrate this to be like messages and routes in that
   # it is included and mixed in rather than having the controller
   # passed into it?
+  #
+  # FIXME: add authz checks to attribures and inlined relations
+
   module ObjectSerialization
     PRETTY_DEFAULT = true
     MAX_INLINE_DEFAULT = 50
@@ -61,7 +64,7 @@ module VCAP::CloudController::RestController
     def self.to_hash(controller, obj, opts, depth=0, parents=[])
       rel_hash = relations_hash(controller, obj, opts, depth, parents)
 
-      # TODO: this needs to do a read authz check.
+      # FIXME: this needs to do a read authz check.
       entity_hash = obj.to_hash.merge(rel_hash)
 
       metadata_hash = {
@@ -84,10 +87,18 @@ module VCAP::CloudController::RestController
       parents.push(controller)
 
       controller.to_many_relationships.each do |name, attr|
-        other_controller = VCAP::CloudController.controller_from_name(name)
-        q_key = "#{controller.class_basename.underscore}_id"
+        ar = controller.model.association_reflection(name)
+        other_model = ar.associated_class
+        other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
+        q_key = if ar[:reciprocol]
+                  "#{ar[:reciprocol].to_s.singularize}_id"
+                else
+                  "#{controller.class_basename.underscore}_id"
+                end
         res["#{name}_url"] = "#{other_controller.path}?q=#{q_key}:#{obj.id}"
 
+        # FIXME: others needs to use the enumeration filter from the other
+        # controller
         others = obj.send(name)
 
         # TODO: replace depth with parents.size

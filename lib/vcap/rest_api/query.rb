@@ -22,8 +22,9 @@ module VCAP::RestAPI
     # @param [Hash] query_params A hash containing the full set of http
     # query parameters.  Currently, only :q is extracted and used as the query
     # string.  The :q entry is a key value pair of the form 'key:value'
-    def initialize(model, queryable_attributes, query_params)
+    def initialize(model, access_filter, queryable_attributes, query_params)
       @model = model
+      @access_filter = access_filter
       @queryable_attributes = queryable_attributes
       @query = query_params[:q]
     end
@@ -33,7 +34,7 @@ module VCAP::RestAPI
     #
     # @return [Sequel::Dataset]
     def dataset
-      model.filter(filter_args_from_query)
+      model.filter(access_filter).filter(filter_args_from_query)
     end
 
     # Return the dataset for the supplied query.
@@ -50,9 +51,10 @@ module VCAP::RestAPI
     #
     # @return [Sequel::Dataset]
     def self.dataset_from_query_params(model,
+                                       access_filter,
                                        queryable_attributes,
                                        query_params)
-      self.new(model, queryable_attributes, query_params).dataset
+      self.new(model, access_filter, queryable_attributes, query_params).dataset
     end
 
     private
@@ -100,6 +102,6 @@ module VCAP::RestAPI
       [key.to_sym, value]
     end
 
-    attr_accessor :model, :queryable_attributes, :query
+    attr_accessor :model, :access_filter, :queryable_attributes, :query
   end
 end

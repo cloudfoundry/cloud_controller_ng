@@ -136,8 +136,8 @@ module VCAP::CloudController::ApiSpecHelper
 
         it "should return resources => [child1, child2]" do
           os = VCAP::CloudController::RestController::ObjectSerialization
-          name ="#{attr.to_s.singularize.camelize}"
-          child_controller = VCAP::CloudController.const_get(name)
+          ar = opts[:model].association_reflection(attr)
+          child_controller = VCAP::CloudController.controller_from_model_name(ar.associated_class.name)
 
           c1 = os.to_hash(child_controller, @child1, {})
           c2 = os.to_hash(child_controller, @child2, {})

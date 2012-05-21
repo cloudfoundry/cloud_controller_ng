@@ -14,6 +14,18 @@ Sequel::Model.plugin :vcap_normalization
 Sequel::Model.plugin :vcap_relations
 Sequel::Model.plugin :vcap_guid
 
+module VCAP::CloudController::Models::UserGroup
+  def define_user_group(name, opts = {})
+    many_to_many(name,
+                 :class =>"VCAP::CloudController::Models::User",
+                 :join_table => "#{table_name}_#{name}",
+                 :right_key => :user_id,
+                 :reciprocol => opts[:reciprocol])
+
+    add_association_dependencies name => :nullify
+  end
+end
+
 Dir[File.expand_path("../models/*", __FILE__)].each do |file|
   require file
 end

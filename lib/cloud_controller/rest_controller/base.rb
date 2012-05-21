@@ -60,14 +60,14 @@ module VCAP::CloudController::RestController
     # so that they can be investigated and have more accurate error
     # reporting added.
     #
-    # @param [Symbol] method The method to dispatch to
+    # @param [Symbol] op The method to dispatch to.
     #
     # @param [Array] args The arguments to the method beign disptched to.
     #
     # @return [Object] Returns an array of [http response code, Header hash,
     # body string], or just a body string.
-    def dispatch(method, *args)
-      send(method, *args)
+    def dispatch(op, *args)
+      send(op, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_and_log_exception(@logger, e)
     rescue Sequel::DatabaseError => e
@@ -119,7 +119,7 @@ module VCAP::CloudController::RestController
     # @param [String] id The GUID of the object to delete.
     def delete(id)
       obj = find_id_and_validate_access(:delete, id)
-      obj.delete
+      obj.destroy
       [HTTP::NO_CONTENT, nil]
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, attributes)
@@ -127,8 +127,9 @@ module VCAP::CloudController::RestController
 
     # Enumerate operation
     def enumerate
-      # TODO: filter the ds by what the user can see
-      ds = Query.dataset_from_query_params(model,
+      raise NotAuthenticated unless @user
+      authz_filter = admin_enumeration_filter
+      ds = Query.dataset_from_query_params(model, authz_filter,
                                            self.class.query_parameters, @opts)
       Paginator.render_json(self.class, ds, @opts)
     end
@@ -180,6 +181,20 @@ module VCAP::CloudController::RestController
         raise NotAuthenticated unless user
         raise NotAuthorized
       end
+    end
+
+    # wrapped filter allowing admins full access to all objects
+    #
+    # @return [Hash] Key value pairs used as a dataset filter.
+    def admin_enumeration_filter
+      @user.admin ? {} : enumeration_filter
+    end
+
+    # wrapped filter allowing admins full access to all objects
+    #
+    # @return [Hash] Key value pairs used as a dataset filter.
+    def enumeration_filter
+      { }
     end
 
     # The model associated with this api endpoint.
