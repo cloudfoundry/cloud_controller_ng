@@ -288,6 +288,7 @@ module VCAP::CloudController::ApiSpecHelper
                 before do
                   51.times do
                     child = make.call(@obj)
+                    @obj.refresh
                     @obj.send(@add_method, child)
                   end
 
