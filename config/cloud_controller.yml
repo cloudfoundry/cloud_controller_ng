@@ -13,5 +13,5 @@ db:
 
 secrets:
   user_token:
-    key: 'token key goes here'
+    key: "token key goes here"
     duration: 604800            # 7 * 24 * 60 * 60 (= 1week)

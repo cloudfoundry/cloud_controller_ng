@@ -68,7 +68,7 @@ module VCAP::CloudController
     end
 
     def setup_db
-      db_logger = VCAP::Logging.logger('cc.db')
+      db_logger = VCAP::Logging.logger("cc.db")
       DB.connect(db_logger, @config[:db])
     end
 

@@ -89,7 +89,7 @@ module Sinatra
 
       before do
         logger_name = opts[:logger_name] || "vcap.api"
-        env['rack.logger'] = ::VCAP::Logging.logger(logger_name)
+        env["rack.logger"] = ::VCAP::Logging.logger(logger_name)
       end
     end
   end

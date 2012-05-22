@@ -1,9 +1,9 @@
-require 'vcap/config'
-require 'vcap/json_schema'
+require "vcap/config"
+require "vcap/json_schema"
 
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
-  DEFAULT_CONFIG_PATH = File.expand_path('../../../../config/dev.yml', __FILE__)
+  DEFAULT_CONFIG_PATH = File.expand_path("../../../../config/dev.yml", __FILE__)
 
   define_schema do
     {
