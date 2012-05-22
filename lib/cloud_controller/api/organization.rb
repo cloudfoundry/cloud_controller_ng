@@ -6,6 +6,7 @@ module VCAP::CloudController
       full Permissions::CFAdmin
       full Permissions::OrgManager
       read Permissions::OrgUser
+      read Permissions::BillingManager
     end
 
     define_attributes do
@@ -13,12 +14,16 @@ module VCAP::CloudController
       to_many   :users
       to_many   :app_spaces, :exclude_in => :create
       to_many   :managers
+      to_many   :billing_managers
     end
 
     query_parameters   :name
 
     def enumeration_filter
-      { :managers => [@user], :users => [@user] }.sql_or
+      { :managers => [@user],
+        :users => [@user],
+        :billing_managers => [@user]
+      }.sql_or
     end
 
     def self.translate_validation_exception(e, attributes)
