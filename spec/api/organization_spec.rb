@@ -13,7 +13,8 @@ describe VCAP::CloudController::Organization do
     :unique_attributes   => :name,
     :many_to_many_collection_ids => {
       :users    => lambda { |org| VCAP::CloudController::Models::User.make },
-      :managers => lambda { |org| VCAP::CloudController::Models::User.make }
+      :managers => lambda { |org| VCAP::CloudController::Models::User.make },
+      :billing_managers => lambda { |org| VCAP::CloudController::Models::User.make }
     },
     :one_to_many_collection_ids  => {
       :app_spaces => lambda { |org| VCAP::CloudController::Models::AppSpace.make }
@@ -108,14 +109,18 @@ describe VCAP::CloudController::Organization do
       @org_a = VCAP::CloudController::Models::Organization.make
       @org_a_manager = VCAP::CloudController::Models::User.make
       @org_a_member = VCAP::CloudController::Models::User.make
+      @org_a_billing_manager = VCAP::CloudController::Models::User.make
       @org_a.add_manager(@org_a_manager)
       @org_a.add_user(@org_a_member)
+      @org_a.add_billing_manager(@org_a_billing_manager)
 
       @org_b = VCAP::CloudController::Models::Organization.make
       @org_b_manager = VCAP::CloudController::Models::User.make
       @org_b_member = VCAP::CloudController::Models::User.make
+      @org_b_billing_manager = VCAP::CloudController::Models::User.make
       @org_b.add_manager(@org_b_manager)
       @org_b.add_user(@org_b_member)
+      @org_b.add_billing_manager(@org_b_billing_manager)
 
       @cf_admin = VCAP::CloudController::Models::User.make(:admin => true)
     end
@@ -138,6 +143,16 @@ describe VCAP::CloudController::Organization do
       include_examples "modify org fail", "OrgUser"
       include_examples "read org ok", "OrgUser"
       include_examples "delete org fail", "OrgUser"
+    end
+
+    describe "BillingManager" do
+      let(:member_a) { @org_a_billing_manager }
+      let(:member_b) { @org_b_billing_manager }
+
+      include_examples "enumerate orgs ok", "BillingManager"
+      include_examples "modify org fail", "BillingManager"
+      include_examples "read org ok", "BillingManager"
+      include_examples "delete org fail", "BillingManager"
     end
 
     describe "CFAdmin" do
