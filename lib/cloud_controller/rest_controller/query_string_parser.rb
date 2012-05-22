@@ -4,8 +4,7 @@ module VCAP::CloudController::RestController
   module QueryStringParser
     def self.data_set_from_query_params(model, access_filter, opts)
       filter_args = filter_args_from_query_params(model, opts[:q])
-      filter_args.merge!(access_filter)
-      ds = model.filter(filter_args)
+      ds = model.filter(access_filter).filter(filter_args)
     end
 
     def self.validate_query_params(query_params)
