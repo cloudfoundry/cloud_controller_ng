@@ -3,7 +3,7 @@
 module VCAP::CloudController::Models
   class ServiceAuthToken < Sequel::Model
     default_order_by  :label
-    export_attributes :id, :label, :provider, :created_at, :updated_at
+    export_attributes :label, :provider
     import_attributes :label, :provider, :token
 
     strip_attributes  :label, :provider
