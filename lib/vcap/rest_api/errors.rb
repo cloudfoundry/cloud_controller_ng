@@ -63,6 +63,9 @@ module VCAP::RestAPI
 
         define_error("InvalidRequest", HTTP::BAD_REQUEST, 10004,
                      "The request is invalid")
+
+        define_error("BadQueryParameter", HTTP::BAD_REQUEST, 10005,
+                     "The query parameter is invalid: %s")
       end
 
     end
