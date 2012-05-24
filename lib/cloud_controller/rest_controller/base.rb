@@ -44,16 +44,37 @@ module VCAP::CloudController::RestController
       raise self.class.translate_and_log_exception(@logger, e)
     end
 
+    def with_quota_enforcement(quota_request_body, &blk)
+      token = QuotaManager.fetch_quota_token(quota_request_body)
+      ret = nil
+      begin
+        ret = blk.call
+      rescue Sequel::ValidationFailed => e
+        raise self.class.translate_validation_exception(e, request_attrs)
+      end
+      token.commit
+      return ret
+    rescue QuotaDeclined => e
+      raise e
+    rescue Exception => e
+      token.abandon(e.message) unless token.nil?
+      raise e
+    end
+
+    def create_quota_token_request
+    end
+
     def create(json)
       validate_class_access(:create)
-      attributes = Yajl::Parser.new.parse(json)
-      raise InvalidRequest unless attributes
-      obj = model.create_from_hash(attributes)
-      [HTTP::CREATED,
-       { "Location" => "#{self.class.path}/#{obj.id}" },
-      ObjectSerialization.render_json(self.class, obj, @opts)]
-    rescue Sequel::ValidationFailed => e
-      raise self.class.translate_validation_exception(e, attributes)
+      request_attrs = Yajl::Parser.new.parse(json)
+      raise InvalidRequest unless request_attrs
+
+      with_quota_enforcement(create_quota_token_request) do
+        obj = model.create_from_hash(request_attrs)
+        [HTTP::CREATED,
+         { "Location" => "#{self.class.path}/#{obj.id}" },
+        ObjectSerialization.render_json(self.class, obj, @opts)]
+      end
     end
 
     def read(id)
@@ -63,12 +84,12 @@ module VCAP::CloudController::RestController
 
     def update(id, json)
       obj = find_id_and_validate_access(:update, id)
-      attributes = Yajl::Parser.new.parse(json)
-      obj.update_from_hash(attributes)
+      request_attrs = Yajl::Parser.new.parse(json)
+      obj.update_from_hash(request_attrs)
       obj.save
       [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     rescue Sequel::ValidationFailed => e
-      raise self.class.translate_validation_exception(e, attributes)
+      raise self.class.translate_validation_exception(e, request_attrs)
     end
 
     def delete(id)
@@ -76,7 +97,7 @@ module VCAP::CloudController::RestController
       obj.destroy
       [HTTP::NO_CONTENT, nil]
     rescue Sequel::ValidationFailed => e
-      raise self.class.translate_validation_exception(e, attributes)
+      raise self.class.translate_validation_exception(e, request_attrs)
     end
 
     def enumerate
@@ -122,6 +143,10 @@ module VCAP::CloudController::RestController
 
     def model
       self.class.model
+    end
+
+    def request_attrs
+      @request_attrs ||= {}
     end
 
     class << self
