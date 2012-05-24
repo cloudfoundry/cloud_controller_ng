@@ -10,6 +10,8 @@ module VCAP::CloudController::Errors
   # While most of the code base tries to wrap at 80 columns, this file is an
   # exception.  This is far more readable when all on a single line.
   [
+    ["QuotaDeclined",         HTTP::BAD_REQUEST, 20001, "Quota declined: %s"],
+
     ["UserInvalid",           HTTP::BAD_REQUEST, 20001, "The user info is invalid: %s"],
     ["UaaIdTaken",            HTTP::BAD_REQUEST, 20002, "The UAA ID is taken: %s"],
     ["UserNotFound",          HTTP::BAD_REQUEST, 20003, "The user could not be found: %s"],
