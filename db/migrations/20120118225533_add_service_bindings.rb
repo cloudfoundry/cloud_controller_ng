@@ -4,6 +4,7 @@ Sequel.migration do
   change do
     create_table(:service_bindings) do
       primary_key :id
+      String :guid, :null => false, :index => true
 
       String :credentials, :null => false
       String :binding_options

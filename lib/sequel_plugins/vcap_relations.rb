@@ -11,7 +11,8 @@ module Sequel::Plugins::VcapRelations
     # and return values.
     def many_to_many(name, *args)
       singular_name = name.to_s.singularize
-      ids_attribute = "#{singular_name}_ids"
+      ids_attr      = "#{singular_name}_ids"
+      guids_attr    = "#{singular_name}_guids"
 
       define_method("add_#{singular_name}") do |other|
         # sequel is not capable of merging adds to a many_to_many association
@@ -19,33 +20,13 @@ module Sequel::Plugins::VcapRelations
         # so lets squash the add
         if other.kind_of?(Integer)
           # FIXME: this is inefficient as it has to pull all ids
-          super(other) unless send(ids_attribute).include? other
+          super(other) unless send(ids_attr).include? other
         else
           super(other) unless send(name).include? other
         end
       end
 
-      define_method("remove_#{singular_name}") do |other|
-        if other.kind_of?(Integer)
-          # FIXME: this is inefficient as it has to pull all ids
-          super(other) if send(ids_attribute).include? other
-        else
-          super(other) if send(name).include? other
-        end
-      end
-
-      define_method(ids_attribute) do
-        ids = []
-        send(name).each { |o| ids << o.id }
-        ids
-      end
-
-      define_method("#{ids_attribute}=") do |ids|
-        return unless ids
-        send("remove_all_#{name}") unless send(name).empty?
-        ids.each { |i| send("add_#{singular_name}", i) }
-      end
-
+      define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end
 
@@ -58,30 +39,51 @@ module Sequel::Plugins::VcapRelations
     # and return values.
     def one_to_many(name, *args)
       singular_name = name.to_s.singularize
-      ids_attribute = "#{singular_name}_ids"
+      ids_attr      = "#{singular_name}_ids"
+      guids_attr    = "#{singular_name}_guids"
 
-      define_method(ids_attribute) do
-        ids = []
-        send(name).each { |o| ids << o.id }
-        ids
+      define_to_many_methods(name, singular_name, ids_attr, guids_attr)
+      super
+    end
+
+    private
+
+    def define_to_many_methods(name, singular_name, ids_attr, guids_attr)
+
+      define_method(ids_attr) do
+        send(name).collect { |o| o.id }
       end
 
-      define_method("#{ids_attribute}=") do |ids|
+      define_method("add_#{singular_name}_by_guid") do |guid|
+        ar = self.class.association_reflection(name)
+        other = ar.associated_class[:guid => guid]
+        send("add_#{singular_name}", other)
+      end
+
+      define_method("#{ids_attr}=") do |ids|
         return unless ids
         send("remove_all_#{name}") unless send(name).empty?
         ids.each { |i| send("add_#{singular_name}", i) }
       end
 
+      define_method("#{guids_attr}") do
+        send(name).collect { |o| o.guid }
+      end
+
+      define_method("#{guids_attr}=") do |guids|
+        return unless guids
+        send("remove_all_#{name}") unless send(name).empty?
+        guids.each { |g| send("add_#{singular_name}_by_guid", g) }
+      end
+
       define_method("remove_#{singular_name}") do |other|
         if other.kind_of?(Integer)
           # FIXME: this is inefficient as it has to pull all ids
-          super(other) if send(ids_attribute).include? other
+          super(other) if send(ids_attr).include? other
         else
           super(other) if send(name).include? other
         end
       end
-
-      super
     end
   end
 end

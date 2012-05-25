@@ -4,6 +4,7 @@ Sequel.migration do
   change do
     create_table :services do
       primary_key :id
+      String :guid, :null => false, :index => true
 
       String :label,          :null => false, :index => true
       String :provider,       :null => false

@@ -8,6 +8,7 @@ Sequel.migration do
   change do
     create_table :apps do
       primary_key :id
+      String :guid, :null => false, :index => true
 
       String :name,              :null => false
 

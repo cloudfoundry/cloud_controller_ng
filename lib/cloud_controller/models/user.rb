@@ -26,5 +26,9 @@ module VCAP::CloudController::Models
     def active?
       active
     end
+
+    def guid
+      id
+    end
   end
 end

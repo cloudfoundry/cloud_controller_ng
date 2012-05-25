@@ -8,10 +8,12 @@ describe "Sequel::Plugins::VcapRelations" do
 
     db.create_table :owners do
       primary_key :id
+      String :guid, :null => false, :index => true
     end
 
     db.create_table :dogs do
       primary_key :id
+      String :guid, :null => false, :index => true
 
       # a dog has an owner, (but allowing null, it may be a stray)
       foreign_key :owner_id, :owners
@@ -19,6 +21,7 @@ describe "Sequel::Plugins::VcapRelations" do
 
     db.create_table :names do
       primary_key :id
+      String :guid, :null => false, :index => true
     end
 
     # contrived example.. there is a many-to-many relationship between a dog
@@ -35,6 +38,7 @@ describe "Sequel::Plugins::VcapRelations" do
     def define_model(name, db)
       c = Class.new(Sequel::Model) do
         plugin :vcap_relations
+        plugin :vcap_guid
       end
       self.class.send(:remove_const, name) if self.class.const_defined?(name)
       self.class.const_set(name, c)
@@ -81,6 +85,23 @@ describe "Sequel::Plugins::VcapRelations" do
       @o.dogs.should include(d2)
 
       @o.dog_ids = [d2.id]
+      d1.refresh
+      d2.refresh
+      @o.dogs.should_not include(d1)
+      @o.dogs.should include(d2)
+    end
+
+    it "should add a add_<relation>_guids= method that takes a guid" do
+      d1 = Dog.create
+      d2 = Dog.create
+
+      @o.dog_guids = [d1.guid, d2.guid]
+      d1.refresh
+      d2.refresh
+      @o.dogs.should include(d1)
+      @o.dogs.should include(d2)
+
+      @o.dog_guids = [d2.guid]
       d1.refresh
       d2.refresh
       @o.dogs.should_not include(d1)
@@ -193,6 +214,32 @@ describe "Sequel::Plugins::VcapRelations" do
       @n2.dogs.should include(@d1)
 
       @d1.name_ids = [@n2.id]
+      @n1.refresh
+      @n2.refresh
+      @d1.names.should_not include(@n1)
+      @d1.names.should include(@n2)
+
+      @n1.dogs.should be_empty
+      @n2.dogs.should include(@d1)
+    end
+
+    it "should add a add_<relation> method that takes a guid" do
+      @d1.add_name_by_guid @n1.guid
+      @d1.names.should include(@n1)
+      @n1.refresh
+      @n1.dogs.should include(@d1)
+    end
+
+    it "should add a <relation>_guids= method that takes an array of guids" do
+      @d1.name_guids = [@n1.guid, @n2.guid]
+      @n1.refresh
+      @n2.refresh
+      @d1.names.should include(@n1)
+      @d1.names.should include(@n2)
+      @n1.dogs.should include(@d1)
+      @n2.dogs.should include(@d1)
+
+      @d1.name_guids = [@n2.guid]
       @n1.refresh
       @n2.refresh
       @d1.names.should_not include(@n1)

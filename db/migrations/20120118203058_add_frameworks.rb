@@ -4,6 +4,7 @@ Sequel.migration do
   change do
     create_table :frameworks do
       primary_key :id
+      String :guid, :null => false, :index => true
 
       String :name,           :null => false
       String :description,    :null => false
