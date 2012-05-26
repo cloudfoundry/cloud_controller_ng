@@ -9,6 +9,8 @@ module VCAP::CloudController
     define_attributes do
       attribute :guid, :exclude_in => :update
       to_many   :organizations
+      to_many   :managed_organizations
+      to_many   :billing_managed_organizations
       to_many   :app_spaces
       attribute :admin, Message::Boolean
     end
