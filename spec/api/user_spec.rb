@@ -13,6 +13,8 @@ describe VCAP::CloudController::User do
     :unique_attributes    => :id,
     :many_to_many_collection_ids => {
       :organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
+      :managed_organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
+      :billing_managed_organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
       :app_spaces    => lambda { |user|
          org = user.organizations.first || VCAP::CloudController::Models::Organization.make
          VCAP::CloudController::Models::AppSpace.make(:organization => org)
