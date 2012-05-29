@@ -26,6 +26,20 @@ module VCAP::CloudController
       }.sql_or
     end
 
+    def update_quota_token_request(org)
+      # TODO: sync payload with ilia
+      {
+        :path => "/quota/#{org.guid}",
+        :body => {
+          :user_id      => @user.id,
+          :object       => "org",
+          :object_id    => org.guid,
+          :object_name  => request_attrs["name"],
+          :audit_data   => request_attrs
+        }
+      }
+    end
+
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
       if name_errors && name_errors.include?(:unique)
