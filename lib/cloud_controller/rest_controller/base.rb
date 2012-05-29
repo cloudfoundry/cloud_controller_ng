@@ -100,9 +100,14 @@ module VCAP::CloudController::RestController
       raise e
     end
 
-    # By default, quota token is not necessary on creation.  Endpoints are
-    # expected to override this method if they need quota enforcement.
+    # By default, operations do not require quota enformcement.
+    # Endpoints are expected to override this method if they need
+    # quota enforcement.
+    #
+    # TODO: once quota is implemented verywhere, take these out
+    # for safety.  Err on the side of requring quota check.
     def create_quota_token_request; end
+    def update_quota_token_request(obj); end
 
     # Create operation
     #
@@ -137,12 +142,14 @@ module VCAP::CloudController::RestController
     # serialized request.
     def update(id, json)
       obj = find_id_and_validate_access(:update, id)
-      request_attrs = Yajl::Parser.new.parse(json)
-      obj.update_from_hash(request_attrs)
-      obj.save
-      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
-    rescue Sequel::ValidationFailed => e
-      raise self.class.translate_validation_exception(e, request_attrs)
+      @request_attrs = Yajl::Parser.new.parse(json)
+      raise InvalidRequest unless request_attrs
+
+      with_quota_enforcement(update_quota_token_request(obj)) do
+        obj.update_from_hash(request_attrs)
+        obj.save
+        [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
+      end
     end
 
     # Delete operation
