@@ -42,7 +42,7 @@ module VCAP::CloudController::ApiSpecHelper
 
     def do_write(verb, children, expected_result, expected_children)
       body = Yajl::Encoder.encode({"#{@child_name}_ids" => children.map { |c| c[:id] }})
-      send(verb, "#{@opts[:path]}/#{@obj.id}", body, @headers)
+      send(verb, "#{@opts[:path]}/#{@obj.guid}", body, @headers)
       last_response.status.should == expected_result
 
       @obj.refresh
@@ -56,7 +56,7 @@ module VCAP::CloudController::ApiSpecHelper
 
     before do
       query_parms = query_params_for_inline_depth(depth)
-      get "#{opts[:path]}/#{@obj.id}", query_parms, @headers
+      get "#{opts[:path]}/#{@obj.guid}", query_parms, @headers
       @uri = entity["#{attr}_url"]
     end
   end
@@ -293,7 +293,7 @@ module VCAP::CloudController::ApiSpecHelper
                   end
 
                   query_parms = query_params_for_inline_depth(depth)
-                  get "#{opts[:path]}/#{@obj.id}", query_parms, @headers
+                  get "#{opts[:path]}/#{@obj.guid}", query_parms, @headers
                   @uri = entity["#{attr}_url"]
                 end
 

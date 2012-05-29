@@ -7,7 +7,7 @@ module VCAP::CloudController::ApiSpecHelper
         let (:obj) { opts[:model].make }
 
         before do
-          get "#{opts[:path]}/#{obj.id}", {}, json_headers(admin_headers)
+          get "#{opts[:path]}/#{obj.guid}", {}, json_headers(admin_headers)
         end
 
         it "should return 200" do

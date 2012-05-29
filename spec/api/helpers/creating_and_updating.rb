@@ -45,7 +45,7 @@ module VCAP::CloudController::ApiSpecHelper
               when :put
                 obj = opts[:model].make creation_opts
                 @orig_created_at = obj.created_at
-                put("#{opts[:path]}/#{obj.id}",
+                put("#{opts[:path]}/#{obj.guid}",
                     json_body, json_headers(admin_headers))
               end
             end
@@ -73,7 +73,11 @@ module VCAP::CloudController::ApiSpecHelper
 
               it "should have created the object pointed to in the location header" do
                 obj_id = last_response.location.split('/').last
-                obj = opts[:model][obj_id]
+                obj = if opts[:model].columns.include?(:guid)
+                        opts[:model].find(:guid => obj_id)
+                      else
+                        opts[:model].find(:id => obj_id)
+                      end
                 non_synthetic_creation_opts.keys.each do |k|
                   obj.send(k).should == creation_opts[k]
                 end
@@ -119,7 +123,7 @@ module VCAP::CloudController::ApiSpecHelper
                   post opts[:path], Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
                 when :put
                   obj = opts[:model].make creation_opts
-                  put "#{opts[:path]}/#{obj.id}", Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
+                  put "#{opts[:path]}/#{obj.guid}", Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
                 end
               end
 
@@ -210,7 +214,7 @@ module VCAP::CloudController::ApiSpecHelper
                   post opts[:path], Yajl::Encoder.encode(creation_opts), json_headers(admin_headers)
                 when :put
                   dup_obj = opts[:model].make
-                  put "#{opts[:path]}/#{dup_obj.id}", Yajl::Encoder.encode(creation_opts), json_headers(admin_headers)
+                  put "#{opts[:path]}/#{dup_obj.guid}", Yajl::Encoder.encode(creation_opts), json_headers(admin_headers)
                 end
               end
 
