@@ -7,6 +7,11 @@ class VCAP::CloudController::Config < VCAP::Config
 
   define_schema do
     {
+      :uaa => {
+        :resource_id        => String,
+        :symetric_secret    => String
+      },
+
       :secrets => {
         :user_token => {
           :key              => String,      # key used for HMAC signing of CC tokens

@@ -35,9 +35,7 @@ module VCAP::CloudController::ApiSpecHelper
       @child3 = make.call(@obj)
 
       user = VCAP::CloudController::Models::User.make(:admin => true)
-      headers = {}
-      headers['HTTP_AUTHORIZATION'] = user.id
-      @headers = json_headers(headers)
+      @headers = json_headers(headers_for(user))
     end
 
     def do_write(verb, children, expected_result, expected_children)

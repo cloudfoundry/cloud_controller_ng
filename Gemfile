@@ -10,6 +10,7 @@ gem "sinatra-contrib"
 gem "yajl-ruby"
 gem "vcap_common"
 gem "vcap_logging"
+gem "cf-uaa-client", "~> 0.0.12.beta.2"
 
 group :development do
   gem "ruby-debug19"

@@ -11,6 +11,10 @@ db:
   max_connections: 32
   pool_timeout: 10
 
+uaa:
+  resource_id: "cloud_controller"
+  symetric_secret: "symetric secret"
+
 secrets:
   user_token:
     key: "token key goes here"
