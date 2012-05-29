@@ -67,9 +67,10 @@ module VCAP::CloudController::RestController
       # FIXME: this needs to do a read authz check.
       entity_hash = obj.to_hash.merge(rel_hash)
 
+      id = obj.guid || obj.id
       metadata_hash = {
-        "id"  => obj.id,
-        "url" => controller.url_for_id(obj.id),
+        "id"  => id,
+        "url" => controller.url_for_id(id),
         "created_at" => obj.created_at,
         "updated_at" => obj.updated_at
       }
@@ -95,7 +96,7 @@ module VCAP::CloudController::RestController
                 else
                   "#{controller.class_basename.underscore}_id"
                 end
-        res["#{name}_url"] = "#{other_controller.path}?q=#{q_key}:#{obj.id}"
+        res["#{name}_url"] = "#{other_controller.path}?q=#{q_key}:#{obj.guid}"
 
         # FIXME: others needs to use the enumeration filter from the other
         # controller
@@ -113,8 +114,8 @@ module VCAP::CloudController::RestController
 
       controller.to_one_relationships.each do |name, attr|
         other_controller = VCAP::CloudController.controller_from_name(name)
-        other_id = obj.send("#{name}_id")
-        res["#{name}_url"] = other_controller.url_for_id(other_id)
+        other = obj.send(name)
+        res["#{name}_url"] = other_controller.url_for_id(other.guid)
         if depth < target_depth && !parents.include?(other_controller)
           other = obj.send(name)
           other_controller = VCAP::CloudController.controller_from_model(other)

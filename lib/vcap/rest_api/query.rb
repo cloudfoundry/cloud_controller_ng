@@ -64,9 +64,7 @@ module VCAP::RestAPI
       q_key, q_val = parse
       filter_args = nil
 
-      if model.columns.include?(q_key)
-        filter_args = { q_key => q_val }
-      elsif q_key =~ /(.*)_id$/
+      if q_key =~ /(.*)_id$/
         attr = $1
 
         f_key = if model.associations.include?(attr.to_sym)
@@ -81,8 +79,11 @@ module VCAP::RestAPI
         raise Errors::BadQueryParameter.new(q_key) unless f_key
 
         other_model = model.association_reflection(f_key).associated_class
-        f_val = other_model.filter(:id => q_val)
+        id_key = other_model.columns.include?(:guid) ? :guid : :id
+        f_val = other_model.filter(id_key => q_val)
         filter_args = { f_key => f_val }
+      else
+        filter_args = { q_key => q_val }
       end
 
       filter_args

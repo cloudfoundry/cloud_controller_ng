@@ -27,16 +27,16 @@ describe VCAP::CloudController::Organization do
         get "/v2/organizations", {}, headers_for(member_a)
         last_response.should be_ok
         decoded_response["total_results"].should == 1
-        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_a.id]
+        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_a.guid]
 
         get "/v2/organizations", {}, headers_for(member_b)
         last_response.should be_ok
         decoded_response["total_results"].should == 1
-        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_b.id]
+        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_b.guid]
       end
 
       it "should not return orgs to a user with the #{perm_name} permission on a different org" do
-        get "/v2/organizations/#{@org_b.id}", {}, headers_for(@org_a_manager)
+        get "/v2/organizations/#{@org_b.guid}", {}, headers_for(@org_a_manager)
         last_response.should_not be_ok
       end
     end
@@ -45,13 +45,13 @@ describe VCAP::CloudController::Organization do
   shared_examples "modify org ok" do |perm_name|
     describe "PUT /v2/organizations/:id" do
       it "should allow a user with the #{perm_name} permission to modify an org" do
-        put "/v2/organizations/#{@org_a.id}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(member_a))
+        put "/v2/organizations/#{@org_a.guid}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(member_a))
         last_response.status.should == 201
-        decoded_response["metadata"]["id"].should == @org_a.id
+        decoded_response["metadata"]["id"].should == @org_a.guid
       end
 
       it "should not allow a user with the #{perm_name} permission on a different org to modify an org" do
-        put "/v2/organizations/#{@org_a.id}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(member_b))
+        put "/v2/organizations/#{@org_a.guid}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(member_b))
         last_response.status.should == 403
       end
     end
@@ -60,7 +60,7 @@ describe VCAP::CloudController::Organization do
   shared_examples "modify org fail" do |perm_name|
     describe "PUT /v2/organizations/:id" do
       it "should not allow a user with only the #{perm_name} permission to modify an org" do
-        put "/v2/organizations/#{@org_a.id}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(member_a))
+        put "/v2/organizations/#{@org_a.guid}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(member_a))
         last_response.status.should == 403
       end
     end
@@ -69,13 +69,13 @@ describe VCAP::CloudController::Organization do
   shared_examples "read org ok" do |perm_name|
     describe "GET /v2/organizations/:id" do
       it "should allow a user with the #{perm_name} permission to read an org" do
-        get "/v2/organizations/#{@org_a.id}", {}, headers_for(member_a)
+        get "/v2/organizations/#{@org_a.guid}", {}, headers_for(member_a)
         last_response.should be_ok
-        decoded_response["metadata"]["id"].should == @org_a.id
+        decoded_response["metadata"]["id"].should == @org_a.guid
       end
 
       it "should not allow a user with the #{perm_name} permission on another org to read an org" do
-        get "/v2/organizations/#{@org_a.id}", {}, headers_for(member_b)
+        get "/v2/organizations/#{@org_a.guid}", {}, headers_for(member_b)
         last_response.should_not be_ok
       end
     end
@@ -84,12 +84,12 @@ describe VCAP::CloudController::Organization do
   shared_examples "delete org ok" do |perm_name|
     describe "DELETE /v2/organizations/:id" do
       it "should allow a user with the #{perm_name} permission to delete an org" do
-        delete "/v2/organizations/#{@org_a.id}", {}, headers_for(member_a)
+        delete "/v2/organizations/#{@org_a.guid}", {}, headers_for(member_a)
         last_response.status.should == 204
       end
 
       it "should not allow a user with the #{perm_name} permission on a different org to delete an org" do
-        delete "/v2/organizations/#{@org_a.id}", {}, headers_for(member_b)
+        delete "/v2/organizations/#{@org_a.guid}", {}, headers_for(member_b)
         last_response.status.should == 403
       end
     end
@@ -98,7 +98,7 @@ describe VCAP::CloudController::Organization do
   shared_examples "delete org fail" do |perm_name|
     describe "DELETE /v2/organizations/:id" do
       it "should not allow a user with only the #{perm_name} permission to delete an org" do
-        delete "/v2/organizations/#{@org_a.id}", {}, headers_for(member_b)
+        delete "/v2/organizations/#{@org_a.guid}", {}, headers_for(member_b)
         last_response.status.should == 403
       end
     end
@@ -160,22 +160,22 @@ describe VCAP::CloudController::Organization do
         get "/v2/organizations", {}, headers_for(@cf_admin)
         last_response.should be_ok
         decoded_response["total_results"].should == 2
-        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_a.id, @org_b.id]
+        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_a.guid, @org_b.guid]
       end
 
       it "should allow a user with the CFAdmin permission to read any org" do
-        get "/v2/organizations/#{@org_a.id}", {}, headers_for(@cf_admin)
+        get "/v2/organizations/#{@org_a.guid}", {}, headers_for(@cf_admin)
         last_response.should be_ok
       end
 
       it "should allow a user with the CFAdmin permission to modify any org" do
-        put "/v2/organizations/#{@org_a.id}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(@cf_admin))
+        put "/v2/organizations/#{@org_a.guid}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(@cf_admin))
         last_response.status.should == 201
-        decoded_response["metadata"]["id"].should == @org_a.id
+        decoded_response["metadata"]["id"].should == @org_a.guid
       end
 
       it "should allow a user with the CFAdmin permission to delete an org" do
-        delete "/v2/organizations/#{@org_a.id}", {}, headers_for(@cf_admin)
+        delete "/v2/organizations/#{@org_a.guid}", {}, headers_for(@cf_admin)
         last_response.status.should == 204
       end
     end

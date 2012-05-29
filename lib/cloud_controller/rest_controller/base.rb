@@ -116,7 +116,7 @@ module VCAP::CloudController::RestController
       with_quota_enforcement(create_quota_token_request) do
         obj = model.create_from_hash(request_attrs)
         [HTTP::CREATED,
-         { "Location" => "#{self.class.path}/#{obj.id}" },
+         { "Location" => "#{self.class.path}/#{obj.guid}" },
         ObjectSerialization.render_json(self.class, obj, @opts)]
       end
     end
@@ -186,7 +186,8 @@ module VCAP::CloudController::RestController
     # @return [Sequel::Model] The sequel model for the object, only if
     # the use has access.
     def find_id_and_validate_access(op, id)
-      obj = model.find(:id => id)
+      key = model.columns.include?(:guid) ? :guid : :id
+      obj = model.find(key => id)
       if obj
         validate_access(op, obj, @user)
       else
