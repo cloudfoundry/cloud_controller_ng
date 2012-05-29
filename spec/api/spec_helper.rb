@@ -9,15 +9,29 @@ end
 module VCAP::CloudController::ApiSpecHelper
   include VCAP::CloudController::ModelSpecHelper
 
+  def config
+    config_file = File.expand_path("../../../config/cloud_controller.yml",
+                                    __FILE__)
+    VCAP::CloudController::Config.from_file(config_file)
+  end
+
   def app
-    VCAP::CloudController::Controller.new
+    VCAP::CloudController::Controller.new(config)
   end
 
   def headers_for(user, proxy_user = nil, https = false)
     headers = {}
-    # FIXME: we should be using the UAA now, so fix this to *really* use it
-    headers['HTTP_AUTHORIZATION'] = user.id if user
-    headers['HTTP_PROXY_USER']    = proxy_user.id if proxy_user
+    token_coder = CF::UAA::TokenCoder.new(config[:uaa][:resource_id],
+                                          config[:uaa][:symetric_secret],
+                                          nil)
+    unless user.nil?
+      user_token = token_coder.encode( { :user_id => user.id } )
+      headers['HTTP_AUTHORIZATION'] = "bearer #{user_token}"
+    end
+
+    # FIXME: what is the story here?
+    # headers['HTTP_PROXY_USER']    = proxy_user.id if proxy_user
+
     headers['X-Forwarded_Proto']  = "https" if https
     headers
   end

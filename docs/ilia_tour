@@ -17,12 +17,22 @@ Run the CC
   least once.
 
 
+Setup CCNG_HOST env var:
+
+   Since you might be runing against something other than a local
+   instance, i.e. you might be running on CF, set a CCNG_HOST
+   env var to make it easier to cut/paste the commands below:
+
+       export CCNG_HOST=locahost:8080
+   or
+       export CCNG_HOST=pbccng.cloudfoundry.com
+
 Test the CC
 
   Your cc should be up and running on port 8080 now, so test it out.
   with:
 
-    curl -v http://localhost:8080/
+    curl -v http://$CCNG_HOST/
 
   You should get a 404 back and a custom error body.  We should probably be
   nicer about returning something for /, but for now, meh.
@@ -34,9 +44,9 @@ Bootstrap an Admin
 
   Ok.. let's get your admin user created.  We really need an external
   bootstrap tool to insert an initial admin into the db, but for now, you can
-  do the following
+  bootstrap an admin via PUT http://$CCNG_HOST/bootstrap_admin/:uaa_id
 
-    curl -v http://localhost:8080/bootstrap
+    curl -v http://$CCNG_HOST/bootstrap_admin/aaa-bbb-ccc
 
   You should get back an HTTP 201 and a blob of json.  Since the bootstrap call
   is not a real CC api call, it is not in the standard format with a metadata
@@ -46,7 +56,7 @@ Let's see a server error:
 
   If you run the same command again:
 
-    curl -v http://localhost:8080/bootstrap
+    curl -v http://$CCNG_HOST/bootstrap_admin/aaa-bbb-ccc
 
   You will get back a 500 and a custom server error response body.  This is
   because the bootstrap route bypasses the API.  Had you gone through the API
@@ -63,39 +73,54 @@ Let's create an org:
 
      curl -X POST -H "Content-Type: application/json" \
        -d '{"name":"my cool org"}' \
-       http://localhost:8080/v2/organizations
+       http://$CCNG_HOST/v2/organizations
 
   Oh, you got an auth error.  Silly you.
 
 
-Let's create an org with "correct" auth/authz
+Let's create an org with "correct" auth/authz.
 
- Ok, this will be even more fun.  Fun like a horror movie.  (UAA integration
- is coming.  We used to have our own signed token, but didn't bother checking
- it in because the UAA is the true new hotness.)
+ We first need to get an auth token.  Dale is going to send us some command
+ line tools to make it easy to generate uaa tokens using a real uaa, but
+ in the mean time, you can get up and running by doing a
+ GET "/bootstrap_token/:uaa_id"
 
-   curl -X POST -H "Content-Type: application/json" \
-    -H "Authorization: iliag@vmware.com" \
-    -d '{"name":"my cool org"}' \
-    http://localhost:8080/v2/organizations
+    curl -v http://$CCNG_HOST/bootstrap_token/aaa-bbb-ccc
+
+ You will get a raw response like:
+    bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYWFhLWJiYi1jY2MiLCJhdWQiOlsiY2xvdWRfb250cm9sbGVyIl0sImV4cCI6MTMzOTAwNTI5OX0.pkFvszKgVGc5Yp0BWcAwX-Vq1GCFXFb8khmZ4PAoGow
+
+ That entire thing is what you need to pass in the Authorization header.  It
+ is a real UAA token.
+
+
+Export the auth token to an env var so that examples can be cut/paste:
+
+    export AUTH_TOKEN="bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYWFhLWJiYi1jY2MiLCJhdWQiOlsiY2xvdWRfb250cm9sbGVyIl0sImV4cCI6MTMzOTAwNTI5OX0.pkFvszKgVGc5Yp0BWcAwX-Vq1GCFXFb8khmZ4PAoGow"
+
+Ok, now lets do the create org call for real:
+
+   curl -X POST -v -H "Content-Type: application/json" \
+    -H "Authorization: $AUTH_TOKEN"\
+    -d '{"name":"my cool org2"}' \
+    http://$CCNG_HOST/v2/organizations
 
  Now this time you should get something back like:
-
-   {
-     "metadata": {
-       "id": 1,
-       "url": "/v2/organizations/1",
-       "created_at": "2012-05-22 11:28:54 -0700",
-       "updated_at": null
-     },
-     "entity": {
-       "name": "my cool org",
-       "users_url": "/v2/users?q=organization_id:1",
-       "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
-       "managers_url": "/v2/users?q=managed_organization_id:1",
-       "billing_managers_url": "/v2/users?q=billing_managed_organization_id:1"
-     }
-   }
+    {
+      "metadata": {
+        "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+        "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
+        "created_at": "2012-05-30 10:55:34 -0700",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "my cool org2",
+        "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+      }
+    }
 
  Yay.
 
@@ -103,27 +128,31 @@ Let's create an org with "correct" auth/authz
  a GET on that.
 
 
+Export the Org id to an env var so that examples can be cut/paste:
+   export ORG_ID=d815bcf5-5318-41dc-a0cc-72311afca065
+
 Let's double check our org:
 
    curl -H "Authorization: iliag@vmware.com" \
-    http://localhost:8080/v2/organizations/1
+    -H "Authorization: $AUTH_TOKEN" \
+    http://$CCNG_HOST/v2/organizations/$ORG_ID
 
+    {
+      "metadata": {
+        "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+        "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
+        "created_at": "2012-05-30 10:55:34 -0700",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "my cool org2",
+        "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+      }
+    }
 
-   {
-     "metadata": {
-       "id": 1,
-       "url": "/v2/organizations/1",
-       "created_at": "2012-05-22 11:28:54 -0700",
-       "updated_at": null
-     },
-     "entity": {
-       "name": "my cool org",
-       "users_url": "/v2/users?q=organization_id:1",
-       "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
-       "managers_url": "/v2/users?q=managed_organization_id:1",
-       "billing_managers_url": "/v2/users?q=billing_managed_organization_id:1"
-     }
-   }
 
   Double yay.
 
@@ -131,48 +160,47 @@ Let's double check our org:
 Let's rename the org:
 
     curl -v -X PUT -H "Content-Type: application/json" \
-     -H "Authorization: iliag@vmware.com" \
+     -H "Authorization: $AUTH_TOKEN" \
      -d '{"name":"ilia likes orgs"}' \
-     http://localhost:8080/v2/organizations/1
+     http://$CCNG_HOST/v2/organizations/$ORG_ID
 
     {
       "metadata": {
-        "id": 1,
-        "url": "/v2/organizations/1",
-        "created_at": "2012-05-22 11:28:54 -0700",
-        "updated_at": "2012-05-22 11:32:29 -0700"
+        "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+        "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
+        "created_at": "2012-05-30 10:55:34 -0700",
+        "updated_at": "2012-05-30 10:57:56 -0700"
       },
       "entity": {
         "name": "ilia likes orgs",
-        "users_url": "/v2/users?q=organization_id:1",
-        "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
-        "managers_url": "/v2/users?q=managed_organization_id:1",
-        "billing_managers_url": "/v2/users?q=billing_managed_organization_id:1"
+        "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
       }
     }
-
 
 Let's go create a user:
 
     curl -v -X POST -H "Content-Type: application/json" \
-     -H "Authorization: iliag@vmware.com" \
+     -H "Authorization: $AUTH_TOKEN" \
      -d '{"id":"1234-4567-89AB-CDEF"}' \
-     http://localhost:8080/v2/users
+     http://$CCNG_HOST/v2/users
 
     {
       "metadata": {
         "id": "1234-4567-89AB-CDEF",
-        "url": "/v2/users/1234-4567-89AB-CDEF",
-        "created_at": "2012-05-22 11:33:25 -0700",
-        "updated_at": null
+          "url": "/v2/users/1234-4567-89AB-CDEF",
+          "created_at": "2012-05-30 10:58:41 -0700",
+          "updated_at": null
       },
-      "entity": {
-        "id": "1234-4567-89AB-CDEF",
-        "admin": false,
-        "active": false,
-        "organizations_url": "/v2/organizations?q=user_id:1234-4567-89AB-CDEF",
-        "app_spaces_url": "/v2/app_spaces?q=user_id:1234-4567-89AB-CDEF"
-      }
+        "entity": {
+          "id": "1234-4567-89AB-CDEF",
+          "admin": false,
+          "active": false,
+          "organizations_url": "/v2/organizations?q=user_id:1234-4567-89AB-CDEF",
+          "app_spaces_url": "/v2/app_spaces?q=user_id:1234-4567-89AB-CDEF"
+        }
     }
 
 So now we should have 2 users, (the boot strap user, plus the one above)
@@ -180,7 +208,9 @@ let's see:  (NOTE: The bootstrap user is currently using an email address
 since that is what was provided in the last drop, but for now,
 all uaa_ids are basically arbitrary text strings as far as the CC is concerned)
 
-    curl -v -H "Authorization: iliag@vmware.com" http://localhost:8080/v2/users
+    curl -v \
+     -H "Authorization: $AUTH_TOKEN" \
+     http://$CCNG_HOST/v2/users
 
     {
       "total_results": 2,
@@ -190,24 +220,24 @@ all uaa_ids are basically arbitrary text strings as far as the CC is concerned)
       "resources": [
         {
           "metadata": {
-            "id": "iliag@vmware.com",
-            "url": "/v2/users/iliag@vmware.com",
-            "created_at": "2012-05-22 11:28:40 -0700",
+            "id": "aaa-bbb-ccc",
+            "url": "/v2/users/aaa-bbb-ccc",
+            "created_at": "2012-05-30 10:54:32 -0700",
             "updated_at": null
           },
           "entity": {
-            "id": "iliag@vmware.com",
+            "id": "aaa-bbb-ccc",
             "admin": true,
             "active": true,
-            "organizations_url": "/v2/organizations?q=user_id:iliag@vmware.com",
-            "app_spaces_url": "/v2/app_spaces?q=user_id:iliag@vmware.com"
+            "organizations_url": "/v2/organizations?q=user_id:aaa-bbb-ccc",
+            "app_spaces_url": "/v2/app_spaces?q=user_id:aaa-bbb-ccc"
           }
         },
         {
           "metadata": {
             "id": "1234-4567-89AB-CDEF",
             "url": "/v2/users/1234-4567-89AB-CDEF",
-            "created_at": "2012-05-22 11:33:25 -0700",
+            "created_at": "2012-05-30 10:58:41 -0700",
             "updated_at": null
           },
           "entity": {
@@ -221,12 +251,14 @@ all uaa_ids are basically arbitrary text strings as far as the CC is concerned)
       ]
     }
 
+
   Yep
 
 Check the orgs the same way:
 
-    curl -v -H "Authorization: iliag@vmware.com" \
-     http://localhost:8080/v2/organizations
+    curl -v \
+     -H "Authorization: $AUTH_TOKEN" \
+     http://$CCNG_HOST/v2/organizations
 
     {
       "total_results": 1,
@@ -236,35 +268,38 @@ Check the orgs the same way:
       "resources": [
         {
           "metadata": {
-            "id": 1,
-            "url": "/v2/organizations/1",
-            "created_at": "2012-05-22 11:28:54 -0700",
-            "updated_at": "2012-05-22 11:32:29 -0700"
+            "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+            "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
+            "created_at": "2012-05-30 10:55:34 -0700",
+            "updated_at": "2012-05-30 10:57:56 -0700"
           },
           "entity": {
             "name": "ilia likes orgs",
-            "users_url": "/v2/users?q=organization_id:1",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
-            "managers_url": "/v2/users?q=managed_organization_id:1",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:1"
+            "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
         }
       ]
     }
 
+
 Those url associations work.  Let's check the one for
 the 1234-... user.
 
-    curl -v -H "Authorization: iliag@vmware.com" \
-     http://localhost:8080/v2/organizations?q=user_id:1234-4567-89AB-CDEF
+    curl -v \
+     -H "Authorization: $AUTH_TOKEN" \
+     http://$CCNG_HOST/v2/organizations?q=user_id:1234-4567-89AB-CDEF
 
     {
       "total_results": 0,
-       "prev_url": null,
-       "next_url": null,
-       "resources": [
+      "total_pages": 0,
+      "prev_url": null,
+      "next_url": null,
+      "resources": [
 
-       ]
+      ]
     }
 
     Which is correct because we haven't added the user to an org yet.
@@ -273,30 +308,31 @@ the 1234-... user.
 Now let's add that 1234-... user to an org:
 
     curl -v -X PUT -H "Content-Type: application/json" \
-     -H "Authorization: iliag@vmware.com" \
+     -H "Authorization: $AUTH_TOKEN" \
      -d '{"user_ids":["1234-4567-89AB-CDEF"]}' \
-     http://localhost:8080/v2/organizations/1
+     http://$CCNG_HOST/v2/organizations/$ORG_ID
 
     {
       "metadata": {
-        "id": 1,
-        "url": "/v2/organizations/1",
-        "created_at": "2012-05-22 11:28:54 -0700",
-        "updated_at": "2012-05-22 11:37:30 -0700"
+        "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+        "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
+        "created_at": "2012-05-30 10:55:34 -0700",
+        "updated_at": "2012-05-30 11:03:18 -0700"
       },
-      "entity": {
-        "name": "ilia likes orgs",
-        "users_url": "/v2/users?q=organization_id:1",
-        "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
-        "managers_url": "/v2/users?q=managed_organization_id:1",
-        "billing_managers_url": "/v2/users?q=billing_managed_organization_id:1"
-      }
+        "entity": {
+          "name": "ilia likes orgs",
+          "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+          "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+          "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+          "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+        }
     }
 
 Now if we fetch the url association for that user again:
 
-    curl -v -H "Authorization: iliag@vmware.com" \
-      http://localhost:8080/v2/organizations?q=user_id:1234-4567-89AB-CDEF
+    curl -v \
+     -H "Authorization: $AUTH_TOKEN" \
+      http://$CCNG_HOST/v2/organizations?q=user_id:1234-4567-89AB-CDEF
 
     {
       "total_results": 1,
@@ -306,17 +342,17 @@ Now if we fetch the url association for that user again:
       "resources": [
         {
           "metadata": {
-            "id": 1,
-            "url": "/v2/organizations/1",
-            "created_at": "2012-05-22 11:28:54 -0700",
-            "updated_at": "2012-05-22 11:37:30 -0700"
+            "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+            "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
+            "created_at": "2012-05-30 10:55:34 -0700",
+            "updated_at": "2012-05-30 11:03:18 -0700"
           },
           "entity": {
             "name": "ilia likes orgs",
-            "users_url": "/v2/users?q=organization_id:1",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
-            "managers_url": "/v2/users?q=managed_organization_id:1",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:1"
+            "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
         }
       ]
@@ -327,8 +363,9 @@ Now if we fetch the url association for that user again:
 
 inlining relations is now supported:
 
-    curl -v -H "Authorization: iliag@vmware.com" \
-     http://localhost:8080/v2/organizations?inline-relations-depth=1
+    curl -v \
+     -H "Authorization: $AUTH_TOKEN" \
+     http://$CCNG_HOST/v2/organizations?inline-relations-depth=1
 
     {
       "total_results": 1,
@@ -338,20 +375,20 @@ inlining relations is now supported:
       "resources": [
         {
           "metadata": {
-            "id": 1,
-            "url": "/v2/organizations/1",
-            "created_at": "2012-05-22 11:28:54 -0700",
-            "updated_at": "2012-05-22 11:37:30 -0700"
+            "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+            "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
+            "created_at": "2012-05-30 10:55:34 -0700",
+            "updated_at": "2012-05-30 11:03:18 -0700"
           },
           "entity": {
             "name": "ilia likes orgs",
-            "users_url": "/v2/users?q=organization_id:1",
+            "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
             "users": [
               {
                 "metadata": {
                   "id": "1234-4567-89AB-CDEF",
                   "url": "/v2/users/1234-4567-89AB-CDEF",
-                  "created_at": "2012-05-22 11:33:25 -0700",
+                  "created_at": "2012-05-30 10:58:41 -0700",
                   "updated_at": null
                 },
                 "entity": {
@@ -363,15 +400,15 @@ inlining relations is now supported:
                 }
               }
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
             "app_spaces": [
 
             ],
-            "managers_url": "/v2/users?q=managed_organization_id:1",
+            "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
             "managers": [
 
             ],
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:1",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
             "billing_managers": [
 
             ]
@@ -379,7 +416,6 @@ inlining relations is now supported:
         }
       ]
     }
-
 
 Let's make a whole bunch of orgs:
 
@@ -390,151 +426,140 @@ Let's make a whole bunch of orgs:
     echo $org_name
     echo $payload
     curl -X POST -H "Content-Type: application/json" \
-      -H "Authorization: iliag@vmware.com" \
+      -H "Authorization: $AUTH_TOKEN" \
       -d "$payload" \
-      http://localhost:8080/v2/organizations
+      http://$CCNG_HOST/v2/organizations
   done
 
 And now enumerate them:
 
-    curl -v -H "Authorization: iliag@vmware.com" \
-     http://localhost:8080/v2/organizations
+    curl -v -H "Authorization: $AUTH_TOKEN" \
+     http://$CCNG_HOST/v2/organizations
 
     {
-      "total_results": 113,
+      "total_results": 101,
       "total_pages": 3,
       "prev_url": null,
       "next_url": "/v2/organizations?page=2&results-per-page=50",
       "resources": [
         {
           "metadata": {
-            "id": 1,
-            "url": "/v2/organizations/1",
-            "created_at": "2012-05-22 11:28:54 -0700",
-            "updated_at": "2012-05-22 11:37:30 -0700"
+            "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+            "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
+            "created_at": "2012-05-30 10:55:34 -0700",
+            "updated_at": "2012-05-30 11:11:29 -0700"
           },
           "entity": {
             "name": "ilia likes orgs",
-            "users_url": "/v2/users?q=organization_id:1",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
-            "managers_url": "/v2/users?q=managed_organization_id:1",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:1"
+            "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
         },
         {
           "metadata": {
-            "id": 2,
-            "url": "/v2/organizations/2",
-            "created_at": "2012-05-22 11:53:27 -0700",
+            "id": "2d069ce5-f964-40c9-9982-1e571d477606",
+            "url": "/v2/organizations/2d069ce5-f964-40c9-9982-1e571d477606",
+            "created_at": "2012-05-30 11:06:07 -0700",
             "updated_at": null
           },
           "entity": {
-            "name": "org 1 8e6e8f0a9bb59dfd2056b80c9917f3ae",
-            "users_url": "/v2/users?q=organization_id:2",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:2",
-            "managers_url": "/v2/users?q=managed_organization_id:2",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:2"
-          }
-        },
-    <snip>
-        {
-          "metadata": {
-            "id": 50,
-            "url": "/v2/organizations/50",
-            "created_at": "2012-05-22 11:59:03 -0700",
-            "updated_at": null
-          },
-          "entity": {
-            "name": "org 37 7a9791924d38aad7e98f130f9ac357d1",
-            "users_url": "/v2/users?q=organization_id:50",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:50",
-            "managers_url": "/v2/users?q=managed_organization_id:50",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:50"
+            "name": "org 49 5f108b412c9c97766bf13dc3ea579998",
+            "users_url": "/v2/users?q=organization_id:2d069ce5-f964-40c9-9982-1e571d477606",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:2d069ce5-f964-40c9-9982-1e571d477606",
+            "managers_url": "/v2/users?q=managed_organization_id:2d069ce5-f964-40c9-9982-1e571d477606",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:2d069ce5-f964-40c9-9982-1e571d477606"
           }
         }
       ]
     }
 
-
 And go to the next page:
 
-    curl -v -H "Authorization: iliag@vmware.com" \
-     http://localhost:8080/v2/organizations?page=2&results-per-page=50
+    curl -v -H "Authorization: $AUTH_TOKEN" \
+     http://$CCNG_HOST/v2/organizations?page=2&results-per-page=50
 
     {
-      "total_results": 113,
-      "total_pages": 3,
-      "prev_url": "/v2/organizations?page=1&results-per-page=50",
-      "next_url": "/v2/organizations?page=3&results-per-page=50",
-      "resources": [
+      "total_results": 101,
+        "total_pages": 3,
+        "prev_url": "/v2/organizations?page=1&results-per-page=50",
+        "next_url": "/v2/organizations?page=3&results-per-page=50",
+        "resources": [
         {
           "metadata": {
-            "id": 51,
-            "url": "/v2/organizations/51",
-            "created_at": "2012-05-22 11:59:03 -0700",
+            "id": "31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "url": "/v2/organizations/31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "created_at": "2012-05-30 11:06:07 -0700",
             "updated_at": null
           },
-
-       <snip.. of the next 50>
-        }
+          "entity": {
+            "name": "org 50 220ce37cfb18f6fe9e487949bed0c4be",
+            "users_url": "/v2/users?q=organization_id:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "managers_url": "/v2/users?q=managed_organization_id:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:31c32a6e-5859-4e00-aed0-2a1a3249c48a"
+          }
+        },
+        <snip.. of the next 50>
       ]
     }
 
 
 Or if you only want 3 on a page:
 
-    curl -v -H "Authorization: iliag@vmware.com" \
-     http://localhost:8080/v2/organizations?page=2\&results-per-page=3
+    curl -v -H "Authorization: $AUTH_TOKEN" \
+     http://$CCNG_HOST/v2/organizations?page=2\&results-per-page=3
 
     {
-      "total_results": 113,
-      "total_pages": 38,
+      "total_results": 101,
+      "total_pages": 34,
       "prev_url": "/v2/organizations?page=1&results-per-page=3",
       "next_url": "/v2/organizations?page=3&results-per-page=3",
       "resources": [
         {
           "metadata": {
-            "id": 4,
-            "url": "/v2/organizations/4",
-            "created_at": "2012-05-22 11:58:45 -0700",
+            "id": "24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "url": "/v2/organizations/24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
-            "name": "org 1 0acb85dd142a5cbda51f3d41524d7c70",
-            "users_url": "/v2/users?q=organization_id:4",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:4",
-            "managers_url": "/v2/users?q=managed_organization_id:4",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:4"
+            "name": "org 3 57e2d7f93997aee937e32b1fd6929947",
+            "users_url": "/v2/users?q=organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "managers_url": "/v2/users?q=managed_organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971"
           }
         },
         {
           "metadata": {
-            "id": 5,
-            "url": "/v2/organizations/5",
-            "created_at": "2012-05-22 11:58:45 -0700",
+            "id": "73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "url": "/v2/organizations/73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
-            "name": "org 2 7097e7840e98c661b6785ec467897023",
-            "users_url": "/v2/users?q=organization_id:5",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:5",
-            "managers_url": "/v2/users?q=managed_organization_id:5",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:5"
+            "name": "org 4 f381ff8f09a8ca620133f8ab5c8f55c5",
+            "users_url": "/v2/users?q=organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "managers_url": "/v2/users?q=managed_organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033"
           }
         },
         {
           "metadata": {
-            "id": 6,
-            "url": "/v2/organizations/6",
-            "created_at": "2012-05-22 11:58:45 -0700",
+            "id": "0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "url": "/v2/organizations/0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
-            "name": "org 3 d817fe1880f638926966d10a5c7d1606",
-            "users_url": "/v2/users?q=organization_id:6",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:6",
-            "managers_url": "/v2/users?q=managed_organization_id:6",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:6"
+            "name": "org 5 e99a2a1e20794030c7067d14f508a778",
+            "users_url": "/v2/users?q=organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "managers_url": "/v2/users?q=managed_organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923"
           }
         }
       ]
@@ -542,37 +567,37 @@ Or if you only want 3 on a page:
 
 And pagination can be combined with inlining relations:
 
-    curl -v -H "Authorization: iliag@vmware.com" \
-     http://localhost:8080/v2/organizations?page=2\&results-per-page=3\&inline-relations-depth=1
+    curl -v -H "Authorization: $AUTH_TOKEN" \
+     http://$CCNG_HOST/v2/organizations?page=2\&results-per-page=3\&inline-relations-depth=1
 
     {
-      "total_results": 113,
-      "total_pages": 38,
+      "total_results": 101,
+      "total_pages": 34,
       "prev_url": "/v2/organizations?page=1&results-per-page=3",
       "next_url": "/v2/organizations?page=3&results-per-page=3",
       "resources": [
         {
           "metadata": {
-            "id": 4,
-            "url": "/v2/organizations/4",
-            "created_at": "2012-05-22 11:58:45 -0700",
+            "id": "24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "url": "/v2/organizations/24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
-            "name": "org 1 0acb85dd142a5cbda51f3d41524d7c70",
-            "users_url": "/v2/users?q=organization_id:4",
+            "name": "org 3 57e2d7f93997aee937e32b1fd6929947",
+            "users_url": "/v2/users?q=organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:4",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "app_spaces": [
 
             ],
-            "managers_url": "/v2/users?q=managed_organization_id:4",
+            "managers_url": "/v2/users?q=managed_organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "managers": [
 
             ],
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:4",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "billing_managers": [
 
             ]
@@ -580,26 +605,26 @@ And pagination can be combined with inlining relations:
         },
         {
           "metadata": {
-            "id": 5,
-            "url": "/v2/organizations/5",
-            "created_at": "2012-05-22 11:58:45 -0700",
+            "id": "73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "url": "/v2/organizations/73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
-            "name": "org 2 7097e7840e98c661b6785ec467897023",
-            "users_url": "/v2/users?q=organization_id:5",
+            "name": "org 4 f381ff8f09a8ca620133f8ab5c8f55c5",
+            "users_url": "/v2/users?q=organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:5",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "app_spaces": [
 
             ],
-            "managers_url": "/v2/users?q=managed_organization_id:5",
+            "managers_url": "/v2/users?q=managed_organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "managers": [
 
             ],
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:5",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "billing_managers": [
 
             ]
@@ -607,26 +632,26 @@ And pagination can be combined with inlining relations:
         },
         {
           "metadata": {
-            "id": 6,
-            "url": "/v2/organizations/6",
-            "created_at": "2012-05-22 11:58:45 -0700",
+            "id": "0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "url": "/v2/organizations/0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
-            "name": "org 3 d817fe1880f638926966d10a5c7d1606",
-            "users_url": "/v2/users?q=organization_id:6",
+            "name": "org 5 e99a2a1e20794030c7067d14f508a778",
+            "users_url": "/v2/users?q=organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:6",
+            "app_spaces_url": "/v2/app_spaces?q=organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "app_spaces": [
 
             ],
-            "managers_url": "/v2/users?q=managed_organization_id:6",
+            "managers_url": "/v2/users?q=managed_organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "managers": [
 
             ],
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:6",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "billing_managers": [
 
             ]

@@ -76,6 +76,7 @@ module VCAP::CloudController
       db = setup_db
       run_migrations = @run_migrations
       development = @development
+      config = @config
 
       DB.apply_migrations(db) if run_migrations
 
@@ -84,7 +85,7 @@ module VCAP::CloudController
         use Rack::CommonLogger
         map "/" do
           DB.apply_migrations(db) if (run_migrations && development)
-          run VCAP::CloudController::Controller.new
+          run VCAP::CloudController::Controller.new(config)
         end
       end
 

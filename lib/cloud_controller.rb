@@ -10,6 +10,7 @@ require "eventmachine/schedule_sync"
 
 require "vcap/common"
 require "vcap/logging"
+require "uaa/token_coder"
 
 require "sinatra/vcap"
 
@@ -22,16 +23,25 @@ module VCAP::CloudController
 
     vcap_configure :reload_path => File.dirname(__FILE__)
 
+    def initialize(config)
+      @config = config
+      super()
+    end
+
     before do
       auth_token = env["HTTP_AUTHORIZATION"]
       if auth_token
-        # FIXME: the commented out code is what we used to have.  Now that the
-        # UAA is ready to rock, we should just go right to it.  In the mean
-        # time, we'll accept a raw uaa_id just to test different sort of
-        # user types using the somewhat correct flow.
-        # email = Notary.new(@token_config[:key]).decode(auth_token)
-        # @user = Models::User.find(:email => email)
-        @user = VCAP::CloudController::Models::User.find(:id => auth_token)
+        token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
+                                              @config[:uaa][:symetric_secret],
+                                              nil)
+        begin
+          token_information = token_coder.decode(auth_token)
+          logger.info("Token received from the UAA #{token_information.inspect}")
+          uaa_id = token_information[:user_id] if token_information
+          @user = Models::User.find(:id => uaa_id) if uaa_id
+        rescue => e
+          logger.error("Invalid bearer token Message: #{e.message}")
+        end
       end
     end
 
@@ -59,13 +69,22 @@ module VCAP::CloudController
     end
 
     # This is is temporary for ilia
-    get "/bootstrap" do
+    get "/bootstrap_admin/:uaa_id" do |uaa_id|
       body VCAP::CloudController::Models::User.create_from_hash(
-        :id => "iliag@vmware.com",
+        :id => uaa_id,
         :admin => true,
         :active => true).to_json
 
       VCAP::RestAPI::HTTP::CREATED
+    end
+
+    # This is temporary for ilia
+    get "/bootstrap_token/:uaa_id" do |uaa_id|
+      token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
+                                            @config[:uaa][:symetric_secret],
+                                            nil)
+      user_token = token_coder.encode( { :user_id => uaa_id } )
+      "bearer #{user_token}"
     end
   end
 end
