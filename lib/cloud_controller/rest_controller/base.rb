@@ -64,6 +64,9 @@ module VCAP::CloudController::RestController
     def create_quota_token_request
     end
 
+    def update_quota_token_request(obj)
+    end
+
     def create(json)
       validate_class_access(:create)
       request_attrs = Yajl::Parser.new.parse(json)
@@ -85,11 +88,13 @@ module VCAP::CloudController::RestController
     def update(id, json)
       obj = find_id_and_validate_access(:update, id)
       request_attrs = Yajl::Parser.new.parse(json)
-      obj.update_from_hash(request_attrs)
-      obj.save
-      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
-    rescue Sequel::ValidationFailed => e
-      raise self.class.translate_validation_exception(e, request_attrs)
+      raise InvalidRequest unless request_attrs
+
+      with_quota_enforcement(update_quota_token_request(obj)) do
+        obj.update_from_hash(request_attrs)
+        obj.save
+        [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
+      end
     end
 
     def delete(id)
