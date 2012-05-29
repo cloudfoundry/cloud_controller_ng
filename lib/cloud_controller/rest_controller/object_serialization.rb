@@ -12,9 +12,10 @@ module VCAP::CloudController::RestController
       rel_hash      = relations_hash(controller, obj, opts, depth, parents)
       entity_hash   = obj.to_hash.merge(rel_hash)
 
+      id = obj.guid || obj.id
       metadata_hash = {
-        "id"  => obj.id,
-        "url" => controller.url_for_id(obj.id),
+        "id"  => id,
+        "url" => controller.url_for_id(id),
         "created_at" => obj.created_at,
         "updated_at" => obj.updated_at
       }
@@ -39,7 +40,7 @@ module VCAP::CloudController::RestController
                   "#{controller.class_basename.underscore}_id"
                 end
         route_name = other_model.name.split("::").last.underscore.pluralize
-        res["#{name}_url"] = "/v2/#{route_name}?q=#{q_key}:#{obj.id}"
+        res["#{name}_url"] = "/v2/#{route_name}?q=#{q_key}:#{obj.guid}"
 
         others = obj.send(name)
 
@@ -54,8 +55,8 @@ module VCAP::CloudController::RestController
 
       controller.to_one_relationships.each do |name, attr|
         other_controller = VCAP::CloudController.controller_from_name(name)
-        other_id = obj.send("#{name}_id")
-        res["#{name}_url"] = "/v2/#{name.to_s.pluralize}/#{other_id}"
+        other = obj.send(name)
+        res["#{name}_url"] = "/v2/#{name.to_s.pluralize}/#{other.guid}"
         if depth < target_depth && !parents.include?(other_controller)
           other = obj.send(name)
           other_controller = VCAP::CloudController.controller_from_model(other)

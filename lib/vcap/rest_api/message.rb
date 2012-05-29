@@ -39,7 +39,7 @@ module VCAP::RestAPI
   end
 
   class MetadataMessage < Message
-    required :id, Integer
+    required :id, String
     required :url, HTTPS_URL
     required :created_at, Date
     required :updated_at, Date
