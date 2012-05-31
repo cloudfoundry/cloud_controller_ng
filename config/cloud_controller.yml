@@ -15,6 +15,12 @@ uaa:
   resource_id: "cloud_controller"
   symmetric_secret: "symmetric secret"
 
+quota_manager:
+  policy: "MoneyMakerApproval" # can also be BlindApproval
+  base_url: "http://localhost:31004/v1/quota"
+  auth_token: "testtoken"
+  http_timeout_sec: 2
+
 secrets:
   user_token:
     key: "token key goes here"
