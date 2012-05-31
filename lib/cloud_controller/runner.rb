@@ -12,9 +12,18 @@ module VCAP::CloudController
       parse_options!
       parse_config
 
-      create_pidfile
+      if running_in_cf?
+        merge_vcap_config
+      else
+        create_pidfile
+      end
+
       setup_db
       setup_logging
+    end
+
+    def logger
+      @logger ||= VCAP::Logging.logger("cc.runner")
     end
 
     def options_parser
@@ -68,6 +77,7 @@ module VCAP::CloudController
     end
 
     def setup_db
+      logger.info "db config #{@config[:db]}"
       db_logger = VCAP::Logging.logger("cc.db")
       DB.connect(db_logger, @config[:db])
     end
@@ -78,9 +88,12 @@ module VCAP::CloudController
       development = @development
       config = @config
 
+      port = ENV["VMC_APP_PORT"]
+      port ||= @config[:port]
+
       DB.apply_migrations(db) if run_migrations
 
-      @thin_server = Thin::Server.new("0.0.0.0", @config[:port],
+      @thin_server = Thin::Server.new("0.0.0.0", port,
                                       :signals => false) do
         use Rack::CommonLogger
         map "/" do
@@ -101,6 +114,18 @@ module VCAP::CloudController
           EM.stop
         end
       end
+    end
+
+    # http://tinyurl.com/bml8nzf
+    def running_in_cf?
+      ENV.has_key?("VMC_APP_PORT")
+    end
+
+    def merge_vcap_config
+      services = JSON.parse(ENV["VCAP_SERVICES"])
+      pg_key = services.keys.select { |svc| svc =~ /postgres/i }.first
+      c = services[pg_key].first["credentials"]
+      @config[:db][:database] = "postgres://#{c["user"]}:#{c["password"]}@#{c["hostname"]}:#{c["port"]}/#{c["name"]}"
     end
   end
 end
