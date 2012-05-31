@@ -12,6 +12,12 @@ class VCAP::CloudController::Config < VCAP::Config
         :symmetric_secret   => String
       },
 
+      :quota_manager => {
+        :base_url                   => String,
+        :auth_token                 => String,
+        optional(:http_timeout_sec) => Integer
+      },
+
       :secrets => {
         :user_token => {
           :key              => String,      # key used for HMAC signing of CC tokens
@@ -45,6 +51,10 @@ class VCAP::CloudController::Config < VCAP::Config
 
   def self.from_file(*args)
     config = super(*args)
+    # TODO: this introduces 2 config styles.  CC takes config
+    # via per instance constructor.  Remove that in favor of this
+    # method as there will be more along these lines.
+    VCAP::CloudController::RestController::QuotaManager.configure(config)
     config
   end
 end

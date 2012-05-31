@@ -11,6 +11,7 @@ gem "yajl-ruby"
 gem "vcap_common", "~> 1.0.13"
 gem "vcap_logging"
 gem "cf-uaa-client", "~> 0.2.0"
+gem "httpclient"
 
 group :production do
   gem "pg"
