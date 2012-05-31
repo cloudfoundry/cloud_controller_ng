@@ -21,7 +21,8 @@ module VCAP::CloudController
   class Controller < Sinatra::Base
     register Sinatra::VCAP
 
-    vcap_configure :reload_path => File.dirname(__FILE__)
+    vcap_configure(:logger_name => "cc.api",
+                   :reload_path => File.dirname(__FILE__))
 
     def initialize(config)
       @config = config
