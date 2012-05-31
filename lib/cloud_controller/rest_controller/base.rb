@@ -38,6 +38,7 @@ module VCAP::CloudController::RestController
     #
     # @return [Hash] the parsed parameter hash
     def parse_params(params)
+      logger.debug2 "#{log_prefix} parse_params: #{params}"
       # FIXME: replace with URI parse on the query string.
       # Sinatra squshes duplicate query parms into a single entry rather
       # than an array (which we might have for q)
@@ -67,11 +68,12 @@ module VCAP::CloudController::RestController
     # @return [Object] Returns an array of [http response code, Header hash,
     # body string], or just a body string.
     def dispatch(op, *args)
+      logger.debug2 "#{log_prefix} dispatch: #{op}"
       send(op, *args)
     rescue Sequel::ValidationFailed => e
-      raise self.class.translate_and_log_exception(@logger, e)
+      raise self.class.translate_and_log_exception(logger, e)
     rescue Sequel::DatabaseError => e
-      raise self.class.translate_and_log_exception(@logger, e)
+      raise self.class.translate_and_log_exception(logger, e)
     end
 
     # Common managment of quota enforcement.
@@ -117,6 +119,7 @@ module VCAP::CloudController::RestController
       validate_class_access(:create)
       @request_attrs = Yajl::Parser.new.parse(json)
       raise InvalidRequest unless request_attrs
+      logger.debug2 "#{log_prefix} create: #{request_attrs}"
 
       with_quota_enforcement(create_quota_token_request) do
         obj = model.create_from_hash(request_attrs)
@@ -130,6 +133,7 @@ module VCAP::CloudController::RestController
     #
     # @param [String] id The GUID of the object to read.
     def read(id)
+      logger.debug2 "#{log_prefix} read: #{id}"
       obj = find_id_and_validate_access(:read, id)
       ObjectSerialization.render_json(self.class, obj, @opts)
     end
@@ -144,6 +148,7 @@ module VCAP::CloudController::RestController
       obj = find_id_and_validate_access(:update, id)
       @request_attrs = Yajl::Parser.new.parse(json)
       raise InvalidRequest unless request_attrs
+      logger.debug2 "#{log_prefix} update: #{id} #{request_attrs}"
 
       with_quota_enforcement(update_quota_token_request(obj)) do
         obj.update_from_hash(request_attrs)
@@ -156,6 +161,7 @@ module VCAP::CloudController::RestController
     #
     # @param [String] id The GUID of the object to delete.
     def delete(id)
+      logger.debug2 "#{log_prefix} update: #{id}"
       obj = find_id_and_validate_access(:delete, id)
       obj.destroy
       [HTTP::NO_CONTENT, nil]
@@ -167,6 +173,7 @@ module VCAP::CloudController::RestController
     def enumerate
       raise NotAuthenticated unless @user
       authz_filter = admin_enumeration_filter
+      logger.debug2 "#{log_prefix} enumerate: #{authz_filter.inspect}"
       ds = Query.dataset_from_query_params(model, authz_filter,
                                            self.class.query_parameters, @opts)
       Paginator.render_json(self.class, ds, @opts)
@@ -241,6 +248,22 @@ module VCAP::CloudController::RestController
     # @return [Sequel::Model] The model associated with this api endpoint.
     def model
       self.class.model
+    end
+
+    # The log prefix to use on all log lines.
+    #
+    # TODO: see if we can dup the logger and add our own prefix.
+    #
+    # @return [String] The log prefix to use on all log lines.
+    def log_prefix
+      self.class.class_basename
+    end
+
+    # Our logger.
+    #
+    # @return [VCAP::Logger] The logger.
+    def logger
+      @logger
     end
 
     attr_accessor :request_attrs

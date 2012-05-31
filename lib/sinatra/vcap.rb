@@ -88,6 +88,8 @@ module Sinatra
       end
 
       before do
+        # TODO: wrap the logger with a sesion logger like we
+        # do in caldecott
         logger_name = opts[:logger_name] || "vcap.api"
         env["rack.logger"] = ::VCAP::Logging.logger(logger_name)
       end
