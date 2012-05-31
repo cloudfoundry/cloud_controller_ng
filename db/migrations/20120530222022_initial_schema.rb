@@ -1,0 +1,213 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
+# Helper to create migrations.  This was added because
+# I wanted to add an index to all the Timestamps so that
+# we can enumerate by :created_at.
+#
+# TODO: decide on a better way of mixing this in to whatever
+# context Sequel.migration is running in so that we can call
+# the migration methods.
+module VCAP
+  module Migration
+    def self.timestamps(migration)
+      migration.Timestamp :created_at, :null => false, :index => true
+      migration.Timestamp :updated_at, :index => true
+    end
+
+    def self.guid(migration)
+      migration.String :guid, :null => false, :index => true
+    end
+
+    def self.common(migration)
+      migration.primary_key :id
+      guid(migration)
+      timestamps(migration)
+    end
+
+    def self.user_fk(migration)
+      # need to use the composite foreign key form,
+      # otherwise the default migrator tries to make this
+      # an Integer column.
+      migration.String :user_id, :null => false
+      migration.foreign_key [:user_id], :users
+    end
+  end
+end
+
+Sequel.migration do
+  change do
+    create_table :users do
+      String :id, :null => false, :primary_key => true
+
+      Boolean :admin,  :default => false
+      Boolean :active, :default => false
+
+      VCAP::Migration.timestamps(self)
+    end
+
+    create_table :organizations do
+      VCAP::Migration.common(self)
+      String :name, :null => false, :index => true, :unique => true
+    end
+
+    create_table(:organizations_users) do
+      VCAP::Migration.user_fk(self)
+
+      foreign_key :organization_id, :organizations, :null => false
+      index [:organization_id, :user_id], :unique => true
+    end
+
+    create_table :app_spaces do
+      VCAP::Migration.common(self)
+
+      String :name, :null => false
+
+      foreign_key :organization_id, :organizations, :null => false
+      index [:organization_id, :name], :unique => true
+    end
+
+    create_table(:app_spaces_users) do
+      VCAP::Migration.user_fk(self)
+      foreign_key :app_space_id, :app_spaces, :null => false
+      index [:app_space_id, :user_id], :unique => true
+    end
+
+    create_table :service_auth_tokens do
+      VCAP::Migration.common(self)
+
+      String :label,         :null => false
+      String :provider,      :null => false
+      String :crypted_token, :null => false
+
+      index [:label, :provider], :unique => true
+    end
+
+    create_table :services do
+      VCAP::Migration.common(self)
+
+      String :label,       :null => false, :index => true
+      String :provider,    :null => false
+      String :url,         :null => false
+      String :type,        :null => false
+      String :description, :null => false
+      String :version,     :null => false
+
+      String  :info_url
+      String  :acls
+      Integer :timeout
+      Boolean :active, :default => false
+
+      index [:label, :provider], :unique => true
+    end
+
+    create_table :service_plans do
+      VCAP::Migration.common(self)
+
+      String :name,        :null => false
+      String :description, :null => false
+
+      foreign_key :service_id, :services, :null => false
+      index [:service_id, :name], :unique => true
+    end
+
+    create_table :service_instances do
+      VCAP::Migration.common(self)
+
+      String :name, :null => false, :index => true
+
+      # the creds are needed for bacwkards compatability, but,
+      # they should be deprecated in place of bindings only
+      String :credentials, :null => false
+      String :vendor_data
+
+      foreign_key :app_space_id,    :app_spaces,        :null => false
+      foreign_key :service_plan_id, :service_plans,     :null => false
+
+      index [:app_space_id, :name], :unique => true
+    end
+
+    create_table :runtimes do
+      VCAP::Migration.common(self)
+
+      String :name,        :null => false
+      String :description, :null => false
+
+      index :name, :unique => true
+    end
+
+    create_table :frameworks do
+      VCAP::Migration.common(self)
+
+      String :name,        :null => false
+      String :description, :null => false
+
+      index :name, :unique => true
+    end
+
+    create_table :apps do
+      VCAP::Migration.common(self)
+
+      String :name, :null => false
+
+      # environment provided by the developer.
+      # does not include environment from service
+      # bindings.  those get merged from the bound
+      # services
+      String :environment_json
+
+      # quota settings
+      #
+      # FIXME: these defaults are going to move out of here and into
+      # the upper layers so that they are more easily run-time configurable
+      #
+      # This *MUST* be moved because we have to know up at the controller
+      # what the actual numbers are going to be so that we can
+      # send the correct billing events to the "money maker"
+      Integer :memory,           :default => 256
+      Integer :instances,        :default => 0
+      Integer :file_descriptors, :default => 256
+      Integer :disk_quota,       :default => 2048
+
+      # app state
+      # TODO: this is a place holder
+      String :state,             :null => false, :default => "STOPPED"
+
+      # package state
+      # TODO: this is a place holder
+      String :package_state,     :null => false, :default => "PENDING"
+      String :package_hash
+
+      # TODO: sort out the legacy cc fields of metadata and run_count
+
+      foreign_key :app_space_id, :app_spaces, :null => false
+      foreign_key :runtime_id,   :runtimes,   :null => false
+      foreign_key :framework_id, :frameworks, :null => false
+
+      index [:app_space_id, :name], :unique => true
+    end
+
+    create_table(:service_bindings) do
+      VCAP::Migration.common(self)
+
+      String :credentials, :null => false
+      String :binding_options
+      String :vendor_data
+
+      foreign_key :app_id, :apps, :null => false
+      foreign_key :service_instance_id, :service_instances, :null => false
+      index [:app_id, :service_instance_id], :unique => true
+    end
+
+    create_table(:organizations_managers) do
+      foreign_key :organization_id, :organizations, :null => false
+      VCAP::Migration.user_fk(self)
+      index [:organization_id, :user_id], :unique => true
+    end
+
+    create_table(:organizations_billing_managers) do
+      foreign_key :organization_id, :organizations, :null => false
+      VCAP::Migration.user_fk(self)
+      index [:organization_id, :user_id], :unique => true
+    end
+  end
+end
