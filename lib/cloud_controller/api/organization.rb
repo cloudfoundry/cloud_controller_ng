@@ -34,12 +34,13 @@ module VCAP::CloudController
     def update_quota_token_request(org)
       # TODO: sync payload with ilia
       {
-        :path => "/quota/#{org.guid}",
+        :path => "#{org.guid}",
         :body => {
-          :user_id      => @user.id,
+          :op           => "put",
+          :user_id      => @user.guid,
           :object       => "org",
           :object_id    => org.guid,
-          :object_name  => request_attrs["name"],
+          :object_name  => request_attrs["name"] || org.name,
           :audit_data   => request_attrs
         }
       }
