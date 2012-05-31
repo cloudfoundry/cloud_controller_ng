@@ -161,7 +161,7 @@ Let's double check our org:
 
 Let's rename the org:
 
-    curl -v -X PUT -H "Content-Type: application/json" \
+curl -v -X PUT -H "Content-Type: application/json" \
      -H "Authorization: $AUTH_TOKEN" \
      -d '{"name":"ilia likes orgs"}' \
      http://$CCNG_HOST/v2/organizations/$ORG_GUID
