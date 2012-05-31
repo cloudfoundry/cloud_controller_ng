@@ -12,14 +12,16 @@ gem "vcap_common"
 gem "vcap_logging"
 gem "cf-uaa-client", "~> 0.0.12.beta.2"
 
+group :production do
+  gem "pg"
+end
+
 group :development do
-  gem "ruby-debug19"
   gem "sqlite3"
   gem "ruby-graphviz"
 end
 
 group :test do
-  gem "ruby-debug19"
   gem "rspec"
   gem "simplecov"
   gem "sqlite3"
