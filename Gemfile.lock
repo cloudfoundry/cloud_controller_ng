@@ -55,7 +55,8 @@ GEM
     em-socksify (0.1.0)
       eventmachine
     http_parser.rb (0.5.3)
-    interact (0.4.3)
+    httpclient (2.2.5)
+    interact (0.4)
     json_pure (1.7.3)
     launchy (2.1.0)
       addressable (~> 2.2.6)
@@ -119,6 +120,7 @@ DEPENDENCIES
   bcrypt-ruby
   cf-uaa-client (~> 0.2.0)!
   eventmachine!
+  httpclient
   machinist (~> 1.0.6)
   pg
   rake
