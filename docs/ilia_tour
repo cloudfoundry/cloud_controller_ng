@@ -316,3 +316,50 @@ Now if we fetch the url association for that user again:
     }
 
     Yep.. he shows up in org 1 as expected.
+
+
+Inlining relations is now supported:
+
+    curl -v -H "Authorization: iliag@vmware.com" \
+     http://localhost:8080/v2/organizations?inline-relations-depth=1
+
+    {
+      total_results": 1,
+      "prev_url": null,
+      "next_url": null,
+      "resources": [
+        {
+          "metadata": {
+            "id": 1,
+            "url": "/v2/organizations/1",
+            "created_at": "2012-05-14 12:49:31 -0700",
+            "updated_at": "2012-05-14 13:09:59 -0700"
+          },
+          "entity": {
+            "name": "ilia likes orgs",
+            "users_url": "/v2/users?q=organization_id:1",
+            "users": [
+            {
+              "metadata": {
+                "id": "1234-4567-89AB-CDEF",
+                "url": "/v2/users/1234-4567-89AB-CDEF",
+                "created_at": "2012-05-14 12:57:08 -0700",
+                "updated_at": null
+              },
+              "entity": {
+                "id": "1234-4567-89AB-CDEF",
+                "admin": false,
+                "active": false,
+                "organizations_url": "/v2/organizations?q=user_id:1234-4567-89AB-CDEF",
+                "app_spaces_url": "/v2/app_spaces?q=user_id:1234-4567-89AB-CDEF"
+              }
+            }
+            ],
+              "app_spaces_url": "/v2/app_spaces?q=organization_id:1",
+              "app_spaces": [
+
+                ]
+          }
+        }
+      ]
+    }
