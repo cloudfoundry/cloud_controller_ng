@@ -7,22 +7,27 @@ module VCAP::CloudController
       full Permissions::OrgManager
       read Permissions::OrgUser
       read Permissions::BillingManager
+      read Permissions::Auditor
     end
 
     define_attributes do
       attribute :name, String
-      to_many   :users
       to_many   :app_spaces, :exclude_in => :create
+      to_many   :users
       to_many   :managers
       to_many   :billing_managers
+      to_many   :auditors
     end
 
-    query_parameters :name, :user_guid, :app_space_guid
+    query_parameters :name, :app_space_guid,
+                     :user_guid, :manager_guid, :billing_manager_guid,
+                     :auditor_guid
 
     def enumeration_filter
       { :managers => [@user],
         :users => [@user],
-        :billing_managers => [@user]
+        :billing_managers => [@user],
+        :auditors => [@user]
       }.sql_or
     end
 

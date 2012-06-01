@@ -14,7 +14,13 @@ module VCAP::CloudController::Models
     many_to_many      :billing_managed_organizations,
                       :class => "VCAP::CloudController::Models::Organization",
                       :join_table => "organizations_billing_managers",
-                      :right_key => :organization_id, :reciprocol => :billing_managers
+                      :right_key => :organization_id,
+                      :reciprocol => :billing_managers
+
+    many_to_many      :audited_organizations,
+                      :class => "VCAP::CloudController::Models::Organization",
+                      :join_table => "organizations_auditors",
+                      :right_key => :organization_id, :reciprocol => :auditors
 
     many_to_many      :app_spaces
 
@@ -26,6 +32,7 @@ module VCAP::CloudController::Models
                       :organization_guids,
                       :managed_organization_guids,
                       :billing_managed_organization_guids,
+                      :audited_organization_guids,
                       :app_space_guids
 
     def validate
