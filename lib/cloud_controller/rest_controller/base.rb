@@ -38,7 +38,17 @@ module VCAP::CloudController::RestController
     #
     # @return [Hash] the parsed parameter hash
     def parse_params(params)
-      { :q => params["q"] }
+      # FIXME: replace with URI parse on the query string.
+      # Sinatra squshes duplicate query parms into a single entry rather
+      # than an array (which we might have for q)
+      res = {}
+      [ [ "inline-relations-depth", Integer ],
+        [ "q",                      String  ]
+      ].each do |key, klass|
+        val = params[key]
+        res[key.underscore.to_sym] = Object.send(klass.name, val) if val
+      end
+      res
     end
 
     # Main entry point for the rest routes.  Acts as the final location
@@ -73,7 +83,7 @@ module VCAP::CloudController::RestController
       obj = model.create_from_hash(attributes)
       [HTTP::CREATED,
        { "Location" => "#{self.class.path}/#{obj.id}" },
-      ObjectSerialization.render_json(self.class, obj)]
+      ObjectSerialization.render_json(self.class, obj, @opts)]
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, attributes)
     end
@@ -83,7 +93,7 @@ module VCAP::CloudController::RestController
     # @param [String] id The GUID of the object to read.
     def read(id)
       obj = find_id_and_validate_access(:read, id)
-      ObjectSerialization.render_json(self.class, obj)
+      ObjectSerialization.render_json(self.class, obj, @opts)
     end
 
     # Update operation
@@ -97,7 +107,7 @@ module VCAP::CloudController::RestController
       attributes = Yajl::Parser.new.parse(json)
       obj.update_from_hash(attributes)
       obj.save
-      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj)]
+      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, attributes)
     end
@@ -120,7 +130,7 @@ module VCAP::CloudController::RestController
                                            self.class.query_parameters, @opts)
       resources = []
       ds.all.each do |m|
-        resources << ObjectSerialization.to_hash(self.class, m)
+        resources << ObjectSerialization.to_hash(self.class, m, @opts)
       end
 
       res = {}

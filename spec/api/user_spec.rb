@@ -14,8 +14,7 @@ describe VCAP::CloudController::User do
     :many_to_many_collection_ids => {
       :organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
       :app_spaces    => lambda { |user|
-         org = VCAP::CloudController::Models::Organization.make
-         user.add_organization(org)
+         org = user.organizations.first || VCAP::CloudController::Models::Organization.make
          VCAP::CloudController::Models::AppSpace.make(:organization => org)
       }
     }
