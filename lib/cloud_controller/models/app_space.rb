@@ -11,9 +11,9 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name, :organization_id
+    export_attributes :name, :organization_guid
 
-    import_attributes :name, :organization_id, :user_ids
+    import_attributes :name, :organization_guid, :user_guids
 
     strip_attributes  :name
 

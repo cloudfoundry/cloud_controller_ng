@@ -3,7 +3,6 @@
 require File.join(File.dirname(__FILE__), 'spec_helper')
 
 describe VCAP::CloudController::Runtime do
-  let(:runtime) { VCAP::CloudController::Models::Runtime.make }
 
   it_behaves_like "a CloudController API", {
     :path                 => '/v2/runtimes',

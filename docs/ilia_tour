@@ -23,7 +23,7 @@ Setup CCNG_HOST env var:
    instance, i.e. you might be running on CF, set a CCNG_HOST
    env var to make it easier to cut/paste the commands below:
 
-       export CCNG_HOST=locahost:8080
+       export CCNG_HOST=localhost:8181
    or
        export CCNG_HOST=ccng.p01.rbconsvcs.com
 
@@ -108,17 +108,17 @@ Ok, now lets do the create org call for real:
  Now this time you should get something back like:
     {
       "metadata": {
-        "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+        "guid": "d815bcf5-5318-41dc-a0cc-72311afca065",
         "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
         "created_at": "2012-05-30 10:55:34 -0700",
         "updated_at": null
       },
       "entity": {
         "name": "my cool org2",
-        "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+        "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
       }
     }
 
@@ -129,26 +129,26 @@ Ok, now lets do the create org call for real:
 
 
 Export the Org id to an env var so that examples can be cut/paste:
-   export ORG_ID=d815bcf5-5318-41dc-a0cc-72311afca065
+   export ORG_GUID=d815bcf5-5318-41dc-a0cc-72311afca065
 
 Let's double check our org:
 
    curl -v -H "Authorization: $AUTH_TOKEN" \
-    http://$CCNG_HOST/v2/organizations/$ORG_ID
+    http://$CCNG_HOST/v2/organizations/$ORG_GUID
 
     {
       "metadata": {
-        "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+        "guid": "d815bcf5-5318-41dc-a0cc-72311afca065",
         "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
         "created_at": "2012-05-30 10:55:34 -0700",
         "updated_at": null
       },
       "entity": {
         "name": "my cool org2",
-        "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+        "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
       }
     }
 
@@ -161,21 +161,21 @@ Let's rename the org:
     curl -v -X PUT -H "Content-Type: application/json" \
      -H "Authorization: $AUTH_TOKEN" \
      -d '{"name":"ilia likes orgs"}' \
-     http://$CCNG_HOST/v2/organizations/$ORG_ID
+     http://$CCNG_HOST/v2/organizations/$ORG_GUID
 
     {
       "metadata": {
-        "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+        "guid": "d815bcf5-5318-41dc-a0cc-72311afca065",
         "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
         "created_at": "2012-05-30 10:55:34 -0700",
         "updated_at": "2012-05-30 10:57:56 -0700"
       },
       "entity": {
         "name": "ilia likes orgs",
-        "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+        "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
       }
     }
 
@@ -183,22 +183,22 @@ Let's go create a user:
 
     curl -v -X POST -H "Content-Type: application/json" \
      -H "Authorization: $AUTH_TOKEN" \
-     -d '{"id":"1234-4567-89AB-CDEF"}' \
+     -d '{"guid":"1234-4567-89AB-CDEF"}' \
      http://$CCNG_HOST/v2/users
 
     {
       "metadata": {
-        "id": "1234-4567-89AB-CDEF",
+        "guid": "1234-4567-89AB-CDEF",
           "url": "/v2/users/1234-4567-89AB-CDEF",
           "created_at": "2012-05-30 10:58:41 -0700",
           "updated_at": null
       },
         "entity": {
-          "id": "1234-4567-89AB-CDEF",
+          "guid": "1234-4567-89AB-CDEF",
           "admin": false,
           "active": false,
-          "organizations_url": "/v2/organizations?q=user_id:1234-4567-89AB-CDEF",
-          "app_spaces_url": "/v2/app_spaces?q=user_id:1234-4567-89AB-CDEF"
+          "organizations_url": "/v2/organizations?q=user_guid:1234-4567-89AB-CDEF",
+          "app_spaces_url": "/v2/app_spaces?q=user_guid:1234-4567-89AB-CDEF"
         }
     }
 
@@ -219,32 +219,32 @@ all uaa_ids are basically arbitrary text strings as far as the CC is concerned)
       "resources": [
         {
           "metadata": {
-            "id": "aaa-bbb-ccc",
+            "guid": "aaa-bbb-ccc",
             "url": "/v2/users/aaa-bbb-ccc",
             "created_at": "2012-05-30 10:54:32 -0700",
             "updated_at": null
           },
           "entity": {
-            "id": "aaa-bbb-ccc",
+            "guid": "aaa-bbb-ccc",
             "admin": true,
             "active": true,
-            "organizations_url": "/v2/organizations?q=user_id:aaa-bbb-ccc",
-            "app_spaces_url": "/v2/app_spaces?q=user_id:aaa-bbb-ccc"
+            "organizations_url": "/v2/organizations?q=user_guid:aaa-bbb-ccc",
+            "app_spaces_url": "/v2/app_spaces?q=user_guid:aaa-bbb-ccc"
           }
         },
         {
           "metadata": {
-            "id": "1234-4567-89AB-CDEF",
+            "guid": "1234-4567-89AB-CDEF",
             "url": "/v2/users/1234-4567-89AB-CDEF",
             "created_at": "2012-05-30 10:58:41 -0700",
             "updated_at": null
           },
           "entity": {
-            "id": "1234-4567-89AB-CDEF",
+            "guid": "1234-4567-89AB-CDEF",
             "admin": false,
             "active": false,
-            "organizations_url": "/v2/organizations?q=user_id:1234-4567-89AB-CDEF",
-            "app_spaces_url": "/v2/app_spaces?q=user_id:1234-4567-89AB-CDEF"
+            "organizations_url": "/v2/organizations?q=user_guid:1234-4567-89AB-CDEF",
+            "app_spaces_url": "/v2/app_spaces?q=user_guid:1234-4567-89AB-CDEF"
           }
         }
       ]
@@ -267,17 +267,17 @@ Check the orgs the same way:
       "resources": [
         {
           "metadata": {
-            "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+            "guid": "d815bcf5-5318-41dc-a0cc-72311afca065",
             "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
             "created_at": "2012-05-30 10:55:34 -0700",
             "updated_at": "2012-05-30 10:57:56 -0700"
           },
           "entity": {
             "name": "ilia likes orgs",
-            "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+            "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
         }
       ]
@@ -289,7 +289,7 @@ the 1234-... user.
 
     curl -v \
      -H "Authorization: $AUTH_TOKEN" \
-     http://$CCNG_HOST/v2/organizations?q=user_id:1234-4567-89AB-CDEF
+     http://$CCNG_HOST/v2/organizations?q=user_guid:1234-4567-89AB-CDEF
 
     {
       "total_results": 0,
@@ -308,22 +308,22 @@ Now let's add that 1234-... user to an org:
 
     curl -v -X PUT -H "Content-Type: application/json" \
      -H "Authorization: $AUTH_TOKEN" \
-     -d '{"user_ids":["1234-4567-89AB-CDEF"]}' \
-     http://$CCNG_HOST/v2/organizations/$ORG_ID
+     -d '{"user_guids":["1234-4567-89AB-CDEF"]}' \
+     http://$CCNG_HOST/v2/organizations/$ORG_GUID
 
     {
       "metadata": {
-        "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+        "guid": "d815bcf5-5318-41dc-a0cc-72311afca065",
         "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
         "created_at": "2012-05-30 10:55:34 -0700",
         "updated_at": "2012-05-30 11:03:18 -0700"
       },
         "entity": {
           "name": "ilia likes orgs",
-          "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-          "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-          "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-          "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+          "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+          "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+          "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+          "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
         }
     }
 
@@ -331,7 +331,7 @@ Now if we fetch the url association for that user again:
 
     curl -v \
      -H "Authorization: $AUTH_TOKEN" \
-      http://$CCNG_HOST/v2/organizations?q=user_id:1234-4567-89AB-CDEF
+      http://$CCNG_HOST/v2/organizations?q=user_guid:1234-4567-89AB-CDEF
 
     {
       "total_results": 1,
@@ -341,17 +341,17 @@ Now if we fetch the url association for that user again:
       "resources": [
         {
           "metadata": {
-            "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+            "guid": "d815bcf5-5318-41dc-a0cc-72311afca065",
             "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
             "created_at": "2012-05-30 10:55:34 -0700",
             "updated_at": "2012-05-30 11:03:18 -0700"
           },
           "entity": {
             "name": "ilia likes orgs",
-            "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+            "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
         }
       ]
@@ -374,40 +374,40 @@ inlining relations is now supported:
       "resources": [
         {
           "metadata": {
-            "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+            "guid": "d815bcf5-5318-41dc-a0cc-72311afca065",
             "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
             "created_at": "2012-05-30 10:55:34 -0700",
             "updated_at": "2012-05-30 11:03:18 -0700"
           },
           "entity": {
             "name": "ilia likes orgs",
-            "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "users": [
               {
                 "metadata": {
-                  "id": "1234-4567-89AB-CDEF",
+                  "guid": "1234-4567-89AB-CDEF",
                   "url": "/v2/users/1234-4567-89AB-CDEF",
                   "created_at": "2012-05-30 10:58:41 -0700",
                   "updated_at": null
                 },
                 "entity": {
-                  "id": "1234-4567-89AB-CDEF",
+                  "guid": "1234-4567-89AB-CDEF",
                   "admin": false,
                   "active": false,
-                  "organizations_url": "/v2/organizations?q=user_id:1234-4567-89AB-CDEF",
-                  "app_spaces_url": "/v2/app_spaces?q=user_id:1234-4567-89AB-CDEF"
+                  "organizations_url": "/v2/organizations?q=user_guid:1234-4567-89AB-CDEF",
+                  "app_spaces_url": "/v2/app_spaces?q=user_guid:1234-4567-89AB-CDEF"
                 }
               }
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "app_spaces": [
 
             ],
-            "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "managers": [
 
             ],
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "billing_managers": [
 
             ]
@@ -443,32 +443,32 @@ And now enumerate them:
       "resources": [
         {
           "metadata": {
-            "id": "d815bcf5-5318-41dc-a0cc-72311afca065",
+            "guid": "d815bcf5-5318-41dc-a0cc-72311afca065",
             "url": "/v2/organizations/d815bcf5-5318-41dc-a0cc-72311afca065",
             "created_at": "2012-05-30 10:55:34 -0700",
             "updated_at": "2012-05-30 11:11:29 -0700"
           },
           "entity": {
             "name": "ilia likes orgs",
-            "users_url": "/v2/users?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "managers_url": "/v2/users?q=managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:d815bcf5-5318-41dc-a0cc-72311afca065"
+            "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
         },
         {
           "metadata": {
-            "id": "2d069ce5-f964-40c9-9982-1e571d477606",
+            "guid": "2d069ce5-f964-40c9-9982-1e571d477606",
             "url": "/v2/organizations/2d069ce5-f964-40c9-9982-1e571d477606",
             "created_at": "2012-05-30 11:06:07 -0700",
             "updated_at": null
           },
           "entity": {
             "name": "org 49 5f108b412c9c97766bf13dc3ea579998",
-            "users_url": "/v2/users?q=organization_id:2d069ce5-f964-40c9-9982-1e571d477606",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:2d069ce5-f964-40c9-9982-1e571d477606",
-            "managers_url": "/v2/users?q=managed_organization_id:2d069ce5-f964-40c9-9982-1e571d477606",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:2d069ce5-f964-40c9-9982-1e571d477606"
+            "users_url": "/v2/users?q=organization_guid:2d069ce5-f964-40c9-9982-1e571d477606",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:2d069ce5-f964-40c9-9982-1e571d477606",
+            "managers_url": "/v2/users?q=managed_organization_guid:2d069ce5-f964-40c9-9982-1e571d477606",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:2d069ce5-f964-40c9-9982-1e571d477606"
           }
         }
       ]
@@ -487,17 +487,17 @@ And go to the next page:
         "resources": [
         {
           "metadata": {
-            "id": "31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "guid": "31c32a6e-5859-4e00-aed0-2a1a3249c48a",
             "url": "/v2/organizations/31c32a6e-5859-4e00-aed0-2a1a3249c48a",
             "created_at": "2012-05-30 11:06:07 -0700",
             "updated_at": null
           },
           "entity": {
             "name": "org 50 220ce37cfb18f6fe9e487949bed0c4be",
-            "users_url": "/v2/users?q=organization_id:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
-            "managers_url": "/v2/users?q=managed_organization_id:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:31c32a6e-5859-4e00-aed0-2a1a3249c48a"
+            "users_url": "/v2/users?q=organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "managers_url": "/v2/users?q=managed_organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a"
           }
         },
         <snip.. of the next 50>
@@ -518,47 +518,47 @@ Or if you only want 3 on a page:
       "resources": [
         {
           "metadata": {
-            "id": "24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "guid": "24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "url": "/v2/organizations/24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
             "name": "org 3 57e2d7f93997aee937e32b1fd6929947",
-            "users_url": "/v2/users?q=organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
-            "managers_url": "/v2/users?q=managed_organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971"
+            "users_url": "/v2/users?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "managers_url": "/v2/users?q=managed_organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971"
           }
         },
         {
           "metadata": {
-            "id": "73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "guid": "73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "url": "/v2/organizations/73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
             "name": "org 4 f381ff8f09a8ca620133f8ab5c8f55c5",
-            "users_url": "/v2/users?q=organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
-            "managers_url": "/v2/users?q=managed_organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033"
+            "users_url": "/v2/users?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "managers_url": "/v2/users?q=managed_organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033"
           }
         },
         {
           "metadata": {
-            "id": "0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "guid": "0e7384c4-ed42-4e98-a1e0-66f619422923",
             "url": "/v2/organizations/0e7384c4-ed42-4e98-a1e0-66f619422923",
             "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
             "name": "org 5 e99a2a1e20794030c7067d14f508a778",
-            "users_url": "/v2/users?q=organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
-            "managers_url": "/v2/users?q=managed_organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923"
+            "users_url": "/v2/users?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "managers_url": "/v2/users?q=managed_organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923"
           }
         }
       ]
@@ -577,26 +577,26 @@ And pagination can be combined with inlining relations:
       "resources": [
         {
           "metadata": {
-            "id": "24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "guid": "24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "url": "/v2/organizations/24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
             "name": "org 3 57e2d7f93997aee937e32b1fd6929947",
-            "users_url": "/v2/users?q=organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "users_url": "/v2/users?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "app_spaces": [
 
             ],
-            "managers_url": "/v2/users?q=managed_organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "managers_url": "/v2/users?q=managed_organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "managers": [
 
             ],
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "billing_managers": [
 
             ]
@@ -604,26 +604,26 @@ And pagination can be combined with inlining relations:
         },
         {
           "metadata": {
-            "id": "73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "guid": "73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "url": "/v2/organizations/73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
             "name": "org 4 f381ff8f09a8ca620133f8ab5c8f55c5",
-            "users_url": "/v2/users?q=organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "users_url": "/v2/users?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "app_spaces": [
 
             ],
-            "managers_url": "/v2/users?q=managed_organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "managers_url": "/v2/users?q=managed_organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "managers": [
 
             ],
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "billing_managers": [
 
             ]
@@ -631,26 +631,26 @@ And pagination can be combined with inlining relations:
         },
         {
           "metadata": {
-            "id": "0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "guid": "0e7384c4-ed42-4e98-a1e0-66f619422923",
             "url": "/v2/organizations/0e7384c4-ed42-4e98-a1e0-66f619422923",
             "created_at": "2012-05-30 11:06:06 -0700",
             "updated_at": null
           },
           "entity": {
             "name": "org 5 e99a2a1e20794030c7067d14f508a778",
-            "users_url": "/v2/users?q=organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "users_url": "/v2/users?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "app_spaces_url": "/v2/app_spaces?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "app_spaces": [
 
             ],
-            "managers_url": "/v2/users?q=managed_organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "managers_url": "/v2/users?q=managed_organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "managers": [
 
             ],
-            "billing_managers_url": "/v2/users?q=billing_managed_organization_id:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "billing_managers": [
 
             ]

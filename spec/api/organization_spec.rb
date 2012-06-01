@@ -27,12 +27,12 @@ describe VCAP::CloudController::Organization do
         get "/v2/organizations", {}, headers_for(member_a)
         last_response.should be_ok
         decoded_response["total_results"].should == 1
-        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_a.guid]
+        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@org_a.guid]
 
         get "/v2/organizations", {}, headers_for(member_b)
         last_response.should be_ok
         decoded_response["total_results"].should == 1
-        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_b.guid]
+        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@org_b.guid]
       end
 
       it "should not return orgs to a user with the #{perm_name} permission on a different org" do
@@ -47,7 +47,7 @@ describe VCAP::CloudController::Organization do
       it "should allow a user with the #{perm_name} permission to modify an org" do
         put "/v2/organizations/#{@org_a.guid}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(member_a))
         last_response.status.should == 201
-        decoded_response["metadata"]["id"].should == @org_a.guid
+        decoded_response["metadata"]["guid"].should == @org_a.guid
       end
 
       it "should not allow a user with the #{perm_name} permission on a different org to modify an org" do
@@ -71,7 +71,7 @@ describe VCAP::CloudController::Organization do
       it "should allow a user with the #{perm_name} permission to read an org" do
         get "/v2/organizations/#{@org_a.guid}", {}, headers_for(member_a)
         last_response.should be_ok
-        decoded_response["metadata"]["id"].should == @org_a.guid
+        decoded_response["metadata"]["guid"].should == @org_a.guid
       end
 
       it "should not allow a user with the #{perm_name} permission on another org to read an org" do
@@ -160,7 +160,7 @@ describe VCAP::CloudController::Organization do
         get "/v2/organizations", {}, headers_for(@cf_admin)
         last_response.should be_ok
         decoded_response["total_results"].should == 2
-        decoded_response["resources"].map { |o| o["metadata"]["id"] }.should == [@org_a.guid, @org_b.guid]
+        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@org_a.guid, @org_b.guid]
       end
 
       it "should allow a user with the CFAdmin permission to read any org" do
@@ -171,7 +171,7 @@ describe VCAP::CloudController::Organization do
       it "should allow a user with the CFAdmin permission to modify any org" do
         put "/v2/organizations/#{@org_a.guid}", Yajl::Encoder.encode({ :name => "#{@org_a.name}_renamed" }), json_headers(headers_for(@cf_admin))
         last_response.status.should == 201
-        decoded_response["metadata"]["id"].should == @org_a.guid
+        decoded_response["metadata"]["guid"].should == @org_a.guid
       end
 
       it "should allow a user with the CFAdmin permission to delete an org" do

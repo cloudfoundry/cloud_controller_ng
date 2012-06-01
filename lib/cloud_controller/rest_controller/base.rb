@@ -124,8 +124,7 @@ module VCAP::CloudController::RestController
     end
 
     def find_id_and_validate_access(op, id)
-      key = model.columns.include?(:guid) ? :guid : :id
-      obj = model.find(key => id)
+      obj = model.find(:guid => id)
       if obj
         validate_access(op, obj, @user)
       else
@@ -182,7 +181,7 @@ module VCAP::CloudController::RestController
       end
 
       def path_id
-        "#{path}/:id"
+        "#{path}/:guid"
       end
 
       def url_for_id(id)

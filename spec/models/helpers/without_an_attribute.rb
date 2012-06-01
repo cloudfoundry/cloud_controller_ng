@@ -17,9 +17,12 @@ module VCAP::CloudController::ModelSpecHelper
       end
 
       it "should fail due to database integrity checks" do
+        msg = without_attr
+        msg = :guid if without_attr == :uaa_id
+
         lambda {
           described_class.new(filtered_opts).save(:validate => false)
-        }.should raise_error Sequel::DatabaseError, /#{without_attr}/
+        }.should raise_error Sequel::DatabaseError, /#{msg}/
       end
       end
     end
