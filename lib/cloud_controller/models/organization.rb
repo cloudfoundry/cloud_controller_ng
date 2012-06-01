@@ -16,7 +16,7 @@ module VCAP::CloudController::Models
     default_order_by  :name
 
     export_attributes :name
-    import_attributes :name, :user_ids, :manager_ids, :billing_manager_ids
+    import_attributes :name, :user_guids, :manager_guids, :billing_manager_guids
 
     def validate
       validates_presence :name

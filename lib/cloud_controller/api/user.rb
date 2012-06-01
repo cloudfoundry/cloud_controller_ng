@@ -7,20 +7,20 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :id,            :exclude_in => :update
+      attribute :guid, :exclude_in => :update
       to_many   :organizations
       to_many   :app_spaces
-      attribute :admin,         Message::Boolean
+      attribute :admin, Message::Boolean
     end
 
-    query_parameters :app_space_id, :organization_id,
-                     :managed_organization_id,
-                     :billing_managed_organization_id
+    query_parameters :app_space_guid, :organization_guid,
+                     :managed_organization_guid,
+                     :billing_managed_organization_guid
 
     def self.translate_validation_exception(e, attributes)
-      id_errors = e.errors.on(:id)
-      if id_errors && id_errors.include?(:unique)
-        UaaIdTaken.new(attributes["id"])
+      guid_errors = e.errors.on(:guid)
+      if guid_errors && guid_errors.include?(:unique)
+        UaaIdTaken.new(attributes["guid"])
       else
         UserInvalid.new(e.errors.full_messages)
       end

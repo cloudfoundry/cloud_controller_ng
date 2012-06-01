@@ -2,7 +2,7 @@
 
 module VCAP::CloudController::Models
   class User < Sequel::Model
-    unrestrict_primary_key
+    no_auto_guid
 
     many_to_many      :organizations
 
@@ -20,17 +20,17 @@ module VCAP::CloudController::Models
 
     default_order_by  :id
 
-    export_attributes :id, :admin, :active
+    export_attributes :admin, :active
 
-    import_attributes :id, :admin, :active,
-                      :organization_ids,
-                      :managed_organization_ids,
-                      :billing_managed_organization_ids,
-                      :app_space_ids
+    import_attributes :guid, :admin, :active,
+                      :organization_guids,
+                      :managed_organization_guids,
+                      :billing_managed_organization_guids,
+                      :app_space_guids
 
     def validate
-      validates_presence :id
-      validates_unique :id
+      validates_presence :guid
+      validates_unique   :guid
     end
 
     def admin?
@@ -39,10 +39,6 @@ module VCAP::CloudController::Models
 
     def active?
       active
-    end
-
-    def guid
-      id
     end
   end
 end

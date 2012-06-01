@@ -25,7 +25,7 @@ module VCAP::CloudController::ApiSpecHelper
                                           config[:uaa][:symetric_secret],
                                           nil)
     unless user.nil?
-      user_token = token_coder.encode( { :user_id => user.id } )
+      user_token = token_coder.encode( { :user_id => user.guid } )
       headers['HTTP_AUTHORIZATION'] = "bearer #{user_token}"
     end
 
@@ -92,7 +92,7 @@ module VCAP::CloudController::ApiSpecHelper
     end
 
     it "should return an id in the metadata" do
-      metadata["id"].should_not be_nil
+      metadata["guid"].should_not be_nil
       # used to check if the id was an integer here, but now users
       # use uaa based ids, which are strings.
     end

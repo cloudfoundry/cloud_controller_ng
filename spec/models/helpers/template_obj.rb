@@ -27,8 +27,10 @@ module VCAP::CloudController::ModelSpecHelper
     def refresh
       @klass.associations.each do |name|
         association = @obj.send(name)
-        key = "#{name}_id"
-        @attributes[key] = association.class.make.id if @attributes[key]
+        ["id", "guid"].each do |k|
+          key = "#{name}_#{k}"
+          @attributes[key] = association.class.make.send(k) if @attributes[key]
+        end
       end
     end
   end

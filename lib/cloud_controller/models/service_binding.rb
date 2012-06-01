@@ -9,10 +9,10 @@ module VCAP::CloudController::Models
 
     default_order_by  :id
 
-    export_attributes :app_id, :service_instance_id, :credentials,
+    export_attributes :app_guid, :service_instance_guid, :credentials,
                       :binding_options, :vendor_data
 
-    import_attributes :app_id, :service_instance_id, :credentials,
+    import_attributes :app_guid, :service_instance_guid, :credentials,
                       :binding_options, :vendor_data
 
     def validate

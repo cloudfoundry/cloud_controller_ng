@@ -3,7 +3,6 @@
 require File.join(File.dirname(__FILE__), 'spec_helper')
 
 describe VCAP::CloudController::ServiceAuthToken do
-  let(:service_auth_token)   { VCAP::CloudController::Models::ServiceAuthToken.make }
 
   it_behaves_like "a CloudController API", {
     :path                 => '/v2/service_auth_tokens',

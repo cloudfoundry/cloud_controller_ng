@@ -14,7 +14,7 @@ module VCAP::CloudController
       to_one    :service_instance
     end
 
-    query_parameters :app_id, :service_instance_id
+    query_parameters :app_guid, :service_instance_guid
 
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])

@@ -76,7 +76,7 @@ Returns a paginated response of <%= api.class_basename %>s.
 | q                      | Search/filter string of the form `<attribute-name>:<value>` |
 
 The `q` query parameter may include the following `attribute-names`:
-* <%= api.query_parameters.join("\n* ") %>
+* <%= api.query_parameters.to_a.join("\n* ") %>
 <% end %>
 
 See the API Overview for a more detailed description of these parameters.

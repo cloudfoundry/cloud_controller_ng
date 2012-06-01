@@ -64,7 +64,7 @@ module VCAP::RestAPI
       q_key, q_val = parse
       filter_args = nil
 
-      if q_key =~ /(.*)_id$/
+      if q_key =~ /(.*)_(gu)?id$/
         attr = $1
 
         f_key = if model.associations.include?(attr.to_sym)
