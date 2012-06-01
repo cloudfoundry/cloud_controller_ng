@@ -98,6 +98,9 @@ Export the auth token to an env var so that examples can be cut/paste:
 
     export AUTH_TOKEN="bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYWFhLWJiYi1jY2MiLCJhdWQiOlsiY2xvdWRfb250cm9sbGVyIl0sImV4cCI6MTMzOTAwNTI5OX0.pkFvszKgVGc5Yp0BWcAwX-Vq1GCFXFb8khmZ4PAoGow"
 
+  or if you want to be fancy:
+    export AUTH_TOKEN=`curl http://$CCNG_HOST/bootstrap_token/aaa-bbb-ccc`
+
 Ok, now lets do the create org call for real:
 
    curl -X POST -v -H "Content-Type: application/json" \
