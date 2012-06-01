@@ -33,7 +33,7 @@ module VCAP::CloudController::ApiSpecHelper
 
       [:post, :put].each do |verb|
         path_desc = opts[:path]
-        path_desc = "#{opts[:path]}/:id" if verb == :put
+        path_desc = "#{opts[:path]}/:guid" if verb == :put
         describe "#{verb.to_s.upcase} #{path_desc}" do
           context "with all required attributes" do
             before do
@@ -58,8 +58,10 @@ module VCAP::CloudController::ApiSpecHelper
 
             it "should return the json encoded object in the entity hash" do
               non_synthetic_creation_opts.keys.each do |k|
-                entity[k.to_s].should_not be_nil
-                entity[k.to_s].should == creation_opts[k]
+                unless k == "guid"
+                  entity[k.to_s].should_not be_nil
+                  entity[k.to_s].should == creation_opts[k]
+                end
               end
             end
 
@@ -73,11 +75,7 @@ module VCAP::CloudController::ApiSpecHelper
 
               it "should have created the object pointed to in the location header" do
                 obj_id = last_response.location.split("/").last
-                obj = if opts[:model].columns.include?(:guid)
-                        opts[:model].find(:guid => obj_id)
-                      else
-                        opts[:model].find(:id => obj_id)
-                      end
+                obj = opts[:model].find(:guid => obj_id)
                 non_synthetic_creation_opts.keys.each do |k|
                   obj.send(k).should == creation_opts[k]
                 end

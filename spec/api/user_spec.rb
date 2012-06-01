@@ -3,14 +3,13 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::User do
-  let(:user) { u = VCAP::CloudController::Models::User.make }
 
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/users",
     :model                => VCAP::CloudController::Models::User,
-    :basic_attributes     => :id,
-    :required_attributes  => :id,
-    :unique_attributes    => :id,
+    :basic_attributes     => :guid,
+    :required_attributes  => :guid,
+    :unique_attributes    => :guid,
     :many_to_many_collection_ids => {
       :organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
       :app_spaces    => lambda { |user|

@@ -3,7 +3,6 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::Service do
-  let(:service)   { VCAP::CloudController::Models::Service.make }
 
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/services",

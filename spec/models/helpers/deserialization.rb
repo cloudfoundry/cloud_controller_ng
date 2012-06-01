@@ -4,8 +4,17 @@ module VCAP::CloudController::ModelSpecHelper
   shared_examples "deserialization" do |opts|
     context "with all required attributes" do
       let(:json_data) do
+        hash = {}
+
         obj = described_class.make
-        hash = obj.to_hash
+        opts[:required_attributes].each do |attr|
+          if described_class.associations.include?(attr)
+            hash["#{attr}_guid"] = obj.send(attr).guid
+          else
+            hash[attr] = obj.send(attr)
+          end
+        end
+
         obj.delete
 
         # used for things like password that we don't export

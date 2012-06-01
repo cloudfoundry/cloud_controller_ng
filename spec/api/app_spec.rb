@@ -13,9 +13,9 @@ describe VCAP::CloudController::App do
   it_behaves_like "a CloudController API", {
     :path                => "/v2/apps",
     :model               => VCAP::CloudController::Models::App,
-    :basic_attributes    => [:name, :app_space_id, :runtime_id, :framework_id],
-    :required_attributes => [:name, :app_space_id, :runtime_id, :framework_id],
-    :unique_attributes   => [:name, :app_space_id],
+    :basic_attributes    => [:name, :app_space_guid, :runtime_guid, :framework_guid],
+    :required_attributes => [:name, :app_space_guid, :runtime_guid, :framework_guid],
+    :unique_attributes   => [:name, :app_space_guid],
 
     :many_to_one_collection_ids => {
       :app_space       => lambda { |app| VCAP::CloudController::Models::AppSpace.make  },

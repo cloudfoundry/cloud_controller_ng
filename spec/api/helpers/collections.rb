@@ -39,7 +39,7 @@ module VCAP::CloudController::ApiSpecHelper
     end
 
     def do_write(verb, children, expected_result, expected_children)
-      body = Yajl::Encoder.encode({"#{@child_name}_ids" => children.map { |c| c[:id] }})
+      body = Yajl::Encoder.encode({"#{@child_name}_guids" => children.map { |c| c[:guid] }})
       send(verb, "#{@opts[:path]}/#{@obj.guid}", body, @headers)
       last_response.status.should == expected_result
 
@@ -160,7 +160,7 @@ module VCAP::CloudController::ApiSpecHelper
             include_context "collections", opts, attr, make
             child_name  = attr.to_s
 
-            describe "PUT #{opts[:path]}/:id with #{attr} in the request body" do
+            describe "PUT #{opts[:path]}/:guid with #{attr} in the request body" do
               # FIXME: right now, we ignore invalid input
               it "should return 200 but have no effect (FIXME: extra params on a PUT are currently ignored)" do
                 do_write(:put, [@child1], 201, [])
@@ -174,8 +174,8 @@ module VCAP::CloudController::ApiSpecHelper
         opts[:many_to_many_collection_ids].each do |attr, make|
           describe "#{attr}" do
             include_context "collections", opts, attr, make
-            child_name  = attr.to_s.chomp("_ids")
-            path = "#{opts[:path]}/:id"
+            child_name  = attr.to_s.chomp("_guids")
+            path = "#{opts[:path]}/:guid"
 
             describe "POST #{path} with only #{attr} in the request body" do
               before do
@@ -230,7 +230,7 @@ module VCAP::CloudController::ApiSpecHelper
       describe "reading collections" do
         describe "many_to_one" do
           opts[:many_to_one_collection_ids].each do |attr, make|
-            path = "#{opts[:path]}/:id"
+            path = "#{opts[:path]}/:guid"
 
             [nil, 0, 1].each do |inline_relations_depth|
               desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(inline_relations_depth)
@@ -239,8 +239,8 @@ module VCAP::CloudController::ApiSpecHelper
 
                 include_examples "inlined_relations", attr, inline_relations_depth
 
-                it "should return a #{attr}_id field" do
-                  entity.should have_key("#{attr}_id")
+                it "should return a #{attr}_guid field" do
+                  entity.should have_key("#{attr}_guid")
                 end
 
                 # this is basically the read api, so we'll do most of the
@@ -266,7 +266,7 @@ module VCAP::CloudController::ApiSpecHelper
 
           to_many_attrs = opts[:many_to_many_collection_ids].merge(opts[:one_to_many_collection_ids])
           to_many_attrs.each do |attr, make|
-            path = "#{opts[:path]}/:id"
+            path = "#{opts[:path]}/:guid"
 
             [nil, 0, 1].each do |inline_relations_depth|
               desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(inline_relations_depth)

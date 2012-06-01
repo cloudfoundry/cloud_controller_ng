@@ -17,7 +17,7 @@ module VCAP::CloudController
       to_many   :billing_managers
     end
 
-    query_parameters :name, :user_id, :app_space_id
+    query_parameters :name, :user_guid, :app_space_guid
 
     def enumeration_filter
       { :managers => [@user],

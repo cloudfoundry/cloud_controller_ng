@@ -20,7 +20,7 @@ module VCAP::CloudController
       to_many    :service_bindings,    :exclude_in => :create
     end
 
-    query_parameters :app_space_id, :organization_id, :framework_id, :runtime_id
+    query_parameters :app_space_guid, :organization_guid, :framework_guid, :runtime_guid
 
     def self.translate_validation_exception(e, attributes)
       app_space_and_name_errors = e.errors.on([:app_space_id, :name])

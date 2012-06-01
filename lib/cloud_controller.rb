@@ -39,7 +39,7 @@ module VCAP::CloudController
           token_information = token_coder.decode(auth_token)
           logger.info("Token received from the UAA #{token_information.inspect}")
           uaa_id = token_information[:user_id] if token_information
-          @user = Models::User.find(:id => uaa_id) if uaa_id
+          @user = Models::User.find(:guid => uaa_id) if uaa_id
         rescue => e
           logger.error("Invalid bearer token Message: #{e.message}")
         end
@@ -72,7 +72,7 @@ module VCAP::CloudController
     # This is is temporary for ilia
     get "/bootstrap_admin/:uaa_id" do |uaa_id|
       body VCAP::CloudController::Models::User.create_from_hash(
-        :id => uaa_id,
+        :guid => uaa_id,
         :admin => true,
         :active => true).to_json
 

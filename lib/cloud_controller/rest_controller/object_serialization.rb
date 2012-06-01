@@ -69,7 +69,7 @@ module VCAP::CloudController::RestController
 
       id = obj.guid || obj.id
       metadata_hash = {
-        "id"  => id,
+        "guid"  => id,
         "url" => controller.url_for_id(id),
         "created_at" => obj.created_at,
         "updated_at" => obj.updated_at
@@ -92,9 +92,9 @@ module VCAP::CloudController::RestController
         other_model = ar.associated_class
         other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
         q_key = if ar[:reciprocol]
-                  "#{ar[:reciprocol].to_s.singularize}_id"
+                  "#{ar[:reciprocol].to_s.singularize}_guid"
                 else
-                  "#{controller.class_basename.underscore}_id"
+                  "#{controller.class_basename.underscore}_guid"
                 end
         res["#{name}_url"] = "#{other_controller.path}?q=#{q_key}:#{obj.guid}"
 

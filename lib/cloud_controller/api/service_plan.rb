@@ -13,7 +13,7 @@ module VCAP::CloudController
       to_many   :service_instances
     end
 
-    query_parameters :service_id, :service_instance_id
+    query_parameters :service_guid, :service_instance_guid
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:service_id, :name])

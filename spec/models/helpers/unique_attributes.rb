@@ -67,7 +67,7 @@ module VCAP::CloudController::ModelSpecHelper
       end
 
       let(:db_exception_match) do
-        "columns? #{column_list.join(", ")} .* not unique"
+        "columns? #{column_list.join(", ")} .* not unique".sub("uaa_id", "guid")
       end
 
       before do

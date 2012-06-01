@@ -200,8 +200,7 @@ module VCAP::CloudController::RestController
     # @return [Sequel::Model] The sequel model for the object, only if
     # the use has access.
     def find_id_and_validate_access(op, id)
-      key = model.columns.include?(:guid) ? :guid : :id
-      obj = model.find(key => id)
+      obj = model.find(:guid => id)
       if obj
         validate_access(op, obj, @user)
       else
@@ -294,7 +293,7 @@ module VCAP::CloudController::RestController
       #
       # @return [String] The path/route to an instance of this class.
       def path_id
-        "#{path}/:id"
+        "#{path}/:guid"
       end
 
       # Return the url for a specfic id

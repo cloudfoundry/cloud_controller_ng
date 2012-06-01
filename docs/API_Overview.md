@@ -56,7 +56,7 @@ The following attributes are contained in the `metadata` section:
 
 | Attribute  | Description                                                                         |
 | ---------  | -----------                                                                         |
-| id         | Stable id for the resource.                                                         |
+| guid       | Stable id for the resource.                                                         |
 | url        | URL for the resource.                                                               |
 | created_at | Date/Timestamp the resource was created, e.g. "2012-01-01 13:42:00 -0700"           |
 | updated_at | Date/Timestamp the resource was updated.  null if the resource has not been updated |
@@ -77,7 +77,7 @@ The attributes for the FooBar are returned in a JSON encoded response body.
 
 ### Reading Resources
 
-`GET /v2/foo_bars/:id` returns the attributes for a specific
+`GET /v2/foo_bars/:guid` returns the attributes for a specific
 FooBar.
 
 A successful `GET` results in an HTTP 200.  The API endpoint should set the
@@ -142,7 +142,7 @@ Response:
   "resources": [
     {
       "metadata": {
-        "id": 5,
+        "guid": 5,
         "url": "/v2/foo_bars/5",
         "created_at":"2012-01-01 13:42:00 -0700",
         "updated_at":"2012-01-05 08:31:00 -0700"
@@ -154,7 +154,7 @@ Response:
     },
     {
       "metadata": {
-        "id": 7,
+        "guid": 7,
         "url": "/v2/foo_bars/7",
         "created_at":"2012-01-01 19:45:00 -0700",
         "updated_at":"2012-01-04 20:27:00 -0700"
@@ -185,7 +185,7 @@ unindexed search.
 
 ### Deleting Resources
 
-`DELETE /v2/foo_bars/:id` deletes a specific FooBar.
+`DELETE /v2/foo_bars/:guid` deletes a specific FooBar.
 
 The caller may specify the `If-Match` HTTP header to enable opportunistic
 concurrency.  This is not required.  If there is an opportunistic concurrency
@@ -202,7 +202,7 @@ were used.  Specically, if a resource with URL `/v2/foo_bars/99` has attributes
 ```json
 {
   "metadata": {
-    "id": 99,
+    "guid": 99,
     "url": "/v2/foo_bars/99",
     "created_at":"2012-01-01 13:42:00 -0700",
     "updated_at":"2012-01-03 09:15:00 -0700"
@@ -220,7 +220,7 @@ in a resource with the following attributes
 ```json
 {
   "metadata": {
-    "id": 99,
+    "guid": 99,
     "url": "/v2/foo_bars/99",
     "created_at":"2012-01-01 13:42:00 -0700",
     "updated_at":"2012-01-05 08:31:00 -0700"
@@ -253,12 +253,12 @@ Associations
 
 N-to-one relationships are indicated by an id and url attribute for the other
 resource.  For example, if a FooBar has a 1-to-1 relationship with a Baz,
-a `GET /v2/FooBar/:id` will return the following attributes related to
+a `GET /v2/FooBar/:guid` will return the following attributes related to
 the associated Baz (other attributes omitted)
 
 ```json
 {
-  "baz_id": 5,
+  "baz_guid": 5,
   "baz_url": "/v2/bazs/5"
 }
 ```
@@ -269,7 +269,7 @@ Setting an n-to-one association is done during the initial `POST` for the
 resource or during an update via `PUT`.  The caller only specifies the id,
 not the url.  For example, to update change the Baz associated with the FooBar
 in the example above, the caller could issue a
-`PUT /v2/FooBar/:id` with a body of `{ "baz_id": 10 }`.  To disassociate
+`PUT /v2/FooBar/:guid` with a body of `{ "baz_guid": 10 }`.  To disassociate
 the resources, set the id to `null`.
 
 ### N-to-Many
@@ -297,7 +297,7 @@ resource, during an update via `PUT`.
 
 To create the association during a `POST` or to edit it with a `PUT`, supply a
 an array of ids.  For example, in the FooBaz has multiple Bars example
-above, a caller could issue a `POST /v2/FooBaz` with a body of `{ "bar_ids": [1,
+above, a caller could issue a `POST /v2/FooBaz` with a body of `{ "bar_guid": [1,
 5, 10]}` to make an initial assocation of the new FooBaz with Bars with ids 1,
 5 and 10 (other attributes omitted).  Similarly, a `PUT` will update the
 assocations between the resources to only those provided in the list.
@@ -338,7 +338,7 @@ Response:
 ```json
 {
   "metadata": {
-    "id": 5,
+    "guid": 5,
     "url": "/v2/foo_bars/5",
     "created_at":"2012-01-01 13:42:00 -0700",
     "updated_at":"2012-01-05 08:31:00 -0700"
@@ -348,14 +348,14 @@ Response:
     "bars": [
       {
         "metadata": {
-          "id": 10,
-          "url": "/v2/bar/5",
+          "guid": 10,
+          "url": "/v2/bar/10",
           "created_at":"2012-01-03 11:22:00 -0700",
           "updated_at":"2012-01-07 09:03:00 -0700"
         },
         "entity": {
           "name": "some bar",
-          "baz_id": 99,
+          "baz_guid": 99,
           "baz_url": "/v2/bazs/99"
         }
       },
