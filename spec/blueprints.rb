@@ -20,7 +20,7 @@ end
 
 module VCAP::CloudController::Models
   User.blueprint do
-    id                { Sham.uaa_id }
+    guid              { Sham.uaa_id }
   end
 
   Organization.blueprint do

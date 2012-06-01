@@ -15,7 +15,7 @@ module VCAP::CloudController
       attribute :vendor_data,      String, :default => "" # FIXME: notation for access override here
     end
 
-    query_parameters :app_space_id, :service_plan_id, :service_binding_id
+    query_parameters :app_space_guid, :service_plan_guid, :service_binding_guid
 
     def self.translate_validation_exception(e, attributes)
       app_space_and_name_errors = e.errors.on([:app_space_id, :name])

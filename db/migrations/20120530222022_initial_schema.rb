@@ -15,7 +15,7 @@ module VCAP
     end
 
     def self.guid(migration)
-      migration.String :guid, :null => false, :index => true
+      migration.String :guid, :null => false, :index => true, :unique => true
     end
 
     def self.common(migration)
@@ -23,38 +23,21 @@ module VCAP
       guid(migration)
       timestamps(migration)
     end
-
-    def self.user_fk(migration)
-      # need to use the composite foreign key form,
-      # otherwise the default migrator tries to make this
-      # an Integer column.
-      migration.String :user_id, :null => false
-      migration.foreign_key [:user_id], :users
-    end
   end
 end
 
 Sequel.migration do
   change do
     create_table :users do
-      String :id, :null => false, :primary_key => true
+      VCAP::Migration.common(self)
 
       Boolean :admin,  :default => false
       Boolean :active, :default => false
-
-      VCAP::Migration.timestamps(self)
     end
 
     create_table :organizations do
       VCAP::Migration.common(self)
       String :name, :null => false, :index => true, :unique => true
-    end
-
-    create_table(:organizations_users) do
-      VCAP::Migration.user_fk(self)
-
-      foreign_key :organization_id, :organizations, :null => false
-      index [:organization_id, :user_id], :unique => true
     end
 
     create_table :app_spaces do
@@ -67,8 +50,8 @@ Sequel.migration do
     end
 
     create_table(:app_spaces_users) do
-      VCAP::Migration.user_fk(self)
       foreign_key :app_space_id, :app_spaces, :null => false
+      foreign_key :user_id, :users, :null => false
       index [:app_space_id, :user_id], :unique => true
     end
 
@@ -198,15 +181,21 @@ Sequel.migration do
       index [:app_id, :service_instance_id], :unique => true
     end
 
+    create_table(:organizations_users) do
+      foreign_key :organization_id, :organizations, :null => false
+      foreign_key :user_id, :users, :null => false
+      index [:organization_id, :user_id], :unique => true
+    end
+
     create_table(:organizations_managers) do
       foreign_key :organization_id, :organizations, :null => false
-      VCAP::Migration.user_fk(self)
+      foreign_key :user_id, :users, :null => false
       index [:organization_id, :user_id], :unique => true
     end
 
     create_table(:organizations_billing_managers) do
       foreign_key :organization_id, :organizations, :null => false
-      VCAP::Migration.user_fk(self)
+      foreign_key :user_id, :users, :null => false
       index [:organization_id, :user_id], :unique => true
     end
   end

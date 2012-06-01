@@ -13,7 +13,7 @@ module VCAP::CloudController
       to_many    :apps
     end
 
-    query_parameters :organization_id, :user_id, :app_id
+    query_parameters :organization_guid, :user_guid, :app_guid
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:organization_id, :name])

@@ -3,7 +3,6 @@
 require File.join(File.dirname(__FILE__), 'spec_helper')
 
 describe VCAP::CloudController::Framework do
-  let(:framework) { VCAP::CloudController::Models::Framework.make }
 
   it_behaves_like "a CloudController API", {
     :path                 => '/v2/frameworks',

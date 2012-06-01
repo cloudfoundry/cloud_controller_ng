@@ -2,6 +2,27 @@
 
 module Sequel::Plugins::VcapRelations
   module ClassMethods
+    # Override many_to_one in order to add <relation>_guid
+    # and <relation>_guid= methods.
+    #
+    # See the default many_to_one implementation for a description of the args
+    # and return values.
+    def many_to_one(name, *args)
+      guid_attr = "#{name}_guid"
+
+      define_method(guid_attr) do
+        send(name).guid
+      end
+
+      define_method("#{guid_attr}=") do |val|
+        ar = self.class.association_reflection(name)
+        other = ar.associated_class[:guid => val]
+        send("#{name}=", other)
+      end
+
+      super
+    end
+
     # Override many_to_many in order to add an override the default Sequel
     # methods for many_to_many relationships.
     #
