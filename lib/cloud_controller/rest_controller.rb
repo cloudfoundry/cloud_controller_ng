@@ -28,6 +28,6 @@ module VCAP::CloudController
   end
 
   def self.controller_from_model_name(model_name)
-    controller_from_name(model_name.split("::").last)
+    controller_from_name(model_name.to_s.split("::").last)
   end
 end
