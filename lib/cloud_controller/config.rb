@@ -9,7 +9,7 @@ class VCAP::CloudController::Config < VCAP::Config
     {
       :uaa => {
         :resource_id        => String,
-        :symetric_secret    => String
+        :symmetric_secret   => String
       },
 
       :secrets => {

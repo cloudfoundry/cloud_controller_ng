@@ -22,7 +22,7 @@ module VCAP::CloudController::ApiSpecHelper
   def headers_for(user, proxy_user = nil, https = false)
     headers = {}
     token_coder = CF::UAA::TokenCoder.new(config[:uaa][:resource_id],
-                                          config[:uaa][:symetric_secret],
+                                          config[:uaa][:symmetric_secret],
                                           nil)
     unless user.nil?
       user_token = token_coder.encode( { :user_id => user.guid } )

@@ -33,7 +33,7 @@ module VCAP::CloudController
       auth_token = env["HTTP_AUTHORIZATION"]
       if auth_token
         token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
-                                              @config[:uaa][:symetric_secret],
+                                              @config[:uaa][:symmetric_secret],
                                               nil)
         begin
           token_information = token_coder.decode(auth_token)
@@ -82,7 +82,7 @@ module VCAP::CloudController
     # This is temporary for ilia
     get "/bootstrap_token/:uaa_id" do |uaa_id|
       token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
-                                            @config[:uaa][:symetric_secret],
+                                            @config[:uaa][:symmetric_secret],
                                             nil)
       user_token = token_coder.encode( { :user_id => uaa_id } )
       "bearer #{user_token}"

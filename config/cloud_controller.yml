@@ -13,7 +13,7 @@ db:
 
 uaa:
   resource_id: "cloud_controller"
-  symetric_secret: "symetric secret"
+  symmetric_secret: "symmetric secret"
 
 secrets:
   user_token:
