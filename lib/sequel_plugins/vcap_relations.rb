@@ -7,7 +7,7 @@ module Sequel::Plugins::VcapRelations
     #
     # See the default many_to_one implementation for a description of the args
     # and return values.
-    def many_to_one(name, *args)
+    def many_to_one(name, opts = {})
       guid_attr = "#{name}_guid"
 
       define_method(guid_attr) do
@@ -17,9 +17,13 @@ module Sequel::Plugins::VcapRelations
       define_method("#{guid_attr}=") do |val|
         ar = self.class.association_reflection(name)
         other = ar.associated_class[:guid => val]
+        # FIXME: better error reporting
+        return if other.nil?
         send("#{name}=", other)
       end
 
+      opts[:reciprocol] ||=
+        self.name.split("::").last.underscore.to_sym
       super
     end
 
@@ -30,7 +34,7 @@ module Sequel::Plugins::VcapRelations
     #
     # See the default many_to_many implementation for a description of the args
     # and return values.
-    def many_to_many(name, *args)
+    def many_to_many(name, opts = {})
       singular_name = name.to_s.singularize
       ids_attr      = "#{singular_name}_ids"
       guids_attr    = "#{singular_name}_guids"
@@ -47,6 +51,7 @@ module Sequel::Plugins::VcapRelations
         end
       end
 
+      define_to_many_reciprocol(opts)
       define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end
@@ -58,16 +63,22 @@ module Sequel::Plugins::VcapRelations
     #
     # See the default one_to_many implementation for a description of the args
     # and return values.
-    def one_to_many(name, *args)
+    def one_to_many(name, opts = {})
       singular_name = name.to_s.singularize
       ids_attr      = "#{singular_name}_ids"
       guids_attr    = "#{singular_name}_guids"
 
+      define_to_many_reciprocol(opts)
       define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end
 
     private
+
+    def define_to_many_reciprocol(opts)
+      opts[:reciprocol] ||=
+        self.name.split("::").last.underscore.pluralize.to_sym
+    end
 
     def define_to_many_methods(name, singular_name, ids_attr, guids_attr)
 
@@ -78,6 +89,8 @@ module Sequel::Plugins::VcapRelations
       define_method("add_#{singular_name}_by_guid") do |guid|
         ar = self.class.association_reflection(name)
         other = ar.associated_class[:guid => guid]
+        # FIXME: better error reporting
+        return if other.nil?
         send("add_#{singular_name}", other)
       end
 
@@ -95,6 +108,14 @@ module Sequel::Plugins::VcapRelations
         return unless guids
         send("remove_all_#{name}") unless send(name).empty?
         guids.each { |g| send("add_#{singular_name}_by_guid", g) }
+      end
+
+      define_method("remove_#{singular_name}_by_guid") do |guid|
+        ar = self.class.association_reflection(name)
+        other = ar.associated_class[:guid => guid]
+        # FIXME: better error reporting
+        return if other.nil?
+        send("remove_#{singular_name}", other)
       end
 
       define_method("remove_#{singular_name}") do |other|

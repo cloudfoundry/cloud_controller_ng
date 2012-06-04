@@ -91,11 +91,7 @@ module VCAP::CloudController::RestController
         ar = controller.model.association_reflection(name)
         other_model = ar.associated_class
         other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
-        q_key = if ar[:reciprocol]
-                  "#{ar[:reciprocol].to_s.singularize}_guid"
-                else
-                  "#{controller.class_basename.underscore}_guid"
-                end
+        q_key = "#{ar[:reciprocol].to_s.singularize}_guid"
         res["#{name}_url"] = "#{other_controller.path}?q=#{q_key}:#{obj.guid}"
 
         # FIXME: others needs to use the enumeration filter from the other
