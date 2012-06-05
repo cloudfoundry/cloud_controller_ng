@@ -7,10 +7,10 @@ module VCAP::CloudController::Models
     default_order_by  :label
 
     export_attributes :label, :provider, :url, :description,
-                      :version, :info_url
+                      :version, :info_url, :cf_plan_id
 
     import_attributes :label, :provider, :url, :description,
-                      :version, :info_url
+                      :version, :info_url, :cf_plan_id
 
     strip_attributes  :label, :provider
 

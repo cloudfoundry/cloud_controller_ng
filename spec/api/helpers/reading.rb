@@ -25,6 +25,10 @@ module VCAP::CloudController::ApiSpecHelper
             expected.has_key?(k) || (not k =~ /_url/)
           end
           parsed.should == expected
+
+          opts[:basic_attributes].each do |attr|
+            parsed.should have_key(attr)
+          end
         end
       end
     end
