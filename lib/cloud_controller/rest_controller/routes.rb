@@ -17,6 +17,8 @@ module VCAP::CloudController::RestController
         define_update_route
         define_delete_route
         define_enumerate_route
+
+        define_to_many_routes
       end
 
       private
@@ -53,6 +55,26 @@ module VCAP::CloudController::RestController
         klass = self
         controller.get path, do
           klass.new(@user, logger, request).dispatch(:enumerate)
+        end
+      end
+
+      def define_to_many_routes
+        klass = self
+        to_many_relationships.each do |name, attr|
+          controller.get "#{path_id}/#{name}" do |id|
+            klass.new(@user, logger, request).dispatch(:enumerate_related,
+                                                       id, name)
+          end
+
+          controller.put "#{path_id}/#{name}/:other_id" do |id, other_id|
+            klass.new(@user, logger, request).dispatch(:add_related,
+                                                       id, name, other_id)
+          end
+
+          controller.delete "#{path_id}/#{name}/:other_id" do |id, other_id|
+            klass.new(@user, logger, request).dispatch(:remove_related,
+                                                       id, name, other_id)
+          end
         end
       end
 

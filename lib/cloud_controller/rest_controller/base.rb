@@ -183,6 +183,76 @@ module VCAP::CloudController::RestController
       Paginator.render_json(self.class, ds, @opts)
     end
 
+    # Enumerate the related objects to the one with the given id.
+    #
+    # @param [String] id The GUID of the object for which to enumerate related
+    # objects.
+    #
+    # @param [Symbol] name The name of the relation to enumerate.
+    def enumerate_related(id, name)
+      logger.debug2 "#{log_prefix} enumerate_related: #{id} #{name}"
+      obj = find_id_and_validate_access(:read, id)
+
+      # FIXME: enumeration filter on associated model
+      a_model = model.association_reflection(name).associated_class
+      a_controller = VCAP::CloudController.controller_from_model_name(a_model)
+      ar = model.association_reflection(name)
+
+      f_key = ar[:reciprocol]
+      ds = a_model.filter(f_key => obj)
+      qp = a_controller.query_parameters
+
+      ds = Query.filtered_dataset_from_query_params(a_model, ds, qp, @opts)
+      Paginator.render_json(a_controller, ds, @opts)
+    end
+
+    # Add a related object.
+    #
+    # @param [String] id The GUID of the object for which to add a related
+    # object.
+    #
+    # @param [Symbol] name The name of the relation.
+    #
+    # @param [String] other_id The GUID of the object to add to the relation
+    def add_related(id, name, other_id)
+      do_related("add", id, name, other_id)
+    end
+
+    # Remove a related object.
+    #
+    # @param [String] id The GUID of the object for which to delete a related
+    # object.
+    #
+    # @param [Symbol] name The name of the relation.
+    #
+    # @param [String] other_id The GUID of the object to delete from the
+    # relation.
+    def remove_related(id, name, other_id)
+      do_related("remove", id, name, other_id)
+    end
+
+    # Remove a related object.
+    #
+    # @param [String] verb The type of operation to perform.
+    #
+    # @param [String] id The GUID of the object for which to perform
+    # the requested operation.
+    #
+    # @param [Symbol] name The name of the relation.
+    #
+    # @param [String] other_id The GUID of the object to be "verb"ed to the
+    # relation.
+    def do_related(verb, id, name, other_id)
+      logger.debug2 "#{log_prefix} #{verb}_related: #{id} #{name}"
+      singular_name = "#{name.to_s.singularize}"
+      @request_attrs = { singular_name => other_id }
+      obj = find_id_and_validate_access(:update, id)
+      obj.send("#{verb}_#{singular_name}_by_guid", other_id)
+      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
+    rescue Sequel::ValidationFailed => e
+      raise self.class.translate_validation_exception(e, request_attrs)
+    end
+
     # Validates if the current user has rights to perform the given operation
     # on this class of object. Rasies an auth error if not.
     #

@@ -661,3 +661,100 @@ And pagination can be combined with inlining relations:
         }
       ]
     }
+
+
+
+Incremental changes to a relation:
+
+  You can incrementally add and remove items from a relation using GET and
+DELETE.
+
+
+  curl -X PUT -v -H "Authorization:$AUTH_TOKEN" \
+    http://$CCNG_HOST/v2/organizations/${ORG_ID}/users/1234-4567-89AB-CDEF?inline-relations-depth=1
+
+  {
+    "metadata": {
+      "guid": "2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "url": "/v2/organizations/2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "created_at": "2012-06-04 11:20:00 -0700",
+      "updated_at": "2012-06-04 11:29:55 -0700"
+    },
+    "entity": {
+      "name": "my cool org2",
+      "app_spaces_url": "/v2/app_spaces?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "app_spaces": [
+
+      ],
+      "users_url": "/v2/users?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "users": [
+        {
+          "metadata": {
+            "guid": "1234-4567-89AB-CDEF",
+            "url": "/v2/users/1234-4567-89AB-CDEF",
+            "created_at": "2012-06-04 11:28:33 -0700",
+            "updated_at": null
+          },
+          "entity": {
+            "admin": false,
+            "active": false,
+            "app_spaces_url": "/v2/app_spaces?q=user_guid:1234-4567-89AB-CDEF",
+            "organizations_url": "/v2/organizations?q=user_guid:1234-4567-89AB-CDEF",
+            "managed_organizations_url": "/v2/organizations?q=manager_guid:1234-4567-89AB-CDEF",
+            "billing_managed_organizations_url": "/v2/organizations?q=billing_manager_guid:1234-4567-89AB-CDEF",
+            "audited_organizations_url": "/v2/organizations?q=auditor_guid:1234-4567-89AB-CDEF"
+          }
+        }
+      ],
+      "managers_url": "/v2/users?q=managed_organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "managers": [
+
+      ],
+      "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "billing_managers": [
+
+      ],
+      "auditors_url": "/v2/users?q=audited_organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "auditors": [
+
+      ]
+    }
+  }
+
+
+ and:
+
+  curl -X DELETE -v -H "Authorization:$AUTH_TOKEN" \
+    http://$CCNG_HOST/v2/organizations/${ORG_ID}/users/1234-4567-89AB-CDEF?inline-relations-depth=1
+
+  {
+    "metadata": {
+      "guid": "2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "url": "/v2/organizations/2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "created_at": "2012-06-04 11:20:00 -0700",
+      "updated_at": "2012-06-04 11:29:55 -0700"
+    },
+    "entity": {
+      "name": "my cool org2",
+      "app_spaces_url": "/v2/app_spaces?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "app_spaces": [
+
+      ],
+      "users_url": "/v2/users?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "users": [
+
+      ],
+      "managers_url": "/v2/users?q=managed_organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "managers": [
+
+      ],
+      "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "billing_managers": [
+
+      ],
+      "auditors_url": "/v2/users?q=audited_organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "auditors": [
+
+      ]
+    }
+  }

@@ -297,21 +297,26 @@ resource, during an update via `PUT`.
 
 To create the association during a `POST` or to edit it with a `PUT`, supply a
 an array of ids.  For example, in the FooBaz has multiple Bars example
-above, a caller could issue a `POST /v2/FooBaz` with a body of `{ "bar_guid": [1,
+above, a caller could issue a `POST /v2/foo_baz` with a body of `{ "bar_guid": [1,
 5, 10]}` to make an initial assocation of the new FooBaz with Bars with ids 1,
 5 and 10 (other attributes omitted).  Similarly, a `PUT` will update the
 assocations between the resources to only those provided in the list.
 
 Adding and removing elements from a large collection would be onerous if the
-entire list had to be provided every time.  To controll how the list of ids are
-added to the collection, supply the following query parameter
-`collection-method=add`, or `collection-method=replace`.  If the collection-method
-is not supplied, it defaults to replace.
+entire list had to be provided every time.
 
-(An alternative to the query parameters would have been to use POST and DELETE
-on the association url, however, this makes batch operations somewhat easier,
-and allows modifications to the association to be transacted with other changes
-to the resource.)
+A `PUT /v2/foo_baz/1/bars/2` will add bar with id 2 to foobaz with id 1.
+
+A `DELETE /v2/foo_baz/1/bars/2` will remove bar with id 2 to from foobaz with
+id 1.
+
+Batching incremental updates may be supported in the future.
+To controll how the list of ids are added to the collection, supply the
+following query parameter `collection-method=add`, `collection-method=replace`, or
+`collection-method=delete`.  If the collection-method is not supplied,
+it defaults to replace.  NOTE: this is a future design note.
+collection-method is not currently supported.
+
 
 ### Inlining Relationships
 
