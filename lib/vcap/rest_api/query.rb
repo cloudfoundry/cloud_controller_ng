@@ -5,6 +5,10 @@ module VCAP::RestAPI
   # Query against a model using a query string received via http query
   # parameters.
   #
+  # Note: we use both a model and a dataset because we need to know properties
+  # about the model.  We also want to query against a potentially already
+  # filtered dataset.  Since datasets aren't bound to a particular model,
+  # we need to pass both pieces of infomration.
   #
   # TODO: >, < and * (at the end of strings only) will be added in the
   # future.
@@ -16,15 +20,17 @@ module VCAP::RestAPI
     #
     # @param [Sequel::Model] model The model to query against
     #
+    # @param [Sequel::Dataset] ds The dataset to query against
+    #
     # @param [Set] queryable_attributes The attributes allowed to be used as
     # keys in a query.
     #
     # @param [Hash] query_params A hash containing the full set of http
     # query parameters.  Currently, only :q is extracted and used as the query
     # string.  The :q entry is a key value pair of the form 'key:value'
-    def initialize(model, access_filter, queryable_attributes, query_params)
+    def initialize(model, ds, queryable_attributes, query_params)
       @model = model
-      @access_filter = access_filter
+      @ds = ds
       @queryable_attributes = queryable_attributes
       @query = query_params[:q]
     end
@@ -33,14 +39,16 @@ module VCAP::RestAPI
     # result in fetching records from the db.
     #
     # @return [Sequel::Dataset]
-    def dataset
-      model.filter(access_filter).filter(filter_args_from_query)
+    def filtered_dataset
+      @ds.filter(filter_args_from_query)
     end
 
     # Return the dataset for the supplied query.
     # Note that this does not result in fetching records from the db.
     #
     # @param [Sequel::Model] model The model to query against
+    #
+    # @param [Sequel::Dataset] ds The dataset to query against
     #
     # @param [Set] queryable_attributes The attributes allowed to be used as
     # keys in a query.
@@ -50,11 +58,11 @@ module VCAP::RestAPI
     # string.  The :q entry is a key value pair of the form 'key:value'
     #
     # @return [Sequel::Dataset]
-    def self.dataset_from_query_params(model,
-                                       access_filter,
-                                       queryable_attributes,
-                                       query_params)
-      self.new(model, access_filter, queryable_attributes, query_params).dataset
+    def self.filtered_dataset_from_query_params(model,
+                                                ds,
+                                                queryable_attributes,
+                                                query_params)
+      self.new(model, ds, queryable_attributes, query_params).filtered_dataset
     end
 
     private

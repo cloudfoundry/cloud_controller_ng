@@ -173,9 +173,13 @@ module VCAP::CloudController::RestController
     def enumerate
       raise NotAuthenticated unless @user
       authz_filter = admin_enumeration_filter
+
       logger.debug2 "#{log_prefix} enumerate: #{authz_filter.inspect}"
-      ds = Query.dataset_from_query_params(model, authz_filter,
-                                           self.class.query_parameters, @opts)
+
+      ds = model.filter(authz_filter)
+      qp = self.class.query_parameters
+
+      ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
       Paginator.render_json(self.class, ds, @opts)
     end
 
