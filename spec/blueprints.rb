@@ -42,7 +42,6 @@ module VCAP::CloudController::Models
     label             { Sham.label }
     provider          { Sham.provider }
     url               { Sham.url }
-    type              { Sham.type }
     description       { Sham.description }
     version           { Sham.version }
   end

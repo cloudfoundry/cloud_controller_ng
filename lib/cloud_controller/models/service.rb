@@ -6,10 +6,10 @@ module VCAP::CloudController::Models
 
     default_order_by  :label
 
-    export_attributes :label, :provider, :url, :type, :description,
+    export_attributes :label, :provider, :url, :description,
                       :version, :info_url
 
-    import_attributes :label, :provider, :url, :type, :description,
+    import_attributes :label, :provider, :url, :description,
                       :version, :info_url
 
     strip_attributes  :label, :provider
@@ -18,7 +18,6 @@ module VCAP::CloudController::Models
       validates_presence :label
       validates_presence :provider
       validates_presence :url
-      validates_presence :type
       validates_presence :description
       validates_presence :version
       validates_url      :url

@@ -7,8 +7,8 @@ describe VCAP::CloudController::Service do
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/services",
     :model                => VCAP::CloudController::Models::Service,
-    :basic_attributes     => [:label, :provider, :url, :type, :description, :version, :info_url],
-    :required_attributes  => [:label, :provider, :url, :type, :description, :version],
+    :basic_attributes     => [:label, :provider, :url, :description, :version, :info_url],
+    :required_attributes  => [:label, :provider, :url, :description, :version],
     :unique_attributes    => [:label, :provider],
     :one_to_many_collection_ids  => {
       :service_plans => lambda { |service| VCAP::CloudController::Models::ServicePlan.make }

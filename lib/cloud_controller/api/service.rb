@@ -11,7 +11,6 @@ module VCAP::CloudController
       attribute :label,          String
       attribute :provider,       String
       attribute :url,            Message::HTTPS_URL
-      attribute :type,           String
       attribute :description,    String
       attribute :version,        String
       attribute :info_url,       Message::URL

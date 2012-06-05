@@ -4,7 +4,7 @@ require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::Models::Service do
   it_behaves_like "a CloudController model", {
-    :required_attributes  => [:label, :provider, :url, :type, :description, :version],
+    :required_attributes  => [:label, :provider, :url, :description, :version],
     :unique_attributes    => [:label, :provider],
     :sensitive_attributes => :crypted_password,
     :stripped_string_attributes => [:label, :provider],

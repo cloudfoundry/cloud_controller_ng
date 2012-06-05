@@ -71,7 +71,6 @@ Sequel.migration do
       String :label,       :null => false, :index => true
       String :provider,    :null => false
       String :url,         :null => false
-      String :type,        :null => false
       String :description, :null => false
       String :version,     :null => false
 
