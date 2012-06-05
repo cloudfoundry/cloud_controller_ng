@@ -21,5 +21,9 @@ module VCAP::CloudController::Models
       return if unencrypted_token.nil?
       self.crypted_token = BCrypt::Password.create(unencrypted_token)
     end
+
+    def token_matches?(unencrypted_token)
+      BCrypt::Password.new(crypted_token) == unencrypted_token
+    end
   end
 end
