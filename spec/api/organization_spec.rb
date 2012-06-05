@@ -5,21 +5,21 @@ require File.expand_path("../spec_helper", __FILE__)
 describe VCAP::CloudController::Organization do
   let(:org)   { VCAP::CloudController::Models::Organization.make }
 
-  # it_behaves_like "a CloudController API", {
-  #   :path                => "/v2/organizations",
-  #   :model               => VCAP::CloudController::Models::Organization,
-  #   :basic_attributes    => :name,
-  #   :required_attributes => :name,
-  #   :unique_attributes   => :name,
-  #   :many_to_many_collection_ids => {
-  #     :users    => lambda { |org| VCAP::CloudController::Models::User.make },
-  #     :managers => lambda { |org| VCAP::CloudController::Models::User.make },
-  #     :billing_managers => lambda { |org| VCAP::CloudController::Models::User.make }
-  #   },
-  #   :one_to_many_collection_ids  => {
-  #     :app_spaces => lambda { |org| VCAP::CloudController::Models::AppSpace.make }
-  #   }
-  # }
+  it_behaves_like "a CloudController API", {
+    :path                => "/v2/organizations",
+    :model               => VCAP::CloudController::Models::Organization,
+    :basic_attributes    => :name,
+    :required_attributes => :name,
+    :unique_attributes   => :name,
+    :many_to_many_collection_ids => {
+      :users    => lambda { |org| VCAP::CloudController::Models::User.make },
+      :managers => lambda { |org| VCAP::CloudController::Models::User.make },
+      :billing_managers => lambda { |org| VCAP::CloudController::Models::User.make }
+    },
+    :one_to_many_collection_ids  => {
+      :app_spaces => lambda { |org| VCAP::CloudController::Models::AppSpace.make }
+    }
+  }
 
   shared_examples "enumerate orgs ok" do |perm_name|
     describe "GET /v2/organizations" do
