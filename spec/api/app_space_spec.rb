@@ -11,7 +11,9 @@ describe VCAP::CloudController::AppSpace do
     :required_attributes => [:name, :organization_guid],
     :unique_attributes   => [:name, :organization_guid],
     :many_to_many_collection_ids => {
-      :developers => lambda { |app_space| make_user_for_app_space(app_space) }
+      :developers => lambda { |app_space| make_user_for_app_space(app_space) },
+      :managers   => lambda { |app_space| make_user_for_app_space(app_space) },
+      :auditors   => lambda { |app_space| make_user_for_app_space(app_space) }
     },
     :one_to_many_collection_ids => {
       :apps  => lambda { |app_space| VCAP::CloudController::Models::App.make }
