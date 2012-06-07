@@ -22,15 +22,22 @@ describe VCAP::CloudController::Models::AppSpace do
   context "bad relationships" do
     let(:app_space) { Models::AppSpace.make }
 
-    context "developers" do
-      it "should not get associated with a developer that isn't a member of the org" do
-        wrong_org = Models::Organization.make
-        user = make_user_for_org(wrong_org)
+    shared_examples "bad app space permission" do |perm|
+      context perm do
+        it "should not get associated with a #{perm.singularize} that isn't a member of the org" do
+          exception = Models::AppSpace.const_get("Invalid#{perm.camelize}Relation")
+          wrong_org = Models::Organization.make
+          user = make_user_for_org(wrong_org)
 
-        lambda {
-          app_space.add_developer user
-        }.should raise_error Models::AppSpace::InvalidDeveloperRelation
+          lambda {
+            app_space.send("add_#{perm.singularize}", user)
+          }.should raise_error exception
+        end
       end
+    end
+
+    ["developer", "manager", "auditor"].each do |perm|
+      include_examples "bad app space permission", perm
     end
   end
 end

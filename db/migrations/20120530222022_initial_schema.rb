@@ -68,7 +68,7 @@ Sequel.migration do
     end
 
     # App Space permissions
-    [:developers].each do |perm|
+    [:developers, :managers, :auditors].each do |perm|
       VCAP::Migration.create_permission_table(self, :app_space, perm)
     end
 
