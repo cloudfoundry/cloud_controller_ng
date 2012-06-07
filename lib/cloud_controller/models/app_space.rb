@@ -2,10 +2,14 @@
 
 module VCAP::CloudController::Models
   class AppSpace < Sequel::Model
-    class InvalidUserRelation < StandardError; end
+    extend VCAP::CloudController::Models::UserGroup
+    class InvalidDeveloperRelation < StandardError; end
 
     many_to_one       :organization
-    many_to_many      :users, :before_add => :validate_user
+
+    define_user_group :developers, :reciprocol => :app_spaces,
+                      :before_add => :validate_developer
+
     one_to_many       :apps
     one_to_many       :service_instances
 
@@ -13,7 +17,7 @@ module VCAP::CloudController::Models
 
     export_attributes :name, :organization_guid
 
-    import_attributes :name, :organization_guid, :user_guids
+    import_attributes :name, :organization_guid, :developer_guids
 
     strip_attributes  :name
 
@@ -23,11 +27,11 @@ module VCAP::CloudController::Models
       validates_unique   [:organization_id, :name]
     end
 
-    def validate_user(user)
+    def validate_developer(user)
       unless organization && organization.users.include?(user)
         # TODO: unlike most other validations, this is *NOT* being enforced by
         # the db
-        raise InvalidUserRelation.new(user.id)
+        raise InvalidDeveloperRelation.new(user.guid)
       end
     end
   end
