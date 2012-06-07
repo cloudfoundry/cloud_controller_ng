@@ -15,21 +15,21 @@ describe VCAP::CloudController::Models::AppSpace do
       :service_instances => lambda { |app_space| VCAP::CloudController::Models::ServiceInstance.make },
     },
     :many_to_zero_or_more => {
-      :users             => lambda { |app_space| make_user_for_app_space(app_space) },
+      :developers        => lambda { |app_space| make_user_for_app_space(app_space) },
     }
   }
 
   context "bad relationships" do
     let(:app_space) { Models::AppSpace.make }
 
-    context "users" do
-      it "should not get associated with a user that isn't a member of the org" do
+    context "developers" do
+      it "should not get associated with a developer that isn't a member of the org" do
         wrong_org = Models::Organization.make
         user = make_user_for_org(wrong_org)
 
         lambda {
-          app_space.add_user user
-        }.should raise_error Models::AppSpace::InvalidUserRelation
+          app_space.add_developer user
+        }.should raise_error Models::AppSpace::InvalidDeveloperRelation
       end
     end
   end

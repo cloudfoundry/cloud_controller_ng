@@ -22,7 +22,9 @@ module VCAP::CloudController::Models
                       :join_table => "organizations_auditors",
                       :right_key => :organization_id, :reciprocol => :auditors
 
-    many_to_many      :app_spaces
+    many_to_many      :app_spaces,
+                      :join_table => "app_spaces_developers",
+                      :right_key => :app_space_id, :reciprocol => :developers
 
     default_order_by  :id
 

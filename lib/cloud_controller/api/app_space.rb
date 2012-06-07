@@ -9,11 +9,11 @@ module VCAP::CloudController
     define_attributes do
       attribute  :name,            String
       to_one     :organization
-      to_many    :users
+      to_many    :developers
       to_many    :apps
     end
 
-    query_parameters :organization_guid, :user_guid, :app_guid
+    query_parameters :organization_guid, :developer_guid, :app_guid
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:organization_id, :name])

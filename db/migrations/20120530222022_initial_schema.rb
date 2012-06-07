@@ -67,10 +67,9 @@ Sequel.migration do
       index [:organization_id, :name], :unique => true
     end
 
-    create_table(:app_spaces_users) do
-      foreign_key :app_space_id, :app_spaces, :null => false
-      foreign_key :user_id, :users, :null => false
-      index [:app_space_id, :user_id], :unique => true
+    # App Space permissions
+    [:developers].each do |perm|
+      VCAP::Migration.create_permission_table(self, :app_space, perm)
     end
 
     create_table :service_auth_tokens do
