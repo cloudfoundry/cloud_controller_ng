@@ -10,6 +10,8 @@ module VCAP::CloudController
       attribute  :name,            String
       to_one     :organization
       to_many    :developers
+      to_many    :managers
+      to_many    :auditors
       to_many    :apps
     end
 

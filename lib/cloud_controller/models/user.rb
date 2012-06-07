@@ -23,8 +23,19 @@ module VCAP::CloudController::Models
                       :right_key => :organization_id, :reciprocol => :auditors
 
     many_to_many      :app_spaces,
+                      :class => "VCAP::CloudController::Models::AppSpace",
                       :join_table => "app_spaces_developers",
                       :right_key => :app_space_id, :reciprocol => :developers
+
+    many_to_many      :managed_app_spaces,
+                      :class => "VCAP::CloudController::Models::AppSpace",
+                      :join_table => "app_spaces_managers",
+                      :right_key => :app_space_id, :reciprocol => :managers
+
+    many_to_many      :audited_app_spaces,
+                      :class => "VCAP::CloudController::Models::AppSpace",
+                      :join_table => "app_spaces_auditors",
+                      :right_key => :app_space_id, :reciprocol => :auditors
 
     default_order_by  :id
 
