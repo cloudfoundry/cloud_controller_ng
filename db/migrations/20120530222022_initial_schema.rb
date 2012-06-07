@@ -23,6 +23,19 @@ module VCAP
       guid(migration)
       timestamps(migration)
     end
+
+    def self.create_permission_table(migration, name, permission)
+      name = name.to_s
+      join_table = "#{name.pluralize}_#{permission}".to_sym
+      id_attr = "#{name}_id".to_sym
+      table = name.pluralize.to_sym
+
+      migration.create_table(join_table) do
+        foreign_key id_attr, table, :null => false
+        foreign_key :user_id, :users, :null => false
+        index [id_attr, :user_id], :unique => true
+      end
+    end
   end
 end
 
@@ -38,6 +51,11 @@ Sequel.migration do
     create_table :organizations do
       VCAP::Migration.common(self)
       String :name, :null => false, :index => true, :unique => true
+    end
+
+    # Organization permissions
+    [:users, :managers, :billing_managers, :auditors].each do |perm|
+      VCAP::Migration.create_permission_table(self, :organization, perm)
     end
 
     create_table :app_spaces do
@@ -179,30 +197,6 @@ Sequel.migration do
       foreign_key :app_id, :apps, :null => false
       foreign_key :service_instance_id, :service_instances, :null => false
       index [:app_id, :service_instance_id], :unique => true
-    end
-
-    create_table(:organizations_users) do
-      foreign_key :organization_id, :organizations, :null => false
-      foreign_key :user_id, :users, :null => false
-      index [:organization_id, :user_id], :unique => true
-    end
-
-    create_table(:organizations_managers) do
-      foreign_key :organization_id, :organizations, :null => false
-      foreign_key :user_id, :users, :null => false
-      index [:organization_id, :user_id], :unique => true
-    end
-
-    create_table(:organizations_billing_managers) do
-      foreign_key :organization_id, :organizations, :null => false
-      foreign_key :user_id, :users, :null => false
-      index [:organization_id, :user_id], :unique => true
-    end
-
-    create_table(:organizations_auditors) do
-      foreign_key :organization_id, :organizations, :null => false
-      foreign_key :user_id, :users, :null => false
-      index [:organization_id, :user_id], :unique => true
     end
   end
 end
