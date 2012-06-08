@@ -10,7 +10,7 @@ gem "sinatra-contrib"
 gem "yajl-ruby"
 gem "vcap_common", "~> 1.0.13"
 gem "vcap_logging"
-gem "cf-uaa-client", "~> 0.0.12.beta.2"
+gem "cf-uaa-client", "~> 0.2.0"
 
 group :production do
   gem "pg"

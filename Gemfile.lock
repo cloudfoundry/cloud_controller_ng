@@ -4,8 +4,8 @@ GEM
     addressable (2.2.8)
     backports (2.5.1)
     bcrypt-ruby (3.0.1)
-    cf-uaa-client (0.0.12.beta.2)
-      em-http-request (<= 1.0.0.beta.3, < 1.0.1)
+    cf-uaa-client (0.2.0)
+      em-http-request (>= 1.0.0.beta.3, <= 1.0.0.beta.3)
       eventmachine
       interact
       json_pure
@@ -93,7 +93,7 @@ PLATFORMS
 
 DEPENDENCIES
   bcrypt-ruby
-  cf-uaa-client (~> 0.0.12.beta.2)
+  cf-uaa-client (~> 0.2.0)
   eventmachine (~> 0.12.11.cloudfoundry.3)
   machinist (~> 1.0.6)
   pg
