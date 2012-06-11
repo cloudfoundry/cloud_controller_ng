@@ -8,6 +8,7 @@ module VCAP::CloudController::Models
     class InvalidDeveloperRelation < InvalidRelation; end
     class InvalidAuditorRelation   < InvalidRelation; end
     class InvalidManagerRelation   < InvalidRelation; end
+    class InvalidDomainRelation    < InvalidRelation; end
 
     many_to_one       :organization
 
@@ -58,6 +59,12 @@ module VCAP::CloudController::Models
     def validate_auditor(user)
       unless organization && organization.users.include?(user)
         raise InvalidAuditorRelation.new(user.guid)
+      end
+    end
+
+    def validate_domain(domain)
+      unless domain && organization && domain.organization_id == organization.id
+        raise InvalidDomainRelation.new(domain.guid)
       end
     end
   end

@@ -11,6 +11,11 @@ describe VCAP::CloudController::Models::Domain do
     :stripped_string_attributes   => :name,
     :many_to_one => {
       :organization => lambda { |domain| VCAP::CloudController::Models::Organization.make }
+    },
+    :many_to_zero_or_more => {
+      :app_spaces => lambda { |domain|
+        VCAP::CloudController::Models::AppSpace.make(:organization => domain.organization)
+      }
     }
   }
 
@@ -21,6 +26,17 @@ describe VCAP::CloudController::Models::Domain do
                                   :name => "ABC.COM")
         d.name.should == "abc.com"
       end
+    end
+  end
+
+  context "bad relationships" do
+    let(:domain) { Models::Domain.make }
+    let(:app_space) { Models::AppSpace.make }
+
+    it "should not associate with an app space on a different org" do
+      lambda {
+        domain.add_app_space(app_space)
+      }.should raise_error Models::Domain::InvalidAppSpaceRelation
     end
   end
 
