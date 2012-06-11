@@ -17,7 +17,8 @@ describe VCAP::CloudController::Models::AppSpace do
     :many_to_zero_or_more => {
       :developers        => lambda { |app_space| make_user_for_app_space(app_space) },
       :managers          => lambda { |app_space| make_user_for_app_space(app_space) },
-      :auditors          => lambda { |app_space| make_user_for_app_space(app_space) }
+      :auditors          => lambda { |app_space| make_user_for_app_space(app_space) },
+      :domains           => lambda { |app_space| make_domain_for_app_space(app_space) },
     }
   }
 
@@ -40,6 +41,13 @@ describe VCAP::CloudController::Models::AppSpace do
 
     ["developer", "manager", "auditor"].each do |perm|
       include_examples "bad app space permission", perm
+    end
+
+    it "should not associate an domain with a service from a different org" do
+      lambda {
+        domain = Models::Domain.make
+        app_space.add_domain domain
+      }.should raise_error Models::AppSpace::InvalidDomainRelation
     end
   end
 end
