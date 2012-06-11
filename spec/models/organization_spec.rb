@@ -14,7 +14,8 @@ describe VCAP::CloudController::Models::Organization do
       :auditors   => lambda { |org| VCAP::CloudController::Models::User.make },
     },
     :one_to_zero_or_more => {
-      :app_spaces => lambda { |org| VCAP::CloudController::Models::AppSpace.make }
+      :app_spaces => lambda { |org| VCAP::CloudController::Models::AppSpace.make },
+      :domains => lambda { |org| VCAP::CloudController::Models::Domain.make }
     }
   }
 end
