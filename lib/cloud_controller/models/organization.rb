@@ -6,6 +6,8 @@ module VCAP::CloudController::Models
 
     one_to_many       :app_spaces
 
+    one_to_many       :domains
+
     define_user_group :users
     define_user_group :managers, :reciprocol => :managed_organizations
     define_user_group :billing_managers,
