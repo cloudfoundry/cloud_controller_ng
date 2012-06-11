@@ -31,4 +31,41 @@ describe VCAP::CloudController::App do
        }
     }
   }
+
+  describe "validations" do
+    let(:app_obj)   { VCAP::CloudController::Models::App.make }
+    let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+
+    let(:admin_headers) do
+      user = VCAP::CloudController::Models::User.make(:admin => true)
+      headers_for(user)
+    end
+
+    describe "env" do
+      it "should allow an empty environment" do
+        hash = {}
+        update_hash = { :environment_json => hash }
+
+        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
+        last_response.status.should == 201
+      end
+
+      it "should allow multiple variables" do
+        hash = { :abc => 123, :def => "hi" }
+        update_hash = { :environment_json => hash }
+        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
+        last_response.status.should == 201
+      end
+
+      [ "VMC", "vmc", "VCAP", "vcap" ].each do |k|
+        it "should not allow entries to start with #{k}" do
+          hash = { :abc => 123, "#{k}_abc" => "hi" }
+          update_hash = { :environment_json => hash }
+          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
+          last_response.status.should == 400
+          decoded_response["description"].should match /environment_json reserved_key:#{k}_abc/
+        end
+      end
+    end
+  end
 end
