@@ -21,4 +21,27 @@ describe VCAP::CloudController::Models::App do
        }
     }
   }
+
+  describe "validations" do
+    describe "env" do
+      let(:app) { Models::App.make }
+
+      it "should allow an empty environment" do
+        app.environment_json = {}
+        app.should be_valid
+      end
+
+      it "should allow multiple variables" do
+        app.environment_json = { :abc => 123, :def => "hi" }
+        app.should be_valid
+      end
+
+      [ "VMC", "vmc", "VCAP", "vcap" ].each do |k|
+        it "should not allow entries to start with #{k}" do
+          app.environment_json = { :abc => 123, "#{k}_abc" => "hi" }
+          app.should_not be_valid
+        end
+      end
+    end
+  end
 end
