@@ -23,12 +23,15 @@ module VCAP::CloudController::Models
     one_to_many       :apps
     one_to_many       :service_instances
 
+    many_to_many      :domains, :before_add => :validate_domain
+    add_association_dependencies :domains => :nullify
+
     default_order_by  :name
 
     export_attributes :name, :organization_guid
 
     import_attributes :name, :organization_guid, :developer_guids,
-                      :manager_guids, :auditor_guids
+                      :manager_guids, :auditor_guids, :domain_guids
 
     strip_attributes  :name
 
