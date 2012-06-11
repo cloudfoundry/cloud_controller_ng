@@ -16,6 +16,7 @@ Sham.define do
   version             { |index| "version-#{index}" }
   service_credentials { |index| "service-creds-#{index}" }
   uaa_id              { |index| "uaa-id-#{index}" }
+  domain              { |index| "domain-#{index}.com" }
 end
 
 module VCAP::CloudController::Models
@@ -25,6 +26,11 @@ module VCAP::CloudController::Models
 
   Organization.blueprint do
     name              { Sham.name }
+  end
+
+  Domain.blueprint do
+    name              { Sham.domain }
+    organization      { Organization.make }
   end
 
   AppSpace.blueprint do
