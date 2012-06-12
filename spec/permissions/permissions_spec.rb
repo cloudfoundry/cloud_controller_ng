@@ -17,8 +17,8 @@ describe VCAP::CloudController::Permissions do
     end
 
     it "should return [Permission::Authenticated, Permission::CFAdmin] for an admin" do
-      Permissions.permissions_for(obj, admin).should == [Permissions::Authenticated,
-                                                         Permissions::CFAdmin]
+      Permissions.permissions_for(obj, admin).sort_by { |klass| klass.name }.
+        should == [Permissions::Authenticated, Permissions::CFAdmin]
     end
   end
 end
