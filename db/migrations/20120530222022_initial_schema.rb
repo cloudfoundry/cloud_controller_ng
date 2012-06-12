@@ -158,6 +158,17 @@ Sequel.migration do
       index :name, :unique => true
     end
 
+    create_table :routes do
+      VCAP::Migration.common(self)
+
+      # TODO: this is semi temporary and will be fully thought through when
+      # we do custom domains.  For now, this "works" and will prevent
+      # collisions.
+      String :host, :null => false
+      foreign_key :domain_id, :domains, :null => false
+      index [:host, :domain_id], :unique => true
+    end
+
     create_table :apps do
       VCAP::Migration.common(self)
 

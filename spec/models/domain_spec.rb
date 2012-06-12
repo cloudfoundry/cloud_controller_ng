@@ -16,6 +16,9 @@ describe VCAP::CloudController::Models::Domain do
       :app_spaces => lambda { |domain|
         VCAP::CloudController::Models::AppSpace.make(:organization => domain.organization)
       }
+    },
+    :one_to_zero_or_more => {
+      :routes => lambda { |domain| VCAP::CloudController::Models::Route.make }
     }
   }
 
