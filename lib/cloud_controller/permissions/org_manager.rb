@@ -3,8 +3,13 @@
 module VCAP::CloudController::Permissions
   class OrgManager
     def self.granted_to?(obj, user)
-      obj.kind_of?(VCAP::CloudController::Models::Organization) &&
-        !user.nil? && obj.managers.include?(user)
+      return false if user.nil?
+
+      if obj.kind_of?(VCAP::CloudController::Models::Organization)
+        obj.managers.include?(user)
+      elsif obj.respond_to?(:organization)
+        obj.organization && obj.organization.managers.include?(user)
+      end
     end
 
     VCAP::CloudController::Permissions::register self
