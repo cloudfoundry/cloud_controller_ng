@@ -5,6 +5,7 @@ module VCAP::CloudController::Models
     extend VCAP::CloudController::Models::UserGroup
 
     one_to_many       :app_spaces
+    add_association_dependencies :app_spaces => :destroy
 
     define_user_group :users
     define_user_group :managers, :reciprocol => :managed_organizations
