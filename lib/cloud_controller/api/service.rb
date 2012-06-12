@@ -23,8 +23,8 @@ module VCAP::CloudController
 
     query_parameters :service_plan_guid
 
-    def enumeration_filter
-      ~{ :cf_plan_id => nil }
+    def user_visible_dataset
+      model.filter( ~{ :cf_plan_id => nil } )
     end
 
     def self.translate_validation_exception(e, attributes)
