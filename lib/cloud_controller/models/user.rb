@@ -37,6 +37,14 @@ module VCAP::CloudController::Models
                       :join_table => "app_spaces_auditors",
                       :right_key => :app_space_id, :reciprocol => :auditors
 
+    add_association_dependencies :organizations => :nullify
+    add_association_dependencies :managed_organizations => :nullify
+    add_association_dependencies :audited_app_spaces => :nullify
+    add_association_dependencies :billing_managed_organizations => :nullify
+    add_association_dependencies :audited_organizations => :nullify
+    add_association_dependencies :app_spaces => :nullify
+    add_association_dependencies :managed_app_spaces => :nullify
+
     default_order_by  :id
 
     export_attributes :admin, :active

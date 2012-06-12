@@ -68,21 +68,22 @@ module VCAP::CloudController::ModelSpecHelper
           end
         end
 
-        if cardinality_other =~ /one/ or (cardinality_self == :many and cardinality_other =~ /or_more/)
-          it "should fail to delete #{singular_association} due to database integrity checks" do
+        if (described_class != VCAP::CloudController::Models::User &&
+            (cardinality_other =~ /one/ && (cardinality_self == :many || cardinality_other =~ /or_more/)))
+          it "should fail to destroy #{singular_association} due to database integrity checks" do
             related = create_for.call(obj)
             obj.send(add_attribute, related)
             obj.save
             lambda {
-              related.delete
+              related.destroy
             }.should raise_error Sequel::DatabaseError, /foreign key/
           end
         else
-          it "should delete #{singular_association} successfully" do
+          it "should destroy #{singular_association} successfully" do
             related = create_for.call(obj)
             obj.send(add_attribute, related)
             obj.save
-            related.delete
+            related.destroy
           end
         end
       end
