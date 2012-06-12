@@ -116,10 +116,12 @@ module VCAP::CloudController::RestController
     # @param [IO] json An IO object that when read will return the json
     # serialized request.
     def create(json)
-      validate_class_access(:create)
       @request_attrs = Yajl::Parser.new.parse(json)
       raise InvalidRequest unless request_attrs
+
       logger.debug2 "#{log_prefix} create: #{request_attrs}"
+      obj = model.new_from_hash(request_attrs)
+      validate_access(:create, obj, @user)
 
       with_quota_enforcement(create_quota_token_request) do
         obj = model.create_from_hash(request_attrs)
@@ -173,7 +175,7 @@ module VCAP::CloudController::RestController
     def enumerate
       raise NotAuthenticated unless @user
       ds = @user.admin ? model.dataset : user_visible_dataset
-      logger.debug2 "#{log_prefix} enumerate: #{ds.inspect}"
+      logger.debug2 "#{log_prefix} enumerate: #{ds.sql}"
       qp = self.class.query_parameters
       ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
       Paginator.render_json(self.class, ds, @opts)
@@ -247,14 +249,6 @@ module VCAP::CloudController::RestController
       [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, request_attrs)
-    end
-
-    # Validates if the current user has rights to perform the given operation
-    # on this class of object. Rasies an auth error if not.
-    #
-    # @param [Symbol] op The type of operation to check for access
-    def validate_class_access(op)
-      validate_access(op, model, @user)
     end
 
     # Find an object and validate that the current user has rights to
