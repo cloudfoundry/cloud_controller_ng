@@ -20,23 +20,55 @@ describe VCAP::CloudController::AppSpace do
     }
   }
 
-  shared_examples "enumerate app spaces ok" do |perm_name|
+  shared_examples "enumerate app spaces ok" do |perm_name, expected|
+    expected ||= 1
     describe "GET /v2/app_spaces" do
-      it "should return app_spaces to a user that has #{perm_name} permissions" do
+      it "should return #{expected} app_spaces to a user that has #{perm_name} permissions" do
         get "/v2/app_spaces", {}, headers_for(member_a)
         last_response.should be_ok
-        decoded_response["total_results"].should == 1
-        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@app_space_a.guid]
+        decoded_response["total_results"].should == expected
+        if expected == 1
+          decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@app_space_a.guid]
+        end
 
         get "/v2/app_spaces", {}, headers_for(member_b)
         last_response.should be_ok
-        decoded_response["total_results"].should == 1
-        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@app_space_b.guid]
+        decoded_response["total_results"].should == expected
+        if expected == 1
+          decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@app_space_b.guid]
+        end
       end
 
       it "should not return app spaces to a user with the #{perm_name} permission on a different app space" do
         get "/v2/app_spaces/#{@app_space_b.guid}", {}, headers_for(@member_a)
         last_response.should_not be_ok
+      end
+    end
+  end
+
+  shared_examples "create app space ok" do |perm_name|
+    describe "POST /v2/app_spaces/:id" do
+      it "should allow a user with the #{perm_name} permission to create an app space in an org" do
+        before_count = VCAP::CloudController::Models::AppSpace.all.count
+        post "/v2/app_spaces", Yajl::Encoder.encode({ :name => Sham.name, :organization_guid => @org_a.guid }), json_headers(headers_for(member_a))
+        last_response.status.should == 201
+        VCAP::CloudController::Models::AppSpace.count.should == before_count + 1
+      end
+
+      it "should not allow a user with the #{perm_name} permission on a different org to create an app space" do
+        before_count = VCAP::CloudController::Models::AppSpace.all.count
+        post "/v2/app_spaces", Yajl::Encoder.encode({ :name => Sham.name, :organization_guid => @org_a.guid }), json_headers(headers_for(member_b))
+        last_response.status.should == 403
+        VCAP::CloudController::Models::AppSpace.count.should == before_count
+      end
+    end
+  end
+
+  shared_examples "create app space fail" do |perm_name|
+    describe "POST /v2/app_spaces/:id" do
+      it "should not allow a user with only the #{perm_name} permission to create an app space" do
+        post "/v2/app_spaces", Yajl::Encoder.encode({ :name => Sham.name, :organization_guid => @org_a.guid }), json_headers(headers_for(member_a))
+        last_response.status.should == 403
       end
     end
   end
@@ -80,6 +112,15 @@ describe VCAP::CloudController::AppSpace do
     end
   end
 
+  shared_examples "read app space fail" do |perm_name|
+    describe "GET /v2/app_spaces/:id" do
+      it "should not allow a user with only the #{perm_name} permission to read an app space" do
+        get "/v2/app_spaces/#{@app_space_a.guid}", {}, headers_for(member_b)
+        last_response.status.should == 403
+      end
+    end
+  end
+
   shared_examples "delete app space ok" do |perm_name|
     describe "DELETE /v2/app_spaces/:id" do
       it "should allow a user with the #{perm_name} permission to delete an app space" do
@@ -104,55 +145,87 @@ describe VCAP::CloudController::AppSpace do
   end
 
   describe "Permissions" do
-    before do
-      @app_space_a = VCAP::CloudController::Models::AppSpace.make
-      @app_space_a_manager = make_user_for_app_space(@app_space_a)
-      @app_space_a_developer = make_user_for_app_space(@app_space_a)
-      @app_space_a_auditor = make_user_for_app_space(@app_space_a)
-      @app_space_a.add_manager(@app_space_a_manager)
-      @app_space_a.add_developer(@app_space_a_developer)
-      @app_space_a.add_auditor(@app_space_a_auditor)
+    include_context "permissions"
 
-      @app_space_b = VCAP::CloudController::Models::AppSpace.make
-      @app_space_b_manager = make_user_for_app_space(@app_space_b)
-      @app_space_b_developer = make_user_for_app_space(@app_space_b)
-      @app_space_b_auditor = make_user_for_app_space(@app_space_b)
-      @app_space_b.add_manager(@app_space_b_manager)
-      @app_space_b.add_developer(@app_space_b_developer)
-      @app_space_b.add_auditor(@app_space_b_auditor)
+    describe "Org Level Permissions" do
+      describe "OrgManager" do
+        let(:member_a) { @org_a_manager }
+        let(:member_b) { @org_b_manager }
 
-      @cf_admin = VCAP::CloudController::Models::User.make(:admin => true)
+        include_examples "create app space ok", "OrgManager"
+        include_examples "enumerate app spaces ok", "OrgManager"
+        include_examples "modify app space ok", "OrgManager"
+        include_examples "read app space ok", "OrgManager"
+        include_examples "delete app space ok", "OrgManager"
+      end
+
+      describe "OrgUser" do
+        let(:member_a) { @org_a_member }
+        let(:member_b) { @org_b_member }
+
+        include_examples "create app space fail", "OrgUser"
+        include_examples "enumerate app spaces ok", "OrgUser", 0
+        include_examples "modify app space fail", "OrgUser"
+        include_examples "read app space fail", "OrgUser"
+        include_examples "delete app space fail", "OrgUser"
+      end
+
+      describe "BillingManager" do
+        let(:member_a) { @org_a_billing_manager }
+        let(:member_b) { @org_b_billing_manager }
+
+        include_examples "create app space fail", "BillingManager"
+        include_examples "enumerate app spaces ok", "BillingManager", 0
+        include_examples "modify app space fail", "BillingManager"
+        include_examples "read app space fail", "BillingManager"
+        include_examples "delete app space fail", "BillingManager"
+      end
+
+      describe "Auditor" do
+        let(:member_a) { @org_a_auditor }
+        let(:member_b) { @org_b_auditor }
+
+        include_examples "create app space fail", "BillingManager"
+        include_examples "enumerate app spaces ok", "BillingManager", 0
+        include_examples "modify app space fail", "BillingManager"
+        include_examples "read app space fail", "BillingManager"
+        include_examples "delete app space fail", "BillingManager"
+      end
     end
 
-    describe "AppSpaceManager" do
-      let(:member_a) { @app_space_a_manager }
-      let(:member_b) { @app_space_b_manager }
+    describe "App Space Level Permissions" do
+      describe "AppSpaceManager" do
+        let(:member_a) { @app_space_a_manager }
+        let(:member_b) { @app_space_b_manager }
 
-      include_examples "create app space fail", "AppSpaceManager"
-      include_examples "enumerate app spaces ok", "AppSpaceManager"
-      include_examples "modify app space ok", "AppSpaceManager"
-      include_examples "read app space ok", "AppSpaceManager"
-      include_examples "delete app space fail", "AppSpaceManager"
-    end
+        include_examples "create app space fail", "AppSpaceManager"
+        include_examples "enumerate app spaces ok", "AppSpaceManager"
+        include_examples "modify app space ok", "AppSpaceManager"
+        include_examples "read app space ok", "AppSpaceManager"
+        include_examples "delete app space fail", "AppSpaceManager"
+      end
 
-    describe "Developer" do
-      let(:member_a) { @app_space_a_developer }
-      let(:member_b) { @app_space_b_developer }
+      describe "Developer" do
+        let(:member_a) { @app_space_a_developer }
+        let(:member_b) { @app_space_b_developer }
 
-      include_examples "enumerate app spaces ok", "Developer"
-      include_examples "modify app space fail", "Developer"
-      include_examples "read app space ok", "Developer"
-      include_examples "delete app space fail", "Developer"
-    end
+        include_examples "create app space fail", "Developer"
+        include_examples "enumerate app spaces ok", "Developer"
+        include_examples "modify app space fail", "Developer"
+        include_examples "read app space ok", "Developer"
+        include_examples "delete app space fail", "Developer"
+      end
 
-    describe "AppSpaceAuditor" do
-      let(:member_a) { @app_space_a_auditor }
-      let(:member_b) { @app_space_b_auditor }
+      describe "AppSpaceAuditor" do
+        let(:member_a) { @app_space_a_auditor }
+        let(:member_b) { @app_space_b_auditor }
 
-      include_examples "enumerate app spaces ok", "AppSpaceAuditor"
-      include_examples "modify app space fail", "AppSpaceAuditor"
-      include_examples "read app space ok", "AppSpaceAuditor"
-      include_examples "delete app space fail", "AppSpaceAuditor"
+        include_examples "create app space fail", "AppSpaceAuditor"
+        include_examples "enumerate app spaces ok", "AppSpaceAuditor"
+        include_examples "modify app space fail", "AppSpaceAuditor"
+        include_examples "read app space ok", "AppSpaceAuditor"
+        include_examples "delete app space fail", "AppSpaceAuditor"
+      end
     end
 
     describe "CFAdmin" do
