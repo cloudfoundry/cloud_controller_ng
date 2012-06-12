@@ -4,6 +4,7 @@ module VCAP::CloudController
   rest_controller :AppSpace do
     permissions_required do
       full Permissions::CFAdmin
+      full Permissions::OrgManager
       full Permissions::AppSpaceManager
       read Permissions::AppSpaceDeveloper
       read Permissions::AppSpaceAuditor
@@ -21,9 +22,11 @@ module VCAP::CloudController
     query_parameters :organization_guid, :developer_guid, :app_guid
 
     def user_visible_dataset
+      managed_orgs = Models::Organization.filter(:managers => [@user])
       model.filter({ :developers => [@user],
                      :managers => [@user],
-                     :auditors => [@user]}.sql_or)
+                     :auditors => [@user],
+                     :organization => managed_orgs }.sql_or)
     end
 
     def self.translate_validation_exception(e, attributes)
