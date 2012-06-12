@@ -6,6 +6,7 @@ module VCAP::CloudController::Models
     class InvalidAppSpaceRelation < InvalidRelation; end
 
     many_to_one       :organization
+    one_to_many       :routes
 
     default_order_by  :name
 
