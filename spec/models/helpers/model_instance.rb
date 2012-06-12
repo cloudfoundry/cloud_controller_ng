@@ -54,7 +54,7 @@ module VCAP::CloudController::ModelSpecHelper
       let(:obj) { described_class.make }
 
       it "should succeed" do
-        obj.delete
+        obj.destroy
       end
     end
   end
