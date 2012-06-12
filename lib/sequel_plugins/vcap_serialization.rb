@@ -96,8 +96,8 @@ module Sequel::Plugins::VcapSerialization
       create_from_hash(hash, opts)
     end
 
-    # Create a new model instance from the supplied json string.  Only include
-    # attributes specified by import_attributes.
+    # Create and save a new model instance from the supplied json string.
+    # Only include attributes specified by import_attributes.
     #
     # @param [Hash] Hash of the attributes.
     #
@@ -108,6 +108,21 @@ module Sequel::Plugins::VcapSerialization
     def create_from_hash(hash, opts = {})
       create_opts = update_or_create_options(hash, opts)
       create(create_opts)
+    end
+
+    # Instantiates, but does not save, a new model instance from the
+    # supplied json string.  Only include # attributes specified by
+    # import_attributes.
+    #
+    # @param [Hash] Hash of the attributes.
+    #
+    # @option opts [Array<String>] :only Only include an attribute if it is
+    # both included in import_attributes and in the :only option.
+    #
+    # @return [Sequel::Model] The created model.
+    def new_from_hash(hash, opts = {})
+      create_opts = update_or_create_options(hash, opts)
+      new(create_opts)
     end
 
     # Set the default order during a to_json on the model class.
