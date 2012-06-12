@@ -172,13 +172,9 @@ module VCAP::CloudController::RestController
     # Enumerate operation
     def enumerate
       raise NotAuthenticated unless @user
-      authz_filter = admin_enumeration_filter
-
-      logger.debug2 "#{log_prefix} enumerate: #{authz_filter.inspect}"
-
-      ds = model.filter(authz_filter)
+      ds = @user.admin ? model.dataset : user_visible_dataset
+      logger.debug2 "#{log_prefix} enumerate: #{ds.inspect}"
       qp = self.class.query_parameters
-
       ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
       Paginator.render_json(self.class, ds, @opts)
     end
@@ -302,18 +298,11 @@ module VCAP::CloudController::RestController
       end
     end
 
-    # wrapped filter allowing admins full access to all objects
+    # Dataset visible to the current user, by default, everything.
     #
     # @return [Hash] Key value pairs used as a dataset filter.
-    def admin_enumeration_filter
-      @user.admin ? {} : enumeration_filter
-    end
-
-    # wrapped filter allowing admins full access to all objects
-    #
-    # @return [Hash] Key value pairs used as a dataset filter.
-    def enumeration_filter
-      { }
+    def user_visible_dataset
+      model.dataset
     end
 
     # The model associated with this api endpoint.
