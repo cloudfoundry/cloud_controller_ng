@@ -82,6 +82,11 @@ describe VCAP::CloudController::Organization do
   end
 
   shared_examples "delete org ok" do |perm_name|
+    before do
+      @app_space_a.destroy
+      @app_space_b.destroy
+    end
+
     describe "DELETE /v2/organizations/:id" do
       it "should allow a user with the #{perm_name} permission to delete an org" do
         delete "/v2/organizations/#{@org_a.guid}", {}, headers_for(member_a)
@@ -105,68 +110,80 @@ describe VCAP::CloudController::Organization do
   end
 
   describe "Permissions" do
-    before do
-      @org_a = VCAP::CloudController::Models::Organization.make
-      @org_a_manager = VCAP::CloudController::Models::User.make
-      @org_a_member = VCAP::CloudController::Models::User.make
-      @org_a_billing_manager = VCAP::CloudController::Models::User.make
-      @org_a_auditor = VCAP::CloudController::Models::User.make
-      @org_a.add_manager(@org_a_manager)
-      @org_a.add_user(@org_a_member)
-      @org_a.add_billing_manager(@org_a_billing_manager)
-      @org_a.add_auditor(@org_a_auditor)
+    include_context "permissions"
 
-      @org_b = VCAP::CloudController::Models::Organization.make
-      @org_b_manager = VCAP::CloudController::Models::User.make
-      @org_b_member = VCAP::CloudController::Models::User.make
-      @org_b_billing_manager = VCAP::CloudController::Models::User.make
-      @org_b_auditor = VCAP::CloudController::Models::User.make
-      @org_b.add_manager(@org_b_manager)
-      @org_b.add_user(@org_b_member)
-      @org_b.add_billing_manager(@org_b_billing_manager)
-      @org_b.add_auditor(@org_b_auditor)
+    describe "Org Level Permissions" do
+      describe "OrgManager" do
+        let(:member_a) { @org_a_manager }
+        let(:member_b) { @org_b_manager }
 
-      @cf_admin = VCAP::CloudController::Models::User.make(:admin => true)
+        include_examples "enumerate orgs ok", "OrgManager"
+        include_examples "modify org ok", "OrgManager"
+        include_examples "read org ok", "OrgManager"
+        include_examples "delete org ok", "OrgManager"
+      end
+
+      describe "OrgUser" do
+        let(:member_a) { @org_a_member }
+        let(:member_b) { @org_b_member }
+
+        include_examples "enumerate orgs ok", "OrgUser"
+        include_examples "modify org fail", "OrgUser"
+        include_examples "read org ok", "OrgUser"
+        include_examples "delete org fail", "OrgUser"
+      end
+
+      describe "BillingManager" do
+        let(:member_a) { @org_a_billing_manager }
+        let(:member_b) { @org_b_billing_manager }
+
+        include_examples "enumerate orgs ok", "BillingManager"
+        include_examples "modify org fail", "BillingManager"
+        include_examples "read org ok", "BillingManager"
+        include_examples "delete org fail", "BillingManager"
+      end
+
+      describe "Auditor" do
+        let(:member_a) { @org_a_auditor }
+        let(:member_b) { @org_b_auditor }
+
+        include_examples "enumerate orgs ok", "Auditor"
+        include_examples "modify org fail", "Auditor"
+        include_examples "read org ok", "Auditor"
+        include_examples "delete org fail", "Auditor"
+      end
     end
 
-    describe "OrgManager" do
-      let(:member_a) { @org_a_manager }
-      let(:member_b) { @org_b_manager }
+    describe "App Space Level Permissions" do
+      describe "AppSpaceManager" do
+        let(:member_a) { @app_space_a_manager }
+        let(:member_b) { @app_space_b_manager }
 
-      include_examples "enumerate orgs ok", "OrgManager"
-      include_examples "modify org ok", "OrgManager"
-      include_examples "read org ok", "OrgManager"
-      include_examples "delete org ok", "OrgManager"
-    end
+        include_examples "enumerate orgs ok", "AppSpaceManager"
+        include_examples "modify org fail", "AppSpaceManager"
+        include_examples "read org ok", "AppSpaceManager"
+        include_examples "delete org fail", "AppSpaceManager"
+      end
 
-    describe "OrgUser" do
-      let(:member_a) { @org_a_member }
-      let(:member_b) { @org_b_member }
+      describe "Developer" do
+        let(:member_a) { @app_space_a_developer }
+        let(:member_b) { @app_space_b_developer }
 
-      include_examples "enumerate orgs ok", "OrgUser"
-      include_examples "modify org fail", "OrgUser"
-      include_examples "read org ok", "OrgUser"
-      include_examples "delete org fail", "OrgUser"
-    end
+        include_examples "enumerate orgs ok", "Developer"
+        include_examples "modify org fail", "Developer"
+        include_examples "read org ok", "Developer"
+        include_examples "delete org fail", "Developer"
+      end
 
-    describe "BillingManager" do
-      let(:member_a) { @org_a_billing_manager }
-      let(:member_b) { @org_b_billing_manager }
+      describe "AppSpaceAuditor" do
+        let(:member_a) { @app_space_a_auditor }
+        let(:member_b) { @app_space_b_auditor }
 
-      include_examples "enumerate orgs ok", "BillingManager"
-      include_examples "modify org fail", "BillingManager"
-      include_examples "read org ok", "BillingManager"
-      include_examples "delete org fail", "BillingManager"
-    end
-
-    describe "Auditor" do
-      let(:member_a) { @org_a_auditor }
-      let(:member_b) { @org_b_auditor }
-
-      include_examples "enumerate orgs ok", "Auditor"
-      include_examples "modify org fail", "Auditor"
-      include_examples "read org ok", "Auditor"
-      include_examples "delete org fail", "Auditor"
+        include_examples "enumerate orgs ok", "AppSpaceAuditor"
+        include_examples "modify org fail", "AppSpaceAuditor"
+        include_examples "read org ok", "AppSpaceAuditor"
+        include_examples "delete org fail", "AppSpaceAuditor"
+      end
     end
 
     describe "CFAdmin" do
@@ -189,6 +206,8 @@ describe VCAP::CloudController::Organization do
       end
 
       it "should allow a user with the CFAdmin permission to delete an org" do
+        @app_space_a.destroy
+        @app_space_b.destroy
         delete "/v2/organizations/#{@org_a.guid}", {}, headers_for(@cf_admin)
         last_response.status.should == 204
       end
