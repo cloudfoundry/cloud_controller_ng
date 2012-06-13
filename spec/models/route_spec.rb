@@ -9,6 +9,9 @@ describe VCAP::CloudController::Models::Route do
     :stripped_string_attributes => :host,
     :many_to_one => {
       :domain => lambda { |route| VCAP::CloudController::Models::Domain.make }
+    },
+    :many_to_zero_or_more => {
+      :apps => lambda { |app| VCAP::CloudController::Models::App.make }
     }
   }
 
