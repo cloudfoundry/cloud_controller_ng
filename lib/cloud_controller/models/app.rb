@@ -2,10 +2,16 @@
 
 module VCAP::CloudController::Models
   class App < Sequel::Model
+    class InvalidRelation      < StandardError; end
+    class InvalidRouteRelation < InvalidRelation; end
+
     many_to_one       :app_space
     many_to_one       :framework
     many_to_one       :runtime
+    many_to_many      :routes, :before_add => :validate_route
     one_to_many       :service_bindings
+
+    add_association_dependencies :routes => :nullify
 
     default_order_by  :name
 
@@ -45,6 +51,12 @@ module VCAP::CloudController::Models
       end
     rescue Yajl::ParseError
       errors.add(:environment_json, :invalid_json)
+    end
+
+    def validate_route(route)
+      unless route && app_space && route.domain.app_spaces.include?(app_space)
+        raise InvalidRouteRelation.new(route.guid)
+      end
     end
 
   end
