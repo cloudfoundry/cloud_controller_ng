@@ -4,6 +4,9 @@ module VCAP::CloudController::Models
   class Route < Sequel::Model
     many_to_one :domain
 
+    many_to_many :apps
+    add_association_dependencies :apps => :nullify
+
     export_attributes :host, :domain_guid
     import_attributes :host, :domain_guid
     strip_attributes  :host
