@@ -18,8 +18,8 @@ module VCAP::CloudController
         create_pidfile
       end
 
-      setup_db
       setup_logging
+      setup_db
     end
 
     def logger
