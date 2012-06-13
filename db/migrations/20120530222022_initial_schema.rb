@@ -211,6 +211,12 @@ Sequel.migration do
       index [:app_space_id, :name], :unique => true
     end
 
+    create_table :apps_routes do
+      foreign_key :app_id, :apps, :null => false
+      foreign_key :route_id, :routes, :null => false
+      index [:app_id, :route_id], :unique => true
+    end
+
     create_table(:service_bindings) do
       VCAP::Migration.common(self)
 

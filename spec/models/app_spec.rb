@@ -18,9 +18,26 @@ describe VCAP::CloudController::Models::App do
           service_binding = VCAP::CloudController::Models::ServiceBinding.make
           service_binding.service_instance.app_space = app.app_space
           service_binding
+       },
+       :routes => lambda { |app|
+         route = VCAP::CloudController::Models::Route.make
+         app.app_space.organization.add_domain(route.domain)
+         app.app_space.add_domain(route.domain)
+         route
        }
     }
   }
+
+  describe "bad relationships" do
+    let(:app) { Models::App.make }
+
+    it "should not associate an app with a route using a domain not approved for the app space" do
+      lambda {
+        route = VCAP::CloudController::Models::Route.make
+        app.add_route(route)
+      }.should raise_error Models::App::InvalidRouteRelation
+    end
+  end
 
   describe "validations" do
     describe "env" do
