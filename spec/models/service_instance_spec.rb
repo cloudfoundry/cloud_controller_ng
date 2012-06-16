@@ -2,7 +2,9 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Models::ServiceInstance do
+module VCAP::CloudController
+describe Models::ServiceInstance do
+
   it_behaves_like "a CloudController model", {
     :required_attributes => [:name, :credentials, :service_plan, :app_space],
     :unique_attributes   => [:app_space, :name],
@@ -31,4 +33,5 @@ describe VCAP::CloudController::Models::ServiceInstance do
       end
     end
   end
+end
 end

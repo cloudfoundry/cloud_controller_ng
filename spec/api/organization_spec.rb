@@ -2,7 +2,9 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Organization do
+module VCAP::CloudController
+describe Organization do
+
   let(:org)   { VCAP::CloudController::Models::Organization.make }
 
   it_behaves_like "a CloudController API", {
@@ -194,4 +196,5 @@ describe VCAP::CloudController::Organization do
       end
     end
   end
+end
 end

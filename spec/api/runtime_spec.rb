@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Runtime do
+module VCAP::CloudController
+describe Runtime do
 
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/runtimes",
@@ -15,4 +16,5 @@ describe VCAP::CloudController::Runtime do
     }
   }
 
+end
 end

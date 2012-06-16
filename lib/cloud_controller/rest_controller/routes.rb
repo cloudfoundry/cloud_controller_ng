@@ -53,7 +53,7 @@ module VCAP::CloudController::RestController
 
       def define_enumerate_route
         klass = self
-        controller.get path, do
+        controller.get path do
           klass.new(@user, logger, request).dispatch(:enumerate)
         end
       end

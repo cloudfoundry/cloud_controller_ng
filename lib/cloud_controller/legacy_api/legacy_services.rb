@@ -6,7 +6,6 @@ require "services/api"
 # and as we start adding other legacy protocol conversions.
 module VCAP::CloudController
   class LegacyService
-    include VCAP::CloudController::Errors
     SERVICE_TOKEN_KEY = "HTTP_X_VCAP_SERVICE_TOKEN"
     DEFAULT_PROVIDER = "core"
     LEGACY_API_USER_GUID = "legacy-api"
@@ -15,7 +14,6 @@ module VCAP::CloudController
       @logger = logger
       @request = request
       @service_auth_token = service_auth_token
-      super(nil, logger, request)
     end
 
     def create_offering
@@ -59,7 +57,7 @@ module VCAP::CloudController
 
       empty_json
     rescue JsonMessage::ValidationError => e
-      raise InvalidRequest
+      raise Errors::InvalidRequest
     end
 
     def validate_access(label, provider = DEFAULT_PROVIDER)
@@ -69,7 +67,7 @@ module VCAP::CloudController
       unless (svc_auth_token &&
               svc_auth_token.token_matches?(service_auth_token))
         logger.warn("unauthorized service offering")
-        raise NotAuthorized
+        raise Errors::NotAuthorized
       end
     end
 

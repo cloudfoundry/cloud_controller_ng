@@ -1,9 +1,8 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 require File.expand_path("../spec_helper", __FILE__)
 
-describe "VCAP::RestAPI::Query" do
-  include VCAP::RestAPI
-
+module VCAP::RestAPI
+describe Query do
   num_authors = 10
   books_per_author = 2
 
@@ -198,4 +197,5 @@ describe "VCAP::RestAPI::Query" do
       end
     end
   end
+end
 end

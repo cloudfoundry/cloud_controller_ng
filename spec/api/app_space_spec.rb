@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::AppSpace do
+module VCAP::CloudController
+describe AppSpace do
 
   it_behaves_like "a CloudController API", {
     :path                => "/v2/app_spaces",
@@ -18,4 +19,5 @@ describe VCAP::CloudController::AppSpace do
     }
   }
 
+end
 end

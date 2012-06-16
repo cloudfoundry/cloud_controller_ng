@@ -2,7 +2,9 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::App do
+module VCAP::CloudController
+describe App do
+
   let(:app_obj) { VCAP::CloudController::Models::App.make }
   let(:app_space) { VCAP::CloudController::Models::AppSpace.make }
   let(:runtime) { VCAP::CloudController::Models::Runtime.make }
@@ -31,4 +33,5 @@ describe VCAP::CloudController::App do
        }
     }
   }
+end
 end

@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::ServiceAuthToken do
+module VCAP::CloudController
+describe ServiceAuthToken do
 
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/service_auth_tokens",
@@ -14,4 +15,5 @@ describe VCAP::CloudController::ServiceAuthToken do
     :sensitive_attributes => :token
   }
 
+end
 end

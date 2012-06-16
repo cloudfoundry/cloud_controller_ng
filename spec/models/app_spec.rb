@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Models::App do
+module VCAP::CloudController
+describe Models::App do
   it_behaves_like "a CloudController model", {
     :required_attributes  => [:name, :framework, :runtime, :app_space],
     :unique_attributes    => [:app_space, :name],
@@ -21,4 +22,5 @@ describe VCAP::CloudController::Models::App do
        }
     }
   }
+end
 end

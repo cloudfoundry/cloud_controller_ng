@@ -1,7 +1,7 @@
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::LegacyService do
-
+module VCAP::CloudController
+describe LegacyService do
   describe "Gateway facing apis" do
     describe "POST services/v1/offerings" do
       let(:path) { "services/v1/offerings" }
@@ -55,4 +55,5 @@ describe VCAP::CloudController::LegacyService do
       end
     end
   end
+end
 end

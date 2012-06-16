@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::ServiceBinding do
+module VCAP::CloudController
+describe ServiceBinding do
 
   # TODO: reenable
   #
@@ -14,4 +15,5 @@ describe VCAP::CloudController::ServiceBinding do
   #   :unique_attributes    => [:app_guid, :service_instance_guid]
   # }
 
+end
 end

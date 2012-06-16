@@ -2,7 +2,9 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Models::ServiceBinding do
+module VCAP::CloudController
+describe Models::ServiceBinding do
+
   it_behaves_like "a CloudController model", {
     :required_attributes => [:credentials, :service_instance, :app],
     :unique_attributes   => [:app, :service_instance],
@@ -51,4 +53,5 @@ describe VCAP::CloudController::Models::ServiceBinding do
       }.should raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
     end
   end
+end
 end

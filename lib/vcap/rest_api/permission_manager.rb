@@ -60,7 +60,7 @@ module VCAP::RestAPI
           setup_dsl(controller)
         end
 
-        k.new(self).instance_eval(&blk)
+        k.new.instance_eval(&blk)
       end
 
       # Predicate to check if a permission or set of permissions
@@ -108,10 +108,6 @@ module VCAP::RestAPI
     # define_permissions, the method some_type is a valid method that
     # takes one or more permissions as an argument.
     module DefinePermissionsDSL
-      def initialize(controller)
-        @controller = controller
-      end
-
       def setup_dsl(controller)
         controller.permitted_ops.each do |op|
           define_method(op) do |*args, &blk|

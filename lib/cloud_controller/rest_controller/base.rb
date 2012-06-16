@@ -7,7 +7,6 @@ module VCAP::CloudController::RestController
     ROUTE_PREFIX = "/v2"
 
     include VCAP::CloudController
-    include VCAP::CloudController::Errors
     include VCAP::RestAPI
     include PermissionManager
     include Messages
@@ -95,7 +94,7 @@ module VCAP::CloudController::RestController
       end
       token.commit
       return ret
-    rescue QuotaDeclined => e
+    rescue Errors::QuotaDeclined => e
       raise e
     rescue Exception => e
       token.abandon(e.message) unless token.nil?
@@ -118,7 +117,7 @@ module VCAP::CloudController::RestController
     def create(json)
       validate_class_access(:create)
       @request_attrs = Yajl::Parser.new.parse(json)
-      raise InvalidRequest unless request_attrs
+      raise Errors::InvalidRequest unless request_attrs
       logger.debug2 "#{log_prefix} create: #{request_attrs}"
 
       with_quota_enforcement(create_quota_token_request) do
@@ -147,7 +146,7 @@ module VCAP::CloudController::RestController
     def update(id, json)
       obj = find_id_and_validate_access(:update, id)
       @request_attrs = Yajl::Parser.new.parse(json)
-      raise InvalidRequest unless request_attrs
+      raise Errors::InvalidRequest unless request_attrs
       logger.debug2 "#{log_prefix} update: #{id} #{request_attrs}"
 
       with_quota_enforcement(update_quota_token_request(obj)) do
@@ -171,7 +170,7 @@ module VCAP::CloudController::RestController
 
     # Enumerate operation
     def enumerate
-      raise NotAuthenticated unless @user
+      raise Errors::NotAuthenticated unless @user
       authz_filter = admin_enumeration_filter
 
       logger.debug2 "#{log_prefix} enumerate: #{authz_filter.inspect}"
@@ -297,8 +296,8 @@ module VCAP::CloudController::RestController
     def validate_access(op, obj, user)
       user_perms = Permissions.permissions_for(obj, user)
       unless self.class.op_allowed_by?(op, user_perms)
-        raise NotAuthenticated unless user
-        raise NotAuthorized
+        raise Errors::NotAuthenticated unless user
+        raise Errors::NotAuthorized
       end
     end
 

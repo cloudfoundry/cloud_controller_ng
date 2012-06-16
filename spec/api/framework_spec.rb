@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Framework do
+module VCAP::CloudController
+describe Framework do
 
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/frameworks",
@@ -15,4 +16,5 @@ describe VCAP::CloudController::Framework do
     }
   }
 
+end
 end

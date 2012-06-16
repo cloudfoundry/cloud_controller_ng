@@ -2,7 +2,9 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Permissions do
+module VCAP::CloudController
+describe Permissions do
+
   let(:obj) { VCAP::CloudController::Models::Organization.make }
   let(:user) { VCAP::CloudController::Models::User.make }
   let(:admin) { VCAP::CloudController::Models::User.make(:admin => true) }
@@ -21,4 +23,5 @@ describe VCAP::CloudController::Permissions do
                                                          Permissions::CFAdmin]
     end
   end
+end
 end

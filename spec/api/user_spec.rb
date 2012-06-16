@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::User do
+module VCAP::CloudController
+describe User do
 
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/users",
@@ -20,4 +21,5 @@ describe VCAP::CloudController::User do
     }
   }
 
+end
 end

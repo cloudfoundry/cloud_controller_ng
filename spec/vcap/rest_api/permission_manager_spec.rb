@@ -2,9 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe "VCAP::RestAPI::PermissionManager" do
-  include VCAP::RestAPI
-
+module VCAP::RestAPI
+describe PermissionManager do
   def make_controller(&blk)
     k = Class.new do
       include PermissionManager
@@ -144,4 +143,5 @@ describe "VCAP::RestAPI::PermissionManager" do
                        some_perms_allowing_op).should be_false
     end
   end
+end
 end

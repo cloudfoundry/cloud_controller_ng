@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Models::ServiceAuthToken do
+module VCAP::CloudController
+describe Models::ServiceAuthToken do
   it_behaves_like "a CloudController model", {
     :required_attributes  => [:label, :provider, :crypted_token],
     :unique_attributes    => [:label, :provider],
@@ -10,4 +11,5 @@ describe VCAP::CloudController::Models::ServiceAuthToken do
     :extra_json_attributes => :token,
     :stripped_string_attributes => [:label, :provider]
   }
+end
 end

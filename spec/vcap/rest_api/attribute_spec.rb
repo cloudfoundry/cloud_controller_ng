@@ -1,9 +1,8 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 require File.expand_path("../spec_helper", __FILE__)
 
-describe "VCAP::RestAPI::NamedAttribute" do
-  include VCAP::RestAPI
-
+module VCAP::RestAPI
+describe NamedAttribute do
   describe "#name" do
     it "should return the name provided" do
       attr = NamedAttribute.new("some_attr")
@@ -53,4 +52,5 @@ describe "VCAP::RestAPI::NamedAttribute" do
 
   include_examples "operation list", :exclude_in, :exclude_in?, "excluded"
   include_examples "operation list", :optional_in, :optional_in?, "optional"
+end
 end

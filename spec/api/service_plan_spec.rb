@@ -2,7 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::ServicePlan do
+module VCAP::CloudController
+describe ServicePlan do
 
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/service_plans",
@@ -15,4 +16,5 @@ describe VCAP::CloudController::ServicePlan do
     }
   }
 
+end
 end
