@@ -24,6 +24,7 @@ end
 
 group :test do
   gem "rspec"
+  gem "ci_reporter"
   gem "simplecov"
   gem "sqlite3"
   gem "machinist", "~> 1.0.6"

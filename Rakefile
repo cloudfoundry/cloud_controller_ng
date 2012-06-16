@@ -1,8 +1,13 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-require "rspec"
 require "rspec/core/rake_task"
+require "ci/reporter/rake/rspec"
 
-environments = %w(test development production)
+ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
+
+namespace :spec do
+  desc "Run specs producing results for CI"
+  task :ci => ["ci:setup:rspec", "^spec"]
+end
 
 desc "Run specs"
 RSpec::Core::RakeTask.new do |t|
@@ -21,8 +26,6 @@ task :coverage do
     RSpec::Core::Runner.run(['.'])
   end
 end
-
-task "spec:rcov" => :coverage
 
 namespace :db do
   # TODO: add migration support
