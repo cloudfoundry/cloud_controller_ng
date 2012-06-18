@@ -22,6 +22,15 @@ describe VCAP::CloudController::Organization do
     }
   }
 
+  shared_examples "create org fail" do |perm_name|
+    describe "POST /v2/organizations/:id" do
+      it "should not allow a user with only the #{perm_name} permission to modify an org" do
+        post "/v2/organizations", Yajl::Encoder.encode({ :name => "some org" }), json_headers(headers_for(member_a))
+        last_response.status.should == 403
+      end
+    end
+  end
+
   shared_examples "enumerate orgs ok" do |perm_name|
     describe "GET /v2/organizations" do
       it "should return orgs to a user that has #{perm_name} permissions" do
@@ -118,6 +127,7 @@ describe VCAP::CloudController::Organization do
         let(:member_a) { @org_a_manager }
         let(:member_b) { @org_b_manager }
 
+        include_examples "create org fail", "OrgManager"
         include_examples "enumerate orgs ok", "OrgManager"
         include_examples "modify org ok", "OrgManager"
         include_examples "read org ok", "OrgManager"
@@ -128,6 +138,7 @@ describe VCAP::CloudController::Organization do
         let(:member_a) { @org_a_member }
         let(:member_b) { @org_b_member }
 
+        include_examples "create org fail", "OrgUser"
         include_examples "enumerate orgs ok", "OrgUser"
         include_examples "modify org fail", "OrgUser"
         include_examples "read org ok", "OrgUser"
@@ -138,6 +149,7 @@ describe VCAP::CloudController::Organization do
         let(:member_a) { @org_a_billing_manager }
         let(:member_b) { @org_b_billing_manager }
 
+        include_examples "create org fail", "BillingManager"
         include_examples "enumerate orgs ok", "BillingManager"
         include_examples "modify org fail", "BillingManager"
         include_examples "read org ok", "BillingManager"
@@ -148,6 +160,7 @@ describe VCAP::CloudController::Organization do
         let(:member_a) { @org_a_auditor }
         let(:member_b) { @org_b_auditor }
 
+        include_examples "create org fail", "Auditor"
         include_examples "enumerate orgs ok", "Auditor"
         include_examples "modify org fail", "Auditor"
         include_examples "read org ok", "Auditor"
@@ -160,6 +173,7 @@ describe VCAP::CloudController::Organization do
         let(:member_a) { @app_space_a_manager }
         let(:member_b) { @app_space_b_manager }
 
+        include_examples "create org fail", "AppSpaceManager"
         include_examples "enumerate orgs ok", "AppSpaceManager"
         include_examples "modify org fail", "AppSpaceManager"
         include_examples "read org ok", "AppSpaceManager"
@@ -170,6 +184,7 @@ describe VCAP::CloudController::Organization do
         let(:member_a) { @app_space_a_developer }
         let(:member_b) { @app_space_b_developer }
 
+        include_examples "create org fail", "Developer"
         include_examples "enumerate orgs ok", "Developer"
         include_examples "modify org fail", "Developer"
         include_examples "read org ok", "Developer"
@@ -180,6 +195,7 @@ describe VCAP::CloudController::Organization do
         let(:member_a) { @app_space_a_auditor }
         let(:member_b) { @app_space_b_auditor }
 
+        include_examples "create org fail", "AppSpaceAuditor"
         include_examples "enumerate orgs ok", "AppSpaceAuditor"
         include_examples "modify org fail", "AppSpaceAuditor"
         include_examples "read org ok", "AppSpaceAuditor"
