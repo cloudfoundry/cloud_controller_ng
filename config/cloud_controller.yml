@@ -20,8 +20,3 @@ quota_manager:
   base_url: "http://localhost:31004/v1/quota"
   auth_token: "testtoken"
   http_timeout_sec: 2
-
-secrets:
-  user_token:
-    key: "token key goes here"
-    duration: 604800            # 7 * 24 * 60 * 60 (= 1week)
