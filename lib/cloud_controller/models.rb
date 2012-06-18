@@ -20,7 +20,7 @@ module VCAP::CloudController::Models::UserGroup
                  :class =>"VCAP::CloudController::Models::User",
                  :join_table => "#{table_name}_#{name}",
                  :right_key => :user_id,
-                 :reciprocol => opts[:reciprocol])
+                 :reciprocal => opts[:reciprocal])
 
     add_association_dependencies name => :nullify
   end

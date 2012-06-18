@@ -9,18 +9,18 @@ module VCAP::CloudController::Models
     many_to_many      :managed_organizations,
                       :class => "VCAP::CloudController::Models::Organization",
                       :join_table => "organizations_managers",
-                      :right_key => :organization_id, :reciprocol => :managers
+                      :right_key => :organization_id, :reciprocal => :managers
 
     many_to_many      :billing_managed_organizations,
                       :class => "VCAP::CloudController::Models::Organization",
                       :join_table => "organizations_billing_managers",
                       :right_key => :organization_id,
-                      :reciprocol => :billing_managers
+                      :reciprocal => :billing_managers
 
     many_to_many      :audited_organizations,
                       :class => "VCAP::CloudController::Models::Organization",
                       :join_table => "organizations_auditors",
-                      :right_key => :organization_id, :reciprocol => :auditors
+                      :right_key => :organization_id, :reciprocal => :auditors
 
     many_to_many      :app_spaces
 
