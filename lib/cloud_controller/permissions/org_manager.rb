@@ -8,6 +8,7 @@ module VCAP::CloudController::Permissions
       if obj.kind_of?(VCAP::CloudController::Models::Organization)
         obj.managers.include?(user)
       elsif obj.respond_to?(:organization)
+        # FIXME: include pulls the whole list
         obj.organization && obj.organization.managers.include?(user)
       end
     end
