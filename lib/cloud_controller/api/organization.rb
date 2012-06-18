@@ -13,6 +13,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       to_many   :app_spaces, :exclude_in => :create
+      to_many   :domains
       to_many   :users
       to_many   :managers
       to_many   :billing_managers

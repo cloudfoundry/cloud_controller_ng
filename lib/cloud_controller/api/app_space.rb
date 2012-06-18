@@ -18,6 +18,7 @@ module VCAP::CloudController
       to_many    :managers
       to_many    :auditors
       to_many    :apps
+      to_many    :domains
     end
 
     query_parameters :organization_guid, :developer_guid, :app_guid
