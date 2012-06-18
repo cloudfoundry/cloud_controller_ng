@@ -88,7 +88,7 @@ module VCAP::CloudController
       development = @development
       config = @config
 
-      port = ENV["VMC_APP_PORT"]
+      port = ENV["VCAP_APP_PORT"]
       port ||= @config[:port]
 
       DB.apply_migrations(db) if run_migrations
@@ -118,7 +118,7 @@ module VCAP::CloudController
 
     # http://tinyurl.com/bml8nzf
     def running_in_cf?
-      ENV.has_key?("VMC_APP_PORT")
+      ENV.has_key?("VCAP_APP_PORT")
     end
 
     def merge_vcap_config
