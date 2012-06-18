@@ -18,13 +18,6 @@ class VCAP::CloudController::Config < VCAP::Config
         optional(:http_timeout_sec) => Integer
       },
 
-      :secrets => {
-        :user_token => {
-          :key              => String,      # key used for HMAC signing of CC tokens
-          :duration         => Integer,     # duration of the CC tokens, in seconds
-        }
-      },
-
       :logging => {
         :level              => String,      # debug, info, etc.
         optional(:file)     => String,      # Log file to use
