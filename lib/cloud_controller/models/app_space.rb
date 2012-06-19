@@ -27,6 +27,12 @@ module VCAP::CloudController::Models
     many_to_many      :domains, :before_add => :validate_domain
     add_association_dependencies :domains => :nullify
 
+    one_to_many       :default_users,
+                      :class => "VCAP::CloudController::Models::User",
+                      :key => :default_app_space_id
+    add_association_dependencies :default_users => :nullify
+
+
     default_order_by  :name
 
     export_attributes :name, :organization_guid

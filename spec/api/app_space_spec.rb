@@ -233,8 +233,9 @@ describe VCAP::CloudController::AppSpace do
       it "should allow a user with the CFAdmin permission to enumerate all app spaces" do
         get "/v2/app_spaces", {}, headers_for(@cf_admin)
         last_response.should be_ok
-        decoded_response["total_results"].should == 2
-        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@app_space_a.guid, @app_space_b.guid]
+        decoded_response["total_results"].should == Models::Organization.all.count
+        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should ==
+          Models::AppSpace.select(:guid).collect { |o| o.guid }
       end
 
       it "should allow a user with the CFAdmin permission to read any app space" do

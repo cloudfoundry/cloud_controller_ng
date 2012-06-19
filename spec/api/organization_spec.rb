@@ -207,8 +207,9 @@ describe VCAP::CloudController::Organization do
       it "should allow a user with the CFAdmin permission to enumerate all orgs" do
         get "/v2/organizations", {}, headers_for(@cf_admin)
         last_response.should be_ok
-        decoded_response["total_results"].should == 2
-        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should == [@org_a.guid, @org_b.guid]
+        decoded_response["total_results"].should == Models::Organization.all.count
+        decoded_response["resources"].map { |o| o["metadata"]["guid"] }.should ==
+          Models::Organization.select(:guid).collect { |o| o.guid }
       end
 
       it "should allow a user with the CFAdmin permission to read any org" do

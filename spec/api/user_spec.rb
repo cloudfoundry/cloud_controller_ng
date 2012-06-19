@@ -9,6 +9,12 @@ describe VCAP::CloudController::User do
     :model                => VCAP::CloudController::Models::User,
     :required_attributes  => :guid,
     :unique_attributes    => :guid,
+    :many_to_one_collection_ids => {
+      :default_app_space => lambda { |user|
+        org = user.organizations.first || VCAP::CloudController::Models::Organization.make
+        VCAP::CloudController::Models::AppSpace.make(:organization => org)
+      }
+    },
     :many_to_many_collection_ids => {
       :organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
       :managed_organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
