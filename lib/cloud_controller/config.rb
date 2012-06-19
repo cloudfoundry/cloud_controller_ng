@@ -7,7 +7,19 @@ class VCAP::CloudController::Config < VCAP::Config
 
   define_schema do
     {
+      :info => {
+        :name            => String,
+        :build           => String,
+        :version         => Fixnum,
+        :support_address => String,
+        :description     => String,
+      },
+
+      # TODO: put back once json schema is sorted out
+      # :allow_debug => BoolSchema,
+
       :uaa => {
+        :url                => String,
         :resource_id        => String,
         :symmetric_secret   => String
       },
