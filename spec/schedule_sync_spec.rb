@@ -32,9 +32,9 @@ describe "EventMachine#schdule_sync" do
 
   it "should run a block on the reactor thread using an optional callback" do
     with_em_and_thread do
-      result = EM.schedule_sync do |callback|
+      result = EM.schedule_sync do |promise|
         EM::Timer.new(1) {
-          callback.call("async return from the reactor thread")
+          promise.deliver("async return from the reactor thread")
         }
       end
       result.should == "async return from the reactor thread"
