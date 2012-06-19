@@ -46,6 +46,8 @@ Sequel.migration do
 
       Boolean :admin,  :default => false
       Boolean :active, :default => false
+
+      foreign_key :default_app_space_id, :app_spaces
     end
 
     create_table :organizations do

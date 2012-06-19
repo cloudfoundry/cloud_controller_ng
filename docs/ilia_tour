@@ -769,3 +769,13 @@ App Creation:
     -H "Authorization: $AUTH_TOKEN"\
     -d "{\"name\":\"some app\", \"app_space_guid\":\"$APP_SPACE_GUID\", \"framework_guid\": \"$FRAMEWORK_GUID\", \"runtime_guid\": \"$RUNTIME_GUID\"}" \
     http://$CCNG_HOST/v2/apps
+
+
+Working with Legacy VMC:
+
+  In order for the legacy api to know what app space to add apps to, you need
+  to set a default app space:
+
+  curl -X PUT -v -H "Authorization:$AUTH_TOKEN" \
+    -d "{\"default_app_space_guid\":\"$APP_SPACE_GUID\"}" \
+    http://$CCNG_HOST/v2/users/$USER_GUID

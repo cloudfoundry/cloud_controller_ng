@@ -50,8 +50,6 @@ module VCAP::CloudController::ApiSpecHelper
   end
 
   shared_context "inlined_relations_context" do |opts, attr, make, depth|
-    include_context "collections", opts, attr, make
-
     before do
       query_parms = query_params_for_inline_depth(depth)
       get "#{opts[:path]}/#{@obj.guid}", query_parms, @headers
@@ -235,8 +233,14 @@ module VCAP::CloudController::ApiSpecHelper
             [nil, 0, 1].each do |inline_relations_depth|
               desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(inline_relations_depth)
               describe "GET #{path}#{desc}" do
-                include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
+                include_context "collections", opts, attr, make
 
+                before do
+                  @obj.send("#{attr}=", make.call(@obj)) unless @obj.send(attr)
+                  @obj.save
+                end
+
+                include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
                 include_examples "inlined_relations", attr, inline_relations_depth
 
                 it "should return a #{attr}_guid field" do
@@ -271,6 +275,7 @@ module VCAP::CloudController::ApiSpecHelper
             [nil, 0, 1].each do |inline_relations_depth|
               desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(inline_relations_depth)
               describe "GET #{path}#{desc}" do
+                include_context "collections", opts, attr, make
                 include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
                 include_examples "inlined_relations", attr, inline_relations_depth
                 include_examples "get to_many attr url", opts, attr, make

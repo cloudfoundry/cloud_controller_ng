@@ -11,7 +11,8 @@ module Sequel::Plugins::VcapRelations
       guid_attr = "#{name}_guid"
 
       define_method(guid_attr) do
-        send(name).guid
+        other = send(name)
+        other.guid unless other.nil?
       end
 
       define_method("#{guid_attr}=") do |val|

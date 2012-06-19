@@ -6,6 +6,12 @@ describe VCAP::CloudController::Models::User do
   it_behaves_like "a CloudController model", {
     :required_attributes          => :guid,
     :unique_attributes            => :guid,
+    :many_to_zero_or_one => {
+      :default_app_space => lambda { |user|
+        org = user.organizations.first || VCAP::CloudController::Models::Organization.make
+        VCAP::CloudController::Models::AppSpace.make(:organization => org)
+      }
+    },
     :many_to_zero_or_more => {
       :organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
       :managed_organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },

@@ -16,6 +16,7 @@ module VCAP::CloudController
       to_many   :managed_app_spaces
       to_many   :audited_app_spaces
       attribute :admin, Message::Boolean
+      to_one    :default_app_space
     end
 
     query_parameters :app_space_guid, :organization_guid,
