@@ -65,6 +65,8 @@ module VCAP::CloudController::Errors
     ["DomainInvalid",  HTTP::BAD_REQUEST, 130001, "The domain is invalid: %s"],
     ["DomainNotFound", HTTP::BAD_REQUEST, 130002, "The domain could not be found: %s"],
 
+    ["LegacyApiWithoutDefaultAppSpace", HTTP::BAD_REQUEST, 140001, "A legacy api call requring a default app space was called, but no default app space is set for the user."]
+
   ].each do |e|
     define_error *e
   end
