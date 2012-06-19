@@ -92,4 +92,5 @@ require "cloud_controller/errors"
 require "cloud_controller/api"
 
 require "cloud_controller/legacy_api/legacy_api_base"
+require "cloud_controller/legacy_api/legacy_info"
 require "cloud_controller/legacy_api/legacy_services"
