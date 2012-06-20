@@ -71,7 +71,7 @@ module VCAP::CloudController::RestController
       logger.debug2 "#{log_prefix} dispatch: #{op}"
       send(op, *args)
     rescue Sequel::ValidationFailed => e
-      raise self.class.translate_and_log_exception(logger, e)
+      raise self.class.translate_validation_exception(e, request_attrs)
     rescue Sequel::DatabaseError => e
       raise self.class.translate_and_log_exception(logger, e)
     end
@@ -87,12 +87,7 @@ module VCAP::CloudController::RestController
     # @return Results of calling the provided block.
     def with_quota_enforcement(quota_request_body, &blk)
       token = QuotaManager.fetch_quota_token(quota_request_body)
-      ret = nil
-      begin
-        ret = blk.call
-      rescue Sequel::ValidationFailed => e
-        raise self.class.translate_validation_exception(e, request_attrs)
-      end
+      ret = blk.call
       token.commit
       return ret
     rescue QuotaDeclined => e
@@ -167,8 +162,6 @@ module VCAP::CloudController::RestController
       obj = find_id_and_validate_access(:delete, id)
       obj.destroy
       [HTTP::NO_CONTENT, nil]
-    rescue Sequel::ValidationFailed => e
-      raise self.class.translate_validation_exception(e, request_attrs)
     end
 
     # Enumerate operation
@@ -247,8 +240,6 @@ module VCAP::CloudController::RestController
       obj = find_id_and_validate_access(:update, id)
       obj.send("#{verb}_#{singular_name}_by_guid", other_id)
       [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
-    rescue Sequel::ValidationFailed => e
-      raise self.class.translate_validation_exception(e, request_attrs)
     end
 
     # Find an object and validate that the current user has rights to
