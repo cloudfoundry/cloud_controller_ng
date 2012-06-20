@@ -22,6 +22,20 @@ module VCAP::CloudController
 
     query_parameters :app_space_guid, :organization_guid, :framework_guid, :runtime_guid
 
+    def create_quota_token_request(obj)
+      {
+        :path => obj.app_space.organization_guid,
+        :body => {
+          :op           => "post",
+          :user_id      => @user.guid,
+          :object       => "appspace",
+          :object_id    => obj.guid,
+          :object_name  => obj.name,
+          :audit_data   => obj.to_json
+        }
+      }
+    end
+
     def self.translate_validation_exception(e, attributes)
       app_space_and_name_errors = e.errors.on([:app_space_id, :name])
       if app_space_and_name_errors && app_space_and_name_errors.include?(:unique)

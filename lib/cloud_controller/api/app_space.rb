@@ -31,6 +31,20 @@ module VCAP::CloudController
                      :organization => managed_orgs }.sql_or)
     end
 
+    def create_quota_token_request(obj)
+      {
+        :path => obj.organization_guid,
+        :body => {
+          :op           => "post",
+          :user_id      => @user.guid,
+          :object       => "appspace",
+          :object_id    => obj.guid,
+          :object_name  => obj.name,
+          :audit_data   => obj.to_json
+        }
+      }
+    end
+
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:organization_id, :name])
       if name_errors && name_errors.include?(:unique)

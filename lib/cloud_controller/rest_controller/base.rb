@@ -103,7 +103,7 @@ module VCAP::CloudController::RestController
     #
     # TODO: once quota is implemented verywhere, take these out
     # for safety.  Err on the side of requring quota check.
-    def create_quota_token_request; end
+    def create_quota_token_request(obj); end
     def update_quota_token_request(obj); end
 
     # Create operation
@@ -114,15 +114,16 @@ module VCAP::CloudController::RestController
       @request_attrs = Yajl::Parser.new.parse(json)
       raise InvalidRequest unless request_attrs
 
-      logger.debug2 "#{log_prefix} create: #{request_attrs}"
-      obj = model.new_from_hash(request_attrs)
-      validate_access(:create, obj, @user)
-
-      with_quota_enforcement(create_quota_token_request) do
+      model.db.transaction do
+        logger.debug2 "#{log_prefix} create: #{request_attrs}"
         obj = model.create_from_hash(request_attrs)
-        [HTTP::CREATED,
-         { "Location" => "#{self.class.path}/#{obj.guid}" },
-        ObjectSerialization.render_json(self.class, obj, @opts)]
+        validate_access(:create, obj, @user)
+
+        with_quota_enforcement(create_quota_token_request(obj)) do
+          [HTTP::CREATED,
+           { "Location" => "#{self.class.path}/#{obj.guid}" },
+          ObjectSerialization.render_json(self.class, obj, @opts)]
+        end
       end
     end
 
