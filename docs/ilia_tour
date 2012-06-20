@@ -758,3 +758,43 @@ DELETE.
       ]
     }
   }
+
+
+App Space Creation:
+
+  curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+    -H "Authorization: $AUTH_TOKEN"\
+    -d "{\"name\":\"some app space\", \"organization_guid\":\"$ORG_GUID\"}" \
+    http://$CCNG_HOST/v2/app_spaces
+
+  export the app space guid for convenience
+
+    export APP_SPACE_GUID=3f04efcf-4dba-4691-bc10-e044307fe8d1
+
+
+One time framework/runtime creation:
+
+  Need to do a 1 time framework and runtime creation first (only cf admins
+  can do this, so make sure to use an admin auth token)
+
+  curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+    -H "Authorization: $AUTH_TOKEN"\
+    -d "{\"name\":\"java 99\", \"description\":\"some lame java runtime\"}" \
+    http://$CCNG_HOST/v2/runtimes
+
+  curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+    -H "Authorization: $AUTH_TOKEN"\
+    -d "{\"name\":\"groovy 11\", \"description\":\"groovy java framework\"}" \
+    http://$CCNG_HOST/v2/frameworks
+
+  export the framework and runtime guids above for convenience
+
+    export RUNTIME_GUID=6e675666-1cef-4f41-8e2d-fbd6fc1d8b2e
+    export FRAMEWORK_GUID=47bc7be9-fb31-41b7-8752-bc4e76136fd2
+
+App Creation:
+
+  curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+    -H "Authorization: $AUTH_TOKEN"\
+    -d "{\"name\":\"some app\", \"app_space_guid\":\"$APP_SPACE_GUID\", \"framework_guid\": \"$FRAMEWORK_GUID\", \"runtime_guid\": \"$RUNTIME_GUID\"}" \
+    http://$CCNG_HOST/v2/apps
