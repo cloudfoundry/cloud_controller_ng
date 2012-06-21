@@ -22,11 +22,10 @@ module VCAP::CloudController
 
     query_parameters :organization_guid, :developer_guid, :app_guid
 
-    def enumeration_filter
-      { :developers => [@user],
-        :managers => [@user],
-        :auditors => [@user]
-      }.sql_or
+    def user_visible_dataset
+      model.filter({ :developers => [@user],
+                     :managers => [@user],
+                     :auditors => [@user]}.sql_or)
     end
 
     def self.translate_validation_exception(e, attributes)
