@@ -28,6 +28,24 @@ module VCAP::CloudController::Models
       validates_presence :framework
       validates_presence :runtime
       validates_unique   [:app_space_id, :name]
+      validate_environment
     end
+
+    def environment_json=(val)
+      val = Yajl::Encoder.encode(val)
+      super(val)
+    end
+
+    def validate_environment
+      return if environment_json.nil?
+      h = Yajl::Parser.parse(environment_json)
+      errors.add(:environment_json, :invalid_json) unless h.kind_of?(Hash)
+      h.keys.each do |k|
+        errors.add(:environment_json, "reserved_key:#{k}") if k =~ /^(vcap|vmc)_/i
+      end
+    rescue Yajl::ParseError
+      errors.add(:environment_json, :invalid_json)
+    end
+
   end
 end
