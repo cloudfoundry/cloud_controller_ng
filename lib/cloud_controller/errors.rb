@@ -62,6 +62,9 @@ module VCAP::CloudController::Errors
     ["ServiceLabelTaken", HTTP::BAD_REQUEST, 120002, "The service lable is taken: %s"],
     ["ServiceNotFound",   HTTP::BAD_REQUEST, 120003, "The service could not be found: %s"],
 
+    ["DomainInvalid",  HTTP::BAD_REQUEST, 130001, "The domain is invalid: %s"],
+    ["DomainNotFound", HTTP::BAD_REQUEST, 130002, "The domain could not be found: %s"],
+
   ].each do |e|
     define_error *e
   end
