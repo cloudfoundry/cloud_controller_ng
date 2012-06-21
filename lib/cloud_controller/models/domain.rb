@@ -2,6 +2,9 @@
 
 module VCAP::CloudController::Models
   class Domain < Sequel::Model
+    class InvalidRelation         < StandardError; end
+    class InvalidAppSpaceRelation < InvalidRelation; end
+
     many_to_one       :organization
 
     default_order_by  :name
@@ -9,6 +12,9 @@ module VCAP::CloudController::Models
     export_attributes :name, :organization_guid
     import_attributes :name, :organization_guid
     strip_attributes  :name
+
+    many_to_many      :app_spaces, :before_add => :validate_app_space
+    add_association_dependencies :app_spaces => :nullify
 
     # TODO: add this sort of functionality to vcap validations
     # i.e. a strip_down_attributes sort of thing
@@ -29,6 +35,12 @@ module VCAP::CloudController::Models
       #
       # b) not accurate.  this is not an accurate regex for a fqdn
       validates_format  /^[\w\-]+\.[\w\-]+$/, :name
+    end
+
+    def validate_app_space(app_space)
+      unless app_space && organization && organization.app_spaces.include?(app_space)
+        raise InvalidAppSpaceRelation.new(app_space.guid)
+      end
     end
   end
 end
