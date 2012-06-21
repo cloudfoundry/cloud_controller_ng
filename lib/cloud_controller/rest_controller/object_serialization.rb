@@ -109,7 +109,9 @@ module VCAP::CloudController::RestController
       end
 
       controller.to_one_relationships.each do |name, attr|
-        other_controller = VCAP::CloudController.controller_from_name(name)
+        ar = controller.model.association_reflection(name)
+        other_model = ar.associated_class
+        other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
         other = obj.send(name)
         res["#{name}_url"] = other_controller.url_for_id(other.guid)
         if depth < target_depth && !parents.include?(other_controller)
@@ -123,5 +125,6 @@ module VCAP::CloudController::RestController
       parents.pop
       res
     end
+
   end
 end
