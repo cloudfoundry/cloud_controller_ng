@@ -15,7 +15,7 @@ module VCAP::CloudController::ModelSpecHelper
           end
         end
 
-        obj.delete
+        obj.destroy
 
         # used for things like password that we don't export
         opts[:extra_json_attributes].each do |attr|
