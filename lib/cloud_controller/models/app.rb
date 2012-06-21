@@ -15,11 +15,13 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name, :app_space_guid, :framework_guid, :runtime_guid,
+    export_attributes :name, :production,
+                      :app_space_guid, :framework_guid, :runtime_guid,
                       :environment_json, :memory, :instances, :file_descriptors,
                       :disk_quota, :state
 
-    import_attributes :name, :app_space_guid, :framework_guid, :runtime_guid,
+    import_attributes :name, :production,
+                      :app_space_guid, :framework_guid, :runtime_guid,
                       :environment_json, :memory, :instances,
                       :file_descriptors, :disk_quota, :state
 
