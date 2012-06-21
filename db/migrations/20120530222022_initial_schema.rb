@@ -174,6 +174,10 @@ Sequel.migration do
 
       String :name, :null => false
 
+      # Do the bare miminum for now.  We'll migrate this to something
+      # fancier later if we need it.
+      Boolean :production, :default => false
+
       # environment provided by the developer.
       # does not include environment from service
       # bindings.  those get merged from the bound
