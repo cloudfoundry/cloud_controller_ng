@@ -779,12 +779,12 @@ One time framework/runtime creation:
 
   curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
     -H "Authorization: $AUTH_TOKEN"\
-    -d "{\"name\":\"java 99\", \"description\":\"some lame java runtime\"}" \
+    -d "{\"name\":\"ruby18\", \"description\":\"some ruby runtime\"}" \
     http://$CCNG_HOST/v2/runtimes
 
   curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
     -H "Authorization: $AUTH_TOKEN"\
-    -d "{\"name\":\"groovy 11\", \"description\":\"groovy java framework\"}" \
+    -d "{\"name\":\"sinatra\", \"description\":\"sinatra microframework\"}" \
     http://$CCNG_HOST/v2/frameworks
 
   export the framework and runtime guids above for convenience
