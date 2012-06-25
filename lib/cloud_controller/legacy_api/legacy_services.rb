@@ -2,6 +2,10 @@
 
 require "services/api"
 
+
+# FIXME: split this into seperate classe for gateway v.s. end user
+# service apis.
+
 # NOTE: this will get refactored a bit as other methods get added
 # and as we start adding other legacy protocol conversions.
 module VCAP::CloudController
@@ -11,11 +15,26 @@ module VCAP::CloudController
     DEFAULT_PROVIDER = "core"
     LEGACY_API_USER_GUID = "legacy-api"
 
-    def initialize(logger, request, service_auth_token)
+    def initialize(user, logger, request, service_auth_token = nil)
+      @user = user
       @logger = logger
       @request = request
       @service_auth_token = service_auth_token
-      super(nil, logger, request)
+    end
+
+    def enumerate
+      # FIXME: this is not correct.  It needs to encode as legacy and
+      # also should be reporting services for the default app space,
+      # not enumerating service types.
+      logger.debug("legacy service enumerate")
+      svc_api = VCAP::CloudController::Service.new(user, logger)
+      api_resp = svc_api.dispatch(:enumerate)
+
+      svcs = Yajl::Parser.parse(api_resp)
+      legacy_resp = svcs["resources"].map do |svc|
+        legacy_service_encoding(svc)
+      end
+      Yajl::Encoder.encode(legacy_resp)
     end
 
     def create_offering
@@ -39,9 +58,9 @@ module VCAP::CloudController
       provider = DEFAULT_PROVIDER
       validate_access(label, provider)
 
-      user = self.class.legacy_api_user
+      gw_user = self.class.legacy_api_gw_user
       legacy_req = Yajl::Encoder.encode(svc_attrs)
-      svc_api = VCAP::CloudController::Service.new(user, logger, legacy_req)
+      svc_api = VCAP::CloudController::Service.new(gw_user, logger, legacy_req)
       (_, _, svc_resp) = svc_api.dispatch(:create)
       svc = Yajl::Parser.parse(svc_resp)
 
@@ -52,7 +71,8 @@ module VCAP::CloudController
       }
 
       legacy_req = Yajl::Encoder.encode(svc_plan_attrs)
-      svc_plan_api = VCAP::CloudController::ServicePlan.new(user, logger, legacy_req)
+      svc_plan_api = VCAP::CloudController::ServicePlan.new(gw_user, logger,
+                                                            legacy_req)
       svc_plan_api.dispatch(:create)
 
       empty_json
@@ -71,13 +91,27 @@ module VCAP::CloudController
       end
     end
 
+    def legacy_service_encoding(svc)
+      {
+        :name => svc["entity"]["name"],
+        :type => "TODO",
+        :vendor => svc["entity"]["vendor"],
+        :version => svc["entity"]["version"],
+        :tier => "free", # TODO
+        :properties => [], # TODO
+        :meta => {
+          # TODO
+        }
+      }
+    end
+
     private
 
     def empty_json
       "{}"
     end
 
-    def self.legacy_api_user
+    def self.legacy_api_gw_user
       user = Models::User.find(:guid => LEGACY_API_USER_GUID)
       if user.nil?
         user = Models::User.create(:guid => LEGACY_API_USER_GUID,
@@ -90,12 +124,16 @@ module VCAP::CloudController
     def self.setup_routes
       klass = self
 
+      controller.get "/services" do
+        klass.new(@user, logger, request).enumerate
+      end
+
       controller.before "/services/v1/*" do
         @service_auth_token = env[SERVICE_TOKEN_KEY]
       end
 
       controller.post "/services/v1/offerings" do
-        klass.new(logger, request, @service_auth_token).create_offering
+        klass.new(@user, logger, request, @service_auth_token).create_offering
       end
     end
 
@@ -104,6 +142,6 @@ module VCAP::CloudController
     end
 
     setup_routes
-    attr_accessor :request, :logger, :service_auth_token
+    attr_accessor :user, :request, :logger, :service_auth_token
   end
 end
