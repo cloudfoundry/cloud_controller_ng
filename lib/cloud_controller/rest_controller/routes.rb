@@ -26,35 +26,40 @@ module VCAP::CloudController::RestController
       def define_create_route
         klass = self
         controller.post path, :consumes => [:json] do
-          klass.new(@user, logger, request).dispatch(:create, request.body)
+          api = klass.new(@user, logger, request.body, request.params)
+          api.dispatch(:create)
         end
       end
 
       def define_read_route
         klass = self
         controller.get path_id do |id|
-          klass.new(@user, logger, request).dispatch(:read, id)
+          api = klass.new(@user, logger, request.body, request.params)
+          api.dispatch(:read, id)
         end
       end
 
       def define_update_route
         klass = self
         controller.put path_id, :consumes => [:json] do |id|
-          klass.new(@user, logger, request).dispatch(:update, id, request.body)
+          api = klass.new(@user, logger, request.body, request.params)
+          api.dispatch(:update, id)
         end
       end
 
       def define_delete_route
         klass = self
         controller.delete path_id do |id|
-          klass.new(@user, logger, request).dispatch(:delete, id)
+          api = klass.new(@user, logger, request.body, request.params)
+          api.dispatch(:delete, id)
         end
       end
 
       def define_enumerate_route
         klass = self
         controller.get path, do
-          klass.new(@user, logger, request).dispatch(:enumerate)
+          api = klass.new(@user, logger, request.body, request.params)
+          api.dispatch(:enumerate)
         end
       end
 
@@ -62,18 +67,18 @@ module VCAP::CloudController::RestController
         klass = self
         to_many_relationships.each do |name, attr|
           controller.get "#{path_id}/#{name}" do |id|
-            klass.new(@user, logger, request).dispatch(:enumerate_related,
-                                                       id, name)
+            api = klass.new(@user, logger, request.body, request.params)
+            api.dispatch(:enumerate_related, id, name)
           end
 
           controller.put "#{path_id}/#{name}/:other_id" do |id, other_id|
-            klass.new(@user, logger, request).dispatch(:add_related,
-                                                       id, name, other_id)
+            api = klass.new(@user, logger, request.body, request.params)
+            api.dispatch(:add_related, id, name, other_id)
           end
 
           controller.delete "#{path_id}/#{name}/:other_id" do |id, other_id|
-            klass.new(@user, logger, request).dispatch(:remove_related,
-                                                       id, name, other_id)
+            api = klass.new(@user, logger, request.body, request.params)
+            api.dispatch(:remove_related, id, name, other_id)
           end
         end
       end

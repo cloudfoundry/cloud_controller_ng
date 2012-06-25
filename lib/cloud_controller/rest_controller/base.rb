@@ -27,11 +27,14 @@ module VCAP::CloudController::RestController
     #
     # @param [VCAP::Logger] logger The logger to use during the request.
     #
-    # @param [Sinatra::Request] request The full sinatra request object.
-    def initialize(user, logger, request)
+    # @param [IO] body The request body.
+    #
+    # @param [Hash] query_params The http query parameters.
+    def initialize(user, logger, body = nil, query_params = {})
       @user    = user
       @logger  = logger
-      @opts    = parse_params(request.params)
+      @body    = body
+      @opts    = parse_params(query_params)
     end
 
     # Parses and sanitizes query parameters from the sinatra request.
@@ -110,8 +113,8 @@ module VCAP::CloudController::RestController
     #
     # @param [IO] json An IO object that when read will return the json
     # serialized request.
-    def create(json)
-      @request_attrs = Yajl::Parser.new.parse(json)
+    def create
+      @request_attrs = Yajl::Parser.new.parse(@body)
       raise InvalidRequest unless request_attrs
 
       model.db.transaction do
@@ -142,9 +145,9 @@ module VCAP::CloudController::RestController
     #
     # @param [IO] json An IO object that when read will return the json
     # serialized request.
-    def update(id, json)
+    def update(id)
       obj = find_id_and_validate_access(:update, id)
-      @request_attrs = Yajl::Parser.new.parse(json)
+      @request_attrs = Yajl::Parser.new.parse(@body)
       raise InvalidRequest unless request_attrs
       logger.debug2 "#{log_prefix} update: #{id} #{request_attrs}"
 

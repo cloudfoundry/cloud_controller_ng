@@ -40,10 +40,9 @@ module VCAP::CloudController
       validate_access(label, provider)
 
       user = self.class.legacy_api_user
-      svc_api = VCAP::CloudController::Service.new(user, logger, @request)
-      (_, _, svc_resp) = svc_api.dispatch(:create,
-                                          Yajl::Encoder.encode(svc_attrs))
-
+      legacy_req = Yajl::Encoder.encode(svc_attrs)
+      svc_api = VCAP::CloudController::Service.new(user, logger, legacy_req)
+      (_, _, svc_resp) = svc_api.dispatch(:create)
       svc = Yajl::Parser.parse(svc_resp)
 
       svc_plan_attrs = {
@@ -52,10 +51,9 @@ module VCAP::CloudController
         :description => "default plan"
       }
 
-      svc_plan_api = VCAP::CloudController::ServicePlan.new(user,
-                                                            logger, @request)
-
-      svc_plan_api.dispatch(:create, Yajl::Encoder.encode(svc_plan_attrs))
+      legacy_req = Yajl::Encoder.encode(svc_plan_attrs)
+      svc_plan_api = VCAP::CloudController::ServicePlan.new(user, logger, legacy_req)
+      svc_plan_api.dispatch(:create)
 
       empty_json
     rescue JsonMessage::ValidationError => e
