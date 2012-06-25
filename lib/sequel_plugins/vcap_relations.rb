@@ -18,7 +18,7 @@ module Sequel::Plugins::VcapRelations
         ar = self.class.association_reflection(name)
         other = ar.associated_class[:guid => val]
         # FIXME: better error reporting
-        return if other.nil?
+        return if(other.nil? && !val.nil?)
         send("#{name}=", other)
       end
 

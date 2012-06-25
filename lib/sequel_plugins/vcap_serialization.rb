@@ -153,8 +153,13 @@ module Sequel::Plugins::VcapSerialization
       attrs = self.import_attrs || []
       attrs = attrs - opts[:only] unless opts[:only].nil?
       attrs.each do |attr|
-        v = hash[attr] || hash[attr.to_s]
-        results[attr] = v unless v.nil?
+        key = nil
+        if hash.has_key?(attr)
+          key = attr
+        elsif hash.has_key?(attr.to_s)
+          key = attr.to_s
+        end
+        results[attr] = hash[key] unless key.nil?
       end
       results
     end
