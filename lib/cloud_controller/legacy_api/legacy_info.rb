@@ -1,16 +1,8 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-
 module VCAP::CloudController
-  class LegacyInfo
+  class LegacyInfo < LegacyApiBase
     include VCAP::CloudController::Errors
-
-    def initialize(config, logger, user, request)
-      @config = config
-      @logger = logger
-      @user = user
-      @request = request
-    end
 
     def info
       info = {
@@ -40,23 +32,111 @@ module VCAP::CloudController
       Yajl::Encoder.encode(info)
     end
 
+    # Legacy format
+    #
+    # {
+    #   "key-value": {
+    #     "redis": {
+    #       "2.2": {
+    #         "id": 2,
+    #         "vendor": "redis",
+    #         "version": "2.2",
+    #         "tiers": {
+    #           "free": {
+    #             "options": {
+
+    #             },
+    #             "order": 1
+    #           },
+    #           "sptest": {
+    #             "options": {
+
+    #             },
+    #             "order": 2
+    #           }
+    #         },
+    #         "type": "key-value",
+    #         "description": "Redis key-value store service"
+    #       }
+    #     },
+    #     "mongodb": {
+    #       "1.8": {
+    #         "id": 3,
+    #         "vendor": "mongodb",
+    #         "version": "1.8",
+    #         "tiers": {
+    #           "free": {
+    #             "options": {
+
+    #             },
+    #             "order": 1
+    #           },
+    #           "sptest": {
+    #             "options": {
+
+    #             },
+    #             "order": 2
+    #           }
+    #         },
+    #         "type": "key-value",
+    #         "description": "MongoDB NoSQL store"
+    #       }
+    #     }
+    #   },<snip>
+    # }
     def service_info
-      svc_api = VCAP::CloudController::Service.new(user, logger, @request)
+      svc_api = VCAP::CloudController::Service.new(user, logger)
       api_resp = svc_api.dispatch(:enumerate)
 
       svcs = Yajl::Parser.parse(api_resp)
-      # TODO
-      # legacy_resp = svcs["resources"].map do |svc|
-      #   legacy_svc_encoding(svc)
-      # end
-      legacy_resp = []
+
+      legacy_resp = {}
+      svcs["resources"].each do |svc|
+        svc_type = synthesize_service_type(svc)
+        label = svc["entity"]["label"]
+        version = svc["entity"]["version"]
+        legacy_resp[svc_type] ||= {}
+        legacy_resp[svc_type][label] ||= {}
+        legacy_resp[svc_type][label][version] ||= {}
+        legacy_resp[svc_type][label][version] = legacy_svc_encoding(svc, user)
+      end
 
       Yajl::Encoder.encode(legacy_resp)
     end
 
-    def legacy_svc_encoding(svc)
+    # Keep these here in the legacy api translation rather than polluting the
+    # model/schema
+    def synthesize_service_type(svc)
+      case svc["entity"]["label"]
+      when /mysql/
+        "database"
+      when /postgresql/
+        "database"
+      when /redis/
+        "key-value"
+      when /mongodb/
+        "key-value"
+      else
+        "generic"
+      end
+    end
+
+    def legacy_svc_encoding(svc, user)
       {
-        # TODO
+        :id      => svc["entity"]["guid"],
+        :vendor  => svc["entity"]["label"],
+        :version => svc["entity"]["version"],
+        :type    => synthesize_service_type(svc),
+        :description => svc["entity"]["description"] || '-',
+
+        # The legacy vmc/sts clients only handles free.  Don't
+        # try to pretent otherwise.
+        :tiers => {
+          "free" => {
+            "options" => { },
+            "order" => 1
+          }
+        }
       }
     end
 
@@ -65,11 +145,11 @@ module VCAP::CloudController
     def self.setup_routes
       klass = self
       controller.get "/info" do
-        klass.new(@config, logger, @user, request).info
+        klass.new(@config, logger, request).info
       end
 
       controller.get "/info/services" do
-        klass.new(@config, logger, @user, request).service_info
+        klass.new(@config, logger, request).service_info
       end
     end
 
