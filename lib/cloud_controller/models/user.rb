@@ -72,5 +72,17 @@ module VCAP::CloudController::Models
     def active?
       active
     end
+
+    def self.current_user=(user)
+      Thread.current[:vcap_user] = user
+    end
+
+    def self.current_user
+      Thread.current[:vcap_user]
+    end
+
+    def self.current_user_is_admin?
+      return current_user && current_user.admin?
+    end
   end
 end

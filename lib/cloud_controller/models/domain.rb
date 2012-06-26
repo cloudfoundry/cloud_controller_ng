@@ -26,8 +26,11 @@ module VCAP::CloudController::Models
 
     def validate
       validates_presence :name
-      validates_presence :organization
       validates_unique   :name
+
+      unless VCAP::CloudController::Models::User.current_user_is_admin?
+        validates_presence :organization
+      end
 
       # TODO: this is:
       #

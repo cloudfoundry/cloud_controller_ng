@@ -8,6 +8,7 @@ module VCAP::CloudController
       @config = config
       @logger = logger
       @request = request
+      @user = Models::User.current_user
     end
 
     def default_app_space

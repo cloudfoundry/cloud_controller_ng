@@ -1,8 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-
 module VCAP::CloudController
-  class LegacyApps
+  class LegacyApps < LegacyApiBase
     include VCAP::CloudController::Errors
 
     # For reference, this is an example of the old format:
@@ -58,8 +57,10 @@ module VCAP::CloudController
     # REQUEST_BODY:
     #
     # {"name":"foopeb","staging":{"framework":"sinatra","runtime":null},
-    #  "uris":["foopeb.http://localhost:8181"],"instances":1,"resources":{"memory":128}}
+    #  "uris":["foo.vcap.me"],"instances":1,"resources":{"memory":128}}
     def create
+      # TODO: better error reporting instead of just raising InvalidReq
+
       # TODO: use json schema
       legacy_attrs = Yajl::Parser.parse(request.body)
 
@@ -76,6 +77,24 @@ module VCAP::CloudController
       runtime_name = legacy_attrs["staging"]["runtime"] || "ruby18"
       runtime = Models::Runtime.find(:name => runtime_name)
       runtime_guid = runtime ? runtime.guid : nil
+
+      app_space = Models::AppSpace.find(:guid => default_app_space.guid)
+      return InvalidRequest unless app_space
+
+      route_guids = legacy_attrs["uris"].map do |uri_str|
+        uri_str = "http://#{uri_str}"
+        fqdn = URI.parse(uri_str).normalize.host
+        raise InvalidRequest unless fqdn
+
+        fqdn_array = fqdn.split(".")
+        raise InvalidRequest unless fqdn_array.length >= 2
+
+        host_name = fqdn_array[0]
+        domain_name = fqdn_array[1..-1].join(".")
+
+        domain = app_space.domains_dataset[:name => domain_name]
+        #raise InvalidRequest
+      end
 
       attrs = {
         :name => legacy_attrs["name"],
@@ -118,15 +137,9 @@ module VCAP::CloudController
       HTTP::OK
     end
 
-    def default_app_space
-      raise NotAuthorized unless @user
-      raise LegacyApiWithoutDefaultAppSpace unless @user.default_app_space
-      @user.default_app_space
-    end
-
     def legacy_api(body = nil, params = {})
       body ||= request.body
-      VCAP::CloudController::App.new(user, logger, body, params)
+      VCAP::CloudController::App.new(logger, body, params)
     end
 
     def legacy_api_inline_relations(body = nil, params = {})
@@ -154,7 +167,7 @@ module VCAP::CloudController
           :disk => app["entity"]["disk"],
           :fds => app["entity"]["fds"]
         },
-        :state => "TODO",
+        :state => "STARTED",
         :services => [], # TODO
         :version => "TODO",
         :env => [], # TODO
