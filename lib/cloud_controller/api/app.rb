@@ -29,7 +29,7 @@ module VCAP::CloudController
         :body => {
           :op           => "post",
           :user_id      => @user.guid,
-          :object       => "appspace",
+          :object       => "app",
           :object_id    => obj.guid,
           :object_name  => obj.name,
           :audit_data   => obj.to_json
