@@ -24,7 +24,7 @@ db:
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
-  symmetric_secret: "symmetric secret"
+  symmetric_secret: "pebsecret"
 
 quota_manager:
   policy: "MoneyMakerApproval" # can also be BlindApproval
