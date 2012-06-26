@@ -52,6 +52,7 @@ module VCAP::CloudController
               @user = Models::User.create(:guid => uaa_id,
                                           :admin => true, :active => true)
           end
+          Models::User.current_user = @user
         rescue => e
           logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
         end

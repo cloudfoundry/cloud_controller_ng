@@ -392,7 +392,7 @@ inlining relations is now supported:
 
 Let's make a whole bunch of orgs:
 
-  for i in {1..100}
+  for i in {1..20}
   do
     org_name="org $i $(echo $(date) $i | openssl md5)"
     payload="{\"name\":\"$org_name\"}"
@@ -779,3 +779,10 @@ Working with Legacy VMC:
   curl -X PUT -v -H "Authorization:$AUTH_TOKEN" \
     -d "{\"default_app_space_guid\":\"$APP_SPACE_GUID\"}" \
     http://$CCNG_HOST/v2/users/$USER_GUID
+
+Domain creation:
+
+  curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+    -H "Authorization: $AUTH_TOKEN"\
+    -d "{\"name\":\"vcap.me\"}" \
+    http://$CCNG_HOST/v2/domains

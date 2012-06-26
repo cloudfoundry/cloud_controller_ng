@@ -21,7 +21,7 @@ module VCAP::CloudController
       to_many    :domains
     end
 
-    query_parameters :organization_guid, :developer_guid, :app_guid
+    query_parameters :name, :organization_guid, :developer_guid, :app_guid
 
     def user_visible_dataset
       managed_orgs = Models::Organization.filter(:managers => [@user])

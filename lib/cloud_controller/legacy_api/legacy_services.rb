@@ -9,16 +9,15 @@ require "services/api"
 # NOTE: this will get refactored a bit as other methods get added
 # and as we start adding other legacy protocol conversions.
 module VCAP::CloudController
-  class LegacyService
+  class LegacyService < LegacyApiBase
     include VCAP::CloudController::Errors
     SERVICE_TOKEN_KEY = "HTTP_X_VCAP_SERVICE_TOKEN"
     DEFAULT_PROVIDER = "core"
     LEGACY_API_USER_GUID = "legacy-api"
+    LEGACY_PLAN_OVERIDE = "free"
 
-    def initialize(user, logger, request, service_auth_token = nil)
-      @user = user
-      @logger = logger
-      @request = request
+    def initialize(config, logger, request, service_auth_token = nil)
+      super(config, logger, request)
       @service_auth_token = service_auth_token
     end
 
@@ -27,14 +26,44 @@ module VCAP::CloudController
       # also should be reporting services for the default app space,
       # not enumerating service types.
       logger.debug("legacy service enumerate")
-      svc_api = VCAP::CloudController::Service.new(user, logger)
-      api_resp = svc_api.dispatch(:enumerate)
+
+      api = VCAP::CloudController::AppSpace.new(user, logger)
+      api_resp = api.dispatch(:enumerate_related, default_app_space.guid, :service_instances)
 
       svcs = Yajl::Parser.parse(api_resp)
       legacy_resp = svcs["resources"].map do |svc|
         legacy_service_encoding(svc)
       end
       Yajl::Encoder.encode(legacy_resp)
+    end
+
+    # {"type":"database","tier":"free","vendor":"mysql","version":"5.1","name":"mysql-b7d4e"}
+    def create
+      legacy_attrs = Yajl::Parser.parse(request.body)
+      raise InvalidRequest unless legacy_attrs
+
+      logger.debug("legacy service create #{legacy_attrs}")
+
+      svc = Models::Service.find({:label => legacy_attrs["vendor"],
+                                  :version => legacy_attrs["version"]})
+      raise InvalidRequest unless svc
+
+      svc_plans = svc.service_plans_dataset.filter(:name => LEGACY_PLAN_OVERIDE)
+      raise InvalidRequest if svc_plans.count == 0
+      logger.warn("legacy create matched > 1 plan") unless svc_plans.count == 1
+      svc_plan = svc_plans.first
+
+      attrs = {
+        :name => legacy_attrs["name"],
+        :app_space_guid => default_app_space.guid,
+        :service_plan_guid => svc_plan.guid,
+        # FIXME: these should be set at the next level and come from the svc gw
+        :credentials => {}
+      }
+
+      legacy_req = Yajl::Encoder.encode(attrs)
+      svc_api = VCAP::CloudController::ServiceInstance.new(user, logger, legacy_req)
+      svc_api.dispatch(:create)
     end
 
     def create_offering
@@ -91,10 +120,11 @@ module VCAP::CloudController
     end
 
     def legacy_service_encoding(svc)
+      plan = Models::ServicePlan[:guid => svc["entity"]["service_plan_guid"]]
       {
         :name => svc["entity"]["name"],
         :type => "TODO",
-        :vendor => svc["entity"]["vendor"],
+        :vendor => plan.service.label,
         :version => svc["entity"]["version"],
         :tier => "free", # TODO
         :properties => [], # TODO
@@ -129,6 +159,10 @@ module VCAP::CloudController
 
       controller.post "/services" do
         klass.new(@config, logger, request).create
+      end
+
+      controller.post "/services" do
+        klass.new(@user, logger, request).create
       end
 
       controller.before "/services/v1/*" do
