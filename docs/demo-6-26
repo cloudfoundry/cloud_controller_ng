@@ -1,0 +1,87 @@
+win 1:
+# start the uaa
+    ~/src/vmw/ac/billing-services/bin/run_uaa
+
+# start the cc
+    ~/src/cf/cloud_controller_ng/bin/cloud_controller -d -m
+
+win 2:
+
+# setup for curl calls
+
+# create a user in the uaa
+    uaac login client
+    uaac user add pbozeman@vmware.com
+    export USER_GUID=`uaac user get pbozeman@vmware.com | grep 'id: ' | cut -f2 -d ":" | sed -e 's/ //'` ; echo $USER_GUID
+
+    export PATH=~/src/cf/vmc/bin:$PATH
+    vmc target vcap.me:8181
+    vmc login pbozeman@vmware.com
+
+    # make this user an admin for convenience
+    export CCNG_HOST=vcap.me:8181
+    curl -v http://$CCNG_HOST/bootstrap_admin/$USER_GUID
+
+    vmc apps
+
+# create the org/app space for the user
+#
+# first get a token that we can use with curl.
+    export AUTH_TOKEN=`curl http://$CCNG_HOST/bootstrap_token/$USER_GUID` ; echo $AUTH_TOKEN
+
+# create an org
+    curl -X POST -v -H "Content-Type: application/json" \
+       -H "Authorization: $AUTH_TOKEN"\
+       -d '{"name":"my cool org2"}' \
+       http://$CCNG_HOST/v2/organizations
+
+    export ORG_GUID=<guid from above>
+
+# create an app space
+
+    curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+      -d "{\"name\":\"my_app_space\", \"organization_guid\":\"$ORG_GUID\"}" \
+      http://$CCNG_HOST/v2/app_spaces
+
+    export APP_SPACE_GUID=<guid from above>
+
+# add user to org and app space
+
+    curl -X PUT -v -H "Authorization:$AUTH_TOKEN" \
+      http://$CCNG_HOST/v2/organizations/${ORG_GUID}/users/$USER_GUID?inline-relations-depth=1
+
+    curl -X PUT -v -H "Authorization:$AUTH_TOKEN" \
+      http://$CCNG_HOST/v2/app_spaces/${APP_SPACE_GUID}/developers/$USER_GUID?inline-relations-depth=1
+
+# create framework and runtime (these would get added during bosh deploy and/or
+# cf admin portal)
+    curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+      -d "{\"name\":\"ruby18\", \"description\":\"some ruby runtime\"}" \
+      http://$CCNG_HOST/v2/runtimes
+
+    curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+      -d "{\"name\":\"sinatra\", \"description\":\"sinatra microframework\"}" \
+      http://$CCNG_HOST/v2/frameworks
+
+# set the default app space for the user
+    curl -X PUT -v -H "Authorization:$AUTH_TOKEN" \
+      -d "{\"default_app_space_guid\":\"$APP_SPACE_GUID\"}" \
+      http://$CCNG_HOST/v2/users/$USER_GUID
+
+# push an app
+    cd ~/src/vmw/ac/apps/foo
+    vmc push
+
+
+##################################################
+
+# setup services
+    curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+      -d "{\"label\":\"mysql\", \"provider\":\"core\", \"url\":\"http://foo.bar\", \"description\":\"awesome mysql\", \"version\":\"5.1\"}" \
+      http://$CCNG_HOST/v2/services
+
+    export SERVICE_GUID=<guid from above>
+
+    curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
+      -d "{\"name\":\"free\", \"description\":\"mysql for cheapskates\", \"service_guid\":\"$SERVICE_GUID\"}" \
+      http://$CCNG_HOST/v2/service_plans

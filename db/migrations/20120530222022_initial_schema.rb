@@ -64,7 +64,7 @@ Sequel.migration do
       VCAP::Migration.common(self)
 
       String :name, :null => false, :unique => true
-      foreign_key :organization_id, :organizations, :null => false
+      foreign_key :organization_id, :organizations
     end
 
     create_table :app_spaces do

@@ -40,6 +40,7 @@ module VCAP::CloudController
           logger.info("Token received from the UAA #{token_information.inspect}")
           uaa_id = token_information[:user_id] if token_information
           @user = Models::User.find(:guid => uaa_id) if uaa_id
+          Models::User.current_user = @user
         rescue => e
           logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
         end
@@ -98,6 +99,7 @@ require "cloud_controller/runner"
 require "cloud_controller/errors"
 require "cloud_controller/api"
 
+require "cloud_controller/legacy_api/legacy_api_base"
 require "cloud_controller/legacy_api/legacy_info"
 require "cloud_controller/legacy_api/legacy_apps"
 require "cloud_controller/legacy_api/legacy_services"
