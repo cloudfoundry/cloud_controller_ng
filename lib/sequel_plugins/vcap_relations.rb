@@ -25,6 +25,7 @@ module Sequel::Plugins::VcapRelations
 
       opts[:reciprocol] ||=
         self.name.split("::").last.underscore.to_sym
+
       super
     end
 
@@ -52,7 +53,9 @@ module Sequel::Plugins::VcapRelations
         end
       end
 
-      define_to_many_reciprocol(opts)
+      opts[:reciprocol] ||=
+        self.name.split("::").last.underscore.pluralize.to_sym
+
       define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end
@@ -69,7 +72,8 @@ module Sequel::Plugins::VcapRelations
       ids_attr      = "#{singular_name}_ids"
       guids_attr    = "#{singular_name}_guids"
 
-      define_to_many_reciprocol(opts)
+      opts[:reciprocol] ||= self.name.split("::").last.underscore.to_sym
+
       define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end

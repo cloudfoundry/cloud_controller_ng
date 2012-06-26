@@ -4,11 +4,11 @@ module VCAP::CloudController
   class LegacyApiBase
     include VCAP::CloudController::Errors
 
-    def initialize(user, config, logger, request)
+    def initialize(config, logger, request)
       @config = config
       @logger = logger
       @request = request
-      @user = user
+      @user = Models::User.current_user
     end
 
     def default_app_space
