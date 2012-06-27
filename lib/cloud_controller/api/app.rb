@@ -29,12 +29,35 @@ module VCAP::CloudController
         :body => {
           :op           => "post",
           :user_id      => @user.guid,
-          :object       => "appspace",
+          :object       => "application",
           :object_id    => obj.guid,
           :object_name  => obj.name,
           :audit_data   => obj.to_json
         }
       }
+    end
+
+    def update_quota_token_request(app)
+      {
+        :path => app.app_space.organization_guid,
+        :body => {
+          :op           => get_quota_action(app, request_attrs),
+          :user_id      => @user.guid,
+          :object       => "application",
+          :object_id    => app.guid,
+          :object_name  => app.name,
+          :audit_data   => request_attrs
+        }
+      }
+    end
+
+    def get_quota_action(app, request_attrs)
+      op = "put"
+      # quota treats delete as stop app
+      op = "delete" if app.state == "STARTED" && request_attrs["state"] == "STOPPED"
+      # quota treats post as start app
+      op = "post" if app.state == "STOPPED" && request_attrs["state"] == "STARTED"
+      op
     end
 
     def self.translate_validation_exception(e, attributes)
