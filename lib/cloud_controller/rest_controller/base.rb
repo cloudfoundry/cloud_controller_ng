@@ -110,9 +110,6 @@ module VCAP::CloudController::RestController
     def delete_quota_token_request(obj); end
 
     # Create operation
-    #
-    # @param [IO] json An IO object that when read will return the json
-    # serialized request.
     def create
       @request_attrs = Yajl::Parser.new.parse(@body)
       raise InvalidRequest unless request_attrs
@@ -142,9 +139,6 @@ module VCAP::CloudController::RestController
     # Update operation
     #
     # @param [String] id The GUID of the object to update.
-    #
-    # @param [IO] json An IO object that when read will return the json
-    # serialized request.
     def update(id)
       obj = find_id_and_validate_access(:update, id)
       @request_attrs = Yajl::Parser.new.parse(@body)
