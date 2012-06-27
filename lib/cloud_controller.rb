@@ -13,6 +13,7 @@ require "vcap/logging"
 require "uaa/token_coder"
 
 require "sinatra/vcap"
+require "cloud_controller/security_context"
 
 module VCAP::CloudController
   autoload :Models, "cloud_controller/models"
@@ -30,6 +31,7 @@ module VCAP::CloudController
     end
 
     before do
+      VCAP::CloudController::SecurityContext.current_user = nil
       auth_token = env["HTTP_AUTHORIZATION"]
       if auth_token
         token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
@@ -39,19 +41,21 @@ module VCAP::CloudController
           token_information = token_coder.decode(auth_token)
           logger.info("Token received from the UAA #{token_information.inspect}")
           uaa_id = token_information[:id] if token_information
-          @user = Models::User.find(:guid => uaa_id) if uaa_id
+          user = Models::User.find(:guid => uaa_id) if uaa_id
 
           # Bootstraping mechanism..
           #
           # TODO: replace this with an exteranl bootstraping mechanism.
           # I'm not wild about having *any* auto-admin generation code
           # in the cc.
-          if (@user.nil? && Models::User.count == 0 &&
+          if (user.nil? && Models::User.count == 0 &&
               @config[:bootstrap_admin_email] && token_information[:email] &&
               @config[:bootstrap_admin_email] == token_information[:email])
-              @user = Models::User.create(:guid => uaa_id,
-                                          :admin => true, :active => true)
+              user = Models::User.create(:guid => uaa_id,
+                                         :admin => true, :active => true)
           end
+
+          VCAP::CloudController::SecurityContext.current_user = user
         rescue => e
           logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
         end

@@ -24,10 +24,10 @@ module VCAP::CloudController
     query_parameters :organization_guid, :developer_guid, :app_guid
 
     def user_visible_dataset
-      managed_orgs = Models::Organization.filter(:managers => [@user])
-      model.filter({ :developers => [@user],
-                     :managers => [@user],
-                     :auditors => [@user],
+      managed_orgs = Models::Organization.filter(:managers => [user])
+      model.filter({ :developers => [user],
+                     :managers => [user],
+                     :auditors => [user],
                      :organization => managed_orgs }.sql_or)
     end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
         :path => obj.organization_guid,
         :body => {
           :op           => "post",
-          :user_id      => @user.guid,
+          :user_id      => user.guid,
           :object       => "appspace",
           :object_id    => obj.guid,
           :object_name  => obj.name

@@ -38,9 +38,9 @@ module VCAP::CloudController
       provider = DEFAULT_PROVIDER
       validate_access(label, provider)
 
-      user = self.class.legacy_api_user
+      VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
       legacy_req = Yajl::Encoder.encode(svc_attrs)
-      svc_api = VCAP::CloudController::Service.new(user, logger, legacy_req)
+      svc_api = VCAP::CloudController::Service.new(logger, legacy_req)
       (_, _, svc_resp) = svc_api.dispatch(:create)
       svc = Yajl::Parser.parse(svc_resp)
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
       }
 
       legacy_req = Yajl::Encoder.encode(svc_plan_attrs)
-      svc_plan_api = VCAP::CloudController::ServicePlan.new(user, logger, legacy_req)
+      svc_plan_api = VCAP::CloudController::ServicePlan.new(logger, legacy_req)
       svc_plan_api.dispatch(:create)
 
       empty_json

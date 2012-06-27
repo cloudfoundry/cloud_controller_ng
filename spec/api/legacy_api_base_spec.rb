@@ -7,12 +7,14 @@ describe VCAP::CloudController::LegacyApiBase do
 
   describe "#default_app_space" do
     it "should raise NotAuthorized if the user is nil" do
-      api = LegacyApiBase.new(nil, config, logger, fake_req)
+      VCAP::CloudController::SecurityContext.current_user = nil
+      api = LegacyApiBase.new(config, logger, fake_req)
       lambda { api.default_app_space }.should raise_error(Errors::NotAuthorized)
     end
 
     it "should raise LegacyApiWithoutDefaultAppSpace if the user has no app spaces" do
-      api = LegacyApiBase.new(user, config, logger, fake_req)
+      VCAP::CloudController::SecurityContext.current_user = user
+      api = LegacyApiBase.new(config, logger, fake_req)
       lambda {
         api.default_app_space
       }.should raise_error(Errors::LegacyApiWithoutDefaultAppSpace)
@@ -22,7 +24,10 @@ describe VCAP::CloudController::LegacyApiBase do
       let(:org) { Models::Organization.make }
       let(:as1) { Models::AppSpace.make(:organization => org) }
       let(:as2) { Models::AppSpace.make(:organization => org) }
-      let(:api) { LegacyApiBase.new(user, config, logger, fake_req) }
+      let(:api) {
+        VCAP::CloudController::SecurityContext.current_user = user
+        LegacyApiBase.new(config, logger, fake_req)
+      }
 
       before do
         user.add_organization(org)

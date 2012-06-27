@@ -49,7 +49,7 @@ module VCAP::CloudController
         :path => obj.app_space.organization_guid,
         :body => {
           :op           => op,
-          :user_id      => @user.guid,
+          :user_id      => user.guid,
           :object       => "service",
           :object_id    => obj.guid,
           :app_space_id => obj.app_space.guid,

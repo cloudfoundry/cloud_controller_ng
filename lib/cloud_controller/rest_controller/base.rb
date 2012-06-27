@@ -30,8 +30,7 @@ module VCAP::CloudController::RestController
     # @param [IO] body The request body.
     #
     # @param [Hash] query_params The http query parameters.
-    def initialize(user, logger, body = nil, query_params = {})
-      @user    = user
+    def initialize(logger, body = nil, query_params = {})
       @logger  = logger
       @body    = body
       @opts    = parse_params(query_params)
@@ -121,7 +120,7 @@ module VCAP::CloudController::RestController
       model.db.transaction do
         logger.debug2 "#{log_prefix} create: #{request_attrs}"
         obj = model.create_from_hash(request_attrs)
-        validate_access(:create, obj, @user)
+        validate_access(:create, obj, user)
 
         with_quota_enforcement(create_quota_token_request(obj)) do
           [HTTP::CREATED,
@@ -174,8 +173,8 @@ module VCAP::CloudController::RestController
 
     # Enumerate operation
     def enumerate
-      raise NotAuthenticated unless @user
-      ds = @user.admin ? model.dataset : user_visible_dataset
+      raise NotAuthenticated unless user
+      ds = user.admin ? model.dataset : user_visible_dataset
       logger.debug2 "#{log_prefix} enumerate: #{ds.sql}"
       qp = self.class.query_parameters
       ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
@@ -265,7 +264,7 @@ module VCAP::CloudController::RestController
     def find_id_and_validate_access(op, id)
       obj = model.find(:guid => id)
       if obj
-        validate_access(op, obj, @user)
+        validate_access(op, obj, user)
       else
         raise self.class.not_found_exception.new(id) if obj.nil?
       end
@@ -296,6 +295,13 @@ module VCAP::CloudController::RestController
     # @return [Hash] Key value pairs used as a dataset filter.
     def user_visible_dataset
       model.dataset
+    end
+
+    # Fetch the current active user.  May be nil
+    #
+    # @return [Models::User] User object for the currently active user
+    def user
+      VCAP::CloudController::SecurityContext.current_user
     end
 
     # The model associated with this api endpoint.

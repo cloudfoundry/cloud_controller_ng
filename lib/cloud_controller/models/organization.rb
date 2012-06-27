@@ -26,5 +26,6 @@ module VCAP::CloudController::Models
       validates_presence :name
       validates_unique   :name
     end
+
   end
 end

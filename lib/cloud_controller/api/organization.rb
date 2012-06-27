@@ -25,10 +25,10 @@ module VCAP::CloudController
                      :auditor_guid
 
     def user_visible_dataset
-      model.filter({ :managers => [@user],
-                     :users => [@user],
-                     :billing_managers => [@user],
-                     :auditors => [@user]}.sql_or)
+      model.filter({ :managers => [user],
+                     :users => [user],
+                     :billing_managers => [user],
+                     :auditors => [user]}.sql_or)
     end
 
     def update_quota_token_request(org)
@@ -37,7 +37,7 @@ module VCAP::CloudController
         :path => "#{org.guid}",
         :body => {
           :op           => "put",
-          :user_id      => @user.guid,
+          :user_id      => user.guid,
           :object       => "org",
           :object_id    => org.guid,
           :object_name  => request_attrs["name"] || org.name,
