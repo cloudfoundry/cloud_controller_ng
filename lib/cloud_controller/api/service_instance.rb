@@ -27,6 +27,10 @@ module VCAP::CloudController
           :object_id    => obj.guid,
           :app_space_id => obj.app_space.guid,
           :object_name  => obj.name,
+          :plan_name    => obj.service_plan.name,
+          :service_label => obj.service_plan.service.label,
+          :service_provider => obj.service_plan.service.provider,
+          :service_version => obj.service_plan.service.version,
           :audit_data   => obj.to_json
         }
       }
