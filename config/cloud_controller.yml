@@ -3,6 +3,8 @@ port: 8181
 pid_filename: /var/vcap/sys/run/cloud_controller.pid
 nats_uri: nats://127.0.0.1:4222
 
+bootstrap_admin_email: sre@vmware.com
+
 logging:
   level: debug2
 
@@ -13,7 +15,7 @@ db:
 
 uaa:
   resource_id: "cloud_controller"
-  symmetric_secret: "symmetric secret"
+  symmetric_secret: "tokensecret"
 
 quota_manager:
   policy: "MoneyMakerApproval" # can also be BlindApproval

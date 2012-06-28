@@ -46,40 +46,14 @@ Setup UUA_HOST env var:
 
 Create an admin user with the UAA:
 
-    export ADMIN_EMAIL=myadmin@vmware.com
+    # if this isn't sre@vmware.com, you need to change the cloud_controller.yml
+    export ADMIN_EMAIL=sre@vmware.com
     export ADMIN_PW=the_admin_pw
 
     uaac target http://$UAA_HOST/uaa admin
     echo "someadminsecret" | uaac login client
     uaac user add $ADMIN_EMAIL $ADMIN_PW
-    export ADMIN_GUID=`uaac user get myadmin@vmware.com | grep 'id: ' | cut -d" " -f2` ; echo $ADMIN_GUID
-
-Tell the CC about the admin:
-
-  Ok.. let's get your admin user created.  We really need an external
-  bootstrap tool to insert an initial admin into the db, but for now, you can
-  bootstrap an admin via PUT http://$CCNG_HOST/bootstrap_admin/:uaa_id
-
-    curl -v http://$CCNG_HOST/bootstrap_admin/$ADMIN_GUID
-
-  You should get back an HTTP 201 and a blob of json.  Since the bootstrap call
-  is not a real CC api call, it is not in the standard format with a metadata
-  and entity section.
-
-Let's see a server error:
-
-  If you run the same command again:
-
-    curl -v http://$CCNG_HOST/bootstrap_admin/$ADMIN_GUID
-
-  You will get back a 500 and a custom server error response body.  This is
-  because the bootstrap route bypasses the API.  Had you gone through the API
-  you would have gotten a real error message.  Still, you didn't get a blob of
-  html on an unhandled error like in the original cc.
-
-  Note the window you are running the cc in.  You should see a big stack trace.
-  If you get any weird server errors, go check for those sort of backtraces and
-  send them to me.
+    export ADMIN_GUID=`uaac user get $ADMIN_EMAIL | grep 'id: ' | cut -d" " -f2` ; echo $ADMIN_GUID
 
 Let's create an org:
 
