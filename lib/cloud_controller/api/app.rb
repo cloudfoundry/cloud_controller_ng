@@ -32,6 +32,7 @@ module VCAP::CloudController
           :object       => "application",
           :object_id    => obj.guid,
           :object_name  => obj.name,
+          :app_space_id => obj.app_space_guid,
           :audit_data   => obj.to_json
         }
       }
@@ -46,7 +47,8 @@ module VCAP::CloudController
           :object       => "application",
           :object_id    => app.guid,
           :object_name  => app.name,
-          :audit_data   => request_attrs
+          :app_space_id => app.app_space_guid,
+          :audit_data   => request_attrs.to_json
         }
       }
     end
