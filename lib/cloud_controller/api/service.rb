@@ -13,7 +13,6 @@ module VCAP::CloudController
       attribute :url,            Message::HTTPS_URL
       attribute :description,    String
       attribute :version,        String
-      attribute :cf_plan_id,     String
       attribute :info_url,       Message::URL
       attribute :acls,           {"users" => [String], "wildcards" => [String]}
       attribute :timeout,        Integer
@@ -22,10 +21,6 @@ module VCAP::CloudController
     end
 
     query_parameters :service_plan_guid
-
-    def user_visible_dataset
-      model.filter( ~{ :cf_plan_id => nil } )
-    end
 
     def self.translate_validation_exception(e, attributes)
       label_provider_errors = e.errors.on([:label, :provider])

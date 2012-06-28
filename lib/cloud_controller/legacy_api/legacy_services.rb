@@ -31,7 +31,6 @@ module VCAP::CloudController
         :version     => version,
         :acls        => req.acls,
         :timeout     => req.timeout,
-        :cf_plan_id  => req.cf_plan_id,
         :info_url    => req.info_url,
         :active      => req.active
       }

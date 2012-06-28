@@ -105,7 +105,6 @@ Sequel.migration do
       String :description, :null => false
       String :version,     :null => false
 
-      String  :cf_plan_id
       String  :info_url
       String  :acls
       Integer :timeout

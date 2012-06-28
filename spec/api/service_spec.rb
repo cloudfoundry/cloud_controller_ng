@@ -7,7 +7,7 @@ describe VCAP::CloudController::Service do
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/services",
     :model                => VCAP::CloudController::Models::Service,
-    :basic_attributes     => [:label, :provider, :url, :description, :version, :info_url, :cf_plan_id],
+    :basic_attributes     => [:label, :provider, :url, :description, :version, :info_url],
     :required_attributes  => [:label, :provider, :url, :description, :version],
     :unique_attributes    => [:label, :provider],
     :one_to_many_collection_ids  => {
@@ -27,7 +27,7 @@ describe VCAP::CloudController::Service do
         end
 
         num_svc_with_id.times do
-          Models::Service.make(:cf_plan_id => "abc")
+          Models::Service.make
         end
 
         @user = VCAP::CloudController::Models::User.make
@@ -38,12 +38,6 @@ describe VCAP::CloudController::Service do
         get "/v2/services", {}, headers_for(@cf_admin)
         last_response.status.should == 200
         decoded_response["total_results"].should == num_svc
-      end
-
-      it "should return only instances with cf_plan_id to standard users" do
-        get "/v2/services", {}, headers_for(@user)
-        last_response.status.should == 200
-        decoded_response["total_results"].should == num_svc_with_id
       end
     end
   end
