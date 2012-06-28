@@ -40,13 +40,27 @@ Test the CC
   That error body is the standard sort of error that you will expect to see for
   other types of errors.
 
-Bootstrap an Admin
+Setup UUA_HOST env var:
+
+    export UAA_HOST=localhost:8080
+
+Create an admin user with the UAA:
+
+    export ADMIN_EMAIL=myadmin@vmware.com
+    export ADMIN_PW=the_admin_pw
+
+    uaac target http://$UAA_HOST/uaa admin
+    echo "someadminsecret" | uaac login client
+    uaac user add $ADMIN_EMAIL $ADMIN_PW
+    export ADMIN_GUID=`uaac user get myadmin@vmware.com | grep 'id: ' | cut -d" " -f2` ; echo $ADMIN_GUID
+
+Tell the CC about the admin:
 
   Ok.. let's get your admin user created.  We really need an external
   bootstrap tool to insert an initial admin into the db, but for now, you can
   bootstrap an admin via PUT http://$CCNG_HOST/bootstrap_admin/:uaa_id
 
-    curl -v http://$CCNG_HOST/bootstrap_admin/aaa-bbb-ccc
+    curl -v http://$CCNG_HOST/bootstrap_admin/$ADMIN_GUID
 
   You should get back an HTTP 201 and a blob of json.  Since the bootstrap call
   is not a real CC api call, it is not in the standard format with a metadata
@@ -56,7 +70,7 @@ Let's see a server error:
 
   If you run the same command again:
 
-    curl -v http://$CCNG_HOST/bootstrap_admin/aaa-bbb-ccc
+    curl -v http://$CCNG_HOST/bootstrap_admin/$ADMIN_GUID
 
   You will get back a 500 and a custom server error response body.  This is
   because the bootstrap route bypasses the API.  Had you gone through the API
@@ -78,28 +92,11 @@ Let's create an org:
   Oh, you got an auth error.  Silly you.
 
 
-Let's create an org with "correct" auth/authz.
+Get an auth token from the UAA as if we are VMC:
 
- We first need to get an auth token.  Dale is going to send us some command
- line tools to make it easy to generate uaa tokens using a real uaa, but
- in the mean time, you can get up and running by doing a
- GET "/bootstrap_token/:uaa_id"
-
-    curl -v http://$CCNG_HOST/bootstrap_token/aaa-bbb-ccc
-
- You will get a raw response like:
-    bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYWFhLWJiYi1jY2MiLCJhdWQiOlsiY2xvdWRfb250cm9sbGVyIl0sImV4cCI6MTMzOTAwNTI5OX0.pkFvszKgVGc5Yp0BWcAwX-Vq1GCFXFb8khmZ4PAoGow
-
- That entire thing is what you need to pass in the Authorization header.  It
- is a real UAA token.
-
-
-Export the auth token to an env var so that examples can be cut/paste:
-
-    export AUTH_TOKEN="bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYWFhLWJiYi1jY2MiLCJhdWQiOlsiY2xvdWRfb250cm9sbGVyIl0sImV4cCI6MTMzOTAwNTI5OX0.pkFvszKgVGc5Yp0BWcAwX-Vq1GCFXFb8khmZ4PAoGow"
-
-  or if you want to be fancy:
-    export AUTH_TOKEN=`curl http://$CCNG_HOST/bootstrap_token/aaa-bbb-ccc`
+    uaac target http://$UAA_HOST/uaa vmc
+    uaac login implicit $ADMIN_EMAIL $ADMIN_PW
+    export AUTH_TOKEN="bearer $(uaac s | grep access-token | tr -d ' ' | cut -d ':' -f2)"; echo $AUTH_TOKEN
 
 Ok, now lets do the create org call for real:
 

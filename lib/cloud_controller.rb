@@ -78,15 +78,6 @@ module VCAP::CloudController
 
       VCAP::RestAPI::HTTP::CREATED
     end
-
-    # This is temporary for ilia
-    get "/bootstrap_token/:uaa_id" do |uaa_id|
-      token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
-                                            @config[:uaa][:symmetric_secret],
-                                            nil)
-      user_token = token_coder.encode( { :user_id => uaa_id } )
-      "bearer #{user_token}"
-    end
   end
 end
 
