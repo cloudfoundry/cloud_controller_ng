@@ -3,7 +3,7 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::Organization do
-  let(:org)   { VCAP::CloudController::Models::Organization.make }
+  let(:org) { VCAP::CloudController::Models::Organization.make }
 
   it_behaves_like "a CloudController API", {
     :path                => "/v2/organizations",
@@ -228,6 +228,41 @@ describe VCAP::CloudController::Organization do
         @app_space_b.destroy
         delete "/v2/organizations/#{@org_a.guid}", {}, headers_for(@cf_admin)
         last_response.status.should == 204
+      end
+    end
+  end
+
+  describe "quota" do
+    let(:cf_admin) { Models::User.make(:admin => true) }
+
+    describe "create" do
+      it "should not fetch a quota token" do
+        RestController::QuotaManager.should_receive(:fetch_quota_token).with(nil)
+        post "/v2/organizations", Yajl::Encoder.encode({ :name => "some org" }), headers_for(cf_admin)
+      end
+    end
+
+    describe "get" do
+      it "should not fetch a quota token" do
+        RestController::QuotaManager.should_not_receive(:fetch_quota_token)
+        get "/v2/organizations/#{org.guid}", {}, headers_for(cf_admin)
+      end
+    end
+
+    describe "update" do
+      it "should fetch a quota token" do
+        RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
+        RestController::QuotaManager.should_receive(:fetch_quota_token).once
+        put "/v2/organizations/#{org.guid}",
+            Yajl::Encoder.encode(:name => "#{org.name}_renamed"),
+            headers_for(cf_admin)
+      end
+    end
+
+    describe "delete" do
+      it "should not fetch a quota token" do
+        RestController::QuotaManager.should_not_receive(:fetch_quota_token)
+        get "/v2/organizations/#{org.guid}", {}, headers_for(cf_admin)
       end
     end
   end

@@ -255,4 +255,44 @@ describe VCAP::CloudController::AppSpace do
       end
     end
   end
+
+  describe "quota" do
+    let(:cf_admin) { Models::User.make(:admin => true) }
+    let(:org) { Models::Organization.make }
+    let(:app_space) { Models::AppSpace.make }
+
+    describe "create" do
+      it "should fetch a quota token" do
+        RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
+        RestController::QuotaManager.should_receive(:fetch_quota_token).once
+        post "/v2/app_spaces", Yajl::Encoder.encode(:name => Sham.name,
+                                                    :organization_guid => org.guid),
+                                                    headers_for(cf_admin)
+      end
+    end
+
+    describe "get" do
+      it "should not fetch a quota token" do
+        RestController::QuotaManager.should_not_receive(:fetch_quota_token)
+        get "/v2/app_spaces/#{app_space.guid}", {}, headers_for(cf_admin)
+      end
+    end
+
+    describe "update" do
+      it "should fetch a quota token" do
+        RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
+        RestController::QuotaManager.should_receive(:fetch_quota_token).once
+        put "/v2/app_spaces/#{app_space.guid}",
+            Yajl::Encoder.encode(:name => "#{app_space.name}_renamed"),
+            headers_for(cf_admin)
+      end
+    end
+
+    describe "delete" do
+      it "should not fetch a quota token" do
+        RestController::QuotaManager.should_not_receive(:fetch_quota_token)
+        delete "/v2/app_spaces/#{app_space.guid}", {}, headers_for(cf_admin)
+      end
+    end
+  end
 end
