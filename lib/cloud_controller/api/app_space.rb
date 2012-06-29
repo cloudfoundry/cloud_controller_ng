@@ -32,6 +32,33 @@ module VCAP::CloudController
     end
 
     def create_quota_token_request(obj)
+      ret = quota_token_request("create", obj)
+      ret[:body][:audit_data] = obj.to_json
+      ret
+    end
+
+    def update_quota_token_request(obj)
+      ret = quota_token_request("put", obj)
+      ret[:body][:audit_data] = obj.to_json
+      ret
+    end
+
+    def delete_quota_token_request(obj)
+      quota_token_request("delete", obj)
+    end
+
+    def self.translate_validation_exception(e, attributes)
+      name_errors = e.errors.on([:organization_id, :name])
+      if name_errors && name_errors.include?(:unique)
+        AppSpaceNameTaken.new(attributes["name"])
+      else
+        AppSpaceInvalid.new(e.errors.full_messages)
+      end
+    end
+
+    private
+
+    def quota_token_request(op, obj)
       {
         :path => obj.organization_guid,
         :body => {
@@ -43,15 +70,6 @@ module VCAP::CloudController
           :audit_data   => obj.to_json
         }
       }
-    end
-
-    def self.translate_validation_exception(e, attributes)
-      name_errors = e.errors.on([:organization_id, :name])
-      if name_errors && name_errors.include?(:unique)
-        AppSpaceNameTaken.new(attributes["name"])
-      else
-        AppSpaceInvalid.new(e.errors.full_messages)
-      end
     end
   end
 end

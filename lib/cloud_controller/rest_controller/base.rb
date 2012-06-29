@@ -108,6 +108,7 @@ module VCAP::CloudController::RestController
     # for safety.  Err on the side of requring quota check.
     def create_quota_token_request(obj); end
     def update_quota_token_request(obj); end
+    def delete_quota_token_request(obj); end
 
     # Create operation
     #
@@ -164,8 +165,11 @@ module VCAP::CloudController::RestController
     def delete(id)
       logger.debug2 "#{log_prefix} update: #{id}"
       obj = find_id_and_validate_access(:delete, id)
-      obj.destroy
-      [HTTP::NO_CONTENT, nil]
+
+      with_quota_enforcement(delete_quota_token_request(obj)) do
+        obj.destroy
+        [HTTP::NO_CONTENT, nil]
+      end
     end
 
     # Enumerate operation

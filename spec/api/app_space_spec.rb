@@ -289,8 +289,9 @@ describe VCAP::CloudController::AppSpace do
     end
 
     describe "delete" do
-      it "should not fetch a quota token" do
-        RestController::QuotaManager.should_not_receive(:fetch_quota_token)
+      it "should fetch a quota token" do
+        RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
+        RestController::QuotaManager.should_receive(:fetch_quota_token).once
         delete "/v2/app_spaces/#{app_space.guid}", {}, headers_for(cf_admin)
       end
     end
