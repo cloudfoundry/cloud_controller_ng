@@ -12,13 +12,13 @@ module VCAP::CloudController::Models
 
     many_to_one       :organization
 
-    define_user_group :developers, :reciprocol => :app_spaces,
+    define_user_group :developers, :reciprocal => :app_spaces,
                       :before_add => :validate_developer
 
-    define_user_group :managers, :reciprocol => :managed_app_spaces,
+    define_user_group :managers, :reciprocal => :managed_app_spaces,
                       :before_add => :validate_manager
 
-    define_user_group :auditors, :reciprocol => :audited_app_spaces,
+    define_user_group :auditors, :reciprocal => :audited_app_spaces,
                       :before_add => :validate_auditor
 
     one_to_many       :apps
