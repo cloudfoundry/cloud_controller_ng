@@ -46,8 +46,6 @@ Sequel.migration do
 
       Boolean :admin,  :default => false
       Boolean :active, :default => false
-
-      foreign_key :default_app_space_id, :app_spaces
     end
 
     create_table :organizations do
@@ -174,10 +172,6 @@ Sequel.migration do
       VCAP::Migration.common(self)
 
       String :name, :null => false
-
-      # Do the bare miminum for now.  We'll migrate this to something
-      # fancier later if we need it.
-      Boolean :production, :default => false
 
       # environment provided by the developer.
       # does not include environment from service

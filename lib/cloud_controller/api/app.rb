@@ -8,7 +8,6 @@ module VCAP::CloudController
 
     define_attributes do
       attribute  :name,                String
-      attribute  :production,          Message::Boolean
       to_one     :app_space
       to_one     :runtime
       to_one     :framework

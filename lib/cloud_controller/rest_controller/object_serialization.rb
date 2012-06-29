@@ -113,8 +113,9 @@ module VCAP::CloudController::RestController
         other_model = ar.associated_class
         other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
         other = obj.send(name)
-        res["#{name}_url"] = other_controller.url_for_id(other.guid) if other
-        if other && depth < target_depth && !parents.include?(other_controller)
+        res["#{name}_url"] = other_controller.url_for_id(other.guid)
+        if depth < target_depth && !parents.include?(other_controller)
+          other = obj.send(name)
           other_controller = VCAP::CloudController.controller_from_model(other)
           res[name.to_s] = to_hash(other_controller, other,
                                    opts, depth + 1, parents)

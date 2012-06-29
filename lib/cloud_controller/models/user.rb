@@ -6,9 +6,6 @@ module VCAP::CloudController::Models
 
     many_to_many      :organizations
 
-    many_to_one       :default_app_space, :key => :default_app_space_id,
-                      :class => "VCAP::CloudController::Models::AppSpace"
-
     many_to_many      :managed_organizations,
                       :class => "VCAP::CloudController::Models::Organization",
                       :join_table => "organizations_managers",
@@ -50,15 +47,14 @@ module VCAP::CloudController::Models
 
     default_order_by  :id
 
-    export_attributes :admin, :active, :default_app_space_guid
+    export_attributes :admin, :active
 
     import_attributes :guid, :admin, :active,
                       :organization_guids,
                       :managed_organization_guids,
                       :billing_managed_organization_guids,
                       :audited_organization_guids,
-                      :app_space_guids,
-                      :default_app_space_guid
+                      :app_space_guids
 
     def validate
       validates_presence :guid
