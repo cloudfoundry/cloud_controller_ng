@@ -23,36 +23,39 @@ describe VCAP::CloudController::ServiceInstance do
 
     describe "create" do
       it "should fetch a quota token" do
-        RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
-        RestController::QuotaManager.should_receive(:fetch_quota_token).once
+        should_receive_quota_call
         post "/v2/service_instances", Yajl::Encoder.encode(:name => Sham.name,
                                                            :app_space_guid => service_instance.app_space_guid,
                                                            :credentials => {},
                                                            :service_plan_guid => service_instance.service_plan_guid),
                                                            headers_for(cf_admin)
+        last_response.status.should == 201
       end
     end
 
     describe "get" do
       it "should not fetch a quota token" do
-        RestController::QuotaManager.should_not_receive(:fetch_quota_token)
+        should_not_receive_quota_call
         get "/v2/service_instances/#{service_instance.guid}", {}, headers_for(cf_admin)
+        last_response.status.should == 200
       end
     end
 
     describe "update" do
       it "should fetch a quota token" do
-        RestController::QuotaManager.should_not_receive(:fetch_quota_token)
+        should_receive_quota_call
         put "/v2/service_instances/#{service_instance.guid}",
             Yajl::Encoder.encode(:name => "#{service_instance.name}_renamed"),
             headers_for(cf_admin)
+        last_response.status.should == 201
       end
     end
 
     describe "delete" do
       it "should not fetch a quota token" do
-        RestController::QuotaManager.should_not_receive(:fetch_quota_token)
+        should_receive_quota_call
         delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(cf_admin)
+        last_response.status.should == 204
       end
     end
   end
