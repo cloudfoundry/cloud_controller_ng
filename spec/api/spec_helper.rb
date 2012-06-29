@@ -7,6 +7,7 @@ Dir[File.expand_path("../helpers/*", __FILE__)].each do |file|
 end
 
 module VCAP::CloudController::ApiSpecHelper
+  include VCAP::CloudController
   include VCAP::CloudController::ModelSpecHelper
 
   def config
@@ -50,6 +51,23 @@ module VCAP::CloudController::ApiSpecHelper
 
   def entity
     decoded_response["entity"]
+  end
+
+  def should_not_receive_quota_call
+    RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
+  end
+
+  def should_receive_nil_quota_call
+    t = RestController::QuotaManager::BlindApprovalToken.new
+    t.should_receive(:commit)
+    RestController::QuotaManager.should_receive(:fetch_quota_token).with(nil).and_return(t)
+  end
+
+  def should_receive_quota_call
+    t = RestController::QuotaManager::BlindApprovalToken.new
+    t.should_receive(:commit)
+    RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
+    RestController::QuotaManager.should_receive(:fetch_quota_token).and_return(t)
   end
 
   shared_context "permissions" do
