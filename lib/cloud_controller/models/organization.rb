@@ -7,11 +7,11 @@ module VCAP::CloudController::Models
     one_to_many       :domains
 
     define_user_group :users
-    define_user_group :managers, :reciprocol => :managed_organizations
+    define_user_group :managers, :reciprocal => :managed_organizations
     define_user_group :billing_managers,
-                      :reciprocol => :billing_managed_organizations
+                      :reciprocal => :billing_managed_organizations
     define_user_group :auditors,
-                      :reciprocol => :audited_organizations
+                      :reciprocal => :audited_organizations
 
     strip_attributes  :name
 

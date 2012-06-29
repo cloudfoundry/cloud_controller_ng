@@ -190,7 +190,7 @@ module VCAP::CloudController::RestController
       ar = model.association_reflection(name)
       a_path = "#{self.class.url_for_id(id)}/#{name}"
 
-      f_key = ar[:reciprocol]
+      f_key = ar[:reciprocal]
       ds = a_model.user_visible.filter(f_key => obj)
       qp = a_controller.query_parameters
 
