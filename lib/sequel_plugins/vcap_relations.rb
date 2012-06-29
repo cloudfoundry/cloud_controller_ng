@@ -22,8 +22,7 @@ module Sequel::Plugins::VcapRelations
         send("#{name}=", other)
       end
 
-      opts[:reciprocol] ||=
-        self.name.split("::").last.underscore.to_sym
+      define_to_many_reciprocal(opts)
       super
     end
 
@@ -51,7 +50,7 @@ module Sequel::Plugins::VcapRelations
         end
       end
 
-      define_to_many_reciprocol(opts)
+      define_to_many_reciprocal(opts)
       define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end
@@ -68,15 +67,22 @@ module Sequel::Plugins::VcapRelations
       ids_attr      = "#{singular_name}_ids"
       guids_attr    = "#{singular_name}_guids"
 
-      define_to_many_reciprocol(opts)
+      if opts.delete(:reciprocol)
+        raise "AAA"
+      end
+      opts[:reciprocal] ||=
+        self.name.split("::").last.underscore.to_sym
       define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end
 
     private
 
-    def define_to_many_reciprocol(opts)
-      opts[:reciprocol] ||=
+    def define_to_many_reciprocal(opts)
+      if opts.delete(:reciprocol)
+        raise "BBB"
+      end
+      opts[:reciprocal] ||=
         self.name.split("::").last.underscore.pluralize.to_sym
     end
 
