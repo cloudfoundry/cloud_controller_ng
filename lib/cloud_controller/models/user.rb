@@ -12,33 +12,33 @@ module VCAP::CloudController::Models
     many_to_many      :managed_organizations,
                       :class => "VCAP::CloudController::Models::Organization",
                       :join_table => "organizations_managers",
-                      :right_key => :organization_id, :reciprocol => :managers
+                      :right_key => :organization_id, :reciprocal => :managers
 
     many_to_many      :billing_managed_organizations,
                       :class => "VCAP::CloudController::Models::Organization",
                       :join_table => "organizations_billing_managers",
                       :right_key => :organization_id,
-                      :reciprocol => :billing_managers
+                      :reciprocal => :billing_managers
 
     many_to_many      :audited_organizations,
                       :class => "VCAP::CloudController::Models::Organization",
                       :join_table => "organizations_auditors",
-                      :right_key => :organization_id, :reciprocol => :auditors
+                      :right_key => :organization_id, :reciprocal => :auditors
 
     many_to_many      :app_spaces,
                       :class => "VCAP::CloudController::Models::AppSpace",
                       :join_table => "app_spaces_developers",
-                      :right_key => :app_space_id, :reciprocol => :developers
+                      :right_key => :app_space_id, :reciprocal => :developers
 
     many_to_many      :managed_app_spaces,
                       :class => "VCAP::CloudController::Models::AppSpace",
                       :join_table => "app_spaces_managers",
-                      :right_key => :app_space_id, :reciprocol => :managers
+                      :right_key => :app_space_id, :reciprocal => :managers
 
     many_to_many      :audited_app_spaces,
                       :class => "VCAP::CloudController::Models::AppSpace",
                       :join_table => "app_spaces_auditors",
-                      :right_key => :app_space_id, :reciprocol => :auditors
+                      :right_key => :app_space_id, :reciprocal => :auditors
 
     add_association_dependencies :organizations => :nullify
     add_association_dependencies :managed_organizations => :nullify
