@@ -33,13 +33,13 @@ module VCAP::CloudController
 
     def create_quota_token_request(obj)
       ret = quota_token_request("create", obj)
-      ret[:body][:audit_data] = obj.to_json
+      ret[:body][:audit_data] = obj.to_hash
       ret
     end
 
     def update_quota_token_request(obj)
       ret = quota_token_request("put", obj)
-      ret[:body][:audit_data] = obj.to_json
+      ret[:body][:audit_data] = obj.to_hash
       ret
     end
 
@@ -66,8 +66,7 @@ module VCAP::CloudController
           :user_id      => @user.guid,
           :object       => "appspace",
           :object_id    => obj.guid,
-          :object_name  => obj.name,
-          :audit_data   => obj.to_json
+          :object_name  => obj.name
         }
       }
     end

@@ -64,10 +64,14 @@ module VCAP::CloudController::ApiSpecHelper
   end
 
   def should_receive_quota_call
-    t = RestController::QuotaManager::BlindApprovalToken.new
-    t.should_receive(:commit)
     RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
-    RestController::QuotaManager.should_receive(:fetch_quota_token).and_return(t)
+    RestController::QuotaManager.should_receive(:fetch_quota_token) do |arg|
+      arg[:path].should_not be_nil
+      arg[:body].should_not be_nil
+      audit_data = arg[:body][:audit_data]
+      audit_data.should be_a_kind_of(Hash) if audit_data
+      RestController::QuotaManager::BlindApprovalToken.new
+    end
   end
 
   shared_context "permissions" do
