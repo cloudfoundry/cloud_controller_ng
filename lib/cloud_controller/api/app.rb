@@ -53,6 +53,20 @@ module VCAP::CloudController
       }
     end
 
+    def delete_quota_token_request(app)
+      {
+        :path => app.app_space.organization_guid,
+        :body => {
+          :op           => "delete",
+          :user_id      => @user.guid,
+          :object       => "application",
+          :object_id    => app.guid,
+          :object_name  => app.name,
+          :app_space_id => app.app_space_guid
+        }
+      }
+    end
+
     def get_quota_action(app, request_attrs)
       op = "put"
       # quota treats delete as stop app
@@ -69,6 +83,22 @@ module VCAP::CloudController
       else
         AppInvalid.new(e.errors.full_messages)
       end
+    end
+
+    private
+
+    def quota_token_request(op, obj)
+      {
+        :path => obj.organization_guid,
+        :body => {
+          :op           => "post",
+          :user_id      => @user.guid,
+          :object       => "appspace",
+          :object_id    => obj.guid,
+          :object_name  => obj.name,
+          :audit_data   => obj.to_json
+        }
+      }
     end
   end
 end
