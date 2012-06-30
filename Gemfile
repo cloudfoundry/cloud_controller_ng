@@ -3,6 +3,7 @@ source :rubygems
 gem "rake"
 gem "bcrypt-ruby"
 gem "eventmachine", "~> 0.12.11.cloudfoundry.3"
+gem "membrane", "~> 0.0.1"
 gem "rfc822"
 gem "sequel"
 gem "sinatra"
