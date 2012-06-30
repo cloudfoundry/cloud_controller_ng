@@ -1,9 +1,24 @@
 require "vcap/config"
-require "vcap/json_schema"
+require "membrane"
 
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
   DEFAULT_CONFIG_PATH = File.expand_path("../../../../config/dev.yml", __FILE__)
+
+  def self.define_schema(&blk)
+    @schema = Membrane::SchemaParser.parse(&blk)
+  end
+
+  def self.from_file(filename, symbolize_keys=true)
+    config = YAML.load_file(filename)
+    config = VCAP.symbolize_keys(config) if symbolize_keys
+    @schema.validate(config)
+    # TODO: this introduces 2 config styles.  CC takes config
+    # via per instance constructor.  Remove that in favor of this
+    # method as there will be more along these lines.
+    VCAP::CloudController::RestController::QuotaManager.configure(config)
+    config
+  end
 
   define_schema do
     {
@@ -40,14 +55,5 @@ class VCAP::CloudController::Config < VCAP::Config
       optional(:index)       => Integer,    # Component index (cc-0, cc-1, etc)
       optional(:local_route) => String,     # If set, use this to determine the IP address that is returned in discovery messages
     }
-  end
-
-  def self.from_file(*args)
-    config = super(*args)
-    # TODO: this introduces 2 config styles.  CC takes config
-    # via per instance constructor.  Remove that in favor of this
-    # method as there will be more along these lines.
-    VCAP::CloudController::RestController::QuotaManager.configure(config)
-    config
   end
 end
