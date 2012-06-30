@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require "membrane"
 
 module VCAP::CloudController
   class Runner
@@ -54,8 +55,8 @@ module VCAP::CloudController
 
     def parse_config
       @config = VCAP::CloudController::Config.from_file(@config_file)
-    rescue VCAP::JsonSchema::ValidationError => ve
-      puts "ERROR: There was a problem validating the supplied config: #{ve}"
+    rescue Membrane::SchemaValidationError => me
+      puts "ERROR: There was a problem validating the supplied config: #{me}"
       exit 1
     rescue => e
       puts "ERROR: Failed loading config from file '#{@config_file}': #{e}"
