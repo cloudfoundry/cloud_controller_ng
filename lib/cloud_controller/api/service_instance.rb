@@ -18,13 +18,13 @@ module VCAP::CloudController
     query_parameters :app_space_guid, :service_plan_guid, :service_binding_guid
 
     def create_quota_token_request(obj)
-      ret = quota_token_request("create", obj)
+      ret = quota_token_request("post", obj)
       ret[:body][:audit_data] = obj.to_hash
       ret
     end
 
     def update_quota_token_request(obj)
-      ret = quota_token_request("update", obj)
+      ret = quota_token_request("put", obj)
       ret[:body][:audit_data] = obj.to_hash
       ret
     end
