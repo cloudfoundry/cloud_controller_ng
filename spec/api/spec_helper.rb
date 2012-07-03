@@ -26,7 +26,7 @@ module VCAP::CloudController::ApiSpecHelper
                                           config[:uaa][:symmetric_secret],
                                           nil)
     unless user.nil?
-      user_token = token_coder.encode( { :user_id => user.guid } )
+      user_token = token_coder.encode(:id => user.guid)
       headers["HTTP_AUTHORIZATION"] = "bearer #{user_token}"
     end
 
