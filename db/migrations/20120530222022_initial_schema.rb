@@ -46,8 +46,6 @@ Sequel.migration do
 
       Boolean :admin,  :default => false
       Boolean :active, :default => false
-
-      foreign_key :default_app_space_id, :app_spaces
     end
 
     create_table :organizations do
@@ -74,6 +72,10 @@ Sequel.migration do
 
       foreign_key :organization_id, :organizations, :null => false
       index [:organization_id, :name], :unique => true
+    end
+
+    alter_table :users do
+      add_foreign_key :default_app_space_id, :app_spaces
     end
 
     create_table :app_spaces_domains do
