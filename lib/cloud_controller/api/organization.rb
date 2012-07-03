@@ -24,13 +24,6 @@ module VCAP::CloudController
                      :user_guid, :manager_guid, :billing_manager_guid,
                      :auditor_guid
 
-    def user_visible_dataset
-      model.filter({ :managers => [user],
-                     :users => [user],
-                     :billing_managers => [user],
-                     :auditors => [user]}.sql_or)
-    end
-
     def update_quota_token_request(org)
       # TODO: sync payload with ilia
       {

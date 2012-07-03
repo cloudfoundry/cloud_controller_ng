@@ -168,7 +168,7 @@ module VCAP::CloudController::RestController
     # Enumerate operation
     def enumerate
       raise NotAuthenticated unless user
-      ds = user.admin ? model.dataset : user_visible_dataset
+      ds = model.user_visible
       logger.debug2 "#{log_prefix} enumerate: #{ds.sql}"
       qp = self.class.query_parameters
       ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
@@ -191,7 +191,7 @@ module VCAP::CloudController::RestController
       ar = model.association_reflection(name)
 
       f_key = ar[:reciprocol]
-      ds = a_model.filter(f_key => obj)
+      ds = a_model.user_visible.filter(f_key => obj)
       qp = a_controller.query_parameters
 
       ds = Query.filtered_dataset_from_query_params(a_model, ds, qp, @opts)
@@ -282,13 +282,6 @@ module VCAP::CloudController::RestController
         raise NotAuthenticated unless user
         raise NotAuthorized
       end
-    end
-
-    # Dataset visible to the current user, by default, everything.
-    #
-    # @return [Hash] Key value pairs used as a dataset filter.
-    def user_visible_dataset
-      model.dataset
     end
 
     # Fetch the current active user.  May be nil

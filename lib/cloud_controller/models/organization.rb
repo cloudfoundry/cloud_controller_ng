@@ -2,8 +2,6 @@
 
 module VCAP::CloudController::Models
   class Organization < Sequel::Model
-    extend VCAP::CloudController::Models::UserGroup
-
     one_to_many       :app_spaces
 
     one_to_many       :domains
@@ -27,5 +25,12 @@ module VCAP::CloudController::Models
       validates_unique   :name
     end
 
+    def self.user_visibility_filter(user)
+      user_visibility_filter_with_admin_override({
+        :managers => [user],
+        :users => [user],
+        :billing_managers => [user],
+        :auditors => [user] }.sql_or)
+    end
   end
 end

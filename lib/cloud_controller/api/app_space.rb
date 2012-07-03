@@ -23,14 +23,6 @@ module VCAP::CloudController
 
     query_parameters :organization_guid, :developer_guid, :app_guid
 
-    def user_visible_dataset
-      managed_orgs = Models::Organization.filter(:managers => [user])
-      model.filter({ :developers => [user],
-                     :managers => [user],
-                     :auditors => [user],
-                     :organization => managed_orgs }.sql_or)
-    end
-
     def create_quota_token_request(obj)
       ret = quota_token_request("create", obj)
       ret[:body][:audit_data] = obj.to_hash

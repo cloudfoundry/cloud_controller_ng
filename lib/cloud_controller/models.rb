@@ -8,24 +8,59 @@ require "sequel_plugins/vcap_normalization"
 require "sequel_plugins/vcap_relations"
 require "sequel_plugins/vcap_guid"
 
+module Sequel::Plugins::VcapUserGroup
+  module ClassMethods
+    def define_user_group(name, opts = {})
+      opts = opts.merge(
+        :class => "VCAP::CloudController::Models::User",
+        :join_table => "#{table_name}_#{name}",
+        :right_key => :user_id
+      )
+
+      many_to_many(name, opts)
+      add_association_dependencies name => :nullify
+    end
+  end
+end
+
+module Sequel::Plugins::VcapUserVisibility
+  module ClassMethods
+    def user_visible
+      user = VCAP::CloudController::SecurityContext.current_user
+      dataset.filter(user_visibility_filter(user))
+    end
+
+    def user_visibility_filter(user)
+      # TODO: replace with empty_dataset_filter once all perms are in place
+      user_visibility_filter_with_admin_override(full_dataset_filter)
+    end
+
+    def user_visibility_filter_with_admin_override(filt)
+      user = VCAP::CloudController::SecurityContext.current_user
+      if user.admin?
+        full_dataset_filter
+      else
+        filt
+      end
+    end
+
+    def full_dataset_filter
+      ~{:id => nil}
+    end
+
+    def empty_dataset_filter
+      {:id => nil}
+    end
+  end
+end
+
 Sequel::Model.plugin :vcap_validations
 Sequel::Model.plugin :vcap_serialization
 Sequel::Model.plugin :vcap_normalization
 Sequel::Model.plugin :vcap_relations
 Sequel::Model.plugin :vcap_guid
-
-module VCAP::CloudController::Models::UserGroup
-  def define_user_group(name, opts = {})
-    opts = opts.merge(
-      :class => "VCAP::CloudController::Models::User",
-      :join_table => "#{table_name}_#{name}",
-      :right_key => :user_id
-    )
-
-    many_to_many(name, opts)
-    add_association_dependencies name => :nullify
-  end
-end
+Sequel::Model.plugin :vcap_user_group
+Sequel::Model.plugin :vcap_user_visibility
 
 Dir[File.expand_path("../models/*", __FILE__)].each do |file|
   require file

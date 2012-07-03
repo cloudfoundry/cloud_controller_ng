@@ -43,5 +43,10 @@ module VCAP::CloudController::Models
         raise InvalidAppSpaceRelation.new(app_space.guid)
       end
     end
+
+    def self.user_visibility_filter(user)
+      managed_orgs = user.managed_organizations_dataset
+      user_visibility_filter_with_admin_override(:organization => managed_orgs)
+    end
   end
 end

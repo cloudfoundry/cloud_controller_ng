@@ -2,8 +2,6 @@
 
 module VCAP::CloudController::Models
   class AppSpace < Sequel::Model
-    extend VCAP::CloudController::Models::UserGroup
-
     class InvalidRelation          < StandardError; end
     class InvalidDeveloperRelation < InvalidRelation; end
     class InvalidAuditorRelation   < InvalidRelation; end
@@ -72,6 +70,15 @@ module VCAP::CloudController::Models
       unless domain && organization && domain.organization_id == organization.id
         raise InvalidDomainRelation.new(domain.guid)
       end
+    end
+
+    def self.user_visibility_filter(user)
+      managed_orgs = user.managed_organizations_dataset
+      user_visibility_filter_with_admin_override({
+        :developers => [user],
+        :managers => [user],
+        :auditors => [user],
+        :organization => managed_orgs}.sql_or)
     end
   end
 end
