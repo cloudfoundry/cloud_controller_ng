@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     def update_quota_token_request(obj)
       ret = quota_token_request("put", obj)
-      ret[:body][:audit_data] = obj.to_hash
+      ret[:body][:audit_data] = request_attrs
       ret
     end
 
