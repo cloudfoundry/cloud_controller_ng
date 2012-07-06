@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require File.expand_path("../message_bus.rb", __FILE__)
 
 module VCAP::CloudController
   class Runner
@@ -83,27 +84,31 @@ module VCAP::CloudController
       DB.connect(db_logger, @config[:db])
     end
 
+    def development?
+      @development ||= false
+    end
+
     def run!
       db = setup_db
       run_migrations = @run_migrations
-      development = @development
-      config = @config
-
-      port = ENV["VCAP_APP_PORT"]
-      port ||= @config[:port]
+      config = @config.dup
 
       DB.apply_migrations(db) if run_migrations
 
-      @thin_server = Thin::Server.new("0.0.0.0", port,
+      @thin_server = Thin::Server.new("0.0.0.0", config[:port],
                                       :signals => false) do
         use Rack::CommonLogger
+        VCAP::CloudController::MessageBus.register_components
+        VCAP::CloudController::MessageBus.register_routes
+
         map "/" do
-          DB.apply_migrations(db) if (run_migrations && development)
+          DB.apply_migrations(db) if (run_migrations && development?)
           run VCAP::CloudController::Controller.new(config)
         end
       end
 
       trap_signals
+
       @thin_server.threaded = true
       @thin_server.start!
     end
@@ -127,6 +132,7 @@ module VCAP::CloudController
       pg_key = services.keys.select { |svc| svc =~ /postgres/i }.first
       c = services[pg_key].first["credentials"]
       @config[:db][:database] = "postgres://#{c["user"]}:#{c["password"]}@#{c["hostname"]}:#{c["port"]}/#{c["name"]}"
+      @config[:port] = ENV["VCAP_APP_PORT"]
     end
   end
 end

@@ -76,6 +76,7 @@ class VCAP::CloudController::Config < VCAP::Config
     # TODO: this introduces 2 config styles.  CC takes config
     # via per instance constructor.  Remove that in favor of this
     # method as there will be more along these lines.
+    VCAP::CloudController::MessageBus.configure(config)
     VCAP::CloudController::RestController::QuotaManager.configure(config)
     VCAP::CloudController::Models::AccountCapacity.configure(config)
   end
