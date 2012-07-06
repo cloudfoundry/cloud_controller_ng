@@ -1,4 +1,17 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require 'nats/client'
+require 'vcap/component'
+
+# FIXME: this is so gross
+# Monkey-patching the monkeypatch: UAA gem is unhappy because yajl/json_gem
+# ignores symbolize_names
+# The UAA client gem should probably move to Yajl...
+def JSON.parse(str, opts=JSON.default_options)
+  if opts.delete(:symbolize_names)
+    opts[:symbolize_keys] = true
+  end
+  Yajl::Parser.parse(str, opts)
+end
 
 module VCAP::CloudController
   class Runner
@@ -103,6 +116,35 @@ module VCAP::CloudController
       end
 
       trap_signals
+
+      # hook up with NATS
+      # FIXME: index should be configurable
+      # TODO: put useful metrics in varz
+      # TODO: subscribe to the two DEA channels
+      EM.schedule do
+        NATS.start(:uri => @config[:nats_uri]) do
+          VCAP::Component.register(:type => 'CloudController',
+                                   :host => VCAP.local_ip,
+                                   :index => 0,
+                                   :config => @config,
+                                   # leaving the varz port / user / pwd blank to be random
+                                  )
+        end
+
+        # TODO: blacklist api2 in legacy CC
+        router_register_message = Yajl::Encoder.encode({
+          :host => VCAP.local_ip,
+          :port => port,
+          :uris => [@config[:external_domain]],
+          :tags => {:component => "CloudController" },
+        })
+        NATS.publish("router.register", router_register_message)
+        # Broadcast when a router restarts
+        NATS.subscribe("router.start") do
+          NATS.publish("router.register", router_register_message)
+        end
+      end
+
       @thin_server.threaded = true
       @thin_server.start!
     end
