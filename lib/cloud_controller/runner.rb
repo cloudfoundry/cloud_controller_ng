@@ -83,27 +83,34 @@ module VCAP::CloudController
       DB.connect(db_logger, @config[:db])
     end
 
+    def development?
+      @development ||= false
+    end
+
     def run!
       db = setup_db
       run_migrations = @run_migrations
-      development = @development
-      config = @config
+      config = @config.dup
 
-      port = ENV["VCAP_APP_PORT"]
-      port ||= @config[:port]
+      config[:port] = ENV["VCAP_APP_PORT"] || @config[:port]
 
       DB.apply_migrations(db) if run_migrations
 
-      @thin_server = Thin::Server.new("0.0.0.0", port,
+      @thin_server = Thin::Server.new("0.0.0.0", config[:port],
                                       :signals => false) do
         use Rack::CommonLogger
+        require File.expand_path("../message_bus.rb", __FILE__)
+        register_components(config)
+        register_routes(config)
+
         map "/" do
-          DB.apply_migrations(db) if (run_migrations && development)
+          DB.apply_migrations(db) if (run_migrations && development?)
           run VCAP::CloudController::Controller.new(config)
         end
       end
 
       trap_signals
+
       @thin_server.threaded = true
       @thin_server.start!
     end
