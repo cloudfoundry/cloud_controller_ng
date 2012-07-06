@@ -38,9 +38,9 @@ module VCAP::CloudController::RestController
             unless relation.exclude_in?(type)
               if (type == :update || (type == :create &&
                                       relation.optional_in?(type)))
-                optional "#{name}_id", Integer
+                optional "#{name}_guid", String
               else
-                required "#{name}_id", Integer
+                required "#{name}_guid", String
               end
 
               if type == :response
@@ -54,7 +54,7 @@ module VCAP::CloudController::RestController
               if type == :response
                 optional "#{name}_url", VCAP::RestAPI::Message::HTTPS_URL
               else
-                optional "#{name}_id", [Integer]
+                optional "#{name}_guid", [String]
               end
             end
           end
