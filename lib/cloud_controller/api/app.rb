@@ -54,7 +54,7 @@ module VCAP::CloudController
       {
         :path => obj.app_space.organization_guid,
         :body => {
-          :op           => "post",
+          :op           => op,
           :user_id      => user.guid,
           :object       => "application",
           :object_id    => obj.guid,
@@ -71,9 +71,9 @@ module VCAP::CloudController
     def get_quota_action(app, request_attrs)
       op = "put"
       # quota treats delete as stop app
-      op = "delete" if app.state == "STARTED" && request_attrs["state"] == "STOPPED"
+      op = "delete" if (app.state == "STARTED" && request_attrs["state"] == "STOPPED")
       # quota treats post as start app
-      op = "post" if app.state == "STOPPED" && request_attrs["state"] == "STARTED"
+      op = "post" if (app.state == "STOPPED" && request_attrs["state"] == "STARTED")
       op
     end
 
