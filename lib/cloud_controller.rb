@@ -96,8 +96,8 @@ module VCAP::CloudController
     end
 
     get "/hello/em_async" do
-      EM.schedule_sync do |callback|
-        EM::Timer.new(5) { callback.call("async return from an EM timer\n") }
+      EM.schedule_sync do |promise|
+        EM::Timer.new(5) { promise.deliver("async return from an EM timer\n") }
       end
     end
   end
