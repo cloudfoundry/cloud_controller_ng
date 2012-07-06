@@ -40,7 +40,7 @@ module VCAP::CloudController
         begin
           token_information = token_coder.decode(auth_token)
           logger.info("Token received from the UAA #{token_information.inspect}")
-          uaa_id = token_information[:id] if token_information
+          uaa_id = token_information[:user_id] if token_information
           user = Models::User.find(:guid => uaa_id) if uaa_id
 
           # Bootstraping mechanism..
