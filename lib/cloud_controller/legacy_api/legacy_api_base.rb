@@ -25,6 +25,6 @@ module VCAP::CloudController
       VCAP::CloudController::Controller
     end
 
-    attr_accessor :logger, :request
+    attr_accessor :config, :logger, :request
   end
 end
