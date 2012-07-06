@@ -213,10 +213,10 @@ module VCAP::CloudController::RestController
 
         def request(method, url, body)
           headers = {
-            :accept => :json,
-            :x_bs_auth_token => auth_token
+            "accept" => :json,
+            "x-bs-auth-token" => auth_token
           }
-          headers[:content_type] = :json unless body.nil?
+          headers["content-type"] = :json unless body.nil?
           encoded = Yajl::Encoder.encode(body)
 
           logger.debug "req: #{method} #{url} #{headers} #{body}"
