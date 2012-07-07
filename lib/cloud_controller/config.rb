@@ -7,7 +7,19 @@ class VCAP::CloudController::Config < VCAP::Config
 
   define_schema do
     {
+      :info => {
+        :name            => String,
+        :build           => String,
+        :version         => Fixnum,
+        :support_address => String,
+        :description     => String,
+      },
+
+      # TODO: put back once json schema is sorted out
+      # :allow_debug => BoolSchema,
+
       :uaa => {
+        :url                => String,
         :resource_id        => String,
         :symmetric_secret   => String
       },
@@ -37,6 +49,24 @@ class VCAP::CloudController::Config < VCAP::Config
         optional(:pool_timeout)     => Integer     # timeout before raising an error when connection can't be established to the db
       },
 
+      :legacy_framework_manifest => Hash,
+
+      # TODO: use new defaults to set these defaults
+      optional(:default_account_capacity) => {
+        :memory   => Fixnum,   #:default => 2048,
+        :app_uris => Fixnum, #:default => 4,
+        :services => Fixnum, #:default => 16,
+        :apps     => Fixnum, #:default => 20
+      },
+
+      # TODO: use new defaults to set these defaults
+      optional(:admin_account_capacity) => {
+        :memory   => Fixnum,   #:default => 2048,
+        :app_uris => Fixnum, #:default => 4,
+        :services => Fixnum, #:default => 16,
+        :apps     => Fixnum, #:default => 20
+      },
+
       optional(:index)       => Integer,    # Component index (cc-0, cc-1, etc)
       optional(:local_route) => String,     # If set, use this to determine the IP address that is returned in discovery messages
     }
@@ -47,5 +77,6 @@ class VCAP::CloudController::Config < VCAP::Config
     # via per instance constructor.  Remove that in favor of this
     # method as there will be more along these lines.
     VCAP::CloudController::RestController::QuotaManager.configure(config)
+    VCAP::CloudController::Models::AccountCapacity.configure(config)
   end
 end

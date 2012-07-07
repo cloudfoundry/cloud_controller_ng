@@ -32,7 +32,9 @@ module VCAP::CloudController
 
     before do
       VCAP::CloudController::SecurityContext.current_user = nil
+      user = nil
       auth_token = env["HTTP_AUTHORIZATION"]
+
       if auth_token
         token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
                                               @config[:uaa][:symmetric_secret],
@@ -59,6 +61,20 @@ module VCAP::CloudController
         rescue => e
           logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
         end
+      end
+
+      validate_scheme(user)
+    end
+
+    def validate_scheme(user)
+      return unless user
+
+      if @config[:https_required]
+        raise Errors::NotAuthorized unless request.scheme == "https"
+      end
+
+      if @config[:https_required_for_admins] && user && user.admin?
+        raise Errors::NotAuthorized unless request.scheme == "https"
       end
     end
 
@@ -96,4 +112,5 @@ require "cloud_controller/errors"
 require "cloud_controller/api"
 
 require "cloud_controller/legacy_api/legacy_api_base"
+require "cloud_controller/legacy_api/legacy_info"
 require "cloud_controller/legacy_api/legacy_services"
