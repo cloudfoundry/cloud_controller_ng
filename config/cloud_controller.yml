@@ -5,6 +5,15 @@ nats_uri: nats://127.0.0.1:4222
 
 bootstrap_admin_email: sre@vmware.com
 
+info:
+  name: "vcap"
+  build: "2222"
+  version: 2
+  support_address: "http://support.cloudfoundry.com"
+  description: "VMware's Cloud Application Platform"
+# TODO: put back once json schema is sorted out
+# allow_debug: false
+
 logging:
   level: debug2
 
@@ -14,6 +23,7 @@ db:
   pool_timeout: 10
 
 uaa:
+  url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
 
