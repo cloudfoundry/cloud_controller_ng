@@ -17,7 +17,8 @@ describe VCAP::CloudController::AppSpace do
       :domains    => lambda { |app_space| make_domain_for_app_space(app_space) }
     },
     :one_to_many_collection_ids => {
-      :apps  => lambda { |app_space| VCAP::CloudController::Models::App.make }
+      :apps  => lambda { |app_space| VCAP::CloudController::Models::App.make },
+      :service_instances => lambda { |app_space| VCAP::CloudController::Models::ServiceInstance.make }
     }
   }
 
