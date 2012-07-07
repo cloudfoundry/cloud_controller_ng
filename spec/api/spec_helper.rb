@@ -10,10 +10,34 @@ module VCAP::CloudController::ApiSpecHelper
   include VCAP::CloudController
   include VCAP::CloudController::ModelSpecHelper
 
+  HTTPS_ENFORCEMENT_SCENARIOS = [
+    {:protocol => "http",  :config_setting => nil, :user => "user",  :success => true},
+    {:protocol => "http",  :config_setting => nil, :user => "admin", :success => true},
+    {:protocol => "https", :config_setting => nil, :user => "user",  :success => true},
+    {:protocol => "https", :config_setting => nil, :user => "admin", :success => true},
+
+    # Next with https_required
+    {:protocol => "http",  :config_setting => :https_required, :user => "user",  :success => false},
+    {:protocol => "http",  :config_setting => :https_required, :user => "admin", :success => false},
+    {:protocol => "https", :config_setting => :https_required, :user => "user",  :success => true},
+    {:protocol => "https", :config_setting => :https_required, :user => "admin", :success => true},
+
+    # Finally with https_required_for_admins
+    {:protocol => "http",  :config_setting => :https_required_for_admins, :user => "user",  :success => true},
+    {:protocol => "http",  :config_setting => :https_required_for_admins, :user => "admin", :success => false},
+    {:protocol => "https", :config_setting => :https_required_for_admins, :user => "user",  :success => true},
+    {:protocol => "https", :config_setting => :https_required_for_admins, :user => "admin", :success => true}
+  ]
+
+  def config_override(hash)
+    @config_override = hash
+  end
+
   def config
     config_file = File.expand_path("../../../config/cloud_controller.yml",
                                     __FILE__)
-    VCAP::CloudController::Config.from_file(config_file)
+    config = VCAP::CloudController::Config.from_file(config_file)
+    config.merge(@config_override || {})
   end
 
   def app
@@ -33,7 +57,7 @@ module VCAP::CloudController::ApiSpecHelper
     # FIXME: what is the story here?
     # headers["HTTP_PROXY_USER"]    = proxy_user.id if proxy_user
 
-    headers["X-Forwarded_Proto"]  = "https" if https
+    headers["HTTP_X_FORWARDED_PROTO"] = "https" if https
     headers
   end
 
