@@ -30,7 +30,7 @@ module VCAP::CloudController
     end
 
     def update_quota_token_request(obj)
-      ret = quota_token_request(get_quota_action(obj, request_attrs), obj)
+      ret = quota_token_request("put", obj)
       ret[:body][:audit_data] = request_attrs
       ret
     end
@@ -67,15 +67,5 @@ module VCAP::CloudController
         }
       }
     end
-
-    def get_quota_action(app, request_attrs)
-      op = "put"
-      # quota treats delete as stop app
-      op = "delete" if (app.state == "STARTED" && request_attrs["state"] == "STOPPED")
-      # quota treats post as start app
-      op = "post" if (app.state == "STOPPED" && request_attrs["state"] == "STARTED")
-      op
-    end
-
   end
 end
