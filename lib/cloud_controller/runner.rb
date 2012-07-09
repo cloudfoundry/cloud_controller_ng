@@ -20,6 +20,7 @@ module VCAP::CloudController
 
       setup_logging
       setup_db
+      VCAP::CloudController::Config.configure(@config)
     end
 
     def logger

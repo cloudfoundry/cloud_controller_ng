@@ -13,7 +13,9 @@ module VCAP::CloudController::ApiSpecHelper
   def config
     config_file = File.expand_path("../../../config/cloud_controller.yml",
                                     __FILE__)
-    VCAP::CloudController::Config.from_file(config_file)
+    c = VCAP::CloudController::Config.from_file(config_file)
+    VCAP::CloudController::Config.configure(c)
+    c
   end
 
   def app

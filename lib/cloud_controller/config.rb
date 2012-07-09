@@ -42,12 +42,10 @@ class VCAP::CloudController::Config < VCAP::Config
     }
   end
 
-  def self.from_file(*args)
-    config = super(*args)
+  def self.configure(config)
     # TODO: this introduces 2 config styles.  CC takes config
     # via per instance constructor.  Remove that in favor of this
     # method as there will be more along these lines.
     VCAP::CloudController::RestController::QuotaManager.configure(config)
-    config
   end
 end
