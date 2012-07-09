@@ -154,4 +154,131 @@ describe VCAP::CloudController::LegacyInfo do
       end
     end
   end
+
+  describe "service info" do
+    before do
+      @mysql_svc  = Models::Service.make(:label => "mysql")
+      @pg_svc     = Models::Service.make(:label => "postgresql")
+      @redis_svc  = Models::Service.make(:label => "redis")
+      @mongo_svc  = Models::Service.make(:label => "mongodb")
+      @random_svc = Models::Service.make(:label => "random")
+
+      get "/info/services", {}, headers_for(Models::User.make)
+    end
+
+    it "should return success" do
+      last_response.status.should == 200
+    end
+
+    it "should return synthesized types as the top level key" do
+      hash = Yajl::Parser.parse(last_response.body)
+      hash.should have_key("database")
+      hash.should have_key("key-value")
+      hash.should have_key("generic")
+
+      hash["database"].length.should == 2
+      hash["key-value"].length.should == 2
+      hash["generic"].length.should == 1
+    end
+
+    it "should return mysql as a database" do
+      hash = Yajl::Parser.parse(last_response.body)
+      hash["database"].should have_key("mysql")
+      hash["database"]["mysql"].should == {
+        @mysql_svc.version => {
+          "id" => @mysql_svc.guid,
+          "vendor" => "mysql",
+          "version" => @mysql_svc.version,
+          "type" => "database",
+          "description" => @mysql_svc.description,
+          "tiers" => {
+            "free" => {
+              "options" =>{},
+              "order" => 1
+            }
+          }
+        }
+      }
+    end
+
+    it "should return pg as a database" do
+      hash = Yajl::Parser.parse(last_response.body)
+      hash["database"].should have_key("postgresql")
+      hash["database"]["postgresql"].should == {
+        @pg_svc.version => {
+          "id" => @pg_svc.guid,
+          "vendor" => "postgresql",
+          "version" => @pg_svc.version,
+          "type" => "database",
+          "description" => @pg_svc.description,
+          "tiers" => {
+            "free" => {
+              "options" =>{},
+              "order" => 1
+            }
+          }
+        }
+      }
+    end
+
+    it "should return redis under key-value" do
+      hash = Yajl::Parser.parse(last_response.body)
+      hash["key-value"].should have_key("redis")
+      hash["key-value"]["redis"].should == {
+        @redis_svc.version => {
+          "id" => @redis_svc.guid,
+          "vendor" => "redis",
+          "version" => @redis_svc.version,
+          "type" => "key-value",
+          "description" => @redis_svc.description,
+          "tiers" => {
+            "free" => {
+              "options" =>{},
+              "order" => 1
+            }
+          }
+        }
+      }
+    end
+
+    it "should (incorrectly) return mongo under key-value" do
+      hash = Yajl::Parser.parse(last_response.body)
+      hash["key-value"].should have_key("mongodb")
+      hash["key-value"]["mongodb"].should == {
+        @mongo_svc.version => {
+          "id" => @mongo_svc.guid,
+          "vendor" => "mongodb",
+          "version" => @mongo_svc.version,
+          "type" => "key-value",
+          "description" => @mongo_svc.description,
+          "tiers" => {
+            "free" => {
+              "options" =>{},
+              "order" => 1
+            }
+          }
+        }
+      }
+    end
+
+    it "should return random under generic" do
+      hash = Yajl::Parser.parse(last_response.body)
+      hash["generic"].should have_key("random")
+      hash["generic"]["random"].should == {
+        @random_svc.version => {
+          "id" => @random_svc.guid,
+          "vendor" => "random",
+          "version" => @random_svc.version,
+          "type" => "generic",
+          "description" => @random_svc.description,
+          "tiers" => {
+            "free" => {
+              "options" =>{},
+              "order" => 1
+            }
+          }
+        }
+      }
+    end
+  end
 end

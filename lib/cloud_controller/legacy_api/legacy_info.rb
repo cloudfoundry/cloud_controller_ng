@@ -28,6 +28,22 @@ module VCAP::CloudController
       Yajl::Encoder.encode(info)
     end
 
+    def service_info
+      raise NotAuthenticated unless user
+
+      ds = Models::Service.user_visible
+
+      legacy_resp = {}
+      ds.each do |svc|
+        svc_type = synthesize_service_type(svc)
+        legacy_resp[svc_type] ||= {}
+        legacy_resp[svc_type][svc.label] ||= {}
+        legacy_resp[svc_type][svc.label][svc.version] = legacy_svc_encoding(svc)
+      end
+
+      Yajl::Encoder.encode(legacy_resp)
+    end
+
     private
 
     def account_capacity
@@ -57,9 +73,49 @@ module VCAP::CloudController
       }
     end
 
+    # Keep these here in the legacy api translation rather than polluting the
+    # model/schema
+    def synthesize_service_type(svc)
+      case svc.label
+      when /mysql/
+        "database"
+      when /postgresql/
+        "database"
+      when /redis/
+        "key-value"
+      when /mongodb/
+        "key-value"
+      else
+        "generic"
+      end
+    end
+
+    def legacy_svc_encoding(svc)
+      {
+        :id      => svc.guid,
+        :vendor  => svc.label,
+        :version => svc.version,
+        :type    => synthesize_service_type(svc),
+        :description => svc.description || "-",
+
+        # The legacy vmc/sts clients only handles free.  Don't
+        # try to pretent otherwise.
+        :tiers => {
+          "free" => {
+            "options" => { },
+            "order" => 1
+          }
+        }
+      }
+    end
+
     def self.setup_routes
       controller.get "/info" do
         LegacyInfo.new(@config, logger, request).info
+      end
+
+      controller.get "/info/services" do
+        LegacyInfo.new(@config, logger, request).service_info
       end
     end
 
