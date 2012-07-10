@@ -1,6 +1,6 @@
 ---
 port: 8181
-pid_filename: /var/vcap/sys/run/cloud_controller.pid
+pid_filename: /tmp/cloud_controller.pid
 nats_uri: nats://127.0.0.1:4222
 
 bootstrap_admin_email: sre@vmware.com
