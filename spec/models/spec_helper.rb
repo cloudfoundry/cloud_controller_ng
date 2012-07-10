@@ -40,3 +40,17 @@ def make_service_binding_for_service_instance(service_instance)
                                                     :service_instance => service_instance,
                                                     :credentials => Sham.service_credentials)
 end
+
+def make_app_space_for_user(user)
+  app_space = Models::AppSpace.make
+  app_space.organization.add_user(user)
+  app_space.add_developer(user)
+  app_space
+end
+
+def make_user_with_default_app_space(opts = {})
+  user = Models::User.make(:admin => opts.has_key?(:admin), :active => true)
+  app_space = make_app_space_for_user(user)
+  user.default_app_space = app_space
+  user
+end

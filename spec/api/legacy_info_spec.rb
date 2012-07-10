@@ -3,15 +3,6 @@ require File.expand_path("../spec_helper", __FILE__)
 # port of the legacy cc info spec, minus legacy token support. i.e. this is jwt
 # tokens only.
 describe VCAP::CloudController::LegacyInfo do
-  def create_user(admin)
-    user = Models::User.make(:admin => admin,  :active => true)
-    app_space = Models::AppSpace.make
-    app_space.organization.add_user(user)
-    app_space.add_developer(user)
-    user.default_app_space = app_space
-    user
-  end
-
   shared_examples "legacy info response" do |expected_status, expect_user|
     it "should return #{expected_status}" do
       last_response.status.should == expected_status
@@ -40,9 +31,9 @@ describe VCAP::CloudController::LegacyInfo do
       let(:current_user) do
         case scenario_vars[:user]
         when "admin"
-          create_user(true)
+          make_user_with_default_app_space(:admin => true)
         when "user"
-          create_user(false)
+          make_user_with_default_app_space
         end
       end
 
@@ -75,7 +66,7 @@ describe VCAP::CloudController::LegacyInfo do
     let(:headers) { headers_for(current_user) }
 
     describe "for an amdin" do
-      let(:current_user) { create_user(true) }
+      let(:current_user) { make_user_with_default_app_space(:admin => true) }
 
       it "should return admin limits for an admin" do
         get "/info", {}, headers
@@ -92,7 +83,7 @@ describe VCAP::CloudController::LegacyInfo do
     end
 
     describe "for a user" do
-      let(:current_user) { create_user(false) }
+      let(:current_user) { make_user_with_default_app_space }
 
       it "should return default limits for a user" do
         get "/info", {}, headers
