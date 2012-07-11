@@ -52,6 +52,11 @@ module VCAP::CloudController
       HTTP::OK
     end
 
+    def crashes(name)
+      # TODO: stubbed
+      Yajl::Encoder.encode(:crashes => [])
+    end
+
     private
 
     def legacy_app_encoding(app)
@@ -63,7 +68,7 @@ module VCAP::CloudController
         },
         :uris => [], # TODO when routes are finalized
         :instances => app.instances,
-        :runningInstance => 0, # TODO: when HM integration is done
+        :runningInstances => app.instances, # TODO: when HM integration is done
         :resources => {
           :memory => app.memory,
           :disk => app.disk_quota,
@@ -93,8 +98,8 @@ module VCAP::CloudController
         :app_space_guid => default_app_space.guid
       }
 
-      if name = hash["name"]
-        req[:name] = name
+      ["name", "instances", "state"].each do |k|
+        req[k] = hash[k] if hash.has_key?(k)
       end
 
       if staging = hash["staging"]
@@ -141,6 +146,10 @@ module VCAP::CloudController
 
       controller.delete "/apps/:name" do |name|
         LegacyApps.new(@config, logger, request).delete(name)
+      end
+
+      controller.get "/apps/:name/crashes" do |name|
+        LegacyApps.new(@config, logger, request).crashes(name)
       end
     end
 
