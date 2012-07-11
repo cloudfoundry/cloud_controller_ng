@@ -5,17 +5,23 @@ require "services/api"
 # NOTE: this will get refactored a bit as other methods get added
 # and as we start adding other legacy protocol conversions.
 module VCAP::CloudController
-  class LegacyService
+  class LegacyService < LegacyApiBase
     include VCAP::CloudController::Errors
     SERVICE_TOKEN_KEY = "HTTP_X_VCAP_SERVICE_TOKEN"
     DEFAULT_PROVIDER = "core"
     LEGACY_API_USER_GUID = "legacy-api"
 
-    def initialize(logger, request, service_auth_token)
-      @logger = logger
-      @request = request
+    def initialize(config, logger, request, service_auth_token = nil)
       @service_auth_token = service_auth_token
-      super(nil, logger, request)
+      super(config, logger, request)
+    end
+
+    def enumerate
+      resp = default_app_space.service_instances.map do |svc_instance|
+        legacy_service_encoding(svc_instance)
+      end
+
+      Yajl::Encoder.encode(resp)
     end
 
     def create_offering
@@ -70,10 +76,40 @@ module VCAP::CloudController
       end
     end
 
+    # Keep these here in the legacy api translation rather than polluting the
+    # model/schema
+    def self.synthesize_service_type(svc)
+      case svc.label
+      when /mysql/
+        "database"
+      when /postgresql/
+        "database"
+      when /redis/
+        "key-value"
+      when /mongodb/
+        "key-value"
+      else
+        "generic"
+      end
+    end
+
     private
 
     def empty_json
       "{}"
+    end
+
+    def legacy_service_encoding(svc_instance)
+      plan = svc_instance.service_plan
+      {
+        :name => svc_instance.name,
+        :type => LegacyService.synthesize_service_type(plan.service),
+        :vendor => plan.service.label,
+        :version => plan.service.version,
+        :tier => "free",
+        :properties => [],
+        :meta => {}
+      }
     end
 
     def self.legacy_api_user
@@ -87,14 +123,16 @@ module VCAP::CloudController
     end
 
     def self.setup_routes
-      klass = self
+      controller.get "/services" do
+        LegacyService.new(@config, logger, request).enumerate
+      end
 
       controller.before "/services/v1/*" do
         @service_auth_token = env[SERVICE_TOKEN_KEY]
       end
 
       controller.post "/services/v1/offerings" do
-        klass.new(logger, request, @service_auth_token).create_offering
+        LegacyService.new(@config, logger, request, @service_auth_token).create_offering
       end
     end
 

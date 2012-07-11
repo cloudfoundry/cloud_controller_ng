@@ -55,4 +55,43 @@ describe VCAP::CloudController::LegacyService do
       end
     end
   end
+
+  describe "User facing apis" do
+    let(:user) { make_user_with_default_app_space(:admin => true) }
+
+    describe "GET /services" do
+      before do
+        @services = []
+        7.times do
+          @services << Models::ServiceInstance.make(:app_space => user.default_app_space)
+        end
+
+        3.times do
+          app_space = make_app_space_for_user(user)
+          Models::ServiceInstance.make(:app_space => app_space)
+        end
+
+        get "/services", {}, headers_for(user)
+      end
+
+      it "should return success" do
+        last_response.status.should == 200
+      end
+
+      it "should return an array" do
+        decoded_response.should be_a_kind_of(Array)
+      end
+
+      it "should only return services for the default app space" do
+        decoded_response.length.should == 7
+      end
+
+      it "should return service names" do
+        names = decoded_response.map { |a| a["name"] }
+        expected_names = @services.map { |a| a.name }
+        names.should == expected_names
+      end
+    end
+  end
 end
+
