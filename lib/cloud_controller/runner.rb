@@ -93,7 +93,10 @@ module VCAP::CloudController
       run_migrations = @run_migrations
       config = @config.dup
 
-      DB.apply_migrations(db) if run_migrations
+      if run_migrations
+        DB.apply_migrations(db)
+        populate_framework_and_runtimes
+      end
 
       @thin_server = Thin::Server.new("0.0.0.0", config[:port],
                                       :signals => false) do
@@ -133,6 +136,22 @@ module VCAP::CloudController
       c = services[pg_key].first["credentials"]
       @config[:db][:database] = "postgres://#{c["user"]}:#{c["password"]}@#{c["hostname"]}:#{c["port"]}/#{c["name"]}"
       @config[:port] = ENV["VCAP_APP_PORT"]
+    end
+
+    # This isn't exactly the best place for this, but it is also temporary.  A
+    # seperate utility will get written for this
+    def populate_framework_and_runtimes
+      @config[:legacy_framework_manifest].each do |key, fw|
+        Models::Framework.find_or_create(:name => fw[:name]) do |f|
+          f.description = fw[:name]
+        end
+
+        fw[:runtimes].each do |rt|
+          Models::Runtime.find_or_create(:name => rt["name"]) do |r|
+            r.description = rt["description"]
+          end
+        end
+      end
     end
   end
 end
