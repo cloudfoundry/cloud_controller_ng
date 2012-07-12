@@ -4,6 +4,7 @@ module VCAP::CloudController
   rest_controller :ServiceInstance do
     permissions_required do
       full Permissions::CFAdmin
+      full Permissions::Authenticated
     end
 
     define_attributes do
