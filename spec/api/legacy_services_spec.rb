@@ -96,7 +96,7 @@ describe VCAP::CloudController::LegacyService do
     describe "POST /services" do
       before do
         svc = Models::Service.make(:label => "postgres", :version => "9.0")
-        Models::ServicePlan.make(:service => svc, :name => "free")
+        Models::ServicePlan.make(:service => svc, :name => LegacyService::LEGACY_PLAN_OVERIDE)
         Models::ServiceInstance.make(:app_space => user.default_app_space, :name => "duplicate")
 
         3.times { Models::ServiceInstance.make(:app_space => user.default_app_space) }

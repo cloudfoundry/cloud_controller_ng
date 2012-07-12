@@ -10,7 +10,7 @@ module VCAP::CloudController
     SERVICE_TOKEN_KEY = "HTTP_X_VCAP_SERVICE_TOKEN"
     DEFAULT_PROVIDER = "core"
     LEGACY_API_USER_GUID = "legacy-api"
-    LEGACY_PLAN_OVERIDE = "free"
+    LEGACY_PLAN_OVERIDE = "D100"
 
     def initialize(config, logger, request, service_auth_token = nil)
       @service_auth_token = service_auth_token
