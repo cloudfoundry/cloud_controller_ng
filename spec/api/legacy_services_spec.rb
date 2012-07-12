@@ -92,6 +92,127 @@ describe VCAP::CloudController::LegacyService do
         names.should == expected_names
       end
     end
+
+    describe "POST /services" do
+      before do
+        svc = Models::Service.make(:label => "postgres", :version => "9.0")
+        Models::ServicePlan.make(:service => svc, :name => "free")
+        Models::ServiceInstance.make(:app_space => user.default_app_space, :name => "duplicate")
+
+        3.times { Models::ServiceInstance.make(:app_space => user.default_app_space) }
+        @num_instances_before = Models::ServiceInstance.count
+        @req = {
+          :type => "database",
+          :tier => "free",
+          :vendor => "postgres",
+          :version => "9.0",
+          :name => "instance_name"
+        }
+      end
+
+      context "with all required parameters" do
+        before do
+          post "/services", Yajl::Encoder.encode(@req), headers_for(user)
+        end
+
+        it "should return success" do
+          last_response.status.should == 200
+        end
+
+        it "should add the servicew the default app space" do
+          svc = user.default_app_space.service_instances.find(:name => "instance_name")
+          svc.should_not be_nil
+          Models::ServiceInstance.count.should == @num_instances_before + 1
+        end
+      end
+
+      context "with an invalid vendor" do
+        before do
+          @req[:vendor] = "invalid"
+
+          post "/services", Yajl::Encoder.encode(@req), headers_for(user)
+        end
+
+        it "should return bad request" do
+          last_response.status.should == 400
+        end
+
+        it "should not add a service instance " do
+          Models::ServiceInstance.count.should == @num_instances_before
+        end
+
+        it_behaves_like "a vcap rest error response", /service could not be found: invalid-9.0/
+      end
+
+      context "with an invalid version" do
+        before do
+          @req[:version] = "invalid"
+
+          post "/services", Yajl::Encoder.encode(@req), headers_for(user)
+        end
+
+        it "should return bad request" do
+          last_response.status.should == 400
+        end
+
+        it "should not add a service instance " do
+          Models::ServiceInstance.count.should == @num_instances_before
+        end
+
+        it_behaves_like "a vcap rest error response", /service could not be found: postgres-invalid/
+      end
+
+      context "with a duplicate name" do
+        before do
+          @req[:name] = "duplicate"
+          post "/services", Yajl::Encoder.encode(@req), headers_for(user)
+        end
+
+        it "should return bad request" do
+          last_response.status.should == 400
+        end
+
+        it "should not add a service instance " do
+          Models::ServiceInstance.count.should == @num_instances_before
+        end
+
+        it_behaves_like "a vcap rest error response", /service instance name is taken: duplicate/
+      end
+    end
+
+    describe "DELETE /services/:name" do
+      before do
+        3.times { Models::ServiceInstance.make(:app_space => user.default_app_space) }
+        @svc = Models::ServiceInstance.make(:app_space => user.default_app_space)
+        @num_instances_before = Models::ServiceInstance.count
+      end
+
+      describe "with a valid name" do
+        before do
+          delete "/services/#{@svc.name}", {}, headers_for(user)
+        end
+
+        it "should return success" do
+          last_response.status.should == 200
+        end
+
+        it "should reduce the services count by 1" do
+          Models::ServiceInstance.count.should == @num_instances_before - 1
+        end
+      end
+
+      describe "with an invalid name" do
+        before do
+          delete "/services/invalid_name", {}, headers_for(user)
+        end
+
+        it "should return bad request" do
+          last_response.status.should == 400
+        end
+
+        it_behaves_like "a vcap rest error response", /service instance can not be found: invalid_name/
+      end
+    end
   end
 end
 
