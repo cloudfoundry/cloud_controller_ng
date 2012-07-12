@@ -56,7 +56,7 @@ module VCAP::CloudController
 
     def parse_config
       @config = VCAP::CloudController::Config.from_file(@config_file)
-    rescue VCAP::JsonSchema::ValidationError => ve
+    rescue Membrane::SchemaValidationError => ve
       puts "ERROR: There was a problem validating the supplied config: #{ve}"
       exit 1
     rescue => e
