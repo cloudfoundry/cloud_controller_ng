@@ -1,5 +1,4 @@
 require "vcap/config"
-require "vcap/json_schema"
 
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
