@@ -19,7 +19,7 @@ module VCAP::CloudController::RestController
     #
     # @param [Symbol] name Name of the attribute.
     #
-    # @param [Class] schema The JsonSchema or class type of the
+    # @param [Class] schema The Membrane schema or class type of the
     # named attribute.
     #
     # @option opts [[Symbol]] :exclude_in One or more symbols representing
