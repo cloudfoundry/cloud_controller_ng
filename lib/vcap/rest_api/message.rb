@@ -4,13 +4,6 @@ require "json_message"
 require "rfc822"
 
 module VCAP::RestAPI
-  # The gaps that this class addresses are being filed by the new Membrane
-  # work.  Hence, this class isn't going to get full documentation or
-  # specs.  It is implicitly covered by the specs for the caller, and
-  # that should be good enough for now.
-  #
-  # Hopefully when we transition to Membrane, we'll get rid of this all
-  # together.  If not, we'll add docs and specs then.
   class Message < JsonMessage
     URL       = URI::regexp(%w(http https))
     HTTPS_URL = URI::regexp("https")
@@ -55,13 +48,5 @@ module VCAP::RestAPI
   class Response < Message
     required :metadata, Hash
     required :entity, Hash
-  end
-end
-
-# If we weren't moving to Membrane, this would get added to JsonSchema
-# directly.  For now, there is no reason to go do a gem bump.
-class JsonSchema
-  def to_s
-    @schema.to_s
   end
 end

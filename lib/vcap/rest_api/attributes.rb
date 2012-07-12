@@ -5,8 +5,7 @@ module VCAP::RestAPI
   #
   # These are ultimately used to capture the attributes allowed to be
   # fetched/set on a controller.  These ultimately get used to auto-generate
-  # a JsonSchema (and soon to be converted to Membrane) based json validator
-  # on a per request type basis.
+  # a Membrane based json validator on a per request type basis.
   class NamedAttribute
     attr_reader :name
     attr_reader :default
@@ -56,12 +55,11 @@ module VCAP::RestAPI
   class SchemaAttribute < NamedAttribute
     attr_reader :schema
 
-    # A SchemaAttribute has an associated JsonSchema.  (Soon to be replaced
-    # with Membrane).
+    # A SchemaAttribute has an associated Membrane schema.
     #
     # @param [Symbol] name Name of the attribute.
     #
-    # @param [Class] The JsonSchema or class type of the named attribute.
+    # @param [Class] The Membrane schema or class type of the named attribute.
     #
     # @option opts [[Symbol]] :exclude_in One or more symbols representing
     # an operation types that the attribute is allowed in, e.g.
