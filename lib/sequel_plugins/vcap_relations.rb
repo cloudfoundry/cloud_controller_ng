@@ -25,6 +25,7 @@ module Sequel::Plugins::VcapRelations
 
       opts[:reciprocol] ||=
         self.name.split("::").last.underscore.to_sym
+
       super
     end
 
@@ -52,7 +53,9 @@ module Sequel::Plugins::VcapRelations
         end
       end
 
-      define_to_many_reciprocol(opts)
+      opts[:reciprocol] ||=
+        self.name.split("::").last.underscore.pluralize.to_sym
+
       define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end
@@ -69,19 +72,25 @@ module Sequel::Plugins::VcapRelations
       ids_attr      = "#{singular_name}_ids"
       guids_attr    = "#{singular_name}_guids"
 
-      define_to_many_reciprocol(opts)
+      opts[:reciprocol] ||= self.name.split("::").last.underscore.to_sym
+
       define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       super
     end
 
     private
 
-    def define_to_many_reciprocol(opts)
-      opts[:reciprocol] ||=
-        self.name.split("::").last.underscore.pluralize.to_sym
-    end
-
     def define_to_many_methods(name, singular_name, ids_attr, guids_attr)
+      diff_collections = proc do |a, b|
+        cur_set = Set.new(a)
+        new_set = Set.new(b)
+
+        intersection = cur_set & new_set
+        added = new_set - intersection
+        removed = cur_set - intersection
+
+        [added, removed]
+      end
 
       define_method(ids_attr) do
         send(name).collect { |o| o.id }
@@ -97,7 +106,8 @@ module Sequel::Plugins::VcapRelations
 
       define_method("#{ids_attr}=") do |ids|
         return unless ids
-        send("remove_all_#{name}") unless send(name).empty?
+        ds = send(name)
+        ds.each { |r| send("remove_#{singular_name}", r) unless ids.include?(r.id) }
         ids.each { |i| send("add_#{singular_name}", i) }
       end
 
@@ -107,8 +117,10 @@ module Sequel::Plugins::VcapRelations
 
       define_method("#{guids_attr}=") do |guids|
         return unless guids
-        send("remove_all_#{name}") unless send(name).empty?
-        guids.each { |g| send("add_#{singular_name}_by_guid", g) }
+        current_guids = send(name).map { |o| o.guid }
+        (added, removed) = diff_collections.call(current_guids, guids)
+        removed.each { |g| send("remove_#{singular_name}_by_guid", g) }
+        added.each   { |g| send("add_#{singular_name}_by_guid", g) }
       end
 
       define_method("remove_#{singular_name}_by_guid") do |guid|
@@ -128,5 +140,6 @@ module Sequel::Plugins::VcapRelations
         end
       end
     end
+
   end
 end
