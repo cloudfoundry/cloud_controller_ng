@@ -20,8 +20,11 @@ describe VCAP::CloudController::Models::ServiceBinding do
       end
     },
     :many_to_one => {
-      :app => lambda { |service_binding|
-        VCAP::CloudController::Models::App.make(:app_space => service_binding.app_space)
+      :app => {
+        :delete_ok => true,
+        :create_for => lambda { |service_binding|
+          VCAP::CloudController::Models::App.make(:app_space => service_binding.app_space)
+        }
       },
       :service_instance => lambda { |service_binding|
         VCAP::CloudController::Models::ServiceInstance.make(:app_space => service_binding.app_space)

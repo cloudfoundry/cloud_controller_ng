@@ -11,7 +11,7 @@ module VCAP::CloudController::Models
     many_to_many      :routes, :before_add => :validate_route
     one_to_many       :service_bindings
 
-    add_association_dependencies :routes => :nullify
+    add_association_dependencies :routes => :nullify, :service_bindings => :destroy
 
     default_order_by  :name
 
@@ -61,5 +61,18 @@ module VCAP::CloudController::Models
       end
     end
 
+    # We need to overide this ourselves because we are really doing a
+    # many-to-many with ServiceInstances and want to remove the relationship
+    # to that when we remove the binding like sequel would do if the
+    # relationship was explicly defined as such.  However, since we need to
+    # annotate the join table with binding specific info, we manage the
+    # many_to_one and one_to_many sides of the relationship ourself.  If there
+    # is a sequel option that I couldn't see that provides this behavior, this
+    # method could be removed in the future.  Note, the sequel docs explicitly
+    # state that the correct way to overide the remove_bla functionality is to
+    # do so with the _ prefixed private method like we do here.
+    def _remove_service_binding(binding)
+      binding.destroy
+    end
   end
 end

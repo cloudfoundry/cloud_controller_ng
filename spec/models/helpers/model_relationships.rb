@@ -4,13 +4,23 @@ module VCAP::CloudController::ModelSpecHelper
   relation_types = VCAP::CloudController::ModelSpecHelper.relation_types
 
   shared_examples "model relationships" do |opts|
-    # make array of [assocation, create_for, relation_type]
+    # make array of [assocation, test_opts, relation_type]
     relations = []
     relation_types.each do |relation_type|
       relations += opts[relation_type].map { |e| e << relation_type }
     end
 
-    relations.each do |association, create_for, relation_type|
+    relations.each do |association, test_opts, relation_type|
+      create_for = nil
+      delete_ok = false
+
+      if test_opts.kind_of?(Hash)
+        create_for = test_opts[:create_for]
+        delete_ok = test_opts[:delete_ok]
+      else
+        create_for = test_opts
+      end
+
       describe "#{association}" do
         let(:obj) { described_class.make }
 
@@ -72,7 +82,8 @@ module VCAP::CloudController::ModelSpecHelper
           end
         end
 
-        if (described_class != VCAP::CloudController::Models::User &&
+        if (!delete_ok &&
+            (described_class != VCAP::CloudController::Models::User) &&
             (cardinality_other =~ /one/ && (cardinality_self == :many || cardinality_other =~ /or_more/)))
           it "should fail to destroy #{singular_association} due to database integrity checks" do
             related = create_for.call(obj)
