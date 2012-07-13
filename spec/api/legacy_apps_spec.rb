@@ -230,4 +230,45 @@ describe VCAP::CloudController::LegacyApps do
       Models::App.count.should == @num_apps_before - 1
     end
   end
+
+  describe "service binding" do
+    describe "PUT /apps/:name adding and removing bindings" do
+      before(:all) do
+        @app_obj = Models::App.make(:app_space => admin.default_app_space)
+        bound_instances = []
+        5.times do
+          instance = Models::ServiceInstance.make(:app_space => admin.default_app_space)
+          bound_instances << instance
+          Models::ServiceBinding.make(:app => @app_obj, :service_instance => instance)
+        end
+
+        @instance_to_bind = Models::ServiceInstance.make(:app_space => admin.default_app_space)
+        @instance_to_unbind = bound_instances[2]
+
+        service_instance_names = [@instance_to_bind.name]
+        bound_instances.each do |i|
+          service_instance_names << i.name unless i == @instance_to_unbind
+        end
+
+        @num_bindings_before = @app_obj.service_bindings.count
+
+        req = Yajl::Encoder.encode(:services => service_instance_names)
+        put "/apps/#{@app_obj.name}", req, headers_for(admin)
+        @app_obj.refresh
+        @bound_instances = @app_obj.service_bindings.map { |b| b.service_instance }
+      end
+
+      it "should return success" do
+        last_response.status.should == 200
+      end
+
+      it "should add the the specified binding to the app" do
+        @bound_instances.should include(@instance_to_bind)
+      end
+
+      it "should remove the specified binding from the app" do
+        @bound_instances.should_not include(@instance_to_unbind)
+      end
+    end
+  end
 end

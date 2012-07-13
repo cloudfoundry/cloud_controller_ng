@@ -40,8 +40,9 @@ module VCAP::CloudController
     def update(name)
       logger.debug "update app"
       app = app_from_name(name)
-      req = request_from_legacy_json(request.body)
+      req = request_from_legacy_json(request.body, app)
       VCAP::CloudController::App.new(logger, req).dispatch(:update, app.guid)
+      app.refresh
       HTTP::OK
     end
 
@@ -90,7 +91,7 @@ module VCAP::CloudController
       app
     end
 
-    def request_from_legacy_json(legacy_json)
+    def request_from_legacy_json(legacy_json, app = nil)
       hash = Yajl::Parser.parse(legacy_json)
       raise InvalidRequest unless hash
 
@@ -120,6 +121,26 @@ module VCAP::CloudController
       if resources = hash["resources"]
         ["memory", "instances"].each do |k|
           req[k] = resources[k] if resources[k]
+        end
+      end
+
+      if (app && bindings = hash["services"])
+        req[:service_binding_guids] = bindings.map do |name|
+          svc_instance = default_app_space.service_instances_dataset[:name => name]
+          raise ServiceInstanceNotFound.new(name) unless svc_instance
+
+          if binding = svc_instance.service_bindings_dataset[:app => app]
+            binding.guid
+          else
+            # TODO: the credentials should not be here.  Remove when we have full
+            # service binding support
+            binding_req = Yajl::Encoder.encode(:app_guid => app.guid,
+                                               :service_instance_guid => svc_instance.guid,
+                                               :credentials => {})
+            (_, _, binding_json) = VCAP::CloudController::ServiceBinding.new(logger, binding_req).dispatch(:create)
+            binding_resp = Yajl::Parser.parse(binding_json)
+            binding_resp["metadata"]["guid"]
+          end
         end
       end
 
