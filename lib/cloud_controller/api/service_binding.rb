@@ -20,7 +20,7 @@ module VCAP::CloudController
       unique_errors = e.errors.on([:app_id, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)
         ServiceBindingAppServiceTaken.new(
-          "#{attributes["app_id"]}-#{attributes["service_instance_id"]}")
+          "#{attributes["app_guid"]} #{attributes["service_instance_guid"]}")
       else
         ServiceBindingInvalid.new(e.errors.full_messages)
       end
