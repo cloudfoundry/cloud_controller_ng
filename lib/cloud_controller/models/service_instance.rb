@@ -33,5 +33,10 @@ module VCAP::CloudController::Models
         raise InvalidServiceBinding.new(service_binding.id)
       end
     end
+
+    def self.user_visibility_filter(user)
+      user_visibility_filter_with_admin_override(
+        :app_space => user.app_spaces_dataset)
+    end
   end
 end

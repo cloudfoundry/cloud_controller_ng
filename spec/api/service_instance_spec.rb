@@ -17,6 +17,131 @@ describe VCAP::CloudController::ServiceInstance do
     }
   }
 
+  describe "Permissions" do
+    include_context "permissions"
+
+    before do
+      @obj_a = Models::ServiceInstance.make(:app_space => @app_space_a)
+      @obj_b = Models::ServiceInstance.make(:app_space => @app_space_b)
+    end
+
+    let(:creation_req_for_a) do
+      # TODO: remove credentials when service gw flow is in place
+      Yajl::Encoder.encode(
+        :name => Sham.name,
+        :app_space_guid => @app_space_a.guid,
+        :service_plan_guid => Models::ServicePlan.make.guid,
+        :credentials => {}
+      )
+    end
+
+    let(:update_req_for_a) do
+      Yajl::Encoder.encode(:name => "#{@obj_a.name}_renamed")
+    end
+
+    describe "Org Level Permissions" do
+      describe "OrgManager" do
+        let(:member_a) { @org_a_manager }
+        let(:member_b) { @org_b_manager }
+
+        include_examples "permission checks", "OrgManager",
+          :model => VCAP::CloudController::Models::ServiceInstance,
+          :path => "/v2/service_instances",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "OrgUser" do
+        let(:member_a) { @org_a_member }
+        let(:member_b) { @org_b_member }
+
+        include_examples "permission checks", "OrgUser",
+          :model => VCAP::CloudController::Models::ServiceInstance,
+          :path => "/v2/service_instances",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "BillingManager" do
+        let(:member_a) { @org_a_billing_manager }
+        let(:member_b) { @org_b_billing_manager }
+
+        include_examples "permission checks", "BillingManager",
+          :model => VCAP::CloudController::Models::ServiceInstance,
+          :path => "/v2/service_instances",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "Auditor" do
+        let(:member_a) { @org_a_auditor }
+        let(:member_b) { @org_b_auditor }
+
+        include_examples "permission checks", "Auditor",
+          :model => VCAP::CloudController::Models::ServiceInstance,
+          :path => "/v2/service_instances",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+    end
+
+    describe "App Space Level Permissions" do
+      describe "AppSpaceManager" do
+        let(:member_a) { @app_space_a_manager }
+        let(:member_b) { @app_space_b_manager }
+
+        include_examples "permission checks", "AppSpaceManager",
+          :model => VCAP::CloudController::Models::ServiceInstance,
+          :path => "/v2/service_instances",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "Developer" do
+        let(:member_a) { @app_space_a_developer }
+        let(:member_b) { @app_space_b_developer }
+
+        include_examples "permission checks", "Developer",
+          :model => VCAP::CloudController::Models::ServiceInstance,
+          :path => "/v2/service_instances",
+          :enumerate => 1,
+          :create => :allowed,
+          :read => :allowed,
+          :modify => :allowed,
+          :delete => :allowed
+      end
+
+      describe "AppSpaceAuditor" do
+        let(:member_a) { @app_space_a_auditor }
+        let(:member_b) { @app_space_b_auditor }
+
+        include_examples "permission checks", "AppSpaceAuditor",
+          :model => VCAP::CloudController::Models::ServiceInstance,
+          :path => "/v2/service_instances",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+    end
+  end
+
   describe "quota" do
     let(:cf_admin) { Models::User.make(:admin => true) }
     let(:service_instance) { Models::ServiceInstance.make }
@@ -24,11 +149,12 @@ describe VCAP::CloudController::ServiceInstance do
     describe "create" do
       it "should fetch a quota token" do
         should_receive_quota_call
-        post "/v2/service_instances", Yajl::Encoder.encode(:name => Sham.name,
-                                                           :app_space_guid => service_instance.app_space_guid,
-                                                           :credentials => {},
-                                                           :service_plan_guid => service_instance.service_plan_guid),
-                                                           headers_for(cf_admin)
+        post "/v2/service_instances",
+          Yajl::Encoder.encode(:name => Sham.name,
+                               :app_space_guid => service_instance.app_space_guid,
+                               :credentials => {},
+                               :service_plan_guid => service_instance.service_plan_guid),
+                               headers_for(cf_admin)
         last_response.status.should == 201
       end
     end
