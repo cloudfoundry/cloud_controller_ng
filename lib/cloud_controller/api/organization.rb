@@ -4,7 +4,8 @@ module VCAP::CloudController
   rest_controller :Organization do
     permissions_required do
       full Permissions::CFAdmin
-      full Permissions::OrgManager
+      read Permissions::OrgManager
+      update Permissions::OrgManager
       read Permissions::OrgUser
       read Permissions::BillingManager
       read Permissions::Auditor

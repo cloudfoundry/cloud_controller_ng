@@ -100,48 +100,6 @@ module VCAP::CloudController::ApiSpecHelper
     end
   end
 
-  shared_context "permissions" do
-    before do
-      @org_a = VCAP::CloudController::Models::Organization.make
-      @org_a_manager = VCAP::CloudController::Models::User.make
-      @org_a_member = VCAP::CloudController::Models::User.make
-      @org_a_billing_manager = VCAP::CloudController::Models::User.make
-      @org_a_auditor = VCAP::CloudController::Models::User.make
-      @org_a.add_manager(@org_a_manager)
-      @org_a.add_user(@org_a_member)
-      @org_a.add_billing_manager(@org_a_billing_manager)
-      @org_a.add_auditor(@org_a_auditor)
-
-      @app_space_a = VCAP::CloudController::Models::AppSpace.make(:organization => @org_a)
-      @app_space_a_manager = make_user_for_app_space(@app_space_a)
-      @app_space_a_developer = make_user_for_app_space(@app_space_a)
-      @app_space_a_auditor = make_user_for_app_space(@app_space_a)
-      @app_space_a.add_manager(@app_space_a_manager)
-      @app_space_a.add_developer(@app_space_a_developer)
-      @app_space_a.add_auditor(@app_space_a_auditor)
-
-      @org_b = VCAP::CloudController::Models::Organization.make
-      @org_b_manager = VCAP::CloudController::Models::User.make
-      @org_b_member = VCAP::CloudController::Models::User.make
-      @org_b_billing_manager = VCAP::CloudController::Models::User.make
-      @org_b_auditor = VCAP::CloudController::Models::User.make
-      @org_b.add_manager(@org_b_manager)
-      @org_b.add_user(@org_b_member)
-      @org_b.add_billing_manager(@org_b_billing_manager)
-      @org_b.add_auditor(@org_b_auditor)
-
-      @app_space_b = VCAP::CloudController::Models::AppSpace.make(:organization => @org_b)
-      @app_space_b_manager = make_user_for_app_space(@app_space_b)
-      @app_space_b_developer = make_user_for_app_space(@app_space_b)
-      @app_space_b_auditor = make_user_for_app_space(@app_space_b)
-      @app_space_b.add_manager(@app_space_b_manager)
-      @app_space_b.add_developer(@app_space_b_developer)
-      @app_space_b.add_auditor(@app_space_b_auditor)
-
-      @cf_admin = VCAP::CloudController::Models::User.make(:admin => true)
-    end
-  end
-
   shared_examples "a CloudController API" do |opts|
     [:required_attributes, :unique_attributes, :basic_attributes,
      :extra_attributes, :sensitive_attributes].each do |k|
