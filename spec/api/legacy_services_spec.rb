@@ -87,8 +87,8 @@ describe VCAP::CloudController::LegacyService do
       end
 
       it "should return service names" do
-        names = decoded_response.map { |a| a["name"] }
-        expected_names = @services.map { |a| a.name }
+        names = decoded_response.map { |a| a["name"] }.sort!
+        expected_names = @services.map { |a| a.name }.sort!
         names.should == expected_names
       end
     end
