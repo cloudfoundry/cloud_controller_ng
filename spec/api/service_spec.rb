@@ -15,29 +15,92 @@ describe VCAP::CloudController::Service do
     }
   }
 
-  describe "service enumeration" do
-    num_svc_without_id = 5
-    num_svc_with_id = 3
-    num_svc = num_svc_without_id + num_svc_with_id
+  shared_examples "enumerate and read service only" do |perm_name|
+    include_examples "permission checks", perm_name,
+      :model => VCAP::CloudController::Models::Service,
+      :path => "/v2/services",
+      :permissions_overlap => true,
+      :enumerate => 7,
+      :create => :not_allowed,
+      :read => :allowed,
+      :modify => :not_allowed,
+      :delete => :not_allowed
+  end
 
-    describe "GET /v2/services" do
-      before do
-        num_svc_without_id.times do
-          Models::Service.make
-        end
+  describe "Permissions" do
+    include_context "permissions"
 
-        num_svc_with_id.times do
-          Models::Service.make
-        end
+    before do
+      5.times do
+        Models::Service.make
+      end
+      @obj_a = Models::Service.make
+      @obj_b = Models::Service.make
+    end
 
-        @user = VCAP::CloudController::Models::User.make
-        @cf_admin = VCAP::CloudController::Models::User.make(:admin => true)
+    let(:creation_req_for_a) do
+      Yajl::Encoder.encode(
+        :label => Sham.label,
+        :provider => Sham.provider,
+        :url => Sham.url,
+        :description => Sham.description,
+        :version => Sham.version)
+    end
+
+    let(:update_req_for_a) do
+      Yajl::Encoder.encode(:label => Sham.label)
+    end
+
+    describe "Org Level Permissions" do
+      describe "OrgManager" do
+        let(:member_a) { @org_a_manager }
+        let(:member_b) { @org_b_manager }
+
+        include_examples "enumerate and read service only", "OrgManager"
       end
 
-      it "should return all instances to an admin" do
-        get "/v2/services", {}, headers_for(@cf_admin)
-        last_response.status.should == 200
-        decoded_response["total_results"].should == num_svc
+      describe "OrgUser" do
+        let(:member_a) { @org_a_member }
+        let(:member_b) { @org_b_member }
+
+        include_examples "enumerate and read service only", "OrgUser"
+      end
+
+      describe "BillingManager" do
+        let(:member_a) { @org_a_billing_manager }
+        let(:member_b) { @org_b_billing_manager }
+
+        include_examples "enumerate and read service only", "BillingManager"
+      end
+
+      describe "Auditor" do
+        let(:member_a) { @org_a_auditor }
+        let(:member_b) { @org_b_auditor }
+
+        include_examples "enumerate and read service only", "Auditor"
+      end
+    end
+
+    describe "App Space Level Permissions" do
+      describe "AppSpaceManager" do
+        let(:member_a) { @app_space_a_manager }
+        let(:member_b) { @app_space_b_manager }
+
+        include_examples "enumerate and read service only", "AppSpaceManager"
+      end
+
+      describe "Developer" do
+        let(:member_a) { @app_space_a_developer }
+        let(:member_b) { @app_space_b_developer }
+
+        include_examples "enumerate and read service only", "Developer"
+      end
+
+      describe "AppSpaceAuditor" do
+        let(:member_a) { @app_space_a_auditor }
+        let(:member_b) { @app_space_b_auditor }
+
+        include_examples "enumerate and read service only", "AppSpaceAuditor"
       end
     end
   end
