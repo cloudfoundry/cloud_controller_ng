@@ -4,6 +4,7 @@ module VCAP::CloudController
   rest_controller :ServicePlan do
     permissions_required do
       full Permissions::CFAdmin
+      read Permissions::Authenticated
     end
 
     define_attributes do
