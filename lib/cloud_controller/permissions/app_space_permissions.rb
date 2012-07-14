@@ -11,6 +11,8 @@ module VCAP::CloudController::Permissions
         obj.send(relation).include?(user)
       elsif !obj.new? && obj.respond_to?(:app_spaces)
         obj.app_spaces_dataset.filter(relation => [user]).count >= 1
+      elsif !obj.new? && obj.respond_to?(:app_space)
+        obj.app_space.send("#{relation}_dataset")[user.id] != nil
       end
     end
   end
