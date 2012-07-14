@@ -104,8 +104,7 @@ describe VCAP::CloudController::LegacyApps do
           :staging => { :framework => "sinatra", :runtime => "ruby18" },
         })
 
-        # TODO: allow this to be a regular user once perms are finalized
-        post "/apps", req, headers_for(admin)
+        post "/apps", req, headers_for(user)
       end
 
       it "should return success" do
@@ -126,8 +125,7 @@ describe VCAP::CloudController::LegacyApps do
           :staging => { :framework => "funky", :runtime => "ruby18" },
         })
 
-        # TODO: allow this to be a regular user once perms are finalized
-        post "/apps", req, headers_for(admin)
+        post "/apps", req, headers_for(user)
       end
 
       it "should return bad request" do
@@ -148,8 +146,7 @@ describe VCAP::CloudController::LegacyApps do
           :staging => { :framework => "sinatra", :runtime => "cobol" },
         })
 
-        # TODO: allow this to be a regular user once perms are finalized
-        post "/apps", req, headers_for(admin)
+        post "/apps", req, headers_for(user)
       end
 
       it "should return bad request" do
@@ -165,13 +162,13 @@ describe VCAP::CloudController::LegacyApps do
   end
 
   describe "PUT /apps/:name" do
-    let(:app_obj) { Models::App.make(:app_space => admin.default_app_space) }
+    let(:app_obj) { Models::App.make(:app_space => user.default_app_space) }
 
     context "with valid attributes" do
       before do
         @expected_mem = app_obj.memory * 2
         req = Yajl::Encoder.encode(:resources => { :memory => @expected_mem })
-        put "/apps/#{app_obj.name}", req, headers_for(admin)
+        put "/apps/#{app_obj.name}", req, headers_for(user)
         app_obj.refresh
       end
 
@@ -187,9 +184,7 @@ describe VCAP::CloudController::LegacyApps do
     context "with an invalid runtime" do
       before do
         req = Yajl::Encoder.encode(:staging => { :runtime => "cobol" })
-
-        # TODO: allow this to be a regular user once perms are finalized
-        put "/apps/#{app_obj.name}", req, headers_for(admin)
+        put "/apps/#{app_obj.name}", req, headers_for(user)
       end
 
       it "should return bad request" do
@@ -213,13 +208,13 @@ describe VCAP::CloudController::LegacyApps do
   end
 
   describe "DELETE /apps/:name" do
-    let(:app_obj) { Models::App.make(:app_space => admin.default_app_space) }
+    let(:app_obj) { Models::App.make(:app_space => user.default_app_space) }
 
     before do
       3.times { Models::App.make }
       app_obj.guid.should_not be_nil
       @num_apps_before = Models::App.count
-      delete "/apps/#{app_obj.name}", {}, headers_for(admin)
+      delete "/apps/#{app_obj.name}", {}, headers_for(user)
     end
 
     it "should return success" do
@@ -231,6 +226,8 @@ describe VCAP::CloudController::LegacyApps do
     end
   end
 
+  # FIXME: this still needs to switch from admin to user.  This can't happen
+  # until services get correct permission settings
   describe "service binding" do
     describe "PUT /apps/:name adding and removing bindings" do
       before(:all) do

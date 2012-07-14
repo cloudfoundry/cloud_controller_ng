@@ -75,5 +75,10 @@ module VCAP::CloudController::Models
     def _remove_service_binding(binding)
       binding.destroy
     end
+
+    def self.user_visibility_filter(user)
+      user_visibility_filter_with_admin_override({
+        :app_space => user.app_spaces_dataset}.sql_or)
+    end
   end
 end

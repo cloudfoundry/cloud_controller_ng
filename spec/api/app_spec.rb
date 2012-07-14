@@ -69,6 +69,128 @@ describe VCAP::CloudController::App do
     end
   end
 
+  describe "Permissions" do
+    include_context "permissions"
+
+    before do
+      @obj_a = Models::App.make(:app_space => @app_space_a)
+      @obj_b = Models::App.make(:app_space => @app_space_b)
+    end
+
+    let(:creation_req_for_a) do
+      Yajl::Encoder.encode(:name => Sham.name,
+                           :app_space_guid => @app_space_a.guid,
+                           :framework_guid => Models::Framework.make.guid,
+                           :runtime_guid => Models::Runtime.make.guid)
+    end
+
+    let(:update_req_for_a) do
+      Yajl::Encoder.encode(:name => Sham.name)
+    end
+
+    describe "Org Level Permissions" do
+      describe "OrgManager" do
+        let(:member_a) { @org_a_manager }
+        let(:member_b) { @org_b_manager }
+
+        include_examples "permission checks", "OrgManager",
+          :model => VCAP::CloudController::Models::App,
+          :path => "/v2/apps",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "OrgUser" do
+        let(:member_a) { @org_a_member }
+        let(:member_b) { @org_b_member }
+
+        include_examples "permission checks", "OrgUser",
+          :model => VCAP::CloudController::Models::App,
+          :path => "/v2/apps",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "BillingManager" do
+        let(:member_a) { @org_a_billing_manager }
+        let(:member_b) { @org_b_billing_manager }
+
+        include_examples "permission checks", "BillingManager",
+          :model => VCAP::CloudController::Models::App,
+          :path => "/v2/apps",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "Auditor" do
+        let(:member_a) { @org_a_auditor }
+        let(:member_b) { @org_b_auditor }
+
+        include_examples "permission checks", "Auditor",
+          :model => VCAP::CloudController::Models::App,
+          :path => "/v2/apps",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+    end
+
+    describe "App Space Level Permissions" do
+      describe "AppSpaceManager" do
+        let(:member_a) { @app_space_a_manager }
+        let(:member_b) { @app_space_b_manager }
+
+        include_examples "permission checks", "AppSpaceManager",
+          :model => VCAP::CloudController::Models::App,
+          :path => "/v2/apps",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "Developer" do
+        let(:member_a) { @app_space_a_developer }
+        let(:member_b) { @app_space_b_developer }
+
+        include_examples "permission checks", "Developer",
+          :model => VCAP::CloudController::Models::App,
+          :path => "/v2/apps",
+          :enumerate => 1,
+          :create => :allowed,
+          :read => :allowed,
+          :modify => :allowed,
+          :delete => :allowed
+      end
+
+      describe "AppSpaceAuditor" do
+        let(:member_a) { @app_space_a_auditor }
+        let(:member_b) { @app_space_b_auditor }
+
+        include_examples "permission checks", "AppSpaceAuditor",
+          :model => VCAP::CloudController::Models::App,
+          :path => "/v2/apps",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+    end
+  end
+
   describe "quota" do
     let(:cf_admin) { Models::User.make(:admin => true) }
     let(:app_obj) { Models::App.make }
