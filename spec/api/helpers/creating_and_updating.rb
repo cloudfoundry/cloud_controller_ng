@@ -14,6 +14,16 @@ module VCAP::CloudController::ApiSpecHelper
         template_obj.refresh
         attrs = template_obj.attributes.dup
 
+        # if the caller has supplied their own creation lambda, use it
+        create_attribute = opts[:create_attribute]
+        if create_attribute
+          opts[:create_attribute_reset].call
+          attrs.keys.each do |k|
+            v = create_attribute.call k
+            attrs[k] = v if v
+          end
+        end
+
         opts[:extra_attributes].each do |attr|
           if opts[:required_attributes].include?(attr)
             attrs[attr.to_s] = Sham.send(attr)

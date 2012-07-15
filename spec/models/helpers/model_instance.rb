@@ -15,6 +15,7 @@ module VCAP::CloudController::ModelSpecHelper
       # if the caller has supplied their own creation lambda, use it
       create_attribute = opts[:create_attribute]
       if create_attribute
+        opts[:create_attribute_reset].call
         create_opts.keys.each do |k|
           v = create_attribute.call k
           create_opts[k] = v if v

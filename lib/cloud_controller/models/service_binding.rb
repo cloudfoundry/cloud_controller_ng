@@ -4,8 +4,8 @@ module VCAP::CloudController::Models
   class ServiceBinding < Sequel::Model
     class InvalidAppAndServiceRelation < StandardError; end
 
-    many_to_one :app, :before_set => :validate_app
-    many_to_one :service_instance, :before_set => :validate_service_instance
+    many_to_one :app
+    many_to_one :service_instance
 
     default_order_by  :id
 
@@ -20,6 +20,9 @@ module VCAP::CloudController::Models
       validates_presence :service_instance
       validates_presence :credentials
       validates_unique [:app_id, :service_instance_id]
+
+      # TODO: make this a standard validation
+      validate_app_and_service_instance(app, service_instance)
     end
 
     def validate_app_and_service_instance(app, service_instance)
@@ -29,14 +32,6 @@ module VCAP::CloudController::Models
             "'#{app.app_space.name}' '#{service_instance.app_space.name}'")
         end
       end
-    end
-
-    def validate_app(app)
-      validate_app_and_service_instance(app, service_instance)
-    end
-
-    def validate_service_instance(service_instance)
-      validate_app_and_service_instance(app, service_instance)
     end
 
     def app_space

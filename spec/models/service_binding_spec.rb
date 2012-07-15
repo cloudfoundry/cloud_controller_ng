@@ -8,17 +8,16 @@ describe VCAP::CloudController::Models::ServiceBinding do
     :unique_attributes   => [:app, :service_instance],
     :create_attribute    => lambda { |name|
       @app_space ||= VCAP::CloudController::Models::AppSpace.make
-      case name
-      when :app
-        app = VCAP::CloudController::Models::App.make
-        app.app_space = @app_space
-        return app
-      when :service_instance
-        service_instance = VCAP::CloudController::Models::ServiceInstance.make
-        service_instance.app_space = @app_space
-        return service_instance
+      case name.to_sym
+      when :app_id
+        app = VCAP::CloudController::Models::App.make(:app_space => @app_space)
+        app.id
+      when :service_instance_id
+        service_instance = VCAP::CloudController::Models::ServiceInstance.make(:app_space => @app_space)
+        service_instance.id
       end
     },
+    :create_attribute_reset => lambda { @app_space = nil },
     :many_to_one => {
       :app => {
         :delete_ok => true,
@@ -44,6 +43,7 @@ describe VCAP::CloudController::Models::ServiceBinding do
       lambda {
         service_binding = VCAP::CloudController::Models::ServiceBinding.make
         service_binding.app = @app
+        service_binding.save
       }.should raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
     end
 
@@ -51,6 +51,7 @@ describe VCAP::CloudController::Models::ServiceBinding do
       lambda {
         service_binding = VCAP::CloudController::Models::ServiceBinding.make
         service_binding.service_instance = @service_instance
+        service_binding.save
       }.should raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
     end
   end
