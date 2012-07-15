@@ -24,4 +24,135 @@ describe VCAP::CloudController::ServiceBinding do
     :create_attribute_reset => lambda { @app_space = nil }
   }
 
+  describe "Permissions" do
+    include_context "permissions"
+
+    before do
+      @app_a = Models::App.make(:app_space => @app_space_a)
+      @service_instance_a = Models::ServiceInstance.make(:app_space => @app_space_a)
+      @obj_a = Models::ServiceBinding.make(:app => @app_a,
+                                           :service_instance => @service_instance_a)
+
+      @app_b = Models::App.make(:app_space => @app_space_b)
+      @service_instance_b = Models::ServiceInstance.make(:app_space => @app_space_b)
+      @obj_b = Models::ServiceBinding.make(:app => @app_b,
+                                           :service_instance => @service_instance_b)
+    end
+
+    let(:creation_req_for_a) do
+      # TODO: remove credentials once proper service support is in place
+      Yajl::Encoder.encode(
+        :app_guid => Models::App.make(:app_space => @app_space_a).guid,
+        :service_instance_guid => Models::ServiceInstance.make(:app_space => @app_space_a).guid,
+        :credentials => {}
+      )
+    end
+
+    let(:update_req_for_a) do
+      Yajl::Encoder.encode(:credentials => {:a => "b"})
+    end
+
+    describe "Org Level Permissions" do
+      describe "OrgManager" do
+        let(:member_a) { @org_a_manager }
+        let(:member_b) { @org_b_manager }
+
+        include_examples "permission checks", "OrgManager",
+          :model => VCAP::CloudController::Models::ServiceBinding,
+          :path => "/v2/service_bindings",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "OrgUser" do
+        let(:member_a) { @org_a_member }
+        let(:member_b) { @org_b_member }
+
+        include_examples "permission checks", "OrgUser",
+          :model => VCAP::CloudController::Models::ServiceBinding,
+          :path => "/v2/service_bindings",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "BillingManager" do
+        let(:member_a) { @org_a_billing_manager }
+        let(:member_b) { @org_b_billing_manager }
+
+        include_examples "permission checks", "BillingManager",
+          :model => VCAP::CloudController::Models::ServiceBinding,
+          :path => "/v2/service_bindings",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "Auditor" do
+        let(:member_a) { @org_a_auditor }
+        let(:member_b) { @org_b_auditor }
+
+        include_examples "permission checks", "Auditor",
+          :model => VCAP::CloudController::Models::ServiceBinding,
+          :path => "/v2/service_bindings",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+    end
+
+    describe "App Space Level Permissions" do
+      describe "AppSpaceManager" do
+        let(:member_a) { @app_space_a_manager }
+        let(:member_b) { @app_space_b_manager }
+
+        include_examples "permission checks", "AppSpaceManager",
+          :model => VCAP::CloudController::Models::ServiceBinding,
+          :path => "/v2/service_bindings",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :not_allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+
+      describe "Developer" do
+        let(:member_a) { @app_space_a_developer }
+        let(:member_b) { @app_space_b_developer }
+
+        include_examples "permission checks", "Developer",
+          :model => VCAP::CloudController::Models::ServiceBinding,
+          :path => "/v2/service_bindings",
+          :enumerate => 1,
+          :create => :allowed,
+          :read => :allowed,
+          :modify => :allowed,
+          :delete => :allowed
+      end
+
+      describe "AppSpaceAuditor" do
+        let(:member_a) { @app_space_a_auditor }
+        let(:member_b) { @app_space_b_auditor }
+
+        include_examples "permission checks", "AppSpaceAuditor",
+          :model => VCAP::CloudController::Models::ServiceBinding,
+          :path => "/v2/service_bindings",
+          :enumerate => 0,
+          :create => :not_allowed,
+          :read => :allowed,
+          :modify => :not_allowed,
+          :delete => :not_allowed
+      end
+    end
+  end
+
 end

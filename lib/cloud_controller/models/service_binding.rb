@@ -37,5 +37,10 @@ module VCAP::CloudController::Models
     def app_space
       service_instance.app_space
     end
+
+    def self.user_visibility_filter(user)
+      user_visibility_filter_with_admin_override(
+        :service_instance => ServiceInstance.user_visible)
+    end
   end
 end

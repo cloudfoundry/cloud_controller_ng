@@ -4,6 +4,9 @@ module VCAP::CloudController
   rest_controller :ServiceBinding do
     permissions_required do
       full Permissions::CFAdmin
+      read Permissions::OrgManager
+      full Permissions::AppSpaceDeveloper
+      read Permissions::AppSpaceAuditor
     end
 
     define_attributes do
