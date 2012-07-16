@@ -63,8 +63,6 @@ module VCAP::CloudController::RestController
     # @return [Hash] Hash encoding of the object.
     def self.to_hash(controller, obj, opts, depth=0, parents=[])
       rel_hash = relations_hash(controller, obj, opts, depth, parents)
-
-      # FIXME: this needs to do a read authz check.
       entity_hash = obj.to_hash.merge(rel_hash)
 
       id = obj.guid || obj.id
@@ -94,9 +92,7 @@ module VCAP::CloudController::RestController
         q_key = "#{ar[:reciprocol].to_s.singularize}_guid"
         res["#{name}_url"] = "#{other_controller.path}?q=#{q_key}:#{obj.guid}"
 
-        # FIXME: others needs to use the enumeration filter from the other
-        # controller
-        others = obj.send(name)
+        others = other_model.user_visible.filter(ar[:reciprocol] => [obj])
 
         # TODO: replace depth with parents.size
         if (others.count <= max_inline &&
