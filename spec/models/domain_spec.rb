@@ -13,8 +13,8 @@ describe VCAP::CloudController::Models::Domain do
       :organization => lambda { |domain| VCAP::CloudController::Models::Organization.make }
     },
     :many_to_zero_or_more => {
-      :app_spaces => lambda { |domain|
-        VCAP::CloudController::Models::AppSpace.make(:organization => domain.organization)
+      :spaces => lambda { |domain|
+        VCAP::CloudController::Models::Space.make(:organization => domain.organization)
       }
     },
     :one_to_zero_or_more => {
@@ -34,12 +34,12 @@ describe VCAP::CloudController::Models::Domain do
 
   context "bad relationships" do
     let(:domain) { Models::Domain.make }
-    let(:app_space) { Models::AppSpace.make }
+    let(:space) { Models::Space.make }
 
     it "should not associate with an app space on a different org" do
       lambda {
-        domain.add_app_space(app_space)
-      }.should raise_error Models::Domain::InvalidAppSpaceRelation
+        domain.add_space(space)
+      }.should raise_error Models::Domain::InvalidSpaceRelation
     end
   end
 

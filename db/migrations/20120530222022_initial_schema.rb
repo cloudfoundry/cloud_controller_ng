@@ -65,7 +65,7 @@ Sequel.migration do
       foreign_key :organization_id, :organizations, :null => false
     end
 
-    create_table :app_spaces do
+    create_table :spaces do
       VCAP::Migration.common(self)
 
       String :name, :null => false
@@ -75,19 +75,19 @@ Sequel.migration do
     end
 
     alter_table :users do
-      add_foreign_key :default_app_space_id, :app_spaces
+      add_foreign_key :default_space_id, :spaces
     end
 
-    create_table :app_spaces_domains do
-      foreign_key :app_space_id, :app_spaces, :null => false
+    create_table :domains_spaces do
+      foreign_key :space_id, :spaces, :null => false
       foreign_key :domain_id, :domains, :null => false
 
-      index [:app_space_id, :domain_id], :unique => true
+      index [:space_id, :domain_id], :unique => true
     end
 
     # App Space permissions
     [:developers, :managers, :auditors].each do |perm|
-      VCAP::Migration.create_permission_table(self, :app_space, perm)
+      VCAP::Migration.create_permission_table(self, :space, perm)
     end
 
     create_table :service_auth_tokens do
@@ -137,10 +137,10 @@ Sequel.migration do
       String :credentials, :null => false
       String :vendor_data
 
-      foreign_key :app_space_id,    :app_spaces,        :null => false
+      foreign_key :space_id,        :spaces,            :null => false
       foreign_key :service_plan_id, :service_plans,     :null => false
 
-      index [:app_space_id, :name], :unique => true
+      index [:space_id, :name], :unique => true
     end
 
     create_table :runtimes do
@@ -211,11 +211,11 @@ Sequel.migration do
 
       # TODO: sort out the legacy cc fields of metadata and run_count
 
-      foreign_key :app_space_id, :app_spaces, :null => false
+      foreign_key :space_id,     :spaces,     :null => false
       foreign_key :runtime_id,   :runtimes,   :null => false
       foreign_key :framework_id, :frameworks, :null => false
 
-      index [:app_space_id, :name], :unique => true
+      index [:space_id, :name], :unique => true
     end
 
     create_table :apps_routes do

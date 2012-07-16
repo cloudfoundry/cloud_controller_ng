@@ -17,10 +17,10 @@ describe VCAP::CloudController::Domain do
 
     before do
       @obj_a = VCAP::CloudController::Models::Domain.make(:organization => @org_a)
-      @app_space_a.add_domain(@obj_a)
+      @space_a.add_domain(@obj_a)
 
       @obj_b = VCAP::CloudController::Models::Domain.make(:organization => @org_b)
-      @app_space_b.add_domain(@obj_b)
+      @space_b.add_domain(@obj_b)
     end
 
     let(:creation_req_for_a) do
@@ -90,11 +90,11 @@ describe VCAP::CloudController::Domain do
     end
 
     describe "App Space Level Permissions" do
-      describe "AppSpaceManager" do
-        let(:member_a) { @app_space_a_manager }
-        let(:member_b) { @app_space_b_manager }
+      describe "SpaceManager" do
+        let(:member_a) { @space_a_manager }
+        let(:member_b) { @space_b_manager }
 
-        include_examples "permission checks", "AppSpaceManager",
+        include_examples "permission checks", "SpaceManager",
           :model => VCAP::CloudController::Models::Domain,
           :path => "/v2/domains",
           :enumerate => 0,
@@ -105,8 +105,8 @@ describe VCAP::CloudController::Domain do
       end
 
       describe "Developer" do
-        let(:member_a) { @app_space_a_developer }
-        let(:member_b) { @app_space_b_developer }
+        let(:member_a) { @space_a_developer }
+        let(:member_b) { @space_b_developer }
 
         include_examples "permission checks", "Developer",
           :model => VCAP::CloudController::Models::Domain,
@@ -118,11 +118,11 @@ describe VCAP::CloudController::Domain do
           :delete => :not_allowed
       end
 
-      describe "AppSpaceAuditor" do
-        let(:member_a) { @app_space_a_auditor }
-        let(:member_b) { @app_space_b_auditor }
+      describe "SpaceAuditor" do
+        let(:member_a) { @space_a_auditor }
+        let(:member_b) { @space_b_auditor }
 
-        include_examples "permission checks", "AppSpaceAuditor",
+        include_examples "permission checks", "SpaceAuditor",
           :model => VCAP::CloudController::Models::Domain,
           :path => "/v2/domains",
           :enumerate => 0,

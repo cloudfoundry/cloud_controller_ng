@@ -21,36 +21,36 @@ def make_domain_for_org(org)
   VCAP::CloudController::Models::Domain.make(:organization => org)
 end
 
-def make_user_for_app_space(app_space)
-  make_user_for_org app_space.organization
+def make_user_for_space(space)
+  make_user_for_org space.organization
 end
 
-def make_domain_for_app_space(app_space)
-  make_domain_for_org app_space.organization
+def make_domain_for_space(space)
+  make_domain_for_org space.organization
 end
 
 def make_app_for_service_instance(service_instance)
-  app = VCAP::CloudController::Models::App.make(:app_space => service_instance.app_space)
+  app = VCAP::CloudController::Models::App.make(:space => service_instance.space)
 end
 
 def make_service_binding_for_service_instance(service_instance)
-  app = VCAP::CloudController::Models::App.make(:app_space => service_instance.app_space)
-  app.app_space = service_instance.app_space
+  app = VCAP::CloudController::Models::App.make(:space => service_instance.space)
+  app.space = service_instance.space
   VCAP::CloudController::Models::ServiceBinding.new(:app => app,
                                                     :service_instance => service_instance,
                                                     :credentials => Sham.service_credentials)
 end
 
-def make_app_space_for_user(user)
-  app_space = Models::AppSpace.make
-  app_space.organization.add_user(user)
-  app_space.add_developer(user)
-  app_space
+def make_space_for_user(user)
+  space = Models::Space.make
+  space.organization.add_user(user)
+  space.add_developer(user)
+  space
 end
 
-def make_user_with_default_app_space(opts = {})
+def make_user_with_default_space(opts = {})
   user = Models::User.make(:admin => opts.has_key?(:admin), :active => true)
-  app_space = make_app_space_for_user(user)
-  user.default_app_space = app_space
+  space = make_space_for_user(user)
+  user.default_space = space
   user
 end

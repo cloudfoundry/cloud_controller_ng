@@ -2,7 +2,7 @@
 
 module VCAP::CloudController::Models
   class Organization < Sequel::Model
-    one_to_many       :app_spaces
+    one_to_many       :spaces
 
     one_to_many       :domains
 

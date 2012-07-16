@@ -2,11 +2,11 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::Permissions::AppSpaceManager do
-  let(:obj)         { VCAP::CloudController::Models::AppSpace.make }
+describe VCAP::CloudController::Permissions::SpaceManager do
+  let(:obj)         { VCAP::CloudController::Models::Space.make }
   let(:not_granted) { VCAP::CloudController::Models::User.make }
   let(:granted) do
-    manager = make_user_for_app_space(obj)
+    manager = make_user_for_space(obj)
     obj.add_manager(manager)
   end
 
