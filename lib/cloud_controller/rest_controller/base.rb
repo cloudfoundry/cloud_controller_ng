@@ -76,6 +76,8 @@ module VCAP::CloudController::RestController
       raise self.class.translate_validation_exception(e, request_attrs)
     rescue Sequel::DatabaseError => e
       raise self.class.translate_and_log_exception(logger, e)
+    rescue JsonMessage::ValidationError => e
+      raise MessageParseError.new(e)
     end
 
     # Common managment of quota enforcement.
@@ -111,7 +113,7 @@ module VCAP::CloudController::RestController
 
     # Create operation
     def create
-      @request_attrs = Yajl::Parser.new.parse(@body)
+      @request_attrs = self.class::CreateMessage.decode(@body).extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
 
       model.db.transaction do
