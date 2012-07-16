@@ -7,16 +7,17 @@ module VCAP::CloudController
       read Permissions::Authenticated
     end
 
+    # TODO: require the url to use HTTPS?
     define_attributes do
       attribute :label,          String
       attribute :provider,       String
-      attribute :url,            Message::HTTPS_URL
+      attribute :url,            Message::URL
       attribute :description,    String
       attribute :version,        String
-      attribute :info_url,       Message::URL
-      attribute :acls,           {"users" => [String], "wildcards" => [String]}
-      attribute :timeout,        Integer
-      attribute :active,         Message::Boolean
+      attribute :info_url,       Message::URL, :default => nil
+      attribute :acls,           {"users" => [String], "wildcards" => [String]}, :default => nil
+      attribute :timeout,        Integer, :default => nil
+      attribute :active,         Message::Boolean, :default => false
       to_many   :service_plans
     end
 
