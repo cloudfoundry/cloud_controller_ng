@@ -185,7 +185,6 @@ module VCAP::CloudController::RestController
       logger.debug2 "#{log_prefix} enumerate_related: #{id} #{name}"
       obj = find_id_and_validate_access(:read, id)
 
-      # FIXME: enumeration filter on associated model
       a_model = model.association_reflection(name).associated_class
       a_controller = VCAP::CloudController.controller_from_model_name(a_model)
       ar = model.association_reflection(name)
