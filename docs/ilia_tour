@@ -90,7 +90,7 @@ Ok, now lets do the create org call for real:
       "entity": {
         "name": "my cool org2",
         "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "spaces_url": "/v2/spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
         "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
         "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
       }
@@ -120,7 +120,7 @@ Let's double check our org:
       "entity": {
         "name": "my cool org2",
         "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "spaces_url": "/v2/spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
         "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
         "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
       }
@@ -147,7 +147,7 @@ Let's rename the org:
       "entity": {
         "name": "ilia likes orgs",
         "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
-        "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+        "spaces_url": "/v2/spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
         "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
         "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
       }
@@ -172,7 +172,7 @@ Let's go create a user:
           "admin": false,
           "active": false,
           "organizations_url": "/v2/organizations?q=user_guid:1234-4567-89AB-CDEF",
-          "app_spaces_url": "/v2/app_spaces?q=user_guid:1234-4567-89AB-CDEF"
+          "spaces_url": "/v2/spaces?q=user_guid:1234-4567-89AB-CDEF"
         }
     }
 
@@ -203,7 +203,7 @@ all uaa_ids are basically arbitrary text strings as far as the CC is concerned)
             "admin": true,
             "active": true,
             "organizations_url": "/v2/organizations?q=user_guid:aaa-bbb-ccc",
-            "app_spaces_url": "/v2/app_spaces?q=user_guid:aaa-bbb-ccc"
+            "spaces_url": "/v2/spaces?q=user_guid:aaa-bbb-ccc"
           }
         },
         {
@@ -218,7 +218,7 @@ all uaa_ids are basically arbitrary text strings as far as the CC is concerned)
             "admin": false,
             "active": false,
             "organizations_url": "/v2/organizations?q=user_guid:1234-4567-89AB-CDEF",
-            "app_spaces_url": "/v2/app_spaces?q=user_guid:1234-4567-89AB-CDEF"
+            "spaces_url": "/v2/spaces?q=user_guid:1234-4567-89AB-CDEF"
           }
         }
       ]
@@ -249,7 +249,7 @@ Check the orgs the same way:
           "entity": {
             "name": "ilia likes orgs",
             "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "spaces_url": "/v2/spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
@@ -295,7 +295,7 @@ Now let's add that 1234-... user to an org:
         "entity": {
           "name": "ilia likes orgs",
           "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
-          "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+          "spaces_url": "/v2/spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
           "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
           "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
         }
@@ -323,7 +323,7 @@ Now if we fetch the url association for that user again:
           "entity": {
             "name": "ilia likes orgs",
             "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "spaces_url": "/v2/spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
@@ -369,12 +369,12 @@ inlining relations is now supported:
                   "admin": false,
                   "active": false,
                   "organizations_url": "/v2/organizations?q=user_guid:1234-4567-89AB-CDEF",
-                  "app_spaces_url": "/v2/app_spaces?q=user_guid:1234-4567-89AB-CDEF"
+                  "spaces_url": "/v2/spaces?q=user_guid:1234-4567-89AB-CDEF"
                 }
               }
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "app_spaces": [
+            "spaces_url": "/v2/spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "spaces": [
 
             ],
             "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
@@ -425,7 +425,7 @@ And now enumerate them:
           "entity": {
             "name": "ilia likes orgs",
             "users_url": "/v2/users?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
+            "spaces_url": "/v2/spaces?q=organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "managers_url": "/v2/users?q=managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065",
             "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:d815bcf5-5318-41dc-a0cc-72311afca065"
           }
@@ -440,7 +440,7 @@ And now enumerate them:
           "entity": {
             "name": "org 49 5f108b412c9c97766bf13dc3ea579998",
             "users_url": "/v2/users?q=organization_guid:2d069ce5-f964-40c9-9982-1e571d477606",
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:2d069ce5-f964-40c9-9982-1e571d477606",
+            "spaces_url": "/v2/spaces?q=organization_guid:2d069ce5-f964-40c9-9982-1e571d477606",
             "managers_url": "/v2/users?q=managed_organization_guid:2d069ce5-f964-40c9-9982-1e571d477606",
             "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:2d069ce5-f964-40c9-9982-1e571d477606"
           }
@@ -469,7 +469,7 @@ And go to the next page:
           "entity": {
             "name": "org 50 220ce37cfb18f6fe9e487949bed0c4be",
             "users_url": "/v2/users?q=organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
+            "spaces_url": "/v2/spaces?q=organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
             "managers_url": "/v2/users?q=managed_organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a",
             "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:31c32a6e-5859-4e00-aed0-2a1a3249c48a"
           }
@@ -500,7 +500,7 @@ Or if you only want 3 on a page:
           "entity": {
             "name": "org 3 57e2d7f93997aee937e32b1fd6929947",
             "users_url": "/v2/users?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "spaces_url": "/v2/spaces?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "managers_url": "/v2/users?q=managed_organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
             "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971"
           }
@@ -515,7 +515,7 @@ Or if you only want 3 on a page:
           "entity": {
             "name": "org 4 f381ff8f09a8ca620133f8ab5c8f55c5",
             "users_url": "/v2/users?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "spaces_url": "/v2/spaces?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "managers_url": "/v2/users?q=managed_organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
             "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033"
           }
@@ -530,7 +530,7 @@ Or if you only want 3 on a page:
           "entity": {
             "name": "org 5 e99a2a1e20794030c7067d14f508a778",
             "users_url": "/v2/users?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "spaces_url": "/v2/spaces?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "managers_url": "/v2/users?q=managed_organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
             "billing_managers_url": "/v2/users?q=billing_managed_organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923"
           }
@@ -562,8 +562,8 @@ And pagination can be combined with inlining relations:
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
-            "app_spaces": [
+            "spaces_url": "/v2/spaces?q=organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
+            "spaces": [
 
             ],
             "managers_url": "/v2/users?q=managed_organization_guid:24a4c4ec-060d-4e64-bae2-7f156dfee971",
@@ -589,8 +589,8 @@ And pagination can be combined with inlining relations:
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
-            "app_spaces": [
+            "spaces_url": "/v2/spaces?q=organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
+            "spaces": [
 
             ],
             "managers_url": "/v2/users?q=managed_organization_guid:73fa26b4-b0e3-425b-b300-d6da47fcb033",
@@ -616,8 +616,8 @@ And pagination can be combined with inlining relations:
             "users": [
 
             ],
-            "app_spaces_url": "/v2/app_spaces?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
-            "app_spaces": [
+            "spaces_url": "/v2/spaces?q=organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
+            "spaces": [
 
             ],
             "managers_url": "/v2/users?q=managed_organization_guid:0e7384c4-ed42-4e98-a1e0-66f619422923",
@@ -653,8 +653,8 @@ DELETE.
     },
     "entity": {
       "name": "my cool org2",
-      "app_spaces_url": "/v2/app_spaces?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
-      "app_spaces": [
+      "spaces_url": "/v2/spaces?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "spaces": [
 
       ],
       "users_url": "/v2/users?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
@@ -669,7 +669,7 @@ DELETE.
           "entity": {
             "admin": false,
             "active": false,
-            "app_spaces_url": "/v2/app_spaces?q=user_guid:1234-4567-89AB-CDEF",
+            "spaces_url": "/v2/spaces?q=user_guid:1234-4567-89AB-CDEF",
             "organizations_url": "/v2/organizations?q=user_guid:1234-4567-89AB-CDEF",
             "managed_organizations_url": "/v2/organizations?q=manager_guid:1234-4567-89AB-CDEF",
             "billing_managed_organizations_url": "/v2/organizations?q=billing_manager_guid:1234-4567-89AB-CDEF",
@@ -707,8 +707,8 @@ DELETE.
     },
     "entity": {
       "name": "my cool org2",
-      "app_spaces_url": "/v2/app_spaces?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
-      "app_spaces": [
+      "spaces_url": "/v2/spaces?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
+      "spaces": [
 
       ],
       "users_url": "/v2/users?q=organization_guid:2cdf69ca-b2e5-401d-9b82-4bf6bc5c3aee",
@@ -736,11 +736,11 @@ App Space Creation:
   curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
     -H "Authorization: $AUTH_TOKEN"\
     -d "{\"name\":\"some app space\", \"organization_guid\":\"$ORG_GUID\"}" \
-    http://$CCNG_HOST/v2/app_spaces
+    http://$CCNG_HOST/v2/spaces
 
   export the app space guid for convenience
 
-    export APP_SPACE_GUID=3f04efcf-4dba-4691-bc10-e044307fe8d1
+    export space_GUID=3f04efcf-4dba-4691-bc10-e044307fe8d1
 
 
 One time framework/runtime creation:
@@ -767,7 +767,7 @@ App Creation:
 
   curl -X POST -v -H "Authorization:$AUTH_TOKEN" \
     -H "Authorization: $AUTH_TOKEN"\
-    -d "{\"name\":\"some app\", \"app_space_guid\":\"$APP_SPACE_GUID\", \"framework_guid\": \"$FRAMEWORK_GUID\", \"runtime_guid\": \"$RUNTIME_GUID\"}" \
+    -d "{\"name\":\"some app\", \"space_guid\":\"$space_GUID\", \"framework_guid\": \"$FRAMEWORK_GUID\", \"runtime_guid\": \"$RUNTIME_GUID\"}" \
     http://$CCNG_HOST/v2/apps
 
 
@@ -777,5 +777,5 @@ Working with Legacy VMC:
   to set a default app space:
 
   curl -X PUT -v -H "Authorization:$AUTH_TOKEN" \
-    -d "{\"default_app_space_guid\":\"$APP_SPACE_GUID\"}" \
+    -d "{\"default_space_guid\":\"$space_GUID\"}" \
     http://$CCNG_HOST/v2/users/$USER_GUID

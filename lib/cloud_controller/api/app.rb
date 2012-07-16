@@ -5,16 +5,16 @@ module VCAP::CloudController
     permissions_required do
       full Permissions::CFAdmin
       read Permissions::OrgManager
-      read Permissions::AppSpaceManager
-      read Permissions::AppSpaceManager
-      full Permissions::AppSpaceDeveloper
-      read Permissions::AppSpaceAuditor
+      read Permissions::SpaceManager
+      read Permissions::SpaceManager
+      full Permissions::SpaceDeveloper
+      read Permissions::SpaceAuditor
     end
 
     define_attributes do
       attribute  :name,                String
       attribute  :production,          Message::Boolean
-      to_one     :app_space
+      to_one     :space
       to_one     :runtime
       to_one     :framework
       attribute  :environment_json,    Hash,       :default => {}
@@ -26,7 +26,7 @@ module VCAP::CloudController
       to_many    :service_bindings,    :exclude_in => :create
     end
 
-    query_parameters :app_space_guid, :organization_guid, :framework_guid, :runtime_guid
+    query_parameters :space_guid, :organization_guid, :framework_guid, :runtime_guid
 
     def create_quota_token_request(obj)
       ret = quota_token_request("post", obj)
@@ -45,8 +45,8 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      app_space_and_name_errors = e.errors.on([:app_space_id, :name])
-      if app_space_and_name_errors && app_space_and_name_errors.include?(:unique)
+      space_and_name_errors = e.errors.on([:space_id, :name])
+      if space_and_name_errors && space_and_name_errors.include?(:unique)
         AppNameTaken.new(attributes["name"])
       else
         AppInvalid.new(e.errors.full_messages)
@@ -57,14 +57,14 @@ module VCAP::CloudController
 
     def quota_token_request(op, obj)
       {
-        :path => obj.app_space.organization_guid,
+        :path => obj.space.organization_guid,
         :body => {
           :op           => op,
           :user_id      => user.guid,
           :object       => "application",
           :object_id    => obj.guid,
           :object_name  => obj.name,
-          :app_space_id => obj.app_space_guid,
+          :space_id     => obj.space_guid,
           :memory       => obj.memory,
           :instances    => obj.instances,
           :production   => obj.production,

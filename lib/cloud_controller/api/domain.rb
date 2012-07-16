@@ -5,9 +5,9 @@ module VCAP::CloudController
     permissions_required do
       full Permissions::CFAdmin
       full Permissions::OrgManager
-      read Permissions::AppSpaceManager
-      read Permissions::AppSpaceDeveloper
-      read Permissions::AppSpaceAuditor
+      read Permissions::SpaceManager
+      read Permissions::SpaceDeveloper
+      read Permissions::SpaceAuditor
     end
 
     define_attributes do
@@ -15,7 +15,7 @@ module VCAP::CloudController
       to_one    :organization
     end
 
-    query_parameters :name, :organization_guid, :app_space_guid
+    query_parameters :name, :organization_guid, :space_guid
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)

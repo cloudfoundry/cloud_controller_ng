@@ -1,14 +1,14 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController
-  rest_controller :AppSpace do
+  rest_controller :Space do
     permissions_required do
       full Permissions::CFAdmin
       full Permissions::OrgManager
-      read   Permissions::AppSpaceManager
-      update Permissions::AppSpaceManager
-      read Permissions::AppSpaceDeveloper
-      read Permissions::AppSpaceAuditor
+      read   Permissions::SpaceManager
+      update Permissions::SpaceManager
+      read Permissions::SpaceDeveloper
+      read Permissions::SpaceAuditor
     end
 
     define_attributes do
@@ -43,9 +43,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:organization_id, :name])
       if name_errors && name_errors.include?(:unique)
-        AppSpaceNameTaken.new(attributes["name"])
+        SpaceNameTaken.new(attributes["name"])
       else
-        AppSpaceInvalid.new(e.errors.full_messages)
+        SpaceInvalid.new(e.errors.full_messages)
       end
     end
 
@@ -57,7 +57,7 @@ module VCAP::CloudController
         :body => {
           :op           => "post",
           :user_id      => user.guid,
-          :object       => "appspace",
+          :object       => "space",
           :object_id    => obj.guid,
           :object_name  => obj.name
         }

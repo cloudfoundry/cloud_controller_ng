@@ -5,7 +5,7 @@ module VCAP::CloudController::Models
     class InvalidRelation      < StandardError; end
     class InvalidRouteRelation < InvalidRelation; end
 
-    many_to_one       :app_space
+    many_to_one       :space
     many_to_one       :framework
     many_to_one       :runtime
     many_to_many      :routes, :before_add => :validate_route
@@ -16,12 +16,12 @@ module VCAP::CloudController::Models
     default_order_by  :name
 
     export_attributes :name, :production,
-                      :app_space_guid, :framework_guid, :runtime_guid,
+                      :space_guid, :framework_guid, :runtime_guid,
                       :environment_json, :memory, :instances, :file_descriptors,
                       :disk_quota, :state
 
     import_attributes :name, :production,
-                      :app_space_guid, :framework_guid, :runtime_guid,
+                      :space_guid, :framework_guid, :runtime_guid,
                       :environment_json, :memory, :instances,
                       :file_descriptors, :disk_quota, :state,
                       :service_binding_guids
@@ -33,10 +33,10 @@ module VCAP::CloudController::Models
       # controller (as it probably should be), do more presence validation
       # here
       validates_presence :name
-      validates_presence :app_space
+      validates_presence :space
       validates_presence :framework
       validates_presence :runtime
-      validates_unique   [:app_space_id, :name]
+      validates_unique   [:space_id, :name]
       validate_environment
     end
 
@@ -57,7 +57,7 @@ module VCAP::CloudController::Models
     end
 
     def validate_route(route)
-      unless route && app_space && route.domain.app_spaces.include?(app_space)
+      unless route && space && route.domain.spaces.include?(space)
         raise InvalidRouteRelation.new(route.guid)
       end
     end
@@ -77,8 +77,7 @@ module VCAP::CloudController::Models
     end
 
     def self.user_visibility_filter(user)
-      user_visibility_filter_with_admin_override({
-        :app_space => user.app_spaces_dataset}.sql_or)
+      user_visibility_filter_with_admin_override(:space => user.spaces_dataset)
     end
   end
 end

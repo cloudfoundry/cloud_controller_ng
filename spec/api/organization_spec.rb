@@ -17,7 +17,7 @@ describe VCAP::CloudController::Organization do
       :billing_managers => lambda { |org| VCAP::CloudController::Models::User.make }
     },
     :one_to_many_collection_ids  => {
-      :app_spaces => lambda { |org| VCAP::CloudController::Models::AppSpace.make },
+      :spaces => lambda { |org| VCAP::CloudController::Models::Space.make },
       :domains => lambda { |org| VCAP::CloudController::Models::Domain.make }
     }
   }
@@ -97,11 +97,11 @@ describe VCAP::CloudController::Organization do
     end
 
     describe "App Space Level Permissions" do
-      describe "AppSpaceManager" do
-        let(:member_a) { @app_space_a_manager }
-        let(:member_b) { @app_space_b_manager }
+      describe "SpaceManager" do
+        let(:member_a) { @space_a_manager }
+        let(:member_b) { @space_b_manager }
 
-        include_examples "permission checks", "AppSpaceManager",
+        include_examples "permission checks", "SpaceManager",
           :model => VCAP::CloudController::Models::Organization,
           :path => "/v2/organizations",
           :enumerate => 1,
@@ -112,8 +112,8 @@ describe VCAP::CloudController::Organization do
       end
 
       describe "Developer" do
-        let(:member_a) { @app_space_a_developer }
-        let(:member_b) { @app_space_b_developer }
+        let(:member_a) { @space_a_developer }
+        let(:member_b) { @space_b_developer }
 
         include_examples "permission checks", "Developer",
           :model => VCAP::CloudController::Models::Organization,
@@ -125,11 +125,11 @@ describe VCAP::CloudController::Organization do
           :delete => :not_allowed
       end
 
-      describe "AppSpaceAuditor" do
-        let(:member_a) { @app_space_a_auditor }
-        let(:member_b) { @app_space_b_auditor }
+      describe "SpaceAuditor" do
+        let(:member_a) { @space_a_auditor }
+        let(:member_b) { @space_b_auditor }
 
-        include_examples "permission checks", "AppSpaceAuditor",
+        include_examples "permission checks", "SpaceAuditor",
           :model => VCAP::CloudController::Models::Organization,
           :path => "/v2/organizations",
           :enumerate => 1,

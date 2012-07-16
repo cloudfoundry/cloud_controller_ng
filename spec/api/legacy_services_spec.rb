@@ -57,18 +57,18 @@ describe VCAP::CloudController::LegacyService do
   end
 
   describe "User facing apis" do
-    let(:user) { make_user_with_default_app_space(:admin => true) }
+    let(:user) { make_user_with_default_space(:admin => true) }
 
     describe "GET /services" do
       before do
         @services = []
         7.times do
-          @services << Models::ServiceInstance.make(:app_space => user.default_app_space)
+          @services << Models::ServiceInstance.make(:space => user.default_space)
         end
 
         3.times do
-          app_space = make_app_space_for_user(user)
-          Models::ServiceInstance.make(:app_space => app_space)
+          space = make_space_for_user(user)
+          Models::ServiceInstance.make(:space => space)
         end
 
         get "/services", {}, headers_for(user)
@@ -97,9 +97,9 @@ describe VCAP::CloudController::LegacyService do
       before do
         svc = Models::Service.make(:label => "postgres", :version => "9.0")
         Models::ServicePlan.make(:service => svc, :name => LegacyService::LEGACY_PLAN_OVERIDE)
-        Models::ServiceInstance.make(:app_space => user.default_app_space, :name => "duplicate")
+        Models::ServiceInstance.make(:space => user.default_space, :name => "duplicate")
 
-        3.times { Models::ServiceInstance.make(:app_space => user.default_app_space) }
+        3.times { Models::ServiceInstance.make(:space => user.default_space) }
         @num_instances_before = Models::ServiceInstance.count
         @req = {
           :type => "database",
@@ -120,7 +120,7 @@ describe VCAP::CloudController::LegacyService do
         end
 
         it "should add the servicew the default app space" do
-          svc = user.default_app_space.service_instances.find(:name => "instance_name")
+          svc = user.default_space.service_instances.find(:name => "instance_name")
           svc.should_not be_nil
           Models::ServiceInstance.count.should == @num_instances_before + 1
         end
@@ -182,8 +182,8 @@ describe VCAP::CloudController::LegacyService do
 
     describe "DELETE /services/:name" do
       before do
-        3.times { Models::ServiceInstance.make(:app_space => user.default_app_space) }
-        @svc = Models::ServiceInstance.make(:app_space => user.default_app_space)
+        3.times { Models::ServiceInstance.make(:space => user.default_space) }
+        @svc = Models::ServiceInstance.make(:space => user.default_space)
         @num_instances_before = Models::ServiceInstance.count
       end
 

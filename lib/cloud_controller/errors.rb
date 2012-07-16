@@ -22,10 +22,10 @@ module VCAP::CloudController::Errors
     ["OrganizationNameTaken", HTTP::BAD_REQUEST, 30002, "The organization name is taken: %s"],
     ["OrganizationNotFound",  HTTP::BAD_REQUEST, 30003, "The organization could not be found: %s"],
 
-    ["AppSpaceInvalid",       HTTP::BAD_REQUEST, 40001, "The app space info is invalid: %s"],
-    ["AppSpaceNameTaken",     HTTP::BAD_REQUEST, 40002, "The app space name is taken: %s"],
-    ["AppSpaceUserNotInOrg",  HTTP::BAD_REQUEST, 40003, "The app space and the user are not in the same org: %s"],
-    ["AppSpaceNotFound",      HTTP::BAD_REQUEST, 40004, "The app space could not be found: %s"],
+    ["SpaceInvalid",       HTTP::BAD_REQUEST, 40001, "The app space info is invalid: %s"],
+    ["SpaceNameTaken",     HTTP::BAD_REQUEST, 40002, "The app space name is taken: %s"],
+    ["SpaceUserNotInOrg",  HTTP::BAD_REQUEST, 40003, "The app space and the user are not in the same org: %s"],
+    ["SpaceNotFound",      HTTP::BAD_REQUEST, 40004, "The app space could not be found: %s"],
 
     ["ServiceAuthTokenInvalid",    HTTP::BAD_REQUEST, 50001, "The service auth token is invalid: %s"],
     ["ServiceAuthTokenLabelTaken", HTTP::BAD_REQUEST, 50002, "The service auth token label is taken: %s"],
@@ -33,7 +33,7 @@ module VCAP::CloudController::Errors
 
     ["ServiceInstanceNameInvalid", HTTP::BAD_REQUEST, 60001, "The service instance name is taken: %s"],
     ["ServiceInstanceNameTaken",   HTTP::BAD_REQUEST, 60002, "The service instance name is taken: %s"],
-    ["ServiceInstanceServiceBindingWrongAppSpace", HTTP::BAD_REQUEST, 60003, "The service instance and the service binding are in different app spaces: %s"],
+    ["ServiceInstanceServiceBindingWrongSpace", HTTP::BAD_REQUEST, 60003, "The service instance and the service binding are in different app spaces: %s"],
     ["ServiceInstanceInvalid",     HTTP::BAD_REQUEST, 60003, "The service instance is invalid: %s"],
     ["ServiceInstanceNotFound",    HTTP::BAD_REQUEST, 60004, "The service instance can not be found: %s"],
 
@@ -46,7 +46,7 @@ module VCAP::CloudController::Errors
     ["FrameworkNotFound",  HTTP::BAD_REQUEST, 80003, "The framework can not be found: %s"],
 
     ["ServiceBindingInvalid",            HTTP::BAD_REQUEST, 90001, "The service binding is invalid: %s"],
-    ["ServiceBindingDifferentAppSpaces", HTTP::BAD_REQUEST, 90002, "The app and the service are not in the same app space: %s"],
+    ["ServiceBindingDifferentSpaces", HTTP::BAD_REQUEST, 90002, "The app and the service are not in the same app space: %s"],
     ["ServiceBindingAppServiceTaken",    HTTP::BAD_REQUEST, 90003, "The app space binding to service is taken: %s"],
     ["ServiceBindingNotFound",           HTTP::BAD_REQUEST, 90004, "The service binding can not be found: %s"],
 
@@ -65,7 +65,7 @@ module VCAP::CloudController::Errors
     ["DomainInvalid",  HTTP::BAD_REQUEST, 130001, "The domain is invalid: %s"],
     ["DomainNotFound", HTTP::BAD_REQUEST, 130002, "The domain could not be found: %s"],
 
-    ["LegacyApiWithoutDefaultAppSpace", HTTP::BAD_REQUEST, 140001, "A legacy api call requring a default app space was called, but no default app space is set for the user."]
+    ["LegacyApiWithoutDefaultSpace", HTTP::BAD_REQUEST, 140001, "A legacy api call requring a default app space was called, but no default app space is set for the user."]
 
   ].each do |e|
     define_error *e

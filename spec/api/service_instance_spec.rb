@@ -8,8 +8,8 @@ describe VCAP::CloudController::ServiceInstance do
     :path                 => "/v2/service_instances",
     :model                => VCAP::CloudController::Models::ServiceInstance,
     :basic_attributes     => [:name, :credentials, :vendor_data],
-    :required_attributes  => [:name, :credentials, :app_space_guid, :service_plan_guid],
-    :unique_attributes    => [:app_space_guid, :name],
+    :required_attributes  => [:name, :credentials, :space_guid, :service_plan_guid],
+    :unique_attributes    => [:space_guid, :name],
     :one_to_many_collection_ids => {
       :service_bindings => lambda { |service_instance|
         make_service_binding_for_service_instance(service_instance)
@@ -21,15 +21,15 @@ describe VCAP::CloudController::ServiceInstance do
     include_context "permissions"
 
     before do
-      @obj_a = Models::ServiceInstance.make(:app_space => @app_space_a)
-      @obj_b = Models::ServiceInstance.make(:app_space => @app_space_b)
+      @obj_a = Models::ServiceInstance.make(:space => @space_a)
+      @obj_b = Models::ServiceInstance.make(:space => @space_b)
     end
 
     let(:creation_req_for_a) do
       # TODO: remove credentials when service gw flow is in place
       Yajl::Encoder.encode(
         :name => Sham.name,
-        :app_space_guid => @app_space_a.guid,
+        :space_guid => @space_a.guid,
         :service_plan_guid => Models::ServicePlan.make.guid,
         :credentials => {}
       )
@@ -98,11 +98,11 @@ describe VCAP::CloudController::ServiceInstance do
     end
 
     describe "App Space Level Permissions" do
-      describe "AppSpaceManager" do
-        let(:member_a) { @app_space_a_manager }
-        let(:member_b) { @app_space_b_manager }
+      describe "SpaceManager" do
+        let(:member_a) { @space_a_manager }
+        let(:member_b) { @space_b_manager }
 
-        include_examples "permission checks", "AppSpaceManager",
+        include_examples "permission checks", "SpaceManager",
           :model => VCAP::CloudController::Models::ServiceInstance,
           :path => "/v2/service_instances",
           :enumerate => 0,
@@ -113,8 +113,8 @@ describe VCAP::CloudController::ServiceInstance do
       end
 
       describe "Developer" do
-        let(:member_a) { @app_space_a_developer }
-        let(:member_b) { @app_space_b_developer }
+        let(:member_a) { @space_a_developer }
+        let(:member_b) { @space_b_developer }
 
         include_examples "permission checks", "Developer",
           :model => VCAP::CloudController::Models::ServiceInstance,
@@ -126,11 +126,11 @@ describe VCAP::CloudController::ServiceInstance do
           :delete => :allowed
       end
 
-      describe "AppSpaceAuditor" do
-        let(:member_a) { @app_space_a_auditor }
-        let(:member_b) { @app_space_b_auditor }
+      describe "SpaceAuditor" do
+        let(:member_a) { @space_a_auditor }
+        let(:member_b) { @space_b_auditor }
 
-        include_examples "permission checks", "AppSpaceAuditor",
+        include_examples "permission checks", "SpaceAuditor",
           :model => VCAP::CloudController::Models::ServiceInstance,
           :path => "/v2/service_instances",
           :enumerate => 0,
@@ -151,7 +151,7 @@ describe VCAP::CloudController::ServiceInstance do
         should_receive_quota_call
         post "/v2/service_instances",
           Yajl::Encoder.encode(:name => Sham.name,
-                               :app_space_guid => service_instance.app_space_guid,
+                               :space_guid => service_instance.space_guid,
                                :credentials => {},
                                :service_plan_guid => service_instance.service_plan_guid),
                                headers_for(cf_admin)

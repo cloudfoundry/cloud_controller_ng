@@ -39,7 +39,7 @@ module VCAP::CloudController::Models
     domain            { Domain.make }
   end
 
-  AppSpace.blueprint do
+  Space.blueprint do
     name              { Sham.name }
     organization      { Organization.make }
   end
@@ -61,7 +61,7 @@ module VCAP::CloudController::Models
   ServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
-    app_space         { AppSpace.make }
+    space             { Space.make }
     service_plan      { ServicePlan.make }
   end
 
@@ -77,7 +77,7 @@ module VCAP::CloudController::Models
 
   App.blueprint do
     name              { Sham.name }
-    app_space         { AppSpace.make }
+    space             { Space.make }
     runtime           { Runtime.make }
     framework         { Framework.make }
   end
@@ -85,7 +85,7 @@ module VCAP::CloudController::Models
   ServiceBinding.blueprint do
     credentials       { Sham.service_credentials }
     service_instance  { ServiceInstance.make }
-    app               { App.make(:app_space => service_instance.app_space) }
+    app               { App.make(:space => service_instance.space) }
   end
 
   ServicePlan.blueprint do

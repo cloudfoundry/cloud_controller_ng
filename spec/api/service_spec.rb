@@ -82,25 +82,25 @@ describe VCAP::CloudController::Service do
     end
 
     describe "App Space Level Permissions" do
-      describe "AppSpaceManager" do
-        let(:member_a) { @app_space_a_manager }
-        let(:member_b) { @app_space_b_manager }
+      describe "SpaceManager" do
+        let(:member_a) { @space_a_manager }
+        let(:member_b) { @space_b_manager }
 
-        include_examples "enumerate and read service only", "AppSpaceManager"
+        include_examples "enumerate and read service only", "SpaceManager"
       end
 
       describe "Developer" do
-        let(:member_a) { @app_space_a_developer }
-        let(:member_b) { @app_space_b_developer }
+        let(:member_a) { @space_a_developer }
+        let(:member_b) { @space_b_developer }
 
         include_examples "enumerate and read service only", "Developer"
       end
 
-      describe "AppSpaceAuditor" do
-        let(:member_a) { @app_space_a_auditor }
-        let(:member_b) { @app_space_b_auditor }
+      describe "SpaceAuditor" do
+        let(:member_a) { @space_a_auditor }
+        let(:member_b) { @space_b_auditor }
 
-        include_examples "enumerate and read service only", "AppSpaceAuditor"
+        include_examples "enumerate and read service only", "SpaceAuditor"
       end
     end
   end

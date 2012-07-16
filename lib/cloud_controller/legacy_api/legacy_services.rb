@@ -18,7 +18,7 @@ module VCAP::CloudController
     end
 
     def enumerate
-      resp = default_app_space.service_instances.map do |svc_instance|
+      resp = default_space.service_instances.map do |svc_instance|
         legacy_service_encoding(svc_instance)
       end
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       attrs = {
         :name => legacy_attrs["name"],
-        :app_space_guid => default_app_space.guid,
+        :space_guid => default_space.guid,
         :service_plan_guid => plan.guid,
         # FIXME: these should be set at the next level and come from the svc gw
         :credentials => {}
@@ -140,7 +140,7 @@ module VCAP::CloudController
 
     def service_instance_from_name(name)
       svc = Models::ServiceInstance.user_visible[:name => name,
-                                                 :app_space => default_app_space]
+                                                 :space => default_space]
       raise ServiceInstanceNotFound.new(name) unless svc
       svc
     end
