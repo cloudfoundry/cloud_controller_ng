@@ -18,13 +18,13 @@ module VCAP::CloudController::ApiSpecHelper
       @org_a.add_billing_manager(@org_a_billing_manager)
       @org_a.add_auditor(@org_a_auditor)
 
-      @app_space_a = Models::AppSpace.make(:organization => @org_a)
-      @app_space_a_manager = make_user_for_app_space(@app_space_a)
-      @app_space_a_developer = make_user_for_app_space(@app_space_a)
-      @app_space_a_auditor = make_user_for_app_space(@app_space_a)
-      @app_space_a.add_manager(@app_space_a_manager)
-      @app_space_a.add_developer(@app_space_a_developer)
-      @app_space_a.add_auditor(@app_space_a_auditor)
+      @space_a = Models::Space.make(:organization => @org_a)
+      @space_a_manager = make_user_for_space(@space_a)
+      @space_a_developer = make_user_for_space(@space_a)
+      @space_a_auditor = make_user_for_space(@space_a)
+      @space_a.add_manager(@space_a_manager)
+      @space_a.add_developer(@space_a_developer)
+      @space_a.add_auditor(@space_a_auditor)
 
       @org_b = Models::Organization.make
       @org_b_manager = Models::User.make
@@ -36,13 +36,13 @@ module VCAP::CloudController::ApiSpecHelper
       @org_b.add_billing_manager(@org_b_billing_manager)
       @org_b.add_auditor(@org_b_auditor)
 
-      @app_space_b = Models::AppSpace.make(:organization => @org_b)
-      @app_space_b_manager = make_user_for_app_space(@app_space_b)
-      @app_space_b_developer = make_user_for_app_space(@app_space_b)
-      @app_space_b_auditor = make_user_for_app_space(@app_space_b)
-      @app_space_b.add_manager(@app_space_b_manager)
-      @app_space_b.add_developer(@app_space_b_developer)
-      @app_space_b.add_auditor(@app_space_b_auditor)
+      @space_b = Models::Space.make(:organization => @org_b)
+      @space_b_manager = make_user_for_space(@space_b)
+      @space_b_developer = make_user_for_space(@space_b)
+      @space_b_auditor = make_user_for_space(@space_b)
+      @space_b.add_manager(@space_b_manager)
+      @space_b.add_developer(@space_b_developer)
+      @space_b.add_auditor(@space_b_auditor)
 
       @cf_admin = Models::User.make(:admin => true)
     end

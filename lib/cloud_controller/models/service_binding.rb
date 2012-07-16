@@ -27,15 +27,15 @@ module VCAP::CloudController::Models
 
     def validate_app_and_service_instance(app, service_instance)
       if app && service_instance
-        unless service_instance.app_space == app.app_space
+        unless service_instance.space == app.space
           raise InvalidAppAndServiceRelation.new(
-            "'#{app.app_space.name}' '#{service_instance.app_space.name}'")
+            "'#{app.space.name}' '#{service_instance.space.name}'")
         end
       end
     end
 
-    def app_space
-      service_instance.app_space
+    def space
+      service_instance.space
     end
 
     def self.user_visibility_filter(user)

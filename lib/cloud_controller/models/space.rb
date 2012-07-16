@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController::Models
-  class AppSpace < Sequel::Model
+  class Space < Sequel::Model
     class InvalidRelation          < StandardError; end
     class InvalidDeveloperRelation < InvalidRelation; end
     class InvalidAuditorRelation   < InvalidRelation; end
@@ -10,13 +10,13 @@ module VCAP::CloudController::Models
 
     many_to_one       :organization
 
-    define_user_group :developers, :reciprocol => :app_spaces,
+    define_user_group :developers, :reciprocol => :spaces,
                       :before_add => :validate_developer
 
-    define_user_group :managers, :reciprocol => :managed_app_spaces,
+    define_user_group :managers, :reciprocol => :managed_spaces,
                       :before_add => :validate_manager
 
-    define_user_group :auditors, :reciprocol => :audited_app_spaces,
+    define_user_group :auditors, :reciprocol => :audited_spaces,
                       :before_add => :validate_auditor
 
     one_to_many       :apps
@@ -27,7 +27,7 @@ module VCAP::CloudController::Models
 
     one_to_many       :default_users,
                       :class => "VCAP::CloudController::Models::User",
-                      :key => :default_app_space_id
+                      :key => :default_space_id
     add_association_dependencies :default_users => :nullify
 
 

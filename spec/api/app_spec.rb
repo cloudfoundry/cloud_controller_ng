@@ -4,29 +4,28 @@ require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::App do
   let(:app_obj) { VCAP::CloudController::Models::App.make }
-  let(:app_space) { VCAP::CloudController::Models::AppSpace.make }
+  let(:space) { VCAP::CloudController::Models::Space.make }
   let(:runtime) { VCAP::CloudController::Models::Runtime.make }
   let(:framework) { VCAP::CloudController::Models::Framework.make }
 
-  # FIXME: make app_space_id a relation check that checks the id and the url
+  # FIXME: make space_id a relation check that checks the id and the url
   # part.  do everywhere
   it_behaves_like "a CloudController API", {
     :path                => "/v2/apps",
     :model               => VCAP::CloudController::Models::App,
-    :basic_attributes    => [:name, :app_space_guid, :runtime_guid, :framework_guid],
-    :required_attributes => [:name, :app_space_guid, :runtime_guid, :framework_guid],
-    :unique_attributes   => [:name, :app_space_guid],
+    :basic_attributes    => [:name, :space_guid, :runtime_guid, :framework_guid],
+    :required_attributes => [:name, :space_guid, :runtime_guid, :framework_guid],
+    :unique_attributes   => [:name, :space_guid],
 
     :many_to_one_collection_ids => {
-      :app_space       => lambda { |app| VCAP::CloudController::Models::AppSpace.make  },
-      :framework       => lambda { |app| VCAP::CloudController::Models::Framework.make },
-      :runtime         => lambda { |app| VCAP::CloudController::Models::Runtime.make   }
+      :space      => lambda { |app| VCAP::CloudController::Models::Space.make  },
+      :framework  => lambda { |app| VCAP::CloudController::Models::Framework.make },
+      :runtime    => lambda { |app| VCAP::CloudController::Models::Runtime.make   }
     },
     :one_to_many_collection_ids  => {
-      :service_bindings   =>
-       lambda { |app|
+      :service_bindings => lambda { |app|
           service_binding = VCAP::CloudController::Models::ServiceBinding.make
-          service_binding.service_instance.app_space = app.app_space
+          service_binding.service_instance.space = app.space
           service_binding
        }
     }
@@ -73,13 +72,13 @@ describe VCAP::CloudController::App do
     include_context "permissions"
 
     before do
-      @obj_a = Models::App.make(:app_space => @app_space_a)
-      @obj_b = Models::App.make(:app_space => @app_space_b)
+      @obj_a = Models::App.make(:space => @space_a)
+      @obj_b = Models::App.make(:space => @space_b)
     end
 
     let(:creation_req_for_a) do
       Yajl::Encoder.encode(:name => Sham.name,
-                           :app_space_guid => @app_space_a.guid,
+                           :space_guid => @space_a.guid,
                            :framework_guid => Models::Framework.make.guid,
                            :runtime_guid => Models::Runtime.make.guid)
     end
@@ -147,11 +146,11 @@ describe VCAP::CloudController::App do
     end
 
     describe "App Space Level Permissions" do
-      describe "AppSpaceManager" do
-        let(:member_a) { @app_space_a_manager }
-        let(:member_b) { @app_space_b_manager }
+      describe "SpaceManager" do
+        let(:member_a) { @space_a_manager }
+        let(:member_b) { @space_b_manager }
 
-        include_examples "permission checks", "AppSpaceManager",
+        include_examples "permission checks", "SpaceManager",
           :model => VCAP::CloudController::Models::App,
           :path => "/v2/apps",
           :enumerate => 0,
@@ -162,8 +161,8 @@ describe VCAP::CloudController::App do
       end
 
       describe "Developer" do
-        let(:member_a) { @app_space_a_developer }
-        let(:member_b) { @app_space_b_developer }
+        let(:member_a) { @space_a_developer }
+        let(:member_b) { @space_b_developer }
 
         include_examples "permission checks", "Developer",
           :model => VCAP::CloudController::Models::App,
@@ -175,11 +174,11 @@ describe VCAP::CloudController::App do
           :delete => :allowed
       end
 
-      describe "AppSpaceAuditor" do
-        let(:member_a) { @app_space_a_auditor }
-        let(:member_b) { @app_space_b_auditor }
+      describe "SpaceAuditor" do
+        let(:member_a) { @space_a_auditor }
+        let(:member_b) { @space_b_auditor }
 
-        include_examples "permission checks", "AppSpaceAuditor",
+        include_examples "permission checks", "SpaceAuditor",
           :model => VCAP::CloudController::Models::App,
           :path => "/v2/apps",
           :enumerate => 0,
@@ -199,7 +198,7 @@ describe VCAP::CloudController::App do
       it "should fetch a quota token" do
         should_receive_quota_call
         post "/v2/apps", Yajl::Encoder.encode(:name => Sham.name,
-                                              :app_space_guid => app_obj.app_space_guid,
+                                              :space_guid => app_obj.space_guid,
                                               :framework_guid => app_obj.framework_guid,
                                               :runtime_guid => app_obj.runtime_guid),
                                               headers_for(cf_admin)

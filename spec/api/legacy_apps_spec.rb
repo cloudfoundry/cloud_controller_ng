@@ -1,19 +1,19 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::LegacyApps do
-  let(:user) { make_user_with_default_app_space }
-  let(:admin) { make_user_with_default_app_space(:admin => true) }
+  let(:user) { make_user_with_default_space }
+  let(:admin) { make_user_with_default_space(:admin => true) }
 
   describe "GET /apps" do
     before do
       @apps = []
       7.times do
-        @apps << Models::App.make(:app_space => user.default_app_space)
+        @apps << Models::App.make(:space => user.default_space)
       end
 
       3.times do
-        app_space = make_app_space_for_user(user)
-        Models::App.make(:app_space => app_space)
+        space = make_space_for_user(user)
+        Models::App.make(:space => space)
       end
 
       get "/apps", {}, headers_for(user)
@@ -42,14 +42,14 @@ describe VCAP::CloudController::LegacyApps do
     before do
       # since we don't get the guid back, we use the mem attribute to
       # distinguish between apps
-      @app_1 = Models::App.make(:app_space => user.default_app_space, :memory => 128)
-      @app_2 = Models::App.make(:app_space => user.default_app_space, :memory => 256)
-      @app_3 = Models::App.make(:app_space => user.default_app_space, :memory => 512)
+      @app_1 = Models::App.make(:space => user.default_space, :memory => 128)
+      @app_2 = Models::App.make(:space => user.default_space, :memory => 256)
+      @app_3 = Models::App.make(:space => user.default_space, :memory => 512)
 
       # used to make sure we are getting the name from the correct app space,
       # i.e. we *don't* want to get this one back
       Models::App.make(:name => @app_2.name,
-                       :app_space => make_app_space_for_user(user), :memory => 1024)
+                       :space => make_space_for_user(user), :memory => 1024)
 
     end
 
@@ -112,7 +112,7 @@ describe VCAP::CloudController::LegacyApps do
       end
 
       it "should add the app the default app space" do
-        app = user.default_app_space.apps.find(:name => "app_name")
+        app = user.default_space.apps.find(:name => "app_name")
         app.should_not be_nil
         Models::App.count.should == @num_apps_before + 1
       end
@@ -162,7 +162,7 @@ describe VCAP::CloudController::LegacyApps do
   end
 
   describe "PUT /apps/:name" do
-    let(:app_obj) { Models::App.make(:app_space => user.default_app_space) }
+    let(:app_obj) { Models::App.make(:space => user.default_space) }
 
     context "with valid attributes" do
       before do
@@ -208,7 +208,7 @@ describe VCAP::CloudController::LegacyApps do
   end
 
   describe "DELETE /apps/:name" do
-    let(:app_obj) { Models::App.make(:app_space => user.default_app_space) }
+    let(:app_obj) { Models::App.make(:space => user.default_space) }
 
     before do
       3.times { Models::App.make }
@@ -231,15 +231,15 @@ describe VCAP::CloudController::LegacyApps do
   describe "service binding" do
     describe "PUT /apps/:name adding and removing bindings" do
       before(:all) do
-        @app_obj = Models::App.make(:app_space => admin.default_app_space)
+        @app_obj = Models::App.make(:space => admin.default_space)
         bound_instances = []
         5.times do
-          instance = Models::ServiceInstance.make(:app_space => admin.default_app_space)
+          instance = Models::ServiceInstance.make(:space => admin.default_space)
           bound_instances << instance
           Models::ServiceBinding.make(:app => @app_obj, :service_instance => instance)
         end
 
-        @instance_to_bind = Models::ServiceInstance.make(:app_space => admin.default_app_space)
+        @instance_to_bind = Models::ServiceInstance.make(:space => admin.default_space)
         @instance_to_unbind = bound_instances[2]
 
         service_instance_names = [@instance_to_bind.name]

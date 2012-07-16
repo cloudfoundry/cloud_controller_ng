@@ -10,11 +10,11 @@ module VCAP::CloudController
       @request = request
     end
 
-    def default_app_space
+    def default_space
       raise NotAuthorized unless user
-      app_space = user.default_app_space || user.app_spaces.first
-      raise LegacyApiWithoutDefaultAppSpace unless app_space
-      app_space
+      space = user.default_space || user.spaces.first
+      raise LegacyApiWithoutDefaultSpace unless space
+      space
     end
 
     def user

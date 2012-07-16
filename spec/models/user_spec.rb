@@ -7,9 +7,9 @@ describe VCAP::CloudController::Models::User do
     :required_attributes          => :guid,
     :unique_attributes            => :guid,
     :many_to_zero_or_one => {
-      :default_app_space => lambda { |user|
+      :default_space => lambda { |user|
         org = user.organizations.first || VCAP::CloudController::Models::Organization.make
-        VCAP::CloudController::Models::AppSpace.make(:organization => org)
+        VCAP::CloudController::Models::Space.make(:organization => org)
       }
     },
     :many_to_zero_or_more => {
@@ -17,10 +17,10 @@ describe VCAP::CloudController::Models::User do
       :managed_organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
       :billing_managed_organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
       :audited_organizations => lambda { |user| VCAP::CloudController::Models::Organization.make },
-      :app_spaces    => lambda { |user|
+      :spaces => lambda { |user|
         org = VCAP::CloudController::Models::Organization.make
         user.add_organization(org)
-        VCAP::CloudController::Models::AppSpace.make(:organization => org)
+        VCAP::CloudController::Models::Space.make(:organization => org)
       }
     }
   }

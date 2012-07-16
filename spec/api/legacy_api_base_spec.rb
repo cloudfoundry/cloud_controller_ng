@@ -5,25 +5,25 @@ describe VCAP::CloudController::LegacyApiBase do
   let(:logger) { VCAP::Logging.logger("vcap_spec") }
   let(:fake_req) { "" }
 
-  describe "#default_app_space" do
+  describe "#default_space" do
     it "should raise NotAuthorized if the user is nil" do
       VCAP::CloudController::SecurityContext.current_user = nil
       api = LegacyApiBase.new(config, logger, fake_req)
-      lambda { api.default_app_space }.should raise_error(Errors::NotAuthorized)
+      lambda { api.default_space }.should raise_error(Errors::NotAuthorized)
     end
 
-    it "should raise LegacyApiWithoutDefaultAppSpace if the user has no app spaces" do
+    it "should raise LegacyApiWithoutDefaultSpace if the user has no app spaces" do
       VCAP::CloudController::SecurityContext.current_user = user
       api = LegacyApiBase.new(config, logger, fake_req)
       lambda {
-        api.default_app_space
-      }.should raise_error(Errors::LegacyApiWithoutDefaultAppSpace)
+        api.default_space
+      }.should raise_error(Errors::LegacyApiWithoutDefaultSpace)
     end
 
     context "with app spaces" do
       let(:org) { Models::Organization.make }
-      let(:as1) { Models::AppSpace.make(:organization => org) }
-      let(:as2) { Models::AppSpace.make(:organization => org) }
+      let(:as1) { Models::Space.make(:organization => org) }
+      let(:as2) { Models::Space.make(:organization => org) }
       let(:api) {
         VCAP::CloudController::SecurityContext.current_user = user
         LegacyApiBase.new(config, logger, fake_req)
@@ -31,19 +31,19 @@ describe VCAP::CloudController::LegacyApiBase do
 
       before do
         user.add_organization(org)
-        user.add_app_space(as1)
-        user.add_app_space(as2)
+        user.add_space(as1)
+        user.add_space(as2)
       end
 
-      it "should return the first app space a user is in if default_app_space is not set" do
-        api.default_app_space.should == as1
-        user.remove_app_space(as1)
-        api.default_app_space.should == as2
+      it "should return the first app space a user is in if default_space is not set" do
+        api.default_space.should == as1
+        user.remove_space(as1)
+        api.default_space.should == as2
       end
 
       it "should return the explicitly set default app space if one is set" do
-        user.default_app_space = as2
-        api.default_app_space.should == as2
+        user.default_space = as2
+        api.default_space.should == as2
       end
     end
   end

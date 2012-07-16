@@ -31,9 +31,9 @@ describe VCAP::CloudController::LegacyInfo do
       let(:current_user) do
         case scenario_vars[:user]
         when "admin"
-          make_user_with_default_app_space(:admin => true)
+          make_user_with_default_space(:admin => true)
         when "user"
-          make_user_with_default_app_space
+          make_user_with_default_space
         end
       end
 
@@ -66,7 +66,7 @@ describe VCAP::CloudController::LegacyInfo do
     let(:headers) { headers_for(current_user) }
 
     describe "for an amdin" do
-      let(:current_user) { make_user_with_default_app_space(:admin => true) }
+      let(:current_user) { make_user_with_default_space(:admin => true) }
 
       it "should return admin limits for an admin" do
         get "/info", {}, headers
@@ -83,7 +83,7 @@ describe VCAP::CloudController::LegacyInfo do
     end
 
     describe "for a user" do
-      let(:current_user) { make_user_with_default_app_space }
+      let(:current_user) { make_user_with_default_space }
 
       it "should return default limits for a user" do
         get "/info", {}, headers
@@ -116,17 +116,17 @@ describe VCAP::CloudController::LegacyInfo do
       context "with 2 started apps with 2 instances, 5 stopped apps, and 3 service" do
         before do
           2.times do
-            Models::App.make(:app_space => current_user.default_app_space,
+            Models::App.make(:space => current_user.default_space,
                              :state => "STARTED", :instances => 2, :memory => 128)
           end
 
           5.times do
-            Models::App.make(:app_space => current_user.default_app_space,
+            Models::App.make(:space => current_user.default_space,
                              :state => "STOPPED", :instances => 2, :memory => 128)
           end
 
           3.times do
-            Models::ServiceInstance.make(:app_space => current_user.default_app_space)
+            Models::ServiceInstance.make(:space => current_user.default_space)
           end
         end
 

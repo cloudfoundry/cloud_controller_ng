@@ -8,23 +8,23 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :guid, :exclude_in => :update
-      to_many   :app_spaces
+      to_many   :spaces
       to_many   :organizations
       to_many   :managed_organizations
       to_many   :billing_managed_organizations
       to_many   :audited_organizations
-      to_many   :managed_app_spaces
-      to_many   :audited_app_spaces
+      to_many   :managed_spaces
+      to_many   :audited_spaces
       attribute :admin, Message::Boolean
-      to_one    :default_app_space
+      to_one    :default_space
     end
 
-    query_parameters :app_space_guid, :organization_guid,
+    query_parameters :space_guid, :organization_guid,
                      :managed_organization_guid,
                      :billing_managed_organization_guid,
                      :audited_organization_guid,
-                     :managed_app_space_guid,
-                     :audited_app_space_guid
+                     :managed_space_guid,
+                     :audited_space_guid
 
     def self.translate_validation_exception(e, attributes)
       guid_errors = e.errors.on(:guid)

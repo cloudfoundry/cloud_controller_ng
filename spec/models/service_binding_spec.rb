@@ -7,26 +7,26 @@ describe VCAP::CloudController::Models::ServiceBinding do
     :required_attributes => [:credentials, :service_instance, :app],
     :unique_attributes   => [:app, :service_instance],
     :create_attribute    => lambda { |name|
-      @app_space ||= VCAP::CloudController::Models::AppSpace.make
+      @space ||= VCAP::CloudController::Models::Space.make
       case name.to_sym
       when :app_id
-        app = VCAP::CloudController::Models::App.make(:app_space => @app_space)
+        app = VCAP::CloudController::Models::App.make(:space => @space)
         app.id
       when :service_instance_id
-        service_instance = VCAP::CloudController::Models::ServiceInstance.make(:app_space => @app_space)
+        service_instance = VCAP::CloudController::Models::ServiceInstance.make(:space => @space)
         service_instance.id
       end
     },
-    :create_attribute_reset => lambda { @app_space = nil },
+    :create_attribute_reset => lambda { @space = nil },
     :many_to_one => {
       :app => {
         :delete_ok => true,
         :create_for => lambda { |service_binding|
-          VCAP::CloudController::Models::App.make(:app_space => service_binding.app_space)
+          VCAP::CloudController::Models::App.make(:space => service_binding.space)
         }
       },
       :service_instance => lambda { |service_binding|
-        VCAP::CloudController::Models::ServiceInstance.make(:app_space => service_binding.app_space)
+        VCAP::CloudController::Models::ServiceInstance.make(:space => service_binding.space)
       }
     }
   }

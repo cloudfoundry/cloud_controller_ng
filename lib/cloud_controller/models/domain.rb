@@ -3,7 +3,7 @@
 module VCAP::CloudController::Models
   class Domain < Sequel::Model
     class InvalidRelation         < StandardError; end
-    class InvalidAppSpaceRelation < InvalidRelation; end
+    class InvalidSpaceRelation < InvalidRelation; end
 
     many_to_one       :organization
     one_to_many       :routes
@@ -14,8 +14,8 @@ module VCAP::CloudController::Models
     import_attributes :name, :organization_guid
     strip_attributes  :name
 
-    many_to_many      :app_spaces, :before_add => :validate_app_space
-    add_association_dependencies :app_spaces => :nullify
+    many_to_many      :spaces, :before_add => :validate_space
+    add_association_dependencies :spaces => :nullify
 
     # TODO: add this sort of functionality to vcap validations
     # i.e. a strip_down_attributes sort of thing
@@ -38,9 +38,9 @@ module VCAP::CloudController::Models
       validates_format  /^[\w\-]+\.[\w\-]+$/, :name
     end
 
-    def validate_app_space(app_space)
-      unless app_space && organization && organization.app_spaces.include?(app_space)
-        raise InvalidAppSpaceRelation.new(app_space.guid)
+    def validate_space(space)
+      unless space && organization && organization.spaces.include?(space)
+        raise InvalidSpaceRelation.new(space.guid)
       end
     end
 

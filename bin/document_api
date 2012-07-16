@@ -18,7 +18,7 @@ module Docs
       [
         VCAP::CloudController::Organization,
         VCAP::CloudController::User,
-        VCAP::CloudController::AppSpace,
+        VCAP::CloudController::Space,
         VCAP::CloudController::App,
         VCAP::CloudController::Runtime,
         VCAP::CloudController::Framework,

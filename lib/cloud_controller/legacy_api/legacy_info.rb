@@ -56,11 +56,11 @@ module VCAP::CloudController
 
     # TODO: what are the semantics of this?
     def account_usage
-      return {} unless default_app_space
+      return {} unless default_space
 
       app_num = 0
       app_mem = 0
-      default_app_space.apps_dataset.filter(:state => "STARTED").each do |app|
+      default_space.apps_dataset.filter(:state => "STARTED").each do |app|
         app_num += 1
         app_mem += (app.memory * app.instances)
       end
@@ -69,7 +69,7 @@ module VCAP::CloudController
       {
         :memory => app_mem,
         :apps   => app_num,
-        :services => default_app_space.service_instances.count
+        :services => default_space.service_instances.count
       }
     end
 

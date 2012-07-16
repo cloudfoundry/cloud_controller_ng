@@ -12,7 +12,7 @@ module VCAP::CloudController
     def enumerate
       logger.debug "enumerate apps request"
 
-      resp = default_app_space.apps.map do |app|
+      resp = default_space.apps.map do |app|
         legacy_app_encoding(app)
       end
 
@@ -86,7 +86,7 @@ module VCAP::CloudController
     end
 
     def app_from_name(name)
-      app = Models::App.user_visible[:name => name, :app_space => default_app_space]
+      app = Models::App.user_visible[:name => name, :space => default_space]
       raise AppNotFound.new(name) unless app
       app
     end
@@ -96,7 +96,7 @@ module VCAP::CloudController
       raise InvalidRequest unless hash
 
       req = {
-        :app_space_guid => default_app_space.guid
+        :space_guid => default_space.guid
       }
 
       ["name", "instances", "state"].each do |k|
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
       if (app && bindings = hash["services"])
         req[:service_binding_guids] = bindings.map do |name|
-          svc_instance = default_app_space.service_instances_dataset[:name => name]
+          svc_instance = default_space.service_instances_dataset[:name => name]
           raise ServiceInstanceNotFound.new(name) unless svc_instance
 
           if binding = svc_instance.service_bindings_dataset[:app => app]

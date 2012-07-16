@@ -31,7 +31,7 @@ module VCAP::CloudController
   end
 end
 
-require "cloud_controller/permissions/app_space_permissions"
+require "cloud_controller/permissions/space_permissions"
 
 Dir[File.expand_path("../permissions/*", __FILE__)].each do |file|
   require file
