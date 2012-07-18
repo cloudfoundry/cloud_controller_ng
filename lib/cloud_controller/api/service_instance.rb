@@ -18,7 +18,7 @@ module VCAP::CloudController
       attribute :vendor_data,      String, :default => "" # FIXME: notation for access override here
     end
 
-    query_parameters :space_guid, :service_plan_guid, :service_binding_guid
+    query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid
 
     def create_quota_token_request(obj)
       ret = quota_token_request("post", obj)

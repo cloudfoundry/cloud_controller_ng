@@ -102,7 +102,8 @@ module VCAP::CloudController::ApiSpecHelper
 
   shared_examples "a CloudController API" do |opts|
     [:required_attributes, :unique_attributes, :basic_attributes,
-     :extra_attributes, :sensitive_attributes].each do |k|
+     :extra_attributes, :sensitive_attributes,
+     :queryable_attributes].each do |k|
       opts[k] ||= []
       opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
       opts[k].map! { |v| v.to_s }
@@ -123,6 +124,7 @@ module VCAP::CloudController::ApiSpecHelper
       admin_headers
     end
 
+    include_examples "querying objects", opts
     include_examples "enumerating objects", opts
     include_examples "creating and updating", opts
     include_examples "reading a valid object", opts
