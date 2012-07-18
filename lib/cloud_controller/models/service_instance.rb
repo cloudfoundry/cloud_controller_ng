@@ -6,15 +6,16 @@ module VCAP::CloudController::Models
 
     many_to_one :service_plan
     many_to_one :space
+    many_to_one :service
     one_to_many :service_bindings, :before_add => :validate_service_binding
 
     default_order_by  :id
 
     export_attributes :name, :credentials, :service_plan_guid,
-                      :space_guid, :vendor_data
+                      :space_guid, :gateway_data
 
     import_attributes :name, :credentials, :service_plan_guid,
-                      :space_guid, :vendor_data
+                      :space_guid, :gateway_data
 
     strip_attributes  :name
 

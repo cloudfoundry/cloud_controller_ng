@@ -7,7 +7,7 @@ describe VCAP::CloudController::ServiceBinding do
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/service_bindings",
     :model                => VCAP::CloudController::Models::ServiceBinding,
-    :basic_attributes     => [:credentials, :binding_options, :vendor_data, :app_guid, :service_instance_guid],
+    :basic_attributes     => [:credentials, :binding_options, :gateway_data, :app_guid, :service_instance_guid],
     :required_attributes  => [:credentials, :app_guid, :service_instance_guid],
     :unique_attributes    => [:app_guid, :service_instance_guid],
     :create_attribute     => lambda { |name|
