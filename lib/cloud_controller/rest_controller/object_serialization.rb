@@ -90,7 +90,7 @@ module VCAP::CloudController::RestController
         other_model = ar.associated_class
         other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
         q_key = "#{ar[:reciprocol].to_s.singularize}_guid"
-        res["#{name}_url"] = "#{other_controller.path}?q=#{q_key}:#{obj.guid}"
+        res["#{name}_url"] = "#{controller.url_for_id(obj.guid)}/#{name}"
 
         others = other_model.user_visible.filter(ar[:reciprocol] => [obj])
 

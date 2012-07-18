@@ -172,7 +172,7 @@ module VCAP::CloudController::RestController
       logger.debug2 "#{log_prefix} enumerate: #{ds.sql}"
       qp = self.class.query_parameters
       ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
-      Paginator.render_json(self.class, ds, @opts)
+      Paginator.render_json(self.class, ds, self.class.path, @opts)
     end
 
     # Enumerate the related objects to the one with the given id.
@@ -188,13 +188,14 @@ module VCAP::CloudController::RestController
       a_model = model.association_reflection(name).associated_class
       a_controller = VCAP::CloudController.controller_from_model_name(a_model)
       ar = model.association_reflection(name)
+      a_path = "#{self.class.url_for_id(id)}/#{name}"
 
       f_key = ar[:reciprocol]
       ds = a_model.user_visible.filter(f_key => obj)
       qp = a_controller.query_parameters
 
       ds = Query.filtered_dataset_from_query_params(a_model, ds, qp, @opts)
-      Paginator.render_json(a_controller, ds, @opts)
+      Paginator.render_json(a_controller, ds, a_path, @opts)
     end
 
     # Add a related object.

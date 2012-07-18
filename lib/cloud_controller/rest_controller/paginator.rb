@@ -11,6 +11,8 @@ module VCAP::CloudController::RestController
     #
     # @param [Sequel::Dataset] ds Dataset to paginate.
     #
+    # @param [String] path Path used to fetch the dataset.
+    #
     # @option opts [Integer] :page Page number to start at.  Defaults to 1.
     #
     # @option opts [Integer] :results_per_page Number of results to include
@@ -26,8 +28,8 @@ module VCAP::CloudController::RestController
     # expand inline in a relationship.
     #
     # @return [String] Json encoding pagination of the dataset.
-    def self.render_json(controller, ds, opts)
-      self.new(controller, ds, opts).render_json
+    def self.render_json(controller, ds, path, opts)
+      self.new(controller, ds, path, opts).render_json
     end
 
     # Create a paginator.
@@ -36,6 +38,8 @@ module VCAP::CloudController::RestController
     # dataset being paginated.
     #
     # @param [Sequel::Dataset] ds Dataset to paginate.
+    #
+    # @param [String] path Path used to fetch the dataset.
     #
     # @option opts [Integer] :page Page number to start at.  Defaults to 1.
     #
@@ -50,12 +54,13 @@ module VCAP::CloudController::RestController
     #
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
-    def initialize(controller, ds, opts)
+    def initialize(controller, ds, path, opts)
       page       = opts[:page] || 1
       page_size  = opts[:results_per_page] || 50
       @paginated = ds.paginate(page, page_size)
 
       @controller = controller
+      @path = path
       @opts = opts
     end
 
@@ -91,7 +96,7 @@ module VCAP::CloudController::RestController
     end
 
     def url(page)
-      res = "#{@controller.path}?"
+      res = "#{@path}?"
       res += "q=#{@opts[:q]}&" if @opts[:q]
       res += "page=#{page}&results-per-page=#{@paginated.page_size}"
     end

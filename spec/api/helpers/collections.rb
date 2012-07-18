@@ -332,8 +332,7 @@ module VCAP::CloudController::ApiSpecHelper
                   it "should return next_url" do
                     decoded_response.should have_key("next_url")
                     next_url = decoded_response["next_url"]
-                    uri = @uri.gsub("?", "\\?")
-                    next_url.should match /#{uri}&page=2&results-per-page=50/
+                    next_url.should match /#{@uri}\?page=2&results-per-page=50/
                   end
 
                   it "should return resources => []" do
