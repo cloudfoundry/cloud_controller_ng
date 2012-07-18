@@ -10,6 +10,7 @@ describe VCAP::CloudController::ServiceInstance do
     :basic_attributes     => [:name, :credentials, :vendor_data],
     :required_attributes  => [:name, :credentials, :space_guid, :service_plan_guid],
     :unique_attributes    => [:space_guid, :name],
+    :queryable_attributes => :name,
     :one_to_many_collection_ids => {
       :service_bindings => lambda { |service_instance|
         make_service_binding_for_service_instance(service_instance)

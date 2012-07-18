@@ -10,6 +10,7 @@ describe VCAP::CloudController::Space do
     :basic_attributes    => [:name, :organization_guid],
     :required_attributes => [:name, :organization_guid],
     :unique_attributes   => [:name, :organization_guid],
+    :queryable_attributes => :name,
     :many_to_many_collection_ids => {
       :developers => lambda { |space| make_user_for_space(space) },
       :managers   => lambda { |space| make_user_for_space(space) },

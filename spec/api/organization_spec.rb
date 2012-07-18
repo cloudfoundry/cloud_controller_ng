@@ -11,6 +11,7 @@ describe VCAP::CloudController::Organization do
     :basic_attributes    => :name,
     :required_attributes => :name,
     :unique_attributes   => :name,
+    :queryable_attributes => :name,
     :many_to_many_collection_ids => {
       :users    => lambda { |org| VCAP::CloudController::Models::User.make },
       :managers => lambda { |org| VCAP::CloudController::Models::User.make },

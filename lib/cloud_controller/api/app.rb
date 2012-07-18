@@ -26,7 +26,7 @@ module VCAP::CloudController
       to_many    :service_bindings,    :exclude_in => :create
     end
 
-    query_parameters :space_guid, :organization_guid, :framework_guid, :runtime_guid
+    query_parameters :name, :space_guid, :organization_guid, :framework_guid, :runtime_guid
 
     def create_quota_token_request(obj)
       ret = quota_token_request("post", obj)

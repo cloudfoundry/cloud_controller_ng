@@ -16,7 +16,7 @@ describe VCAP::CloudController::App do
     :basic_attributes    => [:name, :space_guid, :runtime_guid, :framework_guid],
     :required_attributes => [:name, :space_guid, :runtime_guid, :framework_guid],
     :unique_attributes   => [:name, :space_guid],
-
+    :queryable_attributes => :name,
     :many_to_one_collection_ids => {
       :space      => lambda { |app| VCAP::CloudController::Models::Space.make  },
       :framework  => lambda { |app| VCAP::CloudController::Models::Framework.make },
