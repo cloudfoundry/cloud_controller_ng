@@ -3,6 +3,8 @@
 module VCAP::CloudController::Models
   class Service < Sequel::Model
     one_to_many :service_plans
+    one_to_many :service_instances
+    many_to_many :service_bindings, :join_table => :service_instances, :right_key => :id, :right_primary_key => :service_instance_id
 
     default_order_by  :label
 

@@ -12,7 +12,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :credentials,          Hash
       attribute :binding_options,      Hash, :default => {}
-      attribute :vendor_data,          Hash, :default => {}
+      attribute :gateway_data,         Hash, :default => {}
       to_one    :app
       to_one    :service_instance
     end
