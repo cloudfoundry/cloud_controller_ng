@@ -6,6 +6,7 @@ module VCAP::CloudController::Models
 
     many_to_one :service_plan
     many_to_one :space
+    many_to_one :service
     one_to_many :service_bindings, :before_add => :validate_service_binding
 
     default_order_by  :id
