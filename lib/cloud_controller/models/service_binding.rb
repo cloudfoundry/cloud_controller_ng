@@ -42,5 +42,16 @@ module VCAP::CloudController::Models
       user_visibility_filter_with_admin_override(
         :service_instance => ServiceInstance.user_visible)
     end
+
+    def credentials=(val)
+      val = Yajl::Encoder.encode(val)
+      super(val)
+    end
+
+    def credentials
+      val = super
+      val = Yajl::Parser.parse(val) if val
+      val
+    end
   end
 end

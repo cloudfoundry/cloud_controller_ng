@@ -134,9 +134,12 @@ module VCAP::CloudController
           else
             # TODO: the credentials should not be here.  Remove when we have full
             # service binding support
-            binding_req = Yajl::Encoder.encode(:app_guid => app.guid,
-                                               :service_instance_guid => svc_instance.guid,
-                                               :credentials => {})
+            req_hash = {
+              :app_guid => app.guid,
+              :service_instance_guid => svc_instance.guid
+            }
+            req_hash[:credentials] = hash["credentials"] if hash["credentials"]
+            binding_req = Yajl::Encoder.encode(req_hash)
             (_, _, binding_json) = VCAP::CloudController::ServiceBinding.new(logger, binding_req).dispatch(:create)
             binding_resp = Yajl::Parser.parse(binding_json)
             binding_resp["metadata"]["guid"]

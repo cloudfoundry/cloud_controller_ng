@@ -26,8 +26,8 @@ module VCAP::CloudController::RestController
         klass = Class.new VCAP::RestAPI::Message do
           attrs.each do |name, attr|
             unless attr.exclude_in?(type)
-              if (type == :update || (type == :create && attr.default))
-                optional name, attr.schema
+              if (type == :update || (type == :create && attr.has_default?))
+                optional name, attr.schema, attr.default
               else
                 required name, attr.schema
               end
@@ -54,7 +54,7 @@ module VCAP::CloudController::RestController
               if type == :response
                 optional "#{name}_url", VCAP::RestAPI::Message::HTTPS_URL
               else
-                optional "#{name}_guid", [String]
+                optional "#{name.to_s.singularize}_guids", [String]
               end
             end
           end
