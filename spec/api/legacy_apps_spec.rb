@@ -249,7 +249,11 @@ describe VCAP::CloudController::LegacyApps do
 
         @num_bindings_before = @app_obj.service_bindings.count
 
-        req = Yajl::Encoder.encode(:services => service_instance_names)
+        req = Yajl::Encoder.encode(
+          :services => service_instance_names,
+          :credentials => { "foo" => "bar" }
+        )
+
         put "/apps/#{@app_obj.name}", req, headers_for(admin)
         @app_obj.refresh
         @bound_instances = @app_obj.service_bindings.map { |b| b.service_instance }

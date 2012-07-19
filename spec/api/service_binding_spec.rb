@@ -19,6 +19,8 @@ describe VCAP::CloudController::ServiceBinding do
       when :service_instance_guid
         service_instance = VCAP::CloudController::Models::ServiceInstance.make(:space => @space)
         service_instance.guid
+      when :credentials
+        { "foo" => "bar" }
       end
     },
     :create_attribute_reset => lambda { @space = nil }
@@ -44,7 +46,7 @@ describe VCAP::CloudController::ServiceBinding do
       Yajl::Encoder.encode(
         :app_guid => Models::App.make(:space => @space_a).guid,
         :service_instance_guid => Models::ServiceInstance.make(:space => @space_a).guid,
-        :credentials => {}
+        :credentials => { "foo" => "bar" }
       )
     end
 

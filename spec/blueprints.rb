@@ -10,11 +10,13 @@ Sham.define do
   token               { |index| "token-#{index}" }
   crypted_token       { |index| "cypted_token-#{index}" }
   provider            { |index| "provider-#{index}" }
-  url                 { |index| "http://foo.com/url-#{index}" }
+  url                 { |index| "https://foo.com/url-#{index}" }
   type                { |index| "type-#{index}" }
   description         { |index| "desc-#{index}" }
   version             { |index| "version-#{index}" }
-  service_credentials { |index| "service-creds-#{index}" }
+  service_credentials { |index|
+    { "creds-key-#{index}" => "creds-val-#{index}" }
+  }
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }

@@ -45,6 +45,12 @@ module VCAP::CloudController::Models
       super(val)
     end
 
+    # def environment_json
+    #   val = super
+    #   val = Yajl::Parser.parse(val) if val
+    #   val
+    # end
+
     def validate_environment
       return if environment_json.nil?
       h = Yajl::Parser.parse(environment_json)
