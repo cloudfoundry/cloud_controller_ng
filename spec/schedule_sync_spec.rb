@@ -4,7 +4,7 @@ require File.expand_path("../spec_helper", __FILE__)
 require "eventmachine"
 require "eventmachine/schedule_sync"
 
-describe "EventMachine#schdule_sync" do
+describe "EventMachine#schedule_sync" do
 
   def with_em_and_thread(&blk)
     Thread.abort_on_exception = true
