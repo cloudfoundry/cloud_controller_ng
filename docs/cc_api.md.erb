@@ -34,6 +34,7 @@
 
       fields.each do |name, field|
         schema_doc = VCAP::RestAPI::Message.schema_doc(field.schema)
+        schema_doc.gsub!("\n", "") if schema_doc
 
         doc_str = "| %-#{name_width}s |"
         doc_str.concat(" %-8s |") if opts[:include_optional]

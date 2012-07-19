@@ -17,7 +17,7 @@ describe VCAP::CloudController::LegacyService do
       let(:foo_bar_offering) do
         VCAP::Services::Api::ServiceOfferingRequest.new(
           :label => "foobar-2.2",
-          :url   => "http://www.google.com",
+          :url   => "https://www.google.com",
           :description => "the foobar svc")
       end
 
@@ -106,7 +106,8 @@ describe VCAP::CloudController::LegacyService do
           :tier => "free",
           :vendor => "postgres",
           :version => "9.0",
-          :name => "instance_name"
+          :name => "instance_name",
+          :credentials => { "foo" => "bar" }
         }
       end
 
@@ -215,4 +216,3 @@ describe VCAP::CloudController::LegacyService do
     end
   end
 end
-

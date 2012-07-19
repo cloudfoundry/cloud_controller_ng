@@ -5,30 +5,39 @@ require "rfc822"
 
 module VCAP::RestAPI
   class Message < JsonMessage
-    URL       = URI::regexp(%w(http https))
-    HTTPS_URL = URI::regexp("https")
-    EMAIL     = RFC822::EMAIL_REGEXP_WHOLE
-    Boolean   = Symbol
 
-    def self.register_type(schema, doc_str)
-      @doc_overrides ||= {}
-      @doc_overrides[schema.to_s] = doc_str
+    def self.readable_schema(schema, description)
+      # The schema validator used by JsonMessage calls `inspect` to get a
+      # description of the schema. We patch the `inspect` method here so that
+      # it can generate the readable documentation for us in the `schema_doc`
+      # method.
+      def schema.inspect
+        description
+      end
+
+      schema
     end
 
     def self.schema_doc(schema)
-      str = schema.to_s
-      # we do a loop in case of nested attributes,
-      # i.e. a regstisterd override inside another type
-      @doc_overrides.each do |k, v|
-        str.sub!(k, v)
-      end
-      str
+      schema.deparse
     end
 
-    register_type(HTTPS_URL, "String /HTTPS_URL_REGEX/")
-    register_type(URL, "String /URL_REGEX/")
-    register_type(EMAIL, "String /EMAIL_REGEX/")
-    register_type(Boolean, "Boolean")
+    unless const_defined?(:URL)
+      URL = self.readable_schema(URI::regexp(%w(http https)),
+                                 "String /URL_REGEX/")
+    end
+
+    unless const_defined?(:HTTPS_URL)
+      HTTPS_URL = self.readable_schema(URI::regexp("https"),
+                                       "String /HTTPS_URL_REGEX/")
+    end
+
+    unless const_defined?(:EMAIL)
+      EMAIL     = self.readable_schema(RFC822::EMAIL_REGEXP_WHOLE,
+                                       "String /EMAIL_REGEX/")
+    end
+
+    Boolean   = Symbol
   end
 
   class MetadataMessage < Message
