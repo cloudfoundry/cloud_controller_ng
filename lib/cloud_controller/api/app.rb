@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     define_attributes do
       attribute  :name,                String
-      attribute  :production,          Message::Boolean
+      attribute  :production,          Message::Boolean,    :default => false
       to_one     :space
       to_one     :runtime
       to_one     :framework

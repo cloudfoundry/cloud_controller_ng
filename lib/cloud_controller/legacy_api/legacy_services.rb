@@ -47,9 +47,13 @@ module VCAP::CloudController
         :name => legacy_attrs["name"],
         :space_guid => default_space.guid,
         :service_plan_guid => plan.guid,
-        # FIXME: these should be set at the next level and come from the svc gw
-        :credentials => {}
+
       }
+
+      # FIXME: these should be set at the next level and come from the svc gw
+      if legacy_attrs["credentials"]
+        attrs[:credentials] = legacy_attrs["credentials"]
+      end
 
       req = Yajl::Encoder.encode(attrs)
       svc_api = VCAP::CloudController::ServiceInstance.new(logger, req)
