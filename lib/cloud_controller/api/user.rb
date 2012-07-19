@@ -7,7 +7,7 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :guid, :exclude_in => :update
+      attribute :guid, String
       to_many   :spaces
       to_many   :organizations
       to_many   :managed_organizations
@@ -15,8 +15,8 @@ module VCAP::CloudController
       to_many   :audited_organizations
       to_many   :managed_spaces
       to_many   :audited_spaces
-      attribute :admin, Message::Boolean
-      to_one    :default_space
+      attribute :admin, Message::Boolean, :default => false
+      to_one    :default_space, :optional_in => [:create]
     end
 
     query_parameters :space_guid, :organization_guid,
