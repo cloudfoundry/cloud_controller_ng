@@ -17,3 +17,8 @@ component.  Once that is done, the history for cloud_controller_ng repo will
 get picked up and moved to a branch on a refactored Cloud Controller repo.
 This will let us keep the history for the old and new Cloud Controller in a
 single repo.
+
+## File a Bug
+
+To file a bug against Cloud Foundry Open Source and its components, sign up
+and use our bug tracking system: [http://cloudfoundry.atlassian.net](http://cloudfoundry.atlassian.net)
