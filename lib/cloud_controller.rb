@@ -117,3 +117,4 @@ require "cloud_controller/legacy_api/legacy_apps"
 require "cloud_controller/legacy_api/legacy_services"
 
 require "cloud_controller/resource_pool/resource_pool"
+require "cloud_controller/resource_pool/filesystem_pool"
