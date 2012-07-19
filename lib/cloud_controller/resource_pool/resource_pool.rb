@@ -73,11 +73,6 @@ class VCAP::CloudController::ResourcePool
       File.file?(path) && !stat.symlink? && stat.size < maximum_size
     end
 
-    # Returns a path for the specified resource.
-    def path_from_sha1(sha1)
-      raise NotImplementedError, "Implemented in subclasses. See filesystem_pool for example."
-    end
-
     # Called after we sanity-check the input.
     # Create a new path on disk containing the resource described by +descriptor+
     def overwrite_destination_with!(descriptor, destination)
