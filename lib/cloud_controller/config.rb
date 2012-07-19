@@ -78,5 +78,6 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::MessageBus.configure(config)
     VCAP::CloudController::RestController::QuotaManager.configure(config)
     VCAP::CloudController::Models::AccountCapacity.configure(config)
+    VCAP::CloudController::ResourcePool.configure(config)
   end
 end
