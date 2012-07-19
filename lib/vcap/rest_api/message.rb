@@ -12,11 +12,11 @@ module VCAP::RestAPI
 
     def self.register_type(schema, doc_str)
       @doc_overrides ||= {}
-      @doc_overrides[schema.to_s] = doc_str
+      @doc_overrides[schema.inspect] = doc_str
     end
 
     def self.schema_doc(schema)
-      str = schema.to_s
+      str = schema.deparse
       # we do a loop in case of nested attributes,
       # i.e. a regstisterd override inside another type
       @doc_overrides.each do |k, v|

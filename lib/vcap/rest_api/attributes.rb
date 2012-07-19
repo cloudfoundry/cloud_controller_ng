@@ -29,6 +29,7 @@ module VCAP::RestAPI
       @exclude_in  = Set.new(Array(opts[:exclude_in]))
       @optional_in = Set.new(Array(opts[:optional_in]))
       @default     = opts[:default]
+      @has_default = opts.has_key?(:default)
     end
 
     # Predicate to check if the attribute is excluded for a certain type of
@@ -49,6 +50,10 @@ module VCAP::RestAPI
     # @return [Boolean] True if the attribute is optional.
     def optional_in?(operation_type)
       @optional_in.include?(operation_type)
+    end
+
+    def has_default?
+      @has_default
     end
   end
 

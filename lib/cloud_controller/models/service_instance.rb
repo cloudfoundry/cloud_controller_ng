@@ -34,6 +34,17 @@ module VCAP::CloudController::Models
       end
     end
 
+    def credentials=(val)
+       val = Yajl::Encoder.encode(val)
+       super(val)
+    end
+
+    def credentials
+      val = super
+      val = Yajl::Parser.parse(val) if val
+      val
+    end
+
     def self.user_visibility_filter(user)
       user_visibility_filter_with_admin_override(
         :space => user.spaces_dataset)
