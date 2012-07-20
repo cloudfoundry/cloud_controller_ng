@@ -18,7 +18,10 @@ module VCAP::CloudController
     end
 
     def enumerate
-      resp = default_space.service_instances.map do |svc_instance|
+      # FIXME: a JOIN might be better
+      resp = default_space.service_instances.select { |instance|
+        instance.service.provider == "core"
+      }.map do |svc_instance|
         legacy_service_encoding(svc_instance)
       end
 

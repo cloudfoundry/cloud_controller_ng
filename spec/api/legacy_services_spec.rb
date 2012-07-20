@@ -142,9 +142,15 @@ describe VCAP::CloudController::LegacyService do
 
     describe "GET /services" do
       before do
-        @services = []
-        7.times do
-          @services << Models::ServiceInstance.make(:space => user.default_space)
+        core_service = Models::Service.make(:provider => "core")
+        @core = 3.times.map do
+          Models::ServiceInstance.make(
+            :space => user.default_space,
+            :service => core_service,
+          )
+        end
+        2.times do
+          Models::ServiceInstance.make(:space => user.default_space)
         end
 
         3.times do
@@ -164,12 +170,12 @@ describe VCAP::CloudController::LegacyService do
       end
 
       it "should only return services for the default app space" do
-        decoded_response.length.should == 7
+        decoded_response.length.should == 3
       end
 
       it "should return service names" do
         names = decoded_response.map { |a| a["name"] }.sort!
-        expected_names = @services.map { |a| a.name }.sort!
+        expected_names = @core.map { |a| a.name }.sort!
         names.should == expected_names
       end
     end
