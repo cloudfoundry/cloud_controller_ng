@@ -74,7 +74,6 @@ describe VCAP::CloudController::LegacyService do
           :provider => "core",
           :url   => "http://localhost:56789",
         )
-        svc1.save
         svc1.should be_valid
 
         svc2 = Models::Service.make(
@@ -82,7 +81,6 @@ describe VCAP::CloudController::LegacyService do
           :provider => "test",
           :url      => "http://localhost:56789",
         )
-        svc2.save
         svc2.should be_valid
 
         cfg1 = Models::ServiceInstance.make(
@@ -90,7 +88,6 @@ describe VCAP::CloudController::LegacyService do
           :name => "bar1",
           :service => svc1
         )
-        cfg1.save
         cfg1.should be_valid
 
         cfg2 = Models::ServiceInstance.make(
@@ -98,27 +95,22 @@ describe VCAP::CloudController::LegacyService do
           :name => "bar2",
           :service => svc2
         )
-        cfg2.save
         cfg2.should be_valid
 
         bdg1 = Models::ServiceBinding.make(
           :gateway_name  => "bind1",
           :service_instance  => cfg1,
           :configuration   => {},
-          :credentials     => {},
           :binding_options => []
         )
-        bdg1.save
         bdg1.should be_valid
 
         bdg2 = Models::ServiceBinding.make(
           :gateway_name  => "bind2",
           :service_instance  => cfg2,
           :configuration   => {},
-          :credentials     => {},
           :binding_options => []
         )
-        bdg2.save
         bdg2.should be_valid
 
         get "/services/v1/offerings/foo-bar/handles"
@@ -142,9 +134,15 @@ describe VCAP::CloudController::LegacyService do
 
     describe "GET /services" do
       before do
-        @services = []
-        7.times do
-          @services << Models::ServiceInstance.make(:space => user.default_space)
+        core_service = Models::Service.make(:provider => "core")
+        @core = 3.times.map do
+          Models::ServiceInstance.make(
+            :space => user.default_space,
+            :service => core_service,
+          )
+        end
+        2.times do
+          Models::ServiceInstance.make(:space => user.default_space)
         end
 
         3.times do
@@ -164,12 +162,12 @@ describe VCAP::CloudController::LegacyService do
       end
 
       it "should only return services for the default app space" do
-        decoded_response.length.should == 7
+        decoded_response.length.should == 3
       end
 
       it "should return service names" do
         names = decoded_response.map { |a| a["name"] }.sort!
-        expected_names = @services.map { |a| a.name }.sort!
+        expected_names = @core.map { |a| a.name }.sort!
         names.should == expected_names
       end
     end

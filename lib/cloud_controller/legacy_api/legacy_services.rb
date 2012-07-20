@@ -18,7 +18,12 @@ module VCAP::CloudController
     end
 
     def enumerate
-      resp = default_space.service_instances.map do |svc_instance|
+      resp = default_space.service_instances_dataset.
+        # I want LINQ-style auto join on FK for this:
+        # filter { service.provider == "core" }.
+        join(:services, :id => :service_id).filter(:provider => DEFAULT_PROVIDER).
+        select_all(:service_instances).
+        map do |svc_instance|
         legacy_service_encoding(svc_instance)
       end
 
