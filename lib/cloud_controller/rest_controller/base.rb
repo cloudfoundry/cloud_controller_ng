@@ -27,7 +27,8 @@ module VCAP::CloudController::RestController
     # @param [IO] body The request body.
     #
     # @param [Hash] query_params The http query parameters.
-    def initialize(logger, body = nil, query_params = {})
+    def initialize(config, logger, body = nil, query_params = {})
+      @config  = config
       @logger  = logger
       @body    = body
       @opts    = parse_params(query_params)
@@ -294,7 +295,7 @@ module VCAP::CloudController::RestController
       @logger
     end
 
-    attr_accessor :request_attrs
+    attr_reader :config, :request_attrs
 
     class << self
       include VCAP::CloudController

@@ -60,14 +60,14 @@ module VCAP::CloudController
       end
 
       req = Yajl::Encoder.encode(attrs)
-      svc_api = VCAP::CloudController::ServiceInstance.new(logger, req)
+      svc_api = VCAP::CloudController::ServiceInstance.new(config, logger, req)
       svc_api.dispatch(:create)
       HTTP::OK
     end
 
     def delete(name)
       service_instance = service_instance_from_name(name)
-      VCAP::CloudController::ServiceInstance.new(logger).dispatch(:delete, service_instance.guid)
+      VCAP::CloudController::ServiceInstance.new(config, logger).dispatch(:delete, service_instance.guid)
       HTTP::OK
     end
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
       VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
       legacy_req = Yajl::Encoder.encode(svc_attrs)
-      svc_api = VCAP::CloudController::Service.new(logger, legacy_req)
+      svc_api = VCAP::CloudController::Service.new(config, logger, legacy_req)
       (_, _, svc_resp) = svc_api.dispatch(:create)
       svc = Yajl::Parser.parse(svc_resp)
 
@@ -104,7 +104,7 @@ module VCAP::CloudController
       }
 
       legacy_req = Yajl::Encoder.encode(svc_plan_attrs)
-      svc_plan_api = VCAP::CloudController::ServicePlan.new(logger, legacy_req)
+      svc_plan_api = VCAP::CloudController::ServicePlan.new(config, logger, legacy_req)
       svc_plan_api.dispatch(:create)
 
       empty_json
