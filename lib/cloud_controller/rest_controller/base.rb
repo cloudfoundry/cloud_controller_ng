@@ -22,9 +22,6 @@ module VCAP::CloudController::RestController
 
     # Create a new rest api endpoint.
     #
-    # @param [Models::User] user The user peforming the rest request.  It may
-    # be nil.
-    #
     # @param [Steno::Logger] logger The logger to use during the request.
     #
     # @param [IO] body The request body.
@@ -395,9 +392,6 @@ module VCAP::CloudController::RestController
         k.new(self).instance_eval(&blk)
       end
 
-      # Start the DSL for defining attributes.  This is used inside
-      # the api controller classes.
-      #
       def translate_and_log_exception(logger, e)
         msg = ["exception not translated: #{e.class} - #{e.message}"]
         msg[0] = msg[0] + ":"
