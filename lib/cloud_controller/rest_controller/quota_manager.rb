@@ -21,6 +21,27 @@ module VCAP::CloudController::RestController
         MoneyMakerClient.configure(c)
       end
 
+      # Common managment of quota enforcement.
+      #
+      # @param [Hash] quota_request_body Hash of the request to send to the
+      # remote quota manager.  If nil, indicates that quota enformcement
+      # is not necessary.
+      #
+      # @param [Block] &blk The block to execute with quota enforcement.
+      #
+      # @return Results of calling the provided block.
+      def with_quota_enforcement(quota_request_body, &blk)
+        token = fetch_quota_token(quota_request_body)
+        ret = blk.call
+        token.commit
+        return ret
+      rescue VCAP::CloudController::Errors::QuotaDeclined => e
+        raise e
+      rescue Exception => e
+        token.abandon(e.message) unless token.nil?
+        raise e
+      end
+
       # Fetch a quota token. If the policy decision is denied,
       # an exception is raised.
       #

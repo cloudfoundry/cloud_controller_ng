@@ -80,27 +80,6 @@ module VCAP::CloudController::RestController
       raise MessageParseError.new(e)
     end
 
-    # Common managment of quota enforcement.
-    #
-    # @param [Hash] quota_request_body Hash of the request to send to the
-    # remote quota manager.  If nil, indicates that quota enformcement
-    # is not necessary.
-    #
-    # @param [Block] &blk The block to execute with quota enforcement.
-    #
-    # @return Results of calling the provided block.
-    def with_quota_enforcement(quota_request_body, &blk)
-      token = QuotaManager.fetch_quota_token(quota_request_body)
-      ret = blk.call
-      token.commit
-      return ret
-    rescue QuotaDeclined => e
-      raise e
-    rescue Exception => e
-      token.abandon(e.message) unless token.nil?
-      raise e
-    end
-
     # By default, operations do not require quota enformcement.
     # Endpoints are expected to override this method if they need
     # quota enforcement.
@@ -122,7 +101,7 @@ module VCAP::CloudController::RestController
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user)
 
-        with_quota_enforcement(create_quota_token_request(obj)) do
+       QuotaManager.with_quota_enforcement(create_quota_token_request(obj)) do
           [HTTP::CREATED,
            { "Location" => "#{self.class.path}/#{obj.guid}" },
           ObjectSerialization.render_json(self.class, obj, @opts)]
@@ -149,7 +128,7 @@ module VCAP::CloudController::RestController
       raise InvalidRequest unless request_attrs
       logger.debug2 "#{log_prefix} update: #{id} #{request_attrs}"
 
-      with_quota_enforcement(update_quota_token_request(obj)) do
+      QuotaManager.with_quota_enforcement(update_quota_token_request(obj)) do
         obj.update_from_hash(request_attrs)
         obj.save
         [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
@@ -163,7 +142,7 @@ module VCAP::CloudController::RestController
       logger.debug2 "#{log_prefix} update: #{id}"
       obj = find_id_and_validate_access(:delete, id)
 
-      with_quota_enforcement(delete_quota_token_request(obj)) do
+      QuotaManager.with_quota_enforcement(delete_quota_token_request(obj)) do
         obj.destroy
         [HTTP::NO_CONTENT, nil]
       end
