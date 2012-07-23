@@ -6,36 +6,36 @@ require "rfc822"
 module VCAP::RestAPI
   class Message < JsonMessage
 
-    def self.readable_schema(schema, description)
-      # The schema validator used by JsonMessage calls `inspect` to get a
-      # description of the schema. We patch the `inspect` method here so that
-      # it can generate the readable documentation for us in the `schema_doc`
-      # method.
-      def schema.inspect
-        description
+    # The schema validator used by class `JsonMessage` calls the `inspect`
+    # method on the schema to get a description of the schema. We wrap the
+    # schema object so that the `inspect` method generates a readable
+    # description for us through `VCAP::RestAPI::Message#schema_doc` method.
+    class ReadableSchema
+      def initialize(schema, description = nil)
+        @schema = schema
+        @description = description
       end
 
-      schema
+      def inspect
+        return @description if @description
+        @schema.inspect
+      end
+
+      def method_missing(symbol, *args, &block)
+        @schema.send(symbol, *args, &block)
+      end
     end
 
     def self.schema_doc(schema)
       schema.deparse
     end
 
-    unless const_defined?(:URL)
-      URL = self.readable_schema(URI::regexp(%w(http https)),
-                                 "String /URL_REGEX/")
-    end
-
-    unless const_defined?(:HTTPS_URL)
-      HTTPS_URL = self.readable_schema(URI::regexp("https"),
-                                       "String /HTTPS_URL_REGEX/")
-    end
-
-    unless const_defined?(:EMAIL)
-      EMAIL     = self.readable_schema(RFC822::EMAIL_REGEXP_WHOLE,
-                                       "String /EMAIL_REGEX/")
-    end
+    URL       = ReadableSchema.new(URI::regexp(%w(http https)),
+                                   "String /URL_REGEX/")
+    HTTPS_URL = ReadableSchema.new(URI::regexp("https"),
+                                   "String /HTTPS_URL_REGEX/")
+    EMAIL     = ReadableSchema.new(RFC822::EMAIL_REGEXP_WHOLE,
+                                   "String /EMAIL_REGEX/")
 
     # The block will be evaluated in the context of the schema validator used
     # by class `JsonMessage` viz. `Membrane`.
