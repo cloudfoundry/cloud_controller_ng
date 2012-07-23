@@ -25,7 +25,7 @@ module VCAP::CloudController
     query_parameters :name, :organization_guid, :developer_guid, :app_guid
 
     def create_quota_token_request(obj)
-      ret = quota_token_request("create", obj)
+      ret = quota_token_request("post", obj)
       ret[:body][:audit_data] = obj.to_hash
       ret
     end
@@ -55,7 +55,7 @@ module VCAP::CloudController
       {
         :path => obj.organization_guid,
         :body => {
-          :op           => "post",
+          :op           => op,
           :user_id      => user.guid,
           :object       => "space",
           :object_id    => obj.guid,
