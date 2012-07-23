@@ -37,7 +37,9 @@ module VCAP::RestAPI
                                        "String /EMAIL_REGEX/")
     end
 
-    Boolean   = Symbol
+    # The block will be evaluated in the context of the schema validator used
+    # by class `JsonMessage` viz. `Membrane`.
+    Boolean   = lambda { |*_| bool }
   end
 
   class MetadataMessage < Message
