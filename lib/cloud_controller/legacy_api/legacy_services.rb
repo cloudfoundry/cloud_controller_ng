@@ -18,7 +18,12 @@ module VCAP::CloudController
     end
 
     def enumerate
-      resp = default_space.service_instances.map do |svc_instance|
+      resp = default_space.service_instances_dataset.
+        # I want LINQ-style auto join on FK for this:
+        # filter { service.provider == "core" }.
+        join(:services, :id => :service_id).filter(:provider => DEFAULT_PROVIDER).
+        select_all(:service_instances).
+        map do |svc_instance|
         legacy_service_encoding(svc_instance)
       end
 
@@ -107,6 +112,29 @@ module VCAP::CloudController
       raise InvalidRequest
     end
 
+    def list_handles(label, provider)
+      service = Models::Service.find(:label => label,
+                                     :provider => provider)
+      raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
+      logger.debug("Listing handles for service: #{service.inspect}")
+      handles = []
+      handles += service.service_instances.map do |si|
+        {
+          :service_id => si.gateway_name,
+          :credentials => si.credentials,
+          :configuration => si.gateway_data,
+        }
+      end
+      handles += service.service_bindings.map do |sb|
+        {
+          :service_id => sb.gateway_name,
+          :credentials => sb.credentials,
+          :configuration => sb.configuration,
+        }
+      end
+      Yajl::Encoder.encode({:handles => handles})
+    end
+
     def validate_access(label, provider = DEFAULT_PROVIDER)
       svc_auth_token = Models::ServiceAuthToken.find(:label => label,
                                                      :provider => provider)
@@ -186,6 +214,14 @@ module VCAP::CloudController
 
       controller.before "/services/v1/*" do
         @service_auth_token = env[SERVICE_TOKEN_KEY]
+      end
+
+      controller.get "/services/v1/offerings/:label/handles" do
+        LegacyService.new(@config, logger, request, @service_auth_token).list_handles(params[:label], DEFAULT_PROVIDER)
+      end
+
+      controller.get "/services/v1/offerings/:label/:provider/handles" do
+        LegacyService.new(@config, logger, request, @service_auth_token).list_handles(params[:label], params[:provider])
       end
 
       controller.post "/services/v1/offerings" do
