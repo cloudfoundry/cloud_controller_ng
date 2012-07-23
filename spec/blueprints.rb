@@ -65,6 +65,7 @@ module VCAP::CloudController::Models
     credentials       { Sham.service_credentials }
     space             { Space.make }
     service_plan      { ServicePlan.make }
+    service           { Service.make }
   end
 
   Runtime.blueprint do
