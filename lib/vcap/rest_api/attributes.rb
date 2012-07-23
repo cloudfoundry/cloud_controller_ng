@@ -58,7 +58,7 @@ module VCAP::RestAPI
   end
 
   class SchemaAttribute < NamedAttribute
-    attr_reader :schema
+    attr_reader :schema, :block
 
     # A SchemaAttribute has an associated Membrane schema.
     #
@@ -77,7 +77,13 @@ module VCAP::RestAPI
     # @option opts [Object] :default default value for the attribute if it
     # isn't supplied.
     def initialize(name, schema, opts = {})
-      @schema = schema
+      if schema.respond_to?(:call)
+        @block = schema
+        @schema = nil
+      else
+        @schema = schema
+        @block = nil
+      end
       super(name, opts)
     end
   end

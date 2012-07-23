@@ -27,9 +27,9 @@ module VCAP::CloudController::RestController
           attrs.each do |name, attr|
             unless attr.exclude_in?(type)
               if (type == :update || (type == :create && attr.has_default?))
-                optional name, attr.schema, attr.default
+                optional name, attr.schema, attr.default, &attr.block
               else
-                required name, attr.schema
+                required name, attr.schema, &attr.block
               end
             end
           end
