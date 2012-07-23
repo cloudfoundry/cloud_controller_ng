@@ -7,7 +7,7 @@ describe VCAP::CloudController::ServiceInstance do
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/service_instances",
     :model                => VCAP::CloudController::Models::ServiceInstance,
-    :basic_attributes     => [:name, :credentials, :vendor_data],
+    :basic_attributes     => [:name, :credentials, :gateway_data],
     :required_attributes  => [:name, :credentials, :space_guid, :service_plan_guid],
     :unique_attributes    => [:space_guid, :name],
     :create_attribute     => lambda { |name|
