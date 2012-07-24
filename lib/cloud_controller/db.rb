@@ -8,7 +8,7 @@ module VCAP::CloudController
     #
     # @option opts [String]  :database Database connection string
     #
-    # @option opts [Symbol]  :log_level VCAP::Logger log level
+    # @option opts [Symbol]  :log_level Steno log level
     #
     # @option opts  [Integer] :max_connections The maximum number of
     # connections the connection pool will open (default 4)

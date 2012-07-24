@@ -25,6 +25,13 @@ GEM
     em-socksify (0.1.0)
       eventmachine
     eventmachine (0.12.11.cloudfoundry.3)
+    grape (0.2.1)
+      hashie (~> 1.2)
+      multi_json
+      multi_xml
+      rack
+      rack-mount
+    hashie (1.2.0)
     http_parser.rb (0.5.3)
     httpclient (2.2.5)
     interact (0.4.3)
@@ -35,6 +42,7 @@ GEM
     membrane (0.0.2)
     mime-types (1.18)
     multi_json (1.3.6)
+    multi_xml (0.5.1)
     nats (0.4.24)
       daemons (>= 1.1.5)
       eventmachine (>= 0.12.10)
@@ -43,6 +51,8 @@ GEM
     pg (0.13.2)
     posix-spawn (0.3.6)
     rack (1.4.1)
+    rack-mount (0.8.3)
+      rack (>= 1.0.0)
     rack-protection (1.2.0)
       rack
     rack-test (0.6.1)
@@ -79,6 +89,9 @@ GEM
       sinatra (~> 1.3.0)
       tilt (~> 1.3)
     sqlite3 (1.3.6)
+    steno (0.0.3)
+      grape
+      yajl-ruby
     thin (1.3.1)
       daemons (>= 1.0.9)
       eventmachine (>= 0.12.6)
@@ -120,6 +133,7 @@ DEPENDENCIES
   sinatra
   sinatra-contrib
   sqlite3
+  steno
   vcap-concurrency
   vcap_common (~> 2.0.2)
   vcap_logging

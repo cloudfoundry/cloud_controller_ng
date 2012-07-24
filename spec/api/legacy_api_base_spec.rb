@@ -2,7 +2,7 @@ require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::LegacyApiBase do
   let(:user) { Models::User.make(:admin => true, :active => true) }
-  let(:logger) { VCAP::Logging.logger("vcap_spec") }
+  let(:logger) { Steno.logger("vcap_spec") }
   let(:fake_req) { "" }
 
   describe "#default_space" do

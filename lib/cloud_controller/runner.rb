@@ -1,4 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+
+require "steno"
 require File.expand_path("../message_bus.rb", __FILE__)
 
 module VCAP::CloudController
@@ -25,7 +27,7 @@ module VCAP::CloudController
     end
 
     def logger
-      @logger ||= VCAP::Logging.logger("cc.runner")
+      @logger ||= Steno.logger("cc.runner")
     end
 
     def options_parser
@@ -75,12 +77,13 @@ module VCAP::CloudController
     end
 
     def setup_logging
-      VCAP::Logging.setup_from_config(@config[:logging])
+      config = Steno::Config.from_file(@config[:logging])
+      Steno.init(config)
     end
 
     def setup_db
       logger.info "db config #{@config[:db]}"
-      db_logger = VCAP::Logging.logger("cc.db")
+      db_logger = Steno.logger("cc.db")
       DB.connect(db_logger, @config[:db])
     end
 

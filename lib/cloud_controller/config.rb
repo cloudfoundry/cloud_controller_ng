@@ -30,9 +30,9 @@ class VCAP::CloudController::Config < VCAP::Config
       },
 
       :logging => {
-        :level              => String,      # debug, info, etc.
-        optional(:file)     => String,      # Log file to use
-        optional(:syslog)   => String,      # Name to associate with syslog messages (should start with 'vcap.')
+        :default_log_level              => String,      # debug, info, etc.
+        optional(:file)     => String,                  # Log file to use
+        optional(:syslog)   => String,                  # Name to associate with syslog messages (should start with 'vcap.')
       },
 
       :nats_uri              => String,     # NATS uri of the form nats://<user>:<pass>@<host>:<port>

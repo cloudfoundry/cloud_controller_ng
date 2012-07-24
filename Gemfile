@@ -14,6 +14,7 @@ gem "vcap_common",  "~> 2.0.2"
 gem "vcap_logging"
 gem "cf-uaa-client", "~> 0.2.0"
 gem "httpclient"
+gem "steno"
 
 group :production do
   gem "pg"

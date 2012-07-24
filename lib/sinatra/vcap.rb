@@ -3,6 +3,8 @@
 require "vcap/rest_api"
 require "sinatra/consumes"
 require "sinatra/reloader"
+require "securerandom"
+require "steno"
 
 module Sinatra
   module VCAP
@@ -63,7 +65,7 @@ module Sinatra
     # we are not able to do this from inside self.registered as sinatra
     # doesn't honor the settings we make there.
     #
-    # @option opts [String] :logger_name Name of the VCAP logger to use.
+    # @option opts [String] :logger_name Name of the Steno logger to use.
     # Defaults to vcap.rest_api
     #
     # @option opts [String] :reload_path If specified and the app is running in
@@ -91,7 +93,15 @@ module Sinatra
         # TODO: wrap the logger with a sesion logger like we
         # do in caldecott
         logger_name = opts[:logger_name] || "vcap.api"
-        env["rack.logger"] = ::VCAP::Logging.logger(logger_name)
+        env["rack.logger"] = Steno.logger(logger_name)
+
+        @request_guid = SecureRandom.uuid
+        logger.info("X-VCAP-Request-ID: #{@request_guid}")
+      end
+
+      after do
+        headers["X-VCAP-Request-ID"] = @request_guid
+        nil
       end
     end
   end

@@ -9,7 +9,6 @@ require "yajl"
 require "eventmachine/schedule_sync"
 
 require "vcap/common"
-require "vcap/logging"
 require "uaa/token_coder"
 
 require "sinatra/vcap"

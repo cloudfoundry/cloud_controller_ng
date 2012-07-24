@@ -25,7 +25,7 @@ module VCAP::CloudController::RestController
     # @param [Models::User] user The user peforming the rest request.  It may
     # be nil.
     #
-    # @param [VCAP::Logger] logger The logger to use during the request.
+    # @param [Steno::Logger] logger The logger to use during the request.
     #
     # @param [IO] body The request body.
     #
@@ -313,7 +313,7 @@ module VCAP::CloudController::RestController
 
     # Our logger.
     #
-    # @return [VCAP::Logger] The logger.
+    # @return [Steno::Logger] The logger.
     def logger
       @logger
     end
