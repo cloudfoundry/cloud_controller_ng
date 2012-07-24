@@ -18,7 +18,7 @@ info:
 # allow_debug: false
 
 logging:
-  default_log_level: debug2
+  level: debug2
 
 db:
   database: "sqlite:///tmp/cloud_controller.db"

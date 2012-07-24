@@ -94,9 +94,8 @@ module Sinatra
         # do in caldecott
         logger_name = opts[:logger_name] || "vcap.api"
         env["rack.logger"] = Steno.logger(logger_name)
-
         @request_guid = SecureRandom.uuid
-        logger.info("X-VCAP-Request-ID: #{@request_guid}")
+        Steno.config.context.data["request_guid"] = @request_guid
       end
 
       after do

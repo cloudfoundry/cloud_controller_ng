@@ -11,10 +11,9 @@ gem "yajl-ruby"
 gem 'vcap-concurrency'
 gem "membrane", "~> 0.0.2"
 gem "vcap_common",  "~> 2.0.2"
-gem "vcap_logging"
 gem "cf-uaa-client", "~> 0.2.0"
 gem "httpclient"
-gem "steno"
+gem "steno", "~> 0.0.5"
 
 group :production do
   gem "pg"
