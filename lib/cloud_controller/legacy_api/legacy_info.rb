@@ -94,11 +94,11 @@ module VCAP::CloudController
 
     def self.setup_routes
       controller.get "/info" do
-        LegacyInfo.new(@config, logger, request).info
+        LegacyInfo.new(@config, logger).info
       end
 
       controller.get "/info/services" do
-        LegacyInfo.new(@config, logger, request).service_info
+        LegacyInfo.new(@config, logger).service_info
       end
     end
 

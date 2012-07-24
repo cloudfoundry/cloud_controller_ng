@@ -90,7 +90,7 @@ module VCAP::CloudController::RestController
 
     # Create operation
     def create
-      json_msg = self.class::CreateMessage.decode(@body)
+      json_msg = self.class::CreateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
 
@@ -121,7 +121,7 @@ module VCAP::CloudController::RestController
     # @param [String] id The GUID of the object to update.
     def update(id)
       obj = find_id_and_validate_access(:update, id)
-      json_msg = self.class::UpdateMessage.decode(@body)
+      json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
       logger.debug2 "#{log_prefix} update: #{id} #{request_attrs}"
@@ -295,7 +295,7 @@ module VCAP::CloudController::RestController
       @logger
     end
 
-    attr_reader :config, :request_attrs
+    attr_reader :config, :body, :request_attrs
 
     class << self
       include VCAP::CloudController

@@ -1,12 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController
-  class Info
-    def initialize(config, logger)
-      @config = config
-      @logger = logger
-    end
-
+  class Info < RestController::Base
     def read
       info = {
         :name        => @config[:info][:name],
@@ -25,11 +20,7 @@ module VCAP::CloudController
       Yajl::Encoder.encode(info)
     end
 
-    def user
-      VCAP::CloudController::SecurityContext.current_user
-    end
-
-    VCAP::CloudController::Controller.get "/v2/info" do
+    controller.get "/v2/info" do
       Info.new(@config, logger).read
     end
   end
