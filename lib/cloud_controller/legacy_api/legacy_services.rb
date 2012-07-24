@@ -12,9 +12,9 @@ module VCAP::CloudController
     LEGACY_API_USER_GUID = "legacy-api"
     LEGACY_PLAN_OVERIDE = "D100"
 
-    def initialize(config, logger, request, service_auth_token = nil)
+    def initialize(config, logger, body, service_auth_token = nil)
       @service_auth_token = service_auth_token
-      super(config, logger, request)
+      super(config, logger, body)
     end
 
     def enumerate
@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def create
-      legacy_attrs = Yajl::Parser.parse(request.body)
+      legacy_attrs = Yajl::Parser.parse(body)
       raise InvalidRequest unless legacy_attrs
 
       logger.debug("legacy service create #{legacy_attrs}")
@@ -72,7 +72,7 @@ module VCAP::CloudController
     end
 
     def create_offering
-      req = VCAP::Services::Api::ServiceOfferingRequest.decode(request.body)
+      req = VCAP::Services::Api::ServiceOfferingRequest.decode(body)
       logger.debug("Create service request: #{req.extract.inspect}")
 
       (label, version) = req.label.split("-")
@@ -201,15 +201,15 @@ module VCAP::CloudController
 
     def self.setup_routes
       controller.get "/services" do
-        LegacyService.new(@config, logger, request).enumerate
+        LegacyService.new(@config, logger, request.body).enumerate
       end
 
       controller.post "/services" do
-        LegacyService.new(@config, logger, request).create
+        LegacyService.new(@config, logger, request.body).create
       end
 
       controller.delete "/services/:name" do |name|
-        LegacyService.new(@config, logger, request).delete(name)
+        LegacyService.new(@config, logger, request.body).delete(name)
       end
 
       controller.before "/services/v1/*" do
@@ -217,23 +217,19 @@ module VCAP::CloudController
       end
 
       controller.get "/services/v1/offerings/:label/handles" do
-        LegacyService.new(@config, logger, request, @service_auth_token).list_handles(params[:label], DEFAULT_PROVIDER)
+        LegacyService.new(@config, logger, request.body, @service_auth_token).list_handles(params[:label], DEFAULT_PROVIDER)
       end
 
       controller.get "/services/v1/offerings/:label/:provider/handles" do
-        LegacyService.new(@config, logger, request, @service_auth_token).list_handles(params[:label], params[:provider])
+        LegacyService.new(@config, logger, request.body, @service_auth_token).list_handles(params[:label], params[:provider])
       end
 
       controller.post "/services/v1/offerings" do
-        LegacyService.new(@config, logger, request, @service_auth_token).create_offering
+        LegacyService.new(@config, logger, request.body, @service_auth_token).create_offering
       end
     end
 
-    def self.controller
-      VCAP::CloudController::Controller
-    end
-
     setup_routes
-    attr_accessor :request, :logger, :service_auth_token
+    attr_accessor :service_auth_token
   end
 end

@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     def create
       logger.debug "create app"
-      req = request_from_legacy_json(request.body)
+      req = request_from_legacy_json(body)
       VCAP::CloudController::App.new(config, logger, req).dispatch(:create)
       HTTP::OK
     end
@@ -40,7 +40,7 @@ module VCAP::CloudController
     def update(name)
       logger.debug "update app"
       app = app_from_name(name)
-      req = request_from_legacy_json(request.body, app)
+      req = request_from_legacy_json(body, app)
       VCAP::CloudController::App.new(config, logger, req).dispatch(:update, app.guid)
       app.refresh
       HTTP::OK
@@ -153,32 +153,28 @@ module VCAP::CloudController
 
     def self.setup_routes
       controller.get "/apps" do
-        LegacyApps.new(@config, logger, request).enumerate
+        LegacyApps.new(@config, logger, request.body).enumerate
       end
 
       controller.post "/apps" do
-        LegacyApps.new(@config, logger, request).create
+        LegacyApps.new(@config, logger, request.body).create
       end
 
       controller.get "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, request).read(name)
+        LegacyApps.new(@config, logger, request.body).read(name)
       end
 
       controller.put "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, request).update(name)
+        LegacyApps.new(@config, logger, request.body).update(name)
       end
 
       controller.delete "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, request).delete(name)
+        LegacyApps.new(@config, logger, request.body).delete(name)
       end
 
       controller.get "/apps/:name/crashes" do |name|
-        LegacyApps.new(@config, logger, request).crashes(name)
+        LegacyApps.new(@config, logger, request.body).crashes(name)
       end
-    end
-
-    def self.controller
-      VCAP::CloudController::Controller
     end
 
     setup_routes
