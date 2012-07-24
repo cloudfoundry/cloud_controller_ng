@@ -83,6 +83,10 @@ module VCAP::CloudController::ApiSpecHelper
                 metadata["url"].should == last_response.location
               end
 
+              it "should return the request guid in the header" do
+                last_response.headers["X-VCAP-Request-ID"].should_not be_nil
+              end
+
               it "should have created the object pointed to in the location header" do
                 obj_id = last_response.location.split("/").last
                 obj = opts[:model].find(:guid => obj_id)
@@ -148,6 +152,10 @@ module VCAP::CloudController::ApiSpecHelper
 
               it "should not return a location header" do
                 last_response.location.should be_nil
+              end
+
+              it "should return the request guid in the header" do
+                last_response.headers["X-VCAP-Request-ID"].should_not be_nil
               end
 
               if verb == :post

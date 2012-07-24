@@ -13,6 +13,9 @@
 # See spec/spec_helper.rb for the test initialization.
 #
 # TODO - Implement "Blob Store" subclass.
+
+require "steno"
+
 class VCAP::CloudController::ResourcePool
   class << self
     attr_accessor :minimum_size, :maximum_size
@@ -65,7 +68,7 @@ class VCAP::CloudController::ResourcePool
     private
 
     def logger
-      @logger ||= VCAP::Logging.logger("cc.resource_pool")
+      @logger ||= Steno.logger("cc.resource_pool")
     end
 
     def resource_allowed?(path)

@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "httpclient"
+require "steno"
 
 module VCAP::CloudController::RestController
   module QuotaManager
@@ -41,7 +42,7 @@ module VCAP::CloudController::RestController
       end
 
       def logger
-        @logger ||= VCAP::Logging.logger("cc.qm")
+        @logger ||= Steno.logger("cc.qm")
       end
     end
 

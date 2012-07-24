@@ -59,8 +59,9 @@ end
 
 FileUtils.mkdir_p artifacts_dir
 File.unlink(log_filename) if File.exists?(log_filename)
-VCAP::Logging.setup_from_config(:level => "debug2", :file => log_filename)
-db = VCAP::CloudController::DB.connect(VCAP::Logging.logger("cc.db"),
+Steno.init(Steno::Config.new(:default_log_level => "debug2",
+                             :file => log_filename))
+db = VCAP::CloudController::DB.connect(Steno.logger("cc.db"),
                                        :database  => "sqlite:///",
                                        :log_level => "debug2")
 validate_sqlite_version(db)
