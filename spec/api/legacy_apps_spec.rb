@@ -194,7 +194,7 @@ describe VCAP::CloudController::LegacyApps do
       it_behaves_like "a vcap rest error response", /runtime can not be found: cobol/
     end
 
-    describe "GET /apps/:invalid_name" do
+    describe "PUT /apps/:invalid_name" do
       before do
         put "/apps/name_does_not_exist", {}, headers_for(user)
       end
