@@ -90,8 +90,6 @@ module Sinatra
       end
 
       before do
-        # TODO: wrap the logger with a sesion logger like we
-        # do in caldecott
         logger_name = opts[:logger_name] || "vcap.api"
         env["rack.logger"] = Steno.logger(logger_name)
         @request_guid = SecureRandom.uuid
