@@ -60,7 +60,7 @@ end
 FileUtils.mkdir_p artifacts_dir
 File.unlink(log_filename) if File.exists?(log_filename)
 Steno.init(Steno::Config.new(:default_log_level => "debug2",
-                             :file => log_filename))
+                             :sinks => [Steno::Sink::IO.for_file(log_filename)]))
 db = VCAP::CloudController::DB.connect(Steno.logger("cc.db"),
                                        :database  => "sqlite:///",
                                        :log_level => "debug2")
