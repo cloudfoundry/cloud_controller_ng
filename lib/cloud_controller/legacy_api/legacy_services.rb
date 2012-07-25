@@ -139,6 +139,7 @@ module VCAP::CloudController
       svc_auth_token = Models::ServiceAuthToken.find(:label => label,
                                                      :provider => provider)
 
+      logger.debug("validate_access #{label} #{provider} #{service_auth_token} #{svc_auth_token.inspect}")
       unless (svc_auth_token &&
               svc_auth_token.token_matches?(service_auth_token))
         logger.warn("unauthorized service offering")
