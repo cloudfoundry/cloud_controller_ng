@@ -16,9 +16,13 @@ module VCAP::CloudController::Models
                       :binding_options, :gateway_data
 
     def validate
+      # we can't use validates_presence because it ends up using the
+      # credentials method below and looks at the hash, which can be empty..
+      # and that isn't the same thing as nil for us
+      errors.add(:credentials, :presence) if credentials.nil?
+
       validates_presence :app
       validates_presence :service_instance
-      validates_presence :credentials
       validates_unique [:app_id, :service_instance_id]
 
       # TODO: make this a standard validation

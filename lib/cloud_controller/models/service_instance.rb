@@ -20,8 +20,12 @@ module VCAP::CloudController::Models
     strip_attributes  :name
 
     def validate
+      # we can't use validates_presence because it ends up using the
+      # credentials method below and looks at the hash, which can be empty..
+      # and that isn't the same thing as nil for us
+      errors.add(:credentials, :presence) if credentials.nil?
+
       validates_presence :name
-      validates_presence :credentials
       validates_presence :space
       validates_presence :service_plan
       validates_unique   [:space_id, :name]
@@ -36,8 +40,8 @@ module VCAP::CloudController::Models
     end
 
     def credentials=(val)
-       val = Yajl::Encoder.encode(val)
-       super(val)
+      str = Yajl::Encoder.encode(val)
+      super(str)
     end
 
     def credentials
