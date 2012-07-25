@@ -3,7 +3,7 @@
 require File.expand_path("../../spec_helper", __FILE__)
 
 module VCAP::CloudController::ResourcePoolSpecHelper
-  shared_context "resource pool" do
+  shared_context "resource pool" do |klass = described_class|
     let(:tmpdir) { Dir.mktmpdir }
     let(:num_dirs) { 3 }
     let(:num_unique_allowed_files_per_dir) { 7 }
@@ -20,7 +20,7 @@ module VCAP::CloudController::ResourcePoolSpecHelper
 
     before(:all) do
       cfg = { :resource_pool => { :maximum_size => max_file_size }}
-      described_class.configure(cfg)
+      klass.configure(cfg)
 
       @descriptors = []
       num_dirs.times do
