@@ -24,6 +24,8 @@ module VCAP::CloudController
       setup_logging
       setup_db
       VCAP::CloudController::Config.configure(@config)
+
+      logger.info "running on #{ENV["VMC_APP_HOST"]}" if running_in_cf?
     end
 
     def logger
