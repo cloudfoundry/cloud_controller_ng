@@ -779,3 +779,21 @@ Working with Legacy VMC:
   curl -X PUT -v -H "Authorization:$AUTH_TOKEN" \
     -d "{\"default_space_guid\":\"$space_GUID\"}" \
     http://$CCNG_HOST/v2/users/$USER_GUID
+
+
+Adding service tokens:
+
+   curl -X POST -v -H "Content-Type: application/json" \
+     -H "Authorization: $AUTH_TOKEN"\
+     -d '{"label":"mysql", "provider":"core", "token":"3735928559"}' \
+     http://$CCNG_HOST/v2/service_auth_tokens
+
+   curl -X POST -v -H "Content-Type: application/json" \
+     -H "Authorization: $AUTH_TOKEN"\
+     -d '{"label":"mongodb", "provider":"core", "token":"3735928559"}' \
+     http://$CCNG_HOST/v2/service_auth_tokens
+
+   curl -X POST -v -H "Content-Type: application/json" \
+     -H "Authorization: $AUTH_TOKEN"\
+     -d '{"label":"redis", "provider":"core", "token":"3735928559"}' \
+     http://$CCNG_HOST/v2/service_auth_tokens
