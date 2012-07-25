@@ -6,6 +6,8 @@ module VCAP::CloudController::Models
     one_to_many :service_instances
     many_to_many :service_bindings, :join_table => :service_instances, :right_key => :id, :right_primary_key => :service_instance_id
 
+    add_association_dependencies :service_plans => :destroy
+
     default_order_by  :label
 
     export_attributes :label, :provider, :url, :description,

@@ -128,6 +128,67 @@ describe VCAP::CloudController::LegacyServiceGateway do
         handles[1]["service_id"].should == "bind2"
       end
     end
+
+    describe "DELETE /services/v1/offerings/:label/(:provider)" do
+      let(:auth_header) do
+        Models::ServiceAuthToken.create(
+          :label    => "foo-bar",
+          :provider => "core",
+          :token    => "foobar"
+        )
+        Models::ServiceAuthToken.create(
+          :label    => "foo-bar",
+          :provider => "test",
+          :token    => "foobar"
+        )
+        { "HTTP_X_VCAP_SERVICE_TOKEN" => "foobar" }
+      end
+      before :each do
+        Models::ServicePlan.make(:service => Models::Service.make(
+          :label => "foo-bar", :provider => "core")
+        )
+
+        Models::ServicePlan.make(:service => Models::Service.make(
+          :label => "foo-bar", :provider => "test")
+        )
+      end
+
+      it "should return not found for unknown label services" do
+        delete "/services/v1/offerings/xxx", {}, auth_header
+        # FIXME: should really be 404, but upstream gateways don't seem to care
+        last_response.status.should == 403
+      end
+
+      it "should return not found for unknown provider services" do
+        delete "/services/v1/offerings/foo-bar/xxx", {}, auth_header
+        # FIXME: should really be 404, but upstream gateways don't seem to care
+        last_response.status.should == 403
+      end
+
+      it "should return not authorized on token mismatch" do
+        delete "/services/v1/offerings/foo-bar/xxx", {}, {
+          "HTTP_X_VCAP_SERVICE_TOKEN" => "barfoo",
+        }
+        last_response.status.should == 403
+      end
+
+      it "should delete existing offerings which has null provider" do
+        delete "/services/v1/offerings/foo-bar", {}, auth_header
+        last_response.status.should == 200
+
+        svc = Models::Service[:label => "foo-bar", :provider => "core"]
+        svc.should be_nil
+      end
+
+      it "should delete existing offerings which has specific provider" do
+        delete "/services/v1/offerings/foo-bar/test", {}, auth_header
+        last_response.status.should == 200
+
+        svc = Models::Service[:label => "foo-bar", :provider => "test"]
+        svc.should be_nil
+      end
+    end
+
   end
 end
 
