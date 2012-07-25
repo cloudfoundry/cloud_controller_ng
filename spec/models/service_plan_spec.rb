@@ -8,7 +8,10 @@ describe VCAP::CloudController::Models::ServicePlan do
     :unique_attributes   => [:service, :name],
     :stripped_string_attributes => :name,
     :many_to_one => {
-      :service   => lambda { |service_plan| VCAP::CloudController::Models::Service.make }
+      :service => {
+        :delete_ok => true,
+        :create_for => lambda { |service_plan| VCAP::CloudController::Models::Service.make },
+      },
     },
     :one_to_zero_or_more  => {
       :service_instances => lambda { |service_plan| VCAP::CloudController::Models::ServiceInstance.make }
