@@ -157,6 +157,15 @@ module VCAP::CloudController::ApiSpecHelper
       entity.should be_a_kind_of(Hash)
     end
   end
+
+  def resource_match_request(verb, path, matches, non_matches)
+    user = Models::User.make(:admin => true, :active => true)
+    req = Yajl::Encoder.encode(matches + non_matches)
+    send(verb, path, req, json_headers(headers_for(user)))
+    last_response.status.should == 200
+    resp = Yajl::Parser.parse(last_response.body, :symbolize_keys => true)
+    resp.should == matches
+  end
 end
 
 RSpec.configure do |conf|

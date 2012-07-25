@@ -16,8 +16,10 @@ class VCAP::CloudController::FilesystemPool < VCAP::CloudController::ResourcePoo
 
     def configure(config = {})
       super
-      dir_config = config[:directories] || {}
-      @directory = dir_config[:resources] || Dir.mktmpdir.to_s
+      unless @directory
+        dir_config = config[:directories] || {}
+        @directory = dir_config[:resources] || Dir.mktmpdir.to_s
+      end
       @levels = LEVELS
       @modulos = MODULOS
     end

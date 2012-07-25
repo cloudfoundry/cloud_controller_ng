@@ -79,5 +79,6 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::RestController::QuotaManager.configure(config)
     VCAP::CloudController::Models::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.configure(config)
+    VCAP::CloudController::FilesystemPool.configure(config)
   end
 end
