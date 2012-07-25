@@ -79,6 +79,20 @@ module VCAP::CloudController
       Yajl::Encoder.encode({:handles => handles})
     end
 
+    def delete(label, provider)
+      validate_access(label, provider)
+
+      VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
+      svc_guid = Models::Service[:label => label, :provider => provider].guid
+      svc_api = VCAP::CloudController::Service.new(config, logger)
+      svc_api.dispatch(:delete, svc_guid)
+
+      # FIXME: 204 or 200?
+      empty_json
+    rescue JsonMessage::ValidationError => e
+      raise InvalidRequest
+    end
+
     def validate_access(label, provider = DEFAULT_PROVIDER)
       svc_auth_token = Models::ServiceAuthToken.find(:label => label,
                                                      :provider => provider)
@@ -117,6 +131,14 @@ module VCAP::CloudController
 
       controller.get "/services/v1/offerings/:label/:provider/handles" do
         LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).list_handles(params[:label], params[:provider])
+      end
+
+      controller.delete "/services/v1/offerings/:label/:provider" do
+        LegacyServiceGateway.new(@config, logger, request, @service_auth_token).delete(params[:label], params[:provider])
+      end
+
+      controller.delete "/services/v1/offerings/:label" do
+        LegacyServiceGateway.new(@config, logger, request, @service_auth_token).delete(params[:label], DEFAULT_PROVIDER)
       end
 
       controller.post "/services/v1/offerings" do
