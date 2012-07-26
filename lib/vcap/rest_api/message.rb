@@ -7,13 +7,17 @@ module VCAP::RestAPI
   class Message < JsonMessage
 
     # The schema validator used by class `JsonMessage` calls the `inspect`
-    # method on the schema to get a description of the schema. We wrap the
-    # schema object so that the `inspect` method generates a readable
+    # method on the regexp object to get a description of the regex. We wrap
+    # the regexp object so that the `inspect` method generates a readable
     # description for us through `VCAP::RestAPI::Message#schema_doc` method.
-    class ReadableSchema
+    class ReadableRegexp < Regexp
       def initialize(schema, description = nil)
         @schema = schema
         @description = description
+      end
+
+      def match(str)
+        @schema.match(str)
       end
 
       def inspect
@@ -30,11 +34,11 @@ module VCAP::RestAPI
       schema.deparse
     end
 
-    URL       = ReadableSchema.new(URI::regexp(%w(http https)),
+    URL       = ReadableRegexp.new(URI::regexp(%w(http https)),
                                    "String /URL_REGEX/")
-    HTTPS_URL = ReadableSchema.new(URI::regexp("https"),
+    HTTPS_URL = ReadableRegexp.new(URI::regexp("https"),
                                    "String /HTTPS_URL_REGEX/")
-    EMAIL     = ReadableSchema.new(RFC822::EMAIL_REGEXP_WHOLE,
+    EMAIL     = ReadableRegexp.new(RFC822::EMAIL_REGEXP_WHOLE,
                                    "String /EMAIL_REGEX/")
 
     # The block will be evaluated in the context of the schema validator used
