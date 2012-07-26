@@ -38,7 +38,7 @@ module VCAP::CloudController::RestController
     #
     # @return [Hash] the parsed parameter hash
     def parse_params(params)
-      logger.debug2 "#{log_prefix} parse_params: #{params}"
+      logger.debug2 "parse_params: #{params}"
       # FIXME: replace with URI parse on the query string.
       # Sinatra squshes duplicate query parms into a single entry rather
       # than an array (which we might have for q)
@@ -68,7 +68,7 @@ module VCAP::CloudController::RestController
     # @return [Object] Returns an array of [http response code, Header hash,
     # body string], or just a body string.
     def dispatch(op, *args)
-      logger.debug2 "#{log_prefix} dispatch: #{op}"
+      logger.debug2 "dispatch: #{op}"
       send(op, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, request_attrs)
@@ -85,23 +85,7 @@ module VCAP::CloudController::RestController
       VCAP::CloudController::SecurityContext.current_user
     end
 
-    # The log prefix to use on all log lines.
-    #
-    # TODO: see if we can dup the logger and add our own prefix.
-    #
-    # @return [String] The log prefix to use on all log lines.
-    def log_prefix
-      self.class.class_basename
-    end
-
-    # Our logger.
-    #
-    # @return [Steno::Logger] The logger.
-    def logger
-      @logger
-    end
-
-    attr_reader :config, :body, :request_attrs
+    attr_reader :config, :logger, :body, :request_attrs
 
     class << self
       include VCAP::CloudController
