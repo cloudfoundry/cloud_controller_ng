@@ -7,10 +7,11 @@ require "cloud_controller/rest_controller/paginator"
 require "cloud_controller/rest_controller/quota_manager"
 require "cloud_controller/rest_controller/routes"
 require "cloud_controller/rest_controller/base"
+require "cloud_controller/rest_controller/model_controller"
 
 module VCAP::CloudController
   def self.rest_controller(name, &blk)
-    klass = Class.new RestController::Base
+    klass = Class.new RestController::ModelController
     self.const_set name, klass
     klass.class_eval &blk
     klass.class_eval do

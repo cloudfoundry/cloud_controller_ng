@@ -5,28 +5,6 @@ module VCAP::CloudController::RestController
   # Wraps models and presents collection and per object rest end points
   class ModelController < Base
     include Routes
-    ROUTE_PREFIX = "/v2"
-
-    # Common managment of quota enforcement.
-    #
-    # @param [Hash] quota_request_body Hash of the request to send to the
-    # remote quota manager.  If nil, indicates that quota enformcement
-    # is not necessary.
-    #
-    # @param [Block] &blk The block to execute with quota enforcement.
-    #
-    # @return Results of calling the provided block.
-    def with_quota_enforcement(quota_request_body, &blk)
-      token = QuotaManager.fetch_quota_token(quota_request_body)
-      ret = blk.call
-      token.commit
-      return ret
-    rescue QuotaDeclined => e
-      raise e
-    rescue Exception => e
-      token.abandon(e.message) unless token.nil?
-      raise e
-    end
 
     # By default, operations do not require quota enformcement.
     # Endpoints are expected to override this method if they need
@@ -40,7 +18,8 @@ module VCAP::CloudController::RestController
 
     # Create operation
     def create
-      @request_attrs = Yajl::Parser.new.parse(@body)
+      json_msg = self.class::CreateMessage.decode(body)
+      @request_attrs = json_msg.extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
 
       model.db.transaction do
@@ -48,7 +27,7 @@ module VCAP::CloudController::RestController
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user)
 
-        with_quota_enforcement(create_quota_token_request(obj)) do
+        QuotaManager.with_quota_enforcement(create_quota_token_request(obj)) do
           [HTTP::CREATED,
            { "Location" => "#{self.class.path}/#{obj.guid}" },
           ObjectSerialization.render_json(self.class, obj, @opts)]
@@ -70,11 +49,12 @@ module VCAP::CloudController::RestController
     # @param [String] id The GUID of the object to update.
     def update(id)
       obj = find_id_and_validate_access(:update, id)
-      @request_attrs = Yajl::Parser.new.parse(@body)
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
       logger.debug2 "#{log_prefix} update: #{id} #{request_attrs}"
 
-      with_quota_enforcement(update_quota_token_request(obj)) do
+      QuotaManager.with_quota_enforcement(update_quota_token_request(obj)) do
         obj.update_from_hash(request_attrs)
         obj.save
         [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
@@ -88,7 +68,7 @@ module VCAP::CloudController::RestController
       logger.debug2 "#{log_prefix} update: #{id}"
       obj = find_id_and_validate_access(:delete, id)
 
-      with_quota_enforcement(delete_quota_token_request(obj)) do
+      QuotaManager.with_quota_enforcement(delete_quota_token_request(obj)) do
         obj.destroy
         [HTTP::NO_CONTENT, nil]
       end
@@ -119,7 +99,7 @@ module VCAP::CloudController::RestController
       ar = model.association_reflection(name)
       a_path = "#{self.class.url_for_id(id)}/#{name}"
 
-      f_key = ar[:reciprocol]
+      f_key = ar[:reciprocal]
       ds = a_model.user_visible.filter(f_key => obj)
       qp = a_controller.query_parameters
 
@@ -245,21 +225,6 @@ module VCAP::CloudController::RestController
       attr_accessor :to_many_relationships
       attr_accessor :to_one_relationships
 
-      # basename of the class
-      #
-      # @return [String] basename of the class
-      def class_basename
-        self.name.split("::").last
-      end
-
-      # path
-      #
-      # @return [String] The path/route to the collection associated with
-      # the class.
-      def path
-        "#{ROUTE_PREFIX}/#{class_basename.underscore.pluralize}"
-      end
-
       # path_id
       #
       # @return [String] The path/route to an instance of this class.
@@ -307,18 +272,15 @@ module VCAP::CloudController::RestController
         Errors.const_get(not_found_exception_name)
       end
 
-      def translate_and_log_exception(logger, e)
-        msg = ["exception not translated: #{e.class} - #{e.message}"]
-        msg[0] = msg[0] + ":"
-        msg.concat(e.backtrace).join("\\n")
-        logger.warn(msg.join("\\n"))
-        Errors::InvalidRequest
-      end
-    end
+      # Start the DSL for defining attributes.  This is used inside
+      # the api controller classes.
+      def define_attributes(&blk)
+        k = Class.new do
+          include ControllerDSL
+        end
 
-    def self.setup_controller
-      super
-      define_routes
+        k.new(self).instance_eval(&blk)
+      end
     end
   end
 end
