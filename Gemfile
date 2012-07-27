@@ -13,7 +13,7 @@ gem "membrane", "~> 0.0.2"
 gem "vcap_common",  "~> 2.0.2"
 gem "cf-uaa-client", "~> 0.2.0"
 gem "httpclient"
-gem "steno", "~> 0.0.5"
+gem "steno", "~> 0.0.12"
 
 group :production do
   gem "pg"

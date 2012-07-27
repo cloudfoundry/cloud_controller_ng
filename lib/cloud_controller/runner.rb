@@ -79,27 +79,9 @@ module VCAP::CloudController
     end
 
     def setup_logging
-      config = @config[:logging].dup
-      config[:context] = Steno::Context::ThreadLocal.new
-
-      if @config[:logging][:level]
-        config[:default_log_level] = @config[:logging][:level]
-      end
-
-      sinks = []
-      if @config[:logging][:file]
-        sinks << [Steno::Sink::IO.for_file(@config[:logging][:file])]
-      end
-
-      if @config[:logging][:syslog]
-        Steno::Sink::Syslog.instance.open(@config[:logging][:syslog])
-        sinks << Steno::Sink::Syslog.instance
-      end
-
-      sinks << Steno::Sink::IO.new(STDOUT) if sinks.empty?
-
-      config[:sinks] = sinks
-      Steno.init(Steno::Config.new(config))
+      steno_config = Steno::Config.to_config_hash(@config[:logging])
+      steno_config[:context] = Steno::Context::ThreadLocal.new
+      Steno.init(Steno::Config.new(steno_config))
     end
 
     def setup_db
