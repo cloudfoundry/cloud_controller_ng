@@ -67,6 +67,93 @@ describe VCAP::CloudController::LegacyServiceGateway do
       end
     end
 
+    describe "GET services/v1/offerings/:label(/:provider)" do
+      before :each do
+        @svc1 = Models::Service.make(
+          :label => "foo-bar",
+          :url => "http://www.google.com",
+          :provider => "core",
+        )
+        Models::ServicePlan.make(
+          :name => "free",
+          :service => @svc1,
+        )
+        Models::ServicePlan.make(
+          :name => "nonfree",
+          :service => @svc1,
+        )
+        @svc2 = Models::Service.make(
+          :label => "foo-bar",
+          :url => "http://www.google.com",
+          :provider => "test",
+        )
+        Models::ServicePlan.make(
+          :name => "free",
+          :service => @svc2,
+        )
+        Models::ServicePlan.make(
+          :name => "nonfree",
+          :service => @svc2,
+        )
+      end
+
+      let(:auth_header) do
+        Models::ServiceAuthToken.create(
+          :label    => "foo-bar",
+          :provider => "core",
+          :token    => "foobar",
+        )
+        Models::ServiceAuthToken.create(
+          :label    => "foo-bar",
+          :provider => "test",
+          :token    => "foobar",
+        )
+
+        { "HTTP_X_VCAP_SERVICE_TOKEN" => "foobar" }
+      end
+
+      it "should return not found for unknown label services" do
+        get "services/v1/offerings/xxx", {}, auth_header
+        # FIXME: should this be 404?
+        last_response.status.should == 403
+      end
+
+      it "should return not found for unknown provider services" do
+        get "services/v1/offerings/foo-bar/xxx", {}, auth_header
+        # FIXME: should this be 404?
+        last_response.status.should == 403
+      end
+
+      it "should return not authorized on token mismatch" do
+        get "services/v1/offerings/foo-bar", {}, {
+          "HTTP_X_VCAP_SERVICE_TOKEN" => "xxx",
+        }
+        last_response.status.should == 403
+      end
+
+      it "should return the specific service offering which has null provider" do
+        get "services/v1/offerings/foo-bar", {}, auth_header
+        last_response.status.should == 200
+
+        resp = Yajl::Parser.parse(last_response.body)
+        resp["label"].should == "foo-bar"
+        resp["url"].should   == "http://www.google.com"
+        resp["plans"].should == ["free", "nonfree"]
+        resp["provider"].should == "core"
+      end
+
+      it "should return the specific service offering which has specific provider" do
+        get "services/v1/offerings/foo-bar/test", {}, auth_header
+        last_response.status.should == 200
+
+        resp = Yajl::Parser.parse(last_response.body)
+        resp["label"].should == "foo-bar"
+        resp["url"].should   == "http://www.google.com"
+        resp["plans"].should == ["free", "nonfree"]
+        resp["provider"].should == "test"
+      end
+    end
+
     describe "GET services/v1/offerings/:label(/:provider)/handles" do
       it "should return not found for unknown services" do
         get "services/v1/offerings/foo-bar/handles"

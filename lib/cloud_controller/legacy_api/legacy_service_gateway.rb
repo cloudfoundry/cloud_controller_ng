@@ -79,9 +79,7 @@ module VCAP::CloudController
     end
 
     def list_handles(label, provider)
-      service = Models::Service[
-        :label => label, :provider => provider,
-      ]
+      service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
       logger.debug("Listing handles for service: #{service.inspect}")
       handles = []
@@ -127,6 +125,39 @@ module VCAP::CloudController
       end
     end
 
+    def get(label, provider)
+      validate_access(label, provider)
+
+      service = Models::Service[:label => label, :provider => provider]
+      offering = {
+        :label => label,
+        :provider => provider,
+        :url => service.url,
+      }
+
+      [
+        :description,
+        :info_url,
+        # :tags,
+        # :plans,
+        # :cf_plan_id,
+        # :plan_options,
+        # :binding_options,
+        :acls,
+        :active,
+        :timeout,
+        :provider,
+        # :supported_versions,
+        # :version_aliases,
+      ].each do |field|
+          if service.values[:field]
+            offering[:field] = service[:field]
+          end
+        end
+        offering[:plans] = service.service_plans.map(&:name)
+        Yajl::Encoder.encode(offering)
+    end
+
     private
 
     def empty_json
@@ -168,6 +199,14 @@ module VCAP::CloudController
 
       controller.post "/services/v1/offerings" do
         LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).create_offering
+      end
+
+      controller.get "/services/v1/offerings/:label/:provider" do
+        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).get(params[:label], params[:provider])
+      end
+
+      controller.get "/services/v1/offerings/:label" do
+        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).get(params[:label], DEFAULT_PROVIDER)
       end
     end
 
