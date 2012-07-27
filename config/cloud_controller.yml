@@ -1,9 +1,9 @@
 ---
 port: 8181
 pid_filename: /tmp/cloud_controller.pid
-nats_uri: nats://127.0.0.1:4222
+nats_uri: nats://nats:z2b3ij3122@172.20.182.11:4222
 
-external_domain: api2.vcap.me
+external_domain: api2.p01.rbconsvcs.com
 
 bootstrap_admin_email: sre@vmware.com
 
@@ -14,6 +14,7 @@ info:
   support_address: "http://support.cloudfoundry.com"
   description: "VMware's Cloud Application Platform"
   api_version: "2.0.0"
+
 # TODO: put back once json schema is sorted out
 # allow_debug: false
 
@@ -26,15 +27,15 @@ db:
   pool_timeout: 10
 
 uaa:
-  url: "http://localhost:8080/uaa"
+  url: "http://uaa.p01.rbconsvcs.com"
   resource_id: "cloud_controller"
-  symmetric_secret: "tokensecret"
+  symmetric_secret: "WGvbxaiC371JM"
 
 quota_manager:
-  policy: "MoneyMakerApproval" # can also be BlindApproval
-  base_url: "http://localhost:31004/v1/quota"
-  auth_token: "testtoken"
-  http_timeout_sec: 2
+  policy: "MoneyMakerApproval"
+  base_url: "http://am.p01.rbconsvcs.com/v1/quota"
+  auth_token: "67d1269e92783716cc9d63703cf6451287540d60014b457243fedf4e0f68"
+  http_timeout_sec: 4
 
 # App staging parameters
 staging:
