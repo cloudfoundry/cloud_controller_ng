@@ -34,7 +34,7 @@ module VCAP::CloudController
       ds = Models::Service.user_visible
 
       legacy_resp = {}
-      ds.each do |svc|
+      ds.filter(:provider => "core").each do |svc|
         svc_type = LegacyService.synthesize_service_type(svc)
         legacy_resp[svc_type] ||= {}
         legacy_resp[svc_type][svc.label] ||= {}

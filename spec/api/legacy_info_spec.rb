@@ -148,11 +148,27 @@ describe VCAP::CloudController::LegacyInfo do
 
   describe "service info" do
     before do
-      @mysql_svc  = Models::Service.make(:label => "mysql")
-      @pg_svc     = Models::Service.make(:label => "postgresql")
-      @redis_svc  = Models::Service.make(:label => "redis")
-      @mongo_svc  = Models::Service.make(:label => "mongodb")
-      @random_svc = Models::Service.make(:label => "random")
+      @mysql_svc  = Models::Service.make(
+        :label => "mysql",
+        :provider => "core",
+      )
+      @pg_svc     = Models::Service.make(
+        :label => "postgresql",
+        :provider => "core",
+      )
+      @redis_svc  = Models::Service.make(
+        :label => "redis",
+        :provider => "core",
+      )
+      @mongo_svc  = Models::Service.make(
+        :label => "mongodb",
+        :provider => "core",
+      )
+      @random_svc = Models::Service.make(
+        :label => "random",
+        :provider => "core",
+      )
+      non_core = Models::Service.make
 
       get "/info/services", {}, headers_for(Models::User.make)
     end
