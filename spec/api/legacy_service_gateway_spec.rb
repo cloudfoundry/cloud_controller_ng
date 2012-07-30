@@ -54,6 +54,17 @@ describe VCAP::CloudController::LegacyServiceGateway do
         svc.should_not be_nil
         svc.version.should == "2.2"
       end
+
+      it "should update service offerings for builtin services" do
+        post path, foo_bar_offering.encode, auth_header
+        post path, Yajl::Encoder.encode(
+          foo_bar_offering.extract.merge("url" => "http://newurl.com")
+        ), auth_header
+        last_response.status.should == 200
+        svc = Models::Service.find(:label => "foobar", :provider => "core")
+        svc.should_not be_nil
+        svc.url.should == "http://newurl.com"
+      end
     end
 
     describe "GET services/v1/offerings/:label(/:provider)/handles" do

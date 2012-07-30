@@ -17,39 +17,61 @@ module VCAP::CloudController
 
     def create_offering
       req = VCAP::Services::Api::ServiceOfferingRequest.decode(body)
-      logger.debug("Create service request: #{req.extract.inspect}")
+      logger.debug("Update or create legacy service request: #{req.extract.inspect}")
 
       (label, version) = req.label.split("-")
-      svc_attrs = {
-        :label       => label,
-        :provider    => DEFAULT_PROVIDER,
-        :url         => req.url,
-        :description => req.description,
-        :version     => version,
-        :acls        => req.acls,
-        :timeout     => req.timeout,
-        :info_url    => req.info_url,
-        :active      => req.active
-      }
 
       provider = DEFAULT_PROVIDER
       validate_access(label, provider)
 
       VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
-      legacy_req = Yajl::Encoder.encode(svc_attrs)
-      svc_api = VCAP::CloudController::Service.new(config, logger, legacy_req)
-      (_, _, svc_resp) = svc_api.dispatch(:create)
-      svc = Yajl::Parser.parse(svc_resp)
+      Sequel::Model.db.transaction do
+        service = Models::Service.find(
+          :label => label, :provider => DEFAULT_PROVIDER
+        )
+        if service
+          logger.debug2("Updating service #{service.guid}")
+          service.set(
+            :url         => req.url,
+            :description => req.description,
+            :version     => version,
+            :acls        => req.acls,
+            :timeout     => req.timeout,
+            :info_url    => req.info_url,
+            :active      => req.active
+          )
+          service.save
+        else
+          logger.debug2("Creating service")
+          service = Models::Service.create(
+            :label => label,
+            :provider => DEFAULT_PROVIDER,
+            :url         => req.url,
+            :description => req.description,
+            :version     => version,
+            :acls        => req.acls,
+            :timeout     => req.timeout,
+            :info_url    => req.info_url,
+            :active      => req.active
+          )
+        end
 
-      svc_plan_attrs = {
-        :service_guid => svc["metadata"]["guid"],
-        :name => "default",
-        :description => "default plan"
-      }
-
-      legacy_req = Yajl::Encoder.encode(svc_plan_attrs)
-      svc_plan_api = VCAP::CloudController::ServicePlan.new(config, logger, legacy_req)
-      svc_plan_api.dispatch(:create)
+        plan = Models::ServicePlan.find(
+          :service_id => service.id, :name => "default"
+        )
+        if plan
+          logger.debug2("Updating default service plan #{plan.guid}")
+          plan.set(:description => "default plan")
+          plan.save
+        else
+          logger.debug2("Creating default service plan for service #{service.label}")
+          plan = Models::ServicePlan.create(
+            :service_id  => service.id,
+            :name        => "default",
+            :description => "default plan",
+          )
+        end
+      end
 
       empty_json
     rescue JsonMessage::ValidationError => e
