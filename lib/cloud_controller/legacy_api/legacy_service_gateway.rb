@@ -45,10 +45,12 @@ module VCAP::CloudController
           )
         end
 
-        plan = Models::ServicePlan.update_or_create(
-          :service_id => service.id, :name => "default"
-        ) do |plan|
-          plan.set(:description => "default plan")
+        Array(req.plans).each do |name|
+          Models::ServicePlan.update_or_create(
+            :service_id => service.id, :name => name
+          ) do |plan|
+            plan.description = "dummy description"
+          end
         end
       end
 

@@ -55,6 +55,15 @@ describe VCAP::CloudController::LegacyServiceGateway do
         svc.version.should == "2.2"
       end
 
+      it "should create service plans" do
+        offer = foo_bar_offering.dup
+        offer.plans = ["free", "nonfree"]
+        post path, offer.encode, auth_header
+
+        service = Models::Service[:label => "foobar", :provider => "core"]
+        service.service_plans.map(&:name).should include("free", "nonfree")
+      end
+
       it "should update service offerings for builtin services" do
         post path, foo_bar_offering.encode, auth_header
         post path, Yajl::Encoder.encode(
