@@ -26,50 +26,29 @@ module VCAP::CloudController
 
       VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
       Sequel::Model.db.transaction do
-        service = Models::Service.find(
+        service = Models::Service.update_or_create(
           :label => label, :provider => DEFAULT_PROVIDER
-        )
-        if service
-          logger.debug2("Updating service #{service.guid}")
-          service.set(
+        ) do |svc|
+          if svc.new?
+            logger.debug2("Creating service")
+          else
+            logger.debug2("Updating service #{svc.guid}")
+          end
+          svc.set(
             :url         => req.url,
             :description => req.description,
             :version     => version,
             :acls        => req.acls,
             :timeout     => req.timeout,
             :info_url    => req.info_url,
-            :active      => req.active
-          )
-          service.save
-        else
-          logger.debug2("Creating service")
-          service = Models::Service.create(
-            :label => label,
-            :provider => DEFAULT_PROVIDER,
-            :url         => req.url,
-            :description => req.description,
-            :version     => version,
-            :acls        => req.acls,
-            :timeout     => req.timeout,
-            :info_url    => req.info_url,
-            :active      => req.active
+            :active      => req.active,
           )
         end
 
-        plan = Models::ServicePlan.find(
+        plan = Models::ServicePlan.update_or_create(
           :service_id => service.id, :name => "default"
-        )
-        if plan
-          logger.debug2("Updating default service plan #{plan.guid}")
+        ) do |plan|
           plan.set(:description => "default plan")
-          plan.save
-        else
-          logger.debug2("Creating default service plan for service #{service.label}")
-          plan = Models::ServicePlan.create(
-            :service_id  => service.id,
-            :name        => "default",
-            :description => "default plan",
-          )
         end
       end
 

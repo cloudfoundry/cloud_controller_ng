@@ -7,6 +7,7 @@ require "sequel_plugins/vcap_serialization"
 require "sequel_plugins/vcap_normalization"
 require "sequel_plugins/vcap_relations"
 require "sequel_plugins/vcap_guid"
+require "sequel_plugins/update_or_create"
 
 module Sequel::Plugins::VcapUserGroup
   module ClassMethods
@@ -61,6 +62,7 @@ Sequel::Model.plugin :vcap_relations
 Sequel::Model.plugin :vcap_guid
 Sequel::Model.plugin :vcap_user_group
 Sequel::Model.plugin :vcap_user_visibility
+Sequel::Model.plugin :update_or_create
 
 Dir[File.expand_path("../models/*", __FILE__)].each do |file|
   require file
