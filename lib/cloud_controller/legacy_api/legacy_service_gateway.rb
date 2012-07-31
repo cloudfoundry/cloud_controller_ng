@@ -10,11 +10,6 @@ module VCAP::CloudController
     LEGACY_API_USER_GUID = "legacy-api"
     LEGACY_PLAN_OVERIDE = "D100"
 
-    def initialize(config, logger, env, params, body, service_auth_token)
-      @service_auth_token = service_auth_token
-      super(config, logger, env, params, body)
-    end
-
     def create_offering
       req = VCAP::Services::Api::ServiceOfferingRequest.decode(body)
       logger.debug("Update or create legacy service request: #{req.extract.inspect}")
@@ -73,11 +68,9 @@ module VCAP::CloudController
       end
 
       empty_json
-    rescue JsonMessage::ValidationError => e
-      raise InvalidRequest
     end
 
-    def list_handles(label, provider)
+    def list_handles(label, provider = DEFAULT_PROVIDER)
       service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
       logger.debug("Listing handles for service: #{service.inspect}")
@@ -99,7 +92,7 @@ module VCAP::CloudController
       Yajl::Encoder.encode({:handles => handles})
     end
 
-    def delete(label, provider)
+    def delete(label, provider = DEFAULT_PROVIDER)
       validate_access(label, provider)
 
       VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
@@ -108,23 +101,22 @@ module VCAP::CloudController
       svc_api.dispatch(:delete, svc_guid)
 
       empty_json
-    rescue JsonMessage::ValidationError => e
-      raise InvalidRequest
     end
 
     def validate_access(label, provider = DEFAULT_PROVIDER)
+      auth_token = env[SERVICE_TOKEN_KEY]
+
       svc_auth_token = Models::ServiceAuthToken[
         :label => label, :provider => provider,
       ]
 
-      unless (svc_auth_token &&
-              svc_auth_token.token_matches?(service_auth_token))
+      unless (svc_auth_token && svc_auth_token.token_matches?(auth_token))
         logger.warn("unauthorized service offering")
         raise NotAuthorized
       end
     end
 
-    def get(label, provider)
+    def get(label, provider = DEFAULT_PROVIDER)
       validate_access(label, provider)
 
       service = Models::Service[:label => label, :provider => provider]
@@ -176,40 +168,15 @@ module VCAP::CloudController
     end
 
     def self.setup_routes
-      controller.before "/services/v1/*" do
-        @service_auth_token = env[SERVICE_TOKEN_KEY]
-      end
-
-      controller.get "/services/v1/offerings/:label/handles" do
-        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).list_handles(params[:label], DEFAULT_PROVIDER)
-      end
-
-      controller.get "/services/v1/offerings/:label/:provider/handles" do
-        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).list_handles(params[:label], params[:provider])
-      end
-
-      controller.delete "/services/v1/offerings/:label/:provider" do
-        LegacyServiceGateway.new(@config, logger, env, request.params, request, @service_auth_token).delete(params[:label], params[:provider])
-      end
-
-      controller.delete "/services/v1/offerings/:label" do
-        LegacyServiceGateway.new(@config, logger, env, request.params, request, @service_auth_token).delete(params[:label], DEFAULT_PROVIDER)
-      end
-
-      controller.post "/services/v1/offerings" do
-        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).create_offering
-      end
-
-      controller.get "/services/v1/offerings/:label/:provider" do
-        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).get(params[:label], params[:provider])
-      end
-
-      controller.get "/services/v1/offerings/:label" do
-        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).get(params[:label], DEFAULT_PROVIDER)
-      end
+      get    "/services/v1/offerings/:label/handles",           :list_handles
+      get    "/services/v1/offerings/:label/:provider/handles", :list_handles
+      get    "/services/v1/offerings/:label/:provider",         :get
+      get    "/services/v1/offerings/:label",                   :get
+      delete "/services/v1/offerings/:label",                   :delete
+      delete "/services/v1/offerings/:label/:provider",         :delete
+      post   "/services/v1/offerings",                          :create_offering
     end
 
     setup_routes
-    attr_accessor :service_auth_token
   end
 end

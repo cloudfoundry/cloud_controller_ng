@@ -2,8 +2,10 @@
 
 module VCAP::CloudController
   class LegacyResources < LegacyApiBase
-    controller.post "/resources" do
-      VCAP::CloudController::ResourceMatch.new(@config, logger, env, request.params, request.body).match
+    def match
+      VCAP::CloudController::ResourceMatch.new(@config, logger, env, params, body).dispatch(:match)
     end
+
+    post "/resources", :match
   end
 end

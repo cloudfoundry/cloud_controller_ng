@@ -11,8 +11,6 @@ module VCAP::CloudController
       Yajl::Encoder.encode(matched)
     end
 
-    controller.put "/v2/resource_match" do
-      ResourceMatch.new(@config, logger, env, request.params, request.body).match
-    end
+    put "/v2/resource_match", :match
   end
 end

@@ -104,17 +104,9 @@ module VCAP::CloudController
     end
 
     def self.setup_routes
-      controller.get "/services" do
-        LegacyService.new(@config, logger, env, request.params, request.body).enumerate
-      end
-
-      controller.post "/services" do
-        LegacyService.new(@config, logger, env, request.params, request.body).create
-      end
-
-      controller.delete "/services/:name" do |name|
-        LegacyService.new(@config, logger, env, request.params, request.body).delete(name)
-      end
+      get    "/services",       :enumerate
+      post   "/services",       :create
+      delete "/services/:name", :delete
     end
 
     setup_routes

@@ -9,75 +9,58 @@ module VCAP::CloudController::RestController
     end
 
     module ClassMethods
+      def define_route(verb, path, method = nil, &blk)
+        opts = {}
+        opts[:consumes] = [:json] if [:put, :post].include?(verb)
+        klass = self
+        controller.send(verb, path, opts) do |*args|
+          logger.debug "dispatch #{klass} #{verb} #{path}"
+          api = klass.new(@config, logger, env, request.params, request.body)
+          if method
+            api.dispatch(method, *args)
+          else
+            blk.yield(api, *args)
+          end
+        end
+      end
 
-      # Define routes for the rest endpoint.
+      [:post, :get, :put, :delete].each do |verb|
+        define_method(verb) do |*args, &blk|
+          (path, method) = *args
+          define_route(verb, path, method, &blk)
+        end
+      end
+
       def define_routes
-        define_create_route
-        define_read_route
-        define_update_route
-        define_delete_route
-        define_enumerate_route
-
+        define_standard_routes
         define_to_many_routes
       end
 
       private
 
-      def define_create_route
-        klass = self
-        controller.post path, :consumes => [:json] do
-          api = klass.new(@config, logger, env, request.params, request.body)
-          api.dispatch(:create)
-        end
-      end
-
-      def define_read_route
-        klass = self
-        controller.get path_id do |id|
-          api = klass.new(@config, logger, env, request.params, request.body)
-          api.dispatch(:read, id)
-        end
-      end
-
-      def define_update_route
-        klass = self
-        controller.put path_id, :consumes => [:json] do |id|
-          api = klass.new(@config, logger, env, request.params, request.body)
-          api.dispatch(:update, id)
-        end
-      end
-
-      def define_delete_route
-        klass = self
-        controller.delete path_id do |id|
-          api = klass.new(@config, logger, env, request.params, request.body)
-          api.dispatch(:delete, id)
-        end
-      end
-
-      def define_enumerate_route
-        klass = self
-        controller.get path, do
-          api = klass.new(@config, logger, env, request.params, request.body)
-          api.dispatch(:enumerate)
+      def define_standard_routes
+        [
+          [:post,   path,    :create],
+          [:get,    path,    :enumerate],
+          [:get,    path_id, :read],
+          [:put,    path_id, :update],
+          [:delete, path_id, :delete]
+        ].each do |verb, path, method|
+          define_route(verb, path, method)
         end
       end
 
       def define_to_many_routes
-        klass = self
         to_many_relationships.each do |name, attr|
-          controller.get "#{path_id}/#{name}" do |id|
-            api = klass.new(@config, logger, env, request.params, request.body)
+          get "#{path_id}/#{name}" do |api, id|
             api.dispatch(:enumerate_related, id, name)
           end
 
-          controller.put "#{path_id}/#{name}/:other_id" do |id, other_id|
-            api = klass.new(@config, logger, env, request.params, request.body)
+          put "#{path_id}/#{name}/:other_id" do |api, id, other_id|
             api.dispatch(:add_related, id, name, other_id)
           end
 
-          controller.delete "#{path_id}/#{name}/:other_id" do |id, other_id|
-            api = klass.new(@config, logger, env, request.params, request.body)
+          delete "#{path_id}/#{name}/:other_id", do |api, id, other_id|
             api.dispatch(:remove_related, id, name, other_id)
           end
         end
@@ -86,7 +69,6 @@ module VCAP::CloudController::RestController
       def controller
         VCAP::CloudController::Controller
       end
-
     end
   end
 end

@@ -152,29 +152,12 @@ module VCAP::CloudController
     end
 
     def self.setup_routes
-      controller.get "/apps" do
-        LegacyApps.new(@config, logger, env, request.params, request.body).enumerate
-      end
-
-      controller.post "/apps" do
-        LegacyApps.new(@config, logger, env, request.params, request.body).create
-      end
-
-      controller.get "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, env, request.params, request.body).read(name)
-      end
-
-      controller.put "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, env, request.params, request.body).update(name)
-      end
-
-      controller.delete "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, env, request.params, request.body).delete(name)
-      end
-
-      controller.get "/apps/:name/crashes" do |name|
-        LegacyApps.new(@config, logger, env, request.params, request.body).crashes(name)
-      end
+      get     "/apps",               :enumerate
+      post    "/apps",               :create
+      get     "/apps/:name",         :read
+      put     "/apps/:name",         :update
+      delete  "/apps/:name",         :delete
+      get     "/apps/:name/crashes", :crashes
     end
 
     setup_routes

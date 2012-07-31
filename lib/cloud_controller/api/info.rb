@@ -20,8 +20,6 @@ module VCAP::CloudController
       Yajl::Encoder.encode(info)
     end
 
-    controller.get "/v2/info" do
-      Info.new(@config, logger, env, request.params, request.body).read
-    end
+    get "/v2/info", :read
   end
 end
