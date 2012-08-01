@@ -25,6 +25,11 @@ module VCAP::CloudController
       validate_access(label, provider)
 
       VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
+      old_plans = Models::ServicePlan.dataset.
+        join(:services, :id => :service_id).
+        filter(:label => label, :provider => DEFAULT_PROVIDER).
+        select_map(:name.qualify(:service_plans))
+
       Sequel::Model.db.transaction do
         service = Models::Service.update_or_create(
           :label => label, :provider => DEFAULT_PROVIDER
@@ -45,11 +50,24 @@ module VCAP::CloudController
           )
         end
 
-        Array(req.plans).each do |name|
+        new_plans = Array(req.plans)
+        new_plans.each do |name|
           Models::ServicePlan.update_or_create(
             :service_id => service.id, :name => name
           ) do |plan|
             plan.description = "dummy description"
+          end
+        end
+
+        missing = old_plans - new_plans
+        unless missing.empty?
+          logger.info("Attempting to remove old plans: #{missing.inspect}")
+          service.service_plans_dataset.filter(:name => missing).each do |plan|
+            begin
+              plan.destroy
+            rescue Sequel::DatabaseError
+              # If something is hanging on to this plan, let it live
+            end
           end
         end
       end

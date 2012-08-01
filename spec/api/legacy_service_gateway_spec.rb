@@ -75,6 +75,32 @@ describe VCAP::CloudController::LegacyServiceGateway do
         service.service_plans.map(&:name).should include("free", "nonfree")
       end
 
+      it "should remove plans not posted" do
+        offer = foo_bar_offering.dup
+        offer.plans = ["free", "nonfree"]
+        post path, offer.encode, auth_header
+        offer.plans = ["free"]
+        post path, offer.encode, auth_header
+
+        service = Models::Service[:label => "foobar", :provider => "core"]
+        service.service_plans.map(&:name).should == ["free"]
+      end
+
+      it "should not remove plans for referential integrity" do
+        offer = foo_bar_offering.dup
+        offer.plans = ["free", "nonfree"]
+        post path, offer.encode, auth_header
+
+        Models::ServiceInstance.make(
+          :service_plan => Models::ServicePlan[:name => "nonfree"],
+        )
+        offer.plans = ["free"]
+        post path, offer.encode, auth_header
+
+        service = Models::Service[:label => "foobar", :provider => "core"]
+        service.service_plans.map(&:name).should == ["free", "nonfree"]
+      end
+
       it "should update service offerings for builtin services" do
         post path, foo_bar_offering.encode, auth_header
         offer = foo_bar_offering.dup
