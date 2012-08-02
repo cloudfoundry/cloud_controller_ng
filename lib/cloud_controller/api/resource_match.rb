@@ -12,7 +12,7 @@ module VCAP::CloudController
     end
 
     controller.put "/v2/resource_match" do
-      ResourceMatch.new(@config, logger, request.body).match
+      ResourceMatch.new(@config, logger, env, request.params, request.body).match
     end
   end
 end

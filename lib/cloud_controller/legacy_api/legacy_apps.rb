@@ -23,7 +23,7 @@ module VCAP::CloudController
     def create
       logger.debug "create app"
       req = request_from_legacy_json(body)
-      VCAP::CloudController::App.new(config, logger, req).dispatch(:create)
+      VCAP::CloudController::App.new(config, logger, env, params, req).dispatch(:create)
       HTTP::OK
     end
 
@@ -41,7 +41,7 @@ module VCAP::CloudController
       logger.debug "update app"
       app = app_from_name(name)
       req = request_from_legacy_json(body, app)
-      VCAP::CloudController::App.new(config, logger, req).dispatch(:update, app.guid)
+      VCAP::CloudController::App.new(config, logger, env, params, req).dispatch(:update, app.guid)
       app.refresh
       HTTP::OK
     end
@@ -49,7 +49,7 @@ module VCAP::CloudController
     def delete(name)
       logger.debug "delete app"
       app = app_from_name(name)
-      VCAP::CloudController::App.new(config, logger).dispatch(:delete, app.guid)
+      VCAP::CloudController::App.new(config, logger, env, params, body).dispatch(:delete, app.guid)
       HTTP::OK
     end
 
@@ -140,7 +140,7 @@ module VCAP::CloudController
             }
             req_hash[:credentials] = hash["credentials"] if hash["credentials"]
             binding_req = Yajl::Encoder.encode(req_hash)
-            (_, _, binding_json) = VCAP::CloudController::ServiceBinding.new(config, logger, binding_req).dispatch(:create)
+            (_, _, binding_json) = VCAP::CloudController::ServiceBinding.new(config, logger, env, params, binding_req).dispatch(:create)
             binding_resp = Yajl::Parser.parse(binding_json)
             binding_resp["metadata"]["guid"]
           end
@@ -153,27 +153,27 @@ module VCAP::CloudController
 
     def self.setup_routes
       controller.get "/apps" do
-        LegacyApps.new(@config, logger, request.body).enumerate
+        LegacyApps.new(@config, logger, env, request.params, request.body).enumerate
       end
 
       controller.post "/apps" do
-        LegacyApps.new(@config, logger, request.body).create
+        LegacyApps.new(@config, logger, env, request.params, request.body).create
       end
 
       controller.get "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, request.body).read(name)
+        LegacyApps.new(@config, logger, env, request.params, request.body).read(name)
       end
 
       controller.put "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, request.body).update(name)
+        LegacyApps.new(@config, logger, env, request.params, request.body).update(name)
       end
 
       controller.delete "/apps/:name" do |name|
-        LegacyApps.new(@config, logger, request.body).delete(name)
+        LegacyApps.new(@config, logger, env, request.params, request.body).delete(name)
       end
 
       controller.get "/apps/:name/crashes" do |name|
-        LegacyApps.new(@config, logger, request.body).crashes(name)
+        LegacyApps.new(@config, logger, env, request.params, request.body).crashes(name)
       end
     end
 

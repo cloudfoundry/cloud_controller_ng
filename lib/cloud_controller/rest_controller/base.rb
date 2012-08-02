@@ -24,14 +24,20 @@ module VCAP::CloudController::RestController
     #
     # @param [Steno::Logger] logger The logger to use during the request.
     #
+    # @param [Hash] env The http environment for the request.
+    #
+    # @param [Hash] params The http query parms and/or the parameters in a
+    # multipart post.
+    #
     # @param [IO] body The request body.
     #
-    # @param [Hash] query_params The http query parameters.
-    def initialize(config, logger, body = nil, query_params = {})
+    def initialize(config, logger, env, params, body)
       @config  = config
       @logger  = logger
+      @env     = env
+      @params  = params
       @body    = body
-      @opts    = parse_params(query_params)
+      @opts    = parse_params(params)
     end
 
     # Parses and sanitizes query parameters from the sinatra request.
@@ -85,7 +91,7 @@ module VCAP::CloudController::RestController
       VCAP::CloudController::SecurityContext.current_user
     end
 
-    attr_reader :config, :logger, :body, :request_attrs
+    attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self
       include VCAP::CloudController

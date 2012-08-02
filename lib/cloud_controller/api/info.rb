@@ -21,7 +21,7 @@ module VCAP::CloudController
     end
 
     controller.get "/v2/info" do
-      Info.new(@config, logger).read
+      Info.new(@config, logger, env, request.params, request.body).read
     end
   end
 end

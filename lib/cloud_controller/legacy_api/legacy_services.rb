@@ -49,14 +49,14 @@ module VCAP::CloudController
       end
 
       req = Yajl::Encoder.encode(attrs)
-      svc_api = VCAP::CloudController::ServiceInstance.new(config, logger, req)
+      svc_api = VCAP::CloudController::ServiceInstance.new(config, logger, env, params, req)
       svc_api.dispatch(:create)
       HTTP::OK
     end
 
     def delete(name)
       service_instance = service_instance_from_name(name)
-      VCAP::CloudController::ServiceInstance.new(config, logger).dispatch(:delete, service_instance.guid)
+      VCAP::CloudController::ServiceInstance.new(config, logger, env, params, body).dispatch(:delete, service_instance.guid)
       HTTP::OK
     end
 
@@ -105,15 +105,15 @@ module VCAP::CloudController
 
     def self.setup_routes
       controller.get "/services" do
-        LegacyService.new(@config, logger, request.body).enumerate
+        LegacyService.new(@config, logger, env, request.params, request.body).enumerate
       end
 
       controller.post "/services" do
-        LegacyService.new(@config, logger, request.body).create
+        LegacyService.new(@config, logger, env, request.params, request.body).create
       end
 
       controller.delete "/services/:name" do |name|
-        LegacyService.new(@config, logger, request.body).delete(name)
+        LegacyService.new(@config, logger, env, request.params, request.body).delete(name)
       end
     end
 

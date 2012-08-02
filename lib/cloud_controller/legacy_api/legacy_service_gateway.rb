@@ -10,9 +10,9 @@ module VCAP::CloudController
     LEGACY_API_USER_GUID = "legacy-api"
     LEGACY_PLAN_OVERIDE = "D100"
 
-    def initialize(config, logger, body, service_auth_token)
+    def initialize(config, logger, env, params, body, service_auth_token)
       @service_auth_token = service_auth_token
-      super(config, logger, body)
+      super(config, logger, env, params, body)
     end
 
     def create_offering
@@ -104,7 +104,7 @@ module VCAP::CloudController
 
       VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
       svc_guid = Models::Service[:label => label, :provider => provider].guid
-      svc_api = VCAP::CloudController::Service.new(config, logger)
+      svc_api = VCAP::CloudController::Service.new(config, logger, env, params, body)
       svc_api.dispatch(:delete, svc_guid)
 
       empty_json
@@ -181,31 +181,31 @@ module VCAP::CloudController
       end
 
       controller.get "/services/v1/offerings/:label/handles" do
-        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).list_handles(params[:label], DEFAULT_PROVIDER)
+        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).list_handles(params[:label], DEFAULT_PROVIDER)
       end
 
       controller.get "/services/v1/offerings/:label/:provider/handles" do
-        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).list_handles(params[:label], params[:provider])
+        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).list_handles(params[:label], params[:provider])
       end
 
       controller.delete "/services/v1/offerings/:label/:provider" do
-        LegacyServiceGateway.new(@config, logger, request, @service_auth_token).delete(params[:label], params[:provider])
+        LegacyServiceGateway.new(@config, logger, env, request.params, request, @service_auth_token).delete(params[:label], params[:provider])
       end
 
       controller.delete "/services/v1/offerings/:label" do
-        LegacyServiceGateway.new(@config, logger, request, @service_auth_token).delete(params[:label], DEFAULT_PROVIDER)
+        LegacyServiceGateway.new(@config, logger, env, request.params, request, @service_auth_token).delete(params[:label], DEFAULT_PROVIDER)
       end
 
       controller.post "/services/v1/offerings" do
-        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).create_offering
+        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).create_offering
       end
 
       controller.get "/services/v1/offerings/:label/:provider" do
-        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).get(params[:label], params[:provider])
+        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).get(params[:label], params[:provider])
       end
 
       controller.get "/services/v1/offerings/:label" do
-        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).get(params[:label], DEFAULT_PROVIDER)
+        LegacyServiceGateway.new(@config, logger, env, request.params, request.body, @service_auth_token).get(params[:label], DEFAULT_PROVIDER)
       end
     end
 
