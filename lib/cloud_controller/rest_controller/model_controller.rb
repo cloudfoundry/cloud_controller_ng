@@ -246,15 +246,19 @@ module VCAP::CloudController::RestController
       # @return [Sequel::Model] The class of the model associated with
       # this rest endpoint.
       def model(name = model_class_name)
-        Models.const_get(name)
+        @model ||= Models.const_get(name)
       end
 
-      # Model class name associated with this rest/api endpoint.
+      # Get and set the model class name associated with this rest/api endpoint.
+      #
+      # @param [String] name The model class name associated with this rest/api
+      # endpoint.
       #
       # @return [String] The class name of the model associated with
       # this rest endpoint.
-      def model_class_name
-        class_basename
+      def model_class_name(name = nil)
+        @model_class_name = name if name
+        @model_class_name || class_basename
       end
 
       # Model class name associated with this rest/api endpoint.
