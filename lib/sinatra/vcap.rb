@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/rest_api"
+require "vcap/component"
 require "sinatra/consumes"
 require "sinatra/reloader"
 require "securerandom"
@@ -91,14 +92,33 @@ module Sinatra
 
       before do
         logger_name = opts[:logger_name] || "vcap.api"
-        env["rack.logger"] = Steno.logger(logger_name)
+        logger = Steno.logger(logger_name)
+        env["rack.logger"] = logger
         @request_guid = SecureRandom.uuid
         Steno.config.context.data["request_guid"] = @request_guid
+
+        EM.next_tick do
+          varz = ::VCAP::Component.varz
+          if varz.nil?
+            logger.error("Varz is unavailable.")
+          else
+            varz[:requests] += 1
+            varz[:pending_requests] += 1
+          end
+        end
       end
 
       after do
+        EM.next_tick do
+          varz = ::VCAP::Component.varz
+          if varz.nil?
+            env["rack.logger"].error("Varz is unavailable.")
+          else
+            varz[:pending_requests] -= 1
+          end
+        end
+
         headers["X-VCAP-Request-ID"] = @request_guid
-        nil
       end
     end
   end
