@@ -149,6 +149,39 @@ module VCAP::CloudController
         Yajl::Encoder.encode(offering)
     end
 
+    # NB: ambiguous API: the handle id appears in both URI and body.
+    # We should only take the handle id from URI
+    #
+    # P.S. While I applaud Ruby for allowing this default parameter in the
+    # middle, I'm really not wild for _any_ function overloading in Ruby
+    def update_handle(label, provider=DEFAULT_PROVIDER, id)
+      validate_access(label, provider)
+      VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
+
+      req = VCAP::Services::Api::HandleUpdateRequest.decode(body)
+
+      service = Models::Service[:label => label, :provider => provider]
+      raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
+
+      instance = service.service_instances_dataset[:gateway_name => id]
+      if instance
+        instance.set(
+          :gateway_data => req.configuration,
+          :credentials => req.credentials,
+        )
+        instance.save_changes
+      elsif binding = service.service_bindings_dataset[:gateway_name.qualify(:service_bindings) => id]
+        binding.set(
+          :configuration => req.configuration,
+          :credentials => req.credentials,
+        )
+        binding.save_changes
+      else
+        # TODO: shall we add a HandleNotFound?
+        raise ServiceInstanceNotFound, "label=#{label} provider=#{provider} id=#{id}"
+      end
+    end
+
     private
 
     def empty_json
@@ -175,6 +208,8 @@ module VCAP::CloudController
       delete "/services/v1/offerings/:label",                   :delete
       delete "/services/v1/offerings/:label/:provider",         :delete
       post   "/services/v1/offerings",                          :create_offering
+      post   "/services/v1/offerings/:label/handles/:id",       :update_handle
+      post   "/services/v1/offerings/:label/:provider/handles/:id", :update_handle
     end
 
     setup_routes
