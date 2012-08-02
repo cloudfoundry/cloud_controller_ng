@@ -14,9 +14,11 @@ module VCAP::CloudController
     klass = Class.new RestController::ModelController
     self.const_set name, klass
     klass.class_eval &blk
-    klass.class_eval do
-      define_messages
-      define_routes
+    if klass.default_routes?
+      klass.class_eval do
+        define_messages
+        define_routes
+      end
     end
   end
 

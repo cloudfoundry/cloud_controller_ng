@@ -108,7 +108,18 @@ module VCAP::CloudController::RestController
       # @return [String] The path/route to the collection associated with
       # the class.
       def path
-        "#{ROUTE_PREFIX}/#{class_basename.underscore.pluralize}"
+        "#{ROUTE_PREFIX}/#{path_base}"
+      end
+
+      # Get and set the base of the path for the api endpoint.
+      #
+      # @param [String] base path to the api endpoint, e.g. the apps part of
+      # /v2/apps/...
+      #
+      # @return [String] base path to the api endoint
+      def path_base(base = nil)
+        @path_base = base if base
+        @path_base || class_basename.underscore.pluralize
       end
 
       # Get and set the allowed query paramaeters (sent via the q http
@@ -126,6 +137,18 @@ module VCAP::CloudController::RestController
           @query_parameters ||= Set.new
           @query_parameters |= Set.new(args.map { |a| a.to_s })
         end
+      end
+
+      # Disable the generation of default routes
+      def no_default_routes
+        @no_default_routes = true
+      end
+
+      # Returns true if the cc framework should generate default routes for an
+      # api endpoint.  If this is false, the api is expected to generate
+      # its own routes.
+      def default_routes?
+        !@no_default_routes
       end
 
       def translate_and_log_exception(logger, e)
