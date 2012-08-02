@@ -127,6 +127,7 @@ module VCAP::CloudController
     def get(label, provider)
       validate_access(label, provider)
 
+      VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
       service = Models::Service[:label => label, :provider => provider]
       offering = {
         :label => label,
@@ -155,6 +156,36 @@ module VCAP::CloudController
         end
         offering[:plans] = service.service_plans.map(&:name)
         Yajl::Encoder.encode(offering)
+    end
+
+    # FIXME: ambiguous API: the handle id appears in both URI and body.
+    # We should only take the handle id from URI
+    def update_handle(label, provider, id)
+      validate_access(label, provider)
+      VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
+
+      req = VCAP::Services::Api::HandleUpdateRequest.decode(body)
+
+      service = Models::Service[:label => label, :provider => provider]
+      raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
+
+      instance = service.service_instances_dataset[:gateway_name => id]
+      if instance
+        instance.set(
+          :gateway_data => req.configuration,
+          :credentials => req.credentials,
+        )
+        instance.save_changes
+      elsif binding = service.service_bindings_dataset[:gateway_name.qualify(:service_bindings) => id]
+        binding.set(
+          :configuration => req.configuration,
+          :credentials => req.credentials,
+        )
+        binding.save_changes
+      else
+        # TODO: shall we add a HandleNotFound?
+        raise ServiceInstanceNotFound, "label=#{label} provider=#{provider} id=#{id}"
+      end
     end
 
     private
@@ -186,6 +217,14 @@ module VCAP::CloudController
 
       controller.get "/services/v1/offerings/:label/:provider/handles" do
         LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).list_handles(params[:label], params[:provider])
+      end
+
+      controller.post "/services/v1/offerings/:label/handles/:id" do
+        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).update_handle(params[:label], DEFAULT_PROVIDER, params[:id])
+      end
+
+      controller.post "/services/v1/offerings/:label/:provider/handles/:id" do
+        LegacyServiceGateway.new(@config, logger, request.body, @service_auth_token).update_handle(params[:label], params[:provider], params[:id])
       end
 
       controller.delete "/services/v1/offerings/:label/:provider" do
