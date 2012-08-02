@@ -140,15 +140,15 @@ module VCAP::CloudController::RestController
       end
 
       # Disable the generation of default routes
-      def no_default_routes
-        @no_default_routes = true
+      def disable_default_routes
+        @disable_default_routes = true
       end
 
       # Returns true if the cc framework should generate default routes for an
       # api endpoint.  If this is false, the api is expected to generate
       # its own routes.
       def default_routes?
-        !@no_default_routes
+        !@disable_default_routes
       end
 
       def translate_and_log_exception(logger, e)
