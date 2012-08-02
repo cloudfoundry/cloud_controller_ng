@@ -266,6 +266,120 @@ describe VCAP::CloudController::LegacyServiceGateway do
       end
     end
 
+    describe "POST services/v1/offerings/:label(/:provider)/handles/:id" do
+      before :each do
+        @auth_header = {
+          "HTTP_X_VCAP_SERVICE_TOKEN" => "foobar",
+        }
+      end
+
+      describe "with default provider" do
+        before :each do
+          svc = Models::Service.make(
+            :label    => "foo-bar",
+            :provider => "core",
+          )
+          Models::ServiceAuthToken.create(
+            :label    => "foo-bar",
+            :provider => "core",
+            :token    => "foobar",
+          )
+          cfg = Models::ServiceInstance.make(
+            :name     => "bar1",
+            :service  => svc,
+            :gateway_name => "foo1",
+          )
+           Models::ServiceBinding.make(
+            :gateway_name  => "bind1",
+            :service_instance  => cfg,
+            :configuration   => {},
+            :credentials     => {},
+            :binding_options => [],
+          )
+        end
+
+        it "should return not found for unknown handles" do
+          post "services/v1/offerings/foo-bar/handles/xxx",
+            VCAP::Services::Api::HandleUpdateRequest.new(
+              :service_id => "xxx",
+              :configuration => [],
+              :credentials   => []
+          ).encode, @auth_header
+          # FIXME should be 404
+          last_response.status.should == 400
+        end
+
+        it "should update provisioned handles" do
+          post "services/v1/offerings/foo-bar/handles/foo1",
+            VCAP::Services::Api::HandleUpdateRequest.new(
+              :service_id => "foo1",
+              :configuration => [],
+              :credentials   => []
+          ).encode, @auth_header
+          last_response.status.should == 200
+        end
+
+        it "should update bound handles" do
+          post "/services/v1/offerings/foo-bar/handles/bind1",
+            VCAP::Services::Api::HandleUpdateRequest.new(
+              :service_id => "bind1",
+              :configuration => [],
+              :credentials   => []
+          ).encode, @auth_header
+          last_response.status.should == 200
+        end
+      end
+
+      describe "with specific provider" do
+        before :each do
+          Models::ServiceAuthToken.create(
+            :label    => "foo-bar",
+            :provider => "test",
+            :token    => "foobar",
+          )
+
+          svc = Models::Service.make(
+            :label    => "foo-bar",
+            :provider => "test",
+          )
+
+          cfg = Models::ServiceInstance.make(
+            :gateway_name => "foo2",
+            :name         => "bar2",
+            :service      => svc,
+          )
+
+          Models::ServiceBinding.make(
+            :gateway_name  => "bind2",
+            :service_instance  => cfg,
+            :configuration   => {},
+            :credentials     => {},
+            :binding_options => [],
+          )
+        end
+
+        it "should update provisioned handles" do
+          post "/services/v1/offerings/foo-bar/test/handles/foo2",
+            VCAP::Services::Api::HandleUpdateRequest.new(
+              :service_id => "foo2",
+              :configuration => [],
+              :credentials   => []
+          ).encode, @auth_header
+          last_response.status.should == 200
+        end
+
+        it "should update bound handles" do
+          post "/services/v1/offerings/foo-bar/test/handles/bind2",
+            VCAP::Services::Api::HandleUpdateRequest.new(
+              :service_id => "bind2",
+              :configuration => [],
+              :credentials   => []
+          ).encode, @auth_header
+          last_response.status.should == 200
+        end
+      end
+    end
+
     describe "DELETE /services/v1/offerings/:label/(:provider)" do
       let(:auth_header) do
         Models::ServiceAuthToken.create(
