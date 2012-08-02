@@ -80,7 +80,7 @@ module VCAP::CloudController::RestController
       raise self.class.translate_validation_exception(e, request_attrs)
     rescue Sequel::DatabaseError => e
       raise self.class.translate_and_log_exception(logger, e)
-    rescue JsonMessage::ValidationError => e
+    rescue JsonMessage::Error => e
       raise MessageParseError.new(e)
     end
 
