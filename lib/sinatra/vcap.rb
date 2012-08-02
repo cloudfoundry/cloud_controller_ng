@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/rest_api"
+require "vcap/component"
 require "sinatra/consumes"
 require "sinatra/reloader"
 require "securerandom"
@@ -90,6 +91,13 @@ module Sinatra
       end
 
       before do
+        EM.next_tick do
+          unless ::VCAP::Component.varz.nil?
+            ::VCAP::Component.varz[:requests] += 1
+            ::VCAP::Component.varz[:pending_requests] += 1
+          end
+        end
+
         logger_name = opts[:logger_name] || "vcap.api"
         env["rack.logger"] = Steno.logger(logger_name)
         @request_guid = SecureRandom.uuid
@@ -97,8 +105,13 @@ module Sinatra
       end
 
       after do
+        EM.next_tick do
+          unless ::VCAP::Component.varz.nil?
+            ::VCAP::Component.varz[:pending_requests] -= 1
+          end
+        end
+
         headers["X-VCAP-Request-ID"] = @request_guid
-        nil
       end
     end
   end
