@@ -272,4 +272,26 @@ describe VCAP::CloudController::LegacyApps do
       end
     end
   end
+
+  describe "PUT /apps/:name/application" do
+    let(:app_obj) { Models::App.make(:space => user.default_space) }
+    let(:tmpdir) { Dir.mktmpdir }
+
+    after do
+      FileUtils.rm_rf(tmpdir)
+    end
+
+    it "should return success" do
+      zipname = File.join(tmpdir, "file.zip")
+      create_zip(zipname, 10)
+      zipfile = File.new(zipname)
+      req = {
+        :application => Rack::Test::UploadedFile.new(zipfile),
+        :resources => Yajl::Encoder.encode([])
+      }
+
+      post "/apps/#{app_obj.name}/application", req, headers_for(user)
+      last_response.status.should == 200
+    end
+  end
 end

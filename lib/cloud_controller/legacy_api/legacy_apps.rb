@@ -58,6 +58,13 @@ module VCAP::CloudController
       Yajl::Encoder.encode(:crashes => [])
     end
 
+    def upload(name)
+      logger.debug "upload app request name: #{name}"
+      app = app_from_name(name)
+      VCAP::CloudController::AppBits.new(config, logger, env, params, body).dispatch(:upload, app.guid)
+      HTTP::OK
+    end
+
     private
 
     def legacy_app_encoding(app)
@@ -158,6 +165,7 @@ module VCAP::CloudController
       put     "/apps/:name",         :update
       delete  "/apps/:name",         :delete
       get     "/apps/:name/crashes", :crashes
+      post    "/apps/:name/application", :upload
     end
 
     setup_routes
