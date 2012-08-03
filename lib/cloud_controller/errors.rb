@@ -68,8 +68,9 @@ module VCAP::CloudController::Errors
 
     ["LegacyApiWithoutDefaultSpace", HTTP::BAD_REQUEST, 140001, "A legacy api call requring a default app space was called, but no default app space is set for the user."],
 
-    ["AppPackageInvalid", HTTP::BAD_REQUEST, 150001, "The app package is invalid: %s"]
+    ["AppPackageInvalid", HTTP::BAD_REQUEST, 150001, "The app package is invalid: %s"],
 
+    ["AppBitsUploadInvalid", HTTP::BAD_REQUEST, 160001, "The app upload is invalid: %s"]
   ].each do |e|
     define_error *e
   end

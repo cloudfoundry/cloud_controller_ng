@@ -25,6 +25,12 @@ def make_user_for_space(space)
   make_user_for_org space.organization
 end
 
+def make_developer_for_space(space)
+  user = make_user_for_org space.organization
+  space.add_developer user
+  user
+end
+
 def make_domain_for_space(space)
   make_domain_for_org space.organization
 end
