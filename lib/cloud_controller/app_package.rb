@@ -62,7 +62,7 @@ module VCAP::CloudController
 
         if uploaded_file
           cmd = "unzip -q -d #{working_dir} #{uploaded_file.path}"
-          (rc, out, err) = run("unzipping application", cmd)
+          run("unzipping application", cmd)
         end
         working_dir
       end
@@ -92,9 +92,9 @@ module VCAP::CloudController
       # Extract the file size of the unzipped app
       def unzipped_size(uploaded_file)
         cmd = "unzip -l #{uploaded_file.path}"
-        (rc, out, err) = run("listing application archive", cmd)
+        output = run("listing application archive", cmd)
 
-        matches = out.lines.to_a.last.match(/^\s*(\d+)\s+(\d+) file/)
+        matches = output.lines.to_a.last.match(/^\s*(\d+)\s+(\d+) file/)
         unless matches
           msg = "failed parsing application archive listing"
           raise Errors::AppPackageInvalid.new(msg)
@@ -161,11 +161,11 @@ module VCAP::CloudController
       def repack_app_in(dir, tmpdir)
         target_path = File.join(tmpdir, 'app.zip')
         cmd = "zip -q -y -r #{target_path} *"
-        (rc, out, err) = run("repacking application", cmd, :chdir => dir)
+        run("repacking application", cmd, :chdir => dir)
         target_path
       end
 
-      # Runs a command, returns the status, stdout, and stderr
+      # Runs a command, returns the output
       def run(msg, cmd, opts = {})
         logger.debug "run '#{cmd}'"
         child = POSIX::Spawn::Child.new(cmd, opts)
@@ -173,7 +173,7 @@ module VCAP::CloudController
           logger.error "'#{cmd}' failed out: '#{child.out}' err: '#{child.err}'"
           raise Errors::AppPackageInvalid.new("failed #{msg}")
         end
-        [child.status.exitstatus, child.out, child.err]
+        child.out
       end
 
       def logger
