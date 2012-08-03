@@ -26,12 +26,7 @@ class VCAP::CloudController::FilesystemPool < VCAP::CloudController::ResourcePoo
 
     def resource_known?(descriptor)
       resource_path = path_from_sha1(descriptor["sha1"])
-      if File.exists?(resource_path)
-        File.size(resource_path) == descriptor["size"].to_i
-      else
-        logger.error "resource size mismatch #{resource_path}"
-        false
-      end
+      File.exists?(resource_path)
     end
 
     def add_path(path)
