@@ -17,7 +17,7 @@ namespace :spec do
       add_filter "/spec/"
       add_filter "/migrations/"
       RSpec::Core::Runner.disable_autorun!
-      RSpec::Core::Runner.run(['.'])
+      RSpec::Core::Runner.run(['--fail-fast', '--backtrace', 'spec'])
     end
   end
 end
