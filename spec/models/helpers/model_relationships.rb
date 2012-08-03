@@ -1,5 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
+require File.expand_path("../cloud_controller_model", __FILE__)
+
 module VCAP::CloudController::ModelSpecHelper
   relation_types = VCAP::CloudController::ModelSpecHelper.relation_types
 
