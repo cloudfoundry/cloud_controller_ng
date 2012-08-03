@@ -2,7 +2,7 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe VCAP::CloudController::App do
+describe VCAP::CloudController::AppBits do
   describe "PUT /v2/app/:id/upload_bits" do
     let(:app_obj) { Models::App.make }
     let(:user) { make_user_for_space(app_obj.space) }
