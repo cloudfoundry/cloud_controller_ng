@@ -85,7 +85,7 @@ module VCAP::CloudController
         # Ugh, this stat's all the files that would need to be copied
         # from the resource pool. Consider caching sizes in resource pool?
         sizes = resource_pool.resource_sizes(resources)
-        total_size += sizes.reduce(0) {|accum, cur| accum + cur[:size] }
+        total_size += sizes.reduce(0) {|accum, cur| accum + cur["size"] }
         validate_size(total_size)
       end
 
@@ -148,8 +148,8 @@ module VCAP::CloudController
       def synchronize_pool_with(working_dir, resource_descriptors)
         resource_pool.add_directory(working_dir)
         resource_descriptors.each do |descriptor|
-          create_dir_skeleton(working_dir, descriptor[:fn])
-          path = resolve_path(working_dir, descriptor[:fn])
+          create_dir_skeleton(working_dir, descriptor["fn"])
+          path = resolve_path(working_dir, descriptor["fn"])
           resource_pool.copy(descriptor, path)
         end
       rescue => e

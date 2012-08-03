@@ -15,7 +15,7 @@ module VCAP::CloudController::ResourcePoolSpecHelper
     end
 
     let(:dummy_descriptor) do
-      { :sha1 => Digest::SHA1.new("abc").hexdigest, :size => 1}
+      { "sha1" => Digest::SHA1.new("abc").hexdigest, "size" => 1}
     end
 
     before(:all) do
@@ -32,8 +32,8 @@ module VCAP::CloudController::ResourcePoolSpecHelper
           contents = SecureRandom.uuid
 
           descriptor = {
-            :sha1 => Digest::SHA1.hexdigest(contents),
-            :size => contents.length
+            "sha1" => Digest::SHA1.hexdigest(contents),
+            "size" => contents.length
           }
           @descriptors << descriptor
 

@@ -163,7 +163,7 @@ module VCAP::CloudController::ApiSpecHelper
     req = Yajl::Encoder.encode(matches + non_matches)
     send(verb, path, req, json_headers(headers_for(user)))
     last_response.status.should == 200
-    resp = Yajl::Parser.parse(last_response.body, :symbolize_keys => true)
+    resp = Yajl::Parser.parse(last_response.body)
     resp.should == matches
   end
 end

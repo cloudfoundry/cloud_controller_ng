@@ -25,9 +25,9 @@ class VCAP::CloudController::FilesystemPool < VCAP::CloudController::ResourcePoo
     end
 
     def resource_known?(descriptor)
-      resource_path = path_from_sha1(descriptor[:sha1])
+      resource_path = path_from_sha1(descriptor["sha1"])
       if File.exists?(resource_path)
-        File.size(resource_path) == descriptor[:size].to_i
+        File.size(resource_path) == descriptor["size"].to_i
       else
         logger.error "resource size mismatch #{resource_path}"
         false
@@ -47,10 +47,10 @@ class VCAP::CloudController::FilesystemPool < VCAP::CloudController::ResourcePoo
     def resource_sizes(resources)
       sizes = []
       resources.each do |descriptor|
-        resource_path = path_from_sha1(descriptor[:sha1])
+        resource_path = path_from_sha1(descriptor["sha1"])
         if File.exists?(resource_path)
           entry = descriptor.dup
-          entry[:size] = File.size(resource_path)
+          entry["size"] = File.size(resource_path)
           sizes << entry
         end
       end
@@ -61,7 +61,7 @@ class VCAP::CloudController::FilesystemPool < VCAP::CloudController::ResourcePoo
 
     def overwrite_destination_with!(descriptor, destination)
       FileUtils.mkdir_p File.dirname(destination)
-      resource_path = path_from_sha1(descriptor[:sha1])
+      resource_path = path_from_sha1(descriptor["sha1"])
       FileUtils.cp(resource_path, destination)
     end
 

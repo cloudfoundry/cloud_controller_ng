@@ -29,7 +29,7 @@ describe VCAP::CloudController::FilesystemPool do
   describe "#resource_sizes" do
     it "should return resources with sizes" do
       without_sizes = @descriptors.map do |d|
-        { :sha1 => d[:sha1] }
+        { "sha1" => d["sha1"] }
       end
 
       res = FilesystemPool.resource_sizes(without_sizes)
