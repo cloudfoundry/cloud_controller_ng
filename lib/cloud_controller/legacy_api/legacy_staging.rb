@@ -31,6 +31,15 @@ module VCAP::CloudController
 
       private
 
+      def staging_uri(path)
+        URI::HTTP.build(
+          :host     => @config[:bind_address],
+          :port     => @config[:port],
+          :userinfo => [@config[:staging][:auth][:user], @config[:staging][:auth][:password]],
+          :path     => path
+        ).to_s
+      end
+
       def upload_handles
         @upload_handles ||= {}
       end

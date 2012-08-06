@@ -36,6 +36,14 @@ quota_manager:
   auth_token: "testtoken"
   http_timeout_sec: 2
 
+# App staging parameters
+staging:
+  # Max duration for staging process
+  max_staging_runtime: 120 # secs
+  auth:
+    user: zxsfhgjg
+    password: ZNVfdase9
+
 # TODO: this will be removed when we do full runtime/framework
 # db population when we work on real running app support
 legacy_framework_manifest:
