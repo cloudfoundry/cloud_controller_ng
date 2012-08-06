@@ -22,6 +22,8 @@ module VCAP::CloudController::RestController
 
     # Create a new rest api endpoint.
     #
+    # @param [Hash] config CC configuration
+    #
     # @param [Steno::Logger] logger The logger to use during the request.
     #
     # @param [Hash] env The http environment for the request.
@@ -31,13 +33,23 @@ module VCAP::CloudController::RestController
     #
     # @param [IO] body The request body.
     #
-    def initialize(config, logger, env, params, body)
+    # @param [IO] body The request body.
+    #
+    # @param [Sinatra::Base] sinatra The sinatra object associated with the
+    # request.
+    #
+    # We had been trying to keep everything relatively framework
+    # agnostic in the base api and everthing build on it, but, the need to call
+    # send_file changed that.
+    #
+    def initialize(config, logger, env, params, body, sinatra = nil)
       @config  = config
       @logger  = logger
       @env     = env
       @params  = params
       @body    = body
       @opts    = parse_params(params)
+      @sinatra = sinatra
     end
 
     # Parses and sanitizes query parameters from the sinatra request.
@@ -89,6 +101,11 @@ module VCAP::CloudController::RestController
     # @return [Models::User] User object for the currently active user
     def user
       VCAP::CloudController::SecurityContext.current_user
+    end
+
+    # see Sinatra::Base#send_file
+    def send_file(path, opts={})
+      @sinatra.send_file(path, opts)
     end
 
     attr_reader :config, :logger, :env, :params, :body, :request_attrs

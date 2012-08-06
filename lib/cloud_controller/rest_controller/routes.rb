@@ -15,7 +15,7 @@ module VCAP::CloudController::RestController
         klass = self
         controller.send(verb, path, opts) do |*args|
           logger.debug "dispatch #{klass} #{verb} #{path}"
-          api = klass.new(@config, logger, env, request.params, request.body)
+          api = klass.new(@config, logger, env, request.params, request.body, self)
           if method
             api.dispatch(method, *args)
           else
