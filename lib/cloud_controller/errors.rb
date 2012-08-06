@@ -71,7 +71,9 @@ module VCAP::CloudController::Errors
     ["AppPackageInvalid", HTTP::BAD_REQUEST, 150001, "The app package is invalid: %s"],
     ["AppPackageNotFound", HTTP::BAD_REQUEST, 150002, "The app package could not be found: %s"],
 
-    ["AppBitsUploadInvalid", HTTP::BAD_REQUEST, 160001, "The app upload is invalid: %s"]
+    ["AppBitsUploadInvalid", HTTP::BAD_REQUEST, 160001, "The app upload is invalid: %s"],
+
+    ["StagingError", HTTP::BAD_REQUEST, 170001, "Staging error: %s"]
   ].each do |e|
     define_error *e
   end
