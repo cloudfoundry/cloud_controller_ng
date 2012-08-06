@@ -22,6 +22,10 @@ module VCAP::CloudController
         staging_uri("/staging/app/#{id}")
       end
 
+      def upload_droplet_uri(id)
+        staging_uri("/staging/app/#{id}")
+      end
+
       def with_upload_handle(id)
         handle = create_handle(id)
         yield handle

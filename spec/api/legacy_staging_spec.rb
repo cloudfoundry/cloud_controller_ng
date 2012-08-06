@@ -54,6 +54,13 @@ describe VCAP::CloudController::LegacyStaging do
     end
   end
 
+  describe "upload_droplet_uri" do
+    it "should return a uri to our cc" do
+      uri = LegacyStaging.upload_droplet_uri(app_guid)
+      uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/app/#{app_guid}"
+    end
+  end
+
   describe "GET /staging/app/:id/" do
     let(:app_obj) { Models::App.make }
     let(:app_obj_without_pkg) { Models::App.make }
