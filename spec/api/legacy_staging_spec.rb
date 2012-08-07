@@ -89,4 +89,41 @@ describe VCAP::CloudController::LegacyStaging do
       last_response.status.should == 400
     end
   end
+
+  describe "POST /staging/app/:id/" do
+    let(:app_obj) { Models::App.make }
+    let(:tmpfile) { Tempfile.new("droplet.tgz") }
+    let(:upload_req) do
+      { :upload => { :droplet => Rack::Test::UploadedFile.new(tmpfile) } }
+    end
+
+    context "with a valid upload handle" do
+      it "should rename the file and store it in handle.upload_path and delete it when the handle goes out of scope" do
+        saved_path = nil
+        LegacyStaging.with_upload_handle(app_obj.guid) do |handle|
+          post "/staging/app/#{app_obj.guid}", upload_req
+          last_response.status.should == 200
+          File.exists?(handle.upload_path).should be_true
+          saved_path = handle.upload_path
+        end
+        File.exists?(saved_path).should be_false
+      end
+    end
+
+    context "with an invalid upload handle" do
+      it "should return an error" do
+        post "/staging/app/#{app_obj.guid}", upload_req
+        last_response.status.should == 400
+      end
+    end
+
+    context "with an invalid app" do
+      it "should return an error" do
+        LegacyStaging.with_upload_handle(app_obj.guid) do |handle|
+          post "/staging/app/bad", upload_req
+          last_response.status.should == 400
+        end
+      end
+    end
+  end
 end
