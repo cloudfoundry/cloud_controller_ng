@@ -156,8 +156,9 @@ RSpec.configure do |rspec_config|
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController::SpecHelper
 
-  rspec_config.before(:each) do |example|
+  rspec_config.before(:each) do
     reset_database db
+    puts example.full_description
   end
 end
 
