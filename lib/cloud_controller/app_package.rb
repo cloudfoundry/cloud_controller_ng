@@ -27,6 +27,8 @@ module VCAP::CloudController
         repacked_path = AppPackage.repack_app_in(unpacked_path, tmpdir)
 
         # Do the sha1 before the mv, because the mv might be to a slower store
+        logger.debug2("repacked_path is %s, exists? = %s" % [repacked_path, File.exists? repacked_path])
+        logger.debug2("package_path(guid) is %s, exists? = %s" % [package_path(guid), File.exists? package_path(guid)])
         sha1 = Digest::SHA1.file(repacked_path).hexdigest
         FileUtils.mv(repacked_path, package_path(guid))
         sha1
