@@ -21,7 +21,9 @@ describe VCAP::CloudController::AppBits do
     shared_examples "dev app upload" do |expected|
       context "as a developer" do
         it "should return #{expected}" do
-          put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(developer)
+          b = req_body
+          GC.start
+          put "/v2/apps/#{app_obj.guid}/bits", b, headers_for(developer)
           last_response.status.should == expected
         end
       end
@@ -77,6 +79,8 @@ describe VCAP::CloudController::AppBits do
         {
           :application => Rack::Test::UploadedFile.new(zipfile),
           :resources => Yajl::Encoder.encode([])
+        }.tap {
+          GC.start
         }
       end
 
