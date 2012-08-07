@@ -33,6 +33,12 @@ module VCAP::CloudController
         destroy_handle handle
       end
 
+      def lookup_handle(id)
+        mutex.synchronize do
+          return upload_handles[id]
+        end
+      end
+
       private
 
       def staging_uri(path)
@@ -62,6 +68,9 @@ module VCAP::CloudController
       def destroy_handle(handle)
         return unless handle
         mutex.synchronize do
+          if handle.upload_path && File.exists?(handle.upload_path)
+            File.delete(handle.upload_path)
+          end
           upload_handles.delete(handle.id)
         end
       end
@@ -95,6 +104,51 @@ module VCAP::CloudController
       send_file package_path
     end
 
-    get "/staging/app/:id", :download_app
+    # Handles a droplet upload from a stager
+    def upload_droplet(id)
+      app = Models::App.find(:guid => id)
+      raise AppNotFound.new(id) if app.nil?
+
+      handle = self.class.lookup_handle(id)
+      raise StagingError.new("staging not in progress for #{id}") unless handle
+      raise StagingError.new("malformed droplet upload request for #{id}") unless upload_file
+
+      upload_path = upload_file.path
+      final_path = save_path(id)
+      logger.debug "renaming staged droplet from '#{upload_path}' to '#{final_path}'"
+
+      begin
+        File.rename(upload_path, final_path)
+      rescue => e
+        raise StagingError.new("failed renaming staged droplet: #{e}")
+      end
+
+      handle.upload_path = final_path
+      logger.debug "uploaded droplet for #{id} to #{final_path}"
+      HTTP::OK
+    end
+
+    private
+
+    def upload_file
+      # TODO: enable nginx
+      # if CloudController.use_nginx
+      #   params[:droplet_path]
+      # else
+      @upload_file ||= params["upload"]["droplet"][:tempfile]
+    rescue
+      nil
+    end
+
+    def save_path(id)
+      File.join(tmpdir, "staged_upload_#{id}.tgz")
+    end
+
+    def tmpdir
+      (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
+    end
+
+    get  "/staging/app/:id", :download_app
+    post "/staging/app/:id", :upload_droplet
   end
 end
