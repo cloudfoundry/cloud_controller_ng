@@ -148,6 +148,15 @@ module VCAP::CloudController
       (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
     end
 
+    controller.before "/staging/app/*" do
+      auth =  Rack::Auth::Basic::Request.new(env)
+      unless (auth.provided? && auth.basic? && auth.credentials &&
+              auth.credentials == [@config[:staging][:auth][:user],
+                                   @config[:staging][:auth][:password]])
+        raise NotAuthorized
+      end
+    end
+
     get  "/staging/app/:id", :download_app
     post "/staging/app/:id", :upload_droplet
   end

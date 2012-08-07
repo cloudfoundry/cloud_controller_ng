@@ -9,9 +9,8 @@ describe VCAP::CloudController::LegacyStaging do
   let(:staging_user) { "user" }
   let(:staging_password) { "password" }
   let(:app_guid) { "abc" }
-
-  before do
-    cfg = {
+  let(:staging_config) do
+    {
       :max_staging_runtime => max_staging_runtime,
       :bind_address => cc_addr,
       :port => cc_port,
@@ -22,7 +21,10 @@ describe VCAP::CloudController::LegacyStaging do
         }
       }
     }
-    LegacyStaging.configure(cfg)
+  end
+
+  before do
+    LegacyStaging.configure(staging_config)
   end
 
   describe "with_upload_handle" do
@@ -61,12 +63,22 @@ describe VCAP::CloudController::LegacyStaging do
     end
   end
 
-  describe "GET /staging/app/:id/" do
+  shared_examples "staging bad auth" do |verb|
+    it "should return 403 for bad credentials" do
+      authorize "hacker", "sw0rdf1sh"
+      send(verb, "/staging/app/#{app_obj.guid}")
+      last_response.status.should == 403
+    end
+  end
+
+  describe "GET /staging/app/:id" do
     let(:app_obj) { Models::App.make }
     let(:app_obj_without_pkg) { Models::App.make }
     let(:app_package_path) { AppPackage.package_path(app_obj.guid) }
 
     before do
+      config_override(staging_config)
+      authorize staging_user, staging_password
       AppPackage.configure
       pkg_path = AppPackage.package_path(app_obj.guid)
       File.open(pkg_path, "w") do |f|
@@ -88,13 +100,20 @@ describe VCAP::CloudController::LegacyStaging do
       get "/staging/app/#{app_obj_without_pkg.guid}"
       last_response.status.should == 400
     end
+
+    include_examples "staging bad auth", :get
   end
 
-  describe "POST /staging/app/:id/" do
+  describe "POST /staging/app/:id" do
     let(:app_obj) { Models::App.make }
     let(:tmpfile) { Tempfile.new("droplet.tgz") }
     let(:upload_req) do
       { :upload => { :droplet => Rack::Test::UploadedFile.new(tmpfile) } }
+    end
+
+    before do
+      config_override(staging_config)
+      authorize staging_user, staging_password
     end
 
     context "with a valid upload handle" do
@@ -125,5 +144,7 @@ describe VCAP::CloudController::LegacyStaging do
         end
       end
     end
+
+    include_examples "staging bad auth", :post
   end
 end
