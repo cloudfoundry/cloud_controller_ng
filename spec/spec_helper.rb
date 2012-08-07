@@ -123,6 +123,7 @@ def create_zip(zip_name, file_count, file_size=1024)
     tf.write("A" * file_size)
     tf.close
   end
+  File.should be_directory(File.dirname(zip_name))
   child = POSIX::Spawn::Child.new("zip", zip_name, *files.map(&:path))
   child.status.exitstatus.should == 0
   total_size
