@@ -83,6 +83,8 @@ describe VCAP::CloudController::AppBits do
         {
           :application => Rack::Test::UploadedFile.new(zipfile),
           :resources => Yajl::Encoder.encode([])
+        }.tap {
+          GC.start
         }
       end
 
