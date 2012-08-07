@@ -155,6 +155,8 @@ describe VCAP::CloudController::AppPackage do
       create_zip(zipname, 10, 1024)
       AppPackage.to_zip(guid, File.new(zipname), [])
       File.exist?(AppPackage.package_path(guid)).should == true
+      Steno.logger("cc.spec").debug2("inside: %s" % example.full_description)
+      Steno.logger("cc.spec").debug2(`ls -ld /tmp/d2012*`)
     end
   end
 end
