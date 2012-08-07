@@ -18,8 +18,8 @@ namespace :spec do
       add_filter "/migrations/"
       add_filter '/vendor\/bundle/'
       RSpec::Core::Runner.disable_autorun!
-      RSpec::Core::Runner.run(['--fail-fast', '--backtrace', 'spec'])
     end
+    exit RSpec::Core::Runner.run(%w(--fail-fast --backtrace spec)).to_i
   end
 end
 
