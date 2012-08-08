@@ -39,6 +39,16 @@ GIT
   specs:
     vcap-concurrency (0.1.0)
 
+GIT
+  remote: https://github.com/cloudfoundry/stager-client.git
+  revision: 04c2aee9ceed39571d47704a42a70beb472503b9
+  ref: 04c2aee9
+  specs:
+    stager-client (0.0.2)
+      eventmachine
+      nats
+      yajl-ruby
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -154,6 +164,7 @@ DEPENDENCIES
   sinatra
   sinatra-contrib
   sqlite3
+  stager-client (~> 0.0.02)!
   steno (~> 0.0.12)
   vcap-concurrency!
   vcap_common (~> 2.0.2)!
