@@ -6,40 +6,37 @@ require "eventmachine/schedule_sync"
 
 describe "EventMachine#schedule_sync" do
 
-  def with_em_and_thread(&blk)
-    Thread.abort_on_exception = true
-    EM.run do
-      EM.reactor_thread?.should == true
-      Thread.new do
-        EM.reactor_thread?.should == false
-        blk.call
-        EM.reactor_thread?.should == false
-      end
-      EM.reactor_thread?.should == true
-    end
-  end
-
   it "should run a block on the reactor thread and return the result" do
+    result = nil
     with_em_and_thread do
       result = EM.schedule_sync do
         EM.reactor_thread?.should == true
         "sync return from the reactor thread"
       end
-      result.should == "sync return from the reactor thread"
-      EM.next_tick { EM.stop }
     end
+    result.should == "sync return from the reactor thread"
   end
 
-  it "should run a block on the reactor thread using an optional callback" do
+  it "should run a block on the reactor thread using an optional callback (async)" do
+    result = nil
     with_em_and_thread do
       result = EM.schedule_sync do |promise|
         EM::Timer.new(1) {
-          promise.deliver("async return from the reactor thread")
+          promise.deliver("async return from the reactor thread with timer")
         }
       end
-      result.should == "async return from the reactor thread"
-      EM.next_tick { EM.stop }
     end
+    result.should == "async return from the reactor thread with timer"
+  end
+
+  it "should run a block on the reactor thread using an optional callback (sync)" do
+    result = nil
+    with_em_and_thread do
+      result = EM.schedule_sync do |promise|
+        promise.deliver("async return from the reactor thread immediate")
+      end
+    end
+    result.should == "async return from the reactor thread immediate"
   end
 
   it "should rethrow exceptions in the calling thread" do
@@ -50,8 +47,7 @@ describe "EventMachine#schedule_sync" do
           raise "blowup"
         end
       }.should raise_error(Exception, /blowup/)
-      result.should == nil
-      EM.next_tick { EM.stop }
     end
+    result.should == nil
   end
 end

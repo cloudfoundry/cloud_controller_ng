@@ -108,6 +108,20 @@ module VCAP::CloudController::SpecHelper
     total_size
   end
 
+  def with_em_and_thread(&blk)
+    Thread.abort_on_exception = true
+    EM.run do
+      EM.reactor_thread?.should == true
+      Thread.new do
+        EM.reactor_thread?.should == false
+        blk.call
+        EM.reactor_thread?.should == false
+        EM.next_tick { EM.stop }
+      end
+      EM.reactor_thread?.should == true
+    end
+  end
+
   RSpec::Matchers.define :be_recent do |expected|
     match do |actual|
       actual.should be_within(2).of(Time.now)
