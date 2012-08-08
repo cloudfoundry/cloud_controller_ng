@@ -72,11 +72,13 @@ describe VCAP::CloudController::Models::App do
     it "should set the state to PENDING if the hash changes" do
       app.package_hash = "def"
       app.package_state.should == "PENDING"
+      app.package_hash.should == "def"
     end
 
     it "should not set the state to PENDING if the hash remains the same" do
       app.package_hash = "abc"
       app.package_state.should == "STAGED"
+      app.package_hash.should == "abc"
     end
   end
 
@@ -112,6 +114,18 @@ describe VCAP::CloudController::Models::App do
       app.package_hash = "abc"
       app.package_state = "STAGED"
       app.needs_staging?.should be_false
+    end
+  end
+
+  describe "droplet_hash=" do
+    let(:app) { Models::App.make }
+
+    it "should set the state to staged" do
+      app.package_hash = "abc"
+      app.needs_staging?.should be_true
+      app.droplet_hash = "def"
+      app.needs_staging?.should be_false
+      app.droplet_hash.should == "def"
     end
   end
 end

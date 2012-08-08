@@ -92,5 +92,11 @@ module VCAP::CloudController::Models
       self.package_state = "PENDING" unless self.package_hash == hash
       super(hash)
     end
+
+    def droplet_hash=(hash)
+      # TODO: rename package_state to just state?
+      self.package_state = "STAGED"
+      super(hash)
+    end
   end
 end
