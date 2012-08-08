@@ -77,54 +77,74 @@ def reset_database(db)
   VCAP::CloudController::DB.apply_migrations(db)
 end
 
+module VCAP::CloudController::SpecHelper
+  def config_override(hash)
+    @config_override = hash
+  end
+
+  def config
+    config_file = File.expand_path("../../config/cloud_controller.yml", __FILE__)
+    c = VCAP::CloudController::Config.from_file(config_file)
+    c = c.merge(@config_override || {})
+    VCAP::CloudController::Config.configure(c)
+    c
+  end
+
+  def configure
+    config
+  end
+
+  def create_zip(zip_name, file_count, file_size=1024)
+    total_size = file_count * file_size
+    files = []
+    file_count.times do |i|
+      tf = Tempfile.new("ziptest_#{i}")
+      files << tf
+      tf.write("A" * file_size)
+      tf.close
+    end
+    child = POSIX::Spawn::Child.new("zip", zip_name, *files.map(&:path))
+    child.status.exitstatus.should == 0
+    total_size
+  end
+
+  RSpec::Matchers.define :be_recent do |expected|
+    match do |actual|
+      actual.should be_within(2).of(Time.now)
+    end
+  end
+
+  shared_examples "a vcap rest error response" do |description_match|
+    let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+
+    it "should contain a numeric code" do
+      decoded_response["code"].should_not be_nil
+      decoded_response["code"].should be_a_kind_of(Fixnum)
+    end
+
+    it "should contain a description" do
+      decoded_response["description"].should_not be_nil
+      decoded_response["description"].should be_a_kind_of(String)
+    end
+
+    if description_match
+      it "should contain a description that matches #{description_match}" do
+        decoded_response["description"].should match /#{description_match}/
+      end
+    end
+  end
+end
+
 RSpec.configure do |rspec_config|
   rspec_config.include VCAP::CloudController
   rspec_config.include Rack::Test::Methods
+  rspec_config.include VCAP::CloudController::SpecHelper
 
   rspec_config.before(:each) do |example|
     reset_database db
   end
 end
 
-RSpec::Matchers.define :be_recent do |expected|
-  match do |actual|
-    actual.should be_within(2).of(Time.now)
-  end
-end
-
-shared_examples "a vcap rest error response" do |description_match|
-  let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
-
-  it "should contain a numeric code" do
-    decoded_response["code"].should_not be_nil
-    decoded_response["code"].should be_a_kind_of(Fixnum)
-  end
-
-  it "should contain a description" do
-    decoded_response["description"].should_not be_nil
-    decoded_response["description"].should be_a_kind_of(String)
-  end
-
-  if description_match
-    it "should contain a description that matches #{description_match}" do
-      decoded_response["description"].should match /#{description_match}/
-    end
-  end
-end
-
-def create_zip(zip_name, file_count, file_size=1024)
-  total_size = file_count * file_size
-  files = []
-  file_count.times do |i|
-    tf = Tempfile.new("ziptest_#{i}")
-    files << tf
-    tf.write("A" * file_size)
-    tf.close
-  end
-  child = POSIX::Spawn::Child.new("zip", zip_name, *files.map(&:path))
-  child.status.exitstatus.should == 0
-  total_size
-end
 
 require "cloud_controller/models"
 require "blueprints"

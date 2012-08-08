@@ -29,19 +29,6 @@ module VCAP::CloudController::ApiSpecHelper
     {:protocol => "https", :config_setting => :https_required_for_admins, :user => "admin", :success => true}
   ]
 
-  def config_override(hash)
-    @config_override = hash
-  end
-
-  def config
-    config_file = File.expand_path("../../../config/cloud_controller.yml",
-                                    __FILE__)
-    c = VCAP::CloudController::Config.from_file(config_file)
-    c = c.merge(@config_override || {})
-    VCAP::CloudController::Config.configure(c)
-    c
-  end
-
   def app
     VCAP::CloudController::Controller.new(config)
   end
