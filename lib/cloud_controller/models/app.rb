@@ -79,5 +79,18 @@ module VCAP::CloudController::Models
     def self.user_visibility_filter(user)
       user_visibility_filter_with_admin_override(:space => user.spaces_dataset)
     end
+
+    def needs_staging?
+      !(self.package_hash.nil? || self.staged?)
+    end
+
+    def staged?
+      self.package_state == "STAGED"
+    end
+
+    def package_hash=(hash)
+      self.package_state = "PENDING" unless self.package_hash == hash
+      super(hash)
+    end
   end
 end

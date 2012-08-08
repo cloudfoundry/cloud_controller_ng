@@ -60,4 +60,58 @@ describe VCAP::CloudController::Models::App do
       end
     end
   end
+
+  describe "package_hash=" do
+    let(:app) { Models::App.make }
+
+    before do
+      app.package_hash = "abc"
+      app.package_state = "STAGED"
+    end
+
+    it "should set the state to PENDING if the hash changes" do
+      app.package_hash = "def"
+      app.package_state.should == "PENDING"
+    end
+
+    it "should not set the state to PENDING if the hash remains the same" do
+      app.package_hash = "abc"
+      app.package_state.should == "STAGED"
+    end
+  end
+
+  describe "staged?" do
+    let(:app) { Models::App.make }
+
+    it "should return true if package_state is STAGED" do
+      app.package_state = "STAGED"
+      app.staged?.should be_true
+    end
+
+    it "should return false if package_state is PENDING" do
+      app.package_state = "PENDING"
+      app.staged?.should be_false
+    end
+  end
+
+  describe "needs_staging?" do
+    let(:app) { Models::App.make }
+
+    it "should return false if the package_hash is nil" do
+      app.package_hash.should be_nil
+      app.needs_staging?.should be_false
+    end
+
+    it "should return true if PENDING is set" do
+      app.package_hash = "abc"
+      app.package_state = "PENDING"
+      app.needs_staging?.should be_true
+    end
+
+    it "should return false if STAGING is set" do
+      app.package_hash = "abc"
+      app.package_state = "STAGED"
+      app.needs_staging?.should be_false
+    end
+  end
 end
