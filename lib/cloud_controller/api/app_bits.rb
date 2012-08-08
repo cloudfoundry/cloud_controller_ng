@@ -30,10 +30,12 @@ module VCAP::CloudController
       end
       uploaded_file = application[:tempfile]
 
-      AppPackage.to_zip(app.guid, uploaded_file, resources)
+      sha1 = AppPackage.to_zip(app.guid, uploaded_file, resources)
+      app.package_hash = sha1
+      app.save
+
       HTTP::CREATED
     end
-
 
     def json_param(name)
       raw = params[name]

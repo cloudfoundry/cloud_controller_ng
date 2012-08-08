@@ -20,9 +20,15 @@ describe VCAP::CloudController::AppBits do
 
     shared_examples "dev app upload" do |expected|
       context "as a developer" do
-        it "should return #{expected}" do
+        extra_desc = "and set the app package_hash" if expected == 201
+        it "should return #{expected} #{extra_desc}" do
+          app_obj.package_hash.should be_nil
           put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(developer)
           last_response.status.should == expected
+          if expected == 201
+            app_obj.refresh
+            app_obj.package_hash.should_not be_nil
+          end
         end
       end
     end
