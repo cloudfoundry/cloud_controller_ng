@@ -74,10 +74,10 @@ describe VCAP::CloudController::LegacyInfo do
         hash = Yajl::Parser.parse(last_response.body)
         hash.should have_key("limits")
         hash["limits"].should == {
-          "memory"   => Models::AccountCapacity::ADMIN_MEM,
-          "app_uris" => Models::AccountCapacity::ADMIN_URIS,
-          "services" => Models::AccountCapacity::ADMIN_SERVICES,
-          "apps"     => Models::AccountCapacity::ADMIN_APPS
+          "memory"   => AccountCapacity::ADMIN_MEM,
+          "app_uris" => AccountCapacity::ADMIN_URIS,
+          "services" => AccountCapacity::ADMIN_SERVICES,
+          "apps"     => AccountCapacity::ADMIN_APPS
         }
       end
     end
@@ -91,10 +91,10 @@ describe VCAP::CloudController::LegacyInfo do
         hash = Yajl::Parser.parse(last_response.body)
         hash.should have_key("limits")
         hash["limits"].should == {
-          "memory"   => Models::AccountCapacity::DEFAULT_MEM,
-          "app_uris" => Models::AccountCapacity::DEFAULT_URIS,
-          "services" => Models::AccountCapacity::DEFAULT_SERVICES,
-          "apps"     => Models::AccountCapacity::DEFAULT_APPS
+          "memory"   => AccountCapacity::DEFAULT_MEM,
+          "app_uris" => AccountCapacity::DEFAULT_URIS,
+          "services" => AccountCapacity::DEFAULT_SERVICES,
+          "apps"     => AccountCapacity::DEFAULT_APPS
         }
       end
 
