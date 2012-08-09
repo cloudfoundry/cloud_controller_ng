@@ -55,8 +55,14 @@ module VCAP::RestAPI
         permitted_ops.each { |op| self.permissions[op] = Set.new }
 
         controller = self
+
         k = Class.new do
+          def initialize(controller)
+            @controller = controller
+          end
+
           extend DefinePermissionsDSL
+
           setup_dsl(controller)
         end
 
@@ -108,10 +114,6 @@ module VCAP::RestAPI
     # define_permissions, the method some_type is a valid method that
     # takes one or more permissions as an argument.
     module DefinePermissionsDSL
-      def initialize(controller)
-        @controller = controller
-      end
-
       def setup_dsl(controller)
         controller.permitted_ops.each do |op|
           define_method(op) do |*args, &blk|
