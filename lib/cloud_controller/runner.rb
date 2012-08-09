@@ -143,7 +143,7 @@ module VCAP::CloudController
       pg_key = services.keys.select { |svc| svc =~ /postgres/i }.first
       c = services[pg_key].first["credentials"]
       @config[:db][:database] = "postgres://#{c["user"]}:#{c["password"]}@#{c["hostname"]}:#{c["port"]}/#{c["name"]}"
-      @config[:port] = ENV["VCAP_APP_PORT"]
+      @config[:port] = ENV["VCAP_APP_PORT"].to_i
     end
 
     # This isn't exactly the best place for this, but it is also temporary.  A
