@@ -16,9 +16,10 @@ namespace :spec do
     SimpleCov.start do
       add_filter "/spec/"
       add_filter "/migrations/"
+      add_filter '/vendor\/bundle/'
       RSpec::Core::Runner.disable_autorun!
-      RSpec::Core::Runner.run(['.'])
     end
+    exit RSpec::Core::Runner.run(['--fail-fast', '--backtrace', 'spec']).to_i
   end
 end
 

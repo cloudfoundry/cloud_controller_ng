@@ -10,8 +10,8 @@ module VCAP::CloudController
     class << self
       # Configure the AppPackage
       def configure(config = {})
-        @config = config
-        @max_droplet_size = config[:max_droplet_size] || 512 * 1024 * 1024
+        @config = config.dup
+        @max_droplet_size = @config[:max_droplet_size] || 512 * 1024 * 1024
         @resource_pool = FilesystemPool
       end
 
@@ -40,14 +40,13 @@ module VCAP::CloudController
       #
       # Makes the directory on first use.
       def package_dir
-        unless @package_dir
+        unless @config[:directories] && @config[:directories][:droplets]
           # TODO: remove this tmpdir.  It is for use when running under vcap
           # for development
-          @package_dir = @config[:directories] && @config[:directories][:droplets]
-          @package_dir ||= Dir.mktmpdir
-          FileUtils.mkdir_p(@package_dir) unless File.directory?(@package_dir)
+          @config[:directories] ||= {}
+          @config[:directories][:droplets] = Dir.mktmpdir
         end
-        @package_dir
+        @config[:directories][:droplets]
       end
 
       # Return app package path for a given app's guid.
