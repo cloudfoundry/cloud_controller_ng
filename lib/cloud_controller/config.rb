@@ -1,4 +1,5 @@
 require "vcap/config"
+require "cloud_controller/account_capacity"
 
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
@@ -77,7 +78,7 @@ class VCAP::CloudController::Config < VCAP::Config
     # method as there will be more along these lines.
     VCAP::CloudController::MessageBus.configure(config)
     VCAP::CloudController::RestController::QuotaManager.configure(config)
-    VCAP::CloudController::Models::AccountCapacity.configure(config)
+    VCAP::CloudController::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.configure(config)
     VCAP::CloudController::FilesystemPool.configure(config)
     VCAP::CloudController::AppPackage.configure(config)
