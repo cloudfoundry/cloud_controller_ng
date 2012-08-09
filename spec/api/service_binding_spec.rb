@@ -26,6 +26,44 @@ describe VCAP::CloudController::ServiceBinding do
     :create_attribute_reset => lambda { @space = nil }
   }
 
+  describe "staging" do
+    let(:app_obj) do
+      app = Models::App.make
+      fake_app_staging(app)
+      app
+    end
+
+    let(:service_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+
+    let(:admin_headers) do
+      user = VCAP::CloudController::Models::User.make(:admin => true)
+      headers_for(user)
+    end
+
+    it "should flag app for restaging when creating a binding" do
+      req = Yajl::Encoder.encode(:app_guid => app_obj.guid,
+                                 :service_instance_guid => service_instance.guid,
+                                 :credentials => {})
+
+      post "/v2/service_bindings", req, json_headers(admin_headers)
+      last_response.status.should == 201
+      app_obj.refresh
+      app_obj.needs_staging?.should be_true
+    end
+
+    it "should flag app for restaging when deleting a binding" do
+      binding = Models::ServiceBinding.make(:app => app_obj, :service_instance => service_instance)
+      fake_app_staging(app_obj)
+      app_obj.service_bindings.should include(binding)
+
+      delete "/v2/service_bindings/#{binding.guid}", {}, admin_headers
+
+      last_response.status.should == 204
+      app_obj.refresh
+      app_obj.needs_staging?.should be_true
+    end
+  end
+
   describe "Permissions" do
     include_context "permissions"
 

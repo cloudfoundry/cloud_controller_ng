@@ -9,7 +9,7 @@ module VCAP::CloudController::Models
     many_to_one       :framework
     many_to_one       :runtime
     many_to_many      :routes, :before_add => :validate_route
-    one_to_many       :service_bindings
+    one_to_many       :service_bindings, :after_remove => :after_remove_binding, :before_add => :before_add_binding
 
     add_association_dependencies :routes => :nullify, :service_bindings => :destroy
 
@@ -88,8 +88,21 @@ module VCAP::CloudController::Models
       self.package_state == "STAGED"
     end
 
+    def before_add_binding(binding)
+      raise InvalidBindingRelation.new(binding.guid) unless binding.app_id == self.id
+    end
+
+    def after_remove_binding(binding)
+      mark_for_restaging
+    end
+
+    def mark_for_restaging
+      self.package_state = "PENDING"
+      save
+    end
+
     def package_hash=(hash)
-      self.package_state = "PENDING" unless self.package_hash == hash
+      mark_for_restaging unless self.package_hash == hash
       super(hash)
     end
 

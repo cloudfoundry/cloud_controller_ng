@@ -42,6 +42,22 @@ module VCAP::CloudController::Models
       service_instance.space
     end
 
+    def after_create
+      mark_app_for_restaging
+    end
+
+    def after_update
+      mark_app_for_restaging
+    end
+
+    def before_destroy
+      mark_app_for_restaging
+    end
+
+    def mark_app_for_restaging
+      app.mark_for_restaging if app
+    end
+
     def self.user_visibility_filter(user)
       user_visibility_filter_with_admin_override(
         :service_instance => ServiceInstance.user_visible)

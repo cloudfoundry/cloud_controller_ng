@@ -60,3 +60,10 @@ def make_user_with_default_space(opts = {})
   user.default_space = space
   user
 end
+
+def fake_app_staging(app)
+  app.package_hash = "abc"
+  app.droplet_hash = "def"
+  app.save
+  app.needs_staging?.should be_false
+end

@@ -30,10 +30,6 @@ module VCAP::CloudController::ApiSpecHelper
       @obj = opts[:model].make
       @other_obj = opts[:model].make
 
-      @child1 = make.call(@obj)
-      @child2 = make.call(@obj)
-      @child3 = make.call(@obj)
-
       user = VCAP::CloudController::Models::User.make(:admin => true)
       @headers = json_headers(headers_for(user))
     end
@@ -106,6 +102,9 @@ module VCAP::CloudController::ApiSpecHelper
 
       describe "with 2 associated #{attr}" do
         before do
+          @child1 = make.call(@obj)
+          @child2 = make.call(@obj)
+
           @obj.send(@add_method, @child1)
           @obj.send(@add_method, @child2)
           @obj.save
@@ -178,6 +177,12 @@ module VCAP::CloudController::ApiSpecHelper
             include_context "collections", opts, attr, make
             child_name  = attr.to_s.chomp("_guids")
             path = "#{opts[:path]}/:guid"
+
+            before do
+              @child1 = make.call(@obj)
+              @child2 = make.call(@obj)
+              @child3 = make.call(@obj)
+            end
 
             describe "POST #{path} with only #{attr} in the request body" do
               before do

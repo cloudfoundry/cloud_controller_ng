@@ -24,10 +24,14 @@ describe VCAP::CloudController::App do
     },
     :one_to_many_collection_ids  => {
       :service_bindings => lambda { |app|
-          service_binding = VCAP::CloudController::Models::ServiceBinding.make
-          service_binding.service_instance.space = app.space
-          service_binding
-       }
+        service_instance = VCAP::CloudController::Models::ServiceInstance.make(
+          :space => app.space
+        )
+        VCAP::CloudController::Models::ServiceBinding.make(
+          :app => app,
+          :service_instance => service_instance
+        )
+      }
     }
   }
 
@@ -86,7 +90,7 @@ describe VCAP::CloudController::App do
       put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
     end
 
-    it "should restage on update if staging is not needed" do
+    it "should restage on update if staging is needed" do
       AppStager.should_receive(:stage_app)
       app_obj.package_hash = "abc"
       app_obj.save

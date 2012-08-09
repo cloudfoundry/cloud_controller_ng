@@ -55,4 +55,38 @@ describe VCAP::CloudController::Models::ServiceBinding do
       }.should raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
     end
   end
+
+  describe "restaging" do
+    let(:app) do
+      app = Models::App.make
+      fake_app_staging(app)
+      app
+    end
+
+    let(:service_instance) { Models::ServiceInstance.make(:space => app.space) }
+
+    it "should trigger restaging when creating a binding" do
+      Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+      app.needs_staging?.should be_true
+    end
+
+    it "should trigger restaging when directly destroying a binding" do
+      binding = Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+      fake_app_staging(app)
+      app.needs_staging?.should be_false
+
+      binding.destroy
+      app.refresh
+      app.needs_staging?.should be_true
+    end
+
+    it "should trigger restaging when indirectly destroying a binding" do
+      binding = Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+      fake_app_staging(app)
+      app.needs_staging?.should be_false
+
+      app.remove_service_binding(binding)
+      app.needs_staging?.should be_true
+    end
+  end
 end
