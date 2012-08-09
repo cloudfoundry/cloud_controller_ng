@@ -4,12 +4,13 @@ module VCAP::CloudController::Models
   class App < Sequel::Model
     class InvalidRelation      < StandardError; end
     class InvalidRouteRelation < InvalidRelation; end
+    class InvalidBindingRelation < InvalidRelation; end
 
     many_to_one       :space
     many_to_one       :framework
     many_to_one       :runtime
     many_to_many      :routes, :before_add => :validate_route
-    one_to_many       :service_bindings, :after_remove => :after_remove_binding, :before_add => :before_add_binding
+    one_to_many       :service_bindings, :after_remove => :after_remove_binding
 
     add_association_dependencies :routes => :nullify, :service_bindings => :destroy
 
@@ -86,10 +87,6 @@ module VCAP::CloudController::Models
 
     def staged?
       self.package_state == "STAGED"
-    end
-
-    def before_add_binding(binding)
-      raise InvalidBindingRelation.new(binding.guid) unless binding.app_id == self.id
     end
 
     def after_remove_binding(binding)
