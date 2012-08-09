@@ -13,8 +13,11 @@ module VCAP::CloudController::ApiSpecHelper
       @org_a_member = Models::User.make
       @org_a_billing_manager = Models::User.make
       @org_a_auditor = Models::User.make
-      @org_a.add_manager(@org_a_manager)
+      @org_a.add_user(@org_a_manager)
       @org_a.add_user(@org_a_member)
+      @org_a.add_user(@org_a_billing_manager)
+      @org_a.add_user(@org_a_auditor)
+      @org_a.add_manager(@org_a_manager)
       @org_a.add_billing_manager(@org_a_billing_manager)
       @org_a.add_auditor(@org_a_auditor)
 
@@ -31,8 +34,11 @@ module VCAP::CloudController::ApiSpecHelper
       @org_b_member = Models::User.make
       @org_b_billing_manager = Models::User.make
       @org_b_auditor = Models::User.make
-      @org_b.add_manager(@org_b_manager)
+      @org_b.add_user(@org_b_manager)
       @org_b.add_user(@org_b_member)
+      @org_b.add_user(@org_b_billing_manager)
+      @org_b.add_user(@org_b_auditor)
+      @org_b.add_manager(@org_b_manager)
       @org_b.add_billing_manager(@org_b_billing_manager)
       @org_b.add_auditor(@org_b_auditor)
 
