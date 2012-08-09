@@ -12,16 +12,19 @@ module VCAP::CloudController
       end
 
       def stage_app(app)
-        LegacyStaging.with_upload_handle(app) do |handle|
+        logger.debug "staging #{app.guid}"
+        LegacyStaging.with_upload_handle(app.guid) do |handle|
           EM.schedule_sync do |promise|
             client = VCAP::Stager::Client::EmAware.new(MessageBus.nats.client, queue)
             deferrable = client.stage(staging_request(app), staging_timeout)
 
             deferrable.errback do |e|
+              logger.error "staging #{app.guid} error #{e}"
               raise Errors::StagingError.new(e)
             end
 
             deferrable.callback do |resp|
+              logger.debug "staging #{app.guid} complete #{resp}"
               promise.deliver(resp)
             end
           end
@@ -84,7 +87,7 @@ module VCAP::CloudController
       end
 
       def staging_timeout
-        @config[:staging] && [:max_staging_runtime] || 120
+        @config[:staging] && @config[:staging][:max_staging_runtime] || 120
       end
 
       def droplets_path
