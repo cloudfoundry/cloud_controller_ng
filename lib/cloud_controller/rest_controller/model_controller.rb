@@ -57,8 +57,10 @@ module VCAP::CloudController::RestController
       QuotaManager.with_quota_enforcement(update_quota_token_request(obj)) do
         obj.update_from_hash(request_attrs)
         obj.save
-        [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
       end
+
+      after_update(obj) if respond_to?(:after_update)
+      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     end
 
     # Delete operation

@@ -68,6 +68,34 @@ describe VCAP::CloudController::App do
     end
   end
 
+  describe "staging" do
+    let(:app_obj)   { VCAP::CloudController::Models::App.make }
+
+    let(:admin_headers) do
+      user = VCAP::CloudController::Models::User.make(:admin => true)
+      headers_for(user)
+    end
+
+    it "should not restage on update if staging is not needed" do
+      AppStager.should_not_receive(:stage_app)
+      app_obj.package_hash = "abc"
+      app_obj.droplet_hash = "def"
+      app_obj.save
+      app_obj.needs_staging?.should be_false
+      req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
+      put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
+    end
+
+    it "should restage on update if staging is not needed" do
+      AppStager.should_receive(:stage_app)
+      app_obj.package_hash = "abc"
+      app_obj.save
+      app_obj.needs_staging?.should be_true
+      req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
+      put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
+    end
+  end
+
   describe "Permissions" do
     include_context "permissions"
 

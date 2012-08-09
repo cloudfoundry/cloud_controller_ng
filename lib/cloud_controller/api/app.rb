@@ -44,6 +44,10 @@ module VCAP::CloudController
       quota_token_request("delete", obj)
     end
 
+    def after_update(app)
+      AppStager.stage_app(app) if app.needs_staging?
+    end
+
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       if space_and_name_errors && space_and_name_errors.include?(:unique)
