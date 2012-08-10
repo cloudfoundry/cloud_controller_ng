@@ -25,6 +25,10 @@ db:
   max_connections: 32
   pool_timeout: 10
 
+redis:
+  host: 127.0.0.1
+  port: 5454
+
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"

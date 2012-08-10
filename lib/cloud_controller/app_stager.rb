@@ -1,20 +1,24 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/stager/client"
+require "redis"
+require "cloud_controller/staging_task_log"
 
 module VCAP::CloudController
   module AppStager
     class << self
       attr_reader :config
 
-      def configure(config)
+      def configure(config, redis_client = nil)
         @config = config
+        @redis_client = redis_client || Redis.new(:host => @config[:redis][:host],
+                                                  :port => @config[:redis][:port])
       end
 
       def stage_app(app)
         logger.debug "staging #{app.guid}"
         LegacyStaging.with_upload_handle(app.guid) do |handle|
-          EM.schedule_sync do |promise|
+          results = EM.schedule_sync do |promise|
             client = VCAP::Stager::Client::EmAware.new(MessageBus.nats.client, queue)
             deferrable = client.stage(staging_request(app), staging_timeout)
 
@@ -29,13 +33,12 @@ module VCAP::CloudController
             end
           end
 
+          StagingTaskLog.new(app.guid, results[:task_log], @redis_client).save
           upload_path = handle.upload_path
           droplet_hash = Digest::SHA1.file(upload_path).hexdigest
           FileUtils.mv(upload_path, droplet_path(app))
           app.droplet_hash = droplet_hash
         end
-
-        # TODO: save staging log
 
         logger.info "staging for #{app.guid} complete"
       end

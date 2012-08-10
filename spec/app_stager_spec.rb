@@ -46,6 +46,8 @@ describe VCAP::CloudController::AppStager do
       configure
       VCAP::Stager::Client::EmAware.should_receive(:new).and_return stager_client
       stager_client.should_receive(:stage).and_return deferrable
+      @redis = mock("mock redis")
+      AppStager.configure({}, @redis)
     end
 
     it "should stage via the staging client" do
@@ -57,6 +59,8 @@ describe VCAP::CloudController::AppStager do
       deferrable.should_receive(:errback).at_most(:once)
       LegacyStaging.should_receive(:with_upload_handle).and_yield(upload_handle)
 
+      @redis.should_receive(:set)
+        .with(StagingTaskLog.key_for_id(app_obj.guid), "log content")
       with_em_and_thread do
         AppStager.stage_app(app_obj)
       end

@@ -3,6 +3,7 @@ source :rubygems
 gem "rake"
 gem "bcrypt-ruby"
 gem 'eventmachine', :git => 'git://github.com/cloudfoundry/eventmachine.git', :branch => 'release-0.12.11-cf'
+gem "redis"
 gem "rfc822"
 gem "sequel"
 gem "sinatra"
