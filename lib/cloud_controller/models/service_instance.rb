@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require "services/api"
 
 module VCAP::CloudController::Models
   class ServiceInstance < Sequel::Model
@@ -54,5 +55,95 @@ module VCAP::CloudController::Models
       user_visibility_filter_with_admin_override(
         :space => user.spaces_dataset)
     end
+
+    def requester
+      VCAP::Services::Api::SynchronousHttpRequest
+    end
+
+    def service_gateway_client
+      VCAP::Services::Api::ServiceGatewayClient.new(
+        service.url,
+        service.service_auth_token.token,
+        service.timeout,
+        :requester => requester
+      )
+    end
+
+    # def handle_sds_error(e)
+    #   Steno.logger("cc.lifecycle").error("Error talking to serialization_data_server: #{e}")
+    #   Steno.logger("cc.lifecycle").error(e)
+    #   raise CloudError.new(CloudError::SDS_ERROR, "#{e.message}")
+    # end
+
+    # def handle_lifecycle_error(e)
+    #   Steno.logger("cc.lifecycle").error("Error talking to gateway: #{e}")
+    #   # Steno.logger("cc.lifecycle").error(e)
+    #   if e.is_a? VCAP::Services::Api::ServiceGatewayClient::ErrorResponse
+    #     raise CloudError.new([e.error.code, e.status, e.error.description])
+    #   else
+    #     raise CloudError.new(CloudError::SERVICE_GATEWAY_ERROR)
+    #   end
+    # end
+
+    def create_snapshot
+      client = service_gateway_client
+      client.create_snapshot(:service_id => gateway_name)
+    end
+
+    def enum_snapshots
+      client = service_gateway_client
+      client.enum_snapshots(:service_id => gateway_name)
+    end
+
+    def snapshot_details(sid)
+      client = service_gateway_client
+      client.snapshot_details(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def rollback_snapshot(sid)
+      client = service_gateway_client
+      client.rollback_snapshot(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def delete_snapshot(sid)
+      client = service_gateway_client
+      client.delete_snapshot(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def serialized_url(sid)
+      client = service_gateway_client
+      client.serialized_url(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def create_serialized_url(sid)
+      client = service_gateway_client
+      client.create_serialized_url(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def import_from_url(req)
+      client = service_gateway_client
+      client.import_from_url(:service_id => gateway_name, :msg => req)
+    end
+
+    # def import_from_data(req)
+    #   client = VCAP::Services::Api::SDSClient.new(
+    #     req[:upload_url],
+    #     req[:upload_token],
+    #     req[:upload_timeout],
+    #   )
+    #   client.import_from_data(
+    #     :service => service.name,
+    #     :service_id => gateway_name,
+    #     :msg => req[:data_file_path],
+    #   )
+    # rescue => e
+    #   handle_sds_error(e)
+    # end
+
+    def job_info(job_id)
+      client = service_gateway_client
+      client.job_info(:service_id => gateway_name, :job_id => job_id)
+    end
+
   end
 end
