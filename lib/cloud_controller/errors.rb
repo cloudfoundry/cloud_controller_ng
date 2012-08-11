@@ -73,7 +73,9 @@ module VCAP::CloudController::Errors
 
     ["AppBitsUploadInvalid", HTTP::BAD_REQUEST, 160001, "The app upload is invalid: %s"],
 
-    ["StagingError", HTTP::BAD_REQUEST, 170001, "Staging error: %s"]
+    ["StagingError", HTTP::BAD_REQUEST, 170001, "Staging error: %s"],
+
+    ["SnapshotNotFound", HTTP::NOT_FOUND, 180001, "Snapshot could not be found: %s"],
   ].each do |e|
     define_error *e
   end

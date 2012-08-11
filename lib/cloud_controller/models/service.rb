@@ -5,6 +5,7 @@ module VCAP::CloudController::Models
     one_to_many :service_plans
     one_to_many :service_instances
     many_to_many :service_bindings, :join_table => :service_instances, :right_key => :id, :right_primary_key => :service_instance_id
+    one_to_one  :service_auth_token, :key => [:label, :provider], :primary_key => [:label, :provider]
 
     add_association_dependencies :service_plans => :destroy
 
