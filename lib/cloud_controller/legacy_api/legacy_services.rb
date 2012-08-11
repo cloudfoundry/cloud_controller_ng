@@ -1,7 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-require "services/api"
-
 # NOTE: this will get refactored a bit as other methods get added
 # and as we start adding other legacy protocol conversions.
 module VCAP::CloudController

@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require "services/api"
 
 module VCAP::CloudController::Models
   class ServiceInstance < Sequel::Model
@@ -54,5 +55,64 @@ module VCAP::CloudController::Models
       user_visibility_filter_with_admin_override(
         :space => user.spaces_dataset)
     end
+
+    def requester
+      VCAP::Services::Api::SynchronousHttpRequest
+    end
+
+    def service_gateway_client
+      VCAP::Services::Api::ServiceGatewayClient.new(
+        service.url,
+        service.service_auth_token.token,
+        service.timeout,
+        :requester => requester
+      )
+    end
+
+    def create_snapshot
+      client = service_gateway_client
+      client.create_snapshot(:service_id => gateway_name)
+    end
+
+    def enum_snapshots
+      client = service_gateway_client
+      client.enum_snapshots(:service_id => gateway_name)
+    end
+
+    def snapshot_details(sid)
+      client = service_gateway_client
+      client.snapshot_details(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def rollback_snapshot(sid)
+      client = service_gateway_client
+      client.rollback_snapshot(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def delete_snapshot(sid)
+      client = service_gateway_client
+      client.delete_snapshot(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def serialized_url(sid)
+      client = service_gateway_client
+      client.serialized_url(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def create_serialized_url(sid)
+      client = service_gateway_client
+      client.create_serialized_url(:service_id => gateway_name, :snapshot_id => sid)
+    end
+
+    def import_from_url(req)
+      client = service_gateway_client
+      client.import_from_url(:service_id => gateway_name, :msg => req)
+    end
+
+    def job_info(job_id)
+      client = service_gateway_client
+      client.job_info(:service_id => gateway_name, :job_id => job_id)
+    end
+
   end
 end
