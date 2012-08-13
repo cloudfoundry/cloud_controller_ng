@@ -49,4 +49,36 @@ module VCAP::CloudController::MessageBus
       end
     end
   end
+
+  # The provided block is called on a thread
+  def self.subscribe(subject, &blk)
+    subscribe_on_reactor(subject) do |payload|
+      EM.defer do
+        blk.yield(payload)
+      end
+    end
+  end
+
+  def self.subscribe_on_reactor(subject, &blk)
+    EM.schedule do
+      nats.subscribe(subject) do |msg|
+        process_message(msg, &blk)
+      end
+    end
+  end
+
+  def self.publish(subject, message = nil)
+    EM.schedule do
+      nats.publish(subject, message)
+    end
+  end
+
+  private
+
+  def self.process_message(msg, &blk)
+    payload = Yajl::Parser.parse(msg, :symbolize_keys => true)
+    blk.yield(payload)
+  rescue => e
+    CloudController.logger.error("exception processing: '#{msg}' '#{e}'")
+  end
 end

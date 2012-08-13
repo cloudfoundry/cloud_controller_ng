@@ -110,7 +110,8 @@ module VCAP::CloudController::SpecHelper
     total_size
   end
 
-  def with_em_and_thread(&blk)
+  def with_em_and_thread(opts = {}, &blk)
+    auto_stop = opts.has_key?(:auto_stop) ? opts[:auto_stop] : true
     Thread.abort_on_exception = true
     EM.run do
       EM.reactor_thread?.should == true
@@ -118,7 +119,9 @@ module VCAP::CloudController::SpecHelper
         EM.reactor_thread?.should == false
         blk.call
         EM.reactor_thread?.should == false
-        EM.next_tick { EM.stop }
+        if auto_stop
+          EM.next_tick { EM.stop }
+        end
       end
       EM.reactor_thread?.should == true
     end
