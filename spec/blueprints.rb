@@ -8,7 +8,7 @@ Sham.define do
   label               { |index| "label-#{index}" }
   password            { |index| "token-#{index}" }
   token               { |index| "token-#{index}" }
-  crypted_token       { |index| "cypted_token-#{index}" }
+  token               { |index| "token-#{index}" }
   provider            { |index| "provider-#{index}" }
   url                 { |index| "https://foo.com/url-#{index}" }
   type                { |index| "type-#{index}" }
@@ -47,9 +47,9 @@ module VCAP::CloudController::Models
   end
 
   ServiceAuthToken.blueprint do
-    label             { Sham.label }
-    provider          { Sham.provider }
-    crypted_token     { Sham.crypted_token }
+    label
+    provider
+    token
   end
 
   Service.blueprint do
