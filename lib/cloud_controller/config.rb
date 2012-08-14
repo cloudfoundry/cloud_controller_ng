@@ -83,5 +83,7 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::AppPackage.configure(config)
     VCAP::CloudController::AppStager.configure(config)
     VCAP::CloudController::LegacyStaging.configure(config)
+    VCAP::CloudController::DeaPool.configure(config)
+    VCAP::CloudController::DeaClient.configure(config)
   end
 end

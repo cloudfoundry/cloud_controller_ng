@@ -111,6 +111,7 @@ module VCAP::CloudController
         use Rack::CommonLogger
         VCAP::CloudController::MessageBus.register_components
         VCAP::CloudController::MessageBus.register_routes
+        VCAP::CloudController::DeaPool.register_subscriptions
 
         map "/" do
           DB.apply_migrations(db) if (run_migrations && development?)

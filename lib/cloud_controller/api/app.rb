@@ -46,6 +46,11 @@ module VCAP::CloudController
 
     def after_update(app)
       AppStager.stage_app(app) if app.needs_staging?
+
+      # TODO: this is temporary, just to validate dea integration for start
+      # only.  The logic here needs to be more complex and include start, stop,
+      # changing instance counts, etc
+      DeaClient.start(app) if app.instances > 0
     end
 
     def self.translate_validation_exception(e, attributes)
