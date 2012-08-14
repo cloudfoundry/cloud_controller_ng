@@ -55,8 +55,8 @@ module VCAP::CloudController
         {
           :app_id       => app.guid,
           :properties   => staging_task_properties(app),
-          :download_uri => LegacyStaging.download_app_uri(app.guid),
-          :upload_uri   => LegacyStaging.upload_droplet_uri(app.guid)
+          :download_uri => LegacyStaging.app_uri(app.guid),
+          :upload_uri   => LegacyStaging.droplet_uri(app.guid)
         }
       end
 

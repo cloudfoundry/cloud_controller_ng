@@ -49,29 +49,29 @@ describe VCAP::CloudController::LegacyStaging do
     end
   end
 
-  describe "download_app_uri" do
+  describe "app_uri" do
     it "should return a uri to our cc" do
-      uri = LegacyStaging.download_app_uri(app_guid)
-      uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/app/#{app_guid}"
+      uri = LegacyStaging.app_uri(app_guid)
+      uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/apps/#{app_guid}"
     end
   end
 
-  describe "upload_droplet_uri" do
+  describe "droplet_uri" do
     it "should return a uri to our cc" do
-      uri = LegacyStaging.upload_droplet_uri(app_guid)
-      uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/app/#{app_guid}"
+      uri = LegacyStaging.droplet_uri(app_guid)
+      uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}"
     end
   end
 
   shared_examples "staging bad auth" do |verb|
     it "should return 403 for bad credentials" do
       authorize "hacker", "sw0rdf1sh"
-      send(verb, "/staging/app/#{app_obj.guid}")
+      send(verb, "/staging/apps/#{app_obj.guid}")
       last_response.status.should == 403
     end
   end
 
-  describe "GET /staging/app/:id" do
+  describe "GET /staging/apps/:id" do
     let(:app_obj) { Models::App.make }
     let(:app_obj_without_pkg) { Models::App.make }
     let(:app_package_path) { AppPackage.package_path(app_obj.guid) }
@@ -87,24 +87,24 @@ describe VCAP::CloudController::LegacyStaging do
     end
 
     it "should succeed for valid packages" do
-      get "/staging/app/#{app_obj.guid}"
+      get "/staging/apps/#{app_obj.guid}"
       last_response.status.should == 200
     end
 
     it "should return an error for non-existent apps" do
-      get "/staging/app/abcd"
+      get "/staging/apps/abcd"
       last_response.status.should == 400
     end
 
     it "should return an error for an app without a package" do
-      get "/staging/app/#{app_obj_without_pkg.guid}"
+      get "/staging/apps/#{app_obj_without_pkg.guid}"
       last_response.status.should == 400
     end
 
     include_examples "staging bad auth", :get
   end
 
-  describe "POST /staging/app/:id" do
+  describe "POST /staging/droplets/:id" do
     let(:app_obj) { Models::App.make }
     let(:tmpfile) { Tempfile.new("droplet.tgz") }
     let(:upload_req) do
@@ -120,7 +120,7 @@ describe VCAP::CloudController::LegacyStaging do
       it "should rename the file and store it in handle.upload_path and delete it when the handle goes out of scope" do
         saved_path = nil
         LegacyStaging.with_upload_handle(app_obj.guid) do |handle|
-          post "/staging/app/#{app_obj.guid}", upload_req
+          post "/staging/droplets/#{app_obj.guid}", upload_req
           last_response.status.should == 200
           File.exists?(handle.upload_path).should be_true
           saved_path = handle.upload_path
@@ -131,7 +131,7 @@ describe VCAP::CloudController::LegacyStaging do
 
     context "with an invalid upload handle" do
       it "should return an error" do
-        post "/staging/app/#{app_obj.guid}", upload_req
+        post "/staging/droplets/#{app_obj.guid}", upload_req
         last_response.status.should == 400
       end
     end
@@ -139,12 +139,48 @@ describe VCAP::CloudController::LegacyStaging do
     context "with an invalid app" do
       it "should return an error" do
         LegacyStaging.with_upload_handle(app_obj.guid) do |handle|
-          post "/staging/app/bad", upload_req
+          post "/staging/droplets/bad", upload_req
           last_response.status.should == 400
         end
       end
     end
 
     include_examples "staging bad auth", :post
+  end
+
+  describe "GET /staging/droplets/:id" do
+    let(:app_obj) { Models::App.make }
+
+    before do
+      config_override(staging_config)
+      authorize staging_user, staging_password
+    end
+
+    context "with a valid droplet" do
+      it "should return the droplet" do
+        path = AppStager.droplet_path(app_obj)
+        File.open(path, "w") do |f|
+          f.write("droplet contents")
+        end
+
+        get "/staging/droplets/#{app_obj.guid}"
+        last_response.status.should == 200
+        last_response.body.should == "droplet contents"
+      end
+    end
+
+    context "with a valid app but no droplet" do
+      it "should return an error" do
+        get "/staging/droplets/#{app_obj.guid}"
+        last_response.status.should == 400
+      end
+    end
+
+    context "with an invalid app" do
+      it "should return an error" do
+        get "/staging/droplets/bad"
+        last_response.status.should == 400
+      end
+    end
   end
 end

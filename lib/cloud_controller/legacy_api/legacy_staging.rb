@@ -4,6 +4,9 @@ module VCAP::CloudController
   class LegacyStaging < LegacyApiBase
     include VCAP::CloudController::Errors
 
+    APP_PATH = "/staging/apps"
+    DROPLET_PATH = "/staging/droplets"
+
     class DropletUploadHandle
       attr_accessor :id, :upload_path
 
@@ -18,12 +21,12 @@ module VCAP::CloudController
         @config = config
       end
 
-      def download_app_uri(id)
-        staging_uri("/staging/app/#{id}")
+      def app_uri(id)
+        staging_uri("#{APP_PATH}/#{id}")
       end
 
-      def upload_droplet_uri(id)
-        staging_uri("/staging/app/#{id}")
+      def droplet_uri(id)
+        staging_uri("#{DROPLET_PATH}/#{id}")
       end
 
       def with_upload_handle(id)
@@ -128,6 +131,19 @@ module VCAP::CloudController
       HTTP::OK
     end
 
+    def download_droplet(id)
+      app = Models::App.find(:guid => id)
+      raise AppNotFound.new(id) if app.nil?
+
+      droplet_path = AppStager.droplet_path(app)
+      unless droplet_path && File.exists?(droplet_path)
+        raise StagingError.new("droplet not found for #{id}")
+      end
+
+      # TODO: enable nginx
+      send_file droplet_path
+    end
+
     private
 
     def upload_file
@@ -148,7 +164,7 @@ module VCAP::CloudController
       (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
     end
 
-    controller.before "/staging/app/*" do
+    controller.before "/staging/*" do
       auth =  Rack::Auth::Basic::Request.new(env)
       unless (auth.provided? && auth.basic? && auth.credentials &&
               auth.credentials == [@config[:staging][:auth][:user],
@@ -157,7 +173,8 @@ module VCAP::CloudController
       end
     end
 
-    get  "/staging/app/:id", :download_app
-    post "/staging/app/:id", :upload_droplet
+    get  "#{APP_PATH}/:id", :download_app
+    post "#{DROPLET_PATH}/:id", :upload_droplet
+    get  "#{DROPLET_PATH}/:id", :download_droplet
   end
 end
