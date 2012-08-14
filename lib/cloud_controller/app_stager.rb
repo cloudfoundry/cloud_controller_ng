@@ -11,8 +11,10 @@ module VCAP::CloudController
 
       def configure(config, redis_client = nil)
         @config = config
-        @redis_client = redis_client || Redis.new(:host => @config[:redis][:host],
-                                                  :port => @config[:redis][:port])
+        @redis_client = redis_client || Redis.new(
+          :host => @config[:redis][:host],
+          :port => @config[:redis][:port],
+          :password => @config[:redis][:password])
       end
 
       def stage_app(app)
