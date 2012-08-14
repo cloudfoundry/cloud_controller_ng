@@ -164,7 +164,9 @@ module VCAP::CloudController
       (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
     end
 
-    controller.before "/staging/*" do
+    # TODO: put this back to all of staging once we change the auth scheme
+    # (and add a test for /staging/droplets with bad auth)
+    controller.before "#{APP_PATH}/*" do
       auth =  Rack::Auth::Basic::Request.new(env)
       unless (auth.provided? && auth.basic? && auth.credentials &&
               auth.credentials == [@config[:staging][:auth][:user],
