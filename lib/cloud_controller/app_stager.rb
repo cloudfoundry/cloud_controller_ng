@@ -35,8 +35,14 @@ module VCAP::CloudController
             end
           end
 
-          StagingTaskLog.new(app.guid, results[:task_log], @redis_client).save
+          StagingTaskLog.new(app.guid, results["task_log"], @redis_client).save
           upload_path = handle.upload_path
+
+          unless upload_path
+            raise Errors::StagingError.new(
+              "failed to stage application:\n#{results["task_log"]}")
+          end
+
           droplet_hash = Digest::SHA1.file(upload_path).hexdigest
           FileUtils.mv(upload_path, droplet_path(app))
           app.droplet_hash = droplet_hash

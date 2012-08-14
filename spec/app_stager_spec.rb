@@ -42,6 +42,10 @@ describe VCAP::CloudController::AppStager do
       handle
     end
 
+    let(:incomplete_upload_handle) do
+      LegacyStaging::DropletUploadHandle.new(app_obj.guid)
+    end
+
     before do
       configure
       VCAP::Stager::Client::EmAware.should_receive(:new).and_return stager_client
@@ -55,7 +59,7 @@ describe VCAP::CloudController::AppStager do
       app_obj.needs_staging?.should be_true
       app_obj.staged?.should be_false
 
-      deferrable.should_receive(:callback).and_yield(:task_log => "log content")
+      deferrable.should_receive(:callback).and_yield("task_log" => "log content")
       deferrable.should_receive(:errback).at_most(:once)
       LegacyStaging.should_receive(:with_upload_handle).and_yield(upload_handle)
 
@@ -71,7 +75,7 @@ describe VCAP::CloudController::AppStager do
       File.exists?(AppStager.droplet_path(app_obj)).should be_true
     end
 
-    it "should raise a StagingError and propagate the raw description" do
+    it "should raise a StagingError and propagate the raw description for staging client errors" do
       deferrable.should_receive(:callback).at_most(:once)
       deferrable.should_receive(:errback).and_yield("stringy error")
 
@@ -80,6 +84,30 @@ describe VCAP::CloudController::AppStager do
           AppStager.stage_app(app_obj)
         }.should raise_error(Errors::StagingError, /stringy error/)
       end
+    end
+
+    it "should raise a StagingError and propagate the staging log for staging server errors" do
+      app_obj.package_hash = "abc"
+      app_obj.needs_staging?.should be_true
+      app_obj.staged?.should be_false
+
+      deferrable.should_receive(:callback).and_yield("task_log" => "log content")
+      deferrable.should_receive(:errback).at_most(:once)
+      LegacyStaging.should_receive(:with_upload_handle).and_yield(incomplete_upload_handle)
+
+      @redis.should_receive(:set)
+        .with(StagingTaskLog.key_for_id(app_obj.guid), "log content")
+
+      with_em_and_thread do
+        lambda {
+          AppStager.stage_app(app_obj)
+        }.should raise_error(Errors::StagingError, /log content/)
+      end
+
+      FileUtils.should_not_receive(:mv)
+
+      app_obj.needs_staging?.should be_true
+      app_obj.staged?.should be_false
     end
   end
 end
