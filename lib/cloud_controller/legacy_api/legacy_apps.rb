@@ -74,7 +74,7 @@ module VCAP::CloudController
           :model => app.framework.name,
           :stack => app.runtime.name,
         },
-        :uris => [], # TODO when routes are finalized
+        :uris => [xxx_uri_for_app(app)], # TODO when routes are finalized
         :instances => app.instances,
         :runningInstances => app.instances, # TODO: when HM integration is done
         :resources => {
@@ -156,6 +156,11 @@ module VCAP::CloudController
 
       logger.debug "legacy request: #{hash} -> #{req}"
       Yajl::Encoder.encode(req)
+    end
+
+    def xxx_uri_for_app(app)
+      @base_uri ||= config[:external_domain].sub(/^\s*[^\.]+/,'')
+      "#{app.guid}#{@base_uri}"
     end
 
     def self.setup_routes
