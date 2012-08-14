@@ -94,6 +94,9 @@ describe VCAP::CloudController::LegacyApps do
 
       Models::Framework.make(:name => "sinatra")
       Models::Runtime.make(:name => "ruby18")
+
+      Models::Framework.make(:name => "grails")
+      Models::Runtime.make(:name => "java")
       @num_apps_before = Models::App.count
     end
 
@@ -158,6 +161,27 @@ describe VCAP::CloudController::LegacyApps do
       end
 
       it_behaves_like "a vcap rest error response", /runtime can not be found: cobol/
+    end
+
+    context "with a nil runtime" do
+      before do
+        req = Yajl::Encoder.encode({
+          :name => "app_name",
+          :staging => { :framework => "grails" }
+        })
+
+        post "/apps", req, headers_for(user)
+      end
+
+      it "should return success" do
+        last_response.status.should == 200
+      end
+
+      it "should set a default runtime" do
+        app = user.default_space.apps_dataset[:name => "app_name"]
+        app.should_not be_nil
+        app.runtime.name.should == "java"
+      end
     end
   end
 

@@ -117,12 +117,13 @@ module VCAP::CloudController
           req[:framework_guid] = framework.guid
         end
 
-        # apparently runtime wasn't required in v1 and should default to
-        # ruby18
-        runtime_name = staging["runtime"] || "ruby18"
-        runtime = Models::Runtime.find(:name => runtime_name)
-        raise RuntimeNotFound.new(runtime_name) unless runtime
-        req[:runtime_guid] = runtime.guid
+        runtime_name = staging["runtime"]
+        runtime_name ||= default_runtime_for_framework(framework_name)
+        if runtime_name
+          runtime = Models::Runtime.find(:name => runtime_name)
+          raise RuntimeNotFound.new(runtime_name) unless runtime
+          req[:runtime_guid] = runtime.guid
+        end
       end
 
       if resources = hash["resources"]
@@ -161,6 +162,11 @@ module VCAP::CloudController
     def xxx_uri_for_app(app)
       @base_uri ||= config[:external_domain].sub(/^\s*[^\.]+/,'')
       "#{app.guid}#{@base_uri}"
+    end
+
+    def default_runtime_for_framework(framework_name)
+      return unless framework_name
+      config[:legacy_framework_manifest][framework_name.to_sym][:runtimes].first["name"]
     end
 
     def self.setup_routes

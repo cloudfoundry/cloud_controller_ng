@@ -51,6 +51,9 @@ staging:
 
 # TODO: this will be removed when we do full runtime/framework
 # db population when we work on real running app support
+#
+# The first entry in the runtimes array is the default runtime for that
+# framework.
 legacy_framework_manifest:
   django:
     name: django
@@ -98,11 +101,11 @@ legacy_framework_manifest:
   node:
     name: node
     runtimes:
-    - name: node
-      version: 0.4.12
-      description: Node.js
     - name: node06
       version: 0.6.8
+      description: Node.js
+    - name: node
+      version: 0.4.12
       description: Node.js
     appservers: []
 
@@ -189,6 +192,12 @@ legacy_framework_manifest:
   standalone:
     name: standalone
     runtimes:
+    - name: ruby18
+      version: 1.8.7
+      description: Ruby 1.8.7
+    - name: ruby19
+      version: 1.9.2p180
+      description: Ruby 1.9.2
     - name: python2
       version: 2.6.5
       description: Python 2.6.5
@@ -207,12 +216,6 @@ legacy_framework_manifest:
     - name: php
       version: "5.3"
       description: PHP 5
-    - name: ruby18
-      version: 1.8.7
-      description: Ruby 1.8.7
-    - name: ruby19
-      version: 1.9.2p180
-      description: Ruby 1.9.2
     appservers: []
 
     detection:
