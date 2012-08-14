@@ -8,6 +8,7 @@ require "bundler/setup"
 require "machinist/sequel"
 require "rack/test"
 
+require "steno"
 require "cloud_controller"
 
 def spec_dir
@@ -31,7 +32,10 @@ File.unlink(log_filename) if File.exists?(log_filename)
 Steno.init(Steno::Config.new(:default_log_level => "debug2",
                              :sinks => [Steno::Sink::IO.for_file(log_filename)]))
 db_logger = Steno.logger("cc.db")
-db_logger.level = :warn
+if ENV["DB_LOG_LEVEL"]
+  level = ENV["DB_LOG_LEVEL"].downcase.to_sym
+  db_logger.level = level if Steno::Logger::LEVELS.include? level
+end
 db = VCAP::CloudController::DB.connect(db_logger,
                                        :database  => "sqlite:///",
                                        :log_level => "debug2")
