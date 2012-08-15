@@ -56,7 +56,7 @@ module VCAP::CloudController::RestController
     #
     # @return [Hash] the parsed parameter hash
     def parse_params(params)
-      logger.debug2 "parse_params: #{params}"
+      logger.debug "parse_params: #{params}"
       # FIXME: replace with URI parse on the query string.
       # Sinatra squshes duplicate query parms into a single entry rather
       # than an array (which we might have for q)
@@ -86,7 +86,7 @@ module VCAP::CloudController::RestController
     # @return [Object] Returns an array of [http response code, Header hash,
     # body string], or just a body string.
     def dispatch(op, *args)
-      logger.debug2 "dispatch: #{op}"
+      logger.debug "dispatch: #{op}"
       send(op, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, request_attrs)

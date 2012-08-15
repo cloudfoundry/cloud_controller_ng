@@ -23,7 +23,7 @@ module VCAP::CloudController::RestController
       raise InvalidRequest unless request_attrs
 
       model.db.transaction do
-        logger.debug2 "create: #{request_attrs}"
+        logger.debug "create: #{request_attrs}"
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user)
 
@@ -39,7 +39,7 @@ module VCAP::CloudController::RestController
     #
     # @param [String] id The GUID of the object to read.
     def read(id)
-      logger.debug2 "read: #{id}"
+      logger.debug "read: #{id}"
       obj = find_id_and_validate_access(:read, id)
       ObjectSerialization.render_json(self.class, obj, @opts)
     end
@@ -52,7 +52,7 @@ module VCAP::CloudController::RestController
       json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
-      logger.debug2 "update: #{id} #{request_attrs}"
+      logger.debug "update: #{id} #{request_attrs}"
 
       QuotaManager.with_quota_enforcement(update_quota_token_request(obj)) do
         obj.update_from_hash(request_attrs)
@@ -67,7 +67,7 @@ module VCAP::CloudController::RestController
     #
     # @param [String] id The GUID of the object to delete.
     def delete(id)
-      logger.debug2 "delete: #{id}"
+      logger.debug "delete: #{id}"
       obj = find_id_and_validate_access(:delete, id)
 
       QuotaManager.with_quota_enforcement(delete_quota_token_request(obj)) do
@@ -80,7 +80,7 @@ module VCAP::CloudController::RestController
     def enumerate
       raise NotAuthenticated unless user
       ds = model.user_visible
-      logger.debug2 "enumerate: #{ds.sql}"
+      logger.debug "enumerate: #{ds.sql}"
       qp = self.class.query_parameters
       ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
       Paginator.render_json(self.class, ds, self.class.path, @opts)
@@ -93,7 +93,7 @@ module VCAP::CloudController::RestController
     #
     # @param [Symbol] name The name of the relation to enumerate.
     def enumerate_related(id, name)
-      logger.debug2 "enumerate_related: #{id} #{name}"
+      logger.debug "enumerate_related: #{id} #{name}"
       obj = find_id_and_validate_access(:read, id)
 
       a_model = model.association_reflection(name).associated_class
@@ -146,7 +146,7 @@ module VCAP::CloudController::RestController
     # @param [String] other_id The GUID of the object to be "verb"ed to the
     # relation.
     def do_related(verb, id, name, other_id)
-      logger.debug2 "#{verb}_related: #{id} #{name}"
+      logger.debug "#{verb}_related: #{id} #{name}"
       singular_name = "#{name.to_s.singularize}"
       @request_attrs = { singular_name => other_id }
       obj = find_id_and_validate_access(:update, id)
