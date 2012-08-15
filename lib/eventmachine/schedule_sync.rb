@@ -5,7 +5,7 @@ require "vcap/concurrency"
 module EventMachine
   # Runs a block on the reactor thread and blocks the current thread
   # while waiting for the result.  If the block raises an exception,
-  # it will re-thrown in the calling thread.
+  # it will be re-thrown in the calling thread.
   #
   # @param [Block]  blk  The block to be executed on the reactor thread.
   #
