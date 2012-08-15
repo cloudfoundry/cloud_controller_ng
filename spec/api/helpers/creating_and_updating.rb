@@ -134,8 +134,9 @@ module VCAP::CloudController::ApiSpecHelper
                 when :post
                   post opts[:path], Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
                 when :put
-                  obj = opts[:model].make creation_opts
-                  put "#{opts[:path]}/#{obj.guid}", Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
+                  @obj = opts[:model].make creation_opts
+                  @expected_hash = @obj.to_hash
+                  put "#{opts[:path]}/#{@obj.guid}", Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
                 end
               end
 
@@ -156,6 +157,13 @@ module VCAP::CloudController::ApiSpecHelper
 
               it "should return the request guid in the header" do
                 last_response.headers["X-VCAP-Request-ID"].should_not be_nil
+              end
+
+              if verb == :put
+                it "should not change attributes other than the ones specified" do
+                  @obj.refresh
+                  @expected_hash.should == @obj.to_hash
+                end
               end
 
               if verb == :post

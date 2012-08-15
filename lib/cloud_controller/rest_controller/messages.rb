@@ -26,7 +26,9 @@ module VCAP::CloudController::RestController
         klass = Class.new VCAP::RestAPI::Message do
           attrs.each do |name, attr|
             unless attr.exclude_in?(type)
-              if (type == :update || (type == :create && attr.has_default?))
+              if type == :update
+                optional name, attr.schema, &attr.block
+              elsif type == :create && attr.has_default?
                 optional name, attr.schema, attr.default, &attr.block
               else
                 required name, attr.schema, &attr.block
