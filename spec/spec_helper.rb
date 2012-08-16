@@ -26,37 +26,6 @@ def log_filename
   artifact_filename("spec.log")
 end
 
-def validate_version_string(min_version, version)
-  min_fields = min_version.split(".").map { |v| v.to_i }
-  ver_fields = version.split(".").map { |v| v.to_i }
-
-  (0..2).each do |i|
-    return true  if ver_fields[i] > min_fields[i]
-    return false if ver_fields[i] < min_fields[i]
-  end
-
-  return true
-end
-
-def validate_sqlite_version(db)
-  min_version = "3.6.19"
-  version = db.fetch("SELECT sqlite_version()").first[:"sqlite_version()"]
-  unless validate_version_string(min_version, version)
-    puts <<EOF
-The CC models require sqlite version >= #{min_version} but you are
-running #{version} On OSX, you will might to install the sqlite
-gem against an upgraded sqlite (from source, homebrew, macports, etc)
-and not the system sqlite. You can do so with a cummand
-such as:
-
-  gem install sqlite3 -- --with-sqlite3-include=/usr/local/include/ \
-                         --with-sqlite3-lib=/usr/local/lib
-
-EOF
-    exit 1
-  end
-end
-
 FileUtils.mkdir_p artifacts_dir
 File.unlink(log_filename) if File.exists?(log_filename)
 Steno.init(Steno::Config.new(:default_log_level => "debug2",
@@ -66,7 +35,6 @@ db_logger.level = :warn
 db = VCAP::CloudController::DB.connect(db_logger,
                                        :database  => "sqlite:///",
                                        :log_level => "debug2")
-validate_sqlite_version(db)
 VCAP::CloudController::DB.apply_migrations(db)
 
 def reset_database(db)
