@@ -98,7 +98,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         post path, offer.encode, auth_header
 
         service = Models::Service[:label => "foobar", :provider => "core"]
-        service.service_plans.map(&:name).should == ["free", "nonfree"]
+        service.service_plans.map(&:name).sort.should == ["free", "nonfree"]
       end
 
       it "should update service offerings for builtin services" do
@@ -184,7 +184,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         resp = Yajl::Parser.parse(last_response.body)
         resp["label"].should == "foo-bar"
         resp["url"].should   == "http://www.google.com"
-        resp["plans"].should == ["free", "nonfree"]
+        resp["plans"].sort.should == ["free", "nonfree"]
         resp["provider"].should == "core"
       end
 
@@ -195,7 +195,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         resp = Yajl::Parser.parse(last_response.body)
         resp["label"].should == "foo-bar"
         resp["url"].should   == "http://www.google.com"
-        resp["plans"].should == ["free", "nonfree"]
+        resp["plans"].sort.should == ["free", "nonfree"]
         resp["provider"].should == "test"
       end
     end

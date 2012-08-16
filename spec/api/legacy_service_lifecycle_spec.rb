@@ -24,33 +24,7 @@ module VCAP::CloudController
       )
     end
 
-    describe "#lifecycle_extension" # do
-    #   it 'should return not implemented error when lifecycle is disabled' do
-    #     begin
-    #       origin = AppConfig.delete :service_lifecycle
-    #       %w(create_snapshot enum_snapshots import_from_url import_from_data).each do |api|
-    #         post api.to_sym, :id => 'xxx'
-    #         response.status.should == 501
-    #         resp = Yajl::Parser.parse(response.body)
-    #         resp['description'].include?("not implemented").should == true
-    #       end
-
-    #       %w(snapshot_details rollback_snapshot delete_snapshot serialized_url create_serialized_url ).each do |api|
-    #         post api.to_sym, :id => 'xxx', :sid => '1'
-    #         response.status.should == 501
-    #         resp = Yajl::Parser.parse(response.body)
-    #         resp['description'].include?("not implemented").should == true
-    #       end
-
-    #       get :job_info, :id => 'xxx', :job_id => '1'
-    #       response.status.should == 501
-    #       resp = Yajl::Parser.parse(response.body)
-    #       resp['description'].include?("not implemented").should == true
-    #     ensure
-    #       AppConfig[:service_lifecycle] = origin
-    #     end
-    #   end
-    # end
+    describe "#lifecycle_extension"
 
     describe "POST", "/services/v1/configurations/:gateway_name/snapshots" do
       it "should return not authorized for unknown users" do

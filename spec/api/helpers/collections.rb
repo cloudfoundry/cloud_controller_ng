@@ -143,7 +143,8 @@ module VCAP::CloudController::ApiSpecHelper
             m["updated_at"] = m["updated_at"].to_s if m["updated_at"]
           end
 
-          decoded_response["resources"].should == [c1, c2]
+          decoded_response["resources"].size.should == 2
+          decoded_response["resources"].should =~ [c1, c2]
         end
       end
     end
