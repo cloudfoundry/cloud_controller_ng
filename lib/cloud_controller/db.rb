@@ -23,9 +23,16 @@ module VCAP::CloudController
         connection_options[key] = opts[key.to_s]
       end
 
+      using_sqlite = opts[:database].index("sqlite://") == 0
+      if using_sqlite
+        require "vcap/sequel_sqlite_monkeypatch"
+      end
+
       db = Sequel.connect(opts[:database], connection_options)
       db.logger = logger
-      db.sql_log_level = opts[:log_level] || :debug
+      db.sql_log_level = opts[:log_level] || :debug2
+
+      validate_sqlite_version(db) if using_sqlite
       db
     end
 
