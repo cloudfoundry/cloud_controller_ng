@@ -18,8 +18,7 @@ module VCAP::CloudController
       end
 
       def stop(app)
-        json = Yajl::Encoder.encode(:droplet => app.guid)
-        message_bus.publish("dea.stop", json)
+        dea_command("stop", :droplet => app.guid)
       end
 
       def change_running_instances(app, delta)
@@ -37,14 +36,10 @@ module VCAP::CloudController
       def start_instances_in_range(app, idx_range)
         msg = start_app_message(app)
         idx_range.each do |idx|
-          # TODO: audit dea and HM to see if we can use guids for this instead
-          # of sequential indices
           msg[:index] = idx
           dea_id = dea_pool.find_dea(app.memory, app.runtime.name)
           if dea_id
-            json = Yajl::Encoder.encode(msg)
-            logger.debug "sending start message '#{json}' to dea #{dea_id}"
-            message_bus.publish("dea.#{dea_id}.start", json)
+            dea_command("#{dea_id}.start", msg)
           else
             logger.error "no resources available #{msg}"
           end
@@ -52,12 +47,10 @@ module VCAP::CloudController
       end
 
       def stop_instances_in_range(app, idx_range)
-        stop_msg = {
-          :droplet => app.guid,
-          :version => app.version,
-          :indices => idx_range.to_a
-        }
-        message_bus.publish("dea.stop", Yajl::Encoder.encode(stop_msg))
+        dea_command("stop",
+                    :droplet => app.guid,
+                    :version => app.version,
+                    :indices => idx_range.to_a)
       end
 
       def start_app_message(app)
@@ -91,6 +84,13 @@ module VCAP::CloudController
           },
           :env => {} # TODO
         }
+      end
+
+      def dea_command(cmd, args)
+        subject = "dea.#{cmd}"
+        logger.debug "sending '#{subject}' with '#{args}'"
+        json = Yajl::Encoder.encode(args)
+        message_bus.publish(subject, json)
       end
 
       # FIXME: this is a very temporary hack to test out dea integration
