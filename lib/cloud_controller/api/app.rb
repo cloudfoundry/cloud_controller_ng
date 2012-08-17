@@ -53,6 +53,9 @@ module VCAP::CloudController
         elsif app.stopped?
           DeaClient.stop(app)
         end
+      elsif changes.include?(:instances) && app.started?
+        delta = changes[:instances][1] - changes[:instances][0]
+        DeaClient.change_running_instances(app, delta)
       end
     end
 
