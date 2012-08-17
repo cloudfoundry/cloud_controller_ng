@@ -44,13 +44,16 @@ module VCAP::CloudController
       quota_token_request("delete", obj)
     end
 
-    def after_update(app)
+    def after_update(app, changes)
       AppStager.stage_app(app) if app.needs_staging?
 
-      # TODO: this is temporary, just to validate dea integration for start
-      # only.  The logic here needs to be more complex and include start, stop,
-      # changing instance counts, etc
-      DeaClient.start(app) if app.instances > 0
+      if changes.include?(:state)
+        if app.started?
+          DeaClient.start(app)
+        elsif app.stopped?
+          DeaClient.stop(app)
+        end
+      end
     end
 
     def self.translate_validation_exception(e, attributes)
