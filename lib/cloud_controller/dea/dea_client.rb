@@ -22,6 +22,16 @@ module VCAP::CloudController
         message_bus.publish("dea.stop", json)
       end
 
+      def change_running_instances(app, delta)
+        if delta > 0
+          range = (app.instances - delta...app.instances)
+          start_instances_in_range(app, range)
+        elsif delta < 0
+          range = (app.instances...app.instances - delta)
+          stop_instances_in_range(app, range)
+        end
+      end
+
       private
 
       def start_instances_in_range(app, idx_range)
@@ -39,6 +49,15 @@ module VCAP::CloudController
             logger.error "no resources available #{msg}"
           end
         end
+      end
+
+      def stop_instances_in_range(app, idx_range)
+        stop_msg = {
+          :droplet => app.guid,
+          :version => app.version,
+          :indices => idx_range.to_a
+        }
+        message_bus.publish("dea.stop", Yajl::Encoder.encode(stop_msg))
       end
 
       def start_app_message(app)
