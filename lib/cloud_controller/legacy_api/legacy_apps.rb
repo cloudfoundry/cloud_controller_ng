@@ -144,9 +144,10 @@ module VCAP::CloudController
             # service binding support
             req_hash = {
               :app_guid => app.guid,
-              :service_instance_guid => svc_instance.guid
+              :service_instance_guid => svc_instance.guid,
+              # FIXME: remove when SG is hooked up correctly
+              :credentials => {}
             }
-            req_hash[:credentials] = hash["credentials"] if hash["credentials"]
             binding_req = Yajl::Encoder.encode(req_hash)
             (_, _, binding_json) = VCAP::CloudController::ServiceBinding.new(config, logger, env, params, binding_req).dispatch(:create)
             binding_resp = Yajl::Parser.parse(binding_json)
