@@ -48,7 +48,7 @@ module VCAP::CloudController
           :sha1 => app.droplet_hash,
           :executableFile => AppStager.droplet_path(app),
           :executableUri => LegacyStaging.droplet_uri(app.guid),
-          :version => app.droplet_hash,
+          :version => app.version,
           :services => app.service_bindings.map do |sb|
             svc = sb.service_instance.service_plan.service
             {
