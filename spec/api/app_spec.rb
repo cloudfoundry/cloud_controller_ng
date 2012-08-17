@@ -114,6 +114,21 @@ describe VCAP::CloudController::App do
     end
   end
 
+  describe "instance updates" do
+    let(:app_obj) { VCAP::CloudController::Models::App.make }
+
+    it "should change the running instances for an already started app" do
+      app_obj.state = "STARTED"
+      app_obj.instances = 3
+      app_obj.save
+
+      req = Yajl::Encoder.encode(:instances => 5)
+      DeaClient.should_receive(:change_running_instances).with(kind_of(Models::App), 2)
+      put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
+      last_response.status.should == 201
+    end
+  end
+
   describe "Permissions" do
     include_context "permissions"
 
