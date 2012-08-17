@@ -6,7 +6,6 @@ describe VCAP::CloudController::Models::ServicePlan do
   it_behaves_like "a CloudController model", {
     :required_attributes => [:name, :description, :service],
     :unique_attributes   => [:service, :name],
-    :stripped_string_attributes => :name,
     :many_to_one => {
       :service => {
         :delete_ok => true,
@@ -17,4 +16,13 @@ describe VCAP::CloudController::Models::ServicePlan do
       :service_instances => lambda { |service_plan| VCAP::CloudController::Models::ServiceInstance.make }
     },
   }
+
+  describe "conversions" do
+    describe "name" do
+      it "should upcase and strip the name" do
+        p = Models::ServicePlan.make(:name => " d100 ")
+        p.name.should == "D100"
+      end
+    end
+  end
 end

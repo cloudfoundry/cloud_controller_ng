@@ -45,7 +45,7 @@ module VCAP::CloudController
           )
         end
 
-        new_plans = Array(req.plans)
+        new_plans = Array(req.plans).map(&:upcase)
         new_plans.each do |name|
           Models::ServicePlan.update_or_create(
             :service_id => service.id, :name => name

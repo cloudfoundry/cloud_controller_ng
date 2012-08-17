@@ -61,7 +61,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         post path, offer.encode, auth_header
 
         service = Models::Service[:label => "foobar", :provider => "core"]
-        service.service_plans.map(&:name).should include("free", "nonfree")
+        service.service_plans.map(&:name).should include("FREE", "NONFREE")
       end
 
       it "should update service plans" do
@@ -72,7 +72,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         post path, offer.encode, auth_header
 
         service = Models::Service[:label => "foobar", :provider => "core"]
-        service.service_plans.map(&:name).should include("free", "nonfree")
+        service.service_plans.map(&:name).should include("FREE", "NONFREE")
       end
 
       it "should remove plans not posted" do
@@ -83,7 +83,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         post path, offer.encode, auth_header
 
         service = Models::Service[:label => "foobar", :provider => "core"]
-        service.service_plans.map(&:name).should == ["free"]
+        service.service_plans.map(&:name).should == ["FREE"]
       end
 
       it "should not remove plans for referential integrity" do
@@ -92,13 +92,13 @@ describe VCAP::CloudController::LegacyServiceGateway do
         post path, offer.encode, auth_header
 
         Models::ServiceInstance.make(
-          :service_plan => Models::ServicePlan[:name => "nonfree"],
+          :service_plan => Models::ServicePlan[:name => "NONFREE"],
         )
         offer.plans = ["free"]
         post path, offer.encode, auth_header
 
         service = Models::Service[:label => "foobar", :provider => "core"]
-        service.service_plans.map(&:name).sort.should == ["free", "nonfree"]
+        service.service_plans.map(&:name).sort.should == ["FREE", "NONFREE"]
       end
 
       it "should update service offerings for builtin services" do
@@ -184,7 +184,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         resp = Yajl::Parser.parse(last_response.body)
         resp["label"].should == "foo-bar"
         resp["url"].should   == "http://www.google.com"
-        resp["plans"].sort.should == ["free", "nonfree"]
+        resp["plans"].sort.should == ["FREE", "NONFREE"]
         resp["provider"].should == "core"
       end
 
@@ -195,7 +195,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         resp = Yajl::Parser.parse(last_response.body)
         resp["label"].should == "foo-bar"
         resp["url"].should   == "http://www.google.com"
-        resp["plans"].sort.should == ["free", "nonfree"]
+        resp["plans"].sort.should == ["FREE", "NONFREE"]
         resp["provider"].should == "test"
       end
     end

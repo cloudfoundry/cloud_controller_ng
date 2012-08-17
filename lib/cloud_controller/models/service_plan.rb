@@ -20,5 +20,10 @@ module VCAP::CloudController::Models
       validates_presence :service
       validates_unique   [:service_id, :name]
     end
+
+    def name=(val)
+      val = val.upcase
+      super(val)
+    end
   end
 end
