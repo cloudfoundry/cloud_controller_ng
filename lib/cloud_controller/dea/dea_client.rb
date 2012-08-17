@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       def start(app)
-        start_instances(app, app.instances)
+        start_instances_in_range(app, (0...app.instances))
       end
 
       def stop(app)
@@ -24,12 +24,12 @@ module VCAP::CloudController
 
       private
 
-      def start_instances(app, num, next_index = 0)
+      def start_instances_in_range(app, idx_range)
         msg = start_app_message(app)
-        num.times do |i|
+        idx_range.each do |idx|
           # TODO: audit dea and HM to see if we can use guids for this instead
           # of sequential indices
-          msg[:index] = next_index + i
+          msg[:index] = idx
           dea_id = dea_pool.find_dea(app.memory, app.runtime.name)
           if dea_id
             json = Yajl::Encoder.encode(msg)
