@@ -55,4 +55,44 @@ describe VCAP::CloudController::DeaClient do
       end
     end
   end
+
+  describe "change_running_instances" do
+    context "increasing the instance count" do
+      it "should issue a start command with extra indices" do
+        dea_pool.should_receive(:find_dea).and_return("abc")
+        dea_pool.should_receive(:find_dea).and_return("def")
+        dea_pool.should_receive(:find_dea).and_return("efg")
+        message_bus.should_receive(:publish).with("dea.abc.start", kind_of(String))
+        message_bus.should_receive(:publish).with("dea.def.start", kind_of(String))
+        message_bus.should_receive(:publish).with("dea.efg.start", kind_of(String))
+
+        app.instances = 4
+        app.save
+        with_em_and_thread do
+          DeaClient.change_running_instances(app, 3)
+        end
+      end
+    end
+
+    context "decreasing the instance count" do
+      it "should stop the higher indices" do
+        message_bus.should_receive(:publish).with("dea.stop", kind_of(String))
+        app.instances = 5
+        app.save
+        with_em_and_thread do
+          DeaClient.change_running_instances(app, -2)
+        end
+      end
+    end
+
+    context "with no changes" do
+      it "should do nothing" do
+        app.instances = 9
+        app.save
+        with_em_and_thread do
+          DeaClient.change_running_instances(app, 0)
+        end
+      end
+    end
+  end
 end
