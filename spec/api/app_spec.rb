@@ -3,11 +3,6 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::App do
-  let(:app_obj) { VCAP::CloudController::Models::App.make }
-  let(:space) { VCAP::CloudController::Models::Space.make }
-  let(:runtime) { VCAP::CloudController::Models::Runtime.make }
-  let(:framework) { VCAP::CloudController::Models::Framework.make }
-
   # FIXME: make space_id a relation check that checks the id and the url
   # part.  do everywhere
   it_behaves_like "a CloudController API", {
@@ -35,14 +30,14 @@ describe VCAP::CloudController::App do
     }
   }
 
+  let(:admin_headers) do
+    user = VCAP::CloudController::Models::User.make(:admin => true)
+    headers_for(user)
+  end
+
   describe "validations" do
     let(:app_obj)   { VCAP::CloudController::Models::App.make }
     let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
-
-    let(:admin_headers) do
-      user = VCAP::CloudController::Models::User.make(:admin => true)
-      headers_for(user)
-    end
 
     describe "env" do
       it "should allow an empty environment" do
@@ -75,11 +70,6 @@ describe VCAP::CloudController::App do
   describe "staging" do
     let(:app_obj)   { VCAP::CloudController::Models::App.make }
 
-    let(:admin_headers) do
-      user = VCAP::CloudController::Models::User.make(:admin => true)
-      headers_for(user)
-    end
-
     it "should not restage on update if staging is not needed" do
       AppStager.should_not_receive(:stage_app)
       app_obj.package_hash = "abc"
@@ -88,6 +78,7 @@ describe VCAP::CloudController::App do
       app_obj.needs_staging?.should be_false
       req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
       put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
+      last_response.status.should == 201
     end
 
     it "should restage on update if staging is needed" do
@@ -97,6 +88,7 @@ describe VCAP::CloudController::App do
       app_obj.needs_staging?.should be_true
       req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
       put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
+      last_response.status.should == 201
     end
   end
 
