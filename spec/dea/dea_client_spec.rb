@@ -45,4 +45,14 @@ describe VCAP::CloudController::DeaClient do
       end
     end
   end
+
+  describe "stop" do
+    it "should send a stop messages to deas" do
+      app.instances = 2
+      message_bus.should_receive(:publish).with("dea.stop", kind_of(String))
+      with_em_and_thread do
+        DeaClient.stop(app)
+      end
+    end
+  end
 end

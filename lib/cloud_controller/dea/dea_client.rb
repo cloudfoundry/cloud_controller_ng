@@ -17,6 +17,11 @@ module VCAP::CloudController
         start_instances(app, app.instances)
       end
 
+      def stop(app)
+        json = Yajl::Encoder.encode(:droplet => app.guid)
+        message_bus.publish("dea.stop", json)
+      end
+
       private
 
       def start_instances(app, num, next_index = 0)
