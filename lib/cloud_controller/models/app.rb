@@ -113,6 +113,14 @@ module VCAP::CloudController::Models
       self.package_state == "STAGED"
     end
 
+    def started?
+      self.state == "STARTED"
+    end
+
+    def stopped?
+      self.state == "STOPPED"
+    end
+
     def after_remove_binding(binding)
       mark_for_restaging
     end

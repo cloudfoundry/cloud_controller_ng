@@ -117,6 +117,34 @@ describe VCAP::CloudController::Models::App do
     end
   end
 
+  describe "started?" do
+    let(:app) { Models::App.make }
+
+    it "should return true if app is STARTED" do
+      app.state = "STARTED"
+      app.started?.should be_true
+    end
+
+    it "should return false if app is STOPPED" do
+      app.state = "STOPPED"
+      app.started?.should be_false
+    end
+  end
+
+  describe "stopped?" do
+    let(:app) { Models::App.make }
+
+    it "should return true if app is STOPPED" do
+      app.state = "STOPPED"
+      app.stopped?.should be_true
+    end
+
+    it "should return false if app is STARTED" do
+      app.state = "STARTED"
+      app.stopped?.should be_false
+    end
+  end
+
   describe "version" do
     let(:app) { Models::App.make }
 
