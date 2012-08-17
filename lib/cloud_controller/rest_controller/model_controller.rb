@@ -54,12 +54,14 @@ module VCAP::CloudController::RestController
       raise InvalidRequest unless request_attrs
       logger.debug "update: #{id} #{request_attrs}"
 
+      changes = {}
       QuotaManager.with_quota_enforcement(update_quota_token_request(obj)) do
         obj.update_from_hash(request_attrs)
+        changes = obj.previous_changes || {}
         obj.save
       end
 
-      after_update(obj) if respond_to?(:after_update)
+      after_update(obj, changes) if respond_to?(:after_update)
       [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     end
 

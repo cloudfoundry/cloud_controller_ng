@@ -92,6 +92,28 @@ describe VCAP::CloudController::App do
     end
   end
 
+  describe "state updates" do
+    let(:app_obj) { VCAP::CloudController::Models::App.make }
+
+    it "should start an app when moving from STOPPED to STARTED" do
+      app_obj.state = "STOPPED"
+      app_obj.save
+      req = Yajl::Encoder.encode(:state => "STARTED")
+      DeaClient.should_receive(:start)
+      put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
+      last_response.status.should == 201
+    end
+
+    it "should stop an app when moving from STARTED to STOPPED" do
+      app_obj.state = "STARTED"
+      app_obj.save
+      req = Yajl::Encoder.encode(:state => "STOPPED")
+      DeaClient.should_receive(:stop)
+      put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
+      last_response.status.should == 201
+    end
+  end
+
   describe "Permissions" do
     include_context "permissions"
 
