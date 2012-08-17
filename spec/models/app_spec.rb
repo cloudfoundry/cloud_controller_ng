@@ -117,6 +117,47 @@ describe VCAP::CloudController::Models::App do
     end
   end
 
+  describe "version" do
+    let(:app) { Models::App.make }
+
+    it "should have a version on create" do
+      app.version.should_not be_nil
+    end
+
+    it "should not update the version when changing :memory" do
+      orig_version = app.version
+      app.memory = 1024
+      app.save
+      app.version.should == orig_version
+    end
+
+    it "should update the version when changing :state" do
+      orig_version = app.version
+      app.state = "STARTED"
+      app.save
+      app.version.should_not == orig_version
+    end
+
+    it "should not update the version if the caller set it" do
+      app.version = "my-version"
+      app.state = "STARTED"
+      app.save
+      app.version.should == "my-version"
+    end
+
+    it "should not update the version on update of :memory" do
+      orig_version = app.version
+      app.update(:memory => 999)
+      app.version.should == orig_version
+    end
+
+    it "should update the version on update of :state" do
+      orig_version = app.version
+      app.update(:state => "STARTED")
+      app.version.should_not == orig_version
+    end
+  end
+
   describe "droplet_hash=" do
     let(:app) { Models::App.make }
 
