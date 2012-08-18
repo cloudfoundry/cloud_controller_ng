@@ -7,7 +7,6 @@ module VCAP::CloudController::Models
 
     many_to_one :service_plan
     many_to_one :space
-    many_to_one :service
     one_to_many :service_bindings, :before_add => :validate_service_binding
 
     default_order_by  :id
@@ -62,9 +61,9 @@ module VCAP::CloudController::Models
 
     def service_gateway_client
       VCAP::Services::Api::ServiceGatewayClient.new(
-        service.url,
-        service.service_auth_token.token,
-        service.timeout,
+        service_plan.service.url,
+        service_plan.service.service_auth_token.token,
+        service_plan.service.timeout,
         :requester => requester
       )
     end

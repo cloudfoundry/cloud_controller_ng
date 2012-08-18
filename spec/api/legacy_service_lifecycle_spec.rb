@@ -19,7 +19,7 @@ module VCAP::CloudController
         :space => @user.default_space,
       )
       Models::ServiceAuthToken.create(
-        :service => service_instance.service,
+        :service => service_instance.service_plan.service,
         :token => "meow",
       )
     end

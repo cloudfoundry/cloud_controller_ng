@@ -224,16 +224,24 @@ describe VCAP::CloudController::LegacyServiceGateway do
           :provider => "test",
         )
 
+        plan1 = Models::ServicePlan.make(
+          :service => svc1
+        )
+
+        plan2 = Models::ServicePlan.make(
+          :service => svc2
+        )
+
         cfg1 = Models::ServiceInstance.make(
           :gateway_name => "foo1",
           :name => "bar1",
-          :service => svc1
+          :service_plan => plan1
         )
 
         cfg2 = Models::ServiceInstance.make(
           :gateway_name => "foo2",
           :name => "bar2",
-          :service => svc2
+          :service_plan => plan2
         )
 
         bdg1 = Models::ServiceBinding.make(
@@ -279,14 +287,17 @@ describe VCAP::CloudController::LegacyServiceGateway do
             :label    => "foo-bar",
             :provider => "core",
           )
+          plan = Models::ServicePlan.make(
+            :service => svc
+          )
           Models::ServiceAuthToken.create(
             :label    => "foo-bar",
             :provider => "core",
             :token    => "foobar",
           )
           cfg = Models::ServiceInstance.make(
-            :name     => "bar1",
-            :service  => svc,
+            :name         => "bar1",
+            :service_plan => plan,
             :gateway_name => "foo1",
           )
            Models::ServiceBinding.make(
@@ -343,10 +354,14 @@ describe VCAP::CloudController::LegacyServiceGateway do
             :provider => "test",
           )
 
+          plan = Models::ServicePlan.make(
+            :service => svc
+          )
+
           cfg = Models::ServiceInstance.make(
             :gateway_name => "foo2",
             :name         => "bar2",
-            :service      => svc,
+            :service_plan => plan,
           )
 
           Models::ServiceBinding.make(

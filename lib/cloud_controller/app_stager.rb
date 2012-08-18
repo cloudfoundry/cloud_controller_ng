@@ -83,7 +83,7 @@ module VCAP::CloudController
 
       def service_binding_to_staging_request(sb)
         {
-          :label        => sb.service_instance.service.label,
+          :label        => sb.service_instance.service_plan.service.label,
           :tabs         => {}, # TODO: can this be removed?
           :name         => sb.service_instance.name,
           :credentials  => sb.credentials,

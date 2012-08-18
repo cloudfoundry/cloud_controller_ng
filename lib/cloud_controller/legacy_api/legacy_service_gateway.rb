@@ -74,15 +74,22 @@ module VCAP::CloudController
       service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
       logger.debug("Listing handles for service: #{service.inspect}")
+
       handles = []
-      handles += service.service_instances.map do |si|
+      plans_ds = service.service_plans_dataset
+      instances_ds = Models::ServiceInstance.filter(:service_plan => plans_ds)
+      handles += instances_ds.map do |si|
         {
           :service_id => si.gateway_name,
           :credentials => si.credentials,
           :configuration => si.gateway_data,
         }
       end
-      handles += service.service_bindings.map do |sb|
+
+      service_bindings_ds = Models::ServiceBinding.filter(
+        :service_instance => instances_ds)
+
+      handles += service_bindings_ds.map do |sb|
         {
           :service_id => sb.gateway_name,
           :credentials => sb.credentials,
@@ -163,14 +170,18 @@ module VCAP::CloudController
       service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
 
-      instance = service.service_instances_dataset[:gateway_name => id]
-      if instance
+
+      plans_ds = service.service_plans_dataset
+      instances_ds = Models::ServiceInstance.filter(:service_plan => plans_ds)
+      bindings_ds = Models::ServiceBinding.filter(:service_instance => instances_ds)
+
+      if instance = instances_ds[:gateway_name => id]
         instance.set(
           :gateway_data => req.configuration,
           :credentials => req.credentials,
         )
         instance.save_changes
-      elsif binding = service.service_bindings_dataset[:gateway_name.qualify(:service_bindings) => id]
+      elsif binding = bindings_ds[:gateway_name => id]
         binding.set(
           :configuration => req.configuration,
           :credentials => req.credentials,
