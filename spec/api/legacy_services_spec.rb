@@ -7,11 +7,12 @@ describe VCAP::CloudController::LegacyService do
     describe "GET /services" do
       before do
         core_service = Models::Service.make(:provider => "core")
+        core_plan = Models::ServicePlan.make(:service => core_service)
         3.times.map do |i|
           Models::ServiceInstance.make(
             :name => "core-#{i}",
             :space => user.default_space,
-            :service => core_service,
+            :service_plan => core_plan,
           )
         end
         2.times do |i|
