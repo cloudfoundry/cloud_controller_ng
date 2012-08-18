@@ -14,7 +14,9 @@ module VCAP::CloudController::Models
           :service => service,
           :token => "blah",
         )
-        service_instance = ServiceInstance.make(:service => service)
+        service_instance = ServiceInstance.make(
+          :service_plan => ServicePlan.make(:service => service),
+        )
         VCAP::Services::Api::ServiceGatewayClient.should_receive(:new).with(
           "http://example.com:56789",
           "blah",

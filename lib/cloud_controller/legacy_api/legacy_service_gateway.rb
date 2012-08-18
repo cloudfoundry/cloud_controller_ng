@@ -70,6 +70,7 @@ module VCAP::CloudController
       empty_json
     end
 
+    # FIXME: this is VERY inefficient
     def list_handles(label, provider = DEFAULT_PROVIDER)
       service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
