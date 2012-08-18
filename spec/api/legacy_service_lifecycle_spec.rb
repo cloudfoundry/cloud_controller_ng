@@ -7,6 +7,14 @@ module VCAP::CloudController
     before :each do
       @user = make_user_with_default_space
       @mock_client = double("mock service gateway client")
+      @mock_client.stub(:provision).and_return(
+        VCAP::Services::Api::GatewayProvisionResponse.new(
+          :service_id => "lifecycle",
+          :data => "abc",
+          :credentials => { :password => "foo" }
+        )
+      )
+      @mock_client.stub(:unprovision)
       # I miss dependency injection
       Models::ServiceInstance.any_instance.stub(:service_gateway_client).and_return(@mock_client)
       # Machinist 1.0's make_unsaved doesn't work, so

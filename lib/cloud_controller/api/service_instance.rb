@@ -14,8 +14,6 @@ module VCAP::CloudController
       to_one    :space
       to_one    :service_plan
       to_many   :service_bindings
-      attribute :credentials,      Hash
-      attribute :gateway_data,     Hash, :default => {} # FIXME: notation for access override here
     end
 
     query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid

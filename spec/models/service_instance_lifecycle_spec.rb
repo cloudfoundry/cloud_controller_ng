@@ -6,6 +6,8 @@ module VCAP::CloudController::Models
   describe ServiceInstance do
     describe "#service_gateway_client" do
       it "uses the correct url and credential and timeout" do
+        gw_client = double(:client)
+
         service = Service.make(
           :url => "http://example.com:56789",
           :timeout => 20,
@@ -15,14 +17,19 @@ module VCAP::CloudController::Models
           :token => "blah",
         )
         service_plan = ServicePlan.make(:service => service)
-        service_instance = ServiceInstance.make(:service_plan => service_plan)
         VCAP::Services::Api::ServiceGatewayClient.should_receive(:new).with(
           "http://example.com:56789",
           "blah",
           20,
           instance_of(Hash),
-        )
-        service_instance.service_gateway_client
+        ).and_return(gw_client)
+
+        # just raise an error so that we don't have to mock out the response,
+        # we only care about the arg checks in the previous should_receive
+        gw_client.should_receive(:provision).and_raise("fail")
+        lambda {
+          ServiceInstance.make(:service_plan => service_plan)
+        }.should raise_error
       end
     end
   end

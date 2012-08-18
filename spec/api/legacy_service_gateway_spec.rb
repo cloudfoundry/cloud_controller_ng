@@ -2,6 +2,21 @@ require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::LegacyServiceGateway do
   describe "Gateway facing apis" do
+    let(:mock_client) { double(:gw_client) }
+
+    before do
+      mock_client = double("mock service gateway client")
+      mock_client.stub(:provision).and_return(
+        VCAP::Services::Api::GatewayProvisionResponse.new(
+          :service_id => "gw_id",
+          :data => "abc",
+          :credentials => { :password => "foo" }
+        )
+      )
+      mock_client.stub(:unprovision)
+      Models::ServiceInstance.any_instance.stub(:service_gateway_client).and_return(mock_client)
+    end
+
     describe "POST services/v1/offerings" do
       let(:path) { "services/v1/offerings" }
 
@@ -233,16 +248,18 @@ describe VCAP::CloudController::LegacyServiceGateway do
         )
 
         cfg1 = Models::ServiceInstance.make(
-          :gateway_name => "foo1",
           :name => "bar1",
           :service_plan => plan1
         )
+        cfg1.gateway_name = "foo1"
+        cfg1.save
 
         cfg2 = Models::ServiceInstance.make(
-          :gateway_name => "foo2",
           :name => "bar2",
           :service_plan => plan2
         )
+        cfg2.gateway_name = "foo2"
+        cfg2.save
 
         bdg1 = Models::ServiceBinding.make(
           :gateway_name  => "bind1",
@@ -298,9 +315,11 @@ describe VCAP::CloudController::LegacyServiceGateway do
           cfg = Models::ServiceInstance.make(
             :name         => "bar1",
             :service_plan => plan,
-            :gateway_name => "foo1",
           )
-           Models::ServiceBinding.make(
+          cfg.gateway_name = "foo1"
+          cfg.save
+
+          Models::ServiceBinding.make(
             :gateway_name  => "bind1",
             :service_instance  => cfg,
             :configuration   => {},
@@ -359,10 +378,11 @@ describe VCAP::CloudController::LegacyServiceGateway do
           )
 
           cfg = Models::ServiceInstance.make(
-            :gateway_name => "foo2",
             :name         => "bar2",
             :service_plan => plan,
           )
+          cfg.gateway_name = "foo2"
+          cfg.save
 
           Models::ServiceBinding.make(
             :gateway_name  => "bind2",

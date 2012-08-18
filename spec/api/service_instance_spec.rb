@@ -7,15 +7,9 @@ describe VCAP::CloudController::ServiceInstance do
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/service_instances",
     :model                => VCAP::CloudController::Models::ServiceInstance,
-    :basic_attributes     => [:name, :credentials, :gateway_data],
-    :required_attributes  => [:name, :credentials, :space_guid, :service_plan_guid],
+    :basic_attributes     => [:name],
+    :required_attributes  => [:name, :space_guid, :service_plan_guid],
     :unique_attributes    => [:space_guid, :name],
-    :create_attribute     => lambda { |name|
-      case name.to_sym
-      when :credentials
-        { "foo" => "bar" }
-      end
-    },
     :one_to_many_collection_ids => {
       :service_bindings => lambda { |service_instance|
         make_service_binding_for_service_instance(service_instance)
@@ -33,12 +27,10 @@ describe VCAP::CloudController::ServiceInstance do
     end
 
     let(:creation_req_for_a) do
-      # TODO: remove credentials when service gw flow is in place
       Yajl::Encoder.encode(
         :name => Sham.name,
         :space_guid => @space_a.guid,
-        :service_plan_guid => Models::ServicePlan.make.guid,
-        :credentials => { "foo" => "bar" }
+        :service_plan_guid => Models::ServicePlan.make.guid
       )
     end
 
@@ -159,7 +151,6 @@ describe VCAP::CloudController::ServiceInstance do
         post "/v2/service_instances",
           Yajl::Encoder.encode(:name => Sham.name,
                                :space_guid => service_instance.space_guid,
-                               :credentials => { "foo" => "bar" },
                                :service_plan_guid => service_instance.service_plan_guid),
                                headers_for(cf_admin)
         last_response.status.should == 201
