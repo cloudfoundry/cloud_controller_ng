@@ -230,12 +230,14 @@ describe VCAP::CloudController::LegacyServiceGateway do
 
       it "should return provisioned and bound handles" do
         svc1 = Models::Service.make(
-          :label => "foo-bar",
+          :label => "foo",
+          :version => "bar",
           :provider => "core",
         )
 
         svc2 = Models::Service.make(
-          :label    => "foo-bar",
+          :label    => "foo",
+          :version  => "bar",
           :provider => "test",
         )
 

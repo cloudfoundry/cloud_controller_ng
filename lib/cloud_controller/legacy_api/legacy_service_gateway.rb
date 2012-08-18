@@ -71,6 +71,8 @@ module VCAP::CloudController
     end
 
     def list_handles(label, provider = DEFAULT_PROVIDER)
+      (label, version) = label.split("-")
+
       service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
       logger.debug("Listing handles for service: #{service.inspect}")
