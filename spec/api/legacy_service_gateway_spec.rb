@@ -5,7 +5,6 @@ describe VCAP::CloudController::LegacyServiceGateway do
     let(:mock_client) { double(:gw_client) }
 
     before do
-      mock_client = double("mock service gateway client")
       mock_client.stub(:provision).and_return(
         VCAP::Services::Api::GatewayProvisionResponse.new(
           :service_id => "gw_id",
@@ -14,6 +13,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         )
       )
       mock_client.stub(:unprovision)
+      mock_client.stub(:unbind)
       Models::ServiceInstance.any_instance.stub(:service_gateway_client).and_return(mock_client)
     end
 
@@ -104,6 +104,13 @@ describe VCAP::CloudController::LegacyServiceGateway do
       it "should not remove plans for referential integrity" do
         offer = foo_bar_offering.dup
         offer.plans = ["free", "nonfree"]
+        mock_client.stub(:bind).and_return(
+          VCAP::Services::Api::GatewayBindResponse.new(
+            :service_id => "binding",
+            :configuration => {},
+            :credentials => {}
+          )
+        )
         post path, offer.encode, auth_header
 
         Models::ServiceInstance.make(
@@ -263,13 +270,24 @@ describe VCAP::CloudController::LegacyServiceGateway do
         cfg2.gateway_name = "foo2"
         cfg2.save
 
+        mock_client.stub(:bind).and_return(
+          VCAP::Services::Api::GatewayBindResponse.new(
+            :service_id => "bind1",
+            :configuration => {},
+            :credentials => {}
+          )
+        )
         bdg1 = Models::ServiceBinding.make(
-          :gateway_name  => "bind1",
-          :service_instance  => cfg1,
-          :configuration   => {},
-          :binding_options => []
+          :service_instance  => cfg1
         )
 
+        mock_client.stub(:bind).and_return(
+          VCAP::Services::Api::GatewayBindResponse.new(
+            :service_id => "bind2",
+            :configuration => {},
+            :credentials => {}
+          )
+        )
         bdg2 = Models::ServiceBinding.make(
           :gateway_name  => "bind2",
           :service_instance  => cfg2,
@@ -321,12 +339,15 @@ describe VCAP::CloudController::LegacyServiceGateway do
           cfg.gateway_name = "foo1"
           cfg.save
 
+          mock_client.stub(:bind).and_return(
+            VCAP::Services::Api::GatewayBindResponse.new(
+              :service_id => "bind1",
+              :configuration => {},
+              :credentials => {}
+            )
+          )
           Models::ServiceBinding.make(
-            :gateway_name  => "bind1",
-            :service_instance  => cfg,
-            :configuration   => {},
-            :credentials     => {},
-            :binding_options => [],
+            :service_instance  => cfg
           )
         end
 
@@ -386,12 +407,15 @@ describe VCAP::CloudController::LegacyServiceGateway do
           cfg.gateway_name = "foo2"
           cfg.save
 
+          mock_client.stub(:bind).and_return(
+            VCAP::Services::Api::GatewayBindResponse.new(
+              :service_id => "bind2",
+              :configuration => {},
+              :credentials => {}
+            )
+          )
           Models::ServiceBinding.make(
-            :gateway_name  => "bind2",
-            :service_instance  => cfg,
-            :configuration   => {},
-            :credentials     => {},
-            :binding_options => [],
+            :service_instance  => cfg
           )
         end
 

@@ -16,11 +16,6 @@ module VCAP::CloudController::Models
                       :binding_options, :gateway_data
 
     def validate
-      # we can't use validates_presence because it ends up using the
-      # credentials method below and looks at the hash, which can be empty..
-      # and that isn't the same thing as nil for us
-      errors.add(:credentials, :presence) if credentials.nil?
-
       validates_presence :app
       validates_presence :service_instance
       validates_unique [:app_id, :service_instance_id]
@@ -42,6 +37,11 @@ module VCAP::CloudController::Models
       service_instance.space
     end
 
+    def before_create
+      super
+      bind_on_gateway
+    end
+
     def after_create
       mark_app_for_restaging
     end
@@ -51,7 +51,17 @@ module VCAP::CloudController::Models
     end
 
     def before_destroy
+      unbind_on_gateway
       mark_app_for_restaging
+    end
+
+    def after_rollback
+      unbind_on_gateway if @bound_on_gateway
+      super
+    end
+
+    def after_commit
+      @bound_on_gateway = false
     end
 
     def mark_app_for_restaging
@@ -72,6 +82,60 @@ module VCAP::CloudController::Models
       val = super
       val = Yajl::Parser.parse(val) if val
       val
+    end
+
+    def service_gateway_client
+      # this shouldn't happen under normal circumstances, but will if we are
+      # running tests that bypass validations
+      return unless service_instance
+      service_instance.service_gateway_client
+    end
+
+    def bind_on_gateway
+      client = service_gateway_client
+
+      # TODO: see service_gateway_client
+      unless client
+        self.gateway_name = ""
+        self.gateway_data = nil
+        self.credentials = {}
+        return
+      end
+
+      logger.debug "binding service on gateway for #{guid}"
+
+      service = service_instance.service_plan.service
+      gw_attrs = client.bind(
+        :service_id => service_instance.gateway_name,
+        # TODO: we shouldn't still be using this compound label
+        :label      => "#{service.label}-#{service.version}",
+        :email      => "todo@todo.com", # TODO
+        :binding_options => {}
+      )
+
+      logger.debug "binding response for #{guid} #{gw_attrs.inspect}"
+
+      self.gateway_name = gw_attrs.service_id
+      self.gateway_data = gw_attrs.configuration
+      self.credentials  = gw_attrs.credentials
+
+      @bound_on_gateway = true
+    end
+
+    def unbind_on_gateway
+      client = service_gateway_client
+      return unless client # TODO see service_gateway_client
+      client.unbind(
+        :service_id      => service_instance.gateway_name,
+        :handle_id       => gateway_name,
+        :binding_options => {}
+      )
+    rescue => e
+      logger.error "unbind failed #{e}"
+    end
+
+    def logger
+      @logger ||= Steno.logger("cc.models.service_binding")
     end
   end
 end
