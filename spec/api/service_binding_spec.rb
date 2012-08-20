@@ -89,7 +89,7 @@ describe VCAP::CloudController::ServiceBinding do
     end
 
     let(:update_req_for_a) do
-      Yajl::Encoder.encode(:credentials => {:a => "b"})
+      Yajl::Encoder.encode({})
     end
 
     describe "Org Level Permissions" do
@@ -175,7 +175,7 @@ describe VCAP::CloudController::ServiceBinding do
           :enumerate => 1,
           :create => :allowed,
           :read => :allowed,
-          :modify => :allowed,
+          :modify => :not_allowed,
           :delete => :allowed
       end
 

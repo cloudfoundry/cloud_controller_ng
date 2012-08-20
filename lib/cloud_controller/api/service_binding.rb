@@ -5,7 +5,9 @@ module VCAP::CloudController
     permissions_required do
       full Permissions::CFAdmin
       read Permissions::OrgManager
-      full Permissions::SpaceDeveloper
+      create Permissions::SpaceDeveloper
+      read   Permissions::SpaceDeveloper
+      delete Permissions::SpaceDeveloper
       read Permissions::SpaceAuditor
     end
 
