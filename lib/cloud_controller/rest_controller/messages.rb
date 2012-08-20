@@ -19,7 +19,7 @@ module VCAP::CloudController::RestController
       private
 
       def define_message(type)
-        attrs   = attributes
+        attrs   = Array(attributes)
         to_one  = @to_one_relationships ||= []
         to_many = @to_many_relationships ||= []
 
