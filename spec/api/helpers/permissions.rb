@@ -56,7 +56,7 @@ module VCAP::CloudController::ApiSpecHelper
 
   shared_examples "permission enumeration" do |perm_name, model, name, path, expected, perms_overlap|
     describe "GET #{path}" do
-      it "should return #{name} to a user that has #{perm_name} permissions" do
+      it "should return #{expected} #{name.pluralize} to a user that has #{perm_name} permissions" do
         get path, {}, headers_a
         last_response.should be_ok
         decoded_response["total_results"].should == expected
