@@ -41,6 +41,12 @@ quota_manager:
   auth_token: "testtoken"
   http_timeout_sec: 2
 
+cc_partition: ng
+
+bulk_api:
+  auth_user: bulk_user
+  auth_password: bulk_password
+
 # App staging parameters
 staging:
   # Max duration for staging process
