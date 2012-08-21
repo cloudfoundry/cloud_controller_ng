@@ -156,24 +156,6 @@ module VCAP::CloudController::RestController
       [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     end
 
-    # Validate that the given user has rights to access a given object.
-    #
-    # Raises an exception if the user does not have rights to peform
-    # the operation on the object.
-    #
-    # @param [Symbol] op The type of operation to check for access
-    #
-    # @param [Object] obj The object for which to validate access.
-    #
-    # @param [Models::User] user The user for which to validate access.
-    def validate_access(op, obj, user)
-      user_perms = Permissions.permissions_for(obj, user)
-      unless self.class.op_allowed_by?(op, user_perms)
-        raise NotAuthenticated unless user
-        raise NotAuthorized
-      end
-    end
-
     # Find an object and validate that the current user has rights to
     # perform the given operation on that instance.
     #
