@@ -112,6 +112,7 @@ module VCAP::CloudController
         VCAP::CloudController::MessageBus.register_components
         VCAP::CloudController::MessageBus.register_routes
         VCAP::CloudController::DeaPool.register_subscriptions
+        VCAP::CloudController::LegacyBulk.register_subscription
 
         map "/" do
           DB.apply_migrations(db) if (run_migrations && development?)
