@@ -1,10 +1,9 @@
 # Copyright (c) 2009-2012 VMware Inc.
 
 module VCAP::CloudController::Permissions
-  class OrgUser
+  class OrgUser < OrgPermissions
     def self.granted_to?(obj, user)
-      obj.kind_of?(VCAP::CloudController::Models::Organization) &&
-        !user.nil? && obj.users.include?(user)
+      granted_to_via_org?(obj, user, :users)
     end
 
     VCAP::CloudController::Permissions::register self

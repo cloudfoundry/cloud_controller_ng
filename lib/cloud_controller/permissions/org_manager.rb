@@ -1,16 +1,9 @@
 # Copyright (c) 2009-2012 VMware Inc.
 
 module VCAP::CloudController::Permissions
-  class OrgManager
+  class OrgManager < OrgPermissions
     def self.granted_to?(obj, user)
-      return false if user.nil?
-
-      if obj.kind_of?(VCAP::CloudController::Models::Organization)
-        obj.managers.include?(user)
-      elsif obj.respond_to?(:organization)
-        # FIXME: include pulls the whole list
-        obj.organization && obj.organization.managers.include?(user)
-      end
+      granted_to_via_org?(obj, user, :managers)
     end
 
     VCAP::CloudController::Permissions::register self
