@@ -66,6 +66,7 @@ module VCAP::CloudController::Errors
 
     ["DomainInvalid",  HTTP::BAD_REQUEST, 130001, "The domain is invalid: %s"],
     ["DomainNotFound", HTTP::BAD_REQUEST, 130002, "The domain could not be found: %s"],
+    ["DomainNameTaken", HTTP::BAD_REQUEST, 130003, "The domain name is taken: %s"],
 
     ["LegacyApiWithoutDefaultSpace", HTTP::BAD_REQUEST, 140001, "A legacy api call requring a default app space was called, but no default app space is set for the user."],
 
@@ -78,6 +79,7 @@ module VCAP::CloudController::Errors
 
     ["SnapshotNotFound", HTTP::NOT_FOUND, 180001, "Snapshot could not be found: %s"],
     ["ServiceGatewayError", HTTP::SERVICE_UNAVAILABLE, 180002, "Service gateway internal error: %s"],
+
   ].each do |e|
     define_error *e
   end

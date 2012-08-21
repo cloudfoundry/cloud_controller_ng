@@ -20,9 +20,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
       if name_errors && name_errors.include?(:unique)
-        OrganizationNameTaken.new(attributes["name"])
+        DomainNameTaken.new(attributes["name"])
       else
-        OrganizationInvalid.new(e.errors.full_messages)
+        DomainInvalid.new(e.errors.full_messages)
       end
     end
   end
