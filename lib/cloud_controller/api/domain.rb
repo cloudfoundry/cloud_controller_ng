@@ -5,6 +5,7 @@ module VCAP::CloudController
     permissions_required do
       full Permissions::CFAdmin
       full Permissions::OrgManager
+      read Permissions::Auditor
       read Permissions::SpaceManager
       read Permissions::SpaceDeveloper
       read Permissions::SpaceAuditor
