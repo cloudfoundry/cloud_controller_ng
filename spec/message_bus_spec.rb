@@ -59,4 +59,19 @@ describe VCAP::CloudController::MessageBus do
       published.should == true
     end
   end
+
+  describe "request" do
+    it "make a nats request and return response" do
+      nats.should_receive(:request).once.with("subject", "abc",
+                                              :max => 3)
+        .and_yield(msg_json).and_yield(msg_json).and_yield(msg_json)
+
+      with_em_and_thread do
+        response = MessageBus.request("subject", "abc", :expected => 3)
+        response.should be_an_instance_of Array
+        response.size.should == 3
+        response.should == [msg_json, msg_json, msg_json]
+      end
+    end
+  end
 end
