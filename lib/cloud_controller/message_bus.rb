@@ -83,6 +83,21 @@ module VCAP::CloudController::MessageBus
     end
   end
 
+  def self.request(subject, data = nil, opts = {})
+    opts ||= {}
+    expected = opts[:expected] || 1
+
+    response = EM.schedule_sync do |promise|
+      results = []
+      nats.request(subject, data, :max => expected) do |msg|
+        results << msg
+        promise.deliver(results) if results.size == expected
+      end
+    end
+
+    response
+  end
+
   private
 
   def self.process_message(msg, inbox, &blk)
