@@ -73,6 +73,45 @@ module VCAP::CloudController::MessageBus
     end
   end
 
+  def self.timed_request(subject, data = nil, opts = {})
+    expected = opts[:expected] || 1
+    timeout = opts[:timeout] || 1
+
+    type_error = "Expected '%s' to be of type: '%s' and >= 1,"
+    type_error << " but received: '%s' with value: %s."
+
+    unless expected.is_a?(Integer)
+      raise ArgumentError, type_error % ['expected', Integer.to_s,
+                                         expected.class, expected.to_s]
+    end
+
+    unless expected >= 1
+      msg = "Expected 'expected' to be >= 1, but received: #{expected}."
+      raise ArgumentError, msg
+    end
+
+    unless timeout.is_a?(Integer)
+      raise ArgumentError, type_error % ['timeout', Integer.to_s,
+                                         timeout.class, timeout.to_s]
+    end
+
+    unless timeout >= 0
+      msg = "Expected 'timeout' to be >= 0, but received: #{timeout}."
+      raise ArgumentError, msg
+    end
+
+    f = Fiber.current
+    results = []
+    sid = nats.request(subject, data, :max => expected) do |msg|
+      results << msg
+      f.resume if results.length >= expected
+    end
+    nats.timeout(sid, timeout, :expected => expected) { f.resume }
+    Fiber.yield
+
+    return results.slice(0, expected)
+  end
+
   private
 
   def self.process_message(msg, &blk)

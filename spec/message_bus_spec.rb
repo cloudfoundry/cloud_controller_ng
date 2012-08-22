@@ -15,10 +15,10 @@ describe VCAP::CloudController::MessageBus do
 
   shared_examples "subscription" do |receive_in_reactor|
     (desc, method) = if receive_in_reactor
-                        ["on the reactor thread", :subscribe_on_reactor]
-                      else
-                        ["on a thread", :subscribe]
-                      end
+                       ["on the reactor thread", :subscribe_on_reactor]
+                     else
+                       ["on a thread", :subscribe]
+                     end
 
     it "should receive nasts messages #{desc}" do
       received_msg = false
@@ -57,6 +57,99 @@ describe VCAP::CloudController::MessageBus do
       end
 
       published.should == true
+    end
+  end
+
+  describe "timed_request" do
+    context "raise errors" do
+      it "should only allow expected values >= 1" do
+        expect {
+          MessageBus.timed_request("subject", "abc", :expected => "test")
+        }.to raise_error { |error|
+          error.should be_an_instance_of ArgumentError
+          msg = "Expected 'expected' to be of type: '#{Integer}' and >= 1,"
+          msg << " but received: '#{String}' with value: test."
+          error.message.should == msg
+        }
+
+        expect {
+          MessageBus.timed_request("subject", "abc", :expected => -1)
+        }.to raise_error { |error|
+          error.should be_an_instance_of ArgumentError
+          msg = "Expected 'expected' to be >= 1, but received: -1."
+          error.message.should == msg
+        }
+
+        expect {
+          MessageBus.timed_request("subject", "abc", :expected => 0)
+        }.to raise_error { |error|
+          error.should be_an_instance_of ArgumentError
+          msg = "Expected 'expected' to be >= 1, but received: 0."
+          error.message.should == msg
+        }
+      end
+
+      it "should only allow timeout values >= 0" do
+        expect {
+          MessageBus.timed_request("subject", "abc", :timeout => "test")
+        }.to raise_error { |error|
+          error.should be_an_instance_of ArgumentError
+          msg = "Expected 'timeout' to be of type: '#{Integer}' and >= 1,"
+          msg << " but received: '#{String}' with value: test."
+          error.message.should == msg
+        }
+
+        expect {
+          MessageBus.timed_request("subject", "abc", :timeout => -1)
+        }.to raise_error { |error|
+          error.should be_an_instance_of ArgumentError
+          msg = "Expected 'timeout' to be >= 0, but received: -1."
+          error.message.should == msg
+        }
+      end
+    end
+
+    context "make a nats request" do
+      before :each do
+        @fiber = mock("fiber")
+        Fiber.should_receive(:current).and_return(@fiber)
+        Fiber.should_receive(:yield).once
+        @fiber.should_receive(:resume).once
+      end
+
+      it "should use the specified timeout" do
+        nats.should_receive(:request).once.with("subject", "abc",
+                                                :max => 1)
+          .and_yield(msg_json).and_return(1)
+        nats.should_receive(:timeout).once.with(1, 10, :expected => 1)
+
+        response = nil
+        with_em_and_thread do
+          response = MessageBus.timed_request("subject", "abc",
+                                              :timeout => 10)
+        end
+
+        response.should be_an_instance_of Array
+        response.size.should == 1
+        response.should == [msg_json]
+      end
+
+      it "should use the specified expected value" do
+        nats.should_receive(:request).once.with("subject", "abc",
+                                                :max => 3)
+          .and_yield(msg_json).and_yield(msg_json).and_yield(msg_json)
+          .and_return(1)
+        nats.should_receive(:timeout).once.with(1, 1, :expected => 3)
+
+        response = nil
+        with_em_and_thread do
+          response = MessageBus.timed_request("subject", "abc",
+                                              :expected => 3)
+        end
+
+        response.should be_an_instance_of Array
+        response.should == [msg_json, msg_json, msg_json]
+      end
     end
   end
 end

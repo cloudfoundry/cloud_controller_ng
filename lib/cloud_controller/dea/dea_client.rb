@@ -31,6 +31,19 @@ module VCAP::CloudController
         end
       end
 
+      def find_specific_instance(app, options = {})
+        message = { :droplet => app.guid }
+        message.merge!(options)
+        instance_json = message_bus.timed_request('dea.find.droplet',
+                                                  Yajl::Encoder.encode(message),
+                                                  :timeout => 2).first
+        instance = nil
+        block = lambda { |payload| instance = payload }
+
+        message_bus.parse_message(instance_json, &block)
+        instance
+      end
+
       private
 
       def start_instances_in_range(app, idx_range)
