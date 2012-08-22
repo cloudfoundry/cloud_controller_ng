@@ -31,6 +31,19 @@ module VCAP::CloudController
         end
       end
 
+      def find_specific_instance(app, options = {})
+        message = { :droplet => app.guid }
+        message.merge!(options)
+
+        instance_json = dea_command('find.droplet',
+                                    message,
+                                    :blocking => true)
+        instance = nil
+        block = lambda { |parsed| instance = parsed }
+        message_bus.parse_message(instance_json, &block)
+        instance
+      end
+
       private
 
       def start_instances_in_range(app, idx_range)
@@ -86,11 +99,18 @@ module VCAP::CloudController
         }
       end
 
-      def dea_command(cmd, args)
+      def dea_command(cmd, args, opts = {})
+        opts ||= {}
+
         subject = "dea.#{cmd}"
         logger.debug "sending '#{subject}' with '#{args}'"
         json = Yajl::Encoder.encode(args)
-        message_bus.publish(subject, json)
+
+        if opts[:blocking]
+          return message_bus.request(subject, json, :expected => 1).first
+        else
+          message_bus.publish(subject, json)
+        end
       end
 
       # FIXME: this is a very temporary hack to test out dea integration
