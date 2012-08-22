@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
 
       def stop(app)
-        dea_command("stop", :droplet => app.guid)
+        dea_publish("stop", :droplet => app.guid)
       end
 
       def change_running_instances(app, delta)
@@ -39,7 +39,7 @@ module VCAP::CloudController
           msg[:index] = idx
           dea_id = dea_pool.find_dea(app.memory, app.runtime.name)
           if dea_id
-            dea_command("#{dea_id}.start", msg)
+            dea_publish("#{dea_id}.start", msg)
           else
             logger.error "no resources available #{msg}"
           end
@@ -47,7 +47,7 @@ module VCAP::CloudController
       end
 
       def stop_instances_in_range(app, idx_range)
-        dea_command("stop",
+        dea_publish("stop",
                     :droplet => app.guid,
                     :version => app.version,
                     :indices => idx_range.to_a)
@@ -86,11 +86,29 @@ module VCAP::CloudController
         }
       end
 
-      def dea_command(cmd, args)
+      def dea_publish(cmd, args)
         subject = "dea.#{cmd}"
         logger.debug "sending '#{subject}' with '#{args}'"
         json = Yajl::Encoder.encode(args)
+
         message_bus.publish(subject, json)
+      end
+
+      def dea_request(cmd, args, opts = {})
+        expected = opts[:expected] || 1
+
+        subject = "dea.#{cmd}"
+        logger.debug "sending '#{subject}' with '#{args}'"
+        json = Yajl::Encoder.encode(args)
+
+        response = message_bus.request(subject, json, :expected => expected)
+        parsed_response = []
+        response.each do |json_str|
+          parsed_response << Yajl::Parser.parse(json_str,
+                                                :symbolize_keys => true)
+        end
+
+        parsed_response
       end
 
       # FIXME: this is a very temporary hack to test out dea integration
