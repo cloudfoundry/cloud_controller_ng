@@ -1,10 +1,13 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/stager/client"
+require "cloud_controller/errors"
 
 module VCAP::CloudController
   module DeaClient
     class << self
+      include VCAP::CloudController::Errors
+
       attr_reader :config, :message_bus, :dea_pool
 
       def configure(config, message_bus = MessageBus, dea_pool = DeaPool)
@@ -36,6 +39,34 @@ module VCAP::CloudController
         message.merge!(options)
 
         dea_request("find.droplet", message).first
+      end
+
+      def get_file_url(app, instance, path = nil)
+        if app.stopped?
+          msg = "Request failed for app: #{app}, instance: #{instance}"
+          msg << " and path: #{path} as the app is in stopped state."
+
+          raise FileError.new(msg)
+        end
+
+        search_options = {}
+        instance = instance.to_i
+
+        if instance < 0 || instance >= app.instances
+          msg = "Request failed for app: #{app}, instance: #{instance}"
+          msg << " and path: #{path} as the instance was not found."
+
+          raise FileError.new(msg)
+        end
+
+        search_options[:indices] = [instance]
+        search_options[:states] = [:STARTING, :RUNNING, :CRASHED]
+        search_options[:version] = app.version
+
+        if instance = find_specific_instance(app, search_options)
+          return ["#{instance[:file_uri]}#{instance[:staged]}/#{path}",
+                  instance[:credentials]]
+        end
       end
 
       private
