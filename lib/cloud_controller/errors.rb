@@ -81,6 +81,11 @@ module VCAP::CloudController::Errors
     ["ServiceGatewayError", HTTP::SERVICE_UNAVAILABLE, 180002, "Service gateway internal error: %s"],
 
     ["FileError",  HTTP::BAD_REQUEST, 190001, "File error: %s"],
+
+    ["RouteInvalid",  HTTP::BAD_REQUEST, 200001, "The route is invalid: %s"],
+    ["RouteNotFound", HTTP::BAD_REQUEST, 200002, "The route could not be found: %s"],
+    ["RouteHostTaken", HTTP::BAD_REQUEST, 200003, "The host is taken: %s"],
+
   ].each do |e|
     define_error *e
   end
