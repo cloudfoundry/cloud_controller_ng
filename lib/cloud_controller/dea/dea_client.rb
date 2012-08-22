@@ -31,6 +31,13 @@ module VCAP::CloudController
         end
       end
 
+      def find_specific_instance(app, options = {})
+        message = { :droplet => app.guid }
+        message.merge!(options)
+
+        dea_request("find.droplet", message).first
+      end
+
       private
 
       def start_instances_in_range(app, idx_range)
