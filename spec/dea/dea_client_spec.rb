@@ -56,6 +56,24 @@ describe VCAP::CloudController::DeaClient do
     end
   end
 
+  describe "find_specific_instance" do
+    it "should find a specific instance" do
+      app.should_receive(:guid).and_return(1)
+
+      instance_json = "\"instance\""
+      encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
+      message_bus.should_receive(:request).with("dea.find.droplet",
+                                                encoded,
+                                                :expected => 1)
+        .and_return([instance_json])
+
+      with_em_and_thread do
+        DeaClient.find_specific_instance(app, { :other_opt => "value" })
+          .should == "instance"
+      end
+    end
+  end
+
   describe "change_running_instances" do
     context "increasing the instance count" do
       it "should issue a start command with extra indices" do
