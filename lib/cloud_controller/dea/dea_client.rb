@@ -1,10 +1,13 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/stager/client"
+require "cloud_controller/errors"
 
 module VCAP::CloudController
   module DeaClient
     class << self
+      include VCAP::CloudController::Errors
+
       attr_reader :config, :message_bus, :dea_pool
 
       def configure(config, message_bus = MessageBus, dea_pool = DeaPool)
@@ -36,6 +39,39 @@ module VCAP::CloudController
         message.merge!(options)
 
         dea_request("find.droplet", message).first
+      end
+
+      def get_file_url(app, instance, path = nil)
+        if app.stopped?
+          msg = "Request failed for app: #{app.name}, instance: #{instance}"
+          msg << " and path: #{path} as the app is in stopped state."
+
+          raise FileError.new(msg)
+        end
+
+        search_options = {}
+
+        if instance < 0 || instance >= app.instances
+          msg = "Request failed for app: #{app.name}, instance: #{instance}"
+          msg << " and path: #{path} as the instance is out of range."
+
+          raise FileError.new(msg)
+        end
+
+        search_options[:indices] = [instance]
+        search_options[:states] = [:STARTING, :RUNNING, :CRASHED]
+        search_options[:version] = app.version
+
+        if instance_found = find_specific_instance(app, search_options)
+          url = "#{instance_found[:file_uri]}#{instance_found[:staged]}"
+          url << "/#{path}"
+          return [url, instance_found[:credentials]]
+        end
+
+        msg = "Request failed for app: #{app.name}, instance: #{instance}"
+        msg << " and path: #{path} as the instance is not found."
+
+        raise FileError.new(msg)
       end
 
       private

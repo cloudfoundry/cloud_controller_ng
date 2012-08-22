@@ -74,6 +74,104 @@ describe VCAP::CloudController::DeaClient do
     end
   end
 
+  describe "get_file_url" do
+    include VCAP::CloudController::Errors
+
+    it "should throw an error if the app is in stopped state" do
+      app.should_receive(:stopped?).and_return(true)
+
+      instance = 10
+      path = "test"
+
+      with_em_and_thread do
+        expect {
+          DeaClient.get_file_url(app, instance, path)
+        }.to raise_error { |error|
+          error.should be_an_instance_of FileError
+          msg = "File error: Request failed for app: #{app.name}"
+          msg << ", instance: #{instance} and path: #{path} as the app is in stopped state."
+          error.message.should == msg
+        }
+      end
+    end
+
+    it "should throw an error if the instance is out of range" do
+      app.should_receive(:stopped?).and_return(false)
+      app.instances = 5
+
+      instance = 10
+      path = "test"
+
+      with_em_and_thread do
+        expect {
+          DeaClient.get_file_url(app, instance, path)
+        }.to raise_error { |error|
+          error.should be_an_instance_of FileError
+          msg = "File error: Request failed for app: #{app.name}"
+          msg << ", instance: #{instance} and path: #{path} as the instance is"
+          msg << " out of range."
+          error.message.should == msg
+        }
+      end
+    end
+
+    it "should return the file url if the required instance is found" do
+      app.instances = 2
+      app.should_receive(:stopped?).and_return(false)
+
+      instance = 1
+      path = "test"
+
+      search_options = {}
+      search_options[:indices] = [instance]
+      search_options[:states] = [:STARTING, :RUNNING, :CRASHED]
+      search_options[:version] = app.version
+
+      instance_found = {
+        :file_uri => "file_uri",
+        :staged => "staged",
+        :credentials => "credentials"
+      }
+
+      DeaClient.should_receive(:find_specific_instance).once
+        .with(app, search_options).and_return(instance_found)
+
+      with_em_and_thread do
+        file_url, credentials = DeaClient.get_file_url(app, instance, path)
+        file_url.should == "file_uristaged/test"
+        credentials.should == "credentials"
+      end
+    end
+
+    it "should raise an error if the instance is not found" do
+      app.instances = 2
+      app.should_receive(:stopped?).and_return(false)
+
+      instance = 1
+      path = "test"
+
+      search_options = {}
+      search_options[:indices] = [instance]
+      search_options[:states] = [:STARTING, :RUNNING, :CRASHED]
+      search_options[:version] = app.version
+
+      DeaClient.should_receive(:find_specific_instance).once
+        .with(app, search_options).and_return(nil)
+
+      with_em_and_thread do
+        expect {
+          DeaClient.get_file_url(app, instance, path)
+        }.to raise_error { |error|
+          error.should be_an_instance_of FileError
+          msg = "File error: Request failed for app: #{app.name}"
+          msg << ", instance: #{instance} and path: #{path} as the instance is"
+          msg << " not found."
+          error.message.should == msg
+        }
+      end
+    end
+  end
+
   describe "change_running_instances" do
     context "increasing the instance count" do
       it "should issue a start command with extra indices" do

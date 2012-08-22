@@ -80,6 +80,7 @@ module VCAP::CloudController::Errors
     ["SnapshotNotFound", HTTP::NOT_FOUND, 180001, "Snapshot could not be found: %s"],
     ["ServiceGatewayError", HTTP::SERVICE_UNAVAILABLE, 180002, "Service gateway internal error: %s"],
 
+    ["FileError",  HTTP::BAD_REQUEST, 190001, "File error: %s"],
   ].each do |e|
     define_error *e
   end
