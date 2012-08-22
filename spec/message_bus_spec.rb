@@ -15,10 +15,10 @@ describe VCAP::CloudController::MessageBus do
 
   shared_examples "subscription" do |receive_in_reactor|
     (desc, method) = if receive_in_reactor
-                        ["on the reactor thread", :subscribe_on_reactor]
-                      else
-                        ["on a thread", :subscribe]
-                      end
+                       ["on the reactor thread", :subscribe_on_reactor]
+                     else
+                       ["on a thread", :subscribe]
+                     end
 
     it "should receive nasts messages #{desc}" do
       received_msg = false
@@ -58,5 +58,20 @@ describe VCAP::CloudController::MessageBus do
 
       published.should == true
     end
+  end
+
+  describe "trequest" do
+    it "make a nats request and return response" do
+        nats.should_receive(:request).once.with("subject", "abc",
+                                                :max => 3)
+          .and_yield(msg_json).and_yield(msg_json).and_yield(msg_json)
+
+        with_em_and_thread do
+          response = MessageBus.request("subject", "abc", :expected => 3)
+          response.should be_an_instance_of Array
+          response.size.should == 3
+          response.should == [msg_json, msg_json, msg_json]
+        end
+      end
   end
 end
