@@ -1,5 +1,7 @@
 *~
 .idea
+.yardoc
+.rbenv-version
 \#*\#
 .\#*
 .bundle
@@ -12,3 +14,4 @@ ci-working-dir
 .rvmrc
 *.pid
 vendor
+.DS_Store
