@@ -18,6 +18,22 @@ module VCAP::CloudController::Models
       super(val)
     end
 
+    def organization
+      domain.organization
+    end
+
+    # The route is on the same spaces as the domain.  We expose this so that
+    # app space level permssions can be applied to the route.  This, and the
+    # spaces_dataset method can probably be done via a fancy many_to_many, but
+    # it wasn't immediately clear how to do this, and this works.
+    def spaces
+      domain.spaces
+    end
+
+    def spaces_dataset
+      domain.spaces_dataset
+    end
+
     def fqdn
       "#{host}.#{domain.name}"
     end
@@ -28,6 +44,11 @@ module VCAP::CloudController::Models
       # TODO: not accurate regex
       validates_format   /^([\w\-]+)$/, :host
       validates_unique   [:host, :domain_id]
+    end
+
+    def self.user_visibility_filter(user)
+      visible_domains = Domain.filter(Domain.user_visibility_filter(user))
+      user_visibility_filter_with_admin_override(:domain => visible_domains)
     end
   end
 end
