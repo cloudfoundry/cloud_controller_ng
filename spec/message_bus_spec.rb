@@ -22,7 +22,7 @@ describe VCAP::CloudController::MessageBus do
 
     it "should receive nasts messages #{desc}" do
       received_msg = false
-      nats.should_receive(:subscribe).and_yield(msg_json)
+      nats.should_receive(:subscribe).and_yield(msg_json, nil)
       with_em_and_thread(:auto_stop => false) do
         MessageBus.send(method, "some_subject") do |msg|
           EM.reactor_thread?.should == receive_in_reactor
