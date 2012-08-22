@@ -83,6 +83,11 @@ module VCAP::CloudController::Errors
     ["FileError",  HTTP::BAD_REQUEST, 190001, "File error: %s"],
 
     ["StatsError", HTTP::BAD_REQUEST, 200001, "Stats error: %s"],
+
+    ["RouteInvalid",  HTTP::BAD_REQUEST, 210001, "The route is invalid: %s"],
+    ["RouteNotFound", HTTP::BAD_REQUEST, 210002, "The route could not be found: %s"],
+    ["RouteHostTaken", HTTP::BAD_REQUEST, 210003, "The host is taken: %s"],
+
   ].each do |e|
     define_error *e
   end
