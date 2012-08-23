@@ -17,6 +17,15 @@ describe VCAP::CloudController::App do
       :framework  => lambda { |app| VCAP::CloudController::Models::Framework.make },
       :runtime    => lambda { |app| VCAP::CloudController::Models::Runtime.make   }
     },
+    :many_to_many_collection_ids => {
+      :routes => lambda { |app|
+        domain = VCAP::CloudController::Models::Domain.make(
+          :organization => app.space.organization
+        )
+        domain.add_space(app.space)
+        route = VCAP::CloudController::Models::Route.make(:domain => domain)
+      }
+    },
     :one_to_many_collection_ids  => {
       :service_bindings => lambda { |app|
         service_instance = VCAP::CloudController::Models::ServiceInstance.make(
