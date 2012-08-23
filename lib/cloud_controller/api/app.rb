@@ -24,6 +24,7 @@ module VCAP::CloudController
       attribute  :disk_quota,          Integer,    :default => 256
       attribute  :state,               String,     :default => "STOPPED"
       to_many    :service_bindings,    :exclude_in => :create
+      to_many    :routes
     end
 
     query_parameters :name, :space_guid, :organization_guid, :framework_guid, :runtime_guid

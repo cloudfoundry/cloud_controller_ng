@@ -25,7 +25,7 @@ module VCAP::CloudController::Models
                       :space_guid, :framework_guid, :runtime_guid,
                       :environment_json, :memory, :instances,
                       :file_descriptors, :disk_quota, :state,
-                      :service_binding_guids
+                      :service_binding_guids, :route_guids
 
     strip_attributes  :name
 
