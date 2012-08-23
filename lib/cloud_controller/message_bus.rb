@@ -53,7 +53,7 @@ module VCAP::CloudController::MessageBus
   # Subscribe to a subject on the message bus.
   # The provided block is called on a thread
   #
-  # @params [String] subject the subject to subscribe to
+  # @param [String] subject the subject to subscribe to
   #
   # @yield [payload, inbox] callback invoked when a message is posted on the subject
   # @yieldparam [String] payload the message posted on the channel
