@@ -50,19 +50,29 @@ module VCAP::CloudController::MessageBus
     end
   end
 
+  # Subscribe to a subject on the message bus.
   # The provided block is called on a thread
+  #
+  # @params [String] subject the subject to subscribe to
+  #
+  # @yield [payload, inbox] callback invoked when a message is posted on the subject
+  # @yieldparam [String] payload the message posted on the channel
+  # @yieldparam [optional, String] inbox an optional "reply to" subject, nil if not requested
   def self.subscribe(subject, &blk)
-    subscribe_on_reactor(subject) do |payload|
+    subscribe_on_reactor(subject) do |payload, inbox|
       EM.defer do
-        blk.yield(payload)
+        # OK so we're always calling with arity two
+        # NATS does a switch on blk.arity
+        # we might do it if we are propelled to supply a lambda here...
+        blk.yield(payload, inbox)
       end
     end
   end
 
   def self.subscribe_on_reactor(subject, &blk)
     EM.schedule do
-      nats.subscribe(subject) do |msg|
-        process_message(msg, &blk)
+      nats.subscribe(subject) do |msg, inbox|
+        process_message(msg, inbox, &blk)
       end
     end
   end
@@ -75,9 +85,9 @@ module VCAP::CloudController::MessageBus
 
   private
 
-  def self.process_message(msg, &blk)
+  def self.process_message(msg, inbox, &blk)
     payload = Yajl::Parser.parse(msg, :symbolize_keys => true)
-    blk.yield(payload)
+    blk.yield(payload, inbox)
   rescue => e
     CloudController.logger.error("exception processing: '#{msg}' '#{e}'")
   end
