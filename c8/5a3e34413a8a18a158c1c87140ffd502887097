@@ -1,0 +1,7 @@
+Code-Review+2: Patrick Bozeman <pbozeman@vmware.com>
+Verified+1: CI Master <cf-ci@rbcon.com>
+Submitted-by: Jesse Zhang <jessezhang@vmware.com>
+Submitted-at: Fri, 24 Aug 2012 19:06:14 +0000
+Reviewed-on: http://reviews.cloudfoundry.org/8652
+Project: cloud_controller_ng
+Branch: refs/heads/master
