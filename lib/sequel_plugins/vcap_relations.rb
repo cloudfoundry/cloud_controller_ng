@@ -1,6 +1,11 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module Sequel::Plugins::VcapRelations
+  # Depend on the instance_hooks plugin.
+  def self.apply(model)
+    model.plugin(:instance_hooks)
+  end
+
   module ClassMethods
     # Override many_to_one in order to add <relation>_guid
     # and <relation>_guid= methods.
@@ -101,7 +106,11 @@ module Sequel::Plugins::VcapRelations
         other = ar.associated_class[:guid => guid]
         # FIXME: better error reporting
         return if other.nil?
-        send("add_#{singular_name}", other)
+        if pk
+          send("add_#{singular_name}", other)
+        else
+          after_save_hook { send("add_#{singular_name}", other) }
+        end
       end
 
       define_method("#{ids_attr}=") do |ids|
