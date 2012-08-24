@@ -49,6 +49,13 @@ class VCAP::CloudController::Config < VCAP::Config
         optional(:pool_timeout)     => Integer     # timeout before raising an error when connection can't be established to the db
       },
 
+      :bulk_api => {
+        :auth_user  => String,
+        :auth_password => String,
+      },
+
+      :cc_partition => String,
+
       :legacy_framework_manifest => Hash,
 
       # TODO: use new defaults to set these defaults
