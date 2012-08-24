@@ -44,7 +44,7 @@ module VCAP::CloudController
       def get_file_url(app, instance, path = nil)
         if app.stopped?
           msg = "Request failed for app: #{app.name}, instance: #{instance}"
-          msg << " and path: #{path} as the app is in stopped state."
+          msg << " and path: #{path || '/'} as the app is in stopped state."
 
           raise FileError.new(msg)
         end
@@ -53,7 +53,7 @@ module VCAP::CloudController
 
         if instance < 0 || instance >= app.instances
           msg = "Request failed for app: #{app.name}, instance: #{instance}"
-          msg << " and path: #{path} as the instance is out of range."
+          msg << " and path: #{path || '/'} as the instance is out of range."
 
           raise FileError.new(msg)
         end
@@ -69,7 +69,7 @@ module VCAP::CloudController
         end
 
         msg = "Request failed for app: #{app.name}, instance: #{instance}"
-        msg << " and path: #{path} as the instance is not found."
+        msg << " and path: #{path || '/'} as the instance is not found."
 
         raise FileError.new(msg)
       end
