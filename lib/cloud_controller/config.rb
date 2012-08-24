@@ -86,5 +86,6 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::LegacyStaging.configure(config)
     VCAP::CloudController::DeaPool.configure(config)
     VCAP::CloudController::DeaClient.configure(config)
+    VCAP::CloudController::LegacyBulk.configure(config)
   end
 end
