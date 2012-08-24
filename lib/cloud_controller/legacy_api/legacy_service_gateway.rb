@@ -14,7 +14,8 @@ module VCAP::CloudController
       req = VCAP::Services::Api::ServiceOfferingRequest.decode(body)
       logger.debug("Update or create legacy service request: #{req.extract.inspect}")
 
-      (label, version) = req.label.split("-")
+      (label, version_from_label) = req.label.split("-")
+      version = req.version_aliases["current"] || version_from_label
 
       provider = DEFAULT_PROVIDER
       validate_access(label, provider)

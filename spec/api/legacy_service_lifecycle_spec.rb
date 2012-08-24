@@ -8,9 +8,9 @@ module VCAP::CloudController
       @user = make_user_with_default_space
       @mock_client = double("mock service gateway client")
       @mock_client.stub(:provision).and_return(
-        VCAP::Services::Api::GatewayProvisionResponse.new(
+        VCAP::Services::Api::GatewayHandleResponse.new(
           :service_id => "lifecycle",
-          :data => "abc",
+          :configuration => "abc",
           :credentials => { :password => "foo" }
         )
       )
@@ -105,7 +105,8 @@ module VCAP::CloudController
         snapshot = VCAP::Services::Api::Snapshot.new(
           :snapshot_id => "abc",
           :date => "1",
-          :size => 123
+          :size => 123,
+          :name => "def"
         )
         @mock_client.stub(:snapshot_details).with(
             :service_id => "lifecycle",

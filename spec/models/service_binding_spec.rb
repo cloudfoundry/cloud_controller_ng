@@ -66,15 +66,15 @@ describe VCAP::CloudController::Models::ServiceBinding do
     let(:service_instance) { Models::ServiceInstance.make(:service_plan => service_plan) }
 
     let(:provision_resp) do
-      VCAP::Services::Api::GatewayProvisionResponse.new(
+      VCAP::Services::Api::GatewayHandleResponse.new(
         :service_id => "gwname_instance",
-        :data => "abc",
+        :configuration => "abc",
         :credentials => { :password => "foo" }
       )
     end
 
     let(:bind_resp) do
-      VCAP::Services::Api::GatewayBindResponse.new(
+      VCAP::Services::Api::GatewayHandleResponse.new(
         :service_id => "gwname_binding",
         :configuration => "abc",
         :credentials => { :password => "foo" }

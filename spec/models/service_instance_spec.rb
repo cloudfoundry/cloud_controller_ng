@@ -41,9 +41,9 @@ describe VCAP::CloudController::Models::ServiceInstance do
     let(:service_plan) { Models::ServicePlan.make(:service => service) }
 
     let(:provision_resp) do
-      VCAP::Services::Api::GatewayProvisionResponse.new(
+      VCAP::Services::Api::GatewayHandleResponse.new(
         :service_id => "gwname",
-        :data => "abc",
+        :configuration => "abc",
         :credentials => { :password => "foo" }
       )
     end

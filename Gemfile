@@ -11,7 +11,7 @@ gem "sinatra-contrib"
 gem "yajl-ruby"
 gem 'vcap-concurrency', :git => 'git://github.com/cloudfoundry/vcap-concurrency.git'
 gem "membrane", "~> 0.0.2"
-gem "vcap_common",  "~> 2.0.2", :git => 'git://github.com/cloudfoundry/vcap-common.git', :ref => '6c090f09'
+gem "vcap_common",  "~> 2.0.7", :git => 'git://github.com/cloudfoundry/vcap-common.git', :ref => 'fd6b6d91'
 gem "cf-uaa-client", "~> 0.2.0", :git => 'git://github.com/cloudfoundry/uaa', :ref => '792e7816'
 gem "httpclient"
 gem "steno", "~> 0.0.15"

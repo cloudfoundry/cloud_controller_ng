@@ -6,9 +6,9 @@ describe VCAP::CloudController::LegacyServiceGateway do
 
     before do
       mock_client.stub(:provision).and_return(
-        VCAP::Services::Api::GatewayProvisionResponse.new(
+        VCAP::Services::Api::GatewayHandleResponse.new(
           :service_id => "gw_id",
-          :data => "abc",
+          :configuration => "abc",
           :credentials => { :password => "foo" }
         )
       )
@@ -32,8 +32,10 @@ describe VCAP::CloudController::LegacyServiceGateway do
 
       let(:foo_bar_offering) do
         VCAP::Services::Api::ServiceOfferingRequest.new(
-          :label => "foobar-2.2",
+          :label => "foobar-1.0",
           :url   => "https://www.google.com",
+          :supported_versions => ["1.0", "2.0"],
+          :version_aliases => {"current" => "2.0"},
           :description => "the foobar svc")
       end
 
@@ -67,7 +69,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         last_response.status.should == 200
         svc = Models::Service.find(:label => "foobar", :provider => "core")
         svc.should_not be_nil
-        svc.version.should == "2.2"
+        svc.version.should == "2.0"
       end
 
       it "should create service plans" do
@@ -105,7 +107,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         offer = foo_bar_offering.dup
         offer.plans = ["free", "nonfree"]
         mock_client.stub(:bind).and_return(
-          VCAP::Services::Api::GatewayBindResponse.new(
+          VCAP::Services::Api::GatewayHandleResponse.new(
             :service_id => "binding",
             :configuration => {},
             :credentials => {}
@@ -271,7 +273,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         cfg2.save
 
         mock_client.stub(:bind).and_return(
-          VCAP::Services::Api::GatewayBindResponse.new(
+          VCAP::Services::Api::GatewayHandleResponse.new(
             :service_id => "bind1",
             :configuration => {},
             :credentials => {}
@@ -282,7 +284,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
         )
 
         mock_client.stub(:bind).and_return(
-          VCAP::Services::Api::GatewayBindResponse.new(
+          VCAP::Services::Api::GatewayHandleResponse.new(
             :service_id => "bind2",
             :configuration => {},
             :credentials => {}
@@ -340,7 +342,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
           cfg.save
 
           mock_client.stub(:bind).and_return(
-            VCAP::Services::Api::GatewayBindResponse.new(
+            VCAP::Services::Api::GatewayHandleResponse.new(
               :service_id => "bind1",
               :configuration => {},
               :credentials => {}
@@ -408,7 +410,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
           cfg.save
 
           mock_client.stub(:bind).and_return(
-            VCAP::Services::Api::GatewayBindResponse.new(
+            VCAP::Services::Api::GatewayHandleResponse.new(
               :service_id => "bind2",
               :configuration => {},
               :credentials => {}

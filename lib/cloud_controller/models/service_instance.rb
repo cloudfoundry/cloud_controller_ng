@@ -120,7 +120,7 @@ module VCAP::CloudController::Models
       logger.debug "provision response for instance #{guid} #{gw_attrs.inspect}"
 
       self.gateway_name = gw_attrs.service_id
-      self.gateway_data = gw_attrs.data
+      self.gateway_data = gw_attrs.configuration
       self.credentials  = gw_attrs.credentials
 
       @provisioned_on_gateway_for_plan = service_plan
