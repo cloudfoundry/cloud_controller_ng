@@ -65,6 +65,17 @@ module VCAP::CloudController
       HTTP::OK
     end
 
+    def files(name, instance_id, path = nil)
+      msg = "files app request name: #{name}"
+      msg << ", instance_id: #{instance_id}"
+      msg << ", path: #{path}"
+
+      logger.debug msg
+
+      app = app_from_name(name)
+      VCAP::CloudController::AppBits.new(config, logger, env, params, body).dispatch(:files, app.guid, instance_id, path)
+    end
+
     private
 
     def legacy_app_encoding(app)
@@ -174,6 +185,7 @@ module VCAP::CloudController
       delete  "/apps/:name",         :delete
       get     "/apps/:name/crashes", :crashes
       post    "/apps/:name/application", :upload
+      get     "/apps/:name/files/:instance_id/:path", :files
     end
 
     setup_routes
