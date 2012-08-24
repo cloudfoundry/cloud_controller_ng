@@ -121,6 +121,10 @@ module VCAP::CloudController::Models
       self.state == "STOPPED"
     end
 
+    def uris
+      routes.map { |r| r.fqdn }
+    end
+
     def after_remove_binding(binding)
       mark_for_restaging
     end
