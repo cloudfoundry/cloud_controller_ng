@@ -3,6 +3,15 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::Models::App do
+  let(:org) { Models::Organization.make }
+  let(:space) { Models::Space.make(:organization => org) }
+  let(:domain) do
+    d = Models::Domain.make(:organization => org)
+    space.add_domain(d)
+    d
+  end
+  let(:route) { Models::Route.make(:domain => domain) }
+
   it_behaves_like "a CloudController model", {
     :required_attributes  => [:name, :framework, :runtime, :space],
     :unique_attributes    => [:space, :name],
@@ -195,6 +204,14 @@ describe VCAP::CloudController::Models::App do
       app.droplet_hash = "def"
       app.needs_staging?.should be_false
       app.droplet_hash.should == "def"
+    end
+  end
+
+  describe "uris" do
+    it "should return the uris on the app" do
+      app = Models::App.make(:space => space)
+      app.add_route(route)
+      app.uris.should == [route.fqdn]
     end
   end
 end
