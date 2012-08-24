@@ -214,4 +214,26 @@ describe VCAP::CloudController::Models::App do
       app.uris.should == [route.fqdn]
     end
   end
+
+  describe "adding routes to unsaved apps" do
+    it "should set a route by guid on a new but unsaved app" do
+      app = Models::App.new(:name => Sham.name,
+                            :framework => Models::Framework.make,
+                            :runtime => Models::Runtime.make,
+                            :space => space)
+      app.add_route_by_guid(route.guid)
+      app.save
+      app.routes.should == [route]
+    end
+
+    it "should not allow a route on a domain from another org" do
+      app = Models::App.new(:name => Sham.name,
+                            :framework => Models::Framework.make,
+                            :runtime => Models::Runtime.make,
+                            :space => space)
+      app.add_route_by_guid(Models::Route.make.guid)
+      expect { app.save }.should raise_error(Models::App::InvalidRouteRelation)
+      app.routes.should be_empty
+    end
+  end
 end
