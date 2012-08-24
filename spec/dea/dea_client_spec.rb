@@ -86,6 +86,23 @@ describe VCAP::CloudController::DeaClient do
         DeaClient.start(app)
       end
     end
+
+    it "sends a dea start message that includes cc_partition" do
+      config_override(
+        :cc_partition => "ngFTW",
+      )
+      DeaClient.configure(config, message_bus, dea_pool)
+
+      app.instances = 1
+      dea_pool.should_receive(:find_dea).and_return("abc")
+      message_bus.should_receive(:publish).with("dea.abc.start", anything) do |_, json|
+        Yajl::Parser.parse(json).should include("cc_partition" => "ngFTW")
+      end
+
+      with_em_and_thread do
+        DeaClient.start(app)
+      end
+    end
   end
 
   describe "#stop_instances" do
