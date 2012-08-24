@@ -4,6 +4,14 @@ describe VCAP::CloudController::LegacyApps do
   let(:user) { make_user_with_default_space }
   let(:admin) { make_user_with_default_space(:admin => true) }
 
+  let(:domain) do
+    domain = Models::Domain.make(:organization => user.default_space.organization)
+    user.default_space.add_domain(domain)
+    domain
+  end
+
+  let(:route) { Models::Route.make(:domain => domain) }
+
   describe "GET /apps" do
     before do
       @apps = []
@@ -46,6 +54,8 @@ describe VCAP::CloudController::LegacyApps do
       @app_2 = Models::App.make(:space => user.default_space, :memory => 256)
       @app_3 = Models::App.make(:space => user.default_space, :memory => 512)
 
+      @app_2.add_route(route)
+
       # used to make sure we are getting the name from the correct app space,
       # i.e. we *don't* want to get this one back
       Models::App.make(:name => @app_2.name,
@@ -72,6 +82,10 @@ describe VCAP::CloudController::LegacyApps do
 
       it "should return the version from the default app space" do
         decoded_response["resources"]["memory"].should == 256
+      end
+
+      it "should return the uris for the app" do
+        decoded_response["uris"].should == [route.fqdn]
       end
     end
 
@@ -235,6 +249,57 @@ describe VCAP::CloudController::LegacyApps do
         app = user.default_space.apps_dataset[:name => "app_name"]
         app.should_not be_nil
         app.runtime.name.should == "java"
+      end
+    end
+
+    context "with uris" do
+      context "with a valid route" do
+        before do
+          req = Yajl::Encoder.encode({
+            :name => "app_name",
+            :staging => { :framework => "grails" },
+            :uris => ["someroute.#{domain.name}"]
+          })
+
+          post "/apps", req, headers_for(user)
+        end
+
+        it "should return success" do
+          last_response.status.should == 200
+        end
+
+        it "should set the route" do
+          app = user.default_space.apps_dataset[:name => "app_name"]
+          app.should_not be_nil
+          app.uris.should == ["someroute.#{domain.name}"]
+        end
+      end
+
+      context "with an invalid route" do
+        let(:bad_domain) { Models::Domain.make(:name => "notonspace.com") }
+
+        before do
+          req = Yajl::Encoder.encode({
+            :name => "app_name",
+            :staging => { :framework => "grails" },
+            :uris => ["someroute.#{domain.name}",
+                      "anotherroute.#{bad_domain.name}"]
+          })
+
+          post "/apps", req, headers_for(user)
+        end
+
+        it "should return bad request" do
+          last_response.status.should == 400
+        end
+
+        it "should not create the app" do
+          app = user.default_space.apps_dataset[:name => "app_name"]
+          app.should be_nil
+        end
+
+        it_behaves_like "a vcap rest error response",
+                        /domain could not be found: notonspace.com/
       end
     end
   end

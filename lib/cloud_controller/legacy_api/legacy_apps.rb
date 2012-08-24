@@ -100,7 +100,7 @@ module VCAP::CloudController
           :model => app.framework.name,
           :stack => app.runtime.name,
         },
-        :uris => [xxx_uri_for_app(app)], # TODO when routes are finalized
+        :uris => app.uris,
         :instances => app.instances,
         :runningInstances => app.instances, # TODO: when HM integration is done
         :resources => {
@@ -178,13 +178,30 @@ module VCAP::CloudController
         end
       end
 
+      if uris = hash["uris"]
+        req[:route_guids] = uris.map do |uri|
+          # TODO: change when we allow subdomains
+          (host, domain_name) = uri.split(".", 2)
+          domain = default_space.domains_dataset[:name => domain_name]
+          raise DomainNotFound.new(domain_name) unless domain
+          route = domain.routes_dataset[:host => host]
+          if route
+            route.guid
+          else
+            req_hash = {
+              :host => host,
+              :domain_guid => domain.guid
+            }
+            route_req = Yajl::Encoder.encode(req_hash)
+            (_, _, route_json) = VCAP::CloudController::Route.new(config, logger, env, params, route_req).dispatch(:create)
+            route_resp = Yajl::Parser.parse(route_json)
+            route_resp["metadata"]["guid"]
+          end
+        end
+      end
+
       logger.debug "legacy request: #{hash} -> #{req}"
       Yajl::Encoder.encode(req)
-    end
-
-    def xxx_uri_for_app(app)
-      @base_uri ||= config[:external_domain].sub(/^\s*[^\.]+/,'')
-      "#{app.guid}#{@base_uri}"
     end
 
     def default_runtime_for_framework(framework_name)
