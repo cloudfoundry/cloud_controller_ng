@@ -162,7 +162,7 @@ module VCAP::CloudController
         {
           :droplet => app.guid,
           :name => app.name,
-          :uris => [xxx_uri_for_app(app)], # TODO app.mapped_urls
+          :uris => app.uris,
           :runtime => app.runtime.name,
           :framework => app.framework.name,
           :prod => app.production,
@@ -214,12 +214,6 @@ module VCAP::CloudController
         end
 
         parsed_response
-      end
-
-      # FIXME: this is a very temporary hack to test out dea integration
-      def xxx_uri_for_app(app)
-        @base_uri ||= config[:external_domain].sub(/^\s*[^\.]+/,'')
-        "#{app.guid}#{@base_uri}"
       end
 
       def logger
