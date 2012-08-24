@@ -31,6 +31,16 @@ describe VCAP::CloudController::DeaClient do
       res[:limits].should be_kind_of(Hash)
       res[:env].should be_kind_of(Hash)
     end
+
+    it "includes cc_partition" do
+      config_override(
+        :cc_partition => "ngFTW",
+      )
+      black_hole = double("black hole").as_null_object
+      DeaClient.configure(config, black_hole, black_hole)
+      start_message = DeaClient.send(:start_app_message, app)
+      start_message.should include(:cc_partition => "ngFTW")
+    end
   end
 
   describe "start" do
