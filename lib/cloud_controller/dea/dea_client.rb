@@ -101,7 +101,7 @@ module VCAP::CloudController
         {
           :droplet => app.guid,
           :name => app.name,
-          :uris => [xxx_uri_for_app(app)], # TODO app.mapped_urls
+          :uris => app.uris,
           :runtime => app.runtime.name,
           :framework => app.framework.name,
           :prod => app.production,
