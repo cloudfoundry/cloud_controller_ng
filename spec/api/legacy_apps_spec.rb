@@ -88,6 +88,40 @@ describe VCAP::CloudController::LegacyApps do
     end
   end
 
+  describe "GET /apps/:name/instances/:instance_id/files/(:path)" do
+    before do
+      @app = Models::App.make(:space => user.default_space)
+    end
+
+    it "should delegate to v2 files api with path" do
+      files_obj = mock("files")
+
+      VCAP::CloudController::Files.should_receive(:new).once
+        .and_return(files_obj)
+      files_obj.should_receive(:dispatch).once
+        .with(:files, @app.guid, "1", "path").and_return([HTTP::OK, "files"])
+
+      get "/apps/#{@app.name}/instances/1/files/path", {}, headers_for(user)
+
+      last_response.status.should == 200
+      last_response.body.should == "files"
+    end
+
+    it "should delegate to v2 files api without path" do
+      files_obj = mock("files")
+
+      VCAP::CloudController::Files.should_receive(:new).once
+        .and_return(files_obj)
+      files_obj.should_receive(:dispatch).once
+        .with(:files, @app.guid, "1", nil).and_return([HTTP::OK, "files"])
+
+      get "/apps/#{@app.name}/instances/1/files", {}, headers_for(user)
+
+      last_response.status.should == 200
+      last_response.body.should == "files"
+    end
+  end
+
   describe "POST /apps" do
     before do
       3.times { Models::App.make }
