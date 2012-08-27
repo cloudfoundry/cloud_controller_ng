@@ -50,4 +50,22 @@ describe VCAP::CloudController::Models::Space do
       }.should raise_error Models::Space::InvalidDomainRelation
     end
   end
+
+  describe "default domains" do
+    context "with the default serving domain name set" do
+      before do
+        Models::Domain.default_serving_domain_name = "foo.com"
+      end
+
+      after do
+        Models::Domain.default_serving_domain_name = nil
+      end
+
+      it "should be associated with the default serving domain" do
+        space = Models::Organization.make
+        d = Models::Domain.default_serving_domain
+        space.domains.map(&:guid) == [d.guid]
+      end
+    end
+  end
 end

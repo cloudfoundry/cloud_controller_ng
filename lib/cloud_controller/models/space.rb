@@ -40,6 +40,11 @@ module VCAP::CloudController::Models
 
     strip_attributes  :name
 
+    def before_create
+      add_inheritable_domains
+      super
+    end
+
     def validate
       validates_presence :name
       validates_presence :organization
@@ -72,6 +77,14 @@ module VCAP::CloudController::Models
               domain.owning_organization_id &&
               domain.owning_organization_id == organization.id)
         raise InvalidDomainRelation.new(domain.guid)
+      end
+    end
+
+    def add_inheritable_domains
+      return unless organization
+
+      organization.domains.each do |d|
+        add_domain_by_guid(d.guid) unless d.owning_organization
       end
     end
 
