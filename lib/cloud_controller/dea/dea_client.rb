@@ -80,6 +80,7 @@ module VCAP::CloudController
         msg = start_app_message(app)
         idx_range.each do |idx|
           msg[:index] = idx
+
           dea_id = dea_pool.find_dea(app.memory, app.runtime.name)
           if dea_id
             dea_publish("#{dea_id}.start", msg)
@@ -125,6 +126,7 @@ module VCAP::CloudController
             :disk => app.disk_quota,
             :fds => app.file_descriptors
           },
+          :cc_partition => config[:cc_partition],
           :env => {} # TODO
         }
       end
