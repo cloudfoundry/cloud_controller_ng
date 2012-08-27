@@ -20,4 +20,22 @@ describe VCAP::CloudController::Models::Organization do
       }
     }
   }
+
+  describe "default domains" do
+    context "with the default serving domain name set" do
+      before do
+        Models::Domain.default_serving_domain_name = "foo.com"
+      end
+
+      after do
+        Models::Domain.default_serving_domain_name = nil
+      end
+
+      it "should be associated with the default serving domain" do
+        org = Models::Organization.make
+        d = Models::Domain.default_serving_domain
+        org.domains.map(&:guid) == [d.guid]
+      end
+    end
+  end
 end

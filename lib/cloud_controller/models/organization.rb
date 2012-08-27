@@ -24,6 +24,12 @@ module VCAP::CloudController::Models
     export_attributes :name
     import_attributes :name, :user_guids, :manager_guids, :billing_manager_guids, :auditor_guids, :domain_guids
 
+    def before_create
+      d = Domain.default_serving_domain
+      add_domain_by_guid(d.guid) if d
+      super
+    end
+
     def validate
       validates_presence :name
       validates_unique   :name
