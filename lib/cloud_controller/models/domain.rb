@@ -84,5 +84,33 @@ module VCAP::CloudController::Models
         :spaces => spaces
       }.sql_or)
     end
+
+    def self.default_serving_domain
+      @default_serving_domain
+    end
+
+    def self.default_serving_domain_name=(name)
+      logger = Steno.logger("cc.db.domain")
+      @default_serving_domain_name = name
+      unless name
+        @default_serving_domain = nil
+      else
+        Domain.db.transaction do
+          @default_serving_domain = Domain[:name => name]
+          unless @default_serving_domain
+            logger.info "creating default serving domain: #{name}"
+            @default_serving_domain = Domain.new(:name => name)
+            @default_serving_domain.save(:validate => false)
+          else
+            logger.info "reusing default serving domain: #{name}"
+          end
+        end
+      end
+      name
+    end
+
+    def self.default_serving_domain_name
+      @default_serving_domain_name
+    end
   end
 end

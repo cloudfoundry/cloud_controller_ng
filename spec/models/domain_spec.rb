@@ -138,4 +138,28 @@ describe VCAP::CloudController::Models::Domain do
       end
     end
   end
+
+  describe "default_serving_domain" do
+    context "with the default serving domain name set" do
+      before do
+        Models::Domain.default_serving_domain_name = "foo.com"
+      end
+
+      after do
+        Models::Domain.default_serving_domain_name = nil
+      end
+
+      it "should return the default serving domain" do
+        d = Models::Domain.default_serving_domain
+        d.name.should == "foo.com"
+      end
+    end
+
+    context "without the default seving domain name set" do
+      it "should return nil" do
+        d = Models::Domain.default_serving_domain
+        d.should be_nil
+      end
+    end
+  end
 end
