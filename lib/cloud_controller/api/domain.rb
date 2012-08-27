@@ -13,10 +13,10 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name, String
-      to_one    :organization
+      to_one    :owning_organization
     end
 
-    query_parameters :name, :organization_guid, :space_guid
+    query_parameters :name, :owning_organization_guid, :space_guid
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)

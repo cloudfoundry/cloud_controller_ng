@@ -67,7 +67,10 @@ module VCAP::CloudController::Models
     end
 
     def validate_domain(domain)
-      unless domain && organization && domain.organization_id == organization.id
+      return if domain && domain.owning_organization.nil?
+      unless (domain && organization &&
+              domain.owning_organization_id &&
+              domain.owning_organization_id == organization.id)
         raise InvalidDomainRelation.new(domain.guid)
       end
     end

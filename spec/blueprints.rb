@@ -32,8 +32,8 @@ module VCAP::CloudController::Models
   end
 
   Domain.blueprint do
-    name              { Sham.domain }
-    organization      { Organization.make }
+    name                { Sham.domain }
+    owning_organization { Organization.make }
   end
 
   Route.blueprint do

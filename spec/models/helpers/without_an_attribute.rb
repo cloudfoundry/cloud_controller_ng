@@ -10,17 +10,19 @@ module VCAP::CloudController::ModelSpecHelper
           end
         end
 
-      it "should fail due to Sequel validations" do
-        lambda {
-          described_class.create filtered_opts
-        }.should raise_error Sequel::ValidationFailed, /#{without_attr}/
-      end
+        it "should fail due to Sequel validations" do
+          lambda {
+            described_class.create filtered_opts
+          }.should raise_error Sequel::ValidationFailed, /#{without_attr}/
+        end
 
-      it "should fail due to database integrity checks" do
-        lambda {
-          described_class.new(filtered_opts).save(:validate => false)
-        }.should raise_error Sequel::DatabaseError, /#{without_attr}/
-      end
+        if (!opts[:db_required_attributes] || opts[:db_required_attributes].include?(without_attr))
+          it "should fail due to database integrity checks" do
+            lambda {
+              described_class.new(filtered_opts).save(:validate => false)
+            }.should raise_error Sequel::DatabaseError, /#{without_attr}/
+          end
+        end
       end
     end
   end

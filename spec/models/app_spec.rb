@@ -6,7 +6,8 @@ describe VCAP::CloudController::Models::App do
   let(:org) { Models::Organization.make }
   let(:space) { Models::Space.make(:organization => org) }
   let(:domain) do
-    d = Models::Domain.make(:organization => org)
+    d = Models::Domain.make(:owning_organization => org)
+    org.add_domain(d)
     space.add_domain(d)
     d
   end
@@ -28,8 +29,9 @@ describe VCAP::CloudController::Models::App do
           service_binding
        },
        :routes => lambda { |app|
-         route = VCAP::CloudController::Models::Route.make
-         app.space.organization.add_domain(route.domain)
+         domain = VCAP::CloudController::Models::Domain.make(
+           :owning_organization => app.space.organization)
+           route = VCAP::CloudController::Models::Route.make(:domain => domain)
          app.space.add_domain(route.domain)
          route
        }

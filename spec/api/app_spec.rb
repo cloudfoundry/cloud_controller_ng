@@ -20,9 +20,10 @@ describe VCAP::CloudController::App do
     :many_to_many_collection_ids => {
       :routes => lambda { |app|
         domain = VCAP::CloudController::Models::Domain.make(
-          :organization => app.space.organization
+          :owning_organization => app.space.organization
         )
-        domain.add_space(app.space)
+        app.space.organization.add_domain(domain)
+        app.space.add_domain(domain)
         route = VCAP::CloudController::Models::Route.make(:domain => domain)
       }
     },

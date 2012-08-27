@@ -16,11 +16,11 @@ describe VCAP::CloudController::Route do
     include_context "permissions"
 
     before do
-      @domain_a = Models::Domain.make(:organization => @org_a)
+      @domain_a = Models::Domain.make(:owning_organization => @org_a)
       @space_a.add_domain(@domain_a)
       @obj_a = Models::Route.make(:domain => @domain_a)
 
-      @domain_b = Models::Domain.make(:organization => @org_b)
+      @domain_b = Models::Domain.make(:owning_organization => @org_b)
       @space_b.add_domain(@domain_b)
       @obj_b = Models::Route.make(:domain => @domain_b)
     end

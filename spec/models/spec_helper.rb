@@ -18,7 +18,7 @@ def make_user_for_org(org)
 end
 
 def make_domain_for_org(org)
-  VCAP::CloudController::Models::Domain.make(:organization => org)
+  VCAP::CloudController::Models::Domain.make(:owning_organization => org)
 end
 
 def make_user_for_space(space)
@@ -32,7 +32,9 @@ def make_developer_for_space(space)
 end
 
 def make_domain_for_space(space)
-  make_domain_for_org space.organization
+  domain = make_domain_for_org space.organization
+  space.organization.add_domain(domain)
+  domain
 end
 
 def make_app_for_service_instance(service_instance)

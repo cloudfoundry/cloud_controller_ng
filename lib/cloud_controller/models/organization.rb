@@ -2,9 +2,13 @@
 
 module VCAP::CloudController::Models
   class Organization < Sequel::Model
+    class InvalidRelation < StandardError; end
+    class InvalidDomainRelation < InvalidRelation; end
+
     one_to_many       :spaces
 
-    one_to_many       :domains
+    many_to_many      :domains, :before_add => :validate_domain
+    add_association_dependencies :domains => :nullify
 
     define_user_group :users
     define_user_group :managers, :reciprocal => :managed_organizations
@@ -18,11 +22,20 @@ module VCAP::CloudController::Models
     default_order_by  :name
 
     export_attributes :name
-    import_attributes :name, :user_guids, :manager_guids, :billing_manager_guids, :auditor_guids
+    import_attributes :name, :user_guids, :manager_guids, :billing_manager_guids, :auditor_guids, :domain_guids
 
     def validate
       validates_presence :name
       validates_unique   :name
+    end
+
+    def validate_domain(domain)
+      return if domain && domain.owning_organization.nil?
+      unless (domain &&
+              domain.owning_organization_id &&
+              domain.owning_organization_id == id)
+        raise InvalidDomainRelation.new(domain.guid)
+      end
     end
 
     def self.user_visibility_filter(user)

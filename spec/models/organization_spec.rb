@@ -15,7 +15,9 @@ describe VCAP::CloudController::Models::Organization do
     },
     :one_to_zero_or_more => {
       :spaces  => lambda { |org| VCAP::CloudController::Models::Space.make },
-      :domains => lambda { |org| VCAP::CloudController::Models::Domain.make }
+      :domains => lambda { |org|
+        VCAP::CloudController::Models::Domain.make(:owning_organization => org)
+      }
     }
   }
 end

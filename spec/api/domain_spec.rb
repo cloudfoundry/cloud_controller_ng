@@ -7,8 +7,8 @@ describe VCAP::CloudController::Domain do
   it_behaves_like "a CloudController API", {
     :path                 => "/v2/domains",
     :model                => VCAP::CloudController::Models::Domain,
-    :basic_attributes     => [:name, :organization_guid],
-    :required_attributes  => [:name, :organization_guid],
+    :basic_attributes     => [:name, :owning_organization_guid],
+    :required_attributes  => [:name, :owning_organization_guid],
     :unique_attributes    => :name
   }
 
@@ -16,15 +16,18 @@ describe VCAP::CloudController::Domain do
     include_context "permissions"
 
     before do
-      @obj_a = VCAP::CloudController::Models::Domain.make(:organization => @org_a)
+      @obj_a = VCAP::CloudController::Models::Domain.make(
+        :owning_organization => @org_a)
       @space_a.add_domain(@obj_a)
 
-      @obj_b = VCAP::CloudController::Models::Domain.make(:organization => @org_b)
+      @obj_b = VCAP::CloudController::Models::Domain.make(
+        :owning_organization => @org_b)
       @space_b.add_domain(@obj_b)
     end
 
     let(:creation_req_for_a) do
-      Yajl::Encoder.encode(:name => Sham.domain, :organization_guid => @org_a.guid)
+      Yajl::Encoder.encode(:name => Sham.domain,
+                           :owning_organization_guid => @org_a.guid)
     end
 
     let(:update_req_for_a) do

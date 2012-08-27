@@ -9,10 +9,15 @@ module VCAP::CloudController::Permissions
 
       if obj.kind_of?(Models::Organization)
         obj.send(relation).include?(user)
-      elsif !obj.new? && obj.respond_to?(:organizations)
-        obj.organizations_dataset.filter(relation => [user]).count >= 1
-      elsif !obj.new? && obj.respond_to?(:organization)
-        obj.organization.send("#{relation}_dataset")[user.id] != nil
+      elsif !obj.new?
+        if (obj.respond_to?(:organizations) &&
+            obj.organizations_dataset.filter(relation => [user]).count >= 1)
+          return true
+        end
+        if (obj.respond_to?(:organization) && obj.organization &&
+            obj.organization.send("#{relation}_dataset")[user.id] != nil)
+          return true
+        end
       end
     end
   end

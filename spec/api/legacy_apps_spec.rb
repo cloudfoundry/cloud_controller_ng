@@ -5,7 +5,9 @@ describe VCAP::CloudController::LegacyApps do
   let(:admin) { make_user_with_default_space(:admin => true) }
 
   let(:domain) do
-    domain = Models::Domain.make(:organization => user.default_space.organization)
+    domain = Models::Domain.make(
+      :owning_organization => user.default_space.organization)
+    user.default_space.organization.add_domain(domain)
     user.default_space.add_domain(domain)
     domain
   end

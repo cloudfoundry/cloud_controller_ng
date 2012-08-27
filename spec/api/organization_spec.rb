@@ -18,8 +18,12 @@ describe VCAP::CloudController::Organization do
       :billing_managers => lambda { |org| VCAP::CloudController::Models::User.make }
     },
     :one_to_many_collection_ids  => {
-      :spaces => lambda { |org| VCAP::CloudController::Models::Space.make },
-      :domains => lambda { |org| VCAP::CloudController::Models::Domain.make }
+      :spaces => lambda { |org| VCAP::CloudController::Models::Space.make }
+    },
+    :many_to_many_collection_ids  => {
+      :domains => lambda { |org|
+        VCAP::CloudController::Models::Domain.make(:owning_organization => org)
+      }
     }
   }
 
