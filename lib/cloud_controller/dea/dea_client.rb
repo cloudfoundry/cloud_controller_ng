@@ -125,6 +125,7 @@ module VCAP::CloudController
             :disk => app.disk_quota,
             :fds => app.file_descriptors
           },
+          :cc_partition => config[:cc_partition],
           :env => {} # TODO
         }
       end
