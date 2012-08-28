@@ -101,7 +101,7 @@ describe VCAP::CloudController::MessageBus do
       end
     end
 
-    it "should not use register negative timeout with nats" do
+    it "should not register nats timeout with negative timeout value" do
       nats.should_receive(:request).once.
         with("subject", "abc", :max => 1).and_yield(msg_json)
 
