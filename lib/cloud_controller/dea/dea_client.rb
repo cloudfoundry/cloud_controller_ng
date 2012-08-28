@@ -83,6 +83,43 @@ module VCAP::CloudController
         raise FileError.new(msg)
       end
 
+      def find_stats(app)
+        if app.stopped?
+          msg = "Request failed for app: #{app.name}"
+          msg << " as the app is in stopped state."
+
+          raise StatsError.new(msg)
+        end
+
+        search_options = {
+          :include_stats => true,
+          :states => [:RUNNING],
+          :version => app.version,
+        }
+
+        running_instances = find_instances(app, search_options)
+
+        stats = {} # map of instance index to stats.
+        running_instances.each do |instance|
+          stats[instance[:index]] = {
+            :state => instance[:state],
+            :stats => instance[:stats],
+          }
+        end
+
+        # we may not have received responses from all instances.
+        app.instances.times do |index|
+          unless stats[index]
+            stats[index] = {
+              :state => "DOWN",
+              :since => Time.now.to_i,
+            }
+          end
+        end
+
+        stats
+      end
+
       private
 
       def start_instances_in_range(app, idx_range)

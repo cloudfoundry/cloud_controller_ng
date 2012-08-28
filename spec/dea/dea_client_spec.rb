@@ -93,8 +93,8 @@ describe VCAP::CloudController::DeaClient do
   describe "get_file_url" do
     include VCAP::CloudController::Errors
 
-    it "should throw an error if the app is in stopped state" do
-      app.should_receive(:stopped?).and_return(true)
+    it "should raise an error if the app is in stopped state" do
+      app.should_receive(:stopped?).once.and_return(true)
 
       instance = 10
       path = "test"
@@ -104,15 +104,18 @@ describe VCAP::CloudController::DeaClient do
           DeaClient.get_file_url(app, instance, path)
         }.to raise_error { |error|
           error.should be_an_instance_of FileError
+
           msg = "File error: Request failed for app: #{app.name}"
-          msg << ", instance: #{instance} and path: #{path} as the app is in stopped state."
+          msg << ", instance: #{instance} and path: #{path}"
+          msg << " as the app is in stopped state."
+
           error.message.should == msg
         }
       end
     end
 
-    it "should throw an error if the instance is out of range" do
-      app.should_receive(:stopped?).and_return(false)
+    it "should raise an error if the instance is out of range" do
+      app.should_receive(:stopped?).once.and_return(false)
       app.instances = 5
 
       instance = 10
@@ -123,9 +126,11 @@ describe VCAP::CloudController::DeaClient do
           DeaClient.get_file_url(app, instance, path)
         }.to raise_error { |error|
           error.should be_an_instance_of FileError
+
           msg = "File error: Request failed for app: #{app.name}"
           msg << ", instance: #{instance} and path: #{path} as the instance is"
           msg << " out of range."
+
           error.message.should == msg
         }
       end
@@ -133,15 +138,16 @@ describe VCAP::CloudController::DeaClient do
 
     it "should return the file url if the required instance is found" do
       app.instances = 2
-      app.should_receive(:stopped?).and_return(false)
+      app.should_receive(:stopped?).once.and_return(false)
 
       instance = 1
       path = "test"
 
-      search_options = {}
-      search_options[:indices] = [instance]
-      search_options[:states] = [:STARTING, :RUNNING, :CRASHED]
-      search_options[:version] = app.version
+      search_options = {
+        :indices => [instance],
+        :states => [:STARTING, :RUNNING, :CRASHED],
+        :version => app.version
+      }
 
       instance_found = {
         :file_uri => "file_uri",
@@ -161,15 +167,16 @@ describe VCAP::CloudController::DeaClient do
 
     it "should raise an error if the instance is not found" do
       app.instances = 2
-      app.should_receive(:stopped?).and_return(false)
+      app.should_receive(:stopped?).once.and_return(false)
 
       instance = 1
       path = "test"
 
-      search_options = {}
-      search_options[:indices] = [instance]
-      search_options[:states] = [:STARTING, :RUNNING, :CRASHED]
-      search_options[:version] = app.version
+      search_options = {
+        :indices => [instance],
+        :states => [:STARTING, :RUNNING, :CRASHED],
+        :version => app.version
+      }
 
       DeaClient.should_receive(:find_specific_instance).once
         .with(app, search_options).and_return(nil)
@@ -179,10 +186,111 @@ describe VCAP::CloudController::DeaClient do
           DeaClient.get_file_url(app, instance, path)
         }.to raise_error { |error|
           error.should be_an_instance_of FileError
+
           msg = "File error: Request failed for app: #{app.name}"
           msg << ", instance: #{instance} and path: #{path} as the instance is"
           msg << " not found."
+
           error.message.should == msg
+        }
+      end
+    end
+  end
+
+  describe "find_stats" do
+    include VCAP::CloudController::Errors
+
+    it "should raise an error if the app is in stopped state" do
+      app.should_receive(:stopped?).once.and_return(true)
+
+      with_em_and_thread do
+        expect {
+          DeaClient.find_stats(app)
+        }.to raise_error { |error|
+          error.should be_an_instance_of StatsError
+
+          msg = "Stats error: Request failed for app: #{app.name}"
+          msg << " as the app is in stopped state."
+
+          error.message.should == msg
+        }
+      end
+    end
+
+    it "should return the stats for all instances" do
+      app.instances = 2
+      app.should_receive(:stopped?).once.and_return(false)
+
+      search_options = {
+        :include_stats => true,
+        :states => [:RUNNING],
+        :version => app.version,
+      }
+
+      stats = double("mock stats")
+      instance_0 = {
+        :index => 0,
+        :state => "RUNNING",
+        :stats => stats,
+      }
+
+      instance_1 = {
+        :index => 1,
+        :state => "RUNNING",
+        :stats => stats,
+      }
+
+      DeaClient.should_receive(:find_instances).once
+        .with(app, search_options).and_return([instance_0, instance_1])
+
+      with_em_and_thread do
+        app_stats = DeaClient.find_stats(app)
+        app_stats.should == {
+          0 => {
+            :state => "RUNNING",
+            :stats => stats,
+          },
+          1 => {
+            :state => "RUNNING",
+            :stats => stats,
+          },
+        }
+      end
+    end
+
+    it "should return filler stats for instances that have not responded" do
+      app.instances = 2
+      app.should_receive(:stopped?).once.and_return(false)
+
+      search_options = {
+        :include_stats => true,
+        :states => [:RUNNING],
+        :version => app.version,
+      }
+
+      stats = double("mock stats")
+      instance = {
+        :index => 0,
+        :state => "RUNNING",
+        :stats => stats,
+      }
+
+      Time.should_receive(:now).once.and_return(1)
+
+      DeaClient.should_receive(:find_instances).once
+        .with(app, search_options).and_return([instance])
+
+      with_em_and_thread do
+        app_stats = DeaClient.find_stats(app)
+        app_stats.should == {
+          0 => {
+            :state => "RUNNING",
+            :stats => stats,
+          },
+          1 => {
+            :state => "DOWN",
+            :since => 1,
+          },
         }
       end
     end
