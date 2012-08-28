@@ -23,7 +23,8 @@ module VCAP::CloudController
     def create
       logger.debug "create app"
       req = request_from_legacy_json(body)
-      VCAP::CloudController::App.new(config, logger, env, params, req).dispatch(:create)
+      VCAP::CloudController::App.new(config, logger, env, params, req).
+        dispatch(:create)
       HTTP::OK
     end
 
@@ -39,17 +40,23 @@ module VCAP::CloudController
 
     def update(name)
       logger.debug "update app"
+
       app = app_from_name(name)
       req = request_from_legacy_json(body, app)
-      VCAP::CloudController::App.new(config, logger, env, params, req).dispatch(:update, app.guid)
+      VCAP::CloudController::App.new(config, logger, env, params, req).
+        dispatch(:update, app.guid)
       app.refresh
+
       HTTP::OK
     end
 
     def delete(name)
       logger.debug "delete app"
+
       app = app_from_name(name)
-      VCAP::CloudController::App.new(config, logger, env, params, body).dispatch(:delete, app.guid)
+      VCAP::CloudController::App.new(config, logger, env, params, body).
+        dispatch(:delete, app.guid)
+
       HTTP::OK
     end
 
@@ -72,8 +79,8 @@ module VCAP::CloudController
       logger.debug msg
 
       app = app_from_name(name)
-      VCAP::CloudController::Files.new(config, logger, env, params, body)
-        .dispatch(:files, app.guid, instance_id, path)
+      VCAP::CloudController::Files.new(config, logger, env, params, body).
+        dispatch(:files, app.guid, instance_id, path)
     end
 
     private
