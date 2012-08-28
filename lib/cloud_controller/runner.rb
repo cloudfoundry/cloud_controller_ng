@@ -113,6 +113,7 @@ module VCAP::CloudController
         VCAP::CloudController::MessageBus.register_routes
         VCAP::CloudController::DeaPool.register_subscriptions
         VCAP::CloudController::LegacyBulk.register_subscription
+        VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
 
         map "/" do
           DB.apply_migrations(db) if (run_migrations && development?)
