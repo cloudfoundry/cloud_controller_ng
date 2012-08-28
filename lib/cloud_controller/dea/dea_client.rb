@@ -41,6 +41,15 @@ module VCAP::CloudController
         dea_request("find.droplet", message).first
       end
 
+      def find_instances(app, options = {})
+        message = { :droplet => app.guid }
+        message.merge!(options)
+
+        dea_request("find.droplet", message,
+                    :expected => app.instances,
+                    :timeout => 2)
+      end
+
       def get_file_url(app, instance, path = nil)
         if app.stopped?
           msg = "Request failed for app: #{app.name}, instance: #{instance}"
@@ -139,13 +148,13 @@ module VCAP::CloudController
       end
 
       def dea_request(cmd, args, opts = {})
-        expected = opts[:expected] || 1
-
         subject = "dea.#{cmd}"
-        logger.debug "sending '#{subject}' with '#{args}'"
+        msg = "sending subject: '#{subject}' with args: '#{args}'"
+        msg << " and opts: '#{opts}'"
+        logger.debug msg
         json = Yajl::Encoder.encode(args)
 
-        response = message_bus.request(subject, json, :expected => expected)
+        response = message_bus.request(subject, json, opts)
         parsed_response = []
         response.each do |json_str|
           parsed_response << Yajl::Parser.parse(json_str,

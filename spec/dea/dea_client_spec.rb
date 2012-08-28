@@ -62,14 +62,30 @@ describe VCAP::CloudController::DeaClient do
 
       instance_json = "\"instance\""
       encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
-      message_bus.should_receive(:request).with("dea.find.droplet",
-                                                encoded,
-                                                :expected => 1)
+      message_bus.should_receive(:request).with("dea.find.droplet", encoded, {})
         .and_return([instance_json])
 
       with_em_and_thread do
         DeaClient.find_specific_instance(app, { :other_opt => "value" })
           .should == "instance"
+      end
+    end
+  end
+
+  describe "find_instances" do
+    it "should find all instances" do
+      app.should_receive(:guid).and_return(1)
+      app.should_receive(:instances).and_return(2)
+
+      instance_json = "\"instance\""
+      encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
+      message_bus.should_receive(:request).
+        with("dea.find.droplet", encoded, {:expected => 2, :timeout => 2}).
+        and_return([instance_json, instance_json])
+
+      with_em_and_thread do
+        DeaClient.find_instances(app, { :other_opt => "value" })
+          .should == ["instance", "instance"]
       end
     end
   end
