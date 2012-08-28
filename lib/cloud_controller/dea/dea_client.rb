@@ -58,8 +58,6 @@ module VCAP::CloudController
           raise FileError.new(msg)
         end
 
-        search_options = {}
-
         if instance < 0 || instance >= app.instances
           msg = "Request failed for app: #{app.name}, instance: #{instance}"
           msg << " and path: #{path || '/'} as the instance is out of range."
@@ -67,9 +65,11 @@ module VCAP::CloudController
           raise FileError.new(msg)
         end
 
-        search_options[:indices] = [instance]
-        search_options[:states] = [:STARTING, :RUNNING, :CRASHED]
-        search_options[:version] = app.version
+        search_options = {
+          :indices => [instance],
+          :states => [:STARTING, :RUNNING, :CRASHED],
+          :version => app.version
+        }
 
         if instance_found = find_specific_instance(app, search_options)
           url = "#{instance_found[:file_uri]}#{instance_found[:staged]}"
