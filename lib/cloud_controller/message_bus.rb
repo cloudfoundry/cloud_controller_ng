@@ -86,12 +86,19 @@ module VCAP::CloudController::MessageBus
   def self.request(subject, data = nil, opts = {})
     opts ||= {}
     expected = opts[:expected] || 1
+    timeout = opts[:timeout] || -1
 
     response = EM.schedule_sync do |promise|
       results = []
-      nats.request(subject, data, :max => expected) do |msg|
+      sid = nats.request(subject, data, :max => expected) do |msg|
         results << msg
         promise.deliver(results) if results.size == expected
+      end
+
+      if timeout >= 0
+        nats.timeout(sid, timeout, :expected => expected) do
+          promise.deliver(results)
+        end
       end
     end
 

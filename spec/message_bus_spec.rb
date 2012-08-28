@@ -20,7 +20,7 @@ describe VCAP::CloudController::MessageBus do
                         ["on a thread", :subscribe]
                       end
 
-    it "should receive nasts messages #{desc}" do
+    it "should receive nats messages #{desc}" do
       received_msg = false
       nats.should_receive(:subscribe).and_yield(msg_json, nil)
       with_em_and_thread(:auto_stop => false) do
@@ -61,16 +61,74 @@ describe VCAP::CloudController::MessageBus do
   end
 
   describe "request" do
-    it "make a nats request and return response" do
+    it "should use default expected value when not specified" do
       nats.should_receive(:request).once.with("subject", "abc",
-                                              :max => 3)
-        .and_yield(msg_json).and_yield(msg_json).and_yield(msg_json)
+                                              :max => 1)
+        .and_yield(msg_json)
 
       with_em_and_thread do
-        response = MessageBus.request("subject", "abc", :expected => 3)
+        response = MessageBus.request("subject", "abc")
         response.should be_an_instance_of Array
-        response.size.should == 3
-        response.should == [msg_json, msg_json, msg_json]
+        response.size.should == 1
+        response.should == [msg_json]
+      end
+    end
+
+    it "should use the specified expected value" do
+      nats.should_receive(:request).once.with("subject", "abc",
+                                              :max => 2)
+        .and_yield(msg_json).and_yield(msg_json)
+
+      with_em_and_thread do
+        response = MessageBus.request("subject", "abc", :expected => 2)
+        response.should be_an_instance_of Array
+        response.size.should == 2
+        response.should == [msg_json, msg_json]
+      end
+    end
+
+    it "should not register timeout with nats when none is specified" do
+      nats.should_receive(:request).once.
+        with("subject", "abc", :max => 1).and_yield(msg_json)
+
+      nats.should_not_receive(:timeout)
+
+      with_em_and_thread do
+        response = MessageBus.request("subject", "abc")
+        response.should be_an_instance_of Array
+        response.size.should == 1
+        response.should == [msg_json]
+      end
+    end
+
+    it "should not use register negative timeout with nats" do
+      nats.should_receive(:request).once.
+        with("subject", "abc", :max => 1).and_yield(msg_json)
+
+      nats.should_not_receive(:timeout)
+
+      with_em_and_thread do
+        response = MessageBus.request("subject", "abc")
+        response.should be_an_instance_of Array
+        response.size.should == 1
+        response.should == [msg_json]
+      end
+    end
+
+    it "should register nats timeout" do
+      # below, we are not yielding to the block supplied to the request.
+      # this is to ensure that while in test promise.deliver(...) is called
+      # exactly once by block supplied to nats timeout.
+      nats.should_receive(:request).once.
+        with("subject", "abc", :max => 1).and_return(1)
+
+      nats.should_receive(:timeout).once.with(1, 0.1, :expected => 1).
+          and_yield
+
+      with_em_and_thread do
+        response = MessageBus.request("subject", "abc", :timeout => 0.1)
+        response.should be_an_instance_of Array
+        response.size.should == 0
       end
     end
   end
