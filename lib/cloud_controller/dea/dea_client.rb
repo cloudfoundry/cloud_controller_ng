@@ -120,26 +120,41 @@ module VCAP::CloudController
         stats
       end
 
-      private
-
-      def start_instances_in_range(app, idx_range)
+      # @param [#each] indices an Enumerable of indices / indexes
+      # @param [Hash] message_override a hash which will be merged into the
+      #   message sent over to dea, Health Manager's flapping flag should go in
+      #   here. If you are not sure, specify an empty hash ({})
+      def start_instances_with_message(app, indices, message_override)
         msg = start_app_message(app)
-        idx_range.each do |idx|
+
+        indices.each do |idx|
           msg[:index] = idx
           dea_id = dea_pool.find_dea(app.memory, app.runtime.name)
           if dea_id
-            dea_publish("#{dea_id}.start", msg)
+            dea_publish("#{dea_id}.start", msg.merge(message_override))
           else
             logger.error "no resources available #{msg}"
           end
         end
       end
 
-      def stop_instances_in_range(app, idx_range)
+      # @param [Array] indices an Enumerable of integer indices
+      def stop_instances(app, indices)
         dea_publish("stop",
                     :droplet => app.guid,
                     :version => app.version,
-                    :indices => idx_range.to_a)
+                    :indices => indices,
+                   )
+      end
+
+      private
+
+      def start_instances_in_range(app, idx_range)
+        start_instances_with_message(app, idx_range, {})
+      end
+
+      def stop_instances_in_range(app, idx_range)
+        stop_instances(app, idx_range.to_a)
       end
 
       def start_app_message(app)
