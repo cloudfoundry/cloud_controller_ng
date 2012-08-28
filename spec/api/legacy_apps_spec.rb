@@ -122,6 +122,26 @@ describe VCAP::CloudController::LegacyApps do
     end
   end
 
+  describe "GET /apps/:name/stats" do
+    before do
+      @app = Models::App.make(:space => user.default_space)
+    end
+
+    it "should delegate to v2 stats api" do
+      stats_obj = mock("stats")
+
+      VCAP::CloudController::Stats.should_receive(:new).once
+        .and_return(stats_obj)
+      stats_obj.should_receive(:dispatch).once
+        .with(:stats, @app.guid).and_return([HTTP::OK, "stats"])
+
+      get "/apps/#{@app.name}/stats", {}, headers_for(user)
+
+      last_response.status.should == 200
+      last_response.body.should == "stats"
+    end
+  end
+
   describe "POST /apps" do
     before do
       3.times { Models::App.make }
