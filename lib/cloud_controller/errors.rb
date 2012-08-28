@@ -81,6 +81,8 @@ module VCAP::CloudController::Errors
     ["ServiceGatewayError", HTTP::SERVICE_UNAVAILABLE, 180002, "Service gateway internal error: %s"],
 
     ["FileError",  HTTP::BAD_REQUEST, 190001, "File error: %s"],
+
+    ["StatsError", HTTP::BAD_REQUEST, 200001, "Stats error: %s"],
   ].each do |e|
     define_error *e
   end
