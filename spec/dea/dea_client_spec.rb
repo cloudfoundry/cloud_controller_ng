@@ -33,8 +33,28 @@ describe VCAP::CloudController::DeaClient do
     end
   end
 
+  describe "#start_instances_with_message" do
+    it "should send a start messages to deas with message override" do
+      app.instances = 2
+
+      dea_pool.should_receive(:find_dea).and_return("abc")
+      message_bus.should_receive(:publish).with(
+        "dea.abc.start",
+        json_match(
+          hash_including(
+            "foo"   => "bar",
+            "index" => 1,
+          )
+        ),
+      )
+      with_em_and_thread do
+        DeaClient.start_instances_with_message(app, [1], :foo => "bar")
+      end
+    end
+  end
+
   describe "start" do
-    it "should send a start messages to deas" do
+    it "should send start messages to deas" do
       app.instances = 2
       dea_pool.should_receive(:find_dea).and_return("abc")
       dea_pool.should_receive(:find_dea).and_return("def")
@@ -42,6 +62,24 @@ describe VCAP::CloudController::DeaClient do
       message_bus.should_receive(:publish).with("dea.def.start", kind_of(String))
       with_em_and_thread do
         DeaClient.start(app)
+      end
+    end
+  end
+
+  describe "#stop_instances" do
+    it "should send stop messages to deas" do
+      app.instances = 3
+      message_bus.should_receive(:publish).with(
+        "dea.stop",
+        json_match(
+          hash_including(
+            "droplet"   => app.guid,
+            "indices"   => [0, 2],
+          )
+        ),
+      )
+      with_em_and_thread do
+        DeaClient.stop_instances(app, [0,2])
       end
     end
   end
