@@ -4,7 +4,7 @@ require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::Models::Route do
   it_behaves_like "a CloudController model", {
-    :required_attributes  => [:host, :domain],
+    :required_attributes  => [:host, :domain, :organization],
     :unique_attributes    => [:host, :domain],
     :stripped_string_attributes => :host,
     :many_to_one => {

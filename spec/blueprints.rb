@@ -39,6 +39,7 @@ module VCAP::CloudController::Models
   Route.blueprint do
     host              { Sham.host }
     domain            { Domain.make }
+    organization      { Organization.make }
   end
 
   Space.blueprint do

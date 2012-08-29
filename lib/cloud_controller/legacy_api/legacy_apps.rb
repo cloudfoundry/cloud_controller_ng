@@ -190,7 +190,8 @@ module VCAP::CloudController
           else
             req_hash = {
               :host => host,
-              :domain_guid => domain.guid
+              :domain_guid => domain.guid,
+              :organization_guid => default_space.organization.guid
             }
             route_req = Yajl::Encoder.encode(req_hash)
             (_, _, route_json) = VCAP::CloudController::Route.new(config, logger, env, params, route_req).dispatch(:create)
