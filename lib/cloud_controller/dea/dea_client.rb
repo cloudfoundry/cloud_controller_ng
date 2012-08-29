@@ -147,6 +147,12 @@ module VCAP::CloudController
                    )
       end
 
+      def update_uris(app)
+        return unless app.staged?
+        message = dea_update_message(app)
+        dea_publish("update", message)
+      end
+
       private
 
       # @param [Enumerable, #each] indices the range / sequence of instances to start
@@ -157,6 +163,13 @@ module VCAP::CloudController
       # @param [Enumerable, #to_a] indices the range / sequence of instances to stop
       def stop_instances_in_range(app, indices)
         stop_instances(app, indices.to_a)
+      end
+
+      def dea_update_message(app)
+        {
+          :droplet  => app.guid,
+          :uris     => app.uris,
+        }
       end
 
       def start_app_message(app)
