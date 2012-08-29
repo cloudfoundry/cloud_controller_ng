@@ -82,7 +82,7 @@ module VCAP::CloudController
 
       app = Models::App[:guid => app_id]
 
-      # TODO: do we want to keep this behavior?
+      # stop runaway apps
       unless app
         dea_client.stop(
           Models::App.new(:guid => app_id),
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
       app = Models::App[:guid => app_id]
 
-      # TODO: do we want to keep this behavior?
+      # stop runaway apps
       unless app
         dea_client.stop(
           Models::App.new(:guid => app_id),
