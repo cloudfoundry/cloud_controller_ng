@@ -11,7 +11,7 @@ describe VCAP::CloudController::Models::App do
     space.add_domain(d)
     d
   end
-  let(:route) { Models::Route.make(:domain => domain) }
+  let(:route) { Models::Route.make(:domain => domain, :organization => org) }
 
   it_behaves_like "a CloudController model", {
     :required_attributes  => [:name, :framework, :runtime, :space],
@@ -31,7 +31,9 @@ describe VCAP::CloudController::Models::App do
        :routes => lambda { |app|
          domain = VCAP::CloudController::Models::Domain.make(
            :owning_organization => app.space.organization)
-           route = VCAP::CloudController::Models::Route.make(:domain => domain)
+           route = VCAP::CloudController::Models::Route.make(
+             :domain => domain,
+             :organization => app.space.organization)
          app.space.add_domain(route.domain)
          route
        }
@@ -39,11 +41,33 @@ describe VCAP::CloudController::Models::App do
   }
 
   describe "bad relationships" do
-    let(:app) { Models::App.make }
-
     it "should not associate an app with a route using a domain not approved for the app space" do
+      app = Models::App.make
+      domain = Models::Domain.make(:owning_organization => app.space.organization)
+      route = VCAP::CloudController::Models::Route.make(
+        :organization => app.space.organization,
+        :domain => domain
+      )
+
       lambda {
-        route = VCAP::CloudController::Models::Route.make
+        app.add_route(route)
+      }.should raise_error Models::App::InvalidRouteRelation
+    end
+
+    it "should not associate an app with a route created by another org with a shared domain" do
+      shared_domain = Models::Domain.new(:name => Sham.name,
+                                         :owning_organization => nil)
+      shared_domain.save(:validate => false)
+      app = Models::App.make
+      app.space.add_domain(shared_domain)
+
+      other_org = Models::Organization.make
+      route = VCAP::CloudController::Models::Route.make(
+        :organization => other_org,
+        :domain => shared_domain
+      )
+
+      lambda {
         app.add_route(route)
       }.should raise_error Models::App::InvalidRouteRelation
     end

@@ -24,7 +24,9 @@ describe VCAP::CloudController::Models::Domain do
       }
     },
     :one_to_zero_or_more => {
-      :routes => lambda { |domain| VCAP::CloudController::Models::Route.make }
+      :routes => lambda { |domain|
+        VCAP::CloudController::Models::Route.make(:domain => domain)
+      }
     }
   }
 

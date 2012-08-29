@@ -5,7 +5,6 @@ describe VCAP::CloudController::LegacyApps do
 
   let(:user) { make_user_with_default_space }
   let(:admin) { make_user_with_default_space(:admin => true) }
-  let(:route) { Models::Route.make(:domain => Models::Domain.default_serving_domain) }
 
   before do
     Models::Domain.default_serving_domain_name = DEFAULT_SERVING_DOMAIN_NAME
@@ -57,7 +56,11 @@ describe VCAP::CloudController::LegacyApps do
       @app_2 = Models::App.make(:space => user.default_space, :memory => 256)
       @app_3 = Models::App.make(:space => user.default_space, :memory => 512)
 
-      @app_2.add_route(route)
+      @route = Models::Route.make(
+        :domain => Models::Domain.default_serving_domain,
+        :organization => @app_2.space.organization
+      )
+      @app_2.add_route(@route)
 
       # used to make sure we are getting the name from the correct app space,
       # i.e. we *don't* want to get this one back
@@ -88,7 +91,7 @@ describe VCAP::CloudController::LegacyApps do
       end
 
       it "should return the uris for the app" do
-        decoded_response["uris"].should == [route.fqdn]
+        decoded_response["uris"].should == [@route.fqdn]
       end
     end
 

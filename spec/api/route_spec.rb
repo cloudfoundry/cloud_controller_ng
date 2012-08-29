@@ -10,7 +10,19 @@ describe VCAP::CloudController::Route do
     :basic_attributes     => [:host, :domain_guid, :organization_guid],
     :required_attributes  => [:host, :domain_guid, :organization_guid],
     :update_attributes    => [:host],
-    :unique_attributes    => [:host, :domain_guid]
+    :unique_attributes    => [:host, :domain_guid],
+    :create_attribute     => lambda { |name|
+      @org ||= VCAP::CloudController::Models::Organization.make
+      case name.to_sym
+      when :organization_guid
+        @org.guid
+      when :domain_guid
+        VCAP::CloudController::Models::Domain.make(
+          :owning_organization => @org
+        ).guid
+      end
+    },
+    :create_attribute_reset => lambda { @org = nil }
   }
 
   describe "Permissions" do
