@@ -1,18 +1,19 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::LegacyApps do
+  DEFAULT_SERVING_DOMAIN_NAME = "sharedorg.com"
+
   let(:user) { make_user_with_default_space }
   let(:admin) { make_user_with_default_space(:admin => true) }
+  let(:route) { Models::Route.make(:domain => Models::Domain.default_serving_domain) }
 
-  let(:domain) do
-    domain = Models::Domain.make(
-      :owning_organization => user.default_space.organization)
-    user.default_space.organization.add_domain(domain)
-    user.default_space.add_domain(domain)
-    domain
+  before do
+    Models::Domain.default_serving_domain_name = DEFAULT_SERVING_DOMAIN_NAME
   end
 
-  let(:route) { Models::Route.make(:domain => domain) }
+  after do
+    Models::Domain.default_serving_domain_name = nil
+  end
 
   describe "GET /apps" do
     before do
@@ -260,7 +261,7 @@ describe VCAP::CloudController::LegacyApps do
           req = Yajl::Encoder.encode({
             :name => "app_name",
             :staging => { :framework => "grails" },
-            :uris => ["someroute.#{domain.name}"]
+            :uris => ["someroute.#{DEFAULT_SERVING_DOMAIN_NAME}"]
           })
 
           post "/apps", req, headers_for(user)
@@ -273,7 +274,7 @@ describe VCAP::CloudController::LegacyApps do
         it "should set the route" do
           app = user.default_space.apps_dataset[:name => "app_name"]
           app.should_not be_nil
-          app.uris.should == ["someroute.#{domain.name}"]
+          app.uris.should == ["someroute.#{DEFAULT_SERVING_DOMAIN_NAME}"]
         end
       end
 
@@ -284,7 +285,7 @@ describe VCAP::CloudController::LegacyApps do
           req = Yajl::Encoder.encode({
             :name => "app_name",
             :staging => { :framework => "grails" },
-            :uris => ["someroute.#{domain.name}",
+            :uris => ["someroute.#{DEFAULT_SERVING_DOMAIN_NAME}",
                       "anotherroute.#{bad_domain.name}"]
           })
 
