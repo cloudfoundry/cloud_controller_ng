@@ -147,6 +147,13 @@ module VCAP::CloudController
                    )
       end
 
+      # XXX will the router be cool about our hacked URL?
+      def update_uris(app)
+        return unless app.staged?
+        message = start_app_message(app)
+        dea_publish("update", message)
+      end
+
       private
 
       # @param [Enumerable, #each] indices the range / sequence of instances to start

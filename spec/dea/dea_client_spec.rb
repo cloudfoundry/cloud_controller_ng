@@ -33,6 +33,28 @@ describe VCAP::CloudController::DeaClient do
     end
   end
 
+  describe "#update_uris" do
+    it "does not update deas if app isn't staged" do
+      app.update(:package_state => "PENDING")
+      message_bus.should_not_receive(:publish)
+      DeaClient.update_uris(app)
+    end
+
+    it "sends a dea update message" do
+      app.update(:package_state => "STAGED")
+      message_bus.should_receive(:publish).with(
+        "dea.update",
+        json_match(
+          hash_including(
+            # XXX: change this to actual URLs from user once we do it
+            "uris" => kind_of(Array),
+          )
+        ),
+      )
+      DeaClient.update_uris(app)
+    end
+  end
+
   describe "#start_instances_with_message" do
     it "should send a start messages to deas with message override" do
       app.instances = 2
