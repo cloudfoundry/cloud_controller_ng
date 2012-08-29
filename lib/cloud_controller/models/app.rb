@@ -28,6 +28,9 @@ module VCAP::CloudController::Models
 
     strip_attributes  :name
 
+    AppStates = %w[STOPPED STARTED].map(&:freeze).freeze
+    PackageStates = %w[PENDING STAGED FAILED].map(&:freeze).freeze
+
     def validate
       # TODO: if we move the defaults out of the migration and up to the
       # controller (as it probably should be), do more presence validation
@@ -37,6 +40,8 @@ module VCAP::CloudController::Models
       validates_presence :framework
       validates_presence :runtime
       validates_unique   [:space_id, :name]
+      validates_includes PackageStates, :package_state, :allow_missing => true
+      validates_includes AppStates, :state, :allow_missing => true
       validate_environment
     end
 
