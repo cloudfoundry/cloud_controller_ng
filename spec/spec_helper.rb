@@ -105,6 +105,24 @@ module VCAP::CloudController::SpecHelper
     end
   end
 
+  # @param [Hash] expecteds key-value pairs of messages and responses
+  # @return [#==]
+  def respond_with(expecteds)
+    o = Object.new
+
+    o.define_singleton_method(:==) do |actual|
+      expecteds.all? do |message, matcher|
+        if matcher.respond_to?(:matches?)
+          matcher.matches?(actual.public_send(message))
+        else
+          matcher == actual.public_send(message)
+        end
+      end
+    end
+
+    o
+  end
+
   RSpec::Matchers.define :json_match do |matcher|
     # RSpect matcher?
     if matcher.respond_to?(:matches?)
