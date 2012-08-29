@@ -54,12 +54,13 @@ module VCAP::CloudController::MessageBus
   # The provided block is called on a thread
   #
   # @params [String] subject the subject to subscribe to
+  # @params [Hash] opts nats subscribe options
   #
   # @yield [payload, inbox] callback invoked when a message is posted on the subject
   # @yieldparam [String] payload the message posted on the channel
   # @yieldparam [optional, String] inbox an optional "reply to" subject, nil if not requested
-  def self.subscribe(subject, &blk)
-    subscribe_on_reactor(subject) do |payload, inbox|
+  def self.subscribe(subject, opts = {}, &blk)
+    subscribe_on_reactor(subject, opts) do |payload, inbox|
       EM.defer do
         # OK so we're always calling with arity two
         # NATS does a switch on blk.arity
@@ -69,9 +70,9 @@ module VCAP::CloudController::MessageBus
     end
   end
 
-  def self.subscribe_on_reactor(subject, &blk)
+  def self.subscribe_on_reactor(subject, opts = {}, &blk)
     EM.schedule do
-      nats.subscribe(subject) do |msg, inbox|
+      nats.subscribe(subject, opts) do |msg, inbox|
         process_message(msg, inbox, &blk)
       end
     end
