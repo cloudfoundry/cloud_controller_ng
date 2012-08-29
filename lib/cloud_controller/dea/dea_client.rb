@@ -120,7 +120,7 @@ module VCAP::CloudController
         stats
       end
 
-      # @param [#each] indices an Enumerable of indices / indexes
+      # @param [Enumerable, #each] indices an Enumerable of indices / indexes
       # @param [Hash] message_override a hash which will be merged into the
       #   message sent over to dea, Health Manager's flapping flag should go in
       #   here. If you are not sure, specify an empty hash ({})
@@ -149,12 +149,14 @@ module VCAP::CloudController
 
       private
 
-      def start_instances_in_range(app, idx_range)
-        start_instances_with_message(app, idx_range, {})
+      # @param [Enumerable, #each] indices the range / sequence of instances to start
+      def start_instances_in_range(app, indices)
+        start_instances_with_message(app, indices, {})
       end
 
-      def stop_instances_in_range(app, idx_range)
-        stop_instances(app, idx_range.to_a)
+      # @param [Enumerable, #to_a] indices the range / sequence of instances to stop
+      def stop_instances_in_range(app, indices)
+        stop_instances(app, indices.to_a)
       end
 
       def start_app_message(app)
