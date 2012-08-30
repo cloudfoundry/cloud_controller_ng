@@ -62,8 +62,11 @@ module VCAP::CloudController
 
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
+      env_errors = e.errors.on(:environment_json)
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         AppNameTaken.new(attributes["name"])
+      elsif env_errors && env_errors.any? {|msg| msg.include?("reserved_key")}
+        BadQueryParameter.new(e.errors.full_messages)
       else
         AppInvalid.new(e.errors.full_messages)
       end
