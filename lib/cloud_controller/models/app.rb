@@ -51,6 +51,17 @@ module VCAP::CloudController::Models
     end
 
     def before_save
+      if column_changed?(:environment_json)
+        old, new = column_change(:environment_json)
+        # now the object is valid, we should feel safe using this attr as a hash
+        if key_changed?("BUNDLE_WITHOUT", old, new)
+          # We do this before super to give other plugins (e.g. dirty) a chance
+          # to properly mark or reset state
+          # We don't want to call mark_for_restaging because that will call #save again
+          self.package_state = "PENDING"
+        end
+      end
+
       super
 
       # The reason this is only done on a state change is that we really only
@@ -69,6 +80,9 @@ module VCAP::CloudController::Models
       end
     end
 
+    # We sadly have to do this ourselves because the serialization plugin
+    # doesn't play nice with the dirty plugin, and we want the dirty plugin
+    # more
     def environment_json=(env)
       json = Yajl::Encoder.encode(env)
       super(json)
@@ -159,5 +173,18 @@ module VCAP::CloudController::Models
       self.package_state = "STAGED"
       super(hash)
     end
+
+    private
+
+    # @param  [Hash, nil] old
+    # @param  [Hash, nil] new
+    # @return [Boolean]   old and new values of the key differ, or the key was added or removed
+    def key_changed?(key, old, new)
+      if old.nil? || ! old.hash_key?(key)
+        return new && new.has_key?(key)
+      end
+      return new.nil? || ! new.has_key?(key) || old[key] != new[key]
+    end
+
   end
 end

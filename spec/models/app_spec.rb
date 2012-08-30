@@ -80,6 +80,17 @@ describe VCAP::CloudController::Models::App do
       )
       app.environment_json.should eq("jesse" => "awesome")
     end
+
+    it "marks an app for restage if BUNDLE_WITHOUT changes" do
+      app = Models::App.make
+      app.package_hash = "deadbeef"
+      app.update(:package_state => "STAGED")
+
+      app.needs_staging?.should be_false
+      app.environment_json = {"BUNDLE_WITHOUT" => "test"}
+      app.save
+      app.needs_staging?.should be_true
+    end
   end
 
   describe "validations" do
