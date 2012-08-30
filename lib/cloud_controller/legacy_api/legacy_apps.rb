@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     def create
       logger.debug "create app"
-      req = request_from_legacy_json(body)
+      req = request_from_legacy_create_json(body)
       VCAP::CloudController::App.new(config, logger, env, params, req).
         dispatch(:create)
       HTTP::OK
@@ -42,7 +42,7 @@ module VCAP::CloudController
       logger.debug "update app"
 
       app = app_from_name(name)
-      req = request_from_legacy_json(body, app)
+      req = request_from_legacy_update_json(body, app)
       VCAP::CloudController::App.new(config, logger, env, params, req).
         dispatch(:update, app.guid)
       app.refresh
@@ -124,15 +124,49 @@ module VCAP::CloudController
       app
     end
 
-    def request_from_legacy_json(legacy_json, app = nil)
+    def request_from_legacy_create_json(legacy_json)
       around_translate(legacy_json) do |hash|
-        req = _request_from_legacy_json(hash, app)
+        req = translate_legacy_create_json(hash)
         logger.debug "legacy request: #{hash} -> #{req}"
         req
       end
     end
 
-    def _request_from_legacy_json(hash, app)
+    def request_from_legacy_update_json(legacy_json, app)
+      around_translate(legacy_json) do |hash|
+        req = translate_legacy_update_json(hash, app)
+        logger.debug "legacy request: #{hash} -> #{req}"
+        req
+      end
+    end
+
+    def translate_legacy_update_json(hash, app)
+      req = translate_legacy_create_json(hash)
+
+      if bindings = hash["services"]
+        req[:service_binding_guids] = bindings.map do |name|
+          svc_instance = default_space.service_instances_dataset[:name => name]
+          raise ServiceInstanceNotFound.new(name) unless svc_instance
+
+          if binding = svc_instance.service_bindings_dataset[:app => app]
+            binding.guid
+          else
+            req_hash = {
+              :app_guid => app.guid,
+              :service_instance_guid => svc_instance.guid
+            }
+            binding_req = Yajl::Encoder.encode(req_hash)
+            (_, _, binding_json) = VCAP::CloudController::ServiceBinding.new(config, logger, env, params, binding_req).dispatch(:create)
+            binding_resp = Yajl::Parser.parse(binding_json)
+            binding_resp["metadata"]["guid"]
+          end
+        end
+      end
+
+      req
+    end
+
+    def translate_legacy_create_json(hash)
       req = {
         :space_guid => default_space.guid
       }
@@ -160,26 +194,6 @@ module VCAP::CloudController
       if resources = hash["resources"]
         ["memory", "instances"].each do |k|
           req[k] = resources[k] if resources[k]
-        end
-      end
-
-      if (app && bindings = hash["services"])
-        req[:service_binding_guids] = bindings.map do |name|
-          svc_instance = default_space.service_instances_dataset[:name => name]
-          raise ServiceInstanceNotFound.new(name) unless svc_instance
-
-          if binding = svc_instance.service_bindings_dataset[:app => app]
-            binding.guid
-          else
-            req_hash = {
-              :app_guid => app.guid,
-              :service_instance_guid => svc_instance.guid
-            }
-            binding_req = Yajl::Encoder.encode(req_hash)
-            (_, _, binding_json) = VCAP::CloudController::ServiceBinding.new(config, logger, env, params, binding_req).dispatch(:create)
-            binding_resp = Yajl::Parser.parse(binding_json)
-            binding_resp["metadata"]["guid"]
-          end
         end
       end
 
