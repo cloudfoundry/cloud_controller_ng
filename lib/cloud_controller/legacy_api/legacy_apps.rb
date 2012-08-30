@@ -125,9 +125,14 @@ module VCAP::CloudController
     end
 
     def request_from_legacy_json(legacy_json, app = nil)
-      hash = Yajl::Parser.parse(legacy_json)
-      raise InvalidRequest unless hash
+      around_translate(legacy_json) do |hash|
+        req = _request_from_legacy_json(hash, app)
+        logger.debug "legacy request: #{hash} -> #{req}"
+        req
+      end
+    end
 
+    def _request_from_legacy_json(hash, app)
       req = {
         :space_guid => default_space.guid
       }
@@ -204,8 +209,19 @@ module VCAP::CloudController
         end
       end
 
-      logger.debug "legacy request: #{hash} -> #{req}"
-      Yajl::Encoder.encode(req)
+      req
+    end
+
+    # takes an old json-encoded request, runs a block on the decoded hash and
+    # returns the new encoded json
+    # @param [String] old_json  old json-encoded request hash
+    # @yieldparam [Hash]  decoded hash decoded from old_json
+    # @yieldreturn  [Hash] translated hash
+    # @return [String]  new json
+    def around_translate(old_json, &translate)
+      decoded = Yajl::Parser.parse(old_json)
+      translated = translate.call(decoded)
+      Yajl::Encoder.encode(translated)
     end
 
     def default_runtime_for_framework(framework_name)
