@@ -184,7 +184,10 @@ module VCAP::CloudController
           (host, domain_name) = uri.split(".", 2)
           domain = default_space.domains_dataset[:name => domain_name]
           raise DomainNotFound.new(domain_name) unless domain
-          route = domain.routes_dataset[:host => host]
+          visible_routes = Models::Route.filter(
+            Models::Route.user_visibility_filter(user)
+          )
+          route = visible_routes[:host => host]
           if route
             route.guid
           else
