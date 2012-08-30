@@ -44,19 +44,14 @@ describe VCAP::CloudController::Files do
         @app.state = "STARTED"
         @app.instances = 10
         @app.save
+        @app.refresh
 
-        instance = {}
-        instance[:file_uri] = "file_uri"
-        instance[:staged] = ""
-        instance[:credentials] = ["username", "password"]
-
-        instance_json = Yajl::Encoder.encode(instance)
-
-        MessageBus.should_receive(:request).once.and_return([instance_json])
+        DeaClient.should_receive(:get_file_url).with(@app, 5, nil).
+          and_return(["file_uri/", ["username", "password"]])
 
         client = mock("http client")
         HTTPClient.should_receive(:new).and_return(client)
-        client.should_receive(:set_auth).with(nil, "username", "password").once
+        client.should_receive(:set_auth).with(nil, "username", "password")
 
         response = mock("http response")
         client.should_receive(:get).with("file_uri/").and_return(response)
@@ -75,19 +70,14 @@ describe VCAP::CloudController::Files do
         @app.state = "STARTED"
         @app.instances = 10
         @app.save
+        @app.refresh
 
-        instance = {}
-        instance[:file_uri] = "file_uri"
-        instance[:staged] = ""
-        instance[:credentials] = ["username", "password"]
-
-        instance_json = Yajl::Encoder.encode(instance)
-
-        MessageBus.should_receive(:request).once.and_return([instance_json])
+        DeaClient.should_receive(:get_file_url).with(@app, 5, "path").
+          and_return(["file_uri/path", ["username", "password"]])
 
         client = mock("http client")
         HTTPClient.should_receive(:new).and_return(client)
-        client.should_receive(:set_auth).with(nil, "username", "password").once
+        client.should_receive(:set_auth).with(nil, "username", "password")
 
         response = mock("http response")
         client.should_receive(:get).with("file_uri/path").and_return(response)
@@ -108,19 +98,14 @@ describe VCAP::CloudController::Files do
         @app.state = "STARTED"
         @app.instances = 10
         @app.save
+        @app.refresh
 
-        instance = {}
-        instance[:file_uri] = "file_uri"
-        instance[:staged] = ""
-        instance[:credentials] = ["username", "password"]
-
-        instance_json = Yajl::Encoder.encode(instance)
-
-        MessageBus.should_receive(:request).once.and_return([instance_json])
+        DeaClient.should_receive(:get_file_url).with(@app, 5, nil).
+          and_return(["file_uri/", ["username", "password"]])
 
         client = mock("http client")
         HTTPClient.should_receive(:new).and_return(client)
-        client.should_receive(:set_auth).with(nil, "username", "password").once
+        client.should_receive(:set_auth).with(nil, "username", "password")
 
         response = mock("http response")
         client.should_receive(:get).with("file_uri/").and_return(response)
