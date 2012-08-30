@@ -150,8 +150,8 @@ module VCAP::CloudController::Models
     end
 
     def package_hash=(hash)
-      mark_for_restaging unless self.package_hash == hash
       super(hash)
+      mark_for_restaging if column_changed?(:package_hash)
     end
 
     def droplet_hash=(hash)
