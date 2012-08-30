@@ -55,6 +55,10 @@ module Sequel::Plugins::VcapUserVisibility
   end
 end
 
+module VCAP::CloudController::Models
+  class InvalidRelation < StandardError; end
+end
+
 Sequel::Model.plugin :vcap_validations
 Sequel::Model.plugin :vcap_serialization
 Sequel::Model.plugin :vcap_normalization

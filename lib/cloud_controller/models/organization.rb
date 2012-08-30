@@ -2,7 +2,6 @@
 
 module VCAP::CloudController::Models
   class Organization < Sequel::Model
-    class InvalidRelation < StandardError; end
     class InvalidDomainRelation < InvalidRelation; end
 
     one_to_many       :spaces

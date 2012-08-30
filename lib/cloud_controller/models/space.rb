@@ -2,7 +2,6 @@
 
 module VCAP::CloudController::Models
   class Space < Sequel::Model
-    class InvalidRelation          < StandardError; end
     class InvalidDeveloperRelation < InvalidRelation; end
     class InvalidAuditorRelation   < InvalidRelation; end
     class InvalidManagerRelation   < InvalidRelation; end

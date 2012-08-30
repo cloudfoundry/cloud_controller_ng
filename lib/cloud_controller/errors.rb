@@ -13,8 +13,9 @@ module VCAP::CloudController::Errors
   [
     # TODO: redo ranges.  10000 is for vcap base.
     # 20000 should be for cc base.
-    ["QuotaDeclined",         HTTP::BAD_REQUEST, 200001, "Quota declined: %s"],
-    ["MessageParseError",     HTTP::BAD_REQUEST, 200002, "Request invalid due to parse error: %s"],
+    ["QuotaDeclined",         HTTP::BAD_REQUEST, 1000, "Quota declined: %s"],
+    ["MessageParseError",     HTTP::BAD_REQUEST, 1001, "Request invalid due to parse error: %s"],
+    ["InvalidRelation",       HTTP::BAD_REQUEST, 1002, "Invalid relation: %s"],
 
     ["UserInvalid",           HTTP::BAD_REQUEST, 20001, "The user info is invalid: %s"],
     ["UaaIdTaken",            HTTP::BAD_REQUEST, 20002, "The UAA ID is taken: %s"],

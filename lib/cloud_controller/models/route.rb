@@ -2,7 +2,6 @@
 
 module VCAP::CloudController::Models
   class Route < Sequel::Model
-    class InvalidRelation < StandardError; end
     class InvalidDomainRelation < InvalidRelation; end
 
     many_to_one :domain

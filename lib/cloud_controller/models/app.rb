@@ -2,7 +2,6 @@
 
 module VCAP::CloudController::Models
   class App < Sequel::Model
-    class InvalidRelation      < StandardError; end
     class InvalidRouteRelation < InvalidRelation; end
     class InvalidBindingRelation < InvalidRelation; end
 

@@ -2,7 +2,6 @@
 
 module VCAP::CloudController::Models
   class Domain < Sequel::Model
-    class InvalidRelation < StandardError; end
     class InvalidSpaceRelation < InvalidRelation; end
     class InvalidOrganizationRelation < InvalidRelation; end
 

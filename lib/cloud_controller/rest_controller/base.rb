@@ -94,6 +94,8 @@ module VCAP::CloudController::RestController
       raise self.class.translate_and_log_exception(logger, e)
     rescue JsonMessage::Error => e
       raise MessageParseError.new(e)
+    rescue Models::InvalidRelation => e
+      raise InvalidRelation.new(e)
     end
 
     # Fetch the current active user.  May be nil
