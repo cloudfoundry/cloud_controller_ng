@@ -102,3 +102,42 @@ Sequel::Model.plugin :validation_helpers
 Sequel::Plugins::ValidationHelpers::DEFAULT_OPTIONS.each do |k, v|
   Sequel::Plugins::ValidationHelpers::DEFAULT_OPTIONS[k][:message] = k
 end
+
+# Helper to create migrations.  This was added because
+# I wanted to add an index to all the Timestamps so that
+# we can enumerate by :created_at.
+#
+# TODO: decide on a better way of mixing this in to whatever
+# context Sequel.migration is running in so that we can call
+# the migration methods.
+module VCAP
+  module Migration
+    def self.timestamps(migration)
+      migration.Timestamp :created_at, :null => false, :index => true
+      migration.Timestamp :updated_at, :index => true
+    end
+
+    def self.guid(migration)
+      migration.String :guid, :null => false, :index => true, :unique => true
+    end
+
+    def self.common(migration)
+      migration.primary_key :id
+      guid(migration)
+      timestamps(migration)
+    end
+
+    def self.create_permission_table(migration, name, permission)
+      name = name.to_s
+      join_table = "#{name.pluralize}_#{permission}".to_sym
+      id_attr = "#{name}_id".to_sym
+      table = name.pluralize.to_sym
+
+      migration.create_table(join_table) do
+        foreign_key id_attr, table, :null => false
+        foreign_key :user_id, :users, :null => false
+        index [id_attr, :user_id], :unique => true
+      end
+    end
+  end
+end
