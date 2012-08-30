@@ -73,6 +73,15 @@ describe VCAP::CloudController::Models::App do
     end
   end
 
+  describe "#environment_json" do
+    it "deserializes the serialized value" do
+      app = Models::App.make(
+        :environment_json => { "jesse" => "awesome" },
+      )
+      app.environment_json.should eq("jesse" => "awesome")
+    end
+  end
+
   describe "validations" do
     describe "env" do
       let(:app) { Models::App.make }
@@ -80,6 +89,11 @@ describe VCAP::CloudController::Models::App do
       it "should allow an empty environment" do
         app.environment_json = {}
         app.should be_valid
+      end
+
+      it "should not allow an array" do
+        app.environment_json = []
+        app.should_not be_valid
       end
 
       it "should allow multiple variables" do

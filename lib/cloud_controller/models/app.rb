@@ -69,16 +69,25 @@ module VCAP::CloudController::Models
       end
     end
 
-    def environment_json=(val)
-      val = Yajl::Encoder.encode(val)
-      super(val)
+    def environment_json=(env)
+      json = Yajl::Encoder.encode(env)
+      super(json)
+    end
+
+    def environment_json
+      json = super
+      if json
+        Yajl::Parser.parse(json)
+      end
     end
 
     def validate_environment
       return if environment_json.nil?
-      h = Yajl::Parser.parse(environment_json)
-      errors.add(:environment_json, :invalid_json) unless h.kind_of?(Hash)
-      h.keys.each do |k|
+      unless environment_json.kind_of?(Hash)
+        errors.add(:environment_json, :invalid_environment)
+        return
+      end
+      environment_json.keys.each do |k|
         errors.add(:environment_json, "reserved_key:#{k}") if k =~ /^(vcap|vmc)_/i
       end
     rescue Yajl::ParseError
