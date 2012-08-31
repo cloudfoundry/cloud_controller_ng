@@ -222,6 +222,15 @@ module VCAP::CloudController
         request("dea.#{cmd}", args, opts)
       end
 
+      def health_manager_request(cmd, args = {}, opts = {})
+        message = { :droplet => app.guid }
+        message.merge!(args)
+
+        opts[:timeout] ||= 2
+
+        request("healthmanager.#{cmd}", message, opts)
+      end
+
       def request(subject, args = {}, opts = {})
         msg = "sending subject: '#{subject}' with args: '#{args}'"
         msg << " and opts: '#{opts}'"
