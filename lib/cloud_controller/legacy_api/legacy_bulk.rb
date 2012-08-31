@@ -8,7 +8,7 @@ module VCAP::CloudController
       dict(
         any,
         {
-          "id"              => Integer,
+          "id"              => String,
           "instances"       => Integer,
           "framework"       => String,
           "runtime"         => String,
@@ -21,7 +21,7 @@ module VCAP::CloudController
         },
       )
     end
-    required :bulk_token, String
+    required :bulk_token, Hash
   end
 
   class UserCountsResponse < JsonMessage
@@ -72,8 +72,10 @@ module VCAP::CloudController
 
     def bulk_apps
       batch_size = Integer(params.fetch("batch_size"))
+      # TODO: use json message here with a default for id
       bulk_token = Yajl::Parser.parse(params.fetch("bulk_token"))
       last_id = Integer(bulk_token["id"] || 0)
+      id_for_next_token = nil
 
       apps = {}
       Models::App.where { |app|
@@ -81,7 +83,6 @@ module VCAP::CloudController
       }.limit(batch_size).each do |app|
         hash = {}
         export_attributes = [
-          :id,
           :instances,
           :state,
           :memory,
@@ -91,14 +92,16 @@ module VCAP::CloudController
         export_attributes.each do |field|
           hash[field.to_s] = app.values.fetch(field)
         end
+        hash["id"] = app.guid
         hash["updated_at"] = app.updated_at || app.created_at
         hash["runtime"] = app.runtime.name
         hash["framework"] = app.framework.name
-        apps[app.id] = hash
+        apps[app.guid] = hash
+        id_for_next_token = app.id
       end
       BulkResponse.new(
         :results => apps,
-        :bulk_token => Yajl::Encoder.encode( "id" => apps.keys.last ),
+        :bulk_token => { "id" => id_for_next_token }
       ).encode
     rescue IndexError => e
       raise BadQueryParameter, e.message
