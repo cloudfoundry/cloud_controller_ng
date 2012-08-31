@@ -150,19 +150,60 @@ describe VCAP::CloudController::DeaClient do
   end
 
   describe "find_instances" do
-    it "should find all instances" do
+    it "should use specified message options" do
       app.should_receive(:guid).and_return(1)
       app.should_receive(:instances).and_return(2)
 
       instance_json = "\"instance\""
-      encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
+      encoded = Yajl::Encoder.encode({
+                                       "droplet" => 1,
+                                       "other_opt_0" => "value_0",
+                                       "other_opt_1" => "value_1",
+                                     })
       message_bus.should_receive(:request).
-        with("dea.find.droplet", encoded, {:expected => 2, :timeout => 2}).
+        with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
+        and_return([instance_json, instance_json])
+
+      message_options = {
+        :other_opt_0 => "value_0",
+        :other_opt_1 => "value_1",
+      }
+
+      with_em_and_thread do
+        DeaClient.find_instances(app, message_options).
+          should == ["instance", "instance"]
+      end
+    end
+
+    it "should use default values for expected instances and timeout if none are specified" do
+      app.should_receive(:guid).and_return(1)
+      app.should_receive(:instances).and_return(2)
+
+      instance_json = "\"instance\""
+      encoded = Yajl::Encoder.encode({ "droplet" => 1 })
+      message_bus.should_receive(:request).
+        with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
         and_return([instance_json, instance_json])
 
       with_em_and_thread do
-        DeaClient.find_instances(app, { :other_opt => "value" })
-          .should == ["instance", "instance"]
+        DeaClient.find_instances(app).
+          should == ["instance", "instance"]
+      end
+    end
+
+    it "should use the specified values for expected instances and timeout" do
+      app.should_receive(:guid).and_return(1)
+
+      instance_json = "\"instance\""
+      encoded = Yajl::Encoder.encode({ "droplet" => 1, "other_opt" => "value" })
+      message_bus.should_receive(:request).
+        with("dea.find.droplet", encoded, { :expected => 5, :timeout => 10 }).
+        and_return([instance_json, instance_json])
+
+      with_em_and_thread do
+        DeaClient.find_instances(app, { :other_opt => "value" },
+                                 { :expected => 5, :timeout => 10 }).
+          should == ["instance", "instance"]
       end
     end
   end
