@@ -46,6 +46,7 @@ module VCAP::CloudController
           droplet_hash = Digest::SHA1.file(upload_path).hexdigest
           FileUtils.mv(upload_path, droplet_path(app))
           app.droplet_hash = droplet_hash
+          app.save
         end
 
         logger.info "staging for #{app.guid} complete"
