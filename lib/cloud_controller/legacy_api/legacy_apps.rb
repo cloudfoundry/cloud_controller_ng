@@ -91,6 +91,14 @@ module VCAP::CloudController
         dispatch(:stats, app.guid)
     end
 
+    def instances(name)
+      logger.debug "instances app request name: #{name}"
+
+      app = app_from_name(name)
+      VCAP::CloudController::Instances.new(config, logger, env, params, body).
+        dispatch(:instances, app.guid)
+    end
+
     private
 
     def legacy_app_encoding(app)
@@ -267,6 +275,7 @@ module VCAP::CloudController
       get    "/apps/:name/instances/:instance_id/files",   :files
       get    "/apps/:name/instances/:instance_id/files/*", :files
       get    "/apps/:name/stats",                          :stats
+      get    "/apps/:name/instances",                      :instances
     end
 
     setup_routes
