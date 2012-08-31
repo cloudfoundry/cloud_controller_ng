@@ -8,14 +8,16 @@ module VCAP::CloudController
       dict(
         any,
         {
-          "id"              => Integer,
-          "instances"       => Integer,
-          "framework"       => String,
-          "runtime"         => String,
+          "id"                    => Integer,
+          "instances"             => Integer,
+          "framework"             => String,
+          "runtime"               => String,
           # FIXME: find the enum for this
-          "state"           => String,
-          "memory"          => Integer,
-          "package_state"   => String,
+          "state"                 => String,
+          "memory"                => Integer,
+          "package_state"         => String,
+          optional("updated_at")  => String,
+          "version"               => String,
         },
       )
     end
@@ -84,10 +86,12 @@ module VCAP::CloudController
           :state,
           :memory,
           :package_state,
+          :version,
         ]
         export_attributes.each do |field|
           hash[field.to_s] = app.values.fetch(field)
         end
+        hash["updated_at"] = app.updated_at.to_s unless app.updated_at
         hash["runtime"] = app.runtime.name
         hash["framework"] = app.framework.name
         apps[app.id] = hash
