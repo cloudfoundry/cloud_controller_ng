@@ -41,13 +41,14 @@ module VCAP::CloudController
         dea_request("find.droplet", message).first
       end
 
-      def find_instances(app, options = {})
+      def find_instances(app, message_options = {}, request_options = {})
         message = { :droplet => app.guid }
-        message.merge!(options)
+        message.merge!(message_options)
 
-        dea_request("find.droplet", message,
-                    :expected => app.instances,
-                    :timeout => 2)
+        request_options[:expected] ||= app.instances
+        request_options[:timeout] ||= 2
+
+        dea_request("find.droplet", message, request_options)
       end
 
       def get_file_url(app, instance, path = nil)
@@ -209,7 +210,7 @@ module VCAP::CloudController
         }
       end
 
-      def dea_publish(cmd, args)
+      def dea_publish(cmd, args = {})
         subject = "dea.#{cmd}"
         logger.debug "sending '#{subject}' with '#{args}'"
         json = Yajl::Encoder.encode(args)
