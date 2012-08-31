@@ -354,6 +354,57 @@ describe VCAP::CloudController::DeaClient do
         }
       end
     end
+
+    it "should return filler stats for instances with out of range indices" do
+      app.instances = 2
+      app.should_receive(:stopped?).once.and_return(false)
+
+      search_options = {
+        :include_stats => true,
+        :states => [:RUNNING],
+        :version => app.version,
+      }
+
+      stats = double("mock stats")
+      instance_0 = {
+        :index => -1,
+        :state => "RUNNING",
+        :stats => stats,
+      }
+
+      instance_1 = {
+        :index => 0,
+        :state => "RUNNING",
+        :stats => stats,
+      }
+
+      instance_2 = {
+        :index => 2,
+        :state => "RUNNING",
+        :stats => stats,
+      }
+
+      Time.should_receive(:now).and_return(1)
+
+      DeaClient.should_receive(:find_instances).once
+        .with(app, search_options).and_return([instance_0,
+                                               instance_1,
+                                               instance_2])
+
+      with_em_and_thread do
+        app_stats = DeaClient.find_stats(app)
+        app_stats.should == {
+          0 => {
+            :state => "RUNNING",
+            :stats => stats,
+          },
+          1 => {
+            :state => "DOWN",
+            :since => 1,
+          },
+        }
+      end
+    end
   end
 
   describe "change_running_instances" do

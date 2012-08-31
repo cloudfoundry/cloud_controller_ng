@@ -101,10 +101,13 @@ module VCAP::CloudController
 
         stats = {} # map of instance index to stats.
         running_instances.each do |instance|
-          stats[instance[:index]] = {
-            :state => instance[:state],
-            :stats => instance[:stats],
-          }
+          index = instance[:index]
+          if index >= 0 && index < app.instances
+            stats[index] = {
+              :state => instance[:state],
+              :stats => instance[:stats],
+            }
+          end
         end
 
         # we may not have received responses from all instances.
