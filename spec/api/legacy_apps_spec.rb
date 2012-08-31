@@ -188,7 +188,7 @@ describe VCAP::CloudController::LegacyApps do
         last_response.status.should == 200
       end
 
-      it "should add the app the default app space" do
+      it "should add the app to default app space" do
         app = user.default_space.apps.find(:name => "app_name")
         app.should_not be_nil
         Models::App.count.should == @num_apps_before + 1
