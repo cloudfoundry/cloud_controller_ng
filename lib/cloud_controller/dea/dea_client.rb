@@ -120,7 +120,7 @@ module VCAP::CloudController
         stats
       end
 
-      # @param [#each] indices an Enumerable of indices / indexes
+      # @param [Enumerable, #each] indices an Enumerable of indices / indexes
       # @param [Hash] message_override a hash which will be merged into the
       #   message sent over to dea, Health Manager's flapping flag should go in
       #   here. If you are not sure, specify an empty hash ({})
@@ -147,14 +147,29 @@ module VCAP::CloudController
                    )
       end
 
-      private
-
-      def start_instances_in_range(app, idx_range)
-        start_instances_with_message(app, idx_range, {})
+      def update_uris(app)
+        return unless app.staged?
+        message = dea_update_message(app)
+        dea_publish("update", message)
       end
 
-      def stop_instances_in_range(app, idx_range)
-        stop_instances(app, idx_range.to_a)
+      private
+
+      # @param [Enumerable, #each] indices the range / sequence of instances to start
+      def start_instances_in_range(app, indices)
+        start_instances_with_message(app, indices, {})
+      end
+
+      # @param [Enumerable, #to_a] indices the range / sequence of instances to stop
+      def stop_instances_in_range(app, indices)
+        stop_instances(app, indices.to_a)
+      end
+
+      def dea_update_message(app)
+        {
+          :droplet  => app.guid,
+          :uris     => app.uris,
+        }
       end
 
       def start_app_message(app)

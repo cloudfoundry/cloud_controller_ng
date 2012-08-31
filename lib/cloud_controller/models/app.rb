@@ -28,6 +28,9 @@ module VCAP::CloudController::Models
 
     strip_attributes  :name
 
+    AppStates = %w[STOPPED STARTED].map(&:freeze).freeze
+    PackageStates = %w[PENDING STAGED FAILED].map(&:freeze).freeze
+
     def validate
       # TODO: if we move the defaults out of the migration and up to the
       # controller (as it probably should be), do more presence validation
@@ -37,6 +40,8 @@ module VCAP::CloudController::Models
       validates_presence :framework
       validates_presence :runtime
       validates_unique   [:space_id, :name]
+      validates_includes PackageStates, :package_state, :allow_missing => true
+      validates_includes AppStates, :state, :allow_missing => true
       validate_environment
     end
 
@@ -46,6 +51,17 @@ module VCAP::CloudController::Models
     end
 
     def before_save
+      if column_changed?(:environment_json)
+        old, new = column_change(:environment_json)
+        # now the object is valid, we should feel safe using this attr as a hash
+        if key_changed?("BUNDLE_WITHOUT", old, new)
+          # We do this before super to give other plugins (e.g. dirty) a chance
+          # to properly mark or reset state
+          # We don't want to call mark_for_restaging because that will call #save again
+          self.package_state = "PENDING"
+        end
+      end
+
       super
 
       # The reason this is only done on a state change is that we really only
@@ -64,16 +80,28 @@ module VCAP::CloudController::Models
       end
     end
 
-    def environment_json=(val)
-      val = Yajl::Encoder.encode(val)
-      super(val)
+    # We sadly have to do this ourselves because the serialization plugin
+    # doesn't play nice with the dirty plugin, and we want the dirty plugin
+    # more
+    def environment_json=(env)
+      json = Yajl::Encoder.encode(env)
+      super(json)
+    end
+
+    def environment_json
+      json = super
+      if json
+        Yajl::Parser.parse(json)
+      end
     end
 
     def validate_environment
       return if environment_json.nil?
-      h = Yajl::Parser.parse(environment_json)
-      errors.add(:environment_json, :invalid_json) unless h.kind_of?(Hash)
-      h.keys.each do |k|
+      unless environment_json.kind_of?(Hash)
+        errors.add(:environment_json, :invalid_environment)
+        return
+      end
+      environment_json.keys.each do |k|
         errors.add(:environment_json, "reserved_key:#{k}") if k =~ /^(vcap|vmc)_/i
       end
     rescue Yajl::ParseError
@@ -136,8 +164,8 @@ module VCAP::CloudController::Models
     end
 
     def package_hash=(hash)
-      mark_for_restaging unless self.package_hash == hash
       super(hash)
+      mark_for_restaging if column_changed?(:package_hash)
     end
 
     def droplet_hash=(hash)
@@ -145,5 +173,18 @@ module VCAP::CloudController::Models
       self.package_state = "STAGED"
       super(hash)
     end
+
+    private
+
+    # @param  [Hash, nil] old
+    # @param  [Hash, nil] new
+    # @return [Boolean]   old and new values of the key differ, or the key was added or removed
+    def key_changed?(key, old, new)
+      if old.nil? || ! old.hash_key?(key)
+        return new && new.has_key?(key)
+      end
+      return new.nil? || ! new.has_key?(key) || old[key] != new[key]
+    end
+
   end
 end

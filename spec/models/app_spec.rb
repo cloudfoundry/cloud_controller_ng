@@ -73,6 +73,26 @@ describe VCAP::CloudController::Models::App do
     end
   end
 
+  describe "#environment_json" do
+    it "deserializes the serialized value" do
+      app = Models::App.make(
+        :environment_json => { "jesse" => "awesome" },
+      )
+      app.environment_json.should eq("jesse" => "awesome")
+    end
+
+    it "marks an app for restage if BUNDLE_WITHOUT changes" do
+      app = Models::App.make
+      app.package_hash = "deadbeef"
+      app.update(:package_state => "STAGED")
+
+      app.needs_staging?.should be_false
+      app.environment_json = {"BUNDLE_WITHOUT" => "test"}
+      app.save
+      app.needs_staging?.should be_true
+    end
+  end
+
   describe "validations" do
     describe "env" do
       let(:app) { Models::App.make }
@@ -80,6 +100,11 @@ describe VCAP::CloudController::Models::App do
       it "should allow an empty environment" do
         app.environment_json = {}
         app.should be_valid
+      end
+
+      it "should not allow an array" do
+        app.environment_json = []
+        app.should_not be_valid
       end
 
       it "should allow multiple variables" do
