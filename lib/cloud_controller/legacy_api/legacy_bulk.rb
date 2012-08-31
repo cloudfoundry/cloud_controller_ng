@@ -17,6 +17,7 @@ module VCAP::CloudController
           "memory"          => Integer,
           "package_state"   => String,
           "updated_at"      => Time,
+          "version"         => String
         },
       )
     end
@@ -85,6 +86,7 @@ module VCAP::CloudController
           :state,
           :memory,
           :package_state,
+          :version
         ]
         export_attributes.each do |field|
           hash[field.to_s] = app.values.fetch(field)
