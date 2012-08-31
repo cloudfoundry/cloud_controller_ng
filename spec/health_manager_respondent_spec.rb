@@ -16,7 +16,7 @@ module VCAP::CloudController
                           )
 
       @mbus.should_receive(:subscribe).with(
-        "cloudcontrollers.hm.requests",
+        "cloudcontrollers.hm.requests.ng",
         :queue => "cc",
       )
 

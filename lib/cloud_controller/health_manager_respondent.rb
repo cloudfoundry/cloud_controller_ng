@@ -24,7 +24,8 @@ module VCAP::CloudController
 
       @config = config
 
-      message_bus.subscribe("cloudcontrollers.hm.requests", :queue => "cc") do |decoded_msg|
+      subject = "cloudcontrollers.hm.requests.#{config[:cc_partition]}"
+      message_bus.subscribe(subject, :queue => "cc") do |decoded_msg|
         process_hm_request(decoded_msg)
       end
     end
