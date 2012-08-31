@@ -33,7 +33,7 @@ describe VCAP::CloudController::DeaClient do
     end
   end
 
-  describe "#update_uris" do
+  describe "update_uris" do
     it "does not update deas if app isn't staged" do
       app.update(:package_state => "PENDING")
       message_bus.should_not_receive(:publish)
@@ -55,7 +55,7 @@ describe VCAP::CloudController::DeaClient do
     end
   end
 
-  describe "#start_instances_with_message" do
+  describe "start_instances_with_message" do
     it "should send a start messages to deas with message override" do
       app.instances = 2
 
@@ -105,7 +105,7 @@ describe VCAP::CloudController::DeaClient do
     end
   end
 
-  describe "#stop_instances" do
+  describe "stop_instances" do
     it "should send stop messages to deas" do
       app.instances = 3
       message_bus.should_receive(:publish).with(
@@ -455,6 +455,275 @@ describe VCAP::CloudController::DeaClient do
           0 => {
             :state => "RUNNING",
             :stats => stats,
+          },
+          1 => {
+            :state => "DOWN",
+            :since => 1,
+          },
+        }
+      end
+    end
+  end
+
+  describe "find_all_instances" do
+    include VCAP::CloudController::Errors
+
+    it "should raise an error if the app is in stopped state" do
+      app.should_receive(:stopped?).once.and_return(true)
+
+      expected_msg = "Instances error: Request failed for app: #{app.name}"
+      expected_msg << " as the app is in stopped state."
+
+      with_em_and_thread do
+        expect {
+          DeaClient.find_all_instances(app)
+        }.to raise_error(InstancesError, expected_msg)
+      end
+    end
+
+    it "should return flapping instances" do
+      app.instances = 2
+      app.should_receive(:stopped?).and_return(false)
+
+      search_options = {
+        :states => [:FLAPPING],
+        :version => app.version
+      }
+
+      flapping_instances = {
+        :indices => [
+                     { :index => 0, :since => 1},
+                     { :index => 1, :since => 2},
+                    ],
+      }
+
+      HealthManagerClient.should_receive(:find_status)
+        .with(app, search_options).and_return(flapping_instances)
+
+      # Should not find starting or running instances if all instances are
+      # flapping.
+      DeaClient.should_not_receive(:find_instances)
+
+      with_em_and_thread do
+        app_instances = DeaClient.find_all_instances(app)
+        app_instances.should == {
+          0 => {
+            :state => "FLAPPING",
+            :since => 1,
+          },
+          1 => {
+            :state => "FLAPPING",
+            :since => 2,
+          },
+        }
+      end
+    end
+
+    it "should ignore out of range indices of flapping instances" do
+      app.instances = 2
+      app.should_receive(:stopped?).and_return(false)
+
+      search_options = {
+        :states => [:FLAPPING],
+        :version => app.version,
+      }
+
+      flapping_instances = {
+        :indices => [
+                     { :index => -1, :since => 1 },  # -1 is out of range.
+                     { :index => 2, :since => 2 },  # 2 is out of range.
+                    ],
+      }
+
+      HealthManagerClient.should_receive(:find_status)
+        .with(app, search_options).and_return(flapping_instances)
+
+      search_options = {
+        :states => [:STARTING, :RUNNING],
+        :version => app.version,
+      }
+
+      DeaClient.should_receive(:find_instances).
+        with(app, search_options, { :expected => 2 }).
+        and_return([])
+
+      Time.should_receive(:now).twice.and_return(1)
+
+      with_em_and_thread do
+        app_instances = DeaClient.find_all_instances(app)
+        app_instances.should == {
+          0 => {
+            :state => "DOWN",
+            :since => 1,
+          },
+          1 => {
+            :state => "DOWN",
+            :since => 1,
+          },
+        }
+      end
+    end
+
+    it "should return starting or running instances" do
+      app.instances = 3
+      app.should_receive(:stopped?).and_return(false)
+
+      search_options = {
+        :states => [:FLAPPING],
+        :version => app.version,
+      }
+
+      flapping_instances = {
+        :indices => [
+                     { :index => 0, :since => 1 },
+                    ],
+      }
+
+      HealthManagerClient.should_receive(:find_status)
+        .with(app, search_options).and_return(flapping_instances)
+
+      search_options = {
+        :states => [:STARTING, :RUNNING],
+        :version => app.version,
+      }
+
+      starting_instance  = {
+        :index => 1,
+        :state => "STARTING",
+        :state_timestamp => 2,
+        :debug_ip => "1.2.3.4",
+        :debug_port => 1001,
+        :console_ip => "1.2.3.5",
+        :console_port => 1002,
+      }
+
+      running_instance  = {
+        :index => 2,
+        :state => "RUNNING",
+        :state_timestamp => 3,
+        :debug_ip => "2.3.4.5",
+        :debug_port => 2001,
+        :console_ip => "2.3.4.6",
+        :console_port => 2002,
+      }
+
+      DeaClient.should_receive(:find_instances).
+        with(app, search_options, { :expected => 2 }).
+        and_return([starting_instance, running_instance])
+
+      with_em_and_thread do
+        app_instances = DeaClient.find_all_instances(app)
+        app_instances.should == {
+          0 => {
+            :state => "FLAPPING",
+            :since => 1,
+          },
+          1 => {
+            :state => "STARTING",
+            :since => 2,
+            :debug_ip => "1.2.3.4",
+            :debug_port => 1001,
+            :console_ip => "1.2.3.5",
+            :console_port => 1002,
+          },
+          2 => {
+            :state => "RUNNING",
+            :since => 3,
+            :debug_ip => "2.3.4.5",
+            :debug_port => 2001,
+            :console_ip => "2.3.4.6",
+            :console_port => 2002,
+          },
+        }
+      end
+    end
+
+    it "should ignore out of range indices of starting or running instances" do
+      app.instances = 2
+      app.should_receive(:stopped?).and_return(false)
+
+      search_options = {
+        :states => [:FLAPPING],
+        :version => app.version,
+      }
+
+      HealthManagerClient.should_receive(:find_status)
+        .with(app, search_options)
+
+      search_options = {
+        :states => [:STARTING, :RUNNING],
+        :version => app.version,
+      }
+
+      starting_instance  = {
+        :index => -1,  # -1 is out of range.
+        :state_timestamp => 1,
+        :debug_ip => "1.2.3.4",
+        :debug_port => 1001,
+        :console_ip => "1.2.3.5",
+        :console_port => 1002,
+      }
+
+      running_instance  = {
+        :index => 2,  # 2 is out of range.
+        :state => "RUNNING",
+        :state_timestamp => 2,
+        :debug_ip => "2.3.4.5",
+        :debug_port => 2001,
+        :console_ip => "2.3.4.6",
+        :console_port => 2002,
+      }
+
+      DeaClient.should_receive(:find_instances).
+        with(app, search_options, { :expected => 2 }).
+        and_return([starting_instance, running_instance])
+
+      Time.should_receive(:now).twice.and_return(1)
+
+      with_em_and_thread do
+        app_instances = DeaClient.find_all_instances(app)
+        app_instances.should == {
+          0 => {
+            :state => "DOWN",
+            :since => 1,
+          },
+          1 => {
+            :state => "DOWN",
+            :since => 1,
+          },
+        }
+      end
+    end
+
+    it "should return fillers for instances that have not responded" do
+      app.instances = 2
+      app.should_receive(:stopped?).and_return(false)
+
+      search_options = {
+        :states => [:FLAPPING],
+        :version => app.version,
+      }
+
+      HealthManagerClient.should_receive(:find_status)
+        .with(app, search_options)
+
+      search_options = {
+        :states => [:STARTING, :RUNNING],
+        :version => app.version,
+      }
+
+      DeaClient.should_receive(:find_instances).
+        with(app, search_options, { :expected => 2 }).
+        and_return([])
+
+      Time.should_receive(:now).twice.and_return(1)
+
+      with_em_and_thread do
+        app_instances = DeaClient.find_all_instances(app)
+        app_instances.should == {
+          0 => {
+            :state => "DOWN",
+            :since => 1,
           },
           1 => {
             :state => "DOWN",

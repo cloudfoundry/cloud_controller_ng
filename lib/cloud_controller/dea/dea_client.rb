@@ -124,6 +124,72 @@ module VCAP::CloudController
         stats
       end
 
+      def find_all_instances(app)
+        if app.stopped?
+          msg = "Request failed for app: #{app.name}"
+          msg << " as the app is in stopped state."
+
+          raise InstancesError.new(msg)
+        end
+
+        num_instances = app.instances
+        message = {
+          :states => [:FLAPPING],
+          :version => app.version,
+        }
+
+        flapping_indices = HealthManagerClient.find_status(app, message)
+
+        all_instances = {}
+        if flapping_indices && flapping_indices[:indices]
+          flapping_indices[:indices].each do |entry|
+            index = entry[:index]
+            if index >= 0 && index < num_instances
+              all_instances[index] = {
+                :state => "FLAPPING",
+                :since => entry[:since],
+              }
+            end
+          end
+        end
+
+        message = {
+          :states => [:STARTING, :RUNNING],
+          :version => app.version,
+        }
+
+        expected_running_instances = num_instances - all_instances.length
+        if expected_running_instances > 0
+          request_options = { :expected => expected_running_instances }
+          running_instances = find_instances(app, message, request_options)
+
+          running_instances.each do |instance|
+            index = instance[:index]
+            if index >= 0 && index < num_instances
+              all_instances[index] = {
+                :state => instance[:state],
+                :since => instance[:state_timestamp],
+                :debug_ip => instance[:debug_ip],
+                :debug_port => instance[:debug_port],
+                :console_ip => instance[:console_ip],
+                :console_port => instance[:console_port]
+              }
+            end
+          end
+        end
+
+        num_instances.times do |index|
+          unless all_instances[index]
+            all_instances[index] = {
+              :state => "DOWN",
+              :since => Time.now.to_i,
+            }
+          end
+        end
+
+        all_instances
+      end
+
       # @param [Enumerable, #each] indices an Enumerable of indices / indexes
       # @param [Hash] message_override a hash which will be merged into the
       #   message sent over to dea, Health Manager's flapping flag should go in
