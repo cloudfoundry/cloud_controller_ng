@@ -218,7 +218,10 @@ module VCAP::CloudController
       end
 
       def dea_request(cmd, args, opts = {})
-        subject = "dea.#{cmd}"
+        request("dea.#{cmd}", args, opts)
+      end
+
+      def request(subject, args, opts)
         msg = "sending subject: '#{subject}' with args: '#{args}'"
         msg << " and opts: '#{opts}'"
         logger.debug msg
