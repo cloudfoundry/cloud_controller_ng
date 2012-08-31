@@ -89,6 +89,8 @@ module VCAP::CloudController::Errors
     ["RouteNotFound", HTTP::BAD_REQUEST, 210002, "The route could not be found: %s"],
     ["RouteHostTaken", HTTP::BAD_REQUEST, 210003, "The host is taken: %s"],
 
+    ["InstancesError", HTTP::BAD_REQUEST, 220001, "Instances error: %s"],
+
   ].each do |e|
     define_error *e
   end
