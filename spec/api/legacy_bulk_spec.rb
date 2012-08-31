@@ -111,7 +111,7 @@ module VCAP::CloudController
 
           get "/bulk/apps", {
             "batch_size" => 2,
-            "bulk_token" => decoded_response["bulk_token"],
+            "bulk_token" => Yajl::Encoder.encode(decoded_response["bulk_token"]),
           }
           new_results = decoded_response["results"].dup
           new_results.size.should == 2
@@ -128,7 +128,7 @@ module VCAP::CloudController
           while apps.size < total_size do
             get "/bulk/apps", {
               "batch_size" => 2,
-              "bulk_token" => token,
+              "bulk_token" => Yajl::Encoder.encode(token),
             }
             last_response.status.should == 200
             token = decoded_response["bulk_token"]
@@ -138,7 +138,7 @@ module VCAP::CloudController
           apps.size.should == total_size
           get "/bulk/apps", {
             "batch_size" => 2,
-            "bulk_token" => token,
+            "bulk_token" => Yajl::Encoder.encode(token),
           }
           decoded_response["results"].size.should == 0
         end
