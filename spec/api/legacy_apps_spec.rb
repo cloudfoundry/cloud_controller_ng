@@ -174,6 +174,26 @@ describe VCAP::CloudController::LegacyApps do
     end
   end
 
+  describe "GET /apps/:name/instances" do
+    before do
+      @app = Models::App.make(:space => user.default_space)
+    end
+
+    it "should delegate to v2 instances api" do
+      instances_obj = mock("instances")
+
+      VCAP::CloudController::Instances.should_receive(:new).
+        and_return(instances_obj)
+      instances_obj.should_receive(:dispatch).once.
+        with(:instances, @app.guid).and_return([HTTP::OK, "instances"])
+
+      get "/apps/#{@app.name}/instances", {}, headers_for(user)
+
+      last_response.status.should == 200
+      last_response.body.should == "instances"
+    end
+  end
+
   describe "POST /apps" do
     before do
       3.times { Models::App.make }
