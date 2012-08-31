@@ -128,4 +128,5 @@ require "cloud_controller/resource_pool/filesystem_pool"
 require "cloud_controller/dea/dea_pool"
 require "cloud_controller/dea/dea_client"
 
+require "cloud_controller/health_manager_client"
 require "cloud_controller/health_manager_respondent"
