@@ -86,6 +86,7 @@ module VCAP::CloudController
             value.should be_kind_of Hash
             value["id"].should_not be_nil
             value["framework"].should == 'sinatra'
+            value["version"].should_not be_nil
           }
         end
 
