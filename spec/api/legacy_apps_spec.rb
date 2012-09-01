@@ -18,7 +18,8 @@ describe VCAP::CloudController::LegacyApps do
     before do
       @apps = []
       7.times do
-        @apps << Models::App.make(:space => user.default_space)
+        @apps << Models::App.make(:space => user.default_space,
+                                  :environment_json => {})
       end
 
       3.times do

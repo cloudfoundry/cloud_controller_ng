@@ -111,7 +111,7 @@ module VCAP::CloudController
         :state => app.state,
         :services => app.service_bindings.map { |b| b.service_instance.name },
         :version => "TODO", # TODO: fill in when running app support is done
-        :env => Yajl::Parser.parse(app.environment_json || "{}"),
+        :env => app.environment_json || {},
         :meta =>  {
           # TODO when running app support is done
         }
