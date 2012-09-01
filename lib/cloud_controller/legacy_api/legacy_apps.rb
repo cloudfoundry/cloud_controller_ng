@@ -112,7 +112,7 @@ module VCAP::CloudController
         :services => app.service_bindings.map { |b| b.service_instance.name },
         :version => "TODO", # TODO: fill in when running app support is done
         # TODO: quote / escape env vars
-        :env => (app.environment_json || []).map {|k,v| "#{k}=#{v}"} || [],
+        :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
         :meta =>  {
           # TODO when running app support is done
         },

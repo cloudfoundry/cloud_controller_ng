@@ -70,6 +70,17 @@ describe VCAP::CloudController::LegacyApps do
 
     end
 
+    it "should return empty array for nil environment" do
+      Models::App.make(
+        :name  => "nil_env",
+        :space => user.default_space,
+      )
+
+      get "/apps/nil_env", {}, headers_for(user)
+      last_response.status.should == 200
+      decoded_response.should include("env" => [])
+    end
+
     describe "GET /apps/:name_that_exists" do
       before do
         get "/apps/#{@app_2.name}", {}, headers_for(user)
