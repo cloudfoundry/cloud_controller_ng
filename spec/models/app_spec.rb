@@ -81,13 +81,59 @@ describe VCAP::CloudController::Models::App do
       app.environment_json.should eq("jesse" => "awesome")
     end
 
-    it "marks an app for restage if BUNDLE_WITHOUT changes" do
+    it "marks an app for restage if env changed from none to containing BUNDLE_WITHOUT" do
       app = Models::App.make
       app.package_hash = "deadbeef"
       app.update(:package_state => "STAGED")
 
       app.needs_staging?.should be_false
       app.environment_json = {"BUNDLE_WITHOUT" => "test"}
+      app.save
+      app.needs_staging?.should be_true
+    end
+
+    it "marks an app for restage if BUNDLE_WITHOUT is added to env" do
+      app = Models::App.make(
+        :environment_json => {"jesse" => "awesome"},
+      )
+      app.package_hash = "deadbeef"
+      app.update(:package_state => "STAGED")
+
+      app.needs_staging?.should be_false
+      # NB we cannot use Hash#merge!
+      app.environment_json = app.environment_json.merge("BUNDLE_WITHOUT" => "test")
+      app.save
+      app.needs_staging?.should be_true
+    end
+
+    it "marks an app for restage if BUNDLE_WITHOUT is removed from env" do
+      app = Models::App.make(
+        :environment_json => {
+          "BUNDLE_WITHOUT" => "test",
+          "foo" => "bar",
+        },
+      )
+      app.package_hash = "deadbeef"
+      app.update(:package_state => "STAGED")
+
+      app.needs_staging?.should be_false
+      app.environment_json = {"foo" => "bar"}
+      app.save
+      app.needs_staging?.should be_true
+    end
+
+    it "marks an app for restage if value of BUNDLE_WITHOUT changed in env" do
+      app = Models::App.make(
+        :environment_json => {
+          "BUNDLE_WITHOUT" => "test",
+          "foo" => "bar",
+        },
+      )
+      app.package_hash = "deadbeef"
+      app.update(:package_state => "STAGED")
+
+      app.needs_staging?.should be_false
+      app.environment_json = {"foo" => "bar", "BUNDLE_WITHOUT" => "development"}
       app.save
       app.needs_staging?.should be_true
     end
