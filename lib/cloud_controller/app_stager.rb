@@ -77,7 +77,7 @@ module VCAP::CloudController
             :disk   => app.disk_quota,
             :fds    => app.file_descriptors
           },
-          :environment => app.environment_json,
+          :environment => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
           :meta => {} # TODO
         }
       end
