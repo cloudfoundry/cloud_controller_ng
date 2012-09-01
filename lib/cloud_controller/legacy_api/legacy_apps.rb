@@ -111,10 +111,11 @@ module VCAP::CloudController
         :state => app.state,
         :services => app.service_bindings.map { |b| b.service_instance.name },
         :version => "TODO", # TODO: fill in when running app support is done
-        :env => app.environment_json || {},
+        # TODO: quote / escape env vars
+        :env => (app.environment_json || []).map {|k,v| "#{k}=#{v}"} || [],
         :meta =>  {
           # TODO when running app support is done
-        }
+        },
       }
     end
 
@@ -221,6 +222,18 @@ module VCAP::CloudController
             route_resp["metadata"]["guid"]
           end
         end
+      end
+
+      if hash.has_key?("env")
+        env_array = hash["env"]
+        raise BadQueryParameter, "env should be an array" unless env_array.is_a?(Array)
+        env_hash = {}
+        env_array.each do |kv|
+          raise BadQueryParameter, "env var assignment format expected" unless kv.index('=')
+          k,v = kv.split('=', 2)
+          env_hash[k] = v
+        end
+        req["environment_json"] = env_hash
       end
 
       req

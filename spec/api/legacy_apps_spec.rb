@@ -309,6 +309,61 @@ describe VCAP::CloudController::LegacyApps do
                         /domain could not be found: notonspace.com/
       end
     end
+
+    describe "with env" do
+      it "should add the environment variable if its legal" do
+        legacy_req = Yajl::Encoder.encode(
+          "name"    => "app_with_env",
+          "staging" => {
+            "framework" => "grails",
+            "runtime"   => "java",
+          },
+          "env"     => [
+            "jesse=awesome",
+          ],
+        )
+
+        post "/apps", legacy_req, headers_for(user)
+
+        get "/apps/app_with_env", {}, headers_for(user)
+
+        decoded_response["env"].should == ["jesse=awesome"]
+      end
+
+      it "should not allow environment variables that start with vcap_" do
+        legacy_req = Yajl::Encoder.encode(
+          "name"    => "app_with_env",
+          "staging" => {
+            "framework" => "grails",
+            "runtime"   => "java",
+          },
+          "env"     => [
+            "vcap_foo=bar",
+          ],
+        )
+
+        post "/apps", legacy_req, headers_for(user)
+
+        last_response.status.should == 400
+      end
+
+      it 'should not allow environment variables that start with vmc_' do
+        legacy_req = Yajl::Encoder.encode(
+          "name"    => "app_with_env",
+          "staging" => {
+            "framework" => "grails",
+            "runtime"   => "java",
+          },
+          "env"     => [
+            "vmc_foo=bar",
+          ],
+        )
+
+        post "/apps", legacy_req, headers_for(user)
+
+        last_response.status.should == 400
+      end
+    end
   end
 
   describe "PUT /apps/:name" do
@@ -342,6 +397,56 @@ describe VCAP::CloudController::LegacyApps do
       end
 
       it_behaves_like "a vcap rest error response", /runtime can not be found: cobol/
+    end
+
+    describe "with env" do
+      it "should add the environment variable if its legal" do
+        app = Models::App.make(
+          :space  => user.default_space,
+          :name   => "app_with_env",
+        )
+        legacy_req = Yajl::Encoder.encode(
+          "env"     => [
+            "jesse=awesome",
+          ],
+        )
+
+        put "/apps/app_with_env", legacy_req, headers_for(user)
+
+        get "/apps/app_with_env", {}, headers_for(user)
+
+        decoded_response["env"].should == ["jesse=awesome"]
+      end
+
+      it "should not allow environment variables that start with vcap_" do
+        app = Models::App.make(
+          :space  => user.default_space,
+          :name   => "app_with_env",
+        )
+        legacy_req = Yajl::Encoder.encode(
+          "env"     => [
+            "vcap_foo=bar",
+          ],
+        )
+
+        put "/apps/app_with_env", legacy_req, headers_for(user)
+        last_response.status.should == 400
+      end
+
+      it 'should not allow environment variables that start with vmc_' do
+        app = Models::App.make(
+          :space  => user.default_space,
+          :name   => "app_with_env",
+        )
+        legacy_req = Yajl::Encoder.encode(
+          "env"     => [
+            "vmc_foo=bar",
+          ],
+        )
+
+        put "/apps/app_with_env", legacy_req, headers_for(user)
+        last_response.status.should == 400
+      end
     end
 
     describe "PUT /apps/:invalid_name" do
