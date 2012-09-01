@@ -29,7 +29,7 @@ describe VCAP::CloudController::DeaClient do
       res[:services].count.should == NUM_SVC_INSTANCES
       res[:services].first.should be_kind_of(Hash)
       res[:limits].should be_kind_of(Hash)
-      res[:env].should be_kind_of(Hash)
+      res[:env].should be_kind_of(Array)
     end
   end
 
