@@ -6,20 +6,9 @@ ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
 
 namespace :spec do
   desc "Run specs producing results for CI"
-  task :ci => ["ci:setup:rspec"] do
-    require "simplecov-rcov"
-    require "simplecov"
-    # RCov Formatter's output path is hard coded to be "rcov" under
-    # SimpleCov.coverage_path
-    SimpleCov.coverage_dir(File.join("spec", "artifacts"))
-    SimpleCov.formatter = SimpleCov::Formatter::RcovFormatter
-    SimpleCov.start do
-      add_filter "/spec/"
-      add_filter "/migrations/"
-      add_filter '/vendor\/bundle/'
-      RSpec::Core::Runner.disable_autorun!
-    end
-    exit RSpec::Core::Runner.run(['--fail-fast', '--backtrace', 'spec']).to_i
+  RSpec::Core::RakeTask.new(:ci => "ci:setup:rspec") do |t|
+    t.rspec_opts = ["--fail-fast", "--require", "simplecov.rb"]
+    t.pattern = "spec/models/**/*_spec.rb"
   end
 end
 
