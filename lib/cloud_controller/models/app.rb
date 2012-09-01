@@ -180,7 +180,7 @@ module VCAP::CloudController::Models
     # @param  [Hash, nil] new
     # @return [Boolean]   old and new values of the key differ, or the key was added or removed
     def key_changed?(key, old, new)
-      if old.nil? || ! old.hash_key?(key)
+      if old.nil? || ! old.has_key?(key)
         return new && new.has_key?(key)
       end
       return new.nil? || ! new.has_key?(key) || old[key] != new[key]
