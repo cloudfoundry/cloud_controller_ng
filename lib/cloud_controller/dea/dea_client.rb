@@ -205,7 +205,7 @@ module VCAP::CloudController
             :fds => app.file_descriptors
           },
           :cc_partition => config[:cc_partition],
-          :env => {} # TODO
+          :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
         }
       end
 
