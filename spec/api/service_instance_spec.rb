@@ -176,7 +176,7 @@ describe VCAP::CloudController::ServiceInstance do
     end
 
     describe "delete" do
-      it "should not fetch a quota token" do
+      it "should fetch a quota token" do
         should_receive_quota_call
         delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(cf_admin)
         last_response.status.should == 204
