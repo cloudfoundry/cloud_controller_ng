@@ -190,4 +190,41 @@ describe VCAP::CloudController::ServiceBinding do
     end
   end
 
+  describe "quota" do
+    let(:cf_admin) { Models::User.make(:admin => true) }
+    let(:app_obj) { Models::App.make }
+    let(:service_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+    let(:service_binding) do
+      Models::ServiceBinding.make(:app => app_obj,
+                                  :service_instance => service_instance)
+    end
+
+    describe "create" do
+      it "should fetch a quota token" do
+        should_receive_quota_call
+        post "/v2/service_bindings",
+          Yajl::Encoder.encode(:app_guid => app_obj.guid,
+                               :service_instance_guid => service_instance.guid),
+                               headers_for(cf_admin)
+        last_response.status.should == 201
+      end
+    end
+
+    describe "get" do
+      it "should not fetch a quota token" do
+        should_not_receive_quota_call
+        get "/v2/service_bindings/#{service_binding.guid}", {}, headers_for(cf_admin)
+        last_response.status.should == 200
+      end
+    end
+
+    describe "delete" do
+      it "should fetch a quota token" do
+        should_receive_quota_call
+        delete "/v2/service_bindings/#{service_binding.guid}", {}, headers_for(cf_admin)
+        last_response.status.should == 204
+      end
+    end
+  end
+
 end
