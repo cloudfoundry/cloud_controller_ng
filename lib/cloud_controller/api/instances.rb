@@ -14,7 +14,7 @@ module VCAP::CloudController
     def instances(id)
       app = find_id_and_validate_access(:read, id)
       instances = DeaClient.find_all_instances(app)
-      [HTTP::OK, Yajl::Encoder.encode(instances)]
+      Yajl::Encoder.encode(instances)
     end
 
     get  "#{path_id}/instances", :instances

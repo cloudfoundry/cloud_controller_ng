@@ -174,6 +174,11 @@ module VCAP::CloudController::Models
       super(hash)
     end
 
+    def running_instances
+      return 0 unless started?
+      VCAP::CloudController::HealthManagerClient.healthy_instances(self)
+    end
+
     private
 
     # @param  [Hash, nil] old

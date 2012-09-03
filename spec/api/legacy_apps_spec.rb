@@ -8,6 +8,7 @@ describe VCAP::CloudController::LegacyApps do
 
   before do
     Models::Domain.default_serving_domain_name = DEFAULT_SERVING_DOMAIN_NAME
+    HealthManagerClient.stub(:healthy_instances).and_return(1)
   end
 
   after do
@@ -182,15 +183,23 @@ describe VCAP::CloudController::LegacyApps do
     it "should delegate to v2 instances api" do
       instances_obj = mock("instances")
 
+      resp = Yajl::Encoder.encode({
+        0 => {
+          :state => "RUNNING"
+        }
+      })
+
       VCAP::CloudController::Instances.should_receive(:new).
         and_return(instances_obj)
       instances_obj.should_receive(:dispatch).once.
-        with(:instances, @app.guid).and_return([HTTP::OK, "instances"])
+        with(:instances, @app.guid).and_return(resp)
 
       get "/apps/#{@app.name}/instances", {}, headers_for(user)
 
       last_response.status.should == 200
-      last_response.body.should == "instances"
+      decoded_response.should == {"instances" => [
+        {"index" => 0, "state" => "RUNNING"}
+      ]}
     end
   end
 

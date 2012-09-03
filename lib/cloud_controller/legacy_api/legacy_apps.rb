@@ -95,8 +95,15 @@ module VCAP::CloudController
       logger.debug "instances app request name: #{name}"
 
       app = app_from_name(name)
-      VCAP::CloudController::Instances.new(config, logger, env, params, body).
-        dispatch(:instances, app.guid)
+      api = VCAP::CloudController::Instances.new(config, logger, env, params, body)
+      resp_json = api.dispatch(:instances, app.guid)
+
+      hash = Yajl::Parser.parse(resp_json)
+      legacy_resp = []
+      hash.each do |k, v|
+        legacy_resp << {:index => k.to_i}.merge(v)
+      end
+      Yajl::Encoder.encode({:instances => legacy_resp})
     end
 
     private
@@ -110,7 +117,7 @@ module VCAP::CloudController
         },
         :uris => app.uris,
         :instances => app.instances,
-        :runningInstances => app.instances, # TODO: when HM integration is done
+        :runningInstances => app.running_instances,
         :resources => {
           :memory => app.memory,
           :disk => app.disk_quota,
@@ -118,7 +125,7 @@ module VCAP::CloudController
         },
         :state => app.state,
         :services => app.service_bindings.map { |b| b.service_instance.name },
-        :version => "TODO", # TODO: fill in when running app support is done
+        :version => app.version,
         # TODO: quote / escape env vars
         :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
         :meta =>  {
