@@ -25,4 +25,18 @@ describe VCAP::CloudController::HealthManagerClient do
         should == "status"
     end
   end
+
+  describe "healthy_instances" do
+    it "should return num healthy instances" do
+      resp = {
+        :droplet => app.guid,
+        :version => app.version,
+        :healthy => 3
+      }
+      resp_json = Yajl::Encoder.encode(resp)
+
+      message_bus.should_receive(:request).and_return([resp_json])
+      HealthManagerClient.healthy_instances(app).should == 3
+    end
+  end
 end
