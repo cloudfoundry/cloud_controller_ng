@@ -134,7 +134,7 @@ module VCAP::CloudController
 
         num_instances = app.instances
         message = {
-          :states => [:FLAPPING],
+          :state => :FLAPPING,
           :version => app.version,
         }
 

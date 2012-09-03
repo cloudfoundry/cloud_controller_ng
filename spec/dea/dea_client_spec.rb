@@ -486,7 +486,7 @@ describe VCAP::CloudController::DeaClient do
       app.should_receive(:stopped?).and_return(false)
 
       search_options = {
-        :states => [:FLAPPING],
+        :state => :FLAPPING,
         :version => app.version
       }
 
@@ -524,7 +524,7 @@ describe VCAP::CloudController::DeaClient do
       app.should_receive(:stopped?).and_return(false)
 
       search_options = {
-        :states => [:FLAPPING],
+        :state => :FLAPPING,
         :version => app.version,
       }
 
@@ -569,7 +569,7 @@ describe VCAP::CloudController::DeaClient do
       app.should_receive(:stopped?).and_return(false)
 
       search_options = {
-        :states => [:FLAPPING],
+        :state => :FLAPPING,
         :version => app.version,
       }
 
@@ -643,7 +643,7 @@ describe VCAP::CloudController::DeaClient do
       app.should_receive(:stopped?).and_return(false)
 
       search_options = {
-        :states => [:FLAPPING],
+        :state => :FLAPPING,
         :version => app.version,
       }
 
@@ -700,7 +700,7 @@ describe VCAP::CloudController::DeaClient do
       app.should_receive(:stopped?).and_return(false)
 
       search_options = {
-        :states => [:FLAPPING],
+        :state => :FLAPPING,
         :version => app.version,
       }
 
