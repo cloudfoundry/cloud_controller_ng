@@ -193,4 +193,48 @@ describe VCAP::CloudController::Route do
       include_examples "route permissions"
     end
   end
+
+  describe "quota" do
+    let(:cf_admin) { Models::User.make(:admin => true) }
+    let(:domain) { Models::Domain.make }
+    let(:route) { Models::Route.make }
+
+    describe "create" do
+      it "should fetch a quota token" do
+        should_receive_quota_call
+        post "/v2/routes",
+          Yajl::Encoder.encode(:host => Sham.host,
+                               :domain_guid => domain.guid,
+                               :organization_guid => domain.owning_organization.guid),
+          headers_for(cf_admin)
+        last_response.status.should == 201
+      end
+    end
+
+    describe "get" do
+      it "should not fetch a quota token" do
+        should_not_receive_quota_call
+        get "/v2/routes/#{route.guid}", {}, headers_for(cf_admin)
+        last_response.status.should == 200
+      end
+    end
+
+    describe "update" do
+      it "should fetch a quota token" do
+        should_receive_quota_call
+        put "/v2/routes/#{route.guid}",
+            Yajl::Encoder.encode(:host => Sham.host),
+            headers_for(cf_admin)
+        last_response.status.should == 201
+      end
+    end
+
+    describe "delete" do
+      it "should fetch a quota token" do
+        should_receive_quota_call
+        delete "/v2/routes/#{route.guid}", {}, headers_for(cf_admin)
+        last_response.status.should == 204
+      end
+    end
+  end
 end
