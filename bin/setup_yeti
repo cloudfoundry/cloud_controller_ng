@@ -1,0 +1,131 @@
+#! /usr/bin/env ruby
+
+module YetiSetup
+  def self.setup(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, email, password, org_name, space_name)
+    with_uaa_target(uaa_url) do
+      user_guid = create_uaa_user(uaa_cc_secret, email, password)
+      token = auth_token(cc_admin_email, cc_admin_password)
+      create_cc_user(cc_url, token, user_guid)
+      org_guid = create_cc_org(cc_url, token, org_name, user_guid)
+      space_guid = create_cc_space(cc_url, token, space_name, org_guid, user_guid)
+    end
+    puts "SUCCESS"
+  end
+
+  def self.create_uaa_user(uaa_cc_secret, email, password)
+    with_cc_uaa_client(uaa_cc_secret) do
+      output = run "uaac user add #{email} -p #{password}"
+      error unless output =~ /created/
+      uaa_uid(email)
+    end
+  end
+
+  def self.create_cc_user(cc_url, token, guid)
+    puts "# adding user to cc"
+    cmd = "curl -v -X POST -H 'Content-Type: application/json' " +
+          " -H 'Authorization: #{token}' " +
+          " -d '{\"guid\":\"#{guid}\"}' " +
+          " #{cc_url}/v2/users"
+    output = run cmd
+    cc_guid = output[/"guid": "([^"]*)/, 1]
+    error "could not extract user guid" unless guid
+    error "cc guid did not match uaa guid" unless cc_guid == guid
+    guid
+  end
+
+  def self.create_cc_org(cc_url, token, name, user_guid)
+    puts "# creating cc org"
+    cmd = "curl -v -X POST -H 'Content-Type: application/json' " +
+          " -H 'Authorization: #{token}' " +
+          " -d '{" +
+          "\"name\":\"#{name}\", " +
+          "\"user_guids\": [\"#{user_guid}\"], " +
+          "\"manager_guids\": [\"#{user_guid}\"] " +
+          "}'" +
+          " #{cc_url}/v2/organizations"
+    output = run cmd
+    guid = output[/"guid": "([^"]*)/, 1]
+    error "could not extract space guid" unless guid
+    guid
+  end
+
+
+  def self.create_cc_space(cc_url, token, name, org_guid, user_guid)
+    puts "# creating cc space"
+    cmd = "curl -v -X POST -H 'Content-Type: application/json' " +
+          " -H 'Authorization: #{token}' " +
+          " -d '{" +
+          "\"name\":\"#{name}\", " +
+          "\"organization_guid\":\"#{org_guid}\", " +
+          "\"manager_guids\": [\"#{user_guid}\"], " +
+          "\"developer_guids\": [\"#{user_guid}\"] " +
+          "}'" +
+          " #{cc_url}/v2/spaces"
+    output = run cmd
+    guid = output[/"guid": "([^"]*)/, 1]
+    error "could not extract org guid" unless guid
+    guid
+  end
+
+  def self.run(cmd)
+    puts "#{cmd}"
+    output = `#{cmd}`
+    output.split("\n").each { |l| puts "  #{l}" }
+    puts
+    output
+  end
+
+  def self.error(str = nil)
+    STDERR.puts "#{str}" if str
+    exit -1
+  end
+
+  def self.with_uaa_target(uaa_url)
+    puts "# saving original uaa target"
+    output = run "uaac target"
+    orig_target = output[/target set to ([^,]*)?/, 1]
+    output = run "uaac target #{uaa_url}"
+    error unless output =~ /target set to/
+    begin
+      yield if block_given?
+    ensure
+      if orig_target
+        puts "# restoring original uaa target"
+        run "uaac target #{orig_target}"
+      end
+    end
+  end
+
+  def self.with_cc_uaa_client(uaa_cc_secret)
+    puts "# switching to cloud_controller context"
+    output = run "uaac token client get cloud_controller -s #{uaa_cc_secret}"
+    error if output =~ /error/
+    begin
+      yield if block_given?
+    ensure
+      puts "# removing cloud_controller context"
+      run "uaac token delete cloud_controller"
+    end
+  end
+
+  def self.uaa_uid(email)
+    # cmdline copied from a previous bash script, hence the grep/sed
+    puts "# fetching uaa uid for user"
+    output = run "uaac user get #{email} | grep ' id: ' | sed 's/ *id: //'"
+    output.chomp
+  end
+
+  def self.auth_token(email, password)
+    output = run "uaac token get #{email} #{password}"
+    error if output =~ /failed/
+    output = run "uaac context | grep access_token | sed 's/ *access_token: //'"
+    "bearer #{output.chomp}"
+  end
+end
+
+unless ARGV.size == 9
+  STDERR.puts "usage: setup_yeti <uaa_url> <uaa_cc_secret> <cc_url> <admin_email> <admin_password> <user_email> <user_password> <org_name> <space_name>"
+  exit -1
+end
+
+YetiSetup.setup(*ARGV)
