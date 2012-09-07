@@ -22,13 +22,6 @@ module VCAP::CloudController::Models
     many_to_many      :spaces, :before_add => :validate_space
     add_association_dependencies :spaces => :nullify
 
-    # TODO: add this sort of functionality to vcap validations
-    # i.e. a strip_down_attributes sort of thing
-    def name=(val)
-      val = val.downcase
-      super(val)
-    end
-
     def validate
       validates_presence :name
       validates_unique   :name
