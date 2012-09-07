@@ -135,7 +135,7 @@ describe VCAP::CloudController::LegacyService do
           Models::ServiceInstance.count.should == @num_instances_before
         end
 
-        it_behaves_like "a vcap rest error response", /service could not be found: invalid-9.0/
+        it_behaves_like "a vcap rest error response", /service is invalid: invalid-9.0/
       end
 
       context "with an invalid version" do
@@ -153,7 +153,7 @@ describe VCAP::CloudController::LegacyService do
           Models::ServiceInstance.count.should == @num_instances_before
         end
 
-        it_behaves_like "a vcap rest error response", /service could not be found: postgres-invalid/
+        it_behaves_like "a vcap rest error response", /service is invalid: postgres-invalid/
       end
 
       context "with a duplicate name" do
@@ -200,11 +200,11 @@ describe VCAP::CloudController::LegacyService do
           delete "/services/invalid_name", {}, headers_for(user)
         end
 
-        it "should return bad request" do
-          last_response.status.should == 400
+        it "should return not found" do
+          last_response.status.should == 404
         end
 
-        it_behaves_like "a vcap rest error response", /service instance can not be found: invalid_name/
+        it_behaves_like "a vcap rest error response", /service instance could not be found: invalid_name/
       end
     end
   end

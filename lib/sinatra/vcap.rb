@@ -38,7 +38,15 @@ module Sinatra
       app.helpers VCAP::Helpers
 
       app.not_found do
-        body_from_vcap_exception(::VCAP::RestAPI::Errors::NotFound.new)
+        # sinatra wants to drive us through the not_found block for *every*
+        # 404, with no way of disabling it. We want the logic in this block
+        # for access to non-existent urls, but not for 404s that we return
+        # from our logic. This is a check to see if we already did a 404 below.
+        # We don't really have a class to attach a member variable to, so we have to
+        # use the env to flag this.
+        unless request.env["vcap_exception_body_set"]
+          body_from_vcap_exception(::VCAP::RestAPI::Errors::NotFound.new)
+        end
       end
 
       app.error do
@@ -48,6 +56,7 @@ module Sinatra
                        "#{exception.response_code} error code: " +
                        "#{exception.error_code} error: #{exception.message}")
           status(exception.response_code)
+          request.env["vcap_exception_body_set"] = true
           body_from_vcap_exception(exception)
         else
           msg = ["#{exception.class} - #{exception.message}"]
