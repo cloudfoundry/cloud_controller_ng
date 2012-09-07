@@ -29,7 +29,7 @@ end
 
 FileUtils.mkdir_p artifacts_dir
 File.unlink(log_filename) if File.exists?(log_filename)
-Steno.init(Steno::Config.new(:default_log_level => "debug2",
+Steno.init(Steno::Config.new(:default_log_level => "debug",
                              :sinks => [Steno::Sink::IO.for_file(log_filename)]))
 db_logger = Steno.logger("cc.db")
 if ENV["DB_LOG_LEVEL"]
