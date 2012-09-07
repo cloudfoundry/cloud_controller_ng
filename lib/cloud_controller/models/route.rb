@@ -14,13 +14,6 @@ module VCAP::CloudController::Models
     import_attributes :host, :domain_guid, :organization_guid
     strip_attributes  :host
 
-    # TODO: add this sort of functionality to vcap validations
-    # i.e. a strip_down_attributes sort of thing
-    def host=(val)
-      val = val.downcase
-      super(val)
-    end
-
     def spaces
       organization.spaces
     end

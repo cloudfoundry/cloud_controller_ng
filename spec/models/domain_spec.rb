@@ -65,17 +65,6 @@ describe VCAP::CloudController::Models::Domain do
     end
   end
 
-  describe "conversions" do
-    describe "name" do
-      it "should downcase the name" do
-        d = Models::Domain.create(
-          :owning_organization => domain.owning_organization,
-          :name => "ABC.COM")
-        d.name.should == "abc.com"
-      end
-    end
-  end
-
   context "relationships" do
     let(:domain) { Models::Domain.make(
       :owning_organization => Models::Organization.make)

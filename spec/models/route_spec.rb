@@ -37,15 +37,6 @@ describe VCAP::CloudController::Models::Route do
     }
   }
 
-  describe "conversions" do
-    describe "host" do
-      it "should downcase the host" do
-        d = Models::Route.make(:host => "ABC")
-        d.host.should == "abc"
-      end
-    end
-  end
-
   describe "validations" do
     let(:route) { Models::Route.make }
 
