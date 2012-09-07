@@ -227,14 +227,12 @@ describe VCAP::CloudController::LegacyServiceGateway do
     describe "GET services/v1/offerings/:label(/:provider)/handles" do
       it "should return not found for unknown services" do
         get "services/v1/offerings/foo-bar/handles"
-        # FIXME: should this be 404?
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should return not found for unknown services with a provider" do
         get "services/v1/offerings/foo-bar/fooprovider/handles"
-        # FIXME: should this be 404?
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should return provisioned and bound handles" do
@@ -360,8 +358,7 @@ describe VCAP::CloudController::LegacyServiceGateway do
               :configuration => [],
               :credentials   => []
           ).encode, @auth_header
-          # FIXME should be 404
-          last_response.status.should == 400
+          last_response.status.should == 404
         end
 
         it "should update provisioned handles" do

@@ -42,8 +42,7 @@ module VCAP::CloudController
 
       it "should return not found for unknown gateway name" do
         post "/services/v1/configurations/xxx/snapshots", {}, headers_for(@user)
-        # FIXME: should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should create a snapshot job" do
@@ -69,8 +68,7 @@ module VCAP::CloudController
 
       it "should return not found for unknown ids" do
         get "/services/v1/configurations/xxx/snapshots", {}, headers_for(@user)
-        # FIXME: should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should enumerate snapshots" do
@@ -97,8 +95,7 @@ module VCAP::CloudController
 
       it "should return not found for unknown ids" do
         get "/services/v1/configurations/xxx/snapshots/yyy", {}, headers_for(@user)
-        # FIXME: should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should get snapshot_details" do
@@ -143,8 +140,7 @@ module VCAP::CloudController
 
       it "should return not found for unknown ids" do
         put "/services/v1/configurations/xxx/snapshots/yyy", {}, headers_for(@user)
-        # FIXME should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should rollback a snapshot" do
@@ -188,8 +184,7 @@ module VCAP::CloudController
 
       it "should return not found for unknown ids" do
         delete "/services/v1/configurations/xxx/snapshots/yyy", {}, headers_for(@user)
-        # FIXME should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should delete a snapshot" do
@@ -230,8 +225,7 @@ module VCAP::CloudController
 
       it "should return not found for unknown ids" do
         get "/services/v1/configurations/xxx/serialized/url/snapshots/1", {}, headers_for(@user)
-        # FIXME: should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should get serialized url" do
@@ -257,8 +251,7 @@ module VCAP::CloudController
 
       it "should return not found for unknown ids" do
         post "/services/v1/configurations/xxx/serialized/url/snapshots/1", {}, headers_for(@user)
-        # FIXME: should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should create serialized url job" do
@@ -289,15 +282,14 @@ module VCAP::CloudController
         put "/services/v1/configurations/xxx/serialized/url",
           VCAP::Services::Api::SerializedURL.new(:url  => 'http://api.vcap.me').encode,
           headers_for(@user)
-        # FIXME: should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should return bad request for malformed request" do
         put "/services/v1/configurations/xxx/serialized/url",
           %q({"data":"raw_data"}),
           headers_for(@user)
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should create import from url job" do
@@ -333,8 +325,7 @@ module VCAP::CloudController
 
       it "should return not found for unknown ids" do
         get "/services/v1/configurations/xxx/jobs/yyy", {}, headers_for(@user)
-        # FIXME: should be 404
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it "should return job_info" do

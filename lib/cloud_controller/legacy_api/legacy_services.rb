@@ -27,11 +27,11 @@ module VCAP::CloudController
                                   :version => legacy_attrs["version"]})
       unless svc
         msg = "#{legacy_attrs["vendor"]}-#{legacy_attrs["version"]}"
-        raise ServiceNotFound.new(msg)
+        raise ServiceInvalid.new(msg)
       end
 
       plans = svc.service_plans_dataset.filter(:name => LEGACY_PLAN_OVERIDE)
-      raise ServicePlanNotFound.new(LEGACY_PLAN_OVERIDE) if plans.count == 0
+      raise ServicePlanInvalid.new(LEGACY_PLAN_OVERIDE) if plans.count == 0
       logger.warn("legacy create matched > 1 plan") unless plans.count == 1
       plan = plans.first
 

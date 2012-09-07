@@ -93,12 +93,12 @@ describe VCAP::CloudController::LegacyStaging do
 
     it "should return an error for non-existent apps" do
       get "/staging/apps/abcd"
-      last_response.status.should == 400
+      last_response.status.should == 404
     end
 
     it "should return an error for an app without a package" do
       get "/staging/apps/#{app_obj_without_pkg.guid}"
-      last_response.status.should == 400
+      last_response.status.should == 404
     end
 
     include_examples "staging bad auth", :get
@@ -140,7 +140,7 @@ describe VCAP::CloudController::LegacyStaging do
       it "should return an error" do
         LegacyStaging.with_upload_handle(app_obj.guid) do |handle|
           post "/staging/droplets/bad", upload_req
-          last_response.status.should == 400
+          last_response.status.should == 404
         end
       end
     end
@@ -179,7 +179,7 @@ describe VCAP::CloudController::LegacyStaging do
     context "with an invalid app" do
       it "should return an error" do
         get "/staging/droplets/bad"
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
     end
   end
