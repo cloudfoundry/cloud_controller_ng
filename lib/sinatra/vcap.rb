@@ -38,7 +38,9 @@ module Sinatra
       app.helpers VCAP::Helpers
 
       app.not_found do
-        body_from_vcap_exception(::VCAP::RestAPI::Errors::NotFound.new)
+        unless request.env["vcap_exception_body_set"]
+          body_from_vcap_exception(::VCAP::RestAPI::Errors::NotFound.new)
+        end
       end
 
       app.error do
@@ -48,6 +50,7 @@ module Sinatra
                        "#{exception.response_code} error code: " +
                        "#{exception.error_code} error: #{exception.message}")
           status(exception.response_code)
+          request.env["vcap_exception_body_set"] = true
           body_from_vcap_exception(exception)
         else
           msg = ["#{exception.class} - #{exception.message}"]

@@ -162,7 +162,7 @@ module VCAP::CloudController
       if bindings = hash["services"]
         req[:service_binding_guids] = bindings.map do |name|
           svc_instance = default_space.service_instances_dataset[:name => name]
-          raise ServiceInstanceNotFound.new(name) unless svc_instance
+          raise ServiceInstanceInvalid.new(name) unless svc_instance
 
           if binding = svc_instance.service_bindings_dataset[:app => app]
             binding.guid
@@ -194,7 +194,7 @@ module VCAP::CloudController
       if staging = hash["staging"]
         if framework_name = staging["framework"]
           framework = Models::Framework.find(:name => framework_name)
-          raise FrameworkNotFound.new(framework_name) unless framework
+          raise FrameworkInvalid.new(framework_name) unless framework
           req[:framework_guid] = framework.guid
         end
 
@@ -202,7 +202,7 @@ module VCAP::CloudController
         runtime_name ||= default_runtime_for_framework(framework_name)
         if runtime_name
           runtime = Models::Runtime.find(:name => runtime_name)
-          raise RuntimeNotFound.new(runtime_name) unless runtime
+          raise RuntimeInvalid.new(runtime_name) unless runtime
           req[:runtime_guid] = runtime.guid
         end
       end
@@ -218,7 +218,7 @@ module VCAP::CloudController
           # TODO: change when we allow subdomains
           (host, domain_name) = uri.split(".", 2)
           domain = default_space.domains_dataset[:name => domain_name]
-          raise DomainNotFound.new(domain_name) unless domain
+          raise DomainInvalid.new(domain_name) unless domain
           visible_routes = Models::Route.filter(
             Models::Route.user_visibility_filter(user)
           )

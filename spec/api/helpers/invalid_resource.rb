@@ -21,8 +21,8 @@ module VCAP::CloudController::ApiSpecHelper
             send(verb, "#{opts[:path]}/999999", {}, json_headers(admin_headers))
           end
 
-        it "should return 400" do
-          last_response.status.should == 400
+        it "should return 404" do
+          last_response.status.should == 404
         end
 
         it_behaves_like "a vcap rest error response", "not be found: 999999"

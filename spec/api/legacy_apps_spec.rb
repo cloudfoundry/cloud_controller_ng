@@ -114,7 +114,7 @@ describe VCAP::CloudController::LegacyApps do
       end
 
       it "should return an error" do
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it_behaves_like "a vcap rest error response", /app name could not be found: name_does_not_exist/
@@ -254,7 +254,7 @@ describe VCAP::CloudController::LegacyApps do
         Models::App.count.should == @num_apps_before
       end
 
-      it_behaves_like "a vcap rest error response", /framework can not be found: funky/
+      it_behaves_like "a vcap rest error response", /framework is invalid: funky/
     end
 
     context "with an invalid runtime" do
@@ -275,7 +275,7 @@ describe VCAP::CloudController::LegacyApps do
         Models::App.count.should == @num_apps_before
       end
 
-      it_behaves_like "a vcap rest error response", /runtime can not be found: cobol/
+      it_behaves_like "a vcap rest error response", /runtime is invalid: cobol/
     end
 
     context "with a nil runtime" do
@@ -346,7 +346,7 @@ describe VCAP::CloudController::LegacyApps do
         end
 
         it_behaves_like "a vcap rest error response",
-                        /domain could not be found: notonspace.com/
+                        /domain is invalid: notonspace.com/
       end
     end
 
@@ -436,7 +436,7 @@ describe VCAP::CloudController::LegacyApps do
         last_response.status.should == 400
       end
 
-      it_behaves_like "a vcap rest error response", /runtime can not be found: cobol/
+      it_behaves_like "a vcap rest error response", /runtime is invalid: cobol/
     end
 
     describe "with env" do
@@ -495,7 +495,7 @@ describe VCAP::CloudController::LegacyApps do
       end
 
       it "should return an error" do
-        last_response.status.should == 400
+        last_response.status.should == 404
       end
 
       it_behaves_like "a vcap rest error response", /app name could not be found: name_does_not_exist/
