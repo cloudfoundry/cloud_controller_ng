@@ -192,13 +192,13 @@ module VCAP::CloudController
       end
 
       if staging = hash["staging"]
-        if framework_name = staging["framework"]
+        if framework_name = staging["framework"] || staging["model"]
           framework = Models::Framework.find(:name => framework_name)
           raise FrameworkInvalid.new(framework_name) unless framework
           req[:framework_guid] = framework.guid
         end
 
-        runtime_name = staging["runtime"]
+        runtime_name = staging["runtime"] || staging["stack"]
         runtime_name ||= default_runtime_for_framework(framework_name)
         if runtime_name
           runtime = Models::Runtime.find(:name => runtime_name)

@@ -236,6 +236,27 @@ describe VCAP::CloudController::LegacyApps do
       end
     end
 
+    context "with legacy yeti style framework and runtime [TEAM-61]" do
+      before do
+        req = Yajl::Encoder.encode({
+          :name => "app_name",
+          :staging => { :model => "sinatra", :stack => "ruby18" }
+        })
+
+        post "/apps", req, headers_for(user)
+      end
+
+      it "should return success" do
+        last_response.status.should == 200
+      end
+
+      it "should add the app to default app space" do
+        app = user.default_space.apps.find(:name => "app_name")
+        app.should_not be_nil
+        Models::App.count.should == @num_apps_before + 1
+      end
+    end
+
     context "with an invalid framework" do
       before do
         req = Yajl::Encoder.encode({
