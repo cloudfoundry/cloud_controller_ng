@@ -53,6 +53,20 @@ module VCAP::CloudController
       HTTP::OK
     end
 
+    def enumerate_offerings
+      resp = {}
+      Models::Service.each do |svc|
+        svc_type = LegacyService.synthesize_service_type(svc)
+        resp[svc_type] ||= {}
+        resp[svc_type][svc.label] ||= {}
+        resp[svc_type][svc.label][svc.provider] ||= {}
+        resp[svc_type][svc.label][svc.provider][svc.version] =
+          legacy_service_offering_encoding(svc)
+      end
+
+      Yajl::Encoder.encode(resp)
+    end
+
     # Keep these here in the legacy api translation rather than polluting the
     # model/schema
     def self.synthesize_service_type(svc)
@@ -96,10 +110,25 @@ module VCAP::CloudController
       }
     end
 
+    def legacy_service_offering_encoding(svc)
+      svc_offering = {
+        :label => "#{svc.label}-#{svc.version}",
+        :provider => svc.provider,
+        :url => svc.url,
+        :description => svc.description,
+        :info_url => svc.info_url,
+        :plans => svc.service_plans.map(&:name),
+        :supported_versions => [svc.version],
+        :active => true
+      }
+    end
+
     def self.setup_routes
       get    "/services",       :enumerate
       post   "/services",       :create
       delete "/services/:name", :delete
+
+      get    "/services/v1/offerings", :enumerate_offerings
     end
 
     setup_routes

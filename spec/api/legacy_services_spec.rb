@@ -54,6 +54,38 @@ describe VCAP::CloudController::LegacyService do
       end
     end
 
+    describe "GET /services/v1/offerings" do
+      before do
+        svc = Models::Service.make(:label => "foo",
+                                   :provider => "core",
+                                   :version => "1.0",
+                                   :url => "http://localhost:56789")
+
+        svc_test = Models::Service.make(:label => "foo",
+                                        :provider => "test",
+                                        :version => "1.0",
+                                        :url => "http://localhost:56789")
+
+        [svc, svc_test].each do |s|
+          Models::ServicePlan.make(:service => s, :name => "free")
+          Models::ServicePlan.make(:service => s, :name => "nonfree")
+        end
+      end
+
+      it "should return service offerings" do
+        get "/services/v1/offerings", {}, headers_for(user)
+        last_response.status.should == 200
+        decoded_response["generic"]["foo"]["core"]["1.0"]["label"].should == "foo-1.0"
+        decoded_response["generic"]["foo"]["core"]["1.0"]["url"].should == "http://localhost:56789"
+        decoded_response["generic"]["foo"]["core"]["1.0"]["plans"].should == ["free", "nonfree"]
+        decoded_response["generic"]["foo"]["core"]["1.0"]["active"].should == true
+        decoded_response["generic"]["foo"]["test"]["1.0"]["label"].should == "foo-1.0"
+        decoded_response["generic"]["foo"]["test"]["1.0"]["url"].should == "http://localhost:56789"
+        decoded_response["generic"]["foo"]["test"]["1.0"]["plans"].should == ["free", "nonfree"]
+        decoded_response["generic"]["foo"]["test"]["1.0"]["active"].should == true
+      end
+    end
+
     describe "POST /services" do
       before do
         svc = Models::Service.make(:label => "postgres", :version => "9.0")
