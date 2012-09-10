@@ -132,4 +132,34 @@ describe VCAP::CloudController::MessageBus do
       end
     end
   end
+
+  describe "process_message" do
+    let(:msg) { Yajl::Encoder.encode({:a => 1, :b => 2}) }
+
+    it "should pssed the parsed message and inbox to the block" do
+      msg_received = nil
+      inbox_received = nil
+
+      block = proc do |msg, inbox|
+        msg_received = msg
+        inbox_received = inbox
+      end
+
+      MessageBus.send(:process_message, msg, "myinbox", &block)
+      msg_received.should == {:a => 1, :b => 2}
+      inbox_received.should == "myinbox"
+    end
+
+    it "should catch and log an error on an exception" do
+      logger = mock(:logger)
+      logger.should_receive(:error)
+      MessageBus.should_receive(:logger).and_return(logger)
+
+      block = proc do |msg, inbox|
+        raise "boom"
+      end
+
+      MessageBus.send(:process_message, msg, "myinbox", &block)
+    end
+  end
 end
