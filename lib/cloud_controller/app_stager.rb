@@ -20,13 +20,15 @@ module VCAP::CloudController
       def stage_app(app)
         logger.debug "staging #{app.guid}"
         LegacyStaging.with_upload_handle(app.guid) do |handle|
+          client_error = nil
           results = EM.schedule_sync do |promise|
             client = VCAP::Stager::Client::EmAware.new(MessageBus.nats.client, queue)
             deferrable = client.stage(staging_request(app), staging_timeout)
 
             deferrable.errback do |e|
               logger.error "staging #{app.guid} error #{e}"
-              raise Errors::StagingError.new(e)
+              client_error = e
+              promise.deliver(e)
             end
 
             deferrable.callback do |resp|
@@ -35,12 +37,15 @@ module VCAP::CloudController
             end
           end
 
-          StagingTaskLog.new(app.guid, results["task_log"], @redis_client).save
-          upload_path = handle.upload_path
+          unless client_error
+            StagingTaskLog.new(app.guid, results["task_log"], @redis_client).save
+            upload_path = handle.upload_path
+          end
 
           unless upload_path
+            err_str = client_error || results["task_log"]
             raise Errors::StagingError.new(
-              "failed to stage application:\n#{results["task_log"]}")
+              "failed to stage application:\n#{err_str}")
           end
 
           droplet_hash = Digest::SHA1.file(upload_path).hexdigest
