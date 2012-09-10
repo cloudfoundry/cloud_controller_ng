@@ -162,4 +162,39 @@ describe VCAP::CloudController::MessageBus do
       MessageBus.send(:process_message, msg, "myinbox", &block)
     end
   end
+
+  describe "em_schedule" do
+    it "should schedule a block to run on the em reactor thread" do
+      block_called = false
+      block = proc do
+        EM.reactor_thread?.should == true
+        block_called = true
+      end
+
+      with_em_and_thread do
+        MessageBus.send(:em_schedule, &block)
+      end
+
+      block_called.should == true
+    end
+
+    it "should not leak exceptions in the block into EM" do
+      block_called = false
+      logger = mock(:logger)
+      logger.should_receive(:error)
+      MessageBus.should_receive(:logger).and_return(logger)
+
+      block = proc do
+        EM.reactor_thread?.should == true
+        block_called = true
+        raise "BOOM!"
+      end
+
+      with_em_and_thread do
+        MessageBus.send(:em_schedule, &block)
+      end
+
+      block_called.should == true
+    end
+  end
 end
