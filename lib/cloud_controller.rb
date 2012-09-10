@@ -34,7 +34,7 @@ module VCAP::CloudController
       user = nil
       auth_token = env["HTTP_AUTHORIZATION"]
 
-      if auth_token
+      if auth_token && auth_token.upcase.start_with?("BEARER")
         token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
                                               @config[:uaa][:symmetric_secret],
                                               nil)
