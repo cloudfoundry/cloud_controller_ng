@@ -80,6 +80,10 @@ module VCAP::CloudController::Models
       end
     end
 
+    def after_destroy_commit
+      VCAP::CloudController::DeaClient.stop(self) if started?
+    end
+
     # We sadly have to do this ourselves because the serialization plugin
     # doesn't play nice with the dirty plugin, and we want the dirty plugin
     # more
