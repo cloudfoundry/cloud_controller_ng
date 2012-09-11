@@ -139,6 +139,30 @@ describe VCAP::CloudController::App do
     end
   end
 
+  describe "delete" do
+    let(:app_obj) { VCAP::CloudController::Models::App.make }
+
+    context "app started" do
+      it "should send a delete to the deas" do
+        app_obj.state = "STARTED"
+        app_obj.save
+
+        DeaClient.should_receive(:stop).with(app_obj)
+        delete "/v2/apps/#{app_obj.guid}", {}, admin_headers
+      end
+    end
+
+    context "app stopped" do
+      it "should not send a delete to the deas" do
+        app_obj.state = "STOPPED"
+        app_obj.save
+
+        DeaClient.should_not_receive(:stop)
+        delete "/v2/apps/#{app_obj.guid}", {}, admin_headers
+      end
+    end
+  end
+
   describe "Permissions" do
     include_context "permissions"
 
