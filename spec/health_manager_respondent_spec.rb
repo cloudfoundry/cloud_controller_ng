@@ -124,7 +124,7 @@ module VCAP::CloudController
             :droplet        => @app.guid,
             :op             => "STOP",
             :last_updated   => Time.now - 86400,
-            :indices        => [0,1],
+            :instances      => [0,1],
           }
 
           @dea_client.should_not_receive(:stop_instances)
@@ -139,7 +139,7 @@ module VCAP::CloudController
             :droplet        => @app.guid,
             :op             => "STOP",
             :last_updated   => @app.updated_at,
-            :indices        => [1],
+            :instances        => [1],
           }
           @dea_client.should_receive(:stop) do |app|
             app.guid.should == @app.guid
@@ -153,7 +153,7 @@ module VCAP::CloudController
             :droplet        => @app.guid,
             :op             => "STOP",
             :last_updated   => @app.updated_at,
-            :indices        => [1],
+            :instances        => [1],
           }
 
           @dea_client.should_receive(:stop_instances).with(

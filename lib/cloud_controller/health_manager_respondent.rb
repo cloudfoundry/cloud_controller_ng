@@ -74,7 +74,7 @@ module VCAP::CloudController
       # TODO: Ideally we should validate the message here with Membrane
       begin
         app_id = payload.fetch(:droplet)
-        indices = payload.fetch(:indices)
+        indices = payload.fetch(:instances)
         last_updated = payload.fetch(:last_updated).to_i
       rescue KeyError => e
         logger.error("Malformed stop request: #{payload}, #{e.message}")
