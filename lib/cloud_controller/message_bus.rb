@@ -112,6 +112,10 @@ module VCAP::CloudController::MessageBus
     payload = Yajl::Parser.parse(msg, :symbolize_keys => true)
     blk.yield(payload, inbox)
   rescue => e
-    CloudController.logger.error("exception processing: '#{msg}' '#{e}'")
+    logger.error "exception processing: '#{msg}' '#{e}'"
+  end
+
+  def self.logger
+    @logger ||= Steno.logger("cc.mbus")
   end
 end
