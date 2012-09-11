@@ -77,7 +77,9 @@ describe VCAP::CloudController::AppStager do
 
     it "should raise a StagingError and propagate the raw description for staging client errors" do
       deferrable.should_receive(:callback).at_most(:once)
-      deferrable.should_receive(:errback).and_yield("stringy error")
+      deferrable.should_receive(:errback) do |&blk|
+        blk.yield("stringy error")
+      end
 
       with_em_and_thread do
         lambda {
