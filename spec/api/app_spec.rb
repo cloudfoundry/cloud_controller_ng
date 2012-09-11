@@ -139,6 +139,38 @@ describe VCAP::CloudController::App do
     end
   end
 
+  describe "delete" do
+    let(:app_obj) { VCAP::CloudController::Models::App.make }
+
+    context "app started" do
+      it "should send a delete to the deas" do
+        app_obj.state = "STARTED"
+        app_obj.save
+
+        # we can't do a direct comparison due to potential minor timestamp differences,
+        # and we can't do the .should inside the block because sequel will
+        # supress it
+        stopped_app = nil
+        DeaClient.should_receive(:stop) do |obj|
+          stopped_app = obj
+        end
+
+        delete "/v2/apps/#{app_obj.guid}", {}, admin_headers
+        stopped_app.guid.should == app_obj.guid
+      end
+    end
+
+    context "app stopped" do
+      it "should not send a delete to the deas" do
+        app_obj.state = "STOPPED"
+        app_obj.save
+
+        DeaClient.should_not_receive(:stop)
+        delete "/v2/apps/#{app_obj.guid}", {}, admin_headers
+      end
+    end
+  end
+
   describe "Permissions" do
     include_context "permissions"
 
