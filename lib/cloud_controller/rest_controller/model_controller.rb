@@ -74,8 +74,10 @@ module VCAP::CloudController::RestController
 
       QuotaManager.with_quota_enforcement(delete_quota_token_request(obj)) do
         obj.destroy
-        [HTTP::NO_CONTENT, nil]
       end
+
+      after_delete(obj) if respond_to?(:after_delete)
+      [HTTP::NO_CONTENT, nil]
     end
 
     # Enumerate operation

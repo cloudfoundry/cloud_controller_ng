@@ -60,6 +60,10 @@ module VCAP::CloudController
       end
     end
 
+    def after_delete(app)
+      DeaClient.stop(app) if app.started?
+    end
+
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       if space_and_name_errors && space_and_name_errors.include?(:unique)
