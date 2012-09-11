@@ -105,7 +105,7 @@ describe VCAP::CloudController::DeaClient do
     end
   end
 
-  describe "stop_instances" do
+  describe "stop_indices" do
     it "should send stop messages to deas" do
       app.instances = 3
       message_bus.should_receive(:publish).with(
@@ -118,7 +118,25 @@ describe VCAP::CloudController::DeaClient do
         ),
       )
       with_em_and_thread do
-        DeaClient.stop_instances(app, [0,2])
+        DeaClient.stop_indices(app, [0,2])
+      end
+    end
+  end
+
+  describe "stop_instances" do
+    it "should send stop messages to deas" do
+      app.instances = 3
+      message_bus.should_receive(:publish).with(
+        "dea.stop",
+        json_match(
+          hash_including(
+            "droplet"   => app.guid,
+            "instances"   => ["a", "b"]
+          )
+        ),
+      )
+      with_em_and_thread do
+        DeaClient.stop_instances(app, ["a", "b"])
       end
     end
   end

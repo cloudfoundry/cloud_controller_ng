@@ -30,7 +30,7 @@ module VCAP::CloudController
           start_instances_in_range(app, range)
         elsif delta < 0
           range = (app.instances...app.instances - delta)
-          stop_instances_in_range(app, range)
+          stop_indices_in_range(app, range)
         end
       end
 
@@ -209,11 +209,20 @@ module VCAP::CloudController
       end
 
       # @param [Array] indices an Enumerable of integer indices
-      def stop_instances(app, indices)
+      def stop_indices(app, indices)
         dea_publish("stop",
                     :droplet => app.guid,
                     :version => app.version,
                     :indices => indices,
+                   )
+      end
+
+      # @param [Array] indices an Enumerable of guid instance ids
+      def stop_instances(app, instances)
+        dea_publish("stop",
+                    :droplet => app.guid,
+                    :version => app.version,
+                    :instances => instances,
                    )
       end
 
@@ -231,8 +240,8 @@ module VCAP::CloudController
       end
 
       # @param [Enumerable, #to_a] indices the range / sequence of instances to stop
-      def stop_instances_in_range(app, indices)
-        stop_instances(app, indices.to_a)
+      def stop_indices_in_range(app, indices)
+        stop_indices(app, indices.to_a)
       end
 
       def dea_update_message(app)
