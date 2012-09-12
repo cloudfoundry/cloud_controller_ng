@@ -1,5 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
+require "cloud_controller/dea/dea_client"
+
 module VCAP::CloudController::Models
   class Route < Sequel::Model
     class InvalidDomainRelation < InvalidRelation; end
@@ -11,7 +13,7 @@ module VCAP::CloudController::Models
     add_association_dependencies :apps => :nullify
 
     export_attributes :host, :domain_guid, :organization_guid
-    import_attributes :host, :domain_guid, :organization_guid
+    import_attributes :host, :domain_guid, :organization_guid, :app_guids
     strip_attributes  :host
 
     def spaces
@@ -68,6 +70,11 @@ module VCAP::CloudController::Models
     private
     def mark_app_routes_changed(app)
       app.routes_changed = true
+      # I hate putting this in the model, but let's get this feature shippped
+      # TODO: use event emitter to decouple this from the model
+      if app.dea_update_pending?
+        VCAP::CloudController::DeaClient.update_uris(app)
+      end
     end
 
   end
