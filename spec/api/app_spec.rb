@@ -183,6 +183,73 @@ describe VCAP::CloudController::App do
     end
   end
 
+  describe "on route change" do
+    it "sends update message on dea.update" do
+      space = Models::Space.make
+      user = make_developer_for_space(space)
+      runtime = Models::Runtime.make
+      framework = Models::Framework.make
+      route = space.add_domain(
+        :name => "jesse.cloud",
+        :owning_organization => space.organization,
+      ).add_route(
+        :host => "app",
+        :organization => space.organization,
+      )
+
+      # keeping the headers here so that it doesn't reset the global config...
+      headers_for_user = headers_for(user)
+      post(
+        "/v2/apps",
+        App::CreateMessage.new(
+          :name => "foo",
+          :space_guid => space.guid,
+          :runtime_guid => runtime.guid,
+          :framework_guid => framework.guid,
+        ).encode,
+        headers_for_user,
+      )
+      last_response.status.should == 201
+      app_url = decoded_response["metadata"]["url"]
+      app_guid = decoded_response["metadata"]["guid"]
+
+      # OK I'm cheating here to skip staging...
+      app = Models::App[:guid => app_guid]
+      app.droplet_hash = "def"
+      app.save
+
+      black_hole = double("black hole").as_null_object
+      # At this point I don't care which DEA is chosen or what we broadcast on
+      # the message bus, so let's make the mock very tolerant
+      DeaClient.configure(config, black_hole, black_hole)
+      put(
+        app_url,
+        App::UpdateMessage.new(
+          :state => "STARTED",
+        ).encode,
+        headers_for_user,
+      )
+      last_response.status.should == 201
+
+      mbus = double("mock nats")
+      DeaClient.configure(config, mbus, double("dea pool"))
+      mbus.should_receive(:publish).with(
+        "dea.update",
+        json_match(
+          hash_including("uris" => ["app.jesse.cloud"]),
+        ),
+      )
+      put(
+        app_url,
+        App::UpdateMessage.new(
+          :route_guids => [route.guid],
+        ).encode(),
+        headers_for_user,
+      )
+      last_response.status.should == 201
+    end
+  end
+
   describe "Permissions" do
     include_context "permissions"
 
