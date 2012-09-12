@@ -130,10 +130,10 @@ module VCAP::CloudController
       it "should delegate to v2 files api with path" do
         files_obj = mock("files")
 
-        Files.should_receive(:new).once
-        .and_return(files_obj)
-        files_obj.should_receive(:dispatch).once
-        .with(:files, @app.guid, "1", "path").and_return([HTTP::OK, "files"])
+        Files.should_receive(:new).once.
+          and_return(files_obj)
+        files_obj.should_receive(:dispatch).once.
+          with(:files, @app.guid, "1", "path").and_return([HTTP::OK, "files"])
 
         get "/apps/#{@app.name}/instances/1/files/path", {}, headers_for(user)
 
@@ -144,10 +144,10 @@ module VCAP::CloudController
       it "should delegate to v2 files api without path" do
         files_obj = mock("files")
 
-        Files.should_receive(:new).once
-        .and_return(files_obj)
-        files_obj.should_receive(:dispatch).once
-        .with(:files, @app.guid, "1", nil).and_return([HTTP::OK, "files"])
+        Files.should_receive(:new).once.
+          and_return(files_obj)
+        files_obj.should_receive(:dispatch).once.
+          with(:files, @app.guid, "1", nil).and_return([HTTP::OK, "files"])
 
         get "/apps/#{@app.name}/instances/1/files", {}, headers_for(user)
 
@@ -164,10 +164,10 @@ module VCAP::CloudController
       it "should delegate to v2 stats api" do
         stats_obj = mock("stats")
 
-        Stats.should_receive(:new).once
-        .and_return(stats_obj)
-        stats_obj.should_receive(:dispatch).once
-        .with(:stats, @app.guid).and_return([HTTP::OK, "stats"])
+        Stats.should_receive(:new).once.
+          and_return(stats_obj)
+        stats_obj.should_receive(:dispatch).once.
+          with(:stats, @app.guid).and_return([HTTP::OK, "stats"])
 
         get "/apps/#{@app.name}/stats", {}, headers_for(user)
 
@@ -521,6 +521,140 @@ module VCAP::CloudController
         end
 
         it_behaves_like "a vcap rest error response", /app name could not be found: name_does_not_exist/
+      end
+
+      describe "on route change" do
+        it "sends a dea.update message when adding a URL to a running app" do
+          Models::App.make(
+            :name => "foo",
+            :space => user.default_space,
+            :state => "STARTED",
+          ).update(
+            # I hate that implicit save on package_hash=,
+            # but I'll bare with it while nothing breaks...
+            :package_hash   => "abc",
+            :droplet_hash   => "def",
+            :package_state  => "STAGED",
+          )
+
+          nats = double("mock nats")
+          nats.should_receive(:publish).with(
+            "dea.update",
+            json_match(
+              hash_including("uris" => ["bar.sharedorg.com", "foo.sharedorg.com"]),
+            ),
+          )
+          config_override(:nats => nats)
+          EM.run do
+            put(
+              "/apps/foo",
+              Yajl::Encoder.encode(
+                :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+              ),
+              headers_for(user),
+            )
+            last_response.status.should == 200
+            EM.next_tick { EM.stop }
+          end
+        end
+
+        it "sends a dea.update message when removing a URL to a running app" do
+          Models::App.make(
+            :name => "foo",
+            :space => user.default_space,
+            :state => "STARTED",
+          ).update(
+            # I hate that implicit save on package_hash=,
+            # but I'll bare with it while nothing breaks...
+            :package_hash   => "abc",
+            :droplet_hash   => "def",
+            :package_state  => "STAGED",
+          )
+
+          black_hole = double
+          black_hole.stub(:publish)
+          config_override(:nats => black_hole)
+
+          nats = double("mock nats")
+          nats.should_receive(:publish).with(
+            "dea.update",
+            json_match(
+              hash_including("uris" => ["foo.sharedorg.com"]),
+            ),
+          )
+          EM.run do
+            put(
+              "/apps/foo",
+              Yajl::Encoder.encode(
+                :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+              ),
+              headers_for(user),
+            )
+            last_response.status.should == 200
+            config_override(:nats => nats)
+            put(
+              "/apps/foo",
+              Yajl::Encoder.encode(
+                :uris => ["foo.sharedorg.com"],
+              ),
+              headers_for(user),
+            )
+            last_response.status.should == 200
+            EM.next_tick { EM.stop }
+          end
+        end
+
+        it "does not send a dea.update message when adding a URL to a running app" do
+          Models::App.make(
+            :name => "foo",
+            :space => user.default_space,
+            :state => "STOPPED",
+          )
+          nats = double("mock nats")
+          nats.should_not_receive(:publish)
+          config_override(:nats => nats)
+          EM.run do
+            put(
+              "/apps/foo",
+              Yajl::Encoder.encode(
+                :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+              ),
+              headers_for(user),
+            )
+            last_response.status.should == 200
+            EM.next_tick { EM.stop }
+          end
+        end
+
+        it "does not send a dea.update message when removing a URL to a running app" do
+          Models::App.make(
+            :name => "foo",
+            :space => user.default_space,
+            :state => "STOPPED",
+          )
+          nats = double("mock nats")
+          nats.should_not_receive(:publish)
+          config_override(:nats => nats)
+          EM.run do
+            put(
+              "/apps/foo",
+              Yajl::Encoder.encode(
+                :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+              ),
+              headers_for(user),
+            )
+            last_response.status.should == 200
+            put(
+              "/apps/foo",
+              Yajl::Encoder.encode(
+                :uris => ["foo.sharedorg.com"],
+              ),
+              headers_for(user),
+            )
+            last_response.status.should == 200
+            EM.next_tick { EM.stop }
+          end
+        end
       end
     end
 

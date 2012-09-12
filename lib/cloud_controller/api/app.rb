@@ -93,5 +93,11 @@ module VCAP::CloudController
         }
       }
     end
+
+    def after_modify(app)
+      if app.dea_update_pending?
+        DeaClient.update_uris(app)
+      end
+    end
   end
 end
