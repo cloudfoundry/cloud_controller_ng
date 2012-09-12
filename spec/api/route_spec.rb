@@ -239,4 +239,113 @@ module VCAP::CloudController
       end
     end
   end
+
+  describe "on app change" do
+    before :each do
+      space = Models::Space.make
+      user = make_developer_for_space(space)
+      @headers_for_user = headers_for(user)
+      @route = space.add_domain(
+        :name => "jesse.cloud",
+        :owning_organization => space.organization,
+      ).add_route(
+        :host => "foo",
+        :organization => space.organization,
+      )
+      @foo_app = Models::App.make(
+        :name   => "foo",
+        :space  => space,
+        :state  => "STARTED",
+        :guid   => "guid-foo",
+      )
+      @foo_app.update(
+        :package_hash => "abc",
+        :droplet_hash => "def",
+        :package_state => "STAGED",
+      )
+      @bar_app = Models::App.make(
+        :name   => "bar",
+        :space  => space,
+        :state  => "STARTED",
+        :guid   => "guid-bar",
+      )
+      @bar_app.update(
+        :package_hash => "ghi",
+        :droplet_hash => "jkf",
+        :package_state => "STAGED",
+      )
+    end
+
+    it "sends a dea.update message after adding an app" do
+      @foo_app.add_route(@route)
+      get "/v2/routes/#{@route.guid}/apps", {}, @headers_for_user
+      last_response.status.should == 200
+      decoded_response["resources"].map { |r|
+        r["metadata"]["guid"]
+      }.should eq [@foo_app.guid]
+
+      nats = double("mock nats")
+      config_override(:nats => nats)
+      # inject mock nats
+      MessageBus.configure(config)
+
+      nats.should_receive(:publish).with(
+        "dea.update",
+        json_match(
+          hash_including(
+            "uris" => ["foo.jesse.cloud"],
+            "droplet" => @bar_app.guid,
+          ),
+        ),
+      )
+      EM.run do
+        put(
+          "/v2/routes/#{@route.guid}",
+          Route::UpdateMessage.new(
+            :app_guids => [@foo_app.guid, @bar_app.guid],
+          ).encode,
+          @headers_for_user,
+        )
+        EM.next_tick { EM.stop }
+      end
+      last_response.status.should == 201
+    end
+
+    it "sends a dea.update message after removing an app" do
+      @foo_app.add_route(@route)
+      @bar_app.add_route(@route)
+      get "/v2/routes/#{@route.guid}/apps", {}, @headers_for_user
+      last_response.status.should == 200
+      decoded_response["total_results"].should eq(2)
+      decoded_response["resources"].map { |r|
+        r["metadata"]["guid"]
+      }.sort.should eq [@foo_app.guid, @bar_app.guid].sort
+
+      nats = double("mock nats")
+      config_override(:nats => nats)
+      # inject mock nats
+      MessageBus.configure(config)
+
+      nats.should_receive(:publish).with(
+        "dea.update",
+        json_match(
+          hash_including(
+            "uris" => [],
+            "droplet" => @foo_app.guid,
+          ),
+        ),
+      )
+      EM.run do
+        put(
+          "/v2/routes/#{@route.guid}",
+          Route::UpdateMessage.new(
+            :app_guids => [@bar_app.guid],
+          ).encode,
+          @headers_for_user,
+        )
+        EM.next_tick { EM.stop }
+      end
+      last_response.status.should == 201
+    end
+  end
 end

@@ -15,6 +15,7 @@ module VCAP::CloudController
       attribute :host, String
       to_one    :domain
       to_one    :organization
+      to_many   :apps
     end
 
     query_parameters :host, :domain_guid
