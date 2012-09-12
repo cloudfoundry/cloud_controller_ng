@@ -113,6 +113,9 @@ describe VCAP::CloudController::App do
 
     it "should start an app when moving from STOPPED to STARTED" do
       app_obj.state = "STOPPED"
+      # haxx
+      app_obj.package_hash = "abc"
+      app_obj.package_state = "STAGED"
       app_obj.save
       req = Yajl::Encoder.encode(:state => "STARTED")
       DeaClient.should_receive(:start)
@@ -122,6 +125,9 @@ describe VCAP::CloudController::App do
 
     it "should stop an app when moving from STARTED to STOPPED" do
       app_obj.state = "STARTED"
+      # haxx
+      app_obj.package_hash = "abc"
+      app_obj.package_state = "STAGED"
       app_obj.save
       req = Yajl::Encoder.encode(:state => "STOPPED")
       DeaClient.should_receive(:stop)
