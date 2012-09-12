@@ -179,6 +179,17 @@ module VCAP::CloudController::Models
       VCAP::CloudController::HealthManagerClient.healthy_instances(self)
     end
 
+    # A boolean mark is attached to an instance of this Model when the
+    # associated routes have changed, enabling deferred actions like updating
+    # uri's to DEA's.
+    #
+    # Note that we don't clear this state automatically, in the hope that the
+    # in-memory object is ephemeral
+    #
+    # @return [Boolean, nil] whether routes have been changed
+    attr_reader :routes_changed
+    alias routes_changed? routes_changed
+
     private
 
     # @param  [Hash, nil] old
@@ -189,6 +200,16 @@ module VCAP::CloudController::Models
         return new && new.has_key?(key)
       end
       return new.nil? || ! new.has_key?(key) || old[key] != new[key]
+    end
+
+    def _add_route(*)
+      @routes_changed = true
+      super
+    end
+
+    def _remove_route(*)
+      @routes_changed = true
+      super
     end
 
   end
