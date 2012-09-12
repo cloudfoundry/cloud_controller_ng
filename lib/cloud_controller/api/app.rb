@@ -58,6 +58,11 @@ module VCAP::CloudController
       elsif changes.include?(:instances) && app.started?
         delta = changes[:instances][1] - changes[:instances][0]
         DeaClient.change_running_instances(app, delta)
+      elsif app.routes_changed? && app.started?
+        # Old CC doesn't do the check on app state, because each DEA
+        # drops the update uri request if the app isn't running on it
+        # But I would still like to reduce message bus traffic
+        DeaClient.update_uris(app)
       end
     end
 
