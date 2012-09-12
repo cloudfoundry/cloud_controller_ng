@@ -7,11 +7,11 @@ module VCAP::CloudController::Models
     many_to_one :domain
     many_to_one :organization
 
-    many_to_many :apps, :before_add => :validate_app
+    many_to_many :apps, :before_add => :validate_app, :after_add => :run_after_add_app_hooks, :after_remove => :run_after_remove_app_hooks
     add_association_dependencies :apps => :nullify
 
     export_attributes :host, :domain_guid, :organization_guid
-    import_attributes :host, :domain_guid, :organization_guid
+    import_attributes :host, :domain_guid, :organization_guid, :app_guids
     strip_attributes  :host
 
     def spaces
@@ -63,6 +63,33 @@ module VCAP::CloudController::Models
       }.sql_or)
 
       user_visibility_filter_with_admin_override(:organization => orgs)
+    end
+
+    # I'm refraining from full blown re-inventing Sequel instance hooks until
+    # there is a compelling case for it
+    def after_add_app_hook(&block)
+      after_add_app_hooks.push(block)
+    end
+
+    def after_remove_app_hook(&block)
+      after_remove_app_hooks.push(block)
+    end
+
+    private
+    def run_after_add_app_hooks(app)
+      after_add_app_hooks.each { |cb| cb.call(app) }
+    end
+
+    def run_after_remove_app_hooks(app)
+      after_add_app_hooks.each { |cb| cb.call(app) }
+    end
+
+    def after_add_app_hooks
+      @after_add_app_hooks ||= []
+    end
+
+    def after_remove_app_hooks
+      @after_remove_app_hooks ||= []
     end
   end
 end

@@ -15,6 +15,7 @@ module VCAP::CloudController
       attribute :host, String
       to_one    :domain
       to_one    :organization
+      to_many   :apps
     end
 
     query_parameters :host, :domain_guid
@@ -42,6 +43,27 @@ module VCAP::CloudController
       else
         RouteInvalid.new(e.errors.full_messages)
       end
+    end
+
+    def find_id_and_validate_access(op, guid)
+      route = super
+      if op == :update
+        route.after_add_app_hook do |app|
+          # We only need to update DEA's when a running app gets / loses uris
+          if app.staged? && app.started?
+            # Old CC doesn't do the check on app state, because each DEA
+            # drops the update uri request if the app isn't running on it
+            # But I would still like to reduce message bus traffic
+            DeaClient.update_uris(app)
+          end
+        end
+        route.after_remove_app_hook do |app|
+          if app.staged? && app.started?
+            DeaClient.update_uris(app)
+          end
+        end
+      end
+      route
     end
 
     private
