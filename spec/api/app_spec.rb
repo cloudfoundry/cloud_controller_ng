@@ -183,6 +183,100 @@ describe VCAP::CloudController::App do
     end
   end
 
+  describe "on route change" do
+    let(:space) { Models::Space.make }
+    let(:domain) do
+      space.add_domain(
+        :name => "jesse.cloud",
+        :owning_organization => space.organization,
+      )
+    end
+
+    before :each do
+      user = make_developer_for_space(space)
+      # keeping the headers here so that it doesn't reset the global config...
+      @headers_for_user = headers_for(user)
+      @app = Models::App.make(
+        :space => space,
+        :state => "STARTED",
+      )
+      # OK I'm cheating here to skip staging...
+      @app.update(
+        :package_hash => "abc",
+        :droplet_hash => "def",
+        :package_state => "STAGED",
+      )
+      @app_url = "/v2/apps/#{@app.guid}"
+    end
+
+    it "sends message on dea.update when we add one url" do
+      route = domain.add_route(
+        :host => "app",
+        :organization => space.organization,
+      )
+
+      nats = double("mock nats")
+      config_override(:nats => nats)
+      nats.should_receive(:publish).with(
+        "dea.update",
+        json_match(
+          hash_including("uris" => ["app.jesse.cloud"]),
+        ),
+      )
+      EM.run do
+        put(
+          @app_url,
+          App::UpdateMessage.new(
+            :route_guids => [route.guid],
+          ).encode(),
+          @headers_for_user,
+        )
+        EM.stop
+      end
+      last_response.status.should == 201
+    end
+
+    it "sends message on dea.update when we remove a url" do
+      bar_route = @app.add_route(
+        :host => "bar",
+        :organization => space.organization,
+        :domain => domain,
+      )
+      route = @app.add_route(
+        :host => "foo",
+        :organization => space.organization,
+        :domain => domain,
+      )
+      get "#{@app_url}/routes", {}, @headers_for_user
+      decoded_response["resources"].map { |r|
+        r["metadata"]["guid"]
+      }.sort.should == [bar_route.guid, route.guid].sort
+
+      nats = double("mock nats")
+      config_override(:nats => nats)
+      # inject mock nats
+      MessageBus.configure(config)
+
+      nats.should_receive(:publish).with(
+        "dea.update",
+        json_match(
+          hash_including("uris" => ["foo.jesse.cloud"]),
+        ),
+      )
+      EM.run do
+        put(
+          @app_url,
+          App::UpdateMessage.new(
+            :route_guids => [route.guid],
+          ).encode,
+          @headers_for_user,
+        )
+        EM.stop
+      end
+      last_response.status.should == 201
+    end
+  end
+
   describe "Permissions" do
     include_context "permissions"
 

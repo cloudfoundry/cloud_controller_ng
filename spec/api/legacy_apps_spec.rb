@@ -521,6 +521,140 @@ describe VCAP::CloudController::LegacyApps do
 
       it_behaves_like "a vcap rest error response", /app name could not be found: name_does_not_exist/
     end
+
+    describe "on route change" do
+      it "sends a dea.update message when adding a URL to a running app" do
+        Models::App.make(
+          :name => "foo",
+          :space => user.default_space,
+          :state => "STARTED",
+        ).update(
+          # I hate that implicit save on package_hash=,
+          # but I'll bare with it while nothing breaks...
+          :package_hash   => "abc",
+          :droplet_hash   => "def",
+          :package_state  => "STAGED",
+        )
+
+        nats = double("mock nats")
+        nats.should_receive(:publish).with(
+          "dea.update",
+          json_match(
+            hash_including("uris" => ["bar.sharedorg.com", "foo.sharedorg.com"]),
+          ),
+        )
+        config_override(:nats => nats)
+        EM.run do
+          put(
+            "/apps/foo",
+            Yajl::Encoder.encode(
+              :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
+          EM.next_tick { EM.stop }
+        end
+      end
+
+      it "sends a dea.update message when removing a URL to a running app" do
+        Models::App.make(
+          :name => "foo",
+          :space => user.default_space,
+          :state => "STARTED",
+        ).update(
+          # I hate that implicit save on package_hash=,
+          # but I'll bare with it while nothing breaks...
+          :package_hash   => "abc",
+          :droplet_hash   => "def",
+          :package_state  => "STAGED",
+        )
+
+        black_hole = double
+        black_hole.stub(:publish)
+        config_override(:nats => black_hole)
+
+        nats = double("mock nats")
+        nats.should_receive(:publish).with(
+          "dea.update",
+          json_match(
+            hash_including("uris" => ["foo.sharedorg.com"]),
+          ),
+        )
+        EM.run do
+          put(
+            "/apps/foo",
+            Yajl::Encoder.encode(
+              :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
+          config_override(:nats => nats)
+          put(
+            "/apps/foo",
+            Yajl::Encoder.encode(
+              :uris => ["foo.sharedorg.com"],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
+          EM.next_tick { EM.stop }
+        end
+      end
+
+      it "does not send a dea.update message when adding a URL to a running app" do
+        Models::App.make(
+          :name => "foo",
+          :space => user.default_space,
+          :state => "STOPPED",
+        )
+        nats = double("mock nats")
+        nats.should_not_receive(:publish)
+        config_override(:nats => nats)
+        EM.run do
+          put(
+            "/apps/foo",
+            Yajl::Encoder.encode(
+              :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
+          EM.next_tick { EM.stop }
+        end
+      end
+
+      it "does not send a dea.update message when removing a URL to a running app" do
+        Models::App.make(
+          :name => "foo",
+          :space => user.default_space,
+          :state => "STOPPED",
+        )
+        nats = double("mock nats")
+        nats.should_not_receive(:publish)
+        config_override(:nats => nats)
+        EM.run do
+          put(
+            "/apps/foo",
+            Yajl::Encoder.encode(
+              :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
+          put(
+            "/apps/foo",
+            Yajl::Encoder.encode(
+              :uris => ["foo.sharedorg.com"],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
+          EM.next_tick { EM.stop }
+        end
+      end
+    end
   end
 
   describe "DELETE /apps/:name" do

@@ -61,6 +61,29 @@ module VCAP::CloudController
       end
     end
 
+    # This seems to be a common path to all update methods to hook this in.
+    # We will otherwise have to override +update+, +add_related+, and
+    # +remove_related+.
+    def find_id_and_validate_access(op, guid)
+      app = super
+      if op == :update
+        app.after_update_hook do
+          next unless app.staged?
+          # If it's transitioned from stopped to started, we already send out
+          # the full uris in dea start message
+          next if app.previous_changes.include?(:state)
+          # We only need to update DEA's when a running app gets / loses uris
+          if app.routes_changed? && app.started?
+            # Old CC doesn't do the check on app state, because each DEA
+            # drops the update uri request if the app isn't running on it
+            # But I would still like to reduce message bus traffic
+            DeaClient.update_uris(app)
+          end
+        end
+      end
+      app
+    end
+
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       if space_and_name_errors && space_and_name_errors.include?(:unique)
