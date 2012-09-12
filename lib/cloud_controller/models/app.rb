@@ -8,7 +8,7 @@ module VCAP::CloudController::Models
     many_to_one       :space
     many_to_one       :framework
     many_to_one       :runtime
-    many_to_many      :routes, :before_add => :validate_route
+    many_to_many      :routes, :before_add => :validate_route, :after_add => :mark_routes_changed, :after_remove => :mark_routes_changed
     one_to_many       :service_bindings, :after_remove => :after_remove_binding
 
     add_association_dependencies :routes => :nullify, :service_bindings => :destroy
@@ -183,6 +183,18 @@ module VCAP::CloudController::Models
       VCAP::CloudController::HealthManagerClient.healthy_instances(self)
     end
 
+    # A boolean mark is attached to an instance of this Model when the
+    # associated routes have changed, enabling deferred actions like updating
+    # uri's to DEA's.
+    #
+    # Note that we don't clear this state automatically, in the hope that the
+    # in-memory object is ephemeral
+    #
+    # @return [Boolean, nil] whether routes have been changed
+    def routes_changed?
+      @routes_changed
+    end
+
     private
 
     # @param  [Hash, nil] old
@@ -193,6 +205,10 @@ module VCAP::CloudController::Models
         return new && new.has_key?(key)
       end
       return new.nil? || ! new.has_key?(key) || old[key] != new[key]
+    end
+
+    def mark_routes_changed(_)
+      @routes_changed = true
     end
 
   end
