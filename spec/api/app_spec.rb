@@ -103,7 +103,13 @@ describe VCAP::CloudController::App do
   end
 
   describe "state updates" do
-    let(:app_obj) { VCAP::CloudController::Models::App.make }
+    let(:app_obj) do
+      app = VCAP::CloudController::Models::App.make
+      # haxx to make the app appear staged
+      app.package_hash = "abc"
+      app.droplet_hash = "def"
+      app
+    end
 
     it "should start an app when moving from STOPPED to STARTED" do
       app_obj.state = "STOPPED"
@@ -125,7 +131,13 @@ describe VCAP::CloudController::App do
   end
 
   describe "instance updates" do
-    let(:app_obj) { VCAP::CloudController::Models::App.make }
+    let(:app_obj) do
+      app = VCAP::CloudController::Models::App.make
+      # haxx to make the app appear staged
+      app.package_hash = "abc"
+      app.droplet_hash = "def"
+      app
+    end
 
     it "should change the running instances for an already started app" do
       app_obj.state = "STARTED"
