@@ -22,7 +22,7 @@ module VCAP::CloudController
       attribute  :instances,           Integer,    :default => 1
       attribute  :file_descriptors,    Integer,    :default => 256
       attribute  :disk_quota,          Integer,    :default => 256
-      attribute  :state,               String,     :default => "STOPPED"
+      attribute  :state,               String,     :default => "STOPPED", :exclude_in => :create
       to_many    :service_bindings,    :exclude_in => :create
       to_many    :routes
     end
@@ -48,6 +48,7 @@ module VCAP::CloudController
     def after_update(app, changes)
       AppStager.stage_app(app) if app.needs_staging?
 
+      return unless app.staged?
       if changes.include?(:state)
         if app.started?
           DeaClient.start(app)
