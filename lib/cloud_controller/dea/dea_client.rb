@@ -268,11 +268,12 @@ module VCAP::CloudController
             svc = sb.service_instance.service_plan.service
             {
               :name => sb.service_instance.name,
-              :label => svc.label,
-              :vendor => svc.provider,
-              :version => svc.version,
+              :label => "#{svc.label}-#{svc.version}",
               :plan => sb.service_instance.service_plan.name,
-              :credentials => sb.credentials
+              :provider => svc.provider,
+              :version => svc.version,
+              :credentials => sb.credentials,
+              :vendor => svc.label
             }
           end,
           :limits => {
