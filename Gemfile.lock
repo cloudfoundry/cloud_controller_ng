@@ -1,11 +1,4 @@
 GIT
-  remote: git://github.com/cloudfoundry/eventmachine.git
-  revision: 2806c630d8631d5dcf9fb2555f665b829052aabe
-  branch: release-0.12.11-cf
-  specs:
-    eventmachine (0.12.11.cloudfoundry.3)
-
-GIT
   remote: git://github.com/cloudfoundry/uaa
   revision: 792e78165f7702e1e9d512198e6cf9a035ecddab
   ref: 792e7816
@@ -70,6 +63,7 @@ GEM
       http_parser.rb (>= 0.5.1)
     em-socksify (0.1.0)
       eventmachine
+    eventmachine (1.0.0)
     grape (0.2.1)
       hashie (~> 1.2)
       multi_json
@@ -154,7 +148,7 @@ DEPENDENCIES
   bcrypt-ruby
   cf-uaa-client (~> 0.2.0)!
   ci_reporter
-  eventmachine!
+  eventmachine (~> 1.0.0)
   httpclient
   machinist (~> 1.0.6)
   membrane (~> 0.0.2)
