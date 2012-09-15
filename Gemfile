@@ -2,7 +2,7 @@ source :rubygems
 
 gem "rake"
 gem "bcrypt-ruby"
-gem 'eventmachine', :git => 'git://github.com/cloudfoundry/eventmachine.git', :branch => 'release-0.12.11-cf'
+gem 'eventmachine', "~> 1.0.0"
 gem "redis"
 gem "rfc822"
 gem "sequel"
