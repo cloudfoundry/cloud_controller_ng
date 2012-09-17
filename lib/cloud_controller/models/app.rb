@@ -82,6 +82,7 @@ module VCAP::CloudController::Models
 
     def after_destroy_commit
       VCAP::CloudController::DeaClient.stop(self) if started?
+      VCAP::CloudController::AppStager.delete_droplet(self)
     end
 
     # We sadly have to do this ourselves because the serialization plugin
