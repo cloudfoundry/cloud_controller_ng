@@ -4,6 +4,10 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe Models::App do
+    before do
+      VCAP::CloudController::AppStager.stub(:delete_droplet)
+    end
+
     let(:org) { Models::Organization.make }
     let(:space) { Models::Space.make(:organization => org) }
     let(:domain) do
@@ -332,6 +336,33 @@ module VCAP::CloudController
         app.add_route_by_guid(Models::Route.make.guid)
         expect { app.save }.should raise_error(Models::App::InvalidRouteRelation)
         app.routes.should be_empty
+      end
+    end
+
+    describe "destroy" do
+      let(:app) { Models::App.make }
+
+      context "with a started app" do
+        it "should stop the app on the dea" do
+          app.state = "STARTED"
+          app.save
+          DeaClient.should_receive(:stop).with(app)
+          app.destroy
+        end
+      end
+
+      context "with a stopped app" do
+        it "should not stop the app on the dea" do
+          app.state = "STOPPED"
+          app.save
+          DeaClient.should_not_receive(:stop)
+          app.destroy
+        end
+      end
+
+      it "should remove the droplet" do
+        AppStager.should_receive(:delete_droplet).with(app)
+        app.destroy
       end
     end
   end
