@@ -50,14 +50,14 @@ def make_service_binding_for_service_instance(service_instance)
 end
 
 def make_space_for_user(user)
-  space = Models::Space.make
+  space = VCAP::CloudController::Models::Space.make
   space.organization.add_user(user)
   space.add_developer(user)
   space
 end
 
 def make_user_with_default_space(opts = {})
-  user = Models::User.make(:admin => opts.has_key?(:admin), :active => true)
+  user = VCAP::CloudController::Models::User.make(:admin => opts.has_key?(:admin), :active => true)
   space = make_space_for_user(user)
   user.default_space = space
   user

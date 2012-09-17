@@ -18,9 +18,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
       if name_errors && name_errors.include?(:unique)
-        RuntimeNameTaken.new(attributes["name"])
+        Errors::RuntimeNameTaken.new(attributes["name"])
       else
-        RuntimeInvalid.new(e.errors.full_messages)
+        Errors::RuntimeInvalid.new(e.errors.full_messages)
       end
     end
   end

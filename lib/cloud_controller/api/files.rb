@@ -33,7 +33,7 @@ module VCAP::CloudController
         msg << " as the instance_id: #{instance_id} is not a"
         msg << " non-negative integer."
 
-        raise FileError.new(msg)
+        raise Errors::FileError.new(msg)
       end
 
       url, credentials = DeaClient.get_file_url(app, instance_id, path)
@@ -46,7 +46,7 @@ module VCAP::CloudController
         msg << " as there was an error retrieving the files"
         msg << " from the url: #{url}."
 
-        raise FileError.new(msg)
+        raise Errors::FileError.new(msg)
       end
 
       [HTTP::OK, http_response.body]

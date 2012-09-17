@@ -38,9 +38,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:host, :domain_id])
       if name_errors && name_errors.include?(:unique)
-        RouteHostTaken.new(attributes["host"])
+        Errors::RouteHostTaken.new(attributes["host"])
       else
-        RouteInvalid.new(e.errors.full_messages)
+        Errors::RouteInvalid.new(e.errors.full_messages)
       end
     end
 
