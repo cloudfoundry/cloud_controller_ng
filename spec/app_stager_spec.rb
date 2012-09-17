@@ -113,5 +113,21 @@ module VCAP::CloudController
         app_obj.staged?.should be_false
       end
     end
+
+    describe "delete_droplet" do
+      let(:app_obj) { Models::App.make }
+
+      it "should do nothing if the droplet does not exist" do
+        File.should_receive(:exists?).and_return(false)
+        File.should_not_receive(:delete)
+        AppStager.delete_droplet(app_obj)
+      end
+
+      it "should delete the droploet if it exists" do
+        File.should_receive(:exists?).and_return(true)
+        File.should_receive(:delete).with(AppStager.droplet_path(app_obj))
+        AppStager.delete_droplet(app_obj)
+      end
+    end
   end
 end
