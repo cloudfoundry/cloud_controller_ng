@@ -61,6 +61,11 @@ module VCAP::CloudController
         File.join(droplets_path, "droplet_#{app.guid}")
       end
 
+      def delete_droplet(app)
+        path = droplet_path(app)
+        File.delete(path) if File.exists? path
+      end
+
       private
 
       def staging_request(app)
