@@ -60,7 +60,7 @@ module VCAP::CloudController::RestController
             api.dispatch(:add_related, id, name, other_id)
           end
 
-          delete "#{path_id}/#{name}/:other_id", do |api, id, other_id|
+          delete "#{path_id}/#{name}/:other_id" do |api, id, other_id|
             api.dispatch(:remove_related, id, name, other_id)
           end
         end

@@ -17,6 +17,8 @@
 require "steno"
 
 class VCAP::CloudController::ResourcePool
+  class NotImplementedError < StandardError; end
+
   class << self
     attr_accessor :minimum_size, :maximum_size
 

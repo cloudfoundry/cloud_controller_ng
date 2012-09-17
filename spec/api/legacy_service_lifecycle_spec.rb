@@ -3,7 +3,7 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
-  describe LegacyServiceLifecycle do
+  describe VCAP::CloudController::LegacyServiceLifecycle do
     before :each do
       @user = make_user_with_default_space
       @mock_client = double("mock service gateway client")
