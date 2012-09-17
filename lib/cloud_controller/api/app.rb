@@ -22,7 +22,11 @@ module VCAP::CloudController
       attribute  :instances,           Integer,    :default => 1
       attribute  :file_descriptors,    Integer,    :default => 256
       attribute  :disk_quota,          Integer,    :default => 256
-      attribute  :state,               String,     :default => "STOPPED", :exclude_in => :create
+
+      # TODO: renable exclude_in => :create for state, but not until it is
+      # coordinated with ilia and ramnivas
+      attribute  :state,               String,     :default => "STOPPED" # , :exclude_in => :create
+
       to_many    :service_bindings,    :exclude_in => :create
       to_many    :routes
     end
