@@ -17,6 +17,7 @@
 require "steno"
 
 class VCAP::CloudController::ResourcePool
+
   class << self
     attr_accessor :minimum_size, :maximum_size
 

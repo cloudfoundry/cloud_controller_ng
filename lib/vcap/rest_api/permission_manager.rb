@@ -60,7 +60,7 @@ module VCAP::RestAPI
           setup_dsl(controller)
         end
 
-        k.new(self).instance_eval(&blk)
+        k.new.instance_eval(&blk)
       end
 
       # Predicate to check if a permission or set of permissions

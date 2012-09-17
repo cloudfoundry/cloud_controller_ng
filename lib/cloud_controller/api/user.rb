@@ -29,9 +29,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       guid_errors = e.errors.on(:guid)
       if guid_errors && guid_errors.include?(:unique)
-        UaaIdTaken.new(attributes["guid"])
+        Errors::UaaIdTaken.new(attributes["guid"])
       else
-        UserInvalid.new(e.errors.full_messages)
+        Errors::UserInvalid.new(e.errors.full_messages)
       end
     end
   end

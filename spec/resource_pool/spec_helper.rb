@@ -15,7 +15,7 @@ module VCAP::CloudController::ResourcePoolSpecHelper
     end
 
     let(:dummy_descriptor) do
-      { "sha1" => Digest::SHA1.new("abc").hexdigest, "size" => 1}
+      { "sha1" => Digest::SHA1.hexdigest("abc"), "size" => 1}
     end
 
     before(:all) do

@@ -4,7 +4,7 @@ require "cloud_controller/rest_controller/base"
 
 module VCAP::CloudController
   class BulkResponse < JsonMessage
-    required :results, do
+    required :results do
       dict(
         any,
         {
@@ -25,7 +25,7 @@ module VCAP::CloudController
   end
 
   class UserCountsResponse < JsonMessage
-    required :counts, do
+    required :counts do
       {
         "user" => Integer,
       }

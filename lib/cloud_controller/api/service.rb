@@ -25,9 +25,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       label_provider_errors = e.errors.on([:label, :provider])
       if label_provider_errors && label_provider_errors.include?(:unique)
-        ServiceLabelTaken.new("#{attributes["label"]}-#{attributes["provider"]}")
+        Errors::ServiceLabelTaken.new("#{attributes["label"]}-#{attributes["provider"]}")
       else
-        ServiceInvalid.new(e.errors.full_messages)
+        Errors::ServiceInvalid.new(e.errors.full_messages)
       end
     end
   end

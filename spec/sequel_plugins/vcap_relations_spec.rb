@@ -50,11 +50,15 @@ describe "Sequel::Plugins::VcapRelations" do
     define_model :Name, db
   end
 
+  let(:owner_klass) { self.class.const_get(:Owner) }
+  let(:dog_klass) { self.class.const_get(:Dog) }
+  let(:name_klass) { self.class.const_get(:Name) }
+
   describe "#one_to_many" do
     before do
-      @o = Owner.create
+      @o = owner_klass.create
       lambda { @o.dogs }.should raise_error(NoMethodError)
-      Owner.one_to_many :dogs
+      owner_klass.one_to_many :dogs
     end
 
     it "should add a <relation> method" do
@@ -62,21 +66,21 @@ describe "Sequel::Plugins::VcapRelations" do
     end
 
     it "should add a add_<relation> method that takes an object" do
-      d = Dog.create
+      d = dog_klass.create
       @o.add_dog d
       @o.dogs.should include(d)
     end
 
     it "should add a add_<relation> method that takes an id" do
-      d = Dog.create
+      d = dog_klass.create
       @o.add_dog d.id
       d.refresh
       @o.dogs.should include(d)
     end
 
     it "should add a <relation>_ids= method that takes an array of ids" do
-      d1 = Dog.create
-      d2 = Dog.create
+      d1 = dog_klass.create
+      d2 = dog_klass.create
 
       @o.dog_ids = [d1.id, d2.id]
       d1.refresh
@@ -92,8 +96,8 @@ describe "Sequel::Plugins::VcapRelations" do
     end
 
     it "should add a add_<relation>_guids= method that takes a guid" do
-      d1 = Dog.create
-      d2 = Dog.create
+      d1 = dog_klass.create
+      d2 = dog_klass.create
 
       @o.dog_guids = [d1.guid, d2.guid]
       d1.refresh
@@ -112,8 +116,8 @@ describe "Sequel::Plugins::VcapRelations" do
       @o.dog_ids.should be_empty
       @o.dog_ids.respond_to?(:each).should == true
 
-      d1 = Dog.create
-      d2 = Dog.create
+      d1 = dog_klass.create
+      d2 = dog_klass.create
 
       @o.add_dog d1
       @o.dog_ids.should include(d1.id)
@@ -124,7 +128,7 @@ describe "Sequel::Plugins::VcapRelations" do
     end
 
     it "should allow multiple adds of the same id" do
-      d1 = Dog.create
+      d1 = dog_klass.create
       @o.add_dog d1
       @o.add_dog d1
 
@@ -133,8 +137,8 @@ describe "Sequel::Plugins::VcapRelations" do
     end
 
     it "should define a remove_<relation> method that takes an object" do
-      d1 = Dog.create
-      d2 = Dog.create
+      d1 = dog_klass.create
+      d2 = dog_klass.create
 
       @o.add_dog d1
       @o.add_dog d2
@@ -150,8 +154,8 @@ describe "Sequel::Plugins::VcapRelations" do
     end
 
     it "should define a remove_<relation> method that takes an id" do
-      d1 = Dog.create
-      d2 = Dog.create
+      d1 = dog_klass.create
+      d2 = dog_klass.create
 
       @o.add_dog d1
       @o.add_dog d2
@@ -169,17 +173,17 @@ describe "Sequel::Plugins::VcapRelations" do
 
   describe "#many_to_many" do
     before do
-      @d1 = Dog.create
-      @d2 = Dog.create
+      @d1 = dog_klass.create
+      @d2 = dog_klass.create
 
-      @n1 = Name.create
-      @n2 = Name.create
+      @n1 = name_klass.create
+      @n2 = name_klass.create
 
       lambda { @d1.names }.should raise_error(NoMethodError)
       lambda { @n1.names }.should raise_error(NoMethodError)
 
-      Dog.many_to_many :names
-      Name.many_to_many :dogs
+      dog_klass.many_to_many :names
+      name_klass.many_to_many :dogs
 
       @d1.names.should be_empty
       @d2.names.should be_empty
