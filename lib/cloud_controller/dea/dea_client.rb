@@ -18,6 +18,7 @@ module VCAP::CloudController
 
       def start(app)
         start_instances_in_range(app, (0...app.instances))
+        app.routes_changed = false
       end
 
       def stop(app)
@@ -230,6 +231,7 @@ module VCAP::CloudController
         return unless app.staged?
         message = dea_update_message(app)
         dea_publish("update", message)
+        app.routes_changed = false
       end
 
       private

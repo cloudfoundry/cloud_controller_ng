@@ -8,7 +8,7 @@ module VCAP::CloudController::Models
     many_to_one       :space
     many_to_one       :framework
     many_to_one       :runtime
-    many_to_many      :routes, :before_add => :validate_route
+    many_to_many      :routes, :before_add => :validate_route, :after_add => :mark_routes_changed, :after_remove => :mark_routes_changed
     one_to_many       :service_bindings, :after_remove => :after_remove_binding
 
     add_association_dependencies :routes => :nullify, :service_bindings => :destroy
@@ -30,6 +30,10 @@ module VCAP::CloudController::Models
 
     AppStates = %w[STOPPED STARTED].map(&:freeze).freeze
     PackageStates = %w[PENDING STAGED FAILED].map(&:freeze).freeze
+
+    # marked as true on changing the associated routes, and reset by
+    # +DeaClient.start+
+    attr_accessor :routes_changed
 
     def validate
       # TODO: if we move the defaults out of the migration and up to the
@@ -184,6 +188,15 @@ module VCAP::CloudController::Models
       VCAP::CloudController::HealthManagerClient.healthy_instances(self)
     end
 
+    # returns True if we need to update the DEA's with
+    # associated URL's.
+    # We also assume that the relevant methods in +DeaClient+ will reset
+    # this app's routes_changed state
+    # @return [Boolean, nil]
+    def dea_update_pending?
+      staged? && started? && @routes_changed
+    end
+
     private
 
     # @param  [Hash, nil] old
@@ -194,6 +207,10 @@ module VCAP::CloudController::Models
         return new && new.has_key?(key)
       end
       return new.nil? || ! new.has_key?(key) || old[key] != new[key]
+    end
+
+    def mark_routes_changed(_)
+      @routes_changed = true
     end
 
   end

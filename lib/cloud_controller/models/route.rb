@@ -7,7 +7,7 @@ module VCAP::CloudController::Models
     many_to_one :domain
     many_to_one :organization
 
-    many_to_many :apps, :before_add => :validate_app
+    many_to_many :apps, :before_add => :validate_app, :after_add => :mark_app_routes_changed, :after_remove => :mark_app_routes_changed
     add_association_dependencies :apps => :nullify
 
     export_attributes :host, :domain_guid, :organization_guid
@@ -64,5 +64,11 @@ module VCAP::CloudController::Models
 
       user_visibility_filter_with_admin_override(:organization => orgs)
     end
+
+    private
+    def mark_app_routes_changed(app)
+      app.routes_changed = true
+    end
+
   end
 end
