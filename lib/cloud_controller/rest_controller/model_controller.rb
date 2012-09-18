@@ -62,6 +62,7 @@ module VCAP::CloudController::RestController
       end
 
       after_update(obj, changes) if respond_to?(:after_update)
+      after_modify(obj)
       [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     end
 
@@ -153,6 +154,7 @@ module VCAP::CloudController::RestController
       @request_attrs = { singular_name => other_id }
       obj = find_id_and_validate_access(:update, id)
       obj.send("#{verb}_#{singular_name}_by_guid", other_id)
+      after_modify(obj)
       [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
     end
 
@@ -202,6 +204,13 @@ module VCAP::CloudController::RestController
     # @return [Sequel::Model] The model associated with this api endpoint.
     def model
       self.class.model
+    end
+
+    private
+    # Hook called at the end of +update+, +add_related+ and +remove_related+
+    # The default behavior is to do nothing.
+    # @param [Models::(model_class_name)] obj
+    def after_modify(obj)
     end
 
     class << self
