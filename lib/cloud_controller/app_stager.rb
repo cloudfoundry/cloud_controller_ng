@@ -93,13 +93,17 @@ module VCAP::CloudController
       end
 
       def service_binding_to_staging_request(sb)
+        instance = sb.service_instance
+        plan = instance.service_plan
+        service = plan.service
+
         {
-          :label        => sb.service_instance.service_plan.service.label,
-          :tabs         => {}, # TODO: can this be removed?
-          :name         => sb.service_instance.name,
+          :label        => "#{service.label}-#{service.version}",
+          :tags         => {}, # TODO: can this be removed?
+          :name         => instance.name,
           :credentials  => sb.credentials,
           :options      => sb.binding_options || {},
-          :plan         => sb.service_instance.service_plan.name,
+          :plan         => instance.service_plan.name,
           :plan_options => {} # TODO: can this be removed?
         }
       end
