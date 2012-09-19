@@ -115,6 +115,10 @@ module VCAP::CloudController
     end
 
     describe "delete_droplet" do
+      before :each do
+        AppStager.unstub(:delete_droplet)
+      end
+
       let(:app_obj) { Models::App.make }
 
       it "should do nothing if the droplet does not exist" do
