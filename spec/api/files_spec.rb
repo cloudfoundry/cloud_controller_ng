@@ -17,13 +17,13 @@ module VCAP::CloudController
               {},
               headers_for(@developer))
 
-              last_response.status.should == 400
+          last_response.status.should == 400
 
-              get("/v2/apps/#{@app.guid}/instances/-1/files",
-                  {},
-                  headers_for(@developer))
+          get("/v2/apps/#{@app.guid}/instances/-1/files",
+              {},
+              headers_for(@developer))
 
-                  last_response.status.should == 400
+          last_response.status.should == 400
         end
 
         it "should return 400 when there is an error finding the instance" do
@@ -36,7 +36,7 @@ module VCAP::CloudController
               {},
               headers_for(@developer))
 
-              last_response.status.should == 400
+          last_response.status.should == 400
         end
 
         it "should return 400 when accessing of the file URL fails" do
@@ -62,7 +62,7 @@ module VCAP::CloudController
               {},
               headers_for(@developer))
 
-              last_response.status.should == 400
+          last_response.status.should == 400
         end
 
         it "should return the expected files when path is specified" do
@@ -89,8 +89,8 @@ module VCAP::CloudController
               {},
               headers_for(@developer))
 
-              last_response.status.should == 200
-              last_response.body.should == "files"
+          last_response.status.should == 200
+          last_response.body.should == "files"
         end
 
         it "should return the expected files when no path is specified" do
@@ -117,8 +117,8 @@ module VCAP::CloudController
               {},
               headers_for(@developer))
 
-              last_response.status.should == 200
-              last_response.body.should == "files"
+          last_response.status.should == 200
+          last_response.body.should == "files"
         end
 
         it "should return the staging task log if it exists" do
@@ -127,14 +127,14 @@ module VCAP::CloudController
           task_log = StagingTaskLog.new(@app.guid, "task log", redis_client)
           Redis.stub(:new).and_return(redis_client)
           StagingTaskLog.should_receive(:fetch).with(@app.guid, redis_client)
-          .and_return(task_log)
+            .and_return(task_log)
 
           get("/v2/apps/#{@app.guid}/instances/1/files/logs/staging.log",
               {},
               headers_for(@developer))
 
-              last_response.status.should == 200
-              last_response.body.should == "task log"
+          last_response.status.should == 200
+          last_response.body.should == "task log"
         end
 
         it "should return 404 if staging task log is absent" do
@@ -142,13 +142,13 @@ module VCAP::CloudController
 
           Redis.stub(:new).and_return(redis_client)
           StagingTaskLog.should_receive(:fetch).with(@app.guid, redis_client)
-          .and_return(nil)
+            .and_return(nil)
 
           get("/v2/apps/#{@app.guid}/instances/1/files/logs/staging.log",
               {},
               headers_for(@developer))
 
-              last_response.status.should == 404
+          last_response.status.should == 404
         end
       end
 
@@ -158,23 +158,23 @@ module VCAP::CloudController
               {},
               headers_for(@user))
 
-              last_response.status.should == 403
+          last_response.status.should == 403
 
-              @app.state = "STARTED"
-              @app.instances = 10
-              @app.save
+          @app.state = "STARTED"
+          @app.instances = 10
+          @app.save
 
-              get("/v2/apps/#{@app.guid}/instances/5/files",
-                  {},
-                  headers_for(@user))
+          get("/v2/apps/#{@app.guid}/instances/5/files",
+              {},
+              headers_for(@user))
 
-                  last_response.status.should == 403
+          last_response.status.should == 403
 
-                  get("/v2/apps/#{@app.guid}/instances/5/files/path",
-                      {},
-                      headers_for(@user))
+          get("/v2/apps/#{@app.guid}/instances/5/files/path",
+              {},
+              headers_for(@user))
 
-                      last_response.status.should == 403
+          last_response.status.should == 403
         end
       end
     end
