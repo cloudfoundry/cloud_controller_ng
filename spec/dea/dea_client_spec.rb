@@ -290,7 +290,7 @@ module VCAP::CloudController
         instance_found = {
           :file_uri => "file_uri",
           :staged => "staged",
-          :credentials => "credentials",
+          :credentials => ["username", "password"],
         }
 
         DeaClient.should_receive(:find_specific_instance).once
@@ -299,7 +299,7 @@ module VCAP::CloudController
         with_em_and_thread do
           file_url, credentials = DeaClient.get_file_url(app, instance, path)
           file_url.should == "file_uristaged/test"
-          credentials.should == "credentials"
+          credentials.should == ["username", "password"]
         end
       end
 
