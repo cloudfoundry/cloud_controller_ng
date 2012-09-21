@@ -121,6 +121,61 @@ module VCAP::CloudController
           last_response.body.should == "files"
         end
 
+        it "should accept tail query parameter" do
+          instance_id = 5
+
+          @app.state = "STARTED"
+          @app.instances = 10
+          @app.save
+          @app.refresh
+
+          DeaClient.should_receive(:get_file_url).with(@app, 5, "path").
+            and_return(["file_uri", ["username", "password"]])
+
+          client = mock("http client")
+          HTTPClient.should_receive(:new).and_return(client)
+          client.should_receive(:set_auth).with(nil, "username", "password")
+
+          response = mock("http response")
+          client.should_receive(:get).with("file_uri&tail").and_return(response)
+          response.should_receive(:status).and_return(200)
+          response.should_receive(:body).and_return("files")
+
+          get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path?tail",
+              {},
+              headers_for(@developer))
+
+          last_response.status.should == 200
+          last_response.body.should == "files"
+        end
+
+        it "should ignore absence of credentials in dea response" do
+          instance_id = 5
+
+          @app.state = "STARTED"
+          @app.instances = 10
+          @app.save
+          @app.refresh
+
+          DeaClient.should_receive(:get_file_url).with(@app, 5, nil).
+            and_return(["file_uri/", [nil, nil]])
+
+          client = mock("http client")
+          HTTPClient.should_receive(:new).and_return(client)
+
+          response = mock("http response")
+          client.should_receive(:get).with("file_uri/").and_return(response)
+          response.should_receive(:status).and_return(200)
+          response.should_receive(:body).and_return("files")
+
+          get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files",
+              {},
+              headers_for(@developer))
+
+          last_response.status.should == 200
+          last_response.body.should == "files"
+        end
+
         it "should return the staging task log if it exists" do
           redis_client = mock("redis")
 

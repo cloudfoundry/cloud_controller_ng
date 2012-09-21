@@ -37,6 +37,7 @@ module VCAP::CloudController
       end
 
       url, credentials = DeaClient.get_file_url(app, instance_id, path)
+      url << "&tail" if params.include?("tail")
       http_response = http_get(url, credentials[0], credentials[1])
 
       # TODO: nginx acceleration
@@ -54,7 +55,9 @@ module VCAP::CloudController
 
     def http_get(url, username, password)
       client = HTTPClient.new
-      client.set_auth(nil, username, password)
+      if username != nil && password != nil
+        client.set_auth(nil, username, password)
+      end
       client.get(url)
     end
 

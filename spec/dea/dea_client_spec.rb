@@ -273,7 +273,7 @@ module VCAP::CloudController
         end
       end
 
-      it "should return the file url if the required instance is found" do
+      it "should return the file url if the required instance is found via DEA v1" do
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
 
@@ -283,13 +283,14 @@ module VCAP::CloudController
         search_options = {
           :indices => [instance],
           :states => [:STARTING, :RUNNING, :CRASHED],
-          :version => app.version
+          :version => app.version,
+          :path => "test",
         }
 
         instance_found = {
           :file_uri => "file_uri",
           :staged => "staged",
-          :credentials => "credentials"
+          :credentials => "credentials",
         }
 
         DeaClient.should_receive(:find_specific_instance).once
@@ -299,6 +300,38 @@ module VCAP::CloudController
           file_url, credentials = DeaClient.get_file_url(app, instance, path)
           file_url.should == "file_uristaged/test"
           credentials.should == "credentials"
+        end
+      end
+
+      it "should return the file url from DEA v2 if the required instance is found via DEA v2 as well as v1" do
+        app.instances = 2
+        app.should_receive(:stopped?).once.and_return(false)
+
+        instance = 1
+        path = "test"
+
+        search_options = {
+          :indices => [instance],
+          :states => [:STARTING, :RUNNING, :CRASHED],
+          :version => app.version,
+          :path => "test",
+        }
+
+        instance_found = {
+          :file_uri_v2 => "file_uri_v2",
+          :file_uri => "file_uri",
+          :staged => "staged",
+          :credentials => ["username", "password"],
+        }
+
+        DeaClient.should_receive(:find_specific_instance).once
+        .with(app, search_options).and_return(instance_found)
+
+        with_em_and_thread do
+          file_url, credentials = DeaClient.get_file_url(app, instance, path)
+          file_url.should == "file_uri_v2"
+
+          credentials.should == [nil, nil]
         end
       end
 
@@ -312,7 +345,8 @@ module VCAP::CloudController
         search_options = {
           :indices => [instance],
           :states => [:STARTING, :RUNNING, :CRASHED],
-          :version => app.version
+          :version => app.version,
+          :path => "test",
         }
 
         DeaClient.should_receive(:find_specific_instance).once
