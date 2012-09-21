@@ -291,7 +291,7 @@ module VCAP::CloudController
         instance_found = {
           :file_uri => "file_uri",
           :staged => "staged",
-          :credentials => "credentials"
+          :credentials => ["username", "password"]
         }
 
         DeaClient.should_receive(:find_specific_instance).
@@ -301,7 +301,7 @@ module VCAP::CloudController
           file_url, credentials = DeaClient.get_file_url(app, instance,
                                                          :path => path)
           file_url.should == "file_uristaged/test"
-          credentials.should == "credentials"
+          credentials.should == ["username", "password"]
         end
       end
 
@@ -356,7 +356,7 @@ module VCAP::CloudController
         instance_found = {
           :file_uri => "file_uri",
           :staged => "staged",
-          :credentials => "credentials"
+          :credentials => ["username", "password"]
         }
 
         DeaClient.should_receive(:find_specific_instance).
@@ -366,7 +366,7 @@ module VCAP::CloudController
           opts = {:path => path, :has_tail_query => true}
           file_url, credentials = DeaClient.get_file_url(app, instance, opts)
           file_url.should == "file_uristaged/test"
-          credentials.should == "credentials"
+          credentials.should == ["username", "password"]
         end
       end
 
