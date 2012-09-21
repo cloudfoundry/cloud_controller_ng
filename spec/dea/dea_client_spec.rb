@@ -158,8 +158,8 @@ module VCAP::CloudController
 
         instance_json = "\"instance\""
         encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
-        message_bus.should_receive(:request).with("dea.find.droplet", encoded, {})
-        .and_return([instance_json])
+        message_bus.should_receive(:request).with("dea.find.droplet", encoded, {}).
+          and_return([instance_json])
 
         with_em_and_thread do
           DeaClient.find_specific_instance(app, { :other_opt => "value" })
@@ -293,8 +293,8 @@ module VCAP::CloudController
           :credentials => ["username", "password"],
         }
 
-        DeaClient.should_receive(:find_specific_instance).once
-        .with(app, search_options).and_return(instance_found)
+        DeaClient.should_receive(:find_specific_instance).
+          with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
           file_url, credentials = DeaClient.get_file_url(app, instance, path)
@@ -324,8 +324,8 @@ module VCAP::CloudController
           :credentials => ["username", "password"],
         }
 
-        DeaClient.should_receive(:find_specific_instance).once
-        .with(app, search_options).and_return(instance_found)
+        DeaClient.should_receive(:find_specific_instance).
+            with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
           file_url, credentials = DeaClient.get_file_url(app, instance, path)
@@ -349,8 +349,8 @@ module VCAP::CloudController
           :path => "test",
         }
 
-        DeaClient.should_receive(:find_specific_instance).once
-        .with(app, search_options).and_return(nil)
+        DeaClient.should_receive(:find_specific_instance).
+            with(app, search_options).and_return(nil)
 
         with_em_and_thread do
           expect {
@@ -411,8 +411,8 @@ module VCAP::CloudController
           :stats => stats,
         }
 
-        DeaClient.should_receive(:find_instances).once
-        .with(app, search_options).and_return([instance_0, instance_1])
+        DeaClient.should_receive(:find_instances).
+            with(app, search_options).and_return([instance_0, instance_1])
 
         with_em_and_thread do
           app_stats = DeaClient.find_stats(app)
@@ -448,8 +448,8 @@ module VCAP::CloudController
 
         Time.should_receive(:now).once.and_return(1)
 
-        DeaClient.should_receive(:find_instances).once
-        .with(app, search_options).and_return([instance])
+        DeaClient.should_receive(:find_instances).
+          with(app, search_options).and_return([instance])
 
         with_em_and_thread do
           app_stats = DeaClient.find_stats(app)
@@ -497,10 +497,10 @@ module VCAP::CloudController
 
         Time.should_receive(:now).and_return(1)
 
-        DeaClient.should_receive(:find_instances).once
-        .with(app, search_options).and_return([instance_0,
-                                               instance_1,
-                                               instance_2])
+        DeaClient.should_receive(:find_instances).
+          with(app, search_options).and_return([instance_0,
+                                                instance_1,
+                                                instance_2])
 
         with_em_and_thread do
           app_stats = DeaClient.find_stats(app)
@@ -550,8 +550,8 @@ module VCAP::CloudController
           ],
         }
 
-        HealthManagerClient.should_receive(:find_status)
-        .with(app, search_options).and_return(flapping_instances)
+        HealthManagerClient.should_receive(:find_status).
+            with(app, search_options).and_return(flapping_instances)
 
         # Should not find starting or running instances if all instances are
         # flapping.
@@ -588,8 +588,8 @@ module VCAP::CloudController
           ],
         }
 
-        HealthManagerClient.should_receive(:find_status)
-        .with(app, search_options).and_return(flapping_instances)
+        HealthManagerClient.should_receive(:find_status).
+            with(app, search_options).and_return(flapping_instances)
 
         search_options = {
           :states => [:STARTING, :RUNNING],
@@ -632,8 +632,8 @@ module VCAP::CloudController
           ],
         }
 
-        HealthManagerClient.should_receive(:find_status)
-        .with(app, search_options).and_return(flapping_instances)
+        HealthManagerClient.should_receive(:find_status).
+          with(app, search_options).and_return(flapping_instances)
 
         search_options = {
           :states => [:STARTING, :RUNNING],
@@ -700,8 +700,8 @@ module VCAP::CloudController
           :version => app.version,
         }
 
-        HealthManagerClient.should_receive(:find_status)
-        .with(app, search_options)
+        HealthManagerClient.should_receive(:find_status).
+          with(app, search_options)
 
         search_options = {
           :states => [:STARTING, :RUNNING],
@@ -757,8 +757,8 @@ module VCAP::CloudController
           :version => app.version,
         }
 
-        HealthManagerClient.should_receive(:find_status)
-        .with(app, search_options)
+        HealthManagerClient.should_receive(:find_status).
+          with(app, search_options)
 
         search_options = {
           :states => [:STARTING, :RUNNING],
