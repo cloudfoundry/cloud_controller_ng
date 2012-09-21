@@ -238,7 +238,7 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_url(app, instance, path)
+            DeaClient.get_file_url(app, instance, :path => path)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
@@ -260,7 +260,7 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_url(app, instance, path)
+            DeaClient.get_file_url(app, instance, :path => path)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
@@ -283,7 +283,9 @@ module VCAP::CloudController
         search_options = {
           :indices => [instance],
           :states => [:STARTING, :RUNNING, :CRASHED],
-          :version => app.version
+          :version => app.version,
+          :path => "test",
+          :has_tail_query => false
         }
 
         instance_found = {
@@ -292,11 +294,12 @@ module VCAP::CloudController
           :credentials => "credentials"
         }
 
-        DeaClient.should_receive(:find_specific_instance).once
-        .with(app, search_options).and_return(instance_found)
+        DeaClient.should_receive(:find_specific_instance).
+          with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
-          file_url, credentials = DeaClient.get_file_url(app, instance, path)
+          file_url, credentials = DeaClient.get_file_url(app, instance,
+                                                         :path => path)
           file_url.should == "file_uristaged/test"
           credentials.should == "credentials"
         end
@@ -312,7 +315,9 @@ module VCAP::CloudController
         search_options = {
           :indices => [instance],
           :states => [:STARTING, :RUNNING, :CRASHED],
-          :version => app.version
+          :version => app.version,
+          :path => "test",
+          :has_tail_query => false
         }
 
         DeaClient.should_receive(:find_specific_instance).once
@@ -320,7 +325,7 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_url(app, instance, path)
+            DeaClient.get_file_url(app, instance, :path => path)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
@@ -330,6 +335,68 @@ module VCAP::CloudController
 
             error.message.should == msg
           }
+        end
+      end
+
+      it "should send path and tail query fields in nats request" do
+        app.instances = 2
+        app.should_receive(:stopped?).once.and_return(false)
+
+        instance = 1
+        path = "test"
+
+        search_options = {
+          :indices => [instance],
+          :states => [:STARTING, :RUNNING, :CRASHED],
+          :version => app.version,
+          :path => "test",
+          :has_tail_query => true
+        }
+
+        instance_found = {
+          :file_uri => "file_uri",
+          :staged => "staged",
+          :credentials => "credentials"
+        }
+
+        DeaClient.should_receive(:find_specific_instance).
+          with(app, search_options).and_return(instance_found)
+
+        with_em_and_thread do
+          opts = {:path => path, :has_tail_query => true}
+          file_url, credentials = DeaClient.get_file_url(app, instance, opts)
+          file_url.should == "file_uristaged/test"
+          credentials.should == "credentials"
+        end
+      end
+
+      it "should ignore absence of credentials and staged fields in nats response" do
+        app.instances = 2
+        app.should_receive(:stopped?).once.and_return(false)
+
+        instance = 1
+        path = "test"
+
+        search_options = {
+          :indices => [instance],
+          :states => [:STARTING, :RUNNING, :CRASHED],
+          :version => app.version,
+          :path => "test",
+          :has_tail_query => true
+        }
+
+        instance_found = {
+          :file_uri => "file_uri",
+        }
+
+        DeaClient.should_receive(:find_specific_instance).
+          with(app, search_options).and_return(instance_found)
+
+        with_em_and_thread do
+          opts = {:path => path, :has_tail_query => true}
+          file_url, credentials = DeaClient.get_file_url(app, instance, opts)
+          file_url.should == "file_uri"
+          credentials.should == [nil, nil]
         end
       end
     end

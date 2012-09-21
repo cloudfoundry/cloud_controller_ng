@@ -36,7 +36,9 @@ module VCAP::CloudController
         raise Errors::FileError.new(msg)
       end
 
-      url, credentials = DeaClient.get_file_url(app, instance_id, path)
+      has_tail_query = params.include?("tail".downcase)
+      opts = { :path => path, :has_tail_query => has_tail_query }
+      url, credentials = DeaClient.get_file_url(app, instance_id, opts)
       http_response = http_get(url, credentials[0], credentials[1])
 
       # TODO: nginx acceleration
@@ -52,9 +54,11 @@ module VCAP::CloudController
       [HTTP::OK, http_response.body]
     end
 
-    def http_get(url, username, password)
+    def http_get(url, username = nil, password = nil)
       client = HTTPClient.new
-      client.set_auth(nil, username, password)
+      if username != nil && password != nil
+        client.set_auth(nil, username, password)
+      end
       client.get(url)
     end
 
