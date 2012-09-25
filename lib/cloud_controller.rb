@@ -30,7 +30,7 @@ module VCAP::CloudController
     end
 
     before do
-      VCAP::CloudController::SecurityContext.current_user = nil
+      VCAP::CloudController::SecurityContext.clear
       user = nil
       auth_token = env["HTTP_AUTHORIZATION"]
 
@@ -56,7 +56,7 @@ module VCAP::CloudController
                                          :admin => true, :active => true)
           end
 
-          VCAP::CloudController::SecurityContext.current_user = user
+          VCAP::CloudController::SecurityContext.set(user, token_information)
         rescue => e
           logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
         end

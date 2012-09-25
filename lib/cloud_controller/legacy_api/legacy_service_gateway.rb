@@ -20,7 +20,7 @@ module VCAP::CloudController
       provider = DEFAULT_PROVIDER
       validate_access(label, provider)
 
-      VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
+      VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
       old_plans = Models::ServicePlan.dataset.
         join(:services, :id => :service_id).
         filter(:label => label, :provider => DEFAULT_PROVIDER).
@@ -105,7 +105,7 @@ module VCAP::CloudController
     def delete(label, provider = DEFAULT_PROVIDER)
       validate_access(label, provider)
 
-      VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
+      VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
       svc_guid = Models::Service[:label => label, :provider => provider].guid
       svc_api = VCAP::CloudController::Service.new(config, logger, env, params, body)
       svc_api.dispatch(:delete, svc_guid)
@@ -166,7 +166,7 @@ module VCAP::CloudController
     # middle, I'm really not wild for _any_ function overloading in Ruby
     def update_handle(label, provider=DEFAULT_PROVIDER, id)
       validate_access(label, provider)
-      VCAP::CloudController::SecurityContext.current_user = self.class.legacy_api_user
+      VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
 
       req = VCAP::Services::Api::HandleUpdateRequest.decode(body)
 

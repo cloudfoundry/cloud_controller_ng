@@ -8,13 +8,13 @@ module VCAP::CloudController
 
     describe "#default_space" do
       it "should raise NotAuthorized if the user is nil" do
-        SecurityContext.current_user = nil
+        SecurityContext.set(nil)
         api = LegacyApiBase.new(config, logger, {}, {}, fake_req)
         lambda { api.default_space }.should raise_error(Errors::NotAuthorized)
       end
 
       it "should raise LegacyApiWithoutDefaultSpace if the user has no app spaces" do
-        SecurityContext.current_user = user
+        SecurityContext.set(user)
         api = LegacyApiBase.new(config, logger, {}, {}, fake_req)
         lambda {
           api.default_space
@@ -26,7 +26,7 @@ module VCAP::CloudController
         let(:as1) { Models::Space.make(:organization => org) }
         let(:as2) { Models::Space.make(:organization => org) }
         let(:api) {
-          SecurityContext.current_user = user
+          SecurityContext.set(user)
           LegacyApiBase.new(config, logger, {}, {}, fake_req)
         }
 

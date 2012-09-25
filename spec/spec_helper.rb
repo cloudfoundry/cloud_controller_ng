@@ -162,7 +162,7 @@ RSpec.configure do |rspec_config|
   rspec_config.include VCAP::CloudController::SpecHelper
 
   rspec_config.before(:each) do |example|
-    VCAP::CloudController::SecurityContext.current_user = nil
+    VCAP::CloudController::SecurityContext.clear
     reset_database db
   end
 end

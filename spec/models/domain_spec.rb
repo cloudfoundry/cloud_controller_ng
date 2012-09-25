@@ -35,11 +35,11 @@ module VCAP::CloudController
       context "as an admin" do
         before do
           admin = Models::User.make(:admin => true)
-          SecurityContext.current_user = admin
+          SecurityContext.set(admin)
         end
 
         after do
-          SecurityContext.current_user = nil
+          SecurityContext.clear
         end
 
         it "should allow the creation of a shared domain" do
@@ -51,11 +51,11 @@ module VCAP::CloudController
       context "as a standard user" do
         before do
           user = Models::User.make(:admin => false)
-          SecurityContext.current_user = user
+          SecurityContext.set(user)
         end
 
         after do
-          SecurityContext.current_user = nil
+          SecurityContext.clear
         end
 
         it "should not allow the creation of a shared domain" do
