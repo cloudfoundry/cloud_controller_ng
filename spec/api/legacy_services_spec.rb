@@ -175,6 +175,45 @@ module VCAP::CloudController
         end
       end
 
+      describe "GET /services/:name" do
+        before do
+          @svc = Models::ServiceInstance.make(:space => user.default_space)
+        end
+
+        describe "with a valid name" do
+          before do
+            get "/services/#{@svc.name}", {}, headers_for(user)
+          end
+
+          it "should return success" do
+            last_response.status.should == 200
+          end
+
+          it "should return the service info" do
+            plan = @svc.service_plan
+            service = plan.service
+
+            decoded_response["name"].should == @svc.name
+            decoded_response["vendor"].should == service.label
+            decoded_response["provider"].should == service.provider
+            decoded_response["version"].should == service.version
+            decoded_response["tier"].should == plan.name
+          end
+        end
+
+        describe "with an invalid name" do
+          before do
+            delete "/services/invalid_name", {}, headers_for(user)
+          end
+
+          it "should return not found" do
+            last_response.status.should == 404
+          end
+
+          it_behaves_like "a vcap rest error response", /service instance could not be found: invalid_name/
+        end
+      end
+
       describe "DELETE /services/:name" do
         before do
           3.times { Models::ServiceInstance.make(:space => user.default_space) }

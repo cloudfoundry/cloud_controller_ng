@@ -47,6 +47,11 @@ module VCAP::CloudController
       HTTP::OK
     end
 
+    def read(name)
+      service_instance = service_instance_from_name(name)
+      Yajl::Encoder.encode(legacy_service_encoding(service_instance))
+    end
+
     def delete(name)
       service_instance = service_instance_from_name(name)
       VCAP::CloudController::ServiceInstance.new(config, logger, env, params, body).dispatch(:delete, service_instance.guid)
@@ -103,8 +108,9 @@ module VCAP::CloudController
         :name => svc_instance.name,
         :type => LegacyService.synthesize_service_type(plan.service),
         :vendor => plan.service.label,
+        :provider => plan.service.provider,
         :version => plan.service.version,
-        :tier => "free",
+        :tier => plan.name,
         :properties => [],
         :meta => {}
       }
@@ -126,6 +132,7 @@ module VCAP::CloudController
     def self.setup_routes
       get    "/services",       :enumerate
       post   "/services",       :create
+      get    "/services/:name", :read
       delete "/services/:name", :delete
 
       get    "/services/v1/offerings", :enumerate_offerings
