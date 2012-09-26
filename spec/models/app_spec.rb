@@ -144,6 +144,15 @@ module VCAP::CloudController
       end
     end
 
+    describe "metadata" do
+      it "deserializes the serialized value" do
+        app = Models::App.make(
+          :metadata => { "jesse" => "super awesome" },
+        )
+        app.metadata.should eq("jesse" => "super awesome")
+      end
+    end
+
     describe "validations" do
       describe "env" do
         let(:app) { Models::App.make }
@@ -168,6 +177,35 @@ module VCAP::CloudController
             app.environment_json = { :abc => 123, "#{k}_abc" => "hi" }
             app.should_not be_valid
           end
+        end
+      end
+
+      describe "metadata" do
+        let(:app) { Models::App.make }
+
+        it "should allow empty metadata" do
+          app.metadata = {}
+          app.should be_valid
+        end
+
+        it "should not allow an array" do
+          app.metadata = []
+          app.should_not be_valid
+        end
+
+        it "should allow multiple variables" do
+          app.metadata = { :abc => 123, :def => "hi" }
+          app.should be_valid
+        end
+
+        it "should save direct updates to the metadata" do
+          app.metadata.should == {}
+          app.metadata["some_key"] = "some val"
+          app.metadata["some_key"].should == "some val"
+          app.save
+          app.metadata["some_key"].should == "some val"
+          app.refresh
+          app.metadata["some_key"].should == "some val"
         end
       end
     end

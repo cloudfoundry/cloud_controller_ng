@@ -2,6 +2,8 @@
 
 module VCAP::CloudController::Models
   class App < Sequel::Model
+    plugin :serialization
+
     class InvalidRouteRelation < InvalidRelation; end
     class InvalidBindingRelation < InvalidRelation; end
 
@@ -28,6 +30,8 @@ module VCAP::CloudController::Models
 
     strip_attributes  :name
 
+    serialize_attributes :json, :metadata
+
     AppStates = %w[STOPPED STARTED].map(&:freeze).freeze
     PackageStates = %w[PENDING STAGED FAILED].map(&:freeze).freeze
 
@@ -47,6 +51,7 @@ module VCAP::CloudController::Models
       validates_includes PackageStates, :package_state, :allow_missing => true
       validates_includes AppStates, :state, :allow_missing => true
       validate_environment
+      validate_metadata
     end
 
     def before_create
@@ -115,6 +120,14 @@ module VCAP::CloudController::Models
       end
     rescue Yajl::ParseError
       errors.add(:environment_json, :invalid_json)
+    end
+
+    def validate_metadata
+      m = deserialized_values[:metadata]
+      return if m.nil?
+      unless m.kind_of?(Hash)
+        errors.add(:metadata, :invalid_metadata)
+      end
     end
 
     def validate_route(route)
