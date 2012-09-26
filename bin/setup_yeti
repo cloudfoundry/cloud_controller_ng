@@ -1,7 +1,26 @@
 #! /usr/bin/env ruby
 
+require "yaml"
+
 module YetiSetup
-  def self.setup(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, email, password, org_name, space_name)
+  def self.setup(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, num_users, email, password, org_name, space_name)
+    create_user(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, email, password, org_name, space_name)
+    info = create_users(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, num_users, email, password, org_name, space_name)
+    puts YAML.dump("parallel" => info)
+  end
+
+  def self.create_users(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, num_users, email, password, org_name, space_name)
+    (1..num_users.to_i).map do |i|
+      (user, domain) = email.split("@")
+      new_user_email = "#{user}+#{i}@#{domain}"
+      new_org_name = "#{org_name}-#{i}"
+
+      create_user(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, new_user_email, password, new_org_name, space_name)
+      { "email" => new_user_email, "passwd" => password }
+    end
+  end
+
+  def self.create_user(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, email, password, org_name, space_name)
     with_uaa_target(uaa_url) do
       user_guid = create_uaa_user(uaa_cc_secret, email, password)
       token = auth_token(cc_admin_email, cc_admin_password)
@@ -123,8 +142,8 @@ module YetiSetup
   end
 end
 
-unless ARGV.size == 9
-  STDERR.puts "usage: setup_yeti <uaa_url> <uaa_cc_secret> <cc_url> <admin_email> <admin_password> <user_email> <user_password> <org_name> <space_name>"
+unless ARGV.size == 10
+  STDERR.puts "usage: setup_yeti <uaa_url> <uaa_cc_secret> <cc_url> <admin_email> <admin_password> <num_parallel_users> <user_email> <user_password> <org_name> <space_name>"
   exit -1
 end
 
