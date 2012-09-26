@@ -47,6 +47,7 @@ module VCAP::CloudController::Models
       validates_includes PackageStates, :package_state, :allow_missing => true
       validates_includes AppStates, :state, :allow_missing => true
       validate_environment
+      validate_metadata
     end
 
     def before_create
@@ -104,6 +105,18 @@ module VCAP::CloudController::Models
       end
     end
 
+    def metadata=(m)
+      json = Yajl::Encoder.encode(m)
+      super(json)
+    end
+
+    def metadata
+      json = super
+      if json
+        Yajl::Parser.parse(json)
+      end
+    end
+
     def validate_environment
       return if environment_json.nil?
       unless environment_json.kind_of?(Hash)
@@ -115,6 +128,13 @@ module VCAP::CloudController::Models
       end
     rescue Yajl::ParseError
       errors.add(:environment_json, :invalid_json)
+    end
+
+    def validate_metadata
+      return if metadata.nil?
+      unless metadata.kind_of?(Hash)
+        errors.add(:metadata, :invalid_metadata)
+      end
     end
 
     def validate_route(route)
