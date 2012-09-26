@@ -46,7 +46,10 @@ module VCAP::CloudController
             end
           end
 
-          let(:headers) { headers_for(current_user, nil, scenario_vars[:protocol] == "https") }
+          let(:headers) do
+            headers_for(current_user,
+                        :https => scenario_vars[:protocol] == "https")
+          end
 
           before do
             config_override(config_setting => true)

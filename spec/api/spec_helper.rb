@@ -33,20 +33,24 @@ module VCAP::CloudController::ApiSpecHelper
     VCAP::CloudController::Controller.new(config)
   end
 
-  def headers_for(user, proxy_user = nil, https = false)
+  def headers_for(user, opts = {})
+    opts = { :email => Sham.email,
+             :https => false}.merge(opts)
+
     headers = {}
     token_coder = CF::UAA::TokenCoder.new(config[:uaa][:resource_id],
                                           config[:uaa][:symmetric_secret],
                                           nil)
     unless user.nil?
-      user_token = token_coder.encode(:user_id => user.guid)
+      user_token = token_coder.encode(:user_id => user.guid,
+                                      :email => opts[:email])
       headers["HTTP_AUTHORIZATION"] = "bearer #{user_token}"
     end
 
     # FIXME: what is the story here?
     # headers["HTTP_PROXY_USER"]    = proxy_user.id if proxy_user
 
-    headers["HTTP_X_FORWARDED_PROTO"] = "https" if https
+    headers["HTTP_X_FORWARDED_PROTO"] = "https" if opts[:https]
     headers
   end
 

@@ -23,5 +23,13 @@ module VCAP::CloudController
     def self.token
       Thread.current[:vcap_token]
     end
+
+    def self.current_user_email
+      return token[:email] if token
+    end
+
+    def self.current_user_has_email?(email)
+      current_user_email && current_user_email.downcase == email.downcase
+    end
   end
 end
