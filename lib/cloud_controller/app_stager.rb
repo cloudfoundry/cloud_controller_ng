@@ -88,7 +88,7 @@ module VCAP::CloudController
             :fds    => app.file_descriptors
           },
           :environment => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
-          :meta => {} # TODO
+          :meta => app.metadata
         }
       end
 

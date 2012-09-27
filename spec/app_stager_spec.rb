@@ -25,6 +25,7 @@ module VCAP::CloudController
         res[:app_id].should == app_obj.guid
         res[:download_uri].should be_kind_of(String)
         res[:upload_uri].should be_kind_of(String)
+        res[:properties][:meta].should be_kind_of(Hash)
         res[:properties][:services].count.should == NUM_INSTANCES
         res[:properties][:services].each do |svc|
           svc[:credentials].should be_kind_of(Hash)
