@@ -6,7 +6,7 @@ ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
 
 namespace :spec do
   desc "Run specs producing results for CI"
-  task :ci => ["ci:setup:rspec"] do
+  task :ci => ["spec"] do
     require "simplecov-rcov"
     require "simplecov"
     # RCov Formatter's output path is hard coded to be "rcov" under
