@@ -25,7 +25,7 @@ module VCAP::CloudController::Models
     import_attributes :name, :production,
                       :space_guid, :framework_guid, :runtime_guid,
                       :environment_json, :memory, :instances,
-                      :file_descriptors, :disk_quota, :state,
+                      :file_descriptors, :disk_quota, :state, :command,
                       :service_binding_guids, :route_guids
 
     strip_attributes  :name
@@ -92,6 +92,11 @@ module VCAP::CloudController::Models
     def after_destroy_commit
       VCAP::CloudController::DeaClient.stop(self) if started?
       VCAP::CloudController::AppStager.delete_droplet(self)
+    end
+
+    def command=(cmd)
+      self.metadata ||= {}
+      self.metadata["command"] = cmd
     end
 
     # We sadly have to do this ourselves because the serialization plugin

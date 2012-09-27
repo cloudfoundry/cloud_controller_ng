@@ -153,6 +153,17 @@ module VCAP::CloudController
       end
     end
 
+    describe "command" do
+      it "stores the command in the metadata" do
+        app = Models::App.make(:command => "foobar")
+        app.metadata.should eq("command" => "foobar")
+        app.save
+        app.metadata.should eq("command" => "foobar")
+        app.refresh
+        app.metadata.should eq("command" => "foobar")
+      end
+    end
+
     describe "validations" do
       describe "env" do
         let(:app) { Models::App.make }
