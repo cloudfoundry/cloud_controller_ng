@@ -20,7 +20,7 @@ module VCAP::CloudController::Models
     export_attributes :name, :production,
                       :space_guid, :framework_guid, :runtime_guid,
                       :environment_json, :memory, :instances, :file_descriptors,
-                      :disk_quota, :state, :version, :metadata
+                      :disk_quota, :state, :version, :command
 
     import_attributes :name, :production,
                       :space_guid, :framework_guid, :runtime_guid,
@@ -97,6 +97,10 @@ module VCAP::CloudController::Models
     def command=(cmd)
       self.metadata ||= {}
       self.metadata["command"] = cmd
+    end
+
+    def command
+      self.metadata && self.metadata["command"]
     end
 
     # We sadly have to do this ourselves because the serialization plugin

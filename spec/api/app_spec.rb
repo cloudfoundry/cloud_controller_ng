@@ -85,14 +85,15 @@ module VCAP::CloudController
       it "should have no command entry in the metadata if not provided" do
         get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
         last_response.status.should == 200
-        decoded_response["entity"]["metadata"].should_not be_nil
-        decoded_response["entity"]["metadata"].should_not have_key("command")
+        decoded_response["entity"]["command"].should be_nil
+        decoded_response["entity"]["metadata"].should be_nil
       end
 
       it "should set the command on the app metadata" do
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:command => "foobar"), json_headers(admin_headers)
         last_response.status.should == 201
-        decoded_response["entity"]["metadata"]["command"].should == "foobar"
+        decoded_response["entity"]["command"].should == "foobar"
+        decoded_response["entity"]["metadata"].should be_nil
       end
 
     end
