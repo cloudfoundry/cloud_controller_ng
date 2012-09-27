@@ -426,6 +426,26 @@ module VCAP::CloudController
           last_response.status.should == 400
         end
       end
+
+      describe "with staging command" do
+        it "should set the staging command if one is set" do
+          legacy_req = Yajl::Encoder.encode(
+            "name"    => "app_with_cmd",
+            "staging" => {
+              "framework" => "grails",
+              "runtime"   => "java",
+              "command"   => "foobar",
+            }
+          )
+
+          post "/apps", legacy_req, headers_for(user)
+          last_response.status.should == 200
+
+          get "/apps/app_with_cmd", {}, headers_for(user)
+          last_response.status.should == 200
+          decoded_response["meta"]["command"].should == "foobar"
+        end
+      end
     end
 
     describe "PUT /apps/:name" do

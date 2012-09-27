@@ -128,9 +128,7 @@ module VCAP::CloudController
         :version => app.version,
         # TODO: quote / escape env vars
         :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
-        :meta =>  {
-          # TODO when running app support is done
-        },
+        :meta =>  app.metadata,
       }
     end
 
@@ -205,6 +203,8 @@ module VCAP::CloudController
           raise RuntimeInvalid.new(runtime_name) unless runtime
           req[:runtime_guid] = runtime.guid
         end
+
+        req[:command] = staging["command"] if staging["command"]
       end
 
       if resources = hash["resources"]
