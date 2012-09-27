@@ -20,7 +20,7 @@ module VCAP::CloudController::Models
     export_attributes :name, :production,
                       :space_guid, :framework_guid, :runtime_guid,
                       :environment_json, :memory, :instances, :file_descriptors,
-                      :disk_quota, :state, :version
+                      :disk_quota, :state, :version, :metadata
 
     import_attributes :name, :production,
                       :space_guid, :framework_guid, :runtime_guid,

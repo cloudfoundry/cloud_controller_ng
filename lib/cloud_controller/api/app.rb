@@ -26,6 +26,7 @@ module VCAP::CloudController
       # TODO: renable exclude_in => :create for state, but not until it is
       # coordinated with ilia and ramnivas
       attribute  :state,               String,     :default => "STOPPED" # , :exclude_in => :create
+      attribute  :command,             String,     :default => nil
 
       to_many    :service_bindings,    :exclude_in => :create
       to_many    :routes
