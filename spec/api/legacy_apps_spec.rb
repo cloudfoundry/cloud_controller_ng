@@ -445,6 +445,26 @@ module VCAP::CloudController
           last_response.status.should == 200
           decoded_response["meta"]["command"].should == "foobar"
         end
+
+        describe "with console" do
+          it "should set the console if one is set" do
+            legacy_req = Yajl::Encoder.encode(
+              "name"    => "app_with_console",
+              "console" => true,
+              "staging" => {
+                "framework" => "grails",
+                "runtime"   => "java",
+              }
+            )
+
+            post "/apps", legacy_req, headers_for(user)
+            last_response.status.should == 200
+
+            get "/apps/app_with_console", {}, headers_for(user)
+            last_response.status.should == 200
+            decoded_response["meta"]["console"].should == true
+          end
+        end
       end
     end
 
