@@ -22,19 +22,20 @@ module VCAP::CloudController
         info[:user]   = user.guid
         info[:limits] = account_capacity
         info[:usage]  = account_usage
-        info[:frameworks] = config[:legacy_framework_manifest]
       end
+      # TODO get this from DB
+      # Exposing this to the world for CF Core Cert
+      info[:frameworks] = config[:legacy_framework_manifest]
 
       Yajl::Encoder.encode(info)
     end
 
     def service_info
-      raise NotAuthenticated unless user
-
-      ds = Models::Service.user_visible
+      # TODO: narrow down the subset to expose to unauthenticated users
+      # raise NotAuthenticated unless user
 
       legacy_resp = {}
-      ds.filter(:provider => "core").each do |svc|
+      Models::Service.filter(:provider => "core").each do |svc|
         svc_type = LegacyService.synthesize_service_type(svc)
         legacy_resp[svc_type] ||= {}
         legacy_resp[svc_type][svc.label] ||= {}
