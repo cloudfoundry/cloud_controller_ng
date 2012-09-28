@@ -27,6 +27,7 @@ module VCAP::CloudController
       # coordinated with ilia and ramnivas
       attribute  :state,               String,     :default => "STOPPED" # , :exclude_in => :create
       attribute  :command,             String,     :default => nil
+      attribute  :console,             Message::Boolean, :default => false
 
       to_many    :service_bindings,    :exclude_in => :create
       to_many    :routes
