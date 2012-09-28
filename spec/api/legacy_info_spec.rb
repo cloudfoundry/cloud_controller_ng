@@ -69,7 +69,7 @@ module VCAP::CloudController
     describe "account capacity" do
       let(:headers) { headers_for(current_user) }
 
-      describe "for an amdin" do
+      describe "for an admin" do
         let(:current_user) { make_user_with_default_space(:admin => true) }
 
         it "should return admin limits for an admin" do
