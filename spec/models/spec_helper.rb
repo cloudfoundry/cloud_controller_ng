@@ -69,6 +69,10 @@ def make_user_with_default_space(opts = {})
   user
 end
 
+def make_user(opts = {})
+  VCAP::CloudController::Models::User.make(:admin => opts.has_key?(:admin), :active => true)
+end
+
 def fake_app_staging(app)
   app.package_hash = "abc"
   app.droplet_hash = "def"
