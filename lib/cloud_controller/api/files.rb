@@ -38,11 +38,17 @@ module VCAP::CloudController
 
       url, credentials = DeaClient.get_file_url(app, instance_id, path)
       url << "&tail" if params.include?("tail")
-      http_response = http_get(url, credentials[0], credentials[1])
+
+      headers = {}
+      if range = env["HTTP_RANGE"]
+        headers["range"] = range
+      end
+
+      http_response = http_get(url, credentials[0], credentials[1], headers)
 
       # TODO: nginx acceleration
 
-      unless http_response.status == 200
+      unless [200, 206].include? http_response.status
         msg = "Request failed for app: #{app.name}, instance: #{instance_id}"
         msg << " as there was an error retrieving the files"
         msg << " from the url: #{url}."
@@ -50,15 +56,15 @@ module VCAP::CloudController
         raise Errors::FileError.new(msg)
       end
 
-      [HTTP::OK, http_response.body]
+      [http_response.status, http_response.body]
     end
 
-    def http_get(url, username, password)
+    def http_get(url, username, password, headers)
       client = HTTPClient.new
       if username != nil && password != nil
         client.set_auth(nil, username, password)
       end
-      client.get(url)
+      client.get(url, :header => headers)
     end
 
     get  "#{path_id}/instances/:instance_id/files", :files
