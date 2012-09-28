@@ -21,7 +21,7 @@ module VCAP::CloudController
       if user
         info[:user]   = user.guid
         info[:limits] = account_capacity
-        info[:usage]  = account_usage
+        info[:usage]  = account_usage if has_default_space?
         info[:frameworks] = config[:legacy_framework_manifest]
       end
 

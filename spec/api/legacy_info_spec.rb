@@ -86,7 +86,18 @@ module VCAP::CloudController
         end
       end
 
-      describe "for a user" do
+      describe "for a user with no default space" do
+        let(:current_user) { make_user }
+
+        it "should not return service usage" do
+          get "/info", {}, headers
+          last_response.status.should == 200
+          hash = Yajl::Parser.parse(last_response.body)
+          hash.should_not have_key("usage")
+        end
+      end
+
+      describe "for a user with default space" do
         let(:current_user) { make_user_with_default_space }
 
         it "should return default limits for a user" do
