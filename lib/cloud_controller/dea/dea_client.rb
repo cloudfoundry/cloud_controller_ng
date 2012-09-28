@@ -260,7 +260,7 @@ module VCAP::CloudController
       end
 
       def start_app_message(app)
-        # TODO: add debug and console support
+        # TODO: add debug support
         {
           :droplet => app.guid,
           :name => app.name,
@@ -291,6 +291,7 @@ module VCAP::CloudController
           },
           :cc_partition => config[:cc_partition],
           :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
+          :console => app.console,
         }
       end
 
