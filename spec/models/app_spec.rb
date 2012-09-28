@@ -164,6 +164,17 @@ module VCAP::CloudController
       end
     end
 
+    describe "console" do
+      it "stores the command in the metadata" do
+        app = Models::App.make(:console => true)
+        app.metadata.should eq("console" => true)
+        app.save
+        app.metadata.should eq("console" => true)
+        app.refresh
+        app.metadata.should eq("console" => true)
+      end
+    end
+
     describe "validations" do
       describe "env" do
         let(:app) { Models::App.make }
