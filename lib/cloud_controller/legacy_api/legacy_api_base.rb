@@ -10,5 +10,11 @@ module VCAP::CloudController
       raise LegacyApiWithoutDefaultSpace unless space
       space
     end
+
+    def has_default_space?
+      raise NotAuthorized unless user
+      return true if user.default_space || !user.spaces.empty?
+      return false
+    end
   end
 end
