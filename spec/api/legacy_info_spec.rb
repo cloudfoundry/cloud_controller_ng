@@ -346,5 +346,186 @@ module VCAP::CloudController
         hash["generic"].should_not have_key("random_other")
       end
     end
+
+    describe "GET", "/info/services", "unauthenticated" do
+      before :all do
+        # poor man's reset_db
+        Models::Service.filter(:provider => "core").each do |svc|
+          svc.service_plans_dataset.filter(:name => "D100").destroy
+          svc.destroy
+        end
+        @mysql_svc  = Models::Service.make(
+          :label => "mysql",
+          :provider => "core",
+        )
+        Models::ServicePlan.make(
+          :service => @mysql_svc,
+          :name => "D100",
+        )
+        @pg_svc     = Models::Service.make(
+          :label => "postgresql",
+          :provider => "core",
+        )
+        Models::ServicePlan.make(
+          :service => @pg_svc,
+          :name => "D100",
+        )
+        @redis_svc  = Models::Service.make(
+          :label => "redis",
+          :provider => "core",
+        )
+        Models::ServicePlan.make(
+          :service => @redis_svc,
+          :name => "D100",
+        )
+        @mongo_svc  = Models::Service.make(
+          :label => "mongodb",
+          :provider => "core",
+        )
+        Models::ServicePlan.make(
+          :service => @mongo_svc,
+          :name => "D100",
+        )
+        @random_svc = Models::Service.make(
+          :label => "random",
+          :provider => "core",
+        )
+        Models::ServicePlan.make(
+          :service => @random_svc,
+          :name => "D100",
+        )
+        non_core = Models::Service.make
+        Models::ServicePlan.make(
+          :service => non_core,
+          :name => "D100",
+        )
+
+        get "/info/services", {}
+      end
+
+      it "should return success" do
+        last_response.status.should == 200
+      end
+
+      it "should return synthesized types as the top level key" do
+        hash = Yajl::Parser.parse(last_response.body)
+        hash.should have_key("database")
+        hash.should have_key("key-value")
+        hash.should have_key("generic")
+
+        hash["database"].length.should == 2
+        hash["key-value"].length.should == 2
+        hash["generic"].length.should == 1
+      end
+
+      it "should return mysql as a database" do
+        hash = Yajl::Parser.parse(last_response.body)
+        hash["database"].should have_key("mysql")
+        hash["database"]["mysql"].should == {
+          @mysql_svc.version => {
+            "id" => @mysql_svc.guid,
+            "vendor" => "mysql",
+            "version" => @mysql_svc.version,
+            "type" => "database",
+            "description" => @mysql_svc.description,
+            "tiers" => {
+              "free" => {
+                "options" =>{},
+                "order" => 1
+              }
+            }
+          }
+        }
+      end
+
+      it "should return pg as a database" do
+        hash = Yajl::Parser.parse(last_response.body)
+        hash["database"].should have_key("postgresql")
+        hash["database"]["postgresql"].should == {
+          @pg_svc.version => {
+            "id" => @pg_svc.guid,
+            "vendor" => "postgresql",
+            "version" => @pg_svc.version,
+            "type" => "database",
+            "description" => @pg_svc.description,
+            "tiers" => {
+              "free" => {
+                "options" =>{},
+                "order" => 1
+              }
+            }
+          }
+        }
+      end
+
+      it "should return redis under key-value" do
+        hash = Yajl::Parser.parse(last_response.body)
+        hash["key-value"].should have_key("redis")
+        hash["key-value"]["redis"].should == {
+          @redis_svc.version => {
+            "id" => @redis_svc.guid,
+            "vendor" => "redis",
+            "version" => @redis_svc.version,
+            "type" => "key-value",
+            "description" => @redis_svc.description,
+            "tiers" => {
+              "free" => {
+                "options" =>{},
+                "order" => 1
+              }
+            }
+          }
+        }
+      end
+
+      it "should (incorrectly) return mongo under key-value" do
+        hash = Yajl::Parser.parse(last_response.body)
+        hash["key-value"].should have_key("mongodb")
+        hash["key-value"]["mongodb"].should == {
+          @mongo_svc.version => {
+            "id" => @mongo_svc.guid,
+            "vendor" => "mongodb",
+            "version" => @mongo_svc.version,
+            "type" => "key-value",
+            "description" => @mongo_svc.description,
+            "tiers" => {
+              "free" => {
+                "options" =>{},
+                "order" => 1
+              }
+            }
+          }
+        }
+      end
+
+      it "should return random under generic" do
+        hash = Yajl::Parser.parse(last_response.body)
+        hash["generic"].should have_key("random")
+        hash["generic"]["random"].should == {
+          @random_svc.version => {
+            "id" => @random_svc.guid,
+            "vendor" => "random",
+            "version" => @random_svc.version,
+            "type" => "generic",
+            "description" => @random_svc.description,
+            "tiers" => {
+              "free" => {
+                "options" =>{},
+                "order" => 1
+              }
+            }
+          }
+        }
+      end
+    end
+
+    describe "GET", "/info", "unauthenticated" do
+      it "contains frameworks" do
+        get "/info"
+        last_response.status.should == 200
+        decoded_response.should include("frameworks")
+        decoded_response["frameworks"].should include("rails3")
+      end
+    end
   end
 end

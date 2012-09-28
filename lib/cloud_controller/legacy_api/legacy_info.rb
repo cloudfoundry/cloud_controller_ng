@@ -16,7 +16,9 @@ module VCAP::CloudController
         :authorization_endpoint => config[:uaa][:url],
         # TODO: enable once json schema is updated
         # :allow_debug => # config[:allow_debug]
-        :allow_debug => false
+        :allow_debug => false,
+        # TODO get this from DB
+        :frameworks  => config[:legacy_framework_manifest],
       }
 
       # If there is a logged in user, give out additional information
@@ -31,12 +33,11 @@ module VCAP::CloudController
     end
 
     def service_info
-      raise NotAuthenticated unless user
-
-      ds = Models::Service.user_visible
+      # TODO: narrow down the subset to expose to unauthenticated users
+      # raise NotAuthenticated unless user
 
       legacy_resp = {}
-      ds.filter(:provider => "core").each do |svc|
+      Models::Service.filter(:provider => "core").each do |svc|
         next unless svc.service_plans.any? { |plan| plan.name == "D100" }
 
         svc_type = LegacyService.synthesize_service_type(svc)
