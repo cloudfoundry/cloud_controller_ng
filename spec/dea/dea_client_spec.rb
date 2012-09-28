@@ -31,6 +31,15 @@ module VCAP::CloudController
         res[:services].first.should be_kind_of(Hash)
         res[:limits].should be_kind_of(Hash)
         res[:env].should be_kind_of(Array)
+        res[:console].should == false
+      end
+
+      context "with an app enabled for console support" do
+        it "should enable console in the start message" do
+          app.update(:console => true)
+          res = DeaClient.send(:start_app_message, app)
+          res[:console].should == true
+        end
       end
     end
 
