@@ -173,6 +173,16 @@ module VCAP::CloudController
         app.refresh
         app.metadata.should eq("console" => true)
       end
+
+      it "returns false if console was explicitly set to false" do
+        app = Models::App.make(:console => false)
+        app.console.should == false
+      end
+
+      it "returns false if console was not set" do
+        app = Models::App.make(:console => true)
+        app.console.should == true
+      end
     end
 
     describe "validations" do
