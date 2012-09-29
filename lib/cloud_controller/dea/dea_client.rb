@@ -75,9 +75,9 @@ module VCAP::CloudController
         }
 
         if instance_found = find_specific_instance(app, search_options)
-          if instance_found[:file_uri_v2]
-            return ["#{instance_found[:file_uri_v2]}", [nil, nil]]
-          end
+          # if instance_found[:file_uri_v2]
+          #   return ["#{instance_found[:file_uri_v2]}", [nil, nil]]
+          # end
 
           url = "#{instance_found[:file_uri]}#{instance_found[:staged]}"
           url << "/#{path}"
