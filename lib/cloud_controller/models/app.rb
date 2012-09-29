@@ -110,7 +110,9 @@ module VCAP::CloudController::Models
     end
 
     def console
-      (self.metadata && !self.metadata["console"].nil?)
+      # without the == true check, this expression can return nil if
+      # the key doesn't exist, rather than false
+      self.metadata && self.metadata["console"] == true
     end
 
     # We sadly have to do this ourselves because the serialization plugin
