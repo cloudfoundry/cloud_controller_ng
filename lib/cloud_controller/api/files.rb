@@ -39,33 +39,14 @@ module VCAP::CloudController
       info = DeaClient.get_file_uri(app, instance_id, path)
       uri = info[:uri]
       credentials = info[:credentials]
-      file_uri_v2 = info[:file_uri_v2]
-
       uri << "&tail" if params.include?("tail")
 
-      headers = {}
-      if range = env["HTTP_RANGE"]
-        headers["range"] = range
-      end
-
-      http_response = nil
-      if !file_uri_v2 || v1_api
-        # TODO: nginx acceleration.
-        http_response = http_get(uri, headers, credentials[0], credentials[1])
-      else
-        # TODO: issue file server redirect.
-        http_response = http_get(uri, headers)
-      end
-
-      unless [200, 206].include? http_response.status
-        msg = "Request failed for app: #{app.name}, instance: #{instance_id}"
-        msg << " as there was an error retrieving the files"
-        msg << " from the uri: #{uri}."
-
-        raise Errors::FileError.new(msg)
-      end
-
-      [http_response.status, http_response.body]
+      basic_auth = {
+        "X-Auth" => "Basic #{[credentials[0..1].join(":")].pack("m0")}",
+      }
+      # TODO: do a "302 Found" when dea_next replaces dea
+      x_accel = {"X-Accel-Redirect" => "/internal_redirect/#{uri}"}
+      [200, x_accel.merge(basic_auth), ""]
     end
 
     def http_get(uri, headers, username = nil, password = nil)
