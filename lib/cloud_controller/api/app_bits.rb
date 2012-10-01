@@ -14,7 +14,8 @@ module VCAP::CloudController
     def upload(id)
       app = find_id_and_validate_access(:update, id)
 
-      ["application", "resources"].each do |k|
+      # TODO: non-nginx support
+      ["application_path", "resources"].each do |k|
         raise Errors::AppBitsUploadInvalid.new("missing :#{k}") unless params[k]
       end
 
@@ -23,12 +24,12 @@ module VCAP::CloudController
         raise Errors::AppBitsUploadInvalid.new("resources is not an Array")
       end
 
-      # TODO: nginx support
-      application = params["application"]
-      unless application.kind_of?(Hash) && application[:tempfile]
+      # TODO: non-nginx support
+      # TODO: validate upload path
+      unless path = params["application_path"]
         raise Errors::AppBitsUploadInvalid.new("bad :application")
       end
-      uploaded_file = application[:tempfile]
+      uploaded_file = Struct.new(:path).new(path)
 
       sha1 = AppPackage.to_zip(app.guid, uploaded_file, resources)
       app.package_hash = sha1
