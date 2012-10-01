@@ -147,11 +147,8 @@ module VCAP::CloudController
     private
 
     def upload_file
-      # TODO: enable nginx
-      # if CloudController.use_nginx
-      #   params[:droplet_path]
-      # else
-      @upload_file ||= params["upload"]["droplet"][:tempfile]
+      # TODO: re-enable non-nginx case
+      @upload_file ||= Struct.new(:path).new(params["droplet_path"])
     rescue
       nil
     end
