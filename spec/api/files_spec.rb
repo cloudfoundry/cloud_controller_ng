@@ -39,7 +39,7 @@ module VCAP::CloudController
           last_response.status.should == 400
         end
 
-        it "should return 400 when accessing of the file URL fails" do
+        xit "should return 400 when accessing of the file URL fails" do
           instance_id = 5
 
           @app.state = "STARTED"
