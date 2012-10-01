@@ -108,8 +108,9 @@ module VCAP::CloudController
 
       VCAP::CloudController::Models::Domain.default_serving_domain_name = config[:serving_domain]
 
-      @thin_server = Thin::Server.new("0.0.0.0", config[:port],
-                                      :signals => false) do
+      app = Rack::Builder.new do
+        # TODO: we really should put these bootstrapping into a place other
+        # than Rack::Builder
         use Rack::CommonLogger
         VCAP::CloudController::MessageBus.register_components
         VCAP::CloudController::MessageBus.register_routes
@@ -122,6 +123,13 @@ module VCAP::CloudController
           run VCAP::CloudController::Controller.new(config)
         end
       end
+      if @config[:nginx][:use_nginx]
+        @thin_server = Thin::Server.new(config[:nginx][:instance_socket],
+                                      :signals => false)
+      else
+        @thin_server = Thin::Server.new(@config[:bind_address], @config[:port])
+      end
+      @thin_server.app = app
 
       trap_signals
 
