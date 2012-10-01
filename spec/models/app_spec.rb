@@ -4,10 +4,6 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe Models::App do
-    before do
-      VCAP::CloudController::AppStager.stub(:delete_droplet)
-    end
-
     let(:org) { Models::Organization.make }
     let(:space) { Models::Space.make(:organization => org) }
     let(:domain) do
