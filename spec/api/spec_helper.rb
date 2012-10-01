@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require File.expand_path("../../spec_helper", __FILE__)
+require File.expand_path("../helpers/nginx_upload", __FILE__)
 
 Dir[File.expand_path("../helpers/*", __FILE__)].each do |file|
   require file
@@ -30,7 +31,10 @@ module VCAP::CloudController::ApiSpecHelper
   ]
 
   def app
-    VCAP::CloudController::Controller.new(config)
+    klass = Class.new(VCAP::CloudController::Controller)
+    # simulates nginx upload
+    klass.use(NginxUpload)
+    klass.new(config)
   end
 
   def headers_for(user, opts = {})

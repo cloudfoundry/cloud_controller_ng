@@ -101,10 +101,11 @@ module VCAP::CloudController
         raise AppPackageNotFound.new(id)
       end
 
-      # TODO: enable nginx
-      # response.headers['X-Accel-Redirect'] = '/droplets/' + File.basename(path)
-      # render :nothing => true, :status => 200
-      send_file package_path
+      if config[:nginx][:use_nginx]
+        return [200, { "X-Accel-Redirect" => "/droplets/" + "app_#{id}" }, ""]
+      else
+        return send_file package_path
+      end
     end
 
     # Handles a droplet upload from a stager
@@ -140,18 +141,23 @@ module VCAP::CloudController
         raise StagingError.new("droplet not found for #{id}")
       end
 
-      # TODO: enable nginx
-      send_file droplet_path
+      if config[:nginx][:use_nginx]
+        return [200, { "X-Accel-Redirect" => "/droplets/" + "droplet_#{id}" }, ""]
+      else
+        return send_file droplet_path
+      end
     end
 
     private
 
+    # returns an object that responds to #path pointing to the uploaded file
+    # @return [#path]
     def upload_file
-      # TODO: enable nginx
-      # if CloudController.use_nginx
-      #   params[:droplet_path]
-      # else
-      @upload_file ||= params["upload"]["droplet"][:tempfile]
+      @upload_file ||= if config[:nginx][:use_nginx]
+                         Struct.new(:path).new(params["droplet_path"])
+                       else
+                         params["upload"]["droplet"][:tempfile]
+                       end
     rescue
       nil
     end
