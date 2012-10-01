@@ -430,6 +430,11 @@ module VCAP::CloudController
         AppStager.should_receive(:delete_droplet).with(app)
         app.destroy
       end
+
+      it "should remove the package" do
+        AppPackage.should_receive(:delete_package).with(app.guid)
+        app.destroy
+      end
     end
   end
 end

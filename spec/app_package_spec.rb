@@ -160,6 +160,10 @@ module VCAP::CloudController
     end
 
     describe "delete_droplet" do
+      before :each do
+        AppPackage.unstub(:delete_package)
+      end
+
       it "should do nothing if the app package does not exist" do
         File.should_receive(:exists?).and_return(false)
         File.should_not_receive(:delete)

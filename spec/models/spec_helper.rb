@@ -13,6 +13,7 @@ RSpec.configure do |rspec_config|
     # We need to stub out this because it's in an after_destroy_commit hook
     # Is event emitter our salvation?
     VCAP::CloudController::AppStager.stub(:delete_droplet)
+    VCAP::CloudController::AppPackage.stub(:delete_package)
   end
 end
 
