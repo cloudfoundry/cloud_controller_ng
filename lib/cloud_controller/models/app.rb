@@ -93,6 +93,7 @@ module VCAP::CloudController::Models
     def after_destroy_commit
       VCAP::CloudController::DeaClient.stop(self) if started?
       VCAP::CloudController::AppStager.delete_droplet(self)
+      VCAP::CloudController::AppPackage.delete_package(self.guid)
     end
 
     def command=(cmd)
