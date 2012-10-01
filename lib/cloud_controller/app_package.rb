@@ -36,6 +36,11 @@ module VCAP::CloudController
         FileUtils.rm_rf(File.dirname(repacked_path)) if repacked_path
       end
 
+      def delete_package(guid)
+        path = package_path(guid)
+        File.delete(path) if File.exists? path
+      end
+
       # Return the package directory.
       #
       # Makes the directory on first use.

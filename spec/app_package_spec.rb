@@ -158,5 +158,19 @@ module VCAP::CloudController
         File.exist?(AppPackage.package_path(guid)).should == true
       end
     end
+
+    describe "delete_droplet" do
+      it "should do nothing if the app package does not exist" do
+        File.should_receive(:exists?).and_return(false)
+        File.should_not_receive(:delete)
+        AppPackage.delete_package("some_guid")
+      end
+
+      it "should delete the droplet if it exists" do
+        File.should_receive(:exists?).and_return(true)
+        File.should_receive(:delete).with(AppPackage.package_path("some_guid"))
+        AppPackage.delete_package("some_guid")
+      end
+    end
   end
 end
