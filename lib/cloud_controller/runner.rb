@@ -108,7 +108,7 @@ module VCAP::CloudController
 
       VCAP::CloudController::Models::Domain.default_serving_domain_name = config[:serving_domain]
 
-      @thin_server = Thin::Server.new("0.0.0.0", config[:port],
+      @thin_server = Thin::Server.new(config[:nginx][:instance_socket],
                                       :signals => false) do
         use Rack::CommonLogger
         VCAP::CloudController::MessageBus.register_components

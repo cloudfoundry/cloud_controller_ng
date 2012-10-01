@@ -18,6 +18,9 @@ info:
 # TODO: put back once json schema is sorted out
 # allow_debug: false
 
+nginx:
+  instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
+
 logging:
   level: debug2
 
