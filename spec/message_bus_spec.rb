@@ -38,6 +38,21 @@ module VCAP::CloudController
 
     describe "subscribe_on_reactor" do
       include_examples "subscription", true
+
+      it "should not leak exceptions into the defer block" do
+        nats.should_receive(:subscribe).and_yield(msg_json, nil)
+
+        logger = mock(:logger)
+        logger.should_receive(:error)
+        MessageBus.should_receive(:logger).and_return(logger)
+
+        with_em_and_thread(:auto_stop => false) do
+          EventMachine::Timer.new(0.1) { EM.stop }
+          MessageBus.subscribe("foo") do
+            raise "boom"
+          end
+        end
+      end
     end
 
     describe "subscribe" do

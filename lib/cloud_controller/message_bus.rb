@@ -62,10 +62,14 @@ module VCAP::CloudController::MessageBus
   def self.subscribe(subject, opts = {}, &blk)
     subscribe_on_reactor(subject, opts) do |payload, inbox|
       EM.defer do
-        # OK so we're always calling with arity two
-        # NATS does a switch on blk.arity
-        # we might do it if we are propelled to supply a lambda here...
-        blk.yield(payload, inbox)
+        begin
+          # OK so we're always calling with arity two
+          # NATS does a switch on blk.arity
+          # we might do it if we are propelled to supply a lambda here...
+          blk.yield(payload, inbox)
+        rescue => e
+          logger.error "exception processing: '#{subject}' '#{payload}'"
+        end
       end
     end
   end
