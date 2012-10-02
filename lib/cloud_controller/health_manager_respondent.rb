@@ -32,6 +32,7 @@ module VCAP::CloudController
 
     # @param [Hash] payload the decoded request message
     def process_hm_request(payload)
+      logger.debug("hm request: #{payload.inspect}")
       case payload[:op]
       when "START"
         process_hm_start(payload)
