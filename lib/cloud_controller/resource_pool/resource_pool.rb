@@ -59,10 +59,13 @@ class VCAP::CloudController::ResourcePool
     end
 
     def copy(descriptor, destination)
+      path = path_from_sha1(descriptor["sha1"])
       if resource_known?(descriptor)
+        logger.debug "resource pool sync #{descriptor} #{path}"
         overwrite_destination_with!(descriptor, destination)
       else
-        raise ArgumentError, "Can not copy bits we do not have"
+        logger.warn "resource pool sync error #{descriptor} #{path}"
+        raise ArgumentError, "Can not copy bits we do not have #{descriptor}"
       end
     end
 
