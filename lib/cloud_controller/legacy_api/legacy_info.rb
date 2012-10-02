@@ -35,6 +35,13 @@ module VCAP::CloudController
 
       legacy_resp = {}
       ds.filter(:provider => "core").each do |svc|
+        hasD100Plan = false
+        svc.service_plans.each do |plan|
+          hasD100Plan = true if plan.name == "D100"
+        end
+
+        next unless hasD100Plan
+
         svc_type = LegacyService.synthesize_service_type(svc)
         legacy_resp[svc_type] ||= {}
         legacy_resp[svc_type][svc.label] ||= {}

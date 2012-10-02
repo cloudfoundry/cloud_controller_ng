@@ -167,22 +167,47 @@ module VCAP::CloudController
           :label => "mysql",
           :provider => "core",
         )
+
+        Models::ServicePlan.make(:service => @mysql_svc, :name => "D100")
+
         @pg_svc     = Models::Service.make(
           :label => "postgresql",
           :provider => "core",
         )
+
+        Models::ServicePlan.make(:service => @pg_svc, :name => "D100")
+
         @redis_svc  = Models::Service.make(
           :label => "redis",
           :provider => "core",
         )
+
+        Models::ServicePlan.make(:service => @redis_svc, :name => "D100")
+
         @mongo_svc  = Models::Service.make(
           :label => "mongodb",
           :provider => "core",
         )
+
+        Models::ServicePlan.make(:service => @mongo_svc, :name => "D100")
+
         @random_svc = Models::Service.make(
           :label => "random",
           :provider => "core",
         )
+
+        Models::ServicePlan.make(:service => @random_svc, :name => "D100")
+
+        @random_other_svc = Models::Service.make(
+          :label => "random_other",
+          :provider => "core",
+        )
+
+        Models::ServicePlan.make(
+          :service => @random_other_svc,
+          :name => "other"
+        )
+
         non_core = Models::Service.make
 
         get "/info/services", {}, headers_for(Models::User.make)
@@ -301,6 +326,13 @@ module VCAP::CloudController
             }
           }
         }
+      end
+
+      it "should filter service with non-D100 plan" do
+        hash = Yajl::Parser.parse(last_response.body)
+        hash["database"].should_not have_key("random_other")
+        hash["key-value"].should_not have_key("random_other")
+        hash["generic"].should_not have_key("random_other")
       end
     end
   end
