@@ -52,7 +52,7 @@ module VCAP::CloudController
         dea_request("find.droplet", message, request_options)
       end
 
-      def get_file_url(app, instance, path)
+      def get_file_uri(app, instance, path)
         if app.stopped?
           msg = "Request failed for app: #{app.name}, instance: #{instance}"
           msg << " and path: #{path || '/'} as the app is in stopped state."
@@ -76,14 +76,14 @@ module VCAP::CloudController
 
         if instance_found = find_specific_instance(app, search_options)
           if instance_found[:file_uri_v2]
-            return { :url => "#{instance_found[:file_uri_v2]}",
+            return { :uri => "#{instance_found[:file_uri_v2]}",
               :file_uri_v2 => true }
           end
 
           url = "#{instance_found[:file_uri]}#{instance_found[:staged]}"
           url << "/#{path}"
 
-          return { :url => url, :file_uri_v2 => false,
+          return { :uri => url, :file_uri_v2 => false,
             :credentials => instance_found[:credentials]}
         end
 

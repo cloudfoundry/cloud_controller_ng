@@ -236,7 +236,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "get_file_url" do
+    describe "get_file_uri" do
       include Errors
 
       it "should raise an error if the app is in stopped state" do
@@ -247,7 +247,7 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_url(app, instance, path)
+            DeaClient.get_file_uri(app, instance, path)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
@@ -269,7 +269,7 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_url(app, instance, path)
+            DeaClient.get_file_uri(app, instance, path)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
@@ -282,7 +282,7 @@ module VCAP::CloudController
         end
       end
 
-      it "should return the file url if the required instance is found via DEA v1" do
+      it "should return the file uri if the required instance is found via DEA v1" do
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
 
@@ -306,15 +306,15 @@ module VCAP::CloudController
           with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
-          info = DeaClient.get_file_url(app, instance, path)
+          info = DeaClient.get_file_uri(app, instance, path)
           info.should be_an_instance_of Hash
-          info[:url].should == "file_uristaged/test"
+          info[:uri].should == "file_uristaged/test"
           info[:file_uri_v2].should be_false
           info[:credentials].should == ["username", "password"]
         end
       end
 
-      it "should return the file url from DEA v2 if the required instance is found via DEA v2 as well as v1" do
+      it "should return the file uri from DEA v2 if the required instance is found via DEA v2 as well as v1" do
         # pending "v2 uri support was explicitly disabled due to lack of http range support"
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
@@ -340,9 +340,9 @@ module VCAP::CloudController
             with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
-          info = DeaClient.get_file_url(app, instance, path)
+          info = DeaClient.get_file_uri(app, instance, path)
           info.should be_an_instance_of Hash
-          info[:url].should == "file_uri_v2"
+          info[:uri].should == "file_uri_v2"
           info[:file_uri_v2].should be_true
           info.keys.should_not include(:credentials)
         end
@@ -367,7 +367,7 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_url(app, instance, path)
+            DeaClient.get_file_uri(app, instance, path)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 

@@ -47,10 +47,10 @@ module VCAP::CloudController
           @app.save
           @app.refresh
 
-          to_return = { :url => "file_uri/",
+          to_return = { :uri => "file_uri/",
             :credentials => ["username", "password"],
             :file_uri_v2 => false }
-          DeaClient.should_receive(:get_file_url).with(@app, 5, nil).
+          DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
             and_return(to_return)
 
           client = mock("http client")
@@ -77,10 +77,10 @@ module VCAP::CloudController
           @app.save
           @app.refresh
 
-          to_return = { :url => "file_uri/path",
+          to_return = { :uri => "file_uri/path",
             :credentials => ["username", "password"],
             :file_uri_v2 => false }
-          DeaClient.should_receive(:get_file_url).with(@app, 5, "path").
+          DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
             and_return(to_return)
 
           client = mock("http client")
@@ -109,10 +109,10 @@ module VCAP::CloudController
           @app.save
           @app.refresh
 
-          to_return = { :url => "file_uri/",
+          to_return = { :uri => "file_uri/",
             :credentials => ["username", "password"],
             :file_uri_v2 => false }
-          DeaClient.should_receive(:get_file_url).with(@app, 5, nil).
+          DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
             and_return(to_return)
 
           client = mock("http client")
@@ -142,10 +142,10 @@ module VCAP::CloudController
           @app.save
           @app.refresh
 
-          to_return = { :url => "file_uri/",
+          to_return = { :uri => "file_uri/",
             :credentials => ["username", "password"],
             :file_uri_v2 => false }
-          DeaClient.should_receive(:get_file_url).with(@app, 5, nil).
+          DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
             and_return(to_return)
 
           client = mock("http client")
@@ -174,10 +174,10 @@ module VCAP::CloudController
           @app.save
           @app.refresh
 
-          to_return = { :url => "file_uri",
+          to_return = { :uri => "file_uri",
             :credentials => ["username", "password"],
             :file_uri_v2 => false }
-          DeaClient.should_receive(:get_file_url).with(@app, 5, "path").
+          DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
             and_return(to_return)
 
           client = mock("http client")
@@ -206,8 +206,8 @@ module VCAP::CloudController
           @app.save
           @app.refresh
 
-          to_return = { :url => "file_uri/", :file_uri_v2 => true }
-          DeaClient.should_receive(:get_file_url).with(@app, 5, nil).
+          to_return = { :uri => "file_uri/", :file_uri_v2 => true }
+          DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
             and_return(to_return)
 
           client = mock("http client")
