@@ -25,8 +25,12 @@ module VCAP::CloudController
         staging_uri("#{APP_PATH}/#{id}")
       end
 
-      def droplet_uri(id)
-        staging_uri("#{DROPLET_PATH}/#{id}")
+      def droplet_upload_uri(id)
+        staging_uri("/staging/droplets/#{id}")
+      end
+
+      def droplet_download_uri(id)
+        staging_uri("/staged_droplets/#{id}")
       end
 
       def with_upload_handle(id)
@@ -181,8 +185,8 @@ module VCAP::CloudController
       end
     end
 
-    get  "#{APP_PATH}/:id", :download_app
-    post "#{DROPLET_PATH}/:id", :upload_droplet
-    get  "#{DROPLET_PATH}/:id", :download_droplet
+    get  "/staging/apps/:id", :download_app
+    post "/staging/droplets/:id", :upload_droplet
+    get  "/staged_droplets/:id", :download_droplet
   end
 end
