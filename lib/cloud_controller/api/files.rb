@@ -14,7 +14,7 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def files(id, instance_id, path = nil)
+    def files(id, instance_id, path = nil, v1_api = false)
       app = find_id_and_validate_access(:read, id)
 
       if path == "logs/staging.log"
@@ -36,7 +36,11 @@ module VCAP::CloudController
         raise Errors::FileError.new(msg)
       end
 
-      url, credentials = DeaClient.get_file_url(app, instance_id, path)
+      info = DeaClient.get_file_url(app, instance_id, path)
+      url = info[:url]
+      credentials = info[:credentials]
+      file_uri_v2 = info[:file_uri_v2]
+
       url << "&tail" if params.include?("tail")
 
       headers = {}
@@ -44,9 +48,14 @@ module VCAP::CloudController
         headers["range"] = range
       end
 
-      http_response = http_get(url, credentials[0], credentials[1], headers)
-
-      # TODO: nginx acceleration
+      http_response = nil
+      if !file_uri_v2 || v1_api
+        # TODO: nginx acceleration.
+        http_response = http_get(url, credentials[0], credentials[1], headers)
+      else
+        # TODO: issue file server redirect.
+        http_response = http_get(url, nil, nil, headers)
+      end
 
       unless [200, 206].include? http_response.status
         msg = "Request failed for app: #{app.name}, instance: #{instance_id}"
