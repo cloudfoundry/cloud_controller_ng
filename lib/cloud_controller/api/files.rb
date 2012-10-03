@@ -36,7 +36,11 @@ module VCAP::CloudController
         raise Errors::FileError.new(msg)
       end
 
-      url, credentials = DeaClient.get_file_url(app, instance_id, path)
+      info = DeaClient.get_file_url(app, instance_id, path)
+      url = info[:url]
+      credentials = info[:credentials]
+      url_type = info[:type]
+
       url << "&tail" if params.include?("tail")
 
       headers = {}
@@ -44,9 +48,15 @@ module VCAP::CloudController
         headers["range"] = range
       end
 
-      http_response = http_get(url, credentials[0], credentials[1], headers)
-
-      # TODO: nginx acceleration
+      http_response = nil
+      case url_type
+      when "v1"
+        # TODO: nginx acceleration.
+        http_response = http_get(url, credentials[0], credentials[1], headers)
+      when "v2"
+        # TODO: issue file server redirect.
+        http_response = http_get(url, nil, nil, headers)
+      end
 
       unless [200, 206].include? http_response.status
         msg = "Request failed for app: #{app.name}, instance: #{instance_id}"
