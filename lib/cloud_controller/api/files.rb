@@ -52,10 +52,10 @@ module VCAP::CloudController
       case url_type
       when "v1"
         # TODO: nginx acceleration.
-        http_response = http_get(url, credentials[0], credentials[1], headers)
+        http_response = http_get(url, headers, credentials[0], credentials[1])
       when "v2"
         # TODO: issue file server redirect.
-        http_response = http_get(url, nil, nil, headers)
+        http_response = http_get(url, headers)
       end
 
       unless [200, 206].include? http_response.status
@@ -69,11 +69,9 @@ module VCAP::CloudController
       [http_response.status, http_response.body]
     end
 
-    def http_get(url, username, password, headers)
+    def http_get(url, headers, username = nil, password = nil)
       client = HTTPClient.new
-      if username != nil && password != nil
-        client.set_auth(nil, username, password)
-      end
+      client.set_auth(nil, username, password) if username && password
       client.get(url, :header => headers)
     end
 
