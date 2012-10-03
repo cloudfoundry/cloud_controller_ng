@@ -19,6 +19,7 @@ info:
 # allow_debug: false
 
 nginx:
+  use_nginx: true
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
 
 logging:
