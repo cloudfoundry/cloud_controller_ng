@@ -76,13 +76,14 @@ module VCAP::CloudController
 
         if instance_found = find_specific_instance(app, search_options)
           # if instance_found[:file_uri_v2]
-          #   return ["#{instance_found[:file_uri_v2]}", [nil, nil]]
+            # return { :url => "#{instance_found[:file_uri_v2]}", :type => "v2"}
           # end
 
           url = "#{instance_found[:file_uri]}#{instance_found[:staged]}"
           url << "/#{path}"
 
-          return [url, instance_found[:credentials]]
+          return { :url => url, :type => "v1",
+            :credentials => instance_found[:credentials]}
         end
 
         msg = "Request failed for app: #{app.name}, instance: #{instance}"

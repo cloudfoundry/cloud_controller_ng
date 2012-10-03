@@ -306,9 +306,11 @@ module VCAP::CloudController
           with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
-          file_url, credentials = DeaClient.get_file_url(app, instance, path)
-          file_url.should == "file_uristaged/test"
-          credentials.should == ["username", "password"]
+          info = DeaClient.get_file_url(app, instance, path)
+          info.should be_an_instance_of Hash
+          info[:url].should == "file_uristaged/test"
+          info[:type].should == "v1"
+          info[:credentials].should == ["username", "password"]
         end
       end
 
@@ -338,10 +340,11 @@ module VCAP::CloudController
             with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
-          file_url, credentials = DeaClient.get_file_url(app, instance, path)
-          file_url.should == "file_uri_v2"
-
-          credentials.should == [nil, nil]
+          info = DeaClient.get_file_url(app, instance, path)
+          info.should be_an_instance_of Hash
+          info[:url].should == "file_uri_v2"
+          info[:type].should == "v2"
+          info.keys.should_not include(:credentials)
         end
       end
 

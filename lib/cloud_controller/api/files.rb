@@ -36,7 +36,10 @@ module VCAP::CloudController
         raise Errors::FileError.new(msg)
       end
 
-      url, credentials = DeaClient.get_file_url(app, instance_id, path)
+      info = DeaClient.get_file_url(app, instance_id, path)
+      url = info[:url]
+      credentials = info[:credentials]
+
       url << "&tail" if params.include?("tail")
 
       headers = {}
@@ -44,7 +47,12 @@ module VCAP::CloudController
         headers["range"] = range
       end
 
-      http_response = http_get(url, credentials[0], credentials[1], headers)
+      http_response = nil
+      if credentials
+        http_response = http_get(url, credentials[0], credentials[1], headers)
+      else
+        http_response = http_get(url, nil, nil, headers)
+      end
 
       # TODO: nginx acceleration
 
