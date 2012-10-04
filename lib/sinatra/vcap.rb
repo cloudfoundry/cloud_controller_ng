@@ -1,5 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
+require "vcap/component"
 require "vcap/rest_api"
 require "sinatra/consumes"
 require "sinatra/reloader"
@@ -29,11 +30,17 @@ module Sinatra
       def is_vcap_error?(exception)
         exception.respond_to?(:error_code) && exception.respond_to?(:message)
       end
+
+      def varz
+        ::VCAP::Component.varz[:vcap_sinatra]
+      end
     end
 
     # Called when the caller registers the sinatra extension.  Sets up
     # the standard sinatra environment for vcap.
     def self.registered(app)
+      init_varz
+
       app.helpers Sinatra::Consumes
       app.helpers VCAP::Helpers
 
@@ -99,6 +106,9 @@ module Sinatra
       end
 
       before do
+        ::VCAP::Component.varz.synchronize do
+          varz[:requests][:outstanding] += 1
+        end
         logger_name = opts[:logger_name] || "vcap.api"
         env["rack.logger"] = Steno.logger(logger_name)
         @request_guid = SecureRandom.uuid
@@ -106,8 +116,29 @@ module Sinatra
       end
 
       after do
+        ::VCAP::Component.varz.synchronize do
+          varz[:requests][:outstanding] -= 1
+          varz[:requests][:completed] += 1
+          varz[:http_status][response.status] += 1
+        end
         headers["X-VCAP-Request-ID"] = @request_guid
         nil
+      end
+    end
+
+    private
+
+    def self.init_varz
+      ::VCAP::Component.varz.threadsafe!
+
+      requests = { :outstanding => 0, :completed => 0 }
+      http_status = {}
+      [(100..101), (200..206), (300..307), (400..417), (500..505)].each do |r|
+        r.each { |c| http_status[c] = 0 }
+      end
+      vcap_sinatra = { :requests => requests, :http_status => http_status }
+      ::VCAP::Component.varz.synchronize do
+        ::VCAP::Component.varz[:vcap_sinatra] ||= vcap_sinatra
       end
     end
   end
