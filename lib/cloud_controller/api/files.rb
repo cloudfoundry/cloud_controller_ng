@@ -14,7 +14,7 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def files(id, instance_id, path = nil, v1_api = false)
+    def files(id, instance_id, path = nil, redirect_ok = true)
       app = find_id_and_validate_access(:read, id)
 
       if path == "logs/staging.log"
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       http_response = nil
-      if !file_uri_v2 || v1_api
+      if !file_uri_v2 || !redirect_ok
         # TODO: nginx acceleration.
         http_response = http_get(uri, headers, credentials[0], credentials[1])
       else
