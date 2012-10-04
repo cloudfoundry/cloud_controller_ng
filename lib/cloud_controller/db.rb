@@ -1,5 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
+require "vcap/sequel_varz"
+
 module VCAP::CloudController
   class DB
     # Setup a Sequel connection pool
@@ -33,6 +35,7 @@ module VCAP::CloudController
       db.sql_log_level = opts[:log_level] || :debug2
 
       validate_sqlite_version(db) if using_sqlite
+      VCAP::SequelVarz.start(db)
       db
     end
 
