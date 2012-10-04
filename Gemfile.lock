@@ -14,10 +14,10 @@ GIT
 
 GIT
   remote: git://github.com/cloudfoundry/vcap-common.git
-  revision: fd6b6d91b19c551cf5091c8469595df923dd2612
-  ref: fd6b6d91
+  revision: 7b7dd74ddffeb5293af2325f0ed6efb35e226774
+  ref: 7b7dd74d
   specs:
-    vcap_common (2.0.7)
+    vcap_common (2.0.9)
       em-http-request (~> 1.0.0.beta3)
       eventmachine
       httpclient
@@ -27,7 +27,7 @@ GIT
       nats (~> 0.4.24)
       posix-spawn (~> 0.3.6)
       thin
-      yajl-ruby (~> 0.8.3)
+      yajl-ruby
 
 GIT
   remote: git://github.com/cloudfoundry/vcap-concurrency.git
@@ -167,5 +167,5 @@ DEPENDENCIES
   stager-client (~> 0.0.02)!
   steno (~> 0.0.15)
   vcap-concurrency!
-  vcap_common (~> 2.0.7)!
+  vcap_common (~> 2.0.8)!
   yajl-ruby
