@@ -315,7 +315,6 @@ module VCAP::CloudController
       end
 
       it "should return the file uri from DEA v2 if the required instance is found via DEA v2 as well as v1" do
-        # pending "v2 uri support was explicitly disabled due to lack of http range support"
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
 
