@@ -25,8 +25,12 @@ module VCAP::CloudController
         staging_uri("#{APP_PATH}/#{id}")
       end
 
-      def droplet_uri(id)
-        staging_uri("#{DROPLET_PATH}/#{id}")
+      def droplet_upload_uri(id)
+        staging_uri("/staging/droplets/#{id}")
+      end
+
+      def droplet_download_uri(id)
+        staging_uri("/staged_droplets/#{id}")
       end
 
       def with_upload_handle(id)
@@ -101,10 +105,11 @@ module VCAP::CloudController
         raise AppPackageNotFound.new(id)
       end
 
-      # TODO: enable nginx
-      # response.headers['X-Accel-Redirect'] = '/droplets/' + File.basename(path)
-      # render :nothing => true, :status => 200
-      send_file package_path
+      if config[:nginx][:use_nginx]
+        return [200, { "X-Accel-Redirect" => "/droplets/" + "app_#{id}" }, ""]
+      else
+        return send_file package_path
+      end
     end
 
     # Handles a droplet upload from a stager
@@ -140,18 +145,23 @@ module VCAP::CloudController
         raise StagingError.new("droplet not found for #{id}")
       end
 
-      # TODO: enable nginx
-      send_file droplet_path
+      if config[:nginx][:use_nginx]
+        return [200, { "X-Accel-Redirect" => "/droplets/" + "droplet_#{id}" }, ""]
+      else
+        return send_file droplet_path
+      end
     end
 
     private
 
+    # returns an object that responds to #path pointing to the uploaded file
+    # @return [#path]
     def upload_file
-      # TODO: enable nginx
-      # if CloudController.use_nginx
-      #   params[:droplet_path]
-      # else
-      @upload_file ||= params["upload"]["droplet"][:tempfile]
+      @upload_file ||= if config[:nginx][:use_nginx]
+                         Struct.new(:path).new(params["droplet_path"])
+                       else
+                         params["upload"]["droplet"][:tempfile]
+                       end
     rescue
       nil
     end
@@ -175,8 +185,8 @@ module VCAP::CloudController
       end
     end
 
-    get  "#{APP_PATH}/:id", :download_app
-    post "#{DROPLET_PATH}/:id", :upload_droplet
-    get  "#{DROPLET_PATH}/:id", :download_droplet
+    get  "/staging/apps/:id", :download_app
+    post "/staging/droplets/:id", :upload_droplet
+    get  "/staged_droplets/:id", :download_droplet
   end
 end

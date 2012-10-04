@@ -7,6 +7,7 @@ class VCAP::CloudController::Config < VCAP::Config
 
   define_schema do
     {
+      :port => Integer,
       :info => {
         :name            => String,
         :build           => String,
@@ -78,6 +79,11 @@ class VCAP::CloudController::Config < VCAP::Config
 
       optional(:index)       => Integer,    # Component index (cc-0, cc-1, etc)
       optional(:local_route) => String,     # If set, use this to determine the IP address that is returned in discovery messages
+
+      :nginx => {
+        :use_nginx  => bool,
+        :instance_socket => String,
+      },
     }
   end
 

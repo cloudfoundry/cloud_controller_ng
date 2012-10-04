@@ -11,6 +11,10 @@ module VCAP::CloudController
         @developer = make_developer_for_space(@app.space)
       end
 
+      before :each, :use_nginx => false do
+        config_override(:nginx => { :use_nginx => false })
+      end
+
       context "as a developer" do
         it "should return 400 when bad instance id is used" do
           get("/v2/apps/#{@app.guid}/instances/bad_instance_id/files",
@@ -39,7 +43,7 @@ module VCAP::CloudController
           last_response.status.should == 400
         end
 
-        it "should return 400 when accessing of the file URL fails" do
+        it "should return 400 when accessing of the file URL fails", :use_nginx => false do
           instance_id = 5
 
           @app.state = "STARTED"
@@ -69,7 +73,7 @@ module VCAP::CloudController
           last_response.status.should == 400
         end
 
-        it "should return the expected files when path is specified" do
+        it "should return the expected files when path is specified", :use_nginx => false do
           instance_id = 5
 
           @app.state = "STARTED"
@@ -101,7 +105,7 @@ module VCAP::CloudController
           last_response.body.should == "files"
         end
 
-        it "should return the expected files when no path is specified" do
+        it "should return the expected files when no path is specified", :use_nginx => false do
           instance_id = 5
 
           @app.state = "STARTED"
@@ -133,7 +137,7 @@ module VCAP::CloudController
           last_response.body.should == "files"
         end
 
-        it "should forward the http range request" do
+        it "should forward the http range request", :use_nginx => false do
           instance_id = 5
           range = "bytes=100-200"
 
@@ -166,7 +170,7 @@ module VCAP::CloudController
           last_response.body.should == "files"
         end
 
-        it "should accept tail query parameter" do
+        it "should accept tail query parameter (non-nginx)", :use_nginx => false do
           instance_id = 5
 
           @app.state = "STARTED"
@@ -198,7 +202,37 @@ module VCAP::CloudController
           last_response.body.should == "files"
         end
 
-        it "should ignore absence of credentials in dea response" do
+        it "should accept tail query parameter" do
+          instance_id = 5
+
+          @app.state = "STARTED"
+          @app.instances = 10
+          @app.save
+          @app.refresh
+
+          DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
+            and_return(
+              {
+                :uri => "http://1.2.3.4/foo/path",
+                :credentials => ["u", "p"],
+              }
+            )
+
+          get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path?tail",
+              {},
+              headers_for(@developer))
+
+          last_response.status.should == 200
+          last_response.headers.should include(
+            {
+              "X-Accel-Redirect" => "/internal_redirect/http://1.2.3.4/foo/path&tail",
+              # "dTpw" is ["u:p"].pack("m0")
+              "X-Auth" => "Basic dTpw",
+            }
+          )
+        end
+
+        it "should ignore absence of credentials in dea response", :use_nginx => false do
           instance_id = 5
 
           @app.state = "STARTED"

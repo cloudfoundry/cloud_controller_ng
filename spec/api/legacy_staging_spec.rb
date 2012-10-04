@@ -57,9 +57,9 @@ module VCAP::CloudController
       end
     end
 
-    describe "droplet_uri" do
+    describe "droplet_upload_uri" do
       it "should return a uri to our cc" do
-        uri = LegacyStaging.droplet_uri(app_guid)
+        uri = LegacyStaging.droplet_upload_uri(app_guid)
         uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}"
       end
     end
@@ -149,7 +149,7 @@ module VCAP::CloudController
       include_examples "staging bad auth", :post
     end
 
-    describe "GET /staging/droplets/:id" do
+    describe "GET /staged_droplets/:id" do
       let(:app_obj) { Models::App.make }
 
       before do
@@ -158,28 +158,39 @@ module VCAP::CloudController
       end
 
       context "with a valid droplet" do
-        it "should return the droplet" do
+        xit "should return the droplet" do
           path = AppStager.droplet_path(app_obj)
           File.open(path, "w") do |f|
             f.write("droplet contents")
           end
 
-          get "/staging/droplets/#{app_obj.guid}"
+          get "/staged_droplets/#{app_obj.guid}"
           last_response.status.should == 200
           last_response.body.should == "droplet contents"
+        end
+
+        it "redirects nginx to serve staged droplet" do
+          path = AppStager.droplet_path(app_obj)
+          File.open(path, "w") do |f|
+            f.write("droplet contents")
+          end
+
+          get "/staged_droplets/#{app_obj.guid}"
+          last_response.status.should == 200
+          last_response.headers["X-Accel-Redirect"].should == "/droplets/droplet_#{app_obj.guid}"
         end
       end
 
       context "with a valid app but no droplet" do
         it "should return an error" do
-          get "/staging/droplets/#{app_obj.guid}"
+          get "/staged_droplets/#{app_obj.guid}"
           last_response.status.should == 400
         end
       end
 
       context "with an invalid app" do
         it "should return an error" do
-          get "/staging/droplets/bad"
+          get "/staged_droplets/bad"
           last_response.status.should == 404
         end
       end
