@@ -38,8 +38,12 @@ module VCAP::CloudController
 
       info = DeaClient.get_file_uri(app, instance_id, path)
       uri = info[:uri]
-      credentials = info[:credentials]
       file_uri_v2 = info[:file_uri_v2]
+      username = password = nil
+      if info[:credentials]
+        username = info[:credentials][0]
+        password = info[:credentials][1]
+      end
 
       uri << "&tail" if params.include?("tail")
 
@@ -51,10 +55,10 @@ module VCAP::CloudController
       http_response = nil
       if !file_uri_v2 || !redirect_ok
         # TODO: nginx acceleration.
-        http_response = http_get(uri, headers, credentials[0], credentials[1])
+        http_response = http_get(uri, headers, username, password)
       else
         # TODO: issue file server redirect.
-        http_response = http_get(uri, headers)
+        http_response = http_get(uri, headers, username, password)
       end
 
       unless [200, 206].include? http_response.status
@@ -68,7 +72,7 @@ module VCAP::CloudController
       [http_response.status, http_response.body]
     end
 
-    def http_get(uri, headers, username = nil, password = nil)
+    def http_get(uri, headers, username, password)
       client = HTTPClient.new
       client.set_auth(nil, username, password) if username && password
       client.get(uri, :header => headers)
