@@ -53,11 +53,11 @@ module VCAP::CloudController
       end
 
       http_response = nil
-      if !file_uri_v2 || !redirect_ok
-        # TODO: nginx acceleration.
+      if file_uri_v2 && redirect_ok
+        # TODO: issue file server redirect.
         http_response = http_get(uri, headers, username, password)
       else
-        # TODO: issue file server redirect.
+        # TODO: nginx acceleration.
         http_response = http_get(uri, headers, username, password)
       end
 
