@@ -158,7 +158,7 @@ module VCAP::CloudController
       end
 
       context "with a valid droplet" do
-        xit "should return the droplet" do
+        it "should return the droplet" do
           path = AppStager.droplet_path(app_obj)
           File.open(path, "w") do |f|
             f.write("droplet contents")
@@ -167,17 +167,6 @@ module VCAP::CloudController
           get "/staging/droplets/#{app_obj.guid}"
           last_response.status.should == 200
           last_response.body.should == "droplet contents"
-        end
-
-        it "redirects nginx to serve staged droplet" do
-          path = AppStager.droplet_path(app_obj)
-          File.open(path, "w") do |f|
-            f.write("droplet contents")
-          end
-
-          get "/staging/droplets/#{app_obj.guid}"
-          last_response.status.should == 200
-          last_response.headers["X-Accel-Redirect"].should == "/droplets/droplet_#{app_obj.guid}"
         end
       end
 

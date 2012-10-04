@@ -101,9 +101,10 @@ module VCAP::CloudController
         raise AppPackageNotFound.new(id)
       end
 
-      # TODO: enable non-nginx
-      # send_file package_path
-      [200, { "X-Accel-Redirect" => "/droplets/" + "app_#{id}" }, ""]
+      # TODO: enable nginx
+      # response.headers['X-Accel-Redirect'] = '/droplets/' + File.basename(path)
+      # render :nothing => true, :status => 200
+      send_file package_path
     end
 
     # Handles a droplet upload from a stager
@@ -139,9 +140,8 @@ module VCAP::CloudController
         raise StagingError.new("droplet not found for #{id}")
       end
 
-      # TODO: enable non-nginx
-      # send_file droplet_path
-      [200, { "X-Accel-Redirect" => "/droplets/" + "droplet_#{id}" }, ""]
+      # TODO: enable nginx
+      send_file droplet_path
     end
 
     private
