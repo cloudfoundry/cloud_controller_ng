@@ -39,11 +39,6 @@ module VCAP::CloudController
       info = DeaClient.get_file_uri(app, instance_id, path)
       uri = info[:uri]
       file_uri_v2 = info[:file_uri_v2]
-      username = password = nil
-      if info[:credentials]
-        username = info[:credentials][0]
-        password = info[:credentials][1]
-      end
 
       uri << "&tail" if params.include?("tail")
 
@@ -54,14 +49,16 @@ module VCAP::CloudController
 
       http_response = nil
       if file_uri_v2 && redirect_ok
-        if config[:nginx][:use_nginx]
-          x_accel = {"X-Accel-Redirect" => "/internal_redirect/#{uri}"}
-          return [200, x_accel, ""]
+        headers["location"] = uri
+        return [HTTP::FOUND, headers, nil]
+      else
+        username = password = nil
+        # Credentials are absent when file uri v2 is returned by dea ng.
+        if info[:credentials]
+          username = info[:credentials][0]
+          password = info[:credentials][1]
         end
 
-        # TODO: do a "302 Found" here
-        http_response = http_get(uri, headers, username, password)
-      else
         if config[:nginx][:use_nginx]
           basic_auth = {
             "X-Auth" => "Basic #{[[username, password].join(":")].pack("m0")}",
