@@ -53,25 +53,24 @@ module VCAP::CloudController
       end
 
       http_response = nil
-      if !file_uri_v2 || !redirect_ok
+      if file_uri_v2 && redirect_ok
+        if config[:nginx][:use_nginx]
+          x_accel = {"X-Accel-Redirect" => "/internal_redirect/#{uri}"}
+          return [200, x_accel, ""]
+        end
+
+        # TODO: do a "302 Found" here
+        http_response = http_get(uri, headers, username, password)
+      else
         if config[:nginx][:use_nginx]
           basic_auth = {
             "X-Auth" => "Basic #{[[username, password].join(":")].pack("m0")}",
           }
-          # TODO: do a "302 Found" when dea_next replaces dea
           x_accel = {"X-Accel-Redirect" => "/internal_redirect/#{uri}"}
           return [200, x_accel.merge(basic_auth), ""]
-        else
-          http_response = http_get(uri, headers, username, password)
         end
-      else
-        # TODO: do a "302 Found" here
-        if config[:nginx][:use_nginx]
-          x_accel = {"X-Accel-Redirect" => "/internal_redirect/#{uri}"}
-          return [200, x_accel, ""]
-        else
-          http_response = http_get(uri, headers, username, password)
-        end
+
+        http_response = http_get(uri, headers, username, password)
       end
 
       # FIXME if bad things happen during serving the file, we probably
