@@ -22,7 +22,7 @@ module VCAP::CloudController
     def self.connect(logger, opts)
       connection_options = {}
       [:max_connections, :pool_timeout].each do |key|
-        connection_options[key] = opts[key.to_s]
+        connection_options[key] = opts[key] if opts[key]
       end
 
       using_sqlite = opts[:database].index("sqlite://") == 0
