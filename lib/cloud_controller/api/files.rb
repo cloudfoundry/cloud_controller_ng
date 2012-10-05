@@ -73,7 +73,7 @@ module VCAP::CloudController
 
       # FIXME if bad things happen during serving the file, we probably
       # shouldn't expose this url
-      unless [200, 206].include? http_response.status
+      unless [200, 206, 416].include? http_response.status
         msg = "Request failed for app: #{app.name}, instance: #{instance_id}"
         msg << " as there was an error retrieving the files"
         msg << " from the uri: #{uri}."
