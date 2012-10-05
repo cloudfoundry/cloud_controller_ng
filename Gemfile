@@ -33,4 +33,5 @@ group :test do
   gem "simplecov-rcov"
   gem "sqlite3"
   gem "machinist", "~> 1.0.6"
+  gem "webmock"
 end

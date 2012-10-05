@@ -4,6 +4,17 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Organization do
+    before :each do
+      # TODO: This is an overkill, only PUT / POST / DELETE requests will need
+      # to bypass qm, but until we have a less tedious way to make it
+      # finer-grained let's do this
+      config_override(
+        :quota_manager => {
+          :policy => "BlindApproval",
+        },
+      )
+    end
+
     let(:org) { Models::Organization.make }
 
     it_behaves_like "a CloudController API", {
