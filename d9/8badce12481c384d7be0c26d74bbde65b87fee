@@ -1,0 +1,8 @@
+Code-Review+2: Patrick Bozeman <pbozeman@vmware.com>
+Verified+1: CI Master <cf-ci@rbcon.com>
+Code-Review+1: Pivotal Labs <pivotal-vmware@googlegroups.com>
+Submitted-by: Patrick Bozeman <pbozeman@vmware.com>
+Submitted-at: Fri, 05 Oct 2012 19:36:58 +0000
+Reviewed-on: http://reviews.cloudfoundry.org/10108
+Project: cloud_controller_ng
+Branch: refs/heads/master
