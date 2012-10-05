@@ -152,7 +152,7 @@ module VCAP::CloudController
         Files.should_receive(:new).once.
           and_return(files_obj)
         files_obj.should_receive(:dispatch).once.
-          with(:files, @app.guid, "1", "path", false).
+          with(:files, @app.guid, "1", "path", :allow_redirect => false).
           and_return([HTTP::OK, "files"])
 
         get "/apps/#{@app.name}/instances/1/files/path", {}, headers_for(user)
@@ -167,7 +167,7 @@ module VCAP::CloudController
         Files.should_receive(:new).once.
           and_return(files_obj)
         files_obj.should_receive(:dispatch).once.
-          with(:files, @app.guid, "1", nil, false).
+          with(:files, @app.guid, "1", nil, :allow_redirect => false).
           and_return([HTTP::OK, "files"])
 
         get "/apps/#{@app.name}/instances/1/files", {}, headers_for(user)

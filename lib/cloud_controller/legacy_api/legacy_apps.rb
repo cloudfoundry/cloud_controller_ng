@@ -83,7 +83,7 @@ module VCAP::CloudController
 
       app = app_from_name(name)
       VCAP::CloudController::Files.new(config, logger, env, params, body).
-        dispatch(:files, app.guid, instance_id, path, false)
+        dispatch(:files, app.guid, instance_id, path, :allow_redirect => false)
     end
 
     def stats(name)
