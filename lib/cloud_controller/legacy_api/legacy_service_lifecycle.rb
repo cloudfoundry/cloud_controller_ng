@@ -60,8 +60,14 @@ module VCAP::CloudController
       logger.error("service gateway error while performing #{op}: #{e}")
       raise ServiceGatewayError, e
     rescue VCAP::Services::Api::ServiceGatewayClient::ErrorResponse => e
-      logger.error("service gateway client error while performing #{op}: #{e}")
-      raise ServerError
+      if e.status == 501
+        logger.warn("We are running a service gateway that doesn't support lifecycle api: op: #{op}, error: #{e}")
+        # make sure we pass on the 501 instead of a generic 500
+        raise ServiceNotImplemented
+      else
+        logger.error("service gateway client error while performing #{op}: #{e}")
+        raise ServerError
+      end
     end
 
     get    "/services/v1/configurations/:gateway_name/jobs/:job_id",            :job_info
