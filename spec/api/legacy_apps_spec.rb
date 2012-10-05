@@ -12,6 +12,15 @@ module VCAP::CloudController
       HealthManagerClient.stub(:healthy_instances).and_return(1)
     end
 
+    # make sure to override it in before-all's
+    before(:all) do
+      config_override(
+        :quota_manager => {
+          :policy => "BlindApproval",
+        },
+      )
+    end
+
     after do
       Models::Domain.default_serving_domain_name = nil
     end
