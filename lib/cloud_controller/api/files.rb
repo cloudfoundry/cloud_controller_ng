@@ -14,7 +14,8 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def files(id, instance_id, path = nil, redirect_ok = true)
+    def files(id, instance_id, path = nil, opts = {})
+      opts = { :allow_redirect => true }.merge(opts)
       app = find_id_and_validate_access(:read, id)
 
       if path == "logs/staging.log"
@@ -48,7 +49,7 @@ module VCAP::CloudController
       end
 
       http_response = nil
-      if file_uri_v2 && redirect_ok
+      if file_uri_v2 && opts[:allow_redirect]
         headers["location"] = uri
         return [HTTP::FOUND, headers, nil]
       else
