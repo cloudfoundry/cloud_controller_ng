@@ -59,6 +59,7 @@ module VCAP::CloudController::SpecHelper
   def config
     config_file = File.expand_path("../../config/cloud_controller.yml", __FILE__)
     c = VCAP::CloudController::Config.from_file(config_file)
+    c[:nginx][:use_nginx] = true
     c = c.merge(@config_override || {})
     VCAP::CloudController::Config.configure(c)
     c
