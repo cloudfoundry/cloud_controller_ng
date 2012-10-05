@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require File.expand_path("../spec_helper", __FILE__)
+require "webmock/rspec"
 
 module VCAP::CloudController
   describe VCAP::CloudController::LegacyServiceLifecycle do
@@ -25,6 +26,11 @@ module VCAP::CloudController
         :gateway_name => "lifecycle",
         :name => "bar",
         :space => @user.default_space,
+        :service_plan => Models::ServicePlan.make(
+          :service => Models::Service.make(
+            :url => "http://12.34.56.78",
+          ),
+        ),
       )
       Models::ServiceAuthToken.create(
         :service => service_instance.service_plan.service,
@@ -58,6 +64,17 @@ module VCAP::CloudController
         last_response.status.should == 200
         decoded_response["job_id"].should == "abc"
       end
+
+      it "returns a 501 Not Implemented if upstream says so" do
+        Models::ServiceInstance.any_instance.unstub(:service_gateway_client)
+        gateway_url = "http://12.34.56.78/gateway/v1/configurations/lifecycle/snapshots"
+        stub_request(:post, gateway_url).to_return(
+          :status => 501,
+          :body => "{\"code\":1, \"description\":\"value\"}",
+        )
+        post "/services/v1/configurations/lifecycle/snapshots", {}, headers_for(@user)
+        last_response.status.should == 501
+      end
     end
 
     describe "GET", "/services/v1/configurations/:gateway_name/snapshots" do
@@ -84,6 +101,17 @@ module VCAP::CloudController
         last_response.status.should == 200
         decoded_response["snapshots"].size.should == 1
         decoded_response["snapshots"][0]["snapshot_id"].should == "abc"
+      end
+
+      it "returns a 501 Not Implemented if upstream says so" do
+        Models::ServiceInstance.any_instance.unstub(:service_gateway_client)
+        gateway_url = "http://12.34.56.78/gateway/v1/configurations/lifecycle/snapshots"
+        stub_request(:get, gateway_url).to_return(
+          :status => 501,
+          :body => "{\"code\":1, \"description\":\"value\"}",
+        )
+        get "/services/v1/configurations/lifecycle/snapshots", {}, headers_for(@user)
+        last_response.status.should == 501
       end
     end
 
@@ -315,7 +343,9 @@ module VCAP::CloudController
       end
     end
 
-    describe "PUT", "/services/v1/configurations/:gateway_name/serialized/data"
+    describe "PUT", "/services/v1/configurations/:gateway_name/serialized/data" do
+      it "returns a 501 Not Implemented if upstream says so"
+    end
 
     describe "GET", "/services/v1/configurations/:gateway_name/jobs/:job_id" do
       it "should return not authorized for unknown users" do

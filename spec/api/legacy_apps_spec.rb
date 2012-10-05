@@ -10,6 +10,23 @@ module VCAP::CloudController
     before do
       Models::Domain.default_serving_domain_name = DEFAULT_SERVING_DOMAIN_NAME
       HealthManagerClient.stub(:healthy_instances).and_return(1)
+      # TODO: This is an overkill, only PUT / POST / DELETE requests will need
+      # to bypass qm, but until we have a less tedious way to make it
+      # finer-grained let's do this
+      config_override(
+        :quota_manager => {
+          :policy => "BlindApproval",
+        },
+      )
+    end
+
+    # ensure this overrides the config in lower before-all's
+    before :all do
+      config_override(
+        :quota_manager => {
+          :policy => "BlindApproval",
+        },
+      )
     end
 
     after do

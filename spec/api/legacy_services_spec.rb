@@ -2,6 +2,17 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::LegacyService do
+    before :each do
+      # TODO: This is an overkill, only PUT / POST / DELETE requests will need
+      # to bypass qm, but until we have a less tedious way to make it
+      # finer-grained let's do this
+      config_override(
+        :quota_manager => {
+          :policy => "BlindApproval",
+        },
+      )
+    end
+
     describe "User facing apis" do
       let(:user) { make_user_with_default_space(:admin => true) }
 
