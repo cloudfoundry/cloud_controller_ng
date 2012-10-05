@@ -14,7 +14,11 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def files(id, instance_id, path = nil, redirect_ok = true)
+    def files(id, instance_id, path = nil)
+      get_files(id, instance_id, path, true)
+    end
+
+    def get_files(id, instance_id, path, redirect_ok)
       app = find_id_and_validate_access(:read, id)
 
       if path == "logs/staging.log"
