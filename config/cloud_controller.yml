@@ -1,4 +1,5 @@
 ---
+local_route: 127.0.0.1
 port: 8181
 pid_filename: /tmp/cloud_controller.pid
 nats_uri: nats://127.0.0.1:4222
@@ -19,7 +20,7 @@ info:
 # allow_debug: false
 
 nginx:
-  use_nginx: true
+  use_nginx: false
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
 
 logging:
