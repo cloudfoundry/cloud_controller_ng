@@ -91,7 +91,12 @@ module VCAP::CloudController
 
       context "service binding" do
         it "should bind a service on the gw during create" do
-          gw_client.should_receive(:bind).and_return(bind_resp)
+          VCAP::CloudController::SecurityContext.
+            should_receive(:current_user_email).
+            and_return("a@b.c")
+          gw_client.should_receive(:bind).
+            with(hash_including(:email => "a@b.c")).
+            and_return(bind_resp)
           binding = Models::ServiceBinding.make(:service_instance => service_instance)
           binding.gateway_name.should == "gwname_binding"
           binding.gateway_data.should == "abc"

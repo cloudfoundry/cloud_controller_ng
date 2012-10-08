@@ -120,7 +120,8 @@ module VCAP::CloudController::Models
         :service_id => service_instance.gateway_name,
         # TODO: we shouldn't still be using this compound label
         :label      => "#{service.label}-#{service.version}",
-        :email      => "todo@todo.com", # TODO
+        :email      => VCAP::CloudController::SecurityContext.
+                             current_user_email,
         :binding_options => {}
       )
 

@@ -122,7 +122,7 @@ module VCAP::CloudController::Models
         # TODO: we shouldn't still be using this compound label
         :label => "#{service_plan.service.label}-#{service_plan.service.version}",
         :name  => name,
-        :email => "todo@todo.com", # TODO
+        :email => VCAP::CloudController::SecurityContext.current_user_email,
         :plan  => service_plan.name,
         :plan_option => {}, # TODO: remove this
         :version => service_plan.service.version

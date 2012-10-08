@@ -56,7 +56,13 @@ module VCAP::CloudController
 
       context "service provisioning" do
         it "should provision a service on create" do
-          gw_client.should_receive(:provision).and_return(provision_resp)
+          VCAP::CloudController::SecurityContext.
+            should_receive(:current_user_email).
+            and_return("a@b.c")
+          received = nil
+          gw_client.should_receive(:provision).
+            with(hash_including(:email => "a@b.c")).
+            and_return(provision_resp)
           instance = Models::ServiceInstance.make(:service_plan => service_plan)
           instance.gateway_name.should == "gwname"
           instance.gateway_data.should == "abc"
