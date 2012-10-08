@@ -72,6 +72,14 @@ module VCAP::CloudController
       HTTP::OK
     end
 
+    def crashes(name)
+      logger.debug "instances app request name: #{name}"
+
+      app = app_from_name(name)
+      VCAP::CloudController::Crashes.new(config, logger, env, params, body).
+        dispatch(:crashes, app.guid)
+    end
+
     def files(name, instance_id, path = nil)
       msg = "files app request name: #{name}, instance_id: #{instance_id}"
       msg << ", path: #{path}"
