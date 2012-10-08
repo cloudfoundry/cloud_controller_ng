@@ -54,14 +54,15 @@ module VCAP::CloudController
             }
           }
 
-          DeaClient.should_receive(:find_stats).with(@app).and_return(stats)
+          DeaClient.should_receive(:find_stats).with(@app, {}).
+            and_return(stats)
 
           get("/v2/apps/#{@app.guid}/stats",
               {},
               headers_for(@developer))
 
-              last_response.status.should == 200
-              Yajl::Parser.parse(last_response.body).should == expected
+          last_response.status.should == 200
+          Yajl::Parser.parse(last_response.body).should == expected
         end
       end
 
