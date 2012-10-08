@@ -11,9 +11,9 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def stats(id)
+    def stats(id, opts = {})
       app = find_id_and_validate_access(:read, id)
-      stats = DeaClient.find_stats(app)
+      stats = DeaClient.find_stats(app, opts)
       [HTTP::OK, Yajl::Encoder.encode(stats)]
     end
 
