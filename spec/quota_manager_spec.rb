@@ -74,4 +74,31 @@ module VCAP::CloudController
       end
     end
   end
+
+  describe VCAP::CloudController::RestController::QuotaManager::MoneyMakerClient do
+    describe "request" do
+      it "should send X-VCAP-Request_ID" do
+        request_guid = SecureRandom.uuid
+        Thread.current[:vcap_request_id] = request_guid
+
+        client = mock(:http_client)
+        url = "http://some/url"
+        body = { :foo => "bar" }
+
+        client.should_receive(:request) do |m, u, opts|
+          m.should == :post
+          u.should == url
+          opts[:body].should == Yajl::Encoder.encode(body)
+          opts[:header]["x-vcap-request-id"].should == request_guid
+          OpenStruct.new(:code => 200, :body => "")
+        end
+
+        RestController::QuotaManager::MoneyMakerClient.
+          should_receive(:http_client).and_return(client)
+
+        RestController::QuotaManager::MoneyMakerClient.
+          send(:request, :post, url, body)
+      end
+    end
+  end
 end
