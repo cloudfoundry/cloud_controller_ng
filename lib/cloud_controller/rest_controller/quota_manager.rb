@@ -31,15 +31,26 @@ module VCAP::CloudController::RestController
       #
       # @return Results of calling the provided block.
       def with_quota_enforcement(quota_request_body, &blk)
-        token = fetch_quota_token(quota_request_body)
-        ret = blk.call
-        token.commit
+        begin
+          token = fetch_quota_token(quota_request_body)
+        rescue VCAP::CloudController::Errors::QuotaDeclined => e
+          raise e
+        end
+
+        begin
+          ret = blk.call
+        rescue Exception => e
+          token.abandon(e.message) unless token.nil?
+          raise e
+        end
+
+        begin
+          token.commit
+        rescue Exception => e
+          logger.error "failed to commit token #{token.inspect} #{e}"
+        end
+
         return ret
-      rescue VCAP::CloudController::Errors::QuotaDeclined => e
-        raise e
-      rescue Exception => e
-        token.abandon(e.message) unless token.nil?
-        raise e
       end
 
       # Fetch a quota token. If the policy decision is denied,
