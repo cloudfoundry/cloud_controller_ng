@@ -112,6 +112,7 @@ module Sinatra
         logger_name = opts[:logger_name] || "vcap.api"
         env["rack.logger"] = Steno.logger(logger_name)
         @request_guid = SecureRandom.uuid
+        Thread.current[:vcap_request_id] = @request_guid
         Steno.config.context.data["request_guid"] = @request_guid
       end
 
@@ -122,6 +123,7 @@ module Sinatra
           varz[:http_status][response.status] += 1
         end
         headers["X-VCAP-Request-ID"] = @request_guid
+        Thread.current[:vcap_request_id] = nil
         nil
       end
     end

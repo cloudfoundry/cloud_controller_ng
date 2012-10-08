@@ -14,6 +14,10 @@ describe "Sinatra::VCAP" do
     get "/div_0" do
       1 / 0
     end
+
+    get "/request_id" do
+      Thread.current[:vcap_request_id]
+    end
   end
 
   def app
@@ -53,6 +57,12 @@ describe "Sinatra::VCAP" do
     end
   end
 
+  shared_examples "vcap request id" do
+    it "should return the request guid in the header" do
+      last_response.headers["X-VCAP-Request-ID"].should_not be_nil
+    end
+  end
+
   describe "access with no errors" do
     before do
       get "/"
@@ -64,6 +74,7 @@ describe "Sinatra::VCAP" do
     end
 
     include_examples "vcap sinatra varz stats", 200
+    include_examples "vcap request id"
   end
 
   describe "accessing an invalid route" do
@@ -77,6 +88,7 @@ describe "Sinatra::VCAP" do
     end
 
     include_examples "vcap sinatra varz stats", 404
+    include_examples "vcap request id"
     it_behaves_like "a vcap rest error response", /Unknown request/
   end
 
@@ -91,6 +103,18 @@ describe "Sinatra::VCAP" do
     end
 
     include_examples "vcap sinatra varz stats", 500
+    include_examples "vcap request id"
     it_behaves_like "a vcap rest error response", /Server error/
+  end
+
+  describe "accessing vcap request id from inside the app" do
+    before do
+      get "/request_id"
+    end
+
+    it "should access the request id via Thread.current[:request_id]" do
+      last_response.status.should == 200
+      last_response.body.should == last_response.headers["X-VCAP-Request-ID"]
+    end
   end
 end
