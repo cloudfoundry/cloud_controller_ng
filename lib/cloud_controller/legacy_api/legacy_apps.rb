@@ -61,8 +61,11 @@ module VCAP::CloudController
     end
 
     def crashes(name)
-      # TODO: stubbed
-      Yajl::Encoder.encode(:crashes => [])
+      logger.debug "crashes app request name: #{name}"
+
+      app = app_from_name(name)
+      VCAP::CloudController::Crashes.new(config, logger, env, params, body).
+        dispatch(:crashes, app.guid)
     end
 
     def upload(name)
