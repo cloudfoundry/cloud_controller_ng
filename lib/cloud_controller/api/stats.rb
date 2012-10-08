@@ -12,8 +12,12 @@ module VCAP::CloudController
     end
 
     def stats(id)
+      get_stats(id)
+    end
+
+    def get_stats(id, allow_stopped_state = false)
       app = find_id_and_validate_access(:read, id)
-      stats = DeaClient.find_stats(app)
+      stats = DeaClient.find_stats(app, allow_stopped_state)
       [HTTP::OK, Yajl::Encoder.encode(stats)]
     end
 

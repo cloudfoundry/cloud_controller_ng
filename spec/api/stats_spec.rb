@@ -54,7 +54,8 @@ module VCAP::CloudController
             }
           }
 
-          DeaClient.should_receive(:find_stats).with(@app).and_return(stats)
+          DeaClient.should_receive(:find_stats).with(@app, false).
+            and_return(stats)
 
           get("/v2/apps/#{@app.guid}/stats",
               {},
