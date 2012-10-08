@@ -69,5 +69,17 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "data integrity" do
+      it "should not make strings into integers" do
+        space = Models::Space.make
+        space.name.should be_kind_of(String)
+        space.name = "1234"
+        space.name.should be_kind_of(String)
+        space.save
+        space.refresh
+        space.name.should be_kind_of(String)
+      end
+    end
   end
 end
