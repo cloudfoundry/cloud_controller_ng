@@ -93,12 +93,18 @@ module VCAP::CloudController
         raise FileError.new(msg)
       end
 
-      def find_stats(app)
-        if app.stopped?
-          msg = "Request failed for app: #{app.name}"
-          msg << " as the app is in stopped state."
+      def find_stats(app, opts = {})
+        opts = { :allow_stopped_state => false }.merge(opts)
 
-          raise StatsError.new(msg)
+        if app.stopped?
+          unless opts[:allow_stopped_state]
+            msg = "Request failed for app: #{app.name}"
+            msg << " as the app is in stopped state."
+
+            raise StatsError.new(msg)
+          end
+
+          return {}
         end
 
         search_options = {
