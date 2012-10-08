@@ -383,7 +383,7 @@ module VCAP::CloudController
     describe "find_stats" do
       include Errors
 
-      it "should raise an error if the app is in stopped state" do
+      it "should raise an error if the app is not allowed to be in stopped state" do
         app.should_receive(:stopped?).once.and_return(true)
 
         with_em_and_thread do
@@ -397,6 +397,14 @@ module VCAP::CloudController
 
             error.message.should == msg
           }
+        end
+      end
+
+      it "should return an empty hash if the app is allowed to be in stopped state" do
+        app.should_receive(:stopped?).once.and_return(true)
+
+        with_em_and_thread do
+          DeaClient.find_stats(app, :allow_stopped_state => true).should == {}
         end
       end
 
