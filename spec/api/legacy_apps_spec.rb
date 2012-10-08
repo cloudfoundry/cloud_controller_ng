@@ -169,7 +169,7 @@ module VCAP::CloudController
         Stats.should_receive(:new).once.
           and_return(stats_obj)
         stats_obj.should_receive(:dispatch).once.
-          with(:stats, @app.guid).and_return([HTTP::OK, "stats"])
+          with(:get_stats, @app.guid, true).and_return([HTTP::OK, "stats"])
 
         get "/apps/#{@app.name}/stats", {}, headers_for(user)
 

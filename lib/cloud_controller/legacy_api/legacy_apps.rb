@@ -88,7 +88,7 @@ module VCAP::CloudController
 
       app = app_from_name(name)
       VCAP::CloudController::Stats.new(config, logger, env, params, body).
-        dispatch(:stats, app.guid)
+        dispatch(:get_stats, app.guid, true)
     end
 
     def instances(name)
