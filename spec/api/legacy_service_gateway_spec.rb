@@ -262,6 +262,7 @@ module VCAP::CloudController
             :service_plan => plan1
           )
           cfg1.gateway_name = "foo1"
+          cfg1.gateway_data = { :config => "foo1" }
           cfg1.save
 
           cfg2 = Models::ServiceInstance.make(
@@ -269,12 +270,13 @@ module VCAP::CloudController
             :service_plan => plan2
           )
           cfg2.gateway_name = "foo2"
+          cfg2.gateway_data = { :config => "foo2" }
           cfg2.save
 
           mock_client.stub(:bind).and_return(
             VCAP::Services::Api::GatewayHandleResponse.new(
               :service_id => "bind1",
-              :configuration => {},
+              :configuration => { :config => "bind1" },
               :credentials => {}
             )
           )
@@ -285,7 +287,7 @@ module VCAP::CloudController
           mock_client.stub(:bind).and_return(
             VCAP::Services::Api::GatewayHandleResponse.new(
               :service_id => "bind2",
-              :configuration => {},
+              :configuration => { :config => "bind2" },
               :credentials => {}
             )
           )
@@ -300,7 +302,9 @@ module VCAP::CloudController
           handles = JSON.parse(last_response.body)["handles"]
           handles.size.should == 2
           handles[0]["service_id"].should == "foo1"
+          handles[0]["configuration"].should == { "config" => "foo1" }
           handles[1]["service_id"].should == "bind1"
+          handles[1]["configuration"].should == { "config" => "bind1" }
 
           get "/services/v1/offerings/foo-bar/test/handles"
           last_response.status.should == 200
@@ -308,7 +312,9 @@ module VCAP::CloudController
           handles = JSON.parse(last_response.body)["handles"]
           handles.size.should == 2
           handles[0]["service_id"].should == "foo2"
+          handles[0]["configuration"].should == { "config" => "foo2" }
           handles[1]["service_id"].should == "bind2"
+          handles[1]["configuration"].should == { "config" => "bind2" }
         end
       end
 

@@ -65,6 +65,17 @@ module VCAP::CloudController::Models
       val
     end
 
+    def gateway_data=(val)
+      str = Yajl::Encoder.encode(val)
+      super(str)
+    end
+
+    def gateway_data
+      val = super
+      val = Yajl::Parser.parse(val) if val
+      val
+    end
+
     def self.user_visibility_filter(user)
       user_visibility_filter_with_admin_override(
         :space => user.spaces_dataset)
