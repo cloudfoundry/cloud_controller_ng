@@ -40,5 +40,20 @@ module VCAP::CloudController
         HealthManagerClient.healthy_instances(app).should == 3
       end
     end
+
+    describe "find_crashes" do
+      it "should return crashed instances" do
+        resp = {
+          :instances => [
+                         { :instance => "instance_1", :since => 1 },
+                         { :instance => "instance_2", :since => 1 },
+                        ]
+        }
+        resp_json = Yajl::Encoder.encode(resp)
+
+        message_bus.should_receive(:request).and_return([resp_json])
+        HealthManagerClient.find_crashes(app).should == resp[:instances]
+      end
+    end
   end
 end

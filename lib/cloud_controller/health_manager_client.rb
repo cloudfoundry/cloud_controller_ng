@@ -9,6 +9,12 @@ module VCAP::CloudController
         @message_bus = message_bus
       end
 
+      def find_crashes(app)
+        message = { :droplet => app.id, :state => :CRASHED }
+        crashed_instances = hm_request("status", message, :timeout => 2).first
+        crashed_instances[:instances]
+      end
+
       def find_status(app, message_options = {})
         message = { :droplet => app.guid }
         message.merge!(message_options)
