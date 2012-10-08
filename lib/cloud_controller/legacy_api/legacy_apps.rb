@@ -91,7 +91,7 @@ module VCAP::CloudController
 
       app = app_from_name(name)
       VCAP::CloudController::Stats.new(config, logger, env, params, body).
-        dispatch(:stats, app.guid)
+        dispatch(:stats, app.guid, :allow_stopped_state => true)
     end
 
     def instances(name)
