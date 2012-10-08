@@ -122,6 +122,25 @@ module VCAP::CloudController
       end
     end
 
+    describe "GET /apps/name/crashes" do
+      before do
+        @app = Models::App.make(:space => user.default_space)
+      end
+
+      it "should delegate to v2 crashes api" do
+        files_obj = mock("crashes")
+
+        Crashes.should_receive(:new).and_return(files_obj)
+        files_obj.should_receive(:dispatch).with(:crashes, @app.guid).
+          and_return([HTTP::OK, "crashes"])
+
+        get "/apps/#{@app.name}/crashes", {}, headers_for(user)
+
+        last_response.status.should == 200
+        last_response.body.should == "crashes"
+      end
+    end
+
     describe "GET /apps/:name/instances/:instance_id/files/(:path)" do
       before do
         @app = Models::App.make(:space => user.default_space)
