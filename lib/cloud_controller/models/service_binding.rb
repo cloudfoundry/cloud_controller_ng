@@ -84,6 +84,17 @@ module VCAP::CloudController::Models
       val
     end
 
+    def gateway_data=(val)
+      val = Yajl::Encoder.encode(val)
+      super(val)
+    end
+
+    def gateway_data
+      val = super
+      val = Yajl::Parser.parse(val) if val
+      val
+    end
+
     def service_gateway_client
       # this shouldn't happen under normal circumstances, but will if we are
       # running tests that bypass validations
