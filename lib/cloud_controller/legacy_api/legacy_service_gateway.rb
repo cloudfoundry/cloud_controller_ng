@@ -96,7 +96,7 @@ module VCAP::CloudController
         {
           :service_id => sb.gateway_name,
           :credentials => sb.credentials,
-          :configuration => sb.gateway_data,
+          :configuration => sb.configuration,
         }
       end
       Yajl::Encoder.encode({:handles => handles})
