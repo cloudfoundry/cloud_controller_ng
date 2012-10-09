@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       context "as a user" do
         it "should return 403" do
-          get("/v2/apps/#{@app.guid}/instances",
+          get("/v2/apps/#{@app.guid}/crashes",
               {},
               headers_for(@user))
 
