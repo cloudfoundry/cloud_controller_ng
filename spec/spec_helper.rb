@@ -52,8 +52,11 @@ def reset_database(db)
 end
 
 module VCAP::CloudController::SpecHelper
+  # Note that this method is mixed into each example, and so the instance
+  # variable we created here gets cleared automatically after each example
   def config_override(hash)
-    @config_override = hash
+    @config_override ||= {}
+    @config_override.update(hash)
   end
 
   def config
