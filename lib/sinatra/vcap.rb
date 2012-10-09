@@ -124,6 +124,7 @@ module Sinatra
         end
         headers["X-VCAP-Request-ID"] = @request_guid
         Thread.current[:vcap_request_id] = nil
+        Steno.config.context.data.delete("request_guid")
         nil
       end
     end
