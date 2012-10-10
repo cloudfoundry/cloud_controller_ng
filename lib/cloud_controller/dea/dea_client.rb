@@ -5,6 +5,20 @@ require "cloud_controller/errors"
 
 module VCAP::CloudController
   module DeaClient
+    class FileUriResult < Struct.new(:file_uri_v1, :file_uri_v2, :credentials)
+      def initialize(opts = {})
+        if opts[:file_uri_v2]
+          self.file_uri_v2 = opts[:file_uri_v2]
+        end
+        if opts[:file_uri_v1]
+          self.file_uri_v1 = opts[:file_uri_v1]
+        end
+        if opts[:credentials]
+          self.credentials = opts[:credentials]
+        end
+      end
+    end
+
     class << self
       include VCAP::CloudController::Errors
 
@@ -52,6 +66,7 @@ module VCAP::CloudController
         dea_request("find.droplet", message, request_options)
       end
 
+      # @return [FileUriResult]
       def get_file_uri(app, instance, path)
         if app.stopped?
           msg = "Request failed for app: #{app.name}, instance: #{instance}"
@@ -75,16 +90,16 @@ module VCAP::CloudController
         }
 
         if instance_found = find_specific_instance(app, search_options)
+          result = FileUriResult.new
           if instance_found[:file_uri_v2]
-            return { :uri => "#{instance_found[:file_uri_v2]}",
-              :file_uri_v2 => true }
+            result.file_uri_v2 = instance_found[:file_uri_v2]
           end
 
-          url = "#{instance_found[:file_uri]}#{instance_found[:staged]}"
-          url << "/#{path}"
+          uri_v1 = [instance_found[:file_uri], instance_found[:staged], "/", path].join("")
+          result.file_uri_v1 = uri_v1
+          result.credentials = instance_found[:credentials]
 
-          return { :uri => url, :file_uri_v2 => false,
-            :credentials => instance_found[:credentials]}
+          return result
         end
 
         msg = "Request failed for app: #{app.name}, instance: #{instance}"

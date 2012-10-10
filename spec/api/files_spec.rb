@@ -82,11 +82,12 @@ module VCAP::CloudController
             @app.save
             @app.refresh
 
-            to_return = { :uri => "file_uri/",
+            file_uri_result = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
-              :file_uri_v2 => false }
+            )
             DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
-              and_return(to_return)
+              and_return(file_uri_result)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
@@ -112,11 +113,12 @@ module VCAP::CloudController
             @app.save
             @app.refresh
 
-            to_return = { :uri => "file_uri/path",
+            file_uri_result = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "file_uri/path",
               :credentials => ["username", "password"],
-              :file_uri_v2 => false }
+            )
             DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
-              and_return(to_return)
+              and_return(file_uri_result)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
@@ -144,11 +146,12 @@ module VCAP::CloudController
             @app.save
             @app.refresh
 
-            to_return = { :uri => "file_uri/",
+            file_uri_result = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
-              :file_uri_v2 => false }
+            )
             DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
-              and_return(to_return)
+              and_return(file_uri_result)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
@@ -177,18 +180,19 @@ module VCAP::CloudController
             @app.save
             @app.refresh
 
-            to_return = { :uri => "file_uri/",
+            file_uri_result = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
-              :file_uri_v2 => false }
+            )
             DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
-              and_return(to_return)
+              and_return(file_uri_result)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
             client.should_receive(:set_auth).with(nil, "username", "password")
 
             response = mock("http response")
-            headers = { "range" => range }
+            headers = { "Range" => range }
             client.should_receive(:get).with("file_uri/", :header => headers).
               and_return(response)
 
@@ -212,9 +216,10 @@ module VCAP::CloudController
             @app.save
             @app.refresh
 
-            to_return = { :uri => "file_uri/",
+            to_return = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
-              :file_uri_v2 => false }
+            )
             DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
               and_return(to_return)
 
@@ -223,7 +228,7 @@ module VCAP::CloudController
             client.should_receive(:set_auth).with(nil, "username", "password")
 
             response = mock("http response")
-            headers = { "range" => range }
+            headers = { "Range" => range }
             client.should_receive(:get).with("file_uri/", :header => headers).
               and_return(response)
 
@@ -246,29 +251,22 @@ module VCAP::CloudController
             @app.save
             @app.refresh
 
-            to_return = { :uri => "file_uri",
+            to_return = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "http://12.34.56.78/path",
               :credentials => ["username", "password"],
-              :file_uri_v2 => false }
+              :file_uri_v2 => "http://new.dea.cloud/private/?path=path",
+            )
             DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
               and_return(to_return)
-
-            client = mock("http client")
-            HTTPClient.should_receive(:new).and_return(client)
-            client.should_receive(:set_auth).with(nil, "username", "password")
-
-            response = mock("http response")
-            client.should_receive(:get).with("file_uri&tail", :header => {}).
-              and_return(response)
-
-            response.should_receive(:status).at_least(:once).and_return(200)
-            response.should_receive(:body).and_return("files")
 
             get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path?tail",
                 {},
                 headers_for(@developer))
 
-            last_response.status.should == 200
-            last_response.body.should == "files"
+            last_response.status.should == 302
+            last_response.headers.should include(
+              "location" => "http://new.dea.cloud/private/?path=path&tail",
+            )
           end
 
           it "should accept tail query parameter" do
@@ -279,10 +277,11 @@ module VCAP::CloudController
             @app.save
             @app.refresh
 
-            to_return = {
-              :uri => "http://1.2.3.4/foo/path",
+            to_return = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "http://1.2.3.4/foo/path",
               :credentials => ["u", "p"],
-            }
+              :file_uri_v2 => "http://new.dea.cloud/private/?path=path",
+            )
             DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
               and_return(to_return)
 
@@ -290,13 +289,10 @@ module VCAP::CloudController
                 {},
                 headers_for(@developer))
 
-            expected = {
-              "X-Accel-Redirect" => "/internal_redirect/http://1.2.3.4/foo/path&tail",
-              # "dTpw" is ["u:p"].pack("m0")
-              "X-Auth" => "Basic dTpw",
-            }
-            last_response.status.should == 200
-            last_response.headers.should include(expected)
+            last_response.status.should == 302
+            last_response.headers.should include(
+              "location" => "http://new.dea.cloud/private/?path=path&tail",
+            )
           end
         end
 
@@ -310,7 +306,11 @@ module VCAP::CloudController
             @app.save
             @app.refresh
 
-            to_return = { :uri => "file_uri/", :file_uri_v2 => true }
+            to_return = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "file_uri/",
+              :credentials => [],
+              :file_uri_v2 => "file_uri/",
+            )
             DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
               and_return(to_return)
 
@@ -319,9 +319,7 @@ module VCAP::CloudController
                 headers_for(@developer).merge("HTTP_RANGE" => range))
 
             last_response.status.should == 302
-            last_response.headers.should include "Location"
-            last_response.headers["Location"] == "file_uri/"
-            last_response.headers["Range"] == "bytes=100-200"
+            last_response.headers.should include("Location" => "file_uri/")
           end
         end
       end
