@@ -132,12 +132,12 @@ module VCAP::CloudController
 
         Crashes.should_receive(:new).and_return(files_obj)
         files_obj.should_receive(:dispatch).with(:crashes, @app.guid).
-          and_return([HTTP::OK, "crashes"])
+          and_return("[]")
 
         get "/apps/#{@app.name}/crashes", {}, headers_for(user)
 
         last_response.status.should == 200
-        last_response.body.should == "crashes"
+        last_response.body.should == Yajl::Encoder.encode(:crashes => [])
       end
     end
 
