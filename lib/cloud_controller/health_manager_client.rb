@@ -10,9 +10,13 @@ module VCAP::CloudController
       end
 
       def find_crashes(app)
-        message = { :droplet => app.id, :state => :CRASHED }
+        message = { :droplet => app.guid, :state => :CRASHED }
         crashed_instances = hm_request("status", message, :timeout => 2).first
-        crashed_instances[:instances]
+        if crashed_instances
+          crashed_instances[:instances]
+        else
+          []
+        end
       end
 
       def find_status(app, message_options = {})
