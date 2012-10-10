@@ -2,6 +2,7 @@
 
 require "httpclient"
 require "redis"
+require "uri"
 
 module VCAP::CloudController
   rest_controller :Files do
@@ -49,10 +50,7 @@ module VCAP::CloudController
       # We sadly still have to serve the files through CC otherwise
       if info.file_uri_v2 && opts[:allow_redirect]
         uri = info.file_uri_v2
-        # FIXME: tihs assumes that the uri returned by DEA ends with
-        # a query string, which is currently true but nonetheless
-        # this is assuming too much
-        uri << "&tail" if params.include?("tail")
+        uri = add_query(uri, "tail", "") if params.include?("tail")
         return [HTTP::FOUND, {"Location" => uri}, nil]
       else
         # We either have an old VMC that doesn't know the tail capability, or
@@ -87,6 +85,26 @@ module VCAP::CloudController
       client = HTTPClient.new
       client.set_auth(nil, username, password) if username && password
       client.get(uri, :header => headers)
+    end
+
+    private
+    # @param [String, URI::Generic] uri
+    # @param [String, #to_s] name
+    # @param [String] value
+    # @return [String] uri with name=value added to query string
+    def add_query(uri, name, value)
+      uri = URI(uri)
+      name = name.to_s
+      value = value.to_s
+      # query is Array of [key, value1, value2...]
+      query = URI::decode_www_form(uri.query || "")
+      if kv = query.assoc(name)
+        kv.push(value) unless kv[1..-1].include?(value)
+      else
+        query.push([name, value])
+      end
+      uri.query = URI::encode_www_form(query)
+      uri.to_s
     end
 
     get  "#{path_id}/instances/:instance_id/files", :files

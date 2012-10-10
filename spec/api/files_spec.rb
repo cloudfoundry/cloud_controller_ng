@@ -265,7 +265,7 @@ module VCAP::CloudController
 
             last_response.status.should == 302
             last_response.headers.should include(
-              "location" => "http://new.dea.cloud/private/?path=path&tail",
+              "location" => "http://new.dea.cloud/private/?path=path&tail=",
             )
           end
 
@@ -291,7 +291,7 @@ module VCAP::CloudController
 
             last_response.status.should == 302
             last_response.headers.should include(
-              "location" => "http://new.dea.cloud/private/?path=path&tail",
+              "location" => "http://new.dea.cloud/private/?path=path&tail=",
             )
           end
         end
