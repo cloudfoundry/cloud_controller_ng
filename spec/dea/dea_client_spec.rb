@@ -297,7 +297,7 @@ module VCAP::CloudController
         }
 
         instance_found = {
-          :file_uri => "file_uri",
+          :file_uri => "http://1.2.3.4/",
           :staged => "staged",
           :credentials => ["username", "password"],
         }
@@ -306,11 +306,10 @@ module VCAP::CloudController
           with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
-          info = DeaClient.get_file_uri(app, instance, path)
-          info.should be_an_instance_of Hash
-          info[:uri].should == "file_uristaged/test"
-          info[:file_uri_v2].should be_false
-          info[:credentials].should == ["username", "password"]
+          result = DeaClient.get_file_uri(app, instance, path)
+          result.file_uri_v1.should == "http://1.2.3.4/staged/test"
+          result.file_uri_v2.should be_nil
+          result.credentials.should == ["username", "password"]
         end
       end
 
@@ -330,7 +329,7 @@ module VCAP::CloudController
 
         instance_found = {
           :file_uri_v2 => "file_uri_v2",
-          :file_uri => "file_uri",
+          :file_uri => "http://1.2.3.4/",
           :staged => "staged",
           :credentials => ["username", "password"],
         }
@@ -340,10 +339,9 @@ module VCAP::CloudController
 
         with_em_and_thread do
           info = DeaClient.get_file_uri(app, instance, path)
-          info.should be_an_instance_of Hash
-          info[:uri].should == "file_uri_v2"
-          info[:file_uri_v2].should be_true
-          info.keys.should_not include(:credentials)
+          info.file_uri_v2.should == "file_uri_v2"
+          info.file_uri_v1.should == "http://1.2.3.4/staged/test"
+          info.credentials.should_not be_empty
         end
       end
 
