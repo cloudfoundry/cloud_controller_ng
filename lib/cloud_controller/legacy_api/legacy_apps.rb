@@ -64,8 +64,10 @@ module VCAP::CloudController
       logger.debug "crashes app request name: #{name}"
 
       app = app_from_name(name)
-      VCAP::CloudController::Crashes.new(config, logger, env, params, body).
-        dispatch(:crashes, app.guid)
+      api = VCAP::CloudController::Crashes.new(config, logger, env, params, body)
+      resp_json = api.dispatch(:crashes, app.guid)
+      resp = Yajl::Parser.parse(resp_json)
+      Yajl::Encoder.encode(:crashes => resp)
     end
 
     def upload(name)
