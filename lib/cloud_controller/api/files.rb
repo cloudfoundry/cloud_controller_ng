@@ -38,37 +38,36 @@ module VCAP::CloudController
       end
 
       info = DeaClient.get_file_uri(app, instance_id, path)
-      uri = info[:uri]
-      file_uri_v2 = info[:file_uri_v2]
-
-      uri << "&tail" if params.include?("tail")
 
       headers = {}
       if range = env["HTTP_RANGE"]
-        headers["range"] = range
+        headers["Range"] = range
       end
 
       http_response = nil
-      if file_uri_v2 && opts[:allow_redirect]
-        headers["location"] = uri
-        return [HTTP::FOUND, headers, nil]
+      # new VMC and new DEA, let's hand out the directory server url.
+      # We sadly still have to serve the files through CC otherwise
+      if info.file_uri_v2 && opts[:allow_redirect]
+        uri = info.file_uri_v2
+        # FIXME: tihs assumes that the uri returned by DEA ends with
+        # a query string, which is currently true but nonetheless
+        # this is assuming too much
+        uri << "&tail" if params.include?("tail")
+        return [HTTP::FOUND, {"Location" => uri}, nil]
       else
-        username = password = nil
-        # Credentials are absent when file uri v2 is returned by dea ng.
-        if info[:credentials]
-          username = info[:credentials][0]
-          password = info[:credentials][1]
-        end
-
+        # We either have an old VMC that doesn't know the tail capability, or
+        # that we're serving a file from an old DEA that isn't capable of tail
+        # queries
         if config[:nginx][:use_nginx]
           basic_auth = {
-            "X-Auth" => "Basic #{[[username, password].join(":")].pack("m0")}",
+            "X-Auth" => "Basic #{[info.credentials.join(":")].pack("m0")}",
           }
-          x_accel = {"X-Accel-Redirect" => "/internal_redirect/#{uri}"}
+          # use the v1 dir server to avoid resolving domain names in nginx
+          x_accel = {"X-Accel-Redirect" => "/internal_redirect/#{info.file_uri_v1}"}
           return [200, x_accel.merge(basic_auth), ""]
         end
 
-        http_response = http_get(uri, headers, username, password)
+        http_response = http_get(info.file_uri_v1, headers, info.credentials[0], info.credentials[1])
       end
 
       # FIXME if bad things happen during serving the file, we probably
