@@ -23,7 +23,7 @@ module VCAP::CloudController::MessageBus
       nats.start(:uri => config[:nats_uri]) do
         VCAP::Component.register(
           :type => 'CloudController',
-          :host => VCAP.local_ip,
+          :host => @config[:bind_address],
           :index => config[:index],
           :config => config,
           # leaving the varz port / user / pwd blank to be random
@@ -37,7 +37,7 @@ module VCAP::CloudController::MessageBus
       # TODO: blacklist api2 in legacy CC
       # TODO: Yajl should probably also be injected
       router_register_message = Yajl::Encoder.encode({
-        :host => VCAP.local_ip,
+        :host => @config[:bind_address],
         :port => config[:port],
         :uris => [config[:external_domain]],
         :tags => {:component => "CloudController" },
