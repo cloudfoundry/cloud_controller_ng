@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/component"
+require "vcap/ring_buffer"
 require "vcap/rest_api"
 require "sinatra/consumes"
 require "sinatra/reloader"
@@ -70,6 +71,9 @@ module Sinatra
           msg[0] = msg[0] + ":"
           msg.concat(exception.backtrace)
           logger.error(msg.join("\n"))
+          ::VCAP::Component.varz.synchronize do
+            varz[:recent_errors] << msg
+          end
           body_from_vcap_exception(::VCAP::RestAPI::Errors::ServerError.new)
           status(500)
         end
@@ -139,7 +143,12 @@ module Sinatra
       [(100..101), (200..206), (300..307), (400..417), (500..505)].each do |r|
         r.each { |c| http_status[c] = 0 }
       end
-      vcap_sinatra = { :requests => requests, :http_status => http_status }
+      recent_errors = ::VCAP::RingBuffer.new(50)
+      vcap_sinatra = {
+        :requests => requests,
+        :http_status => http_status,
+        :recent_errors => recent_errors
+      }
       ::VCAP::Component.varz.synchronize do
         ::VCAP::Component.varz[:vcap_sinatra] ||= vcap_sinatra
       end

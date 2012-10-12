@@ -28,6 +28,7 @@ describe "Sinatra::VCAP" do
     VCAP::Component.varz.synchronize do
       @orig_varz = VCAP::Component.varz[:vcap_sinatra].dup
     end
+    @orig_recent_errors = @orig_varz[:recent_errors].dup
     @orig_requests = @orig_varz[:requests].dup
     @orig_completed = @orig_requests[:completed]
     @orig_http_status = @orig_varz[:http_status].dup
@@ -100,6 +101,14 @@ describe "Sinatra::VCAP" do
 
     it "should return 500" do
       last_response.status.should == 500
+    end
+
+    it "should add an entry to varz recent errors" do
+      recent_errors = nil
+      VCAP::Component.varz.synchronize do
+        recent_errors = VCAP::Component.varz[:vcap_sinatra][:recent_errors]
+      end
+      recent_errors.size.should == @orig_recent_errors.size + 1
     end
 
     include_examples "vcap sinatra varz stats", 500
