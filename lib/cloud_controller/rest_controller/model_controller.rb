@@ -171,12 +171,15 @@ module VCAP::CloudController::RestController
     # @return [Sequel::Model] The sequel model for the object, only if
     # the use has access.
     def find_id_and_validate_access(op, id)
+      logger.debug("find_id_and_validate_access: #{op} #{id}")
       obj = model.find(:guid => id)
+      logger.debug("found: #{op} #{id}")
       if obj
         validate_access(op, obj, user)
       else
         raise self.class.not_found_exception.new(id) if obj.nil?
       end
+      logger.debug("find_id_and_validate_access OK: #{op} #{id}")
       obj
     end
 
@@ -192,11 +195,13 @@ module VCAP::CloudController::RestController
     #
     # @param [Models::User] user The user for which to validate access.
     def validate_access(op, obj, user)
+      logger.debug("validate access: #{op} #{obj.guid}")
       user_perms = Permissions.permissions_for(obj, user)
       unless self.class.op_allowed_by?(op, user_perms)
         raise NotAuthenticated unless user
         raise NotAuthorized
       end
+      logger.debug("validate access OK: #{op} #{obj.guid}")
     end
 
     # The model associated with this api endpoint.
