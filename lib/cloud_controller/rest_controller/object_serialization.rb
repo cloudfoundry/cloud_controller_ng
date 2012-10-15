@@ -92,14 +92,14 @@ module VCAP::CloudController::RestController
         q_key = "#{ar[:reciprocal].to_s.singularize}_guid"
         res["#{name}_url"] = "#{controller.url_for_id(obj.guid)}/#{name}"
 
-        others = other_model.user_visible.filter(ar[:reciprocal] => [obj])
 
-        # TODO: replace depth with parents.size
-        if (others.count <= max_inline &&
-            depth < target_depth && !parents.include?(other_controller))
-          res[name.to_s] = others.map do |other|
-            other_controller = VCAP::CloudController.controller_from_model(other)
-            to_hash(other_controller, other, opts, depth + 1, parents)
+        if depth < target_depth && !parents.include?(other_controller)
+          others = other_model.user_visible.filter(ar[:reciprocal] => [obj])
+          if others.count <= max_inline
+            res[name.to_s] = others.map do |other|
+              other_controller = VCAP::CloudController.controller_from_model(other)
+              to_hash(other_controller, other, opts, depth + 1, parents)
+            end
           end
         end
       end
