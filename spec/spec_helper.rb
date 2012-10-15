@@ -11,44 +11,57 @@ require "rack/test"
 require "steno"
 require "cloud_controller"
 
-def spec_dir
-  File.expand_path("..", __FILE__)
-end
+module VCAP::CloudController
+  class SpecEnvironment
+    def initialize
+      FileUtils.mkdir_p artifacts_dir
+      File.unlink(log_filename) if File.exists?(log_filename)
+      Steno.init(Steno::Config.new(:default_log_level => "debug",
+                                   :sinks => [Steno::Sink::IO.for_file(log_filename)]))
+      VCAP::CloudController::DB.apply_migrations(db)
+    end
 
-def artifacts_dir
-  File.join(spec_dir, "artifacts")
-end
+    def spec_dir
+      File.expand_path("..", __FILE__)
+    end
 
-def artifact_filename(name)
-  File.join(artifacts_dir, name)
-end
+    def artifacts_dir
+      File.join(spec_dir, "artifacts")
+    end
 
-def log_filename
-  artifact_filename("spec.log")
-end
+    def artifact_filename(name)
+      File.join(artifacts_dir, name)
+    end
 
-FileUtils.mkdir_p artifacts_dir
-File.unlink(log_filename) if File.exists?(log_filename)
-Steno.init(Steno::Config.new(:default_log_level => "debug",
-                             :sinks => [Steno::Sink::IO.for_file(log_filename)]))
-db_logger = Steno.logger("cc.db")
-if ENV["DB_LOG_LEVEL"]
-  level = ENV["DB_LOG_LEVEL"].downcase.to_sym
-  db_logger.level = level if Steno::Logger::LEVELS.include? level
-end
-db = VCAP::CloudController::DB.connect(db_logger,
-                                       :database  => "sqlite:///",
-                                       :log_level => "debug2")
-VCAP::CloudController::DB.apply_migrations(db)
+    def log_filename
+      artifact_filename("spec.log")
+    end
 
-def reset_database(db)
-  db.execute("PRAGMA foreign_keys = OFF")
-  db.tables.each do |table|
-    db.drop_table(table)
+    def reset_database
+      db.execute("PRAGMA foreign_keys = OFF")
+      db.tables.each do |table|
+        db.drop_table(table)
+      end
+
+      db.execute("PRAGMA foreign_keys = ON")
+      VCAP::CloudController::DB.apply_migrations(db)
+    end
+
+    def db
+      @db ||= VCAP::CloudController::DB.connect(
+        db_logger, :database  => "sqlite:///", :log_level => "debug2")
+    end
+
+    def db_logger
+      return @db_logger if @db_logger
+      @db_logger = Steno.logger("cc.db")
+      if ENV["DB_LOG_LEVEL"]
+        level = ENV["DB_LOG_LEVEL"].downcase.to_sym
+        @db_logger.level = level if Steno::Logger::LEVELS.include? level
+      end
+      @db_logger
+    end
   end
-
-  db.execute("PRAGMA foreign_keys = ON")
-  VCAP::CloudController::DB.apply_migrations(db)
 end
 
 module VCAP::CloudController::SpecHelper
@@ -160,6 +173,8 @@ module VCAP::CloudController::SpecHelper
   end
 end
 
+spec_env = VCAP::CloudController::SpecEnvironment.new
+
 RSpec.configure do |rspec_config|
   rspec_config.include VCAP::CloudController
   rspec_config.include Rack::Test::Methods
@@ -167,7 +182,7 @@ RSpec.configure do |rspec_config|
 
   rspec_config.before(:each) do |example|
     VCAP::CloudController::SecurityContext.clear
-    reset_database db
+    spec_env.reset_database
   end
 end
 
