@@ -47,7 +47,7 @@ module VCAP::CloudController::ApiSpecHelper
         path_desc = "#{opts[:path]}/:guid" if verb == :put
         describe "#{verb.to_s.upcase} #{path_desc}" do
           context "with all required attributes" do
-            before do
+            before(:all) do
               json_body = Yajl::Encoder.encode(creation_opts)
 
               case verb

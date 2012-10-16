@@ -3,7 +3,7 @@
 module VCAP::CloudController::ApiSpecHelper
   shared_examples "querying objects" do |opts|
     describe "querying objects" do
-      before do
+      before(:all) do
         5.times { opts[:model].make }
       end
 
@@ -11,12 +11,12 @@ module VCAP::CloudController::ApiSpecHelper
         describe "#{opts[:path]}?q=#{attr}:<val>" do
           let(:val) { Sham.send(attr) }
 
-          before do
+          before(:all) do
             opts[:model].make(attr => val)
           end
 
           describe "with a matching value" do
-            before do
+            before(:all) do
               get "#{opts[:path]}?q=#{attr}:#{val}", {}, json_headers(admin_headers)
             end
 
@@ -31,7 +31,7 @@ module VCAP::CloudController::ApiSpecHelper
 
           describe "with a non-existent value" do
             let(:non_existent_value) { Sham.send(attr) }
-            before do
+            before(:all) do
               get "#{opts[:path]}?q=#{attr}:#{non_existent_value}", {}, json_headers(admin_headers)
             end
 

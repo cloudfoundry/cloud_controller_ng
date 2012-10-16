@@ -6,7 +6,7 @@ module VCAP::CloudController::ApiSpecHelper
       describe "DELETE #{opts[:path]}/:id" do
         let (:obj) { opts[:model].make }
 
-        before do
+        before(:all) do
           delete "#{opts[:path]}/#{obj.guid}", {}, admin_headers
         end
 

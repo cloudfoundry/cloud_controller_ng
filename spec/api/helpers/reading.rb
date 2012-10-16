@@ -6,7 +6,7 @@ module VCAP::CloudController::ApiSpecHelper
       describe "GET #{opts[:path]}/:id" do
         let (:obj) { opts[:model].make }
 
-        before do
+        before(:all) do
           get "#{opts[:path]}/#{obj.guid}", {}, json_headers(admin_headers)
         end
 
