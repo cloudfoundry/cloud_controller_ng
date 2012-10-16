@@ -4,10 +4,6 @@ module VCAP::CloudController
   # port of the legacy cc info spec, minus legacy token support. i.e. this is jwt
   # tokens only.
   describe VCAP::CloudController::LegacyInfo do
-    before do
-      reset_database
-    end
-
     shared_examples "legacy info response" do |expected_status, expect_user|
       it "should return #{expected_status}" do
         last_response.status.should == expected_status
@@ -47,12 +43,12 @@ module VCAP::CloudController
                       :https => scenario_vars[:protocol] == "https")
         end
 
-        before do
+        before(:all) do
           config_override(config_setting => true)
         end
 
         context "with invalid authorization header for #{scenario_vars[:user]}" do
-          before do
+          before(:all) do
             headers["HTTP_AUTHORIZATION"].reverse! if headers["HTTP_AUTHORIZATION"]
             get "/info", {}, headers
           end
@@ -61,7 +57,7 @@ module VCAP::CloudController
         end
 
         context "with a valid authorization header for #{scenario_vars[:user]}" do
-          before do
+          before(:all) do
             get "/info", {}, headers
           end
 
@@ -133,7 +129,7 @@ module VCAP::CloudController
         end
 
         context "with 2 started apps with 2 instances, 5 stopped apps, and 3 service" do
-          before do
+          before(:all) do
             2.times do
               Models::App.make(:space => current_user.default_space,
                                :state => "STARTED", :instances => 2, :memory => 128)
@@ -166,7 +162,7 @@ module VCAP::CloudController
     end
 
     describe "service info" do
-      before do
+      before(:all) do
         @mysql_svc  = Models::Service.make(
           :label => "mysql",
           :provider => "core",
