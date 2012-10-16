@@ -6,19 +6,22 @@ module VCAP::CloudController
 
     let(:user) { make_user_with_default_space }
     let(:admin) { make_user_with_default_space(:admin => true) }
+    let(:app_name) { Sham.name }
 
-    before do
-      reset_database
+    before(:all) do
       Models::Domain.default_serving_domain_name = DEFAULT_SERVING_DOMAIN_NAME
+    end
+
+    before(:each) do
       HealthManagerClient.stub(:healthy_instances).and_return(1)
     end
 
-    after do
+    after(:all) do
       Models::Domain.default_serving_domain_name = nil
     end
 
     describe "GET /apps" do
-      before do
+      before(:all) do
         @apps = []
         7.times do
           @apps << Models::App.make(:space => user.default_space,
@@ -46,14 +49,14 @@ module VCAP::CloudController
       end
 
       it "should return app names" do
-        names = decoded_response.map { |a| a["name"] }
-        expected_names = @apps.map { |a| a.name }
+        names = decoded_response.map { |a| a["name"] }.sort
+        expected_names = @apps.map { |a| a.name }.sort
         names.should == expected_names
       end
     end
 
     describe "GET /apps/:name" do
-      before do
+      before(:all) do
         # since we don't get the guid back, we use the mem attribute to
         # distinguish between apps
         @app_1 = Models::App.make(:space => user.default_space, :memory => 128)
@@ -85,7 +88,7 @@ module VCAP::CloudController
       end
 
       describe "GET /apps/:name_that_exists" do
-        before do
+        before(:all) do
           get "/apps/#{@app_2.name}", {}, headers_for(user)
         end
 
@@ -111,7 +114,7 @@ module VCAP::CloudController
       end
 
       describe "GET /apps/:invalid_name" do
-        before do
+        before(:all) do
           get "/apps/name_does_not_exist", {}, headers_for(user)
         end
 
@@ -124,7 +127,7 @@ module VCAP::CloudController
     end
 
     describe "GET /apps/name/crashes" do
-      before do
+      before(:all) do
         @app = Models::App.make(:space => user.default_space)
       end
 
@@ -143,7 +146,7 @@ module VCAP::CloudController
     end
 
     describe "GET /apps/:name/instances/:instance_id/files/(:path)" do
-      before do
+      before(:all) do
         @app = Models::App.make(:space => user.default_space)
       end
 
@@ -228,21 +231,23 @@ module VCAP::CloudController
     end
 
     describe "POST /apps" do
-      before do
+      before(:all) do
+        ["java", "ruby18"].each do |r|
+          Models::Runtime.make(:name => r) unless Models::Runtime[:name => r]
+        end
+
+        ["sinatra", "grails"].each do |f|
+          Models::Framework.make(:name => f) unless Models::Framework[:name => f]
+        end
+
         3.times { Models::App.make }
-
-        Models::Framework.make(:name => "sinatra")
-        Models::Runtime.make(:name => "ruby18")
-
-        Models::Framework.make(:name => "grails")
-        Models::Runtime.make(:name => "java")
         @num_apps_before = Models::App.count
       end
 
       context "with all required parameters" do
-        before do
+        before(:all) do
           req = Yajl::Encoder.encode({
-            :name => "app_name",
+            :name => app_name,
             :staging => { :framework => "sinatra", :runtime => "ruby18" },
           })
 
@@ -254,19 +259,20 @@ module VCAP::CloudController
         end
 
         it "should add the app to default app space" do
-          app = user.default_space.apps.find(:name => "app_name")
+          app = user.default_space.apps.find(:name => app_name)
           app.should_not be_nil
           Models::App.count.should == @num_apps_before + 1
         end
       end
 
       context "with legacy yeti style framework and runtime [TEAM-61]" do
-        before do
+        before(:all) do
           req = Yajl::Encoder.encode({
-            :name => "app_name",
+            :name => app_name,
             :staging => { :model => "sinatra", :stack => "ruby18" }
           })
 
+          @num_apps_before = Models::App.count
           post "/apps", req, headers_for(user)
         end
 
@@ -275,19 +281,20 @@ module VCAP::CloudController
         end
 
         it "should add the app to default app space" do
-          app = user.default_space.apps.find(:name => "app_name")
+          app = user.default_space.apps.find(:name => app_name)
           app.should_not be_nil
           Models::App.count.should == @num_apps_before + 1
         end
       end
 
       context "with an invalid framework" do
-        before do
+        before(:all) do
           req = Yajl::Encoder.encode({
-            :name => "app_name",
+            :name => app_name,
             :staging => { :framework => "funky", :runtime => "ruby18" },
           })
 
+          @num_apps_before = Models::App.count
           post "/apps", req, headers_for(user)
         end
 
@@ -303,12 +310,13 @@ module VCAP::CloudController
       end
 
       context "with an invalid runtime" do
-        before do
+        before(:all) do
           req = Yajl::Encoder.encode({
-            :name => "app_name",
+            :name => app_name,
             :staging => { :framework => "sinatra", :runtime => "cobol" },
           })
 
+          @num_apps_before = Models::App.count
           post "/apps", req, headers_for(user)
         end
 
@@ -324,9 +332,9 @@ module VCAP::CloudController
       end
 
       context "with a nil runtime" do
-        before do
+        before(:all) do
           req = Yajl::Encoder.encode({
-            :name => "app_name",
+            :name => app_name,
             :staging => { :framework => "grails" }
           })
 
@@ -338,7 +346,7 @@ module VCAP::CloudController
         end
 
         it "should set a default runtime" do
-          app = user.default_space.apps_dataset[:name => "app_name"]
+          app = user.default_space.apps_dataset[:name => app_name]
           app.should_not be_nil
           app.runtime.name.should == "java"
         end
@@ -346,11 +354,13 @@ module VCAP::CloudController
 
       context "with uris" do
         context "with a valid route" do
-          before do
+          let(:host) { Sham.host }
+
+          before(:all) do
             req = Yajl::Encoder.encode({
-              :name => "app_name",
+              :name => app_name,
               :staging => { :framework => "grails" },
-              :uris => ["someroute.#{DEFAULT_SERVING_DOMAIN_NAME}"]
+              :uris => ["#{host}.#{DEFAULT_SERVING_DOMAIN_NAME}"]
             })
 
             post "/apps", req, headers_for(user)
@@ -361,21 +371,22 @@ module VCAP::CloudController
           end
 
           it "should set the route" do
-            app = user.default_space.apps_dataset[:name => "app_name"]
+            app = user.default_space.apps_dataset[:name => app_name]
             app.should_not be_nil
-            app.uris.should == ["someroute.#{DEFAULT_SERVING_DOMAIN_NAME}"]
+            app.uris.should == ["#{host}.#{DEFAULT_SERVING_DOMAIN_NAME}"]
           end
         end
 
         context "with an invalid route" do
-          let(:bad_domain) { Models::Domain.make(:name => "notonspace.com") }
+          bad_domain_name = Sham.domain
 
-          before do
+          before(:all) do
+            bad_domain = Models::Domain.make(:name => bad_domain_name)
             req = Yajl::Encoder.encode({
-              :name => "app_name",
+              :name => app_name,
               :staging => { :framework => "grails" },
-              :uris => ["someroute.#{DEFAULT_SERVING_DOMAIN_NAME}",
-                        "anotherroute.#{bad_domain.name}"]
+              :uris => ["#{Sham.host}.#{DEFAULT_SERVING_DOMAIN_NAME}",
+                        "anotherroute.#{bad_domain_name}"]
             })
 
             post "/apps", req, headers_for(user)
@@ -386,12 +397,12 @@ module VCAP::CloudController
           end
 
           it "should not create the app" do
-            app = user.default_space.apps_dataset[:name => "app_name"]
+            app = user.default_space.apps_dataset[:name => app_name]
             app.should be_nil
           end
 
           it_behaves_like "a vcap rest error response",
-            /domain is invalid: notonspace.com/
+            /domain is invalid: #{bad_domain_name}/
         end
       end
 
@@ -587,9 +598,14 @@ module VCAP::CloudController
       end
 
       describe "on route change" do
+        let(:host1) { Sham.host }
+        let(:host2) { Sham.host }
+        let(:uri1) { "#{host1}.#{DEFAULT_SERVING_DOMAIN_NAME}" }
+        let(:uri2) { "#{host2}.#{DEFAULT_SERVING_DOMAIN_NAME}" }
+
         it "sends a dea.update message when adding a URL to a running app" do
           Models::App.make(
-            :name => "foo",
+            :name => app_name,
             :space => user.default_space,
             :state => "STARTED",
           ).update(
@@ -604,15 +620,15 @@ module VCAP::CloudController
           nats.should_receive(:publish).with(
             "dea.update",
             json_match(
-              hash_including("uris" => ["bar.sharedorg.com", "foo.sharedorg.com"]),
+              hash_including("uris" => [uri1, uri2]),
             ),
           )
           config_override(:nats => nats)
           EM.run do
             put(
-              "/apps/foo",
+              "/apps/#{app_name}",
               Yajl::Encoder.encode(
-                :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+                :uris => [uri1, uri2],
               ),
               headers_for(user),
             )
@@ -623,7 +639,7 @@ module VCAP::CloudController
 
         it "sends a dea.update message when removing a URL to a running app" do
           Models::App.make(
-            :name => "foo",
+            :name => app_name,
             :space => user.default_space,
             :state => "STARTED",
           ).update(
@@ -642,23 +658,23 @@ module VCAP::CloudController
           nats.should_receive(:publish).with(
             "dea.update",
             json_match(
-              hash_including("uris" => ["foo.sharedorg.com"]),
+              hash_including("uris" => [uri2]),
             ),
           )
           EM.run do
             put(
-              "/apps/foo",
+              "/apps/#{app_name}",
               Yajl::Encoder.encode(
-                :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+                :uris => [uri1, uri2],
               ),
               headers_for(user),
             )
             last_response.status.should == 200
             config_override(:nats => nats)
             put(
-              "/apps/foo",
+              "/apps/#{app_name}",
               Yajl::Encoder.encode(
-                :uris => ["foo.sharedorg.com"],
+                :uris => [uri2],
               ),
               headers_for(user),
             )
@@ -669,7 +685,7 @@ module VCAP::CloudController
 
         it "does not send a dea.update message when adding a URL to a running app" do
           Models::App.make(
-            :name => "foo",
+            :name => app_name,
             :space => user.default_space,
             :state => "STOPPED",
           )
@@ -678,9 +694,9 @@ module VCAP::CloudController
           config_override(:nats => nats)
           EM.run do
             put(
-              "/apps/foo",
+              "/apps/#{app_name}",
               Yajl::Encoder.encode(
-                :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+                :uris => [uri1, uri2],
               ),
               headers_for(user),
             )
@@ -691,7 +707,7 @@ module VCAP::CloudController
 
         it "does not send a dea.update message when removing a URL to a running app" do
           Models::App.make(
-            :name => "foo",
+            :name => app_name,
             :space => user.default_space,
             :state => "STOPPED",
           )
@@ -700,17 +716,17 @@ module VCAP::CloudController
           config_override(:nats => nats)
           EM.run do
             put(
-              "/apps/foo",
+              "/apps/#{app_name}",
               Yajl::Encoder.encode(
-                :uris => ["bar.sharedorg.com", "foo.sharedorg.com"],
+                :uris => [uri1, uri2],
               ),
               headers_for(user),
             )
             last_response.status.should == 200
             put(
-              "/apps/foo",
+              "/apps/#{app_name}",
               Yajl::Encoder.encode(
-                :uris => ["foo.sharedorg.com"],
+                :uris => [uri1],
               ),
               headers_for(user),
             )
