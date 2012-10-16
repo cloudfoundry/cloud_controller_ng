@@ -8,15 +8,17 @@ module VCAP::CloudController
     let(:message_bus) { double(:message_bus) }
     let(:dea_pool) { double(:dea_pool) }
 
-    before do
-      DeaClient.configure(config, message_bus, dea_pool)
-
+    before(:all) do
       NUM_SVC_INSTANCES.times do
         instance = Models::ServiceInstance.make(:space => app.space)
         binding = Models::ServiceBinding.make(:app => app,
                                               :service_instance => instance)
         app.add_service_binding(binding)
       end
+    end
+
+    before(:each) do
+      DeaClient.configure(config, message_bus, dea_pool)
     end
 
     describe "start_app_message" do
