@@ -169,7 +169,8 @@ module VCAP::CloudController
 
         instance_json = "\"instance\""
         encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
-        message_bus.should_receive(:request).with("dea.find.droplet", encoded, {}).
+        message_bus.should_receive(:request).
+          with("dea.find.droplet", encoded, {:timeout=>2}).
           and_return([instance_json])
 
         with_em_and_thread do
