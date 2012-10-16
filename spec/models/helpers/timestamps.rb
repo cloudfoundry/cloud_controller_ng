@@ -4,7 +4,7 @@ module VCAP::CloudController::ModelSpecHelper
   shared_examples "timestamps" do |opts|
     let(:obj) { described_class.make }
 
-    before do
+    before(:all) do
       @orig_created_at = obj.created_at
       obj.updated_at.should be_nil
       obj.save
