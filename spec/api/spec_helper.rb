@@ -170,15 +170,4 @@ end
 RSpec.configure do |conf|
   conf.include VCAP::CloudController::RestController
   conf.include VCAP::CloudController::ApiSpecHelper
-  conf.before(:each) do
-    # TODO: This is an overkill, because
-    # 1) This bypasses QM for *all* tests, not just the API tests
-    # 2) only PUT / POST / DELETE requests will need to bypass qm, but until we
-    # have a less tedious way to make it finer-grained let's do this
-    config_override(
-      :quota_manager => {
-        :policy => "BlindApproval",
-      },
-    )
-  end
 end
