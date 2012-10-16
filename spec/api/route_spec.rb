@@ -242,6 +242,8 @@ module VCAP::CloudController
 
   describe "on app change" do
     before :each do
+      reset_database
+
       space = Models::Space.make
       user = make_developer_for_space(space)
       @headers_for_user = headers_for(user)

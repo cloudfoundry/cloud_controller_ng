@@ -96,6 +96,10 @@ module VCAP::CloudController::ApiSpecHelper
   end
 
   shared_examples "a CloudController API" do |opts|
+    before do
+      reset_database
+    end
+
     [:required_attributes, :unique_attributes, :basic_attributes,
      :extra_attributes, :sensitive_attributes,
      :queryable_attributes].each do |k|

@@ -2,10 +2,12 @@
 
 module VCAP::CloudController::ModelSpecHelper
   shared_examples "serialization" do |opts|
-    let(:obj) { described_class.create(creation_opts) }
+    before(:all) do
+      @obj = described_class.make
+    end
 
     it "should be seriazable to a hash and not include sensitive information" do
-      hash = obj.to_hash
+      hash = @obj.to_hash
       hash.should be_a_kind_of(Hash)
       opts[:sensitive_attributes].each do |attr|
         hash.should_not include(attr.to_s)
@@ -14,8 +16,8 @@ module VCAP::CloudController::ModelSpecHelper
     end
 
     it "should be seriazable to json and not include sensitive information" do
-      hash = obj.to_hash
-      json = obj.to_json
+      hash = @obj.to_hash
+      json = @obj.to_json
       json.should be_a_kind_of(String)
       parsed_hash = Yajl::Parser.new.parse(json)
       parsed_hash.keys.should == hash.keys

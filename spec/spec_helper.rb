@@ -64,7 +64,13 @@ module VCAP::CloudController
   end
 end
 
+$spec_env = VCAP::CloudController::SpecEnvironment.new
+
 module VCAP::CloudController::SpecHelper
+  def reset_database
+    $spec_env.reset_database
+  end
+
   # Note that this method is mixed into each example, and so the instance
   # variable we created here gets cleared automatically after each example
   def config_override(hash)
@@ -173,8 +179,6 @@ module VCAP::CloudController::SpecHelper
   end
 end
 
-spec_env = VCAP::CloudController::SpecEnvironment.new
-
 RSpec.configure do |rspec_config|
   rspec_config.include VCAP::CloudController
   rspec_config.include Rack::Test::Methods
@@ -182,7 +186,6 @@ RSpec.configure do |rspec_config|
 
   rspec_config.before(:each) do |example|
     VCAP::CloudController::SecurityContext.clear
-    spec_env.reset_database
   end
 end
 

@@ -214,6 +214,8 @@ module VCAP::CloudController
       end
 
       before :each do
+        reset_database
+
         user = make_developer_for_space(space)
         # keeping the headers here so that it doesn't reset the global config...
         @headers_for_user = headers_for(user)

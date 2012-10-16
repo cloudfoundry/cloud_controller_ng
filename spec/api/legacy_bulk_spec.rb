@@ -9,6 +9,8 @@ module VCAP::CloudController
   module VCAP::CloudController
     describe LegacyBulk do
       before :each do
+        reset_database
+
         @bulk_user = "bulk_user"
         @bulk_password = "bulk_password"
       end

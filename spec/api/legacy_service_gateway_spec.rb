@@ -6,6 +6,8 @@ module VCAP::CloudController
       let(:mock_client) { double(:gw_client) }
 
       before do
+        reset_database
+
         mock_client.stub(:provision).and_return(
           VCAP::Services::Api::GatewayHandleResponse.new(
             :service_id => "gw_id",

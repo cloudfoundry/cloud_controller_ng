@@ -1,6 +1,19 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController::ModelSpecHelper
+  def creation_opts_from_obj(obj, opts)
+    attribute_names = opts[:required_attributes]
+   create_attribute = opts[:create_attribute]
+
+    attrs = {}
+    attribute_names.each do |attr_name|
+      v = create_attribute.call(attr_name) if create_attribute
+      v ||= obj.send(attr_name)
+      attrs[attr_name] = v
+    end
+    attrs
+  end
+
   shared_context "model template" do |opts|
     # we use the template object to automatically get values
     # to use during creation from sham

@@ -8,6 +8,8 @@ module VCAP::CloudController::ApiSpecHelper
     let(:headers_b) { headers_for(member_b) }
 
     before do
+      reset_database
+
       @org_a = Models::Organization.make
       @org_a_manager = Models::User.make
       @org_a_member = Models::User.make

@@ -10,12 +10,10 @@ module VCAP::CloudController
       :create_attribute    => lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym
-        when :app_id
-          app = Models::App.make(:space => @space)
-          app.id
-        when :service_instance_id
-          service_instance = Models::ServiceInstance.make(:space => @space)
-          service_instance.id
+        when :app
+          Models::App.make(:space => @space)
+        when :service_instance
+          Models::ServiceInstance.make(:space => @space)
         end
       },
       :create_attribute_reset => lambda { @space = nil },

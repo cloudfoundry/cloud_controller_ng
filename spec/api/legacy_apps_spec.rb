@@ -8,6 +8,7 @@ module VCAP::CloudController
     let(:admin) { make_user_with_default_space(:admin => true) }
 
     before do
+      reset_database
       Models::Domain.default_serving_domain_name = DEFAULT_SERVING_DOMAIN_NAME
       HealthManagerClient.stub(:healthy_instances).and_return(1)
     end

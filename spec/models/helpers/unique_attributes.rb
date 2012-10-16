@@ -9,18 +9,20 @@ module VCAP::CloudController::ModelSpecHelper
       opts[:unique_attributes].each do |new_attr|
         context "with duplicate attributes other than #{new_attr}" do
           let(:dup_opts) do
-            if described_class.associations.include?(new_attr)
-              new_attr = "#{new_attr}_id"
-            end
+            create_attribute = opts[:create_attribute]
+            opts[:create_attribute_reset].call if opts[:create_attribute_reset]
 
-            new_creation_opts = creation_opts.dup
-            orig_obj = described_class.create new_creation_opts
+            initial_template = described_class.make
+            orig_opts = creation_opts_from_obj(initial_template, opts)
+            initial_template.delete
+
+            orig_obj = described_class.make orig_opts
             orig_obj.should be_valid
 
-            create_attribute = opts[:create_attribute]
+            new_creation_opts = creation_opts_from_obj(orig_obj, opts)
 
             # create the attribute using the caller supplied lambda,
-            # otherwise, create a second template object and fetch
+            # otherwise, create a second object and fetch
             # the value from that
             val = nil
             if create_attribute
@@ -28,10 +30,9 @@ module VCAP::CloudController::ModelSpecHelper
             end
 
             if val.nil?
-              another_obj = TemplateObj.new(described_class,
-                                            opts[:required_attributes])
-              another_obj.refresh
-              val = another_obj.attributes[new_attr]
+              another_obj = described_class.make
+              val = another_obj.send(new_attr)
+              another_obj.delete
             end
 
             new_creation_opts[new_attr] = val
@@ -70,22 +71,27 @@ module VCAP::CloudController::ModelSpecHelper
         "columns? #{column_list.join(", ")} .* not unique".sub("uaa_id", "guid")
       end
 
-      before do
-        obj = described_class.make creation_opts
-        obj.should be_valid
+      let(:dup_opts) do
+        opts[:create_attribute_reset].call if opts[:create_attribute_reset]
+        initial_template = described_class.make
+        orig_opts = creation_opts_from_obj(initial_template, opts)
+        initial_template.delete
+
+        orig_obj = described_class.make orig_opts
+        orig_opts
       end
 
       it "should fail due to Sequel validations" do
         # TODO: swap out everything but the unique entries for more
         # accurate testing
         lambda {
-          described_class.create creation_opts
+          described_class.create dup_opts
         }.should raise_error Sequel::ValidationFailed, /#{sequel_exception_match}/
       end
 
       it "should fail due to database integrity checks" do
         lambda {
-          described_class.new(creation_opts).save(:validate => false)
+          described_class.new(dup_opts).save(:validate => false)
         }.should raise_error Sequel::DatabaseError, /#{db_exception_match}/
       end
     end

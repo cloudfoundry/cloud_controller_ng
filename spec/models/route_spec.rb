@@ -11,12 +11,12 @@ module VCAP::CloudController
       :create_attribute => lambda { |name|
         @org ||= Models::Organization.make
         case name.to_sym
-        when :organization_id
-          @org.id
-        when :domain_id
+        when :organization
+          @org
+        when :domain
           Models::Domain.make(
             :owning_organization => @org
-          ).id
+          )
         end
       },
       :create_attribute_reset => lambda { @org = nil },

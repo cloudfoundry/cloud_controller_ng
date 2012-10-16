@@ -4,6 +4,10 @@ module VCAP::CloudController
   # port of the legacy cc info spec, minus legacy token support. i.e. this is jwt
   # tokens only.
   describe VCAP::CloudController::LegacyInfo do
+    before do
+      reset_database
+    end
+
     shared_examples "legacy info response" do |expected_status, expect_user|
       it "should return #{expected_status}" do
         last_response.status.should == expected_status
