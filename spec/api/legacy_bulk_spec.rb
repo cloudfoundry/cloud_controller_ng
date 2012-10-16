@@ -9,8 +9,6 @@ module VCAP::CloudController
   module VCAP::CloudController
     describe LegacyBulk do
       before :each do
-        reset_database
-
         @bulk_user = "bulk_user"
         @bulk_password = "bulk_password"
       end
@@ -37,11 +35,12 @@ module VCAP::CloudController
       end
 
       describe "GET", "/bulk/apps" do
-        before :each do
-          f = Models::Framework.make(:name => "sinatra")
+        before :all do
+          reset_database
+          @framework = Models::Framework.make
           10.times do
             Models::App.make(
-              :framework => f,
+              :framework => @framework,
             )
           end
         end
@@ -88,7 +87,7 @@ module VCAP::CloudController
             decoded_response["results"].each { |key,value|
               value.should be_kind_of Hash
               value["id"].should_not be_nil
-              value["framework"].should == 'sinatra'
+              value["framework"].should == @framework.name
               value["version"].should_not be_nil
             }
           end
@@ -160,7 +159,7 @@ module VCAP::CloudController
           authorize @bulk_user, @bulk_password
           get "/bulk/counts", {"model" => "user"}
           decoded_response["counts"].should include("user" => kind_of(Integer))
-          decoded_response["counts"]["user"].should == 4
+          decoded_response["counts"]["user"].should == Models::User.count
         end
       end
     end
