@@ -18,37 +18,36 @@ module VCAP::CloudController::ApiSpecHelper
   end
 
   shared_context "collections" do |opts, attr, make|
-    before do
+    let(:obj) { opts[:model].make }
+    let(:other_obj) { opts[:model].make }
+    let(:add_method) { "add_#{child_name}" }
+    let(:get_method) { "#{child_name}s" }
+    let(:child_name) { attr.to_s.singularize }
+    let(:headers) do
+      user = VCAP::CloudController::Models::User.make(:admin => true)
+      json_headers(headers_for(user))
+    end
+
+    before(:all) do
       @opts = opts
       @attr = attr
-
-      @child_name  = attr.to_s.singularize
-
-      @add_method  = "add_#{@child_name}"
-      @get_method  = "#{@child_name}s"
-
-      @obj = opts[:model].make
-      @other_obj = opts[:model].make
-
-      user = VCAP::CloudController::Models::User.make(:admin => true)
-      @headers = json_headers(headers_for(user))
     end
 
     def do_write(verb, children, expected_result, expected_children)
-      body = Yajl::Encoder.encode({"#{@child_name}_guids" => children.map { |c| c[:guid] }})
-      send(verb, "#{@opts[:path]}/#{@obj.guid}", body, @headers)
+      body = Yajl::Encoder.encode({"#{child_name}_guids" => children.map { |c| c[:guid] }})
+      send(verb, "#{@opts[:path]}/#{obj.guid}", body, headers)
       last_response.status.should == expected_result
 
-      @obj.refresh
-      @obj.send(@get_method).length.should == expected_children.length
-      expected_children.each { |c| @obj.send(@get_method).should include(c.refresh) }
+      obj.refresh
+      obj.send(get_method).length.should == expected_children.length
+      expected_children.each { |c| obj.send(get_method).should include(c.refresh) }
     end
   end
 
   shared_context "inlined_relations_context" do |opts, attr, make, depth|
-    before do
+    before(:all) do
       query_parms = query_params_for_inline_depth(depth)
-      get "#{opts[:path]}/#{@obj.guid}", query_parms, @headers
+      get "#{opts[:path]}/#{obj.guid}", query_parms, headers
       @uri = entity["#{attr}_url"]
     end
   end
@@ -74,8 +73,8 @@ module VCAP::CloudController::ApiSpecHelper
   shared_examples "get to_many attr url" do |opts, attr, make|
     describe "GET on the #{attr}_url" do
       describe "with no associated #{attr}" do
-        before do
-          get @uri, {}, @headers
+        before(:all) do
+          get @uri, {}, headers
         end
 
         it "should return 200" do
@@ -101,15 +100,15 @@ module VCAP::CloudController::ApiSpecHelper
       end
 
       describe "with 2 associated #{attr}" do
-        before do
-          @child1 = make.call(@obj)
-          @child2 = make.call(@obj)
+        before(:all) do
+          @child1 = make.call(obj)
+          @child2 = make.call(obj)
 
-          @obj.send(@add_method, @child1)
-          @obj.send(@add_method, @child2)
-          @obj.save
+          obj.send(add_method, @child1)
+          obj.send(add_method, @child2)
+          obj.save
 
-          get @uri, {}, @headers
+          get @uri, {}, headers
         end
 
         it "should return 200" do
@@ -179,14 +178,14 @@ module VCAP::CloudController::ApiSpecHelper
             child_name  = attr.to_s.chomp("_guids")
             path = "#{opts[:path]}/:guid"
 
-            before do
-              @child1 = make.call(@obj)
-              @child2 = make.call(@obj)
-              @child3 = make.call(@obj)
+            before(:all) do
+              @child1 = make.call(obj)
+              @child2 = make.call(obj)
+              @child3 = make.call(obj)
             end
 
             describe "POST #{path} with only #{attr} in the request body" do
-              before do
+              before(:all) do
                 do_write(:post, [@child1], 404, [])
               end
 
@@ -207,24 +206,24 @@ module VCAP::CloudController::ApiSpecHelper
               end
 
               it "[:valid_id1, :valid_id2] should replace existing #{attr}" do
-                @obj.send(@add_method, @child1)
-                @obj.send(@get_method).should include(@child1)
+                obj.send(add_method, @child1)
+                obj.send(get_method).should include(@child1)
                 do_write(:put, [@child2, @child3], 201, [@child2, @child3])
-                @obj.send(@get_method).should_not include(@child1)
+                obj.send(get_method).should_not include(@child1)
               end
 
               it "[] should remove all #{child_name}s" do
-                @obj.send(@add_method, @child1)
-                @obj.send(@get_method).should include(@child1)
+                obj.send(add_method, @child1)
+                obj.send(get_method).should include(@child1)
                 do_write(:put, [], 201, [])
-                @obj.send(@get_method).should_not include(@child1)
+                obj.send(get_method).should_not include(@child1)
               end
 
               it "[:invalid_id] should return 400" do
-                @obj.send(@add_method, @child1)
-                @obj.send(@get_method).should include(@child1)
+                obj.send(add_method, @child1)
+                obj.send(get_method).should include(@child1)
                 do_write(:put, [], 201, [])
-                @obj.send(@get_method).should_not include(@child1)
+                obj.send(get_method).should_not include(@child1)
               end
 
               # FIXME: add an error id in the middle of an array test
@@ -245,9 +244,9 @@ module VCAP::CloudController::ApiSpecHelper
               describe "GET #{path}#{desc}" do
                 include_context "collections", opts, attr, make
 
-                before do
-                  @obj.send("#{attr}=", make.call(@obj)) unless @obj.send(attr)
-                  @obj.save
+                before(:all) do
+                  obj.send("#{attr}=", make.call(obj)) unless obj.send(attr)
+                  obj.save
                 end
 
                 include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
@@ -261,8 +260,8 @@ module VCAP::CloudController::ApiSpecHelper
                 # detailed read testing there
                 desc = VCAP::CloudController::ApiSpecHelper::description_for_inline_depth(inline_relations_depth)
                 describe "GET on the #{attr}_url" do
-                  before do
-                    get @uri, {}, @headers
+                  before(:all) do
+                    get @uri, {}, headers
                   end
 
                   it "should return 200" do
@@ -298,15 +297,15 @@ module VCAP::CloudController::ApiSpecHelper
               describe "GET #{path}#{desc}" do
                 include_context "collections", opts, attr, make
 
-                before do
+                before(:all) do
                   51.times do
-                    child = make.call(@obj)
-                    @obj.refresh
-                    @obj.send(@add_method, child)
+                    child = make.call(obj)
+                    obj.refresh
+                    obj.send(add_method, child)
                   end
 
                   query_parms = query_params_for_inline_depth(depth)
-                  get "#{opts[:path]}/#{@obj.guid}", query_parms, @headers
+                  get "#{opts[:path]}/#{obj.guid}", query_parms, headers
                   @uri = entity["#{attr}_url"]
                 end
 
@@ -318,8 +317,8 @@ module VCAP::CloudController::ApiSpecHelper
                 end
 
                 describe "GET on the #{attr}_url" do
-                  before do
-                    get @uri, {}, @headers
+                  before(:all) do
+                    get @uri, {}, headers
                   end
 
                   it "should return 200" do
