@@ -9,12 +9,13 @@ module VCAP::CloudController::ApiSpecHelper
       template_obj = TemplateObj.new(opts[:model], opts[:required_attributes])
 
       let(:creation_opts) do
-        # we potentially need to regenerate associations as the db
-        # gets wiped between tests
-        template_obj.refresh
-        attrs = template_obj.attributes.dup
-
         # if the caller has supplied their own creation lambda, use it
+        opts[:create_attribute_reset].call if opts[:create_attribute_reset]
+
+        initial_obj = opts[:model].make
+        attrs = creation_opts_from_obj(initial_obj, opts)
+        initial_obj.delete
+
         create_attribute = opts[:create_attribute]
         if create_attribute
           opts[:create_attribute_reset].call
@@ -129,7 +130,7 @@ module VCAP::CloudController::ApiSpecHelper
 
               @expected_status = nil
 
-              before do
+              before(:all) do
                 case verb
                 when :post
                   post opts[:path], Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
@@ -229,7 +230,7 @@ module VCAP::CloudController::ApiSpecHelper
             desc = dup_attrs.map { |v| ":#{v}" }.join(", ")
             desc = "[#{desc}]" if opts[:unique_attributes].length > 1
             context "with duplicate #{desc}" do
-              before do
+              before(:all) do
                 obj = opts[:model].make creation_opts
                 obj.should be_valid
 

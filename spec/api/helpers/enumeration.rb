@@ -13,7 +13,7 @@ module VCAP::CloudController::ApiSpecHelper
     path += "results-per-page=#{page_size}"
 
     describe "GET #{path}" do
-      before do
+      before(:all) do
         get "#{path}", {}, json_headers(admin_headers)
       end
 
@@ -66,9 +66,10 @@ module VCAP::CloudController::ApiSpecHelper
   shared_examples "enumerating objects" do |opts|
     describe "enumerating objects" do
       describe "with 8 objects" do
-        before do
-          # some models, i.e. users, get created without explicitly being
-          # asked for.
+        before(:all) do
+          reset_database
+          # force creation of the admin user used in the headers
+          admin_headers
           num_to_create = 8 - opts[:model].count
           num_to_create.times do
             opts[:model].make
