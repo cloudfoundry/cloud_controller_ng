@@ -77,6 +77,11 @@ GEM
       rack-accept
       rack-mount
       virtus
+    guard (1.4.0)
+      listen (>= 0.4.2)
+      thor (>= 0.14.6)
+    guard-rspec (1.2.1)
+      guard (>= 1.1)
     hashie (1.2.0)
     http_parser.rb (0.5.3)
     httpclient (2.2.5)
@@ -85,6 +90,7 @@ GEM
     json_pure (1.7.4)
     launchy (2.1.1)
       addressable (~> 2.3)
+    listen (0.5.3)
     machinist (1.0.6)
     membrane (0.0.2)
     mime-types (1.19)
@@ -164,6 +170,7 @@ DEPENDENCIES
   cf-uaa-client (~> 0.2.0)!
   ci_reporter
   eventmachine (~> 1.0.0)
+  guard-rspec
   httpclient
   machinist (~> 1.0.6)
   membrane (~> 0.0.2)

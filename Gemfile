@@ -34,4 +34,5 @@ group :test do
   gem "sqlite3"
   gem "machinist", "~> 1.0.6"
   gem "webmock"
+  gem "guard-rspec"
 end
