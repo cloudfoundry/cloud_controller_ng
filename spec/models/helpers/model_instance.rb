@@ -3,7 +3,7 @@
 module VCAP::CloudController::ModelSpecHelper
   def creation_opts_from_obj(obj, opts)
     attribute_names = opts[:required_attributes]
-   create_attribute = opts[:create_attribute]
+    create_attribute = opts[:create_attribute]
 
     attrs = {}
     attribute_names.each do |attr_name|
@@ -17,25 +17,13 @@ module VCAP::CloudController::ModelSpecHelper
   shared_context "model template" do |opts|
     # we use the template object to automatically get values
     # to use during creation from sham
-    template_obj = TemplateObj.new(described_class, opts[:required_attributes])
+    # template_obj = TemplateObj.new(described_class, opts[:required_attributes])
 
     let(:creation_opts) do
-      # we potentially need to regenerate associations as the db
-      # gets wiped between tests
-      template_obj.refresh
-      create_opts = template_obj.attributes
-
-      # if the caller has supplied their own creation lambda, use it
-      create_attribute = opts[:create_attribute]
-      if create_attribute
-        opts[:create_attribute_reset].call
-        create_opts.keys.each do |k|
-          v = create_attribute.call k
-          create_opts[k] = v if v
-        end
-      end
-
-      create_opts
+      template_obj = described_class.make
+      o = creation_opts_from_obj(template_obj, opts)
+      template_obj.delete
+      o
     end
   end
 
