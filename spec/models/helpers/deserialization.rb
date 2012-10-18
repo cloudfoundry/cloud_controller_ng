@@ -34,23 +34,26 @@ module VCAP::CloudController::ModelSpecHelper
     opts[:required_attributes].each do |without_attr|
       context "without the :#{without_attr.to_s} attribute" do
         let(:json_data) do
-          new_creation_opts = creation_opts.dup
+          obj = described_class.create creation_opts
+          hash = obj.to_hash
+          obj.delete
 
           # used for things like password that we don't export
           opts[:extra_json_attributes].each do |attr|
+            attr = attr.to_s
             # This is a bit of a hack.  It would be better to somehow indicate
             # the relationship between derived attributes from the json
             # attributes
             unless without_attr == "crypted_#{attr}".to_sym
-              new_creation_opts[attr] = Sham.send(attr)
+              hash[attr] = Sham.send(attr)
             end
           end
 
-          new_creation_opts.select! do |k, v|
-            k != without_attr and k != "#{without_attr}_id"
+          hash.select! do |k, v|
+            k != without_attr.to_s and k != "#{without_attr}_guid"
           end
 
-          Yajl::Encoder.encode(new_creation_opts)
+          Yajl::Encoder.encode(hash)
         end
 
         it "should fail due to Sequel validations" do
