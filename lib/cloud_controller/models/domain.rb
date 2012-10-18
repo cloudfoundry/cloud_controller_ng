@@ -5,6 +5,8 @@ module VCAP::CloudController::Models
     class InvalidSpaceRelation < InvalidRelation; end
     class InvalidOrganizationRelation < InvalidRelation; end
 
+    DOMAIN_REGEX = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}$/ix.freeze
+
     many_to_one       :owning_organization,
                       :class => "VCAP::CloudController::Models::Organization"
 
@@ -38,7 +40,7 @@ module VCAP::CloudController::Models
       # two level domains only.
       #
       # b) not accurate.  this is not an accurate regex for a fqdn
-      validates_format  /^[\w\-]+\.[\w\-]+$/, :name
+      validates_format DOMAIN_REGEX, :name
     end
 
     def validate_space(space)

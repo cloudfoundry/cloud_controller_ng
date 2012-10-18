@@ -102,6 +102,21 @@ module VCAP::CloudController
           domain.should be_valid
         end
 
+        it "should accept a three level domain" do
+          domain.name = "a.b.com"
+          domain.should be_valid
+        end
+
+        it "should accept a four level domain" do
+          domain.name = "a.b.c.com"
+          domain.should be_valid
+        end
+
+        it "should accept a domain with a 2 char top level domain" do
+          domain.name = "b.c.au"
+          domain.should be_valid
+        end
+
         it "should not allow a one level domain" do
           domain.name = "com"
           domain.should_not be_valid
@@ -117,8 +132,18 @@ module VCAP::CloudController
           domain.should_not be_valid
         end
 
-        it "should not allow a three level domain TEMPORARY!" do
-          domain.name = "a.b.com"
+        it "should not allow a domain with a leading dot" do
+          domain.name = ".b.c.com"
+          domain.should_not be_valid
+        end
+
+        it "should not allow a domain with a single char top level domain" do
+          domain.name = "b.c.d"
+          domain.should_not be_valid
+        end
+
+        it "should not allow a domain with a 6 char top level domain" do
+          domain.name = "b.c.abcefg"
           domain.should_not be_valid
         end
 
