@@ -56,6 +56,18 @@ module VCAP::CloudController::Models
       owning_organization
     end
 
+    def intermediate_domains
+      self.class.intermediate_domains(name)
+    end
+
+    def self.intermediate_domains(name)
+      return unless name and name =~ DOMAIN_REGEX
+
+      name.split(".").reverse.inject([]) do |a, e|
+        a.push(a.empty? ? e : "#{e}.#{a.last}")
+      end
+    end
+
     def self.user_visibility_filter(user)
       orgs = Organization.filter({
         :managers => [user],

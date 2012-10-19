@@ -31,6 +31,31 @@ module VCAP::CloudController
       }
     }
 
+    describe "#intermidiate_domains" do
+      context "name is nil" do
+        it "should return nil" do
+          Models::Domain.intermediate_domains(nil).should == nil
+        end
+      end
+
+      context "name is empty" do
+        it "should return nil" do
+          Models::Domain.intermediate_domains("").should == nil
+        end
+      end
+
+      context "name is not a valid domain" do
+        Models::Domain.intermediate_domains("bla").should == nil
+      end
+
+      context "valid domain" do
+        it "should return an array of intermediate domains (minus the tld)" do
+          Models::Domain.intermediate_domains("a.b.c.d.com").should ==
+            [ "com", "d.com", "c.d.com", "b.c.d.com", "a.b.c.d.com"]
+        end
+      end
+    end
+
     describe "creating shared domains" do
       context "as an admin" do
         before do
