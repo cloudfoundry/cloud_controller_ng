@@ -33,6 +33,7 @@ module VCAP::CloudController::Models
 
   Domain.blueprint do
     name                { Sham.domain }
+    wildcard            { true }
     owning_organization { Organization.make }
   end
 

@@ -9,7 +9,7 @@ module VCAP::CloudController
       :path                 => "/v2/domains",
       :model                => Models::Domain,
       :basic_attributes     => [:name, :owning_organization_guid],
-      :required_attributes  => [:name, :owning_organization_guid],
+      :required_attributes  => [:name, :owning_organization_guid, :wildcard],
       :unique_attributes    => :name
     }
 
@@ -28,6 +28,7 @@ module VCAP::CloudController
 
       let(:creation_req_for_a) do
         Yajl::Encoder.encode(:name => Sham.domain,
+                             :wildcard => true,
                              :owning_organization_guid => @org_a.guid)
       end
 
@@ -148,7 +149,8 @@ module VCAP::CloudController
           should_receive_quota_call
           post "/v2/domains",
             Yajl::Encoder.encode(:name => Sham.domain,
-                                 :owning_organization_guid => org.guid),
+                                 :owning_organization_guid => org.guid,
+                                 :wildcard => true),
                                  headers_for(cf_admin)
           last_response.status.should == 201
         end

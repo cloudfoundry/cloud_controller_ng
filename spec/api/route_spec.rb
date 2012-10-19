@@ -249,6 +249,7 @@ module VCAP::CloudController
       @headers_for_user = headers_for(user)
       @route = space.add_domain(
         :name => "jesse.cloud",
+        :wildcard => true,
         :owning_organization => space.organization,
       ).add_route(
         :host => "foo",

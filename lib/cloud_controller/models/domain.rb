@@ -17,8 +17,8 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name, :owning_organization_guid
-    import_attributes :name, :owning_organization_guid
+    export_attributes :name, :owning_organization_guid, :wildcard
+    import_attributes :name, :owning_organization_guid, :wildcard
     strip_attributes  :name
 
     many_to_many      :spaces, :before_add => :validate_space
@@ -27,6 +27,7 @@ module VCAP::CloudController::Models
     def validate
       validates_presence :name
       validates_unique   :name
+      validates_presence :wildcard
 
       if new? || column_changed?(:owning_organization)
         unless VCAP::CloudController::SecurityContext.current_user_is_admin?
@@ -34,12 +35,6 @@ module VCAP::CloudController::Models
         end
       end
 
-      # TODO: this is:
-      #
-      # a) temporary.  we don't want to limit ourselves to
-      # two level domains only.
-      #
-      # b) not accurate.  this is not an accurate regex for a fqdn
       validates_format DOMAIN_REGEX, :name
     end
 

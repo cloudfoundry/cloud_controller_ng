@@ -209,6 +209,7 @@ module VCAP::CloudController
       let(:domain) do
         space.add_domain(
           :name => "jesse.cloud",
+          :wildcard => true,
           :owning_organization => space.organization,
         )
       end

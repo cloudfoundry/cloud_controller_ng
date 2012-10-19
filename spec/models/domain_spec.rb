@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:domain) { Models::Domain.make }
 
     it_behaves_like "a CloudController model", {
-      :required_attributes          => [:name, :owning_organization],
+      :required_attributes          => [:name, :owning_organization, :wildcard],
       :db_required_attributes       => [:name],
       :unique_attributes            => :name,
       :stripped_string_attributes   => :name,
