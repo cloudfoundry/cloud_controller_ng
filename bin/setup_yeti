@@ -4,6 +4,7 @@ require "yaml"
 
 module YetiSetup
   def self.setup(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, num_users, email, password, org_name, space_name)
+    check_uaac_version
     create_user(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, email, password, org_name, space_name)
     info = create_users(uaa_url, uaa_cc_secret, cc_url, cc_admin_email, cc_admin_password, num_users, email, password, org_name, space_name)
     puts YAML.dump("parallel" => info)
@@ -33,8 +34,8 @@ module YetiSetup
 
   def self.create_uaa_user(uaa_cc_secret, email, password)
     with_cc_uaa_client(uaa_cc_secret) do
-      output = run "uaac user add #{email} -p #{password}"
-      error unless output =~ /created/
+      output = run "uaac user add #{email} --email #{email} --given_name yeti --family_name testuser  -p #{password}"
+      error unless output =~ /added/
       uaa_uid(email)
     end
   end
@@ -140,6 +141,14 @@ module YetiSetup
     output = run "uaac context | grep access_token | sed 's/ *access_token: //'"
     "bearer #{output.chomp}"
   end
+
+  def self.check_uaac_version
+    output = run "uaac --version"
+    supported_version = "1.2.4"
+    ver = output.split(" ").last.chomp
+    abort "Error: uaac version 1.2.4 required; please update cf-uaa-client gem if needed" unless ver == supported_version
+  end
+
 end
 
 unless ARGV.size == 10
