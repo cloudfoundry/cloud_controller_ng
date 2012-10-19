@@ -91,6 +91,78 @@ module VCAP::CloudController
       end
     end
 
+    describe "overlapping domains" do
+      shared_examples "overlapping domains" do
+        let(:domain_a) { Models::Domain.make(:name => name_a) }
+
+        context "owned by the same org" do
+          it "should be allowed" do
+            domain_a.should be_valid
+            Models::Domain.make(
+              :name => name_b,
+              :owning_organization => domain_a.owning_organization,
+            ).should be_valid
+          end
+        end
+
+        context "owned by different orgs" do
+          it "should not be allowed" do
+            domain_a.should be_valid
+            expect {
+              Models::Domain.make(:name => name_b)
+            }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+          end
+        end
+      end
+
+      shared_examples "overlapping with system domain" do
+        context "with system domain and non system domain" do
+
+          it "should not be allowed" do
+            system_domain = Models::Domain.new(
+              :name => name_a,
+              :wildcard => true,
+              :owning_organization => nil
+            ).save(:validate => false)
+
+            expect {
+              Models::Domain.make(:name => name_b)
+            }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+          end
+        end
+      end
+
+      context "exact overlap" do
+        let(:name_a) { Sham.domain }
+        let(:name_b) { "foo.#{name_a}" }
+
+        context "owned by different orgs" do
+          it "should not be allowed" do
+            domain_a = Models::Domain.make(:name => name_a)
+            expect {
+              Models::Domain.make(:name => domain_a.name)
+            }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+          end
+        end
+
+        include_examples "overlapping with system domain"
+      end
+
+      context "one level overlap" do
+        let(:name_a) { Sham.domain }
+        let(:name_b) { "foo.#{name_a}" }
+        include_examples "overlapping domains"
+        include_examples "overlapping with system domain"
+      end
+
+      context "multi level overlap" do
+        let(:name_a) { "foo.bar.#{Sham.domain}" }
+        let(:name_b) { "a.b.foo.bar.#{name_a}" }
+        include_examples "overlapping domains"
+        include_examples "overlapping with system domain"
+      end
+    end
+
     context "relationships" do
       let(:domain) { Models::Domain.make(
         :owning_organization => Models::Organization.make)
