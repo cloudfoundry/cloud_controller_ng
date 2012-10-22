@@ -115,7 +115,19 @@ module Sinatra
         end
         logger_name = opts[:logger_name] || "vcap.api"
         env["rack.logger"] = Steno.logger(logger_name)
-        @request_guid = SecureRandom.uuid
+
+        @request_guid = env["X_VCAP_REQUEST_ID"]
+        @request_guid ||= env["X_REQUEST_ID"]
+
+        # we append a new guid to the request because we have no idea if the
+        # caller is really going to be giving us a unique guid, i.e. they might
+        # generate the guid and then turn around and make 3 api calls using it.
+        if @request_guid
+          @request_guid = "#{@request_guid}::#{SecureRandom.uuid}"
+        else
+          @request_guid ||= SecureRandom.uuid
+        end
+
         Thread.current[:vcap_request_id] = @request_guid
         Steno.config.context.data["request_guid"] = @request_guid
       end

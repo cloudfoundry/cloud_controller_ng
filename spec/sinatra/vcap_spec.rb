@@ -126,4 +126,52 @@ describe "Sinatra::VCAP" do
       last_response.body.should == last_response.headers["X-VCAP-Request-ID"]
     end
   end
+
+  describe "caller provided x-vcap-request-id" do
+    before(:all) do
+      get "/request_id", {}, { "X_VCAP_REQUEST_ID" => "abcdef" }
+    end
+
+    it "should set the X-VCAP-Request-ID to the caller specified value" do
+      last_response.status.should == 200
+      last_response.headers["X-VCAP-Request-ID"].should match /abcdef::.*/
+    end
+
+    it "should access the request id via Thread.current[:request_id]" do
+      last_response.status.should == 200
+      last_response.body.should match /abcdef::.*/
+    end
+  end
+
+  describe "caller provided x-request-id" do
+    before(:all) do
+      get "/request_id", {}, { "X_REQUEST_ID" => "abcdef" }
+    end
+
+    it "should set the X-VCAP-Request-ID to the caller specified value" do
+      last_response.status.should == 200
+      last_response.headers["X-VCAP-Request-ID"].should match /abcdef::.*/
+    end
+
+    it "should access the request id via Thread.current[:request_id]" do
+      last_response.status.should == 200
+      last_response.body.should match /abcdef::.*/
+    end
+  end
+
+  describe "caller provided x-request-id and x-vcap-request-id" do
+    before(:all) do
+      get "/request_id", {}, { "X_REQUEST_ID" => "abc", "X_VCAP_REQUEST_ID" => "def" }
+    end
+
+    it "should set the X-VCAP-Request-ID to the caller specified value of X_VCAP_REQUEST_ID" do
+      last_response.status.should == 200
+      last_response.headers["X-VCAP-Request-ID"].should match /def::.*/
+    end
+
+    it "should access the request id via Thread.current[:request_id]" do
+      last_response.status.should == 200
+      last_response.body.should match /def::.*/
+    end
+  end
 end
