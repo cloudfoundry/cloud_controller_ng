@@ -3,14 +3,17 @@
 module VCAP::CloudController::ApiSpecHelper
   shared_examples "paginated enumeration request" do |base_path, page, page_size, total_results, page_results|
     page_count = (total_results / page_size.to_f).ceil
+    path = base_path =~ /\?/ ? "#{base_path}&" : "#{base_path}?"
 
-    path = "#{base_path}?"
+    qp = []
     if page
-      path += "page=#{page}&"
+      qp << "page=#{page}&"
     else
       page = 1
     end
-    path += "results-per-page=#{page_size}"
+    qp << "results-per-page=#{page_size}"
+
+    path = "#{path}#{qp.join("&")}"
 
     describe "GET #{path}" do
       before(:all) do
@@ -36,8 +39,15 @@ module VCAP::CloudController::ApiSpecHelper
       prev_page = page > 1 ? (page - 1) : nil
       if prev_page
         it "should return a prev_url to page #{prev_page}" do
+          expected_qp = "page=#{prev_page}&results-per-page=#{page_size}"
+          expected_url = if base_path =~ /\?/
+                           /#{base_path.sub("?", "\\?")}&#{expected_qp}/
+                         else
+                           /#{base_path}\?#{expected_qp}/
+                         end
+
           prev_url = decoded_response["prev_url"]
-          prev_url.should match /#{base_path}\?page=#{prev_page}&results-per-page=#{page_size}/
+          prev_url.should match expected_url
         end
       else
         it "should return prev_url of nil" do
@@ -48,8 +58,14 @@ module VCAP::CloudController::ApiSpecHelper
       next_page = page < page_count ? (page + 1) : nil
       if next_page
         it "should return next_url to page #{next_page}" do
+          expected_qp = "page=#{next_page}&results-per-page=#{page_size}"
+          expected_url = if base_path =~ /\?/
+                           /#{base_path.sub("?", "\\?")}&#{expected_qp}/
+                         else
+                           /#{base_path}\?#{expected_qp}/
+                         end
           next_url = decoded_response["next_url"]
-          next_url.should match /#{base_path}\?page=#{next_page}&results-per-page=#{page_size}/
+          next_url.should match expected_url
         end
       else
         it "should return next_url of nil" do
@@ -76,10 +92,20 @@ module VCAP::CloudController::ApiSpecHelper
           end
         end
 
-        include_examples "paginated enumeration request", opts[:path], nil, 3, 8, 3
-        include_examples "paginated enumeration request", opts[:path], 1, 3, 8, 3
-        include_examples "paginated enumeration request", opts[:path], 2, 3, 8, 3
-        include_examples "paginated enumeration request", opts[:path], 3, 3, 8, 2
+        context "without inlined relations" do
+          include_examples "paginated enumeration request", opts[:path], nil, 3, 8, 3
+          include_examples "paginated enumeration request", opts[:path], 1, 3, 8, 3
+          include_examples "paginated enumeration request", opts[:path], 2, 3, 8, 3
+          include_examples "paginated enumeration request", opts[:path], 3, 3, 8, 2
+        end
+
+        context "with inlined relations" do
+          path = "#{opts[:path]}?inline-relations-depth=1"
+          include_examples "paginated enumeration request", path, nil, 3, 8, 3
+          include_examples "paginated enumeration request", path, 1, 3, 8, 3
+          include_examples "paginated enumeration request", path, 2, 3, 8, 3
+          include_examples "paginated enumeration request", path, 3, 3, 8, 2
+        end
       end
     end
   end

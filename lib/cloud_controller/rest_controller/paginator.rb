@@ -97,6 +97,9 @@ module VCAP::CloudController::RestController
 
     def url(page)
       res = "#{@path}?"
+      if @opts[:inline_relations_depth]
+        res += "inline-relations-depth=#{@opts[:inline_relations_depth]}&"
+      end
       res += "q=#{@opts[:q]}&" if @opts[:q]
       res += "page=#{page}&results-per-page=#{@paginated.page_size}"
     end
