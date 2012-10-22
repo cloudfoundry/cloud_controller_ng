@@ -319,6 +319,10 @@ module VCAP::CloudController::ApiSpecHelper
                 describe "GET on the #{attr}_url" do
                   before(:all) do
                     get @uri, {}, headers
+
+                    @raw_guids = obj.send(get_method).sort do |a, b|
+                      a[:id] <=> b[:id]
+                    end.map { |o| o.guid }
                   end
 
                   it "should return 200" do
@@ -340,8 +344,22 @@ module VCAP::CloudController::ApiSpecHelper
                     next_url.should match /#{@uri}\?page=2&results-per-page=50/
                   end
 
-                  it "should return resources => []" do
+                  it "should return the first 50 resources" do
                     decoded_response["resources"].count.should == 50
+                    api_guids = decoded_response["resources"].map do |v|
+                      v["metadata"]["guid"]
+                    end
+
+                    api_guids.should == @raw_guids[0..49]
+                  end
+
+                  it "should return the next 1 resource when fetching next_url" do
+                    query_parms = query_params_for_inline_depth(depth)
+                    get decoded_response["next_url"], query_parms, headers
+                    last_response.status.should == 200
+                    decoded_response["resources"].count.should == 1
+                    guid = decoded_response["resources"][0]["metadata"]["guid"]
+                    guid.should == @raw_guids[50]
                   end
                 end
               end
