@@ -4,6 +4,9 @@ module VCAP::CloudController
   class LegacyStaging < LegacyApiBase
     include VCAP::CloudController::Errors
 
+    # Endpoint does its own (non-standard) auth
+    allow_unauthenticated_access
+
     APP_PATH = "/staging/apps"
     DROPLET_PATH = "/staging/droplets"
 

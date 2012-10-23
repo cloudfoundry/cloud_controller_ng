@@ -4,6 +4,9 @@ require "services/api"
 
 module VCAP::CloudController
   class LegacyServiceGateway < LegacyApiBase
+    # This endpoint does its own auth
+    allow_unauthenticated_access
+
     include VCAP::CloudController::Errors
     SERVICE_TOKEN_KEY = "HTTP_X_VCAP_SERVICE_TOKEN"
     DEFAULT_PROVIDER = "core"

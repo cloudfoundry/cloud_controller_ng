@@ -33,6 +33,9 @@ module VCAP::CloudController
   end
 
   class LegacyBulk < RestController::Base
+    # Endpoint does its own (non-standard) auth
+    allow_unauthenticated_access
+
     class << self
       attr_reader :message_bus, :config
 

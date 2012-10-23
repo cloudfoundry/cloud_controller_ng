@@ -2,6 +2,8 @@
 
 module VCAP::CloudController
   class Info < RestController::Base
+    allow_unauthenticated_access
+
     def read
       info = {
         :name        => @config[:info][:name],

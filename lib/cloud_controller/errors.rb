@@ -13,6 +13,9 @@ module VCAP::CloudController::Errors
   [
     # TODO: redo ranges.  10000 is for vcap base.
     # 20000 should be for cc base.
+
+    ["InvalidAuthToken", HTTP::UNAUTHORIZED, 100, "Invalid Auth Token"],
+
     ["QuotaDeclined",         HTTP::BAD_REQUEST, 1000, "Quota declined: %s"],
     ["MessageParseError",     HTTP::BAD_REQUEST, 1001, "Request invalid due to parse error: %s"],
     ["InvalidRelation",       HTTP::BAD_REQUEST, 1002, "Invalid relation: %s"],

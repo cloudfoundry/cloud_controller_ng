@@ -4,6 +4,8 @@ module VCAP::CloudController
   class LegacyInfo < LegacyApiBase
     include VCAP::CloudController::Errors
 
+    allow_unauthenticated_access
+
     def info
       info = {
         :name        => config[:info][:name],
