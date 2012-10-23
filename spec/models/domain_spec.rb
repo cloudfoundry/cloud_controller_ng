@@ -250,6 +250,23 @@ module VCAP::CloudController
             :name => domain.name.upcase)
             d.should_not be_valid
         end
+
+        it "should not remove the wildcard flag if routes are using it" do
+          d = Models::Domain.make(:wildcard => true)
+          r = Models::Route.make(:host => nil,
+                                 :domain => d,
+                                 :organization => d.owning_organization)
+          expect {
+            d.update(:wildcard => false)
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it "should remove the wildcard flag if no routes are using it" do
+          d = Models::Domain.make(:wildcard => true)
+          r = Models::Route.make(:domain => d,
+                                 :organization => d.owning_organization)
+          d.update(:wildcard => false)
+        end
       end
     end
 

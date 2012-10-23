@@ -29,6 +29,11 @@ module VCAP::CloudController::Models
       validates_unique   :name
       validates_presence :wildcard
 
+      if (!new? && column_changed?(:wildcard) && !wildcard &&
+          routes_dataset.filter(:host => nil).count > 0)
+        errors.add(:wildcard, :wildcard_routes_in_use)
+      end
+
       if new? || column_changed?(:owning_organization)
         unless VCAP::CloudController::SecurityContext.current_user_is_admin?
           validates_presence :owning_organization
