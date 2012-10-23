@@ -17,13 +17,11 @@ module VCAP::CloudController
       include_context "permissions"
 
       before do
-        @obj_a = Models::Domain.make(
-          :owning_organization => @org_a)
-          @space_a.add_domain(@obj_a)
+        @obj_a = Models::Domain.make(:owning_organization => @org_a)
+        @space_a.add_domain(@obj_a)
 
-          @obj_b = Models::Domain.make(
-            :owning_organization => @org_b)
-            @space_b.add_domain(@obj_b)
+        @obj_b = Models::Domain.make(:owning_organization => @org_b)
+        @space_b.add_domain(@obj_b)
       end
 
       let(:creation_req_for_a) do
