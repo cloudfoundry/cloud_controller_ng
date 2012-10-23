@@ -12,7 +12,7 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :host, String
+      attribute :host, String, :default => nil
       to_one    :domain
       to_one    :organization
       to_many   :apps

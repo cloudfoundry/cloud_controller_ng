@@ -25,11 +25,11 @@ module VCAP::CloudController::Models
     end
 
     def fqdn
-      "#{host}.#{domain.name}"
+      host ? "#{host}.#{domain.name}" : domain.name
     end
 
     def validate
-      validates_presence :host
+      validates_presence :host if domain && !domain.wildcard
       validates_presence :domain
       validates_presence :organization
 
@@ -40,7 +40,7 @@ module VCAP::CloudController::Models
       end
 
       # TODO: not accurate regex
-      validates_format   /^([\w\-]+)$/, :host
+      validates_format   /^([\w\-]+)$/, :host if host
       validates_unique   [:host, :domain_id]
     end
 
