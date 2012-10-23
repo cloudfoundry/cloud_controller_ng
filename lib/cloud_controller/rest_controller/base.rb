@@ -87,6 +87,7 @@ module VCAP::CloudController::RestController
     # body string], or just a body string.
     def dispatch(op, *args)
       logger.debug "dispatch: #{op}"
+      check_authentication
       send(op, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, request_attrs)
@@ -108,6 +109,19 @@ module VCAP::CloudController::RestController
     # see Sinatra::Base#send_file
     def send_file(path, opts={})
       @sinatra.send_file(path, opts)
+    end
+
+    def check_authentication
+      # The logic here is a bit oddly ordered, but it supports the
+      # legacy calls setting a user, but not providing a token.
+      return if self.class.allow_unauthenticated_access?
+      return if VCAP::CloudController::SecurityContext.current_user
+
+      if VCAP::CloudController::SecurityContext.token
+        raise NotAuthorized
+      else
+        raise InvalidAuthToken
+      end
     end
 
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
@@ -161,6 +175,14 @@ module VCAP::CloudController::RestController
       # Disable the generation of default routes
       def disable_default_routes
         @disable_default_routes = true
+      end
+
+      def allow_unauthenticated_access
+        @allow_unauthenticated_access = true
+      end
+
+      def allow_unauthenticated_access?
+        @allow_unauthenticated_access
       end
 
       # Returns true if the cc framework should generate default routes for an

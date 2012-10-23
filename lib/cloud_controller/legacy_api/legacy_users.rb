@@ -2,6 +2,8 @@
 
 module VCAP::CloudController
   class LegacyUsers < LegacyApiBase
+    allow_unauthenticated_access
+
     include VCAP::CloudController::Errors
 
     def read(email)

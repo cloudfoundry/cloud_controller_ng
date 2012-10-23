@@ -47,9 +47,20 @@ module VCAP::CloudController
           config_override(config_setting => true)
         end
 
+        context "with no authorization header for #{scenario_vars[:user]}" do
+          before(:all) do
+            headers.delete("HTTP_AUTHORIZATION")
+            get "/info", {}, headers
+          end
+
+          include_examples "legacy info response", 200, false
+        end
+
         context "with invalid authorization header for #{scenario_vars[:user]}" do
           before(:all) do
-            headers["HTTP_AUTHORIZATION"].reverse! if headers["HTTP_AUTHORIZATION"]
+            if headers["HTTP_AUTHORIZATION"]
+              headers["HTTP_AUTHORIZATION"] += "EXTRA STUFF"
+            end
             get "/info", {}, headers
           end
 
