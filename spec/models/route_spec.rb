@@ -6,6 +6,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::Models::Route do
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:host, :domain, :organization],
+      :db_required_attributes => [:domain, :organization],
       :unique_attributes    => [:host, :domain],
       :stripped_string_attributes => :host,
       :create_attribute => lambda { |name|
@@ -51,14 +52,76 @@ module VCAP::CloudController
           route.host = "a/b"
           route.should_not be_valid
         end
+
+        context "with a wildcard domain" do
+          let(:domain) { Models::Domain.make(:wildcard => true) }
+
+          it "should allow a nil host" do
+            Models::Route.make(:organization => domain.owning_organization,
+                               :domain => domain,
+                               :host => nil).should be_valid
+          end
+
+          it "should not allow an empty host" do
+            expect {
+              Models::Route.make(:organization => domain.owning_organization,
+                                 :domain => domain,
+                                 :host => "")
+            }.to raise_error(Sequel::ValidationFailed)
+          end
+
+          it "should not allow a blank host" do
+            expect {
+              Models::Route.make(:organization => domain.owning_organization,
+                                 :domain => domain,
+                                 :host => " ")
+            }.to raise_error(Sequel::ValidationFailed)
+          end
+        end
+
+        context "with a non-wild card domain" do
+          let(:domain) { Models::Domain.make(:wildcard => false) }
+
+          it "should not allow an nil host" do
+            expect {
+              Models::Route.make(:organization => domain.owning_organization,
+                                 :domain => domain,
+                                 :host => nil)
+            }.to raise_error(Sequel::ValidationFailed)
+          end
+
+          it "should not allow an empty host" do
+            expect {
+              Models::Route.make(:organization => domain.owning_organization,
+                                 :domain => domain,
+                                 :host => "")
+            }.to raise_error(Sequel::ValidationFailed)
+          end
+
+          it "should not allow a blank host" do
+            expect {
+              Models::Route.make(:organization => domain.owning_organization,
+                                 :domain => domain,
+                                 :host => " ")
+            }.to raise_error(Sequel::ValidationFailed)
+          end
+        end
       end
     end
 
     describe "#fqdn" do
-      it "should return the fqdn of for the route" do
-        d = Models::Domain.make(:name => "foobar.com")
-        r = Models::Route.make(:host => "www", :domain => d)
-        r.fqdn.should == "www.foobar.com"
+      context "for a non-nil host" do
+        it "should return the fqdn of for the route" do
+          d = Models::Domain.make(:name => "foobar.com")
+          r = Models::Route.make(:host => "www", :domain => d)
+          r.fqdn.should == "www.foobar.com"
+        end
+      end
+
+      context "for a nil host" do
+        d = Models::Domain.make(:wildcard => true)
+        r = Models::Route.make(:host => nil, :domain => d)
+        r.fqdn.should == d.name
       end
     end
 

@@ -26,6 +26,19 @@ module VCAP::CloudController
       :create_attribute_reset => lambda { @org = nil }
     }
 
+    context "with a wildcard domain" do
+      it "should allow a nil host" do
+        cf_admin = Models::User.make(:admin => true)
+        domain = Models::Domain.make(:wildcard => true)
+        post "/v2/routes",
+          Yajl::Encoder.encode(:host => nil,
+                               :domain_guid => domain.guid,
+                               :organization_guid => domain.owning_organization.guid),
+          headers_for(cf_admin)
+        last_response.status.should == 201
+      end
+    end
+
     describe "Permissions" do
 
       shared_examples "route permissions" do
