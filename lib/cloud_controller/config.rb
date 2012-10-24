@@ -16,7 +16,7 @@ class VCAP::CloudController::Config < VCAP::Config
         :description     => String,
       },
 
-      :serving_domain => String,
+      :system_domains => [ String ],
 
       # TODO: put back once json schema is sorted out
       # :allow_debug => BoolSchema,
