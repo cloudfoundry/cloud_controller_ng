@@ -22,6 +22,10 @@ module VCAP::CloudController
 
         @obj_b = Models::Domain.make(:owning_organization => @org_b)
         @space_b.add_domain(@obj_b)
+
+        @system_domain = Models::Domain.new(:name => Sham.domain,
+                                            :owning_organization => nil)
+        @system_domain.save(:validate => false)
       end
 
       let(:creation_req_for_a) do
@@ -89,6 +93,32 @@ module VCAP::CloudController
             :read => :allowed,
             :modify => :not_allowed,
             :delete => :not_allowed
+        end
+      end
+
+      describe "System Domain permissions" do
+        describe "PUT /v2/domains/:system_domain" do
+          it "should not allow modification of the shared domain by an org manager" do
+            @system_domain.add_organization(@org_a)
+            put "/v2/domains/#{@system_domain.guid}",
+                Yajl::Encoder.encode(:name => Sham.domain),
+                headers_for(@org_a_manager)
+            last_response.status.should == 403
+          end
+        end
+
+        describe "DELETE /v2/organizations/:id/domains/:system_domain" do
+          it "should be allowed for the org admin" do
+            delete "/v2/organizations/#{@org_a.guid}/domains/#{@system_domain.guid}", {},
+                   headers_for(@org_a_manager)
+            last_response.status.should == 201
+          end
+
+          it "should not be allowed for an org member" do
+            delete "/v2/organizations/#{@org_a.guid}/domains/#{@system_domain.guid}", {},
+                   headers_for(@org_a_member)
+            last_response.status.should == 403
+          end
         end
       end
 
