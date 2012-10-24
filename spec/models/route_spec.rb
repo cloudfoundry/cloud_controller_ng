@@ -5,7 +5,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Models::Route do
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:host, :domain, :organization],
+      :required_attributes  => [:domain, :organization],
       :db_required_attributes => [:domain, :organization],
       :unique_attributes    => [:host, :domain],
       :stripped_string_attributes => :host,
@@ -16,8 +16,11 @@ module VCAP::CloudController
           @org
         when :domain
           Models::Domain.make(
-            :owning_organization => @org
+            :owning_organization => @org,
+            :wildcard => true
           )
+        when :host
+          Sham.host
         end
       },
       :create_attribute_reset => lambda { @org = nil },
@@ -82,11 +85,17 @@ module VCAP::CloudController
         context "with a non-wild card domain" do
           let(:domain) { Models::Domain.make(:wildcard => false) }
 
-          it "should not allow an nil host" do
+          it "should allow a nil host" do
+            Models::Route.make(:organization => domain.owning_organization,
+                               :domain => domain,
+                               :host => nil).should be_valid
+          end
+
+          it "should not allow a valid host" do
             expect {
               Models::Route.make(:organization => domain.owning_organization,
                                  :domain => domain,
-                                 :host => nil)
+                                 :host => Sham.host)
             }.to raise_error(Sequel::ValidationFailed)
           end
 
@@ -112,9 +121,9 @@ module VCAP::CloudController
     describe "#fqdn" do
       context "for a non-nil host" do
         it "should return the fqdn of for the route" do
-          d = Models::Domain.make(:name => "foobar.com")
+          d = Models::Domain.make(:wildcard => true)
           r = Models::Route.make(:host => "www", :domain => d)
-          r.fqdn.should == "www.foobar.com"
+          r.fqdn.should == "www.#{d.name}"
         end
       end
 

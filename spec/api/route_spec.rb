@@ -9,7 +9,7 @@ module VCAP::CloudController
       :path                 => "/v2/routes",
       :model                => Models::Route,
       :basic_attributes     => [:host, :domain_guid, :organization_guid],
-      :required_attributes  => [:host, :domain_guid, :organization_guid],
+      :required_attributes  => [:domain_guid, :organization_guid],
       :update_attributes    => [:host],
       :unique_attributes    => [:host, :domain_guid],
       :create_attribute     => lambda { |name|
@@ -19,8 +19,11 @@ module VCAP::CloudController
           @org.guid
         when :domain_guid
           Models::Domain.make(
+            :wildcard => true,
             :owning_organization => @org
           ).guid
+        when :host
+          Sham.host
         end
       },
       :create_attribute_reset => lambda { @org = nil }
@@ -159,11 +162,11 @@ module VCAP::CloudController
         end
 
         before do
-          @domain_a = Models::Domain.make(:owning_organization => @org_a)
+          @domain_a = Models::Domain.make(:wildcard => true, :owning_organization => @org_a)
           @space_a.add_domain(@domain_a)
           @obj_a = Models::Route.make(:domain => @domain_a, :organization => @org_a)
 
-          @domain_b = Models::Domain.make(:owning_organization => @org_b)
+          @domain_b = Models::Domain.make(:wildcard => true, :owning_organization => @org_b)
           @space_b.add_domain(@domain_b)
           @obj_b = Models::Route.make(:domain => @domain_b, :organization => @org_b)
         end
@@ -190,11 +193,13 @@ module VCAP::CloudController
           Models::Domain.default_serving_domain_name = "shared.com"
 
           @obj_a = Models::Route.make(
+            :host => Sham.host,
             :domain => Models::Domain.default_serving_domain,
             :organization => @org_a
           )
 
           @obj_b = Models::Route.make(
+            :host => Sham.host,
             :domain => Models::Domain.default_serving_domain,
             :organization => @org_b
           )
@@ -210,8 +215,8 @@ module VCAP::CloudController
 
     describe "quota" do
       let(:cf_admin) { Models::User.make(:admin => true) }
-      let(:domain) { Models::Domain.make }
-      let(:route) { Models::Route.make }
+      let(:domain) { Models::Domain.make(:wildcard => true) }
+      let(:route) { Models::Route.make(:domain => domain) }
 
       describe "create" do
         it "should fetch a quota token" do

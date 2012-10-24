@@ -26,7 +26,8 @@ module VCAP::CloudController
       },
       :one_to_zero_or_more => {
         :routes => lambda { |domain|
-          Models::Route.make(:domain => domain)
+          domain.update(:wildcard => true)
+          Models::Route.make(:host => Sham.host, :domain => domain)
         }
       }
     }
@@ -253,7 +254,7 @@ module VCAP::CloudController
 
         it "should not remove the wildcard flag if routes are using it" do
           d = Models::Domain.make(:wildcard => true)
-          r = Models::Route.make(:host => nil,
+          r = Models::Route.make(:host => Sham.host,
                                  :domain => d,
                                  :organization => d.owning_organization)
           expect {
@@ -263,7 +264,8 @@ module VCAP::CloudController
 
         it "should remove the wildcard flag if no routes are using it" do
           d = Models::Domain.make(:wildcard => true)
-          r = Models::Route.make(:domain => d,
+          r = Models::Route.make(:host => nil,
+                                 :domain => d,
                                  :organization => d.owning_organization)
           d.update(:wildcard => false)
         end

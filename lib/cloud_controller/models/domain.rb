@@ -30,7 +30,7 @@ module VCAP::CloudController::Models
       validates_presence :wildcard
 
       if (!new? && column_changed?(:wildcard) && !wildcard &&
-          routes_dataset.filter(:host => nil).count > 0)
+          routes_dataset.filter(~{:host => nil}).count > 0)
         errors.add(:wildcard, :wildcard_routes_in_use)
       end
 
@@ -122,7 +122,8 @@ module VCAP::CloudController::Models
           @default_serving_domain = Domain[:name => name]
           unless @default_serving_domain
             logger.info "creating default serving domain: #{name}"
-            @default_serving_domain = Domain.new(:name => name)
+            @default_serving_domain = Domain.new(:name => name,
+                                                 :wildcard => true)
             @default_serving_domain.save(:validate => false)
           else
             logger.info "reusing default serving domain: #{name}"

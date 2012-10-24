@@ -29,7 +29,10 @@ module VCAP::CloudController::Models
     end
 
     def validate
-      validates_presence :host if domain && !domain.wildcard
+      if domain && !domain.wildcard
+        errors.add(:host, :host_not_nil) unless host.nil?
+      end
+
       validates_presence :domain
       validates_presence :organization
 
