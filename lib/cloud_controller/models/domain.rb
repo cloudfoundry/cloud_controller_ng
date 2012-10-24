@@ -113,28 +113,35 @@ module VCAP::CloudController::Models
     end
 
     def self.default_serving_domain_name=(name)
-      logger = Steno.logger("cc.db.domain")
       @default_serving_domain_name = name
       unless name
         @default_serving_domain = nil
       else
-        Domain.db.transaction do
-          @default_serving_domain = Domain[:name => name]
-          unless @default_serving_domain
-            logger.info "creating default serving domain: #{name}"
-            @default_serving_domain = Domain.new(:name => name,
-                                                 :wildcard => true)
-            @default_serving_domain.save(:validate => false)
-          else
-            logger.info "reusing default serving domain: #{name}"
-          end
-        end
+        @default_serving_domain = find_or_create_shared_domain(name)
       end
       name
     end
 
     def self.default_serving_domain_name
       @default_serving_domain_name
+    end
+
+    def self.find_or_create_shared_domain(name)
+      logger = Steno.logger("cc.db.domain")
+      d = nil
+
+      Domain.db.transaction do
+        d = Domain[:name => name]
+        if d
+          logger.info "reusing default serving domain: #{name}"
+        else
+          logger.info "creating shared serving domain: #{name}"
+          d = Domain.new(:name => name, :wildcard => true)
+          d.save(:validate => false)
+        end
+      end
+
+      return d
     end
   end
 end
