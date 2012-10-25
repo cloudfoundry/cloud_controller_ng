@@ -24,6 +24,10 @@ module VCAP::CloudController::Models
     many_to_many      :spaces, :before_add => :validate_space
     add_association_dependencies :spaces => :nullify
 
+    subset(:shared_domains) do
+      { :owning_organization_id => nil }
+    end
+
     def validate
       validates_presence :name
       validates_unique   :name
