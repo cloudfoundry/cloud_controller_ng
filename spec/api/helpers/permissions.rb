@@ -57,20 +57,25 @@ module VCAP::CloudController::ApiSpecHelper
   shared_examples "permission enumeration" do |perm_name, model, name, path, expected, perms_overlap|
     describe "GET #{path}" do
       it "should return #{expected} #{name.pluralize} to a user that has #{perm_name} permissions" do
+
         get path, {}, headers_a
         last_response.should be_ok
         decoded_response["total_results"].should == expected
-        if expected > 0
-          guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
-          guids.should include(@obj_a.guid)
+        guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
+        if respond_to?(:enumeration_expectation_a)
+          guids.sort.should == enumeration_expectation_a.map(&:guid).sort
+        else
+          guids.should include(@obj_a.guid) if expected > 0
         end
 
         get path, {}, headers_b
         last_response.should be_ok
         decoded_response["total_results"].should == expected
-        if expected > 0
-          guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
-          guids.should include(@obj_b.guid)
+        guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
+        if respond_to?(:enumeration_expectation_b)
+          guids.sort.should == enumeration_expectation_b.map(&:guid).sort
+        else
+          guids.should include(@obj_b.guid) if expected > 0
         end
       end
 

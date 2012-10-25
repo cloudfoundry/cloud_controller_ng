@@ -108,6 +108,7 @@ module VCAP::CloudController::Models
 
       user_visibility_filter_with_admin_override({
         :owning_organization => orgs,
+        :owning_organization_id => nil,
         :spaces => spaces
       }.sql_or)
     end

@@ -24,8 +24,7 @@ module VCAP::CloudController::Models
     import_attributes :name, :user_guids, :manager_guids, :billing_manager_guids, :auditor_guids, :domain_guids
 
     def before_create
-      d = Domain.default_serving_domain
-      add_domain_by_guid(d.guid) if d
+      add_inheritable_domains
       super
     end
 
@@ -40,6 +39,12 @@ module VCAP::CloudController::Models
               domain.owning_organization_id &&
               domain.owning_organization_id == id)
         raise InvalidDomainRelation.new(domain.guid)
+      end
+    end
+
+    def add_inheritable_domains
+      Domain.shared_domains.each do |d|
+        add_domain_by_guid(d.guid)
       end
     end
 
