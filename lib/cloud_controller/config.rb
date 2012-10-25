@@ -1,5 +1,6 @@
 require "vcap/config"
 require "cloud_controller/account_capacity"
+require "uri"
 
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
@@ -83,6 +84,13 @@ class VCAP::CloudController::Config < VCAP::Config
       :nginx => {
         :use_nginx  => bool,
         :instance_socket => String,
+      },
+
+      :service_lifecycle => {
+        :max_upload_size => Integer,
+        :upload_token => String,
+        :upload_timeout => Integer,
+        :serialization_data_server => [URI.regexp(["http", "https"])],
       },
     }
   end

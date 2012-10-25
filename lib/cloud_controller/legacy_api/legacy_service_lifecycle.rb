@@ -42,6 +42,58 @@ module VCAP::CloudController
       service_instance.import_from_url(VCAP::Services::Api::SerializedURL.decode(body))
     end
 
+    def import_from_data(gateway_name)
+      file_path = data_file_path
+
+      begin
+        # Check the service and user's permission
+        upload_token = config[:service_lifecycle][:upload_token]
+
+        # Check the size of the uploaded file
+        max_upload_size_mb = config[:service_lifecycle][:max_upload_size]
+        max_upload_size = max_upload_size_mb * 1024 * 1024
+        unless File.size(file_path) < max_upload_size
+          raise BadQueryParameter, "data_file too large"
+        end
+
+        # Select a serialization data server
+        active_sds = config[:service_lifecycle][:serialization_data_server]
+        if active_sds.empty?
+          raise SDSNotAvailable
+        end
+        upload_url = active_sds.sample
+
+        req = {
+          :upload_url => upload_url,
+          :upload_token => upload_token,
+          :data_file_path => data_file_path,
+          :upload_timeout => config[:service_lifecycle][:upload_timeout],
+        }
+        logger.debug("import_from_data - request is #{req.inspect}")
+
+        serialized_url = service_instance.import_from_data(req)
+        result = service_instance.import_from_url(serialized_url)
+      ensure
+        FileUtils.rm_rf(file_path)
+      end
+    end
+
+    def data_file_path
+      path = nil
+      if config[:nginx][:use_nginx]
+        path = params.fetch("data_file_path")
+        raise BadQueryParameter, "data_file_path" unless path && File.exist?(path)
+      else
+        file = params.fetch("data_file")
+        if file && file.path && File.exist?(file.path)
+          path = file.path
+        else
+          raise BadQueryParameter, "data_file"
+        end
+      end
+      path
+    end
+
     def dispatch(op, gateway_name, *args)
       # FIXME: should really be unauthenticated
       raise NotAuthorized unless user
@@ -82,5 +134,6 @@ module VCAP::CloudController
     get    "/services/v1/configurations/:gateway_name/serialized/url/snapshots/:snapshot_id", :read_serialized_url
 
     put    "/services/v1/configurations/:gateway_name/serialized/url",  :import_from_url
+    put    "/services/v1/configurations/:gateway_name/serialized/data", :import_from_data
   end
 end

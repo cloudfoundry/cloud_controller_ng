@@ -22,14 +22,16 @@ module VCAP::CloudController
       # here's poor man's make_unsaved
       @unknown_user = Models::User.make.destroy
 
+      service = Models::Service.make(
+        :label => "jazz",
+        :url => "http://12.34.56.78",
+      )
       service_instance = Models::ServiceInstance.make(
         :gateway_name => "lifecycle",
         :name => "bar",
         :space => @user.default_space,
         :service_plan => Models::ServicePlan.make(
-          :service => Models::Service.make(
-            :url => "http://12.34.56.78",
-          ),
+          :service => service,
         ),
       )
       Models::ServiceAuthToken.create(
@@ -37,8 +39,6 @@ module VCAP::CloudController
         :token => "meow",
       )
     end
-
-    describe "#lifecycle_extension"
 
     describe "POST", "/services/v1/configurations/:gateway_name/snapshots" do
       it "should return not authorized for unknown users" do
@@ -344,7 +344,83 @@ module VCAP::CloudController
     end
 
     describe "PUT", "/services/v1/configurations/:gateway_name/serialized/data" do
-      it "returns a 501 Not Implemented if upstream says so"
+      before :each do
+        config_override(
+          :service_lifecycle => {
+            :max_upload_size => 1,
+            :upload_token    => "changeme",
+            :upload_timeout  => 2,
+            :serialization_data_server => ["http://sds.example.com"],
+          },
+        )
+        @data_file = f = Tempfile.new("import_from_data")
+        f.write("bar\n")
+        f.close
+
+        @mock_sds_client = mock("mock sds client")
+        Models::ServiceInstance.any_instance.stub(:sds_client).with(
+           "http://sds.example.com",
+           "changeme",
+           2,
+        ).and_return(@mock_sds_client)
+      end
+
+      after :each do
+        @data_file.unlink if @data_file
+      end
+
+      # disabled until upstream frees up the 501 status code ...
+      xit "returns a 501 Not Implemented if upstream says so" do
+        # FIXME: this should be PUT
+        stub_request(:post, @sds_url).to_return(
+          :status => 501,
+          :body => "{\"code\":1, \"description\":\"not implemented\"}",
+        )
+        put "/services/v1/configurations/lifecycle/serialized/data", {
+          "data_file" => Rack::Test::UploadedFile.new(@data_file.path),
+        }, headers_for(@user)
+        last_response.status.should == 501
+      end
+
+      it "should return not authorized for unknown users" do
+        put "/services/v1/configurations/lifecycle/serialized/data", {
+          "data_file" => Rack::Test::UploadedFile.new(@data_file.path),
+        }, headers_for(@unknown_user)
+        # FIXME: shouldn't this be 401?
+        last_response.status.should == 403
+      end
+
+      it "should return not found for unknown ids" do
+        put "/services/v1/configurations/xxx/serialized/data", {
+          "data_file" => Rack::Test::UploadedFile.new(@data_file.path),
+        }, headers_for(@user)
+        last_response.status.should == 404
+      end
+
+      it "should create import from data job" do
+        job = VCAP::Services::Api::Job.new(
+          :job_id => "abc",
+          :status => "queued",
+          :start_time => "1",
+        )
+
+        serialized_url = VCAP::Services::Api::SerializedURL.new(
+          :url => "http://api.cloudfoundry",
+        )
+        @mock_sds_client.should_receive(:import_from_data).with(hash_including(
+          :service => "jazz",
+          :service_id => "lifecycle",
+        )).and_return(serialized_url)
+        @mock_client.should_receive(:import_from_url).with(
+          :service_id => "lifecycle",
+          :msg => serialized_url,
+        ).and_return(job)
+        put "/services/v1/configurations/lifecycle/serialized/data", {
+          "data_file" => Rack::Test::UploadedFile.new(@data_file.path),
+        }, headers_for(@user)
+        last_response.status.should == 200
+        decoded_response["job_id"].should == "abc"
+      end
     end
 
     describe "GET", "/services/v1/configurations/:gateway_name/jobs/:job_id" do
