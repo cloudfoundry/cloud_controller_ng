@@ -29,22 +29,25 @@ module VCAP::CloudController::Models
     end
 
     def validate
-      if domain && !domain.wildcard
-        errors.add(:host, :host_not_nil) unless host.nil?
-      end
-
       validates_presence :domain
       validates_presence :organization
 
-      if (organization && domain &&
-          domain.owning_organization &&
-          domain.owning_organization.id != organization.id)
-        errors.add(:domain, :invalid_relation)
-      end
-
-      # TODO: not accurate regex
       validates_format   /^([\w\-]+)$/, :host if host
       validates_unique   [:host, :domain_id]
+
+      if domain
+        if domain.wildcard
+          validates_presence :host unless domain.owning_organization
+        else
+          errors.add(:host, :host_not_nil) unless host.nil?
+        end
+
+        if (organization &&
+            domain.owning_organization &&
+            domain.owning_organization.id != organization.id)
+          errors.add(:domain, :invalid_relation)
+        end
+      end
     end
 
     def validate_app(app)

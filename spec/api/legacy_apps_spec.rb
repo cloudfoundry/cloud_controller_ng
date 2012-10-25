@@ -64,6 +64,7 @@ module VCAP::CloudController
         @app_3 = Models::App.make(:space => user.default_space, :memory => 512)
 
         @route = Models::Route.make(
+          :host => Sham.host,
           :domain => Models::Domain.default_serving_domain,
           :organization => @app_2.space.organization
         )
