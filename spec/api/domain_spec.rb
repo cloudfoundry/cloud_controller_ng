@@ -16,16 +16,22 @@ module VCAP::CloudController
     describe "Permissions" do
       include_context "permissions"
 
+      before(:all) do
+        @system_domain = Models::Domain.new(:name => Sham.domain,
+                                            :owning_organization => nil)
+        @system_domain.save(:validate => false)
+      end
+
+      after(:all) do
+        @system_domain.destroy
+      end
+
       before do
         @obj_a = Models::Domain.make(:owning_organization => @org_a)
         @space_a.add_domain(@obj_a)
 
         @obj_b = Models::Domain.make(:owning_organization => @org_b)
         @space_b.add_domain(@obj_b)
-
-        @system_domain = Models::Domain.new(:name => Sham.domain,
-                                            :owning_organization => nil)
-        @system_domain.save(:validate => false)
       end
 
       let(:creation_req_for_a) do
@@ -42,11 +48,13 @@ module VCAP::CloudController
         describe "OrgManager" do
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
+          let(:enumeration_expectation_a) { [@obj_a, @system_domain] }
+          let(:enumeration_expectation_b) { [@obj_b, @system_domain] }
 
           include_examples "permission checks", "OrgManager",
             :model => Models::Domain,
             :path => "/v2/domains",
-            :enumerate => 1,
+            :enumerate => 2,
             :create => :allowed,
             :read => :allowed,
             :modify => :allowed,
@@ -56,11 +64,13 @@ module VCAP::CloudController
         describe "OrgUser" do
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
+          let(:enumeration_expectation_a) { [@system_domain] }
+          let(:enumeration_expectation_b) { [@system_domain] }
 
           include_examples "permission checks", "OrgUser",
             :model => Models::Domain,
             :path => "/v2/domains",
-            :enumerate => 0,
+            :enumerate => 1,
             :create => :not_allowed,
             :read => :not_allowed,
             :modify => :not_allowed,
@@ -70,11 +80,13 @@ module VCAP::CloudController
         describe "BillingManager" do
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
+          let(:enumeration_expectation_a) { [@system_domain] }
+          let(:enumeration_expectation_b) { [@system_domain] }
 
           include_examples "permission checks", "BillingManager",
             :model => Models::Domain,
             :path => "/v2/domains",
-            :enumerate => 0,
+            :enumerate => 1,
             :create => :not_allowed,
             :read => :not_allowed,
             :modify => :not_allowed,
@@ -84,11 +96,13 @@ module VCAP::CloudController
         describe "Auditor" do
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
+          let(:enumeration_expectation_a) { [@obj_a, @system_domain] }
+          let(:enumeration_expectation_b) { [@obj_b, @system_domain] }
 
           include_examples "permission checks", "Auditor",
             :model => Models::Domain,
             :path => "/v2/domains",
-            :enumerate => 1,
+            :enumerate => 2,
             :create => :not_allowed,
             :read => :allowed,
             :modify => :not_allowed,
@@ -126,11 +140,13 @@ module VCAP::CloudController
         describe "SpaceManager" do
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
+          let(:enumeration_expectation_a) { [@obj_a, @system_domain] }
+          let(:enumeration_expectation_b) { [@obj_b, @system_domain] }
 
           include_examples "permission checks", "SpaceManager",
             :model => Models::Domain,
             :path => "/v2/domains",
-            :enumerate => 1,
+            :enumerate => 2,
             :create => :not_allowed,
             :read => :allowed,
             :modify => :not_allowed,
@@ -140,11 +156,13 @@ module VCAP::CloudController
         describe "Developer" do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
+          let(:enumeration_expectation_a) { [@obj_a, @system_domain] }
+          let(:enumeration_expectation_b) { [@obj_b, @system_domain] }
 
           include_examples "permission checks", "Developer",
             :model => Models::Domain,
             :path => "/v2/domains",
-            :enumerate => 1,
+            :enumerate => 2,
             :create => :not_allowed,
             :read => :allowed,
             :modify => :not_allowed,
@@ -154,11 +172,13 @@ module VCAP::CloudController
         describe "SpaceAuditor" do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
+          let(:enumeration_expectation_a) { [@obj_a, @system_domain] }
+          let(:enumeration_expectation_b) { [@obj_b, @system_domain] }
 
           include_examples "permission checks", "SpaceAuditor",
             :model => Models::Domain,
             :path => "/v2/domains",
-            :enumerate => 1,
+            :enumerate => 2,
             :create => :not_allowed,
             :read => :allowed,
             :modify => :not_allowed,

@@ -4,6 +4,10 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Models::Space do
+    before(:all) do
+      reset_database
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :organization],
       :unique_attributes   => [:organization, :name],
