@@ -106,11 +106,11 @@ module VCAP::CloudController
         populate_framework_and_runtimes
       end
 
-      config[:serving_domains].each do |name|
+      config[:system_domains].each do |name|
         VCAP::CloudController::Models::Domain.find_or_create_shared_domain(name)
       end
 
-      VCAP::CloudController::Models::Domain.default_serving_domain_name = config[:serving_domains].first
+      VCAP::CloudController::Models::Domain.default_serving_domain_name = config[:system_domains].first
 
       app = Rack::Builder.new do
         # TODO: we really should put these bootstrapping into a place other
