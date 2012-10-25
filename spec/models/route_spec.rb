@@ -143,6 +143,14 @@ module VCAP::CloudController
       let(:space_b) { Models::Space.make(:organization => org_b) }
       let(:domain_b) { Models::Domain.make(:owning_organization => org_b) }
 
+      before do
+        Models::Domain.default_serving_domain_name = Sham.domain
+      end
+
+      after do
+        Models::Domain.default_serving_domain_name = nil
+      end
+
       it "should not allow creation of a route on a domain from another org" do
         expect {
           Models::Route.make(:organization => org_a, :domain => domain_b)
@@ -155,6 +163,15 @@ module VCAP::CloudController
         expect {
           route.add_app(app)
         }.should raise_error Models::Route::InvalidDomainRelation
+      end
+
+      it "should not allow creation of a nil host on a system domain" do
+        expect {
+          Models::Route.make(
+            :host => nil, :organization => org_a,
+            :domain => Models::Domain.default_serving_domain
+          )
+        }.to raise_error Sequel::ValidationFailed
       end
     end
   end

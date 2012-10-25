@@ -64,6 +64,7 @@ module VCAP::CloudController
 
         other_org = Models::Organization.make
         route = Models::Route.make(
+          :host => Sham.host,
           :organization => other_org,
           :domain => shared_domain
         )
