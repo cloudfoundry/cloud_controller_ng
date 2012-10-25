@@ -295,5 +295,25 @@ module VCAP::CloudController
         end
       end
     end
+
+    context "shared_domains" do
+      before do
+        reset_database
+      end
+
+      context "with no domains" do
+        it "should be empty" do
+          Models::Domain.shared_domains.count.should == 0
+        end
+      end
+
+      context "with a shared domain and a owned domain" do
+        it "should return the shared domain" do
+          shared = Models::Domain.find_or_create_shared_domain("a.com")
+          Models::Domain.make
+          Models::Domain.shared_domains.all.should == [shared]
+        end
+      end
+    end
   end
 end
