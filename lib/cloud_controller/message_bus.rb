@@ -93,8 +93,11 @@ module VCAP::CloudController::MessageBus
     expected = opts[:expected] || 1
     timeout = opts[:timeout] || -1
 
+    return [] if expected <= 0
+
     response = EM.schedule_sync do |promise|
       results = []
+
       sid = nats.request(subject, data, :max => expected) do |msg|
         results << msg
         promise.deliver(results) if results.size == expected
