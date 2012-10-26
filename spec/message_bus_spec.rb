@@ -103,6 +103,15 @@ module VCAP::CloudController
         end
       end
 
+      it "should not subscribe to nats when specified expected value is zero" do
+        # We don't expect nats to receive anything.
+        with_em_and_thread do
+          response = MessageBus.request("subject", "abc", :expected => 0)
+          response.should be_an_instance_of Array
+          response.should == []
+        end
+      end
+
       it "should not register timeout with nats when none is specified" do
         nats.should_receive(:request).once.
           with("subject", "abc", :max => 1).and_yield(msg_json)
