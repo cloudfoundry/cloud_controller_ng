@@ -95,6 +95,11 @@ module VCAP::CloudController::MessageBus
 
     response = EM.schedule_sync do |promise|
       results = []
+      if expected <= 0
+        promise.deliver(results)
+        next
+      end
+
       sid = nats.request(subject, data, :max => expected) do |msg|
         results << msg
         promise.deliver(results) if results.size == expected
