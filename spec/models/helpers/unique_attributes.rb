@@ -78,7 +78,7 @@ module VCAP::CloudController::ModelSpecHelper
 
         initial_template = described_class.make
         orig_opts = creation_opts_from_obj(initial_template, new_opts)
-        initial_template.delete
+        initial_template.destroy
 
         orig_obj = described_class.make orig_opts
         orig_opts

@@ -22,7 +22,7 @@ module VCAP::CloudController::ModelSpecHelper
     let(:creation_opts) do
       template_obj = described_class.make
       o = creation_opts_from_obj(template_obj, opts)
-      template_obj.delete
+      template_obj.destroy
       o
     end
   end
