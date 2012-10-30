@@ -378,6 +378,42 @@ module VCAP::CloudController
           end
         end
 
+        context "with a similar hostname to one on another domain" do
+          let(:host) { Sham.host }
+          let(:domain) { Sham.domain }
+
+          before(:all) do
+            Models::Route.create(
+              :host => host,
+              :domain => Models::Domain.default_serving_domain,
+              :organization => user.default_space.organization
+            )
+
+            shared_domain =
+              Models::Domain.find_or_create_shared_domain(domain)
+            user.default_space.organization.add_domain(shared_domain)
+            user.default_space.add_domain(shared_domain)
+
+            req = Yajl::Encoder.encode({
+              :name => app_name,
+              :staging => { :framework => "grails" },
+              :uris => ["#{host}.#{domain}"]
+            })
+
+            post "/apps", req, headers_for(user)
+          end
+
+          it "should return success" do
+            last_response.status.should == 200
+          end
+
+          it "should create a new route" do
+            app = user.default_space.apps_dataset[:name => app_name]
+            app.should_not be_nil
+            app.uris.should == ["#{host}.#{domain}"]
+          end
+        end
+
         context "with an invalid route" do
           bad_domain_name = Sham.domain
 

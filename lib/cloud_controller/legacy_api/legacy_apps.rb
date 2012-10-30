@@ -227,7 +227,7 @@ module VCAP::CloudController
           visible_routes = Models::Route.filter(
             Models::Route.user_visibility_filter(user)
           )
-          route = visible_routes[:host => host]
+          route = visible_routes[:host => host, :domain => domain]
           if route
             route.guid
           else
