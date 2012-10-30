@@ -128,9 +128,11 @@ module VCAP::CloudController
       end
 
       context "for a nil host" do
-        d = Models::Domain.make(:wildcard => true)
-        r = Models::Route.make(:host => nil, :domain => d)
-        r.fqdn.should == d.name
+        it "should return the fqdn for the route" do
+          d = Models::Domain.make(:wildcard => true)
+          r = Models::Route.make(:host => nil, :domain => d)
+          r.fqdn.should == d.name
+        end
       end
     end
 
