@@ -190,7 +190,7 @@ module VCAP::CloudController
         }.should raise_error Models::Domain::InvalidOrganizationRelation
       end
 
-      it "should associate with a shared org" do
+      it "should associate with a shared domain" do
         shared_domain = Models::Domain.new(:name => "abc.com",
                                            :owning_organization => nil)
         shared_domain.save(:validate => false)
