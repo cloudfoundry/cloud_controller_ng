@@ -14,7 +14,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :host, String, :default => nil
       to_one    :domain
-      to_one    :organization
+      to_one    :space
       to_many   :apps
     end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
     def quota_token_request(op, obj)
       {
-        :path => obj.organization_guid,
+        :path => obj.space.organization_guid,
         :body => {
           :op           => op,
           :user_id      => user.guid,

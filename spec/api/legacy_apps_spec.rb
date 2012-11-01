@@ -66,7 +66,7 @@ module VCAP::CloudController
         @route = Models::Route.make(
           :host => Sham.host,
           :domain => Models::Domain.default_serving_domain,
-          :organization => @app_2.space.organization
+          :space => @app_2.space,
         )
         @app_2.add_route(@route)
 
@@ -386,7 +386,7 @@ module VCAP::CloudController
             Models::Route.create(
               :host => host,
               :domain => Models::Domain.default_serving_domain,
-              :organization => user.default_space.organization
+              :space => user.default_space,
             )
 
             shared_domain =

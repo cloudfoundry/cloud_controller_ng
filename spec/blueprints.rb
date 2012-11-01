@@ -38,8 +38,12 @@ module VCAP::CloudController::Models
   end
 
   Route.blueprint do
-    domain            { Domain.make }
-    organization      { domain.owning_organization }
+    space             { Space.make }
+    domain            {
+      d = Domain.make(:owning_organization => space.organization)
+      space.add_domain(d)
+      d
+    }
   end
 
   Space.blueprint do

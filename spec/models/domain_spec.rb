@@ -27,7 +27,15 @@ module VCAP::CloudController
       :one_to_zero_or_more => {
         :routes => lambda { |domain|
           domain.update(:wildcard => true)
-          Models::Route.make(:host => Sham.host, :domain => domain)
+          space = Models::Space.make(
+            :organization => domain.owning_organization,
+          )
+          space.add_domain(domain)
+          Models::Route.make(
+            :host => Sham.host,
+            :domain => domain,
+            :space => space,
+          )
         }
       }
     }
@@ -254,9 +262,9 @@ module VCAP::CloudController
 
         it "should not remove the wildcard flag if routes are using it" do
           d = Models::Domain.make(:wildcard => true)
-          r = Models::Route.make(:host => Sham.host,
-                                 :domain => d,
-                                 :organization => d.owning_organization)
+          s = Models::Space.make(:organization => d.owning_organization)
+          s.add_domain(d)
+          r = Models::Route.make(:host => Sham.host, :domain => d, :space => s)
           expect {
             d.update(:wildcard => false)
           }.to raise_error(Sequel::ValidationFailed)
@@ -264,9 +272,9 @@ module VCAP::CloudController
 
         it "should remove the wildcard flag if no routes are using it" do
           d = Models::Domain.make(:wildcard => true)
-          r = Models::Route.make(:host => nil,
-                                 :domain => d,
-                                 :organization => d.owning_organization)
+          s = Models::Space.make(:organization => d.owning_organization)
+          s.add_domain(d)
+          r = Models::Route.make(:host => nil, :domain => d, :space => s)
           d.update(:wildcard => false)
         end
       end

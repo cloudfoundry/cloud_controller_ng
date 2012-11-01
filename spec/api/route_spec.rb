@@ -8,35 +8,39 @@ module VCAP::CloudController
     it_behaves_like "a CloudController API", {
       :path                 => "/v2/routes",
       :model                => Models::Route,
-      :basic_attributes     => [:host, :domain_guid, :organization_guid],
-      :required_attributes  => [:domain_guid, :organization_guid],
+      :basic_attributes     => [:host, :domain_guid, :space_guid],
+      :required_attributes  => [:domain_guid, :space_guid],
       :update_attributes    => [:host],
       :unique_attributes    => [:host, :domain_guid],
       :create_attribute     => lambda { |name|
-        @org ||= Models::Organization.make
+        @space ||= Models::Space.make
         case name.to_sym
-        when :organization_guid
-          @org.guid
+        when :space_guid
+          @space.guid
         when :domain_guid
-          Models::Domain.make(
+          d = Models::Domain.make(
             :wildcard => true,
-            :owning_organization => @org
-          ).guid
+            :owning_organization => @space.organization,
+          )
+          @space.add_domain(d)
+          d.guid
         when :host
           Sham.host
         end
       },
-      :create_attribute_reset => lambda { @org = nil }
+      :create_attribute_reset => lambda { @space = nil }
     }
 
     context "with a wildcard domain" do
       it "should allow a nil host" do
         cf_admin = Models::User.make(:admin => true)
         domain = Models::Domain.make(:wildcard => true)
+        space = Models::Space.make(:organization => domain.owning_organization)
+        space.add_domain(domain)
         post "/v2/routes",
           Yajl::Encoder.encode(:host => nil,
                                :domain_guid => domain.guid,
-                               :organization_guid => domain.owning_organization.guid),
+                               :space_guid => space.guid),
           headers_for(cf_admin)
         last_response.status.should == 201
       end
@@ -154,7 +158,7 @@ module VCAP::CloudController
         let(:creation_req_for_a) do
           Yajl::Encoder.encode(:host => Sham.host,
                                :domain_guid => @domain_a.guid,
-                               :organization_guid => @org_a.guid)
+                               :space_guid => @space_a.guid)
         end
 
         let(:update_req_for_a) do
@@ -164,11 +168,11 @@ module VCAP::CloudController
         before do
           @domain_a = Models::Domain.make(:wildcard => true, :owning_organization => @org_a)
           @space_a.add_domain(@domain_a)
-          @obj_a = Models::Route.make(:domain => @domain_a, :organization => @org_a)
+          @obj_a = Models::Route.make(:domain => @domain_a, :space => @space_a)
 
           @domain_b = Models::Domain.make(:wildcard => true, :owning_organization => @org_b)
           @space_b.add_domain(@domain_b)
-          @obj_b = Models::Route.make(:domain => @domain_b, :organization => @org_b)
+          @obj_b = Models::Route.make(:domain => @domain_b, :space => @space_b)
         end
 
         include_examples "route permissions"
@@ -181,7 +185,7 @@ module VCAP::CloudController
           Yajl::Encoder.encode(
             :host => Sham.host,
             :domain_guid => Models::Domain.default_serving_domain.guid,
-            :organization_guid => @org_a.guid
+            :space_guid => @space_a.guid,
           )
         end
 
@@ -191,17 +195,19 @@ module VCAP::CloudController
 
         before do
           Models::Domain.default_serving_domain_name = "shared.com"
+          @space_a.add_domain(Models::Domain.default_serving_domain)
+          @space_b.add_domain(Models::Domain.default_serving_domain)
 
           @obj_a = Models::Route.make(
             :host => Sham.host,
             :domain => Models::Domain.default_serving_domain,
-            :organization => @org_a
+            :space => @space_a,
           )
 
           @obj_b = Models::Route.make(
             :host => Sham.host,
             :domain => Models::Domain.default_serving_domain,
-            :organization => @org_b
+            :space => @space_b,
           )
         end
 
@@ -216,7 +222,12 @@ module VCAP::CloudController
     describe "quota" do
       let(:cf_admin) { Models::User.make(:admin => true) }
       let(:domain) { Models::Domain.make(:wildcard => true) }
-      let(:route) { Models::Route.make(:domain => domain) }
+      let(:space) {
+        s = Models::Space.make(:organization => domain.owning_organization)
+        s.add_domain(domain)
+        s
+      }
+      let(:route) { Models::Route.make(:domain => domain, :space => space) }
 
       describe "create" do
         it "should fetch a quota token" do
@@ -224,8 +235,8 @@ module VCAP::CloudController
           post "/v2/routes",
             Yajl::Encoder.encode(:host => Sham.host,
                                  :domain_guid => domain.guid,
-                                 :organization_guid => domain.owning_organization.guid),
-                                 headers_for(cf_admin)
+                                 :space_guid => space.guid),
+            headers_for(cf_admin)
           last_response.status.should == 201
         end
       end
@@ -271,7 +282,7 @@ module VCAP::CloudController
         :owning_organization => space.organization,
       ).add_route(
         :host => "foo",
-        :organization => space.organization,
+        :space => space,
       )
       @foo_app = Models::App.make(
         :name   => "foo",
