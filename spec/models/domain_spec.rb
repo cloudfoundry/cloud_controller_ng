@@ -193,10 +193,25 @@ module VCAP::CloudController
       end
 
       context "shared domains" do
-        it "should associate with an org" do
-          shared_domain = Models::Domain.new(:name => "abc.com",
-                                             :owning_organization => nil)
-          shared_domain.save(:validate => false)
+        let(:shared_domain) do
+          Models::Domain.find_or_create_shared_domain(Sham.domain)
+        end
+
+        it "should auto-associate with a new org" do
+          shared_domain.should be_valid
+          org = Models::Organization.make
+          org.domains.should include(shared_domain)
+        end
+
+        it "should not auto-associate with an existing org" do
+          org = Models::Organization.make
+          new_shared_domain = Models::Domain.find_or_create_shared_domain(Sham.domain)
+          org.domains.should_not include(new_shared_domain)
+        end
+
+        it "should manually associate with an org" do
+          # while this seems like it shouldn't need to be tested, at some point
+          # in the past, this pattern had failed.
           shared_domain.add_organization(Models::Organization.make)
           shared_domain.should be_valid
           shared_domain.save
