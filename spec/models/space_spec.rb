@@ -67,7 +67,7 @@ module VCAP::CloudController
         end
 
         it "should be associated with the default serving domain" do
-          space = Models::Organization.make
+          space = Models::Space.make
           d = Models::Domain.default_serving_domain
           space.domains.map(&:guid) == [d.guid]
         end
