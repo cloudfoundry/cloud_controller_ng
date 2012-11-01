@@ -28,6 +28,11 @@ module VCAP::CloudController::Models
       { :owning_organization_id => nil }
     end
 
+    def after_create
+      add_organization owning_organization if owning_organization
+      super
+    end
+
     def validate
       validates_presence :name
       validates_unique   :name

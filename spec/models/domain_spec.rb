@@ -174,9 +174,12 @@ module VCAP::CloudController
 
     context "relationships" do
       context "custom domains" do
-        let(:domain) { Models::Domain.make(
-          :owning_organization => Models::Organization.make)
+        let(:org) { Models::Organization.make }
+
+        let(:domain) {
+          Models::Domain.make(:owning_organization => org)
         }
+
         let(:space) { Models::Space.make }
 
         it "should not associate with an app space on a different org" do
@@ -189,6 +192,11 @@ module VCAP::CloudController
           lambda {
             domain.add_organization(Models::Organization.make)
           }.should raise_error Models::Domain::InvalidOrganizationRelation
+        end
+
+        it "should auto-associate with the owning org" do
+          domain.should be_valid
+          org.domains.should include(domain)
         end
       end
 
