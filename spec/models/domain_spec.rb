@@ -173,31 +173,35 @@ module VCAP::CloudController
     end
 
     context "relationships" do
-      let(:domain) { Models::Domain.make(
-        :owning_organization => Models::Organization.make)
-      }
-      let(:space) { Models::Space.make }
+      context "custom domains" do
+        let(:domain) { Models::Domain.make(
+          :owning_organization => Models::Organization.make)
+        }
+        let(:space) { Models::Space.make }
 
-      it "should not associate with an app space on a different org" do
-        lambda {
-          domain.add_space(space)
-        }.should raise_error Models::Domain::InvalidSpaceRelation
+        it "should not associate with an app space on a different org" do
+          lambda {
+            domain.add_space(space)
+          }.should raise_error Models::Domain::InvalidSpaceRelation
+        end
+
+        it "should not associate with orgs other than the owning org" do
+          lambda {
+            domain.add_organization(Models::Organization.make)
+          }.should raise_error Models::Domain::InvalidOrganizationRelation
+        end
       end
 
-      it "should not associate with orgs other than the owning org" do
-        lambda {
-          domain.add_organization(Models::Organization.make)
-        }.should raise_error Models::Domain::InvalidOrganizationRelation
-      end
-
-      it "should associate with a shared domain" do
-        shared_domain = Models::Domain.new(:name => "abc.com",
-                                           :owning_organization => nil)
-        shared_domain.save(:validate => false)
-        shared_domain.add_organization(Models::Organization.make)
-        shared_domain.should be_valid
-        shared_domain.save
-        shared_domain.should be_valid
+      context "shared domains" do
+        it "should associate with an org" do
+          shared_domain = Models::Domain.new(:name => "abc.com",
+                                             :owning_organization => nil)
+          shared_domain.save(:validate => false)
+          shared_domain.add_organization(Models::Organization.make)
+          shared_domain.should be_valid
+          shared_domain.save
+          shared_domain.should be_valid
+        end
       end
     end
 
