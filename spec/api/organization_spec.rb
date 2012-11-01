@@ -23,7 +23,7 @@ module VCAP::CloudController
       },
       :many_to_many_collection_ids  => {
         :domains => lambda { |org|
-          Models::Domain.make(:owning_organization => org)
+          Models::Domain.find_or_create_shared_domain(Sham.domain)
         }
       }
     }

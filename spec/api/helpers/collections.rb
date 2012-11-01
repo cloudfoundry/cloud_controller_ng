@@ -74,7 +74,12 @@ module VCAP::CloudController::ApiSpecHelper
     describe "GET on the #{attr}_url" do
       describe "with no associated #{attr}" do
         before(:all) do
+          obj.send("remove_all_#{attr}")
           get @uri, {}, headers
+        end
+
+        after(:all) do
+          obj.send(get_method).map(&:destroy)
         end
 
         it "should return 200" do
@@ -101,6 +106,7 @@ module VCAP::CloudController::ApiSpecHelper
 
       describe "with 2 associated #{attr}" do
         before(:all) do
+          obj.send("remove_all_#{attr}")
           @child1 = make.call(obj)
           @child2 = make.call(obj)
 
@@ -109,6 +115,10 @@ module VCAP::CloudController::ApiSpecHelper
           obj.save
 
           get @uri, {}, headers
+        end
+
+        after(:all) do
+          obj.send(get_method).map(&:destroy)
         end
 
         it "should return 200" do
@@ -298,6 +308,7 @@ module VCAP::CloudController::ApiSpecHelper
                 include_context "collections", opts, attr, make
 
                 before(:all) do
+                  obj.send("remove_all_#{attr}")
                   51.times do
                     child = make.call(obj)
                     obj.refresh
@@ -307,6 +318,10 @@ module VCAP::CloudController::ApiSpecHelper
                   query_parms = query_params_for_inline_depth(depth)
                   get "#{opts[:path]}/#{obj.guid}", query_parms, headers
                   @uri = entity["#{attr}_url"]
+                end
+
+                after(:all) do
+                  obj.send(get_method).map(&:destroy)
                 end
 
                 # we want to make sure to only limit the assocation that
