@@ -4,6 +4,10 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Models::Space do
+    before(:all) do
+      reset_database
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :organization],
       :unique_attributes   => [:organization, :name],
@@ -63,7 +67,7 @@ module VCAP::CloudController
         end
 
         it "should be associated with the default serving domain" do
-          space = Models::Organization.make
+          space = Models::Space.make
           d = Models::Domain.default_serving_domain
           space.domains.map(&:guid) == [d.guid]
         end

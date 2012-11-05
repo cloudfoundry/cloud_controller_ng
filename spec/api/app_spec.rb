@@ -25,7 +25,7 @@ module VCAP::CloudController
           )
           app.space.organization.add_domain(domain)
           app.space.add_domain(domain)
-          route = Models::Route.make(:domain => domain)
+          route = Models::Route.make(:domain => domain, :space => app.space)
         }
       },
       :one_to_many_collection_ids  => {
@@ -209,6 +209,7 @@ module VCAP::CloudController
       let(:domain) do
         space.add_domain(
           :name => "jesse.cloud",
+          :wildcard => true,
           :owning_organization => space.organization,
         )
       end
@@ -235,7 +236,7 @@ module VCAP::CloudController
       it "sends a dea.update message when we add one url through PUT /v2/apps/:guid" do
         route = domain.add_route(
           :host => "app",
-          :organization => space.organization,
+          :space => space,
         )
 
         nats = double("mock nats")
@@ -264,12 +265,12 @@ module VCAP::CloudController
       it "sends a dea.update message dea.update when we remove a url through PUT /v2/apps/:guid" do
         bar_route = @app.add_route(
           :host => "bar",
-          :organization => space.organization,
+          :space => space,
           :domain => domain,
         )
         route = @app.add_route(
           :host => "foo",
-          :organization => space.organization,
+          :space => space,
           :domain => domain,
         )
         get "#{@app_url}/routes", {}, @headers_for_user

@@ -13,6 +13,7 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name, String
+      attribute :wildcard, Message::Boolean
       to_one    :owning_organization
     end
 

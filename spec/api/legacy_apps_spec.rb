@@ -64,8 +64,9 @@ module VCAP::CloudController
         @app_3 = Models::App.make(:space => user.default_space, :memory => 512)
 
         @route = Models::Route.make(
+          :host => Sham.host,
           :domain => Models::Domain.default_serving_domain,
-          :organization => @app_2.space.organization
+          :space => @app_2.space,
         )
         @app_2.add_route(@route)
 
@@ -374,6 +375,42 @@ module VCAP::CloudController
             app = user.default_space.apps_dataset[:name => app_name]
             app.should_not be_nil
             app.uris.should == ["#{host}.#{DEFAULT_SERVING_DOMAIN_NAME}"]
+          end
+        end
+
+        context "with a similar hostname to one on another domain" do
+          let(:host) { Sham.host }
+          let(:domain) { Sham.domain }
+
+          before(:all) do
+            Models::Route.create(
+              :host => host,
+              :domain => Models::Domain.default_serving_domain,
+              :space => user.default_space,
+            )
+
+            shared_domain =
+              Models::Domain.find_or_create_shared_domain(domain)
+            user.default_space.organization.add_domain(shared_domain)
+            user.default_space.add_domain(shared_domain)
+
+            req = Yajl::Encoder.encode({
+              :name => app_name,
+              :staging => { :framework => "grails" },
+              :uris => ["#{host}.#{domain}"]
+            })
+
+            post "/apps", req, headers_for(user)
+          end
+
+          it "should return success" do
+            last_response.status.should == 200
+          end
+
+          it "should create a new route" do
+            app = user.default_space.apps_dataset[:name => app_name]
+            app.should_not be_nil
+            app.uris.should == ["#{host}.#{domain}"]
           end
         end
 

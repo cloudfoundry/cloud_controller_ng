@@ -12,7 +12,7 @@ module VCAP::CloudController
       space.add_domain(d)
       d
     end
-    let(:route) { Models::Route.make(:domain => domain, :organization => org) }
+    let(:route) { Models::Route.make(:domain => domain, :space => space) }
 
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:name, :framework, :runtime, :space],
@@ -31,23 +31,31 @@ module VCAP::CloudController
         },
         :routes => lambda { |app|
           domain = Models::Domain.make(
-            :owning_organization => app.space.organization)
-            route = Models::Route.make(
-              :domain => domain,
-              :organization => app.space.organization)
-              app.space.add_domain(route.domain)
-              route
+            :owning_organization => app.space.organization
+          )
+          app.space.add_domain(domain)
+          Models::Route.make(
+            :domain => domain,
+            :space => app.space
+          )
         }
       }
     }
 
     describe "bad relationships" do
-      it "should not associate an app with a route using a domain not approved for the app space" do
+      it "should not associate an app with a route on a different space" do
         app = Models::App.make
-        domain = Models::Domain.make(:owning_organization => app.space.organization)
+
+        domain = Models::Domain.make(
+          :owning_organization => app.space.organization
+        )
+
+        other_space = Models::Space.make(:organization => app.space.organization)
+        other_space.add_domain(domain)
+
         route = Models::Route.make(
-          :organization => app.space.organization,
-          :domain => domain
+          :space => other_space,
+          :domain => domain,
         )
 
         lambda {
@@ -55,16 +63,17 @@ module VCAP::CloudController
         }.should raise_error Models::App::InvalidRouteRelation
       end
 
-      it "should not associate an app with a route created by another org with a shared domain" do
+      it "should not associate an app with a route created on another space with a shared domain" do
         shared_domain = Models::Domain.new(:name => Sham.name,
                                            :owning_organization => nil)
         shared_domain.save(:validate => false)
         app = Models::App.make
         app.space.add_domain(shared_domain)
 
-        other_org = Models::Organization.make
+        other_space = Models::Space.make(:organization => app.space.organization)
         route = Models::Route.make(
-          :organization => other_org,
+          :host => Sham.host,
+          :space => other_space,
           :domain => shared_domain
         )
 

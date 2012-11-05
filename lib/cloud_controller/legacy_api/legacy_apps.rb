@@ -227,14 +227,14 @@ module VCAP::CloudController
           visible_routes = Models::Route.filter(
             Models::Route.user_visibility_filter(user)
           )
-          route = visible_routes[:host => host]
+          route = visible_routes[:host => host, :domain => domain]
           if route
             route.guid
           else
             req_hash = {
               :host => host,
               :domain_guid => domain.guid,
-              :organization_guid => default_space.organization.guid
+              :space_guid => default_space.guid,
             }
             route_req = Yajl::Encoder.encode(req_hash)
             (_, _, route_json) = VCAP::CloudController::Route.new(config, logger, env, params, route_req).dispatch(:create)

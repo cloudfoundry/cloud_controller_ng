@@ -73,9 +73,12 @@ module VCAP::CloudController::ModelSpecHelper
 
       let(:dup_opts) do
         opts[:create_attribute_reset].call if opts[:create_attribute_reset]
+        new_opts = opts.dup
+        new_opts[:required_attributes] |= new_opts[:unique_attributes]
+
         initial_template = described_class.make
-        orig_opts = creation_opts_from_obj(initial_template, opts)
-        initial_template.delete
+        orig_opts = creation_opts_from_obj(initial_template, new_opts)
+        initial_template.destroy
 
         orig_obj = described_class.make orig_opts
         orig_opts

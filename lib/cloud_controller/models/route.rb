@@ -5,69 +5,76 @@ require "cloud_controller/dea/dea_client"
 module VCAP::CloudController::Models
   class Route < Sequel::Model
     class InvalidDomainRelation < InvalidRelation; end
+    class InvalidAppRelation < InvalidRelation; end
 
     many_to_one :domain
-    many_to_one :organization
+    many_to_one :space
 
     many_to_many :apps, :before_add => :validate_app, :after_add => :mark_app_routes_changed, :after_remove => :mark_app_routes_changed
     add_association_dependencies :apps => :nullify
 
-    export_attributes :host, :domain_guid, :organization_guid
-    import_attributes :host, :domain_guid, :organization_guid, :app_guids
+    export_attributes :host, :domain_guid, :space_guid
+    import_attributes :host, :domain_guid, :space_guid, :app_guids
     strip_attributes  :host
 
-    def spaces
-      organization.spaces
-    end
-
-    def spaces_dataset
-      organization.spaces_dataset
-    end
-
     def fqdn
-      "#{host}.#{domain.name}"
+      host ? "#{host}.#{domain.name}" : domain.name
+    end
+
+    def organization
+      space.organization if space
     end
 
     def validate
-      validates_presence :host
       validates_presence :domain
-      validates_presence :organization
+      validates_presence :space
 
-      if (organization && domain &&
-          domain.owning_organization &&
-          domain.owning_organization.id != organization.id)
-        errors.add(:domain, :invalid_relation)
-      end
-
-      # TODO: not accurate regex
-      validates_format   /^([\w\-]+)$/, :host
+      validates_format   /^([\w\-]+)$/, :host if host
       validates_unique   [:host, :domain_id]
+
+      if domain
+        if domain.wildcard
+          validates_presence :host unless domain.owning_organization
+        else
+          errors.add(:host, :host_not_nil) unless host.nil?
+        end
+
+        if space && space.domains_dataset.filter(:id => domain.id).count < 1
+          errors.add(:domain, :invalid_relation)
+        end
+      end
     end
 
     def validate_app(app)
-      return unless (organization && app)
-      unless app.space.domains.include?(domain)
+      return unless (space && app && domain)
+
+      unless app.space == space
+        raise InvalidAppRelation.new(app.guid)
+      end
+
+      unless space.domains.include?(domain)
         raise InvalidDomainRelation.new(domain.guid)
       end
     end
 
     def self.user_visibility_filter(user)
-      spaces = Space.filter({
-        :developers => [user],
-        :auditors => [user],
-        :managers => [user]
-      }.sql_or)
-
       orgs = Organization.filter({
         :managers => [user],
         :auditors => [user],
-        :spaces => spaces
       }.sql_or)
 
-      user_visibility_filter_with_admin_override(:organization => orgs)
+      spaces = Space.filter({
+        :developers => [user],
+        :auditors => [user],
+        :managers => [user],
+        :organization => orgs,
+      }.sql_or)
+
+      user_visibility_filter_with_admin_override(:space => spaces)
     end
 
     private
+
     def mark_app_routes_changed(app)
       app.routes_changed = true
       # I hate putting this in the model, but let's get this feature shippped

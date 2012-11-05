@@ -14,7 +14,7 @@ module VCAP::CloudController::ApiSpecHelper
 
         initial_obj = opts[:model].make
         attrs = creation_opts_from_obj(initial_obj, opts)
-        initial_obj.delete
+        initial_obj.destroy
 
         create_attribute = opts[:create_attribute]
         if create_attribute

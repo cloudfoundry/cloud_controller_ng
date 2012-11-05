@@ -4,6 +4,10 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Models::Organization do
+    before(:all) do
+      reset_database
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes          => :name,
       :unique_attributes            => :name,
@@ -37,6 +41,17 @@ module VCAP::CloudController
           d = Models::Domain.default_serving_domain
           org.domains.map(&:guid) == [d.guid]
         end
+      end
+    end
+
+    context "with multiple shared domains" do
+      it "should be associated with the shared domains that exist at creation time" do
+        org = Models::Organization.make
+        shared_count = Models::Domain.shared_domains.count
+        org.domains.count.should == shared_count
+        d = Models::Domain.find_or_create_shared_domain(Sham.domain)
+        d.should be_valid
+        org.domains.count.should == shared_count
       end
     end
   end
