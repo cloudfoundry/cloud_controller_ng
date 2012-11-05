@@ -16,7 +16,9 @@ Sequel.migration do
       if apps.count == 0
         route.delete
       else
-        space_id = apps.first[:space_id]
+        app_id = apps.first[:app_id]
+        app = self[:apps].filter(:id => app_id).first
+        space_id = app[:space_id]
         route.update(:space_id => space_id)
       end
     end
