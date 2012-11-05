@@ -20,8 +20,10 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name
-    import_attributes :name, :user_guids, :manager_guids, :billing_manager_guids, :auditor_guids, :domain_guids
+    export_attributes :name, :billing_enabled
+    import_attributes :name, :billing_enabled,
+                      :user_guids, :manager_guids, :billing_manager_guids,
+                      :auditor_guids, :domain_guids
 
     def before_create
       add_inheritable_domains
@@ -31,6 +33,17 @@ module VCAP::CloudController::Models
     def validate
       validates_presence :name
       validates_unique   :name
+
+      if column_changed?(:billing_enabled)
+        unless VCAP::CloudController::SecurityContext.current_user_is_admin?
+          errors.add(:billing_enabled, :not_authorized)
+        end
+
+        orig_val, new_val = column_change(:billing_enabled)
+        if orig_val == true && new_val == false
+          errors.add(:billing_enabled, :not_allowed)
+        end
+      end
     end
 
     def validate_domain(domain)

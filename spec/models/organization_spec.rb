@@ -54,5 +54,11 @@ module VCAP::CloudController
         org.domains.count.should == shared_count
       end
     end
+
+    describe "billing" do
+      it "should not be enabled for billing when first created" do
+        Models::Organization.make.billing_enabled.should == false
+      end
+    end
   end
 end

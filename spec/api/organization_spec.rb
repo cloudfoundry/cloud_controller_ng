@@ -147,6 +147,71 @@ module VCAP::CloudController
       end
     end
 
+    describe "billing" do
+      let(:admin_headers) do
+        user = Models::User.make(:admin => true)
+        headers_for(user)
+      end
+
+      let(:org_admin_headers) do
+        user = Models::User.make
+        org.add_user(user)
+        org.add_manager(user)
+        headers_for(user)
+      end
+
+      it "should export the billing_enabled flag" do
+        org.billing_enabled = true
+        org.save(:validate => false)
+        get "/v2/organizations/#{org.guid}", {}, admin_headers
+        last_response.status.should == 200
+        decoded_response["entity"]["billing_enabled"].should == true
+      end
+
+      describe "cf admins" do
+        it "should be allowed to set billing_enabled flag to true" do
+          org.billing_enabled.should == false
+          req = Yajl::Encoder.encode(:billing_enabled => true)
+          put "/v2/organizations/#{org.guid}", req, admin_headers
+          last_response.status.should == 201
+          decoded_response["entity"]["billing_enabled"].should == true
+          org.refresh
+          org.billing_enabled.should == true
+        end
+
+        it "should not be allowed to set billing_enabled flag to false" do
+          org.billing_enabled = true
+          org.save(:validate => false)
+          req = Yajl::Encoder.encode(:billing_enabled => false)
+          put "/v2/organizations/#{org.guid}", req, admin_headers
+          last_response.status.should == 400
+          org.refresh
+          org.billing_enabled.should == true
+        end
+      end
+
+      describe "org admins" do
+        it "should not be allowed to set billing_enabled flag to true" do
+          org.billing_enabled.should == false
+          req = Yajl::Encoder.encode(:billing_enabled => true)
+          put "/v2/organizations/#{org.guid}", req, org_admin_headers
+          last_response.status.should == 400
+          org.refresh
+          org.billing_enabled.should == false
+        end
+
+        it "should not be allowed to set billing_enabled flag to false" do
+          org.billing_enabled = true
+          org.save(:validate => false)
+          req = Yajl::Encoder.encode(:billing_enabled => false)
+          put "/v2/organizations/#{org.guid}", req, org_admin_headers
+          last_response.status.should == 400
+          org.refresh
+          org.billing_enabled.should == true
+        end
+      end
+    end
+
     describe "quota" do
       let(:cf_admin) { Models::User.make(:admin => true) }
 
