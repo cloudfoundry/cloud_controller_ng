@@ -117,7 +117,7 @@ module VCAP::CloudController
     end
 
     def validate_access(label, provider = DEFAULT_PROVIDER)
-      auth_token = env[SERVICE_TOKEN_KEY]
+      raise NotAuthorized unless auth_token = env[SERVICE_TOKEN_KEY]
 
       svc_auth_token = Models::ServiceAuthToken[
         :label => label, :provider => provider,
