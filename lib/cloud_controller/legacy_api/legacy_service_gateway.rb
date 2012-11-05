@@ -79,6 +79,7 @@ module VCAP::CloudController
 
       service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
+      validate_access("#{label}-#{version}", provider)
       logger.debug("Listing handles for service: #{service.inspect}")
 
       handles = []

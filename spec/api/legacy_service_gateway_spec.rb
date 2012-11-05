@@ -229,26 +229,36 @@ module VCAP::CloudController
 
       describe "GET services/v1/offerings/:label(/:provider)/handles" do
         it "should return not found for unknown services" do
-          get "services/v1/offerings/foo-bar/handles"
+          get "services/v1/offerings/xxx-bar/handles"
           last_response.status.should == 404
         end
 
         it "should return not found for unknown services with a provider" do
-          get "services/v1/offerings/foo-bar/fooprovider/handles"
+          get "services/v1/offerings/xxx-bar/fooprovider/handles"
           last_response.status.should == 404
         end
 
-        it "should return provisioned and bound handles" do
+        before :each do
           svc1 = Models::Service.make(
             :label => "foo",
             :version => "bar",
             :provider => "core",
+          )
+          Models::ServiceAuthToken.create(
+            :label => "foo-bar",
+            :provider => "core",
+            :token => "foobar",
           )
 
           svc2 = Models::Service.make(
             :label    => "foo",
             :version  => "bar",
             :provider => "test",
+          )
+          Models::ServiceAuthToken.create(
+            :label => "foo-bar",
+            :provider => "test",
+            :token => "footest",
           )
 
           plan1 = Models::ServicePlan.make(
@@ -297,8 +307,19 @@ module VCAP::CloudController
             :gateway_name  => "bind2",
             :service_instance  => cfg2,
           )
+        end
 
-          get "/services/v1/offerings/foo-bar/handles"
+        it "rejects requests with mismatching tokens" do
+          get "/services/v1/offerings/foo-bar/handles", {}, {
+            "HTTP_X_VCAP_SERVICE_TOKEN" => "xxx",
+          }
+          last_response.status.should == 403
+        end
+
+        it "should return provisioned and bound handles" do
+          get "/services/v1/offerings/foo-bar/handles", {}, {
+            "HTTP_X_VCAP_SERVICE_TOKEN" => "foobar",
+          }
           last_response.status.should == 200
 
           handles = JSON.parse(last_response.body)["handles"]
@@ -308,7 +329,9 @@ module VCAP::CloudController
           handles[1]["service_id"].should == "bind1"
           handles[1]["configuration"].should == { "config" => "bind1" }
 
-          get "/services/v1/offerings/foo-bar/test/handles"
+          get "/services/v1/offerings/foo-bar/test/handles", {}, {
+            "HTTP_X_VCAP_SERVICE_TOKEN" => "footest",
+          }
           last_response.status.should == 200
 
           handles = JSON.parse(last_response.body)["handles"]
