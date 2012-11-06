@@ -49,6 +49,15 @@ module VCAP::CloudController
         delta = changes[:instances][1] - changes[:instances][0]
         DeaClient.change_running_instances(app, delta)
       end
+
+      send_droplet_updated_message(app)
+    end
+
+    def send_droplet_updated_message(app)
+      json = Yajl::Encoder.encode(:droplet => app.guid,
+                                  :cc_partition => config[:cc_partition])
+      MessageBus.publish("droplet.updated", json)
+      nil
     end
 
     def self.translate_validation_exception(e, attributes)

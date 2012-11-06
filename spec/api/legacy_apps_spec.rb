@@ -641,11 +641,13 @@ module VCAP::CloudController
         let(:uri2) { "#{host2}.#{DEFAULT_SERVING_DOMAIN_NAME}" }
 
         it "sends a dea.update message when adding a URL to a running app" do
-          Models::App.make(
-            :name => app_name,
-            :space => user.default_space,
-            :state => "STARTED",
-          ).update(
+          app = Models::App.make(
+                                 :name => app_name,
+                                 :space => user.default_space,
+                                 :state => "STARTED",
+                                 )
+
+          app.update(
             # I hate that implicit save on package_hash=,
             # but I'll bare with it while nothing breaks...
             :package_hash   => "abc",
@@ -660,6 +662,16 @@ module VCAP::CloudController
               hash_including("uris" => [uri1, uri2]),
             ),
           )
+
+          nats.should_receive(:publish).with(
+            "droplet.updated",
+            json_match(
+              hash_including("droplet" => app.guid,
+                             "cc_partition" => config[:cc_partition]
+              ),
+            ),
+          )
+
           config_override(:nats => nats)
           EM.run do
             put(
@@ -675,11 +687,12 @@ module VCAP::CloudController
         end
 
         it "sends a dea.update message when removing a URL to a running app" do
-          Models::App.make(
-            :name => app_name,
-            :space => user.default_space,
-            :state => "STARTED",
-          ).update(
+          app = Models::App.make(
+                                 :name => app_name,
+                                 :space => user.default_space,
+                                 :state => "STARTED",
+                                 )
+          app.update(
             # I hate that implicit save on package_hash=,
             # but I'll bare with it while nothing breaks...
             :package_hash   => "abc",
@@ -698,6 +711,16 @@ module VCAP::CloudController
               hash_including("uris" => [uri2]),
             ),
           )
+
+          nats.should_receive(:publish).with(
+            "droplet.updated",
+            json_match(
+              hash_including("droplet" => app.guid,
+                             "cc_partition" => config[:cc_partition]
+              ),
+            ),
+          )
+
           EM.run do
             put(
               "/apps/#{app_name}",
