@@ -107,6 +107,15 @@ module VCAP::CloudController
         app_obj.droplet_hash = "def"
         app_obj.save
         app_obj.needs_staging?.should be_false
+
+        MessageBus.should_receive(:publish) do |*args|
+          subject, msg = *args
+          subject.should == "droplet.updated"
+          parsed = Yajl::Parser.parse(msg)
+          parsed["droplet"].should == app_obj.guid
+          parsed["cc_partition"].should == config[:cc_partition]
+        end
+
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
@@ -137,6 +146,14 @@ module VCAP::CloudController
         app_obj.save
         req = Yajl::Encoder.encode(:state => "STARTED")
         DeaClient.should_receive(:start)
+        MessageBus.should_receive(:publish) do |*args|
+          subject, msg = *args
+          subject.should == "droplet.updated"
+          parsed = Yajl::Parser.parse(msg)
+          parsed["droplet"].should == app_obj.guid
+          parsed["cc_partition"].should == config[:cc_partition]
+        end
+
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
       end
@@ -146,6 +163,14 @@ module VCAP::CloudController
         app_obj.save
         req = Yajl::Encoder.encode(:state => "STOPPED")
         DeaClient.should_receive(:stop)
+        MessageBus.should_receive(:publish) do |*args|
+          subject, msg = *args
+          subject.should == "droplet.updated"
+          parsed = Yajl::Parser.parse(msg)
+          parsed["droplet"].should == app_obj.guid
+          parsed["cc_partition"].should == config[:cc_partition]
+        end
+
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
       end
@@ -167,6 +192,14 @@ module VCAP::CloudController
 
         req = Yajl::Encoder.encode(:instances => 5)
         DeaClient.should_receive(:change_running_instances).with(kind_of(Models::App), 2)
+        MessageBus.should_receive(:publish) do |*args|
+          subject, msg = *args
+          subject.should == "droplet.updated"
+          parsed = Yajl::Parser.parse(msg)
+          parsed["droplet"].should == app_obj.guid
+          parsed["cc_partition"].should == config[:cc_partition]
+        end
+
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
       end
@@ -247,6 +280,15 @@ module VCAP::CloudController
             hash_including("uris" => ["app.jesse.cloud"]),
           ),
         )
+
+        nats.should_receive(:publish).with(
+          "droplet.updated",
+          json_match(
+            hash_including("droplet" => @app.guid,
+                           "cc_partition" => config[:cc_partition]),
+            ),
+        )
+
         EM.run do
           put(
             @app_url,
@@ -289,6 +331,15 @@ module VCAP::CloudController
             hash_including("uris" => ["foo.jesse.cloud"]),
           ),
         )
+
+        nats.should_receive(:publish).with(
+          "droplet.updated",
+          json_match(
+            hash_including("droplet" => @app.guid,
+                           "cc_partition" => config[:cc_partition]),
+          ),
+        )
+
         EM.run do
           put(
             @app_url,
