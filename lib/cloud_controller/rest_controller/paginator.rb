@@ -58,6 +58,7 @@ module VCAP::CloudController::RestController
       page       = opts[:page] || 1
       page_size  = opts[:results_per_page] || 50
       @paginated = ds.order_by(:id).paginate(page, page_size)
+      @serialization = opts[:serialization] || ObjectSerialization
 
       @controller = controller
       @path = path
@@ -83,7 +84,7 @@ module VCAP::CloudController::RestController
 
     def resources
       @paginated.all.map do |m|
-        ObjectSerialization.to_hash(@controller, m, @opts)
+        @serialization.to_hash(@controller, m, @opts)
       end
     end
 

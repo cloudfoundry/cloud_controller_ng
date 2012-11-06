@@ -30,7 +30,7 @@ module VCAP::CloudController::RestController
         QuotaManager.with_quota_enforcement(create_quota_token_request(obj)) do
           [HTTP::CREATED,
            { "Location" => "#{self.class.path}/#{obj.guid}" },
-          ObjectSerialization.render_json(self.class, obj, @opts)]
+          serialization.render_json(self.class, obj, @opts)]
         end
       end
     end
@@ -41,7 +41,7 @@ module VCAP::CloudController::RestController
     def read(id)
       logger.debug "read: #{id}"
       obj = find_id_and_validate_access(:read, id)
-      ObjectSerialization.render_json(self.class, obj, @opts)
+      serialization.render_json(self.class, obj, @opts)
     end
 
     # Update operation
@@ -63,7 +63,7 @@ module VCAP::CloudController::RestController
 
       after_update(obj, changes) if respond_to?(:after_update)
       after_modify(obj)
-      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
+      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end
 
     # Delete operation
@@ -86,7 +86,8 @@ module VCAP::CloudController::RestController
       logger.debug "enumerate: #{ds.sql}"
       qp = self.class.query_parameters
       ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
-      Paginator.render_json(self.class, ds, self.class.path, @opts)
+      Paginator.render_json(self.class, ds, self.class.path,
+                            @opts.merge(:serialization => serialization))
     end
 
     # Enumerate the related objects to the one with the given id.
@@ -155,7 +156,7 @@ module VCAP::CloudController::RestController
       obj = find_id_and_validate_access(:update, id)
       obj.send("#{verb}_#{singular_name}_by_guid", other_id)
       after_modify(obj)
-      [HTTP::CREATED, ObjectSerialization.render_json(self.class, obj, @opts)]
+      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end
 
     # Find an object and validate that the current user has rights to
@@ -211,6 +212,10 @@ module VCAP::CloudController::RestController
       self.class.model
     end
 
+    def serialization
+      self.class.serialization
+    end
+
     private
     # Hook called at the end of +update+, +add_related+ and +remove_related+
     # The default behavior is to do nothing.
@@ -259,6 +264,11 @@ module VCAP::CloudController::RestController
       def model_class_name(name = nil)
         @model_class_name = name if name
         @model_class_name || class_basename
+      end
+
+      def serialization(klass = nil)
+        @serialization = klass if klass
+        @serialization || ObjectSerialization
       end
 
       # Model class name associated with this rest/api endpoint.
