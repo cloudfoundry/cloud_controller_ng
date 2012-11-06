@@ -76,8 +76,6 @@ module VCAP::CloudController::RestController
       { "metadata" => metadata_hash, "entity" => entity_hash }
     end
 
-    private
-
     def self.relations_hash(controller, obj, opts, depth, parents)
       target_depth = opts[:inline_relations_depth] || INLINE_RELATIONS_DEFAULT
       max_inline = opts[:max_inline] || MAX_INLINE_DEFAULT
@@ -121,5 +119,12 @@ module VCAP::CloudController::RestController
       res
     end
 
+  end
+
+  module EntityOnlyObjectSerialization
+    def self.to_hash(controller, obj, opts, depth=0, parents=[])
+      rel_hash = ObjectSerialization.relations_hash(controller, obj, opts, depth, parents)
+      obj.to_hash.merge(rel_hash)
+    end
   end
 end
