@@ -17,7 +17,7 @@ module VCAP::CloudController::ModelSpecHelper
     # arrays
     relation_types = VCAP::CloudController::ModelSpecHelper.relation_types
     ([:required_attributes, :unique_attributes, :stripped_string_attributes,
-     :sensitive_attributes, :extra_json_attributes] +
+     :sensitive_attributes, :extra_json_attributes, :disable_examples] +
      relation_types).each do |k|
        opts[k] ||= []
        opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)

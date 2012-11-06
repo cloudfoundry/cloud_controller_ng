@@ -30,33 +30,45 @@ module VCAP::CloudController::ModelSpecHelper
   shared_examples "model instance" do |opts|
     include_context "model template", opts
 
-    describe "creation" do
-      include_examples "creation with all required attributes", opts
-      include_examples "creation without an attribute", opts
-      include_examples "creation of unique attributes", opts
+    unless opts[:disable_examples].include? :creation
+      describe "creation" do
+        include_examples "creation with all required attributes", opts
+        include_examples "creation without an attribute", opts
+        include_examples "creation of unique attributes", opts
+      end
     end
 
-    describe "updates" do
-      include_examples "timestamps", opts
+    unless opts[:disable_examples].include? :updates
+      describe "updates" do
+        include_examples "timestamps", opts
+      end
     end
 
-    describe "attribute normalization" do
-      include_examples "attribute normalization", opts
+    unless opts[:disable_examples].include? :attribute_normalization
+      describe "attribute normalization" do
+        include_examples "attribute normalization", opts
+      end
     end
 
-    describe "serialization" do
-      include_examples "serialization", opts
+    unless opts[:disable_examples].include? :seralization
+      describe "serialization" do
+        include_examples "serialization", opts
+      end
     end
 
-    describe "deserialization" do
-      include_examples "deserialization", opts
+    unless opts[:disable_examples].include? :deserialization
+      describe "deserialization" do
+        include_examples "deserialization", opts
+      end
     end
 
-    describe "deletion" do
-      let(:obj) { described_class.make }
+    unless opts[:disable_examples].include? :deletion
+      describe "deletion" do
+        let(:obj) { described_class.make }
 
-      it "should succeed" do
-        obj.destroy
+        it "should succeed" do
+          obj.destroy
+        end
       end
     end
   end
