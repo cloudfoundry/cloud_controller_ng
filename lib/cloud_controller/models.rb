@@ -71,6 +71,16 @@ Sequel::Model.plugin :update_or_create
 Sequel::Model.plugin :typecast_on_load,
                      :name, :label, :provider, :description, :host
 
-Dir[File.expand_path("../models/*", __FILE__)].each do |file|
-  require file
-end
+require "cloud_controller/models/app"
+require "cloud_controller/models/domain"
+require "cloud_controller/models/framework"
+require "cloud_controller/models/organization"
+require "cloud_controller/models/route"
+require "cloud_controller/models/runtime"
+require "cloud_controller/models/service"
+require "cloud_controller/models/service_auth_token"
+require "cloud_controller/models/service_binding"
+require "cloud_controller/models/service_instance"
+require "cloud_controller/models/service_plan"
+require "cloud_controller/models/space"
+require "cloud_controller/models/user"
