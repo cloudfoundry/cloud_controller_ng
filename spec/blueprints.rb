@@ -20,6 +20,7 @@ Sham.define do
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }
+  guid                { |index| "guid-#{index}" }
 end
 
 module VCAP::CloudController::Models
@@ -99,5 +100,57 @@ module VCAP::CloudController::Models
     name              { Sham.name }
     description       { Sham.description }
     service           { Service.make }
+  end
+
+  BillingEvent.blueprint do
+    timestamp         { Time.now }
+    organization_guid { Sham.guid }
+    organization_name { Sham.name }
+  end
+
+  OrganizationStartEvent.blueprint do
+    BillingEvent.blueprint
+  end
+
+  AppStartEvent.blueprint do
+    BillingEvent.blueprint
+    space_guid        { Sham.guid }
+    space_name        { Sham.name }
+    app_guid          { Sham.guid }
+    app_name          { Sham.name }
+    app_run_id        { Sham.guid }
+    app_plan_name     { "free" }
+    app_memory        { 256 }
+    app_instance_count { 1 }
+  end
+
+  AppStopEvent.blueprint do
+    BillingEvent.blueprint
+    space_guid        { Sham.guid }
+    space_name        { Sham.name }
+    app_guid          { Sham.guid }
+    app_name          { Sham.name }
+  end
+
+  ServiceCreateEvent.blueprint do
+    BillingEvent.blueprint
+    space_guid        { Sham.guid }
+    space_name        { Sham.name }
+    service_instance_guid { Sham.guid }
+    service_instance_name { Sham.name }
+    service_guid      { Sham.guid }
+    service_label     { Sham.label }
+    service_provider  { Sham.provider }
+    service_version   { Sham.version }
+    service_plan_guid { Sham.guid }
+    service_plan_name { Sham.name }
+  end
+
+  ServiceDeleteEvent.blueprint do
+    BillingEvent.blueprint
+    space_guid        { Sham.guid }
+    space_name        { Sham.name }
+    service_instance_guid { Sham.guid }
+    service_instance_name { Sham.name }
   end
 end

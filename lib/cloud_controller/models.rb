@@ -71,6 +71,14 @@ Sequel::Model.plugin :update_or_create
 Sequel::Model.plugin :typecast_on_load,
                      :name, :label, :provider, :description, :host
 
+require "cloud_controller/models/billing_event"
+require "cloud_controller/models/organization_start_event"
+require "cloud_controller/models/app_start_event"
+require "cloud_controller/models/app_stop_event"
+require "cloud_controller/models/service_base_event"
+require "cloud_controller/models/service_create_event"
+require "cloud_controller/models/service_delete_event"
+
 require "cloud_controller/models/app"
 require "cloud_controller/models/domain"
 require "cloud_controller/models/framework"
