@@ -27,5 +27,29 @@ module VCAP::CloudController
       ],
       :disable_examples => :deserialization
     }
+
+    describe "create_from_service_instance" do
+      context "on an org without billing enabled" do
+        it "should do nothing" do
+          Models::ServiceCreateEvent.should_not_receive(:create)
+          si = Models::ServiceInstance.make
+          org = si.space.organization
+          org.billing_enabled = false
+          org.save(:validate => false)
+          Models::ServiceCreateEvent.create_from_service_instance(si)
+        end
+      end
+
+      context "on an org with billing enabled" do
+        it "should create an service create event" do
+          Models::ServiceCreateEvent.should_receive(:create)
+          si = Models::ServiceInstance.make
+          org = si.space.organization
+          org.billing_enabled = true
+          org.save(:validate => false)
+          Models::ServiceCreateEvent.create_from_service_instance(si)
+        end
+      end
+    end
   end
 end
