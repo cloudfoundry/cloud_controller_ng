@@ -32,5 +32,22 @@ module VCAP::CloudController::Models
     def event_type
       "app_start"
     end
+
+    def self.create_from_app(app)
+      return unless app.space.organization.billing_enabled?
+      AppStartEvent.create(
+        :timestamp => Time.now,
+        :organization_guid => app.space.organization_guid,
+        :organization_name => app.space.organization.name,
+        :space_guid => app.space.guid,
+        :space_name => app.space.name,
+        :app_guid => app.guid,
+        :app_name => app.name,
+        :app_run_id => app.version,
+        :app_plan_name => app.production ? "paid" : "free",
+        :app_memory => app.memory,
+        :app_instance_count => app.instances,
+      )
+    end
   end
 end
