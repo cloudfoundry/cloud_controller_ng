@@ -25,5 +25,19 @@ module VCAP::CloudController::Models
     def event_type
       "app_stop"
     end
+
+    def self.create_from_app(app)
+      return unless app.space.organization.billing_enabled?
+      AppStopEvent.create(
+        :timestamp => Time.now,
+        :organization_guid => app.space.organization_guid,
+        :organization_name => app.space.organization.name,
+        :space_guid => app.space.guid,
+        :space_name => app.space.name,
+        :app_guid => app.guid,
+        :app_name => app.name,
+        :app_run_id => app.version,
+      )
+    end
   end
 end
