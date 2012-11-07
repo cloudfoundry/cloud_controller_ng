@@ -25,6 +25,8 @@ module VCAP::CloudController::Models
                       :user_guids, :manager_guids, :billing_manager_guids,
                       :auditor_guids, :domain_guids
 
+    alias :billing_enabled? :billing_enabled
+
     def before_create
       add_inheritable_domains
       super
