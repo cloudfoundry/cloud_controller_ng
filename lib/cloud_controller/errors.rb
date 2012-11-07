@@ -96,6 +96,8 @@ module VCAP::CloudController::Errors
 
     ["InstancesError", HTTP::BAD_REQUEST, 220001, "Instances error: %s"],
 
+    ["BillingEventQueryInvalid", HTTP::BAD_REQUEST, 230001, "Billing event query start_date and/or end_date are missing or invalid"],
+
   ].each do |e|
     define_error *e
   end
