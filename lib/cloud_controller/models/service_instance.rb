@@ -31,9 +31,15 @@ module VCAP::CloudController::Models
       provision_on_gateway
     end
 
+    def after_create
+      super
+      ServiceCreateEvent.create_from_service_instance(self)
+    end
+
     def after_destroy
       super
       deprovision_on_gateway
+      ServiceDeleteEvent.create_from_service_instance(self)
     end
 
     def after_commit

@@ -102,5 +102,25 @@ module VCAP::CloudController
         end
       end
     end
+
+    context "billing" do
+      context "creating a service instance" do
+        it "should call ServiceCreateEvent.create_from_service_instance" do
+          Models::ServiceCreateEvent.should_receive(:create_from_service_instance)
+          Models::ServiceDeleteEvent.should_not_receive(:create_from_service_instance)
+          Models::ServiceInstance.make
+        end
+      end
+
+      context "destroying a service instance" do
+        it "should call ServiceDeleteEvent.create_from_service_instance" do
+          instance = Models::ServiceInstance.make
+          Models::ServiceCreateEvent.should_not_receive(:create_from_service_instance)
+          Models::ServiceDeleteEvent.should_receive(:create_from_service_instance).
+            with(instance)
+          instance.destroy
+        end
+      end
+    end
   end
 end
