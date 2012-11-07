@@ -85,8 +85,13 @@ module VCAP::CloudController::Models
       # The dirty check on version allows a higher level to set the version.
       # We might start populating this with the vcap request guid of an api
       # request.
-      if column_changed?(:state) && !column_changed?(:version)
-        self.version = SecureRandom.uuid
+      if column_changed?(:state)
+        if started?
+          self.version = SecureRandom.uuid if !column_changed?(:version)
+          AppStartEvent.create_from_app(self)
+        else
+          AppStopEvent.create_from_app(self) unless new?
+        end
       end
     end
 

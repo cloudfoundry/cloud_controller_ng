@@ -445,5 +445,59 @@ module VCAP::CloudController
         app.destroy
       end
     end
+
+    describe "billing" do
+      context "creating a stopped app" do
+        it "should not call AppStartEvent.create_from_app" do
+          Models::AppStartEvent.should_not_receive(:create_from_app)
+          Models::AppStopEvent.should_not_receive(:create_from_app)
+          Models::App.make(:state => "STOPPED")
+        end
+      end
+
+      context "creating a started app" do
+        it "should not call AppStartEvent.create_from_app" do
+          Models::AppStartEvent.should_receive(:create_from_app)
+          Models::AppStopEvent.should_not_receive(:create_from_app)
+          Models::App.make(:state => "STARTED")
+        end
+      end
+
+      context "starting a stopped app" do
+        it "should call AppStartEvent.create_from_app" do
+          app = Models::App.make(:state => "STOPPED")
+          Models::AppStartEvent.should_receive(:create_from_app).with(app)
+          Models::AppStopEvent.should_not_receive(:create_from_app)
+          app.update(:state => "STARTED")
+        end
+      end
+
+      context "updating a stopped app" do
+        it "should not call AppStartEvent.create_from_app" do
+          app = Models::App.make(:state => "STOPPED")
+          Models::AppStartEvent.should_not_receive(:create_from_app)
+          Models::AppStopEvent.should_not_receive(:create_from_app)
+          app.update(:state => "STOPPED")
+        end
+      end
+
+      context "stopping a started app" do
+        it "should call AppStopEvent.create_from_app" do
+          app = Models::App.make(:state => "STARTED")
+          Models::AppStartEvent.should_not_receive(:create_from_app)
+          Models::AppStopEvent.should_receive(:create_from_app).with(app)
+          app.update(:state => "STOPPED")
+        end
+      end
+
+      context "updating a started app" do
+        it "should not call AppStartEvent.create_from_app" do
+          app = Models::App.make(:state => "STARTED")
+          Models::AppStartEvent.should_not_receive(:create_from_app)
+          Models::AppStopEvent.should_not_receive(:create_from_app)
+          app.update(:state => "STARTED")
+        end
+      end
+    end
   end
 end
