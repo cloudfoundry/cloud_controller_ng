@@ -74,27 +74,6 @@ module VCAP::CloudController::ApiSpecHelper
     decoded_response["entity"]
   end
 
-  def should_not_receive_quota_call
-    RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
-  end
-
-  def should_receive_nil_quota_call
-    t = RestController::QuotaManager::BlindApprovalToken.new
-    t.should_receive(:commit)
-    RestController::QuotaManager.should_receive(:fetch_quota_token).with(nil).and_return(t)
-  end
-
-  def should_receive_quota_call
-    RestController::QuotaManager.should_not_receive(:fetch_quota_token).with(nil)
-    RestController::QuotaManager.should_receive(:fetch_quota_token) do |arg|
-      arg[:path].should_not be_nil
-      arg[:body].should_not be_nil
-      audit_data = arg[:body][:audit_data]
-      audit_data.should be_a_kind_of(Hash) if audit_data
-      RestController::QuotaManager::BlindApprovalToken.new
-    end
-  end
-
   shared_examples "a CloudController API" do |opts|
     [:required_attributes, :unique_attributes, :basic_attributes,
      :extra_attributes, :sensitive_attributes,

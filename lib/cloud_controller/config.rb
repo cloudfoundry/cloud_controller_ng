@@ -28,12 +28,6 @@ class VCAP::CloudController::Config < VCAP::Config
         :symmetric_secret   => String
       },
 
-      :quota_manager => {
-        :base_url                   => String,
-        :auth_token                 => String,
-        optional(:http_timeout_sec) => Integer
-      },
-
       :logging => {
         :level              => String,      # debug, info, etc.
         optional(:file)     => String,      # Log file to use
@@ -100,7 +94,6 @@ class VCAP::CloudController::Config < VCAP::Config
     # via per instance constructor.  Remove that in favor of this
     # method as there will be more along these lines.
     VCAP::CloudController::MessageBus.configure(config)
-    VCAP::CloudController::RestController::QuotaManager.configure(config)
     VCAP::CloudController::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.configure(config)
     VCAP::CloudController::FilesystemPool.configure(config)

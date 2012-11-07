@@ -24,22 +24,6 @@ module VCAP::CloudController
 
     query_parameters :name, :organization_guid, :developer_guid, :app_guid
 
-    def create_quota_token_request(obj)
-      ret = quota_token_request("post", obj)
-      ret[:body][:audit_data] = obj.to_hash
-      ret
-    end
-
-    def update_quota_token_request(obj)
-      ret = quota_token_request("put", obj)
-      ret[:body][:audit_data] = obj.to_hash
-      ret
-    end
-
-    def delete_quota_token_request(obj)
-      quota_token_request("delete", obj)
-    end
-
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:organization_id, :name])
       if name_errors && name_errors.include?(:unique)
@@ -47,21 +31,6 @@ module VCAP::CloudController
       else
         Errors::SpaceInvalid.new(e.errors.full_messages)
       end
-    end
-
-    private
-
-    def quota_token_request(op, obj)
-      {
-        :path => obj.organization_guid,
-        :body => {
-          :op           => op,
-          :user_id      => user.guid,
-          :object       => "space",
-          :object_id    => obj.guid,
-          :object_name  => obj.name
-        }
-      }
     end
   end
 end

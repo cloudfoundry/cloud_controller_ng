@@ -35,22 +35,6 @@ module VCAP::CloudController
 
     query_parameters :name, :space_guid, :organization_guid, :framework_guid, :runtime_guid
 
-    def create_quota_token_request(obj)
-      ret = quota_token_request("post", obj)
-      ret[:body][:audit_data] = obj.to_hash
-      ret
-    end
-
-    def update_quota_token_request(obj)
-      ret = quota_token_request("put", obj)
-      ret[:body][:audit_data] = request_attrs
-      ret
-    end
-
-    def delete_quota_token_request(obj)
-      quota_token_request("delete", obj)
-    end
-
     def after_update(app, changes)
       AppStager.stage_app(app) if app.needs_staging?
 
@@ -77,24 +61,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def quota_token_request(op, obj)
-      {
-        :path => obj.space.organization_guid,
-        :body => {
-          :op           => op,
-          :user_id      => user.guid,
-          :object       => "application",
-          :object_id    => obj.guid,
-          :object_name  => obj.name,
-          :space_id     => obj.space_guid,
-          :memory       => obj.memory,
-          :instances    => obj.instances,
-          :production   => obj.production,
-          :audit_data   => obj.to_hash
-        }
-      }
-    end
 
     def after_modify(app)
       if app.dea_update_pending?

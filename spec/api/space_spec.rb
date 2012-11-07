@@ -154,47 +154,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    describe "quota" do
-      let(:cf_admin) { Models::User.make(:admin => true) }
-      let(:org) { Models::Organization.make }
-      let(:space) { Models::Space.make }
-
-      describe "create" do
-        it "should fetch a quota token" do
-          should_receive_quota_call
-          post "/v2/spaces", Yajl::Encoder.encode(:name => Sham.name,
-                                                  :organization_guid => org.guid),
-                                                  headers_for(cf_admin)
-          last_response.status.should == 201
-        end
-      end
-
-      describe "get" do
-        it "should not fetch a quota token" do
-          should_not_receive_quota_call
-          get "/v2/spaces/#{space.guid}", {}, headers_for(cf_admin)
-          last_response.status.should == 200
-        end
-      end
-
-      describe "update" do
-        it "should fetch a quota token" do
-          should_receive_quota_call
-          put "/v2/spaces/#{space.guid}",
-          Yajl::Encoder.encode(:name => "#{space.name}_renamed"),
-          headers_for(cf_admin)
-          last_response.status.should == 201
-        end
-      end
-
-      describe "delete" do
-        it "should fetch a quota token" do
-          should_receive_quota_call
-          delete "/v2/spaces/#{space.guid}", {}, headers_for(cf_admin)
-          last_response.status.should == 204
-        end
-      end
-    end
   end
 end

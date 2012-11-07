@@ -6,16 +6,6 @@ module VCAP::CloudController::RestController
   class ModelController < Base
     include Routes
 
-    # By default, operations do not require quota enformcement.
-    # Endpoints are expected to override this method if they need
-    # quota enforcement.
-    #
-    # TODO: once quota is implemented verywhere, take these out
-    # for safety.  Err on the side of requring quota check.
-    def create_quota_token_request(obj); end
-    def update_quota_token_request(obj); end
-    def delete_quota_token_request(obj); end
-
     # Create operation
     def create
       json_msg = self.class::CreateMessage.decode(body)
@@ -26,12 +16,11 @@ module VCAP::CloudController::RestController
         logger.debug "create: #{request_attrs}"
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user)
-
-        QuotaManager.with_quota_enforcement(create_quota_token_request(obj)) do
-          [HTTP::CREATED,
-           { "Location" => "#{self.class.path}/#{obj.guid}" },
-          serialization.render_json(self.class, obj, @opts)]
-        end
+        [
+          HTTP::CREATED,
+          { "Location" => "#{self.class.path}/#{obj.guid}" },
+          serialization.render_json(self.class, obj, @opts)
+        ]
       end
     end
 
@@ -55,7 +44,7 @@ module VCAP::CloudController::RestController
       logger.debug "update: #{id} #{request_attrs}"
 
       changes = {}
-      QuotaManager.with_quota_enforcement(update_quota_token_request(obj)) do
+      model.db.transaction do
         obj.update_from_hash(request_attrs)
         changes = obj.previous_changes || {}
         obj.save
@@ -72,11 +61,8 @@ module VCAP::CloudController::RestController
     def delete(id)
       logger.debug "delete: #{id}"
       obj = find_id_and_validate_access(:delete, id)
-
-      QuotaManager.with_quota_enforcement(delete_quota_token_request(obj)) do
-        obj.destroy
-        [HTTP::NO_CONTENT, nil]
-      end
+      obj.destroy
+      [ HTTP::NO_CONTENT, nil ]
     end
 
     # Enumerate operation

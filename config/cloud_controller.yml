@@ -42,12 +42,6 @@ uaa:
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
 
-quota_manager:
-  policy: "MoneyMakerApproval" # can also be BlindApproval
-  base_url: "http://localhost:31004/v1/quota"
-  auth_token: "testtoken"
-  http_timeout_sec: 2
-
 cc_partition: ng
 
 bulk_api:
