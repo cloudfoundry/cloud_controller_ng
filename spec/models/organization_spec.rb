@@ -59,6 +59,15 @@ module VCAP::CloudController
       it "should not be enabled for billing when first created" do
         Models::Organization.make.billing_enabled.should == false
       end
+
+      context "emabling billing" do
+        it "should call OrganizationStartEvent.create_from_org" do
+          org = Models::Organization.make
+          Models::OrganizationStartEvent.should_receive(:create_from_org)
+          org.billing_enabled = true
+          org.save(:validate => false)
+        end
+      end
     end
   end
 end

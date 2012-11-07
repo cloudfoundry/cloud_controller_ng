@@ -26,15 +26,9 @@ module VCAP::CloudController
         end
       end
 
-      context "on an org with billing enabled" do
-        it "should create an org billing start event" do
-          Models::OrganizationStartEvent.should_receive(:create)
-          org = Models::Organization.make
-          org.billing_enabled = true
-          org.save(:validate => false)
-          Models::OrganizationStartEvent.create_from_org(org)
-        end
-      end
+      # we don't/can't explicitly test the create path, because that
+      # happens automatically when updating the billing_enabled flag
+      # on the org. See the org model specs.
     end
   end
 end

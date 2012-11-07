@@ -48,6 +48,13 @@ module VCAP::CloudController::Models
       end
     end
 
+    def before_save
+      super
+      if column_changed?(:billing_enabled) && billing_enabled?
+        OrganizationStartEvent.create_from_org(self)
+      end
+    end
+
     def validate_domain(domain)
       return if domain && domain.owning_organization.nil?
       unless (domain &&
