@@ -6,34 +6,84 @@ module VCAP::CloudController
   describe VCAP::CloudController::BillingEvent do
     describe "permissions" do
       context "with 5 event records" do
-        before(:all) do
-          Models::BillingEvent.delete
-          @org_event = Models::OrganizationStartEvent.make
-          @app_start_event = Models::AppStartEvent.make
-          @app_stop_event = Models::AppStopEvent.make
-          @service_create_event = Models::ServiceCreateEvent.make
-          @service_delete_event = Models::ServiceDeleteEvent.make
+        let(:org) do
+          Models::Organization.make
         end
 
-        describe "GET /v2/billing_events" do
-          let(:org) do
-            Models::Organization.make
-          end
+        let(:admin_headers) do
+          user = VCAP::CloudController::Models::User.make(:admin => true)
+          headers_for(user)
+        end
 
-          let(:admin_headers) do
-            user = VCAP::CloudController::Models::User.make(:admin => true)
-            headers_for(user)
-          end
+        let(:org_admin_headers) do
+          user = Models::User.make
+          org.add_user(user)
+          org.add_manager(user)
+          headers_for(user)
+        end
 
-          let(:org_admin_headers) do
-            user = Models::User.make
-            org.add_user(user)
-            org.add_manager(user)
-            headers_for(user)
-          end
+        before(:all) do
+          Models::BillingEvent.delete
 
+          timestamp = Time.new(2012, 01, 01, 00, 00, 01)
+          @start_time = timestamp
+
+          @org_event = Models::OrganizationStartEvent.make(
+            :timestamp => timestamp
+          )
+
+          @app_start_event = Models::AppStartEvent.make(
+            :timestamp => timestamp += 1
+          )
+
+          @app_stop_event = Models::AppStopEvent.make(
+            :timestamp => timestamp += 1
+          )
+
+          @service_create_event = Models::ServiceCreateEvent.make(
+            :timestamp => timestamp += 1
+          )
+
+          @service_delete_event = Models::ServiceDeleteEvent.make(
+            :timestamp => timestamp += 1
+          )
+
+          @end_time = timestamp
+        end
+
+        describe 'GET /v2/billing_events' do
+          it "should return 400" do
+            get "/v2/billing_events", {}, admin_headers
+            last_response.status.should == 400
+          end
+        end
+
+        describe 'GET /v2/billing_events?start_date=#{start_date}' do
+          it "should return 400" do
+            get "/v2/billing_events?start_date=#{@start_time.iso8601}", {}, admin_headers
+            last_response.status.should == 400
+          end
+        end
+
+        describe 'GET /v2/billing_events?start_date=bogus' do
+          it "should return 400" do
+            get "/v2/billing_events?start_date=bogus", {}, admin_headers
+            last_response.status.should == 400
+          end
+        end
+
+        describe 'GET /v2/billing_events?end_date=bogus' do
+          it "should return 400" do
+            get "/v2/billing_events?end_date=bogus", {}, admin_headers
+            last_response.status.should == 400
+          end
+        end
+
+        describe 'GET /v2/billing_events?start_date=#{start_date}&end_date=#{end_date}' do
           let(:path) do
-            "/v2/billing_events"
+            "/v2/billing_events?" +
+            "start_date=#{@start_time.iso8601}" +
+            "&end_date=#{@end_time.iso8601}"
           end
 
           context "as a cf admin" do
@@ -140,6 +190,72 @@ module VCAP::CloudController
               decoded_response["total_results"].should == 0
               decoded_response["resources"].size.should == 0
             end
+          end
+        end
+
+        describe 'GET /v2/billing_events?start_date=#{start_date}&end_date=#{end_date-1}' do
+          let(:path) do
+            "/v2/billing_events?" +
+            "start_date=#{@start_time.iso8601}" +
+            "&end_date=#{(@end_time-1).iso8601}"
+          end
+
+          it "should return 200" do
+            get path, {}, admin_headers
+            last_response.status.should == 200
+          end
+
+          it "should return 4 records" do
+            get path, {}, admin_headers
+            decoded_response["total_results"].should == 4
+            decoded_response["total_pages"].should == 1
+            decoded_response["prev_url"].should == nil
+            decoded_response["next_url"].should == nil
+            decoded_response["resources"].size.should == 4
+          end
+        end
+
+        describe 'GET /v2/billing_events?start_date=#{start_date+1}&end_date=#{end_date}' do
+          let(:path) do
+            "/v2/billing_events?" +
+            "start_date=#{(@start_time+1).iso8601}" +
+            "&end_date=#{@end_time.iso8601}"
+          end
+
+          it "should return 200" do
+            get path, {}, admin_headers
+            last_response.status.should == 200
+          end
+
+          it "should return 4 records" do
+            get path, {}, admin_headers
+            decoded_response["total_results"].should == 4
+            decoded_response["total_pages"].should == 1
+            decoded_response["prev_url"].should == nil
+            decoded_response["next_url"].should == nil
+            decoded_response["resources"].size.should == 4
+          end
+        end
+
+        describe 'GET /v2/billing_events?start_date=#{start_date+1}&end_date=#{end_date-1}' do
+          let(:path) do
+            "/v2/billing_events?" +
+            "start_date=#{(@start_time+1).iso8601}" +
+            "&end_date=#{(@end_time-1).iso8601}"
+          end
+
+          it "should return 200" do
+            get path, {}, admin_headers
+            last_response.status.should == 200
+          end
+
+          it "should return 3 records" do
+            get path, {}, admin_headers
+            decoded_response["total_results"].should == 3
+            decoded_response["total_pages"].should == 1
+            decoded_response["prev_url"].should == nil
+            decoded_response["next_url"].should == nil
+            decoded_response["resources"].size.should == 3
           end
         end
       end
