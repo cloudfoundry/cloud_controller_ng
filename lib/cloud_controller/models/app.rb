@@ -12,6 +12,7 @@ module VCAP::CloudController::Models
     many_to_one       :runtime
     many_to_many      :routes, :before_add => :validate_route, :after_add => :mark_routes_changed, :after_remove => :mark_routes_changed
     one_to_many       :service_bindings, :after_remove => :after_remove_binding
+    many_to_many      :service_instances, :join_table => :service_bindings
 
     add_association_dependencies :routes => :nullify, :service_bindings => :destroy
 
