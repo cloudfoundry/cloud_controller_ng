@@ -105,7 +105,7 @@ module VCAP::CloudController
               get path, {}, admin_headers
               decoded_response["resources"][0].should == {
                 "event_type" => "organization_billing_start",
-                "organization_id" => @org_event.organization_guid,
+                "organization_guid" => @org_event.organization_guid,
                 "organization_name" => @org_event.organization_name,
                 "timestamp" => @org_event.timestamp.to_s,
               }
@@ -115,11 +115,11 @@ module VCAP::CloudController
               get path, {}, admin_headers
               decoded_response["resources"][1].should == {
                 "event_type" => "app_start",
-                "organization_id" => @app_start_event.organization_guid,
+                "organization_guid" => @app_start_event.organization_guid,
                 "organization_name" => @app_start_event.organization_name,
-                "space_id" => @app_start_event.space_guid,
+                "space_guid" => @app_start_event.space_guid,
                 "space_name" => @app_start_event.space_name,
-                "app_id" => @app_start_event.app_guid,
+                "app_guid" => @app_start_event.app_guid,
                 "app_name" => @app_start_event.app_name,
                 "app_run_id" => @app_start_event.app_run_id,
                 "app_plan_name" => @app_start_event.app_plan_name,
@@ -133,11 +133,11 @@ module VCAP::CloudController
               get path, {}, admin_headers
               decoded_response["resources"][2].should == {
                 "event_type" => "app_stop",
-                "organization_id" => @app_stop_event.organization_guid,
+                "organization_guid" => @app_stop_event.organization_guid,
                 "organization_name" => @app_stop_event.organization_name,
-                "space_id" => @app_stop_event.space_guid,
+                "space_guid" => @app_stop_event.space_guid,
                 "space_name" => @app_stop_event.space_name,
-                "app_id" => @app_stop_event.app_guid,
+                "app_guid" => @app_stop_event.app_guid,
                 "app_name" => @app_stop_event.app_name,
                 "app_run_id" => @app_stop_event.app_run_id,
                 "timestamp" => @app_stop_event.timestamp.to_s,
@@ -148,17 +148,17 @@ module VCAP::CloudController
               get path, {}, admin_headers
               decoded_response["resources"][3].should == {
                 "event_type" => "service_create",
-                "organization_id" => @service_create_event.organization_guid,
+                "organization_guid" => @service_create_event.organization_guid,
                 "organization_name" => @service_create_event.organization_name,
-                "space_id" => @service_create_event.space_guid,
+                "space_guid" => @service_create_event.space_guid,
                 "space_name" => @service_create_event.space_name,
-                "service_instance_id" => @service_create_event.service_instance_guid,
+                "service_instance_guid" => @service_create_event.service_instance_guid,
                 "service_instance_name" => @service_create_event.service_instance_name,
-                "service_id" => @service_create_event.service_guid,
+                "service_guid" => @service_create_event.service_guid,
                 "service_label" => @service_create_event.service_label,
                 "service_provider" => @service_create_event.service_provider,
                 "service_version" => @service_create_event.service_version,
-                "service_plan_id" => @service_create_event.service_plan_guid,
+                "service_plan_guid" => @service_create_event.service_plan_guid,
                 "service_plan_name" => @service_create_event.service_plan_name,
                 "timestamp" => @service_create_event.timestamp.to_s,
               }
@@ -168,11 +168,11 @@ module VCAP::CloudController
               get path, {}, admin_headers
               decoded_response["resources"][4].should == {
                 "event_type" => "service_delete",
-                "organization_id" => @service_delete_event.organization_guid,
+                "organization_guid" => @service_delete_event.organization_guid,
                 "organization_name" => @service_delete_event.organization_name,
-                "space_id" => @service_delete_event.space_guid,
+                "space_guid" => @service_delete_event.space_guid,
                 "space_name" => @service_delete_event.space_name,
-                "service_instance_id" => @service_delete_event.service_instance_guid,
+                "service_instance_guid" => @service_delete_event.service_instance_guid,
                 "service_instance_name" => @service_delete_event.service_instance_name,
                 "timestamp" => @service_delete_event.timestamp.to_s,
               }

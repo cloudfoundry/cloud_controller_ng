@@ -7,7 +7,7 @@ module VCAP::CloudController::Models
     export_attributes(
       :timestamp,
       :event_type,
-      :organization_id,
+      :organization_guid,
       :organization_name,
     )
 

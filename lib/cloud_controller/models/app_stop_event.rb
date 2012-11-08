@@ -5,11 +5,11 @@ module VCAP::CloudController::Models
     export_attributes(
       :timestamp,
       :event_type,
-      :organization_id,
+      :organization_guid,
       :organization_name,
-      :space_id,
+      :space_guid,
       :space_name,
-      :app_id,
+      :app_guid,
       :app_name,
       :app_run_id,
     )
