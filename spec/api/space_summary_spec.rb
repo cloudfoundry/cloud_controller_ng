@@ -4,12 +4,12 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::SpaceSummary do
-    NUM_SERVICES = 2
-    NUM_PROD_APPS = 3
-    NUM_FREE_APPS = 5
-    PROD_MEM_SIZE = 128
-    FREE_MEM_SIZE = 1024
-    NUM_APPS = NUM_PROD_APPS + NUM_FREE_APPS
+    let(:num_services) { 2 }
+    let(:num_prod_apps) { 3 }
+    let(:num_free_apps) { 5 }
+    let(:prod_mem_size) { 128 }
+    let(:free_mem_size) { 1024 }
+    let(:num_apps) { num_prod_apps + num_free_apps }
 
     let(:admin_headers) do
       user = VCAP::CloudController::Models::User.make(:admin => true)
@@ -23,26 +23,26 @@ module VCAP::CloudController
       @services = []
       @apps = []
 
-      NUM_SERVICES.times do
+      num_services.times do
         @services << Models::ServiceInstance.make(:space => @space)
       end
 
-      NUM_FREE_APPS.times do |i|
+      num_free_apps.times do |i|
         @apps << Models::App.make(
           :space => @space,
           :production => false,
           :instances => i,
-          :memory => FREE_MEM_SIZE,
+          :memory => free_mem_size,
           :state => "STARTED",
         )
       end
 
-      NUM_PROD_APPS.times do |i|
+      num_prod_apps.times do |i|
         @apps << Models::App.make(
           :space => @space,
           :production => true,
           :instances => i,
-          :memory => PROD_MEM_SIZE,
+          :memory => prod_mem_size,
           :state => "STARTED",
         )
       end
@@ -59,6 +59,7 @@ module VCAP::CloudController
     describe "GET /v2/spaces/:id/summary" do
       before do
         hm_resp = {}
+
         @apps.each do |app|
           if app.started?
             hm_resp[app.guid] = app.instances
@@ -83,8 +84,8 @@ module VCAP::CloudController
         decoded_response["name"].should == @space.name
       end
 
-      it "should return NUM_APPS apps" do
-        decoded_response["apps"].size.should == NUM_APPS
+      it "should return num_apps apps" do
+        decoded_response["apps"].size.should == num_apps
       end
 
       it "should return the correct info for an app" do
@@ -95,14 +96,14 @@ module VCAP::CloudController
           "guid" => app.guid,
           "name" => app.name,
           "urls" => [@route1.fqdn, @route2.fqdn],
-          "service_count" => NUM_SERVICES,
+          "service_count" => num_services,
           "instances" => 1,
           "running_instances" => app.instances,
         }.merge(app.to_hash)
       end
 
-      it "should return NUM_SERVICES  services" do
-        decoded_response["services"].size.should == NUM_SERVICES
+      it "should return num_services  services" do
+        decoded_response["services"].size.should == num_services
       end
 
       it "should return the correct info for a service" do
@@ -111,7 +112,7 @@ module VCAP::CloudController
 
         svc_resp.should == {
           "guid" => svc.guid,
-          "bound_app_count" => NUM_APPS,
+          "bound_app_count" => num_apps,
           "service_guid" => svc.service_plan.service.guid,
           "label" => svc.service_plan.service.label,
           "provider" => svc.service_plan.service.provider,
