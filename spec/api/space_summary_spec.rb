@@ -5,11 +5,10 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::SpaceSummary do
     let(:num_services) { 2 }
-    let(:num_prod_apps) { 3 }
-    let(:num_free_apps) { 5 }
-    let(:prod_mem_size) { 128 }
-    let(:free_mem_size) { 1024 }
-    let(:num_apps) { num_prod_apps + num_free_apps }
+    let(:num_started_apps) { 3 }
+    let(:num_stopped_apps) { 5 }
+    let(:mem_size) { 128 }
+    let(:num_apps) { num_started_apps + num_stopped_apps }
 
     let(:admin_headers) do
       user = VCAP::CloudController::Models::User.make(:admin => true)
@@ -27,23 +26,21 @@ module VCAP::CloudController
         @services << Models::ServiceInstance.make(:space => @space)
       end
 
-      num_free_apps.times do |i|
+      num_started_apps.times do |i|
         @apps << Models::App.make(
           :space => @space,
-          :production => false,
           :instances => i,
-          :memory => free_mem_size,
+          :memory => mem_size,
           :state => "STARTED",
         )
       end
 
-      num_prod_apps.times do |i|
+      num_stopped_apps.times do |i|
         @apps << Models::App.make(
           :space => @space,
-          :production => true,
           :instances => i,
-          :memory => prod_mem_size,
-          :state => "STARTED",
+          :memory => mem_size,
+          :state => "STOPPED",
         )
       end
 
@@ -62,8 +59,6 @@ module VCAP::CloudController
         @apps.each do |app|
           if app.started?
             hm_resp[app.guid] = app.instances
-          else
-            hm_resp[app.guid] = 0
           end
         end
 
@@ -99,6 +94,8 @@ module VCAP::CloudController
             "service_count" => num_services,
             "instances" => app.instances,
             "running_instances" => expected_running_instances,
+            "framework_name" => app.framework.name,
+            "runtime_name" => app.runtime.name,
           }.merge(app.to_hash)
         end
       end
