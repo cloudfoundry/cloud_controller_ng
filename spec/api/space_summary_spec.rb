@@ -4,12 +4,11 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::SpaceSummary do
-    NUM_SERVICES = 2
-    NUM_PROD_APPS = 3
-    NUM_FREE_APPS = 5
-    PROD_MEM_SIZE = 128
-    FREE_MEM_SIZE = 1024
-    NUM_APPS = NUM_PROD_APPS + NUM_FREE_APPS
+    let(:num_services) { 2 }
+    let(:num_started_apps) { 3 }
+    let(:num_stopped_apps) { 5 }
+    let(:mem_size) { 128 }
+    let(:num_apps) { num_started_apps + num_stopped_apps }
 
     let(:admin_headers) do
       user = VCAP::CloudController::Models::User.make(:admin => true)
@@ -23,27 +22,25 @@ module VCAP::CloudController
       @services = []
       @apps = []
 
-      NUM_SERVICES.times do
+      num_services.times do
         @services << Models::ServiceInstance.make(:space => @space)
       end
 
-      NUM_FREE_APPS.times do
+      num_started_apps.times do |i|
         @apps << Models::App.make(
           :space => @space,
-          :production => false,
-          :instances => 1,
-          :memory => FREE_MEM_SIZE,
+          :instances => i,
+          :memory => mem_size,
           :state => "STARTED",
         )
       end
 
-      NUM_PROD_APPS.times do
+      num_stopped_apps.times do |i|
         @apps << Models::App.make(
           :space => @space,
-          :production => true,
-          :instances => 1,
-          :memory => PROD_MEM_SIZE,
-          :state => "STARTED",
+          :instances => i,
+          :memory => mem_size,
+          :state => "STOPPED",
         )
       end
 
@@ -57,7 +54,15 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/spaces/:id/summary" do
-      before :all do
+      before do
+        hm_resp = {}
+        @apps.each do |app|
+          if app.started?
+            hm_resp[app.guid] = app.instances
+          end
+        end
+
+        HealthManagerClient.should_receive(:healthy_instances).and_return(hm_resp)
         get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
       end
 
@@ -73,24 +78,30 @@ module VCAP::CloudController
         decoded_response["name"].should == @space.name
       end
 
-      it "should return NUM_APPS apps" do
-        decoded_response["apps"].size.should == NUM_APPS
+      it "should return num_apps apps" do
+        decoded_response["apps"].size.should == num_apps
       end
 
-      it "should return the correct info for an app" do
-        app_resp = decoded_response["apps"][0]
-        app = @apps.find { |a| a.guid == app_resp["guid"] }
+      it "should return the correct info for the apps" do
+        decoded_response["apps"].each do |app_resp|
+          app = @apps.find { |a| a.guid == app_resp["guid"] }
+          expected_running_instances = app.started? ? app.instances : 0
 
-        app_resp.should == {
-          "guid" => app.guid,
-          "name" => app.name,
-          "urls" => [@route1.fqdn, @route2.fqdn],
-          "service_count" => NUM_SERVICES,
-        }.merge(app.to_hash)
+          app_resp.should == {
+            "guid" => app.guid,
+            "name" => app.name,
+            "urls" => [@route1.fqdn, @route2.fqdn],
+            "service_count" => num_services,
+            "instances" => app.instances,
+            "running_instances" => expected_running_instances,
+            "framework_name" => app.framework.name,
+            "runtime_name" => app.runtime.name,
+          }.merge(app.to_hash)
+        end
       end
 
-      it "should return NUM_SERVICES  services" do
-        decoded_response["services"].size.should == NUM_SERVICES
+      it "should return num_services  services" do
+        decoded_response["services"].size.should == num_services
       end
 
       it "should return the correct info for a service" do
@@ -99,7 +110,7 @@ module VCAP::CloudController
 
         svc_resp.should == {
           "guid" => svc.guid,
-          "bound_app_count" => NUM_APPS,
+          "bound_app_count" => num_apps,
           "service_guid" => svc.service_plan.service.guid,
           "label" => svc.service_plan.service.label,
           "provider" => svc.service_plan.service.provider,

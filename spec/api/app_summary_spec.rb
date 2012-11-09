@@ -4,8 +4,8 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppSummary do
-    NUM_SERVICES = 2
-    FREE_MEM_SIZE = 128
+    let(:num_services) { 2 }
+    let(:free_mem_size) { 128 }
 
     let(:admin_headers) do
       user = VCAP::CloudController::Models::User.make(:admin => true)
@@ -22,11 +22,11 @@ module VCAP::CloudController
         :space => @space,
         :production => false,
         :instances => 1,
-        :memory => FREE_MEM_SIZE,
+        :memory => free_mem_size,
         :state => "STARTED",
       )
 
-      NUM_SERVICES.times do
+      num_services.times do
         instance = Models::ServiceInstance.make(:space => @space)
         @services << instance
         Models::ServiceBinding.make(:app => @app, :service_instance => instance)
@@ -67,8 +67,8 @@ module VCAP::CloudController
         decoded_response["runtime"]["name"].should == @app.runtime.name
       end
 
-      it "should return NUM_SERVICES services" do
-        decoded_response["services"].size.should == NUM_SERVICES
+      it "should return num_services services" do
+        decoded_response["services"].size.should == num_services
       end
 
       it "should return the correct info for a service" do

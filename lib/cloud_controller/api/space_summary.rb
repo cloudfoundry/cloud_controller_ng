@@ -17,29 +17,54 @@ module VCAP::CloudController
     def summary(id)
       space = find_id_and_validate_access(:read, id)
 
+      apps = {}
+      space.apps.each do |app|
+        apps[app.guid] = app_summary(app)
+      end
+
+      started_apps = space.apps.select { |app| app.started? }
+      unless started_apps.empty?
+        HealthManagerClient.healthy_instances(started_apps).each do |guid, num|
+          apps[guid][:running_instances] = num
+        end
+      end
+
+      services_summary = space.service_instances.map do |instance|
+        service_instance_summary(instance)
+      end
+
       Yajl::Encoder.encode(
         :guid => space.guid,
         :name => space.name,
-        :apps => space.apps.map do |app|
-          {
-            :guid => app.guid,
-            :urls => app.routes.map(&:fqdn),
-            :service_count => app.service_bindings_dataset.count,
-          }.merge(app.to_hash)
-        end,
-        :services => space.service_instances.map do |instance|
-          {
-            :guid => instance.guid,
-            :bound_app_count => instance.service_bindings_dataset.count,
-            :service_guid => instance.service_plan.service.guid,
-            :label => instance.service_plan.service.label,
-            :provider => instance.service_plan.service.provider,
-            :version => instance.service_plan.service.version,
-            :plan_guid => instance.service_plan.guid,
-            :plan_name => instance.service_plan.name,
-          }
-        end,
+        :apps => apps.values,
+        :services => services_summary,
       )
+    end
+
+    private
+
+    def app_summary(app)
+      {
+        :guid => app.guid,
+        :urls => app.routes.map(&:fqdn),
+        :service_count => app.service_bindings_dataset.count,
+        :framework_name => app.framework.name,
+        :runtime_name => app.runtime.name,
+        :running_instances => 0,
+      }.merge(app.to_hash)
+    end
+
+    def service_instance_summary(instance)
+      {
+        :guid => instance.guid,
+        :bound_app_count => instance.service_bindings_dataset.count,
+        :service_guid => instance.service_plan.service.guid,
+        :label => instance.service_plan.service.label,
+        :provider => instance.service_plan.service.provider,
+        :version => instance.service_plan.service.version,
+        :plan_guid => instance.service_plan.guid,
+        :plan_name => instance.service_plan.name,
+      }
     end
 
     get "#{path_id}/summary", :summary
