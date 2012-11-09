@@ -16,7 +16,7 @@ module VCAP::CloudController
       headers_for(user)
     end
 
-    before :all do
+    before(:all) do
       @space = Models::Space.make
       @route1 = Models::Route.make(:space => @space)
       @route2 = Models::Route.make(:space => @space)
@@ -27,21 +27,21 @@ module VCAP::CloudController
         @services << Models::ServiceInstance.make(:space => @space)
       end
 
-      NUM_FREE_APPS.times do
+      NUM_FREE_APPS.times do |i|
         @apps << Models::App.make(
           :space => @space,
           :production => false,
-          :instances => 1,
+          :instances => i,
           :memory => FREE_MEM_SIZE,
           :state => "STARTED",
         )
       end
 
-      NUM_PROD_APPS.times do
+      NUM_PROD_APPS.times do |i|
         @apps << Models::App.make(
           :space => @space,
           :production => true,
-          :instances => 1,
+          :instances => i,
           :memory => PROD_MEM_SIZE,
           :state => "STARTED",
         )
@@ -57,7 +57,17 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/spaces/:id/summary" do
-      before :all do
+      before do
+        hm_resp = {}
+        @apps.each do |app|
+          if app.started?
+            hm_resp[app.guid] = app.instances
+          else
+            hm_resp[app.guid] = 0
+          end
+        end
+
+        HealthManagerClient.should_receive(:healthy_instances).and_return(hm_resp)
         get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
       end
 
@@ -86,6 +96,8 @@ module VCAP::CloudController
           "name" => app.name,
           "urls" => [@route1.fqdn, @route2.fqdn],
           "service_count" => NUM_SERVICES,
+          "instances" => app.instances,
+          "running_instances" => app.instances,
         }.merge(app.to_hash)
       end
 
