@@ -31,22 +31,27 @@ module VCAP::CloudController
         hm_request("status", message, request_options).first
       end
 
-      def healthy_instances(app)
+      def healthy_instances(apps)
+        apps = Array(apps)
+
         message = {
-          :droplets => [
-            :droplet => app.guid,
-            :version => app.version
-          ]
+          :droplets => apps.map do |app|
+            { :droplet => app.guid, :version => app.version }
+          end
         }
 
         request_options = {
-          :expected => 1,
-          :timeout => 1
+          :expected => apps.size,
+          :timeout => 1,
         }
 
         resp = hm_request("health", message, request_options)
         return 0 unless (resp && resp.size >= 1)
-        resp.first[:healthy]
+        return resp.first[:healthy] if apps.size == 1
+
+        to_return = {}
+        resp.each { |r| to_return[r[:droplet]] = r[:healthy] }
+        to_return
       end
 
       private

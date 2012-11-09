@@ -5,6 +5,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::HealthManagerClient do
     let(:app) { Models::App.make }
+    let(:apps) { [Models::App.make, Models::App.make, Models::App.make] }
     let(:message_bus) { double(:message_bus) }
 
     before do
@@ -28,16 +29,36 @@ module VCAP::CloudController
     end
 
     describe "healthy_instances" do
-      it "should return num healthy instances" do
-        resp = {
-          :droplet => app.guid,
-          :version => app.version,
-          :healthy => 3
-        }
-        resp_json = Yajl::Encoder.encode(resp)
+      context "single app" do
+        it "should return num healthy instances" do
+          resp = {
+            :droplet => app.guid,
+            :version => app.version,
+            :healthy => 3
+          }
+          resp_json = Yajl::Encoder.encode(resp)
 
-        message_bus.should_receive(:request).and_return([resp_json])
-        HealthManagerClient.healthy_instances(app).should == 3
+          message_bus.should_receive(:request).and_return([resp_json])
+          HealthManagerClient.healthy_instances(app).should == 3
+        end
+      end
+
+      context "multiple apps" do
+        it "should return num healthy instances for each app" do
+          resp = apps.map do |app|
+            Yajl::Encoder.encode({
+                                   :droplet => app.guid,
+                                   :version => app.version,
+                                   :healthy => 3,
+                                 })
+          end
+
+          message_bus.should_receive(:request).and_return(resp)
+
+          expected = {}
+          apps.each { |app| expected[app.guid] = 3 }
+          HealthManagerClient.healthy_instances(apps).should == expected
+        end
       end
     end
 
