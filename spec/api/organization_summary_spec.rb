@@ -4,13 +4,13 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::OrganizationSummary do
-    NUM_SPACES = 3
-    NUM_SERVICES = 2
-    NUM_PROD_APPS = 3
-    NUM_FREE_APPS = 5
-    PROD_MEM_SIZE = 128
-    FREE_MEM_SIZE = 1024
-    NUM_APPS = NUM_PROD_APPS + NUM_FREE_APPS
+    let(:num_spaces) { 2 }
+    let(:num_services) { 2 }
+    let(:num_prod_apps) { 3 }
+    let(:num_free_apps) { 5 }
+    let(:prod_mem_size) { 128 }
+    let(:free_mem_size) { 1024 }
+    let(:num_apps) { num_prod_apps + num_free_apps }
 
     let(:admin_headers) do
       user = VCAP::CloudController::Models::User.make(:admin => true)
@@ -20,30 +20,30 @@ module VCAP::CloudController
     before :all do
       @org = Models::Organization.make
       @spaces = []
-      NUM_SPACES.times do
+      num_spaces.times do
         @spaces << Models::Space.make(:organization => @org)
       end
 
-      NUM_SERVICES.times do
+      num_services.times do
         Models::ServiceInstance.make(:space => @spaces.first)
       end
 
-      NUM_FREE_APPS.times do
+      num_free_apps.times do
         Models::App.make(
           :space => @spaces.first,
           :production => false,
           :instances => 1,
-          :memory => FREE_MEM_SIZE,
+          :memory => free_mem_size,
           :state => "STARTED"
         )
       end
 
-      NUM_PROD_APPS.times do
+      num_prod_apps.times do
         Models::App.make(
           :space => @spaces.first,
           :production => true,
           :instances => 1,
-          :memory => PROD_MEM_SIZE,
+          :memory => prod_mem_size,
           :state => "STARTED"
         )
       end
@@ -66,18 +66,18 @@ module VCAP::CloudController
         decoded_response["name"].should == @org.name
       end
 
-      it "should return NUM_SPACES spaces" do
-        decoded_response["spaces"].size.should == NUM_SPACES
+      it "should return num_spaces spaces" do
+        decoded_response["spaces"].size.should == num_spaces
       end
 
       it "should return the correct info for a space" do
         decoded_response["spaces"][0].should == {
           "guid" => @spaces[0].guid,
           "name" => @spaces[0].name,
-          "app_count" => NUM_APPS,
-          "service_count" => NUM_SERVICES,
-          "mem_dev_total" => FREE_MEM_SIZE * NUM_FREE_APPS,
-          "mem_prod_total" => PROD_MEM_SIZE * NUM_PROD_APPS,
+          "app_count" => num_apps,
+          "service_count" => num_services,
+          "mem_dev_total" => free_mem_size * num_free_apps,
+          "mem_prod_total" => prod_mem_size * num_prod_apps,
         }
       end
     end
