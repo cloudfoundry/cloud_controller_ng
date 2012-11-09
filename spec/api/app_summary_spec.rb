@@ -37,7 +37,9 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/apps/:id/summary" do
-      before :all do
+      before do
+        HealthManagerClient.should_receive(:healthy_instances).
+          and_return(@app.instances)
         get "/v2/apps/#{@app.guid}/summary", {}, admin_headers
       end
 
@@ -65,6 +67,16 @@ module VCAP::CloudController
       it "should return the app runtime" do
         decoded_response["runtime"]["guid"].should == @app.runtime.guid
         decoded_response["runtime"]["name"].should == @app.runtime.name
+      end
+
+      it "should contain the running instances" do
+        decoded_response["running_instances"].should == @app.instances
+      end
+
+      it "should contain the basic app attributes" do
+        @app.to_hash.each do |k, v|
+          decoded_response[k.to_s].should == v
+        end
       end
 
       it "should return num_services services" do

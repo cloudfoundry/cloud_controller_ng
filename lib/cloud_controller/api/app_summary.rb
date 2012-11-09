@@ -16,13 +16,13 @@ module VCAP::CloudController
 
     def summary(id)
       app = find_id_and_validate_access(:read, id)
-
-      Yajl::Encoder.encode(
+      app_info = {
         :guid => app.guid,
         :name => app.name,
         :urls => app.routes.map(&:fqdn),
         :framework => app.framework.to_hash.merge(:guid => app.framework.guid),
         :runtime => app.runtime.to_hash.merge(:guid => app.runtime.guid),
+        :running_instances => app.running_instances,
         :services => app.service_instances.map do |instance|
           {
             :guid => instance.guid,
@@ -33,8 +33,10 @@ module VCAP::CloudController
             :plan_guid => instance.service_plan.guid,
             :plan_name => instance.service_plan.name,
           }
-        end,
-      )
+        end
+      }.merge(app.to_hash)
+
+      Yajl::Encoder.encode(app_info)
     end
 
     get "#{path_id}/summary", :summary
