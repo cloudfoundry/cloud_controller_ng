@@ -74,12 +74,12 @@ module VCAP::CloudController
       empty_json
     end
 
-    def list_handles(label, provider = DEFAULT_PROVIDER)
-      (label, version) = label.split("-")
+    def list_handles(label_and_version, provider = DEFAULT_PROVIDER)
+      (label, version) = label_and_version.split("-")
 
       service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
-      validate_access("#{label}-#{version}", provider)
+      validate_access(label, provider)
       logger.debug("Listing handles for service: #{service.inspect}")
 
       handles = []
@@ -219,8 +219,8 @@ module VCAP::CloudController
     end
 
     def self.setup_routes
-      get    "/services/v1/offerings/:label/handles",           :list_handles
-      get    "/services/v1/offerings/:label/:provider/handles", :list_handles
+      get    "/services/v1/offerings/:label_and_version/handles",           :list_handles
+      get    "/services/v1/offerings/:label_and_version/:provider/handles", :list_handles
       get    "/services/v1/offerings/:label/:provider",         :get
       get    "/services/v1/offerings/:label",                   :get
       delete "/services/v1/offerings/:label",                   :delete

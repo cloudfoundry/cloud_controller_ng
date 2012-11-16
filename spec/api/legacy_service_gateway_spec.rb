@@ -245,7 +245,7 @@ module VCAP::CloudController
             :provider => "core",
           )
           Models::ServiceAuthToken.create(
-            :label => "foo-bar",
+            :label => "foo",
             :provider => "core",
             :token => "foobar",
           )
@@ -256,7 +256,7 @@ module VCAP::CloudController
             :provider => "test",
           )
           Models::ServiceAuthToken.create(
-            :label => "foo-bar",
+            :label => "foo",
             :provider => "test",
             :token => "footest",
           )
