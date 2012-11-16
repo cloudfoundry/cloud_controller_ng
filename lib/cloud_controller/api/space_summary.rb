@@ -57,13 +57,18 @@ module VCAP::CloudController
     def service_instance_summary(instance)
       {
         :guid => instance.guid,
+        :name => instance.name,
         :bound_app_count => instance.service_bindings_dataset.count,
-        :service_guid => instance.service_plan.service.guid,
-        :label => instance.service_plan.service.label,
-        :provider => instance.service_plan.service.provider,
-        :version => instance.service_plan.service.version,
-        :plan_guid => instance.service_plan.guid,
-        :plan_name => instance.service_plan.name,
+        :service_plan => {
+          :guid => instance.service_plan.guid,
+          :name => instance.service_plan.name,
+          :service => {
+            :guid => instance.service_plan.service.guid,
+            :label => instance.service_plan.service.label,
+            :provider => instance.service_plan.service.provider,
+            :version => instance.service_plan.service.version,
+          }
+        }
       }
     end
 

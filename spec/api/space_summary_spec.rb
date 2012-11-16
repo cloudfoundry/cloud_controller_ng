@@ -100,7 +100,7 @@ module VCAP::CloudController
         end
       end
 
-      it "should return num_services  services" do
+      it "should return num_services services" do
         decoded_response["services"].size.should == num_services
       end
 
@@ -110,13 +110,18 @@ module VCAP::CloudController
 
         svc_resp.should == {
           "guid" => svc.guid,
+          "name" => svc.name,
           "bound_app_count" => num_apps,
-          "service_guid" => svc.service_plan.service.guid,
-          "label" => svc.service_plan.service.label,
-          "provider" => svc.service_plan.service.provider,
-          "version" => svc.service_plan.service.version,
-          "plan_guid" => svc.service_plan.guid,
-          "plan_name" => svc.service_plan.name,
+          "service_plan" => {
+            "guid" => svc.service_plan.guid,
+            "name" => svc.service_plan.name,
+            "service" => {
+              "guid" => svc.service_plan.service.guid,
+              "label" => svc.service_plan.service.label,
+              "provider" => svc.service_plan.service.provider,
+              "version" => svc.service_plan.service.version,
+            }
+          }
         }
       end
     end
