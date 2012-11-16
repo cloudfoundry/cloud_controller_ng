@@ -32,6 +32,7 @@ module VCAP::CloudController
       end
 
       def healthy_instances(apps)
+        batch_request = apps.kind_of?(Array)
         apps = Array(apps)
 
         message = {
@@ -46,12 +47,17 @@ module VCAP::CloudController
         }
 
         resp = hm_request("health", message, request_options)
-        return 0 unless (resp && resp.size >= 1)
-        return resp.first[:healthy] if apps.size == 1
 
-        to_return = {}
-        resp.each { |r| to_return[r[:droplet]] = r[:healthy] }
-        to_return
+        if batch_request
+          resp.inject({}) do |result, r|
+            result[r[:droplet]] = r[:healthy]
+            result
+          end
+        elsif resp && !resp.empty?
+          resp.first[:healthy]
+        else
+          0
+        end
       end
 
       private

@@ -43,6 +43,22 @@ module VCAP::CloudController
         end
       end
 
+      context "single app as an array" do
+        it "should return num healthy instances as a hash" do
+          resp = {
+            :droplet => app.guid,
+            :version => app.version,
+            :healthy => 3
+          }
+          resp_json = Yajl::Encoder.encode(resp)
+
+          message_bus.should_receive(:request).and_return([resp_json])
+          HealthManagerClient.healthy_instances([app]).should == {
+            app.guid => 3
+          }
+        end
+      end
+
       context "multiple apps" do
         it "should return num healthy instances for each app" do
           resp = apps.map do |app|
