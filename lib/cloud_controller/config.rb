@@ -36,9 +36,15 @@ class VCAP::CloudController::Config < VCAP::Config
 
       :nats_uri              => String,     # NATS uri of the form nats://<user>:<pass>@<host>:<port>
       :pid_filename          => String,     # Pid filename to use
-      optional(:dirs) => {
-        optional(:tmp)       => String,     # Default is /tmp
+
+      optional(:directories) => {
+        optional(:tmpdir)    => String,
+        optional(:droplets)  => String,
+        optional(:resources) => String,
+        optional(:staging_manifests) => String,
       },
+
+      optional(:runtimes_file) => String,
 
       :db => {
         :database                   => String,     # db connection string for sequel
@@ -89,6 +95,19 @@ class VCAP::CloudController::Config < VCAP::Config
     }
   end
 
+  def self.from_file(file_name)
+    config = super(file_name)
+    merge_defaults(config)
+  end
+
+  def self.merge_defaults(config)
+    config[:directories] ||= {}
+    config[:directories][:staging_manifests] ||=
+      File.join(config_dir, "frameworks")
+    config[:runtimes_file] ||= File.join(config_dir, "runtimes.yml")
+    config
+  end
+
   def self.configure(config)
     # TODO: this introduces 2 config styles.  CC takes config
     # via per instance constructor.  Remove that in favor of this
@@ -104,5 +123,9 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::DeaClient.configure(config)
     VCAP::CloudController::HealthManagerClient.configure
     VCAP::CloudController::LegacyBulk.configure(config)
+  end
+
+  def self.config_dir
+    @config_dir ||= File.expand_path("../../../config", __FILE__)
   end
 end

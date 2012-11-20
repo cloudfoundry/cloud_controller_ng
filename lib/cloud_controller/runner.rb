@@ -166,17 +166,10 @@ module VCAP::CloudController
     # This isn't exactly the best place for this, but it is also temporary.  A
     # seperate utility will get written for this
     def populate_framework_and_runtimes
-      @config[:legacy_framework_manifest].each do |key, fw|
-        Models::Framework.find_or_create(:name => fw[:name]) do |f|
-          f.description = fw[:name]
-        end
-
-        fw[:runtimes].each do |rt|
-          Models::Runtime.find_or_create(:name => rt["name"]) do |r|
-            r.description = rt["description"]
-          end
-        end
-      end
+      rt_file = @config[:runtimes_file]
+      fw_dir = @config[:directories][:staging_manifests]
+      Models::Runtime.populate_from_file rt_file
+      Models::Framework.populate_from_directory fw_dir
     end
   end
 end
