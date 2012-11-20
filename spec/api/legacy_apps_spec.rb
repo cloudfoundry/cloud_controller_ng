@@ -234,11 +234,27 @@ module VCAP::CloudController
     describe "POST /apps" do
       before(:all) do
         ["java", "ruby18"].each do |r|
-          Models::Runtime.make(:name => r) unless Models::Runtime[:name => r]
+          unless Models::Runtime[:name => r]
+            Models::Runtime.make(:name => r)
+          end
         end
 
-        ["sinatra", "grails"].each do |f|
-          Models::Framework.make(:name => f) unless Models::Framework[:name => f]
+        Models::Framework.find_or_create(:name => "sinatra") do |fw|
+          fw.update(
+            :description => "sinatra",
+            :internal_info => {
+              :runtimes => [ "ruby18" => { :default => true } ]
+            }
+          )
+        end
+
+        Models::Framework.find_or_create(:name => "grails") do |fw|
+          fw.update(
+            :description => "grails",
+            :internal_info => {
+              :runtimes => [ "java" => { :default => true } ]
+            }
+          )
         end
 
         3.times { Models::App.make }

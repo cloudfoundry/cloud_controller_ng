@@ -60,8 +60,6 @@ class VCAP::CloudController::Config < VCAP::Config
 
       :cc_partition => String,
 
-      :legacy_framework_manifest => Hash,
-
       # TODO: use new defaults to set these defaults
       optional(:default_account_capacity) => {
         :memory   => Fixnum,   #:default => 2048,

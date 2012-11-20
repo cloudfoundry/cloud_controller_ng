@@ -521,10 +521,11 @@ module VCAP::CloudController
 
     describe "GET", "/info", "unauthenticated" do
       it "contains frameworks" do
+        fw = Models::Framework.make
         get "/info"
         last_response.status.should == 200
         decoded_response.should include("frameworks")
-        decoded_response["frameworks"].should include("rails3")
+        decoded_response["frameworks"].should include(fw.name)
       end
     end
   end

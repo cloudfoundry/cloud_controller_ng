@@ -18,7 +18,7 @@ module VCAP::CloudController
         # :allow_debug => # config[:allow_debug]
         :allow_debug => false,
         # TODO get this from DB
-        :frameworks  => config[:legacy_framework_manifest],
+        :frameworks  => legacy_framework_info
       }
 
       # If there is a logged in user, give out additional information
@@ -26,7 +26,7 @@ module VCAP::CloudController
         info[:user]   = user.guid
         info[:limits] = account_capacity
         info[:usage]  = account_usage if has_default_space?
-        info[:frameworks] = config[:legacy_framework_manifest]
+        info[:frameworks] = legacy_framework_info
       end
 
       Yajl::Encoder.encode(info)
@@ -95,6 +95,39 @@ module VCAP::CloudController
           }
         }
       }
+    end
+
+    # this is a direct port of the legacy cc info.
+    def legacy_framework_info
+      frameworks_info = {}
+      Models::Framework.each do |framework|
+        runtimes = []
+
+        framework.internal_info["runtimes"].each do |runtime|
+          runtime.keys do |runtime_name|
+            runtime = Models::Runtime.find(runtime_name)
+            if runtime
+              runtimes <<  {
+                :name => runtime_name,
+                :description => runtime.description,
+                :version => runtime.internal_info.version,
+              }
+            else
+              logger.warn(
+                "Manifest for #{framework.name} lists a runtime not " +
+                "present in runtimes.yml: #{runtime_name}. " +
+                "Runtime will be skipped."
+              )
+            end
+          end
+        end
+        frameworks_info[framework.name] = {
+          :name => framework.name,
+          :runtimes => runtimes,
+          :detection => framework.internal_info["detection"],
+        }
+      end
+      frameworks_info
     end
 
     def self.setup_routes

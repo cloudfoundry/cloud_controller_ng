@@ -81,6 +81,7 @@ module VCAP::CloudController::Models
   Framework.blueprint do
     name              { Sham.name }
     description       { Sham.description }
+    internal_info     { { :runtimes => [ Runtime.make.name => { :default => true } ] } }
   end
 
   App.blueprint do
