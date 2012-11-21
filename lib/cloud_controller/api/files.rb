@@ -28,17 +28,7 @@ module VCAP::CloudController
         return HTTP::NOT_FOUND
       end
 
-      instance = nil
-      if match = search_param.match(/^[+]?([0-9]+)$/)
-        instance = match.captures[0].to_i
-      else
-        msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
-        msg << " as the search_param: #{search_param} is invalid."
-
-        raise Errors::FileError.new(msg)
-      end
-
-      info = DeaClient.get_file_uri_for_instance(app, path, instance)
+      info = get_file_uri_for_search_param(app, path, search_param)
 
       headers = {}
       if range = env["HTTP_RANGE"]
@@ -96,6 +86,22 @@ module VCAP::CloudController
       end
       uri.query = URI::encode_www_form(query)
       uri.to_s
+    end
+
+    def get_file_uri_for_search_param(app, path, search_param)
+      # Do we really want/need to be accepting a + here?  It is pretty
+      # harmless, but it is weird.  Getting rid of it would require checking
+      # with the VMC and STS teams to make sure no one expects to be able to
+      # send a +.
+      if match = search_param.match(/^[+]?([0-9]+)$/)
+        instance = match.captures[0].to_i
+        DeaClient.get_file_uri_for_instance(app, path, instance)
+      else
+        msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
+        msg << " as the search_param: #{search_param} is invalid."
+
+        raise Errors::FileError.new(msg)
+      end
     end
 
     get  "#{path_id}/instances/:instance_id/files", :files
