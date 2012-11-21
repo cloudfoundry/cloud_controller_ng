@@ -76,6 +76,7 @@ module VCAP::CloudController::Models
   Runtime.blueprint do
     name              { Sham.name }
     description       { Sham.description }
+    internal_info     { {} }
   end
 
   Framework.blueprint do
