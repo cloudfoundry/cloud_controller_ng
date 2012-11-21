@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       context "as a developer" do
         it "should return 400 when a bad instance is used" do
-          get("/v2/apps/#{@app.guid}/instances/bad_instance/files",
+          get("/v2/apps/#{@app.guid}/instances/kows$ik/files",
               {},
               headers_for(@developer))
 
@@ -293,6 +293,40 @@ module VCAP::CloudController
             last_response.headers.should include(
               "location" => "http://new.dea.cloud/private/?path=path&tail=",
             )
+          end
+
+          it "should fetch files by instance_id", :use_nginx => false do
+            instance_id = "abcdef12345"
+
+            @app.state = "STARTED"
+            @app.instances = 10
+            @app.save
+            @app.refresh
+
+            file_uri_result = DeaClient::FileUriResult.new(
+              :file_uri_v1 => "file_uri/path",
+              :credentials => ["username", "password"],
+            )
+            DeaClient.should_receive(:get_file_uri_for_instance_id).
+              with(@app, "path", instance_id).and_return(file_uri_result)
+
+            client = mock("http client")
+            HTTPClient.should_receive(:new).and_return(client)
+            client.should_receive(:set_auth).with(nil, "username", "password")
+
+            response = mock("http response")
+            client.should_receive(:get).with(
+              "file_uri/path", :header => {}
+            ).and_return(response)
+            response.should_receive(:status).at_least(:once).and_return(200)
+            response.should_receive(:body).and_return("files")
+
+            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path",
+                {},
+                headers_for(@developer))
+
+            last_response.status.should == 200
+            last_response.body.should == "files"
           end
         end
 
