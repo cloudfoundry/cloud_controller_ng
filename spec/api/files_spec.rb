@@ -4,7 +4,7 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Files do
-    describe "GET /v2/apps/:id/instances/:instance_id/files/(:path)" do
+    describe "GET /v2/apps/:id/instances/:instance/files/(:path)" do
       before :each do
         @app = Models::App.make
         @user =  make_user_for_space(@app.space)
@@ -16,8 +16,8 @@ module VCAP::CloudController
       end
 
       context "as a developer" do
-        it "should return 400 when bad instance id is used" do
-          get("/v2/apps/#{@app.guid}/instances/bad_instance_id/files",
+        it "should return 400 when a bad instance is used" do
+          get("/v2/apps/#{@app.guid}/instances/bad_instance/files",
               {},
               headers_for(@developer))
 
@@ -31,12 +31,12 @@ module VCAP::CloudController
         end
 
         it "should return 400 when there is an error finding the instance" do
-          instance_id = 5
+          instance = 5
 
           @app.state = "STOPPED"
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files",
+          get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
               {},
               headers_for(@developer))
 
@@ -75,7 +75,7 @@ module VCAP::CloudController
 
         context "dea returns file uri v1" do
           it "should return 400 when accessing of the file URL fails", :use_nginx => false do
-            instance_id = 5
+            instance = 5
 
             @app.state = "STARTED"
             @app.instances = 10
@@ -98,7 +98,7 @@ module VCAP::CloudController
                                              "file_uri/", :header => {}).and_return(response)
             response.should_receive(:status).and_return(400)
 
-            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files",
+            get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
                 {},
                 headers_for(@developer))
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
           end
 
           it "should return the expected files when path is specified", :use_nginx => false do
-            instance_id = 5
+            instance = 5
 
             @app.state = "STARTED"
             @app.instances = 10
@@ -130,7 +130,7 @@ module VCAP::CloudController
             response.should_receive(:status).at_least(:once).and_return(200)
             response.should_receive(:body).and_return("files")
 
-            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path",
+            get("/v2/apps/#{@app.guid}/instances/#{instance}/files/path",
                 {},
                 headers_for(@developer))
 
@@ -139,7 +139,7 @@ module VCAP::CloudController
           end
 
           it "should return the expected files when no path is specified", :use_nginx => false do
-            instance_id = 5
+            instance = 5
 
             @app.state = "STARTED"
             @app.instances = 10
@@ -163,7 +163,7 @@ module VCAP::CloudController
             response.should_receive(:status).at_least(:once).and_return(200)
             response.should_receive(:body).and_return("files")
 
-            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files",
+            get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
                 {},
                 headers_for(@developer))
 
@@ -172,7 +172,7 @@ module VCAP::CloudController
           end
 
           it "should forward the http range request and return 206 on request success", :use_nginx => false do
-            instance_id = 5
+            instance = 5
             range = "bytes=100-200"
 
             @app.state = "STARTED"
@@ -199,7 +199,7 @@ module VCAP::CloudController
             response.should_receive(:status).at_least(:once).and_return(206)
             response.should_receive(:body).and_return("files")
 
-            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files",
+            get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
                 {},
                 headers_for(@developer).merge("HTTP_RANGE" => range))
 
@@ -208,7 +208,7 @@ module VCAP::CloudController
           end
 
           it "should forward the http range request and return 416 on request failure", :use_nginx => false do
-            instance_id = 5
+            instance = 5
             range = "bytes=100-200"
 
             @app.state = "STARTED"
@@ -235,7 +235,7 @@ module VCAP::CloudController
             response.should_receive(:status).at_least(:once).and_return(416)
             response.should_receive(:body).and_return("files")
 
-            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files",
+            get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
                 {},
                 headers_for(@developer).merge("HTTP_RANGE" => range))
 
@@ -244,7 +244,7 @@ module VCAP::CloudController
           end
 
           it "should accept tail query parameter (non-nginx)", :use_nginx => false do
-            instance_id = 5
+            instance = 5
 
             @app.state = "STARTED"
             @app.instances = 10
@@ -259,7 +259,7 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance).
               with(@app, "path", 5).and_return(to_return)
 
-            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path?tail",
+            get("/v2/apps/#{@app.guid}/instances/#{instance}/files/path?tail",
                 {},
                 headers_for(@developer))
 
@@ -270,7 +270,7 @@ module VCAP::CloudController
           end
 
           it "should accept tail query parameter" do
-            instance_id = 5
+            instance = 5
 
             @app.state = "STARTED"
             @app.instances = 10
@@ -285,7 +285,7 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance).
               with(@app, "path", 5).and_return(to_return)
 
-            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path?tail",
+            get("/v2/apps/#{@app.guid}/instances/#{instance}/files/path?tail",
                 {},
                 headers_for(@developer))
 
@@ -298,7 +298,7 @@ module VCAP::CloudController
 
         context "dea returns file uri v2" do
           it "should issue redirect when file uri v2 is returned by the dea", :use_nginx => false do
-            instance_id = 5
+            instance = 5
             range = "bytes=100-200"
 
             @app.state = "STARTED"
@@ -314,7 +314,7 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance).
               with(@app, nil, 5).and_return(to_return)
 
-            get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files",
+            get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
                 {},
                 headers_for(@developer).merge("HTTP_RANGE" => range))
 
@@ -326,7 +326,7 @@ module VCAP::CloudController
 
       context "as a user" do
         it "should return 403" do
-          get("/v2/apps/#{@app.guid}/instances/bad_instance_id/files",
+          get("/v2/apps/#{@app.guid}/instances/bad_instance/files",
               {},
               headers_for(@user))
 
