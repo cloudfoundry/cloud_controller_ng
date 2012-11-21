@@ -68,12 +68,9 @@ module VCAP::CloudController
         http_response = http_get(info.file_uri_v1, headers, info.credentials[0], info.credentials[1])
       end
 
-      # FIXME if bad things happen during serving the file, we probably
-      # shouldn't expose this url
       unless [200, 206, 416].include? http_response.status
         msg = "Request failed for app: #{app.name}, search_param: #{search_param}"
-        msg << " as there was an error retrieving the files"
-        msg << " from the uri: #{uri}."
+        msg << " as there was an error retrieving the files."
 
         raise Errors::FileError.new(msg)
       end
