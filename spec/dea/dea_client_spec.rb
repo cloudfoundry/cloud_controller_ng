@@ -379,6 +379,122 @@ module VCAP::CloudController
       end
     end
 
+    describe "get_file_uri_for_instance_id" do
+      include Errors
+
+      it "should raise an error if the app is in stopped state" do
+        app.should_receive(:stopped?).once.and_return(true)
+
+        instance_id = "abcdef"
+        path = "test"
+
+        with_em_and_thread do
+          expect {
+            DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+          }.to raise_error { |error|
+            error.should be_an_instance_of Errors::FileError
+
+            msg = "File error: Request failed for app: #{app.name}"
+            msg << " path: #{path} as the app is in stopped state."
+
+            error.message.should == msg
+          }
+        end
+      end
+
+      it "should return the file uri if the required instance is found via DEA v1" do
+        app.instances = 2
+        app.should_receive(:stopped?).once.and_return(false)
+
+        instance_id = "abcdef"
+        path = "test"
+
+        search_options = {
+          :instance_ids => [instance_id],
+          :states => [:STARTING, :RUNNING, :CRASHED],
+          :path => "test",
+        }
+
+        instance_found = {
+          :file_uri => "http://1.2.3.4/",
+          :staged => "staged",
+          :credentials => ["username", "password"],
+        }
+
+        DeaClient.should_receive(:find_specific_instance).
+          with(app, search_options).and_return(instance_found)
+
+        with_em_and_thread do
+          result = DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+          result.file_uri_v1.should == "http://1.2.3.4/staged/test"
+          result.file_uri_v2.should be_nil
+          result.credentials.should == ["username", "password"]
+        end
+      end
+
+      it "should return both file_uri_v2 and file_uri_v1 from DEA v2" do
+        app.instances = 2
+        app.should_receive(:stopped?).once.and_return(false)
+
+        instance_id = "abcdef"
+        path = "test"
+
+        search_options = {
+          :instance_ids => [instance_id],
+          :states => [:STARTING, :RUNNING, :CRASHED],
+          :path => "test",
+        }
+
+        instance_found = {
+          :file_uri_v2 => "file_uri_v2",
+          :file_uri => "http://1.2.3.4/",
+          :staged => "staged",
+          :credentials => ["username", "password"],
+        }
+
+        DeaClient.should_receive(:find_specific_instance).
+            with(app, search_options).and_return(instance_found)
+
+        with_em_and_thread do
+          info = DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+          info.file_uri_v2.should == "file_uri_v2"
+          info.file_uri_v1.should == "http://1.2.3.4/staged/test"
+          info.credentials.should == ["username", "password"]
+        end
+      end
+
+      it "should raise an error if the instance_id is not found" do
+        app.instances = 2
+        app.should_receive(:stopped?).once.and_return(false)
+
+        instance_id = "abcdef"
+        path = "test"
+
+        search_options = {
+          :instance_ids => [instance_id],
+          :states => [:STARTING, :RUNNING, :CRASHED],
+          :path => "test",
+        }
+
+        DeaClient.should_receive(:find_specific_instance).
+            with(app, search_options).and_return(nil)
+
+        with_em_and_thread do
+          expect {
+            DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+          }.to raise_error { |error|
+            error.should be_an_instance_of Errors::FileError
+
+            msg = "File error: Request failed for app: #{app.name}"
+            msg << ", instance_id: #{instance_id} and path: #{path} as the instance_id is"
+            msg << " not found."
+
+            error.message.should == msg
+          }
+        end
+      end
+    end
+
     describe "find_stats" do
       include Errors
 

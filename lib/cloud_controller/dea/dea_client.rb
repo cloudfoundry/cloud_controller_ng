@@ -89,6 +89,17 @@ module VCAP::CloudController
         result
       end
 
+      def get_file_uri_for_instance_id(app, path, instance_id)
+        result = get_file_uri(app, path, :instance_ids => [instance_id])
+        unless result
+          msg = "Request failed for app: #{app.name}, instance_id: #{instance_id}"
+          msg << " and path: #{path || '/'} as the instance_id is not found."
+
+          raise FileError.new(msg)
+        end
+        result
+      end
+
       def find_stats(app, opts = {})
         opts = { :allow_stopped_state => false }.merge(opts)
 
