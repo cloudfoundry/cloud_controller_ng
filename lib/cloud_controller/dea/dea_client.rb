@@ -66,15 +66,7 @@ module VCAP::CloudController
         dea_request("find.droplet", message, request_options)
       end
 
-      # @return [FileUriResult]
-      def get_file_uri(app, instance, path)
-        if app.stopped?
-          msg = "Request failed for app: #{app.name}, instance: #{instance}"
-          msg << " and path: #{path || '/'} as the app is in stopped state."
-
-          raise FileError.new(msg)
-        end
-
+      def get_file_uri_for_instance(app, path, instance)
         if instance < 0 || instance >= app.instances
           msg = "Request failed for app: #{app.name}, instance: #{instance}"
           msg << " and path: #{path || '/'} as the instance is out of range."
@@ -82,30 +74,19 @@ module VCAP::CloudController
           raise FileError.new(msg)
         end
 
-        search_options = {
+        search_opts = {
           :indices => [instance],
-          :states => [:STARTING, :RUNNING, :CRASHED],
-          :version => app.version,
-          :path => path,
+          :version => app.version
         }
 
-        if instance_found = find_specific_instance(app, search_options)
-          result = FileUriResult.new
-          if instance_found[:file_uri_v2]
-            result.file_uri_v2 = instance_found[:file_uri_v2]
-          end
+        result = get_file_uri(app, path, search_opts)
+        unless result
+          msg = "Request failed for app: #{app.name}, instance: #{instance}"
+          msg << " and path: #{path || '/'} as the instance is not found."
 
-          uri_v1 = [instance_found[:file_uri], instance_found[:staged], "/", path].join("")
-          result.file_uri_v1 = uri_v1
-          result.credentials = instance_found[:credentials]
-
-          return result
+          raise FileError.new(msg)
         end
-
-        msg = "Request failed for app: #{app.name}, instance: #{instance}"
-        msg << " and path: #{path || '/'} as the instance is not found."
-
-        raise FileError.new(msg)
+        result
       end
 
       def find_stats(app, opts = {})
@@ -273,6 +254,36 @@ module VCAP::CloudController
       # @param [Enumerable, #to_a] indices the range / sequence of instances to stop
       def stop_indices_in_range(app, indices)
         stop_indices(app, indices.to_a)
+      end
+
+      # @return [FileUriResult]
+      def get_file_uri(app, path, options)
+        if app.stopped?
+          msg = "Request failed for app: #{app.name} path: #{path || '/'} "
+          msg << "as the app is in stopped state."
+
+          raise FileError.new(msg)
+        end
+
+        search_options = {
+          :states => [:STARTING, :RUNNING, :CRASHED],
+          :path => path,
+        }.merge(options)
+
+        if instance_found = find_specific_instance(app, search_options)
+          result = FileUriResult.new
+          if instance_found[:file_uri_v2]
+            result.file_uri_v2 = instance_found[:file_uri_v2]
+          end
+
+          uri_v1 = [instance_found[:file_uri], instance_found[:staged], "/", path].join("")
+          result.file_uri_v1 = uri_v1
+          result.credentials = instance_found[:credentials]
+
+          return result
+        end
+
+        nil
       end
 
       def dea_update_message(app)

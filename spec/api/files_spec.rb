@@ -86,8 +86,8 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
-              and_return(file_uri_result)
+            DeaClient.should_receive(:get_file_uri_for_instance).
+              with(@app, nil, 5).and_return(file_uri_result)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
@@ -117,8 +117,8 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/path",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
-              and_return(file_uri_result)
+            DeaClient.should_receive(:get_file_uri_for_instance).
+              with(@app, "path", 5).and_return(file_uri_result)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
@@ -150,8 +150,8 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
-              and_return(file_uri_result)
+            DeaClient.should_receive(:get_file_uri_for_instance).
+              with(@app, nil, 5).and_return(file_uri_result)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
@@ -184,8 +184,8 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
-              and_return(file_uri_result)
+            DeaClient.should_receive(:get_file_uri_for_instance).
+              with(@app, nil, 5).and_return(file_uri_result)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
@@ -220,8 +220,8 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
-              and_return(to_return)
+            DeaClient.should_receive(:get_file_uri_for_instance).
+              with(@app, nil, 5).and_return(to_return)
 
             client = mock("http client")
             HTTPClient.should_receive(:new).and_return(client)
@@ -256,8 +256,8 @@ module VCAP::CloudController
               :credentials => ["username", "password"],
               :file_uri_v2 => "http://new.dea.cloud/private/?path=path",
             )
-            DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
-              and_return(to_return)
+            DeaClient.should_receive(:get_file_uri_for_instance).
+              with(@app, "path", 5).and_return(to_return)
 
             get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path?tail",
                 {},
@@ -282,8 +282,8 @@ module VCAP::CloudController
               :credentials => ["u", "p"],
               :file_uri_v2 => "http://new.dea.cloud/private/?path=path",
             )
-            DeaClient.should_receive(:get_file_uri).with(@app, 5, "path").
-              and_return(to_return)
+            DeaClient.should_receive(:get_file_uri_for_instance).
+              with(@app, "path", 5).and_return(to_return)
 
             get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files/path?tail",
                 {},
@@ -311,8 +311,8 @@ module VCAP::CloudController
               :credentials => [],
               :file_uri_v2 => "file_uri/",
             )
-            DeaClient.should_receive(:get_file_uri).with(@app, 5, nil).
-              and_return(to_return)
+            DeaClient.should_receive(:get_file_uri_for_instance).
+              with(@app, nil, 5).and_return(to_return)
 
             get("/v2/apps/#{@app.guid}/instances/#{instance_id}/files",
                 {},

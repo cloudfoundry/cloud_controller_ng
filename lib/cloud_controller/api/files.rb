@@ -15,7 +15,7 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def files(id, instance_id, path = nil, opts = {})
+    def files(id, search_param, path = nil, opts = {})
       opts = { :allow_redirect => true }.merge(opts)
       app = find_id_and_validate_access(:read, id)
 
@@ -28,17 +28,17 @@ module VCAP::CloudController
         return HTTP::NOT_FOUND
       end
 
-      if match = instance_id.match(/^[+]?([0-9]+)$/)
-        instance_id = match.captures[0].to_i
+      instance = nil
+      if match = search_param.match(/^[+]?([0-9]+)$/)
+        instance = match.captures[0].to_i
       else
         msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
-        msg << " as the instance_id: #{instance_id} is not a"
-        msg << " non-negative integer."
+        msg << " as the search_param: #{search_param} is invalid."
 
         raise Errors::FileError.new(msg)
       end
 
-      info = DeaClient.get_file_uri(app, instance_id, path)
+      info = DeaClient.get_file_uri_for_instance(app, path, instance)
 
       headers = {}
       if range = env["HTTP_RANGE"]
@@ -71,7 +71,7 @@ module VCAP::CloudController
       # FIXME if bad things happen during serving the file, we probably
       # shouldn't expose this url
       unless [200, 206, 416].include? http_response.status
-        msg = "Request failed for app: #{app.name}, instance: #{instance_id}"
+        msg = "Request failed for app: #{app.name}, search_param: #{search_param}"
         msg << " as there was an error retrieving the files"
         msg << " from the uri: #{uri}."
 

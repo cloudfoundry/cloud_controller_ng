@@ -239,24 +239,23 @@ module VCAP::CloudController
       end
     end
 
-    describe "get_file_uri" do
+    describe "get_file_uri_for_instance" do
       include Errors
 
       it "should raise an error if the app is in stopped state" do
         app.should_receive(:stopped?).once.and_return(true)
 
-        instance = 10
+        instance = 0
         path = "test"
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_uri(app, instance, path)
+            DeaClient.get_file_uri_for_instance(app, path, instance)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
             msg = "File error: Request failed for app: #{app.name}"
-            msg << ", instance: #{instance} and path: #{path}"
-            msg << " as the app is in stopped state."
+            msg << " path: #{path} as the app is in stopped state."
 
             error.message.should == msg
           }
@@ -264,7 +263,6 @@ module VCAP::CloudController
       end
 
       it "should raise an error if the instance is out of range" do
-        app.should_receive(:stopped?).once.and_return(false)
         app.instances = 5
 
         instance = 10
@@ -272,7 +270,7 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_uri(app, instance, path)
+            DeaClient.get_file_uri_for_instance(app, path, instance)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
@@ -309,7 +307,7 @@ module VCAP::CloudController
           with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
-          result = DeaClient.get_file_uri(app, instance, path)
+          result = DeaClient.get_file_uri_for_instance(app, path, instance)
           result.file_uri_v1.should == "http://1.2.3.4/staged/test"
           result.file_uri_v2.should be_nil
           result.credentials.should == ["username", "password"]
@@ -341,7 +339,7 @@ module VCAP::CloudController
             with(app, search_options).and_return(instance_found)
 
         with_em_and_thread do
-          info = DeaClient.get_file_uri(app, instance, path)
+          info = DeaClient.get_file_uri_for_instance(app, path, instance)
           info.file_uri_v2.should == "file_uri_v2"
           info.file_uri_v1.should == "http://1.2.3.4/staged/test"
           info.credentials.should == ["username", "password"]
@@ -367,7 +365,7 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_uri(app, instance, path)
+            DeaClient.get_file_uri_for_instance(app, path, instance)
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
