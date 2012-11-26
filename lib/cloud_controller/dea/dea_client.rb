@@ -311,6 +311,9 @@ module VCAP::CloudController
           :name => app.name,
           :uris => app.uris,
           :runtime => app.runtime.name,
+          :runtime_info => app.runtime.internal_info.merge(
+            :name => app.runtime.name
+          ),
           :framework => app.framework.name,
           :prod => app.production,
           :sha1 => app.droplet_hash,
