@@ -24,19 +24,31 @@ module VCAP::CloudController
         :runtime => app.runtime.to_hash.merge(:guid => app.runtime.guid),
         :running_instances => app.running_instances,
         :services => app.service_instances.map do |instance|
-          {
-            :guid => instance.guid,
-            :service_guid => instance.service_plan.service.guid,
-            :label => instance.service_plan.service.label,
-            :provider => instance.service_plan.service.provider,
-            :version => instance.service_plan.service.version,
-            :plan_guid => instance.service_plan.guid,
-            :plan_name => instance.service_plan.name,
-          }
+          service_instance_summary(instance)
         end
       }.merge(app.to_hash)
 
       Yajl::Encoder.encode(app_info)
+    end
+
+    private
+
+    def service_instance_summary(instance)
+      {
+        :guid => instance.guid,
+        :name => instance.name,
+        :bound_app_count => instance.service_bindings_dataset.count,
+        :service_plan => {
+          :guid => instance.service_plan.guid,
+          :name => instance.service_plan.name,
+          :service => {
+            :guid => instance.service_plan.service.guid,
+            :label => instance.service_plan.service.label,
+            :provider => instance.service_plan.service.provider,
+            :version => instance.service_plan.service.version,
+          }
+        }
+      }
     end
 
     get "#{path_id}/summary", :summary

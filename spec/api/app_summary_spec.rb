@@ -89,12 +89,18 @@ module VCAP::CloudController
 
         svc_resp.should == {
           "guid" => svc.guid,
-          "service_guid" => svc.service_plan.service.guid,
-          "label" => svc.service_plan.service.label,
-          "provider" => svc.service_plan.service.provider,
-          "version" => svc.service_plan.service.version,
-          "plan_guid" => svc.service_plan.guid,
-          "plan_name" => svc.service_plan.name,
+          "name" => svc.name,
+          "bound_app_count" => 1,
+          "service_plan" => {
+            "guid" => svc.service_plan.guid,
+            "name" => svc.service_plan.name,
+            "service" => {
+              "guid" => svc.service_plan.service.guid,
+              "label" => svc.service_plan.service.label,
+              "provider" => svc.service_plan.service.provider,
+              "version" => svc.service_plan.service.version,
+            }
+          }
         }
       end
     end
