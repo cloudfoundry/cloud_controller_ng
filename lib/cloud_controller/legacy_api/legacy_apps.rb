@@ -23,9 +23,16 @@ module VCAP::CloudController
     def create
       logger.debug "create app"
       req = request_from_legacy_create_json(body)
-      VCAP::CloudController::App.new(config, logger, env, params, req).
+      (_, _, resp) = VCAP::CloudController::App.new(config, logger, env, params, req).
         dispatch(:create)
-      HTTP::OK
+
+      resp_hash = Yajl::Parser.parse(resp)
+
+      [
+        HTTP::FOUND,
+        { "Location" => "/apps/#{resp_hash["entity"]["name"]}" },
+        ""
+      ]
     end
 
     def read(name)

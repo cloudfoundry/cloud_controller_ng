@@ -271,8 +271,16 @@ module VCAP::CloudController
           post "/apps", req, headers_for(user)
         end
 
-        it "should return success" do
-          last_response.status.should == 200
+        it "should return a redirect" do
+          last_response.status.should == 302
+        end
+
+        it "should set the location header correctly" do
+          last_response.location.should match /\/apps\/#{app_name}/
+        end
+
+        it "should not return a content body" do
+          last_response.body.should == ""
         end
 
         it "should add the app to default app space" do
@@ -293,8 +301,8 @@ module VCAP::CloudController
           post "/apps", req, headers_for(user)
         end
 
-        it "should return success" do
-          last_response.status.should == 200
+        it "should return a redirect" do
+          last_response.status.should == 302
         end
 
         it "should add the app to default app space" do
@@ -358,8 +366,8 @@ module VCAP::CloudController
           post "/apps", req, headers_for(user)
         end
 
-        it "should return success" do
-          last_response.status.should == 200
+        it "should return a redirect" do
+          last_response.status.should == 302
         end
 
         it "should set a default runtime" do
@@ -383,8 +391,8 @@ module VCAP::CloudController
             post "/apps", req, headers_for(user)
           end
 
-          it "should return success" do
-            last_response.status.should == 200
+          it "should return a redirect" do
+            last_response.status.should == 302
           end
 
           it "should set the route" do
@@ -419,8 +427,8 @@ module VCAP::CloudController
             post "/apps", req, headers_for(user)
           end
 
-          it "should return success" do
-            last_response.status.should == 200
+          it "should return a redirect" do
+            last_response.status.should == 302
           end
 
           it "should create a new route" do
@@ -526,7 +534,7 @@ module VCAP::CloudController
           )
 
           post "/apps", legacy_req, headers_for(user)
-          last_response.status.should == 200
+          last_response.status.should == 302
 
           get "/apps/app_with_cmd", {}, headers_for(user)
           last_response.status.should == 200
@@ -545,7 +553,7 @@ module VCAP::CloudController
             )
 
             post "/apps", legacy_req, headers_for(user)
-            last_response.status.should == 200
+            last_response.status.should == 302
 
             get "/apps/app_with_console", {}, headers_for(user)
             last_response.status.should == 200
