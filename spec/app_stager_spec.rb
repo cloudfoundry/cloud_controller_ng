@@ -27,6 +27,7 @@ module VCAP::CloudController
         res[:upload_uri].should be_kind_of(String)
         res[:properties][:meta].should be_kind_of(Hash)
         res[:properties][:runtime_info].should be_kind_of(Hash)
+        res[:properties][:runtime_info].should have_key(:name)
         res[:properties][:framework_info].should be_kind_of(Hash)
         res[:properties][:services].count.should == NUM_INSTANCES
         res[:properties][:services].each do |svc|

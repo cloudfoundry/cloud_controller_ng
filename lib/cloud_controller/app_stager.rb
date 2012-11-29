@@ -84,7 +84,9 @@ module VCAP::CloudController
           :framework_info => app.framework.internal_info,
 
           :runtime        => app.runtime.name,
-          :runtime_info   => app.runtime.internal_info,
+          :runtime_info   => app.runtime.internal_info.merge(
+            :name => app.runtime.name
+          ),
 
           :resources   => {
             :memory => app.memory,
