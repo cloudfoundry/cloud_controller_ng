@@ -83,6 +83,7 @@ module VCAP::CloudController::Errors
     ["AppPackageNotFound", HTTP::NOT_FOUND, 150002, "The app package could not be found: %s"],
 
     ["AppBitsUploadInvalid", HTTP::BAD_REQUEST, 160001, "The app upload is invalid: %s"],
+    ["AppBitsUploadNotFound", HTTP::BAD_REQUEST, 160002, "The app download could not be found: %s"],
 
     ["StagingError", HTTP::BAD_REQUEST, 170001, "Staging error: %s"],
 
