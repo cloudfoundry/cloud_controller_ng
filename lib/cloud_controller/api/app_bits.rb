@@ -48,6 +48,11 @@ module VCAP::CloudController
       HTTP::CREATED
     end
 
+    def download(id)
+      path = AppPackage.package_path(id)
+      send_file path, :filename => File.basename("#{path}.zip") if File.exists? path
+    end
+
     def json_param(name)
       raw = params[name]
       Yajl::Parser.parse(raw)
@@ -56,5 +61,7 @@ module VCAP::CloudController
     end
 
     put "#{path_id}/bits", :upload
+
+    get "#{path_id}/download", :download
   end
 end

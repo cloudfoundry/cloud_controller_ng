@@ -95,5 +95,17 @@ module VCAP::CloudController
         include_examples "dev app upload", 201
       end
     end
+
+    describe "GET /v2/app/:id/download" do
+      let(:app_obj) { Models::App.make }
+      let(:user) { make_user_for_space(app_obj.space) }
+
+      context "with zipfile" do
+        it "should return 200" do
+          get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(user)
+          last_response.status.should == 200
+        end
+      end
+    end
   end
 end
