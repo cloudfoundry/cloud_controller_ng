@@ -279,8 +279,9 @@ module VCAP::CloudController
           last_response.location.should match /\/apps\/#{app_name}/
         end
 
-        it "should not return a content body" do
-          last_response.body.should == ""
+        it "repeats the redirect location in body to please legacy vmc" do
+          location = last_response.header.fetch("Location")
+          decoded_response.should include("redirect" => location)
         end
 
         it "should add the app to default app space" do

@@ -28,10 +28,16 @@ module VCAP::CloudController
 
       resp_hash = Yajl::Parser.parse(resp)
 
+      app_name = resp_hash.fetch("entity").fetch("name")
+      app_url = "/apps/%s" % app_name
+      body = {
+        "result"    => "success",
+        "redirect"  => app_url,
+      }
       [
         HTTP::FOUND,
-        { "Location" => "/apps/#{resp_hash["entity"]["name"]}" },
-        ""
+        { "Location" => app_url },
+        Yajl::Encoder.encode(body)
       ]
     end
 
