@@ -27,12 +27,14 @@ ruby18:
       version: "1.8.7"
       description: "Ruby 1.8.7"
       executable: "/usr/bin/ruby"
+      bundler: "bundle"
       environment:
         bundle_gemfile:
 ruby19:
       version: "1.9.2"
       description: "Ruby 1.9.2"
       executable: "ruby"
+      bundler: "bundle"
 myruntime:
       version: "1.0"
       description: "My Runtime"
