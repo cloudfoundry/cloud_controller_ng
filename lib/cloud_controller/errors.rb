@@ -98,6 +98,10 @@ module VCAP::CloudController::Errors
 
     ["BillingEventQueryInvalid", HTTP::BAD_REQUEST, 230001, "Billing event query start_date and/or end_date are missing or invalid"],
 
+    ["QuotaDefinitionNotFound", HTTP::NOT_FOUND, 240001, "Quota Definition could not be found: %s"],
+    ["QuotaDefinitionNameTaken", HTTP::BAD_REQUEST, 240002, "Quota Definition is taken: %s"],
+    ["QuotaDefinitionInvalid", HTTP::BAD_REQUEST, 240003, "Quota Definition is invalid: %s"],
+
   ].each do |e|
     define_error *e
   end
