@@ -155,4 +155,10 @@ module VCAP::CloudController::Models
     service_instance_guid { Sham.guid }
     service_instance_name { Sham.name }
   end
+
+  QuotaDefinition.blueprint do
+    name { Sham.name }
+    non_basic_services_allowed { true }
+    total_services { 5 }
+  end
 end
