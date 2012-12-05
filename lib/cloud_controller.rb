@@ -37,7 +37,7 @@ module VCAP::CloudController
       if auth_token && auth_token.upcase.start_with?("BEARER")
         token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
                                               @config[:uaa][:symmetric_secret],
-                                              nil)
+                                              @config[:uaa][:public_key])
         begin
           token_information = token_coder.decode(auth_token)
           logger.info("Token received from the UAA #{token_information.inspect}")
