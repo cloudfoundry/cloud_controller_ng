@@ -10,6 +10,7 @@ require "rack/test"
 
 require "steno"
 require "cloud_controller"
+require "mocha"
 
 module VCAP::CloudController
   class SpecEnvironment
@@ -181,6 +182,10 @@ module VCAP::CloudController::SpecHelper
 end
 
 RSpec.configure do |rspec_config|
+  # tests with an intentionally invalid key will cause this to fire
+  # for these we can stub with anything (won't matter)
+  CF::UAA::Misc.stubs(:validation_key).returns("some-random-key-value")
+
   rspec_config.include VCAP::CloudController
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController::SpecHelper
