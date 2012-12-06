@@ -41,6 +41,30 @@ uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
+  signing_key: |
+      -----BEGIN RSA PRIVATE KEY-----
+      MIICXgIBAAKBgQDAcxw6ilnDn4FPkl21wA0H3vNyJLtsbwUTvB8Ka61wCVpnoNdI
+      HQOjuCptz32VSCcjYj4djWlMBPTq0Z9svcWi3hnegk/57FFqE3crdTfu9lPZlHyx
+      k3r2aKvnm/dWfpqFXyYsrK8y00bNC8UFY5D/bsl/AvekXizi/hpTLGrp9QIDAQAB
+      AoGABN2kNBK1bE3HHjTsK6E8cxt++j7VgktYTIRwIHpSe0exQnd9mfQp2GTapcYe
+      Pb0CSFG+kk61/9cMPjeomT4/FfDFnQd4AqNYOJUlh0r+AOeSZTLf3ZAYC1osi4o6
+      UH4zrNZenO5ZfxRvxIxR8oDBwjMlbtCDLQwp1BIWhjoGce0CQQD+VGHqef9+hET8
+      MNmFEKz6Qrf0gQX75o+CNsar9qPyeL1/whuhd1wxuXPNeeGViwRXOpmQDL93JySW
+      pzLDHOHDAkEAwbavkGn4Dn/A67CLo6HKAbyoTcgAQyGK3TQhSBaGSCCxdro6m+o3
+      DAYDLOnVrOu5Iwwy3CF/zz/MUliovxnR5wJBAK/oi2UThqzqLZDE9N59fzcFiJi7
+      2Pi3KtFks5tjV1gxPNit2FCg7wqRe9BGGcpGQfVXWblxp8hxMXRmJs0fH+MCQQCw
+      wZmBFLCbykamyPkh3kcNPq/0CULz/m9PWHnl5Wex+OL1iwhfrF9+QR40pUmr94t/
+      R2pBIvAUlApEOVIAzfaRAkEA6mq3t/N5DNIfhYD87+mtwMy5KvWut799bCMpzoWP
+      q5vpbVbOxo/LoUPzeSThspSF/NlVlx6T+HCq+nVcPV3VfA==
+      -----END RSA PRIVATE KEY-----
+
+  verification_key: |
+      -----BEGIN PUBLIC KEY-----
+      MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDAcxw6ilnDn4FPkl21wA0H3vNy
+      JLtsbwUTvB8Ka61wCVpnoNdIHQOjuCptz32VSCcjYj4djWlMBPTq0Z9svcWi3hne
+      gk/57FFqE3crdTfu9lPZlHyxk3r2aKvnm/dWfpqFXyYsrK8y00bNC8UFY5D/bsl/
+      AvekXizi/hpTLGrp9QIDAQAB
+      -----END PUBLIC KEY-----
 
 cc_partition: ng
 
