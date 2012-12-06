@@ -10,6 +10,8 @@ require "eventmachine/schedule_sync"
 
 require "vcap/common"
 require "uaa/token_coder"
+require "uaa/misc"
+require "vcap/uaa_util"
 
 require "sinatra/vcap"
 require "cloud_controller/security_context"
@@ -20,6 +22,7 @@ module VCAP::CloudController
 
   class Controller < Sinatra::Base
     register Sinatra::VCAP
+    include VCAP::UaaUtil
 
     vcap_configure(:logger_name => "cc.api",
                    :reload_path => File.dirname(__FILE__))
@@ -35,32 +38,16 @@ module VCAP::CloudController
       user = nil
       auth_token = env["HTTP_AUTHORIZATION"]
 
-      if auth_token && auth_token.upcase.start_with?("BEARER")
-        token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
-                                              @config[:uaa][:symmetric_secret],
-                                              @verification_key)
-        begin
-          token_information = token_coder.decode(auth_token)
-          logger.info("Token received from the UAA #{token_information.inspect}")
-          uaa_id = token_information['user_id'] if token_information
-          user = Models::User.find(:guid => uaa_id) if uaa_id
-
-          # Bootstraping mechanism..
-          #
-          # TODO: replace this with an exteranl bootstraping mechanism.
-          # I'm not wild about having *any* auto-admin generation code
-          # in the cc.
-          if (user.nil? && Models::User.count == 0 &&
-              @config[:bootstrap_admin_email] && token_information['email'] &&
-              @config[:bootstrap_admin_email] == token_information['email'])
-              user = Models::User.create(:guid => uaa_id,
-                                         :admin => true, :active => true)
-          end
-
-          VCAP::CloudController::SecurityContext.set(user, token_information)
-        rescue => e
-          logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
+      begin
+        apply_token(auth_token,
+                    @config[:uaa][:resource_id],
+                    @config[:uaa][:symmetric_secret],
+                    @config[:uaa][:url]) do |decoded_user, token_information|
+          VCAP::CloudController::SecurityContext.set(decoded_user, token_information)
+          user = decoded_user
         end
+      rescue => e
+        logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
       end
 
       validate_scheme(user)
