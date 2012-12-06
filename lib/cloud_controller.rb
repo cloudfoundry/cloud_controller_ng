@@ -10,6 +10,7 @@ require "eventmachine/schedule_sync"
 
 require "vcap/common"
 require "uaa/token_coder"
+require "vcap/uaa_util"
 
 require "sinatra/vcap"
 require "cloud_controller/security_context"
@@ -20,13 +21,17 @@ module VCAP::CloudController
 
   class Controller < Sinatra::Base
     register Sinatra::VCAP
+    include VCAP::UaaUtil
 
     vcap_configure(:logger_name => "cc.api",
                    :reload_path => File.dirname(__FILE__))
 
     def initialize(config)
       @config = config
-      @verification_key = @config[:uaa][:verification_key]
+      @redis_client = Redis.new(
+          :host => @config[:redis][:host],
+          :port => @config[:redis][:port],
+          :password => @config[:redis][:password])
       super()
     end
 
@@ -35,13 +40,12 @@ module VCAP::CloudController
       user = nil
       auth_token = env["HTTP_AUTHORIZATION"]
 
-      if auth_token && auth_token.upcase.start_with?("BEARER")
-        token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
-                                              @config[:uaa][:symmetric_secret],
-                                              @verification_key)
-        begin
-          token_information = token_coder.decode(auth_token)
-          logger.info("Token received from the UAA #{token_information.inspect}")
+      begin
+        apply_token(auth_token,
+                    @config[:uaa][:resource_id],
+                    @config[:uaa][:symmetric_secret],
+                    @config[:uaa][:url]) do |token_information|
+
           uaa_id = token_information['user_id'] if token_information
           user = Models::User.find(:guid => uaa_id) if uaa_id
 
@@ -58,9 +62,9 @@ module VCAP::CloudController
           end
 
           VCAP::CloudController::SecurityContext.set(user, token_information)
-        rescue => e
-          logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
         end
+      rescue => e
+        logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
       end
 
       validate_scheme(user)

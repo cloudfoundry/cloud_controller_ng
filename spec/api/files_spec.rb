@@ -44,7 +44,7 @@ module VCAP::CloudController
         end
 
         it "should return the staging task log if it exists" do
-          redis_client = mock("redis")
+          redis_client = MockRedis.new
 
           task_log = StagingTaskLog.new(@app.guid, "task log", redis_client)
           Redis.stub(:new).and_return(redis_client)
@@ -60,7 +60,7 @@ module VCAP::CloudController
         end
 
         it "should return 404 if staging task log is absent" do
-          redis_client = mock("redis")
+          redis_client = MockRedis.new
 
           Redis.stub(:new).and_return(redis_client)
           StagingTaskLog.should_receive(:fetch).with(@app.guid, redis_client)
