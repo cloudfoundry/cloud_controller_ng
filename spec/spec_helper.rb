@@ -10,6 +10,7 @@ require "rack/test"
 
 require "steno"
 require "cloud_controller"
+require "mocha"
 
 module VCAP::CloudController
   class SpecEnvironment
@@ -181,6 +182,11 @@ module VCAP::CloudController::SpecHelper
 end
 
 RSpec.configure do |rspec_config|
+  # in mocha since rspec won't install a stub sooner than before(:each)
+  # and we have pervasive controller invocations in before(:all)
+  # stub this to behave like a symmetric-key-configured uaa
+  CF::UAA::Misc.stubs(:validation_key).raises(CF::UAA::TargetError.new('error' => 'unauthorized'))
+
   rspec_config.include VCAP::CloudController
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController::SpecHelper
