@@ -1,4 +1,12 @@
 GIT
+  remote: git://github.com/cloudfoundry/cf-uaa-lib.git
+  revision: 8d34eede588c7620eb22031369f9515f602df68b
+  ref: 8d34eede58
+  specs:
+    cf-uaa-lib (1.3.7)
+      multi_json
+
+GIT
   remote: git://github.com/cloudfoundry/vcap-common.git
   revision: 055964f62282c94ebe7c3ce6f4df9fb093a17714
   ref: 055964f622
@@ -41,8 +49,6 @@ GEM
     backports (2.6.1)
     bcrypt-ruby (3.0.1)
     builder (3.0.0)
-    cf-uaa-lib (1.3.0)
-      multi_json
     ci_reporter (1.7.0)
       builder (>= 2.1.2)
     crack (0.3.1)
@@ -78,7 +84,11 @@ GEM
     listen (0.5.3)
     machinist (1.0.6)
     membrane (0.0.2)
+    metaclass (0.0.1)
     mime-types (1.19)
+    mocha (0.10.5)
+      metaclass (~> 0.0.1)
+    mock_redis (0.4.1)
     multi_json (1.3.6)
     multi_xml (0.5.1)
     multipart-post (1.1.5)
@@ -150,13 +160,15 @@ PLATFORMS
 
 DEPENDENCIES
   bcrypt-ruby
-  cf-uaa-lib (~> 1.3.0)
+  cf-uaa-lib (~> 1.3.7)!
   ci_reporter
   eventmachine (~> 1.0.0)
   guard-rspec
   httpclient
   machinist (~> 1.0.6)
   membrane (~> 0.0.2)
+  mocha
+  mock_redis
   pg
   rake
   redis
