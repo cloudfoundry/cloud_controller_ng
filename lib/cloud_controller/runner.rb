@@ -137,6 +137,9 @@ module VCAP::CloudController
 
       trap_signals
 
+      # The routers proxying to us handle killing inactive connections.
+      # Set an upper limit just to be safe.
+      @thin_server.timeout = 15 * 60 # 15 min
       @thin_server.threaded = true
       @thin_server.start!
     end
