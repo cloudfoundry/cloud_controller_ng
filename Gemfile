@@ -17,6 +17,9 @@ gem "httpclient"
 gem "steno", "~> 1.0.0"
 gem 'stager-client', '~> 0.0.02', :git => 'https://github.com/cloudfoundry/stager-client.git', :ref => '04c2aee9'
 
+# outside the test group in order to run rake tasks
+gem "rspec"
+
 group :production do
   gem "pg"
 end
@@ -27,7 +30,6 @@ group :development do
 end
 
 group :test do
-  gem "rspec"
   gem "ci_reporter"
   gem "simplecov"
   gem "simplecov-rcov"
