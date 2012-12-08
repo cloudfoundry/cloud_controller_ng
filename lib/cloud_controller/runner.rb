@@ -102,7 +102,6 @@ module VCAP::CloudController
       config = @config.dup
 
       if run_migrations
-        DB.apply_migrations(db)
         populate_framework_and_runtimes
       end
 
@@ -123,7 +122,6 @@ module VCAP::CloudController
         VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
 
         map "/" do
-          DB.apply_migrations(db) if (run_migrations && development?)
           run VCAP::CloudController::Controller.new(config)
         end
       end

@@ -1,6 +1,12 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 require "rspec/core/rake_task"
 require "ci/reporter/rake/rspec"
+require "yaml"
+require "sequel"
+require "steno"
+require "vcap/config"
+require "cloud_controller/config"
+require "cloud_controller/db"
 
 ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
 
@@ -42,8 +48,6 @@ task :coverage do
 end
 
 namespace :db do
-  # TODO: add migration support
-
   desc "Create a Sequel migration in ./db/migrate"
   task :create_migration do
     name = ENV["NAME"]
@@ -64,5 +68,18 @@ Sequel.migration do
 end
       EOF
     end
+  end
+
+  desc "Perform Sequel migration to database"
+  task :migrate do
+    migrations = File.expand_path("../db/migrations", __FILE__)
+
+    config_file = ENV["CLOUD_CONTROLLER_NG_CONFIG"]
+    config_file ||= File.expand_path("../config/cloud_controller.yml", __FILE__)
+
+    config = VCAP::CloudController::Config.from_file(config_file)
+    db_logger = Steno.logger("cc.db.migrations")
+    db = VCAP::CloudController::DB.connect(db_logger, config[:db])
+    VCAP::CloudController::DB.apply_migrations(db)
   end
 end
