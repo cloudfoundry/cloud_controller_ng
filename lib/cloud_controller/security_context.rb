@@ -17,7 +17,15 @@ module VCAP::CloudController
     end
 
     def self.current_user_is_admin?
+      return admin_flag? || admin_scope?
+    end
+
+    def self.admin_flag?
       return current_user && current_user.admin?
+    end
+
+    def self.admin_scope?
+      return !!(token && token['scope'] && token['scope'].include?('cloud_controller.admin'))
     end
 
     def self.token
@@ -25,7 +33,7 @@ module VCAP::CloudController
     end
 
     def self.current_user_email
-      return token[:email] if token
+      return token['email'] if token
     end
 
     def self.current_user_has_email?(email)

@@ -12,7 +12,7 @@ gem "yajl-ruby"
 gem 'vcap-concurrency', :git => 'git://github.com/cloudfoundry/vcap-concurrency.git'
 gem "membrane", "~> 0.0.2"
 gem "vcap_common",  "~> 2.0.8", :git => 'git://github.com/cloudfoundry/vcap-common.git', :ref => 'b9024a52'
-gem "cf-uaa-client", "~> 0.2.0", :git => 'git://github.com/cloudfoundry/uaa', :ref => '792e7816'
+gem "cf-uaa-lib", "~> 1.3.0"
 gem "httpclient"
 gem "steno", "~> 1.0.0"
 gem 'stager-client', '~> 0.0.02', :git => 'https://github.com/cloudfoundry/stager-client.git', :ref => '04c2aee9'
