@@ -122,9 +122,28 @@ module VCAP::CloudController
         last_response.status.should == 201
       end
 
+      it "should not restage on update if app is in stopped state" do
+        AppStager.should_not_receive(:stage_app)
+        app_obj.package_hash = "abc"
+        app_obj.save
+        app_obj.needs_staging?.should be_true
+
+        expected = {
+          "droplet" => app_obj.guid,
+          "cc_partition" => config[:cc_partition],
+        }
+
+        MessageBus.should_not_receive(:publish)
+
+        req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
+        put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
+        last_response.status.should == 201
+      end
+
       it "should restage on update if staging is needed" do
         AppStager.should_receive(:stage_app)
         app_obj.package_hash = "abc"
+        app_obj.state = "STARTED"
         app_obj.save
         app_obj.needs_staging?.should be_true
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)

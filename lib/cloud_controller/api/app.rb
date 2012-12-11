@@ -36,9 +36,12 @@ module VCAP::CloudController
     query_parameters :name, :space_guid, :organization_guid, :framework_guid, :runtime_guid
 
     def after_update(app, changes)
-      AppStager.stage_app(app) if app.needs_staging?
+      if app.needs_staging? && !app.stopped?
+        AppStager.stage_app(app)
+      end
 
       return unless app.staged?
+
       if changes.include?(:state)
         if app.started?
           DeaClient.start(app)
