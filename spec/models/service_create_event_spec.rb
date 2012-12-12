@@ -42,11 +42,11 @@ module VCAP::CloudController
 
       context "on an org with billing enabled" do
         it "should create an service create event" do
-          Models::ServiceCreateEvent.should_receive(:create)
           si = Models::ServiceInstance.make
           org = si.space.organization
           org.billing_enabled = true
           org.save(:validate => false)
+          Models::ServiceCreateEvent.should_receive(:create)
           Models::ServiceCreateEvent.create_from_service_instance(si)
         end
       end

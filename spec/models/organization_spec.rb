@@ -61,11 +61,53 @@ module VCAP::CloudController
       end
 
       context "emabling billing" do
+        let (:org) do
+          o = Models::Organization.make
+          2.times do
+            space = Models::Space.make(
+              :organization => o,
+            )
+            2.times do
+              app = Models::App.make(
+                :space => space,
+                :state => "STARTED",
+              )
+              Models::App.make(
+                :space => space,
+                :state => "STOPPED",
+              )
+              service_instance = Models::ServiceInstance.make(
+                :space => space,
+              )
+            end
+          end
+          o
+        end
+
         it "should call OrganizationStartEvent.create_from_org" do
-          org = Models::Organization.make
           Models::OrganizationStartEvent.should_receive(:create_from_org)
           org.billing_enabled = true
           org.save(:validate => false)
+        end
+
+        it "should emit start events for running apps" do
+          ds = Models::AppStartEvent.filter(
+            :organization_guid => org.guid,
+          )
+          # FIXME: don't skip validation
+          org.billing_enabled = true
+          org.save(:validate => false)
+          ds.count.should == 4
+        end
+
+        it "should emit create events for provisioned services" do
+          ds = Models::ServiceCreateEvent.filter(
+            :organization_guid => org.guid,
+          )
+          # FIXME: don't skip validation
+          org.billing_enabled = true
+          org.save(:validate => false)
+          ds.count.should == 4
         end
       end
     end
