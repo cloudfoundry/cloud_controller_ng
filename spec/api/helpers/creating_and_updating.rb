@@ -4,10 +4,6 @@ module VCAP::CloudController::ApiSpecHelper
 
   shared_examples "creating and updating" do |opts|
     describe "creating and updating" do
-      # we use the template object to automatically get values
-      # to use during creation from sham
-      template_obj = TemplateObj.new(opts[:model], opts[:required_attributes])
-
       let(:creation_opts) do
         # if the caller has supplied their own creation lambda, use it
         opts[:create_attribute_reset].call if opts[:create_attribute_reset]
