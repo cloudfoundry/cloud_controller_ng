@@ -9,6 +9,8 @@ module VCAP::CloudController::Models
     many_to_many      :domains, :before_add => :validate_domain
     add_association_dependencies :domains => :nullify
 
+    many_to_one       :quota_definition
+
     define_user_group :users
     define_user_group :managers, :reciprocal => :managed_organizations
     define_user_group :billing_managers,
@@ -20,15 +22,16 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name, :billing_enabled
+    export_attributes :name, :billing_enabled, :quota_definition_guid
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
-                      :auditor_guids, :domain_guids
+                      :auditor_guids, :domain_guids, :quota_definition_guid
 
     alias :billing_enabled? :billing_enabled
 
     def before_create
       add_inheritable_domains
+      add_default_quota
       super
     end
 
@@ -74,6 +77,12 @@ module VCAP::CloudController::Models
     def add_inheritable_domains
       Domain.shared_domains.each do |d|
         add_domain_by_guid(d.guid)
+      end
+    end
+
+    def add_default_quota
+      unless quota_definition_id
+        self.quota_definition_id = QuotaDefinition.default.id
       end
     end
 
