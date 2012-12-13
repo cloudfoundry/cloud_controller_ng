@@ -49,6 +49,12 @@ module VCAP::CloudController::Models
           errors.add(:billing_enabled, :not_allowed)
         end
       end
+
+      if column_changed?(:quota_definition_id) && !new?
+        unless VCAP::CloudController::SecurityContext.current_user_is_admin?
+          errors.add(:quota_definition, :not_authorized)
+        end
+      end
     end
 
     def before_save
