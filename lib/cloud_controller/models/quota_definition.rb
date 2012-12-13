@@ -2,6 +2,7 @@
 
 module VCAP::CloudController::Models
   class QuotaDefinition < Sequel::Model
+
     export_attributes :name, :non_basic_services_allowed, :total_services
     import_attributes :name, :non_basic_services_allowed, :total_services
 
@@ -18,6 +19,14 @@ module VCAP::CloudController::Models
           r.update_from_hash(v)
         end
       end
+    end
+
+    def self.configure(config)
+      @default_quota_name = config[:default_quota_definition]
+    end
+
+    def self.default
+      @default ||= QuotaDefinition[:name => @default_quota_name]
     end
   end
 end
