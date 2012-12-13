@@ -22,5 +22,11 @@ module VCAP::CloudController
         runaway.total_services.should == 500
       end
     end
+
+    describe ".default" do
+      it "should return the default quota" do
+        Models::QuotaDefinition.default.name.should == "free"
+      end
+    end
   end
 end
