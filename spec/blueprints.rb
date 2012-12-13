@@ -30,6 +30,7 @@ module VCAP::CloudController::Models
 
   Organization.blueprint do
     name              { Sham.name }
+    quota_definition  { QuotaDefinition.make }
   end
 
   Domain.blueprint do
