@@ -103,6 +103,7 @@ module VCAP::CloudController
 
       if run_migrations
         populate_framework_and_runtimes
+        VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
       end
 
       config[:system_domains].each do |name|
