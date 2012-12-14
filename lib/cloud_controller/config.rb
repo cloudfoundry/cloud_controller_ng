@@ -90,6 +90,8 @@ class VCAP::CloudController::Config < VCAP::Config
         :upload_timeout => Integer,
         :serialization_data_server => [URI.regexp(["http", "https"])],
       },
+
+      optional(:quota_definitions) => Hash,
     }
   end
 
