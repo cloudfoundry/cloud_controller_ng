@@ -244,16 +244,20 @@ module VCAP::CloudController
 
     describe "find_specific_instance" do
       it "should find a specific instance" do
-        app.should_receive(:guid).and_return(1)
+        app.should_receive(:guid).and_return("1")
 
         instance_json = "\"instance\""
-        encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
+
+        request_hash = { :droplet => "1", :version => "version-1" }
+        encoded = Yajl::Encoder.encode(
+          { "V1" => request_hash, "min_version" => 1 }.merge(request_hash)
+        )
         message_bus.should_receive(:request).
           with("dea.find.droplet", encoded, {:timeout=>2}).
           and_return([instance_json])
 
         with_em_and_thread do
-          DeaClient.find_specific_instance(app, { :other_opt => "value" })
+          DeaClient.find_specific_instance(app, :version => request_hash[:version])
           .should == "instance"
         end
       end
@@ -261,22 +265,21 @@ module VCAP::CloudController
 
     describe "find_instances" do
       it "should use specified message options" do
-        app.should_receive(:guid).and_return(1)
+        app.should_receive(:guid).and_return("1")
         app.should_receive(:instances).and_return(2)
 
         instance_json = "\"instance\""
-        encoded = Yajl::Encoder.encode({
-          "droplet" => 1,
-          "other_opt_0" => "value_0",
-          "other_opt_1" => "value_1",
-        })
+
+        request_hash = { :droplet => "1", :states => ["RUNNING"] }
+        encoded = Yajl::Encoder.encode(
+          { "V1" => request_hash, "min_version" => 1 }.merge(request_hash)
+        )
         message_bus.should_receive(:request).
           with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
 
         message_options = {
-          :other_opt_0 => "value_0",
-          :other_opt_1 => "value_1",
+          :states => ["RUNNING"]
         }
 
         with_em_and_thread do
@@ -286,11 +289,15 @@ module VCAP::CloudController
       end
 
       it "should use default values for expected instances and timeout if none are specified" do
-        app.should_receive(:guid).and_return(1)
+        app.should_receive(:guid).and_return("1")
         app.should_receive(:instances).and_return(2)
 
         instance_json = "\"instance\""
-        encoded = Yajl::Encoder.encode({ "droplet" => 1 })
+
+        request_hash = { :droplet => "1" }
+        encoded = Yajl::Encoder.encode(
+          { "V1" => request_hash, "min_version" => 1 }.merge(request_hash)
+        )
         message_bus.should_receive(:request).
           with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
@@ -302,16 +309,20 @@ module VCAP::CloudController
       end
 
       it "should use the specified values for expected instances and timeout" do
-        app.should_receive(:guid).and_return(1)
+        app.should_receive(:guid).and_return("1")
 
         instance_json = "\"instance\""
-        encoded = Yajl::Encoder.encode({ "droplet" => 1, "other_opt" => "value" })
+
+        request_hash = { "droplet" => "1", "indices" => [0, 1] }
+        encoded = Yajl::Encoder.encode(
+          { "V1" => request_hash, "min_version" => 1}.merge(request_hash)
+        )
         message_bus.should_receive(:request).
           with("dea.find.droplet", encoded, { :expected => 5, :timeout => 10 }).
           and_return([instance_json, instance_json])
 
         with_em_and_thread do
-          DeaClient.find_instances(app, { :other_opt => "value" },
+          DeaClient.find_instances(app, { :indices => [0, 1] },
                                    { :expected => 5, :timeout => 10 }).
                                    should == ["instance", "instance"]
         end

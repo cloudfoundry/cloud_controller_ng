@@ -55,17 +55,21 @@ module VCAP::CloudController
         message = { :droplet => app.guid }
         message.merge!(options)
 
-        dea_request("find.droplet", message, :timeout => 2).first
+        msg_obj = Schemata::Dea::FindDropletRequest::V1.new(message)
+
+        dea_request("find.droplet", msg_obj.encode, :timeout => 2).first
       end
 
       def find_instances(app, message_options = {}, request_options = {})
         message = { :droplet => app.guid }
         message.merge!(message_options)
 
+        msg_obj = Schemata::Dea::FindDropletRequest::V1.new(message)
+
         request_options[:expected] ||= app.instances
         request_options[:timeout] ||= 2
 
-        dea_request("find.droplet", message, request_options)
+        dea_request("find.droplet", msg_obj.encode, request_options)
       end
 
       def get_file_uri_for_instance(app, path, instance)
@@ -362,7 +366,7 @@ module VCAP::CloudController
         msg = "sending subject: '#{subject}' with args: '#{args}'"
         msg << " and opts: '#{opts}'"
         logger.debug msg
-        json = Yajl::Encoder.encode(args)
+        json = args.kind_of?(String) ? args : Yajl::Encoder.encode(args)
 
         response = message_bus.request(subject, json, opts)
         parsed_response = []
