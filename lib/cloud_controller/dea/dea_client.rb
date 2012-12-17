@@ -37,7 +37,8 @@ module VCAP::CloudController
       end
 
       def stop(app)
-        dea_publish("stop", :droplet => app.guid)
+        msg_obj = Schemata::Dea::StopRequest::V1.new(:droplet => app.guid)
+        dea_publish("stop", msg_obj.encode)
       end
 
       def change_running_instances(app, delta)
@@ -234,19 +235,23 @@ module VCAP::CloudController
 
       # @param [Array] indices an Enumerable of integer indices
       def stop_indices(app, indices)
-        dea_publish("stop",
-                    :droplet => app.guid,
-                    :version => app.version,
-                    :indices => indices,
-                   )
+        msg_obj = Schemata::Dea::StopRequest::V1.new(
+          :droplet => app.guid,
+          :version => app.version,
+          :indices => indices
+        )
+
+        dea_publish("stop", msg_obj.encode)
       end
 
       # @param [Array] indices an Enumerable of guid instance ids
       def stop_instances(app, instances)
-        dea_publish("stop",
-                    :droplet => app.guid,
-                    :instances => instances,
-                   )
+        msg_obj = Schemata::Dea::StopRequest::V1.new(
+          :droplet    => app.guid,
+          :instances  => instances
+        )
+
+        dea_publish("stop", msg_obj.encode)
       end
 
       def update_uris(app)

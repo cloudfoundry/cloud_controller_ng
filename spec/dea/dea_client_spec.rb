@@ -176,7 +176,13 @@ module VCAP::CloudController
           json_match(
             hash_including(
               "droplet"   => app.guid,
+              "version"   => app.version,
               "indices"   => [0, 2],
+              "V1"        => {
+                "droplet" => app.guid,
+                "version" => app.version,
+                "indices" => [0, 2]
+              }
             )
           ),
         )
@@ -193,8 +199,12 @@ module VCAP::CloudController
           "dea.stop",
           json_match(
             hash_including(
-              "droplet"   => app.guid,
-              "instances"   => ["a", "b"]
+              "droplet"     => app.guid,
+              "instances"   => ["a", "b"],
+              "V1" => {
+                "droplet"   => app.guid,
+                "instances" => ["a", "b"]
+              }
             )
           ),
         ) do |_, payload|
@@ -209,7 +219,18 @@ module VCAP::CloudController
     describe "stop" do
       it "should send a stop messages to deas" do
         app.instances = 2
-        message_bus.should_receive(:publish).with("dea.stop", kind_of(String))
+        message_bus.should_receive(:publish).with(
+          "dea.stop",
+            json_match(
+              hash_including(
+                "droplet" => app.guid,
+                "V1" => {
+                  "droplet" => app.guid
+                }
+            )
+          )
+        )
+
         with_em_and_thread do
           DeaClient.stop(app)
         end
