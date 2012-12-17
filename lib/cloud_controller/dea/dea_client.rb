@@ -257,7 +257,7 @@ module VCAP::CloudController
       def update_uris(app)
         return unless app.staged?
         message = dea_update_message(app)
-        dea_publish("update", message)
+        dea_publish("update", message.encode)
         app.routes_changed = false
       end
 
@@ -304,10 +304,10 @@ module VCAP::CloudController
       end
 
       def dea_update_message(app)
-        {
+        Schemata::Dea::UpdateRequest::V1.new(
           :droplet  => app.guid,
-          :uris     => app.uris,
-        }
+          :uris     => app.uris
+        )
       end
 
       def start_app_message(app)

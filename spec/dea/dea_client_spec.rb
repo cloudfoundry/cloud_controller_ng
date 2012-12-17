@@ -40,11 +40,16 @@ module VCAP::CloudController
           json_match(
             hash_including(
               # XXX: change this to actual URLs from user once we do it
-              "uris" => kind_of(Array),
+              "droplet"   => app.guid,
+              "uris"      => app.uris,
+              "V1" => {
+                "droplet" => app.guid,
+                "uris"    => app.uris
+              }
             )
           ),
         )
-          DeaClient.update_uris(app)
+        DeaClient.update_uris(app)
       end
     end
 
