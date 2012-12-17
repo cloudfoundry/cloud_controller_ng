@@ -7,15 +7,16 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name, :description, :service_guid
+    export_attributes :name, :free, :description, :service_guid
 
-    import_attributes :name, :description, :service_guid
+    import_attributes :name, :free, :description, :service_guid
 
     strip_attributes  :name
 
     def validate
       validates_presence :name
       validates_presence :description
+      validates_presence :free
       validates_presence :service
       validates_unique   [:service_id, :name]
     end
