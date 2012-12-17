@@ -101,6 +101,7 @@ module VCAP::CloudController::Models
 
   ServicePlan.blueprint do
     name              { Sham.name }
+    free              { false }
     description       { Sham.description }
     service           { Service.make }
   end

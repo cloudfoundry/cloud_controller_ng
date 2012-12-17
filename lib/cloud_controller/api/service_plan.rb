@@ -9,6 +9,7 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name,              String
+      attribute :free,              Message::Boolean
       attribute :description,       String
       to_one    :service
       to_many   :service_instances

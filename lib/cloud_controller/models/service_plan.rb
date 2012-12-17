@@ -7,9 +7,9 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name, :description, :service_guid
+    export_attributes :name, :free, :description, :service_guid
 
-    import_attributes :name, :description, :service_guid
+    import_attributes :name, :free, :description, :service_guid
 
     strip_attributes  :name
 
