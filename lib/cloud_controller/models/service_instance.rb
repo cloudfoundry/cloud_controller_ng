@@ -24,6 +24,7 @@ module VCAP::CloudController::Models
       validates_presence :space
       validates_presence :service_plan
       validates_unique   [:space_id, :name]
+      check_quota
     end
 
     def before_create
@@ -155,6 +156,12 @@ module VCAP::CloudController::Models
       client.unprovision(:service_id => gateway_name)
     rescue => e
       logger.error "deprovision failed #{e}"
+    end
+
+    def check_quota
+      if space.respond_to?(:organization) && space.organization
+        space.organization.check_quota(service_plan)
+      end
     end
 
     def create_snapshot

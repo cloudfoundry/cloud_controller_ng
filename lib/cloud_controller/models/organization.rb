@@ -3,6 +3,8 @@
 module VCAP::CloudController::Models
   class Organization < Sequel::Model
     class InvalidDomainRelation < InvalidRelation; end
+    class QuotaExceeded < StandardError; end
+    class ServicePlanNotAllowed < StandardError; end
 
     one_to_many       :spaces
 
@@ -89,6 +91,27 @@ module VCAP::CloudController::Models
     def add_default_quota
       unless quota_definition_id
         self.quota_definition_id = QuotaDefinition.default.id
+      end
+    end
+
+    def total_service_instances
+      total = 0
+      spaces.each { |space| total += space.service_instances.size }
+      total
+    end
+
+    def check_quota(service_plan)
+      total = total_service_instances
+      if total_service_instances == quota_definition.total_services
+        msg = "Cannot create more than: #{quota_definition.total_services}"
+        msg << " service instance(s)."
+        raise QuotaExceeded.new(msg)
+      end
+
+      if service_plan && !service_plan.free &&
+          !quota_definition.non_basic_services_allowed
+        msg = "Cannot create service instances with non-free plans."
+        raise ServicePlanNotAllowed.new(msg)
       end
     end
 
