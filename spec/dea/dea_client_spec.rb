@@ -246,19 +246,21 @@ module VCAP::CloudController
       it "should find a specific instance" do
         app.should_receive(:guid).and_return("1")
 
-        instance_json = "\"instance\""
+        instance_message = Schemata::Dea.mock_find_droplet_response
+        instance_json = instance_message.encode
 
         request_hash = { :droplet => "1", :version => "version-1" }
         encoded = Yajl::Encoder.encode(
           { "V1" => request_hash, "min_version" => 1 }.merge(request_hash)
         )
+
         message_bus.should_receive(:request).
           with("dea.find.droplet", encoded, {:timeout=>2}).
           and_return([instance_json])
 
         with_em_and_thread do
           DeaClient.find_specific_instance(app, :version => request_hash[:version])
-          .should == "instance"
+          .contents.should == instance_message.contents
         end
       end
     end
@@ -268,12 +270,14 @@ module VCAP::CloudController
         app.should_receive(:guid).and_return("1")
         app.should_receive(:instances).and_return(2)
 
-        instance_json = "\"instance\""
+        instance_message = Schemata::Dea.mock_find_droplet_response
+        instance_json = instance_message.encode
 
         request_hash = { :droplet => "1", :states => ["RUNNING"] }
         encoded = Yajl::Encoder.encode(
           { "V1" => request_hash, "min_version" => 1 }.merge(request_hash)
         )
+
         message_bus.should_receive(:request).
           with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
@@ -283,8 +287,9 @@ module VCAP::CloudController
         }
 
         with_em_and_thread do
-          DeaClient.find_instances(app, message_options).
-            should == ["instance", "instance"]
+          DeaClient.find_instances(app, message_options).each do |instance|
+            instance.contents.should == instance_message.contents
+          end
         end
       end
 
@@ -292,31 +297,36 @@ module VCAP::CloudController
         app.should_receive(:guid).and_return("1")
         app.should_receive(:instances).and_return(2)
 
-        instance_json = "\"instance\""
+        instance_message = Schemata::Dea.mock_find_droplet_response
+        instance_json = instance_message.encode
 
         request_hash = { :droplet => "1" }
         encoded = Yajl::Encoder.encode(
           { "V1" => request_hash, "min_version" => 1 }.merge(request_hash)
         )
+
         message_bus.should_receive(:request).
           with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
 
         with_em_and_thread do
-          DeaClient.find_instances(app).
-            should == ["instance", "instance"]
+          DeaClient.find_instances(app).each do |instance|
+            instance.contents.should == instance_message.contents
+          end
         end
       end
 
       it "should use the specified values for expected instances and timeout" do
         app.should_receive(:guid).and_return("1")
 
-        instance_json = "\"instance\""
+        instance_message = Schemata::Dea.mock_find_droplet_response
+        instance_json = instance_message.encode
 
         request_hash = { "droplet" => "1", "indices" => [0, 1] }
         encoded = Yajl::Encoder.encode(
           { "V1" => request_hash, "min_version" => 1}.merge(request_hash)
         )
+
         message_bus.should_receive(:request).
           with("dea.find.droplet", encoded, { :expected => 5, :timeout => 10 }).
           and_return([instance_json, instance_json])
@@ -324,7 +334,9 @@ module VCAP::CloudController
         with_em_and_thread do
           DeaClient.find_instances(app, { :indices => [0, 1] },
                                    { :expected => 5, :timeout => 10 }).
-                                   should == ["instance", "instance"]
+                                   each do |instance|
+            instance.contents.should == instance_message.contents
+          end
         end
       end
     end
@@ -388,11 +400,11 @@ module VCAP::CloudController
           :path => "test",
         }
 
-        instance_found = {
-          :file_uri => "http://1.2.3.4/",
-          :staged => "staged",
-          :credentials => ["username", "password"],
-        }
+        instance_found = Schemata::Dea.mock_find_droplet_response
+        instance_found.file_uri = "http://1.2.3.4/"
+        instance_found.file_uri_v2 = nil
+        instance_found.staged = "staged"
+        instance_found.credentials = ["username", "password"]
 
         DeaClient.should_receive(:find_specific_instance).
           with(app, search_options).and_return(instance_found)
@@ -419,12 +431,11 @@ module VCAP::CloudController
           :path => "test",
         }
 
-        instance_found = {
-          :file_uri_v2 => "file_uri_v2",
-          :file_uri => "http://1.2.3.4/",
-          :staged => "staged",
-          :credentials => ["username", "password"],
-        }
+        instance_found = Schemata::Dea.mock_find_droplet_response
+        instance_found.file_uri_v2 = "file_uri_v2"
+        instance_found.file_uri = "http://1.2.3.4/"
+        instance_found.staged = "staged"
+        instance_found.credentials = ["username", "password"]
 
         DeaClient.should_receive(:find_specific_instance).
             with(app, search_options).and_return(instance_found)
@@ -506,11 +517,11 @@ module VCAP::CloudController
           :path => "test",
         }
 
-        instance_found = {
-          :file_uri => "http://1.2.3.4/",
-          :staged => "staged",
-          :credentials => ["username", "password"],
-        }
+        instance_found = Schemata::Dea.mock_find_droplet_response
+        instance_found.file_uri = "http://1.2.3.4/"
+        instance_found.file_uri_v2 = nil
+        instance_found.staged = "staged"
+        instance_found.credentials = ["username", "password"]
 
         DeaClient.should_receive(:find_specific_instance).
           with(app, search_options).and_return(instance_found)
@@ -536,12 +547,11 @@ module VCAP::CloudController
           :path => "test",
         }
 
-        instance_found = {
-          :file_uri_v2 => "file_uri_v2",
-          :file_uri => "http://1.2.3.4/",
-          :staged => "staged",
-          :credentials => ["username", "password"],
-        }
+        instance_found = Schemata::Dea.mock_find_droplet_response
+        instance_found.file_uri_v2 = "file_uri_v2"
+        instance_found.file_uri = "http://1.2.3.4/"
+        instance_found.staged = "staged"
+        instance_found.credentials = ["username", "password"]
 
         DeaClient.should_receive(:find_specific_instance).
             with(app, search_options).and_return(instance_found)
@@ -624,18 +634,17 @@ module VCAP::CloudController
           :version => app.version,
         }
 
-        stats = double("mock stats")
-        instance_0 = {
-          :index => 0,
-          :state => "RUNNING",
-          :stats => stats,
-        }
+        stats = Schemata::Dea.mock_find_droplet_response.stats
 
-        instance_1 = {
-          :index => 1,
-          :state => "RUNNING",
-          :stats => stats,
-        }
+        instance_0 = Schemata::Dea.mock_find_droplet_response
+        instance_0.index = 0
+        instance_0.state = "RUNNING"
+        instance_0.stats = stats
+
+        instance_1 = Schemata::Dea.mock_find_droplet_response
+        instance_1.index = 1
+        instance_1.state = "RUNNING"
+        instance_1.stats = stats
 
         DeaClient.should_receive(:find_instances).
             with(app, search_options).and_return([instance_0, instance_1])
@@ -665,12 +674,11 @@ module VCAP::CloudController
           :version => app.version,
         }
 
-        stats = double("mock stats")
-        instance = {
-          :index => 0,
-          :state => "RUNNING",
-          :stats => stats,
-        }
+        stats = Schemata::Dea.mock_find_droplet_response.stats
+        instance = Schemata::Dea.mock_find_droplet_response
+        instance.index = 0
+        instance.state = "RUNNING"
+        instance.stats = stats
 
         Time.should_receive(:now).once.and_return(1)
 
@@ -702,24 +710,21 @@ module VCAP::CloudController
           :version => app.version,
         }
 
-        stats = double("mock stats")
-        instance_0 = {
-          :index => -1,
-          :state => "RUNNING",
-          :stats => stats,
-        }
+        stats = Schemata::Dea.mock_find_droplet_response.stats
+        instance_0 = Schemata::Dea.mock_find_droplet_response
+        instance_0.index = -1
+        instance_0.state = "RUNNING"
+        instance_0.stats = stats
 
-        instance_1 = {
-          :index => 0,
-          :state => "RUNNING",
-          :stats => stats,
-        }
+        instance_1 = Schemata::Dea.mock_find_droplet_response
+        instance_1.index = 0
+        instance_1.state = "RUNNING"
+        instance_1.stats = stats
 
-        instance_2 = {
-          :index => 2,
-          :state => "RUNNING",
-          :stats => stats,
-        }
+        instance_2 = Schemata::Dea.mock_find_droplet_response
+        instance_2.index = 2
+        instance_2.state = "RUNNING"
+        instance_2.stats = stats
 
         Time.should_receive(:now).and_return(1)
 
@@ -866,25 +871,23 @@ module VCAP::CloudController
           :version => app.version,
         }
 
-        starting_instance  = {
-          :index => 1,
-          :state => "STARTING",
-          :state_timestamp => 2,
-          :debug_ip => "1.2.3.4",
-          :debug_port => 1001,
-          :console_ip => "1.2.3.5",
-          :console_port => 1002,
-        }
+        starting_instance = Schemata::Dea.mock_find_droplet_response
+        starting_instance.index = 1
+        starting_instance.state = "STARTING"
+        starting_instance.state_timestamp = 2.0
+        starting_instance.debug_ip = "1.2.3.4"
+        starting_instance.debug_port = 1001
+        starting_instance.console_ip = "1.2.3.5"
+        starting_instance.console_port = 1002
 
-        running_instance  = {
-          :index => 2,
-          :state => "RUNNING",
-          :state_timestamp => 3,
-          :debug_ip => "2.3.4.5",
-          :debug_port => 2001,
-          :console_ip => "2.3.4.6",
-          :console_port => 2002,
-        }
+        running_instance = Schemata::Dea.mock_find_droplet_response
+        running_instance.index = 2
+        running_instance.state = "RUNNING"
+        running_instance.state_timestamp = 3.0
+        running_instance.debug_ip = "2.3.4.5"
+        running_instance.debug_port = 2001
+        running_instance.console_ip = "2.3.4.6"
+        running_instance.console_port = 2002
 
         DeaClient.should_receive(:find_instances).
           with(app, search_options, { :expected => 2 }).
@@ -934,24 +937,22 @@ module VCAP::CloudController
           :version => app.version,
         }
 
-        starting_instance  = {
-          :index => -1,  # -1 is out of range.
-          :state_timestamp => 1,
-          :debug_ip => "1.2.3.4",
-          :debug_port => 1001,
-          :console_ip => "1.2.3.5",
-          :console_port => 1002,
-        }
+        starting_instance  = Schemata::Dea.mock_find_droplet_response
+        starting_instance.index = -1  # -1 is out of range.
+        starting_instance.state_timestamp = 1.0
+        starting_instance.debug_ip = "1.2.3.4"
+        starting_instance.debug_port = 1001
+        starting_instance.console_ip = "1.2.3.5"
+        starting_instance.console_port = 1002
 
-        running_instance  = {
-          :index => 2,  # 2 is out of range.
-          :state => "RUNNING",
-          :state_timestamp => 2,
-          :debug_ip => "2.3.4.5",
-          :debug_port => 2001,
-          :console_ip => "2.3.4.6",
-          :console_port => 2002,
-        }
+        running_instance  = Schemata::Dea.mock_find_droplet_response
+        running_instance.index = 2  # 2 is out of range.
+        running_instance.state = "RUNNING"
+        running_instance.state_timestamp = 2.0
+        running_instance.debug_ip = "2.3.4.5"
+        running_instance.debug_port = 2001
+        running_instance.console_ip = "2.3.4.6"
+        running_instance.console_port = 2002
 
         DeaClient.should_receive(:find_instances).
           with(app, search_options, { :expected => 2 }).
