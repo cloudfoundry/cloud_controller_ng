@@ -141,5 +141,45 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "Quota enforcement" do
+      let(:paid_quota) { Models::QuotaDefinition.make(:name => Sham.name,
+                                                      :total_services => 0) }
+      let(:free_quota) do
+        Models::QuotaDefinition.make(:name => Sham.name,
+                                     :total_services => 1,
+                                     :non_basic_services_allowed => false)
+      end
+
+      let(:svc_plan) { Models::ServicePlan.make(:name => Sham.name) }
+
+      it "should enforce quota on service instance creation" do
+        org = Models::Organization.make(:name => Sham.name,
+                                        :quota_definition => paid_quota)
+        space = Models::Space.make(:name => Sham.name,
+                                   :organization => org)
+
+        req = Yajl::Encoder.encode(:name => Sham.name,
+                                   :space_guid => space.guid,
+                                   :service_plan_guid => svc_plan.guid)
+        post("/v2/service_instances",
+             req, headers_for(make_developer_for_space(space)))
+        last_response.status.should == 500
+      end
+
+      it "should enforce quota on service types" do
+        org = Models::Organization.make(:name => Sham.name,
+                                        :quota_definition => free_quota)
+        space = Models::Space.make(:name => Sham.name,
+                                   :organization => org)
+
+        req = Yajl::Encoder.encode(:name => Sham.name,
+                                   :space_guid => space.guid,
+                                   :service_plan_guid => svc_plan.guid)
+        post("/v2/service_instances",
+             req, headers_for(make_developer_for_space(space)))
+        last_response.status.should == 500
+      end
+    end
   end
 end
