@@ -51,8 +51,11 @@ module VCAP::CloudController
 
         new_plans = Array(req.plans)
         new_plans.each do |name|
+          free = (name =~ /^d1[0-9][0-9]$/i ? true : false)
           Models::ServicePlan.update_or_create(
-            :service_id => service.id, :name => name
+                                               :service_id => service.id,
+                                               :name => name,
+                                               :free => free,
           ) do |plan|
             plan.description = "dummy description"
           end

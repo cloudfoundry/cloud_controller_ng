@@ -8,8 +8,8 @@ module VCAP::CloudController
     it_behaves_like "a CloudController API", {
       :path                 => "/v2/service_plans",
       :model                => Models::ServicePlan,
-      :basic_attributes     => [:name, :description, :service_guid],
-      :required_attributes  => [:name, :description, :service_guid],
+      :basic_attributes     => [:name, :free, :description, :service_guid],
+      :required_attributes  => [:name, :free, :description, :service_guid],
       :unique_attributes    => [:name, :service_guid],
       :one_to_many_collection_ids  => {
         :service_instances => lambda { |service_plan| Models::ServiceInstance.make }
@@ -44,6 +44,7 @@ module VCAP::CloudController
         Yajl::Encoder.encode(
           :service_guid => Models::Service.make.guid,
           :name => Sham.name,
+          :free => false,
           :description => Sham.description)
       end
 
