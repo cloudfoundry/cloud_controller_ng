@@ -161,6 +161,6 @@ module VCAP::CloudController::Models
   QuotaDefinition.blueprint do
     name { Sham.name }
     non_basic_services_allowed { true }
-    total_services { 5 }
+    total_services { 60 }
   end
 end

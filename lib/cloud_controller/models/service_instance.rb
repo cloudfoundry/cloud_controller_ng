@@ -24,6 +24,7 @@ module VCAP::CloudController::Models
       validates_presence :space
       validates_presence :service_plan
       validates_unique   [:space_id, :name]
+      check_quota
     end
 
     def before_create
@@ -57,6 +58,22 @@ module VCAP::CloudController::Models
         # FIXME: unlike most other validations, this is *NOT* being enforced
         # by the underlying db.
         raise InvalidServiceBinding.new(service_binding.id)
+      end
+    end
+
+    def check_quota
+      if space
+        unless space.organization.service_instance_quota_remaining?
+          errors.add(:space, :quota_exceeded)
+        end
+
+        # Is a paid service instance being created
+        # when the org doesn't allow it?
+        if service_plan && !service_plan.free
+          unless space.organization.paid_services_allowed?
+            errors.add(:service_plan, :paid_services_not_allowed)
+          end
+        end
       end
     end
 

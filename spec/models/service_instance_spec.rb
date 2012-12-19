@@ -122,5 +122,84 @@ module VCAP::CloudController
         end
       end
     end
+
+    context "quota" do
+      let(:free_plan) { Models::ServicePlan.make(:free => true)}
+      let(:paid_plan) { Models::ServicePlan.make(:free => false)}
+
+      let(:free_quota) do
+        Models::QuotaDefinition.make(:total_services => 1,
+                                     :non_basic_services_allowed => false)
+      end
+      let(:paid_quota) do
+        Models::QuotaDefinition.make(:total_services => 1,
+                                     :non_basic_services_allowed => true)
+      end
+
+      context "exceed quota" do
+        it "should raise error when quota is exceeded" do
+          org = Models::Organization.make(:quota_definition => paid_quota)
+          space = Models::Space.make(:organization => org)
+          Models::ServiceInstance.make(:space => space,
+                                       :service_plan => free_plan).
+            save(:validate => false)
+          space.refresh
+          expect do
+            Models::ServiceInstance.make(:space => space,
+                                         :service_plan => free_plan)
+          end.to raise_error(Sequel::ValidationFailed, /space quota_exceeded/)
+        end
+
+        it "should not raise error when quota is not exceeded" do
+          org = Models::Organization.make(:quota_definition => paid_quota)
+          space = Models::Space.make(:organization => org)
+          expect do
+            Models::ServiceInstance.make(:space => space,
+                                         :service_plan => free_plan)
+          end.to_not raise_error
+        end
+      end
+
+      context "create free services" do
+        it "should not raise error when created in free quota" do
+          org = Models::Organization.make(:quota_definition => free_quota)
+          space = Models::Space.make(:organization => org)
+          expect do
+            Models::ServiceInstance.make(:space => space,
+                                         :service_plan => free_plan)
+          end.to_not raise_error
+        end
+
+        it "should not raise error when created in paid quota" do
+          org = Models::Organization.make(:quota_definition => paid_quota)
+          space = Models::Space.make(:organization => org)
+          expect do
+            Models::ServiceInstance.make(:space => space,
+                                         :service_plan => free_plan)
+          end.to_not raise_error
+        end
+      end
+
+      context "create paid services" do
+        it "should raise error when created in free quota" do
+          org = Models::Organization.make(:quota_definition => free_quota)
+          space = Models::Space.make(:organization => org)
+          expect do
+            Models::ServiceInstance.make(:space => space,
+                                         :service_plan => paid_plan)
+          end.to raise_error(Sequel::ValidationFailed,
+                             /service_plan paid_services_not_allowed/)
+        end
+
+        it "should not raise error when created in paid quota" do
+          org = Models::Organization.make(:quota_definition => paid_quota)
+          space = Models::Space.make(:organization => org)
+          expect do
+            Models::ServiceInstance.make(:space => space,
+                                         :service_plan => paid_plan)
+          end.to_not raise_error
+        end
+      end
+    end
   end
 end
