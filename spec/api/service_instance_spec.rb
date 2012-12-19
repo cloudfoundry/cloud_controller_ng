@@ -144,35 +144,58 @@ module VCAP::CloudController
 
     describe "Quota enforcement" do
       let(:paid_quota) { Models::QuotaDefinition.make(:total_services => 0) }
-      let(:free_quota) do
+      let(:free_quota_with_no_services) do
+        Models::QuotaDefinition.make(:total_services => 0,
+                                     :non_basic_services_allowed => false)
+      end
+      let(:free_quota_with_one_service) do
         Models::QuotaDefinition.make(:total_services => 1,
                                      :non_basic_services_allowed => false)
       end
+      let(:paid_plan) { Models::ServicePlan.make }
+      let(:free_plan) { Models::ServicePlan.make(:free => true) }
 
-      it "should enforce quota check on number of service instances during creation" do
-        org = Models::Organization.make(:quota_definition => paid_quota)
-        space = Models::Space.make(:organization => org)
-        # The service plan is not free by default.
-        req = Yajl::Encoder.encode(:name => Sham.name,
-                                   :space_guid => space.guid,
-                                   :service_plan_guid => Models::ServicePlan.make.guid)
+      context "paid quota" do
+        it "should enforce quota check on number of service instances during creation" do
+          org = Models::Organization.make(:quota_definition => paid_quota)
+          space = Models::Space.make(:organization => org)
+          req = Yajl::Encoder.encode(:name => Sham.name,
+                                     :space_guid => space.guid,
+                                     :service_plan_guid => paid_plan.guid)
 
-        post("/v2/service_instances",
-             req, headers_for(make_developer_for_space(space)))
-        last_response.status.should == 400
+          post("/v2/service_instances",
+               req, headers_for(make_developer_for_space(space)))
+          last_response.status.should == 400
+          decoded_response["description"].should =~ /file a support ticket to request additional resources/
+        end
       end
 
-      it "should enforce quota check on service plan type during creation" do
-        org = Models::Organization.make(:quota_definition => free_quota)
-        space = Models::Space.make(:organization => org)
-        # The service plan is not free by default.
-        req = Yajl::Encoder.encode(:name => Sham.name,
-                                   :space_guid => space.guid,
-                                   :service_plan_guid => Models::ServicePlan.make.guid)
+      context "free quota" do
+        it "should enforce quota check on number of service instances during creation" do
+          org = Models::Organization.make(:quota_definition => free_quota_with_no_services)
+          space = Models::Space.make(:organization => org)
+          req = Yajl::Encoder.encode(:name => Sham.name,
+                                     :space_guid => space.guid,
+                                     :service_plan_guid => free_plan.guid)
 
-        post("/v2/service_instances",
-             req, headers_for(make_developer_for_space(space)))
-        last_response.status.should == 400
+          post("/v2/service_instances",
+               req, headers_for(make_developer_for_space(space)))
+          last_response.status.should == 400
+          decoded_response["description"].should =~ /login to your account and upgrade/
+        end
+
+        it "should enforce quota check on service plan type during creation" do
+          org = Models::Organization.make(:quota_definition => free_quota_with_one_service)
+          space = Models::Space.make(:organization => org)
+          req = Yajl::Encoder.encode(:name => Sham.name,
+                                     :space_guid => space.guid,
+                                     :service_plan_guid => paid_plan.guid)
+
+          post("/v2/service_instances",
+               req, headers_for(make_developer_for_space(space)))
+          last_response.status.should == 400
+          decoded_response["description"].should =~ /paid service plans are not allowed/
+        end
       end
     end
   end

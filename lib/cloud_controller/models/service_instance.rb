@@ -63,8 +63,12 @@ module VCAP::CloudController::Models
 
     def check_quota
       if space
-        unless space.organization.service_instance_quota_remaining?
-          errors.add(:space, :quota_exceeded)
+        if !space.organization.service_instance_quota_remaining?
+          if space.organization.paid_services_allowed?
+            errors.add(:space, :paid_quota_exceeded)
+          else
+            errors.add(:space, :free_quota_exceeded)
+          end
         end
 
         # Is a paid service instance being created
