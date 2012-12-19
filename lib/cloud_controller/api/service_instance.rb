@@ -25,7 +25,11 @@ module VCAP::CloudController
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::ServiceInstanceNameTaken.new(attributes["name"])
       elsif quota_errors
-        Errors::ServiceInstanceQuotaExceeded.new
+        if quota_errors.include?(:free_quota_exceeded)
+          Errors::ServiceInstanceFreeQuotaExceeded.new
+        elsif quota_errors.include?(:paid_quota_exceeded)
+          Errors::ServiceInstancePaidQuotaExceeded.new
+        end
       elsif service_plan_errors
         Errors::ServiceInstanceServicePlanNotAllowed.new
       else

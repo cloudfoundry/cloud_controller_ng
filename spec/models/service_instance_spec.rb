@@ -137,7 +137,7 @@ module VCAP::CloudController
       end
 
       context "exceed quota" do
-        it "should raise error when quota is exceeded" do
+        it "should raise paid quota error when paid quota is exceeded" do
           org = Models::Organization.make(:quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           Models::ServiceInstance.make(:space => space,
@@ -147,7 +147,20 @@ module VCAP::CloudController
           expect do
             Models::ServiceInstance.make(:space => space,
                                          :service_plan => free_plan)
-          end.to raise_error(Sequel::ValidationFailed, /space quota_exceeded/)
+          end.to raise_error(Sequel::ValidationFailed, /space paid_quota_exceeded/)
+        end
+
+        it "should raise free quota error when free quota is exceeded" do
+          org = Models::Organization.make(:quota_definition => free_quota)
+          space = Models::Space.make(:organization => org)
+          Models::ServiceInstance.make(:space => space,
+                                       :service_plan => free_plan).
+            save(:validate => false)
+          space.refresh
+          expect do
+            Models::ServiceInstance.make(:space => space,
+                                         :service_plan => free_plan)
+          end.to raise_error(Sequel::ValidationFailed, /space free_quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
