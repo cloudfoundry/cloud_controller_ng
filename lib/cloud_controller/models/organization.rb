@@ -5,7 +5,8 @@ module VCAP::CloudController::Models
     class InvalidDomainRelation < InvalidRelation; end
 
     one_to_many       :spaces
-
+    one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::Models::ServiceInstance.
+                                                          filter(:space => spaces) }
     many_to_many      :domains, :before_add => :validate_domain
     add_association_dependencies :domains => :nullify
 
@@ -90,6 +91,14 @@ module VCAP::CloudController::Models
       unless quota_definition_id
         self.quota_definition_id = QuotaDefinition.default.id
       end
+    end
+
+    def service_instance_quota_remaining?
+      service_instances.count < quota_definition.total_services
+    end
+
+    def paid_services_allowed?
+      quota_definition.non_basic_services_allowed
     end
 
     def self.user_visibility_filter(user)
