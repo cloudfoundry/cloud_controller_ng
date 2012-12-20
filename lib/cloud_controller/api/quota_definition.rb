@@ -11,6 +11,8 @@ module VCAP::CloudController
       attribute  :name,                       String
       attribute  :non_basic_services_allowed, Message::Boolean
       attribute  :total_services,             Integer
+      attribute  :free_memory_limit,          Integer
+      attribute  :paid_memory_limit,          Integer
     end
 
     query_parameters :name
