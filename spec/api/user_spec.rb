@@ -20,10 +20,19 @@ module VCAP::CloudController
         :organizations => lambda { |user| Models::Organization.make },
         :managed_organizations => lambda { |user| Models::Organization.make },
         :billing_managed_organizations => lambda { |user| Models::Organization.make },
+        :audited_organizations => lambda { |user| Models::Organization.make },
         :spaces    => lambda { |user|
           org = user.organizations.first || Models::Organization.make
           Models::Space.make(:organization => org)
-        }
+        },
+        :managed_spaces => lambda { |user|
+          org = user.organizations.first || Models::Organization.make
+          Models::Space.make(:organization => org)
+        },
+        :audited_spaces => lambda { |user|
+          org = user.organizations.first || Models::Organization.make
+          Models::Space.make(:organization => org)
+        },
       }
     }
 

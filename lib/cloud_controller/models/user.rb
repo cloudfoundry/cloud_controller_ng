@@ -58,6 +58,8 @@ module VCAP::CloudController::Models
                       :billing_managed_organization_guids,
                       :audited_organization_guids,
                       :space_guids,
+                      :managed_space_guids,
+                      :audited_space_guids,
                       :default_space_guid
 
     def validate
