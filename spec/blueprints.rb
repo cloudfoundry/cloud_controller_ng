@@ -168,6 +168,6 @@ module VCAP::CloudController::Models
   MemoryQuotaDefinition.blueprint do
     name { Sham.name }
     free_limit { 1024 } # 1 GB
-    paid_limit { 2048 } # 1 GB
+    paid_limit { 2048 } # 2 GB
   end
 end
