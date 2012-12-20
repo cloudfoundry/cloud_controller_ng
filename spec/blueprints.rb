@@ -163,4 +163,10 @@ module VCAP::CloudController::Models
     non_basic_services_allowed { true }
     total_services { 60 }
   end
+
+  MemoryQuotaDefinition.blueprint do
+    name { Sham.name }
+    free_limit { 1024 } # 1 GB
+    paid_limit { 2048 } # 1 GB
+  end
 end
