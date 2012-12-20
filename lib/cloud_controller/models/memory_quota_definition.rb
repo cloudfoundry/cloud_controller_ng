@@ -12,5 +12,15 @@ module VCAP::CloudController::Models
       validates_presence :free_limit
       validates_presence :paid_limit
     end
+
+    def self.populate_from_config(config)
+      config = config[:quota_definitions][:memory]
+      config.each do |k, v|
+        MemoryQuotaDefinition.
+          update_or_create(:name => k.to_s) do |r|
+          r.update_from_hash(v)
+        end
+      end
+    end
   end
 end

@@ -73,6 +73,17 @@ quota_definitions:
     runaway:
       non_basic_services_allowed: true
       total_services: 500
+  memory:
+    free:
+      free_limit: 1024 # 1 GB
+      paid_limit: 0
+    paid:
+      free_limit: 1024 # 1 GB
+      paid_limit: 32768 # 32 GB
+    runaway:
+      free_limit: 1024 # 1 GB
+      paid_limit: 204800 # 200 GB
 
 default_quota_definitions:
   service_instances: free
+
