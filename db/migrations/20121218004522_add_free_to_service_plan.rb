@@ -8,7 +8,7 @@ Sequel.migration do
 
     self[:service_plans].all do |plan|
       free = false
-      free = true if plan.name =~ /^d1[0-9][0-9]$/i
+      free = true if plan[:name] =~ /^d1[0-9][0-9]$/i
       self[:service_plans].filter(:id => plan[:id]).update(:free => free)
     end
 
