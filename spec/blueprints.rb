@@ -163,6 +163,6 @@ module VCAP::CloudController::Models
     non_basic_services_allowed { true }
     total_services { 60 }
     free_memory_limit { 1024 } # 1 GB
-    paid_memory_limit { 2048 } # 1 GB
+    paid_memory_limit { 2048 } # 2 GB
   end
 end
