@@ -11,6 +11,7 @@ module VCAP::CloudController::Models
     add_association_dependencies :domains => :nullify
 
     many_to_one       :service_instances_quota_definition
+    many_to_one       :memory_quota_definition
 
     define_user_group :users
     define_user_group :managers, :reciprocal => :managed_organizations
@@ -24,11 +25,13 @@ module VCAP::CloudController::Models
     default_order_by  :name
 
     export_attributes :name, :billing_enabled,
-                      :service_instances_quota_definition_guid
+                      :service_instances_quota_definition_guid,
+                      :memory_quota_definition_guid
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
                       :auditor_guids, :domain_guids,
-                      :service_instances_quota_definition_guid
+                      :service_instances_quota_definition_guid,
+                      :memory_quota_definition_guid
 
     alias :billing_enabled? :billing_enabled
 
@@ -93,6 +96,11 @@ module VCAP::CloudController::Models
       unless service_instances_quota_definition_id
         self.service_instances_quota_definition_id =
           ServiceInstancesQuotaDefinition.default.id
+      end
+
+      unless memory_quota_definition_id
+        self.memory_quota_definition_id =
+          MemoryQuotaDefinition.default.id
       end
     end
 

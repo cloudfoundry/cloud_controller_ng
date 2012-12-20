@@ -71,6 +71,8 @@ module VCAP::CloudController::SpecHelper
     $spec_env.reset_database
     VCAP::CloudController::Models::ServiceInstancesQuotaDefinition.
       populate_from_config(config)
+    VCAP::CloudController::Models::MemoryQuotaDefinition.
+      populate_from_config(config)
   end
 
   # Note that this method is mixed into each example, and so the instance

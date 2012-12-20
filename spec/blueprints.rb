@@ -31,6 +31,7 @@ module VCAP::CloudController::Models
   Organization.blueprint do
     name              { Sham.name }
     service_instances_quota_definition  { ServiceInstancesQuotaDefinition.make }
+    memory_quota_definition { MemoryQuotaDefinition.make }
   end
 
   Domain.blueprint do
