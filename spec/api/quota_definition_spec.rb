@@ -8,8 +8,12 @@ module VCAP::CloudController
     it_behaves_like "a CloudController API", {
       :path                 => "/v2/quota_definitions",
       :model                => Models::QuotaDefinition,
-      :basic_attributes     => [:name, :non_basic_services_allowed, :total_services],
-      :required_attributes  => [:name, :non_basic_services_allowed, :total_services],
+      :basic_attributes     => [:name, :non_basic_services_allowed,
+                                :total_services, :free_memory_limit,
+                                :paid_memory_limit],
+      :required_attributes  => [:name, :non_basic_services_allowed,
+                                :total_services, :free_memory_limit,
+                                :paid_memory_limit],
       :unique_attributes    => :name,
     }
   end
