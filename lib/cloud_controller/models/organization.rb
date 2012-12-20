@@ -10,7 +10,7 @@ module VCAP::CloudController::Models
     many_to_many      :domains, :before_add => :validate_domain
     add_association_dependencies :domains => :nullify
 
-    many_to_one       :quota_definition
+    many_to_one       :service_instances_quota_definition
 
     define_user_group :users
     define_user_group :managers, :reciprocal => :managed_organizations
@@ -23,10 +23,12 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name, :billing_enabled, :quota_definition_guid
+    export_attributes :name, :billing_enabled,
+                      :service_instances_quota_definition_guid
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
-                      :auditor_guids, :domain_guids, :quota_definition_guid
+                      :auditor_guids, :domain_guids,
+                      :service_instances_quota_definition_guid
 
     alias :billing_enabled? :billing_enabled
 
@@ -51,9 +53,9 @@ module VCAP::CloudController::Models
         end
       end
 
-      if column_changed?(:quota_definition_id) && !new?
+      if column_changed?(:service_instances_quota_definition_id) && !new?
         unless VCAP::CloudController::SecurityContext.current_user_is_admin?
-          errors.add(:quota_definition, :not_authorized)
+          errors.add(:service_instances_quota_definition, :not_authorized)
         end
       end
     end
@@ -88,17 +90,19 @@ module VCAP::CloudController::Models
     end
 
     def add_default_quota
-      unless quota_definition_id
-        self.quota_definition_id = QuotaDefinition.default.id
+      unless service_instances_quota_definition_id
+        self.service_instances_quota_definition_id =
+          ServiceInstancesQuotaDefinition.default.id
       end
     end
 
     def service_instance_quota_remaining?
-      service_instances.count < quota_definition.total_services
+      cap = service_instances_quota_definition.total_services
+      service_instances.count < cap
     end
 
     def paid_services_allowed?
-      quota_definition.non_basic_services_allowed
+      service_instances_quota_definition.non_basic_services_allowed
     end
 
     def self.user_visibility_filter(user)

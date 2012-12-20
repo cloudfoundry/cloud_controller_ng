@@ -30,7 +30,7 @@ module VCAP::CloudController::Models
 
   Organization.blueprint do
     name              { Sham.name }
-    quota_definition  { QuotaDefinition.make }
+    service_instances_quota_definition  { ServiceInstancesQuotaDefinition.make }
   end
 
   Domain.blueprint do
@@ -158,7 +158,7 @@ module VCAP::CloudController::Models
     service_instance_name { Sham.name }
   end
 
-  QuotaDefinition.blueprint do
+  ServiceInstancesQuotaDefinition.blueprint do
     name { Sham.name }
     non_basic_services_allowed { true }
     total_services { 60 }

@@ -212,7 +212,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "quota definition" do
+    describe "service instances quota definition" do
       let(:admin_headers) do
         user = Models::User.make(:admin => true)
         headers_for(user)
@@ -226,11 +226,12 @@ module VCAP::CloudController
       end
 
       let(:quota_definition) do
-        Models::QuotaDefinition.make
+        Models::ServiceInstancesQuotaDefinition.make
       end
 
       let(:update_request) do
-        Yajl::Encoder.encode(:quota_definition_guid => quota_definition.guid)
+        Yajl::Encoder.
+          encode(:service_instances_quota_definition_guid => quota_definition.guid)
       end
 
       describe "cf admins" do
@@ -238,17 +239,17 @@ module VCAP::CloudController
           put "/v2/organizations/#{org.guid}", update_request, admin_headers
           last_response.status.should == 201
           org.refresh
-          org.quota_definition.should == quota_definition
+          org.service_instances_quota_definition.should == quota_definition
         end
       end
 
       describe "org admins" do
         it "should not be allowed to set the quota definition" do
-          orig_quota_definition = org.quota_definition
+          orig_quota_definition = org.service_instances_quota_definition
           put "/v2/organizations/#{org.guid}", update_request, org_admin_headers
           last_response.status.should == 400
           org.refresh
-          org.quota_definition.should == orig_quota_definition
+          org.service_instances_quota_definition.should == orig_quota_definition
         end
       end
     end

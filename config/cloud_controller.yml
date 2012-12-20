@@ -63,14 +63,16 @@ staging:
     password: ZNVfdase9
 
 quota_definitions:
-  free:
-    non_basic_services_allowed: false
-    total_services: 2
-  paid:
-    non_basic_services_allowed: true
-    total_services: 32
-  runaway:
-    non_basic_services_allowed: true
-    total_services: 500
+  service_instances:
+    free:
+      non_basic_services_allowed: false
+      total_services: 2
+    paid:
+      non_basic_services_allowed: true
+      total_services: 32
+    runaway:
+      non_basic_services_allowed: true
+      total_services: 500
 
-default_quota_definition: free
+default_quota_definitions:
+  service_instances: free

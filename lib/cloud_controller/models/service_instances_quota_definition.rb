@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController::Models
-  class QuotaDefinition < Sequel::Model
+  class ServiceInstancesQuotaDefinition < Sequel::Model
 
     export_attributes :name, :non_basic_services_allowed, :total_services
     import_attributes :name, :non_basic_services_allowed, :total_services
@@ -14,19 +14,22 @@ module VCAP::CloudController::Models
     end
 
     def self.populate_from_config(config)
-      config[:quota_definitions].each do |k, v|
-        QuotaDefinition.update_or_create(:name => k.to_s) do |r|
+      config = config[:quota_definitions][:service_instances]
+      config.each do |k, v|
+        ServiceInstancesQuotaDefinition.
+          update_or_create(:name => k.to_s) do |r|
           r.update_from_hash(v)
         end
       end
     end
 
     def self.configure(config)
-      @default_quota_name = config[:default_quota_definition]
+      default = config[:default_quota_definitions][:service_instances]
+      @default_quota_name = default
     end
 
     def self.default
-      @default ||= QuotaDefinition[:name => @default_quota_name]
+      @default ||= ServiceInstancesQuotaDefinition[:name => @default_quota_name]
     end
   end
 end

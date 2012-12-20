@@ -3,7 +3,7 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::QuotaDefinition do
+  describe VCAP::CloudController::Models::ServiceInstancesQuotaDefinition do
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :non_basic_services_allowed, :total_services],
       :unique_attributes   => [:name]
@@ -14,10 +14,10 @@ module VCAP::CloudController
         reset_database
 
         # see config/cloud_controller.yml
-        Models::QuotaDefinition.populate_from_config(config)
+        Models::ServiceInstancesQuotaDefinition.populate_from_config(config)
 
-        Models::QuotaDefinition.count.should == 3
-        runaway = Models::QuotaDefinition[:name => "runaway"]
+        Models::ServiceInstancesQuotaDefinition.count.should == 3
+        runaway = Models::ServiceInstancesQuotaDefinition[:name => "runaway"]
         runaway.non_basic_services_allowed.should == true
         runaway.total_services.should == 500
       end
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     describe ".default" do
       it "should return the default quota" do
-        Models::QuotaDefinition.default.name.should == "free"
+        Models::ServiceInstancesQuotaDefinition.default.name.should == "free"
       end
     end
   end

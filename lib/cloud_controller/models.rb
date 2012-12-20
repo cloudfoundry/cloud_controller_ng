@@ -93,4 +93,4 @@ require "cloud_controller/models/service_plan"
 require "cloud_controller/models/space"
 require "cloud_controller/models/user"
 
-require "cloud_controller/models/quota_definition"
+require "cloud_controller/models/service_instances_quota_definition"

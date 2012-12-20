@@ -22,7 +22,7 @@ module VCAP::CloudController::ApiSpecHelper
           end
 
         it "should return 404" do
-          last_response.status.should == 404
+            last_response.status.should == 404
         end
 
         it_behaves_like "a vcap rest error response", "not be found: 999999"
