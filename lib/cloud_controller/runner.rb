@@ -105,6 +105,8 @@ module VCAP::CloudController
         populate_framework_and_runtimes
         VCAP::CloudController::Models::ServiceInstancesQuotaDefinition.
           populate_from_config(config)
+        VCAP::CloudController::Models::MemoryQuotaDefinition.
+          populate_from_config(config)
       end
 
       config[:system_domains].each do |name|
