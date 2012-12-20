@@ -105,6 +105,10 @@ module VCAP::CloudController::Errors
     ["ServiceInstancesQuotaDefinitionNameTaken", HTTP::BAD_REQUEST, 240002, "Quota Definition is taken: %s"],
     ["ServiceInstancesQuotaDefinitionInvalid", HTTP::BAD_REQUEST, 240003, "Quota Definition is invalid: %s"],
 
+    ["MemoryQuotaDefinitionNotFound", HTTP::NOT_FOUND, 250001, "Quota Definition could not be found: %s"],
+    ["MemoryQuotaDefinitionNameTaken", HTTP::BAD_REQUEST, 250002, "Quota Definition is taken: %s"],
+    ["MemoryQuotaDefinitionInvalid", HTTP::BAD_REQUEST, 250003, "Quota Definition is invalid: %s"],
+
   ].each do |e|
     define_error *e
   end
