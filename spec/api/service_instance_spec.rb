@@ -142,22 +142,26 @@ module VCAP::CloudController
       end
     end
 
-    describe "Quota enforcement" do
-      let(:paid_quota) { Models::QuotaDefinition.make(:total_services => 0) }
+    describe "Service instances quota enforcement" do
+      let(:paid_quota) { Models::ServiceInstancesQuotaDefinition.
+        make(:total_services => 0) }
       let(:free_quota_with_no_services) do
-        Models::QuotaDefinition.make(:total_services => 0,
-                                     :non_basic_services_allowed => false)
+        Models::ServiceInstancesQuotaDefinition.
+          make(:total_services => 0,
+               :non_basic_services_allowed => false)
       end
       let(:free_quota_with_one_service) do
-        Models::QuotaDefinition.make(:total_services => 1,
-                                     :non_basic_services_allowed => false)
+        Models::ServiceInstancesQuotaDefinition.
+          make(:total_services => 1,
+               :non_basic_services_allowed => false)
       end
       let(:paid_plan) { Models::ServicePlan.make }
       let(:free_plan) { Models::ServicePlan.make(:free => true) }
 
       context "paid quota" do
         it "should enforce quota check on number of service instances during creation" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
@@ -172,7 +176,8 @@ module VCAP::CloudController
 
       context "free quota" do
         it "should enforce quota check on number of service instances during creation" do
-          org = Models::Organization.make(:quota_definition => free_quota_with_no_services)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => free_quota_with_no_services)
           space = Models::Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
@@ -185,7 +190,8 @@ module VCAP::CloudController
         end
 
         it "should enforce quota check on service plan type during creation" do
-          org = Models::Organization.make(:quota_definition => free_quota_with_one_service)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => free_quota_with_one_service)
           space = Models::Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,

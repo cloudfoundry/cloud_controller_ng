@@ -112,26 +112,30 @@ module VCAP::CloudController
       end
     end
 
-    context "quota" do
+    context "service instances quota" do
       let(:free_quota) do
-        Models::QuotaDefinition.make(:total_services => 1,
-                                     :non_basic_services_allowed => false)
+        Models::ServiceInstancesQuotaDefinition.
+          make(:total_services => 1,
+               :non_basic_services_allowed => false)
       end
       let(:paid_quota) do
-        Models::QuotaDefinition.make(:total_services => 1,
-                                     :non_basic_services_allowed => true)
+        Models::ServiceInstancesQuotaDefinition.
+          make(:total_services => 1,
+               :non_basic_services_allowed => true)
       end
       let(:free_plan) { Models::ServicePlan.make(:free => true)}
 
       describe "#service_instance_quota_remaining" do
         it "should return true when quota is not reached" do
-          org = Models::Organization.make(:quota_definition => free_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           org.service_instance_quota_remaining?.should be_true
         end
 
         it "should return false when quota is reached" do
-          org = Models::Organization.make(:quota_definition => free_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           org.service_instance_quota_remaining?.should be_true
           Models::ServiceInstance.make(:space => space,
@@ -144,12 +148,14 @@ module VCAP::CloudController
 
       describe "#paid_services_allowed" do
         it "should return true when org has paid quota" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => paid_quota)
           org.paid_services_allowed?.should be_true
         end
 
         it "should return false when org has free quota" do
-          org = Models::Organization.make(:quota_definition => free_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => free_quota)
           org.paid_services_allowed?.should be_false
         end
       end

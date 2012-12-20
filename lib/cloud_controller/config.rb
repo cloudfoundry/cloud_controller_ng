@@ -91,8 +91,13 @@ class VCAP::CloudController::Config < VCAP::Config
         :serialization_data_server => [URI.regexp(["http", "https"])],
       },
 
-      :quota_definitions => Hash,
-      :default_quota_definition => String,
+      :quota_definitions => {
+        :service_instances => Hash,
+      },
+
+      :default_quota_definitions => {
+        :service_instances => String,
+      },
     }
   end
 
@@ -124,7 +129,7 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::DeaClient.configure(config)
     VCAP::CloudController::HealthManagerClient.configure
     VCAP::CloudController::LegacyBulk.configure(config)
-    VCAP::CloudController::Models::QuotaDefinition.configure(config)
+    VCAP::CloudController::Models::ServiceInstancesQuotaDefinition.configure(config)
   end
 
   def self.config_dir

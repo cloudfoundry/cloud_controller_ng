@@ -123,22 +123,25 @@ module VCAP::CloudController
       end
     end
 
-    context "quota" do
+    context "service instances quota" do
       let(:free_plan) { Models::ServicePlan.make(:free => true)}
       let(:paid_plan) { Models::ServicePlan.make(:free => false)}
 
       let(:free_quota) do
-        Models::QuotaDefinition.make(:total_services => 1,
-                                     :non_basic_services_allowed => false)
+        Models::ServiceInstancesQuotaDefinition.
+          make(:total_services => 1,
+               :non_basic_services_allowed => false)
       end
       let(:paid_quota) do
-        Models::QuotaDefinition.make(:total_services => 1,
-                                     :non_basic_services_allowed => true)
+        Models::ServiceInstancesQuotaDefinition.
+          make(:total_services => 1,
+               :non_basic_services_allowed => true)
       end
 
       context "exceed quota" do
         it "should raise paid quota error when paid quota is exceeded" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           Models::ServiceInstance.make(:space => space,
                                        :service_plan => free_plan).
@@ -151,7 +154,7 @@ module VCAP::CloudController
         end
 
         it "should raise free quota error when free quota is exceeded" do
-          org = Models::Organization.make(:quota_definition => free_quota)
+          org = Models::Organization.make(:service_instances_quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           Models::ServiceInstance.make(:space => space,
                                        :service_plan => free_plan).
@@ -164,7 +167,8 @@ module VCAP::CloudController
         end
 
         it "should not raise error when quota is not exceeded" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           expect do
             Models::ServiceInstance.make(:space => space,
@@ -175,7 +179,8 @@ module VCAP::CloudController
 
       context "create free services" do
         it "should not raise error when created in free quota" do
-          org = Models::Organization.make(:quota_definition => free_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           expect do
             Models::ServiceInstance.make(:space => space,
@@ -184,7 +189,8 @@ module VCAP::CloudController
         end
 
         it "should not raise error when created in paid quota" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           expect do
             Models::ServiceInstance.make(:space => space,
@@ -195,7 +201,8 @@ module VCAP::CloudController
 
       context "create paid services" do
         it "should raise error when created in free quota" do
-          org = Models::Organization.make(:quota_definition => free_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           expect do
             Models::ServiceInstance.make(:space => space,
@@ -205,7 +212,8 @@ module VCAP::CloudController
         end
 
         it "should not raise error when created in paid quota" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
+          org = Models::Organization.
+            make(:service_instances_quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           expect do
             Models::ServiceInstance.make(:space => space,

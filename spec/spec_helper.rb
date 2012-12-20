@@ -69,7 +69,8 @@ $spec_env = VCAP::CloudController::SpecEnvironment.new
 module VCAP::CloudController::SpecHelper
   def reset_database
     $spec_env.reset_database
-    VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
+    VCAP::CloudController::Models::ServiceInstancesQuotaDefinition.
+      populate_from_config(config)
   end
 
   # Note that this method is mixed into each example, and so the instance
