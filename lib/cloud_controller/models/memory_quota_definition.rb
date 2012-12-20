@@ -22,5 +22,13 @@ module VCAP::CloudController::Models
         end
       end
     end
+
+    def self.configure(config)
+      @default_quota_name = config[:default_quota_definitions][:memory]
+    end
+
+    def self.default
+      @default ||= MemoryQuotaDefinition[:name => @default_quota_name]
+    end
   end
 end

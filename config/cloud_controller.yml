@@ -86,4 +86,5 @@ quota_definitions:
 
 default_quota_definitions:
   service_instances: free
+  memory: free
 

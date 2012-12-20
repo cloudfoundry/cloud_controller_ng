@@ -93,10 +93,12 @@ class VCAP::CloudController::Config < VCAP::Config
 
       :quota_definitions => {
         :service_instances => Hash,
+        :memory => Hash,
       },
 
       :default_quota_definitions => {
         :service_instances => String,
+        :memory => String,
       },
     }
   end
@@ -130,6 +132,7 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::HealthManagerClient.configure
     VCAP::CloudController::LegacyBulk.configure(config)
     VCAP::CloudController::Models::ServiceInstancesQuotaDefinition.configure(config)
+    VCAP::CloudController::Models::MemoryQuotaDefinition.configure(config)
   end
 
   def self.config_dir

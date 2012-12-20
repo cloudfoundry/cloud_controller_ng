@@ -22,5 +22,11 @@ module VCAP::CloudController
         runaway.paid_limit = 2048
       end
     end
+
+    describe ".default" do
+      it "should return the default quota" do
+        Models::MemoryQuotaDefinition.default.name.should == "free"
+      end
+    end
   end
 end
