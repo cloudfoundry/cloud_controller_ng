@@ -61,6 +61,12 @@ module VCAP::CloudController::Models
           errors.add(:service_instances_quota_definition, :not_authorized)
         end
       end
+
+      if column_changed?(:memory_quota_definition_id) && !new?
+        unless VCAP::CloudController::SecurityContext.current_user_is_admin?
+          errors.add(:memory_quota_definition, :not_authorized)
+        end
+      end
     end
 
     def before_save

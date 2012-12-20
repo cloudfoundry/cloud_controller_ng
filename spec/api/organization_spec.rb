@@ -212,7 +212,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "service instances quota definition" do
+    describe "Service instances quota definition" do
       let(:admin_headers) do
         user = Models::User.make(:admin => true)
         headers_for(user)
@@ -250,6 +250,48 @@ module VCAP::CloudController
           last_response.status.should == 400
           org.refresh
           org.service_instances_quota_definition.should == orig_quota_definition
+        end
+      end
+    end
+
+    describe "Memory quota definition" do
+      let(:admin_headers) do
+        user = Models::User.make(:admin => true)
+        headers_for(user)
+      end
+
+      let(:org_admin_headers) do
+        user = Models::User.make
+        org.add_user(user)
+        org.add_manager(user)
+        headers_for(user)
+      end
+
+      let(:quota_definition) do
+        Models::MemoryQuotaDefinition.make
+      end
+
+      let(:update_request) do
+        Yajl::Encoder.
+          encode(:memory_quota_definition_guid => quota_definition.guid)
+      end
+
+      describe "cf admins" do
+        it "should be allowed to set the quota definition" do
+          put "/v2/organizations/#{org.guid}", update_request, admin_headers
+          last_response.status.should == 201
+          org.refresh
+          org.memory_quota_definition.should == quota_definition
+        end
+      end
+
+      describe "org admins" do
+        it "should not be allowed to set the quota definition" do
+          orig_quota_definition = org.memory_quota_definition
+          put "/v2/organizations/#{org.guid}", update_request, org_admin_headers
+          last_response.status.should == 400
+          org.refresh
+          org.memory_quota_definition.should == orig_quota_definition
         end
       end
     end
