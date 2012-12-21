@@ -522,10 +522,18 @@ module VCAP::CloudController
     describe "GET", "/info", "unauthenticated" do
       it "contains frameworks" do
         fw = Models::Framework.make
+        rt = Models::Runtime.make
+        fw.internal_info["runtimes"] = [{rt.name => { :default => true }}]
+        fw.save
         get "/info"
         last_response.status.should == 200
         decoded_response.should include("frameworks")
         decoded_response["frameworks"].should include(fw.name)
+        fw_response = decoded_response["frameworks"][fw.name]
+        fw_response.should have_key("runtimes")
+        fw_response["runtimes"].should be_kind_of(Array)
+        fw_response["runtimes"].first.should be_kind_of(Hash)
+        fw_response["runtimes"].first["name"].should == rt.name
       end
     end
   end
