@@ -104,13 +104,13 @@ module VCAP::CloudController
         runtimes = []
 
         framework.internal_info["runtimes"].each do |runtime|
-          runtime.keys do |runtime_name|
-            runtime = Models::Runtime.find(runtime_name)
+          runtime.keys.each do |runtime_name|
+            runtime = Models::Runtime[:name => runtime_name]
             if runtime
               runtimes <<  {
                 :name => runtime_name,
                 :description => runtime.description,
-                :version => runtime.internal_info.version,
+                :version => runtime.internal_info["version"],
               }
             else
               logger.warn(
