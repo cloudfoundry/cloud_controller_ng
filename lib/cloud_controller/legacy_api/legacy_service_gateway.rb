@@ -11,7 +11,7 @@ module VCAP::CloudController
     SERVICE_TOKEN_KEY = "HTTP_X_VCAP_SERVICE_TOKEN"
     DEFAULT_PROVIDER = "core"
     LEGACY_API_USER_GUID = "legacy-api"
-    LEGACY_PLAN_OVERIDE = "D100"
+    LEGACY_PLAN_OVERIDE = "100"
 
     def create_offering
       req = VCAP::Services::Api::ServiceOfferingRequest.decode(body)
@@ -51,7 +51,7 @@ module VCAP::CloudController
 
         new_plans = Array(req.plans)
         new_plans.each do |name|
-          free = (name =~ /^d1[0-9][0-9]$/i ? true : false)
+          free = (name =~ /^1[0-9][0-9]$/i ? true : false)
           Models::ServicePlan.update_or_create(
                                                :service_id => service.id,
                                                :name => name,

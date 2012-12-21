@@ -38,7 +38,7 @@ module VCAP::CloudController
 
       legacy_resp = {}
       Models::Service.filter(:provider => "core").each do |svc|
-        next unless svc.service_plans.any? { |plan| plan.name == "D100" }
+        next unless svc.service_plans.any? { |plan| plan.name == "100" }
 
         svc_type = LegacyService.synthesize_service_type(svc)
         legacy_resp[svc_type] ||= {}

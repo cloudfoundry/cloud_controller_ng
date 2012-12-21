@@ -179,35 +179,35 @@ module VCAP::CloudController
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @mysql_svc, :name => "D100")
+        Models::ServicePlan.make(:service => @mysql_svc, :name => "100")
 
         @pg_svc     = Models::Service.make(
           :label => "postgresql",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @pg_svc, :name => "D100")
+        Models::ServicePlan.make(:service => @pg_svc, :name => "100")
 
         @redis_svc  = Models::Service.make(
           :label => "redis",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @redis_svc, :name => "D100")
+        Models::ServicePlan.make(:service => @redis_svc, :name => "100")
 
         @mongo_svc  = Models::Service.make(
           :label => "mongodb",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @mongo_svc, :name => "D100")
+        Models::ServicePlan.make(:service => @mongo_svc, :name => "100")
 
         @random_svc = Models::Service.make(
           :label => "random",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @random_svc, :name => "D100")
+        Models::ServicePlan.make(:service => @random_svc, :name => "100")
 
         @random_other_svc = Models::Service.make(
           :label => "random_other",
@@ -339,7 +339,7 @@ module VCAP::CloudController
         }
       end
 
-      it "should filter service with non-D100 plan" do
+      it "should filter service with non-100 plan" do
         hash = Yajl::Parser.parse(last_response.body)
         hash["database"].should_not have_key("random_other")
         hash["key-value"].should_not have_key("random_other")
@@ -351,7 +351,7 @@ module VCAP::CloudController
       before :all do
         # poor man's reset_db
         Models::Service.filter(:provider => "core").each do |svc|
-          svc.service_plans_dataset.filter(:name => "D100").destroy
+          svc.service_plans_dataset.filter(:name => "100").destroy
           svc.destroy
         end
         @mysql_svc  = Models::Service.make(
@@ -360,7 +360,7 @@ module VCAP::CloudController
         )
         Models::ServicePlan.make(
           :service => @mysql_svc,
-          :name => "D100",
+          :name => "100",
         )
         @pg_svc     = Models::Service.make(
           :label => "postgresql",
@@ -368,7 +368,7 @@ module VCAP::CloudController
         )
         Models::ServicePlan.make(
           :service => @pg_svc,
-          :name => "D100",
+          :name => "100",
         )
         @redis_svc  = Models::Service.make(
           :label => "redis",
@@ -376,7 +376,7 @@ module VCAP::CloudController
         )
         Models::ServicePlan.make(
           :service => @redis_svc,
-          :name => "D100",
+          :name => "100",
         )
         @mongo_svc  = Models::Service.make(
           :label => "mongodb",
@@ -384,7 +384,7 @@ module VCAP::CloudController
         )
         Models::ServicePlan.make(
           :service => @mongo_svc,
-          :name => "D100",
+          :name => "100",
         )
         @random_svc = Models::Service.make(
           :label => "random",
@@ -392,12 +392,12 @@ module VCAP::CloudController
         )
         Models::ServicePlan.make(
           :service => @random_svc,
-          :name => "D100",
+          :name => "100",
         )
         non_core = Models::Service.make
         Models::ServicePlan.make(
           :service => non_core,
-          :name => "D100",
+          :name => "100",
         )
 
         get "/info/services", {}

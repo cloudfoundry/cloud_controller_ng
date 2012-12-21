@@ -7,7 +7,7 @@ module VCAP::CloudController
     include VCAP::CloudController::Errors
     DEFAULT_PROVIDER = "core"
     LEGACY_API_USER_GUID = "legacy-api"
-    LEGACY_PLAN_OVERIDE = "D100"
+    LEGACY_PLAN_OVERIDE = "100"
 
     def enumerate
       resp = default_space.service_instances.map do |svc_instance|
