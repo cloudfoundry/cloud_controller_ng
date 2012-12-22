@@ -101,6 +101,30 @@ module VCAP::CloudController::Models
       quota_definition.non_basic_services_allowed
     end
 
+    # We cannot have apps as a separate dataset. The reason is that sequel
+    # automatically converts Sequel::Dataset objects to an array when defining
+    # an association. This prevents us from using functional operations such as
+    # filter/sum on the dataset.
+    def free_memory_apps
+      VCAP::CloudController::Models::App.filter(:space => spaces,
+                                                :production => false)
+    end
+
+    def paid_memory_apps
+      VCAP::CloudController::Models::App.filter(:space => spaces,
+                                                :production => true)
+    end
+
+    def free_memory_remaining
+      free_memory_used = free_memory_apps.sum(:memory) || 0
+      quota_definition.free_memory_limit - free_memory_used
+    end
+
+    def paid_memory_remaining
+      paid_memory_used = paid_memory_apps.sum(:memory) || 0
+      quota_definition.paid_memory_limit - paid_memory_used
+    end
+
     def self.user_visibility_filter(user)
       user_visibility_filter_with_admin_override({
         :managers => [user],
