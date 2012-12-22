@@ -112,7 +112,7 @@ module VCAP::CloudController
       end
     end
 
-    context "quota" do
+    context "service instances quota" do
       let(:free_quota) do
         Models::QuotaDefinition.make(:total_services => 1,
                                      :non_basic_services_allowed => false)
@@ -152,6 +152,30 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => free_quota)
           org.paid_services_allowed?.should be_false
         end
+      end
+    end
+
+    context "memory quota" do
+      let(:quota) do
+        Models::QuotaDefinition.make(:free_memory_limit => 512,
+                                     :paid_memory_limit => 512)
+      end
+
+      it "should return the memory available when no apps are running" do
+        org = Models::Organization.make(:quota_definition => quota)
+
+        org.free_memory_remaining.should == 512
+        org.paid_memory_remaining.should == 512
+      end
+
+      it "should return the memory remaining when apps are consuming memory" do
+        org = Models::Organization.make(:quota_definition => quota)
+        space = Models::Space.make(:organization => org)
+        Models::App.make(:space => space, :production => false, :memory => 200)
+        Models::App.make(:space => space, :production => true, :memory => 100)
+
+        org.free_memory_remaining.should == 312
+        org.paid_memory_remaining.should == 412
       end
     end
   end
