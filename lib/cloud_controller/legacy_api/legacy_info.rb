@@ -49,6 +49,18 @@ module VCAP::CloudController
       Yajl::Encoder.encode(legacy_resp)
     end
 
+    def runtime_info
+      rt_info = Models::Runtime.all.inject({}) do |result, runtime|
+        result.merge(runtime.name => {
+          :version => runtime.internal_info["version"],
+          :description => runtime.description,
+          :debug_modes=> runtime.internal_info["debug_modes"],
+        })
+      end
+
+      Yajl::Encoder.encode(rt_info)
+    end
+
     private
 
     def account_capacity
@@ -132,6 +144,7 @@ module VCAP::CloudController
 
     def self.setup_routes
       get "/info",          :info
+      get "/info/runtimes", :runtime_info
       get "/info/services", :service_info
     end
 
