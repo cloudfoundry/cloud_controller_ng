@@ -536,5 +536,15 @@ module VCAP::CloudController
         fw_response["runtimes"].first["name"].should == rt.name
       end
     end
+
+    describe "GET", "/info/runtimes", "unauthenticated" do
+      it "contains runtimes" do
+        rt = Models::Runtime.make
+        get "/info/runtimes"
+        last_response.status.should == 200
+        decoded_response.should include(rt.name)
+        decoded_response[rt.name].should be_kind_of(Hash)
+      end
+    end
   end
 end
