@@ -7,6 +7,8 @@ module VCAP::CloudController::Models
     one_to_many       :spaces
     one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::Models::ServiceInstance.
                                                           filter(:space => spaces) }
+    one_to_many       :apps, :dataset => lambda { VCAP::CloudController::Models::App.
+                                                          filter(:space => spaces) }
     many_to_many      :domains, :before_add => :validate_domain
     add_association_dependencies :domains => :nullify
 
@@ -99,6 +101,18 @@ module VCAP::CloudController::Models
 
     def paid_services_allowed?
       quota_definition.non_basic_services_allowed
+    end
+
+    def free_memory_remaining
+      remaining = quota_definition.free_memory_limit
+      apps.each { |app| remaining -= app.memory unless app.production }
+      remaining
+    end
+
+    def paid_memory_remaining
+      remaining = quota_definition.paid_memory_limit
+      apps.each { |app| remaining -= app.memory if app.production }
+      remaining
     end
 
     def self.user_visibility_filter(user)
