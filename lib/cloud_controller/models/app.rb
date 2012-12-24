@@ -54,6 +54,7 @@ module VCAP::CloudController::Models
       validates_includes AppStates, :state, :allow_missing => true
       validate_environment
       validate_metadata
+      check_memory_quota
     end
 
     def before_create
@@ -164,6 +165,21 @@ module VCAP::CloudController::Models
               route.domain_dataset.filter(:spaces => [space]).count == 1 &&
               route.space_id == space.id)
         raise InvalidRouteRelation.new(route.guid)
+      end
+    end
+
+    def check_memory_quota
+      if space
+        org = space.organization
+        mem = memory ? memory : db_schema[:memory][:default].to_i
+
+        if production
+          if org.paid_memory_remaining - mem < 0
+            errors.add(:memory, :paid_quota_exceeded)
+          end
+        elsif org.free_memory_remaining - mem < 0
+          errors.add(:memory, :free_quota_exceeded)
+        end
       end
     end
 
