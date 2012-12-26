@@ -526,6 +526,18 @@ module VCAP::CloudController
         last_response.status.should == 200
         decoded_response.should include("frameworks")
         decoded_response["frameworks"].should include(fw.name)
+
+        decoded_response["frameworks"][fw.name].should include("name")
+        decoded_response["frameworks"][fw.name].should include("runtimes")
+        decoded_response["frameworks"][fw.name].should include("detection")
+        decoded_response["frameworks"][fw.name]["name"].should == fw.name
+
+        runtimes = decoded_response["frameworks"][fw.name]["runtimes"]
+        runtimes.should_not be_nil
+        runtimes.should have(1).items
+        runtimes[0].should include("name")
+        runtimes[0].should include("description")
+        runtimes[0].should include("version")
       end
     end
   end
