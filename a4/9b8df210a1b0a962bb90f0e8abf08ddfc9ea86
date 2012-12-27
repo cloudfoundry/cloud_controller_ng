@@ -1,0 +1,8 @@
+Code-Review+2: Bob Nugmanov <bnugmanov@vmware.com>
+Code-Review-1: Jesse Zhang <jessezhang@vmware.com>
+Verified+1: CI Master <cf-ci@rbcon.com>
+Submitted-by: Pivotal Labs <pivotal-vmware@googlegroups.com>
+Submitted-at: Thu, 27 Dec 2012 21:57:16 +0000
+Reviewed-on: http://reviews.cloudfoundry.org/12877
+Project: cloud_controller_ng
+Branch: refs/heads/master
