@@ -540,5 +540,21 @@ module VCAP::CloudController
         runtimes[0].should include("version")
       end
     end
+
+    describe "GET", "/info/runtimes", "unauthenticated" do
+      it "contains runtimes" do
+        get "/info/runtimes"
+        last_response.status.should == 200
+
+        decoded_response.each do |name, runtime|
+          runtime.should include("version")
+          runtime.should include("description")
+          runtime.should include("debug_modes")
+
+          runtime["version"].should_not be_nil
+          runtime["description"].should_not be_nil
+        end
+      end
+    end
   end
 end
