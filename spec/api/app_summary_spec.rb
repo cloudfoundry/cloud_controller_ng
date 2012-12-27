@@ -55,8 +55,11 @@ module VCAP::CloudController
         decoded_response["name"].should == @app.name
       end
 
-      it "should return the app urls" do
-        decoded_response["urls"].should == [@route1.fqdn, @route2.fqdn]
+      it "should return the app routes" do
+        decoded_response["routes"].should == [
+          { "id" => @route1.id, "host" => @route1.host, "domain_name" => @route1.domain.name },
+          { "id" => @route2.id, "host" => @route2.host, "domain_name" => @route2.domain.name }
+        ]
       end
 
       it "should return the app framework" do
