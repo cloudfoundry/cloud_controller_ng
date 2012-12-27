@@ -19,7 +19,7 @@ module VCAP::CloudController
       app_info = {
         :guid => app.guid,
         :name => app.name,
-        :urls => app.routes.map(&:fqdn),
+        :routes => app.routes.map(&:as_summary_json),
         :framework => app.framework.to_hash.merge(:guid => app.framework.guid),
         :runtime => app.runtime.to_hash.merge(:guid => app.runtime.guid),
         :running_instances => app.running_instances,
