@@ -90,7 +90,7 @@ module VCAP::CloudController
           app_resp.should == {
             "guid" => app.guid,
             "name" => app.name,
-            "urls" => [@route1.fqdn, @route2.fqdn],
+            "routes" => [@route1.as_summary_json, @route2.as_summary_json],
             "service_count" => num_services,
             "instances" => app.instances,
             "running_instances" => expected_running_instances,

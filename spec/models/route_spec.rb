@@ -133,7 +133,8 @@ module VCAP::CloudController
       end
     end
 
-    describe "#fqdn" do
+
+    describe "instance methods" do
       let(:space) { Models::Space.make }
 
       let(:domain) do
@@ -145,25 +146,38 @@ module VCAP::CloudController
         d
       end
 
-      context "for a non-nil host" do
-        it "should return the fqdn for the route" do
+      describe "#fqdn" do
+        context "for a non-nil host" do
+          it "should return the fqdn for the route" do
+            r = Models::Route.make(
+              :host => "www",
+              :domain => domain,
+              :space => space,
+            )
+            r.fqdn.should == "www.#{domain.name}"
+          end
+        end
+
+        context "for a nil host" do
+          it "should return the fqdn for the route" do
+            r = Models::Route.make(
+              :host => nil,
+              :domain => domain,
+              :space => space,
+            )
+            r.fqdn.should == domain.name
+          end
+        end
+      end
+
+      describe "#as_summary_json" do
+        it "returns a hash containing the route id, host, and domain name" do
           r = Models::Route.make(
             :host => "www",
             :domain => domain,
             :space => space,
           )
-          r.fqdn.should == "www.#{domain.name}"
-        end
-      end
-
-      context "for a nil host" do
-        it "should return the fqdn for the route" do
-          r = Models::Route.make(
-            :host => nil,
-            :domain => domain,
-            :space => space,
-          )
-          r.fqdn.should == domain.name
+          r.as_summary_json.should == { "guid" => r.guid, "host" => r.host, "domain" => { "name" => r.domain.name } }
         end
       end
     end

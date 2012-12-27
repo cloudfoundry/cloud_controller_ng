@@ -21,6 +21,10 @@ module VCAP::CloudController::Models
       host ? "#{host}.#{domain.name}" : domain.name
     end
 
+    def as_summary_json
+      { "guid" => guid, "host" => host, "domain" => { "name" => domain.name }}
+    end
+
     def organization
       space.organization if space
     end
