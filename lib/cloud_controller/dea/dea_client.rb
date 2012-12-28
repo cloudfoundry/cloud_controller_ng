@@ -243,7 +243,6 @@ module VCAP::CloudController
       def stop_instances(app, instances)
         dea_publish("stop",
                     :droplet => app.guid,
-                    :version => app.version,
                     :instances => instances,
                    )
       end

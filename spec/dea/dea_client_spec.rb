@@ -148,7 +148,9 @@ module VCAP::CloudController
               "instances"   => ["a", "b"]
             )
           ),
-        )
+        ) do |_, payload|
+          Yajl::Parser.parse(payload).should_not include("version")
+        end
           with_em_and_thread do
             DeaClient.stop_instances(app, ["a", "b"])
           end
