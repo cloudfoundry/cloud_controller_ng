@@ -498,6 +498,23 @@ module VCAP::CloudController
           app.update(:state => "STARTED")
         end
       end
+
+      context "deleting a started app" do
+        it "should call AppStopEvent.create_from_app" do
+          app = Models::App.make(:state => "STARTED")
+          VCAP::CloudController::DeaClient.stub(:stop)
+          Models::AppStopEvent.should_receive(:create_from_app).with(app)
+          app.destroy
+        end
+      end
+
+      context "deleting a stopped app" do
+        it "should not call AppStopEvent.create_from_app" do
+          app = Models::App.make(:state => "STOPPED")
+          Models::AppStopEvent.should_not_receive(:create_from_app)
+          app.destroy
+        end
+      end
     end
   end
 end

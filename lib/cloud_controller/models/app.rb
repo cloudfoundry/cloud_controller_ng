@@ -100,6 +100,7 @@ module VCAP::CloudController::Models
       VCAP::CloudController::DeaClient.stop(self) if started?
       VCAP::CloudController::AppStager.delete_droplet(self)
       VCAP::CloudController::AppPackage.delete_package(self.guid)
+      AppStopEvent.create_from_app(self) unless stopped?
     end
 
     def command=(cmd)
