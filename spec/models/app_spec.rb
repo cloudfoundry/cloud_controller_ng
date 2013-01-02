@@ -456,7 +456,7 @@ module VCAP::CloudController
       end
 
       context "creating a started app" do
-        it "should not call AppStartEvent.create_from_app" do
+        it "should not call AppStopEvent.create_from_app" do
           Models::AppStartEvent.should_receive(:create_from_app)
           Models::AppStopEvent.should_not_receive(:create_from_app)
           Models::App.make(:state => "STARTED")
