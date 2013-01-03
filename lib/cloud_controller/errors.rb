@@ -44,7 +44,7 @@ module VCAP::CloudController::Errors
     ["ServiceInstanceNotFound",    HTTP::NOT_FOUND, 60004, "The service instance could not be found: %s"],
     ["ServiceInstanceFreeQuotaExceeded",    HTTP::BAD_REQUEST, 60005, "You have exceeded your organization's services limit. Please login to your account and upgrade."],
     ["ServiceInstancePaidQuotaExceeded",    HTTP::BAD_REQUEST, 60006, "You have exceeded your organization's services limit. Please file a support ticket to request additional resources."],
-    ["ServiceInstanceServicePlanNotAllowed",    HTTP::BAD_REQUEST, 60007, "The service instance cannot be created as paid service plans are not allowed."],
+    ["ServiceInstanceServicePlanNotAllowed",    HTTP::BAD_REQUEST, 60007, "The service instance cannot be created because paid service plans are not allowed."],
 
     ["RuntimeInvalid",   HTTP::BAD_REQUEST, 70001, "The runtime is invalid: %s"],
     ["RuntimeNameTaken", HTTP::BAD_REQUEST, 70002, "The runtime name is taken: %s"],
