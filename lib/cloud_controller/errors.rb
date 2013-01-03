@@ -62,6 +62,8 @@ module VCAP::CloudController::Errors
     ["AppInvalid",   HTTP::BAD_REQUEST, 100001, "The app is invalid: %s"],
     ["AppNameTaken", HTTP::BAD_REQUEST, 100002, "The app name is taken: %s"],
     ["AppNotFound",  HTTP::NOT_FOUND,   100004, "The app name could not be found: %s"],
+    ["AppMemoryFreeQuotaExceeded",  HTTP::BAD_REQUEST,   100005, "You have exceeded your organization's memory limit. Please login to your account and upgrade."],
+    ["AppMemoryPaidQuotaExceeded",  HTTP::BAD_REQUEST,   100006, "You have exceeded your organization's memory limit. Please file a support ticket to request additional resources."],
 
     ["ServicePlanInvalid",   HTTP::BAD_REQUEST, 110001, "The service plan is invalid: %s"],
     ["ServicePlanNameTaken", HTTP::BAD_REQUEST, 110002, "The service plan name is taken: %s"],
