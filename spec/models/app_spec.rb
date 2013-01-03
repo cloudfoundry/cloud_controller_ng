@@ -551,7 +551,7 @@ module VCAP::CloudController
         end
 
         context "app update" do
-          xit "should raise error when quota is exceeded" do
+          it "should raise error when quota is exceeded" do
             org = Models::Organization.make(:quota_definition => paid_quota)
             space = Models::Space.make(:organization => org)
             app = Models::App.make(:space => space,
@@ -562,7 +562,7 @@ module VCAP::CloudController
                                                /memory paid_quota_exceeded/)
           end
 
-          xit "should raise error when quota is not exceeded" do
+          it "should raise error when quota is not exceeded" do
             org = Models::Organization.make(:quota_definition => paid_quota)
             space = Models::Space.make(:organization => org)
             app = Models::App.make(:space => space,
@@ -597,7 +597,7 @@ module VCAP::CloudController
         end
 
         context "app update" do
-          xit "should raise error when quota is exceeded" do
+          it "should raise error when quota is exceeded" do
             org = Models::Organization.make(:quota_definition => free_quota)
             space = Models::Space.make(:organization => org)
             app = Models::App.make(:space => space,
@@ -607,7 +607,7 @@ module VCAP::CloudController
                                                /memory free_quota_exceeded/)
           end
 
-          xit "should not raise error when quota is not exceeded" do
+          it "should not raise error when quota is not exceeded" do
             org = Models::Organization.make(:quota_definition => free_quota)
             space = Models::Space.make(:organization => org)
             app = Models::App.make(:space => space,

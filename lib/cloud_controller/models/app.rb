@@ -168,16 +168,23 @@ module VCAP::CloudController::Models
       end
     end
 
+    def additional_memory_requested
+      if new?
+        return memory if memory
+        return db_schema[:memory][:default].to_i
+      end
+      existing_memory = self.class.find(:guid => guid)[:memory]
+      memory - existing_memory > 0 ? memory - existing_memory : 0
+    end
+
     def check_memory_quota
       if space
         org = space.organization
-        mem = memory ? memory : db_schema[:memory][:default].to_i
-
         if production
-          if org.paid_memory_remaining - mem < 0
+          if org.paid_memory_remaining - additional_memory_requested < 0
             errors.add(:memory, :paid_quota_exceeded)
           end
-        elsif org.free_memory_remaining - mem < 0
+        elsif org.free_memory_remaining - additional_memory_requested < 0
           errors.add(:memory, :free_quota_exceeded)
         end
       end
