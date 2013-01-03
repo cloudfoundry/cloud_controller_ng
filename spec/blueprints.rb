@@ -21,6 +21,7 @@ Sham.define do
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }
   guid                { |index| "guid-#{index}" }
+  version             { |index| "version-#{index}" }
 end
 
 module VCAP::CloudController::Models
@@ -77,7 +78,7 @@ module VCAP::CloudController::Models
   Runtime.blueprint do
     name              { Sham.name }
     description       { Sham.description }
-    internal_info     { {} }
+    internal_info     { {:version => Sham.version} }
   end
 
   Framework.blueprint do

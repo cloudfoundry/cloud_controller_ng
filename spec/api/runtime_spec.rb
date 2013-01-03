@@ -16,5 +16,19 @@ module VCAP::CloudController
       }
     }
 
+    describe "GET /v2/runtimes/:guid" do
+      let (:runtime) { Models::Runtime.make }
+      let (:headers) do
+        user = VCAP::CloudController::Models::User.make
+        headers_for(user)
+      end
+
+      it "should include the version field" do
+        get "/v2/runtimes/#{runtime.guid}", {}, headers
+        last_response.should be_ok
+        decoded_response["entity"]["version"].should == runtime.version
+      end
+    end
+
   end
 end

@@ -7,7 +7,7 @@ module VCAP::CloudController::Models
     one_to_many :apps
 
     default_order_by  :name
-    export_attributes :name, :description
+    export_attributes :name, :description, :version
     import_attributes :name, :description
 
     strip_attributes  :name
@@ -18,6 +18,10 @@ module VCAP::CloudController::Models
       validates_presence :name
       validates_presence :description
       validates_unique   :name
+    end
+
+    def version
+      internal_info["version"] if internal_info
     end
 
     def self.populate_from_file(file_name)
