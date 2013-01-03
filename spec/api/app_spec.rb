@@ -503,55 +503,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    context "quota" do
-      let(:paid_quota) do
-        Models::QuotaDefinition.make(:paid_memory_limit => 128)
-      end
-
-      let(:free_quota) do
-        Models::QuotaDefinition.make(:free_memory_limit => 128)
-      end
-
-      it "should raise paid quota error when paid quota is exceeded" do
-        org = Models::Organization.make(:quota_definition => paid_quota)
-        space = Models::Space.make(:organization => org)
-        expect  do
-          Models::App.make(:space => space,
-                             :production => true,
-                             :memory => 129)
-        end.to raise_error(Sequel::ValidationFailed,
-                             /memory paid_quota_exceeded/)
-      end
-
-      it "should raise free quota error when free quota is exceeded" do
-          org = Models::Organization.make(:quota_definition => free_quota)
-        space = Models::Space.make(:organization => org)
-        expect  do
-          Models::App.make(:space => space,
-                             :memory => 129)
-        end.to raise_error(Sequel::ValidationFailed,
-                             /memory free_quota_exceeded/)
-      end
-
-      it "should not raise error when paid quota is not exceeded" do
-        org = Models::Organization.make(:quota_definition => paid_quota)
-        space = Models::Space.make(:organization => org)
-        expect  do
-            Models::App.make(:space => space,
-                             :production => true,
-                             :memory => 128)
-        end.to_not raise_error
-      end
-
-      it "should not raise error when free quota is not exceeded" do
-        org = Models::Organization.make(:quota_definition => free_quota)
-        space = Models::Space.make(:organization => org)
-        expect  do
-          Models::App.make(:space => space,
-                             :memory => 128)
-        end.to_not raise_error
-      end
-    end
   end
 end
