@@ -162,9 +162,13 @@ module YetiSetup
 
   def self.check_uaac_version
     output = run "uaac --version"
-    supported_version = "1.2.6"
-    ver = output.split(" ").last.chomp
-    abort "Error: uaac version 1.2.6 required; please update cf-uaa-client gem if needed" unless ver == supported_version
+    ver = output.split.last
+    current_uaac_version = Gem::Version.new(ver)
+
+    minimum_version = "1.3.3"
+    minimum_uaac_version = Gem::Version.new(minimum_version)
+
+    abort "Error: uaac minimum version #{minimum_version} required; please 'gem update cf-uaac'" unless current_uaac_version >= minimum_uaac_version
   end
 
 end
