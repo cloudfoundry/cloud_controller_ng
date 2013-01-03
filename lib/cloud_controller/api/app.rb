@@ -65,8 +65,16 @@ module VCAP::CloudController
 
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
+      memory_quota_errors = e.errors.on(:memory)
+
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::AppNameTaken.new(attributes["name"])
+      elsif memory_quota_errors
+        if memory_quota_errors.include?(:free_quota_exceeded)
+          Errors::AppMemoryFreeQuotaExceeded.new
+        elsif memory_quota_errors.include?(:paid_quota_exceeded)
+          Errors::AppMemoryPaidQuotaExceeded.new
+        end
       else
         Errors::AppInvalid.new(e.errors.full_messages)
       end
