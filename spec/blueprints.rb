@@ -21,7 +21,6 @@ Sham.define do
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }
   guid                { |index| "guid-#{index}" }
-  version             { |index| "version-#{index}" }
 end
 
 module VCAP::CloudController::Models
