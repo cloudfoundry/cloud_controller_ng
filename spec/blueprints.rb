@@ -8,7 +8,6 @@ Sham.define do
   label               { |index| "label-#{index}" }
   password            { |index| "token-#{index}" }
   token               { |index| "token-#{index}" }
-  token               { |index| "token-#{index}" }
   provider            { |index| "provider-#{index}" }
   url                 { |index| "https://foo.com/url-#{index}" }
   type                { |index| "type-#{index}" }
@@ -21,7 +20,6 @@ Sham.define do
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }
   guid                { |index| "guid-#{index}" }
-  version             { |index| "version-#{index}" }
 end
 
 module VCAP::CloudController::Models
