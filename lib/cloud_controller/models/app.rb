@@ -169,12 +169,14 @@ module VCAP::CloudController::Models
     end
 
     def additional_memory_requested
-      if new?
-        return memory if memory
-        return db_schema[:memory][:default].to_i
-      end
-      existing_memory = self.class.find(:guid => guid)[:memory]
-      memory - existing_memory > 0 ? memory - existing_memory : 0
+      default_memory = db_schema[:memory][:default].to_i
+      mem = memory ? memory : default_memory
+
+      return mem if new?
+
+      app_from_db = self.class.find(:guid => guid)
+      existing_memory = app_from_db[:memory]
+      mem - existing_memory > 0 ? mem - existing_memory : 0
     end
 
     def check_memory_quota
