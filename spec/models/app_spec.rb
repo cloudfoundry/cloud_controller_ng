@@ -534,7 +534,8 @@ module VCAP::CloudController
             expect  do
               Models::App.make(:space => space,
                                :production => true,
-                               :memory => 129)
+                               :memory => 65,
+                               :instances => 2)
             end.to raise_error(Sequel::ValidationFailed,
                                /memory paid_quota_exceeded/)
           end
@@ -545,7 +546,8 @@ module VCAP::CloudController
             expect  do
               Models::App.make(:space => space,
                                :production => true,
-                               :memory => 128)
+                               :memory => 64,
+                               :instances => 2)
             end.to_not raise_error
           end
         end
@@ -556,19 +558,21 @@ module VCAP::CloudController
             space = Models::Space.make(:organization => org)
             app = Models::App.make(:space => space,
                                    :production => true,
-                                   :memory => 128)
-            app.memory = 129
+                                   :memory => 64,
+                                   :instances => 2)
+            app.memory = 65
             expect { app.save }.to raise_error(Sequel::ValidationFailed,
                                                /memory paid_quota_exceeded/)
           end
 
-          it "should raise error when quota is not exceeded" do
+          it "should not raise error when quota is not exceeded" do
             org = Models::Organization.make(:quota_definition => paid_quota)
             space = Models::Space.make(:organization => org)
             app = Models::App.make(:space => space,
                                    :production => true,
-                                   :memory => 127)
-            app.memory = 128
+                                   :memory => 63,
+                                   :instances => 2)
+            app.memory = 64
             expect { app.save }.to_not raise_error
           end
         end
@@ -581,7 +585,8 @@ module VCAP::CloudController
             space = Models::Space.make(:organization => org)
             expect  do
               Models::App.make(:space => space,
-                               :memory => 129)
+                               :memory => 65,
+                               :instances => 2)
             end.to raise_error(Sequel::ValidationFailed,
                                /memory free_quota_exceeded/)
           end
@@ -591,7 +596,8 @@ module VCAP::CloudController
             space = Models::Space.make(:organization => org)
             expect  do
               Models::App.make(:space => space,
-                               :memory => 128)
+                               :memory => 64,
+                               :instances => 2)
             end.to_not raise_error
           end
         end
@@ -601,8 +607,9 @@ module VCAP::CloudController
             org = Models::Organization.make(:quota_definition => free_quota)
             space = Models::Space.make(:organization => org)
             app = Models::App.make(:space => space,
-                                   :memory => 128)
-            app.memory = 129
+                                   :memory => 64,
+                                   :instances => 2)
+            app.memory = 65
             expect { app.save }.to raise_error(Sequel::ValidationFailed,
                                                /memory free_quota_exceeded/)
           end
@@ -611,8 +618,9 @@ module VCAP::CloudController
             org = Models::Organization.make(:quota_definition => free_quota)
             space = Models::Space.make(:organization => org)
             app = Models::App.make(:space => space,
-                               :memory => 127)
-            app.memory = 128
+                                   :memory => 63,
+                                   :instances => 2)
+            app.memory = 64
             expect { app.save }.to_not raise_error
           end
         end
