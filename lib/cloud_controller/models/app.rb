@@ -170,13 +170,19 @@ module VCAP::CloudController::Models
 
     def additional_memory_requested
       default_memory = db_schema[:memory][:default].to_i
-      mem = memory ? memory : default_memory
+      default_instances = db_schema[:instances][:default].to_i
 
-      return mem if new?
+      mem = memory ? memory : default_memory
+      num_instances = instances ? instances : default_instances
+      total_requested_memory = mem * num_instances
+
+      return total_requested_memory if new?
 
       app_from_db = self.class.find(:guid => guid)
-      existing_memory = app_from_db[:memory]
-      mem - existing_memory > 0 ? mem - existing_memory : 0
+      total_existing_memory = app_from_db[:memory] * app_from_db[:instances]
+      additional_memory = total_requested_memory - total_existing_memory
+      return additional_memory if additional_memory > 0
+      0
     end
 
     def check_memory_quota

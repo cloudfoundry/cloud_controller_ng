@@ -7,6 +7,7 @@ module VCAP::CloudController::Models
     one_to_many       :spaces
     one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::Models::ServiceInstance.
                                                           filter(:space => spaces) }
+    one_to_many       :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => spaces) }
     many_to_many      :domains, :before_add => :validate_domain
     add_association_dependencies :domains => :nullify
 
@@ -101,27 +102,21 @@ module VCAP::CloudController::Models
       quota_definition.non_basic_services_allowed
     end
 
-    # We cannot have apps as a separate dataset. The reason is that sequel
-    # automatically converts Sequel::Dataset objects to an array when defining
-    # an association. This prevents us from using functional operations such as
-    # filter/sum on the dataset.
     def free_memory_apps
-      VCAP::CloudController::Models::App.filter(:space => spaces,
-                                                :production => false)
+      apps_dataset.filter(:production => false)
     end
 
     def paid_memory_apps
-      VCAP::CloudController::Models::App.filter(:space => spaces,
-                                                :production => true)
+      apps_dataset.filter(:production => true)
     end
 
     def free_memory_remaining
-      free_memory_used = free_memory_apps.sum(:memory) || 0
+      free_memory_used = free_memory_apps.sum(:memory * :instances) || 0
       quota_definition.free_memory_limit - free_memory_used
     end
 
     def paid_memory_remaining
-      paid_memory_used = paid_memory_apps.sum(:memory) || 0
+      paid_memory_used = paid_memory_apps.sum(:memory * :instances) || 0
       quota_definition.paid_memory_limit - paid_memory_used
     end
 
