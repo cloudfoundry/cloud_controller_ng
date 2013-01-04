@@ -157,25 +157,31 @@ module VCAP::CloudController
 
     context "memory quota" do
       let(:quota) do
-        Models::QuotaDefinition.make(:free_memory_limit => 512,
-                                     :paid_memory_limit => 512)
+        Models::QuotaDefinition.make(:free_memory_limit => 500,
+                                     :paid_memory_limit => 500)
       end
 
       it "should return the memory available when no apps are running" do
         org = Models::Organization.make(:quota_definition => quota)
 
-        org.free_memory_remaining.should == 512
-        org.paid_memory_remaining.should == 512
+        org.free_memory_remaining.should == 500
+        org.paid_memory_remaining.should == 500
       end
 
       it "should return the memory remaining when apps are consuming memory" do
         org = Models::Organization.make(:quota_definition => quota)
         space = Models::Space.make(:organization => org)
-        Models::App.make(:space => space, :production => false, :memory => 200)
-        Models::App.make(:space => space, :production => true, :memory => 100)
+        Models::App.make(:space => space,
+                         :production => false,
+                         :memory => 200,
+                         :instances => 2)
+        Models::App.make(:space => space,
+                         :production => true,
+                         :memory => 100,
+                         :instances => 1)
 
-        org.free_memory_remaining.should == 312
-        org.paid_memory_remaining.should == 412
+        org.free_memory_remaining.should == 100
+        org.paid_memory_remaining.should == 400
       end
     end
   end

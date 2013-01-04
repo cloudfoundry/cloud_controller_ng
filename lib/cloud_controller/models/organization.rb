@@ -116,12 +116,20 @@ module VCAP::CloudController::Models
     end
 
     def free_memory_remaining
-      free_memory_used = free_memory_apps.sum(:memory) || 0
+      free_memory_used = 0
+      free_memory_apps.each do |app|
+        free_memory_used += (app.memory * app.instances)
+      end
+
       quota_definition.free_memory_limit - free_memory_used
     end
 
     def paid_memory_remaining
-      paid_memory_used = paid_memory_apps.sum(:memory) || 0
+      paid_memory_used = 0
+      paid_memory_apps.each do |app|
+        paid_memory_used += (app.memory * app.instances)
+      end
+
       quota_definition.paid_memory_limit - paid_memory_used
     end
 
