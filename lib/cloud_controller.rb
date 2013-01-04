@@ -52,7 +52,13 @@ module VCAP::CloudController
           # TODO: replace this with an exteranl bootstraping mechanism.
           # I'm not wild about having *any* auto-admin generation code
           # in the cc.
-          if user.nil?
+
+          if user && is_admin
+            # sanity check on existing admin user
+            user.admin = is_admin
+            user.save
+          end
+          if user.nil? && uaa_id
             if is_admin ||
               (Models::User.count == 0 &&
               @config[:bootstrap_admin_email] && token_information['email'] &&
@@ -60,10 +66,6 @@ module VCAP::CloudController
               user = Models::User.create(:guid => uaa_id,
                                          :admin => true, :active => true)
             end
-          elsif scopes
-            # token scope is authoritative
-            user.admin = is_admin
-            user.save
           end
 
           VCAP::CloudController::SecurityContext.set(user, token_information)
