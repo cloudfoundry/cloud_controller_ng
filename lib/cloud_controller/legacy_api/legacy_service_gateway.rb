@@ -233,11 +233,11 @@ module VCAP::CloudController
       post   "/services/v1/offerings/:label/:provider/handles/:id", :update_handle
     end
 
-    setup_routes
-  end
+    def self.translate_validation_exception(e, attributes)
+      Steno.logger("cc.api.legacy_svc_gw").error "#{attributes} #{e}"
+      Errors::InvalidRequest.new
+    end
 
-  def self.translate_validation_exception(e, attributes)
-    logger.error("legacy serivce gateway request failed: #{attributes} #{e}")
-    Errors::InvalidRequest.new
+    setup_routes
   end
 end
