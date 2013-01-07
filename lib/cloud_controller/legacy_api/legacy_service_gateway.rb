@@ -235,4 +235,9 @@ module VCAP::CloudController
 
     setup_routes
   end
+
+  def self.translate_validation_exception(e, attributes)
+    logger.error("legacy serivce gateway request failed: #{attributes} #{e}")
+    Errors::InvalidRequest.new
+  end
 end
