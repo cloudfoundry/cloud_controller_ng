@@ -134,11 +134,13 @@ module VCAP::CloudController
       end
 
       it "should restage on update if staging is needed" do
-        AppStager.should_receive(:stage_app)
         app_obj.package_hash = "abc"
         app_obj.state = "STARTED"
         app_obj.save
         app_obj.needs_staging?.should be_true
+        AppStager.should_receive(:stage_app) do |app|
+          app.update(:droplet_hash => "def")
+        end
         MessageBus.should_receive(:publish).with(
           "droplet.updated",
           json_match(

@@ -40,16 +40,20 @@ module VCAP::CloudController
         AppStager.stage_app(app)
       end
 
-      # TODO: an app without its bits or failed staging cannot be started,
-      # prune that here or in the models
       if changes.include?(:state)
         if app.started?
+          unless app.staged?
+            return
+          end
           DeaClient.start(app)
         elsif app.stopped?
           DeaClient.stop(app)
         end
         send_droplet_updated_message(app)
       elsif changes.include?(:instances) && app.started?
+        unless app.staged?
+          return
+        end
         delta = changes[:instances][1] - changes[:instances][0]
         DeaClient.change_running_instances(app, delta)
         send_droplet_updated_message(app)
