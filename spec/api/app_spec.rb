@@ -139,6 +139,14 @@ module VCAP::CloudController
         app_obj.state = "STARTED"
         app_obj.save
         app_obj.needs_staging?.should be_true
+        MessageBus.should_receive(:publish).with(
+          "droplet.updated",
+          json_match(
+            hash_including(
+              "droplet" => app_obj.guid,
+            ),
+          ),
+        )
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201

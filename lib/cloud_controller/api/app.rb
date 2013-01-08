@@ -40,8 +40,8 @@ module VCAP::CloudController
         AppStager.stage_app(app)
       end
 
-      return unless app.staged?
-
+      # TODO: an app without its bits or failed staging cannot be started,
+      # prune that here or in the models
       if changes.include?(:state)
         if app.started?
           DeaClient.start(app)
