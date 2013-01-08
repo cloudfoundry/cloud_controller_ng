@@ -108,14 +108,7 @@ module VCAP::CloudController
         app_obj.save
         app_obj.needs_staging?.should be_false
 
-        expected = {
-          "droplet" => app_obj.guid,
-          "cc_partition" => config[:cc_partition],
-        }
-
-        MessageBus.should_receive(:publish).
-          with("droplet.updated",
-               json_match(hash_including(expected)))
+        MessageBus.should_not_receive(:publish).with("droplet.updated", anything)
 
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
@@ -141,11 +134,21 @@ module VCAP::CloudController
       end
 
       it "should restage on update if staging is needed" do
-        AppStager.should_receive(:stage_app)
         app_obj.package_hash = "abc"
         app_obj.state = "STARTED"
         app_obj.save
         app_obj.needs_staging?.should be_true
+        AppStager.should_receive(:stage_app) do |app|
+          app.update(:droplet_hash => "def")
+        end
+        MessageBus.should_receive(:publish).with(
+          "droplet.updated",
+          json_match(
+            hash_including(
+              "droplet" => app_obj.guid,
+            ),
+          ),
+        )
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
@@ -307,14 +310,6 @@ module VCAP::CloudController
           ),
         )
 
-        nats.should_receive(:publish).with(
-          "droplet.updated",
-          json_match(
-            hash_including("droplet" => @app.guid,
-                           "cc_partition" => config[:cc_partition]),
-            ),
-        )
-
         EM.run do
           put(
             @app_url,
@@ -323,7 +318,7 @@ module VCAP::CloudController
             ).encode(),
             @headers_for_user,
           )
-          EM.stop
+          EM.next_tick { EM.stop }
         end
         last_response.status.should == 201
       end
@@ -355,14 +350,6 @@ module VCAP::CloudController
           "dea.update",
           json_match(
             hash_including("uris" => ["foo.jesse.cloud"]),
-          ),
-        )
-
-        nats.should_receive(:publish).with(
-          "droplet.updated",
-          json_match(
-            hash_including("droplet" => @app.guid,
-                           "cc_partition" => config[:cc_partition]),
           ),
         )
 

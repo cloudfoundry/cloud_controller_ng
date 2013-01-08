@@ -688,15 +688,6 @@ module VCAP::CloudController
             ),
           )
 
-          nats.should_receive(:publish).with(
-            "droplet.updated",
-            json_match(
-              hash_including("droplet" => app.guid,
-                             "cc_partition" => config[:cc_partition]
-              ),
-            ),
-          )
-
           config_override(:nats => nats)
           EM.run do
             put(
@@ -734,15 +725,6 @@ module VCAP::CloudController
             "dea.update",
             json_match(
               hash_including("uris" => [uri2]),
-            ),
-          )
-
-          nats.should_receive(:publish).with(
-            "droplet.updated",
-            json_match(
-              hash_including("droplet" => app.guid,
-                             "cc_partition" => config[:cc_partition]
-              ),
             ),
           )
 
