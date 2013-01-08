@@ -108,14 +108,7 @@ module VCAP::CloudController
         app_obj.save
         app_obj.needs_staging?.should be_false
 
-        expected = {
-          "droplet" => app_obj.guid,
-          "cc_partition" => config[:cc_partition],
-        }
-
-        MessageBus.should_receive(:publish).
-          with("droplet.updated",
-               json_match(hash_including(expected)))
+        MessageBus.should_not_receive(:publish).with("droplet.updated", anything)
 
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
@@ -307,14 +300,6 @@ module VCAP::CloudController
           ),
         )
 
-        nats.should_receive(:publish).with(
-          "droplet.updated",
-          json_match(
-            hash_including("droplet" => @app.guid,
-                           "cc_partition" => config[:cc_partition]),
-            ),
-        )
-
         EM.run do
           put(
             @app_url,
@@ -323,7 +308,7 @@ module VCAP::CloudController
             ).encode(),
             @headers_for_user,
           )
-          EM.stop
+          EM.next_tick { EM.stop }
         end
         last_response.status.should == 201
       end
@@ -355,14 +340,6 @@ module VCAP::CloudController
           "dea.update",
           json_match(
             hash_including("uris" => ["foo.jesse.cloud"]),
-          ),
-        )
-
-        nats.should_receive(:publish).with(
-          "droplet.updated",
-          json_match(
-            hash_including("droplet" => @app.guid,
-                           "cc_partition" => config[:cc_partition]),
           ),
         )
 

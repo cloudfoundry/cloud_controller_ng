@@ -48,12 +48,12 @@ module VCAP::CloudController
         elsif app.stopped?
           DeaClient.stop(app)
         end
+        send_droplet_updated_message(app)
       elsif changes.include?(:instances) && app.started?
         delta = changes[:instances][1] - changes[:instances][0]
         DeaClient.change_running_instances(app, delta)
+        send_droplet_updated_message(app)
       end
-
-      send_droplet_updated_message(app)
     end
 
     def send_droplet_updated_message(app)

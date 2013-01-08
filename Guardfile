@@ -3,6 +3,7 @@
 
 guard 'rspec', :version => 2, :cli => '--color --format doc --fail-fast', :all_on_start => false, :all_after_pass => false do
   watch(%r{^spec/.+_spec\.rb$})
+  watch("lib/cloud_controller/api/app.rb")       { "spec/api/legacy_apps_spec.rb" }
   watch(%r{^lib/(.+)\.rb$})                      { |m| "spec/#{m[1]}_spec.rb" }
   watch(%r{^lib/cloud_controller/(.+)\.rb$})     { |m| "spec/#{m[1]}_spec.rb" }
   watch('spec/spec_helper.rb')  { "spec" }
