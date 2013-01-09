@@ -106,6 +106,13 @@ module VCAP::CloudController::RestController
       VCAP::CloudController::SecurityContext.current_user
     end
 
+    # Fetch the current roles in a Roles object.
+    #
+    # @return [Roles] Roles object that can be queried for roles
+    def roles
+      VCAP::CloudController::SecurityContext.roles
+    end
+
     # see Sinatra::Base#send_file
     def send_file(path, opts={})
       @sinatra.send_file(path, opts)
