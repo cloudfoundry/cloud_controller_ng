@@ -36,9 +36,9 @@ module VCAP::CloudController
       auth_token = env["HTTP_AUTHORIZATION"]
 
       if auth_token && auth_token.upcase.start_with?("BEARER")
-        token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
-                                              @config[:uaa][:symmetric_secret],
-                                              @verification_key)
+        token_coder = CF::UAA::TokenCoder.new(:audience_ids => @config[:uaa][:resource_id],
+                                              :skey => @config[:uaa][:symmetric_secret],
+                                              :pkey => @verification_key)
         begin
           token_information = token_coder.decode(auth_token)
           logger.info("Token received from the UAA #{token_information.inspect}")
@@ -57,23 +57,33 @@ module VCAP::CloudController
                                          :admin => true, :active => true)
           end
 
+          # TODO remove bootstraps
+          # the bootstrap above can be removed once scoped admin is used
+          # the bootstrap below can be removed once vcap-yeti single-thread test
+          # does not create orgs/spaces on the initial admin
+
+          if (user.nil? && uaa_id && VCAP::CloudController::Roles.new(token_information).admin?)
+            user = Models::User.create(:guid => uaa_id,
+                                       :admin => true, :active => true)
+          end
+
           VCAP::CloudController::SecurityContext.set(user, token_information)
         rescue => e
           logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
         end
       end
 
-      validate_scheme(user)
+      validate_scheme(user, VCAP::CloudController::SecurityContext.current_user_is_admin?)
     end
 
-    def validate_scheme(user)
-      return unless user
+    def validate_scheme(user, admin)
+      return unless user || admin
 
       if @config[:https_required]
         raise Errors::NotAuthorized unless request.scheme == "https"
       end
 
-      if @config[:https_required_for_admins] && user && user.admin?
+      if @config[:https_required_for_admins] && admin
         raise Errors::NotAuthorized unless request.scheme == "https"
       end
     end
@@ -112,6 +122,7 @@ require "cloud_controller/errors"
 require "cloud_controller/app_package"
 require "cloud_controller/app_stager"
 require "cloud_controller/api"
+require "cloud_controller/roles"
 
 require "cloud_controller/legacy_api/legacy_api_base"
 require "cloud_controller/legacy_api/legacy_info"

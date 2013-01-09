@@ -3,7 +3,7 @@
 module VCAP::CloudController::Permissions
   class SpaceDeveloper < SpacePermissions
 
-    def self.granted_to?(obj, user)
+    def self.granted_to?(obj, user, roles)
       granted_to_via_space?(obj, user, :developers)
     end
 
