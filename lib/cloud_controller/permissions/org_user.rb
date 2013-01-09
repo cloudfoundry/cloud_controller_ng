@@ -2,7 +2,7 @@
 
 module VCAP::CloudController::Permissions
   class OrgUser < OrgPermissions
-    def self.granted_to?(obj, user)
+    def self.granted_to?(obj, user, roles)
       granted_to_via_org?(obj, user, :users)
     end
 

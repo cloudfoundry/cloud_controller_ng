@@ -15,7 +15,7 @@ module VCAP::CloudController::RestController
       model.db.transaction do
         logger.debug "create: #{request_attrs}"
         obj = model.create_from_hash(request_attrs)
-        validate_access(:create, obj, user)
+        validate_access(:create, obj, user, roles)
         [
           HTTP::CREATED,
           { "Location" => "#{self.class.path}/#{obj.guid}" },
@@ -67,7 +67,7 @@ module VCAP::CloudController::RestController
 
     # Enumerate operation
     def enumerate
-      raise NotAuthenticated unless user
+      raise NotAuthenticated unless user || roles.admin?
       ds = model.user_visible
       logger.debug "enumerate: #{ds.sql}"
       qp = self.class.query_parameters
@@ -162,7 +162,7 @@ module VCAP::CloudController::RestController
       obj = model.find(:guid => id)
       logger.debug("found: #{op} #{id}")
       if obj
-        validate_access(op, obj, user)
+        validate_access(op, obj, user, roles)
       else
         raise self.class.not_found_exception.new(id) if obj.nil?
       end
@@ -181,11 +181,13 @@ module VCAP::CloudController::RestController
     # @param [Object] obj The object for which to validate access.
     #
     # @param [Models::User] user The user for which to validate access.
-    def validate_access(op, obj, user)
+    #
+    # @param [Roles] The roles for the current user or client.
+    def validate_access(op, obj, user, roles)
       logger.debug("validate access: #{op} #{obj.guid}")
-      user_perms = Permissions.permissions_for(obj, user)
+      user_perms = Permissions.permissions_for(obj, user, roles)
       unless self.class.op_allowed_by?(op, user_perms)
-        raise NotAuthenticated unless user
+        raise NotAuthenticated if user.nil? && roles.none?
         raise NotAuthorized
       end
       logger.debug("validate access OK: #{op} #{obj.guid}")

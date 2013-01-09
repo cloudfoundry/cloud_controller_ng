@@ -28,7 +28,11 @@ module Sequel::Plugins::VcapUserVisibility
   module ClassMethods
     def user_visible
       user = VCAP::CloudController::SecurityContext.current_user
-      dataset.filter(user_visibility_filter(user))
+      if(user)
+        dataset.filter(user_visibility_filter(user))
+      else
+        dataset.filter(user_visibility_filter_with_admin_override(empty_dataset_filter))
+      end
     end
 
     def user_visibility_filter(user)
@@ -37,8 +41,7 @@ module Sequel::Plugins::VcapUserVisibility
     end
 
     def user_visibility_filter_with_admin_override(filt)
-      user = VCAP::CloudController::SecurityContext.current_user
-      if user.admin?
+      if VCAP::CloudController::SecurityContext.current_user_is_admin?
         full_dataset_filter
       else
         filt

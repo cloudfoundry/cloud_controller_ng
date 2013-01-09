@@ -106,6 +106,13 @@ module VCAP::CloudController::RestController
       VCAP::CloudController::SecurityContext.current_user
     end
 
+    # Fetch the current roles in a Roles object.
+    #
+    # @return [Roles] Roles object that can be queried for roles
+    def roles
+      VCAP::CloudController::SecurityContext.roles
+    end
+
     # see Sinatra::Base#send_file
     def send_file(path, opts={})
       @sinatra.send_file(path, opts)
@@ -116,6 +123,7 @@ module VCAP::CloudController::RestController
       # legacy calls setting a user, but not providing a token.
       return if self.class.allow_unauthenticated_access?
       return if VCAP::CloudController::SecurityContext.current_user
+      return if VCAP::CloudController::SecurityContext.current_user_is_admin?
 
       if VCAP::CloudController::SecurityContext.token
         raise NotAuthorized
