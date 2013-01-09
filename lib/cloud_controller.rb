@@ -36,9 +36,9 @@ module VCAP::CloudController
       auth_token = env["HTTP_AUTHORIZATION"]
 
       if auth_token && auth_token.upcase.start_with?("BEARER")
-        token_coder = CF::UAA::TokenCoder.new(@config[:uaa][:resource_id],
-                                              @config[:uaa][:symmetric_secret],
-                                              @verification_key)
+        token_coder = CF::UAA::TokenCoder.new(:audience_ids => @config[:uaa][:resource_id],
+                                              :skey => @config[:uaa][:symmetric_secret],
+                                              :pkey => @verification_key)
         begin
           token_information = token_coder.decode(auth_token)
           logger.info("Token received from the UAA #{token_information.inspect}")
@@ -55,6 +55,13 @@ module VCAP::CloudController
               @config[:bootstrap_admin_email] == token_information['email'])
               user = Models::User.create(:guid => uaa_id,
                                          :admin => true, :active => true)
+          end
+
+          # External bootstrapping
+          if (user.nil? && uaa_id)
+            user = Models::User.create(:guid => uaa_id,
+                                       :admin => Roles.new(token_information).admin?,
+                                       :active => true)
           end
 
           VCAP::CloudController::SecurityContext.set(user, token_information)
@@ -112,6 +119,7 @@ require "cloud_controller/errors"
 require "cloud_controller/app_package"
 require "cloud_controller/app_stager"
 require "cloud_controller/api"
+require "cloud_controller/roles"
 
 require "cloud_controller/legacy_api/legacy_api_base"
 require "cloud_controller/legacy_api/legacy_info"
