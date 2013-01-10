@@ -79,6 +79,10 @@ module VCAP::CloudController
         end
       end
 
+      it "should contain list of available domains" do
+        decoded_response["available_domains"].should =~ %w(domain-1.com domain-2.com)
+      end
+
       it "should return num_services services" do
         decoded_response["services"].size.should == num_services
       end
