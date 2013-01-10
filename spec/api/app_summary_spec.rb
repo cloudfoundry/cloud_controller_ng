@@ -37,6 +37,16 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/apps/:id/summary" do
+      before(:all) do
+        @system_domain = Models::Domain.new(:name => Sham.domain,
+          :owning_organization => nil)
+        @system_domain.save(:validate => false)
+      end
+
+      after(:all) do
+        @system_domain.destroy
+      end
+
       before do
         HealthManagerClient.should_receive(:healthy_instances).
           and_return(@app.instances)
@@ -77,6 +87,15 @@ module VCAP::CloudController
         @app.to_hash.each do |k, v|
           decoded_response[k.to_s].should == v
         end
+      end
+
+      it "should contain list of available domains" do
+        domain1, domain2 = @app.space.domains
+        decoded_response["available_domains"].should =~ [
+          {"guid" => domain1.guid, "name" => domain1.name, "owning_organization_guid" => domain1.owning_organization.guid},
+          {"guid" => domain2.guid, "name" => domain2.name, "owning_organization_guid" => domain2.owning_organization.guid},
+          {"guid" => @system_domain.guid, "name" => @system_domain.name, "owning_organization_guid" => nil},
+        ]
       end
 
       it "should return num_services services" do

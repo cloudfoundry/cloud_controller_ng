@@ -25,13 +25,27 @@ module VCAP::CloudController
         :running_instances => app.running_instances,
         :services => app.service_instances.map do |instance|
           service_instance_summary(instance)
-        end
+        end,
+        :available_domains => available_domains_summary_for(app)
       }.merge(app.to_hash)
 
       Yajl::Encoder.encode(app_info)
     end
 
     private
+
+    def available_domains_summary_for(app)
+      system_domains = Models::Domain.shared_domains.to_a
+      all_domains = system_domains + app.space.domains
+
+      all_domains.map do |domain|
+        {
+          :guid => domain.guid,
+          :name => domain.name,
+          :owning_organization_guid => (domain.owning_organization ? domain.owning_organization.guid : nil)
+        }
+      end
+    end
 
     def service_instance_summary(instance)
       {
