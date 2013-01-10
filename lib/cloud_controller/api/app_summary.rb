@@ -25,7 +25,8 @@ module VCAP::CloudController
         :running_instances => app.running_instances,
         :services => app.service_instances.map do |instance|
           service_instance_summary(instance)
-        end
+        end,
+        :available_domains => app.space.domains.map { |domain| { :guid => domain.guid, :name => domain.name } }
       }.merge(app.to_hash)
 
       Yajl::Encoder.encode(app_info)

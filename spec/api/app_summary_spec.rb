@@ -79,6 +79,14 @@ module VCAP::CloudController
         end
       end
 
+      it "should contain list of available domains" do
+        domain1, domain2 = @app.space.domains
+        decoded_response["available_domains"].should =~ [
+          {"guid" => domain1.guid, "name" => domain1.name},
+          {"guid" => domain2.guid, "name" => domain2.name}
+        ]
+      end
+
       it "should return num_services services" do
         decoded_response["services"].size.should == num_services
       end
