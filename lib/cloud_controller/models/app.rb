@@ -87,14 +87,31 @@ module VCAP::CloudController::Models
       # The dirty check on version allows a higher level to set the version.
       # We might start populating this with the vcap request guid of an api
       # request.
+
+      generate_start_event = false
+      generate_stop_event = false
+      # Change to app state is given priority over change to footprint as
+      # we would like to generate only either start or stop event exactly
+      # once during a state change.
       if column_changed?(:state)
         if started?
           self.version = SecureRandom.uuid if !column_changed?(:version)
-          AppStartEvent.create_from_app(self)
+          generate_start_event = true
         else
-          AppStopEvent.create_from_app(self) unless new?
+          generate_stop_event = true unless new?
         end
+      elsif !new? && started? &&
+          (column_changed?(:production) ||
+           column_changed?(:memory) ||
+           column_changed?(:instances))
+        # If app is not in started state and/or is new, then the changes
+        # to the footprint shouldn't trigger a billing event.
+        generate_stop_event = true
+        generate_start_event = true
       end
+
+      AppStopEvent.create_from_app(self) if generate_stop_event
+      AppStartEvent.create_from_app(self) if generate_start_event
     end
 
     def after_destroy_commit
