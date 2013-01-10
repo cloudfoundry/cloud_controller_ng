@@ -50,9 +50,21 @@ module VCAP::CloudController
 
     def download(id)
       app  = find_id_and_validate_access(:read, id)
-      path = AppPackage.package_path(app.guid)
+      if app.nil?
+        raise Errors::AppBitsUploadNotFound.new("bad :app")
+      end
 
-      send_file path, :filename => File.basename("#{path}.zip") if File.exists? path
+      package_path = AppPackage.package_path(id)
+      puts "HERE IS MY PACKAGE PATH #{package_path}"
+      unless File.exist?(package_path)
+        raise Errors::AppPackageNotFound.new(id)
+      end
+
+      if config[:nginx][:use_nginx]
+        return [200, { "X-Accel-Redirect" => "/droplets/" + "app_#{id}" }, ""]
+      else
+        return send_file package_path, :filename => File.basename("#{path}.zip")
+      end
     end
 
     def json_param(name)
