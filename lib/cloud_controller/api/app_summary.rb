@@ -23,44 +23,14 @@ module VCAP::CloudController
         :framework => app.framework.to_hash.merge(:guid => app.framework.guid),
         :runtime => app.runtime.to_hash.merge(:guid => app.runtime.guid),
         :running_instances => app.running_instances,
-        :services => app.service_instances.map do |instance|
-          service_instance_summary(instance)
-        end,
-        :available_domains => available_domains_summary_for(app)
+        :services => app.service_instances.map(&:as_summary_json),
+        :available_domains => app.space.domains.map(&:as_summary_json)
       }.merge(app.to_hash)
 
       Yajl::Encoder.encode(app_info)
     end
 
     private
-
-    def available_domains_summary_for(app)
-      app.space.domains.map do |domain|
-        {
-          :guid => domain.guid,
-          :name => domain.name,
-          :owning_organization_guid => (domain.owning_organization ? domain.owning_organization.guid : nil)
-        }
-      end
-    end
-
-    def service_instance_summary(instance)
-      {
-        :guid => instance.guid,
-        :name => instance.name,
-        :bound_app_count => instance.service_bindings_dataset.count,
-        :service_plan => {
-          :guid => instance.service_plan.guid,
-          :name => instance.service_plan.name,
-          :service => {
-            :guid => instance.service_plan.service.guid,
-            :label => instance.service_plan.service.label,
-            :provider => instance.service_plan.service.provider,
-            :version => instance.service_plan.service.version,
-          }
-        }
-      }
-    end
 
     get "#{path_id}/summary", :summary
   end

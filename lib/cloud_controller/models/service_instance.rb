@@ -61,6 +61,24 @@ module VCAP::CloudController::Models
       end
     end
 
+    def as_summary_json
+      {
+        :guid => guid,
+        :name => name,
+        :bound_app_count => service_bindings_dataset.count,
+        :service_plan => {
+          :guid => service_plan.guid,
+          :name => service_plan.name,
+          :service => {
+            :guid => service_plan.service.guid,
+            :label => service_plan.service.label,
+            :provider => service_plan.service.provider,
+            :version => service_plan.service.version,
+          }
+        }
+      }
+    end
+
     def check_quota
       if space
         if !space.organization.service_instance_quota_remaining?
