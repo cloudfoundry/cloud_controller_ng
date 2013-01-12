@@ -23,7 +23,8 @@ module VCAP::CloudController
         :framework => app.framework.to_hash.merge(:guid => app.framework.guid),
         :runtime => app.runtime.to_hash.merge(:guid => app.runtime.guid),
         :running_instances => app.running_instances,
-        :services => app.service_instances.map(&:as_summary_json)
+        :services => app.service_instances.map(&:as_summary_json),
+        :available_domains => app.space.domains.map(&:as_summary_json)
       }.merge(app.to_hash)
 
       Yajl::Encoder.encode(app_info)
