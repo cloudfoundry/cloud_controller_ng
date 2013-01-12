@@ -177,7 +177,7 @@ module VCAP::CloudController
             :domain => domain,
             :space => space,
           )
-          r.as_summary_json.should == { "guid" => r.guid, "host" => r.host, "domain" => { "name" => r.domain.name } }
+          r.as_summary_json.should == { :guid => r.guid, :host => r.host, :domain => { :name => r.domain.name } }
         end
       end
     end
