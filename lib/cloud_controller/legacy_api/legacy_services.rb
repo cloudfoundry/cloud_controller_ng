@@ -44,7 +44,7 @@ module VCAP::CloudController
       req = Yajl::Encoder.encode(attrs)
       svc_api = VCAP::CloudController::ServiceInstance.new(config, logger, env, params, req)
       svc_api.dispatch(:create)
-      HTTP::OK
+      "{}"
     end
 
     def read(name)
