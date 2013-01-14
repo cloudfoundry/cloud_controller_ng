@@ -123,6 +123,28 @@ module VCAP::CloudController
       end
     end
 
+    describe "#as_summary_json" do
+      subject { Models::ServiceInstance.make }
+
+      it "returns detailed summary" do
+        subject.as_summary_json.should == {
+          :guid => subject.guid,
+          :name => subject.name,
+          :bound_app_count => 0,
+          :service_plan => {
+            :guid => subject.service_plan.guid,
+            :name => subject.service_plan.name,
+            :service => {
+              :guid => subject.service_plan.service.guid,
+              :label => subject.service_plan.service.label,
+              :provider => subject.service_plan.service.provider,
+              :version => subject.service_plan.service.version,
+            }
+          }
+        }
+      end
+    end
+
     context "quota" do
       let(:free_plan) { Models::ServicePlan.make(:free => true)}
       let(:paid_plan) { Models::ServicePlan.make(:free => false)}

@@ -23,9 +23,7 @@ module VCAP::CloudController
         :framework => app.framework.to_hash.merge(:guid => app.framework.guid),
         :runtime => app.runtime.to_hash.merge(:guid => app.runtime.guid),
         :running_instances => app.running_instances,
-        :services => app.service_instances.map do |instance|
-          service_instance_summary(instance)
-        end,
+        :services => app.service_instances.map(&:as_summary_json),
         :available_domains => app.space.domains.map(&:as_summary_json)
       }.merge(app.to_hash)
 
@@ -33,24 +31,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def service_instance_summary(instance)
-      {
-        :guid => instance.guid,
-        :name => instance.name,
-        :bound_app_count => instance.service_bindings_dataset.count,
-        :service_plan => {
-          :guid => instance.service_plan.guid,
-          :name => instance.service_plan.name,
-          :service => {
-            :guid => instance.service_plan.service.guid,
-            :label => instance.service_plan.service.label,
-            :provider => instance.service_plan.service.provider,
-            :version => instance.service_plan.service.version,
-          }
-        }
-      }
-    end
 
     get "#{path_id}/summary", :summary
   end
