@@ -38,6 +38,12 @@ def make_developer_for_space(space)
   user
 end
 
+def make_auditor_for_space(space)
+  user = make_user_for_org(space.organization)
+  space.add_auditor(user)
+  user
+end
+
 def make_domain_for_space(space)
   domain = make_domain_for_org space.organization
   space.organization.add_domain(domain)
