@@ -26,7 +26,7 @@ module YetiSetup
     with_uaa_target(uaa_url) do
       user_guid = create_uaa_user(uaa_cc_secret, email, password)
       token = auth_token(cc_admin_email, cc_admin_password)
-      quota_guid = get_paid_quota_guid(cc_url, token)
+      quota_guid = get_yeti_quota_guid(cc_url, token)
       create_cc_user(cc_url, token, user_guid)
       org_guid = create_cc_org(cc_url, token, org_name, user_guid, quota_guid)
       space_guid = create_cc_space(cc_url, token, space_name, org_guid, user_guid)
@@ -55,17 +55,17 @@ module YetiSetup
     guid
   end
 
-  def self.get_paid_quota_guid(cc_url, token)
-    puts "# fetching paid quota guid"
+  def self.get_yeti_quota_guid(cc_url, token)
+    puts "# fetching yeti quota guid"
     cmd = "curl -H 'Content-Type: application/json' " +
           " -H 'Authorization: #{token}' " +
           " #{cc_url}/v2/quota_definitions"
     output = run cmd
     output_hash = Yajl::Parser.parse(output)
     resource = output_hash["resources"].select do |r|
-      r["entity"]["name"] == "paid"
+      r["entity"]["name"] == "yeti"
     end
-    error "could not find paid quota" unless resource
+    error "could not find yeti quota" unless resource
     resource.first["metadata"]["guid"]
   end
 
