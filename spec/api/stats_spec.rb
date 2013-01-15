@@ -9,6 +9,7 @@ module VCAP::CloudController
         @app = Models::App.make
         @user =  make_user_for_space(@app.space)
         @developer = make_developer_for_space(@app.space)
+        @auditor = make_auditor_for_space(@app.space)
       end
 
       context "as a developer" do
@@ -73,6 +74,49 @@ module VCAP::CloudController
               headers_for(@user))
 
               last_response.status.should == 403
+        end
+      end
+
+      context "as an auditor" do
+
+        it "should return the stats" do
+          @app.state = "STARTED"
+          @app.instances = 1
+          @app.save
+
+          @app.refresh
+
+          stats = {
+            0 => {
+              :state => "RUNNING",
+              :stats => "mock stats",
+            },
+            1 => {
+              :state => "DOWN",
+              :since => 1,
+            }
+          }
+
+          expected = {
+            "0" => {
+              "state" => "RUNNING",
+              "stats" => "mock stats",
+            },
+            "1" => {
+              "state" => "DOWN",
+              "since" => 1,
+            }
+          }
+
+          DeaClient.should_receive(:find_stats).with(@app, {}).
+            and_return(stats)
+
+          get("/v2/apps/#{@app.guid}/stats",
+              {},
+              headers_for(@auditor))
+
+          last_response.status.should == 200
+          Yajl::Parser.parse(last_response.body).should == expected
         end
       end
     end

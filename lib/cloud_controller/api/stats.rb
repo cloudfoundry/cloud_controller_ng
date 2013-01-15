@@ -9,6 +9,7 @@ module VCAP::CloudController
     permissions_required do
       read Permissions::CFAdmin
       read Permissions::SpaceDeveloper
+      read Permissions::SpaceAuditor
     end
 
     def stats(id, opts = {})
