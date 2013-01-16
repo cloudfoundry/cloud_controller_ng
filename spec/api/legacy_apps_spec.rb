@@ -753,7 +753,7 @@ module VCAP::CloudController
           end
         end
 
-        it "does not send a dea.update message when adding a URL to a running app" do
+        it "does not send a dea.update message when adding a URL to a stopped app" do
           Models::App.make(
             :name => app_name,
             :space => user.default_space,
@@ -775,7 +775,7 @@ module VCAP::CloudController
           end
         end
 
-        it "does not send a dea.update message when removing a URL to a running app" do
+        it "does not send a dea.update message when removing a URL to a stopped app" do
           Models::App.make(
             :name => app_name,
             :space => user.default_space,
