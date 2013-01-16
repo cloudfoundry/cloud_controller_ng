@@ -40,6 +40,8 @@ module VCAP::RestAPI
                                    "String /HTTPS_URL_REGEX/")
     EMAIL     = ReadableRegexp.new(RFC822::EMAIL_REGEXP_WHOLE,
                                    "String /EMAIL_REGEX/")
+    GIT_URL   = ReadableRegexp.new(URI::regexp(%w(http https git)),
+                                   "String /URL_REGEX/")
 
     # The block will be evaluated in the context of the schema validator used
     # by class `JsonMessage` viz. `Membrane`.
