@@ -29,10 +29,23 @@ module VCAP::CloudController
         res[:properties][:runtime_info].should be_kind_of(Hash)
         res[:properties][:runtime_info].should have_key(:name)
         res[:properties][:framework_info].should be_kind_of(Hash)
+        res[:properties][:buildpack].should be_nil
         res[:properties][:services].count.should == NUM_INSTANCES
         res[:properties][:services].each do |svc|
           svc[:credentials].should be_kind_of(Hash)
           svc[:options].should be_kind_of(Hash)
+        end
+      end
+
+      context "when the application has a buildpack" do
+        before do
+          app_obj.buildpack = "git://example.com/foo.git"
+        end
+
+        it "contains the buildpack in the staging request" do
+          res = AppStager.send(:staging_request, app_obj)
+          res.should be_kind_of(Hash)
+          res[:properties][:buildpack].should == "git://example.com/foo.git"
         end
       end
     end
