@@ -29,6 +29,8 @@ module VCAP::CloudController
       attribute  :command,             String,     :default => nil
       attribute  :console,             Message::Boolean, :default => false
 
+      attribute  :custom_buildpack,    String,     :default => nil
+
       to_many    :service_bindings,    :exclude_in => :create
       to_many    :routes
     end

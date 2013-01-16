@@ -19,12 +19,12 @@ module VCAP::CloudController::Models
     default_order_by  :name
 
     export_attributes :name, :production,
-                      :space_guid, :framework_guid, :runtime_guid,
+                      :space_guid, :framework_guid, :runtime_guid, :custom_buildpack,
                       :environment_json, :memory, :instances, :file_descriptors,
                       :disk_quota, :state, :version, :command, :console
 
     import_attributes :name, :production,
-                      :space_guid, :framework_guid, :runtime_guid,
+                      :space_guid, :framework_guid, :runtime_guid, :custom_buildpack,
                       :environment_json, :memory, :instances,
                       :file_descriptors, :disk_quota, :state,
                       :command, :console,

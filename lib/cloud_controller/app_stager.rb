@@ -88,6 +88,8 @@ module VCAP::CloudController
             :name => app.runtime.name
           ),
 
+          :custom_buildpack => app.custom_buildpack,
+
           :resources   => {
             :memory => app.memory,
             :disk   => app.disk_quota,
