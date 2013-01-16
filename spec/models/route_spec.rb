@@ -171,13 +171,20 @@ module VCAP::CloudController
       end
 
       describe "#as_summary_json" do
-        it "returns a hash containing the route id, host, and domain name" do
+        it "returns a hash containing the route id, host, and domain details" do
           r = Models::Route.make(
             :host => "www",
             :domain => domain,
             :space => space,
           )
-          r.as_summary_json.should == { "guid" => r.guid, "host" => r.host, "domain" => { "name" => r.domain.name } }
+          r.as_summary_json.should == {
+            :guid => r.guid,
+            :host => r.host,
+            :domain => {
+              :guid => r.domain.guid,
+              :name => r.domain.name
+            }
+          }
         end
       end
     end

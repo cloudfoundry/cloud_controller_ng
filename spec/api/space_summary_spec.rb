@@ -91,7 +91,20 @@ module VCAP::CloudController
             "guid" => app.guid,
             "name" => app.name,
             "urls" => [@route1.fqdn, @route2.fqdn],
-            "routes" => [@route1.as_summary_json, @route2.as_summary_json],
+            "routes" => [{
+              "guid" => @route1.guid,
+              "host" => nil,
+              "domain" => {
+                "guid" => @route1.domain.guid,
+                "name" => @route1.domain.name
+              }
+            }, {
+              "guid" => @route2.guid,
+              "host" => nil,
+              "domain" => {
+                "guid" => @route2.domain.guid,
+                "name" => @route2.domain.name}
+            }],
             "service_count" => num_services,
             "instances" => app.instances,
             "running_instances" => expected_running_instances,

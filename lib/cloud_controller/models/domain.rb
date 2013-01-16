@@ -87,6 +87,14 @@ module VCAP::CloudController::Models
       overlapping_domains.count != 0
     end
 
+    def as_summary_json
+      {
+        :guid => guid,
+        :name => name,
+        :owning_organization_guid => (owning_organization ? owning_organization.guid : nil)
+      }
+    end
+
     def intermediate_domains
       self.class.intermediate_domains(name)
     end

@@ -22,7 +22,14 @@ module VCAP::CloudController::Models
     end
 
     def as_summary_json
-      { "guid" => guid, "host" => host, "domain" => { "name" => domain.name }}
+      {
+        :guid => guid,
+        :host => host,
+        :domain => {
+          :guid => domain.guid,
+          :name => domain.name
+        }
+      }
     end
 
     def organization

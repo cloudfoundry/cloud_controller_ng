@@ -13,6 +13,10 @@ module VCAP::CloudController
     end
 
     before :all do
+      @system_domain = Models::Domain.new(:name => Sham.domain,
+        :owning_organization => nil)
+      @system_domain.save(:validate => false)
+
       @space = Models::Space.make
       @route1 = Models::Route.make(:space => @space)
       @route2 = Models::Route.make(:space => @space)
@@ -36,6 +40,10 @@ module VCAP::CloudController
       @app.add_route(@route2)
     end
 
+    after(:all) do
+      @system_domain.destroy
+    end
+
     describe "GET /v2/apps/:id/summary" do
       before do
         HealthManagerClient.should_receive(:healthy_instances).
@@ -56,7 +64,20 @@ module VCAP::CloudController
       end
 
       it "should return the app routes" do
-        decoded_response["routes"].should == [ @route1.as_summary_json, @route2.as_summary_json ]
+        decoded_response["routes"].should == [{
+          "guid" => @route1.guid,
+          "host" => nil,
+          "domain" => {
+            "guid" => @route1.domain.guid,
+            "name" => @route1.domain.name
+          }
+        }, {
+          "guid" => @route2.guid,
+          "host" => nil,
+          "domain" => {
+            "guid" => @route2.domain.guid,
+            "name" => @route2.domain.name}
+        }]
       end
 
       it "should return the app framework" do
@@ -77,6 +98,15 @@ module VCAP::CloudController
         @app.to_hash.each do |k, v|
           decoded_response[k.to_s].should == v
         end
+      end
+
+      it "should contain list of available domains" do
+        _, domain1, domain2 = @app.space.domains
+        decoded_response["available_domains"].should =~ [
+          {"guid" => domain1.guid, "name" => domain1.name, "owning_organization_guid" => domain1.owning_organization.guid},
+          {"guid" => domain2.guid, "name" => domain2.name, "owning_organization_guid" => domain2.owning_organization.guid},
+          {"guid" => @system_domain.guid, "name" => @system_domain.name, "owning_organization_guid" => nil}
+        ]
       end
 
       it "should return num_services services" do

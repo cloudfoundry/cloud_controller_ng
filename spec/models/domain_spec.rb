@@ -40,6 +40,33 @@ module VCAP::CloudController
       }
     }
 
+    describe "#as_summary_json" do
+      context "with a system domain" do
+        subject { Models::Domain.new(:name => Sham.domain, :owning_organization => nil) }
+
+        it "returns a hash containing the domain details" do
+          subject.as_summary_json.should == {
+            :guid => subject.guid,
+            :name => subject.name,
+            :owning_organization_guid => nil
+          }
+        end
+      end
+
+      context "with a custom domain" do
+        let(:organization) { Models::Organization.make }
+        subject { Models::Domain.new(:name => Sham.domain, :owning_organization => organization) }
+
+        it "returns a hash containing the domain details" do
+          subject.as_summary_json.should == {
+            :guid => subject.guid,
+            :name => subject.name,
+            :owning_organization_guid => subject.owning_organization.guid
+          }
+        end
+      end
+    end
+
     describe "#intermidiate_domains" do
       context "name is nil" do
         it "should return nil" do
