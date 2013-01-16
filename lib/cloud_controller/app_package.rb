@@ -51,6 +51,9 @@ module VCAP::CloudController
           @config[:directories] ||= {}
           @config[:directories][:droplets] = Dir.mktmpdir
         end
+        unless File.directory?(@config[:directories][:droplets])
+          FileUtils.mkdir_p(@config[:directories][:droplets])
+        end
         @config[:directories][:droplets]
       end
 
