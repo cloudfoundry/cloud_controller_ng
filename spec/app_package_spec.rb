@@ -177,4 +177,39 @@ module VCAP::CloudController
       end
     end
   end
+
+  describe "#package_dir" do
+    subject { AppPackage.package_dir }
+    let(:config) { { :directories => { :droplets => "/from_config" } } }
+    before { AppPackage.configure(config) }
+
+    context "when droplets directory was defined in configuration" do
+      it "creates defined droplets directory" do
+        FileUtils.should_receive(:mkdir_p).with("/from_config")
+        subject
+      end
+    end
+
+    shared_examples "creating and setting droplets directory" do
+      it "creates temporary droplets directory" do
+        Dir.should_receive(:mktmpdir)
+        subject
+      end
+
+      it "sets temporary droplets directory in configuration" do
+        Dir.should_receive(:mktmpdir) { "/temporary_dir" }
+        subject.should eq "/temporary_dir"
+      end
+    end
+
+    context "when directories were not defined in configuration" do
+      let(:config) { {} }
+      include_examples "creating and setting droplets directory"
+    end
+
+    context "when droplets directory was not defined in configuration" do
+      let(:config) { { :directories => { } } }
+      include_examples "creating and setting droplets directory"
+    end
+  end
 end

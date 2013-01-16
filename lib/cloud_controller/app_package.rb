@@ -45,7 +45,9 @@ module VCAP::CloudController
       #
       # Makes the directory on first use.
       def package_dir
-        unless @config[:directories] && @config[:directories][:droplets]
+        if @config[:directories] && @config[:directories][:droplets]
+           FileUtils.mkdir_p(@config[:directories][:droplets])
+        else
           # TODO: remove this tmpdir.  It is for use when running under vcap
           # for development
           @config[:directories] ||= {}
