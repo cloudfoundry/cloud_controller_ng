@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cloudfoundry/cloud_controller_ng.png)](https://travis-ci.org/cloudfoundry/cloud_controller_ng)
+
 VMware Cloud Application Platform - Cloud Controller
 ====================================================
 
