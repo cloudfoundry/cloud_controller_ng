@@ -134,5 +134,19 @@ module VCAP::CloudController
         }
       end
     end
+
+    describe "Permissions" do
+      context "as an org manager" do
+        it "should return 200" do
+          HealthManagerClient.should_receive(:healthy_instances).
+            and_return(@app.instances)
+          org_manager = make_manager_for_org(@app.space.organization, @app.space)
+          get("/v2/apps/#{@app.guid}/summary",
+              {},
+              headers_for(org_manager))
+          last_response.status.should == 200
+        end
+      end
+    end
   end
 end

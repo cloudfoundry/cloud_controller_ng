@@ -398,7 +398,7 @@ module VCAP::CloudController
             :path => "/v2/apps",
             :enumerate => 0,
             :create => :not_allowed,
-            :read => :not_allowed,
+            :read => :allowed,
             :modify => :not_allowed,
             :delete => :not_allowed
         end
