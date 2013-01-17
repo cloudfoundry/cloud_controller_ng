@@ -9,6 +9,11 @@ module VCAP::CloudController::Permissions
 
       if obj.kind_of?(Models::Organization)
         obj.send(relation).include?(user)
+      elsif obj.kind_of?(Models::App)
+        if (obj.space && obj.space.organization &&
+            obj.space.organization.send("#{relation}_dataset")[:id => user.id] != nil)
+          return true
+        end
       elsif !obj.new?
         if obj.respond_to?(:owning_organization)
           return false unless obj.owning_organization

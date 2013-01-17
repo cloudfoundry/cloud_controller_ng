@@ -50,6 +50,12 @@ def make_domain_for_space(space)
   domain
 end
 
+def make_manager_for_org(org, space)
+  user = make_user_for_org(org)
+  org.add_manager(user)
+  user
+end
+
 def make_app_for_service_instance(service_instance)
   app = VCAP::CloudController::Models::App.make(:space => service_instance.space)
 end
