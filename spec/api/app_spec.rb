@@ -76,6 +76,81 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe "buildpack" do
+        let(:update_hash) { { :buildpack => buildpack } }
+
+        subject {
+          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
+        }
+
+        context "when the buildpack is nil" do
+          let(:buildpack) { nil }
+
+          it "passes validation" do
+            subject
+            last_response.status.should == 201
+          end
+        end
+
+        context "when the buildpack is a public git url" do
+          let(:buildpack) { "git://example.com/foo.git" }
+
+          it "passes validation" do
+            subject
+            last_response.status.should == 201
+          end
+        end
+
+        context "when the buildpack is a public http url" do
+          let(:buildpack) { "http://example.com/foo" }
+
+          it "passes validation" do
+            subject
+            last_response.status.should == 201
+          end
+        end
+
+        context "when the buildpack is a private git url with a ssh schema" do
+          let(:buildpack) { "git@example.com:foo.git" }
+
+          it "fails validation" do
+            subject
+            last_response.body.should =~ /Value #{buildpack} doesn't match regexp String \/GIT_URL_REGEX\//
+            last_response.status.should == 400
+          end
+        end
+
+        context "when the buildpack is a private git url" do
+          let(:buildpack) { "ssh://git@example.com:foo.git" }
+
+          it "fails validation" do
+            subject
+            last_response.body.should =~ /Value #{buildpack} doesn't match regexp String \/GIT_URL_REGEX\//
+            last_response.status.should == 400
+          end
+        end
+
+        context "when the buildpack is some junk string" do
+          let(:buildpack) { "Hello, world!" }
+
+          it "fails validation" do
+            subject
+            last_response.body.should =~ /Value #{buildpack} doesn't match regexp String \/GIT_URL_REGEX\//
+            last_response.status.should == 400
+          end
+        end
+
+        context "when the buildpack is some junk string" do
+          let(:buildpack) { "example.com" }
+
+          it "fails validation" do
+            subject
+            last_response.body.should =~ /Value #{buildpack} doesn't match regexp String \/GIT_URL_REGEX\//
+            last_response.status.should == 400
+          end
+        end
+      end
     end
 
     describe "command" do
