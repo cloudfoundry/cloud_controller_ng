@@ -311,7 +311,7 @@ module VCAP::CloudController
             msg = "File error: Request failed for app: #{app.name}"
             msg << " path: #{path} as the app is in stopped state."
 
-            error.message.should == msg
+            expect(error.message).to eq msg
           }
         end
       end
@@ -332,7 +332,7 @@ module VCAP::CloudController
             msg << ", instance: #{instance} and path: #{path} as the instance is"
             msg << " out of range."
 
-            error.message.should == msg
+            expect(error.message).to eq msg
           }
         end
       end
