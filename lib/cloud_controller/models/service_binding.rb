@@ -84,6 +84,17 @@ module VCAP::CloudController::Models
       val
     end
 
+    def binding_options=(val)
+      val = Yajl::Encoder.encode(val)
+      super(val)
+    end
+
+    def binding_options
+      val = super
+      val = Yajl::Parser.parse(val) if val
+      val
+    end
+
     def gateway_data=(val)
       val = Yajl::Encoder.encode(val)
       super(val)
