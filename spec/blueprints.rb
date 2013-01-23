@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require 'schemata/dea'
 
 Sham.define do
   email               { |index| "email-#{index}@somedomain.com" }
@@ -14,7 +15,14 @@ Sham.define do
   description         { |index| "desc-#{index}" }
   version             { |index| "version-#{index}" }
   service_credentials { |index|
-    { "creds-key-#{index}" => "creds-val-#{index}" }
+    { "creds-key-#{index}"  => "creds-val-#{index}",
+      "hostname"            => "foo.com",
+      "host"                => "host",
+      "port"                => 80,
+      "username"            => "sre@vmware.com",
+      "password"            => "the_admin_pw",
+      "name"                => "name"
+    }
   }
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.com" }
@@ -76,7 +84,10 @@ module VCAP::CloudController::Models
   Runtime.blueprint do
     name              { Sham.name }
     description       { Sham.description }
-    internal_info     { {:version => Sham.version} }
+    internal_info do
+      mock_message = Schemata::Dea.mock_start_request
+      mock_message.contents['runtime_info'].merge({:version => Sham.version})
+    end
   end
 
   Framework.blueprint do
@@ -90,12 +101,14 @@ module VCAP::CloudController::Models
     space             { Space.make }
     runtime           { Runtime.make }
     framework         { Framework.make }
+    droplet_hash      { "deadbeef" }
   end
 
   ServiceBinding.blueprint do
     credentials       { Sham.service_credentials }
     service_instance  { ServiceInstance.make }
     app               { App.make(:space => service_instance.space) }
+    binding_options   { {} }
   end
 
   ServicePlan.blueprint do

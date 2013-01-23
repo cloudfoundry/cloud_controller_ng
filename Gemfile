@@ -15,6 +15,7 @@ gem "vcap_common",  "~> 2.0.8", :git => 'git://github.com/cloudfoundry/vcap-comm
 gem "cf-uaa-lib", "~> 1.3.0"
 gem "httpclient"
 gem "steno", "~> 1.0.0"
+gem "schemata-dea", :path => "../schemata"
 gem 'stager-client', '~> 0.0.02', :git => 'https://github.com/cloudfoundry/stager-client.git', :ref => '04c2aee9'
 
 # These are outside the test group in order to run rake tasks
