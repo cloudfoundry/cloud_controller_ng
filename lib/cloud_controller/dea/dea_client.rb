@@ -2,6 +2,7 @@
 
 require "vcap/stager/client"
 require "cloud_controller/errors"
+require "schemata/dea"
 
 module VCAP::CloudController
   module DeaClient
@@ -223,7 +224,8 @@ module VCAP::CloudController
           msg[:index] = idx
           dea_id = dea_pool.find_dea(app.memory, app.runtime.name)
           if dea_id
-            dea_publish("#{dea_id}.start", msg.merge(message_override))
+            msg_obj = Schemata::Dea::StartRequest::V1.new(msg.merge(message_override))
+            dea_publish("#{dea_id}.start", msg_obj.encode)
           else
             logger.error "no resources available #{msg}"
           end
@@ -345,7 +347,7 @@ module VCAP::CloudController
       def dea_publish(cmd, args = {})
         subject = "dea.#{cmd}"
         logger.debug "sending '#{subject}' with '#{args}'"
-        json = Yajl::Encoder.encode(args)
+        json = args.kind_of?(String) ? args : Yajl::Encoder.encode(args)
 
         message_bus.publish(subject, json)
       end
