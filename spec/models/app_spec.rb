@@ -409,7 +409,7 @@ module VCAP::CloudController
                               :runtime => Models::Runtime.make,
                               :space => space)
         app.add_route_by_guid(Models::Route.make.guid)
-        expect { app.save }.should raise_error(Models::App::InvalidRouteRelation)
+        expect { app.save }.to raise_error(Models::App::InvalidRouteRelation)
         app.routes.should be_empty
       end
     end
