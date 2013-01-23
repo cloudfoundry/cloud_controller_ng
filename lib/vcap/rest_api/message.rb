@@ -5,41 +5,32 @@ require "rfc822"
 
 module VCAP::RestAPI
   class Message < JsonMessage
-
     # The schema validator used by class `JsonMessage` calls the `inspect`
-    # method on the regexp object to get a description of the regex. We wrap
+    # method on the regexp object to get a description of the regex. We tweak
     # the regexp object so that the `inspect` method generates a readable
     # description for us through `VCAP::RestAPI::Message#schema_doc` method.
-    class ReadableRegexp < Regexp
-      def initialize(schema, description = nil)
-        @schema = schema
-        @description = description
+    def self.readable_regexp(regexp, description)
+      regexp.define_singleton_method(:inspect) do
+        description
       end
 
-      def match(str)
-        @schema.match(str)
+      regexp.define_singleton_method(:to_s) do
+        inspect
       end
 
-      def inspect
-        return @description if @description
-        @schema.inspect
-      end
-
-      def method_missing(symbol, *args, &block)
-        @schema.send(symbol, *args, &block)
-      end
+      regexp
     end
 
     def self.schema_doc(schema)
       schema.deparse
     end
 
-    URL       = ReadableRegexp.new(URI::regexp(%w(http https)),
-                                   "String /URL_REGEX/")
-    HTTPS_URL = ReadableRegexp.new(URI::regexp("https"),
-                                   "String /HTTPS_URL_REGEX/")
-    EMAIL     = ReadableRegexp.new(RFC822::EMAIL_REGEXP_WHOLE,
-                                   "String /EMAIL_REGEX/")
+    URL       = readable_regexp(URI::regexp(%w(http https)),
+                                "String /URL_REGEX/")
+    HTTPS_URL = readable_regexp(URI::regexp("https"),
+                                "String /HTTPS_URL_REGEX/")
+    EMAIL     = readable_regexp(RFC822::EMAIL_REGEXP_WHOLE,
+                                "String /EMAIL_REGEX/")
 
     # The block will be evaluated in the context of the schema validator used
     # by class `JsonMessage` viz. `Membrane`.
