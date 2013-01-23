@@ -71,13 +71,13 @@ describe "String :name" do
     it "should not allow create with different case due to sequel validations" do
       expect {
         @c.create(:str => "ABC")
-      }.should raise_error(Sequel::ValidationFailed)
+      }.to raise_error(Sequel::ValidationFailed)
     end
 
     it "should not allow create with different case due to db constraints" do
       expect {
         @c.new(:str => "ABC").save(:validate => false)
-      }.should raise_error(Sequel::DatabaseError)
+      }.to raise_error(Sequel::DatabaseError)
     end
 
     it "should perform case sensitive search" do
