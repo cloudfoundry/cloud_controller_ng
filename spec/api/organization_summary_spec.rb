@@ -4,18 +4,13 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::OrganizationSummary do
-    let(:num_spaces) { 2 }
-    let(:num_services) { 2 }
-    let(:num_prod_apps) { 3 }
-    let(:num_free_apps) { 5 }
-    let(:prod_mem_size) { 128 }
-    let(:free_mem_size) { 1024 }
-    let(:num_apps) { num_prod_apps + num_free_apps }
-
-    let(:admin_headers) do
-      user = VCAP::CloudController::Models::User.make(:admin => true)
-      headers_for(user)
-    end
+    num_spaces = 2
+    num_services = 2
+    num_prod_apps = 3
+    num_free_apps = 5
+    prod_mem_size = 128
+    free_mem_size = 1024
+    num_apps = num_prod_apps + num_free_apps
 
     before :all do
       @org = Models::Organization.make
@@ -51,7 +46,8 @@ module VCAP::CloudController
 
     describe "GET /v2/organizations/:id/summary" do
       before :all do
-        get "/v2/organizations/#{@org.guid}/summary", {}, admin_headers
+        admin_user = VCAP::CloudController::Models::User.make(:admin => true)
+        get "/v2/organizations/#{@org.guid}/summary", {}, headers_for(admin_user)
       end
 
       it "should return 200" do

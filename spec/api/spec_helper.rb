@@ -88,14 +88,11 @@ module VCAP::CloudController::ApiSpecHelper
       opts[k] ||= {}
     end
 
-    let(:admin_headers) do
-      user = VCAP::CloudController::Models::User.make(:admin => true)
-      headers_for(user)
-    end
-
-    before do
-      # force creation of the admin user used in the headers
-      admin_headers
+    def admin_headers
+      @admin_headers ||= begin
+        user = VCAP::CloudController::Models::User.make(:admin => true)
+        headers_for(user)
+      end
     end
 
     include_examples "uaa authenticated api", opts

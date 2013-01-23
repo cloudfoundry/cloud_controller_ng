@@ -4,10 +4,9 @@ module VCAP::CloudController::ApiSpecHelper
   shared_examples "reading a valid object" do |opts|
     describe "reading a valid object" do
       describe "GET #{opts[:path]}/:id" do
-        let (:obj) { opts[:model].make }
-
         before(:all) do
-          get "#{opts[:path]}/#{obj.guid}", {}, json_headers(admin_headers)
+          @obj = opts[:model].make
+          get "#{opts[:path]}/#{@obj.guid}", {}, json_headers(admin_headers)
         end
 
         it "should return 200" do
@@ -17,7 +16,7 @@ module VCAP::CloudController::ApiSpecHelper
         include_examples "return a vcap rest encoded object"
 
         it "should return the json encoded object in the response body" do
-          expected = obj.to_hash
+          expected = @obj.to_hash
           expected.each { |k, v| expected[k] = v.to_s if v.kind_of?(Time) }
 
           # filter out the relation urls.

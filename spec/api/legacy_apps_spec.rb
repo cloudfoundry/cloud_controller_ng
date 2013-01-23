@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:admin) { make_user_with_default_space(:admin => true) }
     let(:app_name) { Sham.name }
 
-    before(:all) do
+    before do
       Models::Domain.default_serving_domain_name = DEFAULT_SERVING_DOMAIN_NAME
     end
 
@@ -16,12 +16,12 @@ module VCAP::CloudController
       HealthManagerClient.stub(:healthy_instances).and_return(1)
     end
 
-    after(:all) do
+    after do
       Models::Domain.default_serving_domain_name = nil
     end
 
     describe "GET /apps" do
-      before(:all) do
+      before do
         @apps = []
         7.times do
           @apps << Models::App.make(:space => user.default_space,
@@ -56,7 +56,7 @@ module VCAP::CloudController
     end
 
     describe "GET /apps/:name" do
-      before(:all) do
+      before do
         # since we don't get the guid back, we use the mem attribute to
         # distinguish between apps
         @app_1 = Models::App.make(:space => user.default_space, :memory => 128)
@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
 
       describe "GET /apps/:name_that_exists" do
-        before(:all) do
+        before do
           get "/apps/#{@app_2.name}", {}, headers_for(user)
         end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
       end
 
       describe "GET /apps/:invalid_name" do
-        before(:all) do
+        before do
           get "/apps/name_does_not_exist", {}, headers_for(user)
         end
 
@@ -128,7 +128,7 @@ module VCAP::CloudController
     end
 
     describe "GET /apps/name/crashes" do
-      before(:all) do
+      before do
         @app = Models::App.make(:space => user.default_space)
       end
 
@@ -147,7 +147,7 @@ module VCAP::CloudController
     end
 
     describe "GET /apps/:name/instances/:instance_id/files/(:path)" do
-      before(:all) do
+      before do
         @app = Models::App.make(:space => user.default_space)
       end
 
@@ -232,7 +232,7 @@ module VCAP::CloudController
     end
 
     describe "POST /apps" do
-      before(:all) do
+      before do
         ["java", "ruby18"].each do |r|
           unless Models::Runtime[:name => r]
             Models::Runtime.make(:name => r)
@@ -262,7 +262,7 @@ module VCAP::CloudController
       end
 
       context "with all required parameters" do
-        before(:all) do
+        before do
           req = Yajl::Encoder.encode({
             :name => app_name,
             :staging => { :framework => "sinatra", :runtime => "ruby18" },
@@ -292,7 +292,7 @@ module VCAP::CloudController
       end
 
       context "with legacy yeti style framework and runtime [TEAM-61]" do
-        before(:all) do
+        before do
           req = Yajl::Encoder.encode({
             :name => app_name,
             :staging => { :model => "sinatra", :stack => "ruby18" }
@@ -314,7 +314,7 @@ module VCAP::CloudController
       end
 
       context "with an invalid framework" do
-        before(:all) do
+        before do
           req = Yajl::Encoder.encode({
             :name => app_name,
             :staging => { :framework => "funky", :runtime => "ruby18" },
@@ -336,7 +336,7 @@ module VCAP::CloudController
       end
 
       context "with an invalid runtime" do
-        before(:all) do
+        before do
           req = Yajl::Encoder.encode({
             :name => app_name,
             :staging => { :framework => "sinatra", :runtime => "cobol" },
@@ -358,7 +358,7 @@ module VCAP::CloudController
       end
 
       context "with a nil runtime" do
-        before(:all) do
+        before do
           req = Yajl::Encoder.encode({
             :name => app_name,
             :staging => { :framework => "grails" }
@@ -382,7 +382,7 @@ module VCAP::CloudController
         context "with a valid route" do
           let(:host) { Sham.host }
 
-          before(:all) do
+          before do
             req = Yajl::Encoder.encode({
               :name => app_name,
               :staging => { :framework => "grails" },
@@ -407,7 +407,7 @@ module VCAP::CloudController
           let(:host) { Sham.host }
           let(:domain) { Sham.domain }
 
-          before(:all) do
+          before do
             Models::Route.create(
               :host => host,
               :domain => Models::Domain.default_serving_domain,
@@ -440,15 +440,18 @@ module VCAP::CloudController
         end
 
         context "with an invalid route" do
-          bad_domain_name = Sham.domain
+          taken_domain_name = Sham.domain
 
           before(:all) do
-            bad_domain = Models::Domain.make(:name => bad_domain_name)
+            Models::Domain.make(:name => taken_domain_name)
+          end
+
+          before do
             req = Yajl::Encoder.encode({
               :name => app_name,
               :staging => { :framework => "grails" },
               :uris => ["#{Sham.host}.#{DEFAULT_SERVING_DOMAIN_NAME}",
-                        "anotherroute.#{bad_domain_name}"]
+                        "anotherroute.#{taken_domain_name}"]
             })
 
             post "/apps", req, headers_for(user)
@@ -464,7 +467,7 @@ module VCAP::CloudController
           end
 
           it_behaves_like "a vcap rest error response",
-            /domain is invalid: #{bad_domain_name}/
+            /domain is invalid: #{taken_domain_name}/
         end
       end
 
@@ -827,7 +830,7 @@ module VCAP::CloudController
     # until services get correct permission settings
     describe "service binding" do
       describe "PUT /apps/:name adding and removing bindings" do
-        before(:all) do
+        before do
           @app_obj = Models::App.make(:space => admin.default_space)
           bound_instances = []
           5.times do

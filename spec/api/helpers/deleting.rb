@@ -4,10 +4,9 @@ module VCAP::CloudController::ApiSpecHelper
   shared_examples "deleting a valid object" do |opts|
     describe "deleting a valid object" do
       describe "DELETE #{opts[:path]}/:id" do
-        let (:obj) { opts[:model].make }
-
         before(:all) do
-          delete "#{opts[:path]}/#{obj.guid}", {}, admin_headers
+          @obj = opts[:model].make
+          delete "#{opts[:path]}/#{@obj.guid}", {}, admin_headers
         end
 
         it "should return 204" do
