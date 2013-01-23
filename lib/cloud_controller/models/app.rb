@@ -19,12 +19,12 @@ module VCAP::CloudController::Models
     default_order_by  :name
 
     export_attributes :name, :production,
-                      :space_guid, :framework_guid, :runtime_guid,
+                      :space_guid, :framework_guid, :runtime_guid, :buildpack,
                       :environment_json, :memory, :instances, :file_descriptors,
                       :disk_quota, :state, :version, :command, :console
 
     import_attributes :name, :production,
-                      :space_guid, :framework_guid, :runtime_guid,
+                      :space_guid, :framework_guid, :runtime_guid, :buildpack,
                       :environment_json, :memory, :instances,
                       :file_descriptors, :disk_quota, :state,
                       :command, :console,
@@ -49,6 +49,7 @@ module VCAP::CloudController::Models
       validates_presence :space
       validates_presence :framework
       validates_presence :runtime
+      validates_git_url :buildpack
       validates_unique   [:space_id, :name]
       validates_includes PackageStates, :package_state, :allow_missing => true
       validates_includes AppStates, :state, :allow_missing => true
