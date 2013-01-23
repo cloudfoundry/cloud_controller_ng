@@ -122,7 +122,7 @@ module VCAP::CloudController
         it "should not allow the creation of a shared domain" do
           expect {
             Models::Domain.create(:name => "shared.com")
-          }.should raise_error Sequel::ValidationFailed, /organization presence/
+          }.to raise_error Sequel::ValidationFailed, /organization presence/
         end
       end
     end
