@@ -1,50 +1,29 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DeaClient do
     let(:app) { Models::App.make }
     let(:message_bus) { double(:message_bus) }
     let(:dea_pool) { double(:dea_pool) }
+    let(:number_service_instances) { 3 }
 
-    before(:all) do
-      NUM_SVC_INSTANCES.times do
+    before do
+
+      Models::ServiceBinding.any_instance.stub(:bind_on_gateway)
+
+      number_service_instances.times do
         instance = Models::ServiceInstance.make(:space => app.space)
         binding = Models::ServiceBinding.make(:app => app,
                                               :service_instance => instance)
         app.add_service_binding(binding)
       end
-    end
-
-    before(:each) do
       DeaClient.configure(config, message_bus, dea_pool)
     end
 
-    describe "start_app_message" do
-      NUM_SVC_INSTANCES = 3
-
-      it "should return a serialized dea message" do
-        res = DeaClient.send(:start_app_message, app)
-        res.should be_kind_of(Hash)
-        res[:droplet].should == app.guid
-        res[:runtime_info].should be_kind_of(Hash)
-        res[:runtime_info].should have_key(:name)
-        res[:services].should be_kind_of(Array)
-        res[:services].count.should == NUM_SVC_INSTANCES
-        res[:services].first.should be_kind_of(Hash)
-        res[:limits].should be_kind_of(Hash)
-        res[:env].should be_kind_of(Array)
-        res[:console].should == false
-      end
-
-      context "with an app enabled for console support" do
-        it "should enable console in the start message" do
-          app.update(:console => true)
-          res = DeaClient.send(:start_app_message, app)
-          res[:console].should == true
-        end
-      end
+    after do
+      Models::ServiceBinding.any_instance.unstub(:bind_on_gateway)
     end
 
     describe "update_uris" do
@@ -69,23 +48,93 @@ module VCAP::CloudController
       end
     end
 
-    describe "start_instances_with_message" do
-      it "should send a start messages to deas with message override" do
-        app.instances = 2
+    describe "#start_instances_with_message" do
+      let(:indices) { [1] }
+      let(:message_override) { {} }
+      let(:start_instances) do
+        with_em_and_thread do
+          DeaClient.start_instances_with_message(app, indices, message_override)
+        end
+      end
 
-        dea_pool.should_receive(:find_dea).and_return("abc")
-        message_bus.should_receive(:publish).with(
-          "dea.abc.start",
-          json_match(
-            hash_including(
-              "foo"   => "bar",
-              "index" => 1,
-            )
-          ),
-        )
-          with_em_and_thread do
-            DeaClient.start_instances_with_message(app, [1], :foo => "bar")
+      subject { start_instances }
+
+      context "when there is a dea id" do
+        before { dea_pool.should_receive(:find_dea) { "abc" } }
+
+        it "should send a start messages to deas with message override" do
+          #app.instances = 2
+
+          message_bus.should_receive(:publish).with(
+              "dea.abc.start",
+              json_match(hash_including("V1"))
+          )
+          subject
+        end
+
+        describe "the basic start app fields" do
+          subject do
+            return_json = nil
+            message_bus.stub(:publish).with(any_args) { |_, json| return_json = json }
+            start_instances
+            Yajl::Parser.parse(return_json)
           end
+
+          it { should be_kind_of Hash }
+          its(['droplet']) { should eq app.guid }
+          its(['runtime_info']) { should be_kind_of Hash }
+          its(['runtime_info']) { should have_key 'name' }
+          its(['limits']) { should be_kind_of Hash }
+          its(['env']) { should be_kind_of Array }
+          its(['console']) { should eq false }
+          its(['services']) { should be_kind_of Array }
+
+          it 'has all the services in the hash' do
+            expect(subject['services'].count).to eq number_service_instances
+          end
+
+          it 'each services is a hash' do
+            expect(subject['services'].first).to be_kind_of Hash
+          end
+
+          context "with an app enabled for console support" do
+            before { app.update(:console => true) }
+            its(['console']) { should eq true }
+          end
+        end
+
+        context 'when there is a message override' do
+          let(:message_override) { {'name' => "bar"} }
+
+          it "merges the message override into the message" do
+            message_bus.should_receive(:publish).with(anything, json_match(hash_including(message_override)))
+            subject
+          end
+        end
+      end
+
+      context 'when there are multiple indices' do
+        let(:indices) { [0, 1, 2] }
+
+        it "creates a message for each index" do
+          dea_pool.should_receive(:find_dea).exactly(indices.size).times { "abc" }
+          message_bus.should_receive(:publish).exactly(indices.size).times
+          subject
+        end
+      end
+
+      context "when there is no dea id" do
+        let(:logger) { mock("Logger Mock") }
+
+        before do
+          dea_pool.stub(:find_dea) { nil }
+          DeaClient.stub(:logger) { logger }
+        end
+
+        it "logs an error message" do
+          logger.should_receive(:error).with /no resources/
+          subject
+        end
       end
     end
 
@@ -247,6 +296,7 @@ module VCAP::CloudController
       include Errors
 
       it "should raise an error if the app is in stopped state" do
+        app.instances = 1
         app.should_receive(:stopped?).once.and_return(true)
 
         instance = 0
