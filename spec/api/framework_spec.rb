@@ -9,7 +9,7 @@ module VCAP::CloudController
       :path                 => "/v2/frameworks",
       :model                => Models::Framework,
       :basic_attributes     => [:name, :description],
-      :required_attributes  => [:name, :description],
+      :required_attributes  => [:name, :description, :internal_info],
       :unique_attributes    => :name,
       :one_to_many_collection_ids => {
         :apps  => lambda { |framework| Models::App.make }

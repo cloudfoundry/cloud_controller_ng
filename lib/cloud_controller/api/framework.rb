@@ -10,6 +10,7 @@ module VCAP::CloudController
     define_attributes do
       attribute  :name,           String
       attribute  :description,    String
+      attribute  :internal_info,  Hash
       to_many    :apps
     end
 
