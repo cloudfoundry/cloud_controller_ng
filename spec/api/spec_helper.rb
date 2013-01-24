@@ -45,6 +45,7 @@ module VCAP::CloudController::ApiSpecHelper
     token_coder = CF::UAA::TokenCoder.new(config[:uaa][:resource_id],
                                           config[:uaa][:symmetric_secret],
                                           nil)
+
     unless user.nil?
       user_token = token_coder.encode(:user_id => user.guid,
                                       :email => opts[:email])

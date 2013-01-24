@@ -378,10 +378,11 @@ module VCAP::CloudController
       end
 
       let(:creation_req_for_a) do
-        Yajl::Encoder.encode(:name => Sham.name,
-                             :space_guid => @space_a.guid,
-                             :framework_guid => Models::Framework.make.guid,
-                             :runtime_guid => Models::Runtime.make.guid)
+        Yajl::Encoder.encode(
+          :name => Sham.name,
+          :space_guid => @space_a.guid,
+          :framework_guid => Models::Framework.make.guid,
+          :runtime_guid => Models::Runtime.make.guid)
       end
 
       let(:update_req_for_a) do
@@ -398,7 +399,7 @@ module VCAP::CloudController
             :path => "/v2/apps",
             :enumerate => 0,
             :create => :not_allowed,
-            :read => :not_allowed,
+            :read => :allowed,
             :modify => :not_allowed,
             :delete => :not_allowed
         end

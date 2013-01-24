@@ -6,7 +6,6 @@ module VCAP::CloudController
       full Permissions::CFAdmin
       read Permissions::OrgManager
       read Permissions::SpaceManager
-      read Permissions::SpaceManager
       full Permissions::SpaceDeveloper
       read Permissions::SpaceAuditor
     end
