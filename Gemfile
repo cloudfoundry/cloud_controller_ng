@@ -3,6 +3,7 @@ source :rubygems
 gem "rake"
 gem "bcrypt-ruby"
 gem 'eventmachine', "~> 1.0.0"
+gem 'fog'
 gem "redis"
 gem "rfc822"
 gem "sequel"

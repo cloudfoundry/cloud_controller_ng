@@ -80,3 +80,9 @@ quota_definitions:
     paid_memory_limit: 204800 # 200 GB
 
 default_quota_definition: free
+
+resource_pool:
+  resource_directory_key: cc-resources
+  fog_connection:
+    provider: Local
+    local_root: /tmp

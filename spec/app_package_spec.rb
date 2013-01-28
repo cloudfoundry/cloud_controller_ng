@@ -4,11 +4,12 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppPackage do
+    include_context "resource pool"
+
     let(:tmpdir) { Dir.mktmpdir }
     let(:droplets_dir) { Dir.mktmpdir }
 
     before do
-      FilesystemPool.configure
       AppPackage.configure(:directories => { :droplets => droplets_dir })
     end
 
@@ -59,7 +60,7 @@ module VCAP::CloudController
         tf.write("A" * 1024)
         tf.close
 
-        AppPackage.resource_pool.add_path(tf.path)
+        ResourcePool.add_path(tf.path)
         sha1 = Digest::SHA1.file(tf.path).hexdigest
         zipname = File.join(tmpdir, "test.zip")
         unzipped_size = create_zip(zipname, 1, 1024)

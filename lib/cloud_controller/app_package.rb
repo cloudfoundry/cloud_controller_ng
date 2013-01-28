@@ -12,7 +12,6 @@ module VCAP::CloudController
       def configure(config = {})
         @config = config.dup
         @max_droplet_size = @config[:max_droplet_size] || 512 * 1024 * 1024
-        @resource_pool = FilesystemPool
       end
 
       # Collects the necessary files and returns the sha1 of the resulting
@@ -90,7 +89,7 @@ module VCAP::CloudController
 
         # Ugh, this stat's all the files that would need to be copied
         # from the resource pool. Consider caching sizes in resource pool?
-        sizes = resource_pool.resource_sizes(resources)
+        sizes = ResourcePool.resource_sizes(resources)
         total_size += sizes.reduce(0) {|accum, cur| accum + cur["size"] }
         validate_size(total_size)
       end
@@ -152,11 +151,11 @@ module VCAP::CloudController
 
       # Do resource pool synch
       def synchronize_pool_with(working_dir, resource_descriptors)
-        resource_pool.add_directory(working_dir)
+        ResourcePool.add_directory(working_dir)
         resource_descriptors.each do |descriptor|
           create_dir_skeleton(working_dir, descriptor["fn"])
           path = resolve_path(working_dir, descriptor["fn"])
-          resource_pool.copy(descriptor, path)
+          ResourcePool.copy(descriptor, path)
         end
       rescue => e
         logger.error "failed synchronizing resource pool with '#{working_dir}' #{e}"
@@ -186,7 +185,7 @@ module VCAP::CloudController
         @logger ||= Steno.logger("cc.ap")
       end
 
-      attr_accessor :max_droplet_size, :resource_pool, :droplets_dir
+      attr_accessor :max_droplet_size, :droplets_dir
     end
   end
 end

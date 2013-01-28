@@ -7,7 +7,7 @@ module VCAP::CloudController
       return NotAuthorized unless user
       # TODO: replace with json_message
       descriptors = Yajl::Parser.parse(body)
-      matched = FilesystemPool.match_resources(descriptors)
+      matched = ResourcePool.match_resources(descriptors)
       Yajl::Encoder.encode(matched)
     end
 
