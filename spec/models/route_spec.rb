@@ -133,7 +133,6 @@ module VCAP::CloudController
       end
     end
 
-
     describe "instance methods" do
       let(:space) { Models::Space.make }
 
@@ -230,6 +229,45 @@ module VCAP::CloudController
             :domain => Models::Domain.default_serving_domain
           )
         }.to raise_error Sequel::ValidationFailed
+      end
+    end
+
+    describe "#remove" do
+      let!(:route) { Models::Route.make }
+      let!(:app_1) do
+        Models::App.make({
+          :space => route.space,
+          :route_guids => [route.guid]
+        }.merge(app_attributes))
+      end
+
+      context "when app is running and staged" do
+        let(:app_attributes) { {:state => "STARTED", :package_state => "STAGED"} }
+
+        it "notifies DEAs of route change for running apps" do
+          VCAP::CloudController::DeaClient.should_receive(:update_uris).with(app_1)
+          Models::Route[:guid => route.guid].destroy
+        end
+      end
+
+      context "when app is not staged and running" do
+        let(:app_attributes) { {:state => "STARTED", :package_state => "FAILED"} }
+
+        it "does not notify DEAs of route change for apps that are not started" do
+          Models::App.make(:space => route.space, :state => "STOPPED", :route_guids => [route.guid])
+          VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
+          Models::Route[:guid => route.guid].destroy
+        end
+      end
+
+      context "when app is staged but not running" do
+        let(:app_attributes) { {:state => "STOPPED", :package_state => "STAGED"} }
+
+        it "does not notify DEAs of route change for apps that are not staged" do
+          Models::App.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
+          VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
+          Models::Route[:guid => route.guid].destroy
+        end
       end
     end
   end
