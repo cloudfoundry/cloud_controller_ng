@@ -86,3 +86,9 @@ resource_pool:
   fog_connection:
     provider: Local
     local_root: /tmp
+
+packages:
+  resource_directory_key: cc-packages
+  fog_connection:
+    provider: Local
+    local_root: /tmp

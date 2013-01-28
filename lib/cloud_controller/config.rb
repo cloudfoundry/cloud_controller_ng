@@ -102,6 +102,17 @@ class VCAP::CloudController::Config < VCAP::Config
           optional(:aws_secret_access_key) => String,
           optional(:local_root) => String
         }
+      },
+
+      :packages => {
+        optional(:max_droplet_size) => Integer,
+        optional(:app_package_directory_key) => String,
+        :fog_connection => {
+          :provider => String,
+          optional(:aws_access_key_id) => String,
+          optional(:aws_secret_access_key) => String,
+          optional(:local_root) => String
+        }
       }
     }
   end

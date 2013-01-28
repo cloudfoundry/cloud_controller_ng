@@ -45,11 +45,13 @@ class VCAP::CloudController::ResourcePool
       key = key_from_sha1(sha1)
       return if resource_dir.files.head(sha1)
 
-      resource_dir.files.create(
-        :key    => key,
-        :body   => File.open(path),
-        :public => false,
-      )
+      File.open(path) do |file|
+        resource_dir.files.create(
+          :key    => key,
+          :body   => file,
+          :public => false,
+        )
+      end
     end
 
     def resource_sizes(resources)

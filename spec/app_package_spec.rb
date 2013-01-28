@@ -7,15 +7,22 @@ module VCAP::CloudController
     include_context "resource pool"
 
     let(:tmpdir) { Dir.mktmpdir }
-    let(:droplets_dir) { Dir.mktmpdir }
 
     before do
-      AppPackage.configure(:directories => { :droplets => droplets_dir })
+      AppPackage.configure(
+        :packages => {
+          :fog_connection => {
+            :provider => "AWS",
+            :aws_access_key_id => "fake_aws_key_id",
+            :aws_secret_access_key => "fake_secret_access_key",
+          }
+        }
+      )
+      Fog.mock!
     end
 
     after do
       FileUtils.rm_rf(tmpdir)
-      FileUtils.rm_rf(droplets_dir)
     end
 
     describe 'unzipped_size' do
@@ -152,11 +159,11 @@ module VCAP::CloudController
 
     describe "to_zip" do
       it "should move the app package to the droplets directory" do
-        guid = "abc"
+        guid = Sham.guid
         zipname = File.join(tmpdir, "test.zip")
         create_zip(zipname, 10, 1024)
         AppPackage.to_zip(guid, File.new(zipname), [])
-        File.exist?(AppPackage.package_path(guid)).should == true
+        AppPackage.package_exists?(guid).should == true
       end
     end
 
@@ -166,51 +173,62 @@ module VCAP::CloudController
       end
 
       it "should do nothing if the app package does not exist" do
-        File.should_receive(:exists?).and_return(false)
-        File.should_not_receive(:delete)
-        AppPackage.delete_package("some_guid")
+        guid = Sham.guid
+
+        # It is hard to test this via Fog, but lets at least make sure that it
+        # doesn't throw an exception
+        AppPackage.package_exists?(guid).should == false
+        AppPackage.delete_package(guid)
+        AppPackage.package_exists?(guid).should == false
       end
 
       it "should delete the droplet if it exists" do
-        File.should_receive(:exists?).and_return(true)
-        File.should_receive(:delete).with(AppPackage.package_path("some_guid"))
-        AppPackage.delete_package("some_guid")
-      end
-    end
-  end
+        guid = Sham.guid
 
-  describe "#package_dir" do
-    subject { AppPackage.package_dir }
-    let(:config) { { :directories => { :droplets => "/from_config" } } }
-    before { AppPackage.configure(config) }
+        AppPackage.package_exists?(guid).should == false
+        zipname = File.join(tmpdir, "test.zip")
+        create_zip(zipname, 10, 1024)
+        AppPackage.to_zip(guid, File.new(zipname), [])
+        AppPackage.package_exists?(guid).should == true
 
-    context "when droplets directory was defined in configuration" do
-      it "creates defined droplets directory" do
-        FileUtils.should_receive(:mkdir_p).with("/from_config")
-        subject
+        AppPackage.delete_package(guid)
+        AppPackage.package_exists?(guid).should == false
       end
     end
 
-    shared_examples "creating and setting droplets directory" do
-      it "creates temporary droplets directory" do
-        Dir.should_receive(:mktmpdir)
-        subject
+    describe "package_uri" do
+      before do
+        @guid = Sham.guid
+
+        AppPackage.configure(
+          :packages => {
+            :fog_connection => {
+              :provider => "AWS",
+              :aws_access_key_id => "fake_aws_key_id",
+              :aws_secret_access_key => "fake_secret_access_key",
+            }
+          }
+        )
+        Fog.mock!
+
+        tmpdir = Dir.mktmpdir
+        AppPackage.package_exists?(@guid).should == false
+        zipname = File.join(tmpdir, "test.zip")
+        create_zip(zipname, 10, 1024)
+        AppPackage.to_zip(@guid, File.new(zipname), [])
+        AppPackage.package_exists?(@guid).should == true
+        FileUtils.rm_rf(tmpdir)
       end
 
-      it "sets temporary droplets directory in configuration" do
-        Dir.should_receive(:mktmpdir) { "/temporary_dir" }
-        subject.should eq "/temporary_dir"
+      it "should return a URL for a valid guid" do
+        uri = AppPackage.package_uri(@guid)
+        uri.should match(/https:\/\/.*s3.amazonaws.com\/.*/)
       end
-    end
 
-    context "when directories were not defined in configuration" do
-      let(:config) { {} }
-      include_examples "creating and setting droplets directory"
-    end
-
-    context "when droplets directory was not defined in configuration" do
-      let(:config) { { :directories => { } } }
-      include_examples "creating and setting droplets directory"
+      it "should return nil for an invalid guid" do
+        uri = AppPackage.package_uri(Sham.guid)
+        uri.should be_nil
+      end
     end
   end
 end

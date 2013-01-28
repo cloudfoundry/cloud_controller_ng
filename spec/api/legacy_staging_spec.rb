@@ -20,11 +20,24 @@ module VCAP::CloudController
             :user => staging_user,
             :password => staging_password
           }
+        },
+        :resource_pool => {
+          :fog_connection => {
+            :provider => "Local",
+            :local_root => Dir.mktmpdir
+          }
+        },
+        :packages => {
+          :fog_connection => {
+            :provider => "Local",
+            :local_root => Dir.mktmpdir
+          }
         }
       }
     end
 
     before do
+      Fog.unmock!
       LegacyStaging.configure(staging_config)
     end
 
@@ -80,20 +93,22 @@ module VCAP::CloudController
       before do
         config_override(staging_config)
         authorize staging_user, staging_password
-        AppPackage.configure
-        pkg_path = AppPackage.package_path(app_obj.guid)
-        File.open(pkg_path, "w") do |f|
-          f.write("A")
-        end
       end
 
       it "should succeed for valid packages" do
+        guid = app_obj.guid
+        tmpdir = Dir.mktmpdir
+        zipname = File.join(tmpdir, "test.zip")
+        create_zip(zipname, 10, 1024)
+        AppPackage.to_zip(guid, File.new(zipname), [])
+        FileUtils.rm_rf(tmpdir)
+
         get "/staging/apps/#{app_obj.guid}"
         last_response.status.should == 200
       end
 
       it "should return an error for non-existent apps" do
-        get "/staging/apps/abcd"
+        get "/staging/apps/#{Sham.guid}"
         last_response.status.should == 404
       end
 

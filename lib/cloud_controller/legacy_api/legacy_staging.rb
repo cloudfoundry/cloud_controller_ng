@@ -97,20 +97,25 @@ module VCAP::CloudController
 
     # Handles an app download from a stager
     def download_app(id)
+      raise InvalidRequest unless AppPackage.local?
+
       app = Models::App.find(:guid => id)
       raise AppNotFound.new(id) if app.nil?
 
-      package_path = AppPackage.package_path(id)
+      package_path = AppPackage.package_local_path(id)
       logger.debug "id: #{id} package_path: #{package_path}"
 
-      unless File.exist?(package_path)
+      unless package_path
         logger.error "could not find package for #{id}"
         raise AppPackageNotFound.new(id)
       end
 
       if config[:nginx][:use_nginx]
-        return [200, { "X-Accel-Redirect" => "/droplets/" + "app_#{id}" }, ""]
+        url = AppPackage.package_uri(id)
+        logger.debug "nginx redirect #{url}"
+        return [200, { "X-Accel-Redirect" => url }, ""]
       else
+        logger.debug "send_file #{patchage_path}"
         return send_file package_path
       end
     end

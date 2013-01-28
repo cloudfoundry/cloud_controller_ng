@@ -92,10 +92,24 @@ module VCAP::CloudController::SpecHelper
           :aws_access_key_id => "fake_aws_key_id",
           :aws_secret_access_key => "fake_secret_access_key",
         }
+      },
+      :packages => {
+        :app_package_directory_key => "cc-packages",
+        :fog_connection => {
+          :provider => "AWS",
+          :aws_access_key_id => "fake_aws_key_id",
+          :aws_secret_access_key => "fake_secret_access_key",
+        }
       }
     )
-    Fog.mock!
+
     c = c.merge(@config_override || {})
+
+    unless (c[:resource_pool][:fog_connection][:provider].downcase == "local" ||
+            c[:packages][:fog_connection][:provider].downcase == "local")
+      Fog.mock!
+    end
+
     VCAP::CloudController::Config.configure(c)
     c
   end

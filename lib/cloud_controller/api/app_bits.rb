@@ -49,17 +49,24 @@ module VCAP::CloudController
     end
 
     def download(id)
-      app  = find_id_and_validate_access(:read, id)
+      find_id_and_validate_access(:read, id)
 
-      package_path = AppPackage.package_path(id)
-      unless File.exist?(package_path)
-        raise Errors::AppPackageNotFound.new(id)
+      package_uri = AppPackage.package_uri(id)
+      logger.debug "id: #{id} package_uri: #{package_uri}"
+
+      if package_uri.nil?
+        logger.error "could not find package for #{id}"
+        raise AppPackageNotFound.new(id)
       end
 
-      if config[:nginx][:use_nginx]
-        return [200, { "X-Accel-Redirect" => "/droplets/" + "app_#{id}" }, ""]
+      if AppPackage.local?
+        if config[:nginx][:use_nginx]
+          return [200, { "X-Accel-Redirect" => "/droplets#{package_uri}" }, ""]
+        else
+          return send_file package_path, :filename => File.basename("#{path}.zip")
+        end
       else
-        return send_file package_path, :filename => File.basename("#{path}.zip")
+        return [HTTP::FOUND, {"Location" => package_uri}, nil]
       end
     end
 
