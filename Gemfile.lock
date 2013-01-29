@@ -31,6 +31,14 @@ GIT
       nats
       yajl-ruby
 
+PATH
+  remote: ../schemata
+  specs:
+    schemata-dea (0.0.1.beta19)
+      membrane
+      vcap_common
+      yajl-ruby
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -110,10 +118,6 @@ GEM
       diff-lcs (~> 1.1.3)
     rspec-mocks (2.12.1)
     ruby-graphviz (1.0.5)
-    schemata-dea (0.0.1.beta17)
-      membrane
-      vcap_common
-      yajl-ruby
     sequel (3.40.0)
     simplecov (0.6.4)
       multi_json (~> 1.0)
@@ -167,7 +171,7 @@ DEPENDENCIES
   rfc822
   rspec
   ruby-graphviz
-  schemata-dea (~> 0.0.1.beta17)
+  schemata-dea!
   sequel
   simplecov
   simplecov-rcov
