@@ -8,9 +8,9 @@ module VCAP::CloudController
     let(:message_bus) { double(:message_bus) }
     let(:dea_pool) { double(:dea_pool) }
     let(:number_service_instances) { 3 }
+    let(:schemata_droplet_response) { Schemata::Dea.mock_find_droplet_response }
 
     before do
-
       Models::ServiceBinding.any_instance.stub(:bind_on_gateway)
 
       number_service_instances.times do
@@ -22,9 +22,7 @@ module VCAP::CloudController
       DeaClient.configure(config, message_bus, dea_pool)
     end
 
-    after do
-      Models::ServiceBinding.any_instance.unstub(:bind_on_gateway)
-    end
+    after { Models::ServiceBinding.any_instance.unstub(:bind_on_gateway) }
 
     describe "update_uris" do
       it "does not update deas if app isn't staged" do
@@ -344,76 +342,22 @@ module VCAP::CloudController
     describe "get_file_uri_for_instance" do
       include Errors
 
-      it "should raise an error if the app is in stopped state" do
-        app.instances = 1
-        app.should_receive(:stopped?).once.and_return(true)
-
-        instance = 0
-        path = "test"
-
-        with_em_and_thread do
-          expect {
-            DeaClient.get_file_uri_for_instance(app, path, instance)
-          }.to raise_error { |error|
-            error.should be_an_instance_of Errors::FileError
-
-            msg = "File error: Request failed for app: #{app.name}"
-            msg << " path: #{path} as the app is in stopped state."
-
-            expect(error.message).to eq msg
-          }
-        end
-      end
-
-      it "should raise an error if the instance is out of range" do
-        app.instances = 5
-
-        instance = 10
-        path = "test"
-
-        with_em_and_thread do
-          expect {
-            DeaClient.get_file_uri_for_instance(app, path, instance)
-          }.to raise_error { |error|
-            error.should be_an_instance_of Errors::FileError
-
-            msg = "File error: Request failed for app: #{app.name}"
-            msg << ", instance: #{instance} and path: #{path} as the instance is"
-            msg << " out of range."
-
-            expect(error.message).to eq msg
-          }
-        end
-      end
-
-      it "should return the file uri if the required instance is found via DEA v1" do
+      it "returns the file uri if the required instance is found via DEA v1" do
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
+        schemata_droplet_response.file_uri_v2 = nil
 
-        instance = 1
-        path = "test"
-
-        search_options = {
-          :indices => [instance],
-          :states => [:STARTING, :RUNNING, :CRASHED],
-          :version => app.version,
-          :path => "test",
-        }
-
-        instance_found = Schemata::Dea.mock_find_droplet_response
-        instance_found.file_uri = "http://1.2.3.4/"
-        instance_found.file_uri_v2 = nil
-        instance_found.staged = "staged"
-        instance_found.credentials = ["username", "password"]
-
-        DeaClient.should_receive(:find_specific_instance).
-          with(app, search_options).and_return(instance_found)
+        message_bus.should_receive(:request).with(
+            "dea.find.droplet",
+            json_match(hash_including("V1" => anything, "min_version" => 1)),
+            {:timeout =>2}
+        ).and_return([schemata_droplet_response.encode])
 
         with_em_and_thread do
-          result = DeaClient.get_file_uri_for_instance(app, path, instance)
-          result.file_uri_v1.should == "http://1.2.3.4/staged/test"
-          result.file_uri_v2.should be_nil
-          result.credentials.should == ["username", "password"]
+          result = DeaClient.get_file_uri_for_instance(app, "test", 1)
+          expect(result.file_uri_v1).to match /#{schemata_droplet_response.file_uri}\/.+?\/test/
+          expect(result.file_uri_v2).to be_nil
+          expect(result.credentials).to eq schemata_droplet_response.credentials
         end
       end
 
@@ -421,62 +365,85 @@ module VCAP::CloudController
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
 
-        instance = 1
-        path = "test"
-
-        search_options = {
-          :indices => [instance],
-          :states => [:STARTING, :RUNNING, :CRASHED],
-          :version => app.version,
-          :path => "test",
-        }
-
-        instance_found = Schemata::Dea.mock_find_droplet_response
-        instance_found.file_uri_v2 = "file_uri_v2"
-        instance_found.file_uri = "http://1.2.3.4/"
-        instance_found.staged = "staged"
-        instance_found.credentials = ["username", "password"]
-
-        DeaClient.should_receive(:find_specific_instance).
-            with(app, search_options).and_return(instance_found)
+        message_bus.should_receive(:request).with(
+            "dea.find.droplet",
+            json_match(hash_including("V1" => anything, "min_version" => 1)),
+            {:timeout =>2}
+        ).and_return([schemata_droplet_response.encode])
 
         with_em_and_thread do
-          info = DeaClient.get_file_uri_for_instance(app, path, instance)
-          info.file_uri_v2.should == "file_uri_v2"
-          info.file_uri_v1.should == "http://1.2.3.4/staged/test"
-          info.credentials.should == ["username", "password"]
+          result = DeaClient.get_file_uri_for_instance(app, "test", 1)
+          expect(result.file_uri_v1).to match /#{schemata_droplet_response.file_uri}\/.+?\/test/
+          expect(result.file_uri_v2).to eq schemata_droplet_response.file_uri_v2
+          expect(result.credentials).to eq schemata_droplet_response.credentials
         end
       end
 
-      it "should raise an error if the instance is not found" do
-        app.instances = 2
-        app.should_receive(:stopped?).once.and_return(false)
+      context 'when an error occurs' do
+        it "should raise an error if the app is in stopped state" do
+          app.instances = 1
+          app.should_receive(:stopped?).and_return(true)
 
-        instance = 1
-        path = "test"
+          instance = 0
+          path = "test"
 
-        search_options = {
-          :indices => [instance],
-          :states => [:STARTING, :RUNNING, :CRASHED],
-          :version => app.version,
-          :path => "test",
-        }
+          with_em_and_thread do
+            expect {
+              DeaClient.get_file_uri_for_instance(app, path, instance)
+            }.to raise_error { |error|
+              error.should be_an_instance_of Errors::FileError
 
-        DeaClient.should_receive(:find_specific_instance).
-            with(app, search_options).and_return(nil)
+              msg = "File error: Request failed for app: #{app.name}"
+              msg << " path: #{path} as the app is in stopped state."
 
-        with_em_and_thread do
-          expect {
-            DeaClient.get_file_uri_for_instance(app, path, instance)
-          }.to raise_error { |error|
-            error.should be_an_instance_of Errors::FileError
+              expect(error.message).to eq msg
+            }
+          end
+        end
 
-            msg = "File error: Request failed for app: #{app.name}"
-            msg << ", instance: #{instance} and path: #{path} as the instance is"
-            msg << " not found."
+        it "should raise an error if the instance is out of range" do
+          app.instances = 5
 
-            error.message.should == msg
-          }
+          instance = 10
+          path = "test"
+
+          with_em_and_thread do
+            expect {
+              DeaClient.get_file_uri_for_instance(app, path, instance)
+            }.to raise_error { |error|
+              error.should be_an_instance_of Errors::FileError
+
+              msg = "File error: Request failed for app: #{app.name}"
+              msg << ", instance: #{instance} and path: #{path} as the instance is"
+              msg << " out of range."
+
+              expect(error.message).to eq msg
+            }
+          end
+        end
+
+        it "should raise an error if the instance is not found" do
+          app.instances = 2
+          app.should_receive(:stopped?).once.and_return(false)
+
+          instance = 1
+          path = "test"
+
+          message_bus.should_receive(:request).with(any_args).and_return([])
+
+          with_em_and_thread do
+            expect {
+              DeaClient.get_file_uri_for_instance(app, path, instance)
+            }.to raise_error { |error|
+              error.should be_an_instance_of Errors::FileError
+
+              msg = "File error: Request failed for app: #{app.name}"
+              msg << ", instance: #{instance} and path: #{path} as the instance is"
+              msg << " not found."
+
+              error.message.should == msg
+            }
+          end
         end
       end
     end
@@ -508,29 +475,18 @@ module VCAP::CloudController
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
 
-        instance_id = "abcdef"
-        path = "test"
-
-        search_options = {
-          :instance_ids => [instance_id],
-          :states => [:STARTING, :RUNNING, :CRASHED],
-          :path => "test",
-        }
-
-        instance_found = Schemata::Dea.mock_find_droplet_response
-        instance_found.file_uri = "http://1.2.3.4/"
-        instance_found.file_uri_v2 = nil
-        instance_found.staged = "staged"
-        instance_found.credentials = ["username", "password"]
-
-        DeaClient.should_receive(:find_specific_instance).
-          with(app, search_options).and_return(instance_found)
+        schemata_droplet_response.file_uri_v2 = nil
+        message_bus.should_receive(:request).with(
+            "dea.find.droplet",
+            json_match(hash_including("V1" => anything, "min_version" => 1)),
+            {:timeout =>2}
+        ).and_return([schemata_droplet_response.encode])
 
         with_em_and_thread do
-          result = DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
-          result.file_uri_v1.should == "http://1.2.3.4/staged/test"
-          result.file_uri_v2.should be_nil
-          result.credentials.should == ["username", "password"]
+          result = DeaClient.get_file_uri_for_instance_id(app, "test", "abcdef")
+          expect(result.file_uri_v1).to match /#{schemata_droplet_response.file_uri}\/.+?\/test/
+          expect(result.file_uri_v2).to be_nil
+          expect(result.credentials).to eq schemata_droplet_response.credentials
         end
       end
 
@@ -538,29 +494,17 @@ module VCAP::CloudController
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
 
-        instance_id = "abcdef"
-        path = "test"
-
-        search_options = {
-          :instance_ids => [instance_id],
-          :states => [:STARTING, :RUNNING, :CRASHED],
-          :path => "test",
-        }
-
-        instance_found = Schemata::Dea.mock_find_droplet_response
-        instance_found.file_uri_v2 = "file_uri_v2"
-        instance_found.file_uri = "http://1.2.3.4/"
-        instance_found.staged = "staged"
-        instance_found.credentials = ["username", "password"]
-
-        DeaClient.should_receive(:find_specific_instance).
-            with(app, search_options).and_return(instance_found)
+        message_bus.should_receive(:request).with(
+            "dea.find.droplet",
+            json_match(hash_including("V1" => anything, "min_version" => 1)),
+            {:timeout =>2}
+        ).and_return([schemata_droplet_response.encode])
 
         with_em_and_thread do
-          info = DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
-          info.file_uri_v2.should == "file_uri_v2"
-          info.file_uri_v1.should == "http://1.2.3.4/staged/test"
-          info.credentials.should == ["username", "password"]
+          result = DeaClient.get_file_uri_for_instance_id(app, "test", "abcdef")
+          expect(result.file_uri_v1).to match /#{schemata_droplet_response.file_uri}\/.+\/test/
+          expect(result.file_uri_v2).to eq schemata_droplet_response.file_uri_v2
+          expect(result.credentials).to eq schemata_droplet_response.credentials
         end
       end
 
@@ -568,26 +512,16 @@ module VCAP::CloudController
         app.instances = 2
         app.should_receive(:stopped?).once.and_return(false)
 
-        instance_id = "abcdef"
-        path = "test"
-
-        search_options = {
-          :instance_ids => [instance_id],
-          :states => [:STARTING, :RUNNING, :CRASHED],
-          :path => "test",
-        }
-
-        DeaClient.should_receive(:find_specific_instance).
-            with(app, search_options).and_return(nil)
+        message_bus.should_receive(:request).with(any_args).and_return([])
 
         with_em_and_thread do
           expect {
-            DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+            DeaClient.get_file_uri_for_instance_id(app, "test", "abcdef")
           }.to raise_error { |error|
             error.should be_an_instance_of Errors::FileError
 
             msg = "File error: Request failed for app: #{app.name}"
-            msg << ", instance_id: #{instance_id} and path: #{path} as the instance_id is"
+            msg << ", instance_id: #{"abcdef"} and path: #{"test"} as the instance_id is"
             msg << " not found."
 
             error.message.should == msg

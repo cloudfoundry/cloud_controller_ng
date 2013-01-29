@@ -291,7 +291,7 @@ module VCAP::CloudController
           :path => path,
         }.merge(options)
 
-        if instance_found = find_specific_instance(app, search_options)
+        if (instance_found = find_specific_instance(app, search_options))
           result = FileUriResult.new
           if instance_found.file_uri_v2
             result.file_uri_v2 = instance_found.file_uri_v2
