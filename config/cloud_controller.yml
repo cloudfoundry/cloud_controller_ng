@@ -92,3 +92,9 @@ packages:
   fog_connection:
     provider: Local
     local_root: /tmp
+
+droplets:
+  droplet_directory_key: cc-droplets
+  fog_connection:
+    provider: Local
+    local_root: /tmp

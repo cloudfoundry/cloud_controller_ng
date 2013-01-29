@@ -49,7 +49,7 @@ module VCAP::CloudController
           end
 
           droplet_hash = Digest::SHA1.file(upload_path).hexdigest
-          FileUtils.mv(upload_path, droplet_path(app))
+          LegacyStaging.store_droplet(app.guid, upload_path)
           app.droplet_hash = droplet_hash
           app.save
         end
@@ -57,13 +57,8 @@ module VCAP::CloudController
         logger.info "staging for #{app.guid} complete"
       end
 
-      def droplet_path(app)
-        File.join(droplets_path, "droplet_#{app.guid}")
-      end
-
       def delete_droplet(app)
-        path = droplet_path(app)
-        File.delete(path) if File.exists? path
+        LegacyStaging.delete_droplet(app.guid)
       end
 
       private

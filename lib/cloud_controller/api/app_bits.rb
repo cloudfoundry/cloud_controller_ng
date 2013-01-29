@@ -56,7 +56,7 @@ module VCAP::CloudController
 
       if package_uri.nil?
         logger.error "could not find package for #{id}"
-        raise AppPackageNotFound.new(id)
+        raise Errors::AppPackageNotFound.new(id)
       end
 
       if AppPackage.local?
@@ -73,7 +73,7 @@ module VCAP::CloudController
     def json_param(name)
       raw = params[name]
       Yajl::Parser.parse(raw)
-    rescue Yajl::ParseError => e
+    rescue Yajl::ParseError
       raise Errors::AppBitsUploadInvalid.new("invalid :#{name}")
     end
 

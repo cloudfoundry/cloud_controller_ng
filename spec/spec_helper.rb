@@ -100,6 +100,14 @@ module VCAP::CloudController::SpecHelper
           :aws_access_key_id => "fake_aws_key_id",
           :aws_secret_access_key => "fake_secret_access_key",
         }
+      },
+      :droplets => {
+        :droplet_directory_key => "cc-droplets",
+        :fog_connection => {
+          :provider => "AWS",
+          :aws_access_key_id => "fake_aws_key_id",
+          :aws_secret_access_key => "fake_secret_access_key",
+        }
       }
     )
 

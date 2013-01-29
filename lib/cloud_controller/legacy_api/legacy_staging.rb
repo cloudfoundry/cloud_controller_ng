@@ -1,5 +1,15 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
+# All the storing and deleting of droplets was pushed into this class as it is
+# a mix of legacy cc and fog related work.  This is because this class is
+# responsible for handing out the urls to the droplets, which now gets
+# delegated to fog. There is also substantial overlap in code and functionality
+# with AppPackage.
+#
+# As part of the refactor to use the Fog gem, this ended up being done by
+# dropping Fog in place directly.  However, now that there is more going on at
+# the storage layer than FileUtils.mv, this should get refactored.
+
 module VCAP::CloudController
   class LegacyStaging < LegacyApiBase
     include VCAP::CloudController::Errors
@@ -22,10 +32,19 @@ module VCAP::CloudController
     class << self
       def configure(config)
         @config = config
+
+        opts = config[:droplets]
+        @droplet_directory_key = opts[:droplet_directory_key] || "cc-droplets"
+        @connection_config = opts[:fog_connection]
+        @directory = nil
       end
 
       def app_uri(id)
-        staging_uri("#{APP_PATH}/#{id}")
+        if AppPackage.local?
+          staging_uri("#{APP_PATH}/#{id}")
+        else
+          AppPackage.package_uri(id)
+        end
       end
 
       def droplet_upload_uri(id)
@@ -33,7 +52,11 @@ module VCAP::CloudController
       end
 
       def droplet_download_uri(id)
-        staging_uri("/staged_droplets/#{id}")
+        if local?
+          staging_uri("/staged_droplets/#{id}")
+        else
+          droplet_uri(id)
+        end
       end
 
       def with_upload_handle(id)
@@ -47,6 +70,59 @@ module VCAP::CloudController
         mutex.synchronize do
           return upload_handles[id]
         end
+      end
+
+      def store_droplet(guid, path)
+        File.open(path) do |file|
+          droplet_dir.files.create(
+            :key => key_from_guid(guid),
+            :body => file,
+            :public => local?
+          )
+        end
+      end
+
+      def delete_droplet(guid)
+        key = key_from_guid(guid)
+        droplet_dir.files.destroy(key)
+      end
+
+      def droplet_exists?(guid)
+        key = key_from_guid(guid)
+        !droplet_dir.files.head(key).nil?
+      end
+
+      def local?
+        @connection_config[:provider].downcase == "local"
+      end
+
+      # Return droplet uri for path for a given app's guid.
+      #
+      # The url is valid for 1 hour when using aws.
+      # TODO: The expiration should be configurable.
+      def droplet_uri(guid)
+        key = key_from_guid(guid)
+        f = droplet_dir.files.head(key)
+        return nil unless f
+
+        # unfortunately fog doesn't have a unified interface for non-public
+        # urls
+        if local?
+          f.public_url
+        else
+          f.url(Time.now + 3600)
+        end
+      end
+
+      def droplet_local_path(id)
+        raise ArgumentError unless local?
+        key = key_from_guid(id)
+        f = droplet_dir.files.head(key)
+        return nil unless f
+        # Yes, this is bad.  But, we really need a handle to the actual path in
+        # order to serve the file using send_file since send_file only takes a
+        # path as an argument
+        f.send(:path)
       end
 
       private
@@ -92,6 +168,24 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger("cc.legacy_staging")
+      end
+
+      def connection
+        opts = @connection_config
+        opts = opts.merge(:endpoint => "") if local?
+        Fog::Storage.new(opts)
+      end
+
+      def droplet_dir
+        @directory ||= connection.directories.create(
+          :key    => @droplet_directory_key,
+          :public => false,
+        )
+      end
+
+      def key_from_guid(guid)
+        guid = guid.to_s.downcase
+        File.join(guid[0..1], guid[2..3], guid)
       end
     end
 
@@ -145,17 +239,25 @@ module VCAP::CloudController
     end
 
     def download_droplet(id)
+      raise InvalidRequest unless LegacyStaging.local?
+
       app = Models::App.find(:guid => id)
       raise AppNotFound.new(id) if app.nil?
 
-      droplet_path = AppStager.droplet_path(app)
-      unless droplet_path && File.exists?(droplet_path)
+      droplet_path = LegacyStaging.droplet_local_path(id)
+      logger.debug "id: #{id} droplet_path #{droplet_path}"
+
+      unless droplet_path
+        logger.error "could not find droplet for #{id}"
         raise StagingError.new("droplet not found for #{id}")
       end
 
       if config[:nginx][:use_nginx]
-        return [200, { "X-Accel-Redirect" => "/droplets/" + "droplet_#{id}" }, ""]
+        url = LegacyStaging.droplet_uri(id)
+        logger.debug "nginx redirect #{url}"
+        return [200, { "X-Accel-Redirect" => url }, ""]
       else
+        logger.debug "send_file #{droplet_path}"
         return send_file droplet_path
       end
     end

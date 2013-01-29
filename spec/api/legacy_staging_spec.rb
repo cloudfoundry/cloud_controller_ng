@@ -32,13 +32,20 @@ module VCAP::CloudController
             :provider => "Local",
             :local_root => Dir.mktmpdir
           }
+        },
+        :droplets => {
+          :fog_connection => {
+            :provider => "Local",
+            :local_root => Dir.mktmpdir
+          }
         }
       }
     end
 
     before do
       Fog.unmock!
-      LegacyStaging.configure(staging_config)
+      config_override(staging_config)
+      config
     end
 
     describe "with_upload_handle" do
@@ -174,10 +181,10 @@ module VCAP::CloudController
 
       context "with a valid droplet" do
         xit "should return the droplet" do
-          path = AppStager.droplet_path(app_obj)
-          File.open(path, "w") do |f|
-            f.write("droplet contents")
-          end
+          droplet = Tempfile.new(app_obj.guid)
+          droplet.write("droplet contents")
+          droplet.close
+          LegacyStaging.store_droplet(app_obj.guid, droplet.path)
 
           get "/staged_droplets/#{app_obj.guid}"
           last_response.status.should == 200
@@ -185,14 +192,14 @@ module VCAP::CloudController
         end
 
         it "redirects nginx to serve staged droplet" do
-          path = AppStager.droplet_path(app_obj)
-          File.open(path, "w") do |f|
-            f.write("droplet contents")
-          end
+          droplet = Tempfile.new(app_obj.guid)
+          droplet.write("droplet contents")
+          droplet.close
+          LegacyStaging.store_droplet(app_obj.guid, droplet.path)
 
           get "/staged_droplets/#{app_obj.guid}"
           last_response.status.should == 200
-          last_response.headers["X-Accel-Redirect"].should == "/droplets/droplet_#{app_obj.guid}"
+          last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
         end
       end
 

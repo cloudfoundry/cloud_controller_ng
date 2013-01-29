@@ -20,6 +20,14 @@ module VCAP::CloudController
       end
 
       it "should return a serialized staging request" do
+        # This should be moved to a helper function
+        guid = app_obj.guid
+        tmpdir = Dir.mktmpdir
+        zipname = File.join(tmpdir, "test.zip")
+        create_zip(zipname, 10, 1024)
+        AppPackage.to_zip(guid, File.new(zipname), [])
+        FileUtils.rm_rf(tmpdir)
+
         res = AppStager.send(:staging_request, app_obj)
         res.should be_kind_of(Hash)
         res[:app_id].should == app_obj.guid
@@ -90,7 +98,7 @@ module VCAP::CloudController
         app_obj.needs_staging?.should be_false
         app_obj.staged?.should be_true
 
-        File.exists?(AppStager.droplet_path(app_obj)).should be_true
+        LegacyStaging.droplet_exists?(app_obj.guid).should be_true
       end
 
       it "should raise a StagingError and propagate the raw description for staging client errors" do
@@ -139,15 +147,21 @@ module VCAP::CloudController
       let(:app_obj) { Models::App.make }
 
       it "should do nothing if the droplet does not exist" do
-        File.should_receive(:exists?).and_return(false)
-        File.should_not_receive(:delete)
+        guid = Sham.guid
+        LegacyStaging.droplet_exists?(guid).should == false
         AppStager.delete_droplet(app_obj)
+        LegacyStaging.droplet_exists?(guid).should == false
       end
 
-      it "should delete the droploet if it exists" do
-        File.should_receive(:exists?).and_return(true)
-        File.should_receive(:delete).with(AppStager.droplet_path(app_obj))
+      it "should delete the droplet if it exists" do
+        droplet = Tempfile.new(app_obj.guid)
+        droplet.write("droplet contents")
+        droplet.close
+        LegacyStaging.store_droplet(app_obj.guid, droplet.path)
+
+        LegacyStaging.droplet_exists?(app_obj.guid).should == true
         AppStager.delete_droplet(app_obj)
+        LegacyStaging.droplet_exists?(app_obj.guid).should == false
       end
     end
   end
