@@ -95,6 +95,7 @@ class VCAP::CloudController::Config < VCAP::Config
 
       :resource_pool => {
         optional(:maximum_size) => Integer,
+        optional(:minimum_size) => Integer,
         optional(:resource_directory_key) => String,
         :fog_connection => {
           :provider => String,

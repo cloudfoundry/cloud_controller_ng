@@ -17,6 +17,7 @@ class VCAP::CloudController::ResourcePool
       opts = config[:resource_pool] || {}
       @connection_config = opts[:fog_connection]
       @resource_directory_key = opts[:resource_directory_key] || "cc-resources"
+      @minimum_size = opts[:minimum_size] || 0
       @maximum_size = opts[:maximum_size] || 512 * 1024 * 1024 # MB
     end
 
@@ -84,13 +85,20 @@ class VCAP::CloudController::ResourcePool
     end
 
     def resource_known?(descriptor)
-      key = key_from_sha1(descriptor["sha1"])
-      resource_dir.files.head(key)
+      size = descriptor["size"]
+      if size_allowed?(size)
+        key = key_from_sha1(descriptor["sha1"])
+        resource_dir.files.head(key)
+      end
     end
 
     def resource_allowed?(path)
       stat = File.stat(path)
-      File.file?(path) && !stat.symlink? && stat.size < maximum_size
+      File.file?(path) && !stat.symlink? && size_allowed?(stat.size)
+    end
+
+    def size_allowed?(size)
+      size && size > minimum_size && size < maximum_size
     end
 
     # Called after we sanity-check the input.

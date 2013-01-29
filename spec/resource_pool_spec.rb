@@ -44,5 +44,30 @@ module VCAP::CloudController
         ResourcePool.add_directory(@tmpdir)
       end
     end
+
+    describe "#size_allowed?" do
+      before do
+        @minimum_size = 5
+        @maximum_size = 7
+        ResourcePool.minimum_size = @minimum_size
+        ResourcePool.maximum_size = @maximum_size
+      end
+
+      it "should return true for a size between min and max size" do
+        ResourcePool.send(:size_allowed?, @minimum_size + 1).should be_true
+      end
+
+      it "should return false for a size < min size" do
+        ResourcePool.send(:size_allowed?, @minimum_size - 1).should be_false
+      end
+
+      it "should return false for a size > max size" do
+        ResourcePool.send(:size_allowed?, @maximum_size + 1).should be_false
+      end
+
+      it "should return false for a nil size" do
+        ResourcePool.send(:size_allowed?, nil).should be_false
+      end
+    end
   end
 end
