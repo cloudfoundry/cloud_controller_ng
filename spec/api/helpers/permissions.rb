@@ -54,10 +54,9 @@ module VCAP::CloudController::ApiSpecHelper
     end
   end
 
-  shared_examples "permission enumeration" do |perm_name, model, name, path, expected, perms_overlap|
+  shared_examples "permission enumeration" do |perm_name, model, name, path, path_suffix, expected, perms_overlap|
     describe "GET #{path}" do
       it "should return #{expected} #{name.pluralize} to a user that has #{perm_name} permissions" do
-
         get path, {}, headers_a
         last_response.should be_ok
         decoded_response["total_results"].should == expected
@@ -81,34 +80,34 @@ module VCAP::CloudController::ApiSpecHelper
 
       unless perms_overlap
         it "should not return a #{name} to a user with the #{perm_name} permission on a different #{name}" do
-          get "#{path}/#{@obj_a.guid}", {}, headers_b
+          get "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_b
           last_response.should_not be_ok
         end
       end
     end
   end
 
-  shared_examples "permission create allowed" do |perm_name, model, name, path, perms_overlap|
+  shared_examples "permission create allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "POST #{path}" do
       it "should allow a user with the #{perm_name} permission to create a #{name}" do
-        before_count = model.count
-        post path, creation_req_for_a, json_headers(headers_a)
-        last_response.status.should == 201
-        model.count.should == before_count + 1
+        expect {
+          post path, creation_req_for_a, json_headers(headers_a)
+          last_response.status.should == 201
+        }.to change { model.count }.by(1)
       end
 
       unless perms_overlap
         it "should not allow a user with the #{perm_name} permission for a different service instance to create a service instance" do
-          before_count = model.count
-          post path, creation_req_for_a, json_headers(headers_b)
-          last_response.status.should == 403
-          model.count.should == before_count
+          expect {
+            post path, creation_req_for_a, json_headers(headers_b)
+            last_response.status.should == 403
+          }.to_not change { model.count }
         end
       end
     end
   end
 
-  shared_examples "permission create not_allowed" do |perm_name, model, name, path|
+  shared_examples "permission create not_allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "POST #{path}" do
       it "should not allow a user with only the #{perm_name} permission to create a #{name}" do
         post path, creation_req_for_a, json_headers(headers_a)
@@ -117,78 +116,80 @@ module VCAP::CloudController::ApiSpecHelper
     end
   end
 
-  shared_examples "permission modify allowed" do |perm_name, model, name, path, perms_overlap|
+  shared_examples "permission modify allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "PUT #{path}/:id" do
       it "should allow a user with the #{perm_name} permission to modify a #{name}" do
-        put "#{path}/#{@obj_a.guid}", update_req_for_a, json_headers(headers_a)
+        put "#{path}/#{@obj_a.guid}#{path_suffix}", update_req_for_a, json_headers(headers_a)
         last_response.status.should == 201
         decoded_response["metadata"]["guid"].should == @obj_a.guid
       end
 
       unless perms_overlap
         it "should not allow a user with the #{perm_name} permission for a different #{name} to modify a #{name}" do
-          put "#{path}/#{@obj_a.guid}", update_req_for_a, json_headers(headers_b)
+          put "#{path}/#{@obj_a.guid}#{path_suffix}", update_req_for_a, json_headers(headers_b)
           last_response.status.should == 403
         end
       end
     end
   end
 
-  shared_examples "permission modify not_allowed" do |perm_name, model, name, path|
+  shared_examples "permission modify not_allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "PUT /v2/service_instances/:id" do
       it "should not allow a user with only the #{perm_name} permission to modify a #{name}" do
-        put "#{path}/#{@obj_a.guid}", update_req_for_a, json_headers(headers_a)
+        put "#{path}/#{@obj_a.guid}#{path_suffix}", update_req_for_a, json_headers(headers_a)
         last_response.status.should == 403
       end
     end
   end
 
-  shared_examples "permission read not_allowed" do |perm_name, model, name, path|
+  shared_examples "permission read not_allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "GET #{path}/:id" do
       it "should not allow a user with only the #{perm_name} permission to read a #{name}" do
-        get "#{path}/#{@obj_a.guid}", {}, headers_a
+        get "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_a
         last_response.status.should == 403
       end
     end
   end
 
-  shared_examples "permission read allowed" do |perm_name, model, name, path, perms_overlap|
+  shared_examples "permission read allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "GET #{path}/:id" do
       it "should allow a user with the #{perm_name} permission to read a #{name}" do
-        get "#{path}/#{@obj_a.guid}", {}, headers_a
-        last_response.should be_ok
-        decoded_response["metadata"]["guid"].should == @obj_a.guid
+        get "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_a
+        last_response.status.should == 200
+
+        returned_guid = (path_suffix == "/summary") ? decoded_response["guid"] : decoded_response["metadata"]["guid"]
+        returned_guid.should == @obj_a.guid
       end
 
       unless perms_overlap
         it "should not allow a user with the #{perm_name} permission for another #{name} to read a #{name}" do
-          get "#{path}/#{@obj_a.guid}", {}, headers_b
-          last_response.should_not be_ok
+          get "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_b
+          last_response.status.should == 403
         end
       end
     end
   end
 
-  shared_examples "permission delete allowed" do |perm_name, model, name, path, perms_overlap|
+  shared_examples "permission delete allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "DELETE /v2/apps/:id" do
       it "should allow a user with the #{perm_name} permission to delete a #{name}" do
-        delete "#{path}/#{@obj_a.guid}", {}, headers_a
+        delete "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_a
         last_response.status.should == 204
       end
 
       unless perms_overlap
         it "should not allow a user with the #{perm_name} permission for a different #{name} to delete a #{name}" do
-          delete "#{path}/#{@obj_a.guid}", {}, headers_b
+          delete "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_b
           last_response.status.should == 403
         end
       end
     end
   end
 
-  shared_examples "permission delete not_allowed" do |perm_name, model, name, path|
+  shared_examples "permission delete not_allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "DELETE #{path}/:id" do
       it "should not allow a user with only the #{perm_name} permission to delete a #{name}" do
-        delete "#{path}/#{@obj_a.guid}", {}, headers_a
+        delete "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_a
         last_response.status.should == 403
       end
     end
@@ -196,15 +197,28 @@ module VCAP::CloudController::ApiSpecHelper
 
   shared_examples "permission checks" do |perm_name, opts|
     model = opts[:model]
-    path = opts[:path]
     name = model.name.split("::").last.underscore.gsub("_", " ")
+
+    path = opts[:path]
+    path_suffix = opts[:path_suffix]
     perms_overlap = opts[:permissions_overlap]
 
     include_examples "permission enumeration",
-      perm_name, model, name, path, opts[:enumerate], perms_overlap
+      perm_name, model, name, path, path_suffix, opts[:enumerate], perms_overlap
 
     [:create, :read, :modify, :delete].each do |op|
-      include_examples "permission #{op} #{opts[op]}", perm_name, model, name, path, perms_overlap
+      include_examples "permission #{op} #{opts[op]}", perm_name, model, name, path, path_suffix, perms_overlap
     end
+  end
+
+  shared_examples "read permission check" do |perm_name, opts|
+    model = opts[:model]
+    name = model.name.split("::").last.underscore.gsub("_", " ")
+
+    path = opts[:path]
+    path_suffix = opts[:path_suffix]
+
+    include_examples "permission read #{opts[:allowed] ? "allowed" : "not_allowed"}",
+      perm_name, model, name, path, path_suffix, false
   end
 end

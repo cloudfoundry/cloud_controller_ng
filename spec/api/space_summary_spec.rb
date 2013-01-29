@@ -4,11 +4,11 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::SpaceSummary do
-    let(:num_services) { 2 }
-    let(:num_started_apps) { 3 }
-    let(:num_stopped_apps) { 5 }
-    let(:mem_size) { 128 }
-    let(:num_apps) { num_started_apps + num_stopped_apps }
+    num_services = 2
+    num_started_apps = 3
+    num_stopped_apps = 5
+    mem_size = 128
+    num_apps = num_started_apps + num_stopped_apps
 
     let(:admin_headers) do
       user = VCAP::CloudController::Models::User.make(:admin => true)

@@ -10,6 +10,7 @@ require "rack/test"
 
 require "steno"
 require "cloud_controller"
+require "rspec_let_monkey_patch"
 
 module VCAP::CloudController
   class SpecEnvironment

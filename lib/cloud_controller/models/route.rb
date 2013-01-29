@@ -10,7 +10,10 @@ module VCAP::CloudController::Models
     many_to_one :domain
     many_to_one :space
 
-    many_to_many :apps, :before_add => :validate_app, :after_add => :mark_app_routes_changed, :after_remove => :mark_app_routes_changed
+    many_to_many :apps,
+                 :before_add => :validate_app,
+                 :after_add => :mark_app_routes_changed,
+                 :after_remove => :mark_app_routes_changed
     add_association_dependencies :apps => :nullify
 
     export_attributes :host, :domain_guid, :space_guid
@@ -86,14 +89,20 @@ module VCAP::CloudController::Models
 
     private
 
+    def around_destroy
+      loaded_apps = apps
+      super
+
+      loaded_apps.each do |app|
+        mark_app_routes_changed(app)
+      end
+    end
+
     def mark_app_routes_changed(app)
       app.routes_changed = true
-      # I hate putting this in the model, but let's get this feature shippped
-      # TODO: use event emitter to decouple this from the model
       if app.dea_update_pending?
         VCAP::CloudController::DeaClient.update_uris(app)
       end
     end
-
   end
 end

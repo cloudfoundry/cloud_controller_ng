@@ -4,31 +4,28 @@ require File.expand_path("../../spec_helper", __FILE__)
 
 module VCAP::CloudController::ResourcePoolSpecHelper
   shared_context "resource pool" do |klass = described_class|
-    let(:tmpdir) { Dir.mktmpdir }
-    let(:num_dirs) { 3 }
-    let(:num_unique_allowed_files_per_dir) { 7 }
-    let(:file_duplication_factor) { 2 }
-    let(:num_dup_files) { 7 }
-    let(:max_file_size) { 1098 } # this is arbitrary
-    let(:total_allowed_files) do
-      num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
-    end
-
-    let(:dummy_descriptor) do
-      { "sha1" => Digest::SHA1.hexdigest("abc"), "size" => 1}
-    end
-
     before(:all) do
+      num_dirs = 3
+      num_unique_allowed_files_per_dir = 7
+      file_duplication_factor = 2
+      max_file_size = 1098 # this is arbitrary
+
+      @total_allowed_files =
+          num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
+
+      @dummy_descriptor = { "sha1" => Digest::SHA1.hexdigest("abc"), "size" => 1}
+      @tmpdir = Dir.mktmpdir
+
       cfg = { :resource_pool => { :maximum_size => max_file_size }}
       klass.configure(cfg)
 
       @descriptors = []
       num_dirs.times do
         dirname = SecureRandom.uuid
-        Dir.mkdir("#{tmpdir}/#{dirname}")
+        Dir.mkdir("#{@tmpdir}/#{dirname}")
         num_unique_allowed_files_per_dir.times do
           basename = SecureRandom.uuid
-          path = "#{tmpdir}/#{dirname}/#{basename}"
+          path = "#{@tmpdir}/#{dirname}/#{basename}"
           contents = SecureRandom.uuid
 
           descriptor = {
@@ -51,7 +48,7 @@ module VCAP::CloudController::ResourcePoolSpecHelper
     end
 
     after(:all) do
-      FileUtils.rm_rf(tmpdir)
+      FileUtils.rm_rf(@tmpdir)
     end
   end
 end

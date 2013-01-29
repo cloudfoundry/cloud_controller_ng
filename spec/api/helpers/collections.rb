@@ -18,14 +18,27 @@ module VCAP::CloudController::ApiSpecHelper
   end
 
   shared_context "collections" do |opts, attr, make|
-    let(:obj) { opts[:model].make }
-    let(:other_obj) { opts[:model].make }
-    let(:add_method) { "add_#{child_name}" }
-    let(:get_method) { "#{child_name}s" }
-    let(:child_name) { attr.to_s.singularize }
-    let(:headers) do
-      user = VCAP::CloudController::Models::User.make(:admin => true)
-      json_headers(headers_for(user))
+    define_method(:obj) do
+      @obj ||= opts[:model].make
+    end
+
+    define_method(:child_name) do
+      attr.to_s.singularize
+    end
+
+    def add_method
+      "add_#{child_name}"
+    end
+
+    def get_method
+      "#{child_name}s"
+    end
+
+    def headers
+      @header ||= begin
+        user = VCAP::CloudController::Models::User.make(:admin => true)
+        json_headers(headers_for(user))
+      end
     end
 
     before(:all) do
