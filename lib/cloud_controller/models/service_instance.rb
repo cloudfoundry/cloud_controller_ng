@@ -156,7 +156,8 @@ module VCAP::CloudController::Models
         :email => VCAP::CloudController::SecurityContext.current_user_email,
         :plan  => service_plan.name,
         :plan_option => {}, # TODO: remove this
-        :version => service_plan.service.version
+        :version => service_plan.service.version,
+        :user_guid => VCAP::CloudController::SecurityContext.current_user_guid
       )
 
       logger.debug "provision response for instance #{guid} #{gw_attrs.inspect}"

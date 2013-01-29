@@ -3,18 +3,19 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
-  describe VCAP::CloudController::AppSummary do
-    let(:num_services) { 2 }
-    let(:free_mem_size) { 128 }
-
+  describe AppSummary do
     let(:admin_headers) do
       user = VCAP::CloudController::Models::User.make(:admin => true)
       headers_for(user)
     end
 
-    before :all do
-      @system_domain = Models::Domain.new(:name => Sham.domain,
-        :owning_organization => nil)
+    before(:all) do
+      @num_services = 2
+      @free_mem_size = 128
+
+      @system_domain = Models::Domain.new(
+          :name => Sham.domain,
+          :owning_organization => nil)
       @system_domain.save(:validate => false)
 
       @space = Models::Space.make
@@ -26,11 +27,11 @@ module VCAP::CloudController
         :space => @space,
         :production => false,
         :instances => 1,
-        :memory => free_mem_size,
-        :state => "STARTED",
+        :memory => @free_mem_size,
+        :state => "STARTED"
       )
 
-      num_services.times do
+      @num_services.times do
         instance = Models::ServiceInstance.make(:space => @space)
         @services << instance
         Models::ServiceBinding.make(:app => @app, :service_instance => instance)
@@ -109,8 +110,8 @@ module VCAP::CloudController
         ]
       end
 
-      it "should return num_services services" do
-        decoded_response["services"].size.should == num_services
+      it "should return correct number of services" do
+        decoded_response["services"].size.should == @num_services
       end
 
       it "should return the correct info for a service" do
@@ -132,6 +133,96 @@ module VCAP::CloudController
             }
           }
         }
+      end
+    end
+
+    describe "Permissions" do
+      include_context "permissions"
+
+      before do
+        @obj_a = Models::App.make(:space => @space_a)
+        @obj_b = Models::App.make(:space => @space_b)
+      end
+
+      describe "Org Level Permissions" do
+        describe "OrgManager" do
+          let(:member_a) { @org_a_manager }
+          let(:member_b) { @org_b_manager }
+
+          include_examples "read permission check", "OrgManager",
+            :model => Models::App,
+            :path => "/v2/apps",
+            :path_suffix => "/summary",
+            :allowed => true
+        end
+
+        describe "OrgUser" do
+          let(:member_a) { @org_a_member }
+          let(:member_b) { @org_b_member }
+
+          include_examples "read permission check", "OrgUser",
+            :model => Models::App,
+            :path => "/v2/apps",
+            :path_suffix => "/summary",
+            :allowed => false
+        end
+
+        describe "BillingManager" do
+          let(:member_a) { @org_a_billing_manager }
+          let(:member_b) { @org_b_billing_manager }
+
+          include_examples "read permission check", "BillingManager",
+            :model => Models::App,
+            :path => "/v2/apps",
+            :path_suffix => "/summary",
+            :allowed => false
+        end
+
+        describe "Auditor" do
+          let(:member_a) { @org_a_auditor }
+          let(:member_b) { @org_b_auditor }
+
+          include_examples "read permission check", "Auditor",
+            :model => Models::App,
+            :path => "/v2/apps",
+            :path_suffix => "/summary",
+            :allowed => false
+        end
+      end
+
+      describe "App Space Level Permissions" do
+        describe "SpaceManager" do
+          let(:member_a) { @space_a_manager }
+          let(:member_b) { @space_b_manager }
+
+          include_examples "read permission check", "SpaceManager",
+            :model => Models::App,
+            :path => "/v2/apps",
+            :path_suffix => "/summary",
+            :allowed => true
+        end
+
+        describe "Developer" do
+          let(:member_a) { @space_a_developer }
+          let(:member_b) { @space_b_developer }
+
+          include_examples "read permission check", "Developer",
+            :model => Models::App,
+            :path => "/v2/apps",
+            :path_suffix => "/summary",
+            :allowed => true
+        end
+
+        describe "SpaceAuditor" do
+          let(:member_a) { @space_a_auditor }
+          let(:member_b) { @space_b_auditor }
+
+          include_examples "read permission check", "SpaceAuditor",
+            :model => Models::App,
+            :path => "/v2/apps",
+            :path_suffix => "/summary",
+            :allowed => true
+        end
       end
     end
   end

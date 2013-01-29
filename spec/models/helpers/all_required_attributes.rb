@@ -3,9 +3,7 @@
 module VCAP::CloudController::ModelSpecHelper
   shared_examples "creation with all required attributes" do
     describe "with all required attributes" do
-      before(:all) do
-        @obj = described_class.make
-      end
+      before(:all) { @obj = described_class.make }
 
       it "should succeed" do
         @obj.should be_valid

@@ -1,7 +1,7 @@
 GIT
   remote: git://github.com/cloudfoundry/vcap-common.git
-  revision: b9024a52348223b146ce51126486e88816fa03f4
-  ref: b9024a52
+  revision: 055964f62282c94ebe7c3ce6f4df9fb093a17714
+  ref: 055964f622
   specs:
     vcap_common (2.0.10)
       em-http-request (~> 1.0.0.beta3, < 1.0.0.beta4)
@@ -53,8 +53,8 @@ GEM
       em-socksify
       eventmachine
       http_parser.rb (>= 0.5.1)
-    em-socksify (0.1.0)
-      eventmachine
+    em-socksify (0.2.1)
+      eventmachine (>= 1.0.0.beta.4)
     eventmachine (1.0.0)
     grape (0.2.2)
       activesupport

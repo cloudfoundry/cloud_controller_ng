@@ -4,7 +4,6 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Space do
-
     it_behaves_like "a CloudController API", {
       :path                => "/v2/spaces",
       :model               => Models::Space,

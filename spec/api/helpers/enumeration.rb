@@ -16,9 +16,7 @@ module VCAP::CloudController::ApiSpecHelper
     path = "#{path}#{qp.join("&")}"
 
     describe "GET #{path}" do
-      before(:all) do
-        get "#{path}", {}, json_headers(admin_headers)
-      end
+      before(:all) { get "#{path}", {}, json_headers(admin_headers) }
 
       it "should return 200" do
         last_response.status.should == 200

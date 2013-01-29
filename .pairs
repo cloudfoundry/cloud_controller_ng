@@ -1,0 +1,9 @@
+pairs:
+  dk: Dmitriy Kalinin
+  nc: Nate Clark
+  mb: Max Brunsfeld
+  bn: Bob Nugmanov
+email:
+  prefix: pair
+  domain: pivotallabs.com
+global: true

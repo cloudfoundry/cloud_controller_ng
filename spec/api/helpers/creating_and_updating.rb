@@ -1,33 +1,34 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController::ApiSpecHelper
-
   shared_examples "creating and updating" do |opts|
     describe "creating and updating" do
-      let(:creation_opts) do
-        # if the caller has supplied their own creation lambda, use it
-        opts[:create_attribute_reset].call if opts[:create_attribute_reset]
+      define_method(:creation_opts) do
+        @creation_opts ||= begin
+          # if the caller has supplied their own creation lambda, use it
+          opts[:create_attribute_reset].call if opts[:create_attribute_reset]
 
-        initial_obj = opts[:model].make
-        attrs = creation_opts_from_obj(initial_obj, opts)
-        initial_obj.destroy
+          initial_obj = opts[:model].make
+          attrs = creation_opts_from_obj(initial_obj, opts)
+          initial_obj.destroy
 
-        create_attribute = opts[:create_attribute]
-        if create_attribute
-          opts[:create_attribute_reset].call
-          attrs.keys.each do |k|
-            v = create_attribute.call k
-            attrs[k] = v if v
+          create_attribute = opts[:create_attribute]
+          if create_attribute
+            opts[:create_attribute_reset].call
+            attrs.keys.each do |k|
+              v = create_attribute.call k
+              attrs[k] = v if v
+            end
           end
-        end
 
-        opts[:extra_attributes].each do |attr|
-          if opts[:required_attributes].include?(attr)
-            attrs[attr.to_s] = Sham.send(attr)
+          opts[:extra_attributes].each do |attr|
+            if opts[:required_attributes].include?(attr)
+              attrs[attr.to_s] = Sham.send(attr)
+            end
           end
-        end
 
-        attrs
+          attrs
+        end
       end
 
       let(:non_synthetic_creation_opts) do
@@ -118,9 +119,11 @@ module VCAP::CloudController::ApiSpecHelper
           req_attrs = req_attrs - ["id"] if verb == :put
           req_attrs.each do |without_attr|
             context "without the :#{without_attr.to_s} attribute" do
-              let(:filtered_opts) do
-                creation_opts.select do |k, v|
-                  k != without_attr.to_s and k != "#{without_attr}_id"
+              define_method(:filtered_opts) do
+                @filtered_opts ||= begin
+                  creation_opts.select do |k, v|
+                    k != without_attr.to_s and k != "#{without_attr}_id"
+                  end
                 end
               end
 
@@ -246,7 +249,6 @@ module VCAP::CloudController::ApiSpecHelper
               it_behaves_like "a vcap rest error response", /taken/
             end
           end
-
         end
       end
     end

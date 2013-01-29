@@ -101,7 +101,6 @@ module VCAP::CloudController::Models
     space             { Space.make }
     runtime           { Runtime.make }
     framework         { Framework.make }
-    droplet_hash      { "deadbeef" }
   end
 
   ServiceBinding.blueprint do

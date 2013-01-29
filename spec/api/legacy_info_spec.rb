@@ -43,12 +43,12 @@ module VCAP::CloudController
                       :https => scenario_vars[:protocol] == "https")
         end
 
-        before(:all) do
+        before do
           config_override(config_setting => true)
         end
 
         context "with no authorization header for #{scenario_vars[:user]}" do
-          before(:all) do
+          before do
             headers.delete("HTTP_AUTHORIZATION")
             get "/info", {}, headers
           end
@@ -57,7 +57,7 @@ module VCAP::CloudController
         end
 
         context "with invalid authorization header for #{scenario_vars[:user]}" do
-          before(:all) do
+          before do
             if headers["HTTP_AUTHORIZATION"]
               headers["HTTP_AUTHORIZATION"] += "EXTRA STUFF"
             end
@@ -68,7 +68,7 @@ module VCAP::CloudController
         end
 
         context "with a valid authorization header for #{scenario_vars[:user]}" do
-          before(:all) do
+          before do
             get "/info", {}, headers
           end
 
@@ -140,7 +140,7 @@ module VCAP::CloudController
         end
 
         context "with 2 started apps with 2 instances, 5 stopped apps, and 3 service" do
-          before(:all) do
+          before do
             2.times do
               Models::App.make(:space => current_user.default_space,
                                :state => "STARTED", :instances => 2, :memory => 128)
@@ -348,7 +348,7 @@ module VCAP::CloudController
     end
 
     describe "GET", "/info/services", "unauthenticated" do
-      before :all do
+      before(:all) do
         # poor man's reset_db
         Models::Service.filter(:provider => "core").each do |svc|
           svc.service_plans_dataset.filter(:name => "100").destroy

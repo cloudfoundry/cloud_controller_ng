@@ -8,21 +8,21 @@ module VCAP::CloudController
 
     describe "#match_resources" do
       before(:all) do
-        FilesystemPool.add_directory(tmpdir)
+        FilesystemPool.add_directory(@tmpdir)
       end
 
       it "should return an empty list when no resources match" do
-        res = FilesystemPool.match_resources([dummy_descriptor])
+        res = FilesystemPool.match_resources([@dummy_descriptor])
         res.should == []
       end
 
       it "should return a resource that matches" do
-        res = FilesystemPool.match_resources([@descriptors.first, dummy_descriptor])
+        res = FilesystemPool.match_resources([@descriptors.first, @dummy_descriptor])
         res.should == [@descriptors.first]
       end
 
       it "should return many resources that match" do
-        res = FilesystemPool.match_resources(@descriptors + [dummy_descriptor])
+        res = FilesystemPool.match_resources(@descriptors + [@dummy_descriptor])
         res.should == @descriptors
       end
     end

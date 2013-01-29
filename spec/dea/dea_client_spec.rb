@@ -4,7 +4,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DeaClient do
-    let(:app) { Models::App.make }
+    let(:app) { Models::App.make(:droplet_hash => "sha") }
     let(:message_bus) { double(:message_bus) }
     let(:dea_pool) { double(:dea_pool) }
     let(:number_service_instances) { 3 }
@@ -19,16 +19,19 @@ module VCAP::CloudController
                                               :service_instance => instance)
         app.add_service_binding(binding)
       end
+
       DeaClient.configure(config, message_bus, dea_pool)
     end
 
     after { Models::ServiceBinding.any_instance.unstub(:bind_on_gateway) }
 
     describe "update_uris" do
+      subject { DeaClient.update_uris(app) }
+
       it "does not update deas if app isn't staged" do
         app.update(:package_state => "PENDING")
         message_bus.should_not_receive(:publish)
-        DeaClient.update_uris(app)
+        subject
       end
 
       it "sends a dea update message" do
@@ -47,7 +50,7 @@ module VCAP::CloudController
             )
           ),
         )
-        DeaClient.update_uris(app)
+        subject
       end
     end
 
@@ -202,11 +205,11 @@ module VCAP::CloudController
           "dea.stop",
           json_match(
             hash_including(
-              "droplet"     => app.guid,
+              "droplet"   => app.guid,
               "instances"   => ["a", "b"],
               "V1" => {
-                "droplet"   => app.guid,
-                "instances" => ["a", "b"]
+                  "droplet"   => app.guid,
+                  "instances" => ["a", "b"]
               }
             )
           ),
