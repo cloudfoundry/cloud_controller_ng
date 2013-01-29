@@ -23,10 +23,12 @@ module VCAP::CloudController
           client_error = nil
           results = EM.schedule_sync do |promise|
             client = VCAP::Stager::Client::EmAware.new(MessageBus.nats.client, queue)
-            deferrable = client.stage(staging_request(app), staging_timeout)
+            request = staging_request(app)
+            logger.debug "staging #{app.guid} request: #{request}"
+            deferrable = client.stage(request, staging_timeout)
 
             deferrable.errback do |e|
-              logger.error "staging #{app.guid} error #{e}"
+              logger.error "staging #{app.guid} request: #{request} error #{e}"
               client_error = e
               promise.deliver(e)
             end
