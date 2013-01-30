@@ -236,7 +236,7 @@ module VCAP::CloudController::SpecHelper
 
     if description_match
       it "should contain a description that matches #{description_match}" do
-        decoded_response["description"].should match /#{description_match}/
+        decoded_response["description"].should match(/#{description_match}/)
       end
     end
   end
