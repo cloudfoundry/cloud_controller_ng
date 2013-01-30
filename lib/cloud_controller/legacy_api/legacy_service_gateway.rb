@@ -77,8 +77,8 @@ module VCAP::CloudController
       empty_json
     end
 
-    def list_handles(label_and_version, provider = DEFAULT_PROVIDER)
-      (label, version) = label_and_version.split("-")
+    def list_handles(service_label, provider = DEFAULT_PROVIDER)
+      (label, version) = service_label.split("-")
 
       service = Models::Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
@@ -109,7 +109,9 @@ module VCAP::CloudController
       Yajl::Encoder.encode({:handles => handles})
     end
 
-    def delete(label, provider = DEFAULT_PROVIDER)
+    def delete(service_label, provider = DEFAULT_PROVIDER)
+      (label, version) = service_label.split("-")
+
       validate_access(label, provider)
 
       VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
@@ -133,7 +135,9 @@ module VCAP::CloudController
       end
     end
 
-    def get(label, provider = DEFAULT_PROVIDER)
+    def get(service_label, provider = DEFAULT_PROVIDER)
+      (label, version) = service_label.split("-")
+
       validate_access(label, provider)
 
       service = Models::Service[:label => label, :provider => provider]
@@ -171,7 +175,9 @@ module VCAP::CloudController
     #
     # P.S. While I applaud Ruby for allowing this default parameter in the
     # middle, I'm really not wild for _any_ function overloading in Ruby
-    def update_handle(label, provider=DEFAULT_PROVIDER, id)
+    def update_handle(service_label, provider=DEFAULT_PROVIDER, id)
+      (label, version) = service_label.split("-")
+
       validate_access(label, provider)
       VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
 
@@ -222,14 +228,14 @@ module VCAP::CloudController
     end
 
     def self.setup_routes
-      get    "/services/v1/offerings/:label_and_version/handles",           :list_handles
-      get    "/services/v1/offerings/:label_and_version/:provider/handles", :list_handles
-      get    "/services/v1/offerings/:label/:provider",         :get
-      get    "/services/v1/offerings/:label",                   :get
-      delete "/services/v1/offerings/:label",                   :delete
-      delete "/services/v1/offerings/:label/:provider",         :delete
-      post   "/services/v1/offerings",                          :create_offering
-      post   "/services/v1/offerings/:label/handles/:id",       :update_handle
+      get    "/services/v1/offerings/:label/handles",               :list_handles
+      get    "/services/v1/offerings/:label/:provider/handles",     :list_handles
+      get    "/services/v1/offerings/:label/:provider",             :get
+      get    "/services/v1/offerings/:label",                       :get
+      delete "/services/v1/offerings/:label",                       :delete
+      delete "/services/v1/offerings/:label/:provider",             :delete
+      post   "/services/v1/offerings",                              :create_offering
+      post   "/services/v1/offerings/:label/handles/:id",           :update_handle
       post   "/services/v1/offerings/:label/:provider/handles/:id", :update_handle
     end
 
