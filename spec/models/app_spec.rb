@@ -677,5 +677,10 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "file_descriptors" do
+      subject { Models::App.make }
+      its(:file_descriptors) { should == 16_384 }
+    end
   end
 end

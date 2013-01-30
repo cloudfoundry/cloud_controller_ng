@@ -19,7 +19,6 @@ module VCAP::CloudController
       attribute  :environment_json,    Hash,       :default => {}
       attribute  :memory,              Integer,    :default => 256
       attribute  :instances,           Integer,    :default => 1
-      attribute  :file_descriptors,    Integer,    :default => 256
       attribute  :disk_quota,          Integer,    :default => 256
 
       # TODO: renable exclude_in => :create for state, but not until it is
