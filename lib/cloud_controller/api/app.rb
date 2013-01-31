@@ -76,10 +76,8 @@ module VCAP::CloudController
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::AppNameTaken.new(attributes["name"])
       elsif memory_quota_errors
-        if memory_quota_errors.include?(:free_quota_exceeded)
-          Errors::AppMemoryFreeQuotaExceeded.new
-        elsif memory_quota_errors.include?(:paid_quota_exceeded)
-          Errors::AppMemoryPaidQuotaExceeded.new
+        if memory_quota_errors.include?(:quota_exceeded)
+          Errors::AppMemoryQuotaExceeded.new
         end
       else
         Errors::AppInvalid.new(e.errors.full_messages)

@@ -210,15 +210,8 @@ module VCAP::CloudController::Models
     end
 
     def check_memory_quota
-      if space
-        org = space.organization
-        if production
-          if org.paid_memory_remaining - additional_memory_requested < 0
-            errors.add(:memory, :paid_quota_exceeded)
-          end
-        elsif org.free_memory_remaining - additional_memory_requested < 0
-          errors.add(:memory, :free_quota_exceeded)
-        end
+      if space && (space.organization.memory_remaining < additional_memory_requested)
+        errors.add(:memory, :quota_exceeded)
       end
     end
 

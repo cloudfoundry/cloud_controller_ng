@@ -6,8 +6,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::Models::QuotaDefinition do
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :non_basic_services_allowed,
-                               :total_services, :free_memory_limit,
-                               :paid_memory_limit],
+                               :total_services, :memory_limit],
       :unique_attributes   => [:name]
     }
 
@@ -18,12 +17,11 @@ module VCAP::CloudController
         # see config/cloud_controller.yml
         Models::QuotaDefinition.populate_from_config(config)
 
-        Models::QuotaDefinition.count.should == 3
-        runaway = Models::QuotaDefinition[:name => "runaway"]
-        runaway.non_basic_services_allowed.should == true
-        runaway.total_services.should == 500
-        runaway.free_memory_limit.should == 1024
-        runaway.paid_memory_limit.should == 204800
+        Models::QuotaDefinition.count.should == 2
+        paid = Models::QuotaDefinition[:name => "paid"]
+        paid.non_basic_services_allowed.should == true
+        paid.total_services.should == 500
+        paid.memory_limit.should == 204800
       end
     end
 

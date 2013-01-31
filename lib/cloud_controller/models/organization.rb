@@ -102,22 +102,9 @@ module VCAP::CloudController::Models
       quota_definition.non_basic_services_allowed
     end
 
-    def free_memory_apps
-      apps_dataset.filter(:production => false)
-    end
-
-    def paid_memory_apps
-      apps_dataset.filter(:production => true)
-    end
-
-    def free_memory_remaining
-      free_memory_used = free_memory_apps.sum(:memory * :instances) || 0
-      quota_definition.free_memory_limit - free_memory_used
-    end
-
-    def paid_memory_remaining
-      paid_memory_used = paid_memory_apps.sum(:memory * :instances) || 0
-      quota_definition.paid_memory_limit - paid_memory_used
+    def memory_remaining
+      memory_used = apps_dataset.sum(:memory * :instances) || 0
+      quota_definition.memory_limit - memory_used
     end
 
     def self.user_visibility_filter(user)

@@ -590,113 +590,56 @@ module VCAP::CloudController
     end
 
     describe "quota" do
-      let(:paid_quota) do
-        Models::QuotaDefinition.make(:paid_memory_limit => 128)
+      let(:quota) do
+        Models::QuotaDefinition.make(:memory_limit => 128)
       end
 
-      let(:free_quota) do
-        Models::QuotaDefinition.make(:free_memory_limit => 128)
-      end
-
-      context "paid quota" do
-        context "app creation" do
-          it "should raise error when quota is exceeded" do
-            org = Models::Organization.make(:quota_definition => paid_quota)
-            space = Models::Space.make(:organization => org)
-            expect do
-              Models::App.make(:space => space,
-                               :production => true,
-                               :memory => 65,
-                               :instances => 2)
-            end.to raise_error(Sequel::ValidationFailed,
-                               /memory paid_quota_exceeded/)
-          end
-
-          it "should not raise error when quota is not exceeded" do
-            org = Models::Organization.make(:quota_definition => paid_quota)
-            space = Models::Space.make(:organization => org)
-            expect do
-              Models::App.make(:space => space,
-                               :production => true,
-                               :memory => 64,
-                               :instances => 2)
-            end.to_not raise_error
-          end
+      context "app creation" do
+        it "should raise error when quota is exceeded" do
+          org = Models::Organization.make(:quota_definition => quota)
+          space = Models::Space.make(:organization => org)
+          expect do
+            Models::App.make(:space => space,
+                             :memory => 65,
+                             :instances => 2)
+          end.to raise_error(Sequel::ValidationFailed,
+                             /memory quota_exceeded/)
         end
 
-        context "app update" do
-          it "should raise error when quota is exceeded" do
-            org = Models::Organization.make(:quota_definition => paid_quota)
-            space = Models::Space.make(:organization => org)
-            app = Models::App.make(:space => space,
-                                   :production => true,
-                                   :memory => 64,
-                                   :instances => 2)
-            app.memory = 65
-            expect { app.save }.to raise_error(Sequel::ValidationFailed,
-                                               /memory paid_quota_exceeded/)
-          end
-
-          it "should not raise error when quota is not exceeded" do
-            org = Models::Organization.make(:quota_definition => paid_quota)
-            space = Models::Space.make(:organization => org)
-            app = Models::App.make(:space => space,
-                                   :production => true,
-                                   :memory => 63,
-                                   :instances => 2)
-            app.memory = 64
-            expect { app.save }.to_not raise_error
-          end
+        it "should not raise error when quota is not exceeded" do
+          org = Models::Organization.make(:quota_definition => quota)
+          space = Models::Space.make(:organization => org)
+          expect do
+            Models::App.make(:space => space,
+                             :memory => 64,
+                             :instances => 2)
+          end.to_not raise_error
         end
       end
 
-      context "free quota" do
-        context "app creation" do
-          it "should raise error when quota is exceeded" do
-            org = Models::Organization.make(:quota_definition => free_quota)
-            space = Models::Space.make(:organization => org)
-            expect  do
-              Models::App.make(:space => space,
-                               :memory => 65,
-                               :instances => 2)
-            end.to raise_error(Sequel::ValidationFailed,
-                               /memory free_quota_exceeded/)
-          end
-
-          it "should not raise error when quota is not exceeded" do
-            org = Models::Organization.make(:quota_definition => free_quota)
-            space = Models::Space.make(:organization => org)
-            expect  do
-              Models::App.make(:space => space,
-                               :memory => 64,
-                               :instances => 2)
-            end.to_not raise_error
-          end
+      context "app update" do
+        it "should raise error when quota is exceeded" do
+          org = Models::Organization.make(:quota_definition => quota)
+          space = Models::Space.make(:organization => org)
+          app = Models::App.make(:space => space,
+                                 :memory => 64,
+                                 :instances => 2)
+          app.memory = 65
+          expect { app.save }.to raise_error(Sequel::ValidationFailed,
+                                             /memory quota_exceeded/)
         end
 
-        context "app update" do
-          it "should raise error when quota is exceeded" do
-            org = Models::Organization.make(:quota_definition => free_quota)
-            space = Models::Space.make(:organization => org)
-            app = Models::App.make(:space => space,
-                                   :memory => 64,
-                                   :instances => 2)
-            app.memory = 65
-            expect { app.save }.to raise_error(Sequel::ValidationFailed,
-                                               /memory free_quota_exceeded/)
-          end
-
-          it "should not raise error when quota is not exceeded" do
-            org = Models::Organization.make(:quota_definition => free_quota)
-            space = Models::Space.make(:organization => org)
-            app = Models::App.make(:space => space,
-                                   :memory => 63,
-                                   :instances => 2)
-            app.memory = 64
-            expect { app.save }.to_not raise_error
-          end
+        it "should not raise error when quota is not exceeded" do
+          org = Models::Organization.make(:quota_definition => quota)
+          space = Models::Space.make(:organization => org)
+          app = Models::App.make(:space => space,
+                                 :memory => 63,
+                                 :instances => 2)
+          app.memory = 64
+          expect { app.save }.to_not raise_error
         end
       end
+
     end
 
     describe "file_descriptors" do

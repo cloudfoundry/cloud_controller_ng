@@ -9,11 +9,9 @@ module VCAP::CloudController
       :path                 => "/v2/quota_definitions",
       :model                => Models::QuotaDefinition,
       :basic_attributes     => [:name, :non_basic_services_allowed,
-                                :total_services, :free_memory_limit,
-                                :paid_memory_limit],
+                                :total_services, :memory_limit],
       :required_attributes  => [:name, :non_basic_services_allowed,
-                                :total_services, :free_memory_limit,
-                                :paid_memory_limit],
+                                :total_services, :memory_limit],
       :unique_attributes    => :name,
     }
   end

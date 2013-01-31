@@ -493,32 +493,11 @@ module VCAP::CloudController
     end
 
     describe "Quota enforcement" do
-      let(:paid_quota) { Models::QuotaDefinition.make(:paid_memory_limit => 0) }
-      let(:free_quota) do
-        Models::QuotaDefinition.make(:free_memory_limit => 0)
-      end
+      let(:quota) { Models::QuotaDefinition.make(:memory_limit => 0) }
 
-      context "paid quota" do
+      context "quota" do
         it "should enforce quota check on memory" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
-          space = Models::Space.make(:organization => org)
-          req = Yajl::Encoder.encode(:name => Sham.name,
-                                     :space_guid => space.guid,
-                                     :memory => 128,
-                                     :production => true,
-                                     :framework_guid => Models::Framework.make.guid,
-                                     :runtime_guid => Models::Runtime.make.guid)
-
-          post("/v2/apps", req, headers_for(make_developer_for_space(space)))
-
-          last_response.status.should == 400
-          decoded_response["description"].should =~ /file a support ticket to request additional resources/
-        end
-      end
-
-      context "free quota" do
-        it "should enforce quota check on memory" do
-          org = Models::Organization.make(:quota_definition => free_quota)
+          org = Models::Organization.make(:quota_definition => quota)
           space = Models::Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
@@ -529,7 +508,7 @@ module VCAP::CloudController
           post("/v2/apps", req, headers_for(make_developer_for_space(space)))
 
           last_response.status.should == 400
-          decoded_response["description"].should =~ /login to your account and upgrade/
+          decoded_response["description"].should =~ /exceeded your organization's memory limit/
         end
       end
     end
