@@ -40,11 +40,23 @@ module VCAP::CloudController::Models
 
   Route.blueprint do
     space             { Space.make }
-    domain            {
-      d = Domain.make(:owning_organization => space.organization)
+
+    domain do
+      d = Domain.make(
+        :owning_organization => space.organization,
+        :wildcard => true
+      )
       space.add_domain(d)
       d
-    }
+    end
+
+    host do
+      if domain && domain.wildcard
+        Sham.host
+      else
+        ""
+      end
+    end
   end
 
   Space.blueprint do

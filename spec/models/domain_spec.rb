@@ -328,7 +328,7 @@ module VCAP::CloudController
           d = Models::Domain.make(:wildcard => true)
           s = Models::Space.make(:organization => d.owning_organization)
           s.add_domain(d)
-          r = Models::Route.make(:host => nil, :domain => d, :space => s)
+          r = Models::Route.make(:host => "", :domain => d, :space => s)
           d.update(:wildcard => false)
         end
       end

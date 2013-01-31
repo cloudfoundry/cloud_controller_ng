@@ -39,7 +39,7 @@ module VCAP::CloudController::Models
       validates_presence :wildcard
 
       if (!new? && column_changed?(:wildcard) && !wildcard &&
-          routes_dataset.filter(~{:host => nil}).count > 0)
+          routes_dataset.filter(~{:host => ""}).count > 0)
         errors.add(:wildcard, :wildcard_routes_in_use)
       end
 

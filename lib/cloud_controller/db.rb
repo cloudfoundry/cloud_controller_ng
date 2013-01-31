@@ -117,12 +117,16 @@ end
 module VCAP
   module Migration
     def self.timestamps(migration)
-      migration.Timestamp :created_at, :null => false, :index => true
-      migration.Timestamp :updated_at, :index => true
+      migration.Timestamp :created_at, :null => false
+      migration.Timestamp :updated_at
+
+      migration.index :created_at
+      migration.index :updated_at
     end
 
     def self.guid(migration)
-      migration.String :guid, :null => false, :index => true, :unique => true
+      migration.String :guid, :null => false
+      migration.index :guid, :unique => true
     end
 
     def self.common(migration)
@@ -135,11 +139,16 @@ module VCAP
       name = name.to_s
       join_table = "#{name.pluralize}_#{permission}".to_sym
       id_attr = "#{name}_id".to_sym
+      fk_name = "#{name}_fk".to_sym
       table = name.pluralize.to_sym
 
       migration.create_table(join_table) do
-        foreign_key id_attr, table, :null => false
-        foreign_key :user_id, :users, :null => false
+        Integer id_attr, :null => false
+        foreign_key id_attr, table, :name => fk_name
+
+        Integer :user_id, :null => false
+        foreign_key :user_id, :users, :name => :user_fk
+
         index [id_attr, :user_id], :unique => true
       end
     end

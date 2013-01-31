@@ -5,10 +5,9 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Models::Route do
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:domain, :space],
+      :required_attributes  => [:domain, :space, :host],
       :db_required_attributes => [:domain, :space],
       :unique_attributes    => [:host, :domain],
-      :stripped_string_attributes => :host,
       :create_attribute => lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym
@@ -29,7 +28,8 @@ module VCAP::CloudController
       :many_to_one => {
         :domain => lambda { |route|
           d = Models::Domain.make(
-            :owning_organization => route.domain.organization
+            :owning_organization => route.domain.organization,
+            :wildcard => true
           )
           route.space.add_domain(d)
         }
@@ -66,18 +66,18 @@ module VCAP::CloudController
             d
           end
 
-          it "should allow a nil host" do
-            Models::Route.make(:space => space,
-                               :domain => domain,
-                               :host => nil).should be_valid
-          end
-
-          it "should not allow an empty host" do
+          it "should not allow a nil host" do
             expect {
               Models::Route.make(:space => space,
                                  :domain => domain,
-                                 :host => "")
+                                 :host => nil)
             }.to raise_error(Sequel::ValidationFailed)
+          end
+
+          it "should allow an empty host" do
+            Models::Route.make(:space => space,
+                               :domain => domain,
+                               :host => "")
           end
 
           it "should not allow a blank host" do
@@ -89,7 +89,7 @@ module VCAP::CloudController
           end
         end
 
-        context "with a non-wild card domain" do
+        context "with a non-wildcard domain" do
           let(:space) { Models::Space.make }
           let(:domain) do
             d = Models::Domain.make(
@@ -100,10 +100,12 @@ module VCAP::CloudController
             d
           end
 
-          it "should allow a nil host" do
-            Models::Route.make(:space => space,
-                               :domain => domain,
-                               :host => nil).should be_valid
+          it "should not allow a nil host" do
+            expect {
+              Models::Route.make(:space => space,
+                                 :domain => domain,
+                                 :host => nil).should be_valid
+            }.to raise_error(Sequel::ValidationFailed)
           end
 
           it "should not allow a valid host" do
@@ -114,12 +116,10 @@ module VCAP::CloudController
             }.to raise_error(Sequel::ValidationFailed)
           end
 
-          it "should not allow an empty host" do
-            expect {
-              Models::Route.make(:space => space,
-                                 :domain => domain,
-                                 :host => "")
-            }.to raise_error(Sequel::ValidationFailed)
+          it "should allow an empty host" do
+            Models::Route.make(:space => space,
+                               :domain => domain,
+                               :host => "").should be_valid
           end
 
           it "should not allow a blank host" do
@@ -160,7 +160,7 @@ module VCAP::CloudController
         context "for a nil host" do
           it "should return the fqdn for the route" do
             r = Models::Route.make(
-              :host => nil,
+              :host => "",
               :domain => domain,
               :space => space,
             )

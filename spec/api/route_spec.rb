@@ -10,6 +10,7 @@ module VCAP::CloudController
       :model                => Models::Route,
       :basic_attributes     => [:host, :domain_guid, :space_guid],
       :required_attributes  => [:domain_guid, :space_guid],
+      :extra_attributes     => [:host],
       :update_attributes    => [:host],
       :unique_attributes    => [:host, :domain_guid],
       :create_attribute     => lambda { |name|

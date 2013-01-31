@@ -22,9 +22,7 @@ module VCAP::CloudController::ApiSpecHelper
           end
 
           opts[:extra_attributes].each do |attr|
-            if opts[:required_attributes].include?(attr)
-              attrs[attr.to_s] = Sham.send(attr)
-            end
+            attrs[attr.to_s] = Sham.send(attr)
           end
 
           attrs

@@ -134,7 +134,7 @@ GEM
     rspec-mocks (2.12.2)
     ruby-graphviz (1.0.5)
     ruby-hmac (0.4.0)
-    sequel (3.40.0)
+    sequel (3.43.0)
     simplecov (0.6.4)
       multi_json (~> 1.0)
       simplecov-html (~> 0.5.3)

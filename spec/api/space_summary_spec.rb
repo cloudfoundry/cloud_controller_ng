@@ -93,14 +93,14 @@ module VCAP::CloudController
             "urls" => [@route1.fqdn, @route2.fqdn],
             "routes" => [{
               "guid" => @route1.guid,
-              "host" => nil,
+              "host" => @route1.host,
               "domain" => {
                 "guid" => @route1.domain.guid,
                 "name" => @route1.domain.name
               }
             }, {
               "guid" => @route2.guid,
-              "host" => nil,
+              "host" => @route2.host,
               "domain" => {
                 "guid" => @route2.domain.guid,
                 "name" => @route2.domain.name}

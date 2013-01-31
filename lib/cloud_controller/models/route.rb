@@ -18,10 +18,9 @@ module VCAP::CloudController::Models
 
     export_attributes :host, :domain_guid, :space_guid
     import_attributes :host, :domain_guid, :space_guid, :app_guids
-    strip_attributes  :host
 
     def fqdn
-      host ? "#{host}.#{domain.name}" : domain.name
+      !host.empty? ? "#{host}.#{domain.name}" : domain.name
     end
 
     def as_summary_json
@@ -43,14 +42,14 @@ module VCAP::CloudController::Models
       validates_presence :domain
       validates_presence :space
 
-      validates_format   /^([\w\-]+)$/, :host if host
+      errors.add(:host, :presence) if host.nil?
+
+      validates_format   /^([\w\-]+)$/, :host if (host && !host.empty?)
       validates_unique   [:host, :domain_id]
 
       if domain
-        if domain.wildcard
-          validates_presence :host unless domain.owning_organization
-        else
-          errors.add(:host, :host_not_nil) unless host.nil?
+        unless domain.wildcard
+          errors.add(:host, :host_not_empty) unless (host.nil? || host.empty?)
         end
 
         if space && space.domains_dataset.filter(:id => domain.id).count < 1
