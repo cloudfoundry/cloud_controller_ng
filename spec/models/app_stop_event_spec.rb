@@ -19,7 +19,11 @@ module VCAP::CloudController
         :organization_guid,
         :organization_name,
       ],
-      :disable_examples => :deserialization
+      :unique_attributes => [
+        :app_run_id
+      ],
+      :disable_examples => :deserialization,
+      :skip_database_constraints => true
     }
 
     describe "create_from_app" do
@@ -34,12 +38,23 @@ module VCAP::CloudController
       end
 
       context "on an org with billing enabled" do
-        it "should create an app stop event" do
-          Models::AppStopEvent.should_receive(:create)
-          app = Models::App.make
+        let(:app) { Models::App.make }
+
+        before do
           app.space.organization.billing_enabled = true
           app.space.organization.save(:validate => false)
-          Models::AppStopEvent.create_from_app(app)
+        end
+
+
+        it "should create an app stop event using the run id from the latest start event" do
+          Timecop.freeze(Time.now - 3600) { Models::AppStartEvent.create_from_app(app) }
+          start_event_latest = Models::AppStartEvent.create_from_app(app)
+          stop_event = Models::AppStopEvent.create_from_app(app)
+          stop_event.app_run_id.should == start_event_latest.app_run_id
+        end
+
+        it "should raise an exception if a corresponding AppStartEvent is not found" do
+          expect { Models::AppStopEvent.create_from_app(app) }.to raise_error( VCAP::CloudController::Models::MissingAppStartEvent )
         end
       end
     end

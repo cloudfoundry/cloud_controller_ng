@@ -449,7 +449,7 @@ module VCAP::CloudController
     describe "billing" do
       context "app state changes" do
         context "creating a stopped app" do
-          it "should not call AppStartEvent.create_from_app" do
+          it "does not generate a start event or stop event" do
             Models::AppStartEvent.should_not_receive(:create_from_app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
             Models::App.make(:state => "STOPPED")
@@ -457,7 +457,7 @@ module VCAP::CloudController
         end
 
         context "creating a started app" do
-          it "should not call AppStopEvent.create_from_app" do
+          it "does not generate a stop event" do
             Models::AppStartEvent.should_receive(:create_from_app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
             Models::App.make(:state => "STARTED")
@@ -465,7 +465,7 @@ module VCAP::CloudController
         end
 
         context "starting a stopped app" do
-          it "should call AppStartEvent.create_from_app" do
+          it "generates a start event" do
             app = Models::App.make(:state => "STOPPED")
             Models::AppStartEvent.should_receive(:create_from_app).with(app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
@@ -474,7 +474,7 @@ module VCAP::CloudController
         end
 
         context "updating a stopped app" do
-          it "should not call AppStartEvent.create_from_app" do
+          it "does not generate a start event or stop event" do
             app = Models::App.make(:state => "STOPPED")
             Models::AppStartEvent.should_not_receive(:create_from_app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
@@ -483,7 +483,7 @@ module VCAP::CloudController
         end
 
         context "stopping a started app" do
-          it "should call AppStopEvent.create_from_app" do
+          it "does not generate a start event, but generates a stop event" do
             app = Models::App.make(:state => "STARTED")
             Models::AppStartEvent.should_not_receive(:create_from_app)
             Models::AppStopEvent.should_receive(:create_from_app).with(app)
@@ -492,7 +492,7 @@ module VCAP::CloudController
         end
 
         context "updating a started app" do
-          it "should not call AppStartEvent.create_from_app" do
+          it "does not generate a start or stop event" do
             app = Models::App.make(:state => "STARTED")
             Models::AppStartEvent.should_not_receive(:create_from_app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
@@ -501,7 +501,7 @@ module VCAP::CloudController
         end
 
         context "deleting a started app" do
-          it "should call AppStopEvent.create_from_app" do
+          it "generates a start event" do
             app = Models::App.make(:state => "STARTED")
             VCAP::CloudController::DeaClient.stub(:stop)
             Models::AppStopEvent.should_receive(:create_from_app).with(app)
@@ -510,7 +510,7 @@ module VCAP::CloudController
         end
 
         context "deleting a stopped app" do
-          it "should not call AppStopEvent.create_from_app" do
+          it "does not generate a stop event" do
             app = Models::App.make(:state => "STOPPED")
             Models::AppStopEvent.should_not_receive(:create_from_app)
             app.destroy
@@ -519,50 +519,71 @@ module VCAP::CloudController
       end
 
       context "footprint changes" do
+        let(:app) do
+          app = Models::App.make
+          app_org = app.space.organization
+          app_org.billing_enabled = true
+          app_org.save(:validate => false) # because we need to force enable billing
+          app
+        end
+
         context "new app" do
-          it "should not call AppStartEvent.create_from_app or AppStopEvent.create_from_app" do
+          it "does not generate a start event or stop event" do
             Models::AppStartEvent.should_not_receive(:create_from_app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
-            app = Models::App.make(:state => "STOPPED", :memory => 512)
+            app
           end
         end
 
         context "no change in footprint" do
-          it "should not call AppStartEvent.create_from_app or AppStopEvent.create_from_app" do
+          it "does not generate a start event or stop event" do
             Models::AppStartEvent.should_not_receive(:create_from_app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
-            app = Models::App.make
             app.save
           end
         end
 
-        context "change in memory" do
-          it "should call AppStopEvent.create_from_app and AppStartEvent.create_from_app" do
-            Models::AppStopEvent.should_receive(:create_from_app).once
-            Models::AppStartEvent.should_receive(:create_from_app).twice
-            app = Models::App.make(:state => "STARTED")
-            app.memory = 512
+        context "started app" do
+          before do
+            app.state = "STARTED"
             app.save
           end
-        end
 
-        context "change in production flag" do
-          it "should call AppStopEvent.create_from_app and AppStartEvent.create_from_app" do
-            Models::AppStopEvent.should_receive(:create_from_app).once
-            Models::AppStartEvent.should_receive(:create_from_app).twice
-            app = Models::App.make(:state => "STARTED")
-            app.production = true
-            app.save
+          def self.it_emits_app_start_and_stop_events(&block)
+            it "generates a stop event for the old run_id, and start events for the new run_id" do
+              original_start_event = Models::AppStartEvent.filter(:app_guid => app.guid).all[0]
+
+              yield(app)
+
+              app.save
+
+              Models::AppStopEvent.filter(
+                :app_guid => app.guid,
+                :app_run_id => original_start_event.app_run_id
+              ).count.should == 1
+
+              Models::AppStartEvent.filter(
+                :app_guid => app.guid
+              ).all.last.app_run_id.should_not == original_start_event.app_run_id
+            end
           end
-        end
 
-        context "change in instances" do
-          it "should call AppStopEvent.create_from_app and AppStartEvent.create_from_app" do
-            Models::AppStopEvent.should_receive(:create_from_app).once
-            Models::AppStartEvent.should_receive(:create_from_app).twice
-            app = Models::App.make(:state => "STARTED")
-            app.instances = 5
-            app.save
+          context "change in memory" do
+            it_emits_app_start_and_stop_events do |app|
+              app.memory = 512
+            end
+          end
+
+          context "change in production flag" do
+            it_emits_app_start_and_stop_events do |app|
+              app.production = true
+            end
+          end
+
+          context "change in instances" do
+            it_emits_app_start_and_stop_events do |app|
+              app.instances = 5
+            end
           end
         end
       end
@@ -582,7 +603,7 @@ module VCAP::CloudController
           it "should raise error when quota is exceeded" do
             org = Models::Organization.make(:quota_definition => paid_quota)
             space = Models::Space.make(:organization => org)
-            expect  do
+            expect do
               Models::App.make(:space => space,
                                :production => true,
                                :memory => 65,
@@ -594,7 +615,7 @@ module VCAP::CloudController
           it "should not raise error when quota is not exceeded" do
             org = Models::Organization.make(:quota_definition => paid_quota)
             space = Models::Space.make(:organization => org)
-            expect  do
+            expect do
               Models::App.make(:space => space,
                                :production => true,
                                :memory => 64,

@@ -7,6 +7,7 @@ require "bundler/setup"
 
 require "machinist/sequel"
 require "rack/test"
+require "timecop"
 
 require "steno"
 require "cloud_controller"

@@ -133,6 +133,7 @@ module VCAP::CloudController::Models
     space_name        { Sham.name }
     app_guid          { Sham.guid }
     app_name          { Sham.name }
+    app_run_id        { Sham.guid }
   end
 
   ServiceCreateEvent.blueprint do

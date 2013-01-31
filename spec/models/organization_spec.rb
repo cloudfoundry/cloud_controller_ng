@@ -60,7 +60,7 @@ module VCAP::CloudController
         Models::Organization.make.billing_enabled.should == false
       end
 
-      context "emabling billing" do
+      context "enabling billing" do
         let (:org) do
           o = Models::Organization.make
           2.times do
