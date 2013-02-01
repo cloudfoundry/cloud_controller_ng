@@ -53,8 +53,19 @@ module VCAP::CloudController
     end
 
     def db
+      db_connection = "sqlite:///"
+      db_index = ""
+
+      if ENV["DB_CONNECTION"]
+        db_connection = ENV["DB_CONNECTION"]
+        db_index = ENV["TEST_ENV_NUMBER"]
+      end
+
       @db ||= VCAP::CloudController::DB.connect(
-        db_logger, :database  => "sqlite:///", :log_level => "debug2")
+        db_logger,
+        :database => "#{db_connection}#{db_index}",
+        :log_level => "debug2"
+      )
     end
 
     def db_logger
