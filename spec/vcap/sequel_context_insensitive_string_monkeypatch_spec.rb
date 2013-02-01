@@ -4,19 +4,16 @@ require File.expand_path("../spec_helper", __FILE__)
 require "vcap/sequel_case_insensitive_string_monkeypatch"
 
 describe "String :name" do
-  before do
-    @db = Sequel.sqlite
-  end
-
   context "with default options" do
     before do
-      @db.create_table :test do
+      table_name = Sham.name.to_sym
+      db.create_table table_name do
         primary_key :id
         String :str, :unique => true
       end
 
       @c = Class.new(Sequel::Model)
-      @c.set_dataset(@db[:test])
+      @c.set_dataset(db[table_name])
       @c.create(:str => "abc")
     end
 
@@ -32,13 +29,15 @@ describe "String :name" do
 
   context "with :context_insensitive => false" do
     before do
-      @db.create_table :test do
+      table_name = Sham.name.to_sym
+
+      db.create_table table_name do
         primary_key :id
         String :str, :unique => true, :case_insensitive => false
       end
 
       @c = Class.new(Sequel::Model)
-      @c.set_dataset(@db[:test])
+      @c.set_dataset(db[table_name])
       @c.create(:str => "abc")
     end
 
@@ -54,7 +53,9 @@ describe "String :name" do
 
   context "with :context_insensitive => true" do
     before do
-      @db.create_table :test do
+      table_name = Sham.name.to_sym
+
+      db.create_table table_name do
         primary_key :id
         String :str, :unique => true, :case_insensitive => true
       end
@@ -64,7 +65,7 @@ describe "String :name" do
           validates_unique :str
         end
       end
-      @c.set_dataset(@db[:test])
+      @c.set_dataset(db[table_name])
       @c.create(:str => "abc")
     end
 
@@ -88,7 +89,9 @@ describe "String :name" do
 
   context "alter table set_column_type" do
     before do
-      @db.create_table :test do
+      @table_name = Sham.name.to_sym
+
+      db.create_table @table_name do
         primary_key :id
         String :str, :unique => true
       end
@@ -96,13 +99,13 @@ describe "String :name" do
 
     context "with defaults" do
       it "should not result in a case sensitive column" do
-        @db.alter_table :test do
+        db.alter_table @table_name do
           set_column_type :str, String
         end
 
         @c = Class.new(Sequel::Model) do
         end
-        @c.set_dataset(@db[:test])
+        @c.set_dataset(db[@table_name])
         @c.create(:str => "abc")
         @c.dataset[:str => "abc"].should_not be_nil
         @c.dataset[:str => "ABC"].should be_nil
@@ -111,13 +114,13 @@ describe "String :name" do
 
     context "with :context_insensitive => false" do
       it "should not result in a case sensitive column" do
-        @db.alter_table :test do
+        db.alter_table @table_name do
           set_column_type :str, String
         end
 
         @c = Class.new(Sequel::Model) do
         end
-        @c.set_dataset(@db[:test])
+        @c.set_dataset(db[@table_name])
         @c.create(:str => "abc")
         @c.dataset[:str => "abc"].should_not be_nil
         @c.dataset[:str => "ABC"].should be_nil
@@ -126,13 +129,13 @@ describe "String :name" do
 
     context "with :context_insensitive => true" do
       it "should change the column" do
-        @db.alter_table :test do
+        db.alter_table @table_name do
           set_column_type :str, String, :case_insensitive => true
         end
 
         @c = Class.new(Sequel::Model) do
         end
-        @c.set_dataset(@db[:test])
+        @c.set_dataset(db[@table_name])
         @c.create(:str => "abc")
         @c.dataset[:str => "abc"].should_not be_nil
         @c.dataset[:str => "ABC"].should_not be_nil

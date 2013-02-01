@@ -4,6 +4,7 @@ gem "rake"
 gem "bcrypt-ruby"
 gem 'eventmachine', "~> 1.0.0"
 gem 'fog'
+gem "mysql2"
 gem "redis"
 gem "rfc822"
 gem "sequel"

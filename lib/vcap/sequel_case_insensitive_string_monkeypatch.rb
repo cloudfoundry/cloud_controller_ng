@@ -53,6 +53,21 @@ module Sequel
 end
 
 module Sequel
+  module Mysql2
+    class Database
+      # Mysql is case insensitive by default
+      def case_insensitive_string_column_type
+        "VARCHAR(255)"
+      end
+
+      def case_insensitive_string_column_opts
+        { :collate => "latin1_general_ci" }
+      end
+    end
+  end
+end
+
+module Sequel
   module Schema
     class Generator
       def String(name, opts = {})

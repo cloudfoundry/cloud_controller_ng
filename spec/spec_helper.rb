@@ -23,7 +23,7 @@ module VCAP::CloudController
       File.unlink(log_filename) if File.exists?(log_filename)
       Steno.init(Steno::Config.new(:default_log_level => "debug",
                                    :sinks => [Steno::Sink::IO.for_file(log_filename)]))
-      VCAP::CloudController::DB.apply_migrations(db)
+      reset_database
     end
 
     def spec_dir
@@ -42,14 +42,28 @@ module VCAP::CloudController
       artifact_filename("spec.log")
     end
 
-    def reset_database
-      db.execute("PRAGMA foreign_keys = OFF")
-      db.tables.each do |table|
-        db.drop_table(table)
+    def without_foreign_key_checks
+      case db.database_type
+      when :sqlite
+        db.execute("PRAGMA foreign_keys = OFF")
+        yield
+        db.execute("PRAGMA foreign_keys = ON")
+      when :mysql
+        db.execute("SET foreign_key_checks = 0")
+        yield
+        db.execute("SET foreign_key_checks = 1")
+      else
+        raise "Unknown db"
       end
+    end
 
-      db.execute("PRAGMA foreign_keys = ON")
-      VCAP::CloudController::DB.apply_migrations(db)
+    def reset_database
+      without_foreign_key_checks do
+        db.tables.each do |table|
+          db.drop_table(table)
+        end
+        VCAP::CloudController::DB.apply_migrations(db)
+      end
     end
 
     def db
@@ -83,6 +97,10 @@ end
 $spec_env = VCAP::CloudController::SpecEnvironment.new
 
 module VCAP::CloudController::SpecHelper
+  def db
+    $spec_env.db
+  end
+
   def reset_database
     $spec_env.reset_database
     VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
@@ -198,7 +216,7 @@ module VCAP::CloudController::SpecHelper
 
   RSpec::Matchers.define :be_recent do |expected|
     match do |actual|
-      actual.should be_within(2).of(Time.now)
+      actual.should be_within(5).of(Time.now)
     end
   end
 

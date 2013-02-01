@@ -4,7 +4,7 @@ require File.expand_path("../spec_helper", __FILE__)
 
 describe "Sequel::Plugins::VcapRelations" do
   before do
-    db = Sequel.sqlite
+    reset_database
 
     db.create_table :owners do
       primary_key :id

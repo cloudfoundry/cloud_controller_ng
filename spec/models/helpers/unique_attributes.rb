@@ -57,7 +57,7 @@ module VCAP::CloudController::ModelSpecHelper
         desc = "[#{desc}]" if opts[:unique_attributes].length > 1
         context "with duplicate #{desc}" do
           let(:column_list) do
-            attrs = opts[:unique_attributes].map do |v|
+            opts[:unique_attributes].map do |v|
               if described_class.associations.include?(v.to_sym)
                 v = v.to_s.concat("_id")
               end
@@ -70,7 +70,14 @@ module VCAP::CloudController::ModelSpecHelper
           end
 
           let(:db_exception_match) do
-            "columns? #{column_list.join(", ")} .* not unique".sub("uaa_id", "guid")
+            case described_class.db.database_type
+            when :mysql
+              "Duplicate entry"
+            when :sqlite
+              "columns? #{column_list.join(", ")} .* not unique".sub("uaa_id", "guid")
+            else
+              ".*"
+            end
           end
 
           let(:dup_opts) do
@@ -80,9 +87,10 @@ module VCAP::CloudController::ModelSpecHelper
 
             initial_template = described_class.make
             orig_opts = creation_opts_from_obj(initial_template, new_opts)
+
             initial_template.destroy
 
-            orig_obj = described_class.make orig_opts
+            described_class.make orig_opts
             orig_opts
           end
 

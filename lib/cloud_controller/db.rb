@@ -20,7 +20,7 @@ module VCAP::CloudController
     #
     # @return [Sequel::Database]
     def self.connect(logger, opts)
-      connection_options = {}
+      connection_options = { :sql_mode => [:strict_trans_tables, :strict_all_tables, :no_zero_in_date] }
       [:max_connections, :pool_timeout].each do |key|
         connection_options[key] = opts[key] if opts[key]
       end
@@ -33,6 +33,10 @@ module VCAP::CloudController
       db = Sequel.connect(opts[:database], connection_options)
       db.logger = logger
       db.sql_log_level = opts[:log_level] || :debug2
+
+      if db.database_type == :mysql
+        Sequel::MySQL.default_collate = "latin1_general_cs"
+      end
 
       validate_sqlite_version(db) if using_sqlite
       VCAP::SequelVarz.start(db)
