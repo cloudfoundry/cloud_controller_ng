@@ -175,9 +175,8 @@ module VCAP::CloudController::Models
         :plan  => service_plan.name,
         :plan_option => {}, # TODO: remove this
         :version => service_plan.service.version,
-        # The current version of the service gateways that are in cf-release don't
-        # support this.  It makes them fail json validation of the message.
-        # :user_guid => VCAP::CloudController::SecurityContext.current_user_guid
+        :provider => service_plan.service.provider,
+        :user_guid => VCAP::CloudController::SecurityContext.current_user_guid
       )
 
       logger.debug "provision response for instance #{guid} #{gw_attrs.inspect}"
