@@ -10,6 +10,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name,           String
       attribute :description,    String
+      attribute  :internal_info, Hash
 
       # version was really a v1 concept, but the yeti tests expect it
       attribute :version,        String, :exclude_in => [:create, :update]

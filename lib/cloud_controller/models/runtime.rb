@@ -7,8 +7,8 @@ module VCAP::CloudController::Models
     one_to_many :apps
 
     default_order_by  :name
-    export_attributes :name, :description, :version
-    import_attributes :name, :description
+    export_attributes :name, :description, :version, :internal_info
+    import_attributes :name, :description, :internal_info
 
     strip_attributes  :name
 
@@ -17,6 +17,7 @@ module VCAP::CloudController::Models
     def validate
       validates_presence :name
       validates_presence :description
+      validates_presence :internal_info
       validates_unique   :name
     end
 
