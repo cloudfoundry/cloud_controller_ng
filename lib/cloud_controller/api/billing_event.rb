@@ -35,7 +35,7 @@ module VCAP::CloudController
 
     def parse_date_param(param)
       str = @params[param]
-      Time.parse(str) if str
+      Time.parse(str).localtime if str
     rescue
       raise Errors::BillingEventQueryInvalid
     end
