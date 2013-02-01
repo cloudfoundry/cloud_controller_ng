@@ -338,18 +338,9 @@ module VCAP::CloudController
         app.version.should_not be_nil
       end
 
-      it "should not update the version when changing :memory" do
-        orig_version = app.version
-        app.memory = 1024
-        app.save
-        app.version.should == orig_version
-      end
-
       it "should update the version when changing :state" do
-        orig_version = app.version
         app.state = "STARTED"
-        app.save
-        app.version.should_not == orig_version
+        expect { app.save }.to change(app, :version)
       end
 
       it "should not update the version if the caller set it" do
@@ -359,16 +350,30 @@ module VCAP::CloudController
         app.version.should == "my-version"
       end
 
-      it "should not update the version on update of :memory" do
-        orig_version = app.version
-        app.update(:memory => 999)
-        app.version.should == orig_version
+      it "should update the version on update of :state" do
+        expect { app.update(:state => "STARTED") }.to change(app, :version)
       end
 
-      it "should update the version on update of :state" do
-        orig_version = app.version
-        app.update(:state => "STARTED")
-        app.version.should_not == orig_version
+      context "for a started app" do
+        before { app.update(:state => "STARTED") }
+
+        it "should update the version when changing :memory" do
+          app.memory = 1024
+          expect { app.save }.to change(app, :version)
+        end
+
+        it "should update the version on update of :memory" do
+          expect { app.update(:memory => 999) }.to change(app, :version)
+        end
+
+        it "should not update the version when changing :instances" do
+          app.instances = 8
+          expect { app.save }.to_not change(app, :version)
+        end
+
+        it "should not update the version on update of :instances" do
+          expect { app.update(:instances => 8) }.to_not change(app, :version)
+        end
       end
     end
 

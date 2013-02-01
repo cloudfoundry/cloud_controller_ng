@@ -70,7 +70,7 @@ quota_definitions:
   paid:
     non_basic_services_allowed: true
     total_services: 500
-    memory_limit: 204800 # 20 GB
+    memory_limit: 204800 # 200 GB
 
 default_quota_definition: free
 

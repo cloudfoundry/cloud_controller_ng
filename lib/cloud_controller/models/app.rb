@@ -92,7 +92,7 @@ module VCAP::CloudController::Models
       # We might start populating this with the vcap request guid of an api
       # request.
 
-      if column_changed?(:state) && started?
+      if (column_changed?(:state) || column_changed?(:memory)) && started?
         self.version = SecureRandom.uuid if !column_changed?(:version)
       end
 
