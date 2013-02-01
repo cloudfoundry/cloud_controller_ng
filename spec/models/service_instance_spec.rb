@@ -37,9 +37,13 @@ module VCAP::CloudController
       let(:gw_client) { double(:client) }
 
       let(:token)   { Models::ServiceAuthToken.make }
+
       let(:service) { Models::Service.make(:label => token.label,
-                                           :provider => token.provider) }
-      let(:service_plan) { Models::ServicePlan.make(:service => service) }
+                                           :provider => token.provider,
+                                           :version => "1.0") }
+
+      let(:service_plan) { Models::ServicePlan.make(:service => service,
+                                                    :name => "myplan") }
 
       let(:provision_resp) do
         VCAP::Services::Api::GatewayHandleResponse.new(
@@ -89,6 +93,28 @@ module VCAP::CloudController
               raise "something bad"
             end
           }.should raise_error
+        end
+
+        it "ensure gateway provision request contains specific fields" do
+          VCAP::CloudController::SecurityContext.
+            should_receive(:current_user_email).
+            and_return("a@b.c")
+
+          min_expected_fields_in_gw_provision_request = {
+            :label => "#{token.label}-#{service.version}",
+            :name => "foobar",
+            :email => "a@b.c",
+            :plan => "myplan",
+            :version => "1.0",
+            :user_guid => nil,
+            :provider => token.provider,
+          }
+
+          gw_client.should_receive(:provision).
+            with(hash_including(min_expected_fields_in_gw_provision_request)).
+            and_return(provision_resp)
+
+          instance = Models::ServiceInstance.make(:name => "foobar", :service_plan => service_plan)
         end
       end
 
