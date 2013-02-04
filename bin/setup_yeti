@@ -121,9 +121,9 @@ module YetiSetup
   def self.with_uaa_target(uaa_url)
     puts "# saving original uaa target"
     output = run "uaac target"
-    orig_target = output[/target set to ([^,]*)?/, 1]
+    orig_target = output[/Target: ([^,]*)?/, 1]
     output = run "uaac target #{uaa_url}"
-    error unless output =~ /target set to/
+    error unless output =~ /Target: #{uaa_url}/
     begin
       yield if block_given?
     ensure
