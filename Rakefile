@@ -1,4 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+$:.unshift File.expand_path("../lib", __FILE__)
+
 require "rspec/core/rake_task"
 require "ci/reporter/rake/rspec"
 require "yaml"
