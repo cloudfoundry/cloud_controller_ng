@@ -42,6 +42,15 @@ module VCAP::CloudController
             :description => "the foobar svc")
         end
 
+        let(:foo_bar_dash_offering) do
+          VCAP::Services::Api::ServiceOfferingRequest.new(
+            :label => "foo-bar-1.0",
+            :url   => "https://www.google.com",
+            :supported_versions => ["1.0", "2.0"],
+            :version_aliases => {"current" => "2.0"},
+            :description => "the foobar svc")
+        end
+
         it "should reject requests without auth tokens" do
           post path, foo_bar_offering.encode, {}
           last_response.status.should == 403
@@ -64,6 +73,11 @@ module VCAP::CloudController
                   :description => "the foobar svc",
                   :url => "zazzle" }
           post path, Yajl::Encoder.encode(msg), auth_header
+          last_response.status.should == 400
+        end
+
+        it "shoukd reject requests with extra dash in label" do
+          post path, foo_bar_dash_offering.encode, auth_header
           last_response.status.should == 400
         end
 
@@ -140,10 +154,10 @@ module VCAP::CloudController
         end
       end
 
-      describe "GET services/v1/offerings/:label(/:provider)" do
+      describe "GET services/v1/offerings/:label_and_version(/:provider)" do
         before :each do
           @svc1 = Models::Service.make(
-            :label => "foo-bar",
+            :label => "foobar",
             :url => "http://www.google.com",
             :provider => "core",
           )
@@ -156,7 +170,7 @@ module VCAP::CloudController
             :service => @svc1,
           )
           @svc2 = Models::Service.make(
-            :label => "foo-bar",
+            :label => "foobar",
             :url => "http://www.google.com",
             :provider => "test",
           )
@@ -172,12 +186,12 @@ module VCAP::CloudController
 
         let(:auth_header) do
           Models::ServiceAuthToken.create(
-            :label    => "foo-bar",
+            :label    => "foobar",
             :provider => "core",
             :token    => "foobar",
           )
           Models::ServiceAuthToken.create(
-            :label    => "foo-bar",
+            :label    => "foobar",
             :provider => "test",
             :token    => "foobar",
           )
@@ -192,71 +206,71 @@ module VCAP::CloudController
         end
 
         it "should return not found for unknown provider services" do
-          get "services/v1/offerings/foo-bar/xxx", {}, auth_header
+          get "services/v1/offerings/foobar-version/xxx", {}, auth_header
           # FIXME: should this be 404?
           last_response.status.should == 403
         end
 
         it "should return not authorized on token mismatch" do
-          get "services/v1/offerings/foo-bar", {}, {
+          get "services/v1/offerings/foobar-version", {}, {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "xxx",
           }
           last_response.status.should == 403
         end
 
         it "should return the specific service offering which has null provider" do
-          get "services/v1/offerings/foo-bar", {}, auth_header
+          get "services/v1/offerings/foobar-version", {}, auth_header
           last_response.status.should == 200
 
           resp = Yajl::Parser.parse(last_response.body)
-          resp["label"].should == "foo-bar"
+          resp["label"].should == "foobar"
           resp["url"].should   == "http://www.google.com"
           resp["plans"].sort.should == ["free", "nonfree"]
           resp["provider"].should == "core"
         end
 
         it "should return the specific service offering which has specific provider" do
-          get "services/v1/offerings/foo-bar/test", {}, auth_header
+          get "services/v1/offerings/foobar-version/test", {}, auth_header
           last_response.status.should == 200
 
           resp = Yajl::Parser.parse(last_response.body)
-          resp["label"].should == "foo-bar"
+          resp["label"].should == "foobar"
           resp["url"].should   == "http://www.google.com"
           resp["plans"].sort.should == ["free", "nonfree"]
           resp["provider"].should == "test"
         end
       end
 
-      describe "GET services/v1/offerings/:label(/:provider)/handles" do
+      describe "GET services/v1/offerings/:label_and_version(/:provider)/handles" do
         it "should return not found for unknown services" do
-          get "services/v1/offerings/xxx-bar/handles"
+          get "services/v1/offerings/xxx-version/handles"
           last_response.status.should == 404
         end
 
         it "should return not found for unknown services with a provider" do
-          get "services/v1/offerings/xxx-bar/fooprovider/handles"
+          get "services/v1/offerings/xxx-version/fooprovider/handles"
           last_response.status.should == 404
         end
 
         before :each do
           svc1 = Models::Service.make(
-            :label => "foo",
-            :version => "bar",
+            :label => "foobar",
+            :version => "1.0",
             :provider => "core",
           )
           Models::ServiceAuthToken.create(
-            :label => "foo",
+            :label => "foobar",
             :provider => "core",
             :token => "foobar",
           )
 
           svc2 = Models::Service.make(
-            :label    => "foo",
-            :version  => "bar",
+            :label    => "foobar",
+            :version  => "1.0",
             :provider => "test",
           )
           Models::ServiceAuthToken.create(
-            :label => "foo",
+            :label => "foobar",
             :provider => "test",
             :token => "footest",
           )
@@ -310,14 +324,14 @@ module VCAP::CloudController
         end
 
         it "rejects requests with mismatching tokens" do
-          get "/services/v1/offerings/foo-bar/handles", {}, {
+          get "/services/v1/offerings/foobar-version/handles", {}, {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "xxx",
           }
           last_response.status.should == 403
         end
 
         it "should return provisioned and bound handles" do
-          get "/services/v1/offerings/foo-bar/handles", {}, {
+          get "/services/v1/offerings/foobar-version/handles", {}, {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "foobar",
           }
           last_response.status.should == 200
@@ -329,7 +343,7 @@ module VCAP::CloudController
           handles[1]["service_id"].should == "bind1"
           handles[1]["configuration"].should == { "config" => "bind1" }
 
-          get "/services/v1/offerings/foo-bar/test/handles", {}, {
+          get "/services/v1/offerings/foobar-version/test/handles", {}, {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "footest",
           }
           last_response.status.should == 200
@@ -343,7 +357,7 @@ module VCAP::CloudController
         end
       end
 
-      describe "POST services/v1/offerings/:label(/:provider)/handles/:id" do
+      describe "POST services/v1/offerings/:label_and_version(/:provider)/handles/:id" do
         before :each do
           @auth_header = {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "foobar",
@@ -353,14 +367,14 @@ module VCAP::CloudController
         describe "with default provider" do
           before :each do
             svc = Models::Service.make(
-              :label    => "foo-bar",
+              :label    => "foobar",
               :provider => "core",
             )
             plan = Models::ServicePlan.make(
               :service => svc
             )
             Models::ServiceAuthToken.create(
-              :label    => "foo-bar",
+              :label    => "foobar",
               :provider => "core",
               :token    => "foobar",
             )
@@ -384,7 +398,7 @@ module VCAP::CloudController
           end
 
           it "should return not found for unknown handles" do
-            post "services/v1/offerings/foo-bar/handles/xxx",
+            post "services/v1/offerings/foobar-version/handles/xxx",
               VCAP::Services::Api::HandleUpdateRequest.new(
                 :service_id => "xxx",
                 :configuration => [],
@@ -394,7 +408,7 @@ module VCAP::CloudController
           end
 
           it "should update provisioned handles" do
-            post "services/v1/offerings/foo-bar/handles/foo1",
+            post "services/v1/offerings/foobar-version/handles/foo1",
               VCAP::Services::Api::HandleUpdateRequest.new(
                 :service_id => "foo1",
                 :configuration => [],
@@ -404,7 +418,7 @@ module VCAP::CloudController
           end
 
           it "should update bound handles" do
-            post "/services/v1/offerings/foo-bar/handles/bind1",
+            post "/services/v1/offerings/foobar-version/handles/bind1",
               VCAP::Services::Api::HandleUpdateRequest.new(
                 :service_id => "bind1",
                 :configuration => [],
@@ -417,13 +431,13 @@ module VCAP::CloudController
         describe "with specific provider" do
           before :each do
             Models::ServiceAuthToken.create(
-              :label    => "foo-bar",
+              :label    => "foobar",
               :provider => "test",
               :token    => "foobar",
             )
 
             svc = Models::Service.make(
-              :label    => "foo-bar",
+              :label    => "foobar",
               :provider => "test",
             )
 
@@ -451,7 +465,7 @@ module VCAP::CloudController
           end
 
           it "should update provisioned handles" do
-            post "/services/v1/offerings/foo-bar/test/handles/foo2",
+            post "/services/v1/offerings/foobar-version/test/handles/foo2",
               VCAP::Services::Api::HandleUpdateRequest.new(
                 :service_id => "foo2",
                 :configuration => [],
@@ -461,7 +475,7 @@ module VCAP::CloudController
           end
 
           it "should update bound handles" do
-            post "/services/v1/offerings/foo-bar/test/handles/bind2",
+            post "/services/v1/offerings/foobar-version/test/handles/bind2",
               VCAP::Services::Api::HandleUpdateRequest.new(
                 :service_id => "bind2",
                 :configuration => [],
@@ -472,15 +486,15 @@ module VCAP::CloudController
         end
       end
 
-      describe "DELETE /services/v1/offerings/:label/(:provider)" do
+      describe "DELETE /services/v1/offerings/:label_and_version/(:provider)" do
         let(:auth_header) do
           Models::ServiceAuthToken.create(
-            :label    => "foo-bar",
+            :label    => "foobar",
             :provider => "core",
             :token    => "foobar"
           )
           Models::ServiceAuthToken.create(
-            :label    => "foo-bar",
+            :label    => "foobar",
             :provider => "test",
             :token    => "foobar"
           )
@@ -488,11 +502,11 @@ module VCAP::CloudController
         end
         before :each do
           Models::ServicePlan.make(:service => Models::Service.make(
-            :label => "foo-bar", :provider => "core")
+            :label => "foobar", :provider => "core")
                                   )
 
                                   Models::ServicePlan.make(:service => Models::Service.make(
-                                    :label => "foo-bar", :provider => "test")
+                                    :label => "foobar", :provider => "test")
                                                           )
         end
 
@@ -503,31 +517,31 @@ module VCAP::CloudController
         end
 
         it "should return not found for unknown provider services" do
-          delete "/services/v1/offerings/foo-bar/xxx", {}, auth_header
+          delete "/services/v1/offerings/foobar-version/xxx", {}, auth_header
           # FIXME: should really be 404, but upstream gateways don't seem to care
           last_response.status.should == 403
         end
 
         it "should return not authorized on token mismatch" do
-          delete "/services/v1/offerings/foo-bar/xxx", {}, {
+          delete "/services/v1/offerings/foobar-version/xxx", {}, {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "barfoo",
           }
           last_response.status.should == 403
         end
 
         it "should delete existing offerings which has null provider" do
-          delete "/services/v1/offerings/foo-bar", {}, auth_header
+          delete "/services/v1/offerings/foobar-version", {}, auth_header
           last_response.status.should == 200
 
-          svc = Models::Service[:label => "foo-bar", :provider => "core"]
+          svc = Models::Service[:label => "foobar", :provider => "core"]
           svc.should be_nil
         end
 
         it "should delete existing offerings which has specific provider" do
-          delete "/services/v1/offerings/foo-bar/test", {}, auth_header
+          delete "/services/v1/offerings/foobar-version/test", {}, auth_header
           last_response.status.should == 200
 
-          svc = Models::Service[:label => "foo-bar", :provider => "test"]
+          svc = Models::Service[:label => "foobar", :provider => "test"]
           svc.should be_nil
         end
       end
