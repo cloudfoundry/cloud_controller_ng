@@ -39,6 +39,5 @@ group :test do
   gem "webmock"
   gem "guard-rspec"
   gem "timecop"
-  gem "mocha"
   gem "mock_redis"
 end

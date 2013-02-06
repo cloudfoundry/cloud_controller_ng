@@ -23,6 +23,8 @@ module VCAP::CloudController
     register Sinatra::VCAP
     include VCAP::UaaUtil
 
+    attr_reader :config
+
     vcap_configure(:logger_name => "cc.api",
                    :reload_path => File.dirname(__FILE__))
 
@@ -41,45 +43,26 @@ module VCAP::CloudController
       auth_token = env["HTTP_AUTHORIZATION"]
 
       begin
-        apply_token(auth_token,
-                    @config[:uaa][:resource_id],
-                    @config[:uaa][:symmetric_secret],
-                    @config[:uaa][:url]) do |token_information|
+        token_information = decode_token(
+          auth_token,
+          config[:uaa][:resource_id],
+          config[:uaa][:symmetric_secret],
+          config[:uaa][:url]
+        )
 
-          uaa_id = token_information['user_id'] if token_information
-          user = Models::User.find(:guid => uaa_id) if uaa_id
+        uaa_id = token_information['user_id'] if token_information
+        user = Models::User.find(:guid => uaa_id) if uaa_id
 
-          # Bootstraping mechanism..
-          #
-          # TODO: replace this with an exteranl bootstraping mechanism.
-          # I'm not wild about having *any* auto-admin generation code
-          # in the cc.
-          if (user.nil? && Models::User.count == 0 &&
-              @config[:bootstrap_admin_email] && token_information['email'] &&
-              @config[:bootstrap_admin_email] == token_information['email'])
-              user = Models::User.create(:guid => uaa_id,
-                                         :admin => true, :active => true)
-          end
+        # TODO: replace this with an external bootstrapping mechanism.
+        user ||= create_admin_user_if_needed(token_information)
 
-          VCAP::CloudController::SecurityContext.set(user, token_information)
-        end
+        VCAP::CloudController::SecurityContext.set(user, token_information)
+      #rescue CF::UAA::InvalidSignature, CF::UAA::TargetError => e
       rescue => e
         logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
       end
 
       validate_scheme(user)
-    end
-
-    def validate_scheme(user)
-      return unless user
-
-      if @config[:https_required]
-        raise Errors::NotAuthorized unless request.scheme == "https"
-      end
-
-      if @config[:https_required_for_admins] && user && user.admin?
-        raise Errors::NotAuthorized unless request.scheme == "https"
-      end
     end
 
     # All manual routes here will be removed prior to final release.
@@ -103,6 +86,31 @@ module VCAP::CloudController
       EM.schedule_sync do |promise|
         EM::Timer.new(5) { promise.deliver("async return from an EM timer\n") }
       end
+    end
+
+    private
+
+    def validate_scheme(user)
+      return unless user
+
+      if @config[:https_required]
+        raise Errors::NotAuthorized unless request.scheme == "https"
+      end
+
+      if @config[:https_required_for_admins] && user && user.admin?
+        raise Errors::NotAuthorized unless request.scheme == "https"
+      end
+    end
+
+    def create_admin_user_if_needed(token_information)
+      if Models::User.count == 0 && current_user_admin?(token_information)
+        Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
+      end
+    end
+
+    def current_user_admin?(token_information)
+      admin_email = config[:bootstrap_admin_email]
+      admin_email && (admin_email == token_information['email'])
     end
   end
 end

@@ -12,7 +12,6 @@ require "timecop"
 require "steno"
 require "cloud_controller"
 require "rspec_let_monkey_patch"
-require "mocha"
 require "mock_redis"
 
 module VCAP::CloudController
@@ -277,13 +276,19 @@ module VCAP::CloudController::SpecHelper
   end
 end
 
-RSpec.configure do |rspec_config|
-  # in mocha since rspec won't install a stub sooner than before(:each)
-  # and we have pervasive controller invocations in before(:all)
-  # stub this to behave like a symmetric-key-configured uaa
-  CF::UAA::Misc.stubs(:validation_key).raises(CF::UAA::TargetError.new('error' => 'unauthorized'))
-  Redis.stubs(:new).returns(MockRedis.new)
+class CF::UAA::Misc
+  def self.validation_key(*args)
+    raise CF::UAA::TargetError.new('error' => 'unauthorized')
+  end
+end
 
+class Redis
+  def self.new(*args)
+    MockRedis.new
+  end
+end
+
+RSpec.configure do |rspec_config|
   rspec_config.include VCAP::CloudController
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController::SpecHelper

@@ -96,10 +96,7 @@ GEM
     listen (0.5.3)
     machinist (1.0.6)
     membrane (0.0.2)
-    metaclass (0.0.1)
     mime-types (1.19)
-    mocha (0.10.5)
-      metaclass (~> 0.0.1)
     mock_redis (0.4.1)
     multi_json (1.3.6)
     multi_xml (0.5.1)
@@ -186,7 +183,6 @@ DEPENDENCIES
   httpclient
   machinist (~> 1.0.6)
   membrane (~> 0.0.2)
-  mocha
   mock_redis
   pg
   rake

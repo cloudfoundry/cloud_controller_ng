@@ -9,27 +9,27 @@ module VCAP
     MIN_KEY_ACQUIRE = 20
 
     # redis keys for persistent data
-    REDIS_UAA_VERIFY_KEY = 'cc.verification_key'
-    REDIS_UAA_VERIFY_QUERIED_AT = 'cc.verification_queried_at'
-    REDIS_UAA_VERIFY_SET_AT = 'cc.verification_set_at'
+    REDIS_UAA_VERIFY_KEY = 'cc.verification_key'.freeze
+    REDIS_UAA_VERIFY_QUERIED_AT = 'cc.verification_queried_at'.freeze
+    REDIS_UAA_VERIFY_SET_AT = 'cc.verification_set_at'.freeze
 
-    def apply_token(auth_token, resource_id, symmetric_secret, target)
-      return unless auth_token && auth_token.upcase.start_with?("BEARER")
+    def decode_token(auth_token, resource_id, symmetric_secret, target)
+      return unless token_format_valid?(auth_token)
 
-      @verification_key = @redis_client.get(REDIS_UAA_VERIFY_KEY) || @config[:uaa][:verification_key]
+      @verification_key = @redis_client.get(REDIS_UAA_VERIFY_KEY) || config[:uaa][:verification_key]
       key = @verification_key
       key ||= get_verification_key(target)
 
       begin
-        token_coder = CF::UAA::TokenCoder.new(:audience_ids => resource_id,
-                                              :skey => symmetric_secret,
-                                              :pkey => key)
+        token_coder = CF::UAA::TokenCoder.new(
+          :audience_ids => resource_id,
+          :skey => symmetric_secret,
+          :pkey => key
+        )
         token_information = token_coder.decode(auth_token)
         logger.info("Token received from the UAA #{token_information.inspect}")
 
-        yield(token_information)
         if token_information
-          # cache working key
           if key
             @redis_client.set(REDIS_UAA_VERIFY_KEY, key)
           else
@@ -37,6 +37,7 @@ module VCAP
           end
         end
 
+        token_information
       rescue CF::UAA::InvalidSignature => e
         key = get_verification_key(target)
         if key != @verification_key
@@ -75,15 +76,16 @@ module VCAP
         logger.warn "validation_key returned #{key_response.inspect}"
         new_key = key_response['value']
       rescue CF::UAA::TargetError => e
-        # todo: there should also be a more specific exception here
-        # unauthorized indicates uaa is running in symmetric key mode
-        # will return nil new_key
         raise unless e.info['error'] == 'unauthorized'
       end
 
       redis_set_time(REDIS_UAA_VERIFY_SET_AT, Time.now)
 
       new_key
+    end
+
+    def token_format_valid?(auth_token)
+      auth_token && auth_token.upcase.start_with?("BEARER")
     end
 
     def redis_get_time(key)
@@ -94,6 +96,5 @@ module VCAP
     def redis_set_time(key, time)
       @redis_client.set(key, time.to_i)
     end
-
   end
 end
