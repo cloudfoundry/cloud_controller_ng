@@ -30,10 +30,6 @@ module VCAP::CloudController
 
     def initialize(config)
       @config = config
-      @redis_client = Redis.new(
-          :host => @config[:redis][:host],
-          :port => @config[:redis][:port],
-          :password => @config[:redis][:password])
       super()
     end
 
@@ -43,13 +39,7 @@ module VCAP::CloudController
       auth_token = env["HTTP_AUTHORIZATION"]
 
       begin
-        token_information = decode_token(
-          auth_token,
-          config[:uaa][:resource_id],
-          config[:uaa][:symmetric_secret],
-          config[:uaa][:url]
-        )
-
+        token_information = decode_token(auth_token)
         uaa_id = token_information['user_id'] if token_information
         user = Models::User.find(:guid => uaa_id) if uaa_id
 
@@ -57,7 +47,6 @@ module VCAP::CloudController
         user ||= create_admin_user_if_needed(token_information)
 
         VCAP::CloudController::SecurityContext.set(user, token_information)
-      #rescue CF::UAA::InvalidSignature, CF::UAA::TargetError => e
       rescue => e
         logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
       end

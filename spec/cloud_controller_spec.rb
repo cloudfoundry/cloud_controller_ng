@@ -7,6 +7,7 @@ describe VCAP::CloudController::Controller do
   let(:uaa_url) { "uaa.some-domain.com" }
   let(:now) { Time.utc(2013, 2, 5) }
   let(:config_admin_email) { Sham.email }
+  let(:symmetric_key) { nil }
 
   let!(:user) { VCAP::CloudController::Models::User.make(:admin => true, :guid => user_id) }
 
@@ -16,8 +17,9 @@ describe VCAP::CloudController::Controller do
     Timecop.freeze(now)
 
     VCAP::CloudController::Controller.any_instance.stub(:config).and_return({
+      :redis => {},
       :uaa => {
-        :symmetric_secret => "tokensecret",
+        :symmetric_secret => symmetric_key,
         :resource_id => "cloud_controller",
         :verification_key => config_key,
         :url => uaa_url,
@@ -58,16 +60,13 @@ describe VCAP::CloudController::Controller do
         valid_coder
       end
 
-      context "when the UAA's public key is already cached in redis" do
-        let(:cached_key) { "some-key-in-redis" }
+      context "when configured to use symmetric encryption" do
+        let(:symmetric_key) { "some-symmetric-key" }
 
-        before { fake_redis['cc.verification_key'] = cached_key }
-
-        it "uses that key to decode the auth token" do
-          CF::UAA::TokenCoder.should_receive(:new).with(
+        it "uses the symmetric key from the config file to decode the auth token" do
+          CF::UAA::TokenCoder.stub(:new).with(
             :audience_ids => "cloud_controller",
-            :skey => "tokensecret",
-            :pkey => cached_key
+            :skey => symmetric_key,
           ).and_return(valid_coder)
 
           subject
@@ -78,90 +77,18 @@ describe VCAP::CloudController::Controller do
         end
       end
 
-      context "when the UAA's public key is provided in the config file" do
-        it "uses that key to decode the auth token" do
-          CF::UAA::TokenCoder.should_receive(:new).with(
-            :audience_ids => "cloud_controller",
-            :skey => "tokensecret",
-            :pkey => config_key
-          ).and_return(valid_coder)
+      context "when configured to use asymmetric encryption" do
+        let(:symmetric_key) { nil }
 
-          subject
+        context "when the UAA's public key is already cached in redis" do
+          let(:cached_key) { "some-key-in-redis" }
 
-          last_response.status.should == 200
-          VCAP::CloudController::SecurityContext.current_user.should == user
-          VCAP::CloudController::SecurityContext.token.should == token_info
-        end
-      end
+          before { fake_redis['cc.verification_key'] = cached_key }
 
-      context "when the public key stored in redis is no longer valid" do
-        let(:old_key) { "some-old-key" }
-
-        before do
-          CF::UAA::TokenCoder.should_receive(:new).with(
-            :audience_ids => "cloud_controller",
-            :skey => "tokensecret",
-            :pkey => old_key
-          ).and_return(invalid_coder)
-          fake_redis['cc.verification_key'] = old_key
-        end
-
-        context "when the key was fetched from UAA recently (less than 10 mins ago)" do
-          before do
-            fake_redis['cc.verification_set_at'] = (now.to_i - 599)
-            fake_redis['cc.verification_queried_at'] = (now.to_i - 21)
-          end
-
-          it "does not try to fetch the key again: the token is considered invalid" do
-            subject
-
-            expect(VCAP::CloudController::SecurityContext.current_user).to be_nil
-            expect(VCAP::CloudController::SecurityContext.token).to be_nil
-          end
-
-          it "logs that an invalid token was sent" do
-            fake_logger = mock(:logger)
-            fake_logger.should_receive(:warn).with(/key is too new/i)
-            fake_logger.should_receive(:warn).with(/invalid bearer/i)
-            VCAP::CloudController::Controller.any_instance.stub(:logger).and_return(fake_logger)
-            subject
-          end
-        end
-
-        context "when the key was requested from UAA recently (less than 20 seconds ago)" do
-          before do
-            fake_redis['cc.verification_set_at'] = (now.to_i - 601)
-            fake_redis['cc.verification_queried_at'] = (now.to_i - 19)
-          end
-
-          it "does not try to fetch the key again: the request is still outstanding" do
-            subject
-
-            expect(VCAP::CloudController::SecurityContext.current_user).to be_nil
-            expect(VCAP::CloudController::SecurityContext.token).to be_nil
-          end
-
-          it "logs that an invalid token was sent" do
-            fake_logger = mock(:logger)
-            fake_logger.should_receive(:warn).with(/request was just made/i)
-            fake_logger.should_receive(:warn).with(/invalid bearer/i)
-            VCAP::CloudController::Controller.any_instance.stub(:logger).and_return(fake_logger)
-            subject
-          end
-        end
-
-        context "when the key has never been fetched from UAA" do
-          let(:new_key) { "new-public-key-from-uaa" }
-          let(:config_key) { nil }
-
-          it "fetches the public key from UAA" do
-            CF::UAA::Misc.stub(:validation_key).with(uaa_url).and_return(
-              'value' => new_key
-            )
+          it "uses that key to decode the auth token" do
             CF::UAA::TokenCoder.should_receive(:new).with(
               :audience_ids => "cloud_controller",
-              :skey => "tokensecret",
-              :pkey => new_key
+              :pkey => cached_key
             ).and_return(valid_coder)
 
             subject
@@ -170,65 +97,143 @@ describe VCAP::CloudController::Controller do
             VCAP::CloudController::SecurityContext.current_user.should == user
             VCAP::CloudController::SecurityContext.token.should == token_info
           end
-
-          it "updates the timestamp of the last fetch of the key in redis" do
-            subject
-            expect(fake_redis['cc.verification_queried_at']).to eq(now.to_i.to_s)
-            expect(fake_redis['cc.verification_set_at']).to eq(now.to_i.to_s)
-          end
         end
 
-        context "when the key has not recently been fetched from UAA" do
-          before do
-            fake_redis['cc.verification_set_at'] = (now.to_i - 601)
-            fake_redis['cc.verification_queried_at'] = (now.to_i - 21)
-          end
-
-          let(:new_key) { "new-public-key-from-uaa" }
-          let(:config_key) { nil }
-
-          it "fetches the public key from UAA" do
-            CF::UAA::Misc.stub(:validation_key).with(uaa_url).and_return({
-              'value' => new_key
-            })
+        context "when the UAA's public key is provided in the config file" do
+          it "uses that key to decode the auth token" do
             CF::UAA::TokenCoder.should_receive(:new).with(
               :audience_ids => "cloud_controller",
-              :skey => "tokensecret",
-              :pkey => new_key
+              :pkey => config_key
             ).and_return(valid_coder)
 
             subject
 
-            puts last_response.body
             last_response.status.should == 200
             VCAP::CloudController::SecurityContext.current_user.should == user
             VCAP::CloudController::SecurityContext.token.should == token_info
           end
+        end
 
-          context "when unable to fetch the key from UAA" do
+        context "when the public key stored in redis is no longer valid" do
+          let(:old_key) { "some-old-key" }
+
+          before do
+            CF::UAA::TokenCoder.stub(:new).with(
+              :audience_ids => "cloud_controller",
+              :pkey => old_key
+            ).and_return(invalid_coder)
+            fake_redis['cc.verification_key'] = old_key
+          end
+
+          context "when the key was fetched from UAA recently (less than 10 mins ago)" do
             before do
-              CF::UAA::Misc.stub(:validation_key).and_raise(CF::UAA::TargetError.new(error_info))
+              fake_redis['cc.verification_set_at'] = (now.to_i - 599)
+              fake_redis['cc.verification_queried_at'] = (now.to_i - 21)
             end
 
-            context "when the uaa is running in symmetric key mode" do
-              let(:error_info) { {'error' => 'unauthorized'} }
+            it "does not try to fetch the key again: the token is considered invalid" do
+              subject
 
-              it "decodes the token using symmetric encryption (doesn't provide a public key)" do
-                CF::UAA::TokenCoder.should_receive(:new).with(
-                  :audience_ids => "cloud_controller",
-                  :skey => "tokensecret",
-                  :pkey => nil
-                ).and_return(valid_coder)
+              expect(VCAP::CloudController::SecurityContext.current_user).to be_nil
+              expect(VCAP::CloudController::SecurityContext.token).to be_nil
+            end
 
-                subject
+            it "logs that an invalid token was sent" do
+              fake_logger = mock(:logger)
+              fake_logger.should_receive(:warn).with(/key is too new/i)
+              fake_logger.should_receive(:warn).with(/invalid bearer/i)
+              VCAP::CloudController::Controller.any_instance.stub(:logger).and_return(fake_logger)
+              subject
+            end
+          end
 
-                expect(VCAP::CloudController::SecurityContext.current_user).to eq user
-                expect(VCAP::CloudController::SecurityContext.token).to eq token_info
+          context "when the key was requested from UAA recently (less than 20 seconds ago)" do
+            before do
+              fake_redis['cc.verification_set_at'] = (now.to_i - 601)
+              fake_redis['cc.verification_queried_at'] = (now.to_i - 19)
+            end
+
+            it "does not try to fetch the key again: the request is still outstanding" do
+              subject
+
+              expect(VCAP::CloudController::SecurityContext.current_user).to be_nil
+              expect(VCAP::CloudController::SecurityContext.token).to be_nil
+            end
+
+            it "logs that an invalid token was sent" do
+              fake_logger = mock(:logger)
+              fake_logger.should_receive(:warn).with(/request was just made/i)
+              fake_logger.should_receive(:warn).with(/invalid bearer/i)
+              VCAP::CloudController::Controller.any_instance.stub(:logger).and_return(fake_logger)
+              subject
+            end
+          end
+
+          context "when the key has never been fetched from UAA" do
+            let(:new_key) { "new-public-key-from-uaa" }
+            let(:config_key) { nil }
+
+            before do
+              CF::UAA::Misc.stub(:validation_key).with(uaa_url).and_return(
+                'value' => new_key
+              )
+              CF::UAA::TokenCoder.stub(:new).with(
+                :audience_ids => "cloud_controller",
+                :pkey => new_key
+              ).and_return(valid_coder)
+            end
+
+            it "fetches the public key from UAA" do
+              subject
+
+              last_response.status.should == 200
+              VCAP::CloudController::SecurityContext.current_user.should == user
+              VCAP::CloudController::SecurityContext.token.should == token_info
+            end
+
+            it "updates the timestamp of the last fetch of the key in redis" do
+              subject
+              expect(fake_redis['cc.verification_queried_at']).to eq(now.to_i.to_s)
+              expect(fake_redis['cc.verification_set_at']).to eq(now.to_i.to_s)
+            end
+          end
+
+          context "when the key has not recently been fetched from UAA" do
+            before do
+              fake_redis['cc.verification_set_at'] = (now.to_i - 601)
+              fake_redis['cc.verification_queried_at'] = (now.to_i - 21)
+            end
+
+            let(:new_key) { "new-public-key-from-uaa" }
+            let(:config_key) { nil }
+
+            before do
+              CF::UAA::Misc.stub(:validation_key).with(uaa_url).and_return({
+                'value' => new_key
+              })
+              CF::UAA::TokenCoder.stub(:new).with(
+                :audience_ids => "cloud_controller",
+                :pkey => new_key
+              ).and_return(valid_coder)
+            end
+
+            it "fetches the public key from UAA" do
+              subject
+
+              last_response.status.should == 200
+              VCAP::CloudController::SecurityContext.current_user.should == user
+              VCAP::CloudController::SecurityContext.token.should == token_info
+            end
+
+            it "stores the public key in redis" do
+              subject
+              expect(fake_redis['cc.verification_key']).to eq(new_key)
+            end
+
+            context "when unable to fetch the key from UAA" do
+              before do
+                CF::UAA::Misc.stub(:validation_key).and_raise(CF::UAA::TargetError.new({'error' => 'other'}))
               end
-            end
-
-            context "when the uaa is NOT running in symmetric key mode" do
-              let(:error_info) { {'error' => 'other'} }
 
               it "does not try to decode the token" do
                 subject
@@ -253,57 +258,56 @@ describe VCAP::CloudController::Controller do
               end
 
               it "does not update the timestamp of the last public key response from UAA in redis" do
-                expect { subject }.not_to change { fake_redis['cc.verification_set_at'] }
-              end
+                  expect { subject }.not_to change { fake_redis['cc.verification_set_at'] }
+                end
             end
           end
         end
-      end
 
-      context "when the UAA's public key is not cached in redis and not in the config file" do
-        context "when a request has just been sent to the UAA for the public key" do
+        context "when the UAA's public key is not cached in redis and not in the config file" do
+          context "when a request has just been sent to the UAA for the public key" do
+            before do
+              fake_redis['cc.verification_set_at'] = nil
+              fake_redis['cc.verification_queried_at'] = (now.to_i - 19)
+            end
+
+            it "does not try to fetch the key again: the token is considered invalid" do
+              subject
+
+              expect(VCAP::CloudController::SecurityContext.current_user).to be_nil
+              expect(VCAP::CloudController::SecurityContext.token).to be_nil
+            end
+          end
+        end
+
+        context "when the users table is empty" do
           before do
-            fake_redis['cc.verification_set_at'] = nil
-            fake_redis['cc.verification_queried_at'] = (now.to_i - 19)
+            VCAP::CloudController::Models::User.dataset.delete
+            CF::UAA::TokenCoder.should_receive(:new).with(
+              :audience_ids => "cloud_controller",
+              :pkey => config_key
+            ).and_return(valid_coder)
           end
 
-          it "does not try to fetch the key again: the token is considered invalid" do
-            subject
+          context "when the current user's email matches the admin email in the config file" do
+            let(:email) { config_admin_email }
 
-            expect(VCAP::CloudController::SecurityContext.current_user).to be_nil
-            expect(VCAP::CloudController::SecurityContext.token).to be_nil
+            it "saves the current user as an admin" do
+              expect(VCAP::CloudController::Models::User.count).to eq(0)
+
+              subject
+
+              user = VCAP::CloudController::Models::User.first
+              expect(user.guid).to eq(user_id)
+              expect(user.admin).to be_true
+              expect(user.active).to be_true
+            end
           end
-        end
-      end
 
-      context "when the users table is empty" do
-        before do
-          VCAP::CloudController::Models::User.dataset.delete
-          CF::UAA::TokenCoder.should_receive(:new).with(
-            :audience_ids => "cloud_controller",
-            :skey => "tokensecret",
-            :pkey => config_key
-          ).and_return(valid_coder)
-        end
-
-        context "when the current user's email matches the admin email in the config file" do
-          let(:email) { config_admin_email }
-
-          it "saves the current user as an admin" do
-            expect(VCAP::CloudController::Models::User.count).to eq(0)
-
-            subject
-
-            user = VCAP::CloudController::Models::User.first
-            expect(user.guid).to eq(user_id)
-            expect(user.admin).to be_true
-            expect(user.active).to be_true
-          end
-        end
-
-        context "when the current user is not admin" do
-          it "does not create a user" do
-            expect { subject }.not_to change(VCAP::CloudController::Models::User, :count)
+          context "when the current user is not admin" do
+            it "does not create a user" do
+              expect { subject }.not_to change(VCAP::CloudController::Models::User, :count)
+            end
           end
         end
       end
