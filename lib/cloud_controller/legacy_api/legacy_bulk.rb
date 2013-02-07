@@ -37,13 +37,13 @@ module VCAP::CloudController
     allow_unauthenticated_access
 
     class << self
-      attr_reader :message_bus, :config
+      attr_reader :config, :message_bus
 
-      def configure(config)
-        @message_bus = config.fetch(:message_bus, MessageBus)
+      def configure(config, message_bus)
         @config = config[:bulk_api].merge(
           :cc_partition => config.fetch(:cc_partition),
         )
+        @message_bus = message_bus
       end
 
       def register_subscription
@@ -62,7 +62,6 @@ module VCAP::CloudController
           config[:auth_password],
         ]
       end
-
     end
 
     def initialize(*)

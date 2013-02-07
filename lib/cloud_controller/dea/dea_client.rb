@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       attr_reader :config, :message_bus, :dea_pool
 
-      def configure(config, message_bus = MessageBus, dea_pool = DeaPool)
+      def configure(config, message_bus, dea_pool = DeaPool)
         @config = config
         @message_bus = message_bus
         @dea_pool = dea_pool

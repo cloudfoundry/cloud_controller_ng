@@ -14,6 +14,8 @@ require "cloud_controller"
 require "rspec_let_monkey_patch"
 require "mock_redis"
 
+Dir.glob(File.join(File.dirname(__FILE__), "support/**/*.rb")).each { |f| require f }
+
 module VCAP::CloudController
   class SpecEnvironment
     def initialize
@@ -80,48 +82,71 @@ module VCAP::CloudController::SpecHelper
   def config_override(hash)
     @config_override ||= {}
     @config_override.update(hash)
+
+    @config = nil
+    config
   end
 
   def config
-    config_file = File.expand_path("../../config/cloud_controller.yml", __FILE__)
-    c = VCAP::CloudController::Config.from_file(config_file)
-    c = c.merge(
-      :nginx => { :use_nginx => true },
-      :resource_pool => {
-        :resource_directory_key => "spec-cc-resources",
-        :fog_connection =>  {
-          :provider => "AWS",
-          :aws_access_key_id => "fake_aws_key_id",
-          :aws_secret_access_key => "fake_secret_access_key",
-        }
-      },
-      :packages => {
-        :app_package_directory_key => "cc-packages",
-        :fog_connection => {
-          :provider => "AWS",
-          :aws_access_key_id => "fake_aws_key_id",
-          :aws_secret_access_key => "fake_secret_access_key",
-        }
-      },
-      :droplets => {
-        :droplet_directory_key => "cc-droplets",
-        :fog_connection => {
-          :provider => "AWS",
-          :aws_access_key_id => "fake_aws_key_id",
-          :aws_secret_access_key => "fake_secret_access_key",
-        }
-      }
-    )
+    @config ||= begin
+      config_file = File.expand_path("../../config/cloud_controller.yml", __FILE__)
+      config_hash = VCAP::CloudController::Config.from_file(config_file)
 
-    c = c.merge(@config_override || {})
+      config_hash.merge!(
+        :nginx => { :use_nginx => true },
+        :resource_pool => {
+          :resource_directory_key => "spec-cc-resources",
+          :fog_connection =>  {
+            :provider => "AWS",
+            :aws_access_key_id => "fake_aws_key_id",
+            :aws_secret_access_key => "fake_secret_access_key",
+          }
+        },
+        :packages => {
+          :app_package_directory_key => "cc-packages",
+          :fog_connection => {
+            :provider => "AWS",
+            :aws_access_key_id => "fake_aws_key_id",
+            :aws_secret_access_key => "fake_secret_access_key",
+          }
+        },
+        :droplets => {
+          :droplet_directory_key => "cc-droplets",
+          :fog_connection => {
+            :provider => "AWS",
+            :aws_access_key_id => "fake_aws_key_id",
+            :aws_secret_access_key => "fake_secret_access_key",
+          }
+        }
+      )
 
-    unless (c[:resource_pool][:fog_connection][:provider].downcase == "local" ||
-            c[:packages][:fog_connection][:provider].downcase == "local")
-      Fog.mock!
+      config_hash.merge!(@config_override || {})
+
+      res_pool_connection_provider = config_hash[:resource_pool][:fog_connection][:provider].downcase
+      packages_connection_provider = config_hash[:packages][:fog_connection][:provider].downcase
+      Fog.mock! unless (res_pool_connection_provider == "local" || packages_connection_provider == "local")
+
+      configure_components(config_hash)
+      config_hash
     end
+  end
 
-    VCAP::CloudController::Config.configure(c)
-    c
+  def configure_components(config)
+    mbus = MockMessageBus.new(config)
+    VCAP::CloudController::MessageBus.instance = mbus
+
+    VCAP::CloudController::AccountCapacity.configure(config)
+    VCAP::CloudController::ResourcePool.configure(config)
+    VCAP::CloudController::AppPackage.configure(config)
+    VCAP::CloudController::AppStager.configure(config)
+    VCAP::CloudController::LegacyStaging.configure(config)
+
+    VCAP::CloudController::DeaPool.configure(config, mbus)
+    VCAP::CloudController::DeaClient.configure(config, mbus)
+    VCAP::CloudController::HealthManagerClient.configure(mbus)
+
+    VCAP::CloudController::LegacyBulk.configure(config, mbus)
+    VCAP::CloudController::Models::QuotaDefinition.configure(config)
   end
 
   def configure
@@ -220,27 +245,13 @@ module VCAP::CloudController::SpecHelper
       num_dirs = 3
       num_unique_allowed_files_per_dir = 7
       file_duplication_factor = 2
-      max_file_size = 1098 # this is arbitrary
+      @max_file_size = 1098 # this is arbitrary
 
       @total_allowed_files =
         num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
 
       @dummy_descriptor = { "sha1" => Digest::SHA1.hexdigest("abc"), "size" => 1}
       @tmpdir = Dir.mktmpdir
-
-      cfg = {
-        :resource_pool => {
-          :maximum_size => max_file_size,
-          :resource_directory_key => "spec-cc-resources",
-          :fog_connection =>  {
-            :provider => "AWS",
-            :aws_access_key_id => "fake_aws_key_id",
-            :aws_secret_access_key => "fake_secret_access_key",
-          }
-        }
-      }
-      VCAP::CloudController::ResourcePool.configure(cfg)
-      Fog.mock!
 
       @descriptors = []
       num_dirs.times do
@@ -264,10 +275,25 @@ module VCAP::CloudController::SpecHelper
           end
 
           File.open("#{path}-not-allowed", "w") do |f|
-            f.write "A" * max_file_size
+            f.write "A" * @max_file_size
           end
         end
       end
+    end
+
+    before do
+      VCAP::CloudController::ResourcePool.configure(
+        :resource_pool => {
+          :maximum_size => @max_file_size,
+          :resource_directory_key => "spec-cc-resources",
+          :fog_connection =>  {
+            :provider => "AWS",
+            :aws_access_key_id => "fake_aws_key_id",
+            :aws_secret_access_key => "fake_secret_access_key",
+          }
+        }
+      )
+      Fog.mock!
     end
 
     after(:all) do
@@ -293,8 +319,9 @@ RSpec.configure do |rspec_config|
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController::SpecHelper
 
-  rspec_config.before(:each) do |example|
+  rspec_config.before(:each) do
     VCAP::CloudController::SecurityContext.clear
+    configure
   end
 end
 

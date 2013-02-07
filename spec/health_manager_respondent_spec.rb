@@ -11,9 +11,7 @@ module VCAP::CloudController
         :instances => 2,
       ).save
       @mbus = double("mock nats")
-      @dea_client = double("mock dea client",
-                          :message_bus => @mbus,
-                          )
+      @dea_client = double("mock dea client", :message_bus => @mbus)
 
       @mbus.should_receive(:subscribe).with(
         "cloudcontrollers.hm.requests.ng",

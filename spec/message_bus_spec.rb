@@ -5,61 +5,45 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::MessageBus do
     let(:nats) { double(:nats) }
+    let!(:bus) { MessageBus.new(:nats => nats) }
 
-    let(:msg_json) do
-      Yajl::Encoder.encode(:foo => "bar")
-    end
+    let(:msg) { {:foo => "bar"} }
+    let(:msg_json) { Yajl::Encoder.encode(msg) }
 
-    before do
-      MessageBus.configure(:nats => nats)
-    end
+    describe "#subscribe" do
+      before { nats.should_receive(:subscribe).and_yield(msg_json, nil) }
 
-    shared_examples "subscription" do |receive_in_reactor|
-      (desc, method) = if receive_in_reactor
-                         ["on the reactor thread", :subscribe_on_reactor]
-                       else
-                         ["on a thread", :subscribe]
-                       end
+      it "should receive nats messages" do
+        was_on_reactor_thread = false
+        received_msg = nil
 
-      it "should receive nats messages #{desc}" do
-        received_msg = false
-        nats.should_receive(:subscribe).and_yield(msg_json, nil)
         with_em_and_thread(:auto_stop => false) do
-          MessageBus.send(method, "some_subject") do |msg|
-            EM.reactor_thread?.should == receive_in_reactor
-            msg[:foo].should == "bar"
-            received_msg = true
+          bus.subscribe("some_subject") do |msg|
+            was_on_reactor_thread = EM.reactor_thread?
+            received_msg = msg
             EM.next_tick { EM.stop }
           end
         end
-        received_msg.should == true
-      end
-    end
 
-    describe "subscribe_on_reactor" do
-      include_examples "subscription", true
+        was_on_reactor_thread.should be_false
+        received_msg.should == msg
+      end
 
       it "should not leak exceptions into the defer block" do
-        nats.should_receive(:subscribe).and_yield(msg_json, nil)
-
         logger = mock(:logger)
         logger.should_receive(:error)
-        MessageBus.should_receive(:logger).and_return(logger)
+        bus.should_receive(:logger).and_return(logger)
 
         with_em_and_thread(:auto_stop => false) do
           EventMachine::Timer.new(0.1) { EM.stop }
-          MessageBus.subscribe("foo") do
+          bus.subscribe("foo") do
             raise "boom"
           end
         end
       end
     end
 
-    describe "subscribe" do
-      include_examples "subscription", false
-    end
-
-    describe "publish" do
+    describe "#publish" do
       it "should publish to nats on the reactor thread" do
         published = false
 
@@ -69,21 +53,22 @@ module VCAP::CloudController
         end
 
         with_em_and_thread do
-          MessageBus.publish("another_subject", "abc")
+          bus.publish("another_subject", "abc")
         end
 
         published.should == true
       end
     end
 
-    describe "request" do
+    describe "#request" do
       it "should use default expected value when not specified" do
-        nats.should_receive(:request).once.with("subject", "abc",
-                                                :max => 1)
-        .and_yield(msg_json)
+        nats.should_receive(:request)
+          .once
+          .with("subject", "abc", :max => 1)
+          .and_yield(msg_json)
 
         with_em_and_thread do
-          response = MessageBus.request("subject", "abc")
+          response = bus.request("subject", "abc")
           response.should be_an_instance_of Array
           response.size.should == 1
           response.should == [msg_json]
@@ -91,12 +76,14 @@ module VCAP::CloudController
       end
 
       it "should use the specified expected value" do
-        nats.should_receive(:request).once.with("subject", "abc",
-                                                :max => 2)
-        .and_yield(msg_json).and_yield(msg_json)
+        nats.should_receive(:request)
+          .once
+          .with("subject", "abc", :max => 2)
+          .and_yield(msg_json)
+          .and_yield(msg_json)
 
         with_em_and_thread do
-          response = MessageBus.request("subject", "abc", :expected => 2)
+          response = bus.request("subject", "abc", :expected => 2)
           response.should be_an_instance_of Array
           response.size.should == 2
           response.should == [msg_json, msg_json]
@@ -106,20 +93,22 @@ module VCAP::CloudController
       it "should not subscribe to nats when specified expected value is zero" do
         # We don't expect nats to receive anything.
         with_em_and_thread do
-          response = MessageBus.request("subject", "abc", :expected => 0)
+          response = bus.request("subject", "abc", :expected => 0)
           response.should be_an_instance_of Array
           response.should == []
         end
       end
 
       it "should not register timeout with nats when none is specified" do
-        nats.should_receive(:request).once.
-          with("subject", "abc", :max => 1).and_yield(msg_json)
+        nats.should_receive(:request)
+          .once
+          .with("subject", "abc", :max => 1)
+          .and_yield(msg_json)
 
         nats.should_not_receive(:timeout)
 
         with_em_and_thread do
-          response = MessageBus.request("subject", "abc")
+          response = bus.request("subject", "abc")
           response.should be_an_instance_of Array
           response.size.should == 1
           response.should == [msg_json]
@@ -133,7 +122,7 @@ module VCAP::CloudController
         nats.should_not_receive(:timeout)
 
         with_em_and_thread do
-          response = MessageBus.request("subject", "abc")
+          response = bus.request("subject", "abc")
           response.should be_an_instance_of Array
           response.size.should == 1
           response.should == [msg_json]
@@ -151,14 +140,14 @@ module VCAP::CloudController
           and_yield
 
         with_em_and_thread do
-          response = MessageBus.request("subject", "abc", :timeout => 0.1)
+          response = bus.request("subject", "abc", :timeout => 0.1)
           response.should be_an_instance_of Array
           response.size.should == 0
         end
       end
     end
 
-    describe "process_message" do
+    describe "#process_message" do
       let(:msg) { Yajl::Encoder.encode({:a => 1, :b => 2}) }
 
       it "should pssed the parsed message and inbox to the block" do
@@ -170,7 +159,7 @@ module VCAP::CloudController
           inbox_received = inbox
         end
 
-        MessageBus.send(:process_message, msg, "myinbox", &block)
+        bus.send(:process_message, msg, "myinbox", &block)
         msg_received.should == {:a => 1, :b => 2}
         inbox_received.should == "myinbox"
       end
@@ -178,13 +167,13 @@ module VCAP::CloudController
       it "should catch and log an error on an exception" do
         logger = mock(:logger)
         logger.should_receive(:error)
-        MessageBus.should_receive(:logger).and_return(logger)
+        bus.should_receive(:logger).and_return(logger)
 
         block = proc do |msg, inbox|
           raise "boom"
         end
 
-        MessageBus.send(:process_message, msg, "myinbox", &block)
+        bus.send(:process_message, msg, "myinbox", &block)
       end
     end
   end

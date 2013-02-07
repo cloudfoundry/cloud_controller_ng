@@ -9,7 +9,7 @@ module VCAP::CloudController
     class << self
       attr_reader :config, :message_bus
 
-      def configure(config, message_bus = MessageBus)
+      def configure(config, message_bus)
         @config = config
         @message_bus = message_bus
         @deas = {}

@@ -4,19 +4,24 @@ require "nats/client"
 require "vcap/component"
 require "cloud_controller/json_patch"
 
-module VCAP::CloudController::MessageBus
+class VCAP::CloudController::MessageBus
   class << self
-    attr_reader :config
-    attr_reader :nats
+    attr_reader :instance
 
-    def configure(config)
-      @config = config
-      @nats = config[:nats] || NATS
+    def instance=(instance)
+      raise ArgumentError, "instance must not be nil" unless instance
+      @instance = instance
     end
   end
 
-  def self.register_components
-    # hook up with NATS
+  attr_reader :config, :nats
+
+  def initialize(config)
+    @config = config
+    @nats = config[:nats] || NATS
+  end
+
+  def register_components
     # TODO: put useful metrics in varz
     # TODO: subscribe to the two DEA channels
     EM.schedule do
@@ -32,7 +37,7 @@ module VCAP::CloudController::MessageBus
     end
   end
 
-  def self.register_routes
+  def register_routes
     EM.schedule do
       # TODO: blacklist api2 in legacy CC
       # TODO: Yajl should probably also be injected
@@ -42,7 +47,9 @@ module VCAP::CloudController::MessageBus
         :uris => [config[:external_domain]],
         :tags => {:component => "CloudController" },
       })
+
       nats.publish("router.register", router_register_message)
+
       # Broadcast when a router restarts
       nats.subscribe("router.start") do
         nats.publish("router.register", router_register_message)
@@ -59,7 +66,7 @@ module VCAP::CloudController::MessageBus
   # @yield [payload, inbox] callback invoked when a message is posted on the subject
   # @yieldparam [String] payload the message posted on the channel
   # @yieldparam [optional, String] inbox an optional "reply to" subject, nil if not requested
-  def self.subscribe(subject, opts = {}, &blk)
+  def subscribe(subject, opts = {}, &blk)
     subscribe_on_reactor(subject, opts) do |payload, inbox|
       EM.defer do
         begin
@@ -74,21 +81,13 @@ module VCAP::CloudController::MessageBus
     end
   end
 
-  def self.subscribe_on_reactor(subject, opts = {}, &blk)
-    EM.schedule do
-      nats.subscribe(subject, opts) do |msg, inbox|
-        process_message(msg, inbox, &blk)
-      end
-    end
-  end
-
-  def self.publish(subject, message = nil)
+  def publish(subject, message = nil)
     EM.schedule do
       nats.publish(subject, message)
     end
   end
 
-  def self.request(subject, data = nil, opts = {})
+  def request(subject, data = nil, opts = {})
     opts ||= {}
     expected = opts[:expected] || 1
     timeout = opts[:timeout] || -1
@@ -115,14 +114,22 @@ module VCAP::CloudController::MessageBus
 
   private
 
-  def self.process_message(msg, inbox, &blk)
+  def subscribe_on_reactor(subject, opts = {}, &blk)
+    EM.schedule do
+      nats.subscribe(subject, opts) do |msg, inbox|
+        process_message(msg, inbox, &blk)
+      end
+    end
+  end
+
+  def process_message(msg, inbox, &blk)
     payload = Yajl::Parser.parse(msg, :symbolize_keys => true)
     blk.yield(payload, inbox)
   rescue => e
     logger.error "exception processing: '#{msg}' '#{e}'"
   end
 
-  def self.logger
+  def logger
     @logger ||= Steno.logger("cc.mbus")
   end
 end

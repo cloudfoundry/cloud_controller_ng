@@ -267,36 +267,28 @@ module VCAP::CloudController
         r["metadata"]["guid"]
       }.should eq [@foo_app.guid]
 
-      nats = double("mock nats")
-      config_override(:nats => nats)
-      # inject mock nats
-      MessageBus.configure(config)
-
-      nats.should_receive(:publish).with(
+      MessageBus.instance.should_receive(:publish).with(
         "dea.update",
-        json_match(
-          hash_including(
-            "uris" => ["foo.jesse.cloud"],
-            "droplet" => @bar_app.guid,
-          ),
-        ),
+        json_match(hash_including(
+          "uris" => ["foo.jesse.cloud"],
+          "droplet" => @bar_app.guid,
+        )),
       )
-      EM.run do
-        put(
-          "/v2/routes/#{@route.guid}",
-          Route::UpdateMessage.new(
-            :app_guids => [@foo_app.guid, @bar_app.guid],
-          ).encode,
-          @headers_for_user,
-        )
-        EM.next_tick { EM.stop }
-      end
+
+      put(
+        "/v2/routes/#{@route.guid}",
+        Route::UpdateMessage.new(
+          :app_guids => [@foo_app.guid, @bar_app.guid],
+        ).encode,
+        @headers_for_user,
+      )
       last_response.status.should == 201
     end
 
     it "sends a dea.update message after removing an app" do
       @foo_app.add_route(@route)
       @bar_app.add_route(@route)
+
       get "/v2/routes/#{@route.guid}/apps", {}, @headers_for_user
       last_response.status.should == 200
       decoded_response["total_results"].should eq(2)
@@ -304,30 +296,21 @@ module VCAP::CloudController
         r["metadata"]["guid"]
       }.sort.should eq [@foo_app.guid, @bar_app.guid].sort
 
-      nats = double("mock nats")
-      config_override(:nats => nats)
-      # inject mock nats
-      MessageBus.configure(config)
-
-      nats.should_receive(:publish).with(
+      MessageBus.instance.should_receive(:publish).with(
         "dea.update",
-        json_match(
-          hash_including(
-            "uris" => [],
-            "droplet" => @foo_app.guid,
-          ),
-        ),
+        json_match(hash_including(
+          "uris" => [],
+          "droplet" => @foo_app.guid,
+        )),
       )
-      EM.run do
-        put(
-          "/v2/routes/#{@route.guid}",
-          Route::UpdateMessage.new(
-            :app_guids => [@bar_app.guid],
-          ).encode,
-          @headers_for_user,
-        )
-        EM.next_tick { EM.stop }
-      end
+
+      put(
+        "/v2/routes/#{@route.guid}",
+        Route::UpdateMessage.new(
+          :app_guids => [@bar_app.guid],
+        ).encode,
+        @headers_for_user,
+      )
       last_response.status.should == 201
     end
   end

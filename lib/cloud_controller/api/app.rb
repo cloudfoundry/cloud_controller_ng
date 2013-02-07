@@ -63,10 +63,10 @@ module VCAP::CloudController
     end
 
     def send_droplet_updated_message(app)
-      json = Yajl::Encoder.encode(:droplet => app.guid,
-                                  :cc_partition => config[:cc_partition])
-      MessageBus.publish("droplet.updated", json)
-      nil
+      MessageBus.instance.publish("droplet.updated", Yajl::Encoder.encode(
+        :droplet => app.guid,
+        :cc_partition => config[:cc_partition]
+      ))
     end
 
     def self.translate_validation_exception(e, attributes)

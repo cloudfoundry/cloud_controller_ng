@@ -8,28 +8,28 @@ require "cloud_controller/models"
 module VCAP::CloudController
   module VCAP::CloudController
     describe LegacyBulk do
-      before :each do
+      let(:mbus) { MockMessageBus.new({}) }
+
+      before do
         @bulk_user = "bulk_user"
         @bulk_password = "bulk_password"
       end
 
       describe ".register_subscription" do
         it "should be able to discover credentials through NATS" do
-          message_bus = double("mock message bus")
-          config_override(
-            :message_bus    => message_bus,
-            :cc_partition   => "ng",
-          )
-          LegacyBulk.configure(config)
-          message_bus.should_receive(:subscribe).
-            with("cloudcontroller.bulk.credentials.ng").
-            and_yield("xxx", "inbox")
-          message_bus.should_receive(:publish).with("inbox", anything) do |_, msg|
+          LegacyBulk.configure(config, mbus)
+
+          mbus.should_receive(:subscribe)
+            .with("cloudcontroller.bulk.credentials.ng")
+            .and_yield("xxx", "inbox")
+
+          mbus.should_receive(:publish).with("inbox", anything) do |_, msg|
             Yajl::Parser.parse(msg).should == {
               "user"      => @bulk_user,
               "password"  => @bulk_password,
             }
           end
+
           LegacyBulk.register_subscription
         end
       end
@@ -39,11 +39,10 @@ module VCAP::CloudController
           reset_database
           @framework = Models::Framework.make
           10.times do
-            Models::App.make(
-              :framework => @framework,
-            )
+            Models::App.make(:framework => @framework)
           end
         end
+
         it "requires authentication" do
           get "/bulk/apps"
           last_response.status.should == 401
@@ -54,7 +53,7 @@ module VCAP::CloudController
         end
 
         describe "with authentication" do
-          before :each do
+          before do
             authorize @bulk_user, @bulk_password
           end
 
@@ -91,7 +90,6 @@ module VCAP::CloudController
               value["version"].should_not be_nil
             }
           end
-
 
           it "respects the batch_size parameter" do
             [3,5].each { |size|
@@ -144,7 +142,6 @@ module VCAP::CloudController
             }
             decoded_response["results"].size.should == 0
           end
-
         end
       end
 

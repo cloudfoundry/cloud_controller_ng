@@ -116,8 +116,8 @@ module VCAP::CloudController
         # TODO: we really should put these bootstrapping into a place other
         # than Rack::Builder
         use Rack::CommonLogger
-        VCAP::CloudController::MessageBus.register_components
-        VCAP::CloudController::MessageBus.register_routes
+        VCAP::CloudController::MessageBus.instance.register_components
+        VCAP::CloudController::MessageBus.instance.register_routes
         VCAP::CloudController::DeaPool.register_subscriptions
         VCAP::CloudController::LegacyBulk.register_subscription
         VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)

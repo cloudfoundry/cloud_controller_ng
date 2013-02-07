@@ -104,9 +104,7 @@ module VCAP::CloudController
       end
 
       it "sends a dea start message that includes cc_partition" do
-        config_override(
-          :cc_partition => "ngFTW",
-        )
+        config_override(:cc_partition => "ngFTW")
         DeaClient.configure(config, @message_bus, @dea_pool)
 
         @app.instances = 1

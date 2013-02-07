@@ -108,7 +108,7 @@ module VCAP::CloudController
         app_obj.save
         app_obj.needs_staging?.should be_false
 
-        MessageBus.should_not_receive(:publish).with("droplet.updated", anything)
+        MessageBus.instance.should_not_receive(:publish).with("droplet.updated", anything)
 
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
@@ -126,7 +126,7 @@ module VCAP::CloudController
           "cc_partition" => config[:cc_partition],
         }
 
-        MessageBus.should_not_receive(:publish)
+        MessageBus.instance.should_not_receive(:publish)
 
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
@@ -138,17 +138,18 @@ module VCAP::CloudController
         app_obj.state = "STARTED"
         app_obj.save
         app_obj.needs_staging?.should be_true
+
         AppStager.should_receive(:stage_app) do |app|
           app.update(:droplet_hash => "def")
         end
-        MessageBus.should_receive(:publish).with(
+
+        MessageBus.instance.should_receive(:publish).with(
           "droplet.updated",
-          json_match(
-            hash_including(
-              "droplet" => app_obj.guid,
-            ),
-          ),
+          json_match(hash_including(
+            "droplet" => app_obj.guid,
+          )),
         )
+
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
@@ -175,9 +176,10 @@ module VCAP::CloudController
           "cc_partition" => config[:cc_partition],
         }
 
-        MessageBus.should_receive(:publish).
-          with("droplet.updated",
-               json_match(hash_including(expected)))
+        MessageBus.instance.should_receive(:publish).with(
+          "droplet.updated",
+          json_match(hash_including(expected))
+        )
 
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
@@ -194,9 +196,10 @@ module VCAP::CloudController
           "cc_partition" => config[:cc_partition],
         }
 
-        MessageBus.should_receive(:publish).
-          with("droplet.updated",
-               json_match(hash_including(expected)))
+        MessageBus.instance.should_receive(:publish).with(
+          "droplet.updated",
+          json_match(hash_including(expected))
+        )
 
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
@@ -225,9 +228,10 @@ module VCAP::CloudController
           "cc_partition" => config[:cc_partition],
         }
 
-        MessageBus.should_receive(:publish).
-          with("droplet.updated",
-               json_match(hash_including(expected)))
+        MessageBus.instance.should_receive(:publish).with(
+          "droplet.updated",
+          json_match(hash_including(expected))
+        )
 
         put "/v2/apps/#{app_obj.guid}", req, json_headers(admin_headers)
         last_response.status.should == 201
@@ -301,25 +305,20 @@ module VCAP::CloudController
           :space => space,
         )
 
-        nats = double("mock nats")
-        config_override(:nats => nats)
-        nats.should_receive(:publish).with(
+        MessageBus.instance.should_receive(:publish).with(
           "dea.update",
           json_match(
             hash_including("uris" => ["app.jesse.cloud"]),
           ),
         )
 
-        EM.run do
-          put(
-            @app_url,
-            App::UpdateMessage.new(
-              :route_guids => [route.guid],
-            ).encode(),
-            @headers_for_user,
-          )
-          EM.next_tick { EM.stop }
-        end
+        put(
+          @app_url,
+          App::UpdateMessage.new(
+            :route_guids => [route.guid],
+          ).encode(),
+          @headers_for_user,
+        )
         last_response.status.should == 201
       end
 
@@ -341,28 +340,20 @@ module VCAP::CloudController
           r["metadata"]["guid"]
         }.sort.should == [bar_route.guid, route.guid].sort
 
-        nats = double("mock nats")
-        config_override(:nats => nats)
-        # inject mock nats
-        MessageBus.configure(config)
-
-        nats.should_receive(:publish).with(
+        MessageBus.instance.should_receive(:publish).with(
           "dea.update",
-          json_match(
-            hash_including("uris" => ["foo.jesse.cloud"]),
-          ),
+          json_match(hash_including(
+            "uris" => ["foo.jesse.cloud"],
+          )),
         )
 
-        EM.run do
-          put(
-            @app_url,
-            App::UpdateMessage.new(
-              :route_guids => [route.guid],
-            ).encode,
-            @headers_for_user,
-          )
-          EM.stop
-        end
+        put(
+          @app_url,
+          App::UpdateMessage.new(
+            :route_guids => [route.guid],
+          ).encode,
+          @headers_for_user,
+        )
         last_response.status.should == 201
       end
 

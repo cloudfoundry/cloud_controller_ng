@@ -143,19 +143,20 @@ class VCAP::CloudController::Config < VCAP::Config
   end
 
   def self.configure(config)
-    # TODO: this introduces 2 config styles.  CC takes config
-    # via per instance constructor.  Remove that in favor of this
-    # method as there will be more along these lines.
-    VCAP::CloudController::MessageBus.configure(config)
+    mbus = VCAP::CloudController::MessageBus.new(config)
+    VCAP::CloudController::MessageBus.instance = mbus
+
     VCAP::CloudController::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.configure(config)
     VCAP::CloudController::AppPackage.configure(config)
     VCAP::CloudController::AppStager.configure(config)
     VCAP::CloudController::LegacyStaging.configure(config)
-    VCAP::CloudController::DeaPool.configure(config)
-    VCAP::CloudController::DeaClient.configure(config)
-    VCAP::CloudController::HealthManagerClient.configure
-    VCAP::CloudController::LegacyBulk.configure(config)
+
+    VCAP::CloudController::DeaPool.configure(config, mbus)
+    VCAP::CloudController::DeaClient.configure(config, mbus)
+    VCAP::CloudController::HealthManagerClient.configure(mbus)
+
+    VCAP::CloudController::LegacyBulk.configure(config, mbus)
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
   end
 

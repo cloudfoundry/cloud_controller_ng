@@ -22,7 +22,8 @@ module VCAP::CloudController
         LegacyStaging.with_upload_handle(app.guid) do |handle|
           client_error = nil
           results = EM.schedule_sync do |promise|
-            client = VCAP::Stager::Client::EmAware.new(MessageBus.nats.client, queue)
+            client = VCAP::Stager::Client::EmAware.new(MessageBus.instance.nats.client, queue)
+
             request = staging_request(app)
             logger.debug "staging #{app.guid} request: #{request}"
             deferrable = client.stage(request, staging_timeout)

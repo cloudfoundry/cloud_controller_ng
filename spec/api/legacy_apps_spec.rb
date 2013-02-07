@@ -24,8 +24,10 @@ module VCAP::CloudController
       before do
         @apps = []
         7.times do
-          @apps << Models::App.make(:space => user.default_space,
-                                    :environment_json => {})
+          @apps << Models::App.make(
+            :space => user.default_space,
+            :environment_json => {}
+          )
         end
 
         3.times do
@@ -670,10 +672,10 @@ module VCAP::CloudController
 
         it "sends a dea.update message when adding a URL to a running app" do
           app = Models::App.make(
-                                 :name => app_name,
-                                 :space => user.default_space,
-                                 :state => "STARTED",
-                                 )
+            :name => app_name,
+            :space => user.default_space,
+            :state => "STARTED",
+          )
 
           app.update(
             # I hate that implicit save on package_hash=,
@@ -683,34 +685,30 @@ module VCAP::CloudController
             :package_state  => "STAGED",
           )
 
-          nats = double("mock nats")
-          nats.should_receive(:publish).with(
+          MessageBus.instance.should_receive(:publish).with(
             "dea.update",
-            json_match(
-              hash_including("uris" => [uri1, uri2]),
-            ),
+            json_match(hash_including(
+              "uris" => [uri1, uri2]
+            )),
           )
 
-          config_override(:nats => nats)
-          EM.run do
-            put(
-              "/apps/#{app_name}",
-              Yajl::Encoder.encode(
-                :uris => [uri1, uri2],
-              ),
-              headers_for(user),
-            )
-            last_response.status.should == 200
-            EM.next_tick { EM.stop }
-          end
+          put(
+            "/apps/#{app_name}",
+            Yajl::Encoder.encode(
+              :uris => [uri1, uri2],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
         end
 
         it "sends a dea.update message when removing a URL to a running app" do
           app = Models::App.make(
-                                 :name => app_name,
-                                 :space => user.default_space,
-                                 :state => "STARTED",
-                                 )
+            :name => app_name,
+            :space => user.default_space,
+            :state => "STARTED",
+          )
+
           app.update(
             # I hate that implicit save on package_hash=,
             # but I'll bare with it while nothing breaks...
@@ -719,38 +717,30 @@ module VCAP::CloudController
             :package_state  => "STAGED",
           )
 
-          black_hole = double
-          black_hole.stub(:publish)
-          config_override(:nats => black_hole)
-
-          nats = double("mock nats")
-          nats.should_receive(:publish).with(
-            "dea.update",
-            json_match(
-              hash_including("uris" => [uri2]),
+          put(
+            "/apps/#{app_name}",
+            Yajl::Encoder.encode(
+              :uris => [uri1, uri2],
             ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
+
+          MessageBus.instance.should_receive(:publish).with(
+            "dea.update",
+            json_match(hash_including(
+              "uris" => [uri2]
+            )),
           )
 
-          EM.run do
-            put(
-              "/apps/#{app_name}",
-              Yajl::Encoder.encode(
-                :uris => [uri1, uri2],
-              ),
-              headers_for(user),
-            )
-            last_response.status.should == 200
-            config_override(:nats => nats)
-            put(
-              "/apps/#{app_name}",
-              Yajl::Encoder.encode(
-                :uris => [uri2],
-              ),
-              headers_for(user),
-            )
-            last_response.status.should == 200
-            EM.next_tick { EM.stop }
-          end
+          put(
+            "/apps/#{app_name}",
+            Yajl::Encoder.encode(
+              :uris => [uri2],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
         end
 
         it "does not send a dea.update message when adding a URL to a stopped app" do
@@ -759,20 +749,17 @@ module VCAP::CloudController
             :space => user.default_space,
             :state => "STOPPED",
           )
-          nats = double("mock nats")
-          nats.should_not_receive(:publish)
-          config_override(:nats => nats)
-          EM.run do
-            put(
-              "/apps/#{app_name}",
-              Yajl::Encoder.encode(
-                :uris => [uri1, uri2],
-              ),
-              headers_for(user),
-            )
-            last_response.status.should == 200
-            EM.next_tick { EM.stop }
-          end
+
+          MessageBus.instance.should_not_receive(:publish)
+
+          put(
+            "/apps/#{app_name}",
+            Yajl::Encoder.encode(
+              :uris => [uri1, uri2],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
         end
 
         it "does not send a dea.update message when removing a URL to a stopped app" do
@@ -781,9 +768,9 @@ module VCAP::CloudController
             :space => user.default_space,
             :state => "STOPPED",
           )
-          nats = double("mock nats")
-          nats.should_not_receive(:publish)
-          config_override(:nats => nats)
+
+          MessageBus.instance.should_not_receive(:publish)
+
           EM.run do
             put(
               "/apps/#{app_name}",
