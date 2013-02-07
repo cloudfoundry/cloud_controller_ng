@@ -48,7 +48,7 @@ module VCAP::CloudController::ApiSpecHelper
 
     if user || opts[:admin_scope]
       user_token = token_coder.encode(
-        :user_id => user ? user.guid : 123,
+        :user_id => user ? user.guid : (rand * 1_000_000_000).ceil,
         :email => opts[:email],
         :scope => opts[:admin_scope] ? %w[cloud_controller.admin] : []
       )
