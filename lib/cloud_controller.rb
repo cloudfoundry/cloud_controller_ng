@@ -35,23 +35,22 @@ module VCAP::CloudController
 
     before do
       VCAP::CloudController::SecurityContext.clear
-      user = nil
       auth_token = env["HTTP_AUTHORIZATION"]
 
       begin
         token_information = decode_token(auth_token)
+        logger.info("Token received from the UAA #{token_information.inspect}")
         uaa_id = token_information['user_id'] if token_information
         user = Models::User.find(:guid => uaa_id) if uaa_id
-
-        # TODO: replace this with an external bootstrapping mechanism.
-        user ||= create_admin_user_if_needed(token_information)
+        user ||= create_admin_if_in_config(token_information)
+        user ||= create_admin_if_in_token(token_information)
 
         VCAP::CloudController::SecurityContext.set(user, token_information)
       rescue => e
         logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
       end
 
-      validate_scheme(user)
+      validate_scheme(user, VCAP::CloudController::SecurityContext.current_user_is_admin?)
     end
 
     # All manual routes here will be removed prior to final release.
@@ -79,20 +78,26 @@ module VCAP::CloudController
 
     private
 
-    def validate_scheme(user)
-      return unless user
+    def validate_scheme(user, admin)
+      return unless user || admin
 
       if @config[:https_required]
         raise Errors::NotAuthorized unless request.scheme == "https"
       end
 
-      if @config[:https_required_for_admins] && user && user.admin?
+      if @config[:https_required_for_admins] && admin
         raise Errors::NotAuthorized unless request.scheme == "https"
       end
     end
 
-    def create_admin_user_if_needed(token_information)
+    def create_admin_if_in_config(token_information)
       if Models::User.count == 0 && current_user_admin?(token_information)
+        Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
+      end
+    end
+
+    def create_admin_if_in_token(token_information)
+      if VCAP::CloudController::Roles.new(token_information).admin?
         Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
       end
     end
@@ -113,6 +118,7 @@ require "cloud_controller/errors"
 require "cloud_controller/app_package"
 require "cloud_controller/app_stager"
 require "cloud_controller/api"
+require "cloud_controller/roles"
 
 require "cloud_controller/legacy_api/legacy_api_base"
 require "cloud_controller/legacy_api/legacy_info"

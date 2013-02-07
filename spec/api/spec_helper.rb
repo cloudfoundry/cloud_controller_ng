@@ -42,14 +42,17 @@ module VCAP::CloudController::ApiSpecHelper
              :https => false}.merge(opts)
 
     headers = {}
-    pkey = opts[:signing_key] || config[:uaa][:signing_key]
     token_coder = CF::UAA::TokenCoder.new(:audience_ids => config[:uaa][:resource_id],
                                           :skey => config[:uaa][:symmetric_secret],
-                                          :pkey => pkey)
-    unless user.nil?
-      user_token = token_coder.encode({:user_id => user.guid,
-                                       :email => opts[:email]},
-                                      pkey ? 'RS256' : 'HS256')
+                                          :pkey => nil)
+
+    if user || opts[:admin_scope]
+      user_token = token_coder.encode(
+        :user_id => user ? user.guid : 123,
+        :email => opts[:email],
+        :scope => opts[:admin_scope] ? %w[cloud_controller.admin] : []
+      )
+
       headers["HTTP_AUTHORIZATION"] = "bearer #{user_token}"
     end
 

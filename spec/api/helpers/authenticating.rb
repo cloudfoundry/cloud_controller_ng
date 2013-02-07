@@ -28,6 +28,20 @@ module VCAP::CloudController::ApiSpecHelper
         end
       end
 
+      context "for an admin client" do
+        it "should return 200" do
+          get opts[:path], {}, headers_for(nil, :admin_scope => true)
+          last_response.status.should == 200
+        end
+      end
+
+      context "for a non-admin client" do
+        it "should return 401" do
+          get opts[:path], {}, headers_for(nil)
+          last_response.status.should == 401
+        end
+      end
+
       context "for an unknown user" do
         before(:all) do
           user = Models::User.make
