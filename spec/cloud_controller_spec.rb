@@ -8,7 +8,6 @@ describe VCAP::CloudController::Controller do
   let(:now) { Time.utc(2013, 2, 5) }
   let(:config_admin_email) { Sham.email }
   let(:symmetric_key) { nil }
-
   let!(:user) { VCAP::CloudController::Models::User.make(:admin => true, :guid => user_id) }
 
   before do
@@ -30,35 +29,37 @@ describe VCAP::CloudController::Controller do
 
   describe "validating the auth token" do
     let(:headers) { {"HTTP_AUTHORIZATION" => auth_token} }
+    let(:email) { Sham.email }
+    let(:token_info) { {'user_id' => user_id, 'email' => email, 'scope' => ['cloud_controller.admin'] } }
+    let(:valid_coder) do
+      valid_coder = Object.new
+      valid_coder.stub(:decode).with(auth_token).and_return(token_info)
+      valid_coder
+    end
+    let(:invalid_coder) do
+      valid_coder = Object.new
+      valid_coder.stub(:decode).with(auth_token).and_raise(CF::UAA::InvalidSignature)
+      valid_coder
+    end
 
     subject { get "/hello/sync", {}, headers }
 
-    context "when the token does not have the expected type" do
+    context "when the token does not have the expected type (i.e. does not have the BEARER header)" do
       let(:auth_token) { "not-bearer some-token" }
 
       it "does not set the current user" do
+        CF::UAA::TokenCoder.stub(:new).with(any_args).and_return(valid_coder)
+
         expect {
           subject
         }.not_to change {
           VCAP::CloudController::SecurityContext.current_user
-        }.from(nil)
+        }
       end
     end
 
     context "when the token has the expected type" do
-      let(:token_info) { {'user_id' => user_id, 'email' => email } }
-      let(:email) { Sham.email }
       let(:auth_token) { "bearer some-token" }
-      let(:valid_coder) do
-        valid_coder = Object.new
-        valid_coder.stub(:decode).with(auth_token).and_return(token_info)
-        valid_coder
-      end
-      let(:invalid_coder) do
-        valid_coder = Object.new
-        valid_coder.stub(:decode).with(auth_token).and_raise(CF::UAA::InvalidSignature)
-        valid_coder
-      end
 
       context "when configured to use symmetric encryption" do
         let(:symmetric_key) { "some-symmetric-key" }
@@ -289,7 +290,8 @@ describe VCAP::CloudController::Controller do
             ).and_return(valid_coder)
           end
 
-          context "when the current user's email matches the admin email in the config file" do
+          context "and the current user's email matches the admin email in the config file" do
+            let(:token_info) { {'user_id' => user_id, 'email' => email, 'scope' => ['non_admin'] } }
             let(:email) { config_admin_email }
 
             it "saves the current user as an admin" do
@@ -304,9 +306,26 @@ describe VCAP::CloudController::Controller do
             end
           end
 
-          context "when the current user is not admin" do
+          context "and the current user is not admin" do
+            let(:token_info) { {'user_id' => user_id, 'email' => email, 'scope' => ['non_admin'] } }
+
             it "does not create a user" do
               expect { subject }.not_to change(VCAP::CloudController::Models::User, :count)
+            end
+          end
+
+          context "and the current user's token has an admin scope" do
+            let(:token_info) { {'user_id' => user_id, 'email' => email, 'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] } }
+
+            it "saves the current user as an admin" do
+              expect(VCAP::CloudController::Models::User.count).to eq(0)
+
+              subject
+
+              user = VCAP::CloudController::Models::User.first
+              expect(user.guid).to eq(user_id)
+              expect(user.admin).to be_true
+              expect(user.active).to be_true
             end
           end
         end

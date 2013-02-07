@@ -25,7 +25,11 @@ module VCAP::CloudController
     end
 
     def self.admin_scope?
-      return !!(token && token['scope'] && token['scope'].include?('cloud_controller.admin'))
+      return roles.admin?
+    end
+
+    def self.roles
+      VCAP::CloudController::Roles.new(token)
     end
 
     def self.token

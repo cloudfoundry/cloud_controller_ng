@@ -10,8 +10,8 @@ module VCAP::CloudController
       # @param [Models::User] user The user for which to lookup permissions.
       #
       # @return [Array] Array of permissions granted to the user.
-      def permissions_for(obj, user)
-        permissions.select { |perm| perm.granted_to?(obj, user) }
+      def permissions_for(obj, user, roles)
+        permissions.select { |perm| perm.granted_to?(obj, user, roles) }
       end
 
       # Used by permission implementations to register themselves as a valid
