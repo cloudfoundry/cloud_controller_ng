@@ -58,7 +58,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "stage_app" do
+    describe ".stage_app" do
       let(:app_obj) { Models::App.make }
       let(:stager_client) { double(:stager_client) }
       let(:deferrable) { double(:deferrable) }
@@ -77,7 +77,7 @@ module VCAP::CloudController
         VCAP::Stager::Client::EmAware.should_receive(:new).and_return stager_client
         stager_client.should_receive(:stage).and_return deferrable
         @redis = mock("mock redis")
-        AppStager.configure({}, @redis)
+        AppStager.configure({}, nil, @redis)
       end
 
       it "should stage via the staging client" do
@@ -139,7 +139,73 @@ module VCAP::CloudController
       end
     end
 
-    describe "delete_droplet" do
+    describe ".stage_app_async (blocks until url is returned)" do
+      subject { described_class }
+      let(:app) { Models::App.make }
+
+      it "sends staging.async request" do
+        staging_request = {:staging => "request"}
+
+        described_class
+          .should_receive(:staging_request)
+          .with(app)
+          .and_return(staging_request)
+
+        described_class.message_bus.should_receive(:request).with(
+          "staging.async",
+          JSON.dump(staging_request),
+          {:expected => 1}
+        ).and_return([])
+
+        subject.stage_app_async(app) rescue nil
+      end
+
+      context "when staging successfully starts" do
+        let(:response) do
+          JSON.dump(
+            :task_id => "task-id",
+            :streaming_log_url => "http://stream-log-url")
+        end
+
+        it "returns url to stream staging log" do
+          described_class.message_bus
+            .should_receive(:request)
+            .and_return([response])
+
+          subject.stage_app_async(app).tap do |r|
+            r.task_id.should == "task-id"
+            r.streaming_log_url.should == "http://stream-log-url"
+          end
+        end
+      end
+
+      context "when dea indicates that staging failed" do
+        let(:response) do
+          JSON.dump(:error => "some-error")
+        end
+
+        it "raises staging error" do
+          described_class.message_bus
+            .should_receive(:request)
+            .and_return([response])
+
+          expect {
+            subject.stage_app_async(app)
+          }.to raise_error(described_class::AsyncError)
+        end
+      end
+
+      context "when request timed out" do
+        it "raises staging error" do
+          described_class.message_bus.should_receive(:request).and_return([])
+          expect {
+            subject.stage_app_async(app)
+          }.to raise_error(described_class::AsyncError)
+        end
+      end
+    end
+
+    describe ".delete_droplet" do
       before :each do
         AppStager.unstub(:delete_droplet)
       end

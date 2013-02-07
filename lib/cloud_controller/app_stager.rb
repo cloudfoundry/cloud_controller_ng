@@ -6,15 +6,34 @@ require "cloud_controller/staging_task_log"
 
 module VCAP::CloudController
   module AppStager
-    class << self
-      attr_reader :config
+    class AsyncResponse < Struct.new(:task_id, :streaming_log_url, :error)
+      def self.from_json(json)
+        if json
+          hash = Yajl::Parser.parse(json)
+          new(*hash.values_at("task_id", "streaming_log_url", "error"))
+        else
+          new(nil, nil, "Did not receive staging response")
+        end
+      end
 
-      def configure(config, redis_client = nil)
+      def error?
+        !!error
+      end
+    end
+
+    class AsyncError < StandardError; end
+
+    class << self
+      attr_reader :config, :message_bus
+
+      def configure(config, message_bus, redis_client = nil)
         @config = config
+        @message_bus = message_bus
         @redis_client = redis_client || Redis.new(
           :host => @config[:redis][:host],
           :port => @config[:redis][:port],
-          :password => @config[:redis][:password])
+          :password => @config[:redis][:password]
+        )
       end
 
       def stage_app(app)
@@ -60,11 +79,27 @@ module VCAP::CloudController
         logger.info "staging for #{app.guid} complete"
       end
 
+      def stage_app_async(app)
+        responses = message_bus.request(
+          "staging.async",
+          json_staging_request(app),
+          :expected => 1
+        )
+
+        AsyncResponse.from_json(responses.first).tap do |r|
+          raise AsyncError if r.error?
+        end
+      end
+
       def delete_droplet(app)
         LegacyStaging.delete_droplet(app.guid)
       end
 
       private
+
+      def json_staging_request(app)
+        Yajl::Encoder.encode(staging_request(app))
+      end
 
       def staging_request(app)
         {

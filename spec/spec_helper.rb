@@ -168,7 +168,7 @@ module VCAP::CloudController::SpecHelper
     VCAP::CloudController::ResourcePool.instance =
       VCAP::CloudController::ResourcePool.new(config)
     VCAP::CloudController::AppPackage.configure(config)
-    VCAP::CloudController::AppStager.configure(config)
+    VCAP::CloudController::AppStager.configure(config, mbus)
     VCAP::CloudController::LegacyStaging.configure(config)
 
     VCAP::CloudController::DeaPool.configure(config, mbus)
