@@ -10,6 +10,7 @@ require "eventmachine/schedule_sync"
 
 require "vcap/common"
 require "uaa/token_coder"
+require "vcap/uaa_util"
 
 require "sinatra/vcap"
 require "cloud_controller/security_context"
@@ -20,72 +21,36 @@ module VCAP::CloudController
 
   class Controller < Sinatra::Base
     register Sinatra::VCAP
+    include VCAP::UaaUtil
+
+    attr_reader :config
 
     vcap_configure(:logger_name => "cc.api",
                    :reload_path => File.dirname(__FILE__))
 
     def initialize(config)
       @config = config
-      @verification_key = @config[:uaa][:verification_key]
       super()
     end
 
     before do
       VCAP::CloudController::SecurityContext.clear
-      user = nil
       auth_token = env["HTTP_AUTHORIZATION"]
 
-      if auth_token && auth_token.upcase.start_with?("BEARER")
-        token_coder = CF::UAA::TokenCoder.new(:audience_ids => @config[:uaa][:resource_id],
-                                              :skey => @config[:uaa][:symmetric_secret],
-                                              :pkey => @verification_key)
-        begin
-          token_information = token_coder.decode(auth_token)
-          logger.info("Token received from the UAA #{token_information.inspect}")
-          uaa_id = token_information['user_id'] if token_information
-          user = Models::User.find(:guid => uaa_id) if uaa_id
+      begin
+        token_information = decode_token(auth_token)
+        logger.info("Token received from the UAA #{token_information.inspect}")
+        uaa_id = token_information['user_id'] if token_information
+        user = Models::User.find(:guid => uaa_id) if uaa_id
+        user ||= create_admin_if_in_config(token_information)
+        user ||= create_admin_if_in_token(token_information)
 
-          # Bootstraping mechanism..
-          #
-          # TODO: replace this with an exteranl bootstraping mechanism.
-          # I'm not wild about having *any* auto-admin generation code
-          # in the cc.
-          if (user.nil? && Models::User.count == 0 &&
-              @config[:bootstrap_admin_email] && token_information['email'] &&
-              @config[:bootstrap_admin_email] == token_information['email'])
-              user = Models::User.create(:guid => uaa_id,
-                                         :admin => true, :active => true)
-          end
-
-          # TODO remove bootstraps
-          # the bootstrap above can be removed once scoped admin is used
-          # the bootstrap below can be removed once vcap-yeti single-thread test
-          # does not create orgs/spaces on the initial admin
-
-          if (user.nil? && uaa_id && VCAP::CloudController::Roles.new(token_information).admin?)
-            user = Models::User.create(:guid => uaa_id,
-                                       :admin => true, :active => true)
-          end
-
-          VCAP::CloudController::SecurityContext.set(user, token_information)
-        rescue => e
-          logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
-        end
+        VCAP::CloudController::SecurityContext.set(user, token_information)
+      rescue => e
+        logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
       end
 
       validate_scheme(user, VCAP::CloudController::SecurityContext.current_user_is_admin?)
-    end
-
-    def validate_scheme(user, admin)
-      return unless user || admin
-
-      if @config[:https_required]
-        raise Errors::NotAuthorized unless request.scheme == "https"
-      end
-
-      if @config[:https_required_for_admins] && admin
-        raise Errors::NotAuthorized unless request.scheme == "https"
-      end
     end
 
     # All manual routes here will be removed prior to final release.
@@ -109,6 +74,37 @@ module VCAP::CloudController
       EM.schedule_sync do |promise|
         EM::Timer.new(5) { promise.deliver("async return from an EM timer\n") }
       end
+    end
+
+    private
+
+    def validate_scheme(user, admin)
+      return unless user || admin
+
+      if @config[:https_required]
+        raise Errors::NotAuthorized unless request.scheme == "https"
+      end
+
+      if @config[:https_required_for_admins] && admin
+        raise Errors::NotAuthorized unless request.scheme == "https"
+      end
+    end
+
+    def create_admin_if_in_config(token_information)
+      if Models::User.count == 0 && current_user_admin?(token_information)
+        Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
+      end
+    end
+
+    def create_admin_if_in_token(token_information)
+      if VCAP::CloudController::Roles.new(token_information).admin?
+        Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
+      end
+    end
+
+    def current_user_admin?(token_information)
+      admin_email = config[:bootstrap_admin_email]
+      admin_email && (admin_email == token_information['email'])
     end
   end
 end
@@ -135,8 +131,7 @@ require "cloud_controller/legacy_api/legacy_staging"
 require "cloud_controller/legacy_api/legacy_resources"
 require "cloud_controller/legacy_api/legacy_users"
 
-require "cloud_controller/resource_pool/resource_pool"
-require "cloud_controller/resource_pool/filesystem_pool"
+require "cloud_controller/resource_pool"
 
 require "cloud_controller/dea/dea_pool"
 require "cloud_controller/dea/dea_client"

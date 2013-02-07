@@ -105,17 +105,12 @@ module VCAP::CloudController
       let(:developer2) { make_developer_for_space(app_obj_without_pkg.space) }
 
       before do
-        AppPackage.configure(config_override({
-            :directories => { :droplets => tmpdir }
-        }))
-
-        pkg_path = AppPackage.package_path(app_obj.guid)
-        File.open(pkg_path, "w") do |f|
-          f.write("A")
-        end
-      end
-
-      after do
+        config
+        guid = app_obj.guid
+        tmpdir = Dir.mktmpdir
+        zipname = File.join(tmpdir, "test.zip")
+        create_zip(zipname, 10, 1024)
+        AppPackage.to_zip(guid, File.new(zipname), [])
         FileUtils.rm_rf(tmpdir)
       end
 
@@ -124,10 +119,9 @@ module VCAP::CloudController
           get "/v2/apps/#{app_obj_without_pkg.guid}/download", {}, headers_for(developer2)
           last_response.status.should == 404
         end
-        it "should return 200 for valid packages" do
+        it "should return 302 for valid packages" do
           get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
-          puts last_response.body
-          last_response.status.should == 200
+          last_response.status.should == 302
         end
         it "should return 404 for non-existent apps" do
           get "/v2/apps/abcd/download", {}, headers_for(developer)

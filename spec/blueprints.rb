@@ -133,6 +133,7 @@ module VCAP::CloudController::Models
     space_name        { Sham.name }
     app_guid          { Sham.guid }
     app_name          { Sham.name }
+    app_run_id        { Sham.guid }
   end
 
   ServiceCreateEvent.blueprint do
@@ -161,7 +162,6 @@ module VCAP::CloudController::Models
     name { Sham.name }
     non_basic_services_allowed { true }
     total_services { 60 }
-    free_memory_limit { 20480 } # 10 GB
-    paid_memory_limit { 20480 } # 20 GB
+    memory_limit { 20480 } # 20 GB
   end
 end

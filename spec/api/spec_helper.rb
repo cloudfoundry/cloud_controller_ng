@@ -41,22 +41,20 @@ module VCAP::CloudController::ApiSpecHelper
     opts = { :email => Sham.email,
              :https => false}.merge(opts)
 
-    user_token = nil
     headers = {}
-    pkey = opts[:signing_key] || config[:uaa][:signing_key]
     token_coder = CF::UAA::TokenCoder.new(:audience_ids => config[:uaa][:resource_id],
                                           :skey => config[:uaa][:symmetric_secret],
                                           :pkey => nil)
-    if user.nil?
-      scope = []
-      scope << 'cloud_controller.admin' if opts[:admin_scope]
-      user_token = token_coder.encode('scope' => scope)
-    else
-      user_token = token_coder.encode(:user_id => user.guid,
-                                      :email => opts[:email])
-    end
 
-    headers["HTTP_AUTHORIZATION"] = "bearer #{user_token}" if user_token
+    if user || opts[:admin_scope]
+      user_token = token_coder.encode(
+        :user_id => user ? user.guid : 123,
+        :email => opts[:email],
+        :scope => opts[:admin_scope] ? %w[cloud_controller.admin] : []
+      )
+
+      headers["HTTP_AUTHORIZATION"] = "bearer #{user_token}"
+    end
 
     # FIXME: what is the story here?
     # headers["HTTP_PROXY_USER"]    = proxy_user.id if proxy_user

@@ -23,7 +23,11 @@ module VCAP::CloudController
         :organization_guid,
         :organization_name,
       ],
-      :disable_examples => :deserialization
+      :unique_attributes => [
+        :app_run_id
+      ],
+      :disable_examples => :deserialization,
+      :skip_database_constraints => true
     }
 
     describe "create_from_app" do

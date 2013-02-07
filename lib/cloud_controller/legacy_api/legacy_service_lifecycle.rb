@@ -38,6 +38,11 @@ module VCAP::CloudController
       service_instance.serialized_url(snapshot_id)
     end
 
+    def get_upload_url(gateway_name)
+      #TODO: switch upload url returns to point to sds
+      "#{@config[:external_domain]}/services/v1/configurations/#{gateway_name}/serialized/data"
+    end
+
     def import_from_url(gateway_name)
       service_instance.import_from_url(VCAP::Services::Api::SerializedURL.decode(body))
     end
@@ -135,5 +140,7 @@ module VCAP::CloudController
 
     put    "/services/v1/configurations/:gateway_name/serialized/url",  :import_from_url
     put    "/services/v1/configurations/:gateway_name/serialized/data", :import_from_data
+
+    post   "/services/v1/configurations/:gateway_name/serialized/uploads", :get_upload_url
   end
 end

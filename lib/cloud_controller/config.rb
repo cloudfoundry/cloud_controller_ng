@@ -40,7 +40,6 @@ class VCAP::CloudController::Config < VCAP::Config
       optional(:directories) => {
         optional(:tmpdir)    => String,
         optional(:droplets)  => String,
-        optional(:resources) => String,
         optional(:staging_manifests) => String,
       },
 
@@ -93,6 +92,40 @@ class VCAP::CloudController::Config < VCAP::Config
 
       :quota_definitions => Hash,
       :default_quota_definition => String,
+
+      :resource_pool => {
+        optional(:maximum_size) => Integer,
+        optional(:minimum_size) => Integer,
+        optional(:resource_directory_key) => String,
+        :fog_connection => {
+          :provider => String,
+          optional(:aws_access_key_id) => String,
+          optional(:aws_secret_access_key) => String,
+          optional(:local_root) => String
+        }
+      },
+
+      :packages => {
+        optional(:max_droplet_size) => Integer,
+        optional(:app_package_directory_key) => String,
+        :fog_connection => {
+          :provider => String,
+          optional(:aws_access_key_id) => String,
+          optional(:aws_secret_access_key) => String,
+          optional(:local_root) => String
+        }
+      },
+
+      :droplets => {
+        optional(:max_droplet_size) => Integer,
+        optional(:droplet_directory_key) => String,
+        :fog_connection => {
+          :provider => String,
+          optional(:aws_access_key_id) => String,
+          optional(:aws_secret_access_key) => String,
+          optional(:local_root) => String
+        }
+      }
     }
   end
 
@@ -116,7 +149,6 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::MessageBus.configure(config)
     VCAP::CloudController::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.configure(config)
-    VCAP::CloudController::FilesystemPool.configure(config)
     VCAP::CloudController::AppPackage.configure(config)
     VCAP::CloudController::AppStager.configure(config)
     VCAP::CloudController::LegacyStaging.configure(config)

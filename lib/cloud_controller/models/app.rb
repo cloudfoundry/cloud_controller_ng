@@ -23,13 +23,13 @@ module VCAP::CloudController::Models
 
     export_attributes :name, :production,
                       :space_guid, :framework_guid, :runtime_guid, :buildpack,
-                      :environment_json, :memory, :instances, :file_descriptors,
+                      :environment_json, :memory, :instances,
                       :disk_quota, :state, :version, :command, :console
 
     import_attributes :name, :production,
                       :space_guid, :framework_guid, :runtime_guid, :buildpack,
                       :environment_json, :memory, :instances,
-                      :file_descriptors, :disk_quota, :state,
+                      :disk_quota, :state,
                       :command, :console,
                       :service_binding_guids, :route_guids
 
@@ -92,7 +92,7 @@ module VCAP::CloudController::Models
       # We might start populating this with the vcap request guid of an api
       # request.
 
-      if column_changed?(:state) && started?
+      if (column_changed?(:state) || column_changed?(:memory)) && started?
         self.version = SecureRandom.uuid if !column_changed?(:version)
       end
 
@@ -210,15 +210,8 @@ module VCAP::CloudController::Models
     end
 
     def check_memory_quota
-      if space
-        org = space.organization
-        if production
-          if org.paid_memory_remaining - additional_memory_requested < 0
-            errors.add(:memory, :paid_quota_exceeded)
-          end
-        elsif org.free_memory_remaining - additional_memory_requested < 0
-          errors.add(:memory, :free_quota_exceeded)
-        end
+      if space && (space.organization.memory_remaining < additional_memory_requested)
+        errors.add(:memory, :quota_exceeded)
       end
     end
 

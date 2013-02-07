@@ -7,10 +7,12 @@ require "bundler/setup"
 
 require "machinist/sequel"
 require "rack/test"
+require "timecop"
 
 require "steno"
 require "cloud_controller"
 require "rspec_let_monkey_patch"
+require "mock_redis"
 
 module VCAP::CloudController
   class SpecEnvironment
@@ -83,8 +85,41 @@ module VCAP::CloudController::SpecHelper
   def config
     config_file = File.expand_path("../../config/cloud_controller.yml", __FILE__)
     c = VCAP::CloudController::Config.from_file(config_file)
-    c[:nginx][:use_nginx] = true
+    c = c.merge(
+      :nginx => { :use_nginx => true },
+      :resource_pool => {
+        :resource_directory_key => "spec-cc-resources",
+        :fog_connection =>  {
+          :provider => "AWS",
+          :aws_access_key_id => "fake_aws_key_id",
+          :aws_secret_access_key => "fake_secret_access_key",
+        }
+      },
+      :packages => {
+        :app_package_directory_key => "cc-packages",
+        :fog_connection => {
+          :provider => "AWS",
+          :aws_access_key_id => "fake_aws_key_id",
+          :aws_secret_access_key => "fake_secret_access_key",
+        }
+      },
+      :droplets => {
+        :droplet_directory_key => "cc-droplets",
+        :fog_connection => {
+          :provider => "AWS",
+          :aws_access_key_id => "fake_aws_key_id",
+          :aws_secret_access_key => "fake_secret_access_key",
+        }
+      }
+    )
+
     c = c.merge(@config_override || {})
+
+    unless (c[:resource_pool][:fog_connection][:provider].downcase == "local" ||
+            c[:packages][:fog_connection][:provider].downcase == "local")
+      Fog.mock!
+    end
+
     VCAP::CloudController::Config.configure(c)
     c
   end
@@ -178,6 +213,78 @@ module VCAP::CloudController::SpecHelper
         decoded_response["description"].should match /#{description_match}/
       end
     end
+  end
+
+  shared_context "resource pool" do
+    before(:all) do
+      num_dirs = 3
+      num_unique_allowed_files_per_dir = 7
+      file_duplication_factor = 2
+      max_file_size = 1098 # this is arbitrary
+
+      @total_allowed_files =
+        num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
+
+      @dummy_descriptor = { "sha1" => Digest::SHA1.hexdigest("abc"), "size" => 1}
+      @tmpdir = Dir.mktmpdir
+
+      cfg = {
+        :resource_pool => {
+          :maximum_size => max_file_size,
+          :resource_directory_key => "spec-cc-resources",
+          :fog_connection =>  {
+            :provider => "AWS",
+            :aws_access_key_id => "fake_aws_key_id",
+            :aws_secret_access_key => "fake_secret_access_key",
+          }
+        }
+      }
+      VCAP::CloudController::ResourcePool.configure(cfg)
+      Fog.mock!
+
+      @descriptors = []
+      num_dirs.times do
+        dirname = SecureRandom.uuid
+        Dir.mkdir("#{@tmpdir}/#{dirname}")
+        num_unique_allowed_files_per_dir.times do
+          basename = SecureRandom.uuid
+          path = "#{@tmpdir}/#{dirname}/#{basename}"
+          contents = SecureRandom.uuid
+
+          descriptor = {
+            "sha1" => Digest::SHA1.hexdigest(contents),
+            "size" => contents.length
+          }
+          @descriptors << descriptor
+
+          file_duplication_factor.times do |i|
+            File.open("#{path}-#{i}", "w") do |f|
+              f.write contents
+            end
+          end
+
+          File.open("#{path}-not-allowed", "w") do |f|
+            f.write "A" * max_file_size
+          end
+        end
+      end
+    end
+
+    after(:all) do
+      FileUtils.rm_rf(@tmpdir)
+    end
+  end
+end
+
+class CF::UAA::Misc
+  def self.validation_key(*args)
+    raise CF::UAA::TargetError.new('error' => 'unauthorized')
+  end
+end
+
+class Redis
+  def self.new(*args)
+    MockRedis.new
   end
 end
 

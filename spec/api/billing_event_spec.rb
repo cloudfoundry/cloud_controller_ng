@@ -82,8 +82,8 @@ module VCAP::CloudController
         describe 'GET /v2/billing_events?start_date=#{start_date}&end_date=#{end_date}' do
           let(:path) do
             "/v2/billing_events?" +
-            "start_date=#{@start_time.iso8601}" +
-            "&end_date=#{@end_time.iso8601}"
+            "start_date=#{@start_time.utc.iso8601}" +
+            "&end_date=#{@end_time.utc.iso8601}"
           end
 
           context "as a cf admin" do

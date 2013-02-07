@@ -175,6 +175,7 @@ module VCAP::CloudController::Models
         :plan  => service_plan.name,
         :plan_option => {}, # TODO: remove this
         :version => service_plan.service.version,
+        :provider => service_plan.service.provider,
         :user_guid => VCAP::CloudController::SecurityContext.current_user_guid
       )
 

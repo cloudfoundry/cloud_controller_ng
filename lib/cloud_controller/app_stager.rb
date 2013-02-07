@@ -23,10 +23,12 @@ module VCAP::CloudController
           client_error = nil
           results = EM.schedule_sync do |promise|
             client = VCAP::Stager::Client::EmAware.new(MessageBus.nats.client, queue)
-            deferrable = client.stage(staging_request(app), staging_timeout)
+            request = staging_request(app)
+            logger.debug "staging #{app.guid} request: #{request}"
+            deferrable = client.stage(request, staging_timeout)
 
             deferrable.errback do |e|
-              logger.error "staging #{app.guid} error #{e}"
+              logger.error "staging #{app.guid} request: #{request} error #{e}"
               client_error = e
               promise.deliver(e)
             end
@@ -49,7 +51,7 @@ module VCAP::CloudController
           end
 
           droplet_hash = Digest::SHA1.file(upload_path).hexdigest
-          FileUtils.mv(upload_path, droplet_path(app))
+          LegacyStaging.store_droplet(app.guid, upload_path)
           app.droplet_hash = droplet_hash
           app.save
         end
@@ -57,13 +59,8 @@ module VCAP::CloudController
         logger.info "staging for #{app.guid} complete"
       end
 
-      def droplet_path(app)
-        File.join(droplets_path, "droplet_#{app.guid}")
-      end
-
       def delete_droplet(app)
-        path = droplet_path(app)
-        File.delete(path) if File.exists? path
+        LegacyStaging.delete_droplet(app.guid)
       end
 
       private

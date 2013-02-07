@@ -27,6 +27,7 @@ module VCAP::CloudController::Models
       validates_presence :app_plan_name
       validates_presence :app_memory
       validates_presence :app_instance_count
+      validates_unique   :app_run_id
     end
 
     def event_type
@@ -43,7 +44,7 @@ module VCAP::CloudController::Models
         :space_name => app.space.name,
         :app_guid => app.guid,
         :app_name => app.name,
-        :app_run_id => app.version,
+        :app_run_id => SecureRandom.uuid,
         :app_plan_name => app.production ? "paid" : "free",
         :app_memory => app.memory,
         :app_instance_count => app.instances,

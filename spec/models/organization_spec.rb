@@ -60,7 +60,7 @@ module VCAP::CloudController
         Models::Organization.make.billing_enabled.should == false
       end
 
-      context "emabling billing" do
+      context "enabling billing" do
         let (:org) do
           o = Models::Organization.make
           2.times do
@@ -157,31 +157,26 @@ module VCAP::CloudController
 
     context "memory quota" do
       let(:quota) do
-        Models::QuotaDefinition.make(:free_memory_limit => 500,
-                                     :paid_memory_limit => 500)
+        Models::QuotaDefinition.make(:memory_limit => 500)
       end
 
       it "should return the memory available when no apps are running" do
         org = Models::Organization.make(:quota_definition => quota)
 
-        org.free_memory_remaining.should == 500
-        org.paid_memory_remaining.should == 500
+        org.memory_remaining.should == 500
       end
 
       it "should return the memory remaining when apps are consuming memory" do
         org = Models::Organization.make(:quota_definition => quota)
         space = Models::Space.make(:organization => org)
         Models::App.make(:space => space,
-                         :production => false,
                          :memory => 200,
                          :instances => 2)
         Models::App.make(:space => space,
-                         :production => true,
-                         :memory => 100,
+                         :memory => 50,
                          :instances => 1)
 
-        org.free_memory_remaining.should == 100
-        org.paid_memory_remaining.should == 400
+        org.memory_remaining.should == 50
       end
     end
   end

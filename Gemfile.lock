@@ -1,7 +1,15 @@
 GIT
+  remote: git://github.com/cloudfoundry/cf-uaa-lib.git
+  revision: 8d34eede588c7620eb22031369f9515f602df68b
+  ref: 8d34eede58
+  specs:
+    cf-uaa-lib (1.3.7)
+      multi_json
+
+GIT
   remote: git://github.com/cloudfoundry/vcap-common.git
-  revision: 055964f62282c94ebe7c3ce6f4df9fb093a17714
-  ref: 055964f622
+  revision: 9267b079b1179360dc0356c5dbd0ff9b772f663d
+  ref: 9267b079b1
   specs:
     vcap_common (2.0.10)
       em-http-request (~> 1.0.0.beta3, < 1.0.0.beta4)
@@ -41,8 +49,6 @@ GEM
     backports (2.6.1)
     bcrypt-ruby (3.0.1)
     builder (3.0.0)
-    cf-uaa-lib (1.3.4)
-      multi_json
     ci_reporter (1.7.0)
       builder (>= 2.1.2)
     crack (0.3.1)
@@ -56,6 +62,18 @@ GEM
     em-socksify (0.2.1)
       eventmachine (>= 1.0.0.beta.4)
     eventmachine (1.0.0)
+    excon (0.16.10)
+    fog (1.9.0)
+      builder
+      excon (~> 0.14)
+      formatador (~> 0.2.0)
+      mime-types
+      multi_json (~> 1.0)
+      net-scp (~> 1.0.4)
+      net-ssh (>= 2.1.3)
+      nokogiri (~> 1.5.0)
+      ruby-hmac
+    formatador (0.2.4)
     grape (0.2.2)
       activesupport
       hashie (~> 1.2)
@@ -79,6 +97,7 @@ GEM
     machinist (1.0.6)
     membrane (0.0.2)
     mime-types (1.19)
+    mock_redis (0.4.1)
     multi_json (1.3.6)
     multi_xml (0.5.1)
     multipart-post (1.1.5)
@@ -87,6 +106,10 @@ GEM
       eventmachine (>= 0.12.10)
       json_pure (>= 1.7.3)
       thin (>= 1.3.1)
+    net-scp (1.0.4)
+      net-ssh (>= 1.99.1)
+    net-ssh (2.6.3)
+    nokogiri (1.5.6)
     pg (0.13.2)
     posix-spawn (0.3.6)
     rack (1.4.1)
@@ -101,15 +124,16 @@ GEM
     rake (0.9.2.2)
     redis (3.0.1)
     rfc822 (0.1.1)
-    rspec (2.10.0)
-      rspec-core (~> 2.10.0)
-      rspec-expectations (~> 2.10.0)
-      rspec-mocks (~> 2.10.0)
-    rspec-core (2.10.1)
-    rspec-expectations (2.10.0)
+    rspec (2.12.0)
+      rspec-core (~> 2.12.0)
+      rspec-expectations (~> 2.12.0)
+      rspec-mocks (~> 2.12.0)
+    rspec-core (2.12.2)
+    rspec-expectations (2.12.1)
       diff-lcs (~> 1.1.3)
-    rspec-mocks (2.10.1)
+    rspec-mocks (2.12.2)
     ruby-graphviz (1.0.5)
+    ruby-hmac (0.4.0)
     sequel (3.40.0)
     simplecov (0.6.4)
       multi_json (~> 1.0)
@@ -138,6 +162,7 @@ GEM
       rack (>= 1.0.0)
     thor (0.15.4)
     tilt (1.3.3)
+    timecop (0.5.9.1)
     virtus (0.5.2)
       backports (~> 2.6.1)
     webmock (1.8.11)
@@ -150,13 +175,15 @@ PLATFORMS
 
 DEPENDENCIES
   bcrypt-ruby
-  cf-uaa-lib (~> 1.3.4)
+  cf-uaa-lib (~> 1.3.7)!
   ci_reporter
   eventmachine (~> 1.0.0)
+  fog
   guard-rspec
   httpclient
   machinist (~> 1.0.6)
   membrane (~> 0.0.2)
+  mock_redis
   pg
   rake
   redis
@@ -171,6 +198,7 @@ DEPENDENCIES
   sqlite3
   stager-client (~> 0.0.02)!
   steno (~> 1.0.0)
+  timecop
   vcap-concurrency!
   vcap_common (~> 2.0.8)!
   webmock

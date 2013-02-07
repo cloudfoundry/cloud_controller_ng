@@ -17,7 +17,12 @@ module VCAP::CloudController
       req = VCAP::Services::Api::ServiceOfferingRequest.decode(body)
       logger.debug("Update or create legacy service request: #{req.extract.inspect}")
 
-      (label, version_from_label) = req.label.split("-")
+      (label, version_from_label, label_dash_check) = req.label.split("-")
+      if label_dash_check
+        logger.warn("Unexpected dash in label: #{req.label} ")
+        raise Errors::InvalidRequest.new
+      end
+
       version = req.version_aliases["current"] || version_from_label
 
       provider = DEFAULT_PROVIDER
@@ -109,7 +114,9 @@ module VCAP::CloudController
       Yajl::Encoder.encode({:handles => handles})
     end
 
-    def delete(label, provider = DEFAULT_PROVIDER)
+    def delete(label_and_version, provider = DEFAULT_PROVIDER)
+      (label, version) = label_and_version.split("-")
+
       validate_access(label, provider)
 
       VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
@@ -133,7 +140,9 @@ module VCAP::CloudController
       end
     end
 
-    def get(label, provider = DEFAULT_PROVIDER)
+    def get(label_and_version, provider = DEFAULT_PROVIDER)
+      (label, version) = label_and_version.split("-")
+
       validate_access(label, provider)
 
       service = Models::Service[:label => label, :provider => provider]
@@ -171,7 +180,9 @@ module VCAP::CloudController
     #
     # P.S. While I applaud Ruby for allowing this default parameter in the
     # middle, I'm really not wild for _any_ function overloading in Ruby
-    def update_handle(label, provider=DEFAULT_PROVIDER, id)
+    def update_handle(label_and_version, provider=DEFAULT_PROVIDER, id)
+      (label, version) = label_and_version.split("-")
+
       validate_access(label, provider)
       VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
 
@@ -222,15 +233,15 @@ module VCAP::CloudController
     end
 
     def self.setup_routes
-      get    "/services/v1/offerings/:label_and_version/handles",           :list_handles
-      get    "/services/v1/offerings/:label_and_version/:provider/handles", :list_handles
-      get    "/services/v1/offerings/:label/:provider",         :get
-      get    "/services/v1/offerings/:label",                   :get
-      delete "/services/v1/offerings/:label",                   :delete
-      delete "/services/v1/offerings/:label/:provider",         :delete
-      post   "/services/v1/offerings",                          :create_offering
-      post   "/services/v1/offerings/:label/handles/:id",       :update_handle
-      post   "/services/v1/offerings/:label/:provider/handles/:id", :update_handle
+      get    "/services/v1/offerings/:label_and_version/handles",               :list_handles
+      get    "/services/v1/offerings/:label_and_version/:provider/handles",     :list_handles
+      get    "/services/v1/offerings/:label_and_version/:provider",             :get
+      get    "/services/v1/offerings/:label_and_version",                       :get
+      delete "/services/v1/offerings/:label_and_version",                       :delete
+      delete "/services/v1/offerings/:label_and_version/:provider",             :delete
+      post   "/services/v1/offerings",                                          :create_offering
+      post   "/services/v1/offerings/:label_and_version/handles/:id",           :update_handle
+      post   "/services/v1/offerings/:label_and_version/:provider/handles/:id", :update_handle
     end
 
     def self.translate_validation_exception(e, attributes)

@@ -1,6 +1,6 @@
 require "rspec/version"
 
-unless RSpec::Version::STRING == "2.10.0"
+unless RSpec::Version::STRING == "2.12.0"
   throw "Make sure monkey patches below are still needed"
 end
 

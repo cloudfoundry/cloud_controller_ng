@@ -10,9 +10,11 @@ module VCAP::CloudController
     class << self
       # Configure the AppPackage
       def configure(config = {})
-        @config = config.dup
-        @max_droplet_size = @config[:max_droplet_size] || 512 * 1024 * 1024
-        @resource_pool = FilesystemPool
+        opts = config[:packages]
+        @app_package_directory_key = opts[:app_package_directory_key] || "cc-app-packages"
+        @connection_config = opts[:fog_connection]
+        @max_droplet_size = opts[:max_droplet_size] || 512 * 1024 * 1024
+        @directory = nil
       end
 
       # Collects the necessary files and returns the sha1 of the resulting
@@ -28,7 +30,15 @@ module VCAP::CloudController
 
         # Do the sha1 before the mv, because the mv might be to a slower store
         sha1 = Digest::SHA1.file(repacked_path).hexdigest
-        FileUtils.mv(repacked_path, package_path(guid))
+
+        File.open(repacked_path) do |file|
+          package_dir.files.create(
+            :key => key_from_guid(guid),
+            :body => file,
+            :public => local?
+          )
+        end
+
         sha1
       ensure
         FileUtils.rm_rf(tmpdir) if tmpdir
@@ -37,28 +47,42 @@ module VCAP::CloudController
       end
 
       def delete_package(guid)
-        path = package_path(guid)
-        File.delete(path) if File.exists? path
+        key = key_from_guid(guid)
+        package_dir.files.destroy(key)
       end
 
-      # Return the package directory.
+      def package_exists?(guid)
+        key = key_from_guid(guid)
+        !package_dir.files.head(key).nil?
+      end
+
+      # Return app uri for path for a given app's guid.
       #
-      # Makes the directory on first use.
-      def package_dir
-        if @config[:directories] && @config[:directories][:droplets]
-           FileUtils.mkdir_p(@config[:directories][:droplets])
+      # The url is valid for 1 hour when using aws.
+      # TODO: The expiration should be configurable.
+      def package_uri(guid)
+        key = key_from_guid(guid)
+        f = package_dir.files.head(key)
+        return nil unless f
+
+        # unfortunately fog doesn't have a unified interface for non-public
+        # urls
+        if local?
+          f.public_url
         else
-          # TODO: remove this tmpdir.  It is for use when running under vcap
-          # for development
-          @config[:directories] ||= {}
-          @config[:directories][:droplets] = Dir.mktmpdir
+          f.url(Time.now + 3600)
         end
-        @config[:directories][:droplets]
       end
 
-      # Return app package path for a given app's guid.
-      def package_path(guid)
-        File.join(package_dir, "app_#{guid}")
+      def package_local_path(guid)
+        raise ArgumentError unless local?
+        key = key_from_guid(guid)
+        f = package_dir.files.head(key)
+        return nil unless f
+        # Yes, this is bad.  But, we really need a handle to the actual path in
+        # order to serve the file using send_file since send_file only takes a
+        # path as an argument
+        f.send(:path)
       end
 
       # Unzip the uploaded file
@@ -90,7 +114,7 @@ module VCAP::CloudController
 
         # Ugh, this stat's all the files that would need to be copied
         # from the resource pool. Consider caching sizes in resource pool?
-        sizes = resource_pool.resource_sizes(resources)
+        sizes = ResourcePool.resource_sizes(resources)
         total_size += sizes.reduce(0) {|accum, cur| accum + cur["size"] }
         validate_size(total_size)
       end
@@ -152,15 +176,15 @@ module VCAP::CloudController
 
       # Do resource pool synch
       def synchronize_pool_with(working_dir, resource_descriptors)
-        resource_pool.add_directory(working_dir)
+        ResourcePool.add_directory(working_dir)
         resource_descriptors.each do |descriptor|
           create_dir_skeleton(working_dir, descriptor["fn"])
           path = resolve_path(working_dir, descriptor["fn"])
-          resource_pool.copy(descriptor, path)
+          ResourcePool.copy(descriptor, path)
         end
       rescue => e
         logger.error "failed synchronizing resource pool with '#{working_dir}' #{e}"
-        raise Errors::AppPackageInvalid.new("failed synchronizing resource pool")
+        raise Errors::AppPackageInvalid.new("failed synchronizing resource pool #{e}")
       end
 
       # Repacks a directory into a compressed file.
@@ -186,7 +210,29 @@ module VCAP::CloudController
         @logger ||= Steno.logger("cc.ap")
       end
 
-      attr_accessor :max_droplet_size, :resource_pool, :droplets_dir
+      def connection
+        opts = @connection_config
+        opts = opts.merge(:endpoint => "") if local?
+        Fog::Storage.new(opts)
+      end
+
+      def package_dir
+        @directory ||= connection.directories.create(
+          :key    => @app_package_directory_key,
+          :public => false,
+        )
+      end
+
+      def key_from_guid(guid)
+        guid = guid.to_s.downcase
+        File.join(guid[0..1], guid[2..3], guid)
+      end
+
+      def local?
+        @connection_config[:provider].downcase == "local"
+      end
+
+      attr_accessor :max_droplet_size
     end
   end
 end

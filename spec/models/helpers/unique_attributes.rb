@@ -94,10 +94,12 @@ module VCAP::CloudController::ModelSpecHelper
             }.should raise_error Sequel::ValidationFailed, /#{sequel_exception_match}/
           end
 
-          it "should fail due to database integrity checks" do
-            lambda {
-              described_class.new(dup_opts).save(:validate => false)
-            }.should raise_error Sequel::DatabaseError, /#{db_exception_match}/
+          unless opts[:skip_database_constraints]
+            it "should fail due to database integrity checks" do
+              lambda {
+                described_class.new(dup_opts).save(:validate => false)
+              }.should raise_error Sequel::DatabaseError, /#{db_exception_match}/
+            end
           end
         end
       end

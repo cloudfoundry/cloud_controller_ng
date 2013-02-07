@@ -36,9 +36,9 @@ module VCAP::CloudController::ApiSpecHelper
       end
 
       context "for a non-admin client" do
-        it "should return 403" do
+        it "should return 401" do
           get opts[:path], {}, headers_for(nil)
-          last_response.status.should == 403
+          last_response.status.should == 401
         end
       end
 
