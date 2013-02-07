@@ -283,7 +283,7 @@ describe VCAP::CloudController::Controller do
 
         context "when the users table is empty" do
           before do
-            VCAP::CloudController::Models::User.dataset.delete
+            reset_database
             CF::UAA::TokenCoder.should_receive(:new).with(
               :audience_ids => "cloud_controller",
               :pkey => config_key
