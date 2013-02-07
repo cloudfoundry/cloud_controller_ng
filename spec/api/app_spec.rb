@@ -95,11 +95,10 @@ module VCAP::CloudController
         decoded_response["entity"]["command"].should == "foobar"
         decoded_response["entity"]["metadata"].should be_nil
       end
-
     end
 
     describe "staging" do
-      let(:app_obj)   { Models::App.make }
+      let(:app_obj) { Models::App.make }
 
       it "should not restage on update if staging is not needed" do
         app_obj.package_hash = "abc"
@@ -304,16 +303,16 @@ module VCAP::CloudController
 
         MessageBus.instance.should_receive(:publish).with(
           "dea.update",
-          json_match(
-            hash_including("uris" => ["app.jesse.cloud"]),
-          ),
+          json_match(hash_including(
+            "uris" => ["app.jesse.cloud"]
+          )),
         )
 
         put(
           @app_url,
           App::UpdateMessage.new(
             :route_guids => [route.guid],
-          ).encode(),
+          ).encode,
           @headers_for_user,
         )
         last_response.status.should == 201

@@ -675,8 +675,6 @@ module VCAP::CloudController
           )
 
           app.update(
-            # I hate that implicit save on package_hash=,
-            # but I'll bare with it while nothing breaks...
             :package_hash   => "abc",
             :droplet_hash   => "def",
             :package_state  => "STAGED",
@@ -707,8 +705,6 @@ module VCAP::CloudController
           )
 
           app.update(
-            # I hate that implicit save on package_hash=,
-            # but I'll bare with it while nothing breaks...
             :package_hash   => "abc",
             :droplet_hash   => "def",
             :package_state  => "STAGED",

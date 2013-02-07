@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2012 VMware, Inr.
+# Copyright (c) 2009-2012 VMware, Inc.
 
 module VCAP::CloudController::RestController
 

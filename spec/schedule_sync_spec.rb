@@ -5,7 +5,6 @@ require "eventmachine"
 require "eventmachine/schedule_sync"
 
 describe "EventMachine#schedule_sync" do
-
   it "should run a block on the reactor thread and return the result" do
     result = nil
     with_em_and_thread do

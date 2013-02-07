@@ -51,10 +51,9 @@ module VCAP::CloudController::ApiSpecHelper
               when :post
                 post opts[:path], json_body, json_headers(admin_headers)
               when :put
-                obj = opts[:model].make creation_opts
+                obj = opts[:model].make(creation_opts)
                 @orig_created_at = obj.created_at
-                put("#{opts[:path]}/#{obj.guid}",
-                    json_body, json_headers(admin_headers))
+                put("#{opts[:path]}/#{obj.guid}", json_body, json_headers(admin_headers))
               end
             end
 
