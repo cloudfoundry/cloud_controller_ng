@@ -341,8 +341,9 @@ module VCAP::CloudController
       def key_changed?(key, old, new)
         if old.nil? || ! old.has_key?(key)
           return new && new.has_key?(key)
+        else
+          new.nil? || ! new.has_key?(key) || old[key] != new[key]
         end
-        return new.nil? || ! new.has_key?(key) || old[key] != new[key]
       end
 
       def mark_routes_changed(_)
