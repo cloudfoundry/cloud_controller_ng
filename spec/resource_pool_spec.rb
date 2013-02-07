@@ -8,21 +8,21 @@ module VCAP::CloudController
 
     describe "#match_resources" do
       before(:all) do
-        ResourcePool.add_directory(@tmpdir)
+        @resource_pool.add_directory(@tmpdir)
       end
 
       it "should return an empty list when no resources match" do
-        res = ResourcePool.match_resources([@dummy_descriptor])
+        res = @resource_pool.match_resources([@dummy_descriptor])
         res.should == []
       end
 
       it "should return a resource that matches" do
-        res = ResourcePool.match_resources([@descriptors.first, @dummy_descriptor])
+        res = @resource_pool.match_resources([@descriptors.first, @dummy_descriptor])
         res.should == [@descriptors.first]
       end
 
       it "should return many resources that match" do
-        res = ResourcePool.match_resources(@descriptors + [@dummy_descriptor])
+        res = @resource_pool.match_resources(@descriptors + [@dummy_descriptor])
         res.should == @descriptors
       end
     end
@@ -33,15 +33,15 @@ module VCAP::CloudController
           { "sha1" => d["sha1"] }
         end
 
-        res = ResourcePool.resource_sizes(without_sizes)
+        res = @resource_pool.resource_sizes(without_sizes)
         res.should == @descriptors
       end
     end
 
     describe "#add_path" do
       it "should walk the fs tree and add only allowable files" do
-        ResourcePool.should_receive(:add_path).exactly(@total_allowed_files).times
-        ResourcePool.add_directory(@tmpdir)
+        @resource_pool.should_receive(:add_path).exactly(@total_allowed_files).times
+        @resource_pool.add_directory(@tmpdir)
       end
     end
 
@@ -49,24 +49,24 @@ module VCAP::CloudController
       before do
         @minimum_size = 5
         @maximum_size = 7
-        ResourcePool.minimum_size = @minimum_size
-        ResourcePool.maximum_size = @maximum_size
+        @resource_pool.minimum_size = @minimum_size
+        @resource_pool.maximum_size = @maximum_size
       end
 
       it "should return true for a size between min and max size" do
-        ResourcePool.send(:size_allowed?, @minimum_size + 1).should be_true
+        @resource_pool.send(:size_allowed?, @minimum_size + 1).should be_true
       end
 
       it "should return false for a size < min size" do
-        ResourcePool.send(:size_allowed?, @minimum_size - 1).should be_false
+        @resource_pool.send(:size_allowed?, @minimum_size - 1).should be_false
       end
 
       it "should return false for a size > max size" do
-        ResourcePool.send(:size_allowed?, @maximum_size + 1).should be_false
+        @resource_pool.send(:size_allowed?, @maximum_size + 1).should be_false
       end
 
       it "should return false for a nil size" do
-        ResourcePool.send(:size_allowed?, nil).should be_false
+        @resource_pool.send(:size_allowed?, nil).should be_false
       end
     end
   end

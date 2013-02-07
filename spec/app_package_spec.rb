@@ -67,7 +67,7 @@ module VCAP::CloudController
         tf.write("A" * 1024)
         tf.close
 
-        ResourcePool.add_path(tf.path)
+        ResourcePool.instance.add_path(tf.path)
         sha1 = Digest::SHA1.file(tf.path).hexdigest
         zipname = File.join(tmpdir, "test.zip")
         unzipped_size = create_zip(zipname, 1, 1024)

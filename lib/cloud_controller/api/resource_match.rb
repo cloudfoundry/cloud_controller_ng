@@ -2,12 +2,11 @@
 
 module VCAP::CloudController
   class ResourceMatch < RestController::Base
-
     def match
       return NotAuthorized unless user
       # TODO: replace with json_message
       descriptors = Yajl::Parser.parse(body)
-      matched = ResourcePool.match_resources(descriptors)
+      matched = ResourcePool.instance.match_resources(descriptors)
       Yajl::Encoder.encode(matched)
     end
 

@@ -7,7 +7,7 @@ module VCAP::CloudController
     include_context "resource pool"
 
     before(:all) do
-      ResourcePool.add_directory(@tmpdir)
+      @resource_pool.add_directory(@tmpdir)
     end
 
     describe "PUT /v2/resource_match" do

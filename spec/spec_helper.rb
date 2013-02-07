@@ -136,7 +136,8 @@ module VCAP::CloudController::SpecHelper
     VCAP::CloudController::MessageBus.instance = mbus
 
     VCAP::CloudController::AccountCapacity.configure(config)
-    VCAP::CloudController::ResourcePool.configure(config)
+    VCAP::CloudController::ResourcePool.instance =
+      VCAP::CloudController::ResourcePool.new(config)
     VCAP::CloudController::AppPackage.configure(config)
     VCAP::CloudController::AppStager.configure(config)
     VCAP::CloudController::LegacyStaging.configure(config)
@@ -281,8 +282,10 @@ module VCAP::CloudController::SpecHelper
       end
     end
 
-    before do
-      VCAP::CloudController::ResourcePool.configure(
+    before(:all) do
+      Fog.mock!
+
+      @resource_pool = VCAP::CloudController::ResourcePool.new(
         :resource_pool => {
           :maximum_size => @max_file_size,
           :resource_directory_key => "spec-cc-resources",
@@ -293,7 +296,6 @@ module VCAP::CloudController::SpecHelper
           }
         }
       )
-      Fog.mock!
     end
 
     after(:all) do

@@ -147,7 +147,8 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::MessageBus.instance = mbus
 
     VCAP::CloudController::AccountCapacity.configure(config)
-    VCAP::CloudController::ResourcePool.configure(config)
+    VCAP::CloudController::ResourcePool.instance =
+      VCAP::CloudController::ResourcePool.new(config)
     VCAP::CloudController::AppPackage.configure(config)
     VCAP::CloudController::AppStager.configure(config)
     VCAP::CloudController::LegacyStaging.configure(config)

@@ -4,10 +4,10 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::ResourceMatch do
-    include_context "resource pool", ResourcePool
+    include_context "resource pool"
 
     before(:all) do
-      ResourcePool.add_directory(@tmpdir)
+      @resource_pool.add_directory(@tmpdir)
     end
 
     describe "POST /resources" do
