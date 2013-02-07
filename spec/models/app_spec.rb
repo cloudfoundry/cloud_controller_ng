@@ -639,12 +639,234 @@ module VCAP::CloudController
           expect { app.save }.to_not raise_error
         end
       end
-
     end
 
     describe "file_descriptors" do
       subject { Models::App.make }
       its(:file_descriptors) { should == 16_384 }
+    end
+
+    describe "changes to the app that trigger staging/dea notifications" do
+      # Mark app as staged when AppStager.stage_app is called
+      before { AppStager.stub(:stage_app) { |app| app.droplet_hash = "def" } }
+
+      def self.it_does_not_stage
+        it "does not stage app" do
+          AppStager.should_not_receive(:stage_app)
+          update
+        end
+      end
+
+      def self.it_stages
+        it "stages" do
+          AppStager.should_receive(:stage_app)
+          update
+        end
+      end
+
+      describe "update instance count" do
+        let!(:before_update_instances) { subject.instances }
+        let!(:after_update_instances) { subject.instances+1 }
+
+        def update
+          subject.instances = after_update_instances
+          subject.save
+        end
+
+        def self.it_does_not_notify_dea
+          it "does not notify dea of app update" do
+            DeaClient.should_not_receive(:change_running_instances)
+            MessageBus.instance.should_not_receive(:publish)
+            update
+          end
+        end
+
+        def self.it_notifies_dea
+          it "notifies dea of update" do
+            DeaClient.should_receive(:change_running_instances).with(subject, after_update_instances)
+            MessageBus.instance.should_receive(:publish).with(
+              "droplet.updated",
+              json_match(hash_including(
+                "droplet" => subject.guid,
+              )),
+            )
+            update
+          end
+        end
+
+        context "when app is stopped and already staged" do
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          it_does_not_stage
+          it_does_not_notify_dea
+        end
+
+        context "when app is already started and already staged" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          it_does_not_stage
+          it_notifies_dea
+        end
+
+        context "when app is stopped and not staged" do
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc") }
+          it_does_not_stage
+          it_does_not_notify_dea
+        end
+
+        context "when app is already started and not staged" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
+          it_stages
+          it_notifies_dea
+        end
+      end
+
+      describe "updating state to STOPPED" do
+        def update
+          subject.state = "STOPPED"
+          subject.save
+        end
+
+        def self.it_does_not_notify_dea
+          it "does not notify dea of stop or update" do
+            DeaClient.should_not_receive(:stop)
+            MessageBus.instance.should_not_receive(:publish)
+            update
+          end
+        end
+
+        def self.it_notifies_dea
+          it "notifies dea of stop and update" do
+            DeaClient.should_receive(:stop).with(subject)
+            MessageBus.instance.should_receive(:publish).with(
+              "droplet.updated",
+              json_match(hash_including(
+                "droplet" => subject.guid,
+              )),
+            )
+            update
+          end
+        end
+
+        context "when app is stopped and already staged" do
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          it_does_not_stage
+          it_does_not_notify_dea
+        end
+
+        context "when app is already started and already staged" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          it_does_not_stage
+          it_notifies_dea
+        end
+
+        context "when app is stopped and not staged" do
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc") }
+          it_does_not_stage
+          it_does_not_notify_dea
+        end
+
+        context "when app is already started and not staged" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
+          it_does_not_stage
+          it_notifies_dea
+        end
+      end
+
+      describe "updating state to STARTED" do
+        def update
+          subject.state = "STARTED"
+          subject.save
+        end
+
+        def self.it_does_not_notify_dea
+          it "does not notify dea of app update" do
+            DeaClient.should_not_receive(:start)
+            MessageBus.instance.should_not_receive(:publish)
+            update
+          end
+        end
+
+        def self.it_notifies_dea
+          it "notifies dea of start and update" do
+            DeaClient.should_receive(:start).with(subject)
+            MessageBus.instance.should_receive(:publish).with(
+              "droplet.updated",
+              json_match(hash_including(
+                "droplet" => subject.guid,
+              )),
+            )
+            update
+          end
+        end
+
+        context "when app is stopped and already staged" do
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          it_does_not_stage
+          it_notifies_dea
+        end
+
+        context "when app is already started and already staged" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          it_does_not_stage
+          it_does_not_notify_dea
+        end
+
+        context "when app is stopped and not staged" do
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc") }
+          it_stages
+          it_notifies_dea
+        end
+
+        # Original change to app that moved state into STARTED staged the app and notified dea
+        context "when app is already started and not staged" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
+          it_does_not_stage
+          it_does_not_notify_dea
+        end
+      end
+
+      describe "app deletion" do
+        def update
+          subject.destroy
+        end
+
+        def self.it_does_not_notify_dea
+          it "does not notify dea of app update" do
+            DeaClient.should_not_receive(:stop)
+            update
+          end
+        end
+
+        def self.it_notifies_dea
+          it "notifies dea to stop" do
+            DeaClient.should_receive(:stop).with(subject)
+            update
+          end
+        end
+
+        context "when app is stopped and already staged" do
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          it_does_not_stage
+          it_does_not_notify_dea
+        end
+
+        context "when app is already started and already staged" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          it_does_not_stage
+          it_notifies_dea
+        end
+
+        context "when app is stopped and not staged" do
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc") }
+          it_does_not_stage
+          it_does_not_notify_dea
+        end
+
+        context "when app is already started and not staged" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
+          it_does_not_stage
+          it_notifies_dea
+        end
+      end
     end
   end
 end

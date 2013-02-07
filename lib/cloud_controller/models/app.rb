@@ -289,32 +289,44 @@ module VCAP::CloudController
       def dea_update_pending?
         staged? && started? && @routes_changed
       end
-  
+
       def after_commit
         super
-        changes = previous_changes || {}
-
-        if needs_staging? && !stopped?
-          AppStager.stage_app(self)
-        end
-
-        if changes.has_key?(:state)
-          if started?
-            return unless staged?
-            DeaClient.start(self)
-          elsif stopped?
-            DeaClient.stop(self)
-          end
-          send_droplet_updated_message
-        elsif changes.has_key?(:instances) && started?
-          return unless staged?
-          delta = changes[:instances][1] - changes[:instances][0]
-          DeaClient.change_running_instances(self, delta)
-          send_droplet_updated_message
-        end
+        react_to_saved_changes(previous_changes || {})
       end
 
       private
+
+      def stage_if_needed
+        if needs_staging? && !stopped?
+          AppStager.stage_app(self)
+        end
+      end
+
+      def react_to_saved_changes(changes)
+        if changes.has_key?(:state)
+          react_to_state_change
+        elsif changes.has_key?(:instances) && started?
+          delta = changes[:instances][1] - changes[:instances][0]
+          react_to_instances_change(delta)
+        end
+      end
+
+      def react_to_state_change
+        if started?
+          stage_if_needed
+          DeaClient.start(self)
+        elsif stopped?
+          DeaClient.stop(self)
+        end
+        send_droplet_updated_message
+      end
+
+      def react_to_instances_change(delta)
+        stage_if_needed
+        DeaClient.change_running_instances(self, delta)
+        send_droplet_updated_message
+      end
 
       def send_droplet_updated_message
         MessageBus.instance.publish("droplet.updated", Yajl::Encoder.encode(
