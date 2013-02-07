@@ -89,16 +89,16 @@ module VCAP::CloudController::ModelSpecHelper
           it "should fail due to Sequel validations" do
             # TODO: swap out everything but the unique entries for more
             # accurate testing
-            lambda {
+            expect {
               described_class.create dup_opts
-            }.should raise_error Sequel::ValidationFailed, /#{sequel_exception_match}/
+            }.to raise_error Sequel::ValidationFailed, /#{sequel_exception_match}/
           end
 
           unless opts[:skip_database_constraints]
             it "should fail due to database integrity checks" do
-              lambda {
+              expect {
                 described_class.new(dup_opts).save(:validate => false)
-              }.should raise_error Sequel::DatabaseError, /#{db_exception_match}/
+              }.to raise_error Sequel::DatabaseError, /#{db_exception_match}/
             end
           end
         end

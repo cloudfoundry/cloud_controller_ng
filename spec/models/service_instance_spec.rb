@@ -26,9 +26,9 @@ module VCAP::CloudController
         it "should not bind an app and a service instance from different app spaces" do
           app = Models::App.make(:space => service_instance.space)
           service_binding = Models::ServiceBinding.make
-          lambda {
+          expect {
             service_instance.add_service_binding(service_binding)
-          }.should raise_error Models::ServiceInstance::InvalidServiceBinding
+          }.to raise_error Models::ServiceInstance::InvalidServiceBinding
         end
       end
     end
@@ -74,25 +74,25 @@ module VCAP::CloudController
         end
 
         it "should deprovision a service on rollback after a create" do
-          lambda {
+          expect {
             Models::ServiceInstance.db.transaction do
               gw_client.should_receive(:provision).and_return(provision_resp)
               gw_client.should_receive(:unprovision)
               instance = Models::ServiceInstance.make(:service_plan => service_plan)
               raise "something bad"
             end
-          }.should raise_error
+          }.to raise_error
         end
 
         it "should not deprovision a service on rollback after update" do
           gw_client.should_receive(:provision).and_return(provision_resp)
           instance = Models::ServiceInstance.make(:service_plan => service_plan)
-          lambda {
+          expect {
             Models::ServiceInstance.db.transaction do
               instance.update(:name => "newname")
               raise "something bad"
             end
-          }.should raise_error
+          }.to raise_error
         end
 
         it "ensure gateway provision request contains specific fields" do

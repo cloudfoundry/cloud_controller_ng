@@ -28,9 +28,9 @@ module VCAP::CloudController
           # just raise an error so that we don't have to mock out the response,
           # we only care about the arg checks in the previous should_receive
           gw_client.should_receive(:provision).and_raise("fail")
-          lambda {
+          expect {
             ServiceInstance.make(:service_plan => service_plan)
-          }.should raise_error
+          }.to raise_error
         end
       end
     end

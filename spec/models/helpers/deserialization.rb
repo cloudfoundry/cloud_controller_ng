@@ -60,9 +60,9 @@ module VCAP::CloudController::ModelSpecHelper
           # keep this out of the lambda to make sure we are testing the
           # right exception
           data = json_data
-          lambda {
+          expect {
             obj = described_class.create_from_json(data)
-          }.should raise_error Sequel::ValidationFailed, /#{without_attr}/
+          }.to raise_error Sequel::ValidationFailed, /#{without_attr}/
         end
       end
     end

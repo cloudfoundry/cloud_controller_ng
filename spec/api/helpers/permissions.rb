@@ -72,7 +72,7 @@ module VCAP::CloudController::ApiSpecHelper
         decoded_response["total_results"].should == expected
         guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
         if respond_to?(:enumeration_expectation_b)
-          guids.sort.should == enumeration_expectation_b.map(&:guid).sort
+          expect(guids.sort).to eq enumeration_expectation_b.map(&:guid).sort
         else
           guids.should include(@obj_b.guid) if expected > 0
         end

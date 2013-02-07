@@ -39,19 +39,19 @@ module VCAP::CloudController
       end
 
       it "should not associate an app with a service from a different app space" do
-        lambda {
+        expect {
           service_binding = Models::ServiceBinding.make
           service_binding.app = @app
           service_binding.save
-        }.should raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
+        }.to raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
       end
 
       it "should not associate a service with an app from a different app space" do
-        lambda {
+        expect {
           service_binding = Models::ServiceBinding.make
           service_binding.service_instance = @service_instance
           service_binding.save
-        }.should raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
+        }.to raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
       end
     end
 
@@ -102,26 +102,26 @@ module VCAP::CloudController
         end
 
         it "should unbind a service on rollback after create" do
-          lambda {
+          expect {
             Models::ServiceInstance.db.transaction do
               gw_client.should_receive(:bind).and_return(bind_resp)
               gw_client.should_receive(:unbind)
               binding = Models::ServiceBinding.make(:service_instance => service_instance)
               raise "something bad"
             end
-          }.should raise_error
+          }.to raise_error
         end
 
         it "should not unbind a service on rollback after update" do
           gw_client.should_receive(:bind).and_return(bind_resp)
           binding = Models::ServiceBinding.make(:service_instance => service_instance)
 
-          lambda {
+          expect {
             Models::ServiceInstance.db.transaction do
               binding.update(:name => "newname")
               raise "something bad"
             end
-          }.should raise_error
+          }.to raise_error
         end
       end
 

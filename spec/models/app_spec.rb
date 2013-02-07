@@ -58,9 +58,9 @@ module VCAP::CloudController
           :domain => domain,
         )
 
-        lambda {
+        expect {
           app.add_route(route)
-        }.should raise_error Models::App::InvalidRouteRelation
+        }.to raise_error Models::App::InvalidRouteRelation
       end
 
       it "should not associate an app with a route created on another space with a shared domain" do
@@ -77,9 +77,9 @@ module VCAP::CloudController
           :domain => shared_domain
         )
 
-        lambda {
+        expect {
           app.add_route(route)
-        }.should raise_error Models::App::InvalidRouteRelation
+        }.to raise_error Models::App::InvalidRouteRelation
       end
     end
 
@@ -414,7 +414,7 @@ module VCAP::CloudController
                               :runtime => Models::Runtime.make,
                               :space => space)
         app.add_route_by_guid(Models::Route.make.guid)
-        expect { app.save }.should raise_error(Models::App::InvalidRouteRelation)
+        expect { app.save }.to raise_error(Models::App::InvalidRouteRelation)
         app.routes.should be_empty
       end
     end

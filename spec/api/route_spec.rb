@@ -263,9 +263,9 @@ module VCAP::CloudController
       @foo_app.add_route(@route)
       get "/v2/routes/#{@route.guid}/apps", {}, @headers_for_user
       last_response.status.should == 200
-      decoded_response["resources"].map { |r|
+      expect(decoded_response["resources"].map { |r|
         r["metadata"]["guid"]
-      }.should eq [@foo_app.guid]
+      }).to eq [@foo_app.guid]
 
       MessageBus.instance.should_receive(:publish).with(
         "dea.update",

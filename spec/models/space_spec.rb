@@ -37,9 +37,9 @@ module VCAP::CloudController
             wrong_org = Models::Organization.make
             user = make_user_for_org(wrong_org)
 
-            lambda {
+            expect {
               space.send("add_#{perm.singularize}", user)
-            }.should raise_error exception
+            }.to raise_error exception
           end
         end
       end
@@ -49,10 +49,10 @@ module VCAP::CloudController
       end
 
       it "should not associate an domain with a service from a different org" do
-        lambda {
+        expect {
           domain = Models::Domain.make
           space.add_domain domain
-        }.should raise_error Models::Space::InvalidDomainRelation
+        }.to raise_error Models::Space::InvalidDomainRelation
       end
     end
 

@@ -63,9 +63,9 @@ module VCAP::CloudController
 
       it "should raise an error if an app guid is staged twice" do
         LegacyStaging.with_upload_handle(app_guid) do |handle|
-          lambda {
+          expect {
             LegacyStaging.with_upload_handle(app_guid)
-          }.should raise_error(Errors::StagingError, /already in progress/)
+          }.to raise_error(Errors::StagingError, /already in progress/)
         end
       end
     end

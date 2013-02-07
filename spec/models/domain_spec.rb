@@ -122,7 +122,7 @@ module VCAP::CloudController
         it "should not allow the creation of a shared domain" do
           expect {
             Models::Domain.create(:name => "shared.com")
-          }.should raise_error Sequel::ValidationFailed, /organization presence/
+          }.to raise_error Sequel::ValidationFailed, /organization presence/
         end
       end
     end
@@ -210,15 +210,15 @@ module VCAP::CloudController
         let(:space) { Models::Space.make }
 
         it "should not associate with an app space on a different org" do
-          lambda {
+          expect {
             domain.add_space(space)
-          }.should raise_error Models::Domain::InvalidSpaceRelation
+          }.to raise_error Models::Domain::InvalidSpaceRelation
         end
 
         it "should not associate with orgs other than the owning org" do
-          lambda {
+          expect {
             domain.add_organization(Models::Organization.make)
-          }.should raise_error Models::Domain::InvalidOrganizationRelation
+          }.to raise_error Models::Domain::InvalidOrganizationRelation
         end
 
         it "should auto-associate with the owning org" do

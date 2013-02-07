@@ -28,9 +28,9 @@ module VCAP::CloudController
     describe 'unzipped_size' do
       it "should raise an instance of AppPackageInvalid if unzip exits with a nonzero status" do
         invalid_zip = Tempfile.new("unzipped_size_test")
-        lambda {
+        expect {
           AppPackage.unzipped_size(invalid_zip)
-        }.should raise_error(Errors::AppPackageInvalid, /failed listing/)
+        }.to raise_error(Errors::AppPackageInvalid, /failed listing/)
       end
 
       it "should return the total size of the unzipped droplet" do
@@ -57,9 +57,9 @@ module VCAP::CloudController
         unzipped_size = create_zip(zipname, 10, 1024)
         AppPackage.max_droplet_size = unzipped_size - 1024
 
-        lambda {
+        expect {
           AppPackage.validate_package_size(File.new(zipname), [])
-        }.should raise_error(Errors::AppPackageInvalid, /exceeds/)
+        }.to raise_error(Errors::AppPackageInvalid, /exceeds/)
       end
 
       it "should raise an instance of AppPackageInvalid if the total size is too large" do
@@ -73,19 +73,19 @@ module VCAP::CloudController
         unzipped_size = create_zip(zipname, 1, 1024)
         AppPackage.max_droplet_size = unzipped_size + 512
 
-        lambda {
+        expect {
           AppPackage.validate_package_size(File.new(zipname),
                                            [{"sha1" => sha1, "fn" => "test/path"}])
-        }.should raise_error(Errors::AppPackageInvalid, /exceeds/)
+        }.to raise_error(Errors::AppPackageInvalid, /exceeds/)
       end
     end
 
     describe "unpack_upload" do
       it "should raise an instance of AppPackageInvalid if unzip exits with a nonzero status code" do
         invalid_zip = Tempfile.new("app_package_test")
-        lambda {
+        expect {
           AppPackage.unpack_upload(File.new(invalid_zip))
-        }.should raise_error(Errors::AppPackageInvalid, /unzipping/)
+        }.to raise_error(Errors::AppPackageInvalid, /unzipping/)
       end
     end
 
@@ -98,9 +98,9 @@ module VCAP::CloudController
 
       it "should raise an error if the resource points outside of the app" do
         [ "../outside", "../../outside", "../././../outside"].each do |resource|
-          lambda {
+          expect {
             AppPackage.create_dir_skeleton("/a/b", resource)
-          }.should raise_error(Errors::AppPackageInvalid, /points outside/)
+          }.to raise_error(Errors::AppPackageInvalid, /points outside/)
         end
       end
 
@@ -131,9 +131,9 @@ module VCAP::CloudController
       end
 
       it "should fail if the given path does not resolve to a file in the applications directory" do
-        lambda {
+        expect {
           AppPackage.resolve_path(tmpdir, "../foo")
-        }.should raise_error(Errors::AppPackageInvalid, /resource path/)
+        }.to raise_error(Errors::AppPackageInvalid, /resource path/)
       end
 
       it "should fail if the given path contains a symlink that points outside of the applications directory" do
@@ -141,9 +141,9 @@ module VCAP::CloudController
           File.symlink("/etc", "foo")
         }
 
-        lambda {
+        expect {
           AppPackage.resolve_path(tmpdir, "foo/bar")
-        }.should raise_error(Errors::AppPackageInvalid, /resource path/)
+        }.to raise_error(Errors::AppPackageInvalid, /resource path/)
       end
     end
 
@@ -151,9 +151,9 @@ module VCAP::CloudController
       it "should raise an instance of AppPackageInvalid if zipping the application fails" do
         nonexistant_dir = Dir.mktmpdir
         FileUtils.rm_rf(nonexistant_dir)
-        lambda {
+        expect {
           AppPackage.repack_app_in(nonexistant_dir, nonexistant_dir)
-        }.should raise_error(Errors::AppPackageInvalid, /repacking/)
+        }.to raise_error(Errors::AppPackageInvalid, /repacking/)
       end
     end
 

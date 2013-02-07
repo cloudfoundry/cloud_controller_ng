@@ -108,9 +108,9 @@ module VCAP::CloudController
         end
 
         with_em_and_thread do
-          lambda {
+          expect {
             AppStager.stage_app(app_obj)
-          }.should raise_error(Errors::StagingError, /stringy error/)
+          }.to raise_error(Errors::StagingError, /stringy error/)
         end
       end
 
@@ -127,9 +127,9 @@ module VCAP::CloudController
         .with(StagingTaskLog.key_for_id(app_obj.guid), "log content")
 
         with_em_and_thread do
-          lambda {
+          expect {
             AppStager.stage_app(app_obj)
-          }.should raise_error(Errors::StagingError, /log content/)
+          }.to raise_error(Errors::StagingError, /log content/)
         end
 
         FileUtils.should_not_receive(:mv)

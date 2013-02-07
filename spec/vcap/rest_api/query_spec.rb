@@ -117,40 +117,40 @@ module VCAP::RestAPI
       describe "exact query on a nonexistent attribute" do
         it "should raise BadQueryParameter" do
           q = "bogus_val:1"
-          lambda {
-            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+          expect {
+            Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.should raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
         end
       end
 
       describe "exact query on a nonallowed attribute" do
         it "should raise BadQueryParameter" do
           q = "protected:1"
-          lambda {
-            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+          expect {
+            Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.should raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
         end
       end
 
       describe "without a key" do
         it "should raise BadQueryParameter" do
           q = ":10"
-          lambda {
-            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+          expect {
+            Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.should raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
         end
       end
 
       describe "with an extra :" do
         it "should raise BadQueryParameter" do
           q = "num_val:1:0"
-          lambda {
-            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+          expect {
+            Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.should raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
         end
       end
 

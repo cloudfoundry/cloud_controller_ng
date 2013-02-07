@@ -42,11 +42,11 @@ describe "EventMachine#schedule_sync" do
   it "should rethrow exceptions in the calling thread" do
     result = nil
     with_em_and_thread do
-      lambda {
+      expect {
         result = EM.schedule_sync do
           raise "blowup"
         end
-      }.should raise_error(Exception, /blowup/)
+      }.to raise_error(Exception, /blowup/)
     end
     result.should == nil
   end

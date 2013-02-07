@@ -91,9 +91,9 @@ module VCAP::CloudController::ModelSpecHelper
             related = create_for.call(obj)
             obj.send(add_attribute, related)
             obj.save
-            lambda {
+            expect {
               related.destroy
-            }.should raise_error Sequel::DatabaseError, /foreign key/
+            }.to raise_error Sequel::DatabaseError, /foreign key/
           end
         else
           it "should destroy #{singular_association} successfully" do

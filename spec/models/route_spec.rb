@@ -208,7 +208,7 @@ module VCAP::CloudController
         space_a.add_domain(domain_a)
         expect {
           Models::Route.make(:space => space_a, :domain => domain_b)
-        }.should raise_error Sequel::ValidationFailed, /domain invalid_relation/
+        }.to raise_error Sequel::ValidationFailed, /domain invalid_relation/
       end
 
       it "should not associate with apps from a different space" do
@@ -219,7 +219,7 @@ module VCAP::CloudController
         app = Models::App.make(:space => space_a)
         expect {
           route.add_app(app)
-        }.should raise_error Models::Route::InvalidAppRelation
+        }.to raise_error Models::Route::InvalidAppRelation
       end
 
       it "should not allow creation of a nil host on a system domain" do

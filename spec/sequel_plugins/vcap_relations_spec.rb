@@ -57,7 +57,7 @@ describe "Sequel::Plugins::VcapRelations" do
   describe "#one_to_many" do
     before do
       @o = owner_klass.create
-      lambda { @o.dogs }.should raise_error(NoMethodError)
+      expect { @o.dogs }.to raise_error(NoMethodError)
       owner_klass.one_to_many :dogs
     end
 
@@ -179,8 +179,8 @@ describe "Sequel::Plugins::VcapRelations" do
       @n1 = name_klass.create
       @n2 = name_klass.create
 
-      lambda { @d1.names }.should raise_error(NoMethodError)
-      lambda { @n1.names }.should raise_error(NoMethodError)
+      expect { @d1.names }.to raise_error(NoMethodError)
+      expect { @n1.names }.to raise_error(NoMethodError)
 
       dog_klass.many_to_many :names
       name_klass.many_to_many :dogs
