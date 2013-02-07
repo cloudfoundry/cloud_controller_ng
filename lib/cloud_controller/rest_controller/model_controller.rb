@@ -43,14 +43,10 @@ module VCAP::CloudController::RestController
       raise InvalidRequest unless request_attrs
       logger.debug "update: #{id} #{request_attrs}"
 
-      changes = {}
       model.db.transaction do
         obj.update_from_hash(request_attrs)
-        changes = obj.previous_changes || {}
-        obj.save
       end
 
-      after_update(obj, changes) if respond_to?(:after_update)
       after_modify(obj)
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end

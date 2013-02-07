@@ -604,28 +604,26 @@ module VCAP::CloudController
 
       describe "with env" do
         it "should add the environment variable if its legal" do
-          app = Models::App.make(
+          Models::App.make(
             :space  => user.default_space,
             :name   => "app_with_env",
           )
+
           legacy_req = Yajl::Encoder.encode(
-            "env"     => [
-              "jesse=awesome",
-            ],
+            "env" => ["jesse=awesome"],
           )
 
           put "/apps/app_with_env", legacy_req, headers_for(user)
-
           get "/apps/app_with_env", {}, headers_for(user)
-
           decoded_response["env"].should == ["jesse=awesome"]
         end
 
         it "should not allow environment variables that start with vcap_" do
-          app = Models::App.make(
+          Models::App.make(
             :space  => user.default_space,
             :name   => "app_with_env",
           )
+
           legacy_req = Yajl::Encoder.encode(
             "env"     => [
               "vcap_foo=bar",
@@ -637,14 +635,13 @@ module VCAP::CloudController
         end
 
         it 'should not allow environment variables that start with vmc_' do
-          app = Models::App.make(
+          Models::App.make(
             :space  => user.default_space,
             :name   => "app_with_env",
           )
+
           legacy_req = Yajl::Encoder.encode(
-            "env"     => [
-              "vmc_foo=bar",
-            ],
+            "env" => ["vmc_foo=bar"],
           )
 
           put "/apps/app_with_env", legacy_req, headers_for(user)
@@ -771,25 +768,23 @@ module VCAP::CloudController
 
           MessageBus.instance.should_not_receive(:publish)
 
-          EM.run do
-            put(
-              "/apps/#{app_name}",
-              Yajl::Encoder.encode(
-                :uris => [uri1, uri2],
-              ),
-              headers_for(user),
-            )
-            last_response.status.should == 200
-            put(
-              "/apps/#{app_name}",
-              Yajl::Encoder.encode(
-                :uris => [uri1],
-              ),
-              headers_for(user),
-            )
-            last_response.status.should == 200
-            EM.next_tick { EM.stop }
-          end
+          put(
+            "/apps/#{app_name}",
+            Yajl::Encoder.encode(
+              :uris => [uri1, uri2],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
+
+          put(
+            "/apps/#{app_name}",
+            Yajl::Encoder.encode(
+              :uris => [uri1],
+            ),
+            headers_for(user),
+          )
+          last_response.status.should == 200
         end
       end
     end

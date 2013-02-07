@@ -37,38 +37,6 @@ module VCAP::CloudController
 
     query_parameters :name, :space_guid, :organization_guid, :framework_guid, :runtime_guid
 
-    def after_update(app, changes)
-      if app.needs_staging? && !app.stopped?
-        AppStager.stage_app(app)
-      end
-
-      if changes.include?(:state)
-        if app.started?
-          unless app.staged?
-            return
-          end
-          DeaClient.start(app)
-        elsif app.stopped?
-          DeaClient.stop(app)
-        end
-        send_droplet_updated_message(app)
-      elsif changes.include?(:instances) && app.started?
-        unless app.staged?
-          return
-        end
-        delta = changes[:instances][1] - changes[:instances][0]
-        DeaClient.change_running_instances(app, delta)
-        send_droplet_updated_message(app)
-      end
-    end
-
-    def send_droplet_updated_message(app)
-      MessageBus.instance.publish("droplet.updated", Yajl::Encoder.encode(
-        :droplet => app.guid,
-        :cc_partition => config[:cc_partition]
-      ))
-    end
-
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       memory_quota_errors = e.errors.on(:memory)

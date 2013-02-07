@@ -102,12 +102,12 @@ module VCAP::CloudController
       let(:app_obj)   { Models::App.make }
 
       it "should not restage on update if staging is not needed" do
-        AppStager.should_not_receive(:stage_app)
         app_obj.package_hash = "abc"
         app_obj.droplet_hash = "def"
         app_obj.save
         app_obj.needs_staging?.should be_false
 
+        AppStager.should_not_receive(:stage_app)
         MessageBus.instance.should_not_receive(:publish).with("droplet.updated", anything)
 
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
@@ -116,16 +116,11 @@ module VCAP::CloudController
       end
 
       it "should not restage on update if app is in stopped state" do
-        AppStager.should_not_receive(:stage_app)
         app_obj.package_hash = "abc"
         app_obj.save
         app_obj.needs_staging?.should be_true
 
-        expected = {
-          "droplet" => app_obj.guid,
-          "cc_partition" => config[:cc_partition],
-        }
-
+        AppStager.should_not_receive(:stage_app)
         MessageBus.instance.should_not_receive(:publish)
 
         req = Yajl::Encoder.encode(:instances => app_obj.instances + 1)
@@ -134,13 +129,15 @@ module VCAP::CloudController
       end
 
       it "should restage on update if staging is needed" do
+        AppStager.stub(:stage_app)
+
         app_obj.package_hash = "abc"
         app_obj.state = "STARTED"
         app_obj.save
         app_obj.needs_staging?.should be_true
 
         AppStager.should_receive(:stage_app) do |app|
-          app.update(:droplet_hash => "def")
+          app.droplet_hash = "def"
         end
 
         MessageBus.instance.should_receive(:publish).with(

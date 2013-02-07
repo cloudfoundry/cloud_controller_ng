@@ -59,8 +59,12 @@ module Sequel::Plugins::VcapSerialization
     # included in import_attributes and in the :only option.
     def update_from_hash(hash, opts = {})
       update_opts = self.class.update_or_create_options(hash, opts)
-      # FIXME: transaction here
-      update(update_opts)
+
+      # Cannot use update(update_opts) because it does not
+      # update updated_at timestamp when no changes are being made.
+      # Arguably this should avoid updating updated_at if nothing changed.
+      set_restricted(update_opts, nil, nil)
+      save
     end
   end
 

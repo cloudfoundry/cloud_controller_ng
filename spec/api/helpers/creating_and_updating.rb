@@ -102,6 +102,7 @@ module VCAP::CloudController::ApiSpecHelper
               end
             when :put
               it "should not update the created_at timestamp" do
+                metadata["created_at"].should_not be_nil
                 metadata["created_at"].should == @orig_created_at.to_s
               end
 

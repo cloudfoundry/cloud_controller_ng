@@ -1,6 +1,9 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::Models
+require "cloud_controller/app_stager"
+
+module VCAP::CloudController
+  module Models
   class App < Sequel::Model
     plugin :serialization
 
@@ -257,14 +260,14 @@ module VCAP::CloudController::Models
       mark_for_restaging
     end
 
-    def mark_for_restaging
+    def mark_for_restaging(should_save=true)
       self.package_state = "PENDING"
-      save
+      save if should_save
     end
 
     def package_hash=(hash)
       super(hash)
-      mark_for_restaging if column_changed?(:package_hash)
+      mark_for_restaging(false) if column_changed?(:package_hash)
     end
 
     def droplet_hash=(hash)
@@ -287,7 +290,38 @@ module VCAP::CloudController::Models
       staged? && started? && @routes_changed
     end
 
+    def after_commit
+      super
+      changes = previous_changes || {}
+
+      if needs_staging? && !stopped?
+        AppStager.stage_app(self)
+      end
+
+      if changes.has_key?(:state)
+        if started?
+          return unless staged?
+          DeaClient.start(self)
+        elsif stopped?
+          DeaClient.stop(self)
+        end
+        send_droplet_updated_message
+      elsif changes.has_key?(:instances) && started?
+        return unless staged?
+        delta = changes[:instances][1] - changes[:instances][0]
+        DeaClient.change_running_instances(self, delta)
+        send_droplet_updated_message
+      end
+    end
+
     private
+
+    def send_droplet_updated_message
+      MessageBus.instance.publish("droplet.updated", Yajl::Encoder.encode(
+        :droplet => guid,
+        :cc_partition => MessageBus.instance.config[:cc_partition]
+      ))
+    end
 
     # @param  [Hash, nil] old
     # @param  [Hash, nil] new
@@ -303,5 +337,6 @@ module VCAP::CloudController::Models
       @routes_changed = true
     end
 
+  end
   end
 end

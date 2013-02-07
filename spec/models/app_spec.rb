@@ -248,12 +248,7 @@ module VCAP::CloudController
     end
 
     describe "package_hash=" do
-      let(:app) { Models::App.make }
-
-      before do
-        app.package_hash = "abc"
-        app.package_state = "STAGED"
-      end
+      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED") }
 
       it "should set the state to PENDING if the hash changes" do
         app.package_hash = "def"
