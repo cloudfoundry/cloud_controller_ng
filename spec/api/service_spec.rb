@@ -106,5 +106,39 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "get /v2/services?q=active:<t|f>" do
+      let (:headers) do
+        user = VCAP::CloudController::Models::User.make
+        headers_for(user)
+      end
+
+      before(:all) do
+        reset_database
+        3.times { Models::Service.make(:active => true) }
+        2.times { Models::Service.make(:active => false) }
+      end
+
+      it "should get all services" do
+        get "/v2/services", {}, headers
+        last_response.should be_ok
+        decoded_response["total_results"].should == 5
+      end
+
+      it "should filter inactive services" do
+        # Sequel stores 'true' and 'false' as 't' and 'f' in sqlite, so with
+        # sqlite, instead of 'true' or 'false', the parameter must be specified
+        # as 't' or 'f'. But in postgresql, either way is ok.
+        get "/v2/services?q=active:t", {}, headers
+        last_response.should be_ok
+        decoded_response["total_results"].should == 3
+      end
+
+      it "should get inactive services" do
+        get "/v2/services?q=active:f", {}, headers
+        last_response.should be_ok
+        decoded_response["total_results"].should == 2
+      end
+    end
   end
 end
