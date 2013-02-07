@@ -298,7 +298,7 @@ module VCAP::CloudController
       private
 
       def stage_if_needed
-        if needs_staging? && !stopped?
+        if needs_staging? && started?
           AppStager.stage_app(self)
         end
       end
@@ -306,7 +306,7 @@ module VCAP::CloudController
       def react_to_saved_changes(changes)
         if changes.has_key?(:state)
           react_to_state_change
-        elsif changes.has_key?(:instances) && started?
+        elsif changes.has_key?(:instances)
           delta = changes[:instances][1] - changes[:instances][0]
           react_to_instances_change(delta)
         end
@@ -323,9 +323,11 @@ module VCAP::CloudController
       end
 
       def react_to_instances_change(delta)
-        stage_if_needed
-        DeaClient.change_running_instances(self, delta)
-        send_droplet_updated_message
+        if started?
+          stage_if_needed
+          DeaClient.change_running_instances(self, delta)
+          send_droplet_updated_message
+        end
       end
 
       def send_droplet_updated_message
