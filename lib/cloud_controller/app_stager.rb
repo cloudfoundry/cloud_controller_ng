@@ -95,12 +95,6 @@ module VCAP::CloudController
         LegacyStaging.delete_droplet(app.guid)
       end
 
-      private
-
-      def json_staging_request(app)
-        Yajl::Encoder.encode(staging_request(app))
-      end
-
       def staging_request(app)
         {
           :app_id       => app.guid,
@@ -108,6 +102,12 @@ module VCAP::CloudController
           :download_uri => LegacyStaging.app_uri(app.guid),
           :upload_uri   => LegacyStaging.droplet_upload_uri(app.guid)
         }
+      end
+
+      private
+
+      def json_staging_request(app)
+        Yajl::Encoder.encode(staging_request(app))
       end
 
       def staging_task_properties(app)

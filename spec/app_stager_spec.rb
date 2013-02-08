@@ -4,72 +4,18 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppStager do
-    describe "staging_request" do
-      let(:app_obj) { Models::App.make }
-      NUM_INSTANCES = 3
-
-      before do
-        configure
-        NUM_INSTANCES.times do
-          instance = Models::ServiceInstance.make(:space => app_obj.space)
-          binding = Models::ServiceBinding.make(:app => app_obj,
-                                                :service_instance => instance)
-          app_obj.add_service_binding(binding)
-        end
-
-      end
-
-      it "should return a serialized staging request" do
-        # This should be moved to a helper function
-        guid = app_obj.guid
-        tmpdir = Dir.mktmpdir
-        zipname = File.join(tmpdir, "test.zip")
-        create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(guid, File.new(zipname), [])
-        FileUtils.rm_rf(tmpdir)
-
-        res = AppStager.send(:staging_request, app_obj)
-        res.should be_kind_of(Hash)
-        res[:app_id].should == app_obj.guid
-        res[:download_uri].should be_kind_of(String)
-        res[:upload_uri].should be_kind_of(String)
-        res[:properties][:meta].should be_kind_of(Hash)
-        res[:properties][:runtime_info].should be_kind_of(Hash)
-        res[:properties][:runtime_info].should have_key(:name)
-        res[:properties][:framework_info].should be_kind_of(Hash)
-        res[:properties][:buildpack].should be_nil
-        res[:properties][:services].count.should == NUM_INSTANCES
-        res[:properties][:services].each do |svc|
-          svc[:credentials].should be_kind_of(Hash)
-          svc[:options].should be_kind_of(Hash)
-        end
-      end
-
-      context "when the application has a buildpack" do
-        before do
-          app_obj.buildpack = "git://example.com/foo.git"
-        end
-
-        it "contains the buildpack in the staging request" do
-          res = AppStager.send(:staging_request, app_obj)
-          res.should be_kind_of(Hash)
-          res[:properties][:buildpack].should == "git://example.com/foo.git"
-        end
-      end
-    end
-
     describe ".stage_app" do
-      let(:app_obj) { Models::App.make }
+      let(:app) { Models::App.make }
       let(:stager_client) { double(:stager_client) }
       let(:deferrable) { double(:deferrable) }
       let(:upload_handle) do
-        handle = LegacyStaging::DropletUploadHandle.new(app_obj.guid)
+        handle = LegacyStaging::DropletUploadHandle.new(app.guid)
         handle.upload_path = Tempfile.new("tmp_droplet")
         handle
       end
 
       let(:incomplete_upload_handle) do
-        LegacyStaging::DropletUploadHandle.new(app_obj.guid)
+        LegacyStaging::DropletUploadHandle.new(app.guid)
       end
 
       before do
@@ -81,24 +27,24 @@ module VCAP::CloudController
       end
 
       it "should stage via the staging client" do
-        app_obj.package_hash = "abc"
-        app_obj.needs_staging?.should be_true
-        app_obj.staged?.should be_false
+        app.package_hash = "abc"
+        app.needs_staging?.should be_true
+        app.staged?.should be_false
 
         deferrable.should_receive(:callback).and_yield("task_log" => "log content")
         deferrable.should_receive(:errback).at_most(:once)
         LegacyStaging.should_receive(:with_upload_handle).and_yield(upload_handle)
 
         @redis.should_receive(:set)
-        .with(StagingTaskLog.key_for_id(app_obj.guid), "log content")
+        .with(StagingTaskLog.key_for_id(app.guid), "log content")
         with_em_and_thread do
-          AppStager.stage_app(app_obj)
+          AppStager.stage_app(app)
         end
 
-        app_obj.needs_staging?.should be_false
-        app_obj.staged?.should be_true
+        app.needs_staging?.should be_false
+        app.staged?.should be_true
 
-        LegacyStaging.droplet_exists?(app_obj.guid).should be_true
+        LegacyStaging.droplet_exists?(app.guid).should be_true
       end
 
       it "should raise a StagingError and propagate the raw description for staging client errors" do
@@ -109,33 +55,33 @@ module VCAP::CloudController
 
         with_em_and_thread do
           expect {
-            AppStager.stage_app(app_obj)
+            AppStager.stage_app(app)
           }.to raise_error(Errors::StagingError, /stringy error/)
         end
       end
 
       it "should raise a StagingError and propagate the staging log for staging server errors" do
-        app_obj.package_hash = "abc"
-        app_obj.needs_staging?.should be_true
-        app_obj.staged?.should be_false
+        app.package_hash = "abc"
+        app.needs_staging?.should be_true
+        app.staged?.should be_false
 
         deferrable.should_receive(:callback).and_yield("task_log" => "log content")
         deferrable.should_receive(:errback).at_most(:once)
         LegacyStaging.should_receive(:with_upload_handle).and_yield(incomplete_upload_handle)
 
         @redis.should_receive(:set)
-        .with(StagingTaskLog.key_for_id(app_obj.guid), "log content")
+        .with(StagingTaskLog.key_for_id(app.guid), "log content")
 
         with_em_and_thread do
           expect {
-            AppStager.stage_app(app_obj)
+            AppStager.stage_app(app)
           }.to raise_error(Errors::StagingError, /log content/)
         end
 
         FileUtils.should_not_receive(:mv)
 
-        app_obj.needs_staging?.should be_true
-        app_obj.staged?.should be_false
+        app.needs_staging?.should be_true
+        app.staged?.should be_false
       end
     end
 
@@ -205,29 +151,95 @@ module VCAP::CloudController
       end
     end
 
+    describe ".staging_request" do
+      before(:all) do
+        @app = Models::App.make
+      end
+
+      before(:all) do
+        3.times do
+          instance = Models::ServiceInstance.make(:space => @app.space)
+          binding = Models::ServiceBinding.make(:app => @app, :service_instance => instance)
+          @app.add_service_binding(binding)
+        end
+      end
+
+      def store_app_package(app)
+        # When Fog is in local mode it looks at the filesystem
+        tmpdir = Dir.mktmpdir
+        zipname = File.join(tmpdir, "test.zip")
+        create_zip(zipname, 1, 1)
+        AppPackage.to_zip(app.guid, File.new(zipname), [])
+        FileUtils.rm_rf(tmpdir)
+      end
+
+      it "includes app guid and download/upload uris" do
+        store_app_package(@app)
+        AppStager.staging_request(@app).tap do |r|
+          r[:app_id].should == @app.guid
+          r[:download_uri].should match /^http/
+          r[:upload_uri].should match /^http/
+        end
+      end
+
+      it "includes misc app properties" do
+        AppStager.staging_request(@app).tap do |r|
+          r[:properties][:meta].should be_kind_of(Hash)
+          r[:properties][:runtime_info].should be_kind_of(Hash)
+          r[:properties][:runtime_info].should have_key(:name)
+          r[:properties][:framework_info].should be_kind_of(Hash)
+        end
+      end
+
+      it "includes service binding properties" do
+        r = AppStager.staging_request(@app)
+        r[:properties][:services].count.should == 3
+        r[:properties][:services].each do |s|
+          s[:credentials].should be_kind_of(Hash)
+          s[:options].should be_kind_of(Hash)
+        end
+      end
+
+      context "when app does not have buildpack" do
+        it "returns nil for buildpack" do
+          @app.buildpack = nil
+          r = AppStager.staging_request(@app)
+          r[:properties][:buildpack].should be_nil
+        end
+      end
+
+      context "when app has a buildpack" do
+        it "returns url for buildpack" do
+          @app.buildpack = "git://example.com/foo.git"
+          res = AppStager.staging_request(@app)
+          res[:properties][:buildpack].should == "git://example.com/foo.git"
+        end
+      end
+    end
+
     describe ".delete_droplet" do
       before :each do
         AppStager.unstub(:delete_droplet)
       end
 
-      let(:app_obj) { Models::App.make }
+      let(:app) { Models::App.make }
 
       it "should do nothing if the droplet does not exist" do
         guid = Sham.guid
         LegacyStaging.droplet_exists?(guid).should == false
-        AppStager.delete_droplet(app_obj)
+        AppStager.delete_droplet(app)
         LegacyStaging.droplet_exists?(guid).should == false
       end
 
       it "should delete the droplet if it exists" do
-        droplet = Tempfile.new(app_obj.guid)
+        droplet = Tempfile.new(app.guid)
         droplet.write("droplet contents")
         droplet.close
-        LegacyStaging.store_droplet(app_obj.guid, droplet.path)
+        LegacyStaging.store_droplet(app.guid, droplet.path)
 
-        LegacyStaging.droplet_exists?(app_obj.guid).should == true
-        AppStager.delete_droplet(app_obj)
-        LegacyStaging.droplet_exists?(app_obj.guid).should == false
+        LegacyStaging.droplet_exists?(app.guid).should == true
+        AppStager.delete_droplet(app)
+        LegacyStaging.droplet_exists?(app.guid).should == false
       end
     end
   end
