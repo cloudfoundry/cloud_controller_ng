@@ -6,15 +6,19 @@ class MockMessageBus
     @nats = config[:nats] || MockNATS
   end
 
-  def subscribe(*args)
-  end
-
   def register_components
   end
 
   def register_routes
   end
 
-  def publish(*args)
+  def subscribe(subject, opts = {}, &blk)
+  end
+
+  def publish(subject, message = nil)
+  end
+
+  def request(subject, data = nil, opts = {})
+    []
   end
 end
