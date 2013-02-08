@@ -97,6 +97,46 @@ module VCAP::CloudController
       end
     end
 
+    describe "sync/async staging" do
+      context "when app will be staged" do
+        let(:app_obj) { Models::App.make(:package_hash => "abc", :state => "STOPPED") }
+
+        context "when stage_async flag is in params" do
+          it "stages the app asynchronously" do
+            AppStager.should_receive(:stage_app_async)
+            put "/v2/apps/#{app_obj.guid}?stage_async=1", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
+          end
+
+          it "returns X-App-Staging-Log header with staging log url" do
+            AppStager
+              .should_receive(:stage_app_async)
+              .and_return(AppStager::AsyncResponse.new("task-id", "http://staging-log-url"))
+
+            put "/v2/apps/#{app_obj.guid}?stage_async=1", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
+            last_response.status.should == 201
+            last_response.headers["X-App-Staging-Log"].should == "http://staging-log-url"
+          end
+        end
+
+        context "when stage_async flag is not in params" do
+          it "stages the app synchronously" do
+            AppStager.should_receive(:stage_app)
+            put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
+          end
+        end
+      end
+
+      context "when app will not be staged" do
+        let(:app_obj) { Models::App.make(:state => "STOPPED") }
+
+        it "does not add X-App-Staging-Log" do
+          put "/v2/apps/#{app_obj.guid}?stage_async=1", Yajl::Encoder.encode({}), json_headers(admin_headers)
+          last_response.status.should == 201
+          last_response.headers.should_not have_key("X-App-Staging-Log")
+        end
+      end
+    end
+
     describe "on route change" do
       let(:space) { Models::Space.make }
       let(:domain) do

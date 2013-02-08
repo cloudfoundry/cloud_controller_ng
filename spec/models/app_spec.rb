@@ -648,19 +648,23 @@ module VCAP::CloudController
 
     describe "changes to the app that trigger staging/dea notifications" do
       # Mark app as staged when AppStager.stage_app is called
-      before { AppStager.stub(:stage_app) { |app| app.droplet_hash = "def" } }
+      before { AppStager.stub(:stage_app_async) { |app| app.droplet_hash = "def" } }
 
       def self.it_does_not_stage
         it "does not stage app" do
-          AppStager.should_not_receive(:stage_app)
-          update
+          AppStager.should_not_receive(:stage_app_async)
+          expect {
+            update
+          }.to_not change { subject.last_stage_async_response }.from(nil)
         end
       end
 
       def self.it_stages
         it "stages" do
-          AppStager.should_receive(:stage_app)
-          update
+          AppStager.should_receive(:stage_app_async).with(subject)
+          expect {
+            update
+          }.to change { subject.last_stage_async_response }.from(nil)
         end
       end
 

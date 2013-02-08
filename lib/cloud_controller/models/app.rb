@@ -47,6 +47,14 @@ module VCAP::CloudController
       # +DeaClient.start+
       attr_accessor :routes_changed
 
+      # Temporary flag to stage apps synchronously
+      # while async staging is being introduced
+      attr_accessor :stage_sync
+
+      # Last async staging response which
+      # contains streaming log url
+      attr_accessor :last_stage_async_response
+
       def validate
         # TODO: if we move the defaults out of the migration and up to the
         # controller (as it probably should be), do more presence validation
@@ -299,7 +307,12 @@ module VCAP::CloudController
 
       def stage_if_needed
         if needs_staging? && started?
-          AppStager.stage_app(self)
+          if stage_sync
+            AppStager.stage_app(self)
+          else
+            self.last_stage_async_response = \
+              AppStager.stage_app_async(self)
+          end
         end
       end
 

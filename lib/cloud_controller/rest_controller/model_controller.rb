@@ -43,6 +43,8 @@ module VCAP::CloudController::RestController
       raise InvalidRequest unless request_attrs
       logger.debug "update: #{id} #{request_attrs}"
 
+      before_modify(obj)
+
       model.db.transaction do
         obj.update_from_hash(request_attrs)
       end
@@ -201,9 +203,11 @@ module VCAP::CloudController::RestController
     end
 
     private
+
+    def before_modify(obj)
+    end
+
     # Hook called at the end of +update+, +add_related+ and +remove_related+
-    # The default behavior is to do nothing.
-    # @param [Models::(model_class_name)] obj
     def after_modify(obj)
     end
 

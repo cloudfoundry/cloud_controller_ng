@@ -52,9 +52,19 @@ module VCAP::CloudController
       end
     end
 
+    def before_modify(app)
+      unless params.has_key?("stage_async")
+        app.stage_sync = true
+      end
+    end
+
     private
 
     def after_modify(app)
+      if async_stage_response = app.last_stage_async_response
+        set_header("X-App-Staging-Log", async_stage_response.streaming_log_url)
+      end
+
       if app.dea_update_pending?
         DeaClient.update_uris(app)
       end

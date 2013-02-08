@@ -118,6 +118,10 @@ module VCAP::CloudController::RestController
       @sinatra.send_file(path, opts)
     end
 
+    def set_header(name, value)
+      @sinatra.headers[name] = value
+    end
+
     def check_authentication
       # The logic here is a bit oddly ordered, but it supports the
       # legacy calls setting a user, but not providing a token.
