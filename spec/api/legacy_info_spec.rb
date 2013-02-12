@@ -348,14 +348,14 @@ module VCAP::CloudController
     end
 
     describe "GET", "/info/services", "unauthenticated" do
-      before(:all) do
+      before(:each) do
         # poor man's reset_db
         Models::Service.filter(:provider => "core").each do |svc|
           svc.service_plans_dataset.filter(:name => "100").destroy
           svc.destroy
         end
         @mysql_svc  = Models::Service.make(
-          :label => "mysql",
+          :label => "mysql_#{Sham.name}",
           :provider => "core",
         )
         Models::ServicePlan.make(
@@ -363,7 +363,7 @@ module VCAP::CloudController
           :name => "100",
         )
         @pg_svc     = Models::Service.make(
-          :label => "postgresql",
+          :label => "postgresql_#{Sham.name}",
           :provider => "core",
         )
         Models::ServicePlan.make(
@@ -371,7 +371,7 @@ module VCAP::CloudController
           :name => "100",
         )
         @redis_svc  = Models::Service.make(
-          :label => "redis",
+          :label => "redis_#{Sham.name}",
           :provider => "core",
         )
         Models::ServicePlan.make(
@@ -379,7 +379,7 @@ module VCAP::CloudController
           :name => "100",
         )
         @mongo_svc  = Models::Service.make(
-          :label => "mongodb",
+          :label => "mongodb_#{Sham.name}",
           :provider => "core",
         )
         Models::ServicePlan.make(
@@ -387,7 +387,7 @@ module VCAP::CloudController
           :name => "100",
         )
         @random_svc = Models::Service.make(
-          :label => "random",
+          :label => "random_#{Sham.name}",
           :provider => "core",
         )
         Models::ServicePlan.make(
@@ -420,11 +420,11 @@ module VCAP::CloudController
 
       it "should return mysql as a database" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["database"].should have_key("mysql")
-        hash["database"]["mysql"].should == {
+        hash["database"].should have_key(@mysql_svc.label)
+        hash["database"][@mysql_svc.label].should == {
           @mysql_svc.version => {
             "id" => @mysql_svc.guid,
-            "vendor" => "mysql",
+            "vendor" => @mysql_svc.label,
             "version" => @mysql_svc.version,
             "type" => "database",
             "description" => @mysql_svc.description,
@@ -440,11 +440,11 @@ module VCAP::CloudController
 
       it "should return pg as a database" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["database"].should have_key("postgresql")
-        hash["database"]["postgresql"].should == {
+        hash["database"].should have_key(@pg_svc.label)
+        hash["database"][@pg_svc.label].should == {
           @pg_svc.version => {
             "id" => @pg_svc.guid,
-            "vendor" => "postgresql",
+            "vendor" => @pg_svc.label,
             "version" => @pg_svc.version,
             "type" => "database",
             "description" => @pg_svc.description,
@@ -460,11 +460,11 @@ module VCAP::CloudController
 
       it "should return redis under key-value" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["key-value"].should have_key("redis")
-        hash["key-value"]["redis"].should == {
+        hash["key-value"].should have_key(@redis_svc.label)
+        hash["key-value"][@redis_svc.label].should == {
           @redis_svc.version => {
             "id" => @redis_svc.guid,
-            "vendor" => "redis",
+            "vendor" => @redis_svc.label,
             "version" => @redis_svc.version,
             "type" => "key-value",
             "description" => @redis_svc.description,
@@ -480,11 +480,11 @@ module VCAP::CloudController
 
       it "should (incorrectly) return mongo under key-value" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["key-value"].should have_key("mongodb")
-        hash["key-value"]["mongodb"].should == {
+        hash["key-value"].should have_key(@mongo_svc.label)
+        hash["key-value"][@mongo_svc.label].should == {
           @mongo_svc.version => {
             "id" => @mongo_svc.guid,
-            "vendor" => "mongodb",
+            "vendor" => @mongo_svc.label,
             "version" => @mongo_svc.version,
             "type" => "key-value",
             "description" => @mongo_svc.description,
@@ -500,11 +500,11 @@ module VCAP::CloudController
 
       it "should return random under generic" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["generic"].should have_key("random")
-        hash["generic"]["random"].should == {
+        hash["generic"].should have_key(@random_svc.label)
+        hash["generic"][@random_svc.label].should == {
           @random_svc.version => {
             "id" => @random_svc.guid,
-            "vendor" => "random",
+            "vendor" => @random_svc.label,
             "version" => @random_svc.version,
             "type" => "generic",
             "description" => @random_svc.description,

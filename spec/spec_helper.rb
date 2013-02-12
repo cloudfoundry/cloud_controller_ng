@@ -6,6 +6,7 @@ require "bundler"
 require "bundler/setup"
 
 require "machinist/sequel"
+require "machinist/object"
 require "rack/test"
 require "timecop"
 
@@ -13,8 +14,7 @@ require "steno"
 require "cloud_controller"
 require "rspec_let_monkey_patch"
 require "mock_redis"
-
-Dir.glob(File.join(File.dirname(__FILE__), "support/**/*.rb")).each { |f| require f }
+require "webmock/rspec"
 
 module VCAP::CloudController
   class SpecEnvironment
@@ -163,10 +163,10 @@ module VCAP::CloudController::SpecHelper
   def configure_components(config)
     mbus = MockMessageBus.new(config)
     VCAP::CloudController::MessageBus.instance = mbus
+    VCAP::CloudController::Models::ServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
 
     VCAP::CloudController::AccountCapacity.configure(config)
-    VCAP::CloudController::ResourcePool.instance =
-      VCAP::CloudController::ResourcePool.new(config)
+    VCAP::CloudController::ResourcePool.instance = VCAP::CloudController::ResourcePool.new(config)
     VCAP::CloudController::AppPackage.configure(config)
     VCAP::CloudController::AppStager.configure(config, mbus)
     VCAP::CloudController::LegacyStaging.configure(config)
@@ -350,14 +350,13 @@ RSpec.configure do |rspec_config|
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController::SpecHelper
 
-  rspec_config.before(:each) do
+  rspec_config.before(:all) do
     VCAP::CloudController::SecurityContext.clear
     configure
   end
 end
 
-
 require "cloud_controller/models"
-require "blueprints"
+Dir.glob(File.join(File.dirname(__FILE__), "support/**/*.rb")).each { |f| require f }
 
 require "models/spec_helper.rb"

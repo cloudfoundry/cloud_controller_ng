@@ -3,9 +3,8 @@
 module VCAP::CloudController::ModelSpecHelper
   def self.relation_types
     relations = []
-    ["one", "many"].each do |cardinality_left|
-      ["zero_or_more", "zero_or_one",
-       "one", "one_or_more"].each do |cardinality_right|
+    %w[one many].each do |cardinality_left|
+      %w[zero_or_more zero_or_one one one_or_more].each do |cardinality_right|
          relations << "#{cardinality_left}_to_#{cardinality_right}".to_sym
        end
     end
@@ -23,7 +22,7 @@ module VCAP::CloudController::ModelSpecHelper
        opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
      end
 
-     ["instance", "relationships", "enumeration"].each do |examples|
+     %w[instance relationships enumeration].each do |examples|
        describe examples do
          include_examples "model #{examples}", opts
        end

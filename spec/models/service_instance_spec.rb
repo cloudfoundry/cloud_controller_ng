@@ -4,8 +4,18 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Models::ServiceInstance do
+    let(:service_instance) { VCAP::CloudController::Models::ServiceInstance.make }
+    let(:email) { Sham.email }
+    let(:guid) { Sham.guid }
+
+    before do
+      VCAP::CloudController::SecurityContext.stub(:current_user_email) { email }
+      VCAP::CloudController::SecurityContext.stub(:current_user_guid) { guid }
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :service_plan, :space],
+      :db_required_attributes => [:name, :space],
       :unique_attributes   => [:space, :name],
       :stripped_string_attributes => :name,
       :many_to_one         => {
@@ -19,112 +29,42 @@ module VCAP::CloudController
       }
     }
 
-    context "bad relationships" do
-      let(:service_instance) { Models::ServiceInstance.make }
-
-      context "service binding" do
-        it "should not bind an app and a service instance from different app spaces" do
-          app = Models::App.make(:space => service_instance.space)
-          service_binding = Models::ServiceBinding.make
-          expect {
-            service_instance.add_service_binding(service_binding)
-          }.to raise_error Models::ServiceInstance::InvalidServiceBinding
-        end
+    describe "#add_service_binding" do
+      it "should not bind an app and a service instance from different app spaces" do
+        Models::App.make(:space => service_instance.space)
+        service_binding = Models::ServiceBinding.make
+        expect {
+          service_instance.add_service_binding(service_binding)
+        }.to raise_error Models::ServiceInstance::InvalidServiceBinding
       end
     end
 
-    context "provisioning" do
-      let(:gw_client) { double(:client) }
-
-      let(:token)   { Models::ServiceAuthToken.make }
-
-      let(:service) { Models::Service.make(:label => token.label,
-                                           :provider => token.provider,
-                                           :version => "1.0") }
-
-      let(:service_plan) { Models::ServicePlan.make(:service => service,
-                                                    :name => "myplan") }
-
-      let(:provision_resp) do
-        VCAP::Services::Api::GatewayHandleResponse.new(
-          :service_id => "gwname",
-          :configuration => "abc",
-          :credentials => { :password => "foo" }
-        )
-      end
-
-      before do
-        client = VCAP::Services::Api::ServiceGatewayClient
-        client.stub(:new).and_return(gw_client)
-      end
-
+    describe "lifecycle" do
       context "service provisioning" do
-        it "should provision a service on create" do
-          VCAP::CloudController::SecurityContext.
-            should_receive(:current_user_email).
-            and_return("a@b.c")
-          received = nil
-          gw_client.should_receive(:provision).
-            with(hash_including(:email => "a@b.c")).
-            and_return(provision_resp)
-          instance = Models::ServiceInstance.make(:service_plan => service_plan)
-          instance.gateway_name.should == "gwname"
-          instance.gateway_data.should == "abc"
-          instance.credentials.should == { "password" => "foo" }
-        end
-
         it "should deprovision a service on rollback after a create" do
           expect {
             Models::ServiceInstance.db.transaction do
-              gw_client.should_receive(:provision).and_return(provision_resp)
               gw_client.should_receive(:unprovision)
-              instance = Models::ServiceInstance.make(:service_plan => service_plan)
-              raise "something bad"
+              service_instance
+              raise "something bad which causes the unprovision to happen"
             end
           }.to raise_error
         end
 
         it "should not deprovision a service on rollback after update" do
-          gw_client.should_receive(:provision).and_return(provision_resp)
-          instance = Models::ServiceInstance.make(:service_plan => service_plan)
           expect {
             Models::ServiceInstance.db.transaction do
-              instance.update(:name => "newname")
+              service_instance.update(:name => "newname")
               raise "something bad"
             end
           }.to raise_error
-        end
-
-        it "ensure gateway provision request contains specific fields" do
-          VCAP::CloudController::SecurityContext.
-            should_receive(:current_user_email).
-            and_return("a@b.c")
-
-          min_expected_fields_in_gw_provision_request = {
-            :label => "#{token.label}-#{service.version}",
-            :name => "foobar",
-            :email => "a@b.c",
-            :plan => "myplan",
-            :version => "1.0",
-            :user_guid => nil,
-            :provider => token.provider,
-          }
-
-          gw_client.should_receive(:provision).
-            with(hash_including(min_expected_fields_in_gw_provision_request)).
-            and_return(provision_resp)
-
-          instance = Models::ServiceInstance.make(:name => "foobar", :service_plan => service_plan)
         end
       end
 
       context "service deprovisioning" do
         it "should deprovision a service on destroy" do
-          gw_client.should_receive(:provision).and_return(provision_resp)
-          instance = Models::ServiceInstance.make(:service_plan => service_plan)
-
-          gw_client.should_receive(:unprovision).with(:service_id => "gwname")
-          instance.destroy
+          service_instance.client.should_receive(:unprovision).with(any_args)
+          service_instance.destroy
         end
       end
     end
@@ -134,17 +74,16 @@ module VCAP::CloudController
         it "should call ServiceCreateEvent.create_from_service_instance" do
           Models::ServiceCreateEvent.should_receive(:create_from_service_instance)
           Models::ServiceDeleteEvent.should_not_receive(:create_from_service_instance)
-          Models::ServiceInstance.make
+          service_instance
         end
       end
 
       context "destroying a service instance" do
         it "should call ServiceDeleteEvent.create_from_service_instance" do
-          instance = Models::ServiceInstance.make
+          service_instance
           Models::ServiceCreateEvent.should_not_receive(:create_from_service_instance)
-          Models::ServiceDeleteEvent.should_receive(:create_from_service_instance).
-            with(instance)
-          instance.destroy
+          Models::ServiceDeleteEvent.should_receive(:create_from_service_instance).with(service_instance)
+          service_instance.destroy
         end
       end
     end
@@ -168,6 +107,82 @@ module VCAP::CloudController
             }
           }
         }
+      end
+    end
+
+    describe "#service_gateway_client" do
+      let(:plan) do
+        double("plan").tap do |p|
+          p.stub(:service) {
+            double("service").tap do |s|
+              s.stub(:url => "https://fake.example.com/fake")
+              s.stub(:service_auth_token => token)
+              s.stub(:timeout => 999999)
+            end
+          }
+        end
+      end
+
+      context "with missing service_auth_token" do
+        let(:token) { nil }
+
+        it "raises an error" do
+          expect {
+            VCAP::CloudController::Models::ServiceInstance.new.service_gateway_client(plan)
+          }.to raise_error(VCAP::CloudController::Models::ServiceInstance::InvalidServiceBinding, /no service_auth_token/i)
+        end
+      end
+
+      context "with service_auth_token" do
+        let(:token) do
+          double("token").tap do |t|
+            t.stub(:token) { "le_token" }
+          end
+        end
+
+        it "sets the service_gateway_client" do
+          instance = VCAP::CloudController::Models::ServiceInstance.new
+          instance.service_gateway_client(plan)
+
+          expect(instance.client.instance_variable_get(:@url)).to eq("https://fake.example.com/fake")
+          expect(instance.client.instance_variable_get(:@token)).to eq("le_token")
+          expect(instance.client.instance_variable_get(:@timeout)).to eq(999999)
+        end
+      end
+    end
+
+    describe "#provision_on_gateway" do
+      context "when a client exists" do
+        it 'provisions the client' do
+          provision_hash = nil
+          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.should_receive(:provision).with(any_args) do |h|
+            provision_hash = h
+            VCAP::Services::Api::GatewayHandleResponse.new(
+              :service_id => '',
+              :configuration => '',
+              :credentials => '',
+            )
+          end
+          service_instance
+
+          expect(provision_hash).to eq(
+           :label => "#{service_instance.service_plan.service.label}-#{service_instance.service_plan.service.version}",
+           :name => service_instance.name,
+           :email => email,
+           :plan => service_instance.service_plan.name,
+           :plan_option => {}, # TODO: remove this
+           :provider => service_instance.service_plan.service.provider,
+           :version => service_instance.service_plan.service.version,
+           :user_guid => guid
+          )
+        end
+
+        it 'sets up the gateway' do
+          service_instance
+          expect(service_instance.gateway_name).to be_a String
+          expect(service_instance.gateway_data).to be_a String
+          expect(service_instance.credentials).to be_a Hash
+        end
       end
     end
 

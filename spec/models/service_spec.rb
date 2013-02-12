@@ -10,8 +10,25 @@ module VCAP::CloudController
       :sensitive_attributes => :crypted_password,
       :stripped_string_attributes => [:label, :provider],
       :one_to_zero_or_more   => {
-        :service_plans      => lambda { |service| Models::ServicePlan.make }
+        :service_plans      => lambda { |_| Models::ServicePlan.make }
       }
     }
+
+    describe 'when destroying' do
+      let!(:service) { VCAP::CloudController::Models::Service.make }
+      subject { service.destroy }
+
+      it "doesn't remove the associated ServiceAuthToken" do
+        # XXX services don't always have a token, unlike what the fixture implies
+        expect {
+          subject
+        }.to_not change {
+          VCAP::CloudController::Models::ServiceAuthToken.count(
+            :label => service.label,
+            :provider => service.provider,
+          )
+        }
+      end
+    end
   end
 end

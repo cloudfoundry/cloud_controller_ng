@@ -77,7 +77,7 @@ module VCAP::CloudController
         logger.debug("import_from_data - request is #{req.inspect}")
 
         serialized_url = service_instance.import_from_data(req)
-        result = service_instance.import_from_url(serialized_url)
+        service_instance.import_from_url(serialized_url)
       ensure
         FileUtils.rm_rf(file_path)
       end

@@ -58,9 +58,7 @@ module VCAP::CloudController
     describe "binding" do
       let(:gw_client) { double(:client) }
 
-      let(:token)   { Models::ServiceAuthToken.make }
-      let(:service) { Models::Service.make(:label => token.label,
-                                           :provider => token.provider) }
+      let(:service) { Models::Service.make }
       let(:service_plan) { Models::ServicePlan.make(:service => service) }
       let(:service_instance) { Models::ServiceInstance.make(:service_plan => service_plan) }
 

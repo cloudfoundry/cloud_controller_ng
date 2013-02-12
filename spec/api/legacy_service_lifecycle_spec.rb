@@ -17,7 +17,8 @@ module VCAP::CloudController
       )
       @mock_client.stub(:unprovision)
       # I miss dependency injection
-      Models::ServiceInstance.any_instance.stub(:service_gateway_client).and_return(@mock_client)
+      Models::ServiceInstance.any_instance.stub(:service_gateway_client)
+      Models::ServiceInstance.any_instance.stub(:client).and_return(@mock_client)
       # Machinist 1.0's make_unsaved doesn't work, so
       # here's poor man's make_unsaved
       @unknown_user = Models::User.make.destroy
@@ -26,17 +27,13 @@ module VCAP::CloudController
         :label => "jazz",
         :url => "http://12.34.56.78",
       )
-      service_instance = Models::ServiceInstance.make(
+      Models::ServiceInstance.make(
         :gateway_name => "lifecycle",
         :name => "bar",
         :space => @user.default_space,
         :service_plan => Models::ServicePlan.make(
           :service => service,
         ),
-      )
-      Models::ServiceAuthToken.create(
-        :service => service_instance.service_plan.service,
-        :token => "meow",
       )
     end
 
@@ -67,6 +64,7 @@ module VCAP::CloudController
 
       it "returns a 501 Not Implemented if upstream says so" do
         Models::ServiceInstance.any_instance.unstub(:service_gateway_client)
+        Models::ServiceInstance.any_instance.unstub(:client)
         gateway_url = "http://12.34.56.78/gateway/v1/configurations/lifecycle/snapshots"
         stub_request(:post, gateway_url).to_return(
           :status => 501,
@@ -105,6 +103,7 @@ module VCAP::CloudController
 
       it "returns a 501 Not Implemented if upstream says so" do
         Models::ServiceInstance.any_instance.unstub(:service_gateway_client)
+        Models::ServiceInstance.any_instance.unstub(:client)
         gateway_url = "http://12.34.56.78/gateway/v1/configurations/lifecycle/snapshots"
         stub_request(:get, gateway_url).to_return(
           :status => 501,

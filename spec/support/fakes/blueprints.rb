@@ -74,8 +74,13 @@ module VCAP::CloudController::Models
     label             { Sham.label }
     provider          { Sham.provider }
     url               { Sham.url }
-    description       { Sham.description }
     version           { Sham.version }
+    description do
+      # Hack since Sequel does not allow two foreign keys natively
+      # and putting this side effect outside memoizes the label and provider
+      ServiceAuthToken.make(:label => label, :provider => provider, :token => Sham.token)
+      Sham.description
+    end
   end
 
   ServiceInstance.blueprint do

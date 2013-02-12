@@ -5,9 +5,22 @@ module VCAP::CloudController::Models
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
 
+    class << self
+      def gateway_client_class
+        @gateway_client_class || VCAP::Services::Api::ServiceGatewayClient
+      end
+
+      def gateway_client_class=(klass)
+        raise ArgumentError, "gateway_client_class must not be nil" unless klass
+        @gateway_client_class = klass
+      end
+    end
+
     many_to_one :service_plan
     many_to_one :space
     one_to_many :service_bindings, :before_add => :validate_service_binding
+
+    attr_reader :provisioned_on_gateway_for_plan, :client
 
     default_order_by  :id
 
@@ -135,36 +148,24 @@ module VCAP::CloudController::Models
     end
 
     def service_gateway_client(plan = service_plan)
-      # This should only happen during unit testing if we are saving without
-      # validations to test db constraints
-      return unless plan
+      @client ||= begin
+        # This should only happen during unit testing if we are saving without
+        # validations to test db constraints
+        return unless plan
 
-      # TODO: this shouldn't be allowed to be nil.  There is a story filed to
-      # address this.
-      unless plan.service.service_auth_token
-        logger.error "no auth token found for #{service_plan.service.inspect}"
-        return
+        raise InvalidServiceBinding.new("no service_auth_token") unless plan.service.service_auth_token
+
+        self.class.gateway_client_class.new(
+          plan.service.url,
+          plan.service.service_auth_token.token,
+          plan.service.timeout,
+          :requester => requester
+        )
       end
-
-      VCAP::Services::Api::ServiceGatewayClient.new(
-        plan.service.url,
-        plan.service.service_auth_token.token,
-        plan.service.timeout,
-        :requester => requester
-      )
     end
 
     def provision_on_gateway
-      client = service_gateway_client
-
-      # TODO: see service_gateway_client
-      unless client
-        self.gateway_name = nil
-        self.gateway_data = nil
-        self.credentials  = {}
-        return
-      end
-
+      service_gateway_client
       logger.debug "provisioning service for instance #{guid}"
 
       gw_attrs = client.provision(
@@ -190,7 +191,7 @@ module VCAP::CloudController::Models
 
     def deprovision_on_gateway
       plan = @provisioned_on_gateway_for_plan || service_plan
-      client = service_gateway_client(plan)
+      service_gateway_client(plan)
       return unless client # TODO: see service_gateway_client
       @provisioned_on_gateway_for_plan = nil
       client.unprovision(:service_id => gateway_name)
@@ -199,42 +200,42 @@ module VCAP::CloudController::Models
     end
 
     def create_snapshot
-      client = service_gateway_client
+      service_gateway_client
       client.create_snapshot(:service_id => gateway_name)
     end
 
     def enum_snapshots
-      client = service_gateway_client
+      service_gateway_client
       client.enum_snapshots(:service_id => gateway_name)
     end
 
     def snapshot_details(sid)
-      client = service_gateway_client
+      service_gateway_client
       client.snapshot_details(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def rollback_snapshot(sid)
-      client = service_gateway_client
+      service_gateway_client
       client.rollback_snapshot(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def delete_snapshot(sid)
-      client = service_gateway_client
+      service_gateway_client
       client.delete_snapshot(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def serialized_url(sid)
-      client = service_gateway_client
+      service_gateway_client
       client.serialized_url(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def create_serialized_url(sid)
-      client = service_gateway_client
+      service_gateway_client
       client.create_serialized_url(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def import_from_url(req)
-      client = service_gateway_client
+      service_gateway_client
       client.import_from_url(:service_id => gateway_name, :msg => req)
     end
 
@@ -244,8 +245,8 @@ module VCAP::CloudController::Models
       upload_timeout = opts.fetch(:upload_timeout)
       file_path = opts.fetch(:data_file_path)
 
-      client = sds_client(upload_url, upload_token, upload_timeout)
-      client.import_from_data(
+      sds_client = sds_client(upload_url, upload_token, upload_timeout)
+      sds_client.import_from_data(
         :service => service_plan.service.label,
         :service_id => gateway_name,
         :msg => file_path,
@@ -253,7 +254,7 @@ module VCAP::CloudController::Models
     end
 
     def job_info(job_id)
-      client = service_gateway_client
+      service_gateway_client
       client.job_info(:service_id => gateway_name, :job_id => job_id)
     end
 
