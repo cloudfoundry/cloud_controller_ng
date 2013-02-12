@@ -41,9 +41,12 @@ module VCAP::CloudController
         token_information = decode_token(auth_token)
         logger.info("Token received from the UAA #{token_information.inspect}")
         uaa_id = token_information['user_id'] if token_information
-        user = Models::User.find(:guid => uaa_id) if uaa_id
-        user ||= create_admin_if_in_config(token_information)
-        user ||= create_admin_if_in_token(token_information)
+
+        if uaa_id
+          user = Models::User.find(:guid => uaa_id)
+          user ||= create_admin_if_in_config(token_information)
+          user ||= create_admin_if_in_token(token_information)
+        end
 
         VCAP::CloudController::SecurityContext.set(user, token_information)
       rescue => e
