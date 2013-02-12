@@ -23,7 +23,7 @@ module VCAP::CloudController
         VCAP::Stager::Client::EmAware.should_receive(:new).and_return stager_client
         stager_client.should_receive(:stage).and_return deferrable
         @redis = mock("mock redis")
-        AppStager.configure({}, nil, @redis)
+        AppStager.configure({}, MockMessageBus.new(config), @redis)
       end
 
       it "should stage via the staging client" do
