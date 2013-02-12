@@ -78,17 +78,6 @@ module VCAP::CloudController
       end
 
       def before_save
-        if column_changed?(:environment_json)
-          old, new = column_change(:environment_json)
-          # now the object is valid, we should feel safe using this attr as a hash
-          if key_changed?("BUNDLE_WITHOUT", old, new)
-            # We do this before super to give other plugins (e.g. dirty) a chance
-            # to properly mark or reset state
-            # We don't want to call mark_for_restaging because that will call #save again
-            self.package_state = "PENDING"
-          end
-        end
-
         super
 
         # The reason this is only done on a state change is that we really only
