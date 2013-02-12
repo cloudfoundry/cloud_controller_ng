@@ -10,7 +10,6 @@ module VCAP::CloudController
 
     before do
       VCAP::CloudController::SecurityContext.stub(:current_user_email) { email }
-      VCAP::CloudController::SecurityContext.stub(:current_user_guid) { guid }
     end
 
     it_behaves_like "a CloudController model", {
