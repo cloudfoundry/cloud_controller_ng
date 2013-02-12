@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :service_plan, :space],
-      :db_required_attributes => [:name, :space],
+      :db_required_attributes => [:name],
       :unique_attributes   => [:space, :name],
       :stripped_string_attributes => :name,
       :many_to_one         => {
@@ -173,7 +173,7 @@ module VCAP::CloudController
            :plan_option => {}, # TODO: remove this
            :provider => service_instance.service_plan.service.provider,
            :version => service_instance.service_plan.service.version,
-           :user_guid => guid
+           :space_guid => service_instance.space.guid
           )
         end
 
