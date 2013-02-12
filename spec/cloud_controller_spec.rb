@@ -281,7 +281,9 @@ describe VCAP::CloudController::Controller do
           end
         end
 
-        context "when the users table is empty" do
+        context "when there is no user_id in the token" do
+          let(:token_info) { {'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] } }
+
           before do
             reset_database
             CF::UAA::TokenCoder.should_receive(:new).with(
@@ -290,42 +292,65 @@ describe VCAP::CloudController::Controller do
             ).and_return(valid_coder)
           end
 
-          context "and the current user's email matches the admin email in the config file" do
-            let(:token_info) { {'user_id' => user_id, 'email' => email, 'scope' => ['non_admin'] } }
-            let(:email) { config_admin_email }
-
-            it "saves the current user as an admin" do
-              expect(VCAP::CloudController::Models::User.count).to eq(0)
-
-              subject
-
-              user = VCAP::CloudController::Models::User.first
-              expect(user.guid).to eq(user_id)
-              expect(user.admin).to be_true
-              expect(user.active).to be_true
-            end
+          it "does not create a user" do
+            expect { subject }.not_to change(VCAP::CloudController::Models::User, :count)
           end
 
-          context "and the current user is not admin" do
-            let(:token_info) { {'user_id' => user_id, 'email' => email, 'scope' => ['non_admin'] } }
+          it "sets up the security context" do
+            subject
 
-            it "does not create a user" do
-              expect { subject }.not_to change(VCAP::CloudController::Models::User, :count)
-            end
+            expect(VCAP::CloudController::SecurityContext.current_user).to be_nil
+            expect(VCAP::CloudController::SecurityContext.token).to eq token_info
           end
+        end
 
-          context "and the current user's token has an admin scope" do
-            let(:token_info) { {'user_id' => user_id, 'email' => email, 'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] } }
+        context "when there is a user_id in the token" do
+          let(:scope) { [] }
+          let(:token_info) { {'user_id' => user_id, 'email' => email, 'scope' => scope } }
 
-            it "saves the current user as an admin" do
-              expect(VCAP::CloudController::Models::User.count).to eq(0)
+          context "and the user doesn't exist" do
+            before do
+              reset_database
+              CF::UAA::TokenCoder.should_receive(:new).with(
+                :audience_ids => "cloud_controller",
+                :pkey => config_key
+              ).and_return(valid_coder)
+            end
 
-              subject
+            context "and the email in the token matches the admin email in the config file" do
+              let(:email) { config_admin_email }
 
-              user = VCAP::CloudController::Models::User.first
-              expect(user.guid).to eq(user_id)
-              expect(user.admin).to be_true
-              expect(user.active).to be_true
+              it "saves the current user as an admin" do
+                expect(VCAP::CloudController::Models::User.count).to eq(0)
+
+                subject
+
+                user = VCAP::CloudController::Models::User.first
+                expect(user.guid).to eq(user_id)
+                expect(user.admin).to be_true
+                expect(user.active).to be_true
+              end
+            end
+
+            context "and the current user is not admin" do
+              it "does not create a user" do
+                expect { subject }.not_to change(VCAP::CloudController::Models::User, :count)
+              end
+            end
+
+            context "and the current user's token has an admin scope" do
+              let(:scope) { [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
+
+              it "saves the current user as an admin" do
+                expect(VCAP::CloudController::Models::User.count).to eq(0)
+
+                subject
+
+                user = VCAP::CloudController::Models::User.first
+                expect(user.guid).to eq(user_id)
+                expect(user.admin).to be_true
+                expect(user.active).to be_true
+              end
             end
           end
         end
