@@ -30,7 +30,7 @@ module VCAP::CloudController
       Models::ServiceInstance.make(
         :gateway_name => "lifecycle",
         :name => "bar",
-        :space => @user.default_space,
+        :space => make_space_for_user(@user),
         :service_plan => Models::ServicePlan.make(
           :service => service,
         ),

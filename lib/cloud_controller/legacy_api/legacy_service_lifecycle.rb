@@ -102,10 +102,7 @@ module VCAP::CloudController
     def dispatch(op, gateway_name, *args)
       # FIXME: should really be unauthenticated
       raise NotAuthorized unless user
-      @service_instance = Models::ServiceInstance[
-        :gateway_name => gateway_name,
-        :space => default_space,
-      ]
+      @service_instance = Models::ServiceInstance.user_visible[:gateway_name => gateway_name]
       raise ServiceInstanceNotFound, gateway_name unless service_instance
       json_message = super
       # maybe this .encode fits better in the methods so that it's more explicit
