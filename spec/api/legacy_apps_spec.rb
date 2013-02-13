@@ -150,7 +150,28 @@ module VCAP::CloudController
 
     describe "GET /apps/:name/instances/:instance_id/files/(:path)" do
       before do
+        @common_name = Sham.name
+
         @app = Models::App.make(:space => user.default_space)
+
+        # make sure to create the app with the common name in a new space
+        # first.  This is the non-optimal order for wanting to pick the
+        # one from the default space with higher priority, and we want to
+        # make sure the implementation finds the right even if the wrong
+        # one was created first.
+        @same_name_new_space = Models::App.make(
+          :name => @common_name,
+          :space => make_space_for_user(user)
+        )
+
+        @same_name_default_space = Models::App.make(
+          :name => @common_name,
+          :space => user.default_space
+        )
+
+        @diff_name_new_space = Models::App.make(
+          :space => make_space_for_user(user)
+        )
       end
 
       it "should delegate to v2 files api with path" do
@@ -181,6 +202,39 @@ module VCAP::CloudController
 
         last_response.status.should == 200
         last_response.body.should == "files"
+      end
+
+      it "should use the app from the default space" do
+        files_obj = mock("files")
+
+        Files.should_receive(:new).once.and_return(files_obj)
+        files_obj.should_receive(:dispatch).once.
+          with(:files, @same_name_default_space.guid, "1", nil, :allow_redirect => false).
+          and_return([HTTP::OK, "files"])
+
+        get "/apps/#{@common_name}/instances/1/files", {}, headers_for(user)
+
+        last_response.status.should == 200
+        last_response.body.should == "files"
+      end
+
+      it "should find an app from a non-default space" do
+        files_obj = mock("files")
+
+        Files.should_receive(:new).once.and_return(files_obj)
+        files_obj.should_receive(:dispatch).once.
+          with(:files, @diff_name_new_space.guid, "1", nil, :allow_redirect => false).
+          and_return([HTTP::OK, "files"])
+
+        get "/apps/#{@diff_name_new_space.name}/instances/1/files", {}, headers_for(user)
+
+        last_response.status.should == 200
+        last_response.body.should == "files"
+      end
+
+      it "should return 404 for a non-existent app" do
+        get "/apps/#{Sham.name}/instances/1/files", {}, headers_for(user)
+        last_response.status.should == 404
       end
     end
 

@@ -151,9 +151,16 @@ module VCAP::CloudController
     end
 
     def app_from_name(name)
-      app = Models::App.user_visible[:name => name, :space => default_space]
-      raise AppNotFound.new(name) unless app
-      app
+      ds = Models::App.user_visible.filter(:name => name)
+
+      case ds.count
+      when 0
+        raise AppNotFound.new(name)
+      when 1
+        ds.first
+      else
+        ds[:space => default_space]
+      end
     end
 
     def request_from_legacy_create_json(legacy_json)
