@@ -54,16 +54,15 @@ module VCAP::CloudController
     end
 
     def before_modify(app)
-      unless params.has_key?("stage_async")
-        app.stage_sync = true
-      end
+      app.stage_async = params.has_key?("stage_async")
     end
 
     private
 
     def after_modify(app)
-      if async_stage_response = app.last_stage_async_response
-        set_header("X-App-Staging-Log", async_stage_response.streaming_log_url)
+      stager_response = app.last_stager_response
+      if stager_response && stager_response.streaming_log_url
+        set_header("X-App-Staging-Log", stager_response.streaming_log_url)
       end
 
       if app.dea_update_pending?

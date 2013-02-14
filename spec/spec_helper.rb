@@ -359,4 +359,4 @@ end
 require "cloud_controller/models"
 Dir.glob(File.join(File.dirname(__FILE__), "support/**/*.rb")).each { |f| require f }
 
-require "models/spec_helper.rb"
+require "models/spec_helper"

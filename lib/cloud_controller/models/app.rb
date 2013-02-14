@@ -47,13 +47,10 @@ module VCAP::CloudController
       # +DeaClient.start+
       attr_accessor :routes_changed
 
-      # Temporary flag to stage apps synchronously
-      # while async staging is being introduced
-      attr_accessor :stage_sync
+      attr_accessor :stage_async
 
-      # Last async staging response which
-      # contains streaming log url
-      attr_accessor :last_stage_async_response
+      # Last staging response which might contain streaming log url
+      attr_accessor :last_stager_response
 
       def validate
         # TODO: if we move the defaults out of the migration and up to the
@@ -304,14 +301,12 @@ module VCAP::CloudController
 
       private
 
-      def stage_if_needed
+      def stage_if_needed(&success_callback)
         if needs_staging? && started?
-          if stage_sync
-            AppStager.stage_app(self)
-          else
-            self.last_stage_async_response = \
-              AppStager.stage_app_async(self)
-          end
+          self.last_stager_response = \
+            AppStager.stage_app(self, {:async => stage_async}, &success_callback)
+        else
+          success_callback.call
         end
       end
 
@@ -326,19 +321,22 @@ module VCAP::CloudController
 
       def react_to_state_change
         if started?
-          stage_if_needed
-          DeaClient.start(self)
+          stage_if_needed do
+            DeaClient.start(self)
+            send_droplet_updated_message
+          end
         elsif stopped?
           DeaClient.stop(self)
+          send_droplet_updated_message
         end
-        send_droplet_updated_message
       end
 
       def react_to_instances_change(delta)
         if started?
-          stage_if_needed
-          DeaClient.change_running_instances(self, delta)
-          send_droplet_updated_message
+          stage_if_needed do
+            DeaClient.change_running_instances(self, delta)
+            send_droplet_updated_message
+          end
         end
       end
 

@@ -103,24 +103,30 @@ module VCAP::CloudController
 
         context "when stage_async flag is in params" do
           it "stages the app asynchronously" do
-            AppStager.should_receive(:stage_app_async)
+            AppStager.should_receive(:stage_app) do |app, options|
+              app.id.should == app_obj.id
+              options.should == {:async => true}
+              AppStager::Response.new({})
+            end
             put "/v2/apps/#{app_obj.guid}?stage_async=1", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
           end
 
           it "returns X-App-Staging-Log header with staging log url" do
-            AppStager
-              .should_receive(:stage_app_async)
-              .and_return(AppStager::AsyncResponse.new("task-id", "http://staging-log-url"))
+            stager_response = AppStager::Response.new("task_streaming_log_url" => "streaming-log-url")
+            AppStager.stub(:stage_app => stager_response)
 
             put "/v2/apps/#{app_obj.guid}?stage_async=1", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
             last_response.status.should == 201
-            last_response.headers["X-App-Staging-Log"].should == "http://staging-log-url"
+            last_response.headers["X-App-Staging-Log"].should == "streaming-log-url"
           end
         end
 
         context "when stage_async flag is not in params" do
           it "stages the app synchronously" do
-            AppStager.should_receive(:stage_app)
+            AppStager.should_receive(:stage_app) do |app, options|
+              app.id.should == app_obj.id
+              options.should == {:async => false}
+            end
             put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
           end
         end

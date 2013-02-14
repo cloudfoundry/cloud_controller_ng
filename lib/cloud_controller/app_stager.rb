@@ -3,25 +3,23 @@
 require "vcap/stager/client"
 require "redis"
 require "cloud_controller/staging_task_log"
+require "cloud_controller/multi_response_nats_request"
 
 module VCAP::CloudController
   module AppStager
-    class AsyncResponse < Struct.new(:task_id, :streaming_log_url, :error)
-      def self.from_json(json)
-        if json
-          hash = Yajl::Parser.parse(json)
-          new(*hash.values_at("task_id", "streaming_log_url", "error"))
-        else
-          new(nil, nil, "Did not receive staging response")
-        end
+    class Response
+      def initialize(response)
+        @response = response
       end
 
-      def error?
-        !!error
+      def log
+        @response["task_log"]
+      end
+
+      def streaming_log_url
+        @response["task_streaming_log_url"]
       end
     end
-
-    class AsyncError < StandardError; end
 
     class << self
       attr_reader :config, :message_bus
@@ -36,78 +34,97 @@ module VCAP::CloudController
         )
       end
 
-      def stage_app(app)
-        logger.debug "staging #{app.guid}"
-        LegacyStaging.with_upload_handle(app.guid) do |handle|
-          client_error = nil
-          results = EM.schedule_sync do |promise|
-            client = VCAP::Stager::Client::EmAware.new(MessageBus.instance.nats.client, queue)
+      def stage_app(app, options={}, &completion_callback)
+        current_droplet_hash = app.droplet_hash
 
-            request = staging_request(app)
-            logger.debug "staging #{app.guid} request: #{request}"
-            deferrable = client.stage(request, staging_timeout)
+        responses = MultiResponseNatsRequest.new(MessageBus.instance.nats.client, queue)
+        upload_handle = LegacyStaging.create_handle(app.guid)
 
-            deferrable.errback do |e|
-              logger.error "staging #{app.guid} request: #{request} error #{e}"
-              client_error = e
-              promise.deliver(e)
+        staging_full_result = EM.schedule_sync do |promise|
+          # First message might be SYNC or ASYNC staging response
+          # since stager might not support async staging process.
+          # First response is blocking stage_app.
+          responses.on_response(staging_timeout) do |response, error|
+            staging_error!(app, response, error, upload_handle)
+            ensure_staging_is_current!(app, current_droplet_hash, upload_handle)
+
+            stager_response = Response.new(response)
+            unless stager_response.streaming_log_url
+              staging_completion(app, stager_response, upload_handle)
+              completion_callback.call if completion_callback
             end
 
-            deferrable.callback do |resp|
-              logger.debug "staging #{app.guid} complete #{resp}"
-              promise.deliver(resp)
-            end
+            promise.deliver(stager_response)
           end
 
-          unless client_error
-            StagingTaskLog.new(app.guid, results["task_log"], @redis_client).save
-            upload_path = handle.upload_path
+          # Second message is received after app staging finished and
+          # droplet was uploaded to the CC.
+          # Second response does NOT block stage_app
+          responses.on_response(staging_timeout) do |response, error|
+            staging_error!(app, response, error, upload_handle)
+            ensure_staging_is_current!(app, current_droplet_hash, upload_handle)
+
+            stager_response = Response.new(response)
+            staging_completion(app, stager_response, upload_handle)
+
+            completion_callback.call if completion_callback
           end
 
-          unless upload_path
-            err_str = client_error || results["task_log"]
-            raise Errors::StagingError.new(
-              "failed to stage application:\n#{err_str}")
-          end
-
-          droplet_hash = Digest::SHA1.file(upload_path).hexdigest
-          LegacyStaging.store_droplet(app.guid, upload_path)
-          app.droplet_hash = droplet_hash
-          app.save
+          responses.request(staging_request(app, options[:async]))
         end
 
-        logger.info "staging for #{app.guid} complete"
-      end
-
-      def stage_app_async(app)
-        responses = message_bus.request(
-          "staging.async",
-          json_staging_request(app),
-          :expected => 1
-        )
-
-        AsyncResponse.from_json(responses.first).tap do |r|
-          raise AsyncError if r.error?
-        end
+        staging_full_result
       end
 
       def delete_droplet(app)
         LegacyStaging.delete_droplet(app.guid)
       end
 
-      def staging_request(app)
+      def staging_request(app, async)
         {
-          :app_id       => app.guid,
-          :properties   => staging_task_properties(app),
+          :app_id => app.guid,
+          :properties => staging_task_properties(app),
           :download_uri => LegacyStaging.app_uri(app.guid),
-          :upload_uri   => LegacyStaging.droplet_upload_uri(app.guid)
+          :upload_uri => LegacyStaging.droplet_upload_uri(app.guid),
+          :async => async,
         }
       end
 
       private
 
-      def json_staging_request(app)
-        Yajl::Encoder.encode(staging_request(app))
+      def staging_error!(app, response, error, upload_handle)
+        if error
+          raise Errors::StagingError, "failed to stage application:\n#{error}"
+        elsif response["error"]
+          raise Errors::StagingError, "failed to stage application:\n#{response["error"]}"
+        end
+      rescue
+        LegacyStaging.destroy_handle(upload_handle)
+        raise
+      end
+
+      def ensure_staging_is_current!(app, current_droplet_hash, upload_handle)
+        # Reload to find other updates of droplet hash
+        # which means that our staging process should not update the app
+        app.refresh
+        unless app.droplet_hash == current_droplet_hash
+          raise Errors::StagingError, "failed to stage because app changed while staging"
+        end
+      rescue
+        LegacyStaging.destroy_handle(upload_handle)
+        raise
+      end
+
+      def staging_completion(app, stager_response, upload_handle)
+        StagingTaskLog.new(app.guid, stager_response.log, @redis_client).save
+
+        droplet_hash = Digest::SHA1.file(upload_handle.upload_path).hexdigest
+        LegacyStaging.store_droplet(app.guid, upload_handle.upload_path)
+
+        app.droplet_hash = droplet_hash
+        app.save
+      ensure
+        LegacyStaging.destroy_handle(upload_handle)
       end
 
       def staging_task_properties(app)

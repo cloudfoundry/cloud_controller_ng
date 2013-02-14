@@ -1,0 +1,16 @@
+By default staging will be synchronous, i.e. CC / CCNG submits a staging job
+to the stager / dea_ng, and it waits until it finishes. You can request
+asynchronous staging via stage_async param but CC might fallback to synchronous
+staging.
+
+Possible VMCs:
+- VMC does not specify stage_async=1 staging will happen synchronously
+- VMC specifies stage_async=1 query param for PUT /apps/:id
+
+  Possible CCs:
+  - CC will ignore it and continue with sync staging
+  - CCNG will include async flag in staging request
+
+    Possible stagers:
+    - Stager will ignore and continue with sync staging
+    - Dea_ng will async stage the app

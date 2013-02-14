@@ -59,11 +59,25 @@ module VCAP::CloudController
         end
       end
 
-      def with_upload_handle(id)
-        handle = create_handle(id)
-        yield handle
-      ensure
-        destroy_handle handle
+      def create_handle(id)
+        handle = DropletUploadHandle.new(id)
+        mutex.synchronize do
+          if upload_handles[id]
+            raise Errors::StagingError.new("staging already in progress for #{id}")
+          end
+          upload_handles[handle.id] = handle
+        end
+        handle
+      end
+
+      def destroy_handle(handle)
+        return unless handle
+        mutex.synchronize do
+          if handle.upload_path && File.exists?(handle.upload_path)
+            File.delete(handle.upload_path)
+          end
+          upload_handles.delete(handle.id)
+        end
       end
 
       def lookup_handle(id)
@@ -138,27 +152,6 @@ module VCAP::CloudController
 
       def upload_handles
         @upload_handles ||= {}
-      end
-
-      def create_handle(id)
-        handle = DropletUploadHandle.new(id)
-        mutex.synchronize do
-          if upload_handles[id]
-            raise Errors::StagingError.new("staging already in progress for #{id}")
-          end
-          upload_handles[handle.id] = handle
-        end
-        handle
-      end
-
-      def destroy_handle(handle)
-        return unless handle
-        mutex.synchronize do
-          if handle.upload_path && File.exists?(handle.upload_path)
-            File.delete(handle.upload_path)
-          end
-          upload_handles.delete(handle.id)
-        end
       end
 
       MUTEX = Mutex.new

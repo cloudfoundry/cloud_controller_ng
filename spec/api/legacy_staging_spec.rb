@@ -48,24 +48,75 @@ module VCAP::CloudController
       config
     end
 
-    describe "with_upload_handle" do
-      it "should yield a handle with an id" do
-        LegacyStaging.with_upload_handle(app_guid) do |handle|
-          handle.id.should_not be_nil
-        end
-      end
+    describe "#create_handle" do
+      let(:handle_id) { Sham.guid }
 
-      it "should yield a handle with the upload_path initially nil" do
-        LegacyStaging.with_upload_handle(app_guid) do |handle|
-          handle.upload_path.should be_nil
+      context "when handle does not exist for given id" do
+        it "creates handle with id and empty upload path" do
+          LegacyStaging.create_handle(handle_id).tap do |h|
+            h.id.should == handle_id
+            h.upload_path.should be_nil
+          end
         end
-      end
 
-      it "should raise an error if an app guid is staged twice" do
-        LegacyStaging.with_upload_handle(app_guid) do |handle|
+        it "remembers handle" do
           expect {
-            LegacyStaging.with_upload_handle(app_guid)
-          }.to raise_error(Errors::StagingError, /already in progress/)
+            LegacyStaging.create_handle(handle_id)
+          }.to change { LegacyStaging.lookup_handle(handle_id) }.from(nil)
+        end
+      end
+
+      context "when handle exists for given id" do
+        before { LegacyStaging.create_handle(handle_id) }
+
+        it "does not allow duplicate handle id's" do
+          expect {
+            LegacyStaging.create_handle(handle_id)
+          }.to raise_error(Errors::StagingError, /staging already in progress/)
+        end
+      end
+    end
+
+    describe "#destroy_handle" do
+      let(:handle_id) { Sham.guid }
+      let!(:handle) { LegacyStaging.create_handle(handle_id) }
+
+      context "when the handle exists" do
+        def self.it_destroys_handle
+          it "destroys the handle" do
+            expect {
+              LegacyStaging.destroy_handle(handle)
+            }.to change { LegacyStaging.lookup_handle(handle_id) }.from(handle).to(nil)
+          end
+        end
+
+        context "when upload_path is set" do
+          let(:tmp_file) { Tempfile.new("temp_file") }
+          before { handle.upload_path = tmp_file.path }
+
+          context "and the upload path exists" do
+            it_destroys_handle
+
+            it "destroys the uploaded file" do
+              expect {
+                LegacyStaging.destroy_handle(handle)
+              }.to change { File.exists?(tmp_file.path) }.from(true).to(false)
+            end
+          end
+
+          context "and the upload path does not exist" do
+            it_destroys_handle
+          end
+        end
+
+        context "when upload_path is not set" do
+          it_destroys_handle
+        end
+      end
+
+      context " when the handle does not exist" do
+        it "does nothing" do
+          LegacyStaging.destroy_handle(handle)
         end
       end
     end
@@ -139,32 +190,38 @@ module VCAP::CloudController
         authorize staging_user, staging_password
       end
 
+      def make_request(droplet_guid=app_obj.guid)
+        post "/staging/droplets/#{droplet_guid}", upload_req
+      end
+
       context "with a valid upload handle" do
-        it "should rename the file and store it in handle.upload_path and delete it when the handle goes out of scope" do
-          saved_path = nil
-          LegacyStaging.with_upload_handle(app_obj.guid) do |handle|
-            post "/staging/droplets/#{app_obj.guid}", upload_req
+        let!(:handle) { LegacyStaging.create_handle(app_obj.guid) }
+        after { LegacyStaging.destroy_handle(handle) }
+
+        context "with valid app" do
+          it "returns 200" do
+            make_request
             last_response.status.should == 200
-            File.exists?(handle.upload_path).should be_true
-            saved_path = handle.upload_path
           end
-          File.exists?(saved_path).should be_false
+
+          it "stores file path in handle.upload_path" do
+            make_request
+            File.exists?(handle.upload_path).should be_true
+          end
+        end
+
+        context "with an invalid app" do
+          it "returns 404" do
+            make_request("bad")
+            last_response.status.should == 404
+          end
         end
       end
 
       context "with an invalid upload handle" do
-        it "should return an error" do
-          post "/staging/droplets/#{app_obj.guid}", upload_req
+        it "return 400" do
+          make_request
           last_response.status.should == 400
-        end
-      end
-
-      context "with an invalid app" do
-        it "should return an error" do
-          LegacyStaging.with_upload_handle(app_obj.guid) do |handle|
-            post "/staging/droplets/bad", upload_req
-            last_response.status.should == 404
-          end
         end
       end
 
