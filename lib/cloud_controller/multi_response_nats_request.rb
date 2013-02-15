@@ -23,8 +23,8 @@ class MultiResponseNatsRequest
       begin
         parsed_response = Yajl.load(response)
       rescue Yajl::ParseError => e
-        emsg = "Failed decoding response: #{e} #{e.backtrace}"
-        error = VCAP::Stager::Client::Error.new(emsg)
+        error_msg = "Failed decoding response: #{e}\n#{e.backtrace}"
+        error = VCAP::Stager::Client::Error.new(error_msg)
       end
 
       response_callback.call(parsed_response, error)
@@ -33,12 +33,22 @@ class MultiResponseNatsRequest
     timeout_request
   end
 
+  def ignore_subsequent_responses
+    raise ArgumentError, "request was not yet made" unless @sid
+    EM.cancel_timer(@timeout) if @timeout
+    unsubscribe
+  end
+
   private
 
   def timeout_request
     EM.cancel_timer(@timeout) if @timeout
     @timeout = EM.add_timer(@response_timeouts.pop) do
-      @nats.unsubscribe(@sid)
+      unsubscribe
     end
+  end
+
+  def unsubscribe
+    @nats.unsubscribe(@sid)
   end
 end

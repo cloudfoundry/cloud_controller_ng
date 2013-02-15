@@ -122,10 +122,10 @@ module VCAP::CloudController::SpecHelper
       config_hash = VCAP::CloudController::Config.from_file(config_file)
 
       config_hash.merge!(
-        :nginx => { :use_nginx => true },
+        :nginx => {:use_nginx => true},
         :resource_pool => {
           :resource_directory_key => "spec-cc-resources",
-          :fog_connection =>  {
+          :fog_connection => {
             :provider => "AWS",
             :aws_access_key_id => "fake_aws_key_id",
             :aws_secret_access_key => "fake_secret_access_key",
@@ -200,18 +200,39 @@ module VCAP::CloudController::SpecHelper
   def with_em_and_thread(opts = {}, &blk)
     auto_stop = opts.has_key?(:auto_stop) ? opts[:auto_stop] : true
     Thread.abort_on_exception = true
+
+    # Make sure that thread pool for defers is 1
+    # so that it acts as a simple run loop.
+    EM.threadpool_size = 1
+
     EM.run do
-      EM.reactor_thread?.should == true
       Thread.new do
-        EM.reactor_thread?.should == false
         blk.call
-        EM.reactor_thread?.should == false
-        if auto_stop
-          EM.next_tick { EM.stop }
-        end
+        stop_em_when_all_defers_are_done if auto_stop
       end
-      EM.reactor_thread?.should == true
     end
+  end
+
+  def stop_em_when_all_defers_are_done
+    stop_em = lambda {
+      # Account for defers/timers made from within defers/timers
+      if EM.defers_finished? && em_timers_finished?
+        EM.stop
+      else
+        # Note: If we put &stop_em in a oneshot timer
+        # calling EM.stop does not stop EM; however,
+        # calling EM.stop in the next tick does.
+        # So let's just do next_tick...
+        EM.next_tick(&stop_em)
+      end
+    }
+    EM.next_tick(&stop_em)
+  end
+
+  def em_timers_finished?
+    all_timers = EM.instance_variable_get("@timers")
+    active_timers = all_timers.select { |tid, t| t.respond_to?(:call) }
+    active_timers.empty?
   end
 
   RSpec::Matchers.define :be_recent do |expected|
@@ -241,7 +262,7 @@ module VCAP::CloudController::SpecHelper
         actual = Yajl::Parser.parse(json)
         matcher.matches?(actual)
       end
-    # regular values or RSpec Mocks argument matchers
+      # regular values or RSpec Mocks argument matchers
     else
       match do |json|
         actual = Yajl::Parser.parse(json)
@@ -280,7 +301,7 @@ module VCAP::CloudController::SpecHelper
       @total_allowed_files =
         num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
 
-      @dummy_descriptor = { "sha1" => Digest::SHA1.hexdigest("abc"), "size" => 1}
+      @dummy_descriptor = {"sha1" => Digest::SHA1.hexdigest("abc"), "size" => 1}
       @tmpdir = Dir.mktmpdir
 
       @descriptors = []
@@ -318,7 +339,7 @@ module VCAP::CloudController::SpecHelper
         :resource_pool => {
           :maximum_size => @max_file_size,
           :resource_directory_key => "spec-cc-resources",
-          :fog_connection =>  {
+          :fog_connection => {
             :provider => "AWS",
             :aws_access_key_id => "fake_aws_key_id",
             :aws_secret_access_key => "fake_secret_access_key",

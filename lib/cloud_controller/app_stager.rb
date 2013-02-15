@@ -49,25 +49,37 @@ module VCAP::CloudController
             ensure_staging_is_current!(app, current_droplet_hash, upload_handle)
 
             stager_response = Response.new(response)
-            unless stager_response.streaming_log_url
-              staging_completion(app, stager_response, upload_handle)
-              completion_callback.call if completion_callback
-            end
+            if stager_response.streaming_log_url
+              promise.deliver(stager_response)
+            else
+              responses.ignore_subsequent_responses
 
-            promise.deliver(stager_response)
+              # Defer potentially expensive operation
+              # to avoid executing on reactor thread
+              EM.defer do
+                staging_completion(app, stager_response, upload_handle)
+                completion_callback.call if completion_callback
+                promise.deliver(stager_response)
+              end
+            end
           end
 
           # Second message is received after app staging finished and
           # droplet was uploaded to the CC.
           # Second response does NOT block stage_app
           responses.on_response(staging_timeout) do |response, error|
+            responses.ignore_subsequent_responses
+
             staging_error!(app, response, error, upload_handle)
             ensure_staging_is_current!(app, current_droplet_hash, upload_handle)
 
-            stager_response = Response.new(response)
-            staging_completion(app, stager_response, upload_handle)
-
-            completion_callback.call if completion_callback
+            # Defer potentially expensive operation
+            # to avoid executing on reactor thread
+            EM.defer do
+              stager_response = Response.new(response)
+              staging_completion(app, stager_response, upload_handle)
+              completion_callback.call if completion_callback
+            end
           end
 
           responses.request(staging_request(app, options[:async]))

@@ -234,7 +234,9 @@ module VCAP::CloudController
               @before_staging_completion.call if @before_staging_completion
               reply_with_staging_setup_completion
             end
-            AppStager.stage_app(app, :async => true, &blk)
+            response = AppStager.stage_app(app, :async => true, &blk)
+            EM.stop # explicitly
+            response
           end
 
           context "when staging setup succeeds" do
