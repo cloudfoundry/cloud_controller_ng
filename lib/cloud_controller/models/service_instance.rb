@@ -178,6 +178,7 @@ module VCAP::CloudController::Models
         :version => service_plan.service.version,
         :provider => service_plan.service.provider,
         :space_guid => space.guid,
+        :organization_guid => space.organization_guid
       )
 
       logger.debug "provision response for instance #{guid} #{gw_attrs.inspect}"
