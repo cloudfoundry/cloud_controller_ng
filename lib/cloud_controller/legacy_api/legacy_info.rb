@@ -13,7 +13,8 @@ module VCAP::CloudController
         :support     => config[:info][:support_address],
         :version     => config[:info][:version],
         :description => config[:info][:description],
-        :authorization_endpoint => config[:uaa][:url],
+        :authorization_endpoint => config[:login] ? config[:login][:url] : config[:uaa][:url],
+        :token_endpoint => config[:uaa][:url],
         # TODO: enable once json schema is updated
         # :allow_debug => # config[:allow_debug]
         :allow_debug => false,
