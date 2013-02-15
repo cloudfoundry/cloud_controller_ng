@@ -27,7 +27,7 @@ describe MultiResponseNatsRequest do
       last_error = nil
 
       subject.on_response(1) do |response, error|
-        responses_count = 1
+        responses_count += 1
         last_response = response
         last_error = error
       end
@@ -71,12 +71,12 @@ describe MultiResponseNatsRequest do
     it "does not accept responses after the specified timeout for subsequent requests" do
       response1_count = 0
       subject.on_response(2) do |response, error|
-        response1_count = 1
+        response1_count += 1
       end
 
       response2_count = 0
       subject.on_response(4) do |response, error|
-        response2_count = 1
+        response2_count += 1
       end
 
       with_em_and_thread do
@@ -104,7 +104,7 @@ describe MultiResponseNatsRequest do
       last_error = nil
 
       subject.on_response(0) do |response, error|
-        responses_count = 1
+        responses_count += 1
         last_response = response
         last_error = error
       end
@@ -127,7 +127,7 @@ describe MultiResponseNatsRequest do
       last1_error = nil
 
       subject.on_response(0) do |response, error|
-        response1_count = 1
+        response1_count += 1
         last1_response = response
         last1_error = error
       end
@@ -137,7 +137,7 @@ describe MultiResponseNatsRequest do
       last2_error = nil
 
       subject.on_response(0) do |response, error|
-        response2_count = 1
+        response2_count += 1
         last2_response = response
         last2_error = error
       end
@@ -190,7 +190,7 @@ describe MultiResponseNatsRequest do
       responses_count = 0
       with_em_and_thread do
         subject.on_response(0) do |data, error|
-          responses_count = 1
+          responses_count += 1 # Should not get here
         end
         subject.request({})
         subject.ignore_subsequent_responses
