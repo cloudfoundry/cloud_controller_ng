@@ -19,18 +19,8 @@ class MultiResponseNatsRequest
     raise ArgumentError, "request was already made" if @sid
 
     @sid = @nats.request(@subject, data) do |response|
-      next unless response_callback = @responses.pop
-      timeout_request
-
-      begin
-        parsed_response = Yajl.load(response)
-      rescue Yajl::ParseError => e
-        error = Error.new("Failed decoding response: #{e}\n#{e.backtrace}")
-      end
-
-      response_callback.call(parsed_response, error)
+      handle_received_response(response)
     end
-
     timeout_request
   end
 
@@ -43,11 +33,30 @@ class MultiResponseNatsRequest
 
   private
 
+  def handle_received_response(response)
+    begin
+      parsed_response = Yajl.load(response)
+    rescue Yajl::ParseError => e
+      error = Error.new("Failed decoding response: #{e}\n#{e.backtrace}")
+    end
+    timeout_request
+    trigger_on_response(parsed_response, error)
+  end
+
+  def trigger_on_response(response, error)
+    if response_callback = @responses.pop
+      response_callback.call(response, error)
+    end
+  end
+
   def timeout_request
     EM.cancel_timer(@timeout) if @timeout
-    @timeout = EM.add_timer(@response_timeouts.pop) do
-      unsubscribe
-      #notify_timeout_error
+
+    if secs = @response_timeouts.pop
+      @timeout = EM.add_timer(secs) do
+        unsubscribe
+        trigger_on_response(nil, Error.new("Timed out"))
+      end
     end
   end
 

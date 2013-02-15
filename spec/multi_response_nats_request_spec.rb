@@ -42,10 +42,15 @@ describe MultiResponseNatsRequest do
       last_error.should be_nil
     end
 
-    it "does not accept responses after the specified timeout" do
+    it "does not accept responses after the specified timeout and returns an error" do
       responses_count = 0
+      last_response = nil
+      last_error = nil
+
       subject.on_response(1) do |response, error|
-        responses_count = 1
+        responses_count += 1
+        last_response = response
+        last_error = error
       end
 
       with_em_and_thread do
@@ -53,11 +58,14 @@ describe MultiResponseNatsRequest do
 
         EM.add_timer(2) do
           mock_nats.reply_to_last_request("subject", "response" => "response-value")
-          EM.next_tick { EM.stop }
         end
       end
 
-      responses_count.should == 0
+      responses_count.should == 1
+      last_response.should be_nil
+
+      last_error.should be_a(described_class::Error)
+      last_error.message.should match /Timed out/
     end
 
     it "does not accept responses after the specified timeout for subsequent requests" do
@@ -110,7 +118,7 @@ describe MultiResponseNatsRequest do
       last_response.should be_nil
 
       last_error.should be_a(described_class::Error)
-      last_error.message.should match /decoding response/
+      last_error.message.should match /Failed decoding response/
     end
 
     it "notifies second callback with second response" do
@@ -208,6 +216,23 @@ describe MultiResponseNatsRequest do
       expect {
         subject.ignore_subsequent_responses
       }.to raise_error(ArgumentError, /request was not yet made/)
+    end
+
+    it "can ignore subsequent responses from a response callback" do
+      responses_count = 0
+      with_em_and_thread do
+        subject.on_response(0) do |*args|
+          responses_count += 1
+          subject.ignore_subsequent_responses
+        end
+        subject.on_response(0) do |*args|
+          responses_count += 1 # Should not get here
+        end
+        subject.request({})
+        mock_nats.reply_to_last_request("subject", "response" => "response-value")
+        mock_nats.reply_to_last_request("subject", "response" => "response-value")
+      end
+      responses_count.should == 1
     end
   end
 end

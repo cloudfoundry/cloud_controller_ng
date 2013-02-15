@@ -235,6 +235,10 @@ module VCAP::CloudController::SpecHelper
     active_timers.empty?
   end
 
+  def em_inspect_timers
+    puts EM.instance_variable_get("@timers").inspect
+  end
+
   RSpec::Matchers.define :be_recent do |expected|
     match do |actual|
       actual.should be_within(5).of(Time.now)
