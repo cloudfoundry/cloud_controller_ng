@@ -11,7 +11,8 @@ module VCAP::CloudController
         :support     => @config[:info][:support_address],
         :version     => @config[:info][:version],
         :description => @config[:info][:description],
-        :authorization_endpoint => @config[:uaa][:url],
+        :authorization_endpoint => @config[:login] ? @config[:login][:url] : @config[:uaa][:url],
+        :token_endpoint => @config[:uaa][:url],
         :api_version => @config[:info][:api_version]
       }
 

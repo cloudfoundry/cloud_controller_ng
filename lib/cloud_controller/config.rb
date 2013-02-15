@@ -22,6 +22,10 @@ class VCAP::CloudController::Config < VCAP::Config
       # TODO: put back once json schema is sorted out
       # :allow_debug => BoolSchema,
 
+      optional(:login) => {
+        :url      => String
+      },
+
       :uaa => {
         :url                => String,
         :resource_id        => String,
