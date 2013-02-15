@@ -1,5 +1,7 @@
 # Can be used to run custom callback for each NATS response
 class MultiResponseNatsRequest
+  class Error < StandardError; end
+
   def initialize(nats, subject)
     @nats = nats
     @subject = subject
@@ -23,8 +25,7 @@ class MultiResponseNatsRequest
       begin
         parsed_response = Yajl.load(response)
       rescue Yajl::ParseError => e
-        error_msg = "Failed decoding response: #{e}\n#{e.backtrace}"
-        error = VCAP::Stager::Client::Error.new(error_msg)
+        error = Error.new("Failed decoding response: #{e}\n#{e.backtrace}")
       end
 
       response_callback.call(parsed_response, error)
@@ -35,6 +36,7 @@ class MultiResponseNatsRequest
 
   def ignore_subsequent_responses
     raise ArgumentError, "request was not yet made" unless @sid
+
     EM.cancel_timer(@timeout) if @timeout
     unsubscribe
   end
@@ -45,6 +47,7 @@ class MultiResponseNatsRequest
     EM.cancel_timer(@timeout) if @timeout
     @timeout = EM.add_timer(@response_timeouts.pop) do
       unsubscribe
+      #notify_timeout_error
     end
   end
 

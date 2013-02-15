@@ -108,7 +108,9 @@ describe MultiResponseNatsRequest do
 
       responses_count.should == 1
       last_response.should be_nil
-      last_error.should be_a(VCAP::Stager::Client::Error)
+
+      last_error.should be_a(described_class::Error)
+      last_error.message.should match /decoding response/
     end
 
     it "notifies second callback with second response" do
