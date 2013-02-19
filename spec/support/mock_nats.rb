@@ -37,8 +37,7 @@ MockClass.define(:NatsClientMock, NatsInstance) do
 
   overrides :publish do |subject, msg=nil, opt_reply=nil, &blk|
     @subscriptions[subject].each do |blk|
-      raw_data = msg.kind_of?(String) ? msg : Yajl::Encoder.encode(msg)
-      blk.call(raw_data, opt_reply)
+      blk.call(msg, opt_reply)
     end
   end
 

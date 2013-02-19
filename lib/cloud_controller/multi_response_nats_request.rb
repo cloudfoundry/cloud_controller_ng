@@ -18,7 +18,7 @@ class MultiResponseNatsRequest
     raise ArgumentError, "at least one callback must be provided" if @responses.empty?
     raise ArgumentError, "request was already made" if @sid
 
-    @sid = @nats.request(@subject, data) do |response|
+    @sid = @nats.request(@subject, Yajl.dump(data)) do |response|
       handle_received_response(response)
     end
     timeout_request
