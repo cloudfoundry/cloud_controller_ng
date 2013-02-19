@@ -422,6 +422,25 @@ module VCAP::CloudController
       end
     end
 
+    describe "POST", "/services/v1/configurations/:gateway_name/serialized/uploads" do
+      it "should return not authorized for unknown users" do
+        post "/services/v1/configurations/lifecycle/serialized/uploads", {}, headers_for(@unknown_user)
+        last_response.status.should == 403
+      end
+
+      it "should return not found for unknown ids" do
+        post "/services/v1/configurations/xxx/serialized/uploads", {}, headers_for(@user)
+        last_response.status.should == 404
+      end
+
+      it "should create a upload url" do
+        config_override(:external_domain => 'http://api.fake.com')
+        post "/services/v1/configurations/lifecycle/serialized/uploads", {}, headers_for(@user)
+        last_response.status.should == 200
+        last_response.body.should == "http://api.fake.com/services/v1/configurations/lifecycle/serialized/data"
+      end
+    end
+
     describe "GET", "/services/v1/configurations/:gateway_name/jobs/:job_id" do
       it "should return not authorized for unknown users" do
         get "/services/v1/configurations/lifecycle/jobs/yyy", {}, headers_for(@unknown_user)
