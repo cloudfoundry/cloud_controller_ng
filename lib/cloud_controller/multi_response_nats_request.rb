@@ -21,6 +21,8 @@ class MultiResponseNatsRequest
     @sid = @nats.request(@subject, Yajl.dump(data)) do |response|
       handle_received_response(response)
     end
+
+    logger.info "request: sid=#{@sid} response='#{data}'"
     timeout_request
   end
 
@@ -34,11 +36,14 @@ class MultiResponseNatsRequest
   private
 
   def handle_received_response(response)
+    logger.info "handle_received_response: sid=#{@sid} response='#{response}'"
+
     begin
       parsed_response = Yajl.load(response)
     rescue Yajl::ParseError => e
       error = Error.new("Failed decoding response: #{e}\n#{e.backtrace}")
     end
+
     timeout_request
     trigger_on_response(parsed_response, error)
   end
@@ -53,6 +58,8 @@ class MultiResponseNatsRequest
     EM.cancel_timer(@timeout) if @timeout
 
     if secs = @response_timeouts.pop
+      logger.info "timeout_request: sid=#{@sid} timeout=#{secs}"
+
       @timeout = EM.add_timer(secs) do
         unsubscribe
         trigger_on_response(nil, Error.new("Timed out"))
@@ -61,6 +68,11 @@ class MultiResponseNatsRequest
   end
 
   def unsubscribe
+    logger.info "unsubscribe: sid=#{@sid}"
     @nats.unsubscribe(@sid)
+  end
+
+  def logger
+    @logger ||= Steno.logger(self.class.name)
   end
 end
