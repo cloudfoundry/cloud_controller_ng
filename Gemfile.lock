@@ -40,7 +40,7 @@ GIT
       yajl-ruby
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     activesupport (3.2.8)
       i18n (~> 0.6)
