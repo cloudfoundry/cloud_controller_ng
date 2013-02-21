@@ -57,7 +57,7 @@
 
 ## CC Specific API
 
-NOTE: Like the migrations and the models this is being fleshed out and should be reviewed for hiearchy and relationships only.
+NOTE: Like the migrations and the models this is being fleshed out and should be reviewed for hierarchy and relationships only.
 
 ### LIST <%= api.class_basename %>s
 
@@ -71,7 +71,7 @@ Returns a paginated response of <%= api.class_basename %>s.
 | ---------              | -----------                                                                      |
 | limit                  | Maximum number of results to return.                                             |
 | offset                 | Offset from which to start iteration.                                            |
-| urls-only              | If 1, only return a list of urls; do not expand metadata or resource attributues |
+| urls-only              | If 1, only return a list of urls; do not expand metadata or resource attributes |
 | inline-relations-depth | 0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.   |
 <% if api.query_parameters %>
 | q                      | Search/filter string of the form `<attribute-name>:<value>` |
