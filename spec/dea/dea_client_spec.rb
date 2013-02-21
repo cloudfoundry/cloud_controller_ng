@@ -47,6 +47,14 @@ module VCAP::CloudController
           res[:console].should == true
         end
       end
+
+      context "with an app enabled for debug support" do
+        it "should pass debug mode in the start message" do
+          @app.update(:debug => "run")
+          res = DeaClient.send(:start_app_message, @app)
+          res[:debug].should == "run"
+        end
+      end
     end
 
     describe "update_uris" do

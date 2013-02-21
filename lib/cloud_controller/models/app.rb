@@ -27,13 +27,13 @@ module VCAP::CloudController
       export_attributes :name, :production,
                         :space_guid, :framework_guid, :runtime_guid, :buildpack,
                         :environment_json, :memory, :instances,
-                        :disk_quota, :state, :version, :command, :console
+                        :disk_quota, :state, :version, :command, :console, :debug
 
       import_attributes :name, :production,
                         :space_guid, :framework_guid, :runtime_guid, :buildpack,
                         :environment_json, :memory, :instances,
                         :disk_quota, :state,
-                        :command, :console,
+                        :command, :console, :debug,
                         :service_binding_guids, :route_guids
 
       strip_attributes  :name
@@ -146,6 +146,16 @@ module VCAP::CloudController
         # without the == true check, this expression can return nil if
         # the key doesn't exist, rather than false
         self.metadata && self.metadata["console"] == true
+      end
+
+      def debug=(d)
+        self.metadata ||= {}
+        # We don't support sending nil through API
+        self.metadata["debug"] = (d == "none") ? nil : d
+      end
+
+      def debug
+        self.metadata && self.metadata["debug"]
       end
 
       # We sadly have to do this ourselves because the serialization plugin

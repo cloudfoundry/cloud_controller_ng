@@ -620,6 +620,26 @@ module VCAP::CloudController
             decoded_response["meta"]["console"].should == true
           end
         end
+
+        describe "with debug" do
+          it "should set debug if one is set" do
+            legacy_req = Yajl::Encoder.encode(
+              "name" => "app_with_debug",
+              "debug" => "suspend",
+              "staging" => {
+                "framework" => "grails",
+                "runtime"   => "java"
+              }
+            )
+
+            post "/apps", legacy_req, headers_for(user)
+            last_response.status.should == 302
+
+            get "/apps/app_with_debug", {}, headers_for(user)
+            last_response.status.should == 200
+            decoded_response["meta"]["debug"].should == "suspend"
+          end
+        end
       end
     end
 

@@ -161,6 +161,27 @@ module VCAP::CloudController
       end
     end
 
+    describe "debug" do
+      it "stores the command in the metadata" do
+        app = Models::App.make(:debug => "suspend")
+        app.metadata.should eq("debug" => "suspend")
+        app.save
+        app.metadata.should eq("debug" => "suspend")
+        app.refresh
+        app.metadata.should eq("debug" => "suspend")
+      end
+
+      it "returns nil if debug was explicitly set to nil" do
+        app = Models::App.make(:debug => nil)
+        app.debug.should be_nil
+      end
+
+      it "returns nil if debug was not set" do
+        app = Models::App.make
+        app.debug.should be_nil
+      end
+    end
+
     describe "validations" do
       describe "env" do
         let(:app) { Models::App.make }

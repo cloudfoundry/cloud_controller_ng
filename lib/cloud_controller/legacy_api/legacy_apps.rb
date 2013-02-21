@@ -210,7 +210,7 @@ module VCAP::CloudController
         :space_guid => default_space.guid
       }
 
-      ["name", "instances", "state", "console"].each do |k|
+      ["name", "instances", "state", "console", "debug"].each do |k|
         req[k] = hash[k] if hash.has_key?(k)
       end
 

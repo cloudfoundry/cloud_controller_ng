@@ -26,6 +26,7 @@ module VCAP::CloudController
       attribute  :state,               String,     :default => "STOPPED" # , :exclude_in => :create
       attribute  :command,             String,     :default => nil
       attribute  :console,             Message::Boolean, :default => false
+      attribute :debug,                String,     :default => nil
 
       # a URL pointing to a git repository
       # note that this will not match private git URLs, i.e. git@github.com:foo/bar.git

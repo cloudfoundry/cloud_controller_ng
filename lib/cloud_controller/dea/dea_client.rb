@@ -339,6 +339,7 @@ module VCAP::CloudController
           :cc_partition => config[:cc_partition],
           :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
           :console => app.console,
+          :debug => app.debug,
         }
       end
 
