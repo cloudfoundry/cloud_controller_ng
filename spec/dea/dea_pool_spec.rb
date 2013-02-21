@@ -42,65 +42,74 @@ module VCAP::CloudController
     end
 
     describe "find_dea" do
-      # meets needs but will be setup to be expired
-      let(:dea_a) do
+      let(:dea_expired) do
         {
-          :id => "a",
+          :id => "expired",
           :available_memory => 1024,
-          :runtimes => ["ruby18", "java", "ruby19"]
+          :runtimes => %w[ruby18 java ruby19]
         }
       end
 
-      # meets mem needs only
-      let(:dea_b) do
+      let(:dea_mem_only) do
         {
-          :id => "b",
+          :id => "mem_only",
           :available_memory => 1024,
-          :runtimes => ["ruby18", "java"]
+          :runtimes => %w[ruby18 java]
         }
       end
 
-      # meets runtime needs only
-      let(:dea_c) do
+      let(:dea_runtime_only) do
         {
-          :id => "c",
+          :id => "runtime_only",
           :available_memory => 512,
-          :runtimes => ["ruby18", "java", "ruby19"]
+          :runtimes => %w[ruby18 java ruby19]
         }
       end
 
-      # meets all needs
-      let(:dea_d) do
+      let(:dea_all) do
         {
-          :id => "d",
+          :id => "all",
           :available_memory => 1024,
-          :runtimes => ["ruby18", "java", "ruby19"]
+          :runtimes => %w[ruby18 java ruby19]
         }
       end
 
-      let(:deas) do
-        deas = DeaPool.send(:deas)
+      let(:dea_buildpack) do
+        {
+          :id => "buildpack",
+          :available_memory => 1024
+        }
       end
 
-      before do
-        DeaPool.send(:process_advertise_message, dea_a)
-        DeaPool.send(:process_advertise_message, dea_b)
-        DeaPool.send(:process_advertise_message, dea_c)
-        DeaPool.send(:process_advertise_message, dea_d)
-        deas["a"][:last_update] = Time.new(2011, 04, 11)
+      context "when the dea has runtimes" do
+        let(:deas) { deas = DeaPool.send(:deas) }
+
+        before do
+          DeaPool.send(:process_advertise_message, dea_expired)
+          DeaPool.send(:process_advertise_message, dea_mem_only)
+          DeaPool.send(:process_advertise_message, dea_runtime_only)
+          DeaPool.send(:process_advertise_message, dea_all)
+          deas["expired"][:last_update] = Time.new(2011, 04, 11)
+        end
+
+        it "should find a non-expired dea meeting the needs of the app" do
+          DeaPool.find_dea(1024, "ruby19").should == "all"
+        end
+
+        it "should remove expired dea entries" do
+          expect {
+            DeaPool.find_dea(4096, "cobol").should be_nil
+          }.to change { deas.count }.from(4).to(3)
+        end
       end
 
-      it "should find a non-expired dea meeting the needs of the app" do
-        deas["a"][:last_update] = Time.new(2011, 04, 11)
-        id = DeaPool.find_dea(1024, "ruby19")
-        id.should == "d"
-      end
+      context "when the dea has no runtimes (i.e. is buildpack only)" do
+        before { DeaPool.send(:process_advertise_message, dea_buildpack) }
 
-      it "should remove expired dea entries" do
-        deas.count.should == 4
-        id = DeaPool.find_dea(4096, "cobol")
-        id.should == nil
-        deas.count.should == 3
+        it "should find a non-expired dea meeting the needs of the app" do
+          DeaPool.find_dea(1024, "foobar").should == "buildpack"
+          DeaPool.find_dea(1024, "ruby19").should == "buildpack"
+        end
       end
     end
   end

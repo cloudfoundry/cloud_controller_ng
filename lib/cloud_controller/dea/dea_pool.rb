@@ -59,7 +59,7 @@ module VCAP::CloudController
 
       def dea_meets_needs?(dea, mem, runtime)
         stats = dea[:advertisement]
-        stats[:available_memory] >= mem && stats[:runtimes].member?(runtime)
+        stats[:available_memory] >= mem && (stats[:runtimes].nil? || stats[:runtimes].member?(runtime))
       end
 
       MUTEX = Mutex.new
