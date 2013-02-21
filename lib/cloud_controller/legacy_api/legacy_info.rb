@@ -15,7 +15,7 @@ module VCAP::CloudController
         :description => config[:info][:description],
         :authorization_endpoint => config[:login] ? config[:login][:url] : config[:uaa][:url],
         :token_endpoint => config[:uaa][:url],
-        :allow_debug => config[:allow_debug],
+        :allow_debug => config[:allow_debug] || true,
         # TODO get this from DB
         :frameworks  => legacy_framework_info
       }
