@@ -16,16 +16,16 @@ module VCAP::CloudController
 
     def summary(id)
       app = find_id_and_validate_access(:read, id)
-      app_info = {
-        :guid => app.guid,
-        :name => app.name,
-        :routes => app.routes.map(&:as_summary_json),
-        :framework => app.framework.to_hash.merge(:guid => app.framework.guid),
-        :runtime => app.runtime.to_hash.merge(:guid => app.runtime.guid),
-        :running_instances => app.running_instances,
-        :services => app.service_instances.map(&:as_summary_json),
-        :available_domains => app.space.domains.map(&:as_summary_json)
-      }.merge(app.to_hash)
+      app_info = app.to_hash.merge(
+        'guid' => app.guid,
+        'name' => app.name,
+        'routes' => app.routes.map(&:as_summary_json),
+        'framework' => app.framework.to_hash.merge(:guid => app.framework.guid),
+        'runtime' => app.runtime.to_hash.merge(:guid => app.runtime.guid),
+        'running_instances' => app.running_instances,
+        'services' => app.service_instances.map(&:as_summary_json),
+        'available_domains' => app.space.domains.map(&:as_summary_json)
+      )
 
       Yajl::Encoder.encode(app_info)
     end

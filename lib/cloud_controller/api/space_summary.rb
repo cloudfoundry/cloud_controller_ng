@@ -34,40 +34,42 @@ module VCAP::CloudController
       end
 
       Yajl::Encoder.encode(
-        :guid => space.guid,
-        :name => space.name,
-        :apps => apps.values,
-        :services => services_summary,
+        'guid' => space.guid,
+        'name' => space.name,
+        'apps' => apps.values,
+        'services' => services_summary,
       )
     end
 
     private
 
     def app_summary(app)
-      {
-        :guid => app.guid,
-        :urls => app.routes.map(&:fqdn),
-        :routes => app.routes.map(&:as_summary_json),
-        :service_count => app.service_bindings_dataset.count,
-        :framework => { :name => app.framework.name },
-        :runtime => { :name => app.runtime.name },
-        :running_instances => 0,
-      }.merge(app.to_hash)
+      app.to_hash.merge(
+        'guid' => app.guid,
+        'urls' => app.routes.map(&:fqdn),
+        'routes' => app.routes.map(&:as_summary_json),
+        'service_count' => app.service_bindings_dataset.count,
+        'framework_name' => app.framework.name,
+        'runtime_name' => app.runtime.name,
+        'framework' => { 'name' => app.framework.name },
+        'runtime' => { 'name' => app.runtime.name },
+        'running_instances' => 0,
+      )
     end
 
     def service_instance_summary(instance)
       {
-        :guid => instance.guid,
-        :name => instance.name,
-        :bound_app_count => instance.service_bindings_dataset.count,
-        :service_plan => {
-          :guid => instance.service_plan.guid,
-          :name => instance.service_plan.name,
-          :service => {
-            :guid => instance.service_plan.service.guid,
-            :label => instance.service_plan.service.label,
-            :provider => instance.service_plan.service.provider,
-            :version => instance.service_plan.service.version,
+        'guid' => instance.guid,
+        'name' => instance.name,
+        'bound_app_count' => instance.service_bindings_dataset.count,
+        'service_plan' => {
+          'guid' => instance.service_plan.guid,
+          'name' => instance.service_plan.name,
+          'service' => {
+            'guid' => instance.service_plan.service.guid,
+            'label' => instance.service_plan.service.label,
+            'provider' => instance.service_plan.service.provider,
+            'version' => instance.service_plan.service.version,
           }
         }
       }

@@ -6,18 +6,18 @@ module VCAP::CloudController
 
     def read
       info = {
-        :name        => @config[:info][:name],
-        :build       => @config[:info][:build],
-        :support     => @config[:info][:support_address],
-        :version     => @config[:info][:version],
-        :description => @config[:info][:description],
-        :authorization_endpoint => @config[:login] ? @config[:login][:url] : @config[:uaa][:url],
-        :token_endpoint => @config[:uaa][:url],
-        :api_version => @config[:info][:api_version]
+        'name' => @config[:info][:name],
+        'build' => @config[:info][:build],
+        'support' => @config[:info][:support_address],
+        'version' => @config[:info][:version],
+        'description' => @config[:info][:description],
+        'authorization_endpoint' => @config[:login] ? @config[:login][:url] : @config[:uaa][:url],
+        'token_endpoint' => @config[:uaa][:url],
+        'api_version' => @config[:info][:api_version]
       }
 
       if user
-        info[:user] = user.guid
+        info['user'] = user.guid
       end
 
       Yajl::Encoder.encode(info)

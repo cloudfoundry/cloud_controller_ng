@@ -97,6 +97,7 @@ module VCAP::CloudController
 
       it "should contain the basic app attributes" do
         @app.to_hash.each do |k, v|
+          next if %w[framework runtime].include?(k)
           decoded_response[k.to_s].should == v
         end
       end

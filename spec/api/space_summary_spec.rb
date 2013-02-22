@@ -87,7 +87,7 @@ module VCAP::CloudController
           app = @apps.find { |a| a.guid == app_resp["guid"] }
           expected_running_instances = app.started? ? app.instances : 0
 
-          app_resp.should == {
+          app_resp.should == app.to_hash.merge(
             "guid" => app.guid,
             "name" => app.name,
             "urls" => [@route1.fqdn, @route2.fqdn],
@@ -112,7 +112,7 @@ module VCAP::CloudController
             "runtime_name" => app.runtime.name,
             "framework" => {"name" => app.framework.name},
             "runtime" => {"name" => app.runtime.name},
-          }.merge(app.to_hash)
+          )
         end
       end
 
