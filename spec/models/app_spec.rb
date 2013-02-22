@@ -641,10 +641,10 @@ module VCAP::CloudController
     describe "changes to the app that trigger staging/dea notifications" do
       # Mark app as staged when AppStager.stage_app is called
       before do
-        AppStager.stub(:stage_app) do |app, options={ }, &success_callback|
+        AppStager.stub(:stage_app) do |app, options={}, &success_callback|
           app.droplet_hash = "droplet-hash"
           success_callback.call
-          AppStager::Response.new({ })
+          AppStagerTask::Response.new({})
         end
       end
 

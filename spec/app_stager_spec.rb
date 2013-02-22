@@ -33,7 +33,10 @@ module VCAP::CloudController
           end
 
           with_em_and_thread { stage }
-          data_in_request.should == JSON.dump(described_class.staging_request(app, options[:async]))
+
+          task = AppStagerTask.new(nil, nil, nil, app)
+          expected_data = task.staging_request(options[:async])
+          data_in_request.should == JSON.dump(expected_data)
         end
       end
 
@@ -149,6 +152,23 @@ module VCAP::CloudController
         it "removes upload handle" do
           LegacyStaging.should_receive(:destroy_handle)
           ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
+        end
+      end
+
+      def self.it_logs_staging_error
+        it "logs StagingError instead of raising to avoid stopping main runloop" do
+          logger = mock(:logger, :info => nil)
+          logger.should_receive(:error) do |msg|
+            msg.should match /failed to stage/
+          end
+
+          Steno.stub(:logger => logger)
+          with_em_and_thread { stage }
+        end
+
+        it "removes upload handle" do
+          LegacyStaging.should_receive(:destroy_handle)
+          with_em_and_thread { stage }
         end
       end
 
@@ -318,7 +338,7 @@ module VCAP::CloudController
               mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
             end
 
-            it_raises_staging_error
+            it_logs_staging_error
             it_does_not_complete_staging
           end
 
@@ -332,7 +352,7 @@ module VCAP::CloudController
               })
             end
 
-            it_raises_staging_error
+            it_logs_staging_error
             it_does_not_complete_staging
           end
         end
@@ -404,7 +424,7 @@ module VCAP::CloudController
       end
 
       def request(async=false)
-        AppStager.staging_request(@app, async)
+        AppStagerTask.new(nil, nil, nil, @app).staging_request(async)
       end
 
       def store_app_package(app)
