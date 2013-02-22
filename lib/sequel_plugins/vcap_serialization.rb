@@ -19,17 +19,8 @@ module Sequel::Plugins::VcapSerialization
     def to_hash(opts = {})
       hash = {}
       attrs = self.class.export_attrs || []
-      attrs.each do |field|
-        if field.is_a? Hash
-          field.each do |nested_field, nested_field_fields|
-            hash[nested_field.to_s] ||= {}
-            nested_field_fields.each do |nested_field_field|
-              hash[nested_field.to_s][nested_field_field.to_s] = send(:"#{nested_field}_#{nested_field_field}")
-            end
-          end
-        else
-          hash[field.to_s] = send(field) if opts[:only].nil? || opts[:only].include?(field)
-        end
+      attrs.each do |k|
+        hash[k.to_s] = send(k) if opts[:only].nil? || opts[:only].include?(k)
       end
       hash
     end

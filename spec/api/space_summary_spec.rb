@@ -110,8 +110,6 @@ module VCAP::CloudController
             "running_instances" => expected_running_instances,
             "framework_name" => app.framework.name,
             "runtime_name" => app.runtime.name,
-            "framework" => {"name" => app.framework.name},
-            "runtime" => {"name" => app.runtime.name},
           }.merge(app.to_hash)
         end
       end

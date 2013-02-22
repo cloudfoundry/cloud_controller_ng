@@ -15,16 +15,16 @@ module VCAP::CloudController
     let(:route) { Models::Route.make(:domain => domain, :space => space) }
 
     it_behaves_like "a CloudController model", {
-      :required_attributes => [:name, :framework, :runtime, :space],
-      :unique_attributes => [:space, :name],
+      :required_attributes  => [:name, :framework, :runtime, :space],
+      :unique_attributes    => [:space, :name],
       :stripped_string_attributes => :name,
       :many_to_one => {
-        :space => lambda { |app| Models::Space.make },
-        :framework => lambda { |app| Models::Framework.make },
-        :runtime => lambda { |app| Models::Runtime.make }
+        :space              => lambda { |app| Models::Space.make  },
+        :framework          => lambda { |app| Models::Framework.make },
+        :runtime            => lambda { |app| Models::Runtime.make   }
       },
-      :one_to_zero_or_more => {
-        :service_bindings => lambda { |app|
+      :one_to_zero_or_more  => {
+        :service_bindings   => lambda { |app|
           service_binding = Models::ServiceBinding.make
           service_binding.service_instance.space = app.space
           service_binding
@@ -65,7 +65,7 @@ module VCAP::CloudController
 
       it "should not associate an app with a route created on another space with a shared domain" do
         shared_domain = Models::Domain.new(:name => Sham.name,
-          :owning_organization => nil)
+                                           :owning_organization => nil)
         shared_domain.save(:validate => false)
         app = Models::App.make
         app.space.add_domain(shared_domain)
@@ -187,7 +187,7 @@ module VCAP::CloudController
         let(:app) { Models::App.make }
 
         it "should allow an empty environment" do
-          app.environment_json = { }
+          app.environment_json = {}
           app.should be_valid
         end
 
@@ -201,7 +201,7 @@ module VCAP::CloudController
           app.should be_valid
         end
 
-        ["VMC", "vmc", "VCAP", "vcap"].each do |k|
+        [ "VMC", "vmc", "VCAP", "vcap" ].each do |k|
           it "should not allow entries to start with #{k}" do
             app.environment_json = { :abc => 123, "#{k}_abc" => "hi" }
             app.should_not be_valid
@@ -213,7 +213,7 @@ module VCAP::CloudController
         let(:app) { Models::App.make }
 
         it "should allow empty metadata" do
-          app.metadata = { }
+          app.metadata = {}
           app.should be_valid
         end
 
@@ -228,7 +228,7 @@ module VCAP::CloudController
         end
 
         it "should save direct updates to the metadata" do
-          app.metadata.should == { }
+          app.metadata.should == {}
           app.metadata["some_key"] = "some val"
           app.metadata["some_key"].should == "some val"
           app.save
@@ -387,9 +387,9 @@ module VCAP::CloudController
     describe "adding routes to unsaved apps" do
       it "should set a route by guid on a new but unsaved app" do
         app = Models::App.new(:name => Sham.name,
-          :framework => Models::Framework.make,
-          :runtime => Models::Runtime.make,
-          :space => space)
+                              :framework => Models::Framework.make,
+                              :runtime => Models::Runtime.make,
+                              :space => space)
         app.add_route_by_guid(route.guid)
         app.save
         app.routes.should == [route]
@@ -397,9 +397,9 @@ module VCAP::CloudController
 
       it "should not allow a route on a domain from another org" do
         app = Models::App.new(:name => Sham.name,
-          :framework => Models::Framework.make,
-          :runtime => Models::Runtime.make,
-          :space => space)
+                              :framework => Models::Framework.make,
+                              :runtime => Models::Runtime.make,
+                              :space => space)
         app.add_route_by_guid(Models::Route.make.guid)
         expect { app.save }.to raise_error(Models::App::InvalidRouteRelation)
         app.routes.should be_empty
@@ -592,10 +592,10 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::App.make(:space => space,
-              :memory => 65,
-              :instances => 2)
+                             :memory => 65,
+                             :instances => 2)
           end.to raise_error(Sequel::ValidationFailed,
-            /memory quota_exceeded/)
+                             /memory quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
@@ -603,8 +603,8 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::App.make(:space => space,
-              :memory => 64,
-              :instances => 2)
+                             :memory => 64,
+                             :instances => 2)
           end.to_not raise_error
         end
       end
@@ -614,19 +614,19 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => quota)
           space = Models::Space.make(:organization => org)
           app = Models::App.make(:space => space,
-            :memory => 64,
-            :instances => 2)
+                                 :memory => 64,
+                                 :instances => 2)
           app.memory = 65
           expect { app.save }.to raise_error(Sequel::ValidationFailed,
-            /memory quota_exceeded/)
+                                             /memory quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
           org = Models::Organization.make(:quota_definition => quota)
           space = Models::Space.make(:organization => org)
           app = Models::App.make(:space => space,
-            :memory => 63,
-            :instances => 2)
+                                 :memory => 63,
+                                 :instances => 2)
           app.memory = 64
           expect { app.save }.to_not raise_error
         end
@@ -877,23 +877,6 @@ module VCAP::CloudController
           it_does_not_stage
           it_notifies_dea
         end
-      end
-    end
-
-    describe "#to_hash" do
-      let(:app) { Models::App.make }
-      subject { app.to_hash }
-
-      it "has the space guid correctly formatted" do
-        should include("space" => { "guid" => app.space_guid })
-      end
-
-      it "has the framework guid correctly formatted" do
-        should include("framework" => { "guid" => app.framework_guid })
-      end
-
-      it "has the runtime guid correctly formatted" do
-        should include("runtime" => { "guid" => app.runtime_guid })
       end
     end
   end

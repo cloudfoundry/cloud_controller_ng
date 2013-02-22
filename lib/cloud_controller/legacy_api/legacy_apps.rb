@@ -210,13 +210,13 @@ module VCAP::CloudController
         :space_guid => default_space.guid
       }
 
-      %w[name instances state console debug].each do |k|
+      ["name", "instances", "state", "console", "debug"].each do |k|
         req[k] = hash[k] if hash.has_key?(k)
       end
 
-      if (staging = hash["staging"])
+      if staging = hash["staging"]
         framework = nil
-        if (framework_name = staging["framework"] || staging["model"])
+        if framework_name = staging["framework"] || staging["model"]
           framework = Models::Framework.find(:name => framework_name)
           raise FrameworkInvalid.new(framework_name) unless framework
           req[:framework_guid] = framework.guid
@@ -233,13 +233,13 @@ module VCAP::CloudController
         req[:command] = staging["command"] if staging["command"]
       end
 
-      if (resources = hash["resources"])
-        %w[memory instances].each do |k|
+      if resources = hash["resources"]
+        ["memory", "instances"].each do |k|
           req[k] = resources[k] if resources[k]
         end
       end
 
-      if (uris = hash["uris"])
+      if uris = hash["uris"]
         req[:route_guids] = uris.map do |uri|
           # TODO: change when we allow subdomains
           (host, domain_name) = uri.split(".", 2)
