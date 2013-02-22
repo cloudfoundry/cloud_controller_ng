@@ -25,7 +25,7 @@ module VCAP::CloudController
           )
           app.space.organization.add_domain(domain)
           app.space.add_domain(domain)
-          Models::Route.make(:domain => domain, :space => app.space)
+          route = Models::Route.make(:domain => domain, :space => app.space)
         }
       },
       :one_to_many_collection_ids  => {

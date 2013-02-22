@@ -72,11 +72,12 @@ module VCAP::CloudController::ApiSpecHelper
       @uri.should_not be_nil
     end
 
-    it "should correctly inline #{attr} field" do
-      export_attrs_keys = obj.class.export_attrs.map { |attrs| attrs.is_a?(Hash) ? attrs.keys.map(&:to_s) : attrs.to_s }.flatten
-      if !export_attrs_keys.include?(attr.to_s) && (depth.nil? || depth == 0)
+    if depth.nil? || depth == 0
+      it "should not return a #{attr} field" do
         entity.should_not have_key(attr)
-      else
+      end
+    else
+      it "should return a #{attr} field" do
         entity.should have_key(attr)
       end
     end
