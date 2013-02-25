@@ -65,7 +65,7 @@ describe MultiResponseNatsRequest do
       last_response.should be_nil
 
       last_error.should be_a(described_class::Error)
-      last_error.message.should match /Timed out/
+      last_error.message.should match /timed out/
     end
 
     it "does not accept responses after the specified timeout for subsequent requests" do
@@ -118,7 +118,7 @@ describe MultiResponseNatsRequest do
       last_response.should be_nil
 
       last_error.should be_a(described_class::Error)
-      last_error.message.should match /Failed decoding response/
+      last_error.message.should match /failed to decode response/
     end
 
     it "notifies second callback with second response" do

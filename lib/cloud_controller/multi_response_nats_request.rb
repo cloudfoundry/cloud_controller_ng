@@ -41,7 +41,8 @@ class MultiResponseNatsRequest
     begin
       parsed_response = Yajl.load(response)
     rescue Yajl::ParseError => e
-      error = Error.new("Failed decoding response: #{e}\n#{e.backtrace}")
+      logger.info("Failed decoding response: #{e}\n#{e.backtrace}")
+      error = Error.new("Internal error: failed to decode response")
     end
 
     timeout_request
@@ -62,7 +63,7 @@ class MultiResponseNatsRequest
 
       @timeout = EM.add_timer(secs) do
         unsubscribe
-        trigger_on_response(nil, Error.new("Timed out"))
+        trigger_on_response(nil, Error.new("Operation timed out"))
       end
     end
   end

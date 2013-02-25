@@ -153,7 +153,7 @@ module VCAP::CloudController
         msg = "failed to stage application:\n#{error}"
         raise Errors::StagingError, msg
       elsif response["error"]
-        msg = "failed to stage application:\n#{response["error"]}"
+        msg = "failed to stage application:\n#{response["error"]}\n#{response["task_log"]}"
         raise Errors::StagingError, msg
       end
     end
