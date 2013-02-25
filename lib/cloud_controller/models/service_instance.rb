@@ -28,7 +28,7 @@ module VCAP::CloudController::Models
                       :space_guid, :gateway_data
 
     import_attributes :name, :service_plan_guid,
-                      :space_guid, :gateway_data
+                      :space_guid, :gateway_data, :credentials, :gateway_name
 
     strip_attributes  :name
 
