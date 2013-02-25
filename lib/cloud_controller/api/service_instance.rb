@@ -11,6 +11,9 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name,             String
+      attribute :credentials,      Hash
+      attribute :gateway_data,     Hash
+      attribute :gateway_name,     String
       to_one    :space
       to_one    :service_plan
       to_many   :service_bindings
