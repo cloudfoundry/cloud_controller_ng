@@ -138,6 +138,7 @@ module Sinatra
           varz[:requests][:completed] += 1
           varz[:http_status][response.status] += 1
         end
+        headers["Content-Type"] = "application/json;charset=utf-8"
         headers["X-VCAP-Request-ID"] = @request_guid
         Thread.current[:vcap_request_id] = nil
         Steno.config.context.data.delete("request_guid")
