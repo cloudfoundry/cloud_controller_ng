@@ -52,6 +52,15 @@ module VCAP::CloudController
       # Last staging response which might contain streaming log url
       attr_accessor :last_stager_response
 
+      def before_validation
+        # TODO: Set default values for framework and runtime for clients that
+        # don't send such information (buildpacks). Once VMC deprecate frameworks
+        # and runtimes we can remove frameworks and runtimes completely from cc.
+        self.framework ||= VCAP::CloudController::Models::Framework.find(:name => "buildpack")
+        self.runtime ||= VCAP::CloudController::Models::Runtime.find(:name => "ruby19")
+        super
+      end
+
       def validate
         # TODO: if we move the defaults out of the migration and up to the
         # controller (as it probably should be), do more presence validation
