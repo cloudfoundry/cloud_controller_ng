@@ -14,8 +14,8 @@ module VCAP::CloudController
       attribute  :name,                String
       attribute  :production,          Message::Boolean,    :default => false
       to_one     :space
-      to_one     :runtime
-      to_one     :framework
+      to_one     :runtime,             :optional_in => :create
+      to_one     :framework,           :optional_in => :create
       attribute  :environment_json,    Hash,       :default => {}
       attribute  :memory,              Integer,    :default => 256
       attribute  :instances,           Integer,    :default => 1
