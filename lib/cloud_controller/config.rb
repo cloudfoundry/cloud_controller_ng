@@ -44,6 +44,7 @@ class VCAP::CloudController::Config < VCAP::Config
         optional(:tmpdir)    => String,
         optional(:droplets)  => String,
         optional(:staging_manifests) => String,
+        optional(:stacks)    => String,
       },
 
       optional(:runtimes_file) => String,
@@ -137,14 +138,6 @@ class VCAP::CloudController::Config < VCAP::Config
     merge_defaults(config)
   end
 
-  def self.merge_defaults(config)
-    config[:directories] ||= {}
-    config[:directories][:staging_manifests] ||=
-      File.join(config_dir, "frameworks")
-    config[:runtimes_file] ||= File.join(config_dir, "runtimes.yml")
-    config
-  end
-
   def self.configure(config)
     mbus = VCAP::CloudController::MessageBus.new(config)
     VCAP::CloudController::MessageBus.instance = mbus
@@ -166,5 +159,17 @@ class VCAP::CloudController::Config < VCAP::Config
 
   def self.config_dir
     @config_dir ||= File.expand_path("../../../config", __FILE__)
+  end
+
+  private
+
+  def self.merge_defaults(config)
+    config[:runtimes_file] ||= File.join(config_dir, "runtimes.yml")
+
+    config[:directories] ||= {}
+    config[:directories][:staging_manifests] ||= File.join(config_dir, "frameworks")
+    config[:directories][:stacks] ||= File.join(config_dir, "stacks")
+
+    config
   end
 end
