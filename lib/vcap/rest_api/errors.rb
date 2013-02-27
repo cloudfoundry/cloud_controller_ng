@@ -72,7 +72,6 @@ module VCAP::RestAPI
 
     def self.included(base)
       base.extend(ClassMethods)
-      base.define_base_errors
     end
 
     extend(ClassMethods)
