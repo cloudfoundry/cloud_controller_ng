@@ -1,0 +1,3 @@
+[submodule "vendor/errors"]
+	path = vendor/errors
+	url = git://github.com/cloudfoundry/errors.git
