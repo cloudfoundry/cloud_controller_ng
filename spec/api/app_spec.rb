@@ -16,7 +16,7 @@ module VCAP::CloudController
       :many_to_one_collection_ids => {
         :space      => lambda { |app| Models::Space.make  },
         :framework  => lambda { |app| Models::Framework.make },
-        :runtime    => lambda { |app| Models::Runtime.make   }
+        :runtime    => lambda { |app| Models::Runtime.make },
       },
       :many_to_many_collection_ids => {
         :routes => lambda { |app|
