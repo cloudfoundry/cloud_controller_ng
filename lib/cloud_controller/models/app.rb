@@ -53,8 +53,7 @@ module VCAP::CloudController
       attr_accessor :last_stager_response
 
       def before_validation
-        # TODO: Set default values for framework and runtime for clients that
-        # don't send such information (buildpacks). Once VMC deprecate frameworks
+        # TODO: Once VMC deprecates frameworks
         # and runtimes we can remove frameworks and runtimes completely from cc.
         self.framework ||= VCAP::CloudController::Models::Framework.find(:name => "buildpack")
         self.runtime ||= VCAP::CloudController::Models::Runtime.find(:name => "ruby19")
