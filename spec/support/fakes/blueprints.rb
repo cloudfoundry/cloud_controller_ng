@@ -102,11 +102,17 @@ module VCAP::CloudController::Models
     internal_info     { { :runtimes => [ Runtime.make.name => { :default => true } ] } }
   end
 
+  Stack.blueprint do
+    name              { Sham.name }
+    description       { Sham.description }
+  end
+
   App.blueprint do
     name              { Sham.name }
     space             { Space.make }
     runtime           { Runtime.make }
     framework         { Framework.make }
+    stack             { Stack.make }
   end
 
   ServiceBinding.blueprint do

@@ -13,6 +13,7 @@ module VCAP::CloudController
       many_to_one       :space
       many_to_one       :framework
       many_to_one       :runtime
+      many_to_one       :stack
       many_to_many      :routes,
                         :before_add => :validate_route,
                         :after_add => :mark_routes_changed,
@@ -31,6 +32,7 @@ module VCAP::CloudController
 
       import_attributes :name, :production,
                         :space_guid, :framework_guid, :runtime_guid, :buildpack,
+                        :stack_guid,
                         :environment_json, :memory, :instances,
                         :disk_quota, :state,
                         :command, :console, :debug,
@@ -68,6 +70,7 @@ module VCAP::CloudController
         validates_presence :space
         validates_presence :framework
         validates_presence :runtime
+        validates_presence :stack
         validates_git_url :buildpack
         validates_unique   [:space_id, :name]
         validates_includes PackageStates, :package_state, :allow_missing => true
