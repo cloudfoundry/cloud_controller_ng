@@ -169,9 +169,13 @@ module VCAP::CloudController
     # seperate utility will get written for this
     def populate_framework_and_runtimes
       rt_file = @config[:runtimes_file]
+      Models::Runtime.populate_from_file(rt_file)
+
       fw_dir = @config[:directories][:staging_manifests]
-      Models::Runtime.populate_from_file rt_file
-      Models::Framework.populate_from_directory fw_dir
+      Models::Framework.populate_from_directory(fw_dir)
+
+      stacks_dir = @config[:directories][:stacks]
+      Models::Stack.populate_from_directory(stacks_dir)
     end
   end
 end
