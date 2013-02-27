@@ -132,7 +132,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
 
