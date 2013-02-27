@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-require "vcap/rest_api/http_constants"
+require "vcap/rest_api/errors"
 
-module VCAP::CloudController::Errors
+module VCAP::Errors
   include VCAP::RestAPI::Errors
 
   ERRORS_DIR = File.expand_path("../../../vendor/errors", __FILE__)
