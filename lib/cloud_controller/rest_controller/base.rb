@@ -7,7 +7,7 @@ module VCAP::CloudController::RestController
     ROUTE_PREFIX = "/v2"
 
     include VCAP::CloudController
-    include VCAP::CloudController::Errors
+    include VCAP::Errors
     include VCAP::RestAPI
     include PermissionManager
     include Messages

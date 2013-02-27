@@ -2,7 +2,7 @@
 
 module VCAP::CloudController
   class LegacyApps < LegacyApiBase
-    include VCAP::CloudController::Errors
+    include VCAP::Errors
 
     def initialize(*args)
       raise NotAuthenticated unless user

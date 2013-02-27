@@ -53,7 +53,7 @@ module Sinatra
         # We don't really have a class to attach a member variable to, so we have to
         # use the env to flag this.
         unless request.env["vcap_exception_body_set"]
-          body_from_vcap_exception(::VCAP::RestAPI::Errors::NotFound.new)
+          body_from_vcap_exception(::VCAP::Errors::NotFound.new)
         end
       end
 
@@ -74,7 +74,7 @@ module Sinatra
           ::VCAP::Component.varz.synchronize do
             varz[:recent_errors] << msg
           end
-          body_from_vcap_exception(::VCAP::RestAPI::Errors::ServerError.new)
+          body_from_vcap_exception(::VCAP::Errors::ServerError.new)
           status(500)
         end
       end

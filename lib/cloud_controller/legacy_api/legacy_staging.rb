@@ -12,7 +12,7 @@
 
 module VCAP::CloudController
   class LegacyStaging < LegacyApiBase
-    include VCAP::CloudController::Errors
+    include VCAP::Errors
 
     # Endpoint does its own (non-standard) auth
     allow_unauthenticated_access

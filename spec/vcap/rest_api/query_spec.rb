@@ -120,7 +120,7 @@ module VCAP::RestAPI
           lambda {
             ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.should raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.should raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
 
@@ -140,7 +140,7 @@ module VCAP::RestAPI
           lambda {
             ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.should raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.should raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
 
@@ -150,7 +150,7 @@ module VCAP::RestAPI
           lambda {
             ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.should raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.should raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
 
