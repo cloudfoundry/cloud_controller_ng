@@ -18,6 +18,36 @@
   http_code: 400
   message: "Invalid relation: %s"
 
+10000:
+  name: NotFound
+  http_code: 404
+  message: "Unknown request"
+
+10001:
+  name: ServerError
+  http_code: 500
+  message: "Server error"
+
+10002:
+  name: NotAuthenticated
+  http_code: 401
+  message: "Authentication error"
+
+10003:
+  name: NotAuthorized
+  http_code: 403
+  message: "You are not authorized to perform the requested action"
+
+10004:
+  name: InvalidRequest
+  http_code: 400
+  message: "The request is invalid"
+
+10005:
+  name: BadQueryParameter
+  http_code: 400
+  message: "The query parameter is invalid: %s"
+
 20001:
   name: UserInvalid
   http_code: 400
