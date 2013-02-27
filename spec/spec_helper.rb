@@ -19,10 +19,18 @@ require "webmock/rspec"
 module VCAP::CloudController
   class SpecEnvironment
     def initialize
-      FileUtils.mkdir_p artifacts_dir
-      File.unlink(log_filename) if File.exists?(log_filename)
-      Steno.init(Steno::Config.new(:default_log_level => "debug",
-                                   :sinks => [Steno::Sink::IO.for_file(log_filename)]))
+      FileUtils.mkdir_p(artifacts_dir)
+
+      # ignore the race when we run specs in parallel
+      begin
+        File.unlink(log_filename)
+      rescue Errno::ENOENT
+      end
+
+      Steno.init(Steno::Config.new(
+        :default_log_level => "debug",
+        :sinks => [Steno::Sink::IO.for_file(log_filename)]
+      ))
       reset_database
     end
 
