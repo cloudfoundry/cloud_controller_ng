@@ -54,7 +54,7 @@ module VCAP::CloudController
     end
 
     def before_modify(app)
-      app.stage_async = params.has_key?("stage_async")
+      app.stage_async = %w(1 true).include?(params["stage_async"])
     end
 
     private
