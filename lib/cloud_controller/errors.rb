@@ -106,6 +106,10 @@ module VCAP::CloudController::Errors
     ["QuotaDefinitionNameTaken", HTTP::BAD_REQUEST, 240002, "Quota Definition is taken: %s"],
     ["QuotaDefinitionInvalid", HTTP::BAD_REQUEST, 240003, "Quota Definition is invalid: %s"],
 
+    ["StackInvalid",   HTTP::BAD_REQUEST, 250001, "The stack is invalid: %s"],
+    ["StackNameTaken", HTTP::BAD_REQUEST, 250002, "The stack name is taken: %s"],
+    ["StackNotFound",  HTTP::NOT_FOUND,   250003, "The stack could not be found: %s"],
+
   ].each do |e|
     define_error *e
   end
