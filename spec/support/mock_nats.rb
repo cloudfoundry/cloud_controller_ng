@@ -10,6 +10,7 @@ end
 
 
 require "nats/client"
+require "support/mock_class"
 
 # Defined specifically for NatsClientMock
 class NatsInstance
