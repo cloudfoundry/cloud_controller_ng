@@ -15,21 +15,18 @@ module VCAP::CloudController::Models
       validates_unique   :name
     end
 
-    def self.populate_from_directory(dir_name)
-      Dir[File.join(dir_name, "*.yml")].each do |file_name|
-        populate_from_file(file_name)
+    def self.populate_from_file(file_name)
+      config_hash = YAML.load_file(file_name)
+      config_hash["stacks"].each do |stack_hash|
+        populate_from_hash(stack_hash)
       end
     end
 
     private
 
-    def self.populate_from_file(file_name)
-      populate_from_hash(YAML.load_file(file_name))
-    end
-
-    def self.populate_from_hash(config)
-      update_or_create(:name => config["name"]) do |r|
-        r.update(:description => config["description"])
+    def self.populate_from_hash(hash)
+      update_or_create(:name => hash["name"]) do |r|
+        r.update(:description => hash["description"])
       end
     end
   end

@@ -22,9 +22,9 @@ module VCAP::CloudController
         config[:directories][:staging_manifests].should == File.join(Config.config_dir, "frameworks")
       end
 
-      it "adds default stack directory path" do
+      it "adds default stack file path" do
         config = Config.from_file(File.expand_path("../fixtures/config/minimal_config.yml", __FILE__))
-        config[:directories][:stacks].should == File.join(Config.config_dir, "stacks")
+        config[:stacks_file].should == File.join(Config.config_dir, "stacks.yml")
       end
     end
   end

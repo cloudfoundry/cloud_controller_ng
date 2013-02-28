@@ -144,7 +144,7 @@ module VCAP::CloudController
     end
 
     def trap_signals
-      ["TERM", "INT", "QUIT"].each do |signal|
+      %w(TERM INT QUIT).each do |signal|
         trap(signal) do
           @thin_server.stop! if @thin_server
           EM.stop
@@ -174,8 +174,8 @@ module VCAP::CloudController
       fw_dir = @config[:directories][:staging_manifests]
       Models::Framework.populate_from_directory(fw_dir)
 
-      stacks_dir = @config[:directories][:stacks]
-      Models::Stack.populate_from_directory(stacks_dir)
+      stacks_file = @config[:stacks_file]
+      Models::Stack.populate_from_file(stacks_file)
     end
   end
 end

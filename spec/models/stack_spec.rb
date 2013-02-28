@@ -2,28 +2,27 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-module VCAP::CloudController
-  describe VCAP::CloudController::Models::Stack do
+module VCAP::CloudController::Models
+  describe Stack do
     it_behaves_like "a CloudController model", {
       :required_attributes        => [:name, :description],
       :unique_attributes          => :name,
       :stripped_string_attributes => :name,
     }
 
-    describe ".populate_from_directory" do
+    describe ".populate_from_file" do
       before { reset_database }
+      let(:file) { File.expand_path("../../fixtures/config/stacks.yml", __FILE__) }
 
       it "loads stacks" do
-        dir = File.expand_path("../../fixtures/config/stacks", __FILE__)
-        Models::Stack.populate_from_directory(dir)
-        cider = Models::Stack.find(:name => "cider")
+        described_class.populate_from_file(file)
+        cider = described_class.find(:name => "cider")
         cider.should be_valid
       end
 
       it "populates descriptions about loaded stacks" do
-        dir = File.expand_path("../../fixtures/config/stacks", __FILE__)
-        Models::Stack.populate_from_directory(dir)
-        cider = Models::Stack.find(:name => "cider")
+        described_class.populate_from_file(file)
+        cider = described_class.find(:name => "cider")
         cider.description.should == "cider-description"
       end
     end
