@@ -1,12 +1,7 @@
-100:
+1000:
   name: InvalidAuthToken
   http_code: 401
   message: "Invalid Auth Token"
-
-1000:
-  name: QuotaDeclined
-  http_code: 400
-  message: "Quota declined: %s"
 
 1001:
   name: MessageParseError
