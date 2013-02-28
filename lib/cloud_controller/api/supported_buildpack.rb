@@ -16,5 +16,13 @@ module VCAP::CloudController
 
     query_parameters :name, :buildpack
 
+    def self.translate_validation_exception(e, attributes)
+      name_errors = e.errors.on(:name)
+      if name_errors && name_errors.include?(:unique)
+        Errors::SupportedBuildpackNameTaken.new(attributes["name"])
+      else
+        Errors::SupportedBuildpackInvalid.new(e.errors.full_messages)
+      end
+    end
   end
 end

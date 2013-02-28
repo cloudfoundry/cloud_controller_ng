@@ -20,6 +20,7 @@ Sham.define do
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }
   guid                { |index| "guid-#{index}" }
+  git_url             { |index| "git://foo.com/url-#{index}.git" }
 end
 
 module VCAP::CloudController::Models
@@ -180,5 +181,12 @@ module VCAP::CloudController::Models
     non_basic_services_allowed { true }
     total_services { 60 }
     memory_limit { 20480 } # 20 GB
+  end
+
+  SupportedBuildpack.blueprint do
+    name { Sham.name }
+    description { Sham.description }
+    buildpack { Sham.git_url }
+    support_url { Sham.url }
   end
 end

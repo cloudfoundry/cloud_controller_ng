@@ -106,6 +106,10 @@ module VCAP::CloudController::Errors
     ["QuotaDefinitionNameTaken", HTTP::BAD_REQUEST, 240002, "Quota Definition is taken: %s"],
     ["QuotaDefinitionInvalid", HTTP::BAD_REQUEST, 240003, "Quota Definition is invalid: %s"],
 
+    ["SupportedBuildpackInvalid",   HTTP::BAD_REQUEST, 250001, "The supported buildpack is invalid: %s"],
+    ["SupportedBuildpackNameTaken", HTTP::BAD_REQUEST, 250002, "The supported buildpack name is taken: %s"],
+    ["SupportedBuildpackNotFound",  HTTP::NOT_FOUND,   250003, "The supported buildpack could not be found: %s"],
+
   ].each do |e|
     define_error *e
   end

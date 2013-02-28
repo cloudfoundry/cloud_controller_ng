@@ -10,7 +10,9 @@ Sequel.migration do
       String :name,         :null => false, :case_insensitive => true
       String :description,  :null => false
       String :buildpack,    :null => false
-      String :support_url,  :null => false
+      String :support_url
+
+      index :name, :unique => true
     end
 
   end
