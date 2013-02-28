@@ -4,95 +4,101 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppBits do
-    describe "PUT /v2/app/:id/upload_bits" do
+    describe "PUT /v2/app/:id/bits" do
       let(:app_obj) { Models::App.make }
-      let(:user) { make_user_for_space(app_obj.space) }
-      let(:developer) { make_developer_for_space(app_obj.space) }
-      let(:dummy_zip) { Tempfile.new("dummy_zip") }
 
-      shared_examples "non dev app upload" do
-        context "as a user" do
-          it "should return 403" do
-            put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(user)
-            last_response.status.should == 403
-          end
+      def self.it_forbids_upload
+        it "returns 403" do
+          put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(user)
+          last_response.status.should == 403
         end
       end
 
-      shared_examples "dev app upload" do |expected|
-        context "as a developer" do
-          extra_desc = "and set the app package_hash" if expected == 201
-          it "should return #{expected} #{extra_desc}" do
-            app_obj.package_hash.should be_nil
-            put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(developer)
-            last_response.status.should == expected
-            if expected == 201
-              app_obj.refresh
-              app_obj.package_hash.should_not be_nil
-            end
-          end
+      def self.it_succeeds_to_upload
+        it "returns 201" do
+          make_request
+          last_response.status.should == 201
+        end
+
+        it "updates package hash" do
+          expect {
+            make_request
+          }.to change { app_obj.refresh.package_hash }.from(nil)
         end
       end
 
-      context "with an empty request" do
+      def self.it_fails_to_upload
+        it "returns 400" do
+          make_request
+          last_response.status.should == 400
+        end
+
+        it "does not update package hash" do
+          expect {
+            make_request
+          }.to_not change { app_obj.refresh.package_hash }.from(nil)
+        end
+      end
+
+      def make_request
+        put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(user)
+      end
+
+      context "as a developer" do
+        let(:dummy_zip) { Tempfile.new("dummy_zip") }
+        let(:user) { make_developer_for_space(app_obj.space) }
+
+        context "with an empty request" do
+          let(:req_body) { {} }
+          it_fails_to_upload
+        end
+
+        context "with no application" do
+          let(:req_body) { {:resources => Yajl::Encoder.encode([]) } }
+          it_fails_to_upload
+        end
+
+        context "with no resources" do
+          let(:req_body) { { :application => Rack::Test::UploadedFile.new(dummy_zip) } }
+          it_fails_to_upload
+        end
+
+        context "with a bad zip file" do
+          let(:req_body) do
+            {
+              :application => Rack::Test::UploadedFile.new(dummy_zip),
+              :resources => Yajl::Encoder.encode([])
+            }
+          end
+          it_fails_to_upload
+        end
+
+        context "with a valid zip file" do
+          let(:tmpdir) { Dir.mktmpdir }
+
+          let(:valid_zip) do
+            zipname = File.join(tmpdir, "file.zip")
+            create_zip(zipname, 10)
+            File.new(zipname)
+          end
+
+          let(:req_body) do
+            {
+              :application => Rack::Test::UploadedFile.new(valid_zip),
+              :resources => Yajl::Encoder.encode([])
+            }
+          end
+
+          after { FileUtils.rm_rf(tmpdir) }
+
+          it_succeeds_to_upload
+        end
+      end
+
+      context "as a non-developer" do
+        let(:user) { make_user_for_space(app_obj.space) }
         let(:req_body) { {} }
-        include_examples "non dev app upload"
-        include_examples "dev app upload", 400
-      end
-
-      context "with no application" do
-        let(:req_body) do
-          {
-            :resources => Yajl::Encoder.encode([])
-          }
-        end
-
-        include_examples "non dev app upload"
-        include_examples "dev app upload", 400
-      end
-
-      context "with no resources" do
-        let(:req_body) do
-          {
-            :application => Rack::Test::UploadedFile.new(dummy_zip)
-          }
-        end
-
-        include_examples "non dev app upload"
-        include_examples "dev app upload", 400
-      end
-
-      context "with a bad zipfile" do
-        let(:req_body) do
-          {
-            :application => Rack::Test::UploadedFile.new(dummy_zip),
-            :resources => Yajl::Encoder.encode([])
-          }
-        end
-
-        include_examples "non dev app upload"
-        include_examples "dev app upload", 400
-      end
-
-      context "with a valid zipfile" do
-        let(:tmpdir) { Dir.mktmpdir }
-
-        let(:req_body) do
-          zipname = File.join(tmpdir, "file.zip")
-          create_zip(zipname, 10)
-          zipfile = File.new(zipname)
-          {
-            :application => Rack::Test::UploadedFile.new(zipfile),
-            :resources => Yajl::Encoder.encode([])
-          }
-        end
-
-        after do
-          FileUtils.rm_rf(tmpdir)
-        end
-
-        include_examples "non dev app upload"
-        include_examples "dev app upload", 201
+        it_forbids_upload
       end
     end
 

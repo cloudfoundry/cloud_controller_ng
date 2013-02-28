@@ -19,6 +19,7 @@ module VCAP::CloudController
       else
         mandatory_params = ["application", "resources"]
       end
+
       mandatory_params.each do |k|
         raise Errors::AppBitsUploadInvalid.new("missing :#{k}") unless params[k]
       end
@@ -78,7 +79,6 @@ module VCAP::CloudController
     end
 
     put "#{path_id}/bits", :upload
-
     get "#{path_id}/download", :download
   end
 end
