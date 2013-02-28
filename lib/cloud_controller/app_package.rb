@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       # Collects the necessary files and returns the sha1 of the resulting
       # app package.
-      def to_zip(guid, uploaded_file, resources)
+      def to_zip(guid, resources, uploaded_file)
         validate_package_size(uploaded_file, resources)
 
         tmpdir = Dir.mktmpdir

@@ -157,20 +157,71 @@ module VCAP::CloudController
       end
     end
 
-    describe "to_zip" do
-      it "should move the app package to the droplets directory" do
-        guid = Sham.guid
-        zipname = File.join(tmpdir, "test.zip")
-        create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(guid, File.new(zipname), [])
-        AppPackage.package_exists?(guid).should == true
+    describe ".to_zip" do
+      let(:guid) { Sham.guid }
+
+      def self.it_packages(expected_file_paths)
+        it "moves the app package to the droplets directory" do
+          expect {
+            AppPackage.to_zip(guid, resources, zip_file)
+          }.to change { AppPackage.package_exists?(guid) }.to(true)
+        end
+
+        def packaged_app_file
+          file_key = AppPackage.key_from_guid(guid)
+          file = AppPackage.package_dir.files.get(file_key)
+          Tempfile.new("package").tap do |f|
+            f.write(file.body)
+            f.close
+          end
+        end
+
+        it "packages correct files" do
+          AppPackage.to_zip(guid, resources, zip_file)
+          list_files(unzip_zip(packaged_app_file.path)).should =~ expected_file_paths
+        end
+      end
+
+      def self.it_raises_error
+        it "raises error" do
+          expect {
+            AppPackage.to_zip(guid, resources, nil)
+          }.to raise_error(Errors::AppPackageInvalid, /app package is invalid/)
+        end
+      end
+
+      context "when the app does not need any file from res pool" do
+        let(:resources) { [] }
+
+        context "when zip file was provided (with files)" do
+          let(:zip_file) { create_zip_with_named_files(2, 2048) }
+          it_packages %w(ziptest_0 ziptest_1)
+        end
+
+        context "when zip file was not provided" do
+          let(:zip_file) { nil }
+          it_raises_error
+        end
+      end
+
+      context "when the app needs some files from res pool" do
+        include_context "with valid resource in resource pool"
+        let(:resources) { [valid_resource] }
+
+        context "when zip file was provided (with files)" do
+          let(:zip_file) { create_zip_with_named_files(2, 2048) }
+          it_packages %w(ziptest_0 ziptest_1 file/path)
+        end
+
+        context "when zip file was not provided" do
+          let(:zip_file) { nil }
+          it_packages %w(file/path)
+        end
       end
     end
 
     describe "delete_droplet" do
-      before :each do
-        AppPackage.unstub(:delete_package)
-      end
+      before { AppPackage.unstub(:delete_package) }
 
       it "should do nothing if the app package does not exist" do
         guid = Sham.guid
@@ -188,7 +239,7 @@ module VCAP::CloudController
         AppPackage.package_exists?(guid).should == false
         zipname = File.join(tmpdir, "test.zip")
         create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(guid, File.new(zipname), [])
+        AppPackage.to_zip(guid, [], File.new(zipname))
         AppPackage.package_exists?(guid).should == true
 
         AppPackage.delete_package(guid)
@@ -215,7 +266,7 @@ module VCAP::CloudController
         AppPackage.package_exists?(@guid).should == false
         zipname = File.join(tmpdir, "test.zip")
         create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(@guid, File.new(zipname), [])
+        AppPackage.to_zip(@guid, [], File.new(zipname))
         AppPackage.package_exists?(@guid).should == true
         FileUtils.rm_rf(tmpdir)
       end

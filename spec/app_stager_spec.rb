@@ -432,7 +432,7 @@ module VCAP::CloudController
         tmpdir = Dir.mktmpdir
         zipname = File.join(tmpdir, "test.zip")
         create_zip(zipname, 1, 1)
-        AppPackage.to_zip(app.guid, File.new(zipname), [])
+        AppPackage.to_zip(app.guid, [], File.new(zipname))
         FileUtils.rm_rf(tmpdir)
       end
 

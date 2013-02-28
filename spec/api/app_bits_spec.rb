@@ -7,6 +7,16 @@ module VCAP::CloudController
     describe "PUT /v2/app/:id/bits" do
       let(:app_obj) { Models::App.make }
 
+      let(:tmpdir) { Dir.mktmpdir }
+      after { FileUtils.rm_rf(tmpdir) }
+
+      let(:valid_zip) do
+        zip_name = File.join(tmpdir, "file.zip")
+        create_zip(zip_name, 1)
+        zip_file = File.new(zip_name)
+        Rack::Test::UploadedFile.new(zip_file)
+      end
+
       def self.it_forbids_upload
         it "returns 403" do
           put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(user)
@@ -45,7 +55,6 @@ module VCAP::CloudController
       end
 
       context "as a developer" do
-        let(:dummy_zip) { Tempfile.new("dummy_zip") }
         let(:user) { make_developer_for_space(app_obj.space) }
 
         context "with an empty request" do
@@ -53,51 +62,54 @@ module VCAP::CloudController
           it_fails_to_upload
         end
 
-        context "with no application" do
-          let(:req_body) { {:resources => Yajl::Encoder.encode([]) } }
+        context "with empty resources and no application" do
+          let(:req_body) { {:resources => "[]"} }
           it_fails_to_upload
         end
 
-        context "with no resources" do
-          let(:req_body) { { :application => Rack::Test::UploadedFile.new(dummy_zip) } }
+        context "with at least one resource and no application" do
+          include_context "with valid resource in resource pool"
+          let(:req_body) { {:resources => JSON.dump([valid_resource])} }
+          it_succeeds_to_upload
+        end
+
+        context "with no resources and application" do
+          let(:req_body) { { :application => valid_zip } }
           it_fails_to_upload
+        end
+
+        context "with empty resources" do
+          let(:req_body) {{
+            :resources => "[]",
+            :application => valid_zip
+          }}
+          it_succeeds_to_upload
         end
 
         context "with a bad zip file" do
-          let(:req_body) do
-            {
-              :application => Rack::Test::UploadedFile.new(dummy_zip),
-              :resources => Yajl::Encoder.encode([])
-            }
-          end
+          let(:bad_zip) { Rack::Test::UploadedFile.new(Tempfile.new("bad_zip")) }
+          let(:req_body) {{
+            :resources => "[]",
+            :application => bad_zip,
+          }}
           it_fails_to_upload
         end
 
         context "with a valid zip file" do
-          let(:tmpdir) { Dir.mktmpdir }
-
-          let(:valid_zip) do
-            zipname = File.join(tmpdir, "file.zip")
-            create_zip(zipname, 10)
-            File.new(zipname)
-          end
-
-          let(:req_body) do
-            {
-              :application => Rack::Test::UploadedFile.new(valid_zip),
-              :resources => Yajl::Encoder.encode([])
-            }
-          end
-
-          after { FileUtils.rm_rf(tmpdir) }
-
+          let(:req_body) {{
+            :resources => "[]",
+            :application => valid_zip,
+          }}
           it_succeeds_to_upload
         end
       end
 
       context "as a non-developer" do
         let(:user) { make_user_for_space(app_obj.space) }
-        let(:req_body) { {} }
+        let(:req_body) {{
+          :resources => "[]",
+          :application => valid_zip,
+        }}
         it_forbids_upload
       end
     end
@@ -116,7 +128,7 @@ module VCAP::CloudController
         tmpdir = Dir.mktmpdir
         zipname = File.join(tmpdir, "test.zip")
         create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(guid, File.new(zipname), [])
+        AppPackage.to_zip(guid, [], File.new(zipname))
         FileUtils.rm_rf(tmpdir)
       end
 
