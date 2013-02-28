@@ -103,6 +103,7 @@ module VCAP::CloudController
 
       if run_migrations
         populate_framework_and_runtimes
+        populate_supported_buildpacks
         VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
       end
 
@@ -172,6 +173,11 @@ module VCAP::CloudController
       fw_dir = @config[:directories][:staging_manifests]
       Models::Runtime.populate_from_file rt_file
       Models::Framework.populate_from_directory fw_dir
+    end
+
+    def populate_supported_buildpacks
+      sb_file = @config[:supported_buildpacks_file]
+      Models::SupportedBuildpack.populate_from_file sb_file
     end
   end
 end

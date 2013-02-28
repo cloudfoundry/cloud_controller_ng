@@ -1,0 +1,13 @@
+---
+java:
+      buildpack:    'git://github.com/cloudfoundry/cloudfoundry-buildpack-java.git'
+      description:  'Buildpack plugin for deploying exploded Java WAR files.'
+      support_url:  'https://groups.google.com/a/cloudfoundry.org/group/vcap-dev/'
+nodejs:
+      buildpack:    'git://github.com/heroku/heroku-buildpack-nodejs.git'
+      description:  'This is a Heroku buildpack for Node.js apps. It uses NPM and SCons.'
+      support_url:  'https://groups.google.com/a/cloudfoundry.org/group/vcap-dev/'
+ruby:
+      buildpack:    'git://github.com/heroku/heroku-buildpack-ruby.git'
+      description:  'This is a Heroku buildpack for Ruby, Rack, and Rails apps. It uses Bundler for dependency management.'
+      support_url:  'https://groups.google.com/a/cloudfoundry.org/group/vcap-dev/'
