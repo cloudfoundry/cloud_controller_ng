@@ -14,95 +14,186 @@ module VCAP::CloudController
     before { AppStager.configure({}, nil, mock_redis) }
 
     describe ".stage_app (stages sync/async)" do
-      let(:app) { Models::App.make(:package_hash => "abc") }
-      before { app.staged?.should be_false }
+      context "when the app package hash is nil" do
+        let(:app) { Models::App.make(:package_hash => nil) }
 
-      let(:upload_handle) do
-        LegacyStaging::DropletUploadHandle.new(app.guid).tap do |h|
-          h.upload_path = Tempfile.new("tmp_droplet")
+        it "raises" do
+          expect { AppStager.stage_app(app) { empty_block = true } }.to raise_error(VCAP::CloudController::Errors::AppPackageInvalid)
         end
       end
 
-      before { LegacyStaging.should_receive(:create_handle).and_return(upload_handle) }
+      context "when the app package hash is blank" do
+        let(:app) { Models::App.make(:package_hash => "") }
 
-      def self.it_requests_staging(options={})
-        it "requests staging (sends NATS request)" do
-          data_in_request = nil
-          mock_nats.subscribe("staging") do |data, _|
-            data_in_request = data
-          end
-
-          with_em_and_thread { stage }
-
-          task = AppStagerTask.new(nil, nil, nil, app)
-          expected_data = task.staging_request(options[:async])
-          data_in_request.should == JSON.dump(expected_data)
+        it "raises" do
+          expect { AppStager.stage_app(app) { empty_block = true } }.to raise_error(VCAP::CloudController::Errors::AppPackageInvalid)
         end
       end
 
-      def self.it_completes_staging
-        context "when no other staging has happened" do
-          it "stages the app" do
-            expect {
+      context "when the app package is valid" do
+        let(:app) { Models::App.make(:package_hash => "abc") }
+        before { app.staged?.should be_false }
+
+        let(:upload_handle) do
+          LegacyStaging::DropletUploadHandle.new(app.guid).tap do |h|
+            h.upload_path = Tempfile.new("tmp_droplet")
+          end
+        end
+
+        before { LegacyStaging.should_receive(:create_handle).and_return(upload_handle) }
+
+        def self.it_requests_staging(options={})
+          it "requests staging (sends NATS request)" do
+            data_in_request = nil
+            mock_nats.subscribe("staging") do |data, _|
+              data_in_request = data
+            end
+
+            with_em_and_thread { stage }
+
+            task = AppStagerTask.new(nil, nil, nil, app)
+            expected_data = task.staging_request(options[:async])
+            data_in_request.should == JSON.dump(expected_data)
+          end
+        end
+
+        def self.it_completes_staging
+          context "when no other staging has happened" do
+            it "stages the app" do
+              expect {
+                with_em_and_thread { stage }
+              }.to change {
+                [app.staged?, app.needs_staging?]
+              }.from([false, true]).to([true, false])
+            end
+
+            it "stores droplet" do
+              expect {
+                with_em_and_thread { stage }
+              }.to change { LegacyStaging.droplet_exists?(app.guid) }.from(false).to(true)
+            end
+
+            it "updates droplet hash on the app" do
+              expect {
+                with_em_and_thread { stage }
+              }.to change { app.droplet_hash }.from(nil)
+            end
+
+            it "removes upload handle" do
+              LegacyStaging.should_receive(:destroy_handle)
               with_em_and_thread { stage }
-            }.to change {
-              [app.staged?, app.needs_staging?]
-            }.from([false, true]).to([true, false])
+            end
+
+            it "saves off staging log for short time" do
+              mock_redis.should_receive(:set).with(StagingTaskLog.key_for_id(app.guid), "task-log")
+              with_em_and_thread { stage }
+            end
+
+            it "calls provided callback" do
+              callback_called = false
+              with_em_and_thread { stage { callback_called = true } }
+              callback_called.should be_true
+            end
           end
 
-          it "stores droplet" do
+          context "when other staging has happened" do
+            before do
+              @before_staging_completion = -> {
+                app.droplet_hash = "droplet-hash"
+                app.package_state = "PENDING"
+                app.save
+              }
+            end
+
+            it "raises a StagingError" do
+              expect {
+                with_em_and_thread { stage }
+              }.to raise_error(
+                     Errors::StagingError,
+                     /failed to stage because app changed while staging/
+                   )
+            end
+
+            it "does not stage the app" do
+              expect {
+                ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
+              }.to_not change {
+                [app.staged?, app.needs_staging?]
+              }.from([false, true])
+            end
+
+            it "does not store droplet" do
+              expect {
+                ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
+              }.to_not change { LegacyStaging.droplet_exists?(app.guid) }.from(false)
+            end
+
+            it "does not update droplet hash on the app" do
+              expect {
+                ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
+              }.to_not change {
+                app.refresh
+                app.droplet_hash
+              }.from("droplet-hash")
+            end
+
+            it "removes upload handle" do
+              LegacyStaging.should_receive(:destroy_handle)
+              ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
+            end
+
+            it "does not save off staging log for short time" do
+              mock_redis.should_not_receive(:set)
+              ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
+            end
+
+            it "does not call provided callback" do
+              callback_called = false
+              ignore_error(Errors::StagingError) do
+                with_em_and_thread do
+                  stage { callback_called = true }
+                end
+              end
+              callback_called.should be_false
+            end
+          end
+        end
+
+        def self.it_raises_staging_error
+          it "raises a StagingError" do
             expect {
               with_em_and_thread { stage }
-            }.to change { LegacyStaging.droplet_exists?(app.guid) }.from(false).to(true)
+            }.to raise_error(Errors::StagingError, /failed to stage/)
           end
 
-          it "updates droplet hash on the app" do
-            expect {
-              with_em_and_thread { stage }
-            }.to change { app.droplet_hash }.from(nil)
+          it "removes upload handle" do
+            LegacyStaging.should_receive(:destroy_handle)
+            ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
+          end
+        end
+
+        def self.it_logs_staging_error
+          it "logs StagingError instead of raising to avoid stopping main runloop" do
+            logger = mock(:logger, :info => nil)
+            logger.should_receive(:error) do |msg|
+              msg.should match /failed to stage/
+            end
+
+            Steno.stub(:logger => logger)
+            with_em_and_thread { stage }
           end
 
           it "removes upload handle" do
             LegacyStaging.should_receive(:destroy_handle)
             with_em_and_thread { stage }
           end
-
-          it "saves off staging log for short time" do
-            mock_redis.should_receive(:set).with(StagingTaskLog.key_for_id(app.guid), "task-log")
-            with_em_and_thread { stage }
-          end
-
-          it "calls provided callback" do
-            callback_called = false
-            with_em_and_thread { stage { callback_called = true } }
-            callback_called.should be_true
-          end
         end
 
-        context "when other staging has happened" do
-          before do
-            @before_staging_completion = -> {
-              app.droplet_hash = "droplet-hash"
-              app.package_state = "PENDING"
-              app.save
-            }
-          end
-
-          it "raises a StagingError" do
-            expect {
-              with_em_and_thread { stage }
-            }.to raise_error(
-              Errors::StagingError,
-              /failed to stage because app changed while staging/
-            )
-          end
-
-          it "does not stage the app" do
+        def self.it_does_not_complete_staging
+          it "keeps the app as not staged" do
             expect {
               ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-            }.to_not change {
-              [app.staged?, app.needs_staging?]
-            }.from([false, true])
+            }.to_not change { app.staged? }.from(false)
           end
 
           it "does not store droplet" do
@@ -111,155 +202,132 @@ module VCAP::CloudController
             }.to_not change { LegacyStaging.droplet_exists?(app.guid) }.from(false)
           end
 
-          it "does not update droplet hash on the app" do
-            expect {
-              ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-            }.to_not change {
-              app.refresh
-              app.droplet_hash
-            }.from("droplet-hash")
-          end
-
-          it "removes upload handle" do
-            LegacyStaging.should_receive(:destroy_handle)
-            ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-          end
-
-          it "does not save off staging log for short time" do
-            mock_redis.should_not_receive(:set)
-            ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-          end
-
-          it "does not call provided callback" do
+          it "does not call provided callback (not yet)" do
             callback_called = false
             ignore_error(Errors::StagingError) do
-              with_em_and_thread do
-                stage { callback_called = true }
-              end
+              with_em_and_thread { stage { callback_called = true } }
             end
             callback_called.should be_false
           end
         end
-      end
 
-      def self.it_raises_staging_error
-        it "raises a StagingError" do
-          expect {
-            with_em_and_thread { stage }
-          }.to raise_error(Errors::StagingError, /failed to stage/)
+        describe "staging synchronously and stager returning sync staging response" do
+          describe "receiving staging completion message" do
+            def stage(&blk)
+              stub_schedule_sync do
+                @before_staging_completion.call if @before_staging_completion
+                reply_with_staging_completion
+              end
+              AppStager.stage_app(app, &blk)
+            end
+
+            context "when staging succeeds" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => nil,
+                  "error" => nil,
+                })
+              end
+
+              it "does not returns streaming log url in response" do
+                with_em_and_thread { stage.streaming_log_url.should be_nil }
+              end
+
+              it_requests_staging
+              it_completes_staging
+            end
+
+            context "when staging fails without a reason" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
+              end
+
+              it_raises_staging_error
+              it_does_not_complete_staging
+            end
+
+            context "when staging returned an error response" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => nil,
+                  "error" => "staging failed",
+                })
+              end
+
+              it_raises_staging_error
+              it_does_not_complete_staging
+            end
+          end
         end
 
-        it "removes upload handle" do
-          LegacyStaging.should_receive(:destroy_handle)
-          ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-        end
-      end
+        describe "staging asynchronously and stager returning async staging responses" do
+          describe "receiving staging setup completion message" do
+            def stage(&blk)
+              stub_schedule_sync do
+                @before_staging_completion.call if @before_staging_completion
+                reply_with_staging_setup_completion
+              end
+              response = AppStager.stage_app(app, :async => true, &blk)
+              EM.stop # explicitly
+              response
+            end
 
-      def self.it_logs_staging_error
-        it "logs StagingError instead of raising to avoid stopping main runloop" do
-          logger = mock(:logger, :info => nil)
-          logger.should_receive(:error) do |msg|
-            msg.should match /failed to stage/
+            context "when staging setup succeeds" do
+              def reply_with_staging_setup_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => "task-streaming-log-url",
+                  "error" => nil,
+                })
+              end
+
+              it "returns streaming log url and rest will happen asynchronously" do
+                with_em_and_thread { stage.streaming_log_url.should == "task-streaming-log-url" }
+              end
+
+              it_requests_staging :async => true
+              it_does_not_complete_staging
+            end
+
+            context "when staging setup fails without a reason" do
+              def reply_with_staging_setup_completion
+                mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
+              end
+
+              it_raises_staging_error
+              it_does_not_complete_staging
+            end
+
+            context "when staging setup returned an error response" do
+              def reply_with_staging_setup_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => nil,
+                  "error" => "staging failed",
+                })
+              end
+
+              it_raises_staging_error
+              it_does_not_complete_staging
+            end
           end
 
-          Steno.stub(:logger => logger)
-          with_em_and_thread { stage }
-        end
-
-        it "removes upload handle" do
-          LegacyStaging.should_receive(:destroy_handle)
-          with_em_and_thread { stage }
-        end
-      end
-
-      def self.it_does_not_complete_staging
-        it "keeps the app as not staged" do
-          expect {
-            ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-          }.to_not change { app.staged? }.from(false)
-        end
-
-        it "does not store droplet" do
-          expect {
-            ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-          }.to_not change { LegacyStaging.droplet_exists?(app.guid) }.from(false)
-        end
-
-        it "does not call provided callback (not yet)" do
-          callback_called = false
-          ignore_error(Errors::StagingError) do
-            with_em_and_thread { stage { callback_called = true } }
-          end
-          callback_called.should be_false
-        end
-      end
-
-      describe "staging synchronously and stager returning sync staging response" do
-        describe "receiving staging completion message" do
-          def stage(&blk)
-            stub_schedule_sync do
-              @before_staging_completion.call if @before_staging_completion
+          describe "receiving staging completion message" do
+            def stage(&blk)
+              stub_schedule_sync do
+                @before_staging_completion.call if @before_staging_completion
+                reply_with_staging_setup_completion
+              end
+              AppStager.stage_app(app, :async => true, &blk)
               reply_with_staging_completion
             end
-            AppStager.stage_app(app, &blk)
-          end
 
-          context "when staging succeeds" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "error" => nil,
-              })
-            end
-
-            it "does not returns streaming log url in response" do
-              with_em_and_thread { stage.streaming_log_url.should be_nil }
-            end
-
-            it_requests_staging
-            it_completes_staging
-          end
-
-          context "when staging fails without a reason" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
-            end
-
-            it_raises_staging_error
-            it_does_not_complete_staging
-          end
-
-          context "when staging returned an error response" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "error" => "staging failed",
-              })
-            end
-
-            it_raises_staging_error
-            it_does_not_complete_staging
-          end
-        end
-      end
-
-      describe "staging asynchronously and stager returning async staging responses" do
-        describe "receiving staging setup completion message" do
-          def stage(&blk)
-            stub_schedule_sync do
-              @before_staging_completion.call if @before_staging_completion
-              reply_with_staging_setup_completion
-            end
-            response = AppStager.stage_app(app, :async => true, &blk)
-            EM.stop # explicitly
-            response
-          end
-
-          context "when staging setup succeeds" do
             def reply_with_staging_setup_completion
               mock_nats.reply_to_last_request("staging", {
                 "task_id" => "task-id",
@@ -269,144 +337,94 @@ module VCAP::CloudController
               })
             end
 
-            it "returns streaming log url and rest will happen asynchronously" do
-              with_em_and_thread { stage.streaming_log_url.should == "task-streaming-log-url" }
+            context "when app staging succeeds" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => nil,
+                  "error" => nil,
+                })
+              end
+
+              it_completes_staging
             end
 
-            it_requests_staging :async => true
-            it_does_not_complete_staging
-          end
+            context "when app staging fails without a reason" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
+              end
 
-          context "when staging setup fails without a reason" do
-            def reply_with_staging_setup_completion
-              mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
+              it_logs_staging_error
+              it_does_not_complete_staging
             end
 
-            it_raises_staging_error
-            it_does_not_complete_staging
-          end
+            context "when app staging returned an error response" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => nil,
+                  "error" => "staging failed",
+                })
+              end
 
-          context "when staging setup returned an error response" do
-            def reply_with_staging_setup_completion
-              mock_nats.reply_to_last_request("staging", {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "error" => "staging failed",
-              })
+              it_logs_staging_error
+              it_does_not_complete_staging
             end
-
-            it_raises_staging_error
-            it_does_not_complete_staging
-          end
-        end
-
-        describe "receiving staging completion message" do
-          def stage(&blk)
-            stub_schedule_sync do
-              @before_staging_completion.call if @before_staging_completion
-              reply_with_staging_setup_completion
-            end
-            AppStager.stage_app(app, :async => true, &blk)
-            reply_with_staging_completion
-          end
-
-          def reply_with_staging_setup_completion
-            mock_nats.reply_to_last_request("staging", {
-              "task_id" => "task-id",
-              "task_log" => "task-log",
-              "task_streaming_log_url" => "task-streaming-log-url",
-              "error" => nil,
-            })
-          end
-
-          context "when app staging succeeds" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "error" => nil,
-              })
-            end
-
-            it_completes_staging
-          end
-
-          context "when app staging fails without a reason" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
-            end
-
-            it_logs_staging_error
-            it_does_not_complete_staging
-          end
-
-          context "when app staging returned an error response" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "error" => "staging failed",
-              })
-            end
-
-            it_logs_staging_error
-            it_does_not_complete_staging
           end
         end
-      end
 
-      describe "staging asynchronously and stager returning sync staging response" do
-        describe "receiving staging completion message" do
-          def stage(&blk)
-            stub_schedule_sync do
-              @before_staging_completion.call if @before_staging_completion
-              reply_with_staging_completion
-            end
-            AppStager.stage_app(app, :async => true, &blk)
-          end
-
-          context "when staging succeeds" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "error" => nil,
-              })
+        describe "staging asynchronously and stager returning sync staging response" do
+          describe "receiving staging completion message" do
+            def stage(&blk)
+              stub_schedule_sync do
+                @before_staging_completion.call if @before_staging_completion
+                reply_with_staging_completion
+              end
+              AppStager.stage_app(app, :async => true, &blk)
             end
 
-            it "does not returns streaming log url in response" do
-              with_em_and_thread { stage.streaming_log_url.should be_nil }
+            context "when staging succeeds" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => nil,
+                  "error" => nil,
+                })
+              end
+
+              it "does not returns streaming log url in response" do
+                with_em_and_thread { stage.streaming_log_url.should be_nil }
+              end
+
+              it_requests_staging :async => true
+              it_completes_staging
             end
 
-            it_requests_staging :async => true
-            it_completes_staging
-          end
+            context "when staging fails without a reason" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
+              end
 
-          context "when staging fails without a reason" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
+              it_raises_staging_error
+              it_does_not_complete_staging
             end
 
-            it_raises_staging_error
-            it_does_not_complete_staging
-          end
+            context "when staging returned an error response" do
+              def reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => nil,
+                  "error" => "staging failed",
+                })
+              end
 
-          context "when staging returned an error response" do
-            def reply_with_staging_completion
-              mock_nats.reply_to_last_request("staging", {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "error" => "staging failed",
-              })
+              it_raises_staging_error
+              it_does_not_complete_staging
             end
-
-            it_raises_staging_error
-            it_does_not_complete_staging
           end
         end
       end
