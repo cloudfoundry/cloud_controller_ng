@@ -40,6 +40,10 @@ module VCAP::CloudController
       app.save
 
       HTTP::CREATED
+    rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid
+      app.package_state = "FAILED"
+      app.save
+      raise
     end
 
     def download(id)

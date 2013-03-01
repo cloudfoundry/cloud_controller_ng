@@ -249,7 +249,7 @@ module VCAP::CloudController
       end
 
       def needs_staging?
-        !(self.package_hash.nil? || self.staged?)
+        self.package_hash && !self.staged?
       end
 
       def staged?
