@@ -15,7 +15,7 @@ module VCAP::CloudController
     let(:route) { Models::Route.make(:domain => domain, :space => space) }
 
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:name, :framework, :runtime, :space, :stack],
+      :required_attributes  => [:name, :framework, :runtime, :space],
       :unique_attributes    => [:space, :name],
       :stripped_string_attributes => :name,
       :many_to_one => {
@@ -42,6 +42,51 @@ module VCAP::CloudController
         }
       }
     }
+
+    describe "#stack" do
+      def self.it_always_sets_stack
+        context "when stack was already set" do
+          let(:stack) { Models::Stack.make }
+          before { subject.stack = stack }
+
+          it "keeps previously set stack" do
+            subject.save
+            subject.refresh
+            subject.stack.should == stack
+          end
+        end
+
+        context "when stack was set to nil" do
+          before do
+            subject.stack = nil
+            Models::Stack.default.should_not be_nil
+          end
+
+          it "is populated with default stack" do
+            subject.save
+            subject.refresh
+            subject.stack.should == Models::Stack.default
+          end
+        end
+      end
+
+      context "when app is being created" do
+        subject do
+          Models::App.new(
+            :name => Sham.name,
+            :framework => Models::Framework.make,
+            :runtime => Models::Runtime.make,
+            :space => space,
+          )
+        end
+        it_always_sets_stack
+      end
+
+      context "when app is being updated" do
+        subject { Models::App.make }
+        it_always_sets_stack
+      end
+    end
 
     describe "bad relationships" do
       it "should not associate an app with a route on a different space" do

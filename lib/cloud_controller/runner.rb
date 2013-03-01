@@ -175,7 +175,8 @@ module VCAP::CloudController
       Models::Framework.populate_from_directory(fw_dir)
 
       stacks_file = @config[:stacks_file]
-      Models::Stack.populate_from_file(stacks_file)
+      Models::Stack.configure(stacks_file)
+      Models::Stack.populate
     end
   end
 end

@@ -185,6 +185,14 @@ module VCAP::CloudController::SpecHelper
 
     VCAP::CloudController::LegacyBulk.configure(config, mbus)
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
+
+    configure_stacks
+  end
+
+  def configure_stacks
+    stacks_file = File.expand_path("../fixtures/config/stacks.yml", __FILE__)
+    VCAP::CloudController::Models::Stack.configure(stacks_file)
+    VCAP::CloudController::Models::Stack.populate
   end
 
   def configure
@@ -469,8 +477,8 @@ class Redis
 end
 
 RSpec.configure do |rspec_config|
-  rspec_config.include VCAP::CloudController
   rspec_config.include Rack::Test::Methods
+  rspec_config.include VCAP::CloudController
   rspec_config.include VCAP::CloudController::SpecHelper
 
   rspec_config.before(:all) do

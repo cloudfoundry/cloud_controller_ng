@@ -26,13 +26,14 @@ module VCAP::CloudController
       default_order_by  :name
 
       export_attributes :name, :production,
-                        :space_guid, :framework_guid, :runtime_guid, :buildpack,
+                        :space_guid, :framework_guid, :runtime_guid,
+                        :stack_guid, :buildpack,
                         :environment_json, :memory, :instances,
                         :disk_quota, :state, :version, :command, :console, :debug
 
       import_attributes :name, :production,
-                        :space_guid, :framework_guid, :runtime_guid, :buildpack,
-                        :stack_guid,
+                        :space_guid, :framework_guid, :runtime_guid,
+                        :stack_guid, :buildpack,
                         :environment_json, :memory, :instances,
                         :disk_quota, :state,
                         :command, :console, :debug,
@@ -57,24 +58,23 @@ module VCAP::CloudController
       def before_validation
         # TODO: Once VMC deprecates frameworks
         # and runtimes we can remove frameworks and runtimes completely from cc.
-        self.framework ||= VCAP::CloudController::Models::Framework.find(:name => "buildpack")
-        self.runtime ||= VCAP::CloudController::Models::Runtime.find(:name => "ruby19")
+        self.framework ||= Framework.find(:name => "buildpack")
+        self.runtime ||= Runtime.find(:name => "ruby19")
         super
       end
 
       def validate
-        # TODO: if we move the defaults out of the migration and up to the
-        # controller (as it probably should be), do more presence validation
-        # here
         validates_presence :name
         validates_presence :space
+        validates_unique   [:space_id, :name]
+
         validates_presence :framework
         validates_presence :runtime
-        validates_presence :stack
         validates_git_url :buildpack
-        validates_unique   [:space_id, :name]
+
         validates_includes PackageStates, :package_state, :allow_missing => true
         validates_includes AppStates, :state, :allow_missing => true
+
         validate_environment
         validate_metadata
         check_memory_quota
@@ -87,6 +87,7 @@ module VCAP::CloudController
 
       def before_save
         super
+        self.stack ||= Stack.default
 
         # The reason this is only done on a state change is that we really only
         # care about the state when we transitioned from stopped to running.  The
@@ -99,7 +100,6 @@ module VCAP::CloudController
         # The dirty check on version allows a higher level to set the version.
         # We might start populating this with the vcap request guid of an api
         # request.
-
         if (column_changed?(:state) || column_changed?(:memory)) && started?
           self.version = SecureRandom.uuid if !column_changed?(:version)
         end

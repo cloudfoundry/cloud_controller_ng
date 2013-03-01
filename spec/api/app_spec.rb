@@ -4,12 +4,14 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::App do
+    before { configure_stacks }
+
     # FIXME: make space_id a relation check that checks the id and the url
     # part.  do everywhere
     it_behaves_like "a CloudController API", {
       :path                => "/v2/apps",
       :model               => Models::App,
-      :basic_attributes    => [:name, :space_guid, :runtime_guid, :framework_guid],
+      :basic_attributes    => [:name, :space_guid, :runtime_guid, :framework_guid, :stack_guid],
       :required_attributes => [:name, :space_guid, :runtime_guid, :framework_guid],
       :unique_attributes   => [:name, :space_guid],
       :queryable_attributes => :name,
@@ -17,6 +19,7 @@ module VCAP::CloudController
         :space      => lambda { |app| Models::Space.make  },
         :framework  => lambda { |app| Models::Framework.make },
         :runtime    => lambda { |app| Models::Runtime.make },
+        :stack      => lambda { |app| Models::Stack.make },
       },
       :many_to_many_collection_ids => {
         :routes => lambda { |app|
