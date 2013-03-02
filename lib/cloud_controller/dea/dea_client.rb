@@ -24,10 +24,14 @@ module VCAP::CloudController
 
       attr_reader :config, :message_bus, :dea_pool
 
-      def configure(config, message_bus, dea_pool = DeaPool)
+      def configure(config, message_bus, dea_pool)
         @config = config
         @message_bus = message_bus
         @dea_pool = dea_pool
+      end
+
+      def run
+        @dea_pool.register_subscriptions
       end
 
       def start(app)

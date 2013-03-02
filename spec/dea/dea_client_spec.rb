@@ -19,8 +19,15 @@ module VCAP::CloudController
       end
     end
 
-    before(:each) do
+    before do
       DeaClient.configure(config, @message_bus, @dea_pool)
+    end
+
+    describe ".run" do
+      it "registers subscriptions for dea_pool" do
+        @dea_pool.should_receive(:register_subscriptions)
+        described_class.run
+      end
     end
 
     describe "start_app_message" do

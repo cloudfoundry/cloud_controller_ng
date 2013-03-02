@@ -14,16 +14,15 @@ module VCAP::CloudController
       }
     end
 
-    before do
-      DeaPool.configure(config, message_bus)
+    subject do
+      DeaPool.new(config, message_bus)
     end
 
     describe "process_advertise_message" do
-
       it "should add a dea profile with a recent timestamp" do
-        deas = DeaPool.send(:deas)
+        deas = subject.send(:deas)
         deas.count.should == 0
-        DeaPool.send(:process_advertise_message, dea_msg)
+        subject.send(:process_advertise_message, dea_msg)
         deas.count.should == 1
         deas.should have_key("abc")
 
@@ -36,8 +35,8 @@ module VCAP::CloudController
     describe "subscription"  do
       it "should respond to dea.advertise" do
         message_bus.should_receive(:subscribe).and_yield(dea_msg)
-        DeaPool.should_receive(:process_advertise_message).with(dea_msg)
-        DeaPool.register_subscriptions
+        subject.should_receive(:process_advertise_message).with(dea_msg)
+        subject.register_subscriptions
       end
     end
 
@@ -82,33 +81,33 @@ module VCAP::CloudController
       end
 
       context "when the dea has runtimes" do
-        let(:deas) { deas = DeaPool.send(:deas) }
+        let(:deas) { deas = subject.send(:deas) }
 
         before do
-          DeaPool.send(:process_advertise_message, dea_expired)
-          DeaPool.send(:process_advertise_message, dea_mem_only)
-          DeaPool.send(:process_advertise_message, dea_runtime_only)
-          DeaPool.send(:process_advertise_message, dea_all)
+          subject.send(:process_advertise_message, dea_expired)
+          subject.send(:process_advertise_message, dea_mem_only)
+          subject.send(:process_advertise_message, dea_runtime_only)
+          subject.send(:process_advertise_message, dea_all)
           deas["expired"][:last_update] = Time.new(2011, 04, 11)
         end
 
         it "should find a non-expired dea meeting the needs of the app" do
-          DeaPool.find_dea(1024, "ruby19").should == "all"
+          subject.find_dea(1024, "ruby19").should == "all"
         end
 
         it "should remove expired dea entries" do
           expect {
-            DeaPool.find_dea(4096, "cobol").should be_nil
+            subject.find_dea(4096, "cobol").should be_nil
           }.to change { deas.count }.from(4).to(3)
         end
       end
 
       context "when the dea has no runtimes (i.e. is buildpack only)" do
-        before { DeaPool.send(:process_advertise_message, dea_buildpack) }
+        before { subject.send(:process_advertise_message, dea_buildpack) }
 
         it "should find a non-expired dea meeting the needs of the app" do
-          DeaPool.find_dea(1024, "foobar").should == "buildpack"
-          DeaPool.find_dea(1024, "ruby19").should == "buildpack"
+          subject.find_dea(1024, "foobar").should == "buildpack"
+          subject.find_dea(1024, "ruby19").should == "buildpack"
         end
       end
     end

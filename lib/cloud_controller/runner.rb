@@ -118,7 +118,7 @@ module VCAP::CloudController
         use Rack::CommonLogger
         VCAP::CloudController::MessageBus.instance.register_components
         VCAP::CloudController::MessageBus.instance.register_routes
-        VCAP::CloudController::DeaPool.register_subscriptions
+        VCAP::CloudController::DeaClient.run
         VCAP::CloudController::LegacyBulk.register_subscription
         VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
 

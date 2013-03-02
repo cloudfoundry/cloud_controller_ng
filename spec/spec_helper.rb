@@ -171,16 +171,19 @@ module VCAP::CloudController::SpecHelper
   def configure_components(config)
     mbus = MockMessageBus.new(config)
     VCAP::CloudController::MessageBus.instance = mbus
-    VCAP::CloudController::Models::ServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
+    VCAP::CloudController::Models::ServiceInstance.gateway_client_class =
+      VCAP::Services::Api::ServiceGatewayClientFake
 
     VCAP::CloudController::AccountCapacity.configure(config)
-    VCAP::CloudController::ResourcePool.instance = VCAP::CloudController::ResourcePool.new(config)
+    VCAP::CloudController::ResourcePool.instance =
+      VCAP::CloudController::ResourcePool.new(config)
     VCAP::CloudController::AppPackage.configure(config)
     VCAP::CloudController::AppStager.configure(config, mbus)
     VCAP::CloudController::LegacyStaging.configure(config)
 
-    VCAP::CloudController::DeaPool.configure(config, mbus)
-    VCAP::CloudController::DeaClient.configure(config, mbus)
+    dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)
+    VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
+
     VCAP::CloudController::HealthManagerClient.configure(mbus)
 
     VCAP::CloudController::LegacyBulk.configure(config, mbus)

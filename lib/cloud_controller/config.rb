@@ -150,8 +150,9 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::AppStager.configure(config, mbus)
     VCAP::CloudController::LegacyStaging.configure(config)
 
-    VCAP::CloudController::DeaPool.configure(config, mbus)
-    VCAP::CloudController::DeaClient.configure(config, mbus)
+    dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)
+    VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
+
     VCAP::CloudController::HealthManagerClient.configure(mbus)
 
     VCAP::CloudController::LegacyBulk.configure(config, mbus)
