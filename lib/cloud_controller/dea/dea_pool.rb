@@ -20,6 +20,11 @@ module VCAP::CloudController
       end
     end
 
+    def process_advertise_message(msg)
+      logger.debug2 "dea advertisement #{msg}"
+      refresh_dea_stats(msg[:id], msg)
+    end
+
     def find_dea(mem, runtime)
       mutex.synchronize do
         deas.keys.shuffle.each do |id|
@@ -35,15 +40,12 @@ module VCAP::CloudController
 
     attr_reader :deas
 
-    def process_advertise_message(msg)
-      logger.debug2 "dea advertisement #{msg}"
-      refresh_dea_stats(msg[:id], msg)
-    end
-
     def refresh_dea_stats(id, advertisement)
       mutex.synchronize do
-        deas[id] = { :advertisement => advertisement,
-                     :last_update => Time.now }
+        deas[id] = {
+          :advertisement => advertisement,
+          :last_update => Time.now
+        }
       end
     end
 
