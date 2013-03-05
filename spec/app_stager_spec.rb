@@ -84,7 +84,7 @@ module VCAP::CloudController
             end
 
             it "removes upload handle" do
-              LegacyStaging.should_receive(:destroy_handle)
+              LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
               with_em_and_thread { stage }
             end
 
@@ -113,9 +113,9 @@ module VCAP::CloudController
               expect {
                 with_em_and_thread { stage }
               }.to raise_error(
-                     Errors::StagingError,
-                     /failed to stage because app changed while staging/
-                   )
+                Errors::StagingError,
+                /failed to stage because app changed while staging/
+              )
             end
 
             it "does not stage the app" do
@@ -142,7 +142,7 @@ module VCAP::CloudController
             end
 
             it "removes upload handle" do
-              LegacyStaging.should_receive(:destroy_handle)
+              LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
               ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
             end
 
@@ -171,7 +171,7 @@ module VCAP::CloudController
           end
 
           it "removes upload handle" do
-            LegacyStaging.should_receive(:destroy_handle)
+            LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
             ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
           end
         end
@@ -188,7 +188,7 @@ module VCAP::CloudController
           end
 
           it "removes upload handle" do
-            LegacyStaging.should_receive(:destroy_handle)
+            LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
             with_em_and_thread { stage }
           end
         end
