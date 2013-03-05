@@ -4,7 +4,6 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe Config do
-
     describe ".from_file" do
       it "raises if the file does not exist" do
         expect {
