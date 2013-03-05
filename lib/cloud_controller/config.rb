@@ -44,7 +44,6 @@ class VCAP::CloudController::Config < VCAP::Config
         optional(:tmpdir)    => String,
         optional(:droplets)  => String,
         optional(:staging_manifests) => String,
-        optional(:stacks)    => String,
       },
 
       optional(:runtimes_file) => String,
