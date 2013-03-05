@@ -4,7 +4,7 @@ require "vcap/stager/client"
 
 module VCAP::CloudController
   class DeaPool
-    DEA_ADVERTISEMENT_EXPIRATION = 10
+    ADVERTISEMENT_EXPIRATION = 10
 
     attr_reader :config, :message_bus
 
@@ -16,7 +16,6 @@ module VCAP::CloudController
 
     def register_subscriptions
       message_bus.subscribe("dea.advertise") do |msg|
-        logger.debug2("Received dea.advertise: #{msg}")
         process_advertise_message(msg)
       end
     end
@@ -25,7 +24,7 @@ module VCAP::CloudController
       mutex.synchronize do
         @deas[msg[:id]] = {
           :advertisement => msg,
-          :last_update => Time.now
+          :last_update => Time.now,
         }
       end
     end
@@ -47,7 +46,7 @@ module VCAP::CloudController
     private
 
     def dea_expired?(dea)
-      (Time.now.to_i - dea[:last_update].to_i) > DEA_ADVERTISEMENT_EXPIRATION
+      (Time.now.to_i - dea[:last_update].to_i) > ADVERTISEMENT_EXPIRATION
     end
 
     def dea_meets_needs?(dea, mem, runtime)
@@ -61,10 +60,6 @@ module VCAP::CloudController
 
     def mutex
       @mutes ||= Mutex.new
-    end
-
-    def logger
-      @logger ||= Steno.logger("cc.dea.pool")
     end
   end
 end
