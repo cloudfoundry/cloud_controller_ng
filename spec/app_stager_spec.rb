@@ -11,7 +11,10 @@ module VCAP::CloudController
     before { MessageBus.instance.nats.client = mock_nats }
 
     let(:mock_redis) { mock(:mock_redis).as_null_object }
-    before { AppStager.configure({}, nil, mock_redis) }
+    before { AppStager.configure({}, nil, stager_pool, mock_redis) }
+
+    let(:stager_pool) { StagerPool.new({}, nil) }
+    before { stager_pool.stub(:find_stager => "staging-id") }
 
     describe ".stage_app (stages sync/async)" do
       context "when the app package hash is nil" do
@@ -44,20 +47,45 @@ module VCAP::CloudController
           end
         end
 
-        before { LegacyStaging.should_receive(:create_handle).and_return(upload_handle) }
+        before { LegacyStaging.stub(:create_handle => upload_handle) }
 
         def self.it_requests_staging(options={})
-          it "requests staging (sends NATS request)" do
-            data_in_request = nil
-            mock_nats.subscribe("staging") do |data, _|
-              data_in_request = data
-            end
-
+          it "creates upload handle for stager to upload droplet" do
+            LegacyStaging.should_receive(:create_handle).and_return(upload_handle)
             with_em_and_thread { stage }
+          end
 
-            task = AppStagerTask.new(nil, nil, nil, app)
-            expected_data = task.staging_request(options[:async])
-            data_in_request.should == JSON.dump(expected_data)
+          context "when there are available stagers" do
+            it "requests staging (sends NATS request)" do
+              stager_pool
+                .should_receive(:find_stager)
+                .with(app.stack.name, 1024)
+                .and_return("staging-id")
+
+              data_in_request = nil
+              mock_nats.subscribe("staging.staging-id.start") do |data, _|
+                data_in_request = data
+              end
+
+              with_em_and_thread { stage }
+
+              task = AppStagerTask.new(nil, nil, nil, app, stager_pool)
+              expected_data = task.staging_request(options[:async])
+              data_in_request.should == JSON.dump(expected_data)
+            end
+          end
+
+          context "when there are no available stagers" do
+            it "raises an error" do
+              stager_pool
+                .should_receive(:find_stager)
+                .with(app.stack.name, 1024)
+                .and_return(nil)
+
+              expect {
+                with_em_and_thread { stage }
+              }.to raise_error(Errors::StagingError, /no available stagers/)
+            end
           end
         end
 
@@ -446,7 +474,7 @@ module VCAP::CloudController
       end
 
       def request(async=false)
-        AppStagerTask.new(nil, nil, nil, @app).staging_request(async)
+        AppStagerTask.new(nil, nil, nil, @app, stager_pool).staging_request(async)
       end
 
       def store_app_package(app)

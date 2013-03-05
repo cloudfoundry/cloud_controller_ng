@@ -146,7 +146,9 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::ResourcePool.instance =
       VCAP::CloudController::ResourcePool.new(config)
     VCAP::CloudController::AppPackage.configure(config)
-    VCAP::CloudController::AppStager.configure(config, mbus)
+
+    stager_pool = VCAP::CloudController::StagerPool.new(config, mbus)
+    VCAP::CloudController::AppStager.configure(config, mbus, stager_pool)
     VCAP::CloudController::LegacyStaging.configure(config)
 
     dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)

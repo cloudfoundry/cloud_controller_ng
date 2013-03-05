@@ -8,11 +8,12 @@ require "cloud_controller/multi_response_nats_request"
 module VCAP::CloudController
   module AppStager
     class << self
-      attr_reader :config, :message_bus
+      attr_reader :config, :message_bus, :stager_pool
 
-      def configure(config, message_bus, redis_client = nil)
+      def configure(config, message_bus, stager_pool, redis_client = nil)
         @config = config
         @message_bus = message_bus
+        @stager_pool = stager_pool
         @redis_client = redis_client || Redis.new(
           :host => @config[:redis][:host],
           :port => @config[:redis][:port],
@@ -21,8 +22,11 @@ module VCAP::CloudController
       end
 
       def stage_app(app, options={}, &completion_callback)
-        raise Errors::AppPackageInvalid.new("The app package hash is empty") if app.package_hash.nil? || app.package_hash.empty?
-        task = AppStagerTask.new(@config, @message_bus, @redis_client, app)
+        if app.package_hash.nil? || app.package_hash.empty?
+          raise Errors::AppPackageInvalid.new("The app package hash is empty")
+        end
+
+        task = AppStagerTask.new(@config, @message_bus, @redis_client, app, stager_pool)
         task.stage(options, &completion_callback)
       end
 
@@ -50,15 +54,20 @@ module VCAP::CloudController
     attr_reader :config
     attr_reader :message_bus
 
-    def initialize(config, message_bus, redis_client, app)
+    def initialize(config, message_bus, redis_client, app, stager_pool)
       @config = config
       @message_bus = message_bus
       @redis_client = redis_client
       @app = app
+      @stager_pool = stager_pool
     end
 
     def stage(options={}, &completion_callback)
-      @responses = MultiResponseNatsRequest.new(MessageBus.instance.nats.client, queue)
+      stager_id = @stager_pool.find_stager(@app.stack.name, 1024)
+      raise Errors::StagingError, "no available stagers" unless stager_id
+
+      subject = "staging.#{stager_id}.start"
+      @responses = MultiResponseNatsRequest.new(MessageBus.instance.nats.client, subject)
       @current_droplet_hash = @app.droplet_hash
 
       @upload_handle = LegacyStaging.create_handle(@app.guid)
@@ -227,10 +236,6 @@ module VCAP::CloudController
         :plan         => instance.service_plan.name,
         :plan_options => {} # TODO: can this be removed?
       }
-    end
-
-    def queue
-      @config[:staging] && @config[:staging][:queue] || "staging"
     end
 
     def staging_timeout

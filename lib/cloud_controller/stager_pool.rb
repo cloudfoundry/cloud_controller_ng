@@ -3,7 +3,7 @@
 require "vcap/stager/client"
 
 module VCAP::CloudController
-  class DeaPool
+  class StagerPool
     ADVERTISEMENT_EXPIRATION = 10
 
     attr_reader :config, :message_bus
@@ -11,31 +11,31 @@ module VCAP::CloudController
     def initialize(config, message_bus)
       @config = config
       @message_bus = message_bus
-      @deas = {}
+      @stagers = {}
     end
 
     def register_subscriptions
-      message_bus.subscribe("dea.advertise") do |msg|
+      message_bus.subscribe("staging.advertise") do |msg|
         process_advertise_message(msg)
       end
     end
 
     def process_advertise_message(msg)
       mutex.synchronize do
-        @deas[msg[:id]] = {
+        @stagers[msg[:id]] = {
           :advertisement => msg,
           :last_update => Time.now,
         }
       end
     end
 
-    def find_dea(mem, runtime)
+    def find_stager(stack, memory)
       mutex.synchronize do
-        @deas.keys.shuffle.each do |id|
-          dea = @deas[id]
-          if dea_expired?(dea)
-            @deas.delete(id)
-          elsif dea_meets_needs?(dea, mem, runtime)
+        @stagers.keys.shuffle.each do |id|
+          stager = @stagers[id]
+          if stager_expired?(stager)
+            @stagers.delete(id)
+          elsif stager_meets_needs?(stager, memory, stack)
             return id
           end
         end
@@ -45,14 +45,14 @@ module VCAP::CloudController
 
     private
 
-    def dea_expired?(dea)
-      (Time.now.to_i - dea[:last_update].to_i) > ADVERTISEMENT_EXPIRATION
+    def stager_expired?(stager)
+      (Time.now.to_i - stager[:last_update].to_i) > ADVERTISEMENT_EXPIRATION
     end
 
-    def dea_meets_needs?(dea, mem, runtime)
-      stats = dea[:advertisement]
+    def stager_meets_needs?(stager, mem, stack)
+      stats = stager[:advertisement]
       if stats[:available_memory] >= mem
-        (stats[:runtimes].nil? || stats[:runtimes].member?(runtime))
+        stats[:stacks].include?(stack)
       else
         false
       end
