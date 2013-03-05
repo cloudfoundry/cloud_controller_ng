@@ -18,7 +18,9 @@ module VCAP::CloudController
         let(:app) { Models::App.make(:package_hash => nil) }
 
         it "raises" do
-          expect { AppStager.stage_app(app) { empty_block = true } }.to raise_error(VCAP::CloudController::Errors::AppPackageInvalid)
+          expect {
+            AppStager.stage_app(app)
+          }.to raise_error(Errors::AppPackageInvalid)
         end
       end
 
@@ -26,7 +28,9 @@ module VCAP::CloudController
         let(:app) { Models::App.make(:package_hash => "") }
 
         it "raises" do
-          expect { AppStager.stage_app(app) { empty_block = true } }.to raise_error(VCAP::CloudController::Errors::AppPackageInvalid)
+          expect {
+            AppStager.stage_app(app)
+          }.to raise_error(Errors::AppPackageInvalid)
         end
       end
 
