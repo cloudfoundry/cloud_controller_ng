@@ -14,38 +14,36 @@ module VCAP::CloudController
     def upload(id)
       app = find_id_and_validate_access(:update, id)
 
-      if config[:nginx][:use_nginx]
-        mandatory_params = ["application_path", "resources"]
-      else
-        mandatory_params = ["application", "resources"]
-      end
-      mandatory_params.each do |k|
-        raise Errors::AppBitsUploadInvalid.new("missing :#{k}") unless params[k]
+      unless params["resources"]
+        raise Errors::AppBitsUploadInvalid.new("missing :resources")
       end
 
       resources = json_param("resources")
       unless resources.kind_of?(Array)
-        raise Errors::AppBitsUploadInvalid.new("resources is not an Array")
+        raise Errors::AppBitsUploadInvalid.new("invalid :resources")
       end
 
       # TODO: validate upload path
       if config[:nginx][:use_nginx]
-        path = params["application_path"]
-        uploaded_file = Struct.new(:path).new(path)
+        if path = params["application_path"]
+          uploaded_file = Struct.new(:path).new(path)
+        end
       else
         application = params["application"]
         if application.kind_of?(Hash) && application[:tempfile]
           uploaded_file = application[:tempfile]
-        else
-          raise Errors::AppBitsUploadInvalid.new("bad :application")
         end
       end
 
-      sha1 = AppPackage.to_zip(app.guid, uploaded_file, resources)
+      sha1 = AppPackage.to_zip(app.guid, resources, uploaded_file)
       app.package_hash = sha1
       app.save
 
       HTTP::CREATED
+    rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid
+      app.package_state = "FAILED"
+      app.save
+      raise
     end
 
     def download(id)
@@ -78,7 +76,6 @@ module VCAP::CloudController
     end
 
     put "#{path_id}/bits", :upload
-
     get "#{path_id}/download", :download
   end
 end

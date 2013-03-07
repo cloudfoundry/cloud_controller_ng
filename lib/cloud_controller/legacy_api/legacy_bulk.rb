@@ -82,7 +82,7 @@ module VCAP::CloudController
       apps = {}
       Models::App.where { |app|
         app.id > last_id
-      }.limit(batch_size).each do |app|
+      }.order(:id).limit(batch_size).each do |app|
         hash = {}
         export_attributes = [
           :instances,

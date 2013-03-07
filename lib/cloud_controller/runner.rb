@@ -118,7 +118,7 @@ module VCAP::CloudController
         use Rack::CommonLogger
         VCAP::CloudController::MessageBus.instance.register_components
         VCAP::CloudController::MessageBus.instance.register_routes
-        VCAP::CloudController::DeaPool.register_subscriptions
+        VCAP::CloudController::DeaClient.run
         VCAP::CloudController::LegacyBulk.register_subscription
         VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
 
@@ -144,7 +144,7 @@ module VCAP::CloudController
     end
 
     def trap_signals
-      ["TERM", "INT", "QUIT"].each do |signal|
+      %w(TERM INT QUIT).each do |signal|
         trap(signal) do
           @thin_server.stop! if @thin_server
           EM.stop
@@ -169,9 +169,14 @@ module VCAP::CloudController
     # seperate utility will get written for this
     def populate_framework_and_runtimes
       rt_file = @config[:runtimes_file]
+      Models::Runtime.populate_from_file(rt_file)
+
       fw_dir = @config[:directories][:staging_manifests]
-      Models::Runtime.populate_from_file rt_file
-      Models::Framework.populate_from_directory fw_dir
+      Models::Framework.populate_from_directory(fw_dir)
+
+      stacks_file = @config[:stacks_file]
+      Models::Stack.configure(stacks_file)
+      Models::Stack.populate
     end
   end
 end

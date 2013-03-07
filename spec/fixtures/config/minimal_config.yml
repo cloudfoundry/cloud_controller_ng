@@ -1,0 +1,57 @@
+---
+port: 8181
+
+info:
+  name: "vcap"
+  build: "2222"
+  version: 2
+  support_address: "http://support.cloudfoundry.com"
+  description: "VMware's Cloud Application Platform"
+
+system_domains:
+  - vcap.me
+
+uaa:
+  url: "http://localhost:8080/uaa"
+  resource_id: "cloud_controller"
+  symmetric_secret: "tokensecret"
+
+logging:
+  level: debug2
+
+nats_uri: nats://127.0.0.1:4222
+pid_filename: /tmp/cloud_controller.pid
+
+db:
+  database: "sqlite:///tmp/cloud_controller.db"
+
+bulk_api:
+  auth_user: bulk_user
+  auth_password: bulk_password
+
+cc_partition: ng
+
+nginx:
+  use_nginx: false
+  instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
+
+service_lifecycle:
+  max_upload_size: 1
+  upload_token: changeme
+  upload_timeout: 2
+  serialization_data_server: []
+
+quota_definitions: {}
+default_quota_definition: free
+
+resource_pool:
+  fog_connection:
+    provider: Local
+
+packages:
+  fog_connection:
+    provider: Local
+
+droplets:
+  fog_connection:
+    provider: Local

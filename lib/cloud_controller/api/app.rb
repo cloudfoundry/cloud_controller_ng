@@ -13,20 +13,21 @@ module VCAP::CloudController
     define_attributes do
       attribute  :name,                String
       attribute  :production,          Message::Boolean,    :default => false
+
       to_one     :space
       to_one     :runtime,             :optional_in => :create
       to_one     :framework,           :optional_in => :create
+      to_one     :stack,               :optional_in => :create
+
       attribute  :environment_json,    Hash,       :default => {}
       attribute  :memory,              Integer,    :default => 256
       attribute  :instances,           Integer,    :default => 1
       attribute  :disk_quota,          Integer,    :default => 1024
 
-      # TODO: renable exclude_in => :create for state, but not until it is
-      # coordinated with ilia and ramnivas
-      attribute  :state,               String,     :default => "STOPPED" # , :exclude_in => :create
+      attribute  :state,               String,     :default => "STOPPED"
       attribute  :command,             String,     :default => nil
       attribute  :console,             Message::Boolean, :default => false
-      attribute :debug,                String,     :default => nil
+      attribute  :debug,               String,     :default => nil
 
       # a URL pointing to a git repository
       # note that this will not match private git URLs, i.e. git@github.com:foo/bar.git
