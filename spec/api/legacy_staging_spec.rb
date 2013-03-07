@@ -158,7 +158,7 @@ module VCAP::CloudController
         tmpdir = Dir.mktmpdir
         zipname = File.join(tmpdir, "test.zip")
         create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(guid, File.new(zipname), [])
+        AppPackage.to_zip(guid, [], File.new(zipname))
         FileUtils.rm_rf(tmpdir)
 
         get "/staging/apps/#{app_obj.guid}"

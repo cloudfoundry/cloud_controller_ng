@@ -171,38 +171,126 @@ module VCAP::CloudController::SpecHelper
   def configure_components(config)
     mbus = MockMessageBus.new(config)
     VCAP::CloudController::MessageBus.instance = mbus
-    VCAP::CloudController::Models::ServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
+    VCAP::CloudController::Models::ServiceInstance.gateway_client_class =
+      VCAP::Services::Api::ServiceGatewayClientFake
 
     VCAP::CloudController::AccountCapacity.configure(config)
-    VCAP::CloudController::ResourcePool.instance = VCAP::CloudController::ResourcePool.new(config)
+    VCAP::CloudController::ResourcePool.instance =
+      VCAP::CloudController::ResourcePool.new(config)
     VCAP::CloudController::AppPackage.configure(config)
     VCAP::CloudController::AppStager.configure(config, mbus)
     VCAP::CloudController::LegacyStaging.configure(config)
 
-    VCAP::CloudController::DeaPool.configure(config, mbus)
-    VCAP::CloudController::DeaClient.configure(config, mbus)
+    dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)
+    VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
+
     VCAP::CloudController::HealthManagerClient.configure(mbus)
 
     VCAP::CloudController::LegacyBulk.configure(config, mbus)
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
+
+    configure_stacks
+  end
+
+  def configure_stacks
+    stacks_file = File.expand_path("../fixtures/config/stacks.yml", __FILE__)
+    VCAP::CloudController::Models::Stack.configure(stacks_file)
+    VCAP::CloudController::Models::Stack.populate
   end
 
   def configure
     config
   end
 
-  def create_zip(zip_name, file_count, file_size=1024)
-    total_size = file_count * file_size
-    files = []
-    file_count.times do |i|
-      tf = Tempfile.new("ziptest_#{i}")
-      files << tf
-      tf.write("A" * file_size)
-      tf.close
+  class TmpdirCleaner
+    def self.dir_paths
+      @dir_paths ||= []
     end
-    child = POSIX::Spawn::Child.new("zip", zip_name, *files.map(&:path))
-    child.status.exitstatus.should == 0
-    total_size
+
+    def self.clean_later(dir_path)
+      dir_path = File.realpath(dir_path)
+      tmpdir_path = File.realpath(Dir.tmpdir)
+
+      unless dir_path.start_with?(tmpdir_path)
+        raise ArgumentError, "dir '#{dir_path}' is not in #{tmpdir_path}"
+      end
+      dir_paths << dir_path
+    end
+
+    def self.clean
+      FileUtils.rm_rf(dir_paths)
+      dir_paths.clear
+    end
+
+    def self.mkdir
+      dir_path = Dir.mktmpdir
+      clean_later(dir_path)
+      yield(dir_path)
+      dir_path
+    end
+  end
+
+  RSpec.configure do |rspec_config|
+    rspec_config.after(:all) do
+      TmpdirCleaner.clean
+    end
+  end
+
+  def create_zip(zip_name, file_count, file_size=1024)
+    (file_count * file_size).tap do |total_size|
+      files = []
+      file_count.times do |i|
+        tf = Tempfile.new("ziptest_#{i}")
+        files << tf
+        tf.write("A" * file_size)
+        tf.close
+      end
+
+      child = POSIX::Spawn::Child.new("zip", zip_name, *files.map(&:path))
+      unless child.status.exitstatus == 0
+        raise "Failed zipping:\n#{child.err}\n#{child.out}"
+      end
+    end
+  end
+
+  def create_zip_with_named_files(file_count, file_size=1024)
+    result_zip_file = Tempfile.new("tmpzip")
+
+    TmpdirCleaner.mkdir do |tmpdir|
+      file_names = file_count.times.map { |i| "ziptest_#{i}" }
+      file_names.each do |file_name|
+        File.open(File.join(tmpdir, file_name), "w") do |f|
+          f.write("A" * file_size)
+        end
+      end
+
+      zip_process = POSIX::Spawn::Child.new(
+        "zip", result_zip_file.path, *file_names, :chdir => tmpdir)
+
+      unless zip_process.status.exitstatus == 0
+        raise "Failed zipping:\n#{zip_process.err}\n#{zip_process.out}"
+      end
+    end
+
+    result_zip_file
+  end
+
+  def unzip_zip(file_path)
+    TmpdirCleaner.mkdir do |tmpdir|
+      child = POSIX::Spawn::Child.new("unzip", "-d", tmpdir, file_path)
+      unless child.status.exitstatus == 0
+        raise "Failed unzipping:\n#{child.err}\n#{child.out}"
+      end
+    end
+  end
+
+  def list_files(dir_path)
+    [].tap do |file_paths|
+      Dir["#{dir_path}/**/*"].each do |file_path|
+        next unless File.file?(file_path)
+        file_paths << file_path.sub("#{dir_path}/", "")
+      end
+    end
   end
 
   def with_em_and_thread(opts = {}, &blk)
@@ -364,6 +452,19 @@ module VCAP::CloudController::SpecHelper
       FileUtils.rm_rf(@tmpdir)
     end
   end
+
+  shared_context "with valid resource in resource pool" do
+    let(:valid_resource) do
+      file = Tempfile.new("mytemp")
+      file.write("A" * 1024)
+      file.close
+
+      VCAP::CloudController::ResourcePool.instance.add_path(file.path)
+      file_sha1 = Digest::SHA1.file(file.path).hexdigest
+
+      {"fn" => "file/path", "sha1" => file_sha1, "size" => 2048}
+    end
+  end
 end
 
 class CF::UAA::Misc
@@ -379,8 +480,8 @@ class Redis
 end
 
 RSpec.configure do |rspec_config|
-  rspec_config.include VCAP::CloudController
   rspec_config.include Rack::Test::Methods
+  rspec_config.include VCAP::CloudController
   rspec_config.include VCAP::CloudController::SpecHelper
 
   rspec_config.before(:all) do

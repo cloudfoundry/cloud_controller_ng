@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/stager/client"
-require "cloud_controller/errors"
+require "vcap/errors"
 
 module VCAP::CloudController
   module DeaClient
@@ -20,14 +20,18 @@ module VCAP::CloudController
     end
 
     class << self
-      include VCAP::CloudController::Errors
+      include VCAP::Errors
 
       attr_reader :config, :message_bus, :dea_pool
 
-      def configure(config, message_bus, dea_pool = DeaPool)
+      def configure(config, message_bus, dea_pool)
         @config = config
         @message_bus = message_bus
         @dea_pool = dea_pool
+      end
+
+      def run
+        @dea_pool.register_subscriptions
       end
 
       def start(app)

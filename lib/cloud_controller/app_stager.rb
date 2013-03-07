@@ -21,6 +21,7 @@ module VCAP::CloudController
       end
 
       def stage_app(app, options={}, &completion_callback)
+        raise Errors::AppPackageInvalid.new("The app package hash is empty") if app.package_hash.nil? || app.package_hash.empty?
         task = AppStagerTask.new(@config, @message_bus, @redis_client, app)
         task.stage(options, &completion_callback)
       end

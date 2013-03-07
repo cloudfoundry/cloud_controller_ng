@@ -44,10 +44,12 @@ class VCAP::CloudController::Config < VCAP::Config
         optional(:tmpdir)    => String,
         optional(:droplets)  => String,
         optional(:staging_manifests) => String,
+        optional(:stacks)    => String,
       },
 
       optional(:runtimes_file) => String,
       optional(:supported_buildpacks_file) => String,
+      optional(:stacks_file) => String,
 
       :db => {
         :database                   => String,     # db connection string for sequel
@@ -138,15 +140,6 @@ class VCAP::CloudController::Config < VCAP::Config
     merge_defaults(config)
   end
 
-  def self.merge_defaults(config)
-    config[:directories] ||= {}
-    config[:directories][:staging_manifests] ||= File.join(config_dir, "frameworks")
-    config[:runtimes_file] ||= File.join(config_dir, "runtimes.yml")
-    config[:supported_buildpacks_file] ||= File.join(config_dir, "supported_buildpacks.yml")
-
-    config
-  end
-
   def self.configure(config)
     mbus = VCAP::CloudController::MessageBus.new(config)
     VCAP::CloudController::MessageBus.instance = mbus
@@ -158,8 +151,9 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::AppStager.configure(config, mbus)
     VCAP::CloudController::LegacyStaging.configure(config)
 
-    VCAP::CloudController::DeaPool.configure(config, mbus)
-    VCAP::CloudController::DeaClient.configure(config, mbus)
+    dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)
+    VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
+
     VCAP::CloudController::HealthManagerClient.configure(mbus)
 
     VCAP::CloudController::LegacyBulk.configure(config, mbus)
@@ -168,5 +162,18 @@ class VCAP::CloudController::Config < VCAP::Config
 
   def self.config_dir
     @config_dir ||= File.expand_path("../../../config", __FILE__)
+  end
+
+  private
+
+  def self.merge_defaults(config)
+    config[:runtimes_file] ||= File.join(config_dir, "runtimes.yml")
+    config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
+    config[:supported_buildpacks_file] ||= File.join(config_dir, "supported_buildpacks.yml")
+
+    config[:directories] ||= {}
+    config[:directories][:staging_manifests] ||= File.join(config_dir, "frameworks")
+
+    config
   end
 end

@@ -21,7 +21,8 @@ module VCAP::CloudController
       :many_to_one => {
         :space              => lambda { |app| Models::Space.make  },
         :framework          => lambda { |app| Models::Framework.make },
-        :runtime            => lambda { |app| Models::Runtime.make   }
+        :runtime            => lambda { |app| Models::Runtime.make },
+        :stack              => lambda { |app| Models::Stack.make },
       },
       :one_to_zero_or_more  => {
         :service_bindings   => lambda { |app|
@@ -41,6 +42,51 @@ module VCAP::CloudController
         }
       }
     }
+
+    describe "#stack" do
+      def self.it_always_sets_stack
+        context "when stack was already set" do
+          let(:stack) { Models::Stack.make }
+          before { subject.stack = stack }
+
+          it "keeps previously set stack" do
+            subject.save
+            subject.refresh
+            subject.stack.should == stack
+          end
+        end
+
+        context "when stack was set to nil" do
+          before do
+            subject.stack = nil
+            Models::Stack.default.should_not be_nil
+          end
+
+          it "is populated with default stack" do
+            subject.save
+            subject.refresh
+            subject.stack.should == Models::Stack.default
+          end
+        end
+      end
+
+      context "when app is being created" do
+        subject do
+          Models::App.new(
+            :name => Sham.name,
+            :framework => Models::Framework.make,
+            :runtime => Models::Runtime.make,
+            :space => space,
+          )
+        end
+        it_always_sets_stack
+      end
+
+      context "when app is being updated" do
+        subject { Models::App.make }
+        it_always_sets_stack
+      end
+    end
 
     describe "bad relationships" do
       it "should not associate an app with a route on a different space" do
@@ -389,7 +435,8 @@ module VCAP::CloudController
         app = Models::App.new(:name => Sham.name,
                               :framework => Models::Framework.make,
                               :runtime => Models::Runtime.make,
-                              :space => space)
+                              :space => space,
+                              :stack => Models::Stack.make)
         app.add_route_by_guid(route.guid)
         app.save
         app.routes.should == [route]
@@ -399,7 +446,8 @@ module VCAP::CloudController
         app = Models::App.new(:name => Sham.name,
                               :framework => Models::Framework.make,
                               :runtime => Models::Runtime.make,
-                              :space => space)
+                              :space => space,
+                              :stack => Models::Stack.make)
         app.add_route_by_guid(Models::Route.make.guid)
         expect { app.save }.to raise_error(Models::App::InvalidRouteRelation)
         app.routes.should be_empty

@@ -4,111 +4,124 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::DeaPool do
-    let(:message_bus) { double(:message_bus) }
+    let(:mock_nats) { NatsClientMock.new({}) }
+    let(:message_bus) { MessageBus.new(:nats => mock_nats) }
+    subject { DeaPool.new(config, message_bus) }
 
-    let(:dea_msg) do
-      {
-        :id => "abc",
-        :available_memory => 1024,
-        :runtimes => ["ruby18", "java"]
-      }
-    end
-
-    before do
-      DeaPool.configure(config, message_bus)
-    end
-
-    describe "process_advertise_message" do
-
-      it "should add a dea profile with a recent timestamp" do
-        deas = DeaPool.send(:deas)
-        deas.count.should == 0
-        DeaPool.send(:process_advertise_message, dea_msg)
-        deas.count.should == 1
-        deas.should have_key("abc")
-
-        dea = deas["abc"]
-        dea[:advertisement].should == dea_msg
-        dea[:last_update].should be_recent
-      end
-    end
-
-    describe "subscription"  do
-      it "should respond to dea.advertise" do
-        message_bus.should_receive(:subscribe).and_yield(dea_msg)
-        DeaPool.should_receive(:process_advertise_message).with(dea_msg)
-        DeaPool.register_subscriptions
-      end
-    end
-
-    describe "find_dea" do
-      let(:dea_expired) do
+    describe "#register_subscriptions" do
+      let(:dea_advertise_msg) do
         {
-          :id => "expired",
+          :id => "dea-id",
           :available_memory => 1024,
-          :runtimes => %w[ruby18 java ruby19]
+          :runtimes => ["ruby18", "java"],
         }
       end
 
-      let(:dea_mem_only) do
-        {
-          :id => "mem_only",
-          :available_memory => 1024,
-          :runtimes => %w[ruby18 java]
-        }
+      it "finds advertised dea" do
+        with_em_and_thread do
+          subject.register_subscriptions
+          EM.next_tick do
+            mock_nats.publish("dea.advertise", JSON.dump(dea_advertise_msg))
+          end
+        end
+        subject.find_dea(0, "ruby18").should == "dea-id"
       end
+    end
 
-      let(:dea_runtime_only) do
-        {
-          :id => "runtime_only",
-          :available_memory => 512,
-          :runtimes => %w[ruby18 java ruby19]
-        }
-      end
-
-      let(:dea_all) do
-        {
-          :id => "all",
-          :available_memory => 1024,
-          :runtimes => %w[ruby18 java ruby19]
-        }
-      end
-
-      let(:dea_buildpack) do
-        {
-          :id => "buildpack",
-          :available_memory => 1024
-        }
-      end
-
-      context "when the dea has runtimes" do
-        let(:deas) { deas = DeaPool.send(:deas) }
-
-        before do
-          DeaPool.send(:process_advertise_message, dea_expired)
-          DeaPool.send(:process_advertise_message, dea_mem_only)
-          DeaPool.send(:process_advertise_message, dea_runtime_only)
-          DeaPool.send(:process_advertise_message, dea_all)
-          deas["expired"][:last_update] = Time.new(2011, 04, 11)
+    describe "#find_dea" do
+      describe "dea availability" do
+        let(:dea_advertise_msg) do
+          {
+            :id => "dea-id",
+            :available_memory => 1024,
+            :runtimes => ["ruby18"],
+          }
         end
 
-        it "should find a non-expired dea meeting the needs of the app" do
-          DeaPool.find_dea(1024, "ruby19").should == "all"
-        end
-
-        it "should remove expired dea entries" do
+        it "only finds registered deas" do
           expect {
-            DeaPool.find_dea(4096, "cobol").should be_nil
-          }.to change { deas.count }.from(4).to(3)
+            subject.process_advertise_message(dea_advertise_msg)
+          }.to change { subject.find_dea(0, "ruby18") }.from(nil).to("dea-id")
         end
       end
 
-      context "when the dea has no runtimes (i.e. is buildpack only)" do
-        before { DeaPool.send(:process_advertise_message, dea_buildpack) }
+      describe "dea advertisement expiration (10sec)" do
+        let(:dea_advertise_msg) do
+          {
+            :id => "dea-id",
+            :available_memory => 1024,
+            :runtimes => ["ruby18"],
+          }
+        end
 
-        it "should find a non-expired dea meeting the needs of the app" do
-          DeaPool.find_dea(1024, "foobar").should == "buildpack"
-          DeaPool.find_dea(1024, "ruby19").should == "buildpack"
+        it "only finds deas with that have not expired" do
+          Timecop.freeze do
+            subject.process_advertise_message(dea_advertise_msg)
+
+            Timecop.travel(10)
+            subject.find_dea(1024, "ruby18").should == "dea-id"
+
+            Timecop.travel(1)
+            subject.find_dea(1024, "ruby18").should be_nil
+          end
+        end
+      end
+
+      describe "memory capacity" do
+        let(:dea_advertise_msg) do
+          {
+            :id => "dea-id",
+            :available_memory => 1024,
+            :runtimes => ["ruby18"],
+          }
+        end
+
+        it "only finds deas that can satisfy memory request" do
+          subject.process_advertise_message(dea_advertise_msg)
+          subject.find_dea(1025, "ruby18").should be_nil
+          subject.find_dea(1024, "ruby18").should == "dea-id"
+        end
+      end
+
+      describe "runtime availability" do
+        let(:dea_advertise_msg) do
+          {
+            :id => "dea-id",
+            :available_memory => 1024,
+            :runtimes => ["ruby18"],
+          }
+        end
+
+        it "only finds deas that can satisfy runtime request" do
+          subject.process_advertise_message(dea_advertise_msg)
+          subject.find_dea(0, "ruby19").should be_nil
+          subject.find_dea(0, "ruby18").should == "dea-id"
+        end
+      end
+
+      describe "buildpack availability" do
+        let(:dea_with_runtimes) do
+          {
+            :id => "dea-with-runtimes-id",
+            :available_memory => 1024,
+            :runtimes => ["ruby18"],
+          }
+        end
+
+        let(:dea_without_runtimes) do
+          {
+            :id => "dea-without-runtimes-id",
+            :available_memory => 1024,
+            :runtimes => nil,
+          }
+        end
+
+        it "only finds deas that do not have runtimes specified" do
+          subject.process_advertise_message(dea_with_runtimes)
+          subject.find_dea(0, "some-runtime").should be_nil
+
+          subject.process_advertise_message(dea_without_runtimes)
+          subject.find_dea(0, "some-runtime").should == "dea-without-runtimes-id"
         end
       end
     end

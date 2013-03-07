@@ -38,7 +38,7 @@ module VCAP::CloudController
         before :all do
           reset_database
           @framework = Models::Framework.make
-          10.times do
+          100.times do
             Models::App.make(:framework => @framework)
           end
         end
@@ -70,8 +70,8 @@ module VCAP::CloudController
 
           it "returns results in the response body" do
             get "/bulk/apps", {
-              "batch_size" => 200,
-              "bulk_token" => "{\"id\":0}",
+              "batch_size" => 20,
+              "bulk_token" => "{\"id\":20}",
             }
             last_response.status.should == 200
             decoded_response["results"].should_not be_nil

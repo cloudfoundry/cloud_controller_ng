@@ -95,6 +95,7 @@ require "cloud_controller/models/service_instance"
 require "cloud_controller/models/service_plan"
 require "cloud_controller/models/space"
 require "cloud_controller/models/supported_buildpack"
+require "cloud_controller/models/stack"
 require "cloud_controller/models/user"
 
 require "cloud_controller/models/quota_definition"

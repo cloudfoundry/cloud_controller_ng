@@ -1,0 +1,7 @@
+default: "default-stack-name"
+
+stacks:
+  - name: "default-stack-name"
+    description: "default-stack-description"
+  - name: "cider"
+    description: "cider-description"
