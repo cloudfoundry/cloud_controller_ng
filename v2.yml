@@ -357,4 +357,18 @@
   name: QuotaDefinitionInvalid
   http_code: 400
   message: "Quota Definition is invalid: %s"
-
+  
+250001:
+  name: StackInvalid
+  http_code: 400
+  message: "The stack is invalid: %s"
+  
+250002:
+  name: StackNameTaken
+  http_code: 400
+  message: "The stack name is taken: %s"
+  
+250003:
+  name: StackNotFound
+  http_code: 404
+  message: "The stack could not be found: %s"
