@@ -7,6 +7,16 @@ Dir[File.expand_path("../helpers/*", __FILE__)].each do |file|
   require file
 end
 
+
+# Ensures that entries are not returned ordered by the id field by
+# default. Breaks the tests (deliberately) unless we order by id
+# explicitly. In sqlite, the default ordering, although not guaranteed,
+# is de facto by id. In postgres the order is random unless specified.
+
+class VCAP::CloudController::Models::App
+  set_dataset dataset.order(:guid)
+end
+
 module VCAP::CloudController::ApiSpecHelper
   include VCAP::CloudController
   include VCAP::CloudController::ModelSpecHelper
