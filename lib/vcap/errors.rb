@@ -1,5 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 require "vcap/rest_api/errors"
+require "yaml"
 
 module VCAP::Errors
   include VCAP::RestAPI::Errors

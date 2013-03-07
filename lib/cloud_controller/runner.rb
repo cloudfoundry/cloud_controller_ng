@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "steno"
+require "optparse"
 require File.expand_path("../message_bus.rb", __FILE__)
 
 module VCAP::CloudController
