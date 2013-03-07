@@ -14,20 +14,6 @@ module VCAP::CloudController
                                       __FILE__)
       parse_options!
       parse_config
-
-      if running_in_cf?
-        merge_vcap_config
-      else
-        create_pidfile
-      end
-
-      setup_logging
-      setup_db
-
-      @config[:bind_address] = VCAP.local_ip(@config[:local_route])
-      VCAP::CloudController::Config.configure(@config)
-
-      logger.info "running on #{ENV["VMC_APP_HOST"]}" if running_in_cf?
     end
 
     def logger
@@ -97,13 +83,18 @@ module VCAP::CloudController
     end
 
     def run!
-      db = setup_db
+      start_cloud_controller
+
       run_migrations = @run_migrations
       config = @config.dup
+      stacks_file = @config[:stacks_file]
+
+      VCAP::CloudController::Models::Stack.configure(stacks_file)
 
       if run_migrations
         populate_framework_and_runtimes
         VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
+        VCAP::CloudController::Models::Stack.populate
       end
 
       config[:system_domains].each do |name|
@@ -112,35 +103,9 @@ module VCAP::CloudController
 
       VCAP::CloudController::Models::Domain.default_serving_domain_name = config[:system_domains].first
 
-      app = Rack::Builder.new do
-        # TODO: we really should put these bootstrapping into a place other
-        # than Rack::Builder
-        use Rack::CommonLogger
-        VCAP::CloudController::MessageBus.instance.register_components
-        VCAP::CloudController::MessageBus.instance.register_routes
-        VCAP::CloudController::DeaClient.run
-        VCAP::CloudController::LegacyBulk.register_subscription
-        VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
+      app = create_app(config)
 
-        map "/" do
-          run VCAP::CloudController::Controller.new(config)
-        end
-      end
-      if @config[:nginx][:use_nginx]
-        @thin_server = Thin::Server.new(config[:nginx][:instance_socket],
-                                      :signals => false)
-      else
-        @thin_server = Thin::Server.new(@config[:bind_address], @config[:port])
-      end
-      @thin_server.app = app
-
-      trap_signals
-
-      # The routers proxying to us handle killing inactive connections.
-      # Set an upper limit just to be safe.
-      @thin_server.timeout = 15 * 60 # 15 min
-      @thin_server.threaded = true
-      @thin_server.start!
+      start_app(app, config)
     end
 
     def trap_signals
@@ -165,6 +130,24 @@ module VCAP::CloudController
       @config[:port] = ENV["VCAP_APP_PORT"].to_i
     end
 
+    private
+
+    def start_cloud_controller
+      if running_in_cf?
+        merge_vcap_config
+      else
+        create_pidfile
+      end
+
+      setup_logging
+      setup_db
+
+      @config[:bind_address] = VCAP.local_ip(@config[:local_route])
+      VCAP::CloudController::Config.configure(@config)
+
+      logger.info "running on #{ENV["VMC_APP_HOST"]}" if running_in_cf?
+    end
+
     # This isn't exactly the best place for this, but it is also temporary.  A
     # seperate utility will get written for this
     def populate_framework_and_runtimes
@@ -173,10 +156,41 @@ module VCAP::CloudController
 
       fw_dir = @config[:directories][:staging_manifests]
       Models::Framework.populate_from_directory(fw_dir)
+    end
 
-      stacks_file = @config[:stacks_file]
-      Models::Stack.configure(stacks_file)
-      Models::Stack.populate
+    def create_app(config)
+      Rack::Builder.new do
+        # TODO: we really should put these bootstrapping into a place other
+        # than Rack::Builder
+        use Rack::CommonLogger
+        VCAP::CloudController::MessageBus.instance.register_components
+        VCAP::CloudController::MessageBus.instance.register_routes
+        VCAP::CloudController::DeaClient.run
+        VCAP::CloudController::LegacyBulk.register_subscription
+        VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
+
+        map "/" do
+          run VCAP::CloudController::Controller.new(config)
+        end
+      end
+    end
+
+    def start_app(app, config)
+      if @config[:nginx][:use_nginx]
+        @thin_server = Thin::Server.new(config[:nginx][:instance_socket],
+          :signals => false)
+      else
+        @thin_server = Thin::Server.new(@config[:bind_address], @config[:port])
+      end
+      @thin_server.app = app
+
+      trap_signals
+
+      # The routers proxying to us handle killing inactive connections.
+      # Set an upper limit just to be safe.
+      @thin_server.timeout = 15 * 60 # 15 min
+      @thin_server.threaded = true
+      @thin_server.start!
     end
   end
 end
