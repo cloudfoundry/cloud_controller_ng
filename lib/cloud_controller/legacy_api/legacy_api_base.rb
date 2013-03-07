@@ -2,7 +2,7 @@
 
 module VCAP::CloudController
   class LegacyApiBase < RestController::Base
-    include VCAP::CloudController::Errors
+    include VCAP::Errors
 
     def default_space
       raise NotAuthorized unless user

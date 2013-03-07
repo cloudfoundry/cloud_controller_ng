@@ -41,7 +41,7 @@ module VCAP::RestAPI
 
       (num_authors - 1).times do |i|
         # mysql does typecasting of strings to ints, so start values at 0
-	# so that the query using string tests don't find the 0 values.
+        # so that the query using string tests don't find the 0 values.
         a = Author.create(:num_val => i + 1, :str_val => "str #{i}")
         books_per_author.times do |j|
           a.add_book(Book.create(:num_val => j + 1, :str_val => "str #{i} #{j}"))
@@ -122,7 +122,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
 
@@ -132,7 +132,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
 
@@ -142,7 +142,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
 
@@ -152,7 +152,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
-          }.to raise_error(VCAP::RestAPI::Errors::BadQueryParameter)
+          }.to raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
 

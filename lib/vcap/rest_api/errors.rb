@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require "vcap/rest_api/http_constants"
 
 module VCAP::RestAPI
   module Errors
@@ -48,35 +49,10 @@ module VCAP::RestAPI
 
         const_set(class_name, klass)
       end
-
-      def define_base_errors
-        define_error("NotFound", HTTP::NOT_FOUND, 10000, "Unknown request")
-
-        define_error("ServerError", HTTP::INTERNAL_SERVER_ERROR,
-                     10001, "Server error")
-
-        define_error("NotAuthenticated", HTTP::UNAUTHORIZED,
-                     10002, "Authentication error")
-
-        define_error("NotAuthorized", HTTP::FORBIDDEN, 10003,
-                     "You are not authorized to perform the requested action")
-
-        define_error("InvalidRequest", HTTP::BAD_REQUEST, 10004,
-                     "The request is invalid")
-
-        define_error("BadQueryParameter", HTTP::BAD_REQUEST, 10005,
-                     "The query parameter is invalid: %s")
-      end
-
     end
 
     def self.included(base)
       base.extend(ClassMethods)
-      base.define_base_errors
     end
-
-    extend(ClassMethods)
-    define_base_errors
-
   end
 end
