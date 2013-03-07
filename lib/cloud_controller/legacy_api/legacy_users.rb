@@ -4,7 +4,7 @@ module VCAP::CloudController
   class LegacyUsers < LegacyApiBase
     allow_unauthenticated_access
 
-    include VCAP::CloudController::Errors
+    include VCAP::Errors
 
     def read(email)
       unless SecurityContext.current_user_has_email?(email)

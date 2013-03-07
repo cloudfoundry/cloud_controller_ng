@@ -4,7 +4,7 @@
 # and as we start adding other legacy protocol conversions.
 module VCAP::CloudController
   class LegacyService < LegacyApiBase
-    include VCAP::CloudController::Errors
+    include VCAP::Errors
     DEFAULT_PROVIDER = "core"
     LEGACY_API_USER_GUID = "legacy-api"
     LEGACY_PLAN_OVERIDE = "100"

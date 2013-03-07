@@ -84,7 +84,7 @@ module VCAP::RestAPI
         # One could argue that this should be a server error.  It means
         # that a query key came in for an attribute that is explicitly
         # in the queryable_attributes, but is not a column or an association.
-        raise Errors::BadQueryParameter.new(q_key) unless f_key
+        raise VCAP::Errors::BadQueryParameter.new(q_key) unless f_key
 
         other_model = model.association_reflection(f_key).associated_class
         id_key = other_model.columns.include?(:guid) ? :guid : :id
@@ -101,11 +101,11 @@ module VCAP::RestAPI
       key, value, extra = query.split(":")
 
       unless extra.nil?
-        raise Errors::BadQueryParameter.new(query)
+        raise VCAP::Errors::BadQueryParameter.new(query)
       end
 
       unless queryable_attributes.include?(key)
-        raise Errors::BadQueryParameter.new(key)
+        raise VCAP::Errors::BadQueryParameter.new(key)
       end
 
       [key.to_sym, value]

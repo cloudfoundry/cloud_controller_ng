@@ -9,6 +9,7 @@ require "yajl"
 require "eventmachine/schedule_sync"
 
 require "vcap/common"
+require "vcap/errors"
 require "uaa/token_coder"
 require "vcap/uaa_util"
 
@@ -18,6 +19,8 @@ require "cloud_controller/security_context"
 module VCAP::CloudController
   autoload :Models, "cloud_controller/models"
   include VCAP::RestAPI
+
+  Errors = VCAP::Errors
 
   class Controller < Sinatra::Base
     register Sinatra::VCAP
@@ -112,12 +115,12 @@ module VCAP::CloudController
   end
 end
 
+require "vcap/errors"
+
 require "cloud_controller/config"
 require "cloud_controller/db"
-require "cloud_controller/errors"
 require "cloud_controller/permissions"
 require "cloud_controller/runner"
-require "cloud_controller/errors"
 require "cloud_controller/app_package"
 require "cloud_controller/app_stager"
 require "cloud_controller/api"
