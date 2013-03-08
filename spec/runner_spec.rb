@@ -12,13 +12,33 @@ describe VCAP::CloudController::Runner do
       end
     end
 
-    context "when the run migrations flag is passed in" do
-      let(:argv) { ["-m"] }
-
+    def self.it_configures_stacks
       it "configures the stacks" do
         VCAP::CloudController::Models::Stack.should_receive(:configure)
         subject.run!
       end
+    end
+
+    def self.it_runs_dea_client
+      it "starts running dea client (one time set up to start tracking deas)" do
+        VCAP::CloudController::DeaClient.should_receive(:run)
+        subject.run!
+      end
+    end
+
+    def self.it_runs_app_stager
+      it "starts running app stager (one time set up to start tracking stagers)" do
+        VCAP::CloudController::AppStager.should_receive(:run)
+        subject.run!
+      end
+    end
+
+    context "when the run migrations flag is passed in" do
+      let(:argv) { ["-m"] }
+
+      it_configures_stacks
+      it_runs_dea_client
+      it_runs_app_stager
 
       it "populate the stacks" do
         VCAP::CloudController::Models::Stack.should_receive(:populate)
@@ -29,10 +49,9 @@ describe VCAP::CloudController::Runner do
     context "when the run migrations flag is not passed in" do
       let(:argv) { [] }
 
-      it "configures the stacks" do
-        VCAP::CloudController::Models::Stack.should_receive(:configure)
-        subject.run!
-      end
+      it_configures_stacks
+      it_runs_dea_client
+      it_runs_app_stager
     end
   end
 end

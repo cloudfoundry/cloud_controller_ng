@@ -16,6 +16,13 @@ module VCAP::CloudController
     let(:stager_pool) { StagerPool.new({}, nil) }
     before { stager_pool.stub(:find_stager => "staging-id") }
 
+    describe ".run" do
+      it "registers subscriptions for dea_pool" do
+        stager_pool.should_receive(:register_subscriptions)
+        described_class.run
+      end
+    end
+
     describe ".stage_app (stages sync/async)" do
       context "when the app package hash is nil" do
         let(:app) { Models::App.make(:package_hash => nil) }

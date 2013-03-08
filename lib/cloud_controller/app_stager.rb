@@ -21,6 +21,10 @@ module VCAP::CloudController
         )
       end
 
+      def run
+        @stager_pool.register_subscriptions
+      end
+
       def stage_app(app, options={}, &completion_callback)
         if app.package_hash.nil? || app.package_hash.empty?
           raise Errors::AppPackageInvalid.new("The app package hash is empty")
