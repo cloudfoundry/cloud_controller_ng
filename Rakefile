@@ -33,7 +33,12 @@ end
 
 desc "Run specs"
 RSpec::Core::RakeTask.new do |t|
-  t.rspec_opts = ["--format", "documentation", "--colour"]
+  # Keep --backtrace for CI backtraces to be useful
+  t.rspec_opts = %w(
+    --backtrace
+    --format documentation
+    --colour
+  )
 end
 
 desc "Run specs with code coverage"
