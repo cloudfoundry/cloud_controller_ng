@@ -3,7 +3,7 @@
 # cloud_controller_ng
 
 This repository contains the code for the Cloud Controller. The NG signifies that this is a "next generation" component and this is not backward-compatible with the original cloud_controller. 
-This version adds significant new functionality including the additional manditory constructs of the "organization" and "space" heirarchy that all users, applications and services must use.
+This version adds significant new functionality including the additional manditory constructs of the "organization" and "space" hierarchy that all users, applications and services must use.
 
 ## Components
 
@@ -31,7 +31,7 @@ The blob store uses [FOG][fog] such that it can use abstractions like s3 or a lo
 
 #### NATS Messaging
 
-The Cloud Controller interacts with other components using the NATS messaging bus.
+The Cloud Controller interacts with other components using REST calls for external requests (e.g. router) and the NATS message bus for internal communication (e.g. dea).
 
 - Instructs a DEA to stage an application (processes a buildpack for the app) to prepare it to run
 - Instructs a DEA to start or stop an application
