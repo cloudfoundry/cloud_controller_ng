@@ -154,10 +154,11 @@ class VCAP::CloudController::Config < VCAP::Config
     dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)
     VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
 
+    VCAP::CloudController::LegacyBulk.configure(config, mbus)
     VCAP::CloudController::HealthManagerClient.configure(mbus)
 
-    VCAP::CloudController::LegacyBulk.configure(config, mbus)
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
+    VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
   end
 
   def self.config_dir

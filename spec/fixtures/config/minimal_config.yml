@@ -17,13 +17,18 @@ uaa:
   symmetric_secret: "tokensecret"
 
 logging:
-  level: debug2
+  level: fatal # Keep at fatal to avoid lots of extraneous output in tests
 
 nats_uri: nats://127.0.0.1:4222
 pid_filename: /tmp/cloud_controller.pid
 
 db:
   database: "sqlite:///tmp/cloud_controller.db"
+
+redis:
+  host: 127.0.0.1
+  port: 5454
+  password: secret
 
 bulk_api:
   auth_user: bulk_user

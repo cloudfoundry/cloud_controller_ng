@@ -2,15 +2,12 @@ require "spec_helper"
 
 describe VCAP::CloudController::Runner do
   describe "#run!" do
-    let(:runner) do
-      runner = VCAP::CloudController::Runner.new(argv)
-      runner.stub(:start_app)
-      runner.stub(:start_cloud_controller)
-      runner
-    end
-
-    def run!
-      runner.run!
+    subject do
+      config_path = File.expand_path("../fixtures/config/minimal_config.yml", __FILE__)
+      VCAP::CloudController::Runner.new(argv + ["-c", config_path]).tap do |r|
+        r.stub(:start_thin_server)
+        r.stub(:create_pidfile)
+      end
     end
 
     context "when the run migrations flag is passed in" do
@@ -18,12 +15,12 @@ describe VCAP::CloudController::Runner do
 
       it "configures the stacks" do
         VCAP::CloudController::Models::Stack.should_receive(:configure)
-        run!
+        subject.run!
       end
 
-      it "does not populate the stacks" do
+      it "populate the stacks" do
         VCAP::CloudController::Models::Stack.should_receive(:populate)
-        run!
+        subject.run!
       end
     end
 
@@ -32,12 +29,7 @@ describe VCAP::CloudController::Runner do
 
       it "configures the stacks" do
         VCAP::CloudController::Models::Stack.should_receive(:configure)
-        run!
-      end
-
-      it "populates the stacks" do
-        VCAP::CloudController::Models::Stack.should_not_receive(:populate)
-        run!
+        subject.run!
       end
     end
   end

@@ -11,8 +11,7 @@ module VCAP::CloudController
 
       # default to production. this may be overriden during opts parsing
       ENV["RACK_ENV"] = "production"
-      @config_file = File.expand_path("../../../config/cloud_controller.yml",
-                                      __FILE__)
+      @config_file = File.expand_path("../../../config/cloud_controller.yml", __FILE__)
       parse_options!
       parse_config
     end
@@ -88,9 +87,6 @@ module VCAP::CloudController
 
       run_migrations = @run_migrations
       config = @config.dup
-      stacks_file = @config[:stacks_file]
-
-      VCAP::CloudController::Models::Stack.configure(stacks_file)
 
       if run_migrations
         populate_framework_and_runtimes
@@ -105,8 +101,7 @@ module VCAP::CloudController
       VCAP::CloudController::Models::Domain.default_serving_domain_name = config[:system_domains].first
 
       app = create_app(config)
-
-      start_app(app, config)
+      start_thin_server(app, config)
     end
 
     def trap_signals
@@ -176,7 +171,7 @@ module VCAP::CloudController
       end
     end
 
-    def start_app(app, config)
+    def start_thin_server(app, config)
       if @config[:nginx][:use_nginx]
         @thin_server = Thin::Server.new(config[:nginx][:instance_socket],
           :signals => false)
