@@ -4,6 +4,8 @@ require "services/api"
 module VCAP::CloudController::Models
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
+    class MissingServiceAuthToken < StandardError; end
+    class ServiceGatewayError < StandardError; end
 
     class << self
       def gateway_client_class
@@ -201,8 +203,19 @@ module VCAP::CloudController::Models
     end
 
     def create_snapshot
-      service_gateway_client
-      client.create_snapshot(:service_id => gateway_name)
+      token = service_plan.service.service_auth_token
+      if !token
+        raise MissingServiceAuthToken, "ServiceAuthToken not found for service #{service_plan.service}"
+      end
+      u = URI.parse(service_plan.service.url)
+      u.path = "/gateway/v2/configurations/#{gateway_name}/snapshots"
+      client = HTTPClient.new
+      response = client.post(u, :header => {VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token})
+      if response.ok?
+        Yajl::Parser.parse(response.body)
+      else
+        raise ServiceGatewayError, "Service gateway upstream failure, responded with #{response.status}: #{response.body}"
+      end
     end
 
     def enum_snapshots
