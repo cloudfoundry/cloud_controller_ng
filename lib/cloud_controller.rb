@@ -43,7 +43,11 @@ module VCAP::CloudController
       begin
         token_information = decode_token(auth_token)
         logger.info("Token received from the UAA #{token_information.inspect}")
-        uaa_id = token_information['user_id'] if token_information
+
+        if token_information
+          token_information['user_id'] ||= token_information['client_id']
+          uaa_id = token_information['user_id']
+        end
 
         if uaa_id
           user = Models::User.find(:guid => uaa_id)
