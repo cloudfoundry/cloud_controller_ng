@@ -62,7 +62,8 @@ module VCAP::CloudController
                                                :name => name,
                                                :free => free,
           ) do |plan|
-            plan.description = "dummy description"
+            plan.description = req.plan_descriptions[name] if req.plan_descriptions
+            plan.description ||= 'dummy description'
           end
         end
 

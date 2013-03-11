@@ -153,6 +153,17 @@ module VCAP::CloudController
           svc.should_not be_nil
           svc.url.should == "http://newurl.com"
         end
+
+        it "should support plan descriptions" do
+          offer = foo_bar_offering.dup
+          offer.plans = ["plan1", "plan2"]
+          plan_descriptions = offer.plans.map { |p| { p => "#{p}-description" } }
+          offer.plan_descriptions = plan_descriptions.reduce(&:merge)
+          post path, offer.encode, auth_header
+          service = Models::Service[:label => "foobar", :provider => "core"]
+          service.service_plans.each { |plan| plan.description.should == "#{plan.name}-description" }
+        end
+
       end
 
       describe "GET services/v1/offerings/:label_and_version(/:provider)" do
