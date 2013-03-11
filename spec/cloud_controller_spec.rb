@@ -281,8 +281,8 @@ describe VCAP::CloudController::Controller do
           end
         end
 
-        context "when there is no user_id in the token" do
-          let(:token_info) { {'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] } }
+        context "when there is no user_id or client_id in the token" do
+          let(:token_info) { {'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE]} }
 
           before do
             reset_database
@@ -352,6 +352,26 @@ describe VCAP::CloudController::Controller do
                 expect(user.active).to be_true
               end
             end
+          end
+        end
+
+        context "when there is a client_id in the token" do
+          let(:scope) { [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
+          let(:token_info) { {'client_id' => user_id, 'email' => email, 'scope' => scope} }
+
+          before do
+            reset_database
+            CF::UAA::TokenCoder.should_receive(:new).with(
+              :audience_ids => "cloud_controller",
+              :pkey => config_key
+            ).and_return(valid_coder)
+          end
+
+          it "should create a user with the client_id as the guid" do
+            subject
+
+            user = VCAP::CloudController::Models::User.first
+            expect(user.guid).to eq(user_id)
           end
         end
       end
