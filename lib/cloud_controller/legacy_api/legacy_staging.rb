@@ -202,7 +202,7 @@ module VCAP::CloudController
         logger.debug "nginx redirect #{url}"
         return [200, { "X-Accel-Redirect" => url }, ""]
       else
-        logger.debug "send_file #{patchage_path}"
+        logger.debug "send_file #{package_path}"
         return send_file package_path
       end
     end

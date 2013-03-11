@@ -148,34 +148,49 @@ module VCAP::CloudController
       let(:app_obj_without_pkg) { Models::App.make }
       let(:app_package_path) { AppPackage.package_path(app_obj.guid) }
 
-      before do
-        config_override(staging_config)
-        authorize staging_user, staging_password
+      def self.it_downloads_staged_app
+        it "succeeds for valid packages" do
+          guid = app_obj.guid
+          tmpdir = Dir.mktmpdir
+          zipname = File.join(tmpdir, "test.zip")
+          create_zip(zipname, 10, 1024)
+          AppPackage.to_zip(guid, [], File.new(zipname))
+          FileUtils.rm_rf(tmpdir)
+
+          get "/staging/apps/#{app_obj.guid}"
+          last_response.status.should == 200
+        end
+
+        it "should return an error for non-existent apps" do
+          get "/staging/apps/#{Sham.guid}"
+          last_response.status.should == 404
+        end
+
+        it "should return an error for an app without a package" do
+          get "/staging/apps/#{app_obj_without_pkg.guid}"
+          last_response.status.should == 404
+        end
       end
 
-      it "should succeed for valid packages" do
-        guid = app_obj.guid
-        tmpdir = Dir.mktmpdir
-        zipname = File.join(tmpdir, "test.zip")
-        create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(guid, [], File.new(zipname))
-        FileUtils.rm_rf(tmpdir)
+      context "when using with nginx" do
+        before do
+          config_override(staging_config)
+          authorize(staging_user, staging_password)
+        end
 
-        get "/staging/apps/#{app_obj.guid}"
-        last_response.status.should == 200
+        it_downloads_staged_app
+        include_examples "staging bad auth", :get
       end
 
-      it "should return an error for non-existent apps" do
-        get "/staging/apps/#{Sham.guid}"
-        last_response.status.should == 404
-      end
+      context "when not using with nginx" do
+        before do
+          config_override(staging_config.merge(:nginx => {:use_nginx => false}))
+          authorize(staging_user, staging_password)
+        end
 
-      it "should return an error for an app without a package" do
-        get "/staging/apps/#{app_obj_without_pkg.guid}"
-        last_response.status.should == 404
+        it_downloads_staged_app
+        include_examples "staging bad auth", :get
       end
-
-      include_examples "staging bad auth", :get
     end
 
     describe "POST /staging/droplets/:id" do
