@@ -1,12 +1,12 @@
 module VCAP::CloudController
   rest_controller :Snapshots do
     disable_default_routes
-    path_base "snapshots"
+    path_base "/v2"
     model_class_name :ServiceInstance
 
     permissions_required do
-      # read Permissions::CFAdmin
       update Permissions::SpaceDeveloper
+      read Permissions::SpaceDeveloper
     end
 
     define_attributes do
@@ -36,6 +36,19 @@ module VCAP::CloudController
       ]
     end
 
+    def index(service_guid)
+      instance = VCAP::CloudController::Models::ServiceInstance.find(:guid => service_guid)
+      validate_access(:read, instance, user, roles)
+      snapshots = instance.enum_snapshots
+      [
+        HTTP::OK,
+        Yajl::Encoder.encode(
+          "resources" => snapshots
+        ),
+      ]
+    end
+
     post "/v2/snapshots", :create
+    get  "/v2/service_instances/:service_guid/snapshots", :index
   end
 end

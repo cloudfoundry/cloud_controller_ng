@@ -279,6 +279,37 @@ module VCAP::CloudController
     end
   end
 
+  describe "#enum_snapshots" do
+    subject { Models::ServiceInstance.make()}
+    let(:enum_snapshots_url_matcher) {"gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots"}
+    before do
+      subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
+      subject.service_plan.service.service_auth_token.update(:token => "tokenvalue")
+    end
+
+    context "when there isn't a service auth token" do
+      it "fails" do
+        subject.service_plan.service.service_auth_token.destroy
+        subject.refresh
+        expect do
+          subject.enum_snapshots
+        end.to raise_error(Models::ServiceInstance::MissingServiceAuthToken)
+      end
+    end
+
+    context "returns a list of snapshots" do
+      let(:success_response) { '[{"snapshot":"attributes"}]' }
+      before do
+        stub_request(:get, enum_snapshots_url_matcher).to_return(:body => success_response)
+      end
+
+      it "return a list of snapshot" do
+        subject.enum_snapshots.should == [{"snapshot" => "attributes"}]
+        a_request(:get, enum_snapshots_url_matcher).should have_been_made
+      end
+    end
+  end
+
   describe "#create_snapshot" do
     subject { Models::ServiceInstance.make()}
     let(:create_snapshot_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }

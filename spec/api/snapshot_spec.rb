@@ -3,10 +3,11 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::Snapshots do
+  let(:service_instance) do
+    VCAP::CloudController::Models::ServiceInstance.make
+  end
+
   describe "POST", "/v2/snapshots" do
-    let(:service_instance) do
-      VCAP::CloudController::Models::ServiceInstance.make
-    end
    let(:payload) { Yajl::Encoder.encode(:service_instance_guid => service_instance.guid) }
     before do
       post "/v2/snapshots", payload, {}
@@ -61,6 +62,46 @@ describe VCAP::CloudController::Snapshots do
           decoded_response['metadata'].should == {"guid" => snapguid, "url" => "/v2/snapshots/#{snapguid}"}
           decoded_response['entity'].should == {"guid" => snapguid, "state" => "empty"}
         end
+      end
+    end
+  end
+
+  describe "GET /v2/service_instances/:service_id/snapshots" do
+    let(:snapshots_url) {  "/v2/service_instances/#{service_instance.guid}/snapshots" }
+
+    it 'requires authentication' do
+      get snapshots_url
+      last_response.status.should == 401
+    end
+
+    context "once authenticated" do
+      let(:developer) {make_developer_for_space(service_instance.space)}
+      before do
+        VCAP::CloudController::Models::ServiceInstance.should_receive(:find).
+          with(:guid => service_instance.guid).
+          and_return(service_instance)
+      end
+
+      it "returns an empty list" do
+        service_instance.stub(:enum_snapshots).and_return []
+        get snapshots_url, {} , headers_for(developer)
+        last_response.status.should == 200
+        decoded_response['resources'].should == []
+      end
+
+      it "returns an list of snpashots" do
+        service_instance.should_receive(:enum_snapshots) do
+          [{"guid" => '1234', "url" => "/v2/snapshots/1234"}]
+        end
+        get snapshots_url, {} , headers_for(developer)
+        last_response.status.should == 200
+        decoded_response['resources'].should == ["guid" => '1234', "url" => "/v2/snapshots/1234"]
+      end
+
+      it "checks for permission to read the service" do
+        another_developer   =  make_developer_for_space(VCAP::CloudController::Models::Space.make)
+        get snapshots_url, {} , headers_for(another_developer)
+        last_response.status.should == 403
       end
     end
   end

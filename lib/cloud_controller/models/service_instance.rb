@@ -207,9 +207,9 @@ module VCAP::CloudController::Models
       if !token
         raise MissingServiceAuthToken, "ServiceAuthToken not found for service #{service_plan.service}"
       end
+      client = HTTPClient.new
       u = URI.parse(service_plan.service.url)
       u.path = "/gateway/v2/configurations/#{gateway_name}/snapshots"
-      client = HTTPClient.new
       response = client.post(u, :header => {VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token})
       if response.ok?
         Yajl::Parser.parse(response.body)
@@ -219,8 +219,23 @@ module VCAP::CloudController::Models
     end
 
     def enum_snapshots
-      service_gateway_client
-      client.enum_snapshots(:service_id => gateway_name)
+      token = service_plan.service.service_auth_token
+      if !token
+        raise MissingServiceAuthToken, "ServiceAuthToken not found for service #{service_plan.service}"
+      end
+      client = HTTPClient.new
+      u = URI.parse(service_plan.service.url)
+      u.path = "/gateway/v2/configurations/#{gateway_name}/snapshots"
+      token = service_plan.service.service_auth_token
+      if !token
+        raise MissingServiceAuthToken, "ServiceAuthToken not found for service #{service_plan.service}"
+      end
+      response = client.get(u, :header => {VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token})
+      if response.ok?
+        Yajl::Parser.parse(response.body)
+      else
+        raise ServiceGatewayError, "Service gateway upstream failure, responded with #{response.status}: #{response.body}"
+      end
     end
 
     def snapshot_details(sid)
