@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 describe VCAP::CloudController::Snapshots do
@@ -28,7 +26,7 @@ describe VCAP::CloudController::Snapshots do
 
     context "once authenticated" do
       let(:developer) {make_developer_for_space(service_instance.space)}
-      let(:success_response) { {"snapshot" => {"id" => "snapshot-id", "other" => "data", "state" => "empty"}} }
+      let(:new_snapshot) { VCAP::CloudController::Models::Snapshot.new(id: 1, state: 'empty')}
 
       context "without service_instance_id" do
         it "returns a 400 status code" do
@@ -52,13 +50,13 @@ describe VCAP::CloudController::Snapshots do
 
       context "when the gateway successfully creates the snapshot" do
         before do
-          VCAP::CloudController::Models::ServiceInstance.any_instance.stub(:create_snapshot).and_return(success_response)
+          VCAP::CloudController::Models::ServiceInstance.any_instance.stub(:create_snapshot).and_return(new_snapshot)
         end
 
         it "returns the details of the new snapshot" do
           post "/v2/snapshots", payload, headers_for(developer)
           last_response.status.should be < 300
-          snapguid = "#{service_instance.guid}:snapshot-id"
+          snapguid = "#{service_instance.guid}:1"
           decoded_response['metadata'].should == {"guid" => snapguid, "url" => "/v2/snapshots/#{snapguid}"}
           decoded_response['entity'].should == {"guid" => snapguid, "state" => "empty"}
         end

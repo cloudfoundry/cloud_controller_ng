@@ -298,13 +298,16 @@ module VCAP::CloudController
     end
 
     context "returns a list of snapshots" do
-      let(:success_response) { '[{"snapshot":"attributes"}]' }
+      let(:success_response) { Yajl::Encoder.encode({snapshots: [{snapshot: {id: 1, state: 'ok'}}, {snapshot: {id: 2, state: 'bad'}} ]}) }
       before do
         stub_request(:get, enum_snapshots_url_matcher).to_return(:body => success_response)
       end
 
       it "return a list of snapshot" do
-        subject.enum_snapshots.should == [{"snapshot" => "attributes"}]
+        subject.enum_snapshots.should == [
+          VCAP::CloudController::Models::Snapshot.new('id' => 1, 'state' =>  'ok'),
+          VCAP::CloudController::Models::Snapshot.new('id' => 2, 'state' =>  'bad')
+        ]
         a_request(:get, enum_snapshots_url_matcher).should have_been_made
       end
     end
@@ -329,14 +332,18 @@ module VCAP::CloudController
     end
 
     context "when the request succeeds" do
-      let(:success_response) { '{"snapshot":"attributes"}' }
+      let(:snapshot_id) { 1 }
+      let(:snapshot_state) { "created" }
+      let(:success_response) { %Q({"snapshot":{"id": #{snapshot_id}, "state": "#{snapshot_state}"}}) }
       before do
         stub_request(:post, create_snapshot_url_matcher).to_return(:body => success_response)
       end
+
       it "makes an HTTP call to the corresponding service gateway and returns the decoded response" do
-        subject.create_snapshot.should == {"snapshot" => "attributes"}
+        subject.create_snapshot.should == VCAP::CloudController::Models::Snapshot.new('id' => snapshot_id, 'state' => snapshot_state)
         a_request(:post, create_snapshot_url_matcher).should have_been_made
       end
+
       it "uses the correct svc auth token" do
         subject.create_snapshot
         a_request(:post, create_snapshot_url_matcher).with(

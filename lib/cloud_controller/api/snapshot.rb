@@ -18,11 +18,11 @@ module VCAP::CloudController
       req = self.class::CreateMessage.decode(body)
       instance = VCAP::CloudController::Models::ServiceInstance.find(:guid => req.service_instance_guid)
       validate_access(:update, instance, user, roles)
-      gwres = instance.create_snapshot
-      snapguid = "%s:%s" % [instance.guid, gwres.fetch("snapshot").fetch("id")]
+      snapshot = instance.create_snapshot
+      snapguid = "%s:%s" % [instance.guid, snapshot.id]
       entity = {
         "guid" => snapguid,
-        "state" => gwres.fetch("snapshot").fetch("state"),
+        "state" => snapshot.state,
       }
       [
         HTTP::CREATED,
