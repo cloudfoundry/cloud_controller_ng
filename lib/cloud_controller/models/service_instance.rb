@@ -196,8 +196,6 @@ module VCAP::CloudController::Models
       return unless client # TODO: see service_gateway_client
       @provisioned_on_gateway_for_plan = nil
       client.unprovision(:service_id => gateway_name)
-    rescue => e
-      logger.error "deprovision failed #{e}"
     end
 
     def create_snapshot
