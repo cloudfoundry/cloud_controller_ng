@@ -1,15 +1,25 @@
 GIT
-  remote: git://github.com/cloudfoundry/cf-uaa-lib.git
+  remote: https://github.com/cloudfoundry/cf-uaa-lib.git
   revision: 8d34eede588c7620eb22031369f9515f602df68b
-  ref: 8d34eede58
+  ref: 8d34eede
   specs:
     cf-uaa-lib (1.3.7)
       multi_json
 
 GIT
-  remote: git://github.com/cloudfoundry/vcap-common.git
+  remote: https://github.com/cloudfoundry/stager-client.git
+  revision: 04c2aee9ceed39571d47704a42a70beb472503b9
+  ref: 04c2aee9
+  specs:
+    stager-client (0.0.2)
+      eventmachine
+      nats
+      yajl-ruby
+
+GIT
+  remote: https://github.com/cloudfoundry/vcap-common.git
   revision: 68d86f57fb82eb44489ace026b6c95102f050c86
-  ref: 68d86f57fb
+  ref: 68d86f57
   specs:
     vcap_common (2.0.10)
       em-http-request (~> 1.0.0.beta3, < 1.0.0.beta4)
@@ -24,20 +34,11 @@ GIT
       yajl-ruby
 
 GIT
-  remote: git://github.com/cloudfoundry/vcap-concurrency.git
+  remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
+  ref: 2a5b0179
   specs:
     vcap-concurrency (0.1.0)
-
-GIT
-  remote: https://github.com/cloudfoundry/stager-client.git
-  revision: 04c2aee9ceed39571d47704a42a70beb472503b9
-  ref: 04c2aee9
-  specs:
-    stager-client (0.0.2)
-      eventmachine
-      nats
-      yajl-ruby
 
 GEM
   remote: https://rubygems.org/
@@ -100,7 +101,7 @@ GEM
     mock_redis (0.4.1)
     multi_json (1.3.6)
     multi_xml (0.5.1)
-    multipart-post (1.1.5)
+    multipart-post (1.2.0)
     mysql2 (0.3.11)
     nats (0.4.24)
       daemons (>= 1.1.5)
