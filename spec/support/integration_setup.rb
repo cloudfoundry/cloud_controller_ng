@@ -1,13 +1,28 @@
 module IntegrationSetup
   def start_nats(opts={})
-    before(:all) { @nats_pid = run_cmd("nats-server -V -D", opts) }
-    before(:all) { sleep(0.5) } # allow server to start up
+    before(:all) do
+      @nats_pid = run_cmd("nats-server -V -D", opts)
+      sleep 0.5
+    end
+
     after(:all) { graceful_kill(:nats, @nats_pid) }
   end
 
   def start_cc(opts={})
-    before(:all) { @cc_pid = run_cmd("bundle exec rake db:migrate && bin/cloud_controller config/cloud_controller.yml", opts) }
-    before(:all) { sleep(10) } # allow server to start up
+    before(:all) do
+      @cc_pid = run_cmd("bundle exec rake db:migrate && bin/cloud_controller config/cloud_controller.yml", opts)
+      attempts = 0
+      while attempts <= 20
+        sleep 1
+        begin
+          result = Net::HTTP.get_response(URI.parse("http://localhost:8181/info"))
+        rescue Errno::ECONNREFUSED
+          # ignore
+        end
+        break if result && result.code.to_i == 200
+        attempts += 1
+      end
+    end
     after(:all) { graceful_kill(:cc, @cc_pid) }
   end
 end
