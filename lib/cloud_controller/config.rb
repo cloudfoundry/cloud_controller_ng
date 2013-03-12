@@ -28,7 +28,7 @@ class VCAP::CloudController::Config < VCAP::Config
       :uaa => {
         :url                => String,
         :resource_id        => String,
-        :symmetric_secret   => String
+        optional(:symmetric_secret)   => String
       },
 
       :logging => {
