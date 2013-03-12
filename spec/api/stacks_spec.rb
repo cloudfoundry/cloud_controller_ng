@@ -10,7 +10,8 @@ module VCAP::CloudController
       :read_only            => true,
       :basic_attributes     => [:name, :description],
       :required_attributes  => [:name, :description],
-      :unique_attributes    => :name
+      :unique_attributes    => :name,
+      :queryable_attributes => :name,
     }
   end
 end

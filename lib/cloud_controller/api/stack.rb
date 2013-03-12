@@ -14,6 +14,8 @@ module VCAP::CloudController
       attribute  :description,    String
     end
 
+    query_parameters :name
+
     get path, :enumerate
     get path_id, :read
   end
