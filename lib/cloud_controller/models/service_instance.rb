@@ -1,39 +1,18 @@
 require "services/api"
-require "active_support/core_ext/hash"
 
 module VCAP::CloudController::Models
-  Snapshot = Struct.new(:id, :state) do
-    def self.from_json(json)
-      attrs = Yajl::Parser.parse(json)
-      snapshot = attrs.fetch('snapshot')
-      new(snapshot)
-    end
-
-    def self.many_from_json(json)
-      Yajl::Parser.parse(json).fetch('snapshots').collect do |snapshot_attrs|
-        new(snapshot_attrs.fetch('snapshot'))
-      end
-    end
-
-    def initialize(attrs)
-      attrs = attrs.symbolize_keys
-      self.id = attrs.fetch(:id)
-      self.state = attrs.fetch(:state)
-    end
-  end
-
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
     class MissingServiceAuthToken < StandardError; end
     class ServiceGatewayError < StandardError; end
 
     class NGServiceGatewayClient
-      attr_accessor :service, :token, :gateway_name
+      attr_accessor :service, :token, :service_id
 
-      def initialize(service, gateway_name)
+      def initialize(service, service_id)
         @service = service
         @token   = service.service_auth_token
-        @gateway_name = gateway_name
+        @service_id = service_id
         unless token
           raise MissingServiceAuthToken, "ServiceAuthToken not found for service #{service}"
         end
@@ -52,7 +31,7 @@ module VCAP::CloudController::Models
       def do_request(method)
         client = HTTPClient.new
         u = URI.parse(service.url)
-        u.path = "/gateway/v2/configurations/#{gateway_name}/snapshots"
+        u.path = "/gateway/v2/configurations/#{service_id}/snapshots"
         response = client.public_send(method, u, :header => {VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token})
         if response.ok?
           response.body
