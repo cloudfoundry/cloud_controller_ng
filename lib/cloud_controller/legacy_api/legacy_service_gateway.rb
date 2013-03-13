@@ -51,6 +51,7 @@ module VCAP::CloudController
             :timeout     => req.timeout,
             :info_url    => req.info_url,
             :active      => req.active,
+            :extra       => req.extra,
           )
         end
 

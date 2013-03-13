@@ -8,7 +8,7 @@ module VCAP::CloudController
     it_behaves_like "a CloudController API", {
       :path                 => "/v2/services",
       :model                => Models::Service,
-      :basic_attributes     => [:label, :provider, :url, :description, :version, :info_url],
+      :basic_attributes     => [:label, :provider, :url, :description, :version, :info_url, :extra],
       :required_attributes  => [:label, :provider, :url, :description, :version],
       :unique_attributes    => [:label, :provider],
       :one_to_many_collection_ids  => {

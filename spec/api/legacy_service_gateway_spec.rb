@@ -90,6 +90,17 @@ module VCAP::CloudController
           svc.version.should == "2.0"
         end
 
+        it "should create services with 'extra' data" do
+          extra_data = '{"I": "AM JSON"}'
+          o = foo_bar_offering.dup
+          o.extra = extra_data
+          post path, o.encode, auth_header
+
+          last_response.status.should == 200
+          service = Models::Service[:label => "foobar", :provider => "core"]
+          service.extra.should == extra_data
+        end
+
         it "should create service plans" do
           offer = foo_bar_offering.dup
           offer.plans = ["free", "nonfree"]
