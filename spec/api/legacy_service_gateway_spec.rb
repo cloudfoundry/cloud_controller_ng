@@ -77,7 +77,7 @@ module VCAP::CloudController
           last_response.status.should == 400
         end
 
-        it "shoukd reject requests with extra dash in label" do
+        it "should reject requests with extra dash in label" do
           post path, foo_bar_dash_offering.encode, auth_header
           last_response.status.should == 400
         end
