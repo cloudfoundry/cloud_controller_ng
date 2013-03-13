@@ -47,6 +47,7 @@ class VCAP::CloudController::Config < VCAP::Config
       },
 
       optional(:runtimes_file) => String,
+      optional(:supported_buildpacks_file) => String,
       optional(:stacks_file) => String,
 
       :db => {
@@ -170,9 +171,11 @@ class VCAP::CloudController::Config < VCAP::Config
   def self.merge_defaults(config)
     config[:runtimes_file] ||= File.join(config_dir, "runtimes.yml")
     config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
+    config[:supported_buildpacks_file] ||= File.join(config_dir, "supported_buildpacks.yml")
 
     config[:directories] ||= {}
     config[:directories][:staging_manifests] ||= File.join(config_dir, "frameworks")
+
     config
   end
 end

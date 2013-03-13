@@ -90,6 +90,7 @@ module VCAP::CloudController
 
       if run_migrations
         populate_framework_and_runtimes
+        populate_supported_buildpacks
         VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
         VCAP::CloudController::Models::Stack.populate
       end
@@ -190,6 +191,11 @@ module VCAP::CloudController
       @thin_server.timeout = 15 * 60 # 15 min
       @thin_server.threaded = true
       @thin_server.start!
+    end
+
+    def populate_supported_buildpacks
+      sb_file = @config[:supported_buildpacks_file]
+      Models::SupportedBuildpack.populate_from_file sb_file
     end
   end
 end
