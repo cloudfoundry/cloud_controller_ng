@@ -355,7 +355,7 @@ describe VCAP::CloudController::Controller do
           end
         end
 
-        context "when there is a client_id in the token" do
+        context "when there is a client_id but no user_id and admin scope in the token" do
           let(:scope) { [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
           let(:token_info) { {'client_id' => user_id, 'email' => email, 'scope' => scope} }
 
