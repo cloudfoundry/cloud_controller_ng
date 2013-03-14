@@ -5,6 +5,17 @@ module VCAP::CloudController
     describe "Gateway facing apis" do
       let(:mock_client) { double(:gw_client) }
 
+      def build_offering(attrs={})
+        defaults = {
+          :label => "foobar-1.0",
+          :url   => "https://www.google.com",
+          :supported_versions => ["1.0", "2.0"],
+          :version_aliases => {"current" => "2.0"},
+          :description => "the foobar svc",
+        }
+        VCAP::Services::Api::ServiceOfferingRequest.new(defaults.merge(attrs))
+      end
+
       before do
         reset_database
 
@@ -34,15 +45,6 @@ module VCAP::CloudController
           { "HTTP_X_VCAP_SERVICE_TOKEN" => "foobar" }
         end
 
-        let(:foo_bar_offering) do
-          VCAP::Services::Api::ServiceOfferingRequest.new(
-            :label => "foobar-1.0",
-            :url   => "https://www.google.com",
-            :supported_versions => ["1.0", "2.0"],
-            :version_aliases => {"current" => "2.0"},
-            :description => "the foobar svc")
-        end
-
         let(:foo_bar_dash_offering) do
           VCAP::Services::Api::ServiceOfferingRequest.new(
             :label => "foo-bar-1.0",
@@ -53,7 +55,7 @@ module VCAP::CloudController
         end
 
         it "should reject requests without auth tokens" do
-          post path, foo_bar_offering.encode, {}
+          post path, build_offering.encode, {}
           last_response.status.should == 403
         end
 
@@ -83,7 +85,7 @@ module VCAP::CloudController
         end
 
         it "should create service offerings for builtin services" do
-          post path, foo_bar_offering.encode, auth_header
+          post path, build_offering.encode, auth_header
           last_response.status.should == 200
           svc = Models::Service.find(:label => "foobar", :provider => "core")
           svc.should_not be_nil
@@ -92,7 +94,7 @@ module VCAP::CloudController
 
         it "should create services with 'extra' data" do
           extra_data = "{\"I\": \"am json #{'more' * 100}\"}"
-          o = foo_bar_offering.dup
+          o = build_offering
           o.extra = extra_data
           post path, o.encode, auth_header
 
@@ -149,45 +151,27 @@ module VCAP::CloudController
 
         context "using the deprecated 'plans' key" do
           it_behaves_like "offering containing service plans" do
-            let(:just_free_plan) {
-              foo_bar_offering.dup.tap do |offer|
-                offer.plans = ["free"]
-                offer.plan_details.should be_nil
-              end
-            }
-
-            let(:both_plans) {
-              foo_bar_offering.dup.tap do |offer|
-                offer.plans = ["free", "nonfree"]
-                offer.plan_details.should be_nil
-              end
-            }
+            let(:just_free_plan) { build_offering(plans: ["free"]) }
+            let(:both_plans)     { build_offering(plans: ["free", "nonfree"]) }
           end
         end
 
         context "using the 'plan_details' key" do
-          let(:just_free_plan) {
-            foo_bar_offering.dup.tap do |offer|
-              offer.plan_details = [{"name" => "free", "free" => true}]
-              offer.plans.should be_nil
-            end
+          let(:just_free_plan) { build_offering(plan_details: [{"name" => "free", "free" => true}]) }
+          let(:both_plans) {
+            build_offering(
+              plan_details: [
+                {"name" => "free",    "free" => true},
+                {"name" => "nonfree", "free" => false},
+              ]
+            )
           }
 
-          it_behaves_like "offering containing service plans" do
-            let(:both_plans) {
-              foo_bar_offering.dup.tap do |offer|
-                offer.plan_details = [
-                  {"name" => "free",    "free" => true},
-                  {"name" => "nonfree", "free" => false},
-                ]
-                offer.plans.should be_nil
-              end
-            }
-          end
+          it_behaves_like "offering containing service plans"
 
           it "puts the details into the db" do
-            offer = foo_bar_offering.dup.tap do |o|
-              o.plan_details = [
+            offer = build_offering(
+              plan_details: [
                 {
                   "name"        => "freeplan",
                   "free"        => true,
@@ -195,7 +179,7 @@ module VCAP::CloudController
                   "extra"       => "extra info",
                 }
               ]
-            end
+            )
             post path, offer.encode, auth_header
             last_response.status.should == 200
 
@@ -211,9 +195,7 @@ module VCAP::CloudController
             post path, just_free_plan.encode, auth_header
             last_response.status.should == 200
 
-            offer2 = foo_bar_offering.dup.tap do |offer|
-              offer.plan_details = [{"name" => "free", "free" => false, "description" => "tetris"}]
-            end
+            offer2 = build_offering(plan_details: [{"name" => "free", "free" => false, "description" => "tetris"}])
             post path, offer2.encode, auth_header
             last_response.status.should == 200
 
@@ -227,28 +209,28 @@ module VCAP::CloudController
         context "using both the 'plan_details' key and the deprecated 'plans' key" do
           it_behaves_like "offering containing service plans" do
             let(:just_free_plan) {
-              foo_bar_offering.dup.tap do |offer|
-                offer.plan_details = [{"name" => "free", "free" => true}]
-                offer.plans = ["free"]
-              end
+              build_offering(
+                plan_details: [{"name" => "free", "free" => true}],
+                plans: ["free"],
+              )
             }
 
             let(:both_plans) {
-              foo_bar_offering.dup.tap do |offer|
-                offer.plan_details = [
+              build_offering(
+                plan_details: [
                   {"name" => "free",    "free" => true},
                   {"name" => "nonfree", "free" => false},
-                ]
-                offer.plans = ["free", "nonfree"]
-              end
+                ],
+                plans: ["free", "nonfree"],
+              )
             }
           end
         end
 
 
         it "should update service offerings for builtin services" do
-          post path, foo_bar_offering.encode, auth_header
-          offer = foo_bar_offering.dup
+          post path, build_offering.encode, auth_header
+          offer = build_offering
           offer.url = "http://newurl.com"
           post path, offer.encode, auth_header
           last_response.status.should == 200
