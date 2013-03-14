@@ -64,6 +64,12 @@ describe "Sinatra::VCAP" do
     end
   end
 
+  shared_examples "http header content type" do
+    it "should return json content type in the header" do
+      last_response.headers["Content-Type"].should eql("application/json;charset=utf-8")
+    end
+  end
+
   describe "access with no errors" do
     before do
       get "/"
@@ -76,6 +82,7 @@ describe "Sinatra::VCAP" do
 
     include_examples "vcap sinatra varz stats", 200
     include_examples "vcap request id"
+    include_examples "http header content type"
   end
 
   describe "accessing an invalid route" do
@@ -90,6 +97,7 @@ describe "Sinatra::VCAP" do
 
     include_examples "vcap sinatra varz stats", 404
     include_examples "vcap request id"
+    include_examples "http header content type"
     it_behaves_like "a vcap rest error response", /Unknown request/
   end
 
@@ -113,6 +121,7 @@ describe "Sinatra::VCAP" do
 
     include_examples "vcap sinatra varz stats", 500
     include_examples "vcap request id"
+    include_examples "http header content type"
     it_behaves_like "a vcap rest error response", /Server error/
   end
 
