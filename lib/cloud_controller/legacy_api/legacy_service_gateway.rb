@@ -79,7 +79,6 @@ module VCAP::CloudController
         Models::ServicePlan.update_or_create(
           :service_id => service.id,
           :name => attrs['name'],
-          :free => attrs['free'],
         ) do |plan|
             plan.set(attrs)
           end

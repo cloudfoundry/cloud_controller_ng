@@ -206,6 +206,22 @@ module VCAP::CloudController
             service.service_plans.first.free.should == true
             service.service_plans.first.extra.should == "extra info"
           end
+
+          it "does not add plans with identical names but different freeness under the same service" do
+            post path, just_free_plan.encode, auth_header
+            last_response.status.should == 200
+
+            offer2 = foo_bar_offering.dup.tap do |offer|
+              offer.plan_details = [{"name" => "free", "free" => false, "description" => "tetris"}]
+            end
+            post path, offer2.encode, auth_header
+            last_response.status.should == 200
+
+            service = Models::Service[:label => "foobar", :provider => "core"]
+            service.should have(1).service_plans
+            service.service_plans.first.description.should == "tetris"
+            service.service_plans.first.free.should == false
+          end
         end
 
         context "using both the 'plan_details' key and the deprecated 'plans' key" do
