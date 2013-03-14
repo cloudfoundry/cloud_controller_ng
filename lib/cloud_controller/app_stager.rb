@@ -1,8 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/stager/client"
-require "redis"
-require "cloud_controller/staging_task_log"
 require "cloud_controller/multi_response_nats_request"
 
 module VCAP::CloudController
@@ -10,15 +8,10 @@ module VCAP::CloudController
     class << self
       attr_reader :config, :message_bus, :stager_pool
 
-      def configure(config, message_bus, stager_pool, redis_client = nil)
+      def configure(config, message_bus, stager_pool)
         @config = config
         @message_bus = message_bus
         @stager_pool = stager_pool
-        @redis_client = redis_client || Redis.new(
-          :host => @config[:redis][:host],
-          :port => @config[:redis][:port],
-          :password => @config[:redis][:password]
-        )
       end
 
       def run
@@ -30,7 +23,7 @@ module VCAP::CloudController
           raise Errors::AppPackageInvalid.new("The app package hash is empty")
         end
 
-        task = AppStagerTask.new(@config, @message_bus, @redis_client, app, stager_pool)
+        task = AppStagerTask.new(@config, @message_bus, app, stager_pool)
         task.stage(options, &completion_callback)
       end
 
@@ -58,10 +51,9 @@ module VCAP::CloudController
     attr_reader :config
     attr_reader :message_bus
 
-    def initialize(config, message_bus, redis_client, app, stager_pool)
+    def initialize(config, message_bus, app, stager_pool)
       @config = config
       @message_bus = message_bus
-      @redis_client = redis_client
       @app = app
       @stager_pool = stager_pool
     end
@@ -183,8 +175,6 @@ module VCAP::CloudController
     end
 
     def staging_completion(stager_response)
-      StagingTaskLog.new(@app.guid, stager_response.log, @redis_client).save
-
       droplet_hash = Digest::SHA1.file(@upload_handle.upload_path).hexdigest
       LegacyStaging.store_droplet(@app.guid, @upload_handle.upload_path)
 

@@ -11,7 +11,7 @@ module VCAP::CloudController
     before { MessageBus.instance.nats.client = mock_nats }
 
     let(:mock_redis) { mock(:mock_redis).as_null_object }
-    before { AppStager.configure({}, nil, stager_pool, mock_redis) }
+    before { AppStager.configure({}, nil, stager_pool) }
 
     let(:stager_pool) { StagerPool.new({}, nil) }
     before { stager_pool.stub(:find_stager => "staging-id") }
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
               with_em_and_thread { stage }
 
-              task = AppStagerTask.new(nil, nil, nil, app, stager_pool)
+              task = AppStagerTask.new(nil, nil, app, stager_pool)
               expected_data = task.staging_request(options[:async])
               data_in_request.should == JSON.dump(expected_data)
             end
@@ -120,11 +120,6 @@ module VCAP::CloudController
 
             it "removes upload handle" do
               LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
-              with_em_and_thread { stage }
-            end
-
-            it "saves off staging log for short time" do
-              mock_redis.should_receive(:set).with(StagingTaskLog.key_for_id(app.guid), "task-log")
               with_em_and_thread { stage }
             end
 
@@ -481,7 +476,7 @@ module VCAP::CloudController
       end
 
       def request(async=false)
-        AppStagerTask.new(nil, nil, nil, @app, stager_pool).staging_request(async)
+        AppStagerTask.new(nil, nil, @app, stager_pool).staging_request(async)
       end
 
       def store_app_package(app)

@@ -43,36 +43,6 @@ module VCAP::CloudController
           last_response.status.should == 400
         end
 
-        it "should return the staging task log if it exists" do
-          redis_client = MockRedis.new
-
-          task_log = StagingTaskLog.new(@app.guid, "task log", redis_client)
-          Redis.stub(:new).and_return(redis_client)
-          StagingTaskLog.should_receive(:fetch).with(@app.guid, redis_client)
-            .and_return(task_log)
-
-          get("/v2/apps/#{@app.guid}/instances/1/files/logs/staging.log",
-              {},
-              headers_for(@developer))
-
-          last_response.status.should == 200
-          last_response.body.should == "task log"
-        end
-
-        it "should return 404 if staging task log is absent" do
-          redis_client = MockRedis.new
-
-          Redis.stub(:new).and_return(redis_client)
-          StagingTaskLog.should_receive(:fetch).with(@app.guid, redis_client)
-            .and_return(nil)
-
-          get("/v2/apps/#{@app.guid}/instances/1/files/logs/staging.log",
-              {},
-              headers_for(@developer))
-
-          last_response.status.should == 404
-        end
-
         context "dea returns file uri v1" do
           it "should return 400 when accessing of the file URL fails", :use_nginx => false do
             instance = 5

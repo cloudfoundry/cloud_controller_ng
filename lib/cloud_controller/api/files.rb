@@ -19,15 +19,6 @@ module VCAP::CloudController
       opts = { :allow_redirect => true }.merge(opts)
       app = find_id_and_validate_access(:read, id)
 
-      if path == "logs/staging.log"
-        redis_client = Redis.new(:host => @config[:redis][:host],
-                                 :port => @config[:redis][:port],
-                                 :password => @config[:redis][:password])
-        log = StagingTaskLog.fetch(id, redis_client)
-        return [HTTP::OK, log.task_log] if log
-        return HTTP::NOT_FOUND
-      end
-
       info = get_file_uri_for_search_param(app, path, search_param)
 
       headers = {}

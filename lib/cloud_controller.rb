@@ -5,6 +5,7 @@ require "sinatra"
 require "sequel"
 require "thin"
 require "yajl"
+# require "yaml"
 
 require "eventmachine/schedule_sync"
 
