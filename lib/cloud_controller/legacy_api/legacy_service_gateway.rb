@@ -29,11 +29,6 @@ module VCAP::CloudController
       validate_access(label, provider)
 
       VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
-      old_plans = Models::ServicePlan.dataset.
-        join(:services, :id => :service_id).
-        filter(:label => label, :provider => DEFAULT_PROVIDER).
-        select_map(:name.qualify(:service_plans))
-
       Sequel::Model.db.transaction do
         service = Models::Service.update_or_create(
           :label => label, :provider => DEFAULT_PROVIDER
@@ -55,32 +50,52 @@ module VCAP::CloudController
           )
         end
 
-        new_plans = Array(req.plans)
-        new_plans.each do |name|
-          free = (name =~ /^1[0-9][0-9]$/i ? true : false)
-          Models::ServicePlan.update_or_create(
-                                               :service_id => service.id,
-                                               :name => name,
-                                               :free => free,
-          ) do |plan|
-            plan.description = "dummy description"
-          end
-        end
-
-        missing = old_plans - new_plans
-        unless missing.empty?
-          logger.info("Attempting to remove old plans: #{missing.inspect}")
-          service.service_plans_dataset.filter(:name => missing).each do |plan|
-            begin
-              plan.destroy
-            rescue Sequel::DatabaseError
-              # If something is hanging on to this plan, let it live
-            end
-          end
-        end
+        update_plans(req, service, label)
       end
 
       empty_json
+    end
+
+    def update_plans(req, service, label)
+      if req.plan_details
+        new_plan_attrs = req.plan_details
+      else
+        new_plan_attrs = Array(req.plans).map {|plan_name|
+          {
+            "name" => plan_name,
+            "free" => !!(plan_name =~ /^1[0-9][0-9]$/), #only 100-level plans are free
+          }
+        }
+      end
+
+      new_plan_attrs.each {|attrs| attrs["description"] ||= "dummy description" }
+
+      old_plan_names = Models::ServicePlan.dataset.
+        join(:services, :id => :service_id).
+        filter(:label => label, :provider => DEFAULT_PROVIDER).
+        select_map(:name.qualify(:service_plans))
+
+      new_plan_attrs.each do |attrs|
+        Models::ServicePlan.update_or_create(
+          :service_id => service.id,
+          :name => attrs['name'],
+          :free => attrs['free'],
+        ) do |plan|
+            plan.set(attrs)
+          end
+      end
+
+      missing = old_plan_names - new_plan_attrs.map {|attrs| attrs["name"]}
+      if missing.any?
+        logger.info("Attempting to remove old plans: #{missing.inspect}")
+        service.service_plans_dataset.filter(:name => missing).each do |plan|
+          begin
+            plan.destroy
+          rescue Sequel::DatabaseError
+            # If something is hanging on to this plan, let it live
+          end
+        end
+      end
     end
 
     def list_handles(label_and_version, provider = DEFAULT_PROVIDER)

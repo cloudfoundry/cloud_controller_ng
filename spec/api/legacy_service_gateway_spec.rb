@@ -101,58 +101,112 @@ module VCAP::CloudController
           service.extra.should == extra_data
         end
 
-        it "should create service plans" do
-          offer = foo_bar_offering.dup
-          offer.plans = ["free", "nonfree"]
-          post path, offer.encode, auth_header
+        shared_examples_for "offering containing service plans" do
+          it "should create service plans" do
+            post path, both_plans.encode, auth_header
 
-          service = Models::Service[:label => "foobar", :provider => "core"]
-          service.service_plans.map(&:name).should include("free", "nonfree")
-        end
+            service = Models::Service[:label => "foobar", :provider => "core"]
+            service.service_plans.map(&:name).should include("free", "nonfree")
+          end
 
-        it "should update service plans" do
-          offer = foo_bar_offering.dup
-          offer.plans = ["free"]
-          post path, offer.encode, auth_header
-          offer.plans = ["free", "nonfree"]
-          post path, offer.encode, auth_header
+          it "should update service plans" do
+            post path, just_free_plan.encode, auth_header
+            post path, both_plans.encode, auth_header
 
-          service = Models::Service[:label => "foobar", :provider => "core"]
-          service.service_plans.map(&:name).should include("free", "nonfree")
-        end
+            service = Models::Service[:label => "foobar", :provider => "core"]
+            service.service_plans.map(&:name).should include("free", "nonfree")
+          end
 
-        it "should remove plans not posted" do
-          offer = foo_bar_offering.dup
-          offer.plans = ["free", "nonfree"]
-          post path, offer.encode, auth_header
-          offer.plans = ["free"]
-          post path, offer.encode, auth_header
+          it "should remove plans not posted" do
+            post path, both_plans.encode, auth_header
+            post path, just_free_plan.encode, auth_header
 
-          service = Models::Service[:label => "foobar", :provider => "core"]
-          service.service_plans.map(&:name).should == ["free"]
-        end
+            service = Models::Service[:label => "foobar", :provider => "core"]
+            service.service_plans.map(&:name).should == ["free"]
+          end
 
-        it "should not remove plans for referential integrity" do
-          offer = foo_bar_offering.dup
-          offer.plans = ["free", "nonfree"]
-          mock_client.stub(:bind).and_return(
-            VCAP::Services::Api::GatewayHandleResponse.new(
-              :service_id => "binding",
-              :configuration => {},
-              :credentials => {}
+          def create_service_instance_using_plan(plan_name)
+            mock_client.stub(:bind).and_return(
+              VCAP::Services::Api::GatewayHandleResponse.new(
+                :service_id => "binding",
+                :configuration => {},
+                :credentials => {}
+              )
             )
-          )
-          post path, offer.encode, auth_header
+            Models::ServiceInstance.make(:service_plan => Models::ServicePlan[:name => plan_name])
+          end
 
-          Models::ServiceInstance.make(
-            :service_plan => Models::ServicePlan[:name => "nonfree"],
-          )
-          offer.plans = ["free"]
-          post path, offer.encode, auth_header
+          it "should not remove plans that are still in use" do
+            post path, both_plans.encode, auth_header
 
-          service = Models::Service[:label => "foobar", :provider => "core"]
-          service.service_plans.map(&:name).sort.should == ["free", "nonfree"]
+            create_service_instance_using_plan("nonfree")
+            post path, just_free_plan.encode, auth_header
+
+            service = Models::Service[:label => "foobar", :provider => "core"]
+            service.service_plans.map(&:name).sort.should == ["free", "nonfree"]
+          end
         end
+
+        context "using the deprecated 'plans' key" do
+          it_behaves_like "offering containing service plans" do
+            let(:just_free_plan) {
+              foo_bar_offering.dup.tap do |offer|
+                offer.plans = ["free"]
+                offer.plan_details.should be_nil
+              end
+            }
+
+            let(:both_plans) {
+              foo_bar_offering.dup.tap do |offer|
+                offer.plans = ["free", "nonfree"]
+                offer.plan_details.should be_nil
+              end
+            }
+          end
+        end
+
+        context "using the 'plan_details' key" do
+          it_behaves_like "offering containing service plans" do
+            let(:just_free_plan) {
+              foo_bar_offering.dup.tap do |offer|
+                offer.plan_details = [{"name" => "free", "free" => true}]
+                offer.plans.should be_nil
+              end
+            }
+
+            let(:both_plans) {
+              foo_bar_offering.dup.tap do |offer|
+                offer.plan_details = [
+                  {"name" => "free",    "free" => true},
+                  {"name" => "nonfree", "free" => false},
+                ]
+                offer.plans.should be_nil
+              end
+            }
+          end
+        end
+
+        context "using both the 'plan_details' key and the deprecated 'plans' key" do
+          it_behaves_like "offering containing service plans" do
+            let(:just_free_plan) {
+              foo_bar_offering.dup.tap do |offer|
+                offer.plan_details = [{"name" => "free", "free" => true}]
+                offer.plans = ["free"]
+              end
+            }
+
+            let(:both_plans) {
+              foo_bar_offering.dup.tap do |offer|
+                offer.plan_details = [
+                  {"name" => "free",    "free" => true},
+                  {"name" => "nonfree", "free" => false},
+                ]
+                offer.plans = ["free", "nonfree"]
+              end
+            }
+          end
+        end
+
 
         it "should update service offerings for builtin services" do
           post path, foo_bar_offering.encode, auth_header
