@@ -136,7 +136,7 @@ module VCAP::CloudController
             Models::ServiceInstance.make(:service_plan => Models::ServicePlan[:name => plan_name])
           end
 
-          it "should not remove plans that are still in use" do
+          it "does not remove plans that are still in use" do
             post path, both_plans.encode, auth_header
 
             create_service_instance_using_plan("nonfree")
@@ -166,14 +166,14 @@ module VCAP::CloudController
         end
 
         context "using the 'plan_details' key" do
-          it_behaves_like "offering containing service plans" do
-            let(:just_free_plan) {
-              foo_bar_offering.dup.tap do |offer|
-                offer.plan_details = [{"name" => "free", "free" => true}]
-                offer.plans.should be_nil
-              end
-            }
+          let(:just_free_plan) {
+            foo_bar_offering.dup.tap do |offer|
+              offer.plan_details = [{"name" => "free", "free" => true}]
+              offer.plans.should be_nil
+            end
+          }
 
+          it_behaves_like "offering containing service plans" do
             let(:both_plans) {
               foo_bar_offering.dup.tap do |offer|
                 offer.plan_details = [
@@ -183,6 +183,28 @@ module VCAP::CloudController
                 offer.plans.should be_nil
               end
             }
+          end
+
+          it "puts the details into the db" do
+            offer = foo_bar_offering.dup.tap do |o|
+              o.plan_details = [
+                {
+                  "name"        => "freeplan",
+                  "free"        => true,
+                  "description" => "free plan",
+                  "extra"       => "extra info",
+                }
+              ]
+            end
+            post path, offer.encode, auth_header
+            last_response.status.should == 200
+
+            service = Models::Service[:label => "foobar", :provider => "core"]
+            service.service_plans.should have(1).entries
+            service.service_plans.first.description.should == "free plan"
+            service.service_plans.first.name.should == "freeplan"
+            service.service_plans.first.free.should == true
+            service.service_plans.first.extra.should == "extra info"
           end
         end
 
