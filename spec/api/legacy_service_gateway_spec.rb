@@ -91,7 +91,7 @@ module VCAP::CloudController
         end
 
         it "should create services with 'extra' data" do
-          extra_data = '{"I": "AM JSON"}'
+          extra_data = "{\"I\": \"am json #{'more' * 100}\"}"
           o = foo_bar_offering.dup
           o.extra = extra_data
           post path, o.encode, auth_header
