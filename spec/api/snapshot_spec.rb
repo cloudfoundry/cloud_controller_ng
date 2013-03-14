@@ -6,7 +6,10 @@ describe VCAP::CloudController::Snapshots do
   end
 
   describe "POST", "/v2/snapshots" do
-   let(:payload) { Yajl::Encoder.encode(:service_instance_guid => service_instance.guid) }
+   let(:new_name) { 'new name' }
+   let(:payload) { Yajl::Encoder.encode(:service_instance_guid => service_instance.guid,
+                                        :name => new_name
+                                       ) }
     before do
       post "/v2/snapshots", payload, {}
     end
@@ -44,7 +47,7 @@ describe VCAP::CloudController::Snapshots do
         VCAP::CloudController::Models::ServiceInstance.should_receive(:find).
           with(:guid => service_instance.guid).
           and_return(service_instance)
-        service_instance.should_receive(:create_snapshot)
+        service_instance.should_receive(:create_snapshot).with(new_name)
         post "/v2/snapshots", payload, headers_for(developer)
       end
 

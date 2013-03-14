@@ -18,8 +18,8 @@ module VCAP::CloudController::Models
         end
       end
 
-      def create_snapshot
-        Snapshot.from_json(do_request(:post))
+      def create_snapshot(name)
+        Snapshot.from_json(do_request(:post, Yajl::Encoder.encode({name: name})))
       end
 
       def enum_snapshots
@@ -28,11 +28,14 @@ module VCAP::CloudController::Models
 
       private
 
-      def do_request(method)
+      def do_request(method, payload=nil)
         client = HTTPClient.new
         u = URI.parse(service.url)
         u.path = "/gateway/v2/configurations/#{service_id}/snapshots"
-        response = client.public_send(method, u, :header => {VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token})
+
+        response = client.public_send(method, u,
+                                      :header => { VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token },
+                                      :body   => payload)
         if response.ok?
           response.body
         else
@@ -236,8 +239,8 @@ module VCAP::CloudController::Models
       logger.error "deprovision failed #{e}"
     end
 
-    def create_snapshot
-      NGServiceGatewayClient.new(service_plan.service, gateway_name).create_snapshot
+    def create_snapshot(name)
+      NGServiceGatewayClient.new(service_plan.service, gateway_name).create_snapshot(name)
     end
 
     def enum_snapshots

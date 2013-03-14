@@ -10,6 +10,7 @@ module VCAP::CloudController
     end
 
     define_attributes do
+      attribute :name, String
       to_one :service_instance
     end
     define_messages
@@ -18,7 +19,7 @@ module VCAP::CloudController
       req = self.class::CreateMessage.decode(body)
       instance = VCAP::CloudController::Models::ServiceInstance.find(:guid => req.service_instance_guid)
       validate_access(:update, instance, user, roles)
-      snapshot = instance.create_snapshot
+      snapshot = instance.create_snapshot(req.name)
       snapguid = "%s:%s" % [instance.guid, snapshot.id]
       entity = {
         "guid" => snapguid,

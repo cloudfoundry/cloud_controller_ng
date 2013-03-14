@@ -33,6 +33,7 @@ group :development do
 end
 
 group :test do
+  gem 'debugger'
   gem "simplecov"
   gem "simplecov-rcov"
   gem "sqlite3"

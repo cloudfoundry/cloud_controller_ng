@@ -314,6 +314,7 @@ module VCAP::CloudController
   end
 
   describe "#create_snapshot" do
+    let(:name) { 'New snapshot' }
     subject { Models::ServiceInstance.make()}
     let(:create_snapshot_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
     before do
@@ -326,7 +327,7 @@ module VCAP::CloudController
         subject.service_plan.service.service_auth_token.destroy
         subject.refresh
         expect do
-          subject.create_snapshot
+          subject.create_snapshot(name)
         end.to raise_error(Models::ServiceInstance::MissingServiceAuthToken)
       end
     end
@@ -340,23 +341,31 @@ module VCAP::CloudController
       end
 
       it "makes an HTTP call to the corresponding service gateway and returns the decoded response" do
-        subject.create_snapshot.should == VCAP::CloudController::Models::Snapshot.new('id' => snapshot_id, 'state' => snapshot_state)
+        subject.create_snapshot(name).should == VCAP::CloudController::Models::Snapshot.new('id' => snapshot_id,
+                                                                                            'state' => snapshot_state)
         a_request(:post, create_snapshot_url_matcher).should have_been_made
       end
 
       it "uses the correct svc auth token" do
-        subject.create_snapshot
+        subject.create_snapshot(name)
+
         a_request(:post, create_snapshot_url_matcher).with(
-        :headers => {"X-VCAP-Service-Token" => 'tokenvalue'}).should have_been_made
+        headers: {"X-VCAP-Service-Token" => 'tokenvalue'}).should have_been_made
+      end
+
+      it "has the name in the payload" do
+        payload = Yajl::Encoder.encode({name: name})
+        subject.create_snapshot(name)
+
+        a_request(:post, create_snapshot_url_matcher).with(:body => payload).should have_been_made
       end
     end
 
     context "when the request fails" do
       it "should raise an error" do
         stub_request(:post, create_snapshot_url_matcher).to_return(:body => "Something went wrong", :status => 500)
-        expect { subject.create_snapshot }.to raise_error(Models::ServiceInstance::ServiceGatewayError, /upstream failure/)
+        expect { subject.create_snapshot(name) }.to raise_error(Models::ServiceInstance::ServiceGatewayError, /upstream failure/)
       end
     end
-
   end
 end

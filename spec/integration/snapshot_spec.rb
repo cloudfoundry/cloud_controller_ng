@@ -20,7 +20,8 @@ describe "Taking snapshots" do
     )
   end
   let(:developer) { make_developer_for_space(service_instance.space) }
-  let(:req) { Yajl::Encoder.encode("service_instance_guid" => service_instance.guid) }
+  let(:new_name) { "new name" }
+  let(:req) { Yajl::Encoder.encode("service_instance_guid" => service_instance.guid, "name" => new_name) }
 
   before :each do
     stub_request(:post, "#{gateway_url}/gateway/v1/configurations").to_return(
