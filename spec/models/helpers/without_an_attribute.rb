@@ -12,14 +12,18 @@ module VCAP::CloudController::ModelSpecHelper
 
         it "should fail due to Sequel validations" do
           expect {
-            described_class.create filtered_opts
+            described_class.create do |instance|
+              instance.set_all(filtered_opts)
+            end
           }.to raise_error Sequel::ValidationFailed, /#{without_attr}/
         end
 
         if (!opts[:db_required_attributes] || opts[:db_required_attributes].include?(without_attr))
           it "should fail due to database integrity checks" do
             expect {
-              described_class.new(filtered_opts).save(:validate => false)
+              described_class.new do |instance|
+                instance.set_all(filtered_opts)
+              end.save(:validate => false)
             }.to raise_error Sequel::DatabaseError, /#{without_attr}/
           end
         end

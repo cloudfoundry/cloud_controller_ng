@@ -41,7 +41,9 @@ module VCAP::CloudController::ModelSpecHelper
             end
 
             it "should succeed" do
-              obj = described_class.create dup_opts
+              obj = described_class.create do |instance|
+                instance.set_all(dup_opts)
+              end
               obj.should be_valid
             end
           end
@@ -98,14 +100,18 @@ module VCAP::CloudController::ModelSpecHelper
             # TODO: swap out everything but the unique entries for more
             # accurate testing
             expect {
-              described_class.create dup_opts
+              described_class.create do |instance|
+                instance.set_all(dup_opts)
+              end
             }.to raise_error Sequel::ValidationFailed, /#{sequel_exception_match}/
           end
 
           unless opts[:skip_database_constraints]
             it "should fail due to database integrity checks" do
               expect {
-                described_class.new(dup_opts).save(:validate => false)
+                described_class.new do |instance|
+                  instance.set_all(dup_opts)
+                end.save(:validate => false)
               }.to raise_error Sequel::DatabaseError, /#{db_exception_match}/
             end
           end

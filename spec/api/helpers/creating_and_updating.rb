@@ -185,7 +185,9 @@ module VCAP::CloudController::ApiSpecHelper
 
                   # FIXME: this name isn't right now that it is shared with PUT
                   new_creation_opts = creation_opts.dup
-                  orig_obj = opts[:model].create new_creation_opts
+                  orig_obj = opts[:model].create do |instance|
+                    instance.set_all(new_creation_opts)
+                  end
                   orig_obj.should be_valid
 
                   create_attribute = opts[:create_attribute]

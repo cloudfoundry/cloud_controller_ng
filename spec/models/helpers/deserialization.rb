@@ -34,7 +34,9 @@ module VCAP::CloudController::ModelSpecHelper
     opts[:required_attributes].each do |without_attr|
       context "without the :#{without_attr.to_s} attribute" do
         let(:json_data) do
-          obj = described_class.create creation_opts
+          obj = described_class.create do |instance|
+            instance.set_all(creation_opts)
+          end
           hash = obj.to_hash
           obj.destroy
 
