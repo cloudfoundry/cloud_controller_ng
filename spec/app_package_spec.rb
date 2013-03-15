@@ -161,12 +161,6 @@ module VCAP::CloudController
       let(:guid) { Sham.guid }
 
       def self.it_packages(expected_file_paths)
-        it "moves the app package to the droplets directory" do
-          expect {
-            AppPackage.to_zip(guid, resources, zip_file)
-          }.to change { AppPackage.package_exists?(guid) }.to(true)
-        end
-
         def packaged_app_file
           file_key = AppPackage.key_from_guid(guid)
           file = AppPackage.package_dir.files.get(file_key)
@@ -176,9 +170,17 @@ module VCAP::CloudController
           end
         end
 
+        it "moves the app package to the droplets directory" do
+          expect {
+            AppPackage.to_zip(guid, resources, zip_file)
+          }.to change { AppPackage.package_exists?(guid) }.to(true)
+        end
+
         it "packages correct files" do
           AppPackage.to_zip(guid, resources, zip_file)
-          list_files(unzip_zip(packaged_app_file.path)).should =~ expected_file_paths
+          # do not inline this - otherwise the temp file might be GCed, which removes the files from disk before the assertion
+          f = packaged_app_file
+          list_files(unzip_zip(f.path)).should =~ expected_file_paths
         end
       end
 
@@ -190,7 +192,7 @@ module VCAP::CloudController
         end
       end
 
-      context "when the app does not need any file from res pool" do
+      context "when the app does not need any file from resource pool" do
         let(:resources) { [] }
 
         context "when zip file was provided (with files)" do
@@ -204,7 +206,7 @@ module VCAP::CloudController
         end
       end
 
-      context "when the app needs some files from res pool" do
+      context "when the app needs some files from resource pool" do
         include_context "with valid resource in resource pool"
         let(:resources) { [valid_resource] }
 
