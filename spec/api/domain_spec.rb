@@ -10,7 +10,20 @@ module VCAP::CloudController
       :model                => Models::Domain,
       :basic_attributes     => [:name, :owning_organization_guid],
       :required_attributes  => [:name, :owning_organization_guid, :wildcard],
-      :unique_attributes    => :name
+      :unique_attributes    => :name,
+
+      :one_to_many_collection_ids => {
+        :spaces => lambda { |user|
+          org = user.organizations.first || Models::Organization.make
+          Models::Space.make(:organization => org)
+        }
+      },
+
+      :many_to_one_collection_ids => {
+        :owning_organization => lambda { |user|
+          user.organizations.first || Models::Organization.make
+        }
+      }
     }
 
     describe "Permissions" do
