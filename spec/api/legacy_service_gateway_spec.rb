@@ -204,6 +204,18 @@ module VCAP::CloudController
             service.service_plans.first.description.should == "tetris"
             service.service_plans.first.free.should == false
           end
+
+          it "prevents the request from setting the plan guid" do
+            offer = build_offering(
+              plan_details:[{"name" => "plan name", "free" => true, "guid" => "myguid"}]
+            )
+            post path, offer.encode, auth_header
+            last_response.status.should == 200
+
+            service = Models::Service[:label => "foobar", :provider => "core"]
+            service.should have(1).service_plans
+            service.service_plans.first.guid.should_not == "myguid"
+          end
         end
 
         context "using both the 'plan_details' key and the deprecated 'plans' key" do

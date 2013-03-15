@@ -20,7 +20,7 @@ module VCAP::CloudController
       (label, version_from_label, label_dash_check) = req.label.split("-")
       if label_dash_check
         logger.warn("Unexpected dash in label: #{req.label} ")
-        raise Errors::InvalidRequest.new
+        raise Errors::InvalidRequest
       end
 
       version = req.version_aliases["current"] || version_from_label
@@ -77,11 +77,11 @@ module VCAP::CloudController
 
       new_plan_attrs.each do |attrs|
         Models::ServicePlan.update_or_create(
-          :service_id => service.id,
-          :name => attrs['name'],
-        ) do |plan|
-            plan.set(attrs)
-          end
+          service_id: service.id,
+          name: attrs['name']
+        ) do |instance|
+          instance.set_fields(attrs, %w(name free description extra))
+        end
       end
 
       missing = old_plan_names - new_plan_attrs.map {|attrs| attrs["name"]}
