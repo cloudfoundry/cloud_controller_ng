@@ -29,7 +29,7 @@ describe VCAP::CloudController::Snapshots do
 
     context "once authenticated" do
       let(:developer) {make_developer_for_space(service_instance.space)}
-      let(:new_snapshot) { VCAP::CloudController::Models::Snapshot.new(id: 1, state: 'empty')}
+      let(:new_snapshot) { VCAP::Services::Api::SnapshotV2.new(snapshot_id: '1', name: 'foo', state: 'empty', size: 0)}
 
       context "without service_instance_id" do
         it "returns a 400 status code" do

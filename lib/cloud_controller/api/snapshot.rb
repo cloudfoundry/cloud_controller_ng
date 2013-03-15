@@ -20,7 +20,7 @@ module VCAP::CloudController
       instance = VCAP::CloudController::Models::ServiceInstance.find(:guid => req.service_instance_guid)
       validate_access(:update, instance, user, roles)
       snapshot = instance.create_snapshot(req.name)
-      snapguid = "%s:%s" % [instance.guid, snapshot.id]
+      snapguid = "%s:%s" % [instance.guid, snapshot.snapshot_id]
       entity = {
         "guid" => snapguid,
         "state" => snapshot.state,

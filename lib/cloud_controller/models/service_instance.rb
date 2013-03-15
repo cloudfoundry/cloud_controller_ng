@@ -19,11 +19,12 @@ module VCAP::CloudController::Models
       end
 
       def create_snapshot(name)
-        Snapshot.from_json(do_request(:post, Yajl::Encoder.encode({name: name})))
+        VCAP::Services::Api::SnapshotV2.decode(do_request(:post, Yajl::Encoder.encode({name: name})))
       end
 
       def enum_snapshots
-        Snapshot.many_from_json(do_request(:get))
+        list = VCAP::Services::Api::SnapshotListV2.decode(do_request(:get))
+        list.snapshots.collect{|e| VCAP::Services::Api::SnapshotV2.new(e) }
       end
 
       private

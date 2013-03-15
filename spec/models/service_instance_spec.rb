@@ -298,16 +298,19 @@ module VCAP::CloudController
     end
 
     context "returns a list of snapshots" do
-      let(:success_response) { Yajl::Encoder.encode({snapshots: [{snapshot: {id: 1, state: 'ok'}}, {snapshot: {id: 2, state: 'bad'}} ]}) }
+      let(:success_response) { Yajl::Encoder.encode({snapshots: [{snapshot_id: '1', name: 'foo', state: 'ok', size: 0},
+                                                                 {snapshot_id: '2', name: 'bar', state: 'bad', size: 0} ]}) }
       before do
         stub_request(:get, enum_snapshots_url_matcher).to_return(:body => success_response)
       end
 
-      it "return a list of snapshot" do
-        subject.enum_snapshots.should == [
-          VCAP::CloudController::Models::Snapshot.new('id' => 1, 'state' =>  'ok'),
-          VCAP::CloudController::Models::Snapshot.new('id' => 2, 'state' =>  'bad')
-        ]
+      it "return a list of snapshot from the gateway" do
+        snapshots = subject.enum_snapshots
+        snapshots.should have(2).items
+        snapshots.first.snapshot_id.should == '1'
+        snapshots.first.state.should == 'ok'
+        snapshots.last.snapshot_id.should == '2'
+        snapshots.last.state.should == 'bad'
         a_request(:get, enum_snapshots_url_matcher).should have_been_made
       end
     end
@@ -333,16 +336,15 @@ module VCAP::CloudController
     end
 
     context "when the request succeeds" do
-      let(:snapshot_id) { 1 }
-      let(:snapshot_state) { "created" }
-      let(:success_response) { %Q({"snapshot":{"id": #{snapshot_id}, "state": "#{snapshot_state}"}}) }
+      let(:success_response) { %Q({"snapshot_id": "1", "state": "empty", "name": "foo", "size": 0}) }
       before do
         stub_request(:post, create_snapshot_url_matcher).to_return(:body => success_response)
       end
 
       it "makes an HTTP call to the corresponding service gateway and returns the decoded response" do
-        subject.create_snapshot(name).should == VCAP::CloudController::Models::Snapshot.new('id' => snapshot_id,
-                                                                                            'state' => snapshot_state)
+        snapshot = subject.create_snapshot(name)
+        snapshot.snapshot_id.should == '1'
+        snapshot.state.should == 'empty'
         a_request(:post, create_snapshot_url_matcher).should have_been_made
       end
 
