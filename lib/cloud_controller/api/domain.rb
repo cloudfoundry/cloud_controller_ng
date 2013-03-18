@@ -15,6 +15,7 @@ module VCAP::CloudController
       attribute :name, String
       attribute :wildcard, Message::Boolean
       to_one    :owning_organization
+      to_many   :spaces
     end
 
     query_parameters :name, :owning_organization_guid, :space_guid
