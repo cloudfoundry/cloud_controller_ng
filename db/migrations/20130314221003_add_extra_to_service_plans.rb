@@ -3,7 +3,7 @@
 Sequel.migration do
   change do
     alter_table :service_plans do
-      add_column :extra, String, :text => true, :size => :medium
+      add_column :extra, String, :text => true
     end
   end
 end
