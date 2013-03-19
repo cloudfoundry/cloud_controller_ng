@@ -44,7 +44,7 @@ class VCAP::CloudController::MessageBus
       router_register_message = Yajl::Encoder.encode({
         :host => @config[:bind_address],
         :port => config[:port],
-        :uris => [config[:external_domain]],
+        :uris => config[:external_domain],
         :tags => {:component => "CloudController" },
       })
 
