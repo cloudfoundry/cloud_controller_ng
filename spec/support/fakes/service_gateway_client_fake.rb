@@ -2,7 +2,7 @@ module VCAP::Services::Api
   class ServiceGatewayClientFake < ServiceGatewayClient
     def provision(*)
       GatewayHandleResponse.decode({
-        :service_id => "SERVICE_ID",
+        :service_id => SecureRandom.uuid,
         :configuration => "CONFIGURATION",
         :credentials => {"password" => "PASSWORD"},
       }.to_json)
@@ -13,7 +13,7 @@ module VCAP::Services::Api
 
     def bind(*)
       GatewayHandleResponse.decode({
-        :service_id => "SERVICE_ID",
+        :service_id => SecureRandom.uuid,
         :configuration => "CONFIGURATION",
         :credentials => {"password" => "PASSWORD"},
       }.to_json)
