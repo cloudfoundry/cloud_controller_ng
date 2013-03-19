@@ -2,6 +2,7 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 require "vcap/uaa_util"
+require "openssl"
 
 module VCAP
   describe UaaUtil do
@@ -25,7 +26,7 @@ module VCAP
     end
 
     describe "#decode_token" do
-      context "when symmetric secret key is used" do
+      context "when symmetric key is used" do
         before { config_hash[:uaa][:symmetric_secret] = "symmetric-key" }
 
         context "when toke is valid" do
@@ -53,94 +54,80 @@ module VCAP
         end
       end
 
-      context "when asymmetric secret key is used" do
+      context "when asymmetric key is used" do
         before { config_hash[:uaa][:symmetric_secret] = nil }
-        before { CF::UAA::Misc.stub(:validation_key => {"value" => "asymmetric-key"}) }
+
+        before { Timecop.freeze(Time.now) }
+        after { Timecop.return }
+
+        let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
+        before { CF::UAA::Misc.stub(:validation_key => {"value" => rsa_key.public_key.to_pem}) }
 
         context "when token is valid" do
-          it "uses UAA::TokenCoder to decode token with pkey" do
-            coder = mock(:token_coder)
-            coder.should_receive(:decode)
-              .with("bearer token")
-              .any_number_of_times
-              .and_return("decoded-info")
-
-            CF::UAA::TokenCoder.should_receive(:new).with(
-              :audience_ids => "resource-id",
-              :pkey => "asymmetric-key",
-            ).and_return(coder)
-
-            CF::UAA::Misc.should_receive(:validation_key)
-            subject.decode_token("bearer token").should == "decoded-info"
-
-            CF::UAA::TokenCoder.should_receive(:new).with(
-              :audience_ids => "resource-id",
-              :pkey => "asymmetric-key",
-            ).and_return(coder)
-
-            CF::UAA::Misc.should_not_receive(:validation_key)
-            subject.decode_token("bearer token").should == "decoded-info"
+          let(:token_content) do
+            {"aud" => "resource-id", "payload" => 123, "exp" => Time.now.to_i + 10_000}
           end
 
-          context "when assymetric key cannot be used to decode token" do
-            it "retries to decode token with newly fetched good asymmetric key" do
-              CF::UAA::Misc.stub(:validation_key).and_return(
-                {"value" => "bad-asymmetric-key"},
-                {"value" => "good-asymmetric-key"},
-              )
+          it "successfully decodes token and caches key" do
+            token = generate_token(rsa_key, token_content)
 
-              failed_coder = mock(:token_coder)
-              failed_coder.should_receive(:decode)
-                .with("bearer token")
-                .any_number_of_times
-                .and_raise(CF::UAA::InvalidSignature)
+            CF::UAA::Misc.should_receive(:validation_key)
+            subject.decode_token("bearer #{token}").should == token_content
 
-              successful_coder = mock(:token_coder)
-              successful_coder.should_receive(:decode)
-                .with("bearer token")
-                .any_number_of_times
-                .and_return("decoded-info")
+            CF::UAA::Misc.should_not_receive(:validation_key)
+            subject.decode_token("bearer #{token}").should == token_content
+          end
 
-              CF::UAA::TokenCoder.should_receive(:new).with(
-                :audience_ids => "resource-id",
-                :pkey => "bad-asymmetric-key",
-              ).and_return(failed_coder)
+          describe "re-fetching key" do
+            let(:old_rsa_key) { OpenSSL::PKey::RSA.new(2048) }
 
-              CF::UAA::TokenCoder.should_receive(:new).with(
-                :audience_ids => "resource-id",
-                :pkey => "good-asymmetric-key",
-              ).and_return(successful_coder)
-
-              subject.decode_token("bearer token").should == "decoded-info"
+            it "retries to decode token with newly fetched asymmetric key" do
+              CF::UAA::Misc
+                .stub(:validation_key)
+                .and_return(
+                  {"value" => old_rsa_key.public_key.to_pem},
+                  {"value" => rsa_key.public_key.to_pem},
+                )
+              subject.decode_token("bearer #{generate_token(rsa_key, token_content)}").should == token_content
             end
 
-            it "stops retrying to decode token with newly fetched bad asymmetric key" do
-              CF::UAA::Misc.stub(:validation_key).and_return({"value" => "bad-asymmetric-key"})
-
-              failed_coder = mock(:token_coder)
-              failed_coder.should_receive(:decode)
-                .with("bearer token")
-                .any_number_of_times
-                .and_raise(CF::UAA::InvalidSignature)
-
-              CF::UAA::TokenCoder.should_receive(:new).with(
-                :audience_ids => "resource-id",
-                :pkey => "bad-asymmetric-key",
-              ).any_number_of_times.and_return(failed_coder)
+            it "stops retrying to decode token with newly fetched asymmetric key after 1 try" do
+              CF::UAA::Misc
+                .stub(:validation_key)
+                .and_return("value" => old_rsa_key.public_key.to_pem)
 
               expect {
-                subject.decode_token("bearer token")
+                subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")
               }.to raise_error(CF::UAA::InvalidSignature)
             end
+          end
+        end
+
+        context "when token has invalid audience" do
+          let(:token_content) do
+            {"aud" => "invalid-audience", "payload" => 123, "exp" => Time.now.to_i + 10_000}
+          end
+
+          it "raises an error if audience is not correct" do
+            expect {
+              subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")
+            }.to raise_error(CF::UAA::InvalidAudience)
           end
         end
 
         context "when token is invalid" do
           it "raises error" do
             expect {
-              subject.decode_token("bearer token")
-            }.to raise_error(OpenSSL::PKey::RSAError)
+              subject.decode_token("bearer invalid-token")
+            }.to raise_error(CF::UAA::InvalidTokenFormat)
           end
+        end
+
+        def generate_token(rsa_key, content)
+          CF::UAA::TokenCoder.encode(content, {
+            :pkey => rsa_key,
+            :algorithm => "RS256",
+          })
         end
       end
     end
