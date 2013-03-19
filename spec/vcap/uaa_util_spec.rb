@@ -108,10 +108,22 @@ module VCAP
             {"aud" => "invalid-audience", "payload" => 123, "exp" => Time.now.to_i + 10_000}
           end
 
-          it "raises an error if audience is not correct" do
+          it "raises an InvalidAudience error" do
             expect {
               subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")
             }.to raise_error(CF::UAA::InvalidAudience)
+          end
+        end
+
+        context "when token has expired" do
+          let(:token_content) do
+            {"aud" => "resource-id", "payload" => 123, "exp" => Time.now.to_i}
+          end
+
+          it "raises an error" do
+            expect {
+              subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")
+            }.to raise_error(CF::UAA::TokenExpired)
           end
         end
 
