@@ -13,8 +13,10 @@ module VCAP::CloudController
 
       NUM_SVC_INSTANCES.times do
         instance = Models::ServiceInstance.make(:space => @app.space)
-        binding = Models::ServiceBinding.make(:app => @app,
-                                              :service_instance => instance)
+        binding = Models::ServiceBinding.make(
+          :app => @app,
+          :service_instance => instance
+        )
         @app.add_service_binding(binding)
       end
     end
