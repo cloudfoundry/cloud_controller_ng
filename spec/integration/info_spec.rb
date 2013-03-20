@@ -2,7 +2,6 @@ require "spec_helper"
 require "net/http"
 
 describe "Cloud controller", :type => :integration do
-  before(:all) { WebMock.allow_net_connect! }
   start_nats
   start_cc
 

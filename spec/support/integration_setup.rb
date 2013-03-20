@@ -66,11 +66,11 @@ RSpec.configure do |rspec_config|
   rspec_config.include(IntegrationHelpers, :type => :integration)
   rspec_config.extend(IntegrationSetup, :type => :integration)
 
-  rspec_config.before(:each, :type => :integration) do
+  rspec_config.before(:all, :type => :integration) do
     WebMock.allow_net_connect!
   end
 
-  rspec_config.after(:each, :type => :integration) do
+  rspec_config.after(:all, :type => :integration) do
     WebMock.disable_net_connect!
   end
 end
