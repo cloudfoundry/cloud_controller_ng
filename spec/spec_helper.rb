@@ -13,7 +13,6 @@ require "timecop"
 require "steno"
 require "cloud_controller"
 require "rspec_let_monkey_patch"
-require "mock_redis"
 require "webmock/rspec"
 
 module VCAP::CloudController

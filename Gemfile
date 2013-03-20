@@ -5,7 +5,6 @@ gem "bcrypt-ruby"
 gem 'eventmachine', "~> 1.0.0"
 gem 'fog'
 gem "mysql2"
-gem "redis"
 gem "rfc822"
 gem "sequel"
 gem "sinatra"
@@ -40,5 +39,4 @@ group :test do
   gem "webmock"
   gem "guard-rspec"
   gem "timecop"
-  gem "mock_redis"
 end

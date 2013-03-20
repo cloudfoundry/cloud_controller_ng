@@ -1,7 +1,6 @@
 # Copyright (c) 2009-2011 VMware, Inc.
 
 require "httpclient"
-require "redis"
 require "uri"
 
 module VCAP::CloudController

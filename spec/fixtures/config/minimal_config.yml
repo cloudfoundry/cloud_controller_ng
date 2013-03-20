@@ -25,11 +25,6 @@ pid_filename: /tmp/cloud_controller.pid
 db:
   database: "sqlite:///tmp/cloud_controller.db"
 
-redis:
-  host: 127.0.0.1
-  port: 5454
-  password: secret
-
 bulk_api:
   auth_user: bulk_user
   auth_password: bulk_password

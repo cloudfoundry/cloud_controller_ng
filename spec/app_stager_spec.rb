@@ -10,11 +10,10 @@ module VCAP::CloudController
     let(:mock_nats) { NatsClientMock.new({}) }
     before { MessageBus.instance.nats.client = mock_nats }
 
-    let(:mock_redis) { mock(:mock_redis).as_null_object }
-    before { AppStager.configure({}, nil, stager_pool) }
-
     let(:stager_pool) { StagerPool.new({}, nil) }
     before { stager_pool.stub(:find_stager => "staging-id") }
+
+    before { AppStager.configure({}, nil, stager_pool) }
 
     describe ".run" do
       it "registers subscriptions for dea_pool" do
@@ -173,11 +172,6 @@ module VCAP::CloudController
 
             it "removes upload handle" do
               LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
-              ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-            end
-
-            it "does not save off staging log for short time" do
-              mock_redis.should_not_receive(:set)
               ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
             end
 
