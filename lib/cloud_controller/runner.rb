@@ -2,6 +2,7 @@
 
 require "steno"
 require "optparse"
+require "vcap/uaa_util"
 require File.expand_path("../message_bus.rb", __FILE__)
 
 module VCAP::CloudController
@@ -155,10 +156,11 @@ module VCAP::CloudController
     end
 
     def create_app(config)
+      token_decoder = VCAP::UaaTokenDecoder.new(config)
+
       Rack::Builder.new do
-        # TODO: we really should put these bootstrapping into a place other
-        # than Rack::Builder
         use Rack::CommonLogger
+
         VCAP::CloudController::MessageBus.instance.register_components
         VCAP::CloudController::MessageBus.instance.register_routes
 
@@ -166,23 +168,26 @@ module VCAP::CloudController
         VCAP::CloudController::AppStager.run
 
         VCAP::CloudController::LegacyBulk.register_subscription
-        VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
+        VCAP::CloudController.health_manager_respondent = \
+          VCAP::CloudController::HealthManagerRespondent.new(config)
 
         map "/" do
-          run VCAP::CloudController::Controller.new(config)
+          run VCAP::CloudController::Controller.new(config, token_decoder)
         end
       end
     end
 
     def start_thin_server(app, config)
       if @config[:nginx][:use_nginx]
-        @thin_server = Thin::Server.new(config[:nginx][:instance_socket],
-          :signals => false)
+        @thin_server = Thin::Server.new(
+          config[:nginx][:instance_socket],
+          :signals => false
+        )
       else
         @thin_server = Thin::Server.new(@config[:bind_address], @config[:port])
       end
-      @thin_server.app = app
 
+      @thin_server.app = app
       trap_signals
 
       # The routers proxying to us handle killing inactive connections.

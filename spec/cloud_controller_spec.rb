@@ -5,6 +5,7 @@ describe VCAP::CloudController::Controller do
     let(:email) { Sham.email }
     let(:user_id) { Sham.guid }
     let(:token_info) { {} }
+
     let(:config) {{
       :quota_definitions => [],
       :uaa => {
@@ -12,9 +13,11 @@ describe VCAP::CloudController::Controller do
       },
     }}
 
-    before do
-      described_class.any_instance.stub(:config => config)
-      described_class.any_instance.stub(:decode_token => token_info)
+    def app
+      token_decoder = VCAP::UaaTokenDecoder.new(config)
+      token_decoder.stub(:decode_token => token_info)
+
+      described_class.new(config, token_decoder)
     end
 
     def make_request

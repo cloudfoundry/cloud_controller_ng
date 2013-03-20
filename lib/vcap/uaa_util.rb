@@ -1,7 +1,13 @@
 require "uaa/misc"
 
 module VCAP
-  module UaaUtil
+  class UaaTokenDecoder
+    attr_reader :config
+
+    def initialize(config)
+      @config = config
+    end
+
     def decode_token(auth_token)
       return unless token_format_valid?(auth_token)
 
@@ -45,25 +51,25 @@ module VCAP
     def asymmetric_key
       @asymmetric_key ||= UaaVerificationKey.new(config[:uaa])
     end
+  end
 
-    class UaaVerificationKey
-      def initialize(config)
-        @config = config
-      end
+  class UaaVerificationKey
+    def initialize(config)
+      @config = config
+    end
 
-      def value
-        @value ||= fetch
-      end
+    def value
+      @value ||= fetch
+    end
 
-      def refresh
-        @value = nil
-      end
+    def refresh
+      @value = nil
+    end
 
-      private
+    private
 
-      def fetch
-        @config[:verification_key] || CF::UAA::Misc.validation_key(@config[:url])["value"]
-      end
+    def fetch
+      @config[:verification_key] || CF::UAA::Misc.validation_key(@config[:url])["value"]
     end
   end
 end

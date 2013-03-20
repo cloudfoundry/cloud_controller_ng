@@ -12,7 +12,6 @@ require "eventmachine/schedule_sync"
 require "vcap/common"
 require "vcap/errors"
 require "uaa/token_coder"
-require "vcap/uaa_util"
 
 require "sinatra/vcap"
 require "cloud_controller/security_context"
@@ -25,15 +24,15 @@ module VCAP::CloudController
 
   class Controller < Sinatra::Base
     register Sinatra::VCAP
-    include VCAP::UaaUtil
 
     attr_reader :config
 
     vcap_configure(:logger_name => "cc.api",
                    :reload_path => File.dirname(__FILE__))
 
-    def initialize(config)
+    def initialize(config, token_decoder)
       @config = config
+      @token_decoder = token_decoder
       super()
     end
 
@@ -42,7 +41,7 @@ module VCAP::CloudController
       auth_token = env["HTTP_AUTHORIZATION"]
 
       begin
-        token_information = decode_token(auth_token)
+        token_information = @token_decoder.decode_token(auth_token)
         logger.info("Token received from the UAA #{token_information.inspect}")
 
         if token_information

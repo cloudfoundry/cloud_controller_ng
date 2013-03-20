@@ -5,17 +5,8 @@ require "vcap/uaa_util"
 require "openssl"
 
 module VCAP
-  describe UaaUtil do
-    subject do
-      Class.new do
-        include UaaUtil
-        attr_reader :config
-
-        def initialize(config)
-          @config = config
-        end
-      end.new(config_hash)
-    end
+  describe UaaTokenDecoder do
+    subject { described_class.new(config_hash) }
 
     let(:config_hash) do
       {:redis => {},
@@ -145,13 +136,11 @@ module VCAP
     end
   end
 
-  describe UaaUtil::UaaVerificationKey do
+  describe UaaVerificationKey do
+    subject { described_class.new(config_hash) }
+
     let(:config_hash) do
       { :url => "http://uaa-url" }
-    end
-
-    subject do
-      UaaUtil::UaaVerificationKey.new(config_hash)
     end
 
     describe "#value" do
