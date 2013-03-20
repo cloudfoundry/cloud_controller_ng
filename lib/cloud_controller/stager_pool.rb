@@ -31,6 +31,7 @@ module VCAP::CloudController
 
     def find_stager(stack, memory)
       mutex.synchronize do
+        validate_stack_availability(stack)
         @stagers.keys.shuffle.each do |id|
           stager = @stagers[id]
           if stager_expired?(stager)
@@ -40,6 +41,12 @@ module VCAP::CloudController
           end
         end
         nil
+      end
+    end
+
+    def validate_stack_availability(stack)
+      unless @stagers.find { |_, stager| stager[:advertisement][:stacks].include?(stack) }
+        raise Errors::StackNotFound, "The requested app stack #{stack} is not available on this system."
       end
     end
 

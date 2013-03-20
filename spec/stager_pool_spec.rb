@@ -38,10 +38,15 @@ module VCAP::CloudController
           }
         end
 
+        it "raises if there are no stagers with that stack" do
+          subject.process_advertise_message(staging_advertise_msg)
+          expect { subject.find_stager("unknown-stack-name", 0) }.to raise_error(Errors::StackNotFound)
+        end
+
         it "only finds registered stagers" do
-          expect {
-            subject.process_advertise_message(staging_advertise_msg)
-          }.to change { subject.find_stager("stack-name", 0) }.from(nil).to("staging-id")
+          expect { subject.find_stager("stack-name", 0) }.to raise_error(Errors::StackNotFound)
+          subject.process_advertise_message(staging_advertise_msg)
+          subject.find_stager("stack-name", 0).should == "staging-id"
         end
       end
 
@@ -94,7 +99,7 @@ module VCAP::CloudController
 
         it "only finds deas that can satisfy runtime request" do
           subject.process_advertise_message(staging_advertise_msg)
-          subject.find_stager("unknown-stack-name", 0).should be_nil
+          expect { subject.find_stager("unknown-stack-name", 0) }.to raise_error(Errors::StackNotFound)
           subject.find_stager("known-stack-name", 0).should == "staging-id"
         end
       end
