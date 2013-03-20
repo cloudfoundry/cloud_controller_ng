@@ -282,9 +282,10 @@ module VCAP::CloudController
   describe "#enum_snapshots" do
     subject { Models::ServiceInstance.make()}
     let(:enum_snapshots_url_matcher) {"gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots"}
+    let(:service_auth_token) { "tokenvalue" }
     before do
       subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
-      subject.service_plan.service.service_auth_token.update(:token => "tokenvalue")
+      subject.service_plan.service.service_auth_token.update(:token => service_auth_token)
     end
 
     context "when there isn't a service auth token" do
@@ -311,7 +312,10 @@ module VCAP::CloudController
         snapshots.first.state.should == 'ok'
         snapshots.last.snapshot_id.should == '2'
         snapshots.last.state.should == 'bad'
-        a_request(:get, enum_snapshots_url_matcher).should have_been_made
+        a_request(:get, enum_snapshots_url_matcher).with(:headers => {
+          "Content-Type" => "application/json",
+          "X-Vcap-Service-Token" => "tokenvalue"
+        }).should have_been_made
       end
     end
   end

@@ -35,7 +35,9 @@ module VCAP::CloudController::Models
         u.path = "/gateway/v2/configurations/#{service_id}/snapshots"
 
         response = client.public_send(method, u,
-                                      :header => { VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token },
+                                      :header => { VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token,
+                                                   "Content-Type" => "application/json"
+                                                },
                                       :body   => payload)
         if response.ok?
           response.body

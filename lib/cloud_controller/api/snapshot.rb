@@ -5,6 +5,7 @@ module VCAP::CloudController
     model_class_name :ServiceInstance
 
     permissions_required do
+      full Permissions::CFAdmin
       update Permissions::SpaceDeveloper
       read Permissions::SpaceDeveloper
     end
