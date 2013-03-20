@@ -8,16 +8,13 @@ module VCAP
     subject { described_class.new(config_hash) }
 
     let(:config_hash) do
-      {:redis => {},
-       :uaa => {
-        :resource_id => "resource-id",
-        :symmetric_secret => nil,
-      }}
+      { :resource_id => "resource-id",
+        :symmetric_secret => nil }
     end
 
     describe "#decode_token" do
       context "when symmetric key is used" do
-        before { config_hash[:uaa][:symmetric_secret] = "symmetric-key" }
+        before { config_hash[:symmetric_secret] = "symmetric-key" }
 
         context "when toke is valid" do
           it "uses UAA::TokenCoder to decode the token with skey" do
@@ -45,7 +42,7 @@ module VCAP
       end
 
       context "when asymmetric key is used" do
-        before { config_hash[:uaa][:symmetric_secret] = nil }
+        before { config_hash[:symmetric_secret] = nil }
 
         before { Timecop.freeze(Time.now) }
         after { Timecop.return }

@@ -14,9 +14,8 @@ describe VCAP::CloudController::Controller do
     }}
 
     def app
-      token_decoder = VCAP::UaaTokenDecoder.new(config)
+      token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
       token_decoder.stub(:decode_token => token_info)
-
       described_class.new(config, token_decoder)
     end
 

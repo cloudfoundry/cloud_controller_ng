@@ -40,16 +40,16 @@ module VCAP
     end
 
     def decode_token_with_key(auth_token, options)
-      options = {:audience_ids => config[:uaa][:resource_id]}.merge(options)
+      options = {:audience_ids => config[:resource_id]}.merge(options)
       CF::UAA::TokenCoder.new(options).decode(auth_token)
     end
 
     def symmetric_key
-      config[:uaa][:symmetric_secret]
+      config[:symmetric_secret]
     end
 
     def asymmetric_key
-      @asymmetric_key ||= UaaVerificationKey.new(config[:uaa])
+      @asymmetric_key ||= UaaVerificationKey.new(config)
     end
   end
 

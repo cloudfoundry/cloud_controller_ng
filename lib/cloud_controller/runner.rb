@@ -156,7 +156,7 @@ module VCAP::CloudController
     end
 
     def create_app(config)
-      token_decoder = VCAP::UaaTokenDecoder.new(config)
+      token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
       Rack::Builder.new do
         use Rack::CommonLogger

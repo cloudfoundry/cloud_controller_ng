@@ -41,8 +41,7 @@ module VCAP::CloudController::ApiSpecHelper
   ]
 
   def app
-    token_decoder = VCAP::UaaTokenDecoder.new(config)
-
+    token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
     klass = Class.new(VCAP::CloudController::Controller)
     klass.use(NginxUpload)
     klass.new(config, token_decoder)
