@@ -27,9 +27,9 @@ module IntegrationSetup
   end
 end
 
-module IntegrationHelpers
+module IntegrationSetupHelpers
   def run_cmd(cmd, opts={})
-    project_path = File.join(File.dirname(__FILE__), "../..")
+    project_path = File.join(File.dirname(__FILE__), "../../..")
     spawn_opts = {
       :chdir => project_path,
       :out => opts[:debug] ? :out : "/dev/null",
@@ -63,7 +63,7 @@ module IntegrationHelpers
 end
 
 RSpec.configure do |rspec_config|
-  rspec_config.include(IntegrationHelpers, :type => :integration)
+  rspec_config.include(IntegrationSetupHelpers, :type => :integration)
   rspec_config.extend(IntegrationSetup, :type => :integration)
 
   rspec_config.before(:all, :type => :integration) do
