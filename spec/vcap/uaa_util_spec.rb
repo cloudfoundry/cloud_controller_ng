@@ -2,7 +2,6 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 require "vcap/uaa_util"
-require "openssl"
 
 module VCAP
   describe UaaTokenDecoder do
