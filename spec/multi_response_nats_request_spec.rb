@@ -202,14 +202,15 @@ describe MultiResponseNatsRequest do
     it "cancels timeout" do
       t = Time.now
       with_em_and_thread do
-        subject.on_response(100) { |*args| }
+        subject.on_response(100) { |*args| raise "Must never be called" }
         subject.request({})
         subject.ignore_subsequent_responses
       end
       # Since provided timeout was 100 secs
-      # if timeout timer does not cancelled
-      # this test will take ~100s instead of 0.1s
-      Time.now.should be_within(0.1).of(t)
+      # if timeout timer does not get cancelled
+      # this test will take ~100s instead of less than 100s
+      # (Use within 50s instead of 0.1s since system might be busy.)
+      Time.now.should be_within(50).of(t)
     end
 
     it "raises error when request was not made" do
