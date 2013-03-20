@@ -40,7 +40,7 @@ module VCAP::CloudController
 
     def get_upload_url(gateway_name)
       #TODO: switch upload url returns to point to sds
-      "#{@config[:external_domain]}/services/v1/configurations/#{gateway_name}/serialized/data"
+      "#{[*@config[:external_domain]].first}/services/v1/configurations/#{gateway_name}/serialized/data"
     end
 
     def import_from_url(gateway_name)

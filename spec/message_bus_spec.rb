@@ -176,5 +176,36 @@ module VCAP::CloudController
         bus.send(:process_message, msg, "myinbox", &block)
       end
     end
+
+    describe "#register_routes" do
+
+      let(:config) { {
+        :bind_address => '1.2.3.4',
+        :port => 4222,
+        :external_domain => ['ccng.vcap.me', 'api.vcap.me'],
+        :nats => nats,
+      } }
+
+      let(:bus) { MessageBus.new(config) }
+
+      let(:msg) { {
+        :host => config[:bind_address],
+        :port => config[:port],
+        :uris => config[:external_domain],
+        :tags => {:component => "CloudController"}
+      } }
+
+      it "subscribes to router.start and publishes router.register" do
+        nats.should_receive(:subscribe).with("router.start").once
+
+        nats.should_receive(:publish).once.
+          with("router.register", msg_json)
+
+        with_em_and_thread do
+          bus.register_routes
+        end
+      end
+    end
+
   end
 end
