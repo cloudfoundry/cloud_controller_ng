@@ -438,6 +438,13 @@ module VCAP::CloudController
         post "/services/v1/configurations/lifecycle/serialized/uploads", {}, headers_for(@user)
         last_response.status.should == 200
         last_response.body.should == "http://api.fake.com/services/v1/configurations/lifecycle/serialized/data"
+        end
+
+      it "should create a upload url" do
+        config_override(:external_domain => %w{http://api.fake.com http://api.fake2.com/})
+        post "/services/v1/configurations/lifecycle/serialized/uploads", {}, headers_for(@user)
+        last_response.status.should == 200
+        last_response.body.should == "http://api.fake.com/services/v1/configurations/lifecycle/serialized/data"
       end
     end
 
