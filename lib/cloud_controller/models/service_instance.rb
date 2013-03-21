@@ -1,9 +1,51 @@
-# Copyright (c) 2009-2012 VMware, Inc.
 require "services/api"
 
 module VCAP::CloudController::Models
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
+    class MissingServiceAuthToken < StandardError; end
+    class ServiceGatewayError < StandardError; end
+
+    class NGServiceGatewayClient
+      attr_accessor :service, :token, :service_id
+
+      def initialize(service, service_id)
+        @service = service
+        @token   = service.service_auth_token
+        @service_id = service_id
+        unless token
+          raise MissingServiceAuthToken, "ServiceAuthToken not found for service #{service}"
+        end
+      end
+
+      def create_snapshot(name)
+        VCAP::Services::Api::SnapshotV2.decode(do_request(:post, Yajl::Encoder.encode({name: name})))
+      end
+
+      def enum_snapshots
+        list = VCAP::Services::Api::SnapshotListV2.decode(do_request(:get))
+        list.snapshots.collect{|e| VCAP::Services::Api::SnapshotV2.new(e) }
+      end
+
+      private
+
+      def do_request(method, payload=nil)
+        client = HTTPClient.new
+        u = URI.parse(service.url)
+        u.path = "/gateway/v2/configurations/#{service_id}/snapshots"
+
+        response = client.public_send(method, u,
+                                      :header => { VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token,
+                                                   "Content-Type" => "application/json"
+                                                },
+                                      :body   => payload)
+        if response.ok?
+          response.body
+        else
+          raise ServiceGatewayError, "Service gateway upstream failure, responded with #{response.status}: #{response.body}"
+        end
+      end
+    end
 
     class << self
       def gateway_client_class
@@ -200,14 +242,12 @@ module VCAP::CloudController::Models
       logger.error "deprovision failed #{e}"
     end
 
-    def create_snapshot
-      service_gateway_client
-      client.create_snapshot(:service_id => gateway_name)
+    def create_snapshot(name)
+      NGServiceGatewayClient.new(service_plan.service, gateway_name).create_snapshot(name)
     end
 
     def enum_snapshots
-      service_gateway_client
-      client.enum_snapshots(:service_id => gateway_name)
+      NGServiceGatewayClient.new(service_plan.service, gateway_name).enum_snapshots
     end
 
     def snapshot_details(sid)

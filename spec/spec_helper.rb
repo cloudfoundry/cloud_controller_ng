@@ -170,6 +170,7 @@ module VCAP::CloudController::SpecHelper
   def configure_components(config)
     mbus = MockMessageBus.new(config)
     VCAP::CloudController::MessageBus.instance = mbus
+    # FIXME: this is better suited for a before-each stub so that we can unstub it in examples
     VCAP::CloudController::Models::ServiceInstance.gateway_client_class =
       VCAP::Services::Api::ServiceGatewayClientFake
 

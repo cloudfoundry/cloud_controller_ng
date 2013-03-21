@@ -12,7 +12,7 @@ require "cloud_controller/db"
 
 ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
 
-task 'default' => 'spec'
+task default: :spec
 
 namespace :spec do
   desc "Run specs producing results for CI"
@@ -42,6 +42,7 @@ RSpec::Core::RakeTask.new do |t|
     --colour
   )
 end
+
 
 desc "Run specs with code coverage"
 task :coverage do
