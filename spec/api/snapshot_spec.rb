@@ -8,7 +8,8 @@ module VCAP::CloudController
 
     describe "POST", "/v2/snapshots" do
       let(:new_name) { 'new name' }
-      let(:new_snapshot) { VCAP::Services::Api::SnapshotV2.new(snapshot_id: '1', name: 'foo', state: 'empty', size: 0)}
+      let(:snapshot_created_at) { Time.now.to_s }
+      let(:new_snapshot) { VCAP::Services::Api::SnapshotV2.new(snapshot_id: '1', name: 'foo', state: 'empty', size: 0, created_time: snapshot_created_at)}
       let(:payload) {
         Yajl::Encoder.encode(:service_instance_guid => service_instance.guid,
                              :name => new_name)
@@ -72,9 +73,14 @@ module VCAP::CloudController
           it "returns the details of the new snapshot" do
             post "/v2/snapshots", payload, headers_for(developer)
             last_response.status.should == 201
-            snapguid = "#{service_instance.guid}:1"
-            decoded_response['metadata'].should == {"guid" => snapguid, "url" => "/v2/snapshots/#{snapguid}"}
-            decoded_response['entity'].should == {"guid" => snapguid, "state" => "empty"}
+            snapguid = "#{service_instance.guid}_1"
+            decoded_response['metadata'].should == {
+              "guid" => snapguid,
+              "url" => "/v2/snapshots/#{snapguid}",
+              "created_at" => snapshot_created_at,
+              "updated_at" => nil
+            }
+            decoded_response['entity'].should include({"state" => "empty", "name" => "foo"})
           end
         end
       end
@@ -91,7 +97,7 @@ module VCAP::CloudController
       context "once authenticated" do
         let(:developer) {make_developer_for_space(service_instance.space)}
         before do
-          Models::ServiceInstance.should_receive(:find).
+          Models::ServiceInstance.stub(:find).
             with(:guid => service_instance.guid).
             and_return(service_instance)
         end
@@ -103,13 +109,38 @@ module VCAP::CloudController
           decoded_response['resources'].should == []
         end
 
-        it "returns an list of snpashots" do
+        it "returns an list of snapshots" do
+          created_time = Time.now.to_s
           service_instance.should_receive(:enum_snapshots) do
-            [{"guid" => '1234', "url" => "/v2/snapshots/1234"}]
+            [VCAP::Services::Api::SnapshotV2.new(
+              "snapshot_id" => "1234",
+              "name" => "something",
+              "state" => "empty",
+              "size" => 0,
+              "created_time" => created_time)
+            ]
           end
           get snapshots_url, {} , headers_for(developer)
+          decoded_response.should == {
+            "total_results" => 1,
+            "total_pages" => 1,
+            "prev_url" => nil,
+            "next_url" => nil,
+            "resources"=>[
+              {
+                "metadata" => {
+                  "guid" => "#{service_instance.guid}_1234",
+                  "url" => "/v2/snapshots/#{service_instance.guid}_1234",
+                  "created_at" => created_time,
+                  "updated_at" => nil
+                },
+                "entity" => {
+                  "snapshot_id" => "1234", "name" => "something", "state" => "empty", "size" => 0, "created_time" => created_time
+                }
+              }
+            ]
+          }
           last_response.status.should == 200
-          decoded_response['resources'].should == ["guid" => '1234', "url" => "/v2/snapshots/1234"]
         end
 
         it "checks for permission to read the service" do

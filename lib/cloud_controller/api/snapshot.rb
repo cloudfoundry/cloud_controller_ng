@@ -21,19 +21,17 @@ module VCAP::CloudController
       instance = VCAP::CloudController::Models::ServiceInstance.find(:guid => req.service_instance_guid)
       validate_access(:update, instance, user, roles)
       snapshot = instance.create_snapshot(req.name)
-      snapguid = "%s:%s" % [instance.guid, snapshot.snapshot_id]
-      entity = {
-        "guid" => snapguid,
-        "state" => snapshot.state,
-      }
+      snapguid = "%s_%s" % [instance.guid, snapshot.snapshot_id]
       [
         HTTP::CREATED,
         Yajl::Encoder.encode(
           "metadata" => {
             "url" => "/v2/snapshots/#{snapguid}",
             "guid" => snapguid,
+            "created_at" => snapshot.created_time,
+            "updated_at" => nil
           },
-          "entity" => entity
+          "entity" => snapshot.extract
         ),
       ]
     end
@@ -45,7 +43,21 @@ module VCAP::CloudController
       [
         HTTP::OK,
         Yajl::Encoder.encode(
-          "resources" => snapshots
+          "total_results" => snapshots.length,
+          "total_pages" => 1,
+          "prev_url" => nil,
+          "next_url" => nil,
+          "resources" => snapshots.collect do |s|
+            {
+              "metadata" => {
+                "guid" => "#{service_guid}_#{s.snapshot_id}",
+                "url" => "/v2/snapshots/#{service_guid}_#{s.snapshot_id}",
+                "created_at" => s.created_time,
+                "updated_at" => nil,
+              },
+              "entity" => s.extract
+            }
+          end
         ),
       ]
     end
