@@ -20,8 +20,6 @@ module VCAP::CloudController
         :guid => app.guid,
         :name => app.name,
         :routes => app.routes.map(&:as_summary_json),
-        :framework => app.framework.to_hash.merge(:guid => app.framework.guid),
-        :runtime => app.runtime.to_hash.merge(:guid => app.runtime.guid),
         :running_instances => app.running_instances,
         :services => app.service_instances.map(&:as_summary_json),
         :available_domains => app.space.domains.map(&:as_summary_json)

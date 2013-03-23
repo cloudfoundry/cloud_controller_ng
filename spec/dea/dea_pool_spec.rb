@@ -13,8 +13,7 @@ module VCAP::CloudController
         {
           :id => "dea-id",
           :stacks => ["stack"],
-          :available_memory => 1024,
-          :runtimes => ["ruby18", "java"],
+          :available_memory => 1024
         }
       end
 
@@ -25,7 +24,7 @@ module VCAP::CloudController
             mock_nats.publish("dea.advertise", JSON.dump(dea_advertise_msg))
           end
         end
-        subject.find_dea(0, "ruby18", "stack").should == "dea-id"
+        subject.find_dea(0, "stack").should == "dea-id"
       end
     end
 
@@ -35,15 +34,14 @@ module VCAP::CloudController
           {
             :id => "dea-id",
             :stacks => ["stack"],
-            :available_memory => 1024,
-            :runtimes => ["ruby18"],
+            :available_memory => 1024
           }
         end
 
         it "only finds registered deas" do
           expect {
             subject.process_advertise_message(dea_advertise_msg)
-          }.to change { subject.find_dea(0, "ruby18", "stack") }.from(nil).to("dea-id")
+          }.to change { subject.find_dea(0, "stack") }.from(nil).to("dea-id")
         end
       end
 
@@ -52,8 +50,7 @@ module VCAP::CloudController
           {
             :id => "dea-id",
             :stacks => ["stack"],
-            :available_memory => 1024,
-            :runtimes => ["ruby18"],
+            :available_memory => 1024
           }
         end
 
@@ -62,10 +59,10 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_advertise_msg)
 
             Timecop.travel(10)
-            subject.find_dea(1024, "ruby18", "stack").should == "dea-id"
+            subject.find_dea(1024, "stack").should == "dea-id"
 
             Timecop.travel(1)
-            subject.find_dea(1024, "ruby18", "stack").should be_nil
+            subject.find_dea(1024, "stack").should be_nil
           end
         end
       end
@@ -75,60 +72,14 @@ module VCAP::CloudController
           {
             :id => "dea-id",
             :stacks => ["stack"],
-            :available_memory => 1024,
-            :runtimes => ["ruby18"],
+            :available_memory => 1024
           }
         end
 
         it "only finds deas that can satisfy memory request" do
           subject.process_advertise_message(dea_advertise_msg)
-          subject.find_dea(1025, "ruby18", "stack").should be_nil
-          subject.find_dea(1024, "ruby18", "stack").should == "dea-id"
-        end
-      end
-
-      describe "runtime availability" do
-        let(:dea_advertise_msg) do
-          {
-            :id => "dea-id",
-            :stacks => ["stack"],
-            :available_memory => 1024,
-            :runtimes => ["ruby18"],
-          }
-        end
-
-        it "only finds deas that can satisfy runtime request" do
-          subject.process_advertise_message(dea_advertise_msg)
-          subject.find_dea(0, "ruby19", "stack").should be_nil
-          subject.find_dea(0, "ruby18", "stack").should == "dea-id"
-        end
-      end
-
-      describe "buildpack availability" do
-        let(:dea_with_runtimes) do
-          {
-            :id => "dea-with-runtimes-id",
-            :stacks => ["stack"],
-            :available_memory => 1024,
-            :runtimes => ["ruby18"],
-          }
-        end
-
-        let(:dea_without_runtimes) do
-          {
-            :id => "dea-without-runtimes-id",
-            :stacks => ["stack"],
-            :available_memory => 1024,
-            :runtimes => nil,
-          }
-        end
-
-        it "only finds deas that do not have runtimes specified" do
-          subject.process_advertise_message(dea_with_runtimes)
-          subject.find_dea(0, "some-runtime", "stack").should be_nil
-
-          subject.process_advertise_message(dea_without_runtimes)
-          subject.find_dea(0, "some-runtime", "stack").should == "dea-without-runtimes-id"
+          subject.find_dea(1025, "stack").should be_nil
+          subject.find_dea(1024, "stack").should == "dea-id"
         end
       end
 
@@ -137,15 +88,14 @@ module VCAP::CloudController
           {
             :id => "dea-id",
             :available_memory => 1024,
-            :stacks => ["known-stack"],
-            :runtimes => ["ruby18"],
+            :stacks => ["known-stack"]
           }
         end
 
         it "only finds deas that can satisfy stack request" do
           subject.process_advertise_message(dea_advertise_msg)
-          subject.find_dea(0, "ruby18", "unknown-stack").should be_nil
-          subject.find_dea(0, "ruby18", "known-stack").should == "dea-id"
+          subject.find_dea(0, "unknown-stack").should be_nil
+          subject.find_dea(0, "known-stack").should == "dea-id"
         end
       end
     end

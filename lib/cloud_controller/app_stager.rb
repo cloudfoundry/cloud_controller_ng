@@ -195,13 +195,6 @@ module VCAP::CloudController
     def staging_task_properties(app)
       {
         :services    => app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
-        :framework      => app.framework.name,
-        :framework_info => app.framework.internal_info,
-
-        :runtime        => app.runtime.name,
-        :runtime_info   => app.runtime.internal_info.merge(
-          :name => app.runtime.name
-        ),
 
         :buildpack => app.buildpack,
 
