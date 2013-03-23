@@ -20,6 +20,8 @@ module Docs
         VCAP::CloudController::User,
         VCAP::CloudController::Space,
         VCAP::CloudController::App,
+        VCAP::CloudController::Runtime,
+        VCAP::CloudController::Framework,
         VCAP::CloudController::Service,
         VCAP::CloudController::ServicePlan,
         VCAP::CloudController::ServiceInstance,

@@ -90,6 +90,7 @@ module VCAP::CloudController
       config = @config.dup
 
       if run_migrations
+        populate_framework_and_runtimes
         VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
         VCAP::CloudController::Models::Stack.populate
       end
@@ -113,6 +114,11 @@ module VCAP::CloudController
       end
     end
 
+    # http://tinyurl.com/bml8nzf
+    def running_in_cf?
+      ENV.has_key?("VCAP_APP_PORT")
+    end
+
     def merge_vcap_config
       services = JSON.parse(ENV["VCAP_SERVICES"])
       pg_key = services.keys.select { |svc| svc =~ /postgres/i }.first
@@ -124,13 +130,29 @@ module VCAP::CloudController
     private
 
     def start_cloud_controller
-      create_pidfile
+      if running_in_cf?
+        merge_vcap_config
+      else
+        create_pidfile
+      end
 
       setup_logging
       setup_db
 
       @config[:bind_address] = VCAP.local_ip(@config[:local_route])
       VCAP::CloudController::Config.configure(@config)
+
+      logger.info "running on #{ENV["VCAP_APP_HOST"]}" if running_in_cf?
+    end
+
+    # This isn't exactly the best place for this, but it is also temporary.  A
+    # seperate utility will get written for this
+    def populate_framework_and_runtimes
+      rt_file = @config[:runtimes_file]
+      Models::Runtime.populate_from_file(rt_file)
+
+      fw_dir = @config[:directories][:staging_manifests]
+      Models::Framework.populate_from_directory(fw_dir)
     end
 
     def create_app(config)

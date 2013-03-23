@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:mock_nats) { NatsClientMock.new({}) }
     let(:message_bus) { MessageBus.new(:nats => mock_nats) }
     subject { StagerPool.new(config, message_bus) }
-
+    
     describe "#register_subscriptions" do
       let(:staging_advertise_msg) do
         {
@@ -16,7 +16,7 @@ module VCAP::CloudController
           :available_memory => 1024,
         }
       end
-
+    
       it "finds advertised stagers" do
         with_em_and_thread do
           subject.register_subscriptions
@@ -58,20 +58,20 @@ module VCAP::CloudController
             :available_memory => 1024,
           }
         end
-
+    
         it "only finds deas with that have not expired" do
           Timecop.freeze do
             subject.process_advertise_message(staging_advertise_msg)
-
+    
             Timecop.travel(10)
             subject.find_stager("stack-name", 1024).should == "staging-id"
-
+    
             Timecop.travel(1)
             subject.find_stager("stack-name", 1024).should be_nil
           end
         end
       end
-
+    
       describe "memory capacity" do
         let(:staging_advertise_msg) do
           {
@@ -97,7 +97,7 @@ module VCAP::CloudController
           }
         end
 
-        it "only finds deas that can satisfy stack request" do
+        it "only finds deas that can satisfy runtime request" do
           subject.process_advertise_message(staging_advertise_msg)
           expect { subject.find_stager("unknown-stack-name", 0) }.to raise_error(Errors::StackNotFound)
           subject.find_stager("known-stack-name", 0).should == "staging-id"

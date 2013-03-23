@@ -129,6 +129,10 @@ module VCAP::CloudController
     def legacy_app_encoding(app)
       {
         :name => app.name,
+        :staging => {
+          :model => app.framework.name,
+          :stack => app.runtime.name,
+        },
         :uris => app.uris,
         :instances => app.instances,
         :runningInstances => app.running_instances,
@@ -211,6 +215,21 @@ module VCAP::CloudController
       end
 
       if staging = hash["staging"]
+        framework = nil
+        if framework_name = staging["framework"] || staging["model"]
+          framework = Models::Framework.find(:name => framework_name)
+          raise FrameworkInvalid.new(framework_name) unless framework
+          req[:framework_guid] = framework.guid
+        end
+
+        runtime_name = staging["runtime"] || staging["stack"]
+        runtime_name ||= default_runtime_for_framework(framework)
+        if runtime_name
+          runtime = Models::Runtime.find(:name => runtime_name)
+          raise RuntimeInvalid.new(runtime_name) unless runtime
+          req[:runtime_guid] = runtime.guid
+        end
+
         req[:command] = staging["command"] if staging["command"]
       end
 
@@ -271,6 +290,16 @@ module VCAP::CloudController
       decoded = Yajl::Parser.parse(old_json)
       translated = translate.call(decoded)
       Yajl::Encoder.encode(translated)
+    end
+
+    def default_runtime_for_framework(framework)
+      return unless framework
+      framework.internal_info["runtimes"].each do |runtime|
+        runtime.each do |runtime_name, runtime_info|
+          return runtime_name if runtime_info["default"] == true
+        end
+      end
+      nil
     end
 
     def self.setup_routes

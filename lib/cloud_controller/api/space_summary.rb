@@ -49,6 +49,8 @@ module VCAP::CloudController
         :urls => app.routes.map(&:fqdn),
         :routes => app.routes.map(&:as_summary_json),
         :service_count => app.service_bindings_dataset.count,
+        :framework => { :name => app.framework.name },
+        :runtime => { :name => app.runtime.name },
         :running_instances => 0,
       }.merge(app.to_hash)
     end

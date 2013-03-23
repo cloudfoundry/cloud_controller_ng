@@ -29,13 +29,13 @@ module VCAP::CloudController
       end
     end
 
-    def find_dea(mem, stack)
+    def find_dea(mem, runtime, stack)
       mutex.synchronize do
         @deas.keys.shuffle.each do |id|
           dea = @deas[id]
           if dea_expired?(dea)
             @deas.delete(id)
-          elsif dea_meets_needs?(dea, mem, stack)
+          elsif dea_meets_needs?(dea, mem, runtime, stack)
             return id
           end
         end
@@ -49,12 +49,17 @@ module VCAP::CloudController
       (Time.now.to_i - dea[:last_update].to_i) > ADVERTISEMENT_EXPIRATION
     end
 
-    def dea_meets_needs?(dea, mem, stack)
+    def dea_meets_needs?(dea, mem, runtime, stack)
       stats = dea[:advertisement]
 
+      has_runtime = stats[:runtimes].nil? || stats[:runtimes].include?(runtime)
       has_stack = stats[:stacks].include?(stack)
 
-      (stats[:available_memory] >= mem) && has_stack
+      if stats[:available_memory] >= mem
+        has_runtime && has_stack
+      else
+        false
+      end
     end
 
     def mutex

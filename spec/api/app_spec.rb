@@ -11,12 +11,14 @@ module VCAP::CloudController
     it_behaves_like "a CloudController API", {
       :path                => "/v2/apps",
       :model               => Models::App,
-      :basic_attributes    => [:name, :space_guid, :stack_guid],
-      :required_attributes => [:name, :space_guid],
+      :basic_attributes    => [:name, :space_guid, :runtime_guid, :framework_guid, :stack_guid],
+      :required_attributes => [:name, :space_guid, :runtime_guid, :framework_guid],
       :unique_attributes   => [:name, :space_guid],
       :queryable_attributes => :name,
       :many_to_one_collection_ids => {
         :space      => lambda { |app| Models::Space.make  },
+        :framework  => lambda { |app| Models::Framework.make },
+        :runtime    => lambda { |app| Models::Runtime.make },
         :stack      => lambda { |app| Models::Stack.make },
       },
       :many_to_many_collection_ids => {
@@ -49,9 +51,13 @@ module VCAP::CloudController
 
     describe "create app" do
       let(:space_guid) { Models::Space.make.guid.to_s }
+      let(:framework_guid) { Models::Framework.make.guid }
+      let(:runtime_guid) { Models::Runtime.make.guid }
       let(:initial_hash) do
         { :name => "maria",
-          :space_guid => space_guid
+          :space_guid => space_guid,
+          :framework_guid => framework_guid,
+          :runtime_guid => runtime_guid
         }
       end
 
@@ -59,17 +65,19 @@ module VCAP::CloudController
 
       subject { post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers) }
 
-      context "when name and space provided" do
+      context "when name, space, framework and runtime were provided" do
         it "responds with new app data" do
           subject
           last_response.status.should == 201
           decoded_response["entity"]["name"].should == "maria"
           decoded_response["entity"]["space_guid"].should == space_guid
+          decoded_response["entity"]["framework_guid"].should == framework_guid
+          decoded_response["entity"]["runtime_guid"].should == runtime_guid
         end
       end
 
       context "when name is not provided" do
-        let(:initial_hash) {{ :space_guid => space_guid }}
+        let(:initial_hash) {{ :space_guid => space_guid, :framework_guid => framework_guid, :runtime_guid => runtime_guid }}
         it "responds with missing field name error" do
           subject
           last_response.status.should == 400
@@ -78,11 +86,41 @@ module VCAP::CloudController
       end
 
       context "when space is not provided" do
-        let(:initial_hash) {{ :name => "maria" }}
+        let(:initial_hash) {{ :name => "maria", :framework_guid => framework_guid, :runtime_guid => runtime_guid }}
         it "responds with missing field space error" do
           subject
           last_response.status.should == 400
           last_response.body.should match /Error: Missing field space/
+        end
+      end
+
+      context "when framework is not provided" do
+        let(:initial_hash) {{ :name => "maria", :space_guid => space_guid, :runtime_guid => runtime_guid }}
+        let(:buildpack_framework) { Models::Framework.make }
+
+        before do
+          VCAP::CloudController::Models::Framework.stub(:find).with({:name => "buildpack"}).and_return(buildpack_framework)
+        end
+
+        it "it uses default framework" do
+          subject
+          last_response.status.should == 201
+          decoded_response["entity"]["framework_guid"].should == buildpack_framework.guid
+        end
+      end
+
+      context "when runtime is not provided" do
+        let(:initial_hash) {{ :name => "maria", :space_guid => space_guid, :framework_guid => framework_guid }}
+        let(:buildpack_runtime) { Models::Runtime.make }
+
+        before do
+          VCAP::CloudController::Models::Runtime.stub(:find).with({:name => "ruby19"}).and_return(buildpack_runtime)
+        end
+
+        it "it uses default runtime" do
+          subject
+          last_response.status.should == 201
+          decoded_response["entity"]["runtime_guid"].should == buildpack_runtime.guid
         end
       end
     end
@@ -305,7 +343,9 @@ module VCAP::CloudController
       let(:creation_req_for_a) do
         Yajl::Encoder.encode(
           :name => Sham.name,
-          :space_guid => @space_a.guid)
+          :space_guid => @space_a.guid,
+          :framework_guid => Models::Framework.make.guid,
+          :runtime_guid => Models::Runtime.make.guid)
       end
 
       let(:update_req_for_a) do
@@ -424,7 +464,9 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
-                                     :memory => 128)
+                                     :memory => 128,
+                                     :framework_guid => Models::Framework.make.guid,
+                                     :runtime_guid => Models::Runtime.make.guid)
 
           post("/v2/apps", req, headers_for(make_developer_for_space(space)))
 
