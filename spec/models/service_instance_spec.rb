@@ -339,6 +339,12 @@ module VCAP::CloudController
       end
     end
 
+    it "rejects empty string as name" do
+      expect do
+        subject.create_snapshot("")
+      end.to raise_error(JsonMessage::ValidationError, /Field: name/)
+    end
+
     context "when the request succeeds" do
       let(:success_response) { %Q({"snapshot_id": "1", "state": "empty", "name": "foo", "size": 0}) }
       before do

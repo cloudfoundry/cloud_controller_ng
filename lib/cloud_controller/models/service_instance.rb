@@ -19,7 +19,9 @@ module VCAP::CloudController::Models
       end
 
       def create_snapshot(name)
-        VCAP::Services::Api::SnapshotV2.decode(do_request(:post, Yajl::Encoder.encode({name: name})))
+        payload = VCAP::Services::Api::CreateSnapshotV2Request.new(:name => name).encode
+        response = do_request(:post, payload)
+        VCAP::Services::Api::SnapshotV2.decode(response)
       end
 
       def enum_snapshots

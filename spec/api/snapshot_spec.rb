@@ -3,7 +3,12 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Snapshots do
     let(:service_instance) do
-      Models::ServiceInstance.make
+      service = Models::Service.make(
+        :url => "http://horsemeat.com",
+      )
+      Models::ServiceInstance.make(
+        :service_plan => Models::ServicePlan.make(:service => service),
+      )
     end
 
     describe "POST", "/v2/snapshots" do
@@ -14,8 +19,10 @@ module VCAP::CloudController
         Yajl::Encoder.encode(:service_instance_guid => service_instance.guid,
                              :name => new_name)
       }
+
       before do
-        Models::ServiceInstance.any_instance.stub(:create_snapshot).and_return(new_snapshot)
+        url = "http://horsemeat.com/gateway/v2/configurations/#{service_instance.gateway_name}/snapshots"
+        stub_request(:post, url).to_return(:status => 201, :body => new_snapshot.encode)
       end
 
       context "for an unauthenticated user" do
@@ -58,6 +65,27 @@ module VCAP::CloudController
           it "does not create a snapshot" do
             Models::ServiceInstance.any_instance.should_not_receive(:create_snapshot)
             post "/v2/snapshots", '{}', headers_for(developer)
+          end
+        end
+
+        context "given nil name" do
+          let(:new_name) {nil}
+          it "craps out" do
+            post "/v2/snapshots", payload, headers_for(developer)
+            last_response.status.should == 400
+          end
+        end
+
+        context "with a blank name" do
+          let(:new_name) {""}
+          it "returns a 400 status code" do
+            post "/v2/snapshots", payload, headers_for(developer)
+            last_response.status.should == 400
+          end
+
+          it "does not create a snapshot" do
+            Models::ServiceInstance.any_instance.should_not_receive(:create_snapshot)
+            post "/v2/snapshots", payload, headers_for(developer)
           end
         end
 
