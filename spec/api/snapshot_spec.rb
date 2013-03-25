@@ -29,6 +29,7 @@ module VCAP::CloudController
         it "requires authentication" do
           post "/v2/snapshots", payload, {}
           last_response.status.should == 401
+          a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
         end
       end
 
@@ -50,6 +51,7 @@ module VCAP::CloudController
         it "denies access" do
           post "/v2/snapshots", payload, headers_for(developer)
           last_response.status.should eq 403
+          a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
         end
       end
 
@@ -65,27 +67,27 @@ module VCAP::CloudController
           it "does not create a snapshot" do
             Models::ServiceInstance.any_instance.should_not_receive(:create_snapshot)
             post "/v2/snapshots", '{}', headers_for(developer)
+            a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
           end
         end
 
         context "given nil name" do
           let(:new_name) {nil}
-          it "craps out" do
+
+          it "returns a 400 status code and does not create a snapshot" do
+            Models::ServiceInstance.any_instance.should_not_receive(:create_snapshot)
             post "/v2/snapshots", payload, headers_for(developer)
             last_response.status.should == 400
+            a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
           end
         end
 
         context "with a blank name" do
           let(:new_name) {""}
-          it "returns a 400 status code" do
+          it "returns a 400 status code and does not create a snapshot" do
             post "/v2/snapshots", payload, headers_for(developer)
             last_response.status.should == 400
-          end
-
-          it "does not create a snapshot" do
-            Models::ServiceInstance.any_instance.should_not_receive(:create_snapshot)
-            post "/v2/snapshots", payload, headers_for(developer)
+            a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
           end
         end
 
@@ -120,6 +122,7 @@ module VCAP::CloudController
       it 'requires authentication' do
         get snapshots_url
         last_response.status.should == 401
+        a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
       end
 
       context "once authenticated" do
