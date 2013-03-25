@@ -588,13 +588,9 @@ module VCAP::CloudController
         let(:uri2) { "#{host2}.#{DEFAULT_SERVING_DOMAIN_NAME}" }
 
         it "sends a dea.update message when adding a URL to a running app" do
-          app = Models::App.make(
-            :name => app_name,
+          app = Models::App.make( :name => app_name,
             :space => user.default_space,
             :state => "STARTED",
-          )
-
-          app.update(
             :package_hash   => "abc",
             :droplet_hash   => "def",
             :package_state  => "STAGED",
@@ -622,9 +618,6 @@ module VCAP::CloudController
             :name => app_name,
             :space => user.default_space,
             :state => "STARTED",
-          )
-
-          app.update(
             :package_hash   => "abc",
             :droplet_hash   => "def",
             :package_state  => "STAGED",

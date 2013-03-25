@@ -71,7 +71,13 @@ module VCAP::CloudController
       end
 
       def before_save
+        if generate_start_event? && !package_hash
+          raise VCAP::Errors::AppPackageInvalid.new(
+            "bits have not been uploaded")
+        end
+
         super
+
         self.stack ||= Stack.default
 
         # The reason this is only done on a state change is that we really only

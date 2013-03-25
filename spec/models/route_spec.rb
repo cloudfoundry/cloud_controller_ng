@@ -237,12 +237,12 @@ module VCAP::CloudController
       let!(:app_1) do
         Models::App.make({
           :space => route.space,
-          :route_guids => [route.guid]
+          :route_guids => [route.guid],
         }.merge(app_attributes))
       end
 
       context "when app is running and staged" do
-        let(:app_attributes) { {:state => "STARTED", :package_state => "STAGED"} }
+        let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "STAGED"} }
 
         it "notifies DEAs of route change for running apps" do
           VCAP::CloudController::DeaClient.should_receive(:update_uris).with(app_1)
@@ -251,7 +251,7 @@ module VCAP::CloudController
       end
 
       context "when app is not staged and running" do
-        let(:app_attributes) { {:state => "STARTED", :package_state => "FAILED"} }
+        let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "FAILED"} }
 
         it "does not notify DEAs of route change for apps that are not started" do
           Models::App.make(:space => route.space, :state => "STOPPED", :route_guids => [route.guid])

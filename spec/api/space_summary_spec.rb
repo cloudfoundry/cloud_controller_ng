@@ -32,6 +32,8 @@ module VCAP::CloudController
           :instances => i,
           :memory => mem_size,
           :state => "STARTED",
+          :package_hash => "abc",
+          :package_state => "STAGED",
         )
       end
 

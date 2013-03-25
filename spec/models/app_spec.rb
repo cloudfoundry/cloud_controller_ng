@@ -361,7 +361,7 @@ module VCAP::CloudController
     end
 
     describe "version" do
-      let(:app) { Models::App.make }
+      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED") }
 
       it "should have a version on create" do
         app.version.should_not be_nil
@@ -447,7 +447,7 @@ module VCAP::CloudController
     end
 
     describe "destroy" do
-      let(:app) { Models::App.make }
+      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED") }
 
       context "with a started app" do
         it "should stop the app on the dea" do
@@ -492,7 +492,7 @@ module VCAP::CloudController
           it "does not generate a stop event" do
             Models::AppStartEvent.should_receive(:create_from_app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
-            Models::App.make(:state => "STARTED")
+            Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
           end
         end
 
@@ -501,7 +501,7 @@ module VCAP::CloudController
             app = Models::App.make(:state => "STOPPED")
             Models::AppStartEvent.should_receive(:create_from_app).with(app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
-            app.update(:state => "STARTED")
+            app.update(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
           end
         end
 
@@ -516,7 +516,7 @@ module VCAP::CloudController
 
         context "stopping a started app" do
           it "does not generate a start event, but generates a stop event" do
-            app = Models::App.make(:state => "STARTED")
+            app = Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
             Models::AppStartEvent.should_not_receive(:create_from_app)
             Models::AppStopEvent.should_receive(:create_from_app).with(app)
             app.update(:state => "STOPPED")
@@ -525,7 +525,7 @@ module VCAP::CloudController
 
         context "updating a started app" do
           it "does not generate a start or stop event" do
-            app = Models::App.make(:state => "STARTED")
+            app = Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
             Models::AppStartEvent.should_not_receive(:create_from_app)
             Models::AppStopEvent.should_not_receive(:create_from_app)
             app.update(:state => "STARTED")
@@ -534,7 +534,7 @@ module VCAP::CloudController
 
         context "deleting a started app" do
           it "generates a start event" do
-            app = Models::App.make(:state => "STARTED")
+            app = Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
             VCAP::CloudController::DeaClient.stub(:stop)
             Models::AppStopEvent.should_receive(:create_from_app).with(app)
             app.destroy
@@ -578,6 +578,8 @@ module VCAP::CloudController
         context "started app" do
           before do
             app.state = "STARTED"
+            app.package_hash = "abc"
+            app.package_state = "STAGED"
             app.save
           end
 
@@ -872,6 +874,16 @@ module VCAP::CloudController
           subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
           it_does_not_stage
           it_does_not_notify_dea
+        end
+
+        context "when app has no bits" do
+          subject { Models::App.make(:state => "STARTED", :package_hash => nil) }
+
+          it "raises an AppPackageInvalid exception" do
+            expect {
+              update
+            }.to raise_error(VCAP::Errors::AppPackageInvalid)
+          end
         end
       end
 

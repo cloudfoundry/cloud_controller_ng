@@ -28,7 +28,9 @@ module VCAP::CloudController
         :production => false,
         :instances => 1,
         :memory => @free_mem_size,
-        :state => "STARTED"
+        :state => "STARTED",
+        :package_hash => "abc",
+        :package_state => "STAGED"
       )
 
       @num_services.times do

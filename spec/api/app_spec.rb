@@ -223,9 +223,6 @@ module VCAP::CloudController
         @app = Models::App.make(
           :space => space,
           :state => "STARTED",
-        )
-        # OK I'm cheating here to skip staging...
-        @app.update(
           :package_hash => "abc",
           :droplet_hash => "def",
           :package_state => "STAGED",

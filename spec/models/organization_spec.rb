@@ -71,6 +71,8 @@ module VCAP::CloudController
               app = Models::App.make(
                 :space => space,
                 :state => "STARTED",
+                :package_hash => "abc",
+                :package_state => "STAGED",
               )
               Models::App.make(
                 :space => space,

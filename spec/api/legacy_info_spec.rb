@@ -143,7 +143,8 @@ module VCAP::CloudController
           before do
             2.times do
               Models::App.make(:space => current_user.default_space,
-                               :state => "STARTED", :instances => 2, :memory => 128)
+                               :state => "STARTED", :instances => 2, :memory => 128,
+                               :package_hash => "abc", :package_state => "STAGED")
             end
 
             5.times do

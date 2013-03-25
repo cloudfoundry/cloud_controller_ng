@@ -29,7 +29,9 @@ module VCAP::CloudController
           :production => false,
           :instances => 1,
           :memory => free_mem_size,
-          :state => "STARTED"
+          :state => "STARTED",
+          :package_hash => "abc",
+          :package_state => "STAGED",
         )
       end
 
@@ -39,7 +41,9 @@ module VCAP::CloudController
           :production => true,
           :instances => 1,
           :memory => prod_mem_size,
-          :state => "STARTED"
+          :state => "STARTED",
+          :package_hash => "abc",
+          :package_state => "STAGED",
         )
       end
     end

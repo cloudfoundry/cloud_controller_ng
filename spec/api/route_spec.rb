@@ -241,8 +241,6 @@ module VCAP::CloudController
         :space  => space,
         :state  => "STARTED",
         :guid   => "guid-foo",
-      )
-      @foo_app.update(
         :package_hash => "abc",
         :droplet_hash => "def",
         :package_state => "STAGED",
@@ -252,8 +250,6 @@ module VCAP::CloudController
         :space  => space,
         :state  => "STARTED",
         :guid   => "guid-bar",
-      )
-      @bar_app.update(
         :package_hash => "ghi",
         :droplet_hash => "jkf",
         :package_state => "STAGED",

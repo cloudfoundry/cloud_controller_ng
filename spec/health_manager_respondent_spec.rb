@@ -6,7 +6,7 @@ require "cloud_controller/health_manager_respondent"
 module VCAP::CloudController
   describe HealthManagerRespondent do
     before :each do
-      # #save refreshes the timestamp
+      # save refreshes the timestamp
       @app = Models::App.make(
         :instances => 2,
       ).save
@@ -72,6 +72,8 @@ module VCAP::CloudController
         it "should send a start request to dea" do
           @app.update(
             :state => "STARTED",
+            :package_hash => "abc",
+            :package_state => "STAGED",
           )
 
           payload = {
@@ -96,6 +98,8 @@ module VCAP::CloudController
         it "should send a start request indicating a flapping app" do
           @app.update(
             :state => "STARTED",
+            :package_hash => "abc",
+            :package_state => "STAGED",
           )
 
           payload = {
@@ -185,6 +189,8 @@ module VCAP::CloudController
         it "should stop an app" do
           @app.update(
             :state => "STARTED",
+            :package_hash => "abc",
+            :package_state => "STAGED",
           )
 
           payload = {
@@ -200,6 +206,8 @@ module VCAP::CloudController
         it "should update the state of an app to stopped" do
           @app.update(
             :state => "STARTED",
+            :package_hash => "abc",
+            :package_state => "STAGED",
           )
           payload = {
             :droplet        => @app.guid,
