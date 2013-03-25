@@ -107,9 +107,7 @@ module VCAP::CloudController
             }],
             "service_count" => num_services,
             "instances" => app.instances,
-            "running_instances" => expected_running_instances,
-            "framework" => {"name" => app.framework.name},
-            "runtime" => {"name" => app.runtime.name}
+            "running_instances" => expected_running_instances
           }.merge(app.to_hash)
         end
       end

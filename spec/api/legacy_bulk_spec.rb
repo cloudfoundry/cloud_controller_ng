@@ -37,9 +37,9 @@ module VCAP::CloudController
       describe "GET", "/bulk/apps" do
         before :all do
           reset_database
-          @framework = Models::Framework.make
+
           100.times do
-            Models::App.make(:framework => @framework)
+            Models::App.make
           end
         end
 
@@ -86,7 +86,6 @@ module VCAP::CloudController
             decoded_response["results"].each { |key,value|
               value.should be_kind_of Hash
               value["id"].should_not be_nil
-              value["framework"].should == @framework.name
               value["version"].should_not be_nil
             }
           end

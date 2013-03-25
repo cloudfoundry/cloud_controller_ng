@@ -289,40 +289,13 @@ module VCAP::CloudController
 
     describe "POST /apps" do
       before do
-        ["java", "ruby18"].each do |r|
-          unless Models::Runtime[:name => r]
-            Models::Runtime.make(:name => r)
-          end
-        end
-
-        Models::Framework.find_or_create(:name => "sinatra") do |fw|
-          fw.update(
-            :description => "sinatra",
-            :internal_info => {
-              :runtimes => [ "ruby18" => { :default => true } ]
-            }
-          )
-        end
-
-        Models::Framework.find_or_create(:name => "grails") do |fw|
-          fw.update(
-            :description => "grails",
-            :internal_info => {
-              :runtimes => [ "java" => { :default => true } ]
-            }
-          )
-        end
-
         3.times { Models::App.make }
         @num_apps_before = Models::App.count
       end
 
       context "with all required parameters" do
         before do
-          req = Yajl::Encoder.encode({
-            :name => app_name,
-            :staging => { :framework => "sinatra", :runtime => "ruby18" },
-          })
+          req = Yajl::Encoder.encode(:name => app_name)
 
           post "/apps", req, headers_for(user)
         end
@@ -347,93 +320,6 @@ module VCAP::CloudController
         end
       end
 
-      context "with legacy yeti style framework and runtime [TEAM-61]" do
-        before do
-          req = Yajl::Encoder.encode({
-            :name => app_name,
-            :staging => { :model => "sinatra", :stack => "ruby18" }
-          })
-
-          @num_apps_before = Models::App.count
-          post "/apps", req, headers_for(user)
-        end
-
-        it "should return a redirect" do
-          last_response.status.should == 302
-        end
-
-        it "should add the app to default app space" do
-          app = user.default_space.apps.find(:name => app_name)
-          app.should_not be_nil
-          Models::App.count.should == @num_apps_before + 1
-        end
-      end
-
-      context "with an invalid framework" do
-        before do
-          req = Yajl::Encoder.encode({
-            :name => app_name,
-            :staging => { :framework => "funky", :runtime => "ruby18" },
-          })
-
-          @num_apps_before = Models::App.count
-          post "/apps", req, headers_for(user)
-        end
-
-        it "should return bad request" do
-          last_response.status.should == 400
-        end
-
-        it "should not add an app" do
-          Models::App.count.should == @num_apps_before
-        end
-
-        it_behaves_like "a vcap rest error response", /framework is invalid: funky/
-      end
-
-      context "with an invalid runtime" do
-        before do
-          req = Yajl::Encoder.encode({
-            :name => app_name,
-            :staging => { :framework => "sinatra", :runtime => "cobol" },
-          })
-
-          @num_apps_before = Models::App.count
-          post "/apps", req, headers_for(user)
-        end
-
-        it "should return bad request" do
-          last_response.status.should == 400
-        end
-
-        it "should not add an app" do
-          Models::App.count.should == @num_apps_before
-        end
-
-        it_behaves_like "a vcap rest error response", /runtime is invalid: cobol/
-      end
-
-      context "with a nil runtime" do
-        before do
-          req = Yajl::Encoder.encode({
-            :name => app_name,
-            :staging => { :framework => "grails" }
-          })
-
-          post "/apps", req, headers_for(user)
-        end
-
-        it "should return a redirect" do
-          last_response.status.should == 302
-        end
-
-        it "should set a default runtime" do
-          app = user.default_space.apps_dataset[:name => app_name]
-          app.should_not be_nil
-          app.runtime.name.should == "java"
-        end
-      end
-
       context "with uris" do
         context "with a valid route" do
           let(:host) { Sham.host }
@@ -441,7 +327,6 @@ module VCAP::CloudController
           before do
             req = Yajl::Encoder.encode({
               :name => app_name,
-              :staging => { :framework => "grails" },
               :uris => ["#{host}.#{DEFAULT_SERVING_DOMAIN_NAME}"]
             })
 
@@ -477,7 +362,6 @@ module VCAP::CloudController
 
             req = Yajl::Encoder.encode({
               :name => app_name,
-              :staging => { :framework => "grails" },
               :uris => ["#{host}.#{domain}"]
             })
 
@@ -505,7 +389,6 @@ module VCAP::CloudController
           before do
             req = Yajl::Encoder.encode({
               :name => app_name,
-              :staging => { :framework => "grails" },
               :uris => ["#{Sham.host}.#{DEFAULT_SERVING_DOMAIN_NAME}",
                         "anotherroute.#{taken_domain_name}"]
             })
@@ -531,10 +414,6 @@ module VCAP::CloudController
         it "should add the environment variable if its legal" do
           legacy_req = Yajl::Encoder.encode(
             "name"    => "app_with_env",
-            "staging" => {
-              "framework" => "grails",
-              "runtime"   => "java",
-            },
             "env"     => [
               "jesse=awesome",
             ],
@@ -550,10 +429,6 @@ module VCAP::CloudController
         it "should not allow environment variables that start with vcap_" do
           legacy_req = Yajl::Encoder.encode(
             "name"    => "app_with_env",
-            "staging" => {
-              "framework" => "grails",
-              "runtime"   => "java",
-            },
             "env"     => [
               "vcap_foo=bar",
             ],
@@ -567,10 +442,6 @@ module VCAP::CloudController
         it 'should not allow environment variables that start with vmc_' do
           legacy_req = Yajl::Encoder.encode(
             "name"    => "app_with_env",
-            "staging" => {
-              "framework" => "grails",
-              "runtime"   => "java",
-            },
             "env"     => [
               "vmc_foo=bar",
             ],
@@ -586,11 +457,7 @@ module VCAP::CloudController
         it "should set the staging command if one is set" do
           legacy_req = Yajl::Encoder.encode(
             "name"    => "app_with_cmd",
-            "staging" => {
-              "framework" => "grails",
-              "runtime"   => "java",
-              "command"   => "foobar",
-            }
+            "staging" => { "command" => "foobar" }
           )
 
           post "/apps", legacy_req, headers_for(user)
@@ -605,11 +472,7 @@ module VCAP::CloudController
           it "should set the console if one is set" do
             legacy_req = Yajl::Encoder.encode(
               "name"    => "app_with_console",
-              "console" => true,
-              "staging" => {
-                "framework" => "grails",
-                "runtime"   => "java",
-              }
+              "console" => true
             )
 
             post "/apps", legacy_req, headers_for(user)
@@ -625,11 +488,7 @@ module VCAP::CloudController
           it "should set debug if one is set" do
             legacy_req = Yajl::Encoder.encode(
               "name" => "app_with_debug",
-              "debug" => "suspend",
-              "staging" => {
-                "framework" => "grails",
-                "runtime"   => "java"
-              }
+              "debug" => "suspend"
             )
 
             post "/apps", legacy_req, headers_for(user)
@@ -661,19 +520,6 @@ module VCAP::CloudController
         it "should update the app" do
           app_obj.memory.should == @expected_mem
         end
-      end
-
-      context "with an invalid runtime" do
-        before do
-          req = Yajl::Encoder.encode(:staging => { :runtime => "cobol" })
-          put "/apps/#{app_obj.name}", req, headers_for(user)
-        end
-
-        it "should return bad request" do
-          last_response.status.should == 400
-        end
-
-        it_behaves_like "a vcap rest error response", /runtime is invalid: cobol/
       end
 
       describe "with env" do

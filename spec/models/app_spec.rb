@@ -15,13 +15,11 @@ module VCAP::CloudController
     let(:route) { Models::Route.make(:domain => domain, :space => space) }
 
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:name, :framework, :runtime, :space],
+      :required_attributes  => [:name, :space],
       :unique_attributes    => [:space, :name],
       :stripped_string_attributes => :name,
       :many_to_one => {
         :space              => lambda { |app| Models::Space.make  },
-        :framework          => lambda { |app| Models::Framework.make },
-        :runtime            => lambda { |app| Models::Runtime.make },
         :stack              => lambda { |app| Models::Stack.make },
       },
       :one_to_zero_or_more  => {
@@ -74,8 +72,6 @@ module VCAP::CloudController
         subject do
           Models::App.new(
             :name => Sham.name,
-            :framework => Models::Framework.make,
-            :runtime => Models::Runtime.make,
             :space => space,
           )
         end
@@ -433,8 +429,6 @@ module VCAP::CloudController
     describe "adding routes to unsaved apps" do
       it "should set a route by guid on a new but unsaved app" do
         app = Models::App.new(:name => Sham.name,
-                              :framework => Models::Framework.make,
-                              :runtime => Models::Runtime.make,
                               :space => space,
                               :stack => Models::Stack.make)
         app.add_route_by_guid(route.guid)
@@ -444,8 +438,6 @@ module VCAP::CloudController
 
       it "should not allow a route on a domain from another org" do
         app = Models::App.new(:name => Sham.name,
-                              :framework => Models::Framework.make,
-                              :runtime => Models::Runtime.make,
                               :space => space,
                               :stack => Models::Stack.make)
         app.add_route_by_guid(Models::Route.make.guid)

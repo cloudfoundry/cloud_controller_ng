@@ -90,18 +90,6 @@ module VCAP::CloudController::Models
     service_plan      { ServicePlan.make }
   end
 
-  Runtime.blueprint do
-    name              { Sham.name }
-    description       { Sham.description }
-    internal_info     { {:version => Sham.version} }
-  end
-
-  Framework.blueprint do
-    name              { Sham.name }
-    description       { Sham.description }
-    internal_info     { { :runtimes => [ Runtime.make.name => { :default => true } ] } }
-  end
-
   Stack.blueprint do
     name              { Sham.name }
     description       { Sham.description }
@@ -110,8 +98,6 @@ module VCAP::CloudController::Models
   App.blueprint do
     name              { Sham.name }
     space             { Space.make }
-    runtime           { Runtime.make }
-    framework         { Framework.make }
     stack             { Stack.make }
   end
 

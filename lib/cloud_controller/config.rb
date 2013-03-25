@@ -46,7 +46,6 @@ class VCAP::CloudController::Config < VCAP::Config
         optional(:staging_manifests) => String,
       },
 
-      optional(:runtimes_file) => String,
       optional(:stacks_file) => String,
 
       :db => {
@@ -168,7 +167,6 @@ class VCAP::CloudController::Config < VCAP::Config
   private
 
   def self.merge_defaults(config)
-    config[:runtimes_file] ||= File.join(config_dir, "runtimes.yml")
     config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
 
     config[:directories] ||= {}

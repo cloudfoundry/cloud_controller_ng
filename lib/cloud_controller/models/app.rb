@@ -11,8 +11,6 @@ module VCAP::CloudController
       class InvalidBindingRelation < InvalidRelation; end
 
       many_to_one       :space
-      many_to_one       :framework
-      many_to_one       :runtime
       many_to_one       :stack
       many_to_many      :routes,
                         :before_add => :validate_route,
@@ -26,17 +24,14 @@ module VCAP::CloudController
       default_order_by  :name
 
       export_attributes :name, :production,
-                        :space_guid, :framework_guid, :runtime_guid,
-                        :stack_guid, :buildpack,
-                        :environment_json, :memory, :instances,
-                        :disk_quota, :state, :version, :command, :console, :debug
+                        :space_guid, :stack_guid, :buildpack,
+                        :environment_json, :memory, :instances, :disk_quota,
+                        :state, :version, :command, :console, :debug
 
       import_attributes :name, :production,
-                        :space_guid, :framework_guid, :runtime_guid,
-                        :stack_guid, :buildpack,
-                        :environment_json, :memory, :instances,
-                        :disk_quota, :state,
-                        :command, :console, :debug,
+                        :space_guid, :stack_guid, :buildpack,
+                        :environment_json, :memory, :instances, :disk_quota,
+                        :state, :command, :console, :debug,
                         :service_binding_guids, :route_guids
 
       strip_attributes  :name
@@ -55,21 +50,11 @@ module VCAP::CloudController
       # Last staging response which might contain streaming log url
       attr_accessor :last_stager_response
 
-      def before_validation
-        # TODO: Once VMC deprecates frameworks
-        # and runtimes we can remove frameworks and runtimes completely from cc.
-        self.framework ||= Framework.find(:name => "buildpack")
-        self.runtime ||= Runtime.find(:name => "ruby19")
-        super
-      end
-
       def validate
         validates_presence :name
         validates_presence :space
         validates_unique   [:space_id, :name]
 
-        validates_presence :framework
-        validates_presence :runtime
         validates_git_url :buildpack
 
         validates_includes PackageStates, :package_state, :allow_missing => true

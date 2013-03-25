@@ -39,8 +39,6 @@ module VCAP::CloudController
         res = DeaClient.send(:start_app_message, @app)
         res.should be_kind_of(Hash)
         res[:droplet].should == @app.guid
-        res[:runtime_info].should be_kind_of(Hash)
-        res[:runtime_info].should have_key(:name)
         res[:services].should be_kind_of(Array)
         res[:services].count.should == NUM_SVC_INSTANCES
         res[:services].first.should be_kind_of(Hash)
