@@ -6,12 +6,14 @@ module VCAP::CloudController
   describe Models::App do
     let(:org) { Models::Organization.make }
     let(:space) { Models::Space.make(:organization => org) }
+
     let(:domain) do
-      d = Models::Domain.make(:owning_organization => org)
-      org.add_domain(d)
-      space.add_domain(d)
-      d
+      Models::Domain.make(:owning_organization => org).tap do |d|
+        org.add_domain(d)
+        space.add_domain(d)
+      end
     end
+
     let(:route) { Models::Route.make(:domain => domain, :space => space) }
 
     it_behaves_like "a CloudController model", {
@@ -225,6 +227,18 @@ module VCAP::CloudController
     end
 
     describe "validations" do
+      describe "name" do
+        let(:space) { Models::Space.make }
+
+        it "does not allow the same name in a different case", :skip_sqlite => true do
+          Models::App.make(:name => "lowercase", :space => space)
+
+          expect {
+            Models::App.make(:name => "lowerCase", :space => space)
+          }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
+        end
+      end
+
       describe "env" do
         let(:app) { Models::App.make }
 
