@@ -73,6 +73,7 @@ module VCAP::RestAPI
       q_key, q_val = parse
       q_key, q_val = clean_up_foreign_key(q_key, q_val)
       q_key, q_val = clean_up_boolean(q_key, q_val)
+      q_key, q_val = clean_up_integer(q_key, q_val)
 
       {q_key => q_val}
     end
@@ -127,6 +128,19 @@ module VCAP::RestAPI
 
       if column[:db_type] == TINYINT_TYPE
         q_val = TINYINT_FROM_TRUE_FALSE.fetch(q_val, q_val)
+      end
+
+      [q_key, q_val]
+    end
+
+    def clean_up_integer(q_key, q_val)
+      column = model.db_schema[q_key.to_sym]
+      unless column
+        return [q_key, q_val]
+      end
+
+      if column[:type] == :integer
+        q_val = q_val.to_i if q_val
       end
 
       [q_key, q_val]

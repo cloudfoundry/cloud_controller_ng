@@ -49,28 +49,14 @@ module VCAP::CloudController
       artifact_filename("spec.log")
     end
 
-    def without_foreign_key_checks
-      case db.database_type
-      when :sqlite
-        db.execute("PRAGMA foreign_keys = OFF")
-        yield
-        db.execute("PRAGMA foreign_keys = ON")
-      when :mysql
-        db.execute("SET foreign_key_checks = 0")
-        yield
-        db.execute("SET foreign_key_checks = 1")
-      else
-        raise "Unknown db"
-      end
-    end
-
     def reset_database
-      without_foreign_key_checks do
-        db.tables.each do |table|
-          db.drop_table(table)
-        end
-        VCAP::CloudController::DB.apply_migrations(db)
+      prepare_database
+
+      db.tables.each do |table|
+        drop_table_unsafely(table)
       end
+
+      VCAP::CloudController::DB.apply_migrations(db)
     end
 
     def db
@@ -97,6 +83,34 @@ module VCAP::CloudController
         @db_logger.level = level if Steno::Logger::LEVELS.include? level
       end
       @db_logger
+    end
+
+    private
+
+    def prepare_database
+      if db.database_type == :postgres
+        db.execute("CREATE EXTENSION IF NOT EXISTS citext")
+      end
+    end
+
+    def drop_table_unsafely(table)
+      case db.database_type
+        when :sqlite
+          db.execute("PRAGMA foreign_keys = OFF")
+          db.drop_table(table)
+          db.execute("PRAGMA foreign_keys = ON")
+
+        when :mysql
+          db.execute("SET foreign_key_checks = 0")
+          db.drop_table(table)
+          db.execute("SET foreign_key_checks = 1")
+
+        # Postgres uses CASCADE directive in DROP TABLE
+        # to remove foreign key contstraints.
+        # http://www.postgresql.org/docs/9.2/static/sql-droptable.html
+        else
+          db.drop_table(table, :cascade => true)
+      end
     end
   end
 end
