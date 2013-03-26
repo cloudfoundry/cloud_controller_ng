@@ -15,6 +15,7 @@ gem "membrane", "~> 0.0.2"
 gem "vcap_common",  "~> 2.0.8", :git => 'https://github.com/cloudfoundry/vcap-common.git', :ref => 'e437aeb'
 gem "cf-uaa-lib", "~> 1.3.7", :git => 'https://github.com/cloudfoundry/cf-uaa-lib.git', :ref =>  '8d34eede'
 gem "httpclient"
+gem "sqlite3"
 gem "steno", "~> 1.0.0"
 gem 'stager-client', '~> 0.0.02', :git => 'https://github.com/cloudfoundry/stager-client.git', :ref => '04c2aee9'
 
@@ -27,14 +28,12 @@ group :production do
 end
 
 group :development do
-  gem "sqlite3"
   gem "ruby-graphviz"
 end
 
 group :test do
   gem "simplecov"
   gem "simplecov-rcov"
-  gem "sqlite3"
   gem "machinist", "~> 1.0.6"
   gem "webmock"
   gem "guard-rspec"
