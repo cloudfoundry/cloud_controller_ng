@@ -29,7 +29,9 @@ module VCAP::CloudController::Models
                       :user_guids, :manager_guids, :billing_manager_guids,
                       :auditor_guids, :domain_guids, :quota_definition_guid
 
-    alias :billing_enabled? :billing_enabled
+    def billing_enabled?
+      billing_enabled
+    end
 
     def before_create
       add_inheritable_domains
