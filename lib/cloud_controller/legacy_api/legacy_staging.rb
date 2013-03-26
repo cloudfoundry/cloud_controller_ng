@@ -260,13 +260,19 @@ module VCAP::CloudController
     # returns an object that responds to #path pointing to the uploaded file
     # @return [#path]
     def upload_file
-      @upload_file ||= if config[:nginx][:use_nginx]
-                         Struct.new(:path).new(params["droplet_path"])
-                       else
-                         params["upload"]["droplet"][:tempfile]
-                       end
-    rescue
-      nil
+      @upload_file ||=
+        if get_from_hash_tree(config, :nginx, :use_nginx)
+          Struct.new(:path).new(params["droplet_path"])
+        else
+          get_from_hash_tree(params, "upload", "droplet", :tempfile)
+        end
+    end
+
+    def get_from_hash_tree(hash, *path)
+      path.reduce(hash) do |here, seg|
+        return unless here && here.is_a?(Hash)
+        here[seg]
+      end
     end
 
     def save_path(id)
