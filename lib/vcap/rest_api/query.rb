@@ -69,32 +69,12 @@ module VCAP::RestAPI
 
     def filter_args_from_query
       return {} unless query
+
       q_key, q_val = parse
-      filter_args = nil
+      q_key, q_val = clean_up_foreign_key(q_key, q_val)
+      q_key, q_val = clean_up_boolean(q_key, q_val)
 
-      if q_key =~ /(.*)_(gu)?id$/
-        attr = $1
-
-        f_key = if model.associations.include?(attr.to_sym)
-          attr.to_sym
-        elsif model.associations.include?(attr.pluralize.to_sym)
-          attr.pluralize.to_sym
-        end
-
-        # One could argue that this should be a server error.  It means
-        # that a query key came in for an attribute that is explicitly
-        # in the queryable_attributes, but is not a column or an association.
-        raise VCAP::Errors::BadQueryParameter.new(q_key) unless f_key
-
-        other_model = model.association_reflection(f_key).associated_class
-        id_key = other_model.columns.include?(:guid) ? :guid : :id
-        f_val = other_model.filter(id_key => q_val)
-        filter_args = { f_key => f_val }
-      else
-        filter_args = { q_key => q_val }
-      end
-
-      filter_args
+      {q_key => q_val}
     end
 
     def parse
@@ -109,6 +89,47 @@ module VCAP::RestAPI
       end
 
       [key.to_sym, value]
+    end
+
+    def clean_up_foreign_key(q_key, q_val)
+      return [q_key, q_val] unless q_key =~ /(.*)_(gu)?id$/
+
+      attr = $1
+
+      f_key = if model.associations.include?(attr.to_sym)
+        attr.to_sym
+      elsif model.associations.include?(attr.pluralize.to_sym)
+        attr.pluralize.to_sym
+      end
+
+      # One could argue that this should be a server error.  It means
+      # that a query key came in for an attribute that is explicitly
+      # in the queryable_attributes, but is not a column or an association.
+      raise VCAP::Errors::BadQueryParameter.new(q_key) unless f_key
+
+      other_model = model.association_reflection(f_key).associated_class
+      id_key = other_model.columns.include?(:guid) ? :guid : :id
+      f_val = other_model.filter(id_key => q_val)
+
+      [f_key, f_val]
+    end
+
+    TINYINT_TYPE = "tinyint(1)".freeze
+    TINYINT_FROM_TRUE_FALSE = {"t" => 1, "f" => 0}.freeze
+
+    # Sequel uses tinyint(1) to store booleans in Mysql.
+    # Mysql does not support using 't'/'f' for querying.
+    def clean_up_boolean(q_key, q_val)
+      column = model.db_schema[q_key.to_sym]
+      unless column && column[:type] == :boolean
+        return [q_key, q_val]
+      end
+
+      if column[:db_type] == TINYINT_TYPE
+        q_val = TINYINT_FROM_TRUE_FALSE.fetch(q_val, q_val)
+      end
+
+      [q_key, q_val]
     end
 
     attr_accessor :model, :access_filter, :queryable_attributes, :query

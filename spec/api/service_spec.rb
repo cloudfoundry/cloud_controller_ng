@@ -115,14 +115,18 @@ module VCAP::CloudController
 
       before(:all) do
         reset_database
-        3.times { Models::Service.make(:active => true) }
-        2.times { Models::Service.make(:active => false) }
+        @active = 3.times.map { Models::Service.make(:active => true) }
+        @inactive = 2.times.map { Models::Service.make(:active => false) }
+      end
+
+      def decoded_guids
+        decoded_response["resources"].map { |r| r["metadata"]["guid"] }
       end
 
       it "should get all services" do
         get "/v2/services", {}, headers
         last_response.should be_ok
-        decoded_response["total_results"].should == 5
+        decoded_guids.should =~ (@active + @inactive).map(&:guid)
       end
 
       it "should filter inactive services" do
@@ -131,13 +135,13 @@ module VCAP::CloudController
         # as 't' or 'f'. But in postgresql, either way is ok.
         get "/v2/services?q=active:t", {}, headers
         last_response.should be_ok
-        decoded_response["total_results"].should == 3
+        decoded_guids.should =~ @active.map(&:guid)
       end
 
       it "should get inactive services" do
         get "/v2/services?q=active:f", {}, headers
         last_response.should be_ok
-        decoded_response["total_results"].should == 2
+        decoded_guids.should =~ @inactive.map(&:guid)
       end
     end
   end
