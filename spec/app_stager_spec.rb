@@ -532,22 +532,43 @@ module VCAP::CloudController
       before { AppStager.unstub(:delete_droplet) }
       let(:app) { Models::App.make }
 
-      it "should do nothing if the droplet does not exist" do
-        guid = Sham.guid
-        LegacyStaging.droplet_exists?(guid).should == false
-        AppStager.delete_droplet(app)
-        LegacyStaging.droplet_exists?(guid).should == false
+      context "when droplet does not exist" do
+        it "does nothing" do
+          LegacyStaging.droplet_exists?(app.guid).should == false
+          AppStager.delete_droplet(app)
+          LegacyStaging.droplet_exists?(app.guid).should == false
+        end
       end
 
-      it "should delete the droplet if it exists" do
-        droplet = Tempfile.new(app.guid)
-        droplet.write("droplet contents")
-        droplet.close
-        LegacyStaging.store_droplet(app.guid, droplet.path)
+      context "when droplet exists" do
+        before { LegacyStaging.store_droplet(app.guid, droplet.path) }
 
-        LegacyStaging.droplet_exists?(app.guid).should == true
-        AppStager.delete_droplet(app)
-        LegacyStaging.droplet_exists?(app.guid).should == false
+        let(:droplet) do
+          Tempfile.new(app.guid).tap do |f|
+            f.write("droplet-contents")
+            f.close
+          end
+        end
+
+        it "deletes the droplet if it exists" do
+          expect {
+            AppStager.delete_droplet(app)
+          }.to change {
+            LegacyStaging.droplet_exists?(app.guid)
+          }.from(true).to(false)
+        end
+
+        # Fog (local) tries to delete parent directories that might be empty
+        # when deleting a file. Sometimes it will fail due to a race
+        # since those directories might have been populated in between
+        # emptiness check and actual deletion.
+        it "does not raise error when it fails to delete directory structure" do
+          Fog::Collection
+            .any_instance
+            .should_receive(:destroy)
+            .and_raise(Errno::ENOTEMPTY)
+          AppStager.delete_droplet(app)
+        end
       end
     end
   end

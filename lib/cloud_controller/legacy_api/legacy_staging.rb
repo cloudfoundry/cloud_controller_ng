@@ -99,6 +99,9 @@ module VCAP::CloudController
       def delete_droplet(guid)
         key = key_from_guid(guid)
         droplet_dir.files.destroy(key)
+      rescue Errno::ENOTEMPTY => e
+        logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
+        true
       end
 
       def droplet_exists?(guid)
