@@ -15,7 +15,7 @@ info:
   build: "2222"
   version: 2
   support_address: "http://support.cloudfoundry.com"
-  description: "VMware's Cloud Application Platform"
+  description: "Cloud Foundry sponsored by Pivotal"
   api_version: "2.0.0"
 # TODO: put back once json schema is sorted out
 # allow_debug: false

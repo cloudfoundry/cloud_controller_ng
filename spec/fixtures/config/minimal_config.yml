@@ -6,7 +6,7 @@ info:
   build: "2222"
   version: 2
   support_address: "http://support.cloudfoundry.com"
-  description: "VMware's Cloud Application Platform"
+  description: "Cloud Foundry sponsored by Pivotal"
 
 system_domains:
   - vcap.me

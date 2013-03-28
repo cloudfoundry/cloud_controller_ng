@@ -8,6 +8,7 @@ describe "Cloud controller", :type => :integration do
     make_http_request("/info").tap do |r|
       r.code.should == "200"
       r.json_body["version"].should == 2
+      r.json_body["description"].should == "Cloud Foundry sponsored by Pivotal"
     end
   end
 
