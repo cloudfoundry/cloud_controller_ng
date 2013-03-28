@@ -198,5 +198,49 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "PUT /v2/service_instances/internal/:instance_id" do
+      let(:service)          { Models::Service.make }
+      let(:plan)             { Models::ServicePlan.make({ :service => service })}
+      let(:service_instance) { Models::ServiceInstance.make({ :service_plan => plan })}
+      let(:admin)            { Models::User.make({ :admin => true })}
+
+      let(:new_configuration) {{ :plan => "100" }}
+      let(:new_credentials)   {{ :name => "svcs-instance-1" }}
+
+      let(:instance_id)       { service_instance.gateway_name }
+
+      it "should allow access with valid token" do
+        req_body = {
+          :token        => service.service_auth_token.token,
+          :gateway_data => new_configuration,
+          :credentials  => new_credentials
+        }.to_json
+
+        put "/v2/service_instances/internal/#{instance_id}", req_body, headers_for(admin)
+        last_response.status.should == 200
+      end
+
+      it "should forbidden access with invalid token" do
+        req_body = {
+          :token        => "wrong_token",
+          :gateway_data => new_configuration,
+          :credentials  => new_credentials
+        }.to_json
+
+        put "/v2/service_instances/internal/#{instance_id}", req_body, headers_for(admin)
+        last_response.status.should == 403
+      end
+
+      it "should forbidden access with invalid request body" do
+        req_body = {
+          :token         => service.service_auth_token.token,
+          :credentials   => new_credentials
+        }.to_json
+
+        put "/v2/service_instances/internal/#{instance_id}", req_body, headers_for(admin)
+        last_response.status.should == 400
+      end
+    end
   end
 end
