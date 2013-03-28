@@ -1,5 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
+require 'services/api'
+
 module VCAP::CloudController
   rest_controller :ServiceInstance do
     permissions_required do
@@ -36,5 +38,43 @@ module VCAP::CloudController
         Errors::ServiceInstanceInvalid.new(e.errors.full_messages)
       end
     end
+
+    def update_instance(gateway_name)
+      begin
+        req = VCAP::Services::Api::HandleUpdateRequestV2.decode(body)
+      rescue
+        raise Errors::InvalidRequest
+      end
+
+      instance_handle = Models::ServiceInstance[:gateway_name => gateway_name]
+      raise Errors::ServiceInstanceNotFound, "gateway_name=#{gateway_name}" unless instance_handle
+
+      plan_handle = Models::ServicePlan[:id => instance_handle[:service_plan_id]]
+      service_handle = Models::Service[:id => plan_handle[:service_id]]
+
+      validate_update(service_handle[:label], service_handle[:provider], req.token)
+
+      instance_handle.set(
+        :gateway_data => req.gateway_data,
+        :credentials => req.credentials,
+      )
+      instance_handle.save_changes
+    end
+
+    def validate_update(label, provider, token)
+      raise Errors::NotAuthorized unless label && provider && token
+
+      svc_auth_token = Models::ServiceAuthToken[
+        :label    => label,
+        :provider => provider,
+      ]
+
+      unless (svc_auth_token && svc_auth_token.token_matches?(token))
+        logger.warn("unauthorized service offering")
+        raise Errors::NotAuthorized
+      end
+    end
+
+    put "/v2/service_instances/internal/:gateway_name", :update_instance
   end
 end
