@@ -4,7 +4,6 @@ gem "rake"
 gem "bcrypt-ruby"
 gem 'eventmachine', "~> 1.0.0"
 gem 'fog'
-gem "mysql2"
 gem "rfc822"
 gem "sequel"
 gem "sinatra"
@@ -15,7 +14,6 @@ gem "membrane", "~> 0.0.2"
 gem "vcap_common",  "~> 2.0.8", :git => 'https://github.com/cloudfoundry/vcap-common.git', :ref => 'e437aeb'
 gem "cf-uaa-lib", "~> 1.3.7", :git => 'https://github.com/cloudfoundry/cf-uaa-lib.git', :ref =>  '8d34eede'
 gem "httpclient"
-gem "sqlite3"
 gem "steno", "~> 1.0.0"
 gem 'stager-client', '~> 0.0.02', :git => 'https://github.com/cloudfoundry/stager-client.git', :ref => '04c2aee9'
 
@@ -23,8 +21,10 @@ gem 'stager-client', '~> 0.0.02', :git => 'https://github.com/cloudfoundry/stage
 gem "rspec"
 gem "ci_reporter"
 
-group :production do
+group :db do
+  gem "mysql2"
   gem "pg"
+  gem "sqlite3"
 end
 
 group :development do
