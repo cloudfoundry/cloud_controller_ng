@@ -29,5 +29,23 @@ module VCAP::CloudController
         }
       end
     end
+
+    describe "validation" do
+      context "when unique_id is not provided" do
+        it "creates a composite unique_id" do
+          service = Models::Service.new(provider: "core", label: "ponies")
+          service.valid?
+          service.unique_id.should == "core_ponies"
+        end
+      end
+
+      context "when unique_id is provided" do
+        it "uses provided unique_id" do
+          service = Models::Service.new(provider: "core", label: "ponies", unique_id: "glue-factory")
+          service.valid?
+          service.unique_id.should == "glue-factory"
+        end
+      end
+    end
   end
 end

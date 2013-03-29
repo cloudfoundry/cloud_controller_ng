@@ -75,6 +75,7 @@ module VCAP::CloudController::Models
     provider          { Sham.provider }
     url               { Sham.url }
     version           { Sham.version }
+    unique_id         { "#{provider}_#{label}" }
     description do
       # Hack since Sequel does not allow two foreign keys natively
       # and putting this side effect outside memoizes the label and provider

@@ -111,6 +111,7 @@ module VCAP::CloudController::ModelSpecHelper
               expect {
                 described_class.new do |instance|
                   instance.set_all(dup_opts)
+                  instance.valid?  # run validations but ignore results
                 end.save(:validate => false)
               }.to raise_error Sequel::DatabaseError, /#{db_exception_match}/
             end

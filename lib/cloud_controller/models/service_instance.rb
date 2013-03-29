@@ -127,10 +127,10 @@ module VCAP::CloudController::Models
           :guid => service_plan.guid,
           :name => service_plan.name,
           :service => {
-            :guid => service_plan.service.guid,
-            :label => service_plan.service.label,
-            :provider => service_plan.service.provider,
-            :version => service_plan.service.version,
+            :guid => service.guid,
+            :label => service.label,
+            :provider => service.provider,
+            :version => service.version,
           }
         }
       }
@@ -208,21 +208,27 @@ module VCAP::CloudController::Models
       end
     end
 
+    def service
+      service_plan.service
+    end
+
+
     def provision_on_gateway
       service_gateway_client
       logger.debug "provisioning service for instance #{guid}"
 
       gw_attrs = client.provision(
         # TODO: we shouldn't still be using this compound label
-        :label => "#{service_plan.service.label}-#{service_plan.service.version}",
+        :label => "#{service.label}-#{service.version}",
         :name  => name,
         :email => VCAP::CloudController::SecurityContext.current_user_email,
         :plan  => service_plan.name,
         :plan_option => {}, # TODO: remove this
-        :version => service_plan.service.version,
-        :provider => service_plan.service.provider,
+        :version => service.version,
+        :provider => service.provider,
         :space_guid => space.guid,
-        :organization_guid => space.organization_guid
+        :organization_guid => space.organization_guid,
+        :unique_id => service.unique_id,
       )
 
       logger.debug "provision response for instance #{guid} #{gw_attrs.inspect}"
@@ -245,11 +251,11 @@ module VCAP::CloudController::Models
     end
 
     def create_snapshot(name)
-      NGServiceGatewayClient.new(service_plan.service, gateway_name).create_snapshot(name)
+      NGServiceGatewayClient.new(service, gateway_name).create_snapshot(name)
     end
 
     def enum_snapshots
-      NGServiceGatewayClient.new(service_plan.service, gateway_name).enum_snapshots
+      NGServiceGatewayClient.new(service, gateway_name).enum_snapshots
     end
 
     def snapshot_details(sid)
@@ -290,7 +296,7 @@ module VCAP::CloudController::Models
 
       sds_client = sds_client(upload_url, upload_token, upload_timeout)
       sds_client.import_from_data(
-        :service => service_plan.service.label,
+        :service => service.label,
         :service_id => gateway_name,
         :msg => file_path,
       )

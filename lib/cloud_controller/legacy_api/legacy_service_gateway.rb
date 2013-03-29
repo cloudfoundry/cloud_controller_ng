@@ -31,7 +31,7 @@ module VCAP::CloudController
       VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
       Sequel::Model.db.transaction do
         service = Models::Service.update_or_create(
-          :label => label, :provider => DEFAULT_PROVIDER
+          :label => label, :provider => provider
         ) do |svc|
           if svc.new?
             logger.debug2("Creating service")

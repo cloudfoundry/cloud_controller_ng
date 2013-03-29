@@ -10,7 +10,7 @@ module VCAP::CloudController::Models
     default_order_by  :label
 
     export_attributes :label, :provider, :url, :description,
-                      :version, :info_url, :active, :extra
+                      :version, :info_url, :active, :extra, :unique_id
 
     import_attributes :label, :provider, :url, :description,
                       :version, :info_url, :active
@@ -18,6 +18,7 @@ module VCAP::CloudController::Models
     strip_attributes  :label, :provider
 
     def validate
+      self.unique_id ||= "#{provider}_#{label}"
       validates_presence :label
       validates_presence :provider
       validates_presence :url
