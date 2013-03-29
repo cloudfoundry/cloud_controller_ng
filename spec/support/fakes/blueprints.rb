@@ -113,6 +113,7 @@ module VCAP::CloudController::Models
     free              { false }
     description       { Sham.description }
     service           { Service.make }
+    unique_id         { [service.provider, service.label, name].join("_") }
   end
 
   BillingEvent.blueprint do

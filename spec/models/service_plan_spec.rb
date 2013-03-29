@@ -19,4 +19,41 @@ module VCAP::CloudController
       },
     }
   end
+
+  describe 'validation' do
+    let(:service) { Models::Service.make }
+
+    context "when there is no service set" do
+      it "does not set the unique_id" do
+        service_plan = Models::ServicePlan.new
+        service_plan.valid?
+        service_plan.unique_id.should be_nil
+      end
+    end
+
+    context "when unique_id is not provided" do
+      it "sets a default" do
+        service_plan = Models::ServicePlan.new(name: '1herd', service: service)
+        service_plan.valid?
+        service_plan.unique_id.should_not be_empty
+      end
+
+      it "sets a unique unique_id" do
+        service_plan_1 = Models::ServicePlan.new(name: '1herd', service: service)
+        service_plan_2 = Models::ServicePlan.new(name: '2herds', service: service)
+        service_plan_1.valid?
+        service_plan_2.valid?
+        service_plan_1.unique_id.should_not == service_plan_2.unique_id
+      end
+    end
+
+    context "when unique_id is provided" do
+      it "uses provided unique_id" do
+        service_plan  = Models::ServicePlan.new(unique_id: "glue-factory", service: service)
+        expect {
+          service_plan.valid?
+        }.not_to change(service_plan, :unique_id)
+      end
+    end
+  end
 end

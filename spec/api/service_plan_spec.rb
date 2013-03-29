@@ -8,7 +8,7 @@ module VCAP::CloudController
     it_behaves_like "a CloudController API", {
       :path                 => "/v2/service_plans",
       :model                => Models::ServicePlan,
-      :basic_attributes     => [:name, :free, :description, :service_guid, :extra],
+      :basic_attributes     => [:name, :free, :description, :service_guid, :extra, :unique_id],
       :required_attributes  => [:name, :free, :description, :service_guid],
       :unique_attributes    => [:name, :service_guid],
       :one_to_many_collection_ids  => {
