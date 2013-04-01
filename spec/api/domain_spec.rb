@@ -123,6 +123,26 @@ module VCAP::CloudController
         end
       end
 
+      describe "Updating space bindings" do
+        before do
+          @bare_domain = Models::Domain.make(:owning_organization => @org_a)
+        end
+
+        describe "PUT /v2/domains/:domain adding to spaces" do
+          it "persists the change" do
+            @bare_domain.space_guids.should be_empty
+
+            put "/v2/domains/#{@bare_domain.guid}",
+                Yajl::Encoder.encode(:space_guids => [@space_a.guid]),
+                headers_for(@org_a_manager)
+            last_response.status.should == 201
+
+            @bare_domain.reload
+            @bare_domain.space_guids.should == [@space_a.guid]
+          end
+        end
+      end
+
       describe "System Domain permissions" do
         describe "PUT /v2/domains/:system_domain" do
           it "should not allow modification of the shared domain by an org manager" do

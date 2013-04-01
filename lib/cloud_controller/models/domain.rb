@@ -18,7 +18,8 @@ module VCAP::CloudController::Models
     default_order_by  :name
 
     export_attributes :name, :owning_organization_guid, :wildcard
-    import_attributes :name, :owning_organization_guid, :wildcard
+    import_attributes :name, :owning_organization_guid, :wildcard,
+                      :space_guids
     strip_attributes  :name
 
     many_to_many      :spaces, :before_add => :validate_space
