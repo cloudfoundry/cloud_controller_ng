@@ -104,7 +104,7 @@ module VCAP::CloudController
 
         expect {
           app.add_route(route)
-        }.to raise_error Models::App::InvalidRouteRelation
+        }.to raise_error(Models::App::InvalidRouteRelation, /URL was not available/)
       end
 
       it "should not associate an app with a route created on another space with a shared domain" do

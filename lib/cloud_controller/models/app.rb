@@ -7,7 +7,12 @@ module VCAP::CloudController
     class App < Sequel::Model
       plugin :serialization
 
-      class InvalidRouteRelation < InvalidRelation; end
+      class InvalidRouteRelation < InvalidRelation
+        def to_s
+          "The URL was not available [route ID #{super}]"
+        end
+      end
+
       class InvalidBindingRelation < InvalidRelation; end
 
       many_to_one       :space
