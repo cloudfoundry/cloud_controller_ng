@@ -20,6 +20,7 @@ module VCAP::CloudController::Models
 
     one_to_many       :apps
     one_to_many       :service_instances
+    one_to_many       :routes
 
     many_to_many      :domains, :before_add => :validate_domain
     add_association_dependencies :domains => :nullify
@@ -39,8 +40,21 @@ module VCAP::CloudController::Models
 
     strip_attributes  :name
 
+    def has_dependencies?
+      apps.count > 0 || service_instances.count > 0 || routes.count > 0
+    end
+
+    def in_organization?(user)
+      organization && organization.users.include?(user)
+    end
+
     def before_create
       add_inheritable_domains
+      super
+    end
+
+    def before_destroy
+      raise VCAP::Errors::SpaceNotEmpty.new(name) if has_dependencies?
       super
     end
 
@@ -51,30 +65,22 @@ module VCAP::CloudController::Models
     end
 
     def validate_developer(user)
-      unless organization && organization.users.include?(user)
-        # TODO: unlike most other validations, this is *NOT* being enforced by
-        # the db
-        raise InvalidDeveloperRelation.new(user.guid)
-      end
+      # TODO: unlike most other validations, is *NOT* being enforced by DB
+      raise InvalidDeveloperRelation.new(user.guid) unless in_organization?(user)
     end
 
     def validate_manager(user)
-      unless organization && organization.users.include?(user)
-        raise InvalidManagerRelation.new(user.guid)
-      end
+      raise InvalidManagerRelation.new(user.guid) unless in_organization?(user)
     end
 
     def validate_auditor(user)
-      unless organization && organization.users.include?(user)
-        raise InvalidAuditorRelation.new(user.guid)
-      end
+      raise InvalidAuditorRelation.new(user.guid) unless in_organization?(user)
     end
 
     def validate_domain(domain)
-      return if domain && domain.owning_organization.nil?
-      unless (domain && organization &&
-              domain.owning_organization_id &&
-              domain.owning_organization_id == organization.id)
+      return if domain && domain.owning_organization.nil? || organization.nil?
+
+      unless domain.owning_organization_id == organization.id
         raise InvalidDomainRelation.new(domain.guid)
       end
     end
