@@ -93,6 +93,11 @@
   http_code: 404
   message: "The app space could not be found: %s"
 
+40005:
+  name: SpaceNotEmpty
+  http_code: 404
+  message: "The app space is not empty, has an app, service or route bound: %s"
+
 50001:
   name: ServiceAuthTokenInvalid
   http_code: 400
