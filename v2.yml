@@ -221,7 +221,7 @@
 100005:
   name: AppMemoryQuotaExceeded
   http_code: 400
-  message: "You have exceeded your organization's memory limit. Please login to your account and upgrade."
+  message: "You have exceeded your organization's memory limit. Please login to your account and upgrade. If you are trying to scale down and you are receiving this error, you can either delete an app or contact support."
 
 110001:
   name: ServicePlanInvalid
@@ -362,17 +362,17 @@
   name: QuotaDefinitionInvalid
   http_code: 400
   message: "Quota Definition is invalid: %s"
-  
+
 250001:
   name: StackInvalid
   http_code: 400
   message: "The stack is invalid: %s"
-  
+
 250002:
   name: StackNameTaken
   http_code: 400
   message: "The stack name is taken: %s"
-  
+
 250003:
   name: StackNotFound
   http_code: 404
