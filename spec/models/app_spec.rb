@@ -686,6 +686,21 @@ module VCAP::CloudController
           app.memory = 64
           expect { app.save }.to_not raise_error
         end
+
+        it "can delete an app that somehow has exceeded its memory quota" do
+          org = Models::Organization.make(:quota_definition => quota)
+          space = Models::Space.make(:organization => org)
+          app = Models::App.make(:space => space,
+                                 :memory => 64,
+                                 :instances => 2)
+
+          quota.memory_limit = 32
+          quota.save
+
+          app.state = "STOPPED"
+          expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+          expect { app.delete }.not_to raise_error
+        end
       end
     end
 
