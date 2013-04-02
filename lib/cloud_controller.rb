@@ -51,7 +51,7 @@ module VCAP::CloudController
 
         if uaa_id
           user = Models::User.find(:guid => uaa_id.to_s)
-          user ||= create_admin_if_in_config(token_information)
+
           user ||= create_admin_if_in_token(token_information)
         end
 
