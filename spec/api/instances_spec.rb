@@ -12,20 +12,39 @@ module VCAP::CloudController
       end
 
       context "as a developer" do
-        it "should return 400 when there is an error finding the instances" do
+        it "returns 400 when there is an error finding the instances" do
           instance_id = 5
 
           @app.state = "STOPPED"
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances",
-              {},
-              headers_for(@developer))
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer))
 
-              last_response.status.should == 400
+          last_response.status.should == 400
+          Yajl::Parser.parse(last_response.body)["code"].should == 220001
         end
 
-        it "should return the instances" do
+        it "returns '170002 NotStaged' when the app is failed to stage" do
+          @app.package_state = "FAILED"
+          @app.save
+
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer))
+
+          last_response.status.should == 400
+          Yajl::Parser.parse(last_response.body)["code"].should == 170002
+        end
+
+        it "returns '170002 NotStaged' when the app is pending to be staged" do
+          @app.package_state = "PENDING"
+          @app.save
+
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer))
+
+          last_response.status.should == 400
+          Yajl::Parser.parse(last_response.body)["code"].should == 170002
+        end
+
+        it "returns the instances" do
           @app.state = "STARTED"
           @app.instances = 1
           @app.save

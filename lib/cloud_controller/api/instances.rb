@@ -13,6 +13,7 @@ module VCAP::CloudController
 
     def instances(id)
       app = find_id_and_validate_access(:read, id)
+      raise VCAP::Errors::NotStaged unless app.staged?
       instances = DeaClient.find_all_instances(app)
       Yajl::Encoder.encode(instances)
     end
