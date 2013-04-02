@@ -130,7 +130,7 @@ module VCAP::CloudController
     end
 
     def delete(label_and_version, provider = DEFAULT_PROVIDER)
-      (label, version) = label_and_version.split("-")
+      label = label_and_version.split("-")[0]
 
       validate_access(label, provider)
 
@@ -156,7 +156,7 @@ module VCAP::CloudController
     end
 
     def get(label_and_version, provider = DEFAULT_PROVIDER)
-      (label, version) = label_and_version.split("-")
+      label = label_and_version.split("-")[0]
 
       validate_access(label, provider)
 
