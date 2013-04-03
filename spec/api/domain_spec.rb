@@ -13,12 +13,23 @@ module VCAP::CloudController
       :unique_attributes    => :name,
 
       :one_to_many_collection_ids => {
-        :spaces => lambda { |user|
-          org = user.organizations.first || Models::Organization.make
+        :spaces => lambda { |domain|
+          org = domain.organizations.first || Models::Organization.make
           Models::Space.make(:organization => org)
-        }
+        },
       },
-
+      :one_to_many_collection_ids_without_url => {
+          :routes => lambda { |domain|
+            domain.update(:wildcard => true)
+            space = Models::Space.make(:organization => domain.owning_organization)
+            space.add_domain(domain)
+            Models::Route.make(
+                :host => Sham.host,
+                :domain => domain,
+                :space => space,
+            )
+          }
+      },
       :many_to_one_collection_ids => {
         :owning_organization => lambda { |user|
           user.organizations.first || Models::Organization.make

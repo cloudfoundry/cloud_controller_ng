@@ -136,6 +136,10 @@ module VCAP::CloudController::RestController
       end
     end
 
+    def v2_api?
+      env["PATH_INFO"] =~ /#{ROUTE_PREFIX}/i
+    end
+
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self

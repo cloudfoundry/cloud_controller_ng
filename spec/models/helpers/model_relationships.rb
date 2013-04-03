@@ -92,17 +92,9 @@ module VCAP::CloudController::ModelSpecHelper
             obj.send(add_attribute, related)
             obj.save
 
-            error_class = "#{singular_association.capitalize}NotEmpty"
-            error_type = if VCAP::Errors.const_defined?(error_class)
-              [VCAP::Errors.const_get(error_class)]
-            else
-              # TODO: delete when Orgs, Apps, etc have a NotEmpty error
-              [Sequel::DatabaseError, /foreign key/]
-            end
-
             expect {
               related.destroy
-            }.to raise_error *error_type
+            }.to raise_error Sequel::DatabaseError, /foreign key/
           end
         else
           it "should destroy #{singular_association} successfully" do

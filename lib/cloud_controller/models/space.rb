@@ -40,21 +40,12 @@ module VCAP::CloudController::Models
 
     strip_attributes  :name
 
-    def has_dependencies?
-      apps.count > 0 || service_instances.count > 0 || routes.count > 0
-    end
-
     def in_organization?(user)
       organization && organization.users.include?(user)
     end
 
     def before_create
       add_inheritable_domains
-      super
-    end
-
-    def before_destroy
-      raise VCAP::Errors::SpaceNotEmpty.new(name) if has_dependencies?
       super
     end
 

@@ -12,7 +12,7 @@ module VCAP::CloudController
       :required_attributes  => [:name, :free, :description, :service_guid],
       :unique_attributes    => [:name, :service_guid],
       :one_to_many_collection_ids  => {
-        :service_instances => lambda { |service_plan| Models::ServiceInstance.make }
+        :service_instances => lambda { |service_plan| Models::ServiceInstance.make(:service_plan => service_plan) }
       }
     }
 

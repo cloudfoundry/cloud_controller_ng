@@ -63,7 +63,7 @@ end
 def make_service_binding_for_service_instance(service_instance)
   app = VCAP::CloudController::Models::App.make(:space => service_instance.space)
   app.space = service_instance.space
-  VCAP::CloudController::Models::ServiceBinding.new(
+  VCAP::CloudController::Models::ServiceBinding.make(
     :app => app,
     :service_instance => service_instance,
     :credentials => Sham.service_credentials

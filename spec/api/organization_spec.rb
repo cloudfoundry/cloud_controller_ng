@@ -19,7 +19,17 @@ module VCAP::CloudController
         :billing_managers => lambda { |org| Models::User.make }
       },
       :one_to_many_collection_ids  => {
-        :spaces => lambda { |org| Models::Space.make }
+        :spaces => lambda { |org| Models::Space.make(:organization => org) }
+      },
+      :one_to_many_collection_ids_without_url => {
+        :service_instance => lambda { |org|
+          space = Models::Space.make(:organization => org)
+          Models::ServiceInstance.make(:space => space)
+        },
+        :apps => lambda { |org|
+          space = Models::Space.make(:organization => org)
+          Models::App.make(:space => space)
+        }
       },
       :many_to_many_collection_ids  => {
         :domains => lambda { |org|

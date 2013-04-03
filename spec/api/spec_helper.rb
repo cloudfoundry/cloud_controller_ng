@@ -99,7 +99,7 @@ module VCAP::CloudController::ApiSpecHelper
     end
 
     [:many_to_many_collection_ids, :one_to_many_collection_ids,
-     :many_to_one_collection_ids].each do |k|
+     :many_to_one_collection_ids, :one_to_many_collection_ids_without_url].each do |k|
       opts[k] ||= {}
     end
 

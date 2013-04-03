@@ -18,8 +18,20 @@ module VCAP::CloudController
         :domains    => lambda { |space| make_domain_for_space(space) }
       },
       :one_to_many_collection_ids => {
-        :apps  => lambda { |space| Models::App.make },
-        :service_instances => lambda { |space| Models::ServiceInstance.make }
+        :apps  => lambda { |space| Models::App.make(:space => space) },
+        :service_instances => lambda { |space| Models::ServiceInstance.make(:space => space) }
+      },
+      :one_to_many_collection_ids_without_url => {
+        :routes => lambda { |space| Models::Route.make(:space => space) },
+        :default_users => lambda { |space|
+          user = VCAP::CloudController::Models::User.make
+          space.organization.add_user(user)
+          space.add_developer(user)
+          space.save
+          user.default_space = space
+          user.save
+          user
+        },
       }
     }
 

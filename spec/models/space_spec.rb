@@ -86,48 +86,5 @@ module VCAP::CloudController
         space.name.should be_kind_of(String)
       end
     end
-
-    describe "#destroy" do
-      let(:space) do
-       space = Models::Space.make
-       space.save
-       space
-      end
-
-      subject { space.destroy }
-
-      context "when the space is empty" do
-        it "works" do
-          expect {
-            subject
-          }.to change { Models::Space[:id => space.id] }.from(space).to(nil)
-        end
-      end
-
-      shared_examples "non-empty spaces" do
-        it "should return a non empty error code" do
-          expect {
-            expect { 
-              subject
-            }.to raise_error VCAP::Errors::SpaceNotEmpty, /.*not empty.*app.*service.*route.*#{space.name}/
-          }.not_to change { Models::Space[:id => space.id] }
-        end
-      end
-
-      context "when the space has apps" do
-        before { Models::App.make(:space => space) }
-        it_behaves_like "non-empty spaces"
-      end
-
-      context "when the space has services" do
-        before { Models::ServiceInstance.make(:space => space) }
-        it_behaves_like "non-empty spaces"
-      end
-
-      context "when the space has routes" do
-        before { Models::Route.make(:space => space) }
-        it_behaves_like "non-empty spaces"
-      end
-    end
   end
 end

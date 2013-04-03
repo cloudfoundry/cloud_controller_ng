@@ -6,6 +6,20 @@ module Sequel::Plugins::VcapRelations
     model.plugin(:instance_hooks)
   end
 
+  module InstanceMethods
+    def has_one_to_many?(association)
+      association_type(association) == :one_to_many && send(association).count > 0
+    end
+
+    def has_one_to_one?(association)
+      association_type(association) == :one_to_one && !!send(association)
+    end
+
+    def association_type(association)
+      self.class.association_reflection(association)[:type]
+    end
+  end
+
   module ClassMethods
     # Override many_to_one in order to add <relation>_guid
     # and <relation>_guid= methods.

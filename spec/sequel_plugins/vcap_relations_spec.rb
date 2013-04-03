@@ -54,7 +54,7 @@ describe "Sequel::Plugins::VcapRelations" do
   let(:dog_klass) { self.class.const_get(:Dog) }
   let(:name_klass) { self.class.const_get(:Name) }
 
-  describe "#one_to_many" do
+  describe ".one_to_many" do
     before do
       @o = owner_klass.create
       expect { @o.dogs }.to raise_error(NoMethodError)
@@ -171,7 +171,7 @@ describe "Sequel::Plugins::VcapRelations" do
     end
   end
 
-  describe "#many_to_many" do
+  describe ".many_to_many" do
     before do
       @d1 = dog_klass.create
       @d2 = dog_klass.create
@@ -316,6 +316,50 @@ describe "Sequel::Plugins::VcapRelations" do
       @n1.dogs.should be_empty
       @n2.dogs.should include(@d1)
       @d1.names.length.should == 1
+    end
+  end
+
+  describe "#has_one_to_many?" do
+    let!(:owner) { owner_klass.create }
+    before { owner_klass.one_to_many :dogs }
+
+    it "should return true when there are one_to_many associations" do
+      d = dog_klass.create
+      owner.add_dog(d)
+      owner.has_one_to_many?(:dogs).should == true
+    end
+
+    it "should return false when there are NO one_to_many associations" do
+      owner.has_one_to_many?(:dogs).should == false
+    end
+  end
+
+  describe "#has_one_to_one?" do
+    let!(:owner) { owner_klass.create }
+    before { owner_klass.one_to_one :dog }
+
+    it "should return true when there are one_to_one associations" do
+      d = dog_klass.create
+      owner.dog = d
+      owner.has_one_to_one?(:dog).should == true
+    end
+
+    it "should return false when there are NO one_to_one associations" do
+      owner.has_one_to_one?(:dog).should == false
+    end
+  end
+
+  describe "#association_type" do
+    let!(:owner) { owner_klass.create }
+
+    it "should return one_to_one association type when it is defined" do
+      owner_klass.one_to_one :dog
+      owner.association_type(:dog).should == :one_to_one
+    end
+
+    it "should return one_to_many association type when it is defined" do
+      owner_klass.one_to_many :dog
+      owner.association_type(:dog).should == :one_to_many
     end
   end
 end
