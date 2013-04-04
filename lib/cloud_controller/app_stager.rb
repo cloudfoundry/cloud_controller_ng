@@ -113,6 +113,7 @@ module VCAP::CloudController
         :properties => staging_task_properties(@app),
         :download_uri => LegacyStaging.app_uri(@app.guid),
         :upload_uri => LegacyStaging.droplet_upload_uri(@app.guid),
+        :buildpack_cache_upload_uri => LegacyStaging.buildpack_cache_upload_uri(@app.guid),
         :async => async }
     end
 
@@ -210,6 +211,10 @@ module VCAP::CloudController
     def staging_completion(stager_response)
       droplet_hash = Digest::SHA1.file(@upload_handle.upload_path).hexdigest
       LegacyStaging.store_droplet(@app.guid, @upload_handle.upload_path)
+
+      if (buildpack_cache = @upload_handle.buildpack_cache_upload_path)
+        LegacyStaging.store_buildpack_cache(@app.guid, buildpack_cache)
+      end
 
       @app.detected_buildpack = stager_response.detected_buildpack
       @app.droplet_hash = droplet_hash

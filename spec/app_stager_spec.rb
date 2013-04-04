@@ -519,6 +519,7 @@ module VCAP::CloudController
           r[:task_id].should eq(staging_task.task_id)
           r[:download_uri].should match /^http/
           r[:upload_uri].should match /^http/
+          r[:buildpack_cache_upload_uri].should match /^http/
         end
       end
 

@@ -21,10 +21,10 @@ module VCAP::CloudController
     DROPLET_PATH = "/staging/droplets"
 
     class DropletUploadHandle
-      attr_accessor :id, :upload_path
+      attr_accessor :guid, :upload_path, :buildpack_cache_upload_path
 
-      def initialize(id)
-        @id = id
+      def initialize(guid)
+        @guid = guid
         @upload_path = nil
       end
     end
@@ -39,29 +39,33 @@ module VCAP::CloudController
         @directory = nil
       end
 
-      def app_uri(id)
+      def app_uri(guid)
         if AppPackage.local?
-          staging_uri("#{APP_PATH}/#{id}")
+          staging_uri("#{APP_PATH}/#{guid}")
         else
-          AppPackage.package_uri(id)
+          AppPackage.package_uri(guid)
         end
       end
 
-      def droplet_upload_uri(id)
-        staging_uri("/staging/droplets/#{id}")
+      def droplet_upload_uri(guid)
+        staging_uri("/staging/droplets/#{guid}")
       end
 
-      def droplet_download_uri(id)
+      def buildpack_cache_upload_uri(guid)
+        staging_uri("/staging/droplets/#{guid}/buildpack_cache")
+      end
+
+      def droplet_download_uri(guid)
         if local?
-          staging_uri("/staged_droplets/#{id}")
+          staging_uri("/staged_droplets/#{guid}")
         else
-          droplet_uri(id)
+          droplet_uri(guid)
         end
       end
 
-      def create_handle(id)
-        handle = DropletUploadHandle.new(id)
-        mutex.synchronize { upload_handles[handle.id] = handle }
+      def create_handle(guid)
+        handle = DropletUploadHandle.new(guid)
+        mutex.synchronize { upload_handles[handle.guid] = handle }
         handle
       end
 
@@ -71,13 +75,13 @@ module VCAP::CloudController
           if handle.upload_path && File.exists?(handle.upload_path)
             File.delete(handle.upload_path)
           end
-          upload_handles.delete(handle.id)
+          upload_handles.delete(handle.guid)
         end
       end
 
-      def lookup_handle(id)
+      def lookup_handle(guid)
         mutex.synchronize do
-          return upload_handles[id]
+          return upload_handles[guid]
         end
       end
 
@@ -85,6 +89,16 @@ module VCAP::CloudController
         File.open(path) do |file|
           droplet_dir.files.create(
             :key => key_from_guid(guid),
+            :body => file,
+            :public => local?
+          )
+        end
+      end
+
+      def store_buildpack_cache(guid, path)
+        File.open(path) do |file|
+          droplet_dir.files.create(
+            :key => buildpack_cache_key_from_guid(guid),
             :body => file,
             :public => local?
           )
@@ -126,9 +140,9 @@ module VCAP::CloudController
         end
       end
 
-      def droplet_local_path(id)
+      def droplet_local_path(guid)
         raise ArgumentError unless local?
-        key = key_from_guid(id)
+        key = key_from_guid(guid)
         f = droplet_dir.files.head(key)
         return nil unless f
         # Yes, this is bad.  But, we really need a handle to the actual path in
@@ -178,25 +192,30 @@ module VCAP::CloudController
         guid = guid.to_s.downcase
         File.join(guid[0..1], guid[2..3], guid)
       end
+
+      def buildpack_cache_key_from_guid(guid)
+        guid = guid.to_s.downcase
+        File.join("buildpack_cache", guid[0..1], guid[2..3], guid)
+      end
     end
 
     # Handles an app download from a stager
-    def download_app(id)
+    def download_app(guid)
       raise InvalidRequest unless AppPackage.local?
 
-      app = Models::App.find(:guid => id)
-      raise AppNotFound.new(id) if app.nil?
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
 
-      package_path = AppPackage.package_local_path(id)
-      logger.debug "id: #{id} package_path: #{package_path}"
+      package_path = AppPackage.package_local_path(guid)
+      logger.debug "guid: #{guid} package_path: #{package_path}"
 
       unless package_path
-        logger.error "could not find package for #{id}"
-        raise AppPackageNotFound.new(id)
+        logger.error "could not find package for #{guid}"
+        raise AppPackageNotFound.new(guid)
       end
 
       if config[:nginx][:use_nginx]
-        url = AppPackage.package_uri(id)
+        url = AppPackage.package_uri(guid)
         logger.debug "nginx redirect #{url}"
         return [200, { "X-Accel-Redirect" => url }, ""]
       else
@@ -206,16 +225,16 @@ module VCAP::CloudController
     end
 
     # Handles a droplet upload from a stager
-    def upload_droplet(id)
-      app = Models::App.find(:guid => id)
-      raise AppNotFound.new(id) if app.nil?
+    def upload_droplet(guid)
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
 
-      handle = self.class.lookup_handle(id)
-      raise StagingError.new("staging not in progress for #{id}") unless handle
-      raise StagingError.new("malformed droplet upload request for #{id}") unless upload_file
+      handle = self.class.lookup_handle(guid)
+      raise StagingError.new("staging not in progress for #{guid}") unless handle
+      raise StagingError.new("malformed droplet upload request for #{guid}") unless upload_file
 
       upload_path = upload_file.path
-      final_path = save_path(id)
+      final_path = save_path(guid)
       logger.debug "renaming staged droplet from '#{upload_path}' to '#{final_path}'"
 
       begin
@@ -225,26 +244,52 @@ module VCAP::CloudController
       end
 
       handle.upload_path = final_path
-      logger.debug "uploaded droplet for #{id} to #{final_path}"
+      logger.debug "uploaded droplet for #{guid} to #{final_path}"
       HTTP::OK
     end
 
-    def download_droplet(id)
+    # Handles a buildpack cache upload from a stager
+    def upload_droplet_buildpack_cache(guid)
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
+
+      handle = self.class.lookup_handle(guid)
+      raise StagingError.new("staging not in progress for #{guid}") unless handle
+      raise StagingError.new("malformed droplet upload request for #{guid}") unless upload_file
+
+      upload_path = upload_file.path
+      final_path = save_path(guid, "buildpack_cache")
+      logger.debug "renaming staged droplet buildpack cache from '#{upload_path}' to '#{final_path}'"
+
+      begin
+        File.rename(upload_path, final_path)
+      rescue => e
+        raise StagingError.new("failed renaming staged droplet buildpack cache: #{e}")
+      end
+
+      handle.buildpack_cache_upload_path = final_path
+
+      logger.debug "uploaded droplet buildpack cache for #{guid} to #{final_path}"
+
+      HTTP::OK
+    end
+
+    def download_droplet(guid)
       raise InvalidRequest unless LegacyStaging.local?
 
-      app = Models::App.find(:guid => id)
-      raise AppNotFound.new(id) if app.nil?
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
 
-      droplet_path = LegacyStaging.droplet_local_path(id)
-      logger.debug "id: #{id} droplet_path #{droplet_path}"
+      droplet_path = LegacyStaging.droplet_local_path(guid)
+      logger.debug "guid: #{guid} droplet_path #{droplet_path}"
 
       unless droplet_path
-        logger.error "could not find droplet for #{id}"
-        raise StagingError.new("droplet not found for #{id}")
+        logger.error "could not find droplet for #{guid}"
+        raise StagingError.new("droplet not found for #{guid}")
       end
 
       if config[:nginx][:use_nginx]
-        url = LegacyStaging.droplet_uri(id)
+        url = LegacyStaging.droplet_uri(guid)
         logger.debug "nginx redirect #{url}"
         return [200, { "X-Accel-Redirect" => url }, ""]
       else
@@ -273,8 +318,8 @@ module VCAP::CloudController
       end
     end
 
-    def save_path(id)
-      File.join(tmpdir, "staged_upload_#{id}.tgz")
+    def save_path(guid, tag = "staged")
+      File.join(tmpdir, "#{tag}_upload_#{guid}.tgz")
     end
 
     def tmpdir
@@ -292,8 +337,10 @@ module VCAP::CloudController
       end
     end
 
-    get  "/staging/apps/:id", :download_app
-    post "/staging/droplets/:id", :upload_droplet
-    get  "/staged_droplets/:id", :download_droplet
+    get  "/staging/apps/:guid", :download_app
+    post "/staging/droplets/:guid", :upload_droplet
+    get  "/staged_droplets/:guid", :download_droplet
+
+    post "/staging/droplets/:guid/buildpack_cache", :upload_droplet_buildpack_cache
   end
 end
