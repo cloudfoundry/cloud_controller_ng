@@ -77,16 +77,25 @@ module YetiSetup
           "\"name\":\"#{name}\", " +
           "\"user_guids\": [\"#{user_guid}\"], " +
           "\"manager_guids\": [\"#{user_guid}\"], " +
-          "\"billing_enabled\": true, " +
           "\"quota_definition_guid\": \"#{quota_guid}\" " +
           "}'" +
           " #{cc_url}/v2/organizations"
     output = run cmd
     guid = output[/"guid": "([^"]*)/, 1]
-    error "could not extract space guid" unless guid
+    error "could not extract org guid" unless guid
+
+    enable_billing(cc_url, token, guid)
     guid
   end
 
+  def self.enable_billing(cc_url, token, guid)
+    puts "# setting billing_enabled: true"
+    cmd = "curl -v -X PUT -H 'Content-Type: application/json' " +
+      " -H 'Authorization: #{token}' " +
+      " -d '{\"billing_enabled\":true}'" +
+      " #{cc_url}/v2/organizations/#{guid}"
+    run cmd
+  end
 
   def self.create_cc_space(cc_url, token, name, org_guid, user_guid)
     puts "# creating cc space"
@@ -101,7 +110,7 @@ module YetiSetup
           " #{cc_url}/v2/spaces"
     output = run cmd
     guid = output[/"guid": "([^"]*)/, 1]
-    error "could not extract org guid" unless guid
+    error "could not extract space guid" unless guid
     guid
   end
 
