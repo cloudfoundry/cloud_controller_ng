@@ -187,10 +187,6 @@ module VCAP::CloudController::Models
       VCAP::Services::Api::SynchronousHttpRequest
     end
 
-    def sds_client(upload_url, upload_token, upload_timeout)
-      VCAP::Services::Api::SDSClient.new(upload_url, upload_token, upload_timeout)
-    end
-
     def service_gateway_client(plan = service_plan)
       @client ||= begin
         # This should only happen during unit testing if we are saving without
@@ -211,7 +207,6 @@ module VCAP::CloudController::Models
     def service
       service_plan.service
     end
-
 
     def provision_on_gateway
       service_gateway_client
@@ -286,20 +281,6 @@ module VCAP::CloudController::Models
     def import_from_url(req)
       service_gateway_client
       client.import_from_url(:service_id => gateway_name, :msg => req)
-    end
-
-    def import_from_data(opts)
-      upload_url = opts.fetch(:upload_url)
-      upload_token = opts.fetch(:upload_token)
-      upload_timeout = opts.fetch(:upload_timeout)
-      file_path = opts.fetch(:data_file_path)
-
-      sds_client = sds_client(upload_url, upload_token, upload_timeout)
-      sds_client.import_from_data(
-        :service => service.label,
-        :service_id => gateway_name,
-        :msg => file_path,
-      )
     end
 
     def job_info(job_id)
