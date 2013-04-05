@@ -43,6 +43,11 @@
   http_code: 400
   message: "The query parameter is invalid: %s"
 
+10006:
+  name: AssociationNotEmpty
+  http_code: 400
+  message: "Please delete the %s associations for your %s."
+
 20001:
   name: UserInvalid
   http_code: 400
@@ -92,11 +97,6 @@
   name: SpaceNotFound
   http_code: 404
   message: "The app space could not be found: %s"
-
-40005:
-  name: SpaceNotEmpty
-  http_code: 404
-  message: "The app space is not empty, has an app, service or route bound: %s"
 
 50001:
   name: ServiceAuthTokenInvalid
