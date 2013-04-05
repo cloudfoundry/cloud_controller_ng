@@ -46,6 +46,10 @@ module VCAP::CloudController
       def streaming_log_url
         @response["task_streaming_log_url"]
       end
+
+      def detected_buildpack
+        @response["detected_buildpack"]
+      end
     end
 
     attr_reader :config
@@ -178,6 +182,7 @@ module VCAP::CloudController
       droplet_hash = Digest::SHA1.file(@upload_handle.upload_path).hexdigest
       LegacyStaging.store_droplet(@app.guid, @upload_handle.upload_path)
 
+      @app.detected_buildpack = stager_response.detected_buildpack
       @app.droplet_hash = droplet_hash
       @app.save
     ensure

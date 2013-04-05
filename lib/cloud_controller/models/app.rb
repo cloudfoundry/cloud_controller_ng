@@ -29,12 +29,12 @@ module VCAP::CloudController
       default_order_by  :name
 
       export_attributes :name, :production,
-                        :space_guid, :stack_guid, :buildpack,
+                        :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                         :environment_json, :memory, :instances, :disk_quota,
                         :state, :version, :command, :console, :debug
 
       import_attributes :name, :production,
-                        :space_guid, :stack_guid, :buildpack,
+                        :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                         :environment_json, :memory, :instances, :disk_quota,
                         :state, :command, :console, :debug,
                         :service_binding_guids, :route_guids
