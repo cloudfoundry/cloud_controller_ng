@@ -68,6 +68,12 @@ module VCAP::CloudController
 
       subject = "staging.#{stager_id}.start"
       @responses = MultiResponseNatsRequest.new(MessageBus.instance.nats.client, subject)
+      # The creation of upload handle only guarantees that this cloud controller
+      # is disallowed from trying to stage this app again. It does NOT guarantee that a different
+      # cloud controller will NOT start staging the app in parallel. Therefore, we need to
+      # cache the current droplet hash here, and later check it was NOT changed by a
+      # different cloud controller completing staging request for the same app before
+      # this cloud controller completes the staging.
       @current_droplet_hash = @app.droplet_hash
 
       @upload_handle = LegacyStaging.create_handle(@app.guid)
@@ -173,6 +179,8 @@ module VCAP::CloudController
       # which means that our staging process should not update the app
       @app.refresh
 
+      # Check if a different cloud controller has already completed
+      # the staging request for the same app.
       unless @app.droplet_hash == @current_droplet_hash
         raise Errors::StagingError, "failed to stage because app changed while staging"
       end
