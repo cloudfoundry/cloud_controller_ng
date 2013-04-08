@@ -20,6 +20,7 @@ Sham.define do
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }
   guid                { |index| "guid-#{index}" }
+  extra               { |index| "extra-#{index}"}
 end
 
 module VCAP::CloudController::Models

@@ -17,6 +17,7 @@ module VCAP::CloudController
       attribute :acls,           {"users" => [String], "wildcards" => [String]}, :default => nil
       attribute :timeout,        Integer, :default => nil
       attribute :active,         Message::Boolean, :default => false
+      attribute :extra,          String, :default => nil
       to_many   :service_plans
     end
 
