@@ -65,7 +65,7 @@ module VCAP::CloudController::Models
     end
 
     def mark_app_for_restaging
-      app.mark_for_restaging if app
+      app.mark_for_restaging(:save => true) if app
     end
 
     def self.user_visibility_filter(user)

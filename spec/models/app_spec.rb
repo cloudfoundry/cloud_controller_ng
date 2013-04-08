@@ -129,38 +129,35 @@ module VCAP::CloudController
 
     describe "#environment_json" do
       it "deserializes the serialized value" do
-        app = Models::App.make(
-          :environment_json => { "jesse" => "awesome" },
-        )
+        app = Models::App.make(:environment_json => {"jesse" => "awesome"})
         app.environment_json.should eq("jesse" => "awesome")
       end
 
-      shared_examples "env change doesn't mark an app for restage" do
-        let(:old_env_json) { }
-
+      def self.it_does_not_mark_for_re_staging
         it "does not mark an app for restage" do
           app = Models::App.make(
             :package_hash => "deadbeef",
             :package_state => "STAGED",
             :environment_json => old_env_json,
           )
-          app.needs_staging?.should be_false
 
-          app.environment_json = new_env_json
-          app.save
-          app.needs_staging?.should be_false
+          expect {
+            app.environment_json = new_env_json
+            app.save
+          }.to_not change { app.needs_staging? }
         end
       end
 
       context "if env changes" do
+        let(:old_env_json) { {} }
         let(:new_env_json) { { "key" => "value" } }
-        it_behaves_like "env change doesn't mark an app for restage"
+        it_does_not_mark_for_re_staging
       end
 
       context "if BUNDLE_WITHOUT in env changes" do
         let(:old_env_json) { { "BUNDLE_WITHOUT" => "test" } }
         let(:new_env_json) { { "BUNDLE_WITHOUT" => "development" } }
-        it_behaves_like "env change doesn't mark an app for restage"
+        it_does_not_mark_for_re_staging
       end
     end
 

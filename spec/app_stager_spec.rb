@@ -97,11 +97,11 @@ module VCAP::CloudController
 
         def self.it_completes_staging
           context "when no other staging has happened" do
-                  it "stages the app" do
-                    expect {
-                      with_em_and_thread { stage }
-                    }.to change {
-                      [app.staged?, app.needs_staging?]
+            it "stages the app" do
+              expect {
+                with_em_and_thread { stage }
+              }.to change {
+                [app.staged?, app.needs_staging?]
               }.from([false, true]).to([true, false])
             end
 

@@ -271,18 +271,18 @@ module VCAP::CloudController
         mark_for_restaging
       end
 
-      def mark_for_restaging(should_save=true)
+      def mark_for_restaging(opts={})
         self.package_state = "PENDING"
-        save if should_save
+        save if opts[:save]
       end
 
       def package_hash=(hash)
         super(hash)
         mark_for_restaging(false) if column_changed?(:package_hash)
+        mark_for_restaging if column_changed?(:package_hash)
       end
 
       def droplet_hash=(hash)
-        # TODO: rename package_state to just state?
         self.package_state = "STAGED"
         super(hash)
       end
