@@ -66,12 +66,20 @@ module VCAP::CloudController
           end
 
           context "when there are available stagers" do
-            it "requests staging (sends NATS request)" do
+            before do
               stager_pool
-                .should_receive(:find_stager)
-                .with(app.stack.name, 1024)
-                .and_return("staging-id")
+              .should_receive(:find_stager)
+              .with(app.stack.name, 1024)
+              .and_return("staging-id")
+            end
 
+            it "stops other staging tasks" do
+              MessageBus.instance.should_receive(:publish).with(
+                "staging.stop", JSON.dump({"app_id" => app.guid}))
+              with_em_and_thread { stage }
+            end
+
+            it "requests staging (sends NATS request)" do
               data_in_request = nil
               mock_nats.subscribe("staging.staging-id.start") do |data, _|
                 data_in_request = data
@@ -81,6 +89,11 @@ module VCAP::CloudController
 
               expected_data = staging_task.staging_request(options[:async])
               data_in_request.should == JSON.dump(expected_data)
+            end
+
+            it "saves staging task id" do
+              with_em_and_thread { stage }
+              app.staging_task_id.should eq("some_task_id")
             end
           end
 
@@ -141,8 +154,7 @@ module VCAP::CloudController
           context "when other staging has happened" do
             before do
               @before_staging_completion = -> {
-                app.droplet_hash = "droplet-hash"
-                app.package_state = "PENDING"
+                app.staging_task_id = "another-staging-task-id"
                 app.save
               }
             end
@@ -152,7 +164,7 @@ module VCAP::CloudController
                 with_em_and_thread { stage }
               }.to raise_error(
                 Errors::StagingError,
-                /failed to stage because app changed while staging/
+                /another staging request was initiated/
               )
             end
 
@@ -175,11 +187,6 @@ module VCAP::CloudController
               expect {
                 ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
               }.to_not change { app.detected_buildpack }.from(nil)
-            end
-
-            it "removes upload handle" do
-              LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
-              ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
             end
 
             it "does not call provided callback" do

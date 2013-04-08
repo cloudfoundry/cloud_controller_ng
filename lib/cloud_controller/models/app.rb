@@ -31,13 +31,14 @@ module VCAP::CloudController
       export_attributes :name, :production,
                         :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                         :environment_json, :memory, :instances, :disk_quota,
-                        :state, :version, :command, :console, :debug
+                        :state, :version, :command, :console, :debug,
+                        :staging_task_id
 
       import_attributes :name, :production,
                         :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                         :environment_json, :memory, :instances, :disk_quota,
                         :state, :command, :console, :debug,
-                        :service_binding_guids, :route_guids
+                        :staging_task_id, :service_binding_guids, :route_guids
 
       strip_attributes  :name
 

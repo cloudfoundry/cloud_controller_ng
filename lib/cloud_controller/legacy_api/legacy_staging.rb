@@ -61,12 +61,7 @@ module VCAP::CloudController
 
       def create_handle(id)
         handle = DropletUploadHandle.new(id)
-        mutex.synchronize do
-          if upload_handles[id]
-            raise Errors::StagingError.new("staging already in progress for #{id}")
-          end
-          upload_handles[handle.id] = handle
-        end
+        mutex.synchronize { upload_handles[handle.id] = handle }
         handle
       end
 

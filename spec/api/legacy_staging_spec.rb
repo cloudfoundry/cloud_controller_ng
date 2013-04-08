@@ -65,16 +65,6 @@ module VCAP::CloudController
           }.to change { LegacyStaging.lookup_handle(handle_id) }.from(nil)
         end
       end
-
-      context "when handle exists for given id" do
-        before { LegacyStaging.create_handle(handle_id) }
-
-        it "does not allow duplicate handle id's" do
-          expect {
-            LegacyStaging.create_handle(handle_id)
-          }.to raise_error(Errors::StagingError, /staging already in progress/)
-        end
-      end
     end
 
     describe "#destroy_handle" do
