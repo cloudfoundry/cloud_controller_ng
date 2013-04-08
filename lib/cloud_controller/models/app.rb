@@ -278,8 +278,12 @@ module VCAP::CloudController
 
       def package_hash=(hash)
         super(hash)
-        mark_for_restaging(false) if column_changed?(:package_hash)
         mark_for_restaging if column_changed?(:package_hash)
+      end
+
+      def stack=(stack)
+        mark_for_restaging unless new?
+        super(stack)
       end
 
       def droplet_hash=(hash)
