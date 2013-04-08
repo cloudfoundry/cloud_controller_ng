@@ -62,6 +62,10 @@ module VCAP::CloudController
       @stager_pool = stager_pool
     end
 
+    def task_id
+      @task_id ||= VCAP.secure_uuid
+    end
+
     def stage(options={}, &completion_callback)
       stager_id = @stager_pool.find_stager(@app.stack.name, 1024)
       raise Errors::StagingError, "no available stagers" unless stager_id
@@ -102,6 +106,7 @@ module VCAP::CloudController
 
     def staging_request(async)
       { :app_id => @app.guid,
+        :task_id => task_id,
         :properties => staging_task_properties(@app),
         :download_uri => LegacyStaging.app_uri(@app.guid),
         :upload_uri => LegacyStaging.droplet_upload_uri(@app.guid),

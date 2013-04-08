@@ -44,6 +44,7 @@ module VCAP::CloudController
       end
 
       context "when the app package is valid" do
+        let(:staging_task) { AppStagerTask.new(nil, nil, app, stager_pool) }
         let(:app) { Models::App.make(:package_hash => "abc") }
         before { app.staged?.should be_false }
 
@@ -53,7 +54,10 @@ module VCAP::CloudController
           end
         end
 
-        before { LegacyStaging.stub(:create_handle => upload_handle) }
+        before do
+          AppStagerTask.any_instance.stub(:task_id) { "some_task_id" }
+          LegacyStaging.stub(:create_handle => upload_handle)
+        end
 
         def self.it_requests_staging(options={})
           it "creates upload handle for stager to upload droplet" do
@@ -75,8 +79,7 @@ module VCAP::CloudController
 
               with_em_and_thread { stage }
 
-              task = AppStagerTask.new(nil, nil, app, stager_pool)
-              expected_data = task.staging_request(options[:async])
+              expected_data = staging_task.staging_request(options[:async])
               data_in_request.should == JSON.dump(expected_data)
             end
           end
@@ -151,14 +154,6 @@ module VCAP::CloudController
                 Errors::StagingError,
                 /failed to stage because app changed while staging/
               )
-            end
-
-            it "does not stage the app" do
-              expect {
-                ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-              }.to_not change {
-                [app.staged?, app.needs_staging?]
-              }.from([false, true])
             end
 
             it "does not store droplet" do
@@ -486,18 +481,19 @@ module VCAP::CloudController
     end
 
     describe ".staging_request" do
-      before(:all) { @app = Models::App.make }
+      let(:staging_task) { AppStagerTask.new(nil, nil, app, stager_pool) }
+      let(:app) { Models::App.make }
 
-      before(:all) do
+      before do
         3.times do
-          instance = Models::ServiceInstance.make(:space => @app.space)
-          binding = Models::ServiceBinding.make(:app => @app, :service_instance => instance)
-          @app.add_service_binding(binding)
+          instance = Models::ServiceInstance.make(:space => app.space)
+          binding = Models::ServiceBinding.make(:app => app, :service_instance => instance)
+          app.add_service_binding(binding)
         end
       end
 
       def request(async=false)
-        AppStagerTask.new(nil, nil, @app, stager_pool).staging_request(async)
+        staging_task.staging_request(async)
       end
 
       def store_app_package(app)
@@ -509,10 +505,11 @@ module VCAP::CloudController
         FileUtils.rm_rf(tmpdir)
       end
 
-      it "includes app guid and download/upload uris" do
-        store_app_package(@app)
+      it "includes app guid, task id and download/upload uris" do
+        store_app_package(app)
         request.tap do |r|
-          r[:app_id].should == @app.guid
+          r[:app_id].should == app.guid
+          r[:task_id].should eq(staging_task.task_id)
           r[:download_uri].should match /^http/
           r[:upload_uri].should match /^http/
         end
@@ -540,7 +537,7 @@ module VCAP::CloudController
 
       context "when app does not have buildpack" do
         it "returns nil for buildpack" do
-          @app.buildpack = nil
+          app.buildpack = nil
           r = request
           r[:properties][:buildpack].should be_nil
         end
@@ -548,7 +545,7 @@ module VCAP::CloudController
 
       context "when app has a buildpack" do
         it "returns url for buildpack" do
-          @app.buildpack = "git://example.com/foo.git"
+          app.buildpack = "git://example.com/foo.git"
           r = request
           r[:properties][:buildpack].should == "git://example.com/foo.git"
         end
