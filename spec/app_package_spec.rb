@@ -196,8 +196,13 @@ module VCAP::CloudController
         let(:resources) { [] }
 
         context "when zip file was provided (with files)" do
-          let(:zip_file) { create_zip_with_named_files(2, 2048) }
+          let(:zip_file) { create_zip_with_named_files(:file_count => 2, :file_size => 2048) }
           it_packages %w(ziptest_0 ziptest_1)
+        end
+
+        context "when the app has hidden files" do
+          let(:zip_file) { create_zip_with_named_files(:file_count => 2, :hidden_file_count => 2, :file_size => 2048) }
+          it_packages %w(ziptest_0 ziptest_1 .ziptest_0 .ziptest_1)
         end
 
         context "when zip file was not provided" do
@@ -211,8 +216,13 @@ module VCAP::CloudController
         let(:resources) { [valid_resource] }
 
         context "when zip file was provided (with files)" do
-          let(:zip_file) { create_zip_with_named_files(2, 2048) }
+          let(:zip_file) { create_zip_with_named_files(:file_count => 2, :file_size => 2048) }
           it_packages %w(ziptest_0 ziptest_1 file/path)
+        end
+
+        context "when the app has hidden files" do
+          let(:zip_file) { create_zip_with_named_files(:file_count => 2, :hidden_file_count => 2, :file_size => 2048) }
+          it_packages %w(ziptest_0 ziptest_1 .ziptest_0 .ziptest_1 file/path)
         end
 
         context "when zip file was not provided" do

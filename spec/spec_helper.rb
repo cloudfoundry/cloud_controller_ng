@@ -269,19 +269,22 @@ module VCAP::CloudController::SpecHelper
     end
   end
 
-  def create_zip_with_named_files(file_count, file_size=1024)
+  def create_zip_with_named_files(opts = {})
+    file_count = opts[:file_count] || 0
+    hidden_file_count = opts[:hidden_file_count] || 0
+    file_size = opts[:file_size] || 1024
+
     result_zip_file = Tempfile.new("tmpzip")
 
     TmpdirCleaner.mkdir do |tmpdir|
       file_names = file_count.times.map { |i| "ziptest_#{i}" }
-      file_names.each do |file_name|
-        File.open(File.join(tmpdir, file_name), "w") do |f|
-          f.write("A" * file_size)
-        end
-      end
+      file_names.each { |file_name| create_file(file_name, tmpdir, file_size) }
+
+      hidden_file_names = hidden_file_count.times.map { |i| ".ziptest_#{i}" }
+      hidden_file_names.each { |file_name| create_file(file_name, tmpdir, file_size) }
 
       zip_process = POSIX::Spawn::Child.new(
-        "zip", result_zip_file.path, *file_names, :chdir => tmpdir)
+        "zip", result_zip_file.path, *(file_names | hidden_file_names), :chdir => tmpdir)
 
       unless zip_process.status.exitstatus == 0
         raise "Failed zipping:\n#{zip_process.err}\n#{zip_process.out}"
@@ -289,6 +292,12 @@ module VCAP::CloudController::SpecHelper
     end
 
     result_zip_file
+  end
+
+  def create_file(file_name, dest_dir, file_size)
+    File.open(File.join(dest_dir, file_name), "w") do |f|
+      f.write("A" * file_size)
+    end
   end
 
   def unzip_zip(file_path)
@@ -302,7 +311,7 @@ module VCAP::CloudController::SpecHelper
 
   def list_files(dir_path)
     [].tap do |file_paths|
-      Dir["#{dir_path}/**/*"].each do |file_path|
+      Dir.glob("#{dir_path}/**/*", File::FNM_DOTMATCH).each do |file_path|
         next unless File.file?(file_path)
         file_paths << file_path.sub("#{dir_path}/", "")
       end
