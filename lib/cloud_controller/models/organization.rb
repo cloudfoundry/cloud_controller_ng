@@ -64,6 +64,14 @@ module VCAP::CloudController::Models
     def before_save
       super
       if column_changed?(:billing_enabled) && billing_enabled?
+         @is_billing_enabled = true
+      end
+    end
+
+    def after_save
+      super
+      # We cannot start billing events without the guid being assigned to the org.
+      if @is_billing_enabled
         OrganizationStartEvent.create_from_org(self)
         # retroactively emit start events for services
         spaces.map(&:service_instances).flatten.each do |si|
