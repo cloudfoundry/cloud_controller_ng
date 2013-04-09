@@ -7,13 +7,13 @@ module VCAP::CloudController::Models
 
     DOMAIN_REGEX = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}$/ix.freeze
 
-    many_to_one       :owning_organization,
-                      :class => "VCAP::CloudController::Models::Organization"
-
+    many_to_one       :owning_organization, :class => "VCAP::CloudController::Models::Organization"
     many_to_many      :organizations, :before_add => :validate_organization
-    add_association_dependencies :organizations => :nullify
-
+    many_to_many      :spaces, :before_add => :validate_space
     one_to_many       :routes
+
+    add_association_dependencies :organizations => :nullify, :spaces => :nullify,
+      :routes => :destroy
 
     default_order_by  :name
 
@@ -22,12 +22,7 @@ module VCAP::CloudController::Models
                       :space_guids
     strip_attributes  :name
 
-    many_to_many      :spaces, :before_add => :validate_space
-    add_association_dependencies :spaces => :nullify
-
-    subset(:shared_domains) do
-      { :owning_organization_id => nil }
-    end
+    subset(:shared_domains) { {:owning_organization_id => nil} }
 
     def after_create
       add_organization owning_organization if owning_organization
@@ -39,8 +34,7 @@ module VCAP::CloudController::Models
       validates_unique   :name
       validates_presence :wildcard
 
-      if (!new? && column_changed?(:wildcard) && !wildcard &&
-          routes_dataset.filter(~{:host => ""}).count > 0)
+      if !new? && column_changed?(:wildcard) && !wildcard && routes_dataset.filter(~{:host => ""}).count > 0
         errors.add(:wildcard, :wildcard_routes_in_use)
       end
 

@@ -26,12 +26,15 @@ module VCAP::CloudController
       },
       :create_attribute_reset => lambda { @space = nil },
       :many_to_one => {
-        :domain => lambda { |route|
-          d = Models::Domain.make(
-            :owning_organization => route.domain.organization,
-            :wildcard => true
-          )
-          route.space.add_domain(d)
+        :domain => {
+          :delete_ok => true,
+          :create_for => lambda { |route|
+            d = Models::Domain.make(
+              :owning_organization => route.domain.organization,
+              :wildcard => true
+            )
+            route.space.add_domain(d)
+          }
         }
       },
       :many_to_zero_or_more => {
@@ -196,13 +199,9 @@ module VCAP::CloudController
       let(:space_b) { Models::Space.make(:organization => org) }
       let(:domain_b) { Models::Domain.make(:owning_organization => org) }
 
-      before do
-        Models::Domain.default_serving_domain_name = Sham.domain
-      end
+      before { Models::Domain.default_serving_domain_name = Sham.domain }
 
-      after do
-        Models::Domain.default_serving_domain_name = nil
-      end
+      after { Models::Domain.default_serving_domain_name = nil }
 
       it "should not allow creation of a route on a domain not on the space" do
         space_a.add_domain(domain_a)

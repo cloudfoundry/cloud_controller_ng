@@ -14,6 +14,7 @@ module VCAP::CloudController::Models
                  :before_add => :validate_app,
                  :after_add => :mark_app_routes_changed,
                  :after_remove => :mark_app_routes_changed
+
     add_association_dependencies :apps => :nullify
 
     export_attributes :host, :domain_guid, :space_guid

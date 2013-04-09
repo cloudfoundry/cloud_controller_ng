@@ -5,6 +5,8 @@ module VCAP::CloudController::Models
     many_to_one       :service
     one_to_many       :service_instances
 
+    add_association_dependencies :service_instances => :destroy
+
     default_order_by  :name
 
     export_attributes :name, :free, :description, :service_guid, :extra, :unique_id

@@ -5,13 +5,14 @@ module VCAP::CloudController::Models
     class InvalidDomainRelation < InvalidRelation; end
 
     one_to_many       :spaces
-    one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::Models::ServiceInstance.
-                                                          filter(:space => spaces) }
+    one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::Models::ServiceInstance.filter(:space => spaces) }
     one_to_many       :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => spaces) }
+    one_to_many       :owned_domain, :class => "VCAP::CloudController::Models::Domain", :key => :owning_organization_id
     many_to_many      :domains, :before_add => :validate_domain
-    add_association_dependencies :domains => :nullify
-
     many_to_one       :quota_definition
+
+    add_association_dependencies :domains => :nullify,
+      :spaces => :destroy, :service_instances => :destroy, :apps => :destroy, :owned_domain => :destroy
 
     define_user_group :users
     define_user_group :managers, :reciprocal => :managed_organizations

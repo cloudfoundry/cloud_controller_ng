@@ -21,8 +21,14 @@ module VCAP::CloudController
       :unique_attributes    => [:space, :name],
       :stripped_string_attributes => :name,
       :many_to_one => {
-        :space              => lambda { |app| Models::Space.make  },
-        :stack              => lambda { |app| Models::Stack.make },
+        :space              => {
+          :delete_ok => true,
+          :create_for => lambda { |app| Models::Space.make  },
+        },
+        :stack              => {
+          :delete_ok => true,
+          :create_for => lambda { |app| Models::Stack.make },
+        }
       },
       :one_to_zero_or_more  => {
         :service_bindings   => lambda { |app|
@@ -530,7 +536,7 @@ module VCAP::CloudController
     end
 
     describe "destroy" do
-      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED") }
+      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
 
       context "with a started app" do
         it "should stop the app on the dea" do
@@ -558,6 +564,23 @@ module VCAP::CloudController
       it "should remove the package" do
         AppPackage.should_receive(:delete_package).with(app.guid)
         app.destroy
+      end
+
+      it "should nullify the routes" do
+        app.add_route(route)
+        expect {
+          app.destroy
+        }.to change { route.apps }.from([app]).to([])
+      end
+
+      it "should destroy all dependent service bindings" do
+        service_binding = Models::ServiceBinding.make(
+          :app => app,
+          :service_instance => Models::ServiceInstance.make(:space => app.space)
+        )
+        expect {
+          app.destroy
+        }.to change { Models::ServiceBinding.where(:id => service_binding.id).count }.from(1).to(0)
       end
     end
 

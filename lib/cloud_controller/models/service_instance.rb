@@ -64,6 +64,8 @@ module VCAP::CloudController::Models
     many_to_one :space
     one_to_many :service_bindings, :before_add => :validate_service_binding
 
+    add_association_dependencies :service_bindings => :destroy
+
     attr_reader :provisioned_on_gateway_for_plan, :client
 
     default_order_by  :id

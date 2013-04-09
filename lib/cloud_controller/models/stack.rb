@@ -5,6 +5,10 @@ module VCAP::CloudController::Models
     class MissingConfigFileError < StandardError; end
     class MissingDefaultStackError < StandardError; end
 
+    one_to_many :apps
+
+    add_association_dependencies :apps => :destroy
+
     plugin :serialization
 
     export_attributes :name, :description

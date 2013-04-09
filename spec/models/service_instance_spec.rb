@@ -18,12 +18,21 @@ module VCAP::CloudController
       :unique_attributes   => [:space, :name],
       :stripped_string_attributes => :name,
       :many_to_one         => {
-        :service_plan      => lambda { |service_instance| Models::ServicePlan.make },
-        :space             => lambda { |service_instance| Models::Space.make },
+        :service_plan      => {
+          :delete_ok => true,
+          :create_for => lambda { |service_instance| Models::ServicePlan.make },
+        },
+        :space             => {
+          :delete_ok => true,
+          :create_for => lambda { |service_instance| Models::Space.make },
+        }
       },
       :one_to_zero_or_more => {
-        :service_bindings  => lambda { |service_instance|
+        :service_bindings  => {
+          :delete_ok => true,
+          :create_for => lambda { |service_instance|
           make_service_binding_for_service_instance(service_instance)
+        }
         }
       }
     }
@@ -276,6 +285,18 @@ module VCAP::CloudController
                                          :service_plan => paid_plan)
           end.to_not raise_error
         end
+      end
+    end
+
+    describe "#destroy" do
+      subject { service_instance.destroy }
+
+      it "destroys the service bindings" do
+        service_binding = Models::ServiceBinding.make(
+          :app => Models::App.make(:space => service_instance.space),
+          :service_instance => service_instance
+        )
+        expect { subject }.to change { Models::ServiceBinding.where(:id => service_binding.id).count }.by(-1)
       end
     end
   end

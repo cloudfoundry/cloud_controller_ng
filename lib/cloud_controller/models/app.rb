@@ -15,16 +15,14 @@ module VCAP::CloudController
 
       class InvalidBindingRelation < InvalidRelation; end
 
+      one_to_many       :service_bindings, :after_remove => :after_remove_binding
       many_to_one       :space
       many_to_one       :stack
-      many_to_many      :routes,
-                        :before_add => :validate_route,
-                        :after_add => :mark_routes_changed,
-                        :after_remove => :mark_routes_changed
-      one_to_many       :service_bindings, :after_remove => :after_remove_binding
+      many_to_many      :routes, :before_add => :validate_route, :after_add => :mark_routes_changed, :after_remove => :mark_routes_changed
       many_to_many      :service_instances, :join_table => :service_bindings
 
-      add_association_dependencies :routes => :nullify, :service_bindings => :destroy
+      add_association_dependencies :routes => :nullify, :service_instances => :nullify,
+        :service_bindings => :destroy
 
       default_order_by  :name
 
@@ -44,8 +42,8 @@ module VCAP::CloudController
 
       serialize_attributes :json, :metadata
 
-      AppStates = %w[STOPPED STARTED].map(&:freeze).freeze
-      PackageStates = %w[PENDING STAGED FAILED].map(&:freeze).freeze
+      APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
+      PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
 
       # marked as true on changing the associated routes, and reset by
       # +DeaClient.start+
@@ -63,8 +61,8 @@ module VCAP::CloudController
 
         validates_git_url :buildpack
 
-        validates_includes PackageStates, :package_state, :allow_missing => true
-        validates_includes AppStates, :state, :allow_missing => true
+        validates_includes PACKAGE_STATES, :package_state, :allow_missing => true
+        validates_includes APP_STATES, :state, :allow_missing => true
 
         validate_environment
         validate_metadata

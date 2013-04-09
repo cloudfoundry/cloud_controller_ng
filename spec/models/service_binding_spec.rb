@@ -24,8 +24,11 @@ module VCAP::CloudController
             Models::App.make(:space => service_binding.space)
           }
         },
-        :service_instance => lambda { |service_binding|
-          Models::ServiceInstance.make(:space => service_binding.space)
+        :service_instance => {
+          :delete_ok => true,
+          :create_for => lambda { |service_binding|
+            Models::ServiceInstance.make(:space => service_binding.space)
+          }
         }
       }
     }

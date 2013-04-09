@@ -8,6 +8,12 @@ module VCAP::CloudController::Models
       :required_attributes        => [:name, :description],
       :unique_attributes          => :name,
       :stripped_string_attributes => :name,
+      :one_to_zero_or_more => {
+        :apps              => {
+          :delete_ok => true,
+          :create_for => lambda { |stack| App.make(:stack => stack) }
+        },
+      },
     }
 
     describe ".configure" do
@@ -107,6 +113,15 @@ module VCAP::CloudController::Models
             }.to raise_error(described_class::MissingDefaultStackError, /default-stack-name/)
           end
         end
+      end
+    end
+
+    describe "#destroy" do
+      let(:stack) { Stack.make }
+
+      it "destroys the apps" do
+        app = App.make(:stack => stack)
+        expect { stack.destroy }.to change { App.where(:id => app.id).count }.by(-1)
       end
     end
   end

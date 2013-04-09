@@ -127,33 +127,12 @@ module VCAP::CloudController
             service = Models::Service[:label => "foobar", :provider => "core"]
             service.service_plans.map(&:name).should == ["free"]
           end
-
-          def create_service_instance_using_plan(plan_name)
-            mock_client.stub(:bind).and_return(
-              VCAP::Services::Api::GatewayHandleResponse.new(
-                :service_id => "binding",
-                :configuration => {},
-                :credentials => {}
-              )
-            )
-            Models::ServiceInstance.make(:service_plan => Models::ServicePlan[:name => plan_name])
-          end
-
-          it "does not remove plans that are still in use" do
-            post path, both_plans.encode, auth_header
-
-            create_service_instance_using_plan("nonfree")
-            post path, just_free_plan.encode, auth_header
-
-            service = Models::Service[:label => "foobar", :provider => "core"]
-            service.service_plans.map(&:name).sort.should == ["free", "nonfree"]
-          end
         end
 
         context "using the deprecated 'plans' key" do
           it_behaves_like "offering containing service plans" do
-            let(:just_free_plan) { build_offering(plans: ["free"]) }
-            let(:both_plans)     { build_offering(plans: ["free", "nonfree"]) }
+            let(:just_free_plan) { build_offering(plans: %w[free]) }
+            let(:both_plans)     { build_offering(plans: %w[free nonfree]) }
           end
         end
 
@@ -224,7 +203,7 @@ module VCAP::CloudController
             let(:just_free_plan) {
               build_offering(
                 plan_details: [{"name" => "free", "free" => true}],
-                plans: ["free"],
+                plans: %w[free],
               )
             }
 
@@ -234,7 +213,7 @@ module VCAP::CloudController
                   {"name" => "free",    "free" => true},
                   {"name" => "nonfree", "free" => false},
                 ],
-                plans: ["free", "nonfree"],
+                plans: %w[free nonfree],
               )
             }
           end
@@ -555,5 +534,4 @@ module VCAP::CloudController
 
     end
   end
-
 end

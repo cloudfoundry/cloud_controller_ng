@@ -8,6 +8,8 @@ module VCAP::CloudController::ApiSpecHelper
 
         subject { delete "#{opts[:path]}/#{obj.guid}", {}, admin_headers }
 
+        before(:all) { reset_database }
+
         context "when there are no child associations" do
           before do
             if obj.is_a? Models::Service
@@ -34,10 +36,8 @@ module VCAP::CloudController::ApiSpecHelper
             end
           end
 
-          before do
-            opts[:one_to_many_collection_ids_without_url].each { |_, child| child.call(obj) }
-            opts[:one_to_many_collection_ids].each { |_, child| child.call(obj) }
-          end
+          let!(:associations_without_url) { opts[:one_to_many_collection_ids_without_url].map { |key, child| [key, child.call(obj)] } }
+          let!(:associations_with_url) { opts[:one_to_many_collection_ids].map { |key, child| [key, child.call(obj)] } }
 
           around { |example| example.call unless one_to_one_or_many.empty? }
 
@@ -52,6 +52,27 @@ module VCAP::CloudController::ApiSpecHelper
                 "code" => 10006,
                 "description" => "Please delete the #{one_to_one_or_many.join(", ")} associations for your #{obj.class.table_name}.",
             }
+          end
+
+          context "and the recursive param is passed in" do
+            subject { delete "#{opts[:path]}/#{obj.guid}?recursive=true", {}, admin_headers }
+
+            it "should return 204" do
+              subject
+              last_response.status.should == 204
+            end
+
+            it "should return an empty response body" do
+              subject
+              last_response.body.should be_empty
+            end
+
+            it "should delete all the child associations" do
+              subject
+              (associations_without_url | associations_with_url).map do |name, association|
+                association.class[:id => association.id].should be_nil unless obj.class.association_reflection(name)[:type] == :many_to_many || name == :default_users
+              end
+            end
           end
         end
       end

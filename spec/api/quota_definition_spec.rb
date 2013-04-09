@@ -13,6 +13,11 @@ module VCAP::CloudController
       :required_attributes  => [:name, :non_basic_services_allowed,
                                 :total_services, :memory_limit],
       :unique_attributes    => :name,
+      :one_to_many_collection_ids_without_url => {
+        :organizations => lambda { |quota_definition|
+          Models::Organization.make(:quota_definition => quota_definition)
+        }
+      }
     }
   end
 end

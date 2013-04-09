@@ -13,12 +13,24 @@ module VCAP::CloudController
       :unique_attributes   => [:organization, :name],
       :stripped_string_attributes => :name,
       :many_to_one => {
-        :organization      => lambda { |space| Models::Organization.make }
+        :organization      => {
+          :delete_ok => true,
+          :create_for => lambda { |space| Models::Organization.make }
+        }
       },
       :one_to_zero_or_more => {
-        :apps              => lambda { |space| Models::App.make },
-        :service_instances => lambda { |space| Models::ServiceInstance.make },
-        :routes            => lambda { |space| Models::Route.make(:space => space) },
+        :apps              => {
+          :delete_ok => true,
+          :create_for => lambda { |space| Models::App.make }
+        },
+        :service_instances => {
+          :delete_ok => true,
+          :create_for => lambda { |space| Models::ServiceInstance.make }
+        },
+        :routes            => {
+          :delete_ok => true,
+          :create_for => lambda { |space| Models::Route.make(:space => space) }
+        },
       },
       :many_to_zero_or_more => {
         :developers        => lambda { |space| make_user_for_space(space) },
@@ -84,6 +96,41 @@ module VCAP::CloudController
         space.save
         space.refresh
         space.name.should be_kind_of(String)
+      end
+    end
+
+    describe "#destroy" do
+      let(:space) { Models::Space.make }
+
+      subject { space.destroy }
+
+      it "destroys all apps" do
+        app = Models::App.make(:space => space)
+        expect { subject }.to change { Models::App.where(:id => app.id).count }.by(-1)
+      end
+
+      it "destroys all service instances" do
+        service_instance = Models::ServiceInstance.make(:space => space)
+        expect { subject }.to change { Models::ServiceInstance.where(:id => service_instance.id).count }.by(-1)
+      end
+
+      it "destroys all routes" do
+        route = Models::Route.make(:space => space)
+        expect { subject }.to change { Models::Route.where(:id => route.id).count }.by(-1)
+      end
+
+      it "nullifies any domains" do
+        domain = Models::Domain.make(:owning_organization => space.organization)
+        space.add_domain(domain)
+        space.save
+        expect { subject }.to change { domain.reload.spaces.count }.by(-1)
+      end
+
+      it "nullifies any default_users" do
+        user = Models::User.make
+        space.add_default_user(user)
+        space.save
+        expect { subject }.to change { user.reload.default_space }.from(space).to(nil)
       end
     end
   end

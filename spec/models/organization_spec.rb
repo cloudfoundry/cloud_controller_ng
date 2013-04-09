@@ -4,9 +4,7 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Models::Organization do
-    before(:all) do
-      reset_database
-    end
+    before(:all) { reset_database }
 
     it_behaves_like "a CloudController model", {
       :required_attributes          => :name,
@@ -179,6 +177,40 @@ module VCAP::CloudController
                          :instances => 1)
 
         org.memory_remaining.should == 50
+      end
+    end
+
+    describe "#destroy" do
+      let(:org) { Models::Organization.make }
+      let(:space) { Models::Space.make(:organization => org) }
+
+      subject { org.reload.destroy }
+
+      it "destroys all apps" do
+        app = Models::App.make(:space => space)
+        expect { subject }.to change { Models::App[:id => app.id] }.from(app).to(nil)
+      end
+
+      it "destroys all spaces" do
+        expect { subject }.to change { Models::Space[:id => space.id] }.from(space).to(nil)
+      end
+
+      it "destroys all service instances" do
+        service_instance = Models::ServiceInstance.make(:space => space)
+        expect { subject }.to change { Models::ServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
+      end
+
+      it "destroys the owned domain" do
+        domain = Models::Domain.make(:owning_organization => org)
+        expect { subject }.to change { Models::Domain[:id => domain.id] }.from(domain).to(nil)
+      end
+
+      it "nullify domains" do
+        SecurityContext.set(Models::User.make(:admin => true))
+        domain = Models::Domain.make(:owning_organization => nil)
+        domain.add_organization(org)
+        domain.save
+        expect { subject }.to change { domain.reload.organizations.count }.by(-1)
       end
     end
   end

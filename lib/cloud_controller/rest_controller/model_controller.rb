@@ -59,7 +59,7 @@ module VCAP::CloudController::RestController
     def delete(id)
       logger.debug "delete: #{id}"
       obj = find_id_and_validate_access(:delete, id)
-      raise_if_has_associations!(obj) if v2_api?
+      raise_if_has_associations!(obj) if v2_api? && !params["recursive"]
       obj.destroy
       [ HTTP::NO_CONTENT, nil ]
     end
@@ -218,7 +218,7 @@ module VCAP::CloudController::RestController
       end
 
       if associations.any?
-        raise VCAP::Errors::NonEmptyAssociations.new(associations.join(", "), obj.class.table_name)
+        raise VCAP::Errors::AssociationNotEmpty.new(associations.join(", "), obj.class.table_name)
       end
     end
 

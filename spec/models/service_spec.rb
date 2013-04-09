@@ -9,12 +9,15 @@ module VCAP::CloudController
       :unique_attributes    => [:label, :provider],
       :stripped_string_attributes => [:label, :provider],
       :one_to_zero_or_more   => {
-        :service_plans      => lambda { |_| Models::ServicePlan.make }
+        :service_plans      => {
+          :delete_ok => true,
+          :create_for => lambda { |_| Models::ServicePlan.make }
+        }
       }
     }
 
-    describe 'when destroying' do
-      let!(:service) { VCAP::CloudController::Models::Service.make }
+    describe "#destroy" do
+      let!(:service) { Models::Service.make }
       subject { service.destroy }
 
       it "doesn't remove the associated ServiceAuthToken" do
@@ -22,10 +25,7 @@ module VCAP::CloudController
         expect {
           subject
         }.to_not change {
-          VCAP::CloudController::Models::ServiceAuthToken.count(
-            :label => service.label,
-            :provider => service.provider,
-          )
+          Models::ServiceAuthToken.count(:label => service.label, :provider => service.provider)
         }
       end
     end

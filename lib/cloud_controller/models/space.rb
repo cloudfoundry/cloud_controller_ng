@@ -7,8 +7,6 @@ module VCAP::CloudController::Models
     class InvalidManagerRelation   < InvalidRelation; end
     class InvalidDomainRelation    < InvalidRelation; end
 
-    many_to_one       :organization
-
     define_user_group :developers, :reciprocal => :spaces,
                       :before_add => :validate_developer
 
@@ -18,18 +16,15 @@ module VCAP::CloudController::Models
     define_user_group :auditors, :reciprocal => :audited_spaces,
                       :before_add => :validate_auditor
 
+    many_to_one       :organization
     one_to_many       :apps
     one_to_many       :service_instances
     one_to_many       :routes
-
+    one_to_many       :default_users, :class => "VCAP::CloudController::Models::User", :key => :default_space_id
     many_to_many      :domains, :before_add => :validate_domain
-    add_association_dependencies :domains => :nullify
 
-    one_to_many       :default_users,
-                      :class => "VCAP::CloudController::Models::User",
-                      :key => :default_space_id
-    add_association_dependencies :default_users => :nullify
-
+    add_association_dependencies :domains => :nullify, :default_users => :nullify,
+      :apps => :destroy, :service_instances => :destroy, :routes => :destroy
 
     default_order_by  :name
 

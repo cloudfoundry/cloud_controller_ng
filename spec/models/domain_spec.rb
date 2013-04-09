@@ -12,7 +12,15 @@ module VCAP::CloudController
       :unique_attributes            => :name,
       :stripped_string_attributes   => :name,
       :many_to_zero_or_one => {
-        :owning_organization => lambda { |domain| Models::Organization.make }
+        :owning_organization => {
+          :delete_ok => true,
+          :create_for => lambda { |domain|
+            org = Models::Organization.make
+            domain.owning_organization = org
+            domain.save
+            org
+          }
+        }
       },
       :many_to_many => {
         :organizations => lambda {
@@ -25,17 +33,14 @@ module VCAP::CloudController
         }
       },
       :one_to_zero_or_more => {
-        :routes => lambda { |domain|
-          domain.update(:wildcard => true)
-          space = Models::Space.make(
-            :organization => domain.owning_organization,
-          )
-          space.add_domain(domain)
-          Models::Route.make(
-            :host => Sham.host,
-            :domain => domain,
-            :space => space,
-          )
+        :routes => {
+          :delete_ok => true,
+          :create_for => lambda { |domain|
+            domain.update(:wildcard => true)
+            space = Models::Space.make(:organization => domain.owning_organization)
+            space.add_domain(domain)
+            Models::Route.make(:domain => domain, :space => space)
+          }
         }
       }
     }
@@ -375,6 +380,30 @@ module VCAP::CloudController
           Models::Domain.make
           Models::Domain.shared_domains.all.should == [shared]
         end
+      end
+    end
+
+    describe "#destroy" do
+      subject { domain.destroy }
+      let(:space) do
+        Models::Space.make(:organization => domain.owning_organization).tap do |space|
+          space.add_domain(domain)
+          space.save
+        end
+      end
+
+      it "should destroy the routes" do
+        route = Models::Route.make(:domain => domain, :space => space)
+        expect { subject }.to change { Models::Route.where(:id => route.id).count }.by(-1)
+      end
+
+      it "nullifies the organization" do
+        organization = domain.owning_organization
+        expect { subject }.to change { organization.reload.domains.count }.by(-1)
+      end
+
+      it "nullifies the space" do
+        expect { subject }.to change { space.reload.domains.count }.by(-1)
       end
     end
   end

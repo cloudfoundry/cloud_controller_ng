@@ -3,6 +3,10 @@
 module VCAP::CloudController::Models
   class QuotaDefinition < Sequel::Model
 
+    one_to_many :organizations
+
+    add_association_dependencies :organizations => :destroy
+
     export_attributes :name, :non_basic_services_allowed, :total_services,
                       :memory_limit
     import_attributes :name, :non_basic_services_allowed, :total_services,
