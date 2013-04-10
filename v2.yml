@@ -293,6 +293,11 @@
   http_code: 400
   message: "Staging error: %s"
 
+170002:
+  name: NotStaged
+  http_code: 400
+  message: "App has not been staged successfully"
+
 180001:
   name: SnapshotNotFound
   http_code: 404
