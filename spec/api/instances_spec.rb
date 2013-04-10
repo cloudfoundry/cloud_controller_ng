@@ -12,13 +12,15 @@ module VCAP::CloudController
       end
 
       context "as a developer" do
+        subject { get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer)) }
+
         it "returns 400 when there is an error finding the instances" do
           instance_id = 5
 
           @app.state = "STOPPED"
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer))
+          subject
 
           last_response.status.should == 400
           Yajl::Parser.parse(last_response.body)["code"].should == 220001
@@ -28,17 +30,17 @@ module VCAP::CloudController
           @app.package_state = "FAILED"
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer))
+          subject
 
           last_response.status.should == 400
-          Yajl::Parser.parse(last_response.body)["code"].should == 170002
+          Yajl::Parser.parse(last_response.body)["code"].should == 170001
         end
 
         it "returns '170002 NotStaged' when the app is pending to be staged" do
           @app.package_state = "PENDING"
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer))
+          subject
 
           last_response.status.should == 400
           Yajl::Parser.parse(last_response.body)["code"].should == 170002
@@ -100,12 +102,10 @@ module VCAP::CloudController
           DeaClient.should_receive(:find_all_instances).with(@app).
             and_return(instances)
 
-          get("/v2/apps/#{@app.guid}/instances",
-              {},
-              headers_for(@developer))
+          subject
 
-              last_response.status.should == 200
-              Yajl::Parser.parse(last_response.body).should == expected
+          last_response.status.should == 200
+          Yajl::Parser.parse(last_response.body).should == expected
         end
       end
 

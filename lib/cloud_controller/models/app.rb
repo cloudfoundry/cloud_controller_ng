@@ -256,6 +256,14 @@ module VCAP::CloudController
         self.package_state == "STAGED"
       end
 
+      def failed?
+        self.package_state == "FAILED"
+      end
+
+      def pending?
+        self.package_state == "PENDING"
+      end
+
       def started?
         self.state == "STARTED"
       end

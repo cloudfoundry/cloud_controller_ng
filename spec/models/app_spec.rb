@@ -366,6 +366,34 @@ module VCAP::CloudController
       end
     end
 
+    describe "pending?" do
+      let(:app) { Models::App.make }
+
+      it "should return true if package_state is PENDING" do
+        app.package_state = "PENDING"
+        app.pending?.should be_true
+      end
+
+      it "should return false if package_state is not PENDING" do
+        app.package_state = "STARTED"
+        app.pending?.should be_false
+      end
+    end
+
+    describe "failed?" do
+      let(:app) { Models::App.make }
+
+      it "should return true if package_state is FAILED" do
+        app.package_state = "FAILED"
+        app.failed?.should be_true
+      end
+
+      it "should return false if package_state is not FAILED" do
+        app.package_state = "STARTED"
+        app.failed?.should be_false
+      end
+    end
+
     describe "needs_staging?" do
       let(:app) { Models::App.make }
 
