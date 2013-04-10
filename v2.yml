@@ -294,9 +294,9 @@
   message: "Staging error: %s"
 
 170002:
-  name: NotStaged
+  name: StagingStillPending
   http_code: 400
-  message: "App has not been staged successfully"
+  message: "App has failed staging"
 
 180001:
   name: SnapshotNotFound
