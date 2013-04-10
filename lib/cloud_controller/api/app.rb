@@ -53,11 +53,11 @@ module VCAP::CloudController
       end
     end
 
+    private
+
     def before_modify(app)
       app.stage_async = %w(1 true).include?(params["stage_async"])
     end
-
-    private
 
     def after_modify(app)
       stager_response = app.last_stager_response

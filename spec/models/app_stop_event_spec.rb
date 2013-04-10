@@ -45,12 +45,17 @@ module VCAP::CloudController
           app.space.organization.save(:validate => false)
         end
 
+        it "should create an app stop event using the run id from the most recently created start event" do
+          Timecop.freeze do
+            newest_by_time = Models::AppStartEvent.create_from_app(app)
 
-        it "should create an app stop event using the run id from the latest start event" do
-          Timecop.freeze(Time.now - 3600) { Models::AppStartEvent.create_from_app(app) }
-          start_event_latest = Models::AppStartEvent.create_from_app(app)
-          stop_event = Models::AppStopEvent.create_from_app(app)
-          stop_event.app_run_id.should == start_event_latest.app_run_id
+            newest_by_sequence = Models::AppStartEvent.create_from_app(app)
+            newest_by_sequence.timestamp = Time.now - 3600
+            newest_by_sequence.save
+
+            stop_event = Models::AppStopEvent.create_from_app(app)
+            stop_event.app_run_id.should == newest_by_sequence.app_run_id
+          end
         end
 
         it "should raise an exception if a corresponding AppStartEvent is not found" do

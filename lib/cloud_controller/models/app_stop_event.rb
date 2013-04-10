@@ -31,7 +31,7 @@ module VCAP::CloudController::Models
 
     def self.create_from_app(app)
       return unless app.space.organization.billing_enabled?
-      app_start_event =  AppStartEvent.filter(:app_guid => app.guid).order(Sequel.desc(:timestamp)).first
+      app_start_event = AppStartEvent.filter(:app_guid => app.guid).order(Sequel.desc(:id)).first
       raise MissingAppStartEvent.new(app.guid) if app_start_event.nil?
 
       AppStopEvent.create(
