@@ -40,19 +40,22 @@ module VCAP::CloudController::RestController
     #
     # @param [String] id The GUID of the object to update.
     def update(id)
+      logger.debug "update: #{id} #{request_attrs}"
+
       obj = find_id_and_validate_access(:update, id)
       json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
-      logger.debug "update: #{id} #{request_attrs}"
 
       before_modify(obj)
 
       model.db.transaction do
+        obj.lock!
         obj.update_from_hash(request_attrs)
       end
 
       after_modify(obj)
+
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end
 

@@ -33,8 +33,6 @@ module VCAP::CloudController::RestController
     #
     # @param [IO] body The request body.
     #
-    # @param [IO] body The request body.
-    #
     # @param [Sinatra::Base] sinatra The sinatra object associated with the
     # request.
     #
