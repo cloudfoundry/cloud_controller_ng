@@ -639,11 +639,40 @@ module VCAP::CloudController
         end
 
         context "deleting a started app" do
-          it "generates a start event" do
+          let(:app) do
             app = Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            app_org = app.space.organization
+            app_org.billing_enabled = true
+            app_org.save(:validate => false) # because we need to force enable billing
+            app
+          end
+
+          before do
+            Models::AppStartEvent.create_from_app(app)
             VCAP::CloudController::DeaClient.stub(:stop)
+          end
+
+          it "generates a stop event" do
             Models::AppStopEvent.should_receive(:create_from_app).with(app)
             app.destroy
+          end
+
+          context "when the stop event creation fails" do
+            before do
+              Models::AppStopEvent.stub(:create_from_app).with(app).and_raise("boom")
+            end
+
+            it "rolls back the deletion" do
+              expect { app.destroy rescue nil }.not_to change(app, :exists?).from(true)
+            end
+          end
+
+          context "when somehow there is already a stop event for the most recent start event" do
+            it "succeeds and does not generate a duplicate stop event" do
+              Models::AppStopEvent.create_from_app(app)
+              Models::AppStopEvent.should_not_receive(:create_from_app).with(app)
+              app.destroy
+            end
           end
         end
 

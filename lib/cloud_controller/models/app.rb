@@ -115,8 +115,18 @@ module VCAP::CloudController
       def generate_stop_event?
         # If app is not in started state and/or is new, then the changes
         # to the footprint shouldn't trigger a billing event.
-        !new? && ((column_changed?(:state) && stopped?) ||
-                  (footprint_changed? && started?))
+        !new? &&
+          (being_stopped? || (footprint_changed? && started?)) &&
+          !has_stop_event_for_latest_run?
+      end
+
+      def being_stopped?
+        column_changed?(:state) && stopped?
+      end
+
+      def has_stop_event_for_latest_run?
+        latest_run_id = AppStartEvent.filter(:app_guid => guid).order(Sequel.desc(:id)).select_map(:app_run_id).first
+        !!AppStopEvent.find(:app_run_id => latest_run_id)
       end
 
       def footprint_changed?
@@ -124,11 +134,14 @@ module VCAP::CloudController
          column_changed?(:instances))
       end
 
+      def after_destroy
+        AppStopEvent.create_from_app(self) unless stopped? || has_stop_event_for_latest_run?
+      end
+
       def after_destroy_commit
         VCAP::CloudController::DeaClient.stop(self) if started?
         VCAP::CloudController::AppStager.delete_droplet(self)
         VCAP::CloudController::AppPackage.delete_package(self.guid)
-        AppStopEvent.create_from_app(self) unless stopped?
       end
 
       def command=(cmd)
