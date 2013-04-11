@@ -16,8 +16,8 @@ module VCAP::CloudController
 
       if app.failed?
         raise VCAP::Errors::StagingError.new("cannot get instances since staging failed")
-      elsif app.pending?
-        raise VCAP::Errors::NotStaged
+      #elsif app.pending?
+      #  raise VCAP::Errors::NotStaged
       end
 
       instances = DeaClient.find_all_instances(app)
