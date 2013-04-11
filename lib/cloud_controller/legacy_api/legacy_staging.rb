@@ -52,7 +52,7 @@ module VCAP::CloudController
       end
 
       def buildpack_cache_upload_uri(guid)
-        staging_uri("/staging/droplets/#{guid}/buildpack_cache")
+        staging_uri("/staging/buildpack_cache/#{guid}")
       end
 
       def droplet_download_uri(guid)
@@ -72,8 +72,9 @@ module VCAP::CloudController
       def destroy_handle(handle)
         return unless handle
         mutex.synchronize do
-          if handle.upload_path && File.exists?(handle.upload_path)
-            File.delete(handle.upload_path)
+          files_to_delete = [handle.upload_path, handle.buildpack_cache_upload_path]
+          files_to_delete.each do |file|
+            File.delete(file) if file && File.exists?(file)
           end
           upload_handles.delete(handle.guid)
         end
@@ -226,52 +227,12 @@ module VCAP::CloudController
 
     # Handles a droplet upload from a stager
     def upload_droplet(guid)
-      app = Models::App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
-
-      handle = self.class.lookup_handle(guid)
-      raise StagingError.new("staging not in progress for #{guid}") unless handle
-      raise StagingError.new("malformed droplet upload request for #{guid}") unless upload_file
-
-      upload_path = upload_file.path
-      final_path = save_path(guid)
-      logger.debug "renaming staged droplet from '#{upload_path}' to '#{final_path}'"
-
-      begin
-        File.rename(upload_path, final_path)
-      rescue => e
-        raise StagingError.new("failed renaming staged droplet: #{e}")
-      end
-
-      handle.upload_path = final_path
-      logger.debug "uploaded droplet for #{guid} to #{final_path}"
-      HTTP::OK
+      upload(guid, :is_buildpack_cache => false)
     end
 
     # Handles a buildpack cache upload from a stager
     def upload_droplet_buildpack_cache(guid)
-      app = Models::App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
-
-      handle = self.class.lookup_handle(guid)
-      raise StagingError.new("staging not in progress for #{guid}") unless handle
-      raise StagingError.new("malformed droplet upload request for #{guid}") unless upload_file
-
-      upload_path = upload_file.path
-      final_path = save_path(guid, "buildpack_cache")
-      logger.debug "renaming staged droplet buildpack cache from '#{upload_path}' to '#{final_path}'"
-
-      begin
-        File.rename(upload_path, final_path)
-      rescue => e
-        raise StagingError.new("failed renaming staged droplet buildpack cache: #{e}")
-      end
-
-      handle.buildpack_cache_upload_path = final_path
-
-      logger.debug "uploaded droplet buildpack cache for #{guid} to #{final_path}"
-
-      HTTP::OK
+      upload(guid, :is_buildpack_cache => true)
     end
 
     def download_droplet(guid)
@@ -300,6 +261,37 @@ module VCAP::CloudController
 
     private
 
+    def upload(guid, opts)
+      is_buildpack_cache = opts.fetch(:is_buildpack_cache)
+      tag = is_buildpack_cache ? "buildpack_cache" : "staged_droplet"
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
+
+      handle = self.class.lookup_handle(guid)
+      raise StagingError.new("staging not in progress for #{guid}") unless handle
+      raise StagingError.new("malformed droplet upload request for #{guid}") unless upload_file
+
+      upload_path = upload_file.path
+      final_path = save_path(guid, tag)
+      logger.debug "renaming #{tag} from '#{upload_path}' to '#{final_path}'"
+
+      begin
+        File.rename(upload_path, final_path)
+      rescue => e
+        raise StagingError.new("failed renaming #{tag} droplet: #{e}")
+      end
+
+      if is_buildpack_cache
+        handle.buildpack_cache_upload_path = final_path
+      else
+        handle.upload_path = final_path
+      end
+
+      logger.debug "uploaded #{tag} for #{guid} to #{final_path}"
+
+      HTTP::OK
+    end
+
     # returns an object that responds to #path pointing to the uploaded file
     # @return [#path]
     def upload_file
@@ -318,7 +310,7 @@ module VCAP::CloudController
       end
     end
 
-    def save_path(guid, tag = "staged")
+    def save_path(guid, tag)
       File.join(tmpdir, "#{tag}_upload_#{guid}.tgz")
     end
 
@@ -341,6 +333,6 @@ module VCAP::CloudController
     post "/staging/droplets/:guid", :upload_droplet
     get  "/staged_droplets/:guid", :download_droplet
 
-    post "/staging/droplets/:guid/buildpack_cache", :upload_droplet_buildpack_cache
+    post "/staging/buildpack_cache/:guid", :upload_droplet_buildpack_cache
   end
 end

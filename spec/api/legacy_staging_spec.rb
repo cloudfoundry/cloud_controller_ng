@@ -54,8 +54,9 @@ module VCAP::CloudController
       context "when handle does not exist for given id" do
         it "creates handle with id and empty upload path" do
           LegacyStaging.create_handle(handle_id).tap do |h|
-            h.id.should == handle_id
+            h.guid.should == handle_id
             h.upload_path.should be_nil
+            h.buildpack_cache_upload_path.should be_nil
           end
         end
 
@@ -102,6 +103,25 @@ module VCAP::CloudController
         context "when upload_path is not set" do
           it_destroys_handle
         end
+
+        context "when buildpack cache upload_path is set" do
+          let(:tmp_file) { Tempfile.new("temp_file") }
+          before { handle.buildpack_cache_upload_path = tmp_file.path }
+
+          context "and the buildpack cache upload path exists" do
+            it_destroys_handle
+
+            it "destroys the buildpack cache uploaded file" do
+              expect {
+                LegacyStaging.destroy_handle(handle)
+              }.to change { File.exists?(tmp_file.path) }.from(true).to(false)
+            end
+          end
+
+          context "and the buildpack cache upload path does not exist" do
+            it_destroys_handle
+          end
+        end
       end
 
       context " when the handle does not exist" do
@@ -125,6 +145,13 @@ module VCAP::CloudController
       end
     end
 
+    describe "buildpack_cache_upload_uri" do
+      it "should return a uri to our cc" do
+        uri = LegacyStaging.buildpack_cache_upload_uri(app_guid)
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}"
+      end
+    end
+
     shared_examples "staging bad auth" do |verb|
       it "should return 403 for bad credentials" do
         authorize "hacker", "sw0rdf1sh"
@@ -133,7 +160,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "GET /staging/apps/:id" do
+    describe "GET /staging/apps/:guid" do
       let(:app_obj) { Models::App.make }
       let(:app_obj_without_pkg) { Models::App.make }
       let(:app_package_path) { AppPackage.package_path(app_obj.guid) }
@@ -183,7 +210,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "POST /staging/droplets/:id" do
+    describe "POST /staging/droplets/:guid" do
       let(:app_obj) { Models::App.make }
       let(:tmpfile) { Tempfile.new("droplet.tgz") }
       let(:upload_req) do
@@ -233,7 +260,7 @@ module VCAP::CloudController
       include_examples "staging bad auth", :post
     end
 
-    describe "GET /staged_droplets/:id" do
+    describe "GET /staged_droplets/:guid" do
       let(:app_obj) { Models::App.make }
 
       before do
@@ -276,6 +303,54 @@ module VCAP::CloudController
         it "should return an error" do
           get "/staged_droplets/bad"
           last_response.status.should == 404
+        end
+      end
+    end
+
+    describe "POST /staging/buildpack_cache/:guid" do
+      let(:app_obj) { Models::App.make }
+      let(:tmpfile) { Tempfile.new("droplet.tgz") }
+      let(:upload_req) do
+        { :upload => { :droplet => Rack::Test::UploadedFile.new(tmpfile) } }
+      end
+
+      before do
+        config_override(staging_config)
+        authorize staging_user, staging_password
+      end
+
+      def make_request(droplet_guid=app_obj.guid)
+        post "/staging/buildpack_cache/#{droplet_guid}", upload_req
+      end
+
+      context "with a valid buildpack cache upload handle" do
+        let!(:handle) { LegacyStaging.create_handle(app_obj.guid) }
+        after { LegacyStaging.destroy_handle(handle) }
+
+        context "with a valid app" do
+          it "returns 200" do
+            make_request
+            last_response.status.should == 200
+          end
+
+          it "stores file path in handle.buildpack_cache_upload_path" do
+            make_request
+            File.exists?(handle.buildpack_cache_upload_path).should be_true
+          end
+        end
+
+        context "with an invalid app" do
+          it "returns 404" do
+            make_request("bad")
+            last_response.status.should == 404
+          end
+        end
+      end
+
+      context "with an invalid upload handle" do
+        it "return 400" do
+          make_request
+          last_response.status.should == 400
         end
       end
     end
