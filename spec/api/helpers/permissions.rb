@@ -109,9 +109,17 @@ module VCAP::CloudController::ApiSpecHelper
 
   shared_examples "permission create not_allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
     describe "POST #{path}" do
-      it "should not allow a user with only the #{perm_name} permission to create a #{name}" do
-        post path, creation_req_for_a, json_headers(headers_a)
-        last_response.status.should == 403
+      context "when the user has only the #{perm_name} permissions" do
+        it "should return a forbidden response" do
+          post path, creation_req_for_a, json_headers(headers_a)
+          last_response.status.should == 403
+        end
+
+        it "should not create a #{name}" do
+          expect {
+            post path, creation_req_for_a, json_headers(headers_a)
+          }.to_not change { model.count }
+        end
       end
     end
   end

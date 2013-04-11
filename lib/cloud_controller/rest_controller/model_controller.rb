@@ -8,20 +8,23 @@ module VCAP::CloudController::RestController
 
     # Create operation
     def create
+      logger.debug "create: #{request_attrs}"
+
       json_msg = self.class::CreateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
 
+      obj = nil
       model.db.transaction do
-        logger.debug "create: #{request_attrs}"
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user, roles)
-        [
-          HTTP::CREATED,
-          { "Location" => "#{self.class.path}/#{obj.guid}" },
-          serialization.render_json(self.class, obj, @opts)
-        ]
       end
+
+      [
+        HTTP::CREATED,
+        { "Location" => "#{self.class.path}/#{obj.guid}" },
+        serialization.render_json(self.class, obj, @opts)
+      ]
     end
 
     # Read operation
