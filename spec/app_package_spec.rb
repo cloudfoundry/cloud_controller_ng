@@ -7,8 +7,10 @@ module VCAP::CloudController
     include_context "resource pool"
 
     let(:tmpdir) { Dir.mktmpdir }
+    let(:config_tmpdir) { File.join(tmpdir, "configured_tmp_dir") }
 
     before do
+      FileUtils.mkdir(config_tmpdir)
       AppPackage.configure(
         :packages => {
           :fog_connection => {
@@ -16,7 +18,8 @@ module VCAP::CloudController
             :aws_access_key_id => "fake_aws_key_id",
             :aws_secret_access_key => "fake_secret_access_key",
           }
-        }
+        },
+        :directories => { :tmpdir => config_tmpdir }
       )
       Fog.mock!
     end
@@ -181,6 +184,11 @@ module VCAP::CloudController
           # do not inline this - otherwise the temp file might be GCed, which removes the files from disk before the assertion
           f = packaged_app_file
           list_files(unzip_zip(f.path)).should =~ expected_file_paths
+        end
+
+        it "packages in temporary directory specified in config" do
+          AppPackage.should_receive(:repack_app_in).with(anything, /#{config_tmpdir}\/app/).and_call_original
+          AppPackage.to_zip(guid, resources, zip_file)
         end
       end
 

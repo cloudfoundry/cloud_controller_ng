@@ -11,6 +11,7 @@ module VCAP::CloudController
       # Configure the AppPackage
       def configure(config = {})
         opts = config[:packages]
+        @tmp_dir = config[:directories] ? config[:directories][:tmpdir] : nil
         @app_package_directory_key = opts[:app_package_directory_key] || "cc-app-packages"
         @connection_config = opts[:fog_connection]
         @max_droplet_size = opts[:max_droplet_size] || 512 * 1024 * 1024
@@ -22,7 +23,7 @@ module VCAP::CloudController
       def to_zip(guid, resources, uploaded_file)
         validate_package_size(uploaded_file, resources)
 
-        tmpdir = Dir.mktmpdir
+        tmpdir = Dir.mktmpdir("app", @tmp_dir)
         unpacked_path = unpack_upload(uploaded_file)
         synchronize_pool_with(unpacked_path, resources)
 
@@ -87,7 +88,7 @@ module VCAP::CloudController
 
       # Unzip the uploaded file
       def unpack_upload(uploaded_file)
-        working_dir = Dir.mktmpdir
+        working_dir = Dir.mktmpdir("unpacked", @tmp_dir)
         return working_dir unless uploaded_file
 
         if uploaded_file
