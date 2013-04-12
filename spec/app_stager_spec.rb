@@ -49,19 +49,19 @@ module VCAP::CloudController
         before { app.staged?.should be_false }
 
         let(:upload_handle) do
-          LegacyStaging::DropletUploadHandle.new(app.guid).tap do |h|
+          Staging::DropletUploadHandle.new(app.guid).tap do |h|
             h.upload_path = Tempfile.new("tmp_droplet")
           end
         end
 
         before do
           AppStagerTask.any_instance.stub(:task_id) { "some_task_id" }
-          LegacyStaging.stub(:create_handle => upload_handle)
+          Staging.stub(:create_handle => upload_handle)
         end
 
         def self.it_requests_staging(options={})
           it "creates upload handle for stager to upload droplet" do
-            LegacyStaging.should_receive(:create_handle).and_return(upload_handle)
+            Staging.should_receive(:create_handle).and_return(upload_handle)
             with_em_and_thread { stage }
           end
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
             it "stores droplet" do
               expect {
                 with_em_and_thread { stage }
-              }.to change { LegacyStaging.droplet_exists?(app.guid) }.from(false).to(true)
+              }.to change { Staging.droplet_exists?(app.guid) }.from(false).to(true)
             end
 
             it "updates droplet hash on the app" do
@@ -140,7 +140,7 @@ module VCAP::CloudController
             end
 
             it "removes upload handle" do
-              LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
+              Staging.should_receive(:destroy_handle).with(upload_handle)
               with_em_and_thread { stage }
             end
 
@@ -171,7 +171,7 @@ module VCAP::CloudController
             it "does not store droplet" do
               expect {
                 ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-              }.to_not change { LegacyStaging.droplet_exists?(app.guid) }.from(false)
+              }.to_not change { Staging.droplet_exists?(app.guid) }.from(false)
             end
 
             it "does not update droplet hash on the app" do
@@ -209,7 +209,7 @@ module VCAP::CloudController
           end
 
           it "removes upload handle" do
-            LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
+            Staging.should_receive(:destroy_handle).with(upload_handle)
             ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
           end
         end
@@ -226,7 +226,7 @@ module VCAP::CloudController
           end
 
           it "removes upload handle" do
-            LegacyStaging.should_receive(:destroy_handle).with(upload_handle)
+            Staging.should_receive(:destroy_handle).with(upload_handle)
             with_em_and_thread { stage }
           end
         end
@@ -241,7 +241,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
-            }.to_not change { LegacyStaging.droplet_exists?(app.guid) }.from(false)
+            }.to_not change { Staging.droplet_exists?(app.guid) }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -566,14 +566,14 @@ module VCAP::CloudController
 
       context "when droplet does not exist" do
         it "does nothing" do
-          LegacyStaging.droplet_exists?(app.guid).should == false
+          Staging.droplet_exists?(app.guid).should == false
           AppStager.delete_droplet(app)
-          LegacyStaging.droplet_exists?(app.guid).should == false
+          Staging.droplet_exists?(app.guid).should == false
         end
       end
 
       context "when droplet exists" do
-        before { LegacyStaging.store_droplet(app.guid, droplet.path) }
+        before { Staging.store_droplet(app.guid, droplet.path) }
 
         let(:droplet) do
           Tempfile.new(app.guid).tap do |f|
@@ -586,7 +586,7 @@ module VCAP::CloudController
           expect {
             AppStager.delete_droplet(app)
           }.to change {
-            LegacyStaging.droplet_exists?(app.guid)
+            Staging.droplet_exists?(app.guid)
           }.from(true).to(false)
         end
 

@@ -3,13 +3,14 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
-  describe VCAP::CloudController::LegacyStaging do
+  describe VCAP::CloudController::Staging do
     let(:max_staging_runtime) { 120 }
     let(:cc_addr) { "1.2.3.4" }
     let(:cc_port) { 5678 }
     let(:staging_user) { "user" }
     let(:staging_password) { "password" }
     let(:app_guid) { "abc" }
+    let(:workspace) { Dir.mktmpdir }
     let(:staging_config) do
       {
         :max_staging_runtime => max_staging_runtime,
@@ -24,20 +25,23 @@ module VCAP::CloudController
         :resource_pool => {
           :fog_connection => {
             :provider => "Local",
-            :local_root => Dir.mktmpdir
+            :local_root => Dir.mktmpdir("resourse_pool", workspace)
           }
         },
         :packages => {
           :fog_connection => {
             :provider => "Local",
-            :local_root => Dir.mktmpdir
+            :local_root => Dir.mktmpdir("packages", workspace)
           }
         },
         :droplets => {
           :fog_connection => {
             :provider => "Local",
-            :local_root => Dir.mktmpdir
+            :local_root => Dir.mktmpdir("droplets", workspace)
           }
+        },
+        :directories => {
+          :tmpdir => Dir.mktmpdir("tmpdir", workspace)
         }
       }
     end
@@ -48,12 +52,14 @@ module VCAP::CloudController
       config
     end
 
+    after { FileUtils.rm_rf(workspace) }
+
     describe "#create_handle" do
       let(:handle_id) { Sham.guid }
 
       context "when handle does not exist for given id" do
         it "creates handle with id and empty upload path" do
-          LegacyStaging.create_handle(handle_id).tap do |h|
+          Staging.create_handle(handle_id).tap do |h|
             h.guid.should == handle_id
             h.upload_path.should be_nil
             h.buildpack_cache_upload_path.should be_nil
@@ -62,22 +68,22 @@ module VCAP::CloudController
 
         it "remembers handle" do
           expect {
-            LegacyStaging.create_handle(handle_id)
-          }.to change { LegacyStaging.lookup_handle(handle_id) }.from(nil)
+            Staging.create_handle(handle_id)
+          }.to change { Staging.lookup_handle(handle_id) }.from(nil)
         end
       end
     end
 
     describe "#destroy_handle" do
       let(:handle_id) { Sham.guid }
-      let!(:handle) { LegacyStaging.create_handle(handle_id) }
+      let!(:handle) { Staging.create_handle(handle_id) }
 
       context "when the handle exists" do
         def self.it_destroys_handle
           it "destroys the handle" do
             expect {
-              LegacyStaging.destroy_handle(handle)
-            }.to change { LegacyStaging.lookup_handle(handle_id) }.from(handle).to(nil)
+              Staging.destroy_handle(handle)
+            }.to change { Staging.lookup_handle(handle_id) }.from(handle).to(nil)
           end
         end
 
@@ -90,7 +96,7 @@ module VCAP::CloudController
 
             it "destroys the uploaded file" do
               expect {
-                LegacyStaging.destroy_handle(handle)
+                Staging.destroy_handle(handle)
               }.to change { File.exists?(tmp_file.path) }.from(true).to(false)
             end
           end
@@ -113,7 +119,7 @@ module VCAP::CloudController
 
             it "destroys the buildpack cache uploaded file" do
               expect {
-                LegacyStaging.destroy_handle(handle)
+                Staging.destroy_handle(handle)
               }.to change { File.exists?(tmp_file.path) }.from(true).to(false)
             end
           end
@@ -126,28 +132,28 @@ module VCAP::CloudController
 
       context " when the handle does not exist" do
         it "does nothing" do
-          LegacyStaging.destroy_handle(handle)
+          Staging.destroy_handle(handle)
         end
       end
     end
 
     describe "app_uri" do
       it "should return a uri to our cc" do
-        uri = LegacyStaging.app_uri(app_guid)
+        uri = Staging.app_uri(app_guid)
         uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/apps/#{app_guid}"
       end
     end
 
-    describe "droplet_upload_uri" do
+    describe "upload_uri" do
       it "should return a uri to our cc" do
-        uri = LegacyStaging.droplet_upload_uri(app_guid)
+        uri = Staging.droplet_upload_uri(app_guid)
         uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}"
       end
     end
 
     describe "buildpack_cache_upload_uri" do
       it "should return a uri to our cc" do
-        uri = LegacyStaging.buildpack_cache_upload_uri(app_guid)
+        uri = Staging.buildpack_cache_upload_uri(app_guid)
         uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}"
       end
     end
@@ -227,8 +233,8 @@ module VCAP::CloudController
       end
 
       context "with a valid upload handle" do
-        let!(:handle) { LegacyStaging.create_handle(app_obj.guid) }
-        after { LegacyStaging.destroy_handle(handle) }
+        let!(:handle) { Staging.create_handle(app_obj.guid) }
+        after { Staging.destroy_handle(handle) }
 
         context "with valid app" do
           it "returns 200" do
@@ -260,7 +266,7 @@ module VCAP::CloudController
       include_examples "staging bad auth", :post
     end
 
-    describe "GET /staged_droplets/:guid" do
+    describe "GET /staging/droplets/:guid" do
       let(:app_obj) { Models::App.make }
 
       before do
@@ -273,9 +279,9 @@ module VCAP::CloudController
           droplet = Tempfile.new(app_obj.guid)
           droplet.write("droplet contents")
           droplet.close
-          LegacyStaging.store_droplet(app_obj.guid, droplet.path)
+          Staging.store_droplet(app_obj.guid, droplet.path)
 
-          get "/staged_droplets/#{app_obj.guid}"
+          get "/staging/droplets/#{app_obj.guid}"
           last_response.status.should == 200
           last_response.body.should == "droplet contents"
         end
@@ -284,9 +290,9 @@ module VCAP::CloudController
           droplet = Tempfile.new(app_obj.guid)
           droplet.write("droplet contents")
           droplet.close
-          LegacyStaging.store_droplet(app_obj.guid, droplet.path)
+          Staging.store_droplet(app_obj.guid, droplet.path)
 
-          get "/staged_droplets/#{app_obj.guid}"
+          get "/staging/droplets/#{app_obj.guid}"
           last_response.status.should == 200
           last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
         end
@@ -294,14 +300,14 @@ module VCAP::CloudController
 
       context "with a valid app but no droplet" do
         it "should return an error" do
-          get "/staged_droplets/#{app_obj.guid}"
+          get "/staging/droplets/#{app_obj.guid}"
           last_response.status.should == 400
         end
       end
 
       context "with an invalid app" do
         it "should return an error" do
-          get "/staged_droplets/bad"
+          get "/staging/droplets/bad"
           last_response.status.should == 404
         end
       end
@@ -324,8 +330,8 @@ module VCAP::CloudController
       end
 
       context "with a valid buildpack cache upload handle" do
-        let!(:handle) { LegacyStaging.create_handle(app_obj.guid) }
-        after { LegacyStaging.destroy_handle(handle) }
+        let!(:handle) { Staging.create_handle(app_obj.guid) }
+        after { Staging.destroy_handle(handle) }
 
         context "with a valid app" do
           it "returns 200" do

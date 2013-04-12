@@ -28,7 +28,7 @@ module VCAP::CloudController
       end
 
       def delete_droplet(app)
-        LegacyStaging.delete_droplet(app.guid)
+        Staging.delete_droplet(app.guid)
       end
     end
   end
@@ -83,7 +83,7 @@ module VCAP::CloudController
       save_latest_staging_task
       stop_other_staging_tasks
 
-      @upload_handle = LegacyStaging.create_handle(@app.guid)
+      @upload_handle = Staging.create_handle(@app.guid)
       @completion_callback = completion_callback
 
       staging_result = EM.schedule_sync do |promise|
@@ -111,9 +111,9 @@ module VCAP::CloudController
       { :app_id => @app.guid,
         :task_id => task_id,
         :properties => staging_task_properties(@app),
-        :download_uri => LegacyStaging.app_uri(@app.guid),
-        :upload_uri => LegacyStaging.droplet_upload_uri(@app.guid),
-        :buildpack_cache_upload_uri => LegacyStaging.buildpack_cache_upload_uri(@app.guid),
+        :download_uri => Staging.app_uri(@app.guid),
+        :upload_uri => Staging.droplet_upload_uri(@app.guid),
+        :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app.guid),
         :async => async }
     end
 
@@ -210,10 +210,10 @@ module VCAP::CloudController
 
     def staging_completion(stager_response)
       droplet_hash = Digest::SHA1.file(@upload_handle.upload_path).hexdigest
-      LegacyStaging.store_droplet(@app.guid, @upload_handle.upload_path)
+      Staging.store_droplet(@app.guid, @upload_handle.upload_path)
 
       if (buildpack_cache = @upload_handle.buildpack_cache_upload_path)
-        LegacyStaging.store_buildpack_cache(@app.guid, buildpack_cache)
+        Staging.store_buildpack_cache(@app.guid, buildpack_cache)
       end
 
       @app.detected_buildpack = stager_response.detected_buildpack
@@ -228,7 +228,7 @@ module VCAP::CloudController
     end
 
     def destroy_upload_handle
-      LegacyStaging.destroy_handle(@upload_handle)
+      Staging.destroy_handle(@upload_handle)
     end
 
     def staging_task_properties(app)

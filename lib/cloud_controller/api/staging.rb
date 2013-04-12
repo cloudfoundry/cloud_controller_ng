@@ -11,7 +11,7 @@
 # the storage layer than FileUtils.mv, this should get refactored.
 
 module VCAP::CloudController
-  class LegacyStaging < LegacyApiBase
+  class Staging < RestController::Base
     include VCAP::Errors
 
     # Endpoint does its own (non-standard) auth
@@ -28,6 +28,8 @@ module VCAP::CloudController
         @upload_path = nil
       end
     end
+
+    attr_reader :config
 
     class << self
       def configure(config)
@@ -48,16 +50,16 @@ module VCAP::CloudController
       end
 
       def droplet_upload_uri(guid)
-        staging_uri("/staging/droplets/#{guid}")
+        upload_uri(guid, :droplet)
       end
 
       def buildpack_cache_upload_uri(guid)
-        staging_uri("/staging/buildpack_cache/#{guid}")
+        upload_uri(guid, :buildpack_cache)
       end
 
       def droplet_download_uri(guid)
         if local?
-          staging_uri("/staged_droplets/#{guid}")
+          staging_uri("/staging/droplets/#{guid}")
         else
           droplet_uri(guid)
         end
@@ -87,27 +89,15 @@ module VCAP::CloudController
       end
 
       def store_droplet(guid, path)
-        File.open(path) do |file|
-          droplet_dir.files.create(
-            :key => key_from_guid(guid),
-            :body => file,
-            :public => local?
-          )
-        end
+        store_package(guid, path, :droplet)
       end
 
       def store_buildpack_cache(guid, path)
-        File.open(path) do |file|
-          droplet_dir.files.create(
-            :key => buildpack_cache_key_from_guid(guid),
-            :body => file,
-            :public => local?
-          )
-        end
+        store_package(guid, path, :buildpack_cache)
       end
 
       def delete_droplet(guid)
-        key = key_from_guid(guid)
+        key = key_from_guid(guid, :droplet)
         droplet_dir.files.destroy(key)
       rescue Errno::ENOTEMPTY => e
         logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
@@ -115,7 +105,7 @@ module VCAP::CloudController
       end
 
       def droplet_exists?(guid)
-        key = key_from_guid(guid)
+        key = key_from_guid(guid, :droplet)
         !droplet_dir.files.head(key).nil?
       end
 
@@ -128,7 +118,7 @@ module VCAP::CloudController
       # The url is valid for 1 hour when using aws.
       # TODO: The expiration should be configurable.
       def droplet_uri(guid)
-        key = key_from_guid(guid)
+        key = key_from_guid(guid, :droplet)
         f = droplet_dir.files.head(key)
         return nil unless f
 
@@ -142,17 +132,32 @@ module VCAP::CloudController
       end
 
       def droplet_local_path(guid)
-        raise ArgumentError unless local?
-        key = key_from_guid(guid)
-        f = droplet_dir.files.head(key)
-        return nil unless f
-        # Yes, this is bad.  But, we really need a handle to the actual path in
-        # order to serve the file using send_file since send_file only takes a
-        # path as an argument
-        f.send(:path)
+        local_path(guid, :droplet)
+      end
+
+      def buildpack_cache_local_path(guid)
+        local_path(guid, :buildpack_cache)
       end
 
       private
+
+      def store_package(guid, path, type)
+        File.open(path) do |file|
+          droplet_dir.files.create(
+            :key => key_from_guid(guid, type),
+            :body => file,
+            :public => local?
+          )
+        end
+      end
+
+      def upload_uri(guid, type)
+        if type == :buildpack_cache
+          staging_uri("/staging/buildpack_cache/#{guid}")
+        else
+          staging_uri("/staging/droplets/#{guid}")
+        end
+      end
 
       def staging_uri(path)
         URI::HTTP.build(
@@ -189,14 +194,24 @@ module VCAP::CloudController
         )
       end
 
-      def key_from_guid(guid)
+      def key_from_guid(guid, type)
         guid = guid.to_s.downcase
-        File.join(guid[0..1], guid[2..3], guid)
+        if type == :buildpack_cache
+          File.join("buildpack_cache", guid[0..1], guid[2..3], guid)
+        else
+          File.join(guid[0..1], guid[2..3], guid)
+        end
       end
 
-      def buildpack_cache_key_from_guid(guid)
-        guid = guid.to_s.downcase
-        File.join("buildpack_cache", guid[0..1], guid[2..3], guid)
+      def local_path(guid, type)
+        raise ArgumentError unless local?
+        key = key_from_guid(guid, type)
+        f = droplet_dir.files.head(key)
+        return nil unless f
+        # Yes, this is bad.  But, we really need a handle to the actual path in
+        # order to serve the file using send_file since send_file only takes a
+        # path as an argument
+        f.send(:path)
       end
     end
 
@@ -227,21 +242,28 @@ module VCAP::CloudController
 
     # Handles a droplet upload from a stager
     def upload_droplet(guid)
-      upload(guid, :is_buildpack_cache => false)
+      upload(guid, :droplet)
     end
 
     # Handles a buildpack cache upload from a stager
-    def upload_droplet_buildpack_cache(guid)
-      upload(guid, :is_buildpack_cache => true)
+    def upload_buildpack_cache(guid)
+      upload(guid, :buildpack_cache)
     end
 
     def download_droplet(guid)
-      raise InvalidRequest unless LegacyStaging.local?
+      droplet_path = Staging.droplet_local_path(guid)
+      droplet_url = Staging.droplet_uri(guid)
+      download(guid, droplet_path, droplet_url)
+    end
+
+    private
+
+    def download(guid, droplet_path, url)
+      raise InvalidRequest unless Staging.local?
 
       app = Models::App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
-      droplet_path = LegacyStaging.droplet_local_path(guid)
       logger.debug "guid: #{guid} droplet_path #{droplet_path}"
 
       unless droplet_path
@@ -250,7 +272,6 @@ module VCAP::CloudController
       end
 
       if config[:nginx][:use_nginx]
-        url = LegacyStaging.droplet_uri(guid)
         logger.debug "nginx redirect #{url}"
         return [200, { "X-Accel-Redirect" => url }, ""]
       else
@@ -261,9 +282,8 @@ module VCAP::CloudController
 
     private
 
-    def upload(guid, opts)
-      is_buildpack_cache = opts.fetch(:is_buildpack_cache)
-      tag = is_buildpack_cache ? "buildpack_cache" : "staged_droplet"
+    def upload(guid, type)
+      tag = (type == :buildpack_cache) ? "buildpack_cache" : "staged_droplet"
       app = Models::App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
@@ -281,7 +301,7 @@ module VCAP::CloudController
         raise StagingError.new("failed renaming #{tag} droplet: #{e}")
       end
 
-      if is_buildpack_cache
+      if type == :buildpack_cache
         handle.buildpack_cache_upload_path = final_path
       else
         handle.upload_path = final_path
@@ -331,8 +351,8 @@ module VCAP::CloudController
 
     get  "/staging/apps/:guid", :download_app
     post "/staging/droplets/:guid", :upload_droplet
-    get  "/staged_droplets/:guid", :download_droplet
+    get  "/staging/droplets/:guid", :download_droplet
 
-    post "/staging/buildpack_cache/:guid", :upload_droplet_buildpack_cache
+    post "/staging/buildpack_cache/:guid", :upload_buildpack_cache
   end
 end

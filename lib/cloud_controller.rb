@@ -136,7 +136,6 @@ require "cloud_controller/legacy_api/legacy_info"
 require "cloud_controller/legacy_api/legacy_services"
 require "cloud_controller/legacy_api/legacy_service_gateway"
 require "cloud_controller/legacy_api/legacy_bulk"
-require "cloud_controller/legacy_api/legacy_staging"
 
 require "cloud_controller/resource_pool"
 
