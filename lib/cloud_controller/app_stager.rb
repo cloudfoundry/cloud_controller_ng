@@ -113,6 +113,7 @@ module VCAP::CloudController
         :properties => staging_task_properties(@app),
         :download_uri => Staging.app_uri(@app.guid),
         :upload_uri => Staging.droplet_upload_uri(@app.guid),
+        :buildpack_cache_download_uri => Staging.buildpack_cache_download_uri(@app.guid),
         :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app.guid),
         :async => async }
     end

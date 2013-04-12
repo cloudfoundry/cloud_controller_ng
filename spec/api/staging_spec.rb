@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:staging_password) { "password" }
     let(:app_guid) { "abc" }
     let(:workspace) { Dir.mktmpdir }
-    let(:staging_config) do
+    let(:original_staging_config) do
       {
         :max_staging_runtime => max_staging_runtime,
         :bind_address => cc_addr,
@@ -35,6 +35,7 @@ module VCAP::CloudController
           }
         },
         :droplets => {
+          :droplet_directory_key => "cc-droplets",
           :fog_connection => {
             :provider => "Local",
             :local_root => Dir.mktmpdir("droplets", workspace)
@@ -45,6 +46,7 @@ module VCAP::CloudController
         }
       }
     end
+    let(:staging_config) { original_staging_config }
 
     before do
       Fog.unmock!
@@ -144,7 +146,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "upload_uri" do
+    describe "droplet_upload_uri" do
       it "should return a uri to our cc" do
         uri = Staging.droplet_upload_uri(app_guid)
         uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}"
@@ -154,6 +156,19 @@ module VCAP::CloudController
     describe "buildpack_cache_upload_uri" do
       it "should return a uri to our cc" do
         uri = Staging.buildpack_cache_upload_uri(app_guid)
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}"
+      end
+    end
+
+    describe "buildpack_cache_download_uri" do
+      let(:buildpack_cache) { Tempfile.new(app_guid) }
+
+      after { FileUtils.rm(buildpack_cache.path) }
+
+      it "should return a uri to our cc" do
+        Staging.store_buildpack_cache(app_guid, buildpack_cache.path)
+
+        uri = Staging.buildpack_cache_download_uri(app_guid)
         uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}"
       end
     end
@@ -357,6 +372,64 @@ module VCAP::CloudController
         it "return 400" do
           make_request
           last_response.status.should == 400
+        end
+      end
+    end
+
+    describe "GET /staging/buildpack_cache/:guid" do
+      let(:app_obj) { Models::App.make }
+      let(:buildpack_cache) { Tempfile.new(app_obj.guid) }
+
+      before do
+        buildpack_cache.write("droplet contents")
+        buildpack_cache.close
+
+        authorize staging_user, staging_password
+      end
+
+      after { FileUtils.rm(buildpack_cache.path) }
+
+      def make_request(droplet_guid=app_obj.guid)
+        get "/staging/buildpack_cache/#{droplet_guid}"
+      end
+
+      context "with a valid buildpack cache" do
+        context "when nginx is enabled" do
+          it "redirects nginx to serve staged droplet" do
+            Staging.store_buildpack_cache(app_obj.guid, buildpack_cache.path)
+
+            make_request
+            last_response.status.should == 200
+            last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
+          end
+        end
+
+        context "when nginx is disabled" do
+          let(:staging_config) do
+            original_staging_config.merge({ :nginx => { :use_nginx => false } })
+          end
+
+          it "should return the buildpack cache" do
+            Staging.store_buildpack_cache(app_obj.guid, buildpack_cache.path)
+
+            make_request
+            last_response.status.should == 200
+            last_response.body.should == "droplet contents"
+          end
+        end
+      end
+
+      context "with a valid buildpack cache but no file" do
+        it "should return an error" do
+          make_request
+          last_response.status.should == 400
+        end
+      end
+
+      context "with an invalid buildpack cache" do
+        it "should return an error" do
+          get "/staging/buildpack_cache/bad"
+          last_response.status.should == 404
         end
       end
     end

@@ -19,6 +19,7 @@ module VCAP::CloudController
 
     APP_PATH = "/staging/apps"
     DROPLET_PATH = "/staging/droplets"
+    BUILDPACK_CACHE_PATH = "/staging/buildpack_cache"
 
     class DropletUploadHandle
       attr_accessor :guid, :upload_path, :buildpack_cache_upload_path
@@ -59,7 +60,7 @@ module VCAP::CloudController
 
       def droplet_download_uri(guid)
         if local?
-          staging_uri("/staging/droplets/#{guid}")
+          staging_uri("#{DROPLET_PATH}/#{guid}")
         else
           droplet_uri(guid)
         end
@@ -113,22 +114,8 @@ module VCAP::CloudController
         @connection_config[:provider].downcase == "local"
       end
 
-      # Return droplet uri for path for a given app's guid.
-      #
-      # The url is valid for 1 hour when using aws.
-      # TODO: The expiration should be configurable.
-      def droplet_uri(guid)
-        key = key_from_guid(guid, :droplet)
-        f = droplet_dir.files.head(key)
-        return nil unless f
-
-        # unfortunately fog doesn't have a unified interface for non-public
-        # urls
-        if local?
-          f.public_url
-        else
-          f.url(Time.now + 3600)
-        end
+      def buildpack_cache_download_uri(guid)
+        staging_uri("#{BUILDPACK_CACHE_PATH}/#{guid}")
       end
 
       def droplet_local_path(guid)
@@ -137,6 +124,18 @@ module VCAP::CloudController
 
       def buildpack_cache_local_path(guid)
         local_path(guid, :buildpack_cache)
+      end
+
+      # Return droplet uri for path for a given app's guid.
+      #
+      # The url is valid for 1 hour when using aws.
+      # TODO: The expiration should be configurable.
+      def droplet_uri(guid)
+        package_uri(guid, :droplet)
+      end
+
+      def buildpack_cache_uri(guid)
+        package_uri(guid, :buildpack_cache)
       end
 
       private
@@ -153,9 +152,23 @@ module VCAP::CloudController
 
       def upload_uri(guid, type)
         if type == :buildpack_cache
-          staging_uri("/staging/buildpack_cache/#{guid}")
+          staging_uri("#{BUILDPACK_CACHE_PATH}/#{guid}")
         else
-          staging_uri("/staging/droplets/#{guid}")
+          staging_uri("#{DROPLET_PATH}/#{guid}")
+        end
+      end
+
+      def package_uri(guid, type)
+        key = key_from_guid(guid, type)
+        f = droplet_dir.files.head(key)
+        return nil unless f
+
+        # unfortunately fog doesn't have a unified interface for non-public
+        # urls
+        if local?
+          f.public_url
+        else
+          f.url(Time.now + 3600)
         end
       end
 
@@ -256,6 +269,12 @@ module VCAP::CloudController
       download(guid, droplet_path, droplet_url)
     end
 
+    def download_buildpack_cache(guid)
+      buildpack_cache_path = Staging.buildpack_cache_local_path(guid)
+      buildpack_cache_url = Staging.buildpack_cache_uri(guid)
+      download(guid, buildpack_cache_path, buildpack_cache_url)
+    end
+
     private
 
     def download(guid, droplet_path, url)
@@ -279,8 +298,6 @@ module VCAP::CloudController
         return send_file droplet_path
       end
     end
-
-    private
 
     def upload(guid, type)
       tag = (type == :buildpack_cache) ? "buildpack_cache" : "staged_droplet"
@@ -350,9 +367,10 @@ module VCAP::CloudController
     end
 
     get  "/staging/apps/:guid", :download_app
-    post "/staging/droplets/:guid", :upload_droplet
-    get  "/staging/droplets/:guid", :download_droplet
+    post "#{DROPLET_PATH}/:guid", :upload_droplet
+    get  "#{DROPLET_PATH}/:guid", :download_droplet
 
-    post "/staging/buildpack_cache/:guid", :upload_buildpack_cache
+    post "#{BUILDPACK_CACHE_PATH}/:guid", :upload_buildpack_cache
+    get "#{BUILDPACK_CACHE_PATH}/:guid", :download_buildpack_cache
   end
 end
