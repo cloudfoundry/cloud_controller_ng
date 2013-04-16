@@ -38,7 +38,7 @@ Amazon S3 or an NFS-mounted file system for storage.
 
 [fog]: http://fog.io/
 
-#### NATS Messaging
+## NATS Messaging
 
 The Cloud Controller interacts with other core components of the Cloud Foundry
 platform using the NATS message bus. For example, it performs the following using NATS:
@@ -59,3 +59,23 @@ variable to test against postgres and mysql. Examples:
     DB_CONNECTION="mysql2://root:password@localhost:3306/ccng" rspec
 
 Travis currently runs 3 build jobs against sqlite, postgres, and mysql.
+
+## Logs
+
+Cloud Controller uses [Steno](github.com/cloudfoundry/steno) to manage its logs.
+Each log entry includes a "source" field to designate which module in the code the
+entry originates from.  Some of the possible sources are 'cc.app', 'cc.app_stager',
+'cc.dea.client' and 'cc.healthmanager.client'.
+
+## Configuration
+
+The Cloud Controller uses a YAML configuration file.
+For an example, see `config/cloud_controller.yml`.
+Some of the keys that are read from this configuration file are:
+
+* `logging` - a [steno configuration hash](github.com/cloudfoundry/steno#from-yaml-file)
+* `bulk_api` - basic auth credentials for the application state bulk API. In Cloud Foundry,
+this endpoint is used by the health manager to retrieve the expected state of every user
+application.
+* `uaa` - URL and credentials for connecting to the [UAA](github.com/cloudfoundry/uaa),
+Cloud Foundry's OAuth 2.0 server.

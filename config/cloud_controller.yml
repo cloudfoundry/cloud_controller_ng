@@ -25,6 +25,7 @@ nginx:
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
 
 logging:
+  file: /tmp/cloud_controller.log
   level: debug2
 
 db:
