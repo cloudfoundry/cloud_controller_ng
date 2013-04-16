@@ -18,7 +18,7 @@ module VCAP::CloudController
         raise Errors::BillingEventQueryInvalid
       end
 
-      ds = model.user_visible.filter(:timestamp => start_time..end_time)
+      ds = model.user_visible.filter(:event_timestamp => start_time..end_time)
       RestController::Paginator.render_json(self.class, ds, self.class.path,
                                             @opts.merge(:serialization => serialization))
     end

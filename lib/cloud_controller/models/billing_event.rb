@@ -9,6 +9,14 @@ module VCAP::CloudController::Models
       validates_presence :organization_guid
       validates_presence :organization_name
     end
+    
+    def timestamp
+      self.event_timestamp
+    end
+    
+    def timestamp=(value)
+      self.event_timestamp = value
+    end
 
     def self.user_visibility_filter(user)
       # don't allow anyone to enumerate other than the admin
