@@ -11,7 +11,7 @@ module VCAP::CloudController::Models
 
     export_attributes :name, :free, :description, :service_guid, :extra, :unique_id
 
-    import_attributes :name, :free, :description, :service_guid
+    import_attributes :name, :free, :description, :service_guid, :extra
 
     strip_attributes  :name
 

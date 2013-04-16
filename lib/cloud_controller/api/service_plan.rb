@@ -11,6 +11,7 @@ module VCAP::CloudController
       attribute :name,              String
       attribute :free,              Message::Boolean
       attribute :description,       String
+      attribute :extra, String, default: nil
       to_one    :service
       to_many   :service_instances
     end

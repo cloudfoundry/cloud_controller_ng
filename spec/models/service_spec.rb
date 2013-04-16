@@ -49,16 +49,7 @@ module VCAP::CloudController
     end
 
     describe "serialization" do
-      let(:attributes) do
-        Models::Service.make.values.tap do |attributes|
-          attributes[:label]    = Sham.label
-          attributes[:provider] = Sham.provider
-        end
-      end
-
-      let(:service) {
-         service = Models::Service.create_from_json(attributes.merge(extra: "extra").to_json)
-      }
+      let(:service) { Models::Service.new_from_hash(extra: "extra") }
 
       it "allows mass assignment of extra" do
          service.extra.should == 'extra'

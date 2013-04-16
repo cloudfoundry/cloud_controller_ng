@@ -12,7 +12,7 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :name,             String
+      attribute :name,  String
       to_one    :space
       to_one    :service_plan
       to_many   :service_bindings
