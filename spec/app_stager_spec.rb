@@ -512,8 +512,18 @@ module VCAP::CloudController
         FileUtils.rm_rf(tmpdir)
       end
 
+      def store_buildpack_cache(app)
+        # When Fog is in local mode it looks at the filesystem
+        tmpdir = Dir.mktmpdir
+        zipname = File.join(tmpdir, "buildpack_cache.zip")
+        create_zip(zipname, 1, 1)
+        Staging.store_buildpack_cache(app.guid, zipname)
+        FileUtils.rm_rf(tmpdir)
+      end
+
       it "includes app guid, task id and download/upload uris" do
         store_app_package(app)
+        store_buildpack_cache(app)
         request.tap do |r|
           r[:app_id].should == app.guid
           r[:task_id].should eq(staging_task.task_id)

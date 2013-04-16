@@ -115,7 +115,11 @@ module VCAP::CloudController
       end
 
       def buildpack_cache_download_uri(guid)
-        staging_uri("#{BUILDPACK_CACHE_PATH}/#{guid}")
+        if AppPackage.local?
+          staging_uri("#{BUILDPACK_CACHE_PATH}/#{guid}")
+        else
+          package_uri(guid, :buildpack_cache)
+        end
       end
 
       def droplet_local_path(guid)
