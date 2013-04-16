@@ -62,7 +62,7 @@ Travis currently runs 3 build jobs against sqlite, postgres, and mysql.
 
 ## Logs
 
-Cloud Controller uses [Steno](github.com/cloudfoundry/steno) to manage its logs.
+Cloud Controller uses [Steno](http://github.com/cloudfoundry/steno) to manage its logs.
 Each log entry includes a "source" field to designate which module in the code the
 entry originates from.  Some of the possible sources are 'cc.app', 'cc.app_stager',
 'cc.dea.client' and 'cc.healthmanager.client'.
@@ -73,7 +73,7 @@ The Cloud Controller uses a YAML configuration file.
 For an example, see `config/cloud_controller.yml`.
 Some of the keys that are read from this configuration file are:
 
-* `logging` - a [steno configuration hash](github.com/cloudfoundry/steno#from-yaml-file)
+* `logging` - a [steno configuration hash](http://github.com/cloudfoundry/steno#from-yaml-file)
 * `bulk_api` - basic auth credentials for the application state bulk API. In Cloud Foundry,
 this endpoint is used by the health manager to retrieve the expected state of every user
 application.
