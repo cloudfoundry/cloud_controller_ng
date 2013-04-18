@@ -67,6 +67,15 @@ Each log entry includes a "source" field to designate which module in the code t
 entry originates from.  Some of the possible sources are 'cc.app', 'cc.app_stager',
 'cc.dea.client' and 'cc.healthmanager.client'.
 
+Here are some use cases for the different log levels:
+* `error` - the CC received a malformed HTTP request, or a request for a non-existent droplet
+* `warn` - the CC failed to delete a droplet, CC received a request with an invalid auth token
+* `info` - CC received a token from UAA, CC received a NATS request
+* `debug2` - CC created a service, updated a service
+* `debug` - CC syncs resource pool, CC uploaded a file
+
+### Database migration logs
+
 The logs for database migrations are written to standard out.
 
 ## Configuration
