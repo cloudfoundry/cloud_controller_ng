@@ -67,6 +67,8 @@ Each log entry includes a "source" field to designate which module in the code t
 entry originates from.  Some of the possible sources are 'cc.app', 'cc.app_stager',
 'cc.dea.client' and 'cc.healthmanager.client'.
 
+The logs for database migrations are written to standard out.
+
 ## Configuration
 
 The Cloud Controller uses a YAML configuration file.
