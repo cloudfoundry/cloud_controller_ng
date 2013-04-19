@@ -159,17 +159,5 @@ module VCAP
         index [id_attr, :user_id], :unique => true, :name => idx_name
       end
     end
-
-    # Helper method to rename a foreign key constraint only if the constraint exists
-    def self.rename_foreign_key(migration, table, current_name, new_name)
-      migration.foreign_key_list(table).each { |fk|
-        if fk[:name] && fk[:name] == current_name
-          migration.alter_table table do
-            drop_constraint current_name, :type => :foreign_key
-            add_foreign_key fk[:columns], fk[:table], :name => new_name
-          end
-        end
-      }
-    end
   end
 end
