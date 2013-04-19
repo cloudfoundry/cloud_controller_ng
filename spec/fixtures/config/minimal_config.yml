@@ -35,12 +35,6 @@ nginx:
   use_nginx: false
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
 
-service_lifecycle:
-  max_upload_size: 1
-  upload_token: changeme
-  upload_timeout: 2
-  serialization_data_server: []
-
 quota_definitions: {}
 default_quota_definition: free
 

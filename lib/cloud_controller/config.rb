@@ -86,13 +86,6 @@ class VCAP::CloudController::Config < VCAP::Config
         :instance_socket => String,
       },
 
-      :service_lifecycle => {
-        :max_upload_size => Integer,
-        :upload_token => String,
-        :upload_timeout => Integer,
-        :serialization_data_server => [URI.regexp(["http", "https"])],
-      },
-
       :quota_definitions => Hash,
       :default_quota_definition => String,
 

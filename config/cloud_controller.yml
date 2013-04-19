@@ -44,12 +44,6 @@ bulk_api:
   auth_user: bulk_user
   auth_password: bulk_password
 
-service_lifecycle:
-  max_upload_size: 1
-  upload_token: changeme
-  upload_timeout: 2
-  serialization_data_server: []
-
 # App staging parameters
 staging:
   # Max duration for staging process
