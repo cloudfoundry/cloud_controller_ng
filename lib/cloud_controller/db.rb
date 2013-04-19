@@ -121,8 +121,8 @@ end
 module VCAP
   module Migration
     def self.timestamps(migration, table_key)
-      created_at_idx = table_key ? "#{table_key}_created_at_index".to_sym : nil
-      updated_at_idx = table_key ? "#{table_key}_updated_at_index".to_sym : nil
+      created_at_idx = "#{table_key}_created_at_index".to_sym if table_key
+      updated_at_idx = "#{table_key}_updated_at_index".to_sym if table_key
       migration.Timestamp :created_at, :null => false
       migration.Timestamp :updated_at
       migration.index :created_at, :name => created_at_idx
@@ -130,7 +130,7 @@ module VCAP
     end
 
     def self.guid(migration, table_key)
-      guid_idx = table_key ? "#{table_key}_guid_index".to_sym : nil
+      guid_idx = "#{table_key}_guid_index".to_sym if table_key
       migration.String :guid, :null => false
       migration.index :guid, :unique => true, :name => guid_idx
     end
@@ -158,6 +158,18 @@ module VCAP
 
         index [id_attr, :user_id], :unique => true, :name => idx_name
       end
+    end
+
+    # Helper method to rename a foreign key constraint only if the constraint exists
+    def self.rename_foreign_key(migration, table, current_name, new_name)
+      migration.foreign_key_list(table).each { |fk|
+        if fk[:name] && fk[:name] == current_name
+          migration.alter_table table do
+            drop_constraint current_name, :type => :foreign_key
+            add_foreign_key fk[:columns], fk[:table], :name => new_name
+          end
+        end
+      }
     end
   end
 end
