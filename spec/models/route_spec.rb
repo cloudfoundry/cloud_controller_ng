@@ -5,7 +5,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Models::Route do
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:domain, :space, :host],
+      :required_attributes  => [:domain, :space],
       :db_required_attributes => [:domain, :space],
       :unique_attributes    => [:host, :domain],
       :create_attribute => lambda { |name|
@@ -63,18 +63,18 @@ module VCAP::CloudController
           let(:domain) do
             d = Models::Domain.make(
               :wildcard => true,
-              :owning_organization => space.organization,
+              :owning_organization => space.organization
             )
             space.add_domain(d)
             d
           end
 
           it "should not allow a nil host" do
-            expect {
-              Models::Route.make(:space => space,
-                                 :domain => domain,
-                                 :host => nil)
-            }.to raise_error(Sequel::ValidationFailed)
+            route = Models::Route.make(:space => space,
+                               :domain => domain,
+                               :host => nil)
+            route.host.should_not be_nil
+            route[:host].should_not be_nil unless route.db.database_type == :oracle
           end
 
           it "should allow an empty host" do
@@ -97,18 +97,18 @@ module VCAP::CloudController
           let(:domain) do
             d = Models::Domain.make(
               :wildcard => false,
-              :owning_organization => space.organization,
+              :owning_organization => space.organization
             )
             space.add_domain(d)
             d
           end
 
           it "should not allow a nil host" do
-            expect {
-              Models::Route.make(:space => space,
-                                 :domain => domain,
-                                 :host => nil).should be_valid
-            }.to raise_error(Sequel::ValidationFailed)
+            route = Models::Route.make(:space => space,
+                               :domain => domain,
+                               :host => nil)
+            route.host.should_not be_nil
+            route[:host].should_not be_nil unless route.db.database_type == :oracle
           end
 
           it "should not allow a valid host" do
@@ -154,7 +154,7 @@ module VCAP::CloudController
             r = Models::Route.make(
               :host => "www",
               :domain => domain,
-              :space => space,
+              :space => space
             )
             r.fqdn.should == "www.#{domain.name}"
           end
@@ -165,7 +165,7 @@ module VCAP::CloudController
             r = Models::Route.make(
               :host => "",
               :domain => domain,
-              :space => space,
+              :space => space
             )
             r.fqdn.should == domain.name
           end
@@ -177,7 +177,7 @@ module VCAP::CloudController
           r = Models::Route.make(
             :host => "www",
             :domain => domain,
-            :space => space,
+            :space => space
           )
           r.as_summary_json.should == {
             :guid => r.guid,
@@ -222,12 +222,13 @@ module VCAP::CloudController
       end
 
       it "should not allow creation of a nil host on a system domain" do
-        expect {
-          Models::Route.make(
-            :host => nil, :space => space_a,
-            :domain => Models::Domain.default_serving_domain
-          )
-        }.to raise_error Sequel::ValidationFailed
+        route = Models::Route.make(
+          :host => nil, :space => space_a,
+          :domain => Models::Domain.default_serving_domain
+        )
+        route.host.should_not be_nil
+        route[:host].should_not be_nil unless route.db.database_type == :oracle
+          
       end
     end
 
