@@ -117,13 +117,20 @@ module VCAP::CloudController
         Models::QuotaDefinition.make(:total_services => 1,
                                      :non_basic_services_allowed => false)
       end
+
       let(:paid_quota) do
         Models::QuotaDefinition.make(:total_services => 1,
-                                     :non_basic_services_allowed => true)
+          :non_basic_services_allowed => true)
       end
+
+      let(:unlimited_quota) do
+        Models::QuotaDefinition.make(:total_services => -1,
+          :non_basic_services_allowed => true)
+      end
+
       let(:free_plan) { Models::ServicePlan.make(:free => true)}
 
-      describe "#service_instance_quota_remaining" do
+      describe "#service_instance_quota_remaining?" do
         it "should return true when quota is not reached" do
           org = Models::Organization.make(:quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
@@ -139,6 +146,12 @@ module VCAP::CloudController
             save(:validate => false)
           org.refresh
           org.service_instance_quota_remaining?.should be_false
+        end
+
+        it "returns true when the limit is -1 (unlimited)" do
+          org = Models::Organization.make(:quota_definition => unlimited_quota)
+          space = Models::Space.make(:organization => org)
+          org.service_instance_quota_remaining?.should be_true
         end
       end
 

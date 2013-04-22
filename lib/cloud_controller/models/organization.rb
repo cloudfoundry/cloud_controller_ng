@@ -106,7 +106,8 @@ module VCAP::CloudController::Models
     end
 
     def service_instance_quota_remaining?
-      service_instances.count < quota_definition.total_services
+      quota_definition.total_services == -1 || # unlimited
+        service_instances.count < quota_definition.total_services
     end
 
     def paid_services_allowed?
