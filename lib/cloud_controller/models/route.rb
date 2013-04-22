@@ -6,6 +6,11 @@ module VCAP::CloudController::Models
   class Route < Sequel::Model
     class InvalidDomainRelation < InvalidRelation; end
     class InvalidAppRelation < InvalidRelation; end
+      
+    def before_save
+      self[:host] = "" if self[:host].nil?
+      super
+    end
 
     many_to_one :domain
     many_to_one :space
@@ -21,7 +26,7 @@ module VCAP::CloudController::Models
     import_attributes :host, :domain_guid, :space_guid, :app_guids
 
     def fqdn
-      !host.empty? ? "#{host}.#{domain.name}" : domain.name
+      host && !host.empty? ? "#{host}.#{domain.name}" : domain.name
     end
 
     def as_summary_json
@@ -36,7 +41,7 @@ module VCAP::CloudController::Models
     end
     
     def host
-      !self[:host] ? "" : self[:host]
+      self[:host].nil? ? "" : self[:host]
     end
 
     def organization
@@ -46,8 +51,6 @@ module VCAP::CloudController::Models
     def validate
       validates_presence :domain
       validates_presence :space
-
-      errors.add(:host, :presence) if self[:host].nil?
 
       validates_format   /^([\w\-]+)$/, :host if (!host.empty?)
       validates_unique   [:host, :domain_id]
