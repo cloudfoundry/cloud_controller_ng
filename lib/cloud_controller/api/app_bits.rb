@@ -41,8 +41,7 @@ module VCAP::CloudController
 
       HTTP::CREATED
     rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid
-      app.package_state = "FAILED"
-      app.save
+      app.mark_as_failed_to_stage
       raise
     end
 

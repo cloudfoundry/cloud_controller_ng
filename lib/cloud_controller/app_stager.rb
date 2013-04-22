@@ -132,7 +132,7 @@ module VCAP::CloudController
     end
 
     def handle_first_response(response, error, promise)
-      staging_error!(response, error)
+      check_staging_error!(response, error)
       ensure_staging_is_current!
 
       stager_response = Response.new(response)
@@ -164,7 +164,8 @@ module VCAP::CloudController
 
     def handle_second_response(response, error)
       @responses.ignore_subsequent_responses
-      staging_error!(response, error)
+      check_staging_error!(response, error)
+
       ensure_staging_is_current!
       process_async_response(response)
     rescue => e
@@ -185,13 +186,18 @@ module VCAP::CloudController
       end
     end
 
-    def staging_error!(response, error)
+    def check_staging_error!(response, error)
+      if msg = error_message(response, error)
+        @app.mark_as_failed_to_stage
+        raise Errors::StagingError, msg
+      end
+    end
+
+    def error_message(response, error)
       if error
-        msg = "failed to stage application:\n#{error}"
-        raise Errors::StagingError, msg
+        "failed to stage application:\n#{error}"
       elsif response["error"]
-        msg = "failed to stage application:\n#{response["error"]}\n#{response["task_log"]}"
-        raise Errors::StagingError, msg
+        "failed to stage application:\n#{response["error"]}\n#{response["task_log"]}"
       end
     end
 

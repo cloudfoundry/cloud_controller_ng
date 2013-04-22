@@ -133,6 +133,12 @@ module VCAP::CloudController
               }.to change { app.droplet_hash }.from(nil)
             end
 
+            it "marks the app as having staged successfully" do
+              expect {
+                with_em_and_thread { stage }
+              }.to change { app.staged? }.to(true)
+            end
+
             it "saves the detected buildpack" do
               expect {
                 with_em_and_thread { stage }
@@ -259,6 +265,14 @@ module VCAP::CloudController
           end
         end
 
+        def self.it_marks_staging_as_failed
+          it "marks the app as having failed to stage" do
+            expect {
+              ignore_error(Errors::StagingError) { with_em_and_thread { stage } }
+            }.to change { app.failed? }.to(true)
+          end
+        end
+
         describe "staging synchronously and stager returning sync staging response" do
           describe "receiving staging completion message" do
             def stage(&blk)
@@ -295,6 +309,7 @@ module VCAP::CloudController
 
               it_raises_staging_error
               it_does_not_complete_staging
+              it_marks_staging_as_failed
             end
 
             context "when staging returned an error response" do
@@ -310,6 +325,7 @@ module VCAP::CloudController
 
               it_raises_staging_error
               it_does_not_complete_staging
+              it_marks_staging_as_failed
             end
           end
         end
@@ -341,6 +357,11 @@ module VCAP::CloudController
                 with_em_and_thread { stage.streaming_log_url.should == "task-streaming-log-url" }
               end
 
+              it "leaves the app as not having been staged" do
+                with_em_and_thread { stage }
+                expect(app).to be_pending
+              end
+
               it_requests_staging :async => true
               it_does_not_complete_staging
             end
@@ -352,6 +373,7 @@ module VCAP::CloudController
 
               it_raises_staging_error
               it_does_not_complete_staging
+              it_marks_staging_as_failed
             end
 
             context "when staging setup returned an error response" do
@@ -367,6 +389,7 @@ module VCAP::CloudController
 
               it_raises_staging_error
               it_does_not_complete_staging
+              it_marks_staging_as_failed
             end
           end
 
@@ -411,6 +434,7 @@ module VCAP::CloudController
 
               it_logs_staging_error
               it_does_not_complete_staging
+              it_marks_staging_as_failed
             end
 
             context "when app staging returned an error response" do
@@ -426,6 +450,7 @@ module VCAP::CloudController
 
               it_logs_staging_error
               it_does_not_complete_staging
+              it_marks_staging_as_failed
             end
           end
         end
@@ -466,6 +491,7 @@ module VCAP::CloudController
 
               it_raises_staging_error
               it_does_not_complete_staging
+              it_marks_staging_as_failed
             end
 
             context "when staging returned an error response" do
@@ -481,6 +507,7 @@ module VCAP::CloudController
 
               it_raises_staging_error
               it_does_not_complete_staging
+              it_marks_staging_as_failed
             end
           end
         end

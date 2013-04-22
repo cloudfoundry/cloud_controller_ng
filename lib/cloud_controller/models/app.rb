@@ -291,6 +291,11 @@ module VCAP::CloudController
         mark_for_restaging
       end
 
+      def mark_as_failed_to_stage
+        self.package_state = "FAILED"
+        save
+      end
+
       def mark_for_restaging(opts={})
         self.package_state = "PENDING"
         save if opts[:save]
