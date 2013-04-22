@@ -31,6 +31,8 @@ module VCAP::CloudController
           Errors::ServiceInstanceFreeQuotaExceeded.new
         elsif quota_errors.include?(:paid_quota_exceeded)
           Errors::ServiceInstancePaidQuotaExceeded.new
+        else
+          Errors::ServiceInstanceInvalid.new(e.errors.full_messages)
         end
       elsif service_plan_errors
         Errors::ServiceInstanceServicePlanNotAllowed.new

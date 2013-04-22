@@ -197,6 +197,27 @@ module VCAP::CloudController
           decoded_response["description"].should =~ /paid service plans are not allowed/
         end
       end
+
+      context 'invalid space guid' do
+        it "does not raise error" do
+          org = Models::Organization.make()
+          space = Models::Space.make(:organization => org)
+          service = Models::Service.make
+          plan =  Models::ServicePlan.make(free: true)
+
+          body = {
+            "space_guid" => "bogus",
+            "name"       => 'name',
+            "service_plan_guid" => plan.guid
+          }
+
+          post("/v2/service_instances",
+               Yajl::Encoder.encode(body),
+               headers_for(make_developer_for_space(space)))
+          decoded_response["description"].should =~ /invalid.*space.*/
+          last_response.status.should == 400
+        end
+      end
     end
 
     describe "PUT /v2/service_instances/internal/:instance_id" do
