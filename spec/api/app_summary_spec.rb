@@ -21,6 +21,7 @@ module VCAP::CloudController
       @space = Models::Space.make
       @route1 = Models::Route.make(:space => @space)
       @route2 = Models::Route.make(:space => @space)
+      @nil_host_route = Models::Route.make(:space => @space, :host => nil)
       @services = []
 
       @app = Models::App.make(
@@ -41,6 +42,7 @@ module VCAP::CloudController
 
       @app.add_route(@route1)
       @app.add_route(@route2)
+      @app.add_route(@nil_host_route)
     end
 
     after(:all) do
@@ -66,7 +68,7 @@ module VCAP::CloudController
         decoded_response["name"].should == @app.name
       end
 
-      it "should return the app routes" do
+      it "should return correct app routes" do
         decoded_response["routes"].should == [{
           "guid" => @route1.guid,
           "host" => @route1.host,
@@ -80,6 +82,12 @@ module VCAP::CloudController
           "domain" => {
             "guid" => @route2.domain.guid,
             "name" => @route2.domain.name}
+        }, {
+          "guid" => @nil_host_route.guid,
+          "host" => "",
+          "domain" => {
+            "guid" => @nil_host_route.domain.guid,
+            "name" => @nil_host_route.domain.name}
         }]
       end
 
@@ -94,10 +102,11 @@ module VCAP::CloudController
       end
 
       it "should contain list of available domains" do
-        _, domain1, domain2 = @app.space.domains
+        _, domain1, domain2, domain3 = @app.space.domains
         decoded_response["available_domains"].should =~ [
           {"guid" => domain1.guid, "name" => domain1.name, "owning_organization_guid" => domain1.owning_organization.guid},
           {"guid" => domain2.guid, "name" => domain2.name, "owning_organization_guid" => domain2.owning_organization.guid},
+          {"guid" => domain3.guid, "name" => domain3.name, "owning_organization_guid" => domain3.owning_organization.guid},
           {"guid" => @system_domain.guid, "name" => @system_domain.name, "owning_organization_guid" => nil}
         ]
       end

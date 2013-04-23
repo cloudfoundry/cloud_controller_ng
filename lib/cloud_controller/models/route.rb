@@ -7,6 +7,13 @@ module VCAP::CloudController::Models
     class InvalidDomainRelation < InvalidRelation; end
     class InvalidAppRelation < InvalidRelation; end
 
+    #Required to make host support nil for Oracle while still
+    #validating domain_id, :host unique constraint on other dbs.
+    def before_save
+      self[:host] = "" if self[:host].nil?
+      super
+    end
+
     many_to_one :domain
     many_to_one :space
 
@@ -35,6 +42,10 @@ module VCAP::CloudController::Models
       }
     end
 
+    def host
+      self[:host].nil? ? "" : self[:host]
+    end
+
     def organization
       space.organization if space
     end
@@ -43,14 +54,12 @@ module VCAP::CloudController::Models
       validates_presence :domain
       validates_presence :space
 
-      errors.add(:host, :presence) if host.nil?
-
-      validates_format   /^([\w\-]+)$/, :host if (host && !host.empty?)
+      validates_format   /^([\w\-]+)$/, :host if (!host.empty?)
       validates_unique   [:host, :domain_id]
 
       if domain
         unless domain.wildcard
-          errors.add(:host, :host_not_empty) unless (host.nil? || host.empty?)
+          errors.add(:host, :host_not_empty) unless (host.empty?)
         end
 
         if space && space.domains_dataset.filter(:id => domain.id).count < 1
