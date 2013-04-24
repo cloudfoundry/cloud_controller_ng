@@ -6,6 +6,13 @@ require "cloud_controller/health_manager_respondent"
 module VCAP::CloudController
   describe HealthManagerRespondent do
     shared_examples "common test for all health manager respondents" do
+      before do
+        # we are only testing if NATS is subscribed
+        dea_client.stub(:stop_instances)
+        dea_client.stub(:stop)
+        dea_client.stub(:start_instances_with_message)
+      end
+
       it "CC subscribes to the Health Mangager NATS" do
         mbus.should_receive(:subscribe).with("cloudcontrollers.hm.requests.ng", :queue => "cc")
         process_hm_request
@@ -14,7 +21,6 @@ module VCAP::CloudController
 
     before { mbus.stub(:subscribe).with(anything, anything) }
 
-    let(:app) { Models::App.make(:instances => 2).save }
     let(:mbus) { double("mock nats") }
     let(:dea_client) { double("mock dea client", :message_bus => mbus) }
     let(:respondent) do
@@ -25,6 +31,11 @@ module VCAP::CloudController
     let(:last_updated) { app.updated_at }
     let(:version) { app.version }
     let(:indices) { [1] }
+    let(:app) do
+      Models::App.make(
+        :instances => 2, :state => 'STARTED', :package_hash => "SOME_HASH", :package_state => "STAGED"
+      ).save
+    end
     let(:payload) do
       {
         :droplet        => app.guid,
@@ -63,6 +74,8 @@ module VCAP::CloudController
         end
 
         context "when the app isn't started" do
+          let(:app) { Models::App.make(:instances => 2).save }
+
           it "drops the request" do
             dea_client.should_not_receive(:start_instances_with_message)
             mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
@@ -121,9 +134,7 @@ module VCAP::CloudController
           }
         end
 
-        it_should_behave_like "common test for all health manager respondents" do
-          before { dea_client.stub(:stop_instances) }
-        end
+        it_should_behave_like "common test for all health manager respondents"
 
         it "sends a stop request to dea" do
           dea_client.should_receive(:stop_instances).with(
@@ -132,6 +143,11 @@ module VCAP::CloudController
           )
 
           process_hm_request
+        end
+
+        it "updates the app model to have fewer instances" do
+          dea_client.stub(:stop_instances)
+          expect { process_hm_request }.to change { app.reload.instances }.by(-1)
         end
 
         context "when the timestamps mismatch" do
@@ -146,10 +162,11 @@ module VCAP::CloudController
 
         context "with a runaway app" do
           let(:instances) { [1] }
+
           it "sends a stop request to dea" do
             app.destroy
-            dea_client.should_receive(:stop) do |app|
-              app.guid.should == app.guid
+            dea_client.should_receive(:stop) do |new_app|
+              expect(new_app.guid).to eq app.guid
             end
 
             process_hm_request
@@ -165,6 +182,7 @@ module VCAP::CloudController
           end
 
           it "does not stop any runway apps" do
+            app.destroy
             dea_client.should_not_receive(:stop)
             process_hm_request
           end
@@ -173,6 +191,36 @@ module VCAP::CloudController
             respondent.logger.should_receive(:error).with(/malformed/i)
             process_hm_request
           end
+        end
+
+        shared_examples "health manager is wrong" do |error_regex|
+          it "logs an error since HM should have sent the spindown command" do
+            respondent.logger.should_receive(:error).with(error_regex)
+            process_hm_request
+          end
+
+          it "marks the app as stopped" do
+            expect { process_hm_request }.to change { app.reload.state }.from("STARTED").to("STOPPED")
+          end
+
+          it "sends a stop request to the dea" do
+            dea_client.should_receive(:stop) do |changed_app|
+              expect(changed_app).to eq app.reload
+            end
+            process_hm_request
+          end
+        end
+
+        context "when health manager incorrectly scales down to 0 instances" do
+          let(:instances) { [0, 1] }
+          before { dea_client.stub(:stop) }
+          it_should_behave_like "health manager is wrong", /spindown/i
+        end
+
+        context "when health manager incorrectly scales down to less than 0 instances" do
+          let(:instances) { [0, 1, 2] }
+          before { dea_client.stub(:stop) }
+          it_should_behave_like "health manager is wrong", /negative/i
         end
       end
 

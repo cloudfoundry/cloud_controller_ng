@@ -4,7 +4,7 @@ require "vcap/stager/client"
 
 module VCAP::CloudController
   class DeaPool
-    ADVERTISEMENT_EXPIRATION = 10
+    ADVERTISEMENT_EXPIRATION = 10.freeze
 
     attr_reader :config, :message_bus
 
