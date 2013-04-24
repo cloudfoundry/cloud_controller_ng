@@ -18,6 +18,7 @@ module VCAP::CloudController
       attribute :timeout,        Integer, :default => nil
       attribute :active,         Message::Boolean, :default => false
       attribute :extra,          String, :default => nil
+      attribute :unique_id,      String, :default => nil, :exclude_in => [:update]
       to_many   :service_plans
     end
 

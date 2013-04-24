@@ -22,6 +22,7 @@ Sham.define do
   guid                { |index| "guid-#{index}" }
   extra               { |index| "extra-#{index}"}
   instance_index      { |index| index }
+  unique_id           { |index| "unique-id-#{index}" }
 end
 
 module VCAP::CloudController::Models

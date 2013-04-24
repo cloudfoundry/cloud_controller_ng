@@ -144,5 +144,35 @@ module VCAP::CloudController
         decoded_guids.should =~ @inactive.map(&:guid)
       end
     end
+
+    let(:admin_headers) do
+      admin = Models::User.make(:admin => true)
+      headers_for(admin)
+    end
+
+    describe "POST", "/v2/services" do
+      it "accepts a request with unique_id" do
+        payload = VCAP::CloudController::Service::CreateMessage.new(
+          :label => 'foo',
+          :provider => 'phan',
+          :url => Sham.url,
+          :description => 'd',
+          :version => 'v',
+          :unique_id => Sham.unique_id,
+        ).encode
+        post "/v2/services", payload, admin_headers
+        last_response.status.should eq(201)
+      end
+    end
+
+    describe "PUT", "/v2/services/:guid" do
+      it "rejects updating unique_id" do
+        service = Models::Service.make
+        new_unique_id = service.unique_id.reverse
+        payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
+        put "/v2/services/#{service.guid}", payload, admin_headers
+        last_response.status.should eq 400
+      end
+    end
   end
 end
