@@ -205,7 +205,10 @@ module VCAP::CloudController
 
           it "sends a stop request to the dea" do
             dea_client.should_receive(:stop) do |changed_app|
-              expect(changed_app).to eq app.reload
+              reloaded_app = app.reload
+              [:id, :guid, :state, :instances].each do |field|
+                changed_app.send(field).should == reloaded_app.send(field)
+              end
             end
             process_hm_request
           end
