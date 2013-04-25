@@ -202,7 +202,8 @@ module VCAP::CloudController
         logger.debug "run '#{cmd}'"
         child = POSIX::Spawn::Child.new(cmd, opts)
         if child.status.exitstatus != 0
-          logger.error "'#{cmd}' failed out: '#{child.out}' err: '#{child.err}'"
+          logger.error "command failed: '#{cmd}'"
+          logger.error "failed command out: '#{child.out}', err: '#{child.err}'"
           raise Errors::AppPackageInvalid.new("failed #{msg}")
         end
         child.out
