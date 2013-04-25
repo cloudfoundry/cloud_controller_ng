@@ -191,12 +191,8 @@ module VCAP::CloudController
       # Repacks a directory into a compressed file.
       def repack_app_in(dir, tmpdir)
         target_path = File.join(tmpdir, 'app.zip')
-        files_list = ""
-        if File.exists?(dir)
-          Dir.chdir(dir) { files_list = Dir.glob("**/{*,.[^.]*}").join(" ") }
-        end
-
-        cmd = "zip -q -y -r #{target_path} #{files_list}"
+        files = File.exists?(dir) ? Dir.entries(dir) - %w[. ..] : []
+        cmd = "zip -q -y -r #{target_path} #{files.join(" ")}"
         run("repacking application", cmd, :chdir => dir)
         target_path
       end
