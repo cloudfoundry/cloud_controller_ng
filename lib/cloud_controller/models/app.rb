@@ -383,17 +383,6 @@ module VCAP::CloudController
         ))
       end
 
-      # @param  [Hash, nil] old
-      # @param  [Hash, nil] new
-      # @return [Boolean]   old and new values of the key differ, or the key was added or removed
-      def key_changed?(key, old, new)
-        if old.nil? || ! old.has_key?(key)
-          return new && new.has_key?(key)
-        else
-          new.nil? || ! new.has_key?(key) || old[key] != new[key]
-        end
-      end
-
       def mark_routes_changed(_)
         @routes_changed = true
       end
