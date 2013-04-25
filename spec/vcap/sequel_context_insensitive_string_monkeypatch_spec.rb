@@ -142,4 +142,4 @@ describe "String :name" do
       end
     end
   end
-end
+end unless $spec_env.db.use_lower_where?

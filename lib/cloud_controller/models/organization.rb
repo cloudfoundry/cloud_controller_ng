@@ -30,6 +30,8 @@ module VCAP::CloudController::Models
                       :user_guids, :manager_guids, :billing_manager_guids,
                       :auditor_guids, :domain_guids, :quota_definition_guid
 
+    ci_attributes  :name
+    
     def billing_enabled?
       billing_enabled
     end
@@ -42,7 +44,7 @@ module VCAP::CloudController::Models
 
     def validate
       validates_presence :name
-      validates_unique   :name
+      validates_unique_ci   :name
 
       if column_changed?(:billing_enabled)
         unless VCAP::CloudController::SecurityContext.current_user_is_admin?

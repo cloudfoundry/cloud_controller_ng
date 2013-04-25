@@ -15,6 +15,7 @@ module VCAP::CloudController
       :required_attributes => [:name, :space_guid],
       :unique_attributes   => [:name, :space_guid],
       :queryable_attributes => :name,
+      :ci_attributes       =>  :name,
       :many_to_one_collection_ids => {
         :space      => lambda { |app| Models::Space.make },
         :stack      => lambda { |app| Models::Stack.make },

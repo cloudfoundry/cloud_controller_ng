@@ -16,6 +16,8 @@ module VCAP::CloudController::Models
                       :version, :info_url, :active, :extra
 
     strip_attributes  :label, :provider
+    
+    ci_attributes  :label, :provider
 
     def validate
       self.unique_id ||= "#{provider}_#{label}"
@@ -26,7 +28,7 @@ module VCAP::CloudController::Models
       validates_presence :version
       validates_url      :url
       validates_url      :info_url
-      validates_unique   [:label, :provider]
+      validates_unique_ci   [:label, :provider]
     end
   end
 end

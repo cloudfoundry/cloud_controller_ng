@@ -20,6 +20,7 @@ module VCAP::CloudController
       :required_attributes  => [:name, :space],
       :unique_attributes    => [:space, :name],
       :stripped_string_attributes => :name,
+      :ci_attributes        => :name,
       :many_to_one => {
         :space              => {
           :delete_ok => true,
@@ -274,18 +275,6 @@ module VCAP::CloudController
     end
 
     describe "validations" do
-      describe "name" do
-        let(:space) { Models::Space.make }
-
-        it "does not allow the same name in a different case", :skip_sqlite => true do
-          Models::App.make(:name => "lowercase", :space => space)
-
-          expect {
-            Models::App.make(:name => "lowerCase", :space => space)
-          }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
-        end
-      end
-
       describe "env" do
         let(:app) { Models::App.make }
 

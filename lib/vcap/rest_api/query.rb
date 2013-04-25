@@ -74,6 +74,7 @@ module VCAP::RestAPI
       q_key, q_val = clean_up_foreign_key(q_key, q_val)
       q_key, q_val = clean_up_boolean(q_key, q_val)
       q_key, q_val = clean_up_integer(q_key, q_val)
+      q_key, q_val = make_case_insensitive(q_key, q_val)
 
       {q_key => q_val}
     end
@@ -143,6 +144,14 @@ module VCAP::RestAPI
         q_val = q_val.to_i if q_val
       end
 
+      [q_key, q_val]
+    end
+    
+    def make_case_insensitive(q_key, q_val)
+      if model.db.use_lower_where? && (model.ci_attrs && model.ci_attrs.include?(q_key))
+        q_key = Sequel.function(:lower, q_key)
+        q_val = q_val.downcase
+      end
       [q_key, q_val]
     end
 

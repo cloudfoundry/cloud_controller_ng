@@ -20,6 +20,8 @@ module VCAP::CloudController::Models
     export_attributes :host, :domain_guid, :space_guid
     import_attributes :host, :domain_guid, :space_guid, :app_guids
 
+    ci_attributes  :host
+    
     def fqdn
       !host.empty? ? "#{host}.#{domain.name}" : domain.name
     end
@@ -46,7 +48,7 @@ module VCAP::CloudController::Models
       errors.add(:host, :presence) if host.nil?
 
       validates_format   /^([\w\-]+)$/, :host if (host && !host.empty?)
-      validates_unique   [:host, :domain_id]
+      validates_unique_ci   [:host, :domain_id]
 
       if domain
         unless domain.wildcard

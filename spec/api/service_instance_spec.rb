@@ -11,6 +11,7 @@ module VCAP::CloudController
       :basic_attributes     => [:name],
       :required_attributes  => [:name, :space_guid, :service_plan_guid],
       :unique_attributes    => [:space_guid, :name],
+      :ci_attributes        => :name,
       :one_to_many_collection_ids => {
         :service_bindings => lambda { |service_instance|
           make_service_binding_for_service_instance(service_instance)
