@@ -22,10 +22,16 @@ module VCAP::CloudController
         apps[app.guid] = app_summary(app)
       end
 
-      started_apps = space.apps.select { |app| app.started? }
+      started_apps = space.apps.select(&:started?)
       unless started_apps.empty?
         HealthManagerClient.healthy_instances(started_apps).each do |guid, num|
           apps[guid][:running_instances] = num
+        end
+      end
+
+      space.apps.each do |app|
+        if app.stopped?
+          apps[app.guid][:running_instances] = 0
         end
       end
 
@@ -49,7 +55,7 @@ module VCAP::CloudController
         :urls => app.routes.map(&:fqdn),
         :routes => app.routes.map(&:as_summary_json),
         :service_count => app.service_bindings_dataset.count,
-        :running_instances => 0,
+        :running_instances => nil,
       }.merge(app.to_hash)
     end
 
