@@ -42,6 +42,12 @@ module VCAP::CloudController
       end
     end
 
+    describe "default access control" do
+      it "cannot access non-public service plans" do
+        Models::Organization.make.can_access_non_public_plans.should eq(false)
+      end
+    end
+
     context "with multiple shared domains" do
       it "should be associated with the shared domains that exist at creation time" do
         org = Models::Organization.make
