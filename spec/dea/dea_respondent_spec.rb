@@ -50,15 +50,19 @@ module VCAP::CloudController
       context "when the app crashed" do
         context "the app described in the event exists" do
           it "adds a record in the CrashEvents table" do
-            respondent.process_droplet_exited_message(payload)
+            time = Time.now
+            Timecop.freeze(time) do
+              respondent.process_droplet_exited_message(payload)
 
-            crash_event = Models::CrashEvent.find(:app_id => app.id)
+              crash_event = Models::CrashEvent.find(:app_id => app.id)
 
-            expect(crash_event).not_to be_nil
-            expect(crash_event.instance_guid).to eq(payload[:instance])
-            expect(crash_event.instance_index).to eq(payload[:index])
-            expect(crash_event.exit_status).to eq(payload[:exit_status])
-            expect(crash_event.exit_description).to eq(payload[:exit_description])
+              expect(crash_event).not_to be_nil
+              expect(crash_event.instance_guid).to eq(payload[:instance])
+              expect(crash_event.instance_index).to eq(payload[:index])
+              expect(crash_event.exit_status).to eq(payload[:exit_status])
+              expect(crash_event.exit_description).to eq(payload[:exit_description])
+              expect(crash_event.timestamp.to_i).to eq(time.to_i)
+            end
           end
         end
 

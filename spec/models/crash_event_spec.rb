@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::Models::CrashEvent do
     it_behaves_like "a CloudController model", {
       :required_attributes => [:app, :instance_guid,
-        :instance_index, :exit_status],
+        :instance_index, :exit_status, :timestamp],
     }
   end
 end

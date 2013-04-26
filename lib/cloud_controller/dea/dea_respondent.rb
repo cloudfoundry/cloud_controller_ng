@@ -31,7 +31,8 @@ module VCAP::CloudController
           :instance_guid => decoded_message[:instance],
           :instance_index => decoded_message[:index],
           :exit_status => decoded_message[:exit_status],
-          :exit_description => decoded_message[:exit_description]
+          :exit_description => decoded_message[:exit_description],
+          :timestamp => Time.now,
         )
       end
     end

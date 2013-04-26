@@ -155,6 +155,7 @@ module VCAP::CloudController::Models
     instance_index    { Sham.instance_index }
     exit_status       { Random.rand(256) }
     exit_description  { Sham.description }
+    timestamp         { Time.now }
   end
 
   ServiceCreateEvent.blueprint do
