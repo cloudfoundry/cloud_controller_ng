@@ -18,10 +18,14 @@ module VCAP::CloudController
       end
     end
 
+    def crashed_app?(decoded_message)
+      decoded_message[:reason] && decoded_message[:reason].downcase == "crashed"
+    end
+
     def process_droplet_exited_message(decoded_message)
       app_guid = decoded_message[:droplet]
       app = Models::App[:guid => app_guid]
-      if app
+      if app && crashed_app?(decoded_message)
         crash_event = Models::CrashEvent.create(
           :app_id => app.id,
           :instance_guid => decoded_message[:instance],

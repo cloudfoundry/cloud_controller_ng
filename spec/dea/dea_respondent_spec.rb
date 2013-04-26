@@ -16,14 +16,16 @@ module VCAP::CloudController
       ).save
     end
 
+    let(:droplet) { app.guid }
+    let(:reason) { "CRASHED" }
     let(:payload) do
       {
         :cc_partition => "cc_partition",
-        :droplet => app.guid,
+        :droplet => droplet,
         :version => app.version,
         :instance => "instance_id",
         :index => 0,
-        :reason => "CRASHED",
+        :reason => reason,
         :exit_status => 145,
         :exit_description => "Exit description",
       }
@@ -45,36 +47,46 @@ module VCAP::CloudController
     end
 
     describe "#process_droplet_exited_message" do
-      context "the app described in the event exists" do
-        it "adds a record in the CrashEvents table" do
-          respondent.process_droplet_exited_message(payload)
+      context "when the app crashed" do
+        context "the app described in the event exists" do
+          it "adds a record in the CrashEvents table" do
+            respondent.process_droplet_exited_message(payload)
 
-          crash_event = Models::CrashEvent.find(:app_id => app.id)
-          expect(crash_event).not_to be_nil
-          expect(crash_event.instance_guid).to eq(payload[:instance])
-          expect(crash_event.instance_index).to eq(payload[:index])
-          expect(crash_event.exit_status).to eq(payload[:exit_status])
-          expect(crash_event.exit_description).to eq(payload[:exit_description])
+            crash_event = Models::CrashEvent.find(:app_id => app.id)
+
+            expect(crash_event).not_to be_nil
+            expect(crash_event.instance_guid).to eq(payload[:instance])
+            expect(crash_event.instance_index).to eq(payload[:index])
+            expect(crash_event.exit_status).to eq(payload[:exit_status])
+            expect(crash_event.exit_description).to eq(payload[:exit_description])
+          end
+        end
+
+        context "the app described in the event does not exist" do
+          let(:droplet) { "non existent droplet" }
+
+          it "does not add a record in the CrashEvents table" do
+            Models::CrashEvent.should_not_receive(:create)
+            respondent.process_droplet_exited_message(payload)
+          end
         end
       end
 
-      context "the app described in the event does not exist" do
-        let(:payload) do
-          {
-            :cc_partition => "cc_partition",
-            :droplet => "nonexistent guid",
-            :version => "some version",
-            :instance => "instance_id",
-            :index => 0,
-            :reason => "CRASHED",
-            :exit_status => 145,
-            :exit_description => "Exit description",
-          }
+      context "when the app did not crash" do
+        let(:reason) { "STOPPED" }
+
+        context "the app described in the event exists" do
+          it "does not add a record in the CrashEvents table" do
+            Models::CrashEvent.should_not_receive(:create)
+            respondent.process_droplet_exited_message(payload)
+          end
         end
 
-        it "does not add a record in the CrashEvents table" do
-          Models::CrashEvent.should_not_receive(:create)
-          respondent.process_droplet_exited_message(payload)
+        context "the app described in the event does not exist" do
+          it "does not add a record in the CrashEvents table" do
+            Models::CrashEvent.should_not_receive(:create)
+            respondent.process_droplet_exited_message(payload)
+          end
         end
       end
     end
