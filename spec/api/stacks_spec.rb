@@ -12,6 +12,7 @@ module VCAP::CloudController
       :required_attributes  => [:name, :description],
       :unique_attributes    => :name,
       :queryable_attributes => :name,
+      :ci_attributes        => :name
     }
   end
 end
