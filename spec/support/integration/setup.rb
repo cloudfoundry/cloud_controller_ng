@@ -35,6 +35,7 @@ end
 
 module IntegrationSetupHelpers
   def run_cmd(cmd, opts={})
+    opts[:env] ||= {}
     project_path = File.join(File.dirname(__FILE__), "../../..")
     spawn_opts = {
       :chdir => project_path,
@@ -42,12 +43,14 @@ module IntegrationSetupHelpers
       :err => opts[:debug] ? :out : "/dev/null",
     }
 
-    Process.spawn(cmd, spawn_opts).tap do |pid|
-      if opts[:wait]
-        Process.wait(pid)
-        raise "`#{cmd}` exited with #{$?}" unless $?.success?
-      end
+    pid = Process.spawn(opts[:env], cmd, spawn_opts)
+
+    if opts[:wait]
+      Process.wait(pid)
+      raise "`#{cmd}` exited with #{$?}" unless $?.success?
     end
+
+    pid
   end
 
   def graceful_kill(name, pid)

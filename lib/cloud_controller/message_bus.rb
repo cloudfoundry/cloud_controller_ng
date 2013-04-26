@@ -25,6 +25,14 @@ class VCAP::CloudController::MessageBus
     # TODO: put useful metrics in varz
     # TODO: subscribe to the two DEA channels
     EM.schedule do
+      EM.error_handler do |e|
+        if e.class == NATS::ConnectError
+          puts "NATS is down"
+        else
+          raise e
+        end
+      end
+
       nats.start(:uri => config[:nats_uri]) do
         VCAP::Component.register(
           :type => 'CloudController',
