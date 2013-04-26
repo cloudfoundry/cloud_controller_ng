@@ -14,26 +14,31 @@ class VCAP::CloudController::MessageBus
     end
   end
 
-  attr_reader :config, :nats
+  attr_reader :config, :nats, :subscriptions
 
   def initialize(config)
     @config = config
     @nats = config[:nats] || NATS
+    @subscriptions = {}
+  end
+
+  def nats_options
+    { :uri => config[:nats_uri] }
   end
 
   def register_components
     # TODO: put useful metrics in varz
     # TODO: subscribe to the two DEA channels
-    EM.schedule do
-      EM.error_handler do |e|
-        if e.class == NATS::ConnectError
-          puts "NATS is down"
-        else
-          raise e
-        end
+    EM.error_handler do |e|
+      if e.class == NATS::ConnectError
+        start_nats_recovery
+      else
+        raise e
       end
+    end
 
-      nats.start(:uri => config[:nats_uri]) do
+    EM.schedule do
+      nats.start(nats_options) do
         VCAP::Component.register(
           :type => 'CloudController',
           :host => @config[:bind_address],
@@ -41,6 +46,24 @@ class VCAP::CloudController::MessageBus
           :config => config,
           # leaving the varz port / user / pwd blank to be random
         )
+      end
+    end
+  end
+
+  def start_nats_recovery
+    EM.defer do
+      unless nats.connected?
+        nats.on_error do
+          start_nats_recovery
+        end
+        nats.wait_for_server(nats_options[:uri])
+        nats.connect(nats_options) do
+          register_routes
+
+          @subscriptions.each do |subject, options|
+            subscribe(subject, options[0], &options[1])
+          end
+        end
       end
     end
   end
@@ -75,6 +98,8 @@ class VCAP::CloudController::MessageBus
   # @yieldparam [String] payload the message posted on the channel
   # @yieldparam [optional, String] inbox an optional "reply to" subject, nil if not requested
   def subscribe(subject, opts = {}, &blk)
+    @subscriptions[subject] = [opts, blk]
+
     subscribe_on_reactor(subject, opts) do |payload, inbox|
       EM.defer do
         begin

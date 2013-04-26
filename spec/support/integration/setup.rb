@@ -1,35 +1,42 @@
 module IntegrationSetup
   def start_nats(opts={})
-    before(:all) do
-      @nats_pid = run_cmd("nats-server -V -D", opts)
-      sleep 0.5
-      unless process_alive?(@nats_pid)
-        raise "nats-server is not running"
-      end
+    @nats_pid = run_cmd("nats-server -V -D", opts)
+    sleep 0.5
+    unless process_alive?(@nats_pid)
+      raise "nats-server is not running"
     end
+  end
 
-    after(:all) { graceful_kill(:nats, @nats_pid) }
+  def stop_nats
+    graceful_kill(:nats, @nats_pid)
+  end
+
+  def kill_nats
+    Process.kill("KILL", @nats_pid)
+    sleep 2
   end
 
   # TODO(David & Kowshik): Rewrite this.
   def start_cc(opts={})
-    before(:all) do
-      @cc_pid = run_cmd("bundle exec rake db:migrate && bin/cloud_controller config/cloud_controller.yml", opts)
-      wait_cycles = 0
-      while wait_cycles < 20
-        sleep 1
-        begin
-          result = Net::HTTP.get_response(URI.parse("http://localhost:8181/info"))
-        rescue Errno::ECONNREFUSED
-          # ignore
-        end
-        break if result && result.code.to_i == 200
-        wait_cycles += 1
+    run_cmd("bundle exec rake db:migrate")
+    @cc_pid = run_cmd("bin/cloud_controller config/cloud_controller.yml", opts)
+    wait_cycles = 0
+    while wait_cycles < 20
+      sleep 1
+      begin
+        result = Net::HTTP.get_response(URI.parse("http://localhost:8181/info"))
+      rescue Errno::ECONNREFUSED
+        # ignore
       end
-
-      raise "Cloud controller did not start up after #{wait_cycles}s" if wait_cycles == 20
+      break if result && result.code.to_i == 200
+      wait_cycles += 1
     end
-    after(:all) { graceful_kill(:cc, @cc_pid) }
+
+    raise "Cloud controller did not start up after #{wait_cycles}s" if wait_cycles == 20
+  end
+
+  def stop_cc
+    graceful_kill(:cc, @cc_pid)
   end
 end
 
@@ -73,7 +80,7 @@ end
 
 RSpec.configure do |rspec_config|
   rspec_config.include(IntegrationSetupHelpers, :type => :integration)
-  rspec_config.extend(IntegrationSetup, :type => :integration)
+  rspec_config.include(IntegrationSetup, :type => :integration)
 
   rspec_config.before(:all, :type => :integration) do
     WebMock.allow_net_connect!
