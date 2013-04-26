@@ -21,6 +21,7 @@ Sham.define do
   host                { |index| "host-#{index}" }
   guid                { |index| "guid-#{index}" }
   extra               { |index| "extra-#{index}"}
+  instance_index      { |index| index }
 end
 
 module VCAP::CloudController::Models
@@ -146,6 +147,14 @@ module VCAP::CloudController::Models
     app_guid          { Sham.guid }
     app_name          { Sham.name }
     app_run_id        { Sham.guid }
+  end
+
+  CrashEvent.blueprint do
+    app               { App.make }
+    instance_guid     { Sham.guid }
+    instance_index    { Sham.instance_index }
+    exit_status       { Random.rand(256) }
+    exit_description  { Sham.description }
   end
 
   ServiceCreateEvent.blueprint do
