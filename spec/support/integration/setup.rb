@@ -3,16 +3,20 @@ module IntegrationSetup
     before(:all) do
       @nats_pid = run_cmd("nats-server -V -D", opts)
       sleep 0.5
+      unless process_alive?(@nats_pid)
+        raise "nats-server is not running"
+      end
     end
 
     after(:all) { graceful_kill(:nats, @nats_pid) }
   end
 
+  # TODO(David & Kowshik): Rewrite this.
   def start_cc(opts={})
     before(:all) do
       @cc_pid = run_cmd("bundle exec rake db:migrate && bin/cloud_controller config/cloud_controller.yml", opts)
-      attempts = 0
-      while attempts <= 20
+      wait_cycles = 0
+      while wait_cycles < 20
         sleep 1
         begin
           result = Net::HTTP.get_response(URI.parse("http://localhost:8181/info"))
@@ -20,8 +24,10 @@ module IntegrationSetup
           # ignore
         end
         break if result && result.code.to_i == 200
-        attempts += 1
+        wait_cycles += 1
       end
+
+      raise "Cloud controller did not start up after #{wait_cycles}s" if wait_cycles == 20
     end
     after(:all) { graceful_kill(:cc, @cc_pid) }
   end
