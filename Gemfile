@@ -38,4 +38,5 @@ group :test do
   gem "webmock"
   gem "guard-rspec"
   gem "timecop"
+  gem "debugger"
 end
