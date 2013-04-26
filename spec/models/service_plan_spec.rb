@@ -66,7 +66,7 @@ module VCAP::CloudController
     end
 
     describe "serialization" do
-      let(:service_plan) { Models::ServicePlan.new_from_hash(extra: "extra") }
+      let(:service_plan) { Models::ServicePlan.new_from_hash(extra: "extra", public: false) }
 
       it "allows mass assignment of extra" do
          service_plan.extra.should == 'extra'
@@ -74,6 +74,10 @@ module VCAP::CloudController
 
       it "allows export of extra"  do
          Yajl::Parser.parse(service_plan.to_json)["extra"].should == 'extra'
+      end
+
+      it "allows massignment of public" do
+        service_plan.public.should == false
       end
     end
   end
