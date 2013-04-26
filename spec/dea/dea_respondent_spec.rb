@@ -89,6 +89,15 @@ module VCAP::CloudController
           end
         end
       end
+
+      context "when the droplet.exited message contains no reason" do
+        let(:reason) { nil }
+
+        it "does not add a record in the CrashEvents table" do
+          Models::CrashEvent.should_not_receive(:create)
+          respondent.process_droplet_exited_message(payload)
+        end
+      end
     end
   end
 end
