@@ -49,10 +49,6 @@ module VCAP::CloudController::Models
           errors.add(:billing_enabled, :not_authorized)
         end
 
-        orig_val, new_val = column_change(:billing_enabled)
-        if orig_val == true && new_val == false
-          errors.add(:billing_enabled, :not_allowed)
-        end
       end
 
       if column_changed?(:quota_definition_id) && !new?

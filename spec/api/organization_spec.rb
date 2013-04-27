@@ -191,16 +191,6 @@ module VCAP::CloudController
           org.refresh
           org.billing_enabled.should == true
         end
-
-        it "should not be allowed to set billing_enabled flag to false" do
-          org.billing_enabled = true
-          org.save(:validate => false)
-          req = Yajl::Encoder.encode(:billing_enabled => false)
-          put "/v2/organizations/#{org.guid}", req, admin_headers
-          last_response.status.should == 400
-          org.refresh
-          org.billing_enabled.should == true
-        end
       end
 
       describe "org admins" do
