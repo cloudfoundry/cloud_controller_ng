@@ -146,8 +146,8 @@ module VCAP::CloudController
 
       it "is visible to users from privileged organizations" do
         organization = developer.organizations.first
-        organization.can_access_non_public_plans = true
-        organization.save
+        VCAP::CloudController::SecurityContext.stub(:current_user_is_admin?) { true }
+        organization.update(:can_access_non_public_plans => true)
         get '/v2/service_plans', {}, headers_for(developer)
         plan_guids.should include(private_plan.guid)
       end

@@ -5,6 +5,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Organization do
     let(:org) { Models::Organization.make }
+    let(:admin_headers) { headers_for(Models::User.make(:admin => true)) }
 
     it_behaves_like "a CloudController API", {
       :path                => "/v2/organizations",
@@ -161,11 +162,6 @@ module VCAP::CloudController
     end
 
     describe "billing" do
-      let(:admin_headers) do
-        user = Models::User.make(:admin => true)
-        headers_for(user)
-      end
-
       let(:org_admin_headers) do
         user = Models::User.make
         org.add_user(user)
@@ -215,12 +211,28 @@ module VCAP::CloudController
       end
     end
 
-    describe "quota definition" do
-      let(:admin_headers) do
-        user = Models::User.make(:admin => true)
-        headers_for(user)
+
+    describe "updating the 'can_access_non_public_plans' field" do
+      let(:non_admin_headers) { headers_for(Models::User.make(:admin => false)) }
+
+      it "can be updated by cf admins" do
+        req = Yajl::Encoder.encode(:can_access_non_public_plans => true)
+        expect {
+          put "/v2/organizations/#{org.guid}", req, admin_headers
+        }.to change { org.reload.can_access_non_public_plans }.to(true)
+        last_response.status.should == 201
       end
 
+      it "cannot be updated by people who aren't cf-admins" do
+        req = Yajl::Encoder.encode(:can_access_non_public_plans => true)
+        expect {
+          put "/v2/organizations/#{org.guid}", req, non_admin_headers
+        }.not_to change { org.reload.can_access_non_public_plans }.from(false)
+        last_response.status.should == 403
+      end
+    end
+
+    describe "quota definition" do
       let(:org_admin_headers) do
         user = Models::User.make
         org.add_user(user)

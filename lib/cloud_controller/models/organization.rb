@@ -28,7 +28,8 @@ module VCAP::CloudController::Models
     export_attributes :name, :billing_enabled, :quota_definition_guid
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
-                      :auditor_guids, :domain_guids, :quota_definition_guid
+                      :auditor_guids, :domain_guids, :quota_definition_guid,
+                      :can_access_non_public_plans
 
     def billing_enabled?
       billing_enabled
@@ -43,18 +44,27 @@ module VCAP::CloudController::Models
     def validate
       validates_presence :name
       validates_unique   :name
+      validate_only_admin_can_update(:billing_enabled)
+      validate_only_admin_can_update(:can_access_non_public_plans)
+      validate_only_admin_can_update(:quota_definition_id)
+      validate_only_admin_can_enable_on_new(:can_access_non_public_plans)
+    end
 
-      if column_changed?(:billing_enabled)
-        unless VCAP::CloudController::SecurityContext.current_user_is_admin?
-          errors.add(:billing_enabled, :not_authorized)
-        end
-
+    def validate_only_admin_can_enable_on_new(field_name)
+      if new? && !!public_send(field_name)
+        require_admin_for(field_name)
       end
+    end
 
-      if column_changed?(:quota_definition_id) && !new?
-        unless VCAP::CloudController::SecurityContext.current_user_is_admin?
-          errors.add(:quota_definition, :not_authorized)
-        end
+    def validate_only_admin_can_update(field_name)
+      if !new? && column_changed?(field_name)
+        require_admin_for(field_name)
+      end
+    end
+
+    def require_admin_for(field_name)
+      unless VCAP::CloudController::SecurityContext.current_user_is_admin?
+        errors.add(field_name, :not_authorized)
       end
     end
 
