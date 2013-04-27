@@ -5,7 +5,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Models::Route do
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:domain, :space, :host],
+      :required_attributes  => [:domain, :space],
       :db_required_attributes => [:domain, :space],
       :unique_attributes    => [:host, :domain],
       :create_attribute => lambda { |name|
@@ -69,12 +69,12 @@ module VCAP::CloudController
             d
           end
 
-          it "should not allow a nil host" do
-            expect {
-              Models::Route.make(:space => space,
+          it "should allow a nil host but not expose or put null in the db" do
+            route = Models::Route.make(:space => space,
                                  :domain => domain,
                                  :host => nil)
-            }.to raise_error(Sequel::ValidationFailed)
+            route.host.should_not be_nil
+            route[:host].should_not be_nil unless route.db.database_type == :oracle
           end
 
           it "should allow an empty host" do
@@ -103,12 +103,12 @@ module VCAP::CloudController
             d
           end
 
-          it "should not allow a nil host" do
-            expect {
-              Models::Route.make(:space => space,
+          it "should allow a nil host and not put null in db" do
+            route = Models::Route.make(:space => space,
                                  :domain => domain,
-                                 :host => nil).should be_valid
-            }.to raise_error(Sequel::ValidationFailed)
+                               :host => nil)
+            route.host.should_not be_nil
+            route[:host].should_not be_nil unless route.db.database_type == :oracle
           end
 
           it "should not allow a valid host" do
@@ -221,14 +221,27 @@ module VCAP::CloudController
         }.to raise_error Models::Route::InvalidAppRelation
       end
 
-      it "should not allow creation of a nil host on a system domain" do
-        expect {
-          Models::Route.make(
+      it "should allow creation of a nil host on a system domain but not put nil in db" do
+        route = Models::Route.make(
+            :host => nil, :space => space_a,
+            :domain => Models::Domain.default_serving_domain
+        )
+        route.host.should_not be_nil
+        route[:host].should_not be_nil unless route.db.database_type == :oracle
+      end
+      it "should not allow a nil and and empty host to have the same domain" do
+        Models::Route.make(
             :host => nil, :space => space_a,
             :domain => Models::Domain.default_serving_domain
           )
-        }.to raise_error Sequel::ValidationFailed
+        expect {
+          Models::Route.make(
+            :host => "", :space => space_a,
+            :domain => Models::Domain.default_serving_domain
+          )
+        }.to raise_error Sequel::ValidationFailed, /unique/
       end
+
     end
 
     describe "#remove" do

@@ -33,7 +33,7 @@ module VCAP::CloudController
     }
 
     context "with a wildcard domain" do
-      it "should allow a nil host" do
+      it "should correctly handle a nil host" do
         cf_admin = Models::User.make(:admin => true)
         domain = Models::Domain.make(:wildcard => true)
         space = Models::Space.make(:organization => domain.owning_organization)
@@ -44,6 +44,9 @@ module VCAP::CloudController
                                :space_guid => space.guid),
           headers_for(cf_admin)
         last_response.status.should == 201
+        get decoded_response["metadata"]["url"], {}, headers_for(cf_admin)
+        last_response.status.should == 200
+        expect(decoded_response["entity"]["host"]).to be_empty
       end
     end
 
