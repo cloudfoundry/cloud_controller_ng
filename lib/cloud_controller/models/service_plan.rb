@@ -11,7 +11,7 @@ module VCAP::CloudController::Models
 
     export_attributes :name, :free, :description, :service_guid, :extra, :unique_id
 
-    import_attributes :name, :free, :description, :service_guid
+    import_attributes :name, :free, :description, :service_guid, :extra, :public
 
     strip_attributes  :name
 
@@ -22,6 +22,11 @@ module VCAP::CloudController::Models
       validates_presence :free
       validates_presence :service
       validates_unique   [:service_id, :name]
+    end
+
+    def self.user_visibility_filter(user)
+      opts = user.can_access_non_public_plans? ? {} : {public: true}
+      user_visibility_filter_with_admin_override(opts)
     end
   end
 end

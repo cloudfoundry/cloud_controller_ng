@@ -25,6 +25,7 @@ nginx:
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
 
 logging:
+  file: /tmp/cloud_controller.log
   level: debug2
 
 db:
@@ -42,12 +43,6 @@ cc_partition: ng
 bulk_api:
   auth_user: bulk_user
   auth_password: bulk_password
-
-service_lifecycle:
-  max_upload_size: 1
-  upload_token: changeme
-  upload_timeout: 2
-  serialization_data_server: []
 
 # App staging parameters
 staging:

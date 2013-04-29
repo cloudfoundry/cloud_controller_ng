@@ -291,6 +291,11 @@ module VCAP::CloudController
         mark_for_restaging
       end
 
+      def mark_as_failed_to_stage
+        self.package_state = "FAILED"
+        save
+      end
+
       def mark_for_restaging(opts={})
         self.package_state = "PENDING"
         save if opts[:save]
@@ -376,17 +381,6 @@ module VCAP::CloudController
           :droplet => guid,
           :cc_partition => MessageBus.instance.config[:cc_partition]
         ))
-      end
-
-      # @param  [Hash, nil] old
-      # @param  [Hash, nil] new
-      # @return [Boolean]   old and new values of the key differ, or the key was added or removed
-      def key_changed?(key, old, new)
-        if old.nil? || ! old.has_key?(key)
-          return new && new.has_key?(key)
-        else
-          new.nil? || ! new.has_key?(key) || old[key] != new[key]
-        end
       end
 
       def mark_routes_changed(_)

@@ -26,7 +26,7 @@ module VCAP::CloudController
           Yajl::Parser.parse(last_response.body)["code"].should == 220001
         end
 
-        it "returns '170002 NotStaged' when the app is failed to stage" do
+        it "returns '170001 StagingError' when the app is failed to stage" do
           @app.package_state = "FAILED"
           @app.save
 

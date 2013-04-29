@@ -86,13 +86,6 @@ class VCAP::CloudController::Config < VCAP::Config
         :instance_socket => String,
       },
 
-      :service_lifecycle => {
-        :max_upload_size => Integer,
-        :upload_token => String,
-        :upload_timeout => Integer,
-        :serialization_data_server => [URI.regexp(["http", "https"])],
-      },
-
       :quota_definitions => Hash,
       :default_quota_definition => String,
 
@@ -148,7 +141,7 @@ class VCAP::CloudController::Config < VCAP::Config
 
     stager_pool = VCAP::CloudController::StagerPool.new(config, mbus)
     VCAP::CloudController::AppStager.configure(config, mbus, stager_pool)
-    VCAP::CloudController::LegacyStaging.configure(config)
+    VCAP::CloudController::Staging.configure(config)
 
     dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)
     VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)

@@ -88,7 +88,10 @@ end
     config_file ||= File.expand_path("../config/cloud_controller.yml", __FILE__)
 
     config = VCAP::CloudController::Config.from_file(config_file)
+
+    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")
+
     db = VCAP::CloudController::DB.connect(db_logger, config[:db])
     VCAP::CloudController::DB.apply_migrations(db)
   end

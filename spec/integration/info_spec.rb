@@ -1,8 +1,15 @@
 require "spec_helper"
 
 describe "Cloud controller", :type => :integration do
-  start_nats
-  start_cc
+  before(:all) do
+    start_nats
+    start_cc
+  end
+
+  after(:all) do
+    stop_cc
+    stop_nats
+  end
 
   it "responds to /info" do
     make_http_request("/info").tap do |r|

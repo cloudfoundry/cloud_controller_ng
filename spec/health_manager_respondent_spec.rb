@@ -5,219 +5,272 @@ require "cloud_controller/health_manager_respondent"
 
 module VCAP::CloudController
   describe HealthManagerRespondent do
-    before :each do
-      # save refreshes the timestamp
-      @app = Models::App.make(
-        :instances => 2,
-      ).save
-      @mbus = double("mock nats")
-      @dea_client = double("mock dea client", :message_bus => @mbus)
+    shared_examples "common test for all health manager respondents" do
+      before do
+        # we are only testing if NATS is subscribed
+        dea_client.stub(:stop_instances)
+        dea_client.stub(:stop)
+        dea_client.stub(:start_instances_with_message)
+      end
 
-      @mbus.should_receive(:subscribe).with(
-        "cloudcontrollers.hm.requests.ng",
-        :queue => "cc",
-      )
+      it "CC subscribes to the Health Mangager NATS" do
+        mbus.should_receive(:subscribe).with("cloudcontrollers.hm.requests.ng", :queue => "cc")
+        process_hm_request
+      end
+    end
 
-      @respondent = HealthManagerRespondent.new(
-        config.merge(
-          :message_bus => @mbus,
-          :dea_client => @dea_client,
-        )
+    before { mbus.stub(:subscribe).with(anything, anything) }
+
+    let(:mbus) { double("mock nats") }
+    let(:dea_client) { double("mock dea client", :message_bus => mbus) }
+    let(:respondent) do
+      HealthManagerRespondent.new(
+        config.merge(:message_bus => mbus, :dea_client => dea_client)
       )
     end
+    let(:last_updated) { app.updated_at }
+    let(:version) { app.version }
+    let(:indices) { [1] }
+    let(:app) do
+      Models::App.make(
+        :instances => 2, :state => 'STARTED', :package_hash => "SOME_HASH", :package_state => "STAGED"
+      ).save
+    end
+    let(:payload) do
+      {
+        :droplet        => app.guid,
+        :op             => op,
+        :last_updated   => last_updated,
+        :version        => version,
+        :indices        => indices,
+      }
+    end
+
+    subject(:process_hm_request) { respondent.process_hm_request(payload) }
 
     describe "#process_hm_request" do
       describe "on START request" do
-        it "should drop request if timestamps mismatch" do
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "START",
-            :last_updated   => Time.now - 86400,
-            :version        => @app.version,
-            :indices        => [0,1],
-          }
+        let(:op) { "START" }
 
-          @dea_client.should_not_receive(:start_instances_with_message)
-          @mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
-          @respondent.process_hm_request(payload)
-        end
+        it_should_behave_like "common test for all health manager respondents"
 
-        it "should drop request if versions mismatch" do
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "START",
-            :last_updated   => @app.updated_at,
-            :version        => 'deadbeaf-0',
-            :indices        => [0,1],
-          }
-
-          @dea_client.should_not_receive(:start_instances_with_message)
-          @mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
-          @respondent.process_hm_request(payload)
-        end
-
-        it "should drop request if app isn't started" do
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "START",
-            :last_updated   => @app.updated_at,
-            :version        => @app.version,
-            :indices        => [0,1],
-          }
-          @dea_client.should_not_receive(:start_instances_with_message)
-          @mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
-          @respondent.process_hm_request(payload)
-        end
-
-        it "should send a start request to dea" do
-          @app.update(
+        it "sends a start request to dea" do
+          app.update(
             :state => "STARTED",
             :package_hash => "abc",
             :package_state => "STAGED",
           )
 
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "START",
-            :last_updated   => @app.updated_at,
-            :version        => @app.version,
-            :indices        => [1],
-          }
-          @dea_client.should_receive(:start_instances_with_message).with(
+          dea_client.should_receive(:start_instances_with_message).with(
             # XXX: we should do something about this, like overriding
             # Sequel::Model#eql? or something that ignores the nanosecond
             # nonsense
-            respond_with(:guid => @app.guid),
+            respond_with(:guid => app.guid),
             [1],
             {},
           )
 
-          @respondent.process_hm_request(payload)
+          process_hm_request
         end
 
-        it "should send a start request indicating a flapping app" do
-          @app.update(
-            :state => "STARTED",
-            :package_hash => "abc",
-            :package_state => "STAGED",
-          )
+        context "when the app isn't started" do
+          let(:app) { Models::App.make(:instances => 2).save }
 
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "START",
-            :last_updated   => @app.updated_at,
-            :version        => @app.version,
-            :indices        => [1],
-            :flapping       => true,
-          }
-          @dea_client.should_receive(:start_instances_with_message).with(
-            respond_with(:guid => @app.guid),
-            [1],
-            :flapping => true,
-          )
+          it "drops the request" do
+            dea_client.should_not_receive(:start_instances_with_message)
+            mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
+            process_hm_request
+          end
+        end
 
-          @respondent.process_hm_request(payload)
+        context "when the times mismatch" do
+          let(:last_updated) { Time.now - 86400 }
+          it "drops the request" do
+            dea_client.should_not_receive(:start_instances_with_message)
+            mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
+            process_hm_request
+          end
+        end
+
+        context "when the versions mismatch" do
+          let(:version) { 'deadbeaf-0' }
+          it "drops the request" do
+            dea_client.should_not_receive(:start_instances_with_message)
+            mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
+            process_hm_request
+          end
+        end
+
+        context "when the app is flapping" do
+          it "should send a start request indicating a flapping app" do
+            app.update(
+              :state => "STARTED",
+              :package_hash => "abc",
+              :package_state => "STAGED",
+            )
+            payload.merge!(:flapping => true)
+
+            dea_client.should_receive(:start_instances_with_message).with(
+              respond_with(:guid => app.guid),
+              [1],
+              :flapping => true,
+            )
+
+            process_hm_request
+          end
         end
       end
 
       describe "on STOP request" do
-        it "should drop request if timestamps mismatch" do
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "STOP",
-            :last_updated   => Time.now - 86400,
-            :instances      => [0,1],
+        let(:instances) { [2] }
+        let(:op) { "STOP" }
+        let(:payload) do
+          {
+            :droplet        => app.guid,
+            :op             => op,
+            :last_updated   => last_updated,
+            :version        => version,
+            :instances        => instances,
           }
-
-          @dea_client.should_not_receive(:stop_instances)
-          @mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
-          @respondent.process_hm_request(payload)
         end
 
-        it "should send a stop request to dea for a runaway app" do
-          @app.destroy
+        it_should_behave_like "common test for all health manager respondents"
 
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "STOP",
-            :last_updated   => @app.updated_at,
-            :instances        => [1],
-          }
-          @dea_client.should_receive(:stop) do |app|
-            app.guid.should == @app.guid
-          end
-
-          @respondent.process_hm_request(payload)
-        end
-
-        it "should send a stop request to dea" do
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "STOP",
-            :last_updated   => @app.updated_at,
-            :instances        => [1],
-          }
-
-          @dea_client.should_receive(:stop_instances).with(
-            respond_with(:guid => @app.guid),
-            [1],
+        it "sends a stop request to dea" do
+          dea_client.should_receive(:stop_instances).with(
+            respond_with(:guid => app.guid),
+            [2],
           )
 
-          @respondent.process_hm_request(payload)
+          process_hm_request
+        end
+
+        it "updates the app model to have fewer instances" do
+          dea_client.stub(:stop_instances)
+          expect { process_hm_request }.to change { app.reload.instances }.by(-1)
+        end
+
+        context "when the timestamps mismatch" do
+          let(:last_updated) { Time.now - 86400 }
+          let(:instances) { [1] }
+          it "drops the request" do
+            dea_client.should_not_receive(:stop_instances)
+            mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
+            process_hm_request
+          end
+        end
+
+        context "with a runaway app" do
+          let(:instances) { [1] }
+
+          it "sends a stop request to dea" do
+            app.destroy
+            dea_client.should_receive(:stop) do |new_app|
+              expect(new_app.guid).to eq app.guid
+            end
+
+            process_hm_request
+          end
+        end
+
+        context "when the payload is malformed" do
+          before { payload.delete(:droplet) }
+
+          it "does not send a stop request to the dea" do
+            dea_client.should_not_receive(:stop_instances)
+            process_hm_request
+          end
+
+          it "does not stop any runway apps" do
+            app.destroy
+            dea_client.should_not_receive(:stop)
+            process_hm_request
+          end
+
+          it "logs an error" do
+            respondent.logger.should_receive(:error).with(/malformed/i)
+            process_hm_request
+          end
+        end
+
+        shared_examples "health manager is wrong" do |error_regex|
+          it "logs an error since HM should have sent the spindown command" do
+            respondent.logger.should_receive(:error).with(error_regex)
+            process_hm_request
+          end
+
+          it "marks the app as stopped" do
+            expect { process_hm_request }.to change { app.reload.state }.from("STARTED").to("STOPPED")
+          end
+
+          it "sends a stop request to the dea" do
+            dea_client.should_receive(:stop) do |changed_app|
+              reloaded_app = app.reload
+              [:id, :guid, :state, :instances].each do |field|
+                changed_app.send(field).should == reloaded_app.send(field)
+              end
+            end
+            process_hm_request
+          end
+        end
+
+        context "when health manager incorrectly scales down to 0 instances" do
+          let(:instances) { [0, 1] }
+          before { dea_client.stub(:stop) }
+          it_should_behave_like "health manager is wrong", /spindown/i
+        end
+
+        context "when health manager incorrectly scales down to less than 0 instances" do
+          let(:instances) { [0, 1, 2] }
+          before { dea_client.stub(:stop) }
+          it_should_behave_like "health manager is wrong", /negative/i
         end
       end
 
       describe "on SPINDOWN request" do
+
+        let(:op) { "SPINDOWN" }
+
+        it_should_behave_like "common test for all health manager respondents"
+
         it "should drop the request if app already stopped" do
-          @app.update(
+          app.update(
             :state => "STOPPED",
           )
 
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "SPINDOWN",
-          }
-          @dea_client.should_not_receive(:stop)
-          @mbus.should_not_receive(:publish).with(
+          dea_client.should_not_receive(:stop)
+          mbus.should_not_receive(:publish).with(
             "dea.stop",
             anything,
           )
 
-          @respondent.process_hm_request(payload)
+          process_hm_request
         end
 
         it "should stop an app" do
-          @app.update(
+          app.update(
             :state => "STARTED",
             :package_hash => "abc",
             :package_state => "STAGED",
           )
 
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "SPINDOWN",
-          }
-          @dea_client.should_receive(:stop).with(
-            respond_with(:guid => @app.guid),
+          dea_client.should_receive(:stop).with(
+            respond_with(:guid => app.guid),
           )
-          @respondent.process_hm_request(payload)
+          process_hm_request
         end
 
         it "should update the state of an app to stopped" do
-          @app.update(
+          app.update(
             :state => "STARTED",
             :package_hash => "abc",
             :package_state => "STAGED",
           )
-          payload = {
-            :droplet        => @app.guid,
-            :op             => "SPINDOWN",
-          }
 
-          @dea_client.should_receive(:stop)
-          @respondent.process_hm_request(payload)
+          dea_client.should_receive(:stop)
+          process_hm_request
 
-          @app.reload.should be_stopped
+          app.reload.should be_stopped
         end
       end
     end
