@@ -131,7 +131,6 @@ module VCAP::CloudController
 
     describe "non public service plans" do
       let!(:private_plan) { Models::ServicePlan.make(public: false) }
-      let(:decoded_response) { Yajl::Parser.parse(last_response.body)}
 
       let(:plan_guids) do
         decoded_response.fetch('resources').collect do |r|
