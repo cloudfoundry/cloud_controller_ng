@@ -18,7 +18,7 @@ module IntegrationHttp
     end
   end
 
-  def make_http_request(path, headers = {})
+  def make_get_request(path, headers = {})
     url = URI.parse("http://localhost:8181#{path}")
 
     response = Net::HTTP.new(url.host, url.port).start do |http|
@@ -29,6 +29,27 @@ module IntegrationHttp
       http.request(request)
     end
 
+    response.extend(JsonBody)
+    response
+  end
+
+  def make_post_request(path, data = {}, headers = {})
+    http = Net::HTTP.new("localhost", "8181")
+    response = http.post(path, data, headers)
+    response.extend(JsonBody)
+    response
+  end
+
+  def make_put_request(path, data = {}, headers = {})
+    http = Net::HTTP.new("localhost", "8181")
+    response = http.put(path, data, headers)
+    response.extend(JsonBody)
+    response
+  end
+
+  def make_delete_request(path, headers = {})
+    http = Net::HTTP.new("localhost", "8181")
+    response = http.delete(path, headers)
     response.extend(JsonBody)
     response
   end

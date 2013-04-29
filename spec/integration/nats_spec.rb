@@ -1,5 +1,6 @@
 require "spec_helper"
 require "nats/client"
+require "json"
 
 describe "NATS", :type => :integration do
   before(:all) do
@@ -18,12 +19,50 @@ describe "NATS", :type => :integration do
     end
 
     it "still works" do
-      make_http_request("/info").tap do |r|
+      make_get_request("/info").tap do |r|
         r.code.should == "200"
       end
     end
 
-    it "doesn't create an app in the database"
+    describe "allowed requests" do
+      let(:authorized_token) do
+        {
+          "Authorization" => "bearer #{admin_token}",
+          "Accept" => "application/json",
+          "Content-Type" => "application/json"
+        }
+      end
+
+      after do
+        make_delete_request("/v2/organizations/#{@org_guid}?recursive=true", authorized_token)
+      end
+
+      it "creates org, space and app in database" do
+        data = %Q({"name":"nats-spec-org"})
+        response = make_post_request("/v2/organizations", data, authorized_token)
+        response.code.should == "201"
+        @org_guid = response.json_body["metadata"]["guid"]
+
+        data = %Q({"organization_guid":"#{@org_guid}","name":"nats-spec-space"})
+        response = make_post_request("/v2/spaces", data, authorized_token)
+        response.code.should == "201"
+        @space_guid = response.json_body["metadata"]["guid"]
+
+        data = %Q({
+          "space_guid" : "#{@space_guid}",
+          "name" : "nats-spec-app",
+          "instances" : 1,
+          "production" : false,
+          "buildpack" : null,
+          "command" : null,
+          "memory" : 256,
+          "stack_guid" : null
+        })
+
+        response = make_post_request("/v2/apps", data, authorized_token)
+        response.code.should == "201"
+      end
+    end
 
     it "complains to VARZ"
   end

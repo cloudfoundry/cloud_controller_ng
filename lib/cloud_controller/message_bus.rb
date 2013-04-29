@@ -31,6 +31,7 @@ class VCAP::CloudController::MessageBus
     # TODO: subscribe to the two DEA channels
     EM.error_handler do |e|
       if e.class == NATS::ConnectError
+        log.warn("NATS connection failed. Starting nats recovery")
         start_nats_recovery
       else
         raise e
