@@ -20,6 +20,12 @@ Sequel.migration do
           rename_column(:billing_events, :timestamp, :event_timestamp)
         end
       }
+
+      schema(:crash_events).each { |column|
+        if column[0] == :timestamp
+          rename_column(:crash_events, :timestamp, :event_timestamp)
+        end
+      }
       
       rename_foreign_key(:organizations, :fk_organizations_quota_definition_id, :fk_org_quota_definition_id)
       rename_foreign_key(:domains, :fk_domains_owning_organization_id, :fk_domains_owning_org_id)
