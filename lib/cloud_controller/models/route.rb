@@ -34,10 +34,6 @@ module VCAP::CloudController::Models
         }
       }
     end
-    
-    def host
-      !self[:host] ? "" : self[:host]
-    end
 
     def organization
       space.organization if space
@@ -47,14 +43,14 @@ module VCAP::CloudController::Models
       validates_presence :domain
       validates_presence :space
 
-      errors.add(:host, :presence) if self[:host].nil?
+      errors.add(:host, :presence) if host.nil?
 
-      validates_format   /^([\w\-]+)$/, :host if (!host.empty?)
+      validates_format   /^([\w\-]+)$/, :host if (host && !host.empty?)
       validates_unique   [:host, :domain_id]
 
       if domain
         unless domain.wildcard
-          errors.add(:host, :host_not_empty) unless (host.empty?)
+          errors.add(:host, :host_not_empty) unless (host.nil? || host.empty?)
         end
 
         if space && space.domains_dataset.filter(:id => domain.id).count < 1
