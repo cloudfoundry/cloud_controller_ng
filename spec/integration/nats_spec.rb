@@ -94,7 +94,7 @@ describe "NATS", :type => :integration do
         end
 
         NATS.publish("router.start", {})
-        NATS.timeout(sid, 5) { fail "NATS timed out while waiting for re-subscribe to propagate" }
+        NATS.timeout(sid, 10) { fail "NATS timed out while waiting for re-subscribe to propagate" }
       end
     end
   end
