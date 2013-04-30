@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2011 VMware, Inc.
-
 module VCAP::CloudController
   rest_controller :App do
     permissions_required do

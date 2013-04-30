@@ -1,8 +1,4 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module VCAP::CloudController::RestController
-
-  # Define routes for the rest endpoint.
   module Routes
     def self.included(base)
       base.extend(ClassMethods)

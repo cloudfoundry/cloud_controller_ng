@@ -38,8 +38,7 @@ module VCAP::CloudController::RestController
 
           to_one.each do |name, relation|
             unless relation.exclude_in?(type)
-              if (type == :update || (type == :create &&
-                                      relation.optional_in?(type)))
+              if type == :update || (type == :create && relation.optional_in?(type))
                 optional "#{name}_guid", String
               else
                 required "#{name}_guid", String
