@@ -126,7 +126,6 @@ module VCAP::CloudController
             :delete => :allowed
         end
 
-
         describe "private plans" do
           let(:space) { Models::Space.make }
           let(:developer) { make_developer_for_space(space)}
