@@ -20,6 +20,11 @@ module VCAP::CloudController
 
     query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid
 
+    def before_create
+      service_plan = Models::ServicePlan.find(:guid => request_attrs['service_plan_guid'])
+      raise Errors::NotAuthorized if !service_plan.public && !user.can_access_non_public_plans?
+    end
+
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       quota_errors = e.errors.on(:space)

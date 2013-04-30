@@ -318,6 +318,13 @@ module VCAP::CloudController::SpecHelper
     end
   end
 
+  def act_as_cf_admin(&block)
+    VCAP::CloudController::SecurityContext.stub(:current_user_is_admin? => true)
+    block.call
+  ensure
+    VCAP::CloudController::SecurityContext.unstub(:current_user_is_admin?)
+  end
+
   def with_em_and_thread(opts = {}, &blk)
     auto_stop = opts.has_key?(:auto_stop) ? opts[:auto_stop] : true
     Thread.abort_on_exception = true

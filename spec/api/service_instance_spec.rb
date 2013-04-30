@@ -126,6 +126,32 @@ module VCAP::CloudController
             :delete => :allowed
         end
 
+
+        describe "private plans" do
+          let(:space) { Models::Space.make }
+          let(:developer) { make_developer_for_space(space)}
+          let!(:private_plan) { Models::ServicePlan.make(public: false) }
+          let(:payload) { Yajl::Encoder.encode(
+            'space_guid' => space.guid,
+            'name' => Sham.name,
+            'service_plan_guid' => private_plan.guid,
+          )}
+
+          it "does not allow to create a service instance" do
+            post('v2/service_instances', payload, headers_for(developer))
+            last_response.status.should == 403
+          end
+
+          it "allows user with privileged organization to create a service instance" do
+            organization = developer.organizations.first
+            act_as_cf_admin do
+              organization.update(:can_access_non_public_plans => true)
+            end
+            post('v2/service_instances', payload, headers_for(developer))
+            last_response.status.should == 201
+          end
+        end
+
         describe "SpaceAuditor" do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
