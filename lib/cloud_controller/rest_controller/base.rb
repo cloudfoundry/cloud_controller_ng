@@ -70,6 +70,13 @@ module VCAP::CloudController::RestController
       res
     end
 
+    def parse_date_param(param)
+      str = @params[param]
+      Time.parse(str).localtime if str
+    rescue
+      raise Errors::BadQueryParameter
+    end
+
     # Main entry point for the rest routes.  Acts as the final location
     # for catching any unhandled sequel and db exceptions.  By calling
     # translate_and_log_exception, they will get logged so that we can

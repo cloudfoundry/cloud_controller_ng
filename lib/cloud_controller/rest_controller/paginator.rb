@@ -57,7 +57,9 @@ module VCAP::CloudController::RestController
     def initialize(controller, ds, path, opts)
       page       = opts[:page] || 1
       page_size  = opts[:results_per_page] || 50
-      @paginated = ds.order_by(:id).paginate(page, page_size)
+      criteria = opts[:order_by] || :id
+
+      @paginated = ds.order_by(criteria).paginate(page, page_size)
       @serialization = opts[:serialization] || ObjectSerialization
 
       @controller = controller
