@@ -37,7 +37,6 @@ module VCAP::CloudController::Models
 
     def before_create
       super
-      generate_salt
       bind_on_gateway
     end
 
@@ -74,6 +73,7 @@ module VCAP::CloudController::Models
 
     def credentials=(val)
       json = Yajl::Encoder.encode(val)
+      generate_salt
       encrypted_string = VCAP::CloudController::Encryptor.encrypt(json, salt)
       super(encrypted_string)
     end
@@ -152,7 +152,7 @@ module VCAP::CloudController::Models
     end
 
     def generate_salt
-      self.salt = VCAP::CloudController::Encryptor.generate_salt
+      self.salt ||= VCAP::CloudController::Encryptor.generate_salt
     end
   end
 end

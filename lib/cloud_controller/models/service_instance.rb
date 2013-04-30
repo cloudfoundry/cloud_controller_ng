@@ -159,14 +159,16 @@ module VCAP::CloudController::Models
     end
 
     def credentials=(val)
-      str = Yajl::Encoder.encode(val)
-      super(str)
+      json = Yajl::Encoder.encode(val)
+      generate_salt
+      encrypted_string = VCAP::CloudController::Encryptor.encrypt(json, salt)
+      super(encrypted_string)
     end
 
     def credentials
-      val = super
-      val = Yajl::Parser.parse(val) if val
-      val
+      return unless super
+      json = VCAP::CloudController::Encryptor.decrypt(super, salt)
+      Yajl::Parser.parse(json) if json
     end
 
     def gateway_data=(val)
@@ -283,6 +285,10 @@ module VCAP::CloudController::Models
 
     def logger
       @logger ||= Steno.logger("cc.models.service_instance")
+    end
+
+    def generate_salt
+      self.salt ||= VCAP::CloudController::Encryptor.generate_salt
     end
   end
 end

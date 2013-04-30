@@ -35,6 +35,31 @@ module VCAP::CloudController
       }
     }
 
+    it_behaves_like "a model with an encrypted attribute" do
+      def new_model
+        Models::ServiceInstance.new.tap do |instance|
+          instance.set(
+            :name => Sham.name,
+            :space => Models::Space.make,
+            :service_plan => Models::ServicePlan.make
+          )
+          instance.stub(:service_gateway_client).and_return(
+            double("Service Gateway Client",
+              :provision => VCAP::Services::Api::GatewayHandleResponse.new(
+                :service_id => "gwname_binding",
+                :configuration => "abc",
+                :credentials => value_to_encrypt
+              )
+            )
+          )
+          instance.save
+        end
+      end
+
+      let(:encrypted_attr) { :credentials }
+    end
+
+
     describe "#add_service_binding" do
       it "should not bind an app and a service instance from different app spaces" do
         Models::App.make(:space => service_instance.space)
