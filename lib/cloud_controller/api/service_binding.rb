@@ -1,6 +1,5 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require 'services/api'
+require 'cloud_controller/api/service_validator'
 
 module VCAP::CloudController
   rest_controller :ServiceBinding do
@@ -31,11 +30,7 @@ module VCAP::CloudController
     end
 
     def update_binding(gateway_name)
-      begin
-        req = VCAP::Services::Api::HandleUpdateRequestV2.decode(body)
-      rescue
-        raise Errors::InvalidRequest
-      end
+      req = decode_message_body
 
       binding_handle = Models::ServiceBinding[:gateway_name => gateway_name]
       raise Errors::ServiceBindingNotFound, "gateway_name=#{gateway_name}" unless binding_handle
@@ -44,29 +39,17 @@ module VCAP::CloudController
       plan_handle = Models::ServicePlan[:id => instance_handle[:service_plan_id]]
       service_handle = Models::Service[:id => plan_handle[:service_id]]
 
-      validate_update(service_handle[:label], service_handle[:provider], req.token)
+      ServiceValidator.validate_auth_token(req.token, service_handle)
 
-      binding_handle.set(
-        :gateway_data => req.gateway_data,
-        :credentials  => req.credentials,
-      )
-      binding_handle.save_changes
-    end
-
-    def validate_update(label, provider, token)
-      raise Errors::NotAuthorized unless label && provider && token
-
-      svc_auth_token = Models::ServiceAuthToken[
-        :label    => label,
-        :provider => provider,
-      ]
-
-      unless (svc_auth_token && svc_auth_token.token_matches?(token))
-        logger.warn("unauthorized service offering")
-        raise Errors::NotAuthorized
-      end
+      binding_handle.update(:gateway_data => req.gateway_data, :credentials => req.credentials)
     end
 
     put "/v2/service_bindings/internal/:gateway_name", :update_binding
+  end
+
+  def decode_message_body
+    VCAP::Services::Api::HandleUpdateRequestV2.decode(body)
+  rescue
+    raise Errors::InvalidRequest
   end
 end

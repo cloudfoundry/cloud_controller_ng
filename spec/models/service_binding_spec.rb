@@ -31,7 +31,7 @@ module VCAP::CloudController
       }
     }
 
-    describe "the service credentials hash" do
+    describe "the service credentials encryption" do
       before do
         VCAP::CloudController::Config.stub(:db_encryption_key).and_return("correct-key")
       end

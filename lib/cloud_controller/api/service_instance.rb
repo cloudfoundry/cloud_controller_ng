@@ -1,4 +1,5 @@
 require 'services/api'
+require 'cloud_controller/api/service_validator'
 
 module VCAP::CloudController
   rest_controller :ServiceInstance do
@@ -46,11 +47,7 @@ module VCAP::CloudController
     end
 
     def update_instance(gateway_name)
-      begin
-        req = VCAP::Services::Api::HandleUpdateRequestV2.decode(body)
-      rescue
-        raise Errors::InvalidRequest
-      end
+      req = decode_message_body
 
       instance_handle = Models::ServiceInstance[:gateway_name => gateway_name]
       raise Errors::ServiceInstanceNotFound, "gateway_name=#{gateway_name}" unless instance_handle
@@ -58,29 +55,16 @@ module VCAP::CloudController
       plan_handle = Models::ServicePlan[:id => instance_handle[:service_plan_id]]
       service_handle = Models::Service[:id => plan_handle[:service_id]]
 
-      validate_update(service_handle[:label], service_handle[:provider], req.token)
-
-      instance_handle.set(
-        :gateway_data => req.gateway_data,
-        :credentials => req.credentials,
-      )
-      instance_handle.save_changes
-    end
-
-    def validate_update(label, provider, token)
-      raise Errors::NotAuthorized unless label && provider && token
-
-      svc_auth_token = Models::ServiceAuthToken[
-        :label    => label,
-        :provider => provider,
-      ]
-
-      unless (svc_auth_token && svc_auth_token.token_matches?(token))
-        logger.warn("unauthorized service offering")
-        raise Errors::NotAuthorized
-      end
+      ServiceValidator.validate_auth_token(req.token, service_handle)
+      instance_handle.update(:gateway_data => req.gateway_data, :credentials => req.credentials)
     end
 
     put "/v2/service_instances/internal/:gateway_name", :update_instance
+  end
+
+  def decode_message_body
+    VCAP::Services::Api::HandleUpdateRequestV2.decode(body)
+  rescue
+    raise Errors::InvalidRequest
   end
 end
