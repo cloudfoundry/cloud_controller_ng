@@ -69,25 +69,22 @@ namespace :db do
     FileUtils.mkdir_p(migrations_dir)
 
     open(File.join(migrations_dir, filename), "w") do |f|
-      f.write <<-EOF
-# Copyright (c) 2009-2012 VMware, Inc.
-
+      f.write <<-Ruby
 Sequel.migration do
   change do
   end
 end
-      EOF
+      Ruby
     end
   end
 
   desc "Perform Sequel migration to database"
   task :migrate do
-    migrations = File.expand_path("../db/migrations", __FILE__)
-
     config_file = ENV["CLOUD_CONTROLLER_NG_CONFIG"]
     config_file ||= File.expand_path("../config/cloud_controller.yml", __FILE__)
 
     config = VCAP::CloudController::Config.from_file(config_file)
+    VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
 
     Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")

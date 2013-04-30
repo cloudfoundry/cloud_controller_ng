@@ -39,6 +39,7 @@ module VCAP::CloudController::Models
 
     def before_create
       super
+      generate_salt
       bind_on_gateway
     end
 
@@ -74,14 +75,16 @@ module VCAP::CloudController::Models
     end
 
     def credentials=(val)
-      val = Yajl::Encoder.encode(val)
-      super(val)
+      json = Yajl::Encoder.encode(val)
+      encrypted_string = VCAP::CloudController::Encryptor.encrypt(json, salt)
+      super(encrypted_string)
     end
 
     def credentials
-      val = super
-      val = Yajl::Parser.parse(val) if val
-      val
+      encrypted_string = super
+      return unless encrypted_string
+      json = VCAP::CloudController::Encryptor.decrypt(encrypted_string, salt)
+      Yajl::Parser.parse(json) if json
     end
 
     def gateway_data=(val)
@@ -148,6 +151,10 @@ module VCAP::CloudController::Models
 
     def logger
       @logger ||= Steno.logger("cc.models.service_binding")
+    end
+
+    def generate_salt
+      self.salt = VCAP::CloudController::Encryptor.generate_salt
     end
   end
 end

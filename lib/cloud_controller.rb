@@ -130,6 +130,7 @@ require "cloud_controller/app_stager"
 require "cloud_controller/stager_pool"
 require "cloud_controller/api"
 require "cloud_controller/roles"
+require "cloud_controller/encryptor"
 
 require "cloud_controller/legacy_api/legacy_api_base"
 require "cloud_controller/legacy_api/legacy_info"

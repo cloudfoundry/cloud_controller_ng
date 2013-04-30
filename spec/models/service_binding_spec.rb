@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
@@ -32,6 +30,59 @@ module VCAP::CloudController
         }
       }
     }
+
+    describe "the service credentials hash" do
+      before do
+        VCAP::CloudController::Config.stub(:db_encryption_key).and_return("correct-key")
+      end
+
+      let!(:service_binding) do
+        Models::ServiceBinding.make(:service_instance => service_instance)
+      end
+
+      let(:service_instance) do
+        Models::ServiceInstance.make.tap do |instance|
+          instance.stub(:service_gateway_client).and_return(
+            double("Service Gateway Client",
+              :bind => VCAP::Services::Api::GatewayHandleResponse.new(
+                :service_id => "gwname_binding",
+                :configuration => "abc",
+                :credentials => { :password => "the-db-password" }
+              )
+            )
+          )
+        end
+      end
+
+      it "is encrypted before being written to the database" do
+        saved_credentials = Models::ServiceBinding.dataset.naked.last[:credentials]
+        saved_credentials.should_not include "the-db-password"
+      end
+
+      it "is decrypted when it is read from the database" do
+        Models::ServiceBinding.last.credentials["password"].should == "the-db-password"
+      end
+
+      it "uses the db_encryption_key from the config file" do
+        saved_credentials = Models::ServiceBinding.dataset.naked.last[:credentials]
+
+        expect(
+          Encryptor.decrypt(saved_credentials, service_binding.salt)
+        ).to include("the-db-password")
+
+        expect {
+          VCAP::CloudController::Config.stub(:db_encryption_key).and_return("a-totally-different-key")
+          Encryptor.decrypt(saved_credentials, service_binding.salt)
+        }.to raise_error(OpenSSL::Cipher::CipherError)
+      end
+
+      it "uses a salt, so that every row is encrypted with a different key" do
+        credentials = Models::ServiceBinding.dataset.naked.last[:credentials]
+        Models::ServiceBinding.make(:service_instance => service_instance)
+        other_credentials = Models::ServiceBinding.dataset.naked.last[:credentials]
+        expect(credentials.hash).not_to eql(other_credentials.hash)
+      end
+    end
 
     describe "bad relationships" do
       before do

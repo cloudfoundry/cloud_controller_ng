@@ -182,6 +182,7 @@ module VCAP::CloudController::SpecHelper
   end
 
   def configure_components(config)
+    VCAP::CloudController::Config.db_encryption_key = "some-key"
     mbus = MockMessageBus.new(config)
     VCAP::CloudController::MessageBus.instance = mbus
     # FIXME: this is better suited for a before-each stub so that we can unstub it in examples

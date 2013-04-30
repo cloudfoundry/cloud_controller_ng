@@ -81,3 +81,5 @@ droplets:
   fog_connection:
     provider: Local
     local_root: /tmp
+
+db_encryption_key: "asdfasdfasdf"

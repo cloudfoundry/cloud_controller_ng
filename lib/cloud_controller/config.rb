@@ -121,7 +121,9 @@ class VCAP::CloudController::Config < VCAP::Config
           optional(:aws_secret_access_key) => String,
           optional(:local_root) => String
         }
-      }
+      },
+
+      :db_encryption_key => String
     }
   end
 
@@ -153,17 +155,21 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
   end
 
-  def self.config_dir
-    @config_dir ||= File.expand_path("../../../config", __FILE__)
-  end
+  class << self
+    attr_accessor :db_encryption_key
 
-  private
+    def config_dir
+      @config_dir ||= File.expand_path("../../../config", __FILE__)
+    end
 
-  def self.merge_defaults(config)
-    config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
+    private
 
-    config[:directories] ||= {}
-    config[:directories][:staging_manifests] ||= File.join(config_dir, "frameworks")
-    config
+    def merge_defaults(config)
+      config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
+
+      config[:directories] ||= {}
+      config[:directories][:staging_manifests] ||= File.join(config_dir, "frameworks")
+      config
+    end
   end
 end
