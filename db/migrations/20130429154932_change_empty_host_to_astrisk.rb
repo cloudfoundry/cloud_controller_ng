@@ -26,7 +26,13 @@ Sequel.migration do
   change do
     run "update routes set host = '*' where host = ''"
     alter_table :routes do
-      add_constraint :routes, ~{:host => ''}
+      add_constraint :routes_host_not_empty, ~{:host => ''}
+      set_column_default :host, "*"
+    end
+    
+    alter_table :service_bindings do
+      set_column_allow_null :gateway_name
+      set_column_default :gateway_name, nil
     end
   end
 end
