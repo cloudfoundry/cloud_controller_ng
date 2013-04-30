@@ -28,7 +28,7 @@ module VCAP::CloudController
         end
 
         opts.on("-m", "--run-migrations", "Run migrations") do
-          @run_migrations = true
+          @insert_seed_data = true
         end
 
         opts.on("-d", "--development-mode", "Run in development mode") do
@@ -86,10 +86,9 @@ module VCAP::CloudController
     def run!
       start_cloud_controller
 
-      run_migrations = @run_migrations
       config = @config.dup
 
-      if run_migrations
+      if @insert_seed_data
         VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
         VCAP::CloudController::Models::Stack.populate
       end

@@ -19,7 +19,7 @@ module IntegrationSetup
   # TODO(David & Kowshik): Rewrite this.
   def start_cc(opts={})
     run_cmd("bundle exec rake db:migrate")
-    @cc_pid = run_cmd("bin/cloud_controller config/cloud_controller.yml", opts)
+    @cc_pid = run_cmd("bin/cloud_controller -m config/cloud_controller.yml", opts)
     wait_cycles = 0
     while wait_cycles < 20
       sleep 1
