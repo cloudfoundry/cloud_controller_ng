@@ -16,6 +16,8 @@ module VCAP::CloudController
       }
     }
 
+    include_examples "uaa authenticated api", path: "/v2/services"
+
     shared_examples "enumerate and read service only" do |perm_name|
       include_examples "permission checks", perm_name,
         :model => Models::Service,

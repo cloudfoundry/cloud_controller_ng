@@ -37,6 +37,8 @@ module VCAP::CloudController
       }
     }
 
+    include_examples "uaa authenticated api", path: "/v2/domains"
+
     describe "Permissions" do
       include_context "permissions"
 

@@ -32,6 +32,8 @@ module VCAP::CloudController
       :create_attribute_reset => lambda { @space = nil }
     }
 
+    include_examples "uaa authenticated api", path: "/v2/routes"
+
     context "with a wildcard domain" do
       it "should allow a nil host" do
         cf_admin = Models::User.make(:admin => true)

@@ -19,5 +19,7 @@ module VCAP::CloudController
         }
       }
     }
+
+    include_examples "uaa authenticated api", path: "/v2/quota_definitions"
   end
 end

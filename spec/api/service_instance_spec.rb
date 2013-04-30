@@ -17,6 +17,8 @@ module VCAP::CloudController
       :create_attribute_reset => lambda {}
     }
 
+    include_examples "uaa authenticated api", path: "/v2/service_instances"
+
     describe "Permissions" do
       include_context "permissions"
 

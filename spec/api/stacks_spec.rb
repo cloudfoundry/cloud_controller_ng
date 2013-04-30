@@ -13,5 +13,7 @@ module VCAP::CloudController
       :unique_attributes    => :name,
       :queryable_attributes => :name,
     }
+
+    include_examples "uaa authenticated api", path: "/v2/stacks"
   end
 end

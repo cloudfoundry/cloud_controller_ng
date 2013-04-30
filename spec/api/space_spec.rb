@@ -35,6 +35,8 @@ module VCAP::CloudController
       }
     }
 
+    include_examples "uaa authenticated api", path: "/v2/spaces"
+
     describe "data integrity" do
       let(:cf_admin) { Models::User.make(:admin => true) }
       let(:space) { Models::Space.make }

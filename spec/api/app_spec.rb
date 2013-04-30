@@ -40,6 +40,8 @@ module VCAP::CloudController
       }
     }
 
+    include_examples "uaa authenticated api", path: "/v2/apps"
+
     let(:admin_headers) do
       user = Models::User.make(:admin => true)
       headers_for(user)

@@ -23,6 +23,8 @@ module VCAP::CloudController
       :create_attribute_reset => lambda { @space = nil }
     }
 
+    include_examples "uaa authenticated api", path: "/v2/service_bindings"
+
     describe "staging" do
       let(:app_obj) do
         app = Models::App.make

@@ -110,7 +110,6 @@ module VCAP::CloudController::ApiSpecHelper
       end
     end
 
-    include_examples "uaa authenticated api", opts
     include_examples "querying objects", opts
     include_examples "enumerating objects", opts
     include_examples "reading a valid object", opts

@@ -15,5 +15,6 @@ module VCAP::CloudController
       :sensitive_attributes => :token
     }
 
+    include_examples "uaa authenticated api", path: "/v2/service_auth_tokens"
   end
 end
