@@ -36,7 +36,7 @@ module VCAP::CloudController
           Yajl::Parser.parse(last_response.body)["code"].should == 170001
         end
 
-        xit "returns '170002 NotStaged' when the app is pending to be staged" do
+        it "returns '170002 NotStaged' when the app is pending to be staged" do
           @app.package_state = "PENDING"
           @app.save
 
