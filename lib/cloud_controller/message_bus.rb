@@ -31,7 +31,8 @@ class VCAP::CloudController::MessageBus
     # TODO: subscribe to the two DEA channels
     EM.error_handler do |e|
       if e.class == NATS::ConnectError
-        log.warn("NATS connection failed. Starting nats recovery")
+        logger.warn("NATS connection failed. Starting nats recovery")
+        update_nats_varz(Time.now)
         start_nats_recovery
       else
         raise e
@@ -47,6 +48,7 @@ class VCAP::CloudController::MessageBus
           :config => config,
           # leaving the varz port / user / pwd blank to be random
         )
+       update_nats_varz(nil)
       end
     end
   end
@@ -59,6 +61,7 @@ class VCAP::CloudController::MessageBus
         end
         nats.wait_for_server(nats_options[:uri])
         nats.connect(nats_options) do
+          update_nats_varz(nil)
           register_routes
 
           @subscriptions.each do |subject, options|
@@ -165,5 +168,11 @@ class VCAP::CloudController::MessageBus
 
   def logger
     @logger ||= Steno.logger("cc.mbus")
+  end
+
+  def update_nats_varz(value)
+    ::VCAP::Component.varz.synchronize do
+      ::VCAP::Component.varz[:nats_downtime] = value
+    end
   end
 end

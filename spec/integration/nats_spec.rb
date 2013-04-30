@@ -34,7 +34,7 @@ describe "NATS", :type => :integration do
       end
 
       after do
-        make_delete_request("/v2/organizations/#{@org_guid}?recursive=true", authorized_token)
+        make_delete_request("/v2/organizations/#{@org_guid}?recursive=true", authorized_token) if @org_guid
       end
 
       it "creates org, space and app in database" do
@@ -63,8 +63,6 @@ describe "NATS", :type => :integration do
         response.code.should == "201"
       end
     end
-
-    it "complains to VARZ"
   end
 
   describe "NATS fails and comes back up" do

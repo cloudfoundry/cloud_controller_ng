@@ -227,11 +227,25 @@ module VCAP::CloudController
 
     describe "#register_components" do
       describe "nats goes down" do
+        before do
+          nats.stub(:start) { raise NATS::ConnectError }
+          nats.stub(:connect) { }
+        end
+
         it "starts subscription recovery" do
           bus.should_receive(:start_nats_recovery)
-          nats.stub(:start) do
-            raise NATS::ConnectError
+
+          with_em_and_thread do
+            bus.register_components
           end
+        end
+
+        it "registers nats downtime varz" do
+          bus.should_receive(:update_nats_varz) do |time|
+            time.should_not be_nil
+            time.to_i.should be_within(2).of(Time.now.to_i)
+          end
+
           with_em_and_thread do
             bus.register_components
           end
@@ -242,6 +256,16 @@ module VCAP::CloudController
     describe "#start_nats_recovery" do
       it "registers routes" do
         bus.should_receive(:register_routes)
+
+        with_em_and_thread do
+          bus.start_nats_recovery
+        end
+      end
+
+      it "updates nats downtime varz" do
+        bus.should_receive(:update_nats_varz) do |time|
+          time.should be_nil
+        end
 
         with_em_and_thread do
           bus.start_nats_recovery
