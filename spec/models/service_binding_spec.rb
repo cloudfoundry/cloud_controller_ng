@@ -63,7 +63,13 @@ module VCAP::CloudController
 
       let(:service) { Models::Service.make }
       let(:service_plan) { Models::ServicePlan.make(:service => service) }
-      let(:service_instance) { Models::ServiceInstance.make(:service_plan => service_plan) }
+      let(:service_instance) do
+        Models::ServiceInstance.new(
+          :service_plan => service_plan,
+          :name => "my-postgresql",
+          :space => Models::Space.make
+        )
+      end
 
       let(:provision_resp) do
         VCAP::Services::Api::GatewayHandleResponse.new(
@@ -82,10 +88,9 @@ module VCAP::CloudController
       end
 
       before do
-        client = VCAP::Services::Api::ServiceGatewayClient
-        client.stub(:new).and_return(gw_client)
-        gw_client.should_receive(:provision).and_return(provision_resp)
-        service_instance.should be_valid
+        Models::ServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
+        gw_client.stub(:provision).and_return(provision_resp)
+        service_instance.save
       end
 
       context "service binding" do

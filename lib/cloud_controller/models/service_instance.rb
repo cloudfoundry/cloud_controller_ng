@@ -66,7 +66,7 @@ module VCAP::CloudController::Models
 
     add_association_dependencies :service_bindings => :destroy
 
-    attr_reader :provisioned_on_gateway_for_plan, :client
+    attr_reader :provisioned_on_gateway_for_plan
 
     default_order_by  :id
 
@@ -211,10 +211,9 @@ module VCAP::CloudController::Models
     end
 
     def provision_on_gateway
-      service_gateway_client
       logger.debug "provisioning service for instance #{guid}"
 
-      gw_attrs = client.provision(
+      gw_attrs = service_gateway_client.provision(
         # TODO: we shouldn't still be using this compound label
         :label => "#{service.label}-#{service.version}",
         :name  => name,
@@ -239,10 +238,9 @@ module VCAP::CloudController::Models
 
     def deprovision_on_gateway
       plan = @provisioned_on_gateway_for_plan || service_plan
-      service_gateway_client(plan)
-      return unless client # TODO: see service_gateway_client
+      return unless service_gateway_client(plan) # TODO: see service_gateway_client
       @provisioned_on_gateway_for_plan = nil
-      client.unprovision(:service_id => gateway_name)
+      service_gateway_client(plan).unprovision(:service_id => gateway_name)
     rescue => e
       logger.error "deprovision failed #{e}"
     end
@@ -256,38 +254,31 @@ module VCAP::CloudController::Models
     end
 
     def snapshot_details(sid)
-      service_gateway_client
-      client.snapshot_details(:service_id => gateway_name, :snapshot_id => sid)
+      service_gateway_client.snapshot_details(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def rollback_snapshot(sid)
-      service_gateway_client
-      client.rollback_snapshot(:service_id => gateway_name, :snapshot_id => sid)
+      service_gateway_client.rollback_snapshot(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def delete_snapshot(sid)
-      service_gateway_client
-      client.delete_snapshot(:service_id => gateway_name, :snapshot_id => sid)
+      service_gateway_client.delete_snapshot(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def serialized_url(sid)
-      service_gateway_client
-      client.serialized_url(:service_id => gateway_name, :snapshot_id => sid)
+      service_gateway_client.serialized_url(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def create_serialized_url(sid)
-      service_gateway_client
-      client.create_serialized_url(:service_id => gateway_name, :snapshot_id => sid)
+      service_gateway_client.create_serialized_url(:service_id => gateway_name, :snapshot_id => sid)
     end
 
     def import_from_url(req)
-      service_gateway_client
-      client.import_from_url(:service_id => gateway_name, :msg => req)
+      service_gateway_client.import_from_url(:service_id => gateway_name, :msg => req)
     end
 
     def job_info(job_id)
-      service_gateway_client
-      client.job_info(:service_id => gateway_name, :job_id => job_id)
+      service_gateway_client.job_info(:service_id => gateway_name, :job_id => job_id)
     end
 
     def logger

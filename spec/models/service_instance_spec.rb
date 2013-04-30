@@ -71,7 +71,7 @@ module VCAP::CloudController
 
       context "service deprovisioning" do
         it "should deprovision a service on destroy" do
-          service_instance.client.should_receive(:unprovision).with(any_args)
+          service_instance.service_gateway_client.should_receive(:unprovision).with(any_args)
           service_instance.destroy
         end
       end
@@ -152,16 +152,16 @@ module VCAP::CloudController
           instance = VCAP::CloudController::Models::ServiceInstance.new
           instance.service_gateway_client(plan)
 
-          expect(instance.client.instance_variable_get(:@url)).to eq("https://fake.example.com/fake")
-          expect(instance.client.instance_variable_get(:@token)).to eq("le_token")
-          expect(instance.client.instance_variable_get(:@timeout)).to eq(999999)
+          expect(instance.service_gateway_client.instance_variable_get(:@url)).to eq("https://fake.example.com/fake")
+          expect(instance.service_gateway_client.instance_variable_get(:@token)).to eq("le_token")
+          expect(instance.service_gateway_client.instance_variable_get(:@timeout)).to eq(999999)
         end
       end
     end
 
     describe "#provision_on_gateway" do
-      context "when a client exists" do
-        it 'provisions the client' do
+      context "when a service_gateway_client exists" do
+        it 'provisions the service_gateway_client' do
           provision_hash = nil
           VCAP::Services::Api::ServiceGatewayClientFake.any_instance.should_receive(:provision).with(any_args) do |h|
             provision_hash = h

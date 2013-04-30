@@ -49,3 +49,5 @@ packages:
 droplets:
   fog_connection:
     provider: Local
+
+db_encryption_key: some-key
