@@ -49,16 +49,25 @@ module VCAP::CloudController
     end
 
     describe "serialization" do
-      let(:service) { Models::Service.new_from_hash(extra: "extra") }
+      let(:extra) { 'extra' }
+      let(:unique_id) { 'glue-factory' }
+      let(:service) { Models::Service.new_from_hash(extra: extra, unique_id: unique_id) }
 
       it "allows mass assignment of extra" do
-         service.extra.should == 'extra'
+        service.extra.should == extra
       end
 
       it "allows export of extra"  do
-         Yajl::Parser.parse(service.to_json)["extra"].should == 'extra'
+        Yajl::Parser.parse(service.to_json)["extra"].should == extra
       end
 
+      it "allows mass assignment of unique_id" do
+        service.unique_id.should == unique_id
+      end
+
+      it "allows export of unique_id" do
+        Yajl::Parser.parse(service.to_json)["unique_id"].should == unique_id
+      end
     end
   end
 end
