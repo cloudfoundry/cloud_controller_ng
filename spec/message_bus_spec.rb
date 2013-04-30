@@ -4,16 +4,25 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::MessageBus do
-    let(:nats) { double(:nats) }
-    let!(:bus) { MessageBus.new(:nats => nats) }
+    let(:nats) do
+      nats = double(:nats)
+      nats.stub(:subscribe)
+      nats.stub(:connected?)
+      nats.stub(:on_error)
+      nats.stub(:connect) { |_, &blk| blk.call }
+      nats.stub(:publish)
+      nats.stub(:options) { {} }
+      nats.stub(:wait_for_server)
+      nats
+    end
+    let(:bus) { MessageBus.new(:nats => nats) }
 
     let(:msg) { {:foo => "bar"} }
     let(:msg_json) { Yajl::Encoder.encode(msg) }
 
     describe "#subscribe" do
-      before { nats.should_receive(:subscribe).and_yield(msg_json, nil) }
-
       it "should receive nats messages" do
+        nats.should_receive(:subscribe).and_yield(msg_json, nil)
         was_on_reactor_thread = false
         received_msg = nil
 
@@ -30,6 +39,7 @@ module VCAP::CloudController
       end
 
       it "should not leak exceptions into the defer block" do
+        nats.should_receive(:subscribe).and_yield(msg_json, nil)
         logger = mock(:logger)
         logger.should_receive(:error)
         bus.should_receive(:logger).and_return(logger)
@@ -40,6 +50,15 @@ module VCAP::CloudController
             raise "boom"
           end
         end
+      end
+
+      it "should save subscriptions" do
+        blk = lambda { puts "le bloc" }
+        with_em_and_thread do
+          bus.subscribe("eenee-meenee.moo", { :optional => true}, &blk)
+        end
+
+        bus.subscriptions.should include({"eenee-meenee.moo" => [ {:optional => true}, blk]})
       end
     end
 
@@ -178,7 +197,6 @@ module VCAP::CloudController
     end
 
     describe "#register_routes" do
-
       let(:config) { {
         :bind_address => '1.2.3.4',
         :port => 4222,
@@ -207,5 +225,46 @@ module VCAP::CloudController
       end
     end
 
+    describe "#register_components" do
+      describe "nats goes down" do
+        it "starts subscription recovery" do
+          bus.should_receive(:start_nats_recovery)
+          nats.stub(:start) do
+            raise NATS::ConnectError
+          end
+          with_em_and_thread do
+            bus.register_components
+          end
+        end
+      end
+    end
+
+    describe "#start_nats_recovery" do
+      it "registers routes" do
+        bus.should_receive(:register_routes)
+
+        with_em_and_thread do
+          bus.start_nats_recovery
+        end
+      end
+
+      it "subscribes to every subjects" do
+        blk1 = lambda {}
+        blk2 = lambda {}
+        blk3 = lambda {}
+
+        bus.subscribe("hello.world", {}, &blk1)
+        bus.subscribe("hello.milkyway", {}, &blk2)
+        bus.subscribe("hello.universe", {}, &blk3)
+
+        bus.should_receive(:subscribe).with("hello.world", {}, &blk1)
+        bus.should_receive(:subscribe).with("hello.milkyway", {}, &blk2)
+        bus.should_receive(:subscribe).with("hello.universe", {}, &blk3)
+
+        with_em_and_thread do
+          bus.start_nats_recovery
+        end
+      end
+    end
   end
 end

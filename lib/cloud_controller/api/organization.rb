@@ -14,6 +14,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :billing_enabled, Message::Boolean, :default => false
+      attribute :can_access_non_public_plans, Message::Boolean, :default => false
       to_one    :quota_definition, :optional_in => :create
       to_many   :spaces, :exclude_in => :create
       to_many   :domains

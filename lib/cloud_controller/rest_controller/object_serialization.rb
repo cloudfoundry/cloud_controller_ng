@@ -87,7 +87,6 @@ module VCAP::CloudController::RestController
         ar = controller.model.association_reflection(name)
         other_model = ar.associated_class
         other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
-        q_key = "#{ar[:reciprocal].to_s.singularize}_guid"
         res["#{name}_url"] = "#{controller.url_for_id(obj.guid)}/#{name}"
 
         if depth < target_depth && !parents.include?(other_controller)

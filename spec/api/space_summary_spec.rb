@@ -56,15 +56,22 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/spaces/:id/summary" do
-      before do
+      let(:health_response) do
         hm_resp = {}
+
         @apps.each do |app|
           if app.started?
             hm_resp[app.guid] = app.instances
           end
         end
 
-        HealthManagerClient.should_receive(:healthy_instances).and_return(hm_resp)
+        hm_resp
+      end
+
+      before do
+        HealthManagerClient.should_receive(:healthy_instances).
+          and_return(health_response)
+
         get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
       end
 
@@ -87,26 +94,29 @@ module VCAP::CloudController
       it "should return the correct info for the apps" do
         decoded_response["apps"].each do |app_resp|
           app = @apps.find { |a| a.guid == app_resp["guid"] }
+
           expected_running_instances = app.started? ? app.instances : 0
 
           app_resp.should == {
             "guid" => app.guid,
             "name" => app.name,
             "urls" => [@route1.fqdn, @route2.fqdn],
-            "routes" => [{
-              "guid" => @route1.guid,
-              "host" => @route1.host,
-              "domain" => {
-                "guid" => @route1.domain.guid,
-                "name" => @route1.domain.name
+            "routes" => [
+              {
+                "guid" => @route1.guid,
+                "host" => @route1.host,
+                "domain" => {
+                  "guid" => @route1.domain.guid,
+                  "name" => @route1.domain.name
+                }
+              }, {
+                "guid" => @route2.guid,
+                "host" => @route2.host,
+                "domain" => {
+                  "guid" => @route2.domain.guid,
+                  "name" => @route2.domain.name}
               }
-            }, {
-              "guid" => @route2.guid,
-              "host" => @route2.host,
-              "domain" => {
-                "guid" => @route2.domain.guid,
-                "name" => @route2.domain.name}
-            }],
+            ],
             "service_count" => num_services,
             "instances" => app.instances,
             "running_instances" => expected_running_instances
@@ -137,6 +147,40 @@ module VCAP::CloudController
             }
           }
         }
+      end
+
+      context "when the health manager does not return the healthy instances for an app" do
+        let(:missing_apps) do
+          missing = []
+
+          @apps.each_with_index do |app, i|
+            if app.started? && i.even?
+              missing << app.guid
+            end
+          end
+
+          missing
+        end
+
+        let(:health_response) do
+          @apps.inject({}) do |response, app|
+            unless missing_apps.include?(app.guid)
+              response[app.guid] = app.instances
+            end
+
+            response
+          end
+        end
+
+        it "has nil for its running_instances" do
+          response_apps = decoded_response["apps"]
+
+          missing_apps.should_not be_empty
+          missing_apps.each do |guid|
+            responded = response_apps.find { |a| a["guid"] == guid }
+            responded["running_instances"].should be_nil
+          end
+        end
       end
     end
   end

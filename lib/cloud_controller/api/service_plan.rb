@@ -14,6 +14,7 @@ module VCAP::CloudController
       attribute :extra, String, default: nil
       to_one    :service
       to_many   :service_instances
+      attribute :public, Message::Boolean, default: true
     end
 
     query_parameters :service_guid, :service_instance_guid
