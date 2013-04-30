@@ -12,9 +12,9 @@ module VCAP::CloudController::RestController
 
       json_msg = self.class::CreateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
-      before_create if respond_to? :before_create
       raise InvalidRequest unless request_attrs
 
+      before_create if respond_to? :before_create
       obj = nil
       model.db.transaction do
         obj = model.create_from_hash(request_attrs)
