@@ -1,10 +1,7 @@
 module IntegrationSetup
   def start_nats(opts={})
     @nats_pid = run_cmd("nats-server -V -D", opts)
-    sleep 0.5
-    unless process_alive?(@nats_pid)
-      raise "nats-server is not running"
-    end
+    wait_for_nats_to_start
   end
 
   def stop_nats
@@ -37,6 +34,24 @@ module IntegrationSetup
 
   def stop_cc
     graceful_kill(:cc, @cc_pid)
+  end
+
+  def wait_for_nats_to_start
+    Timeout::timeout(10) do
+      loop do
+        sleep 0.2
+        break if nats_up?
+      end
+    end
+  end
+
+  def nats_up?
+    NATS.start do
+      NATS.stop
+      return true
+    end
+  rescue NATS::ConnectError
+    nil
   end
 end
 
