@@ -10,11 +10,6 @@ module VCAP::CloudController
           Models::Organization.make
         end
 
-        let(:admin_headers) do
-          user = VCAP::CloudController::Models::User.make(:admin => true)
-          headers_for(user)
-        end
-
         let(:org_admin_headers) do
           user = Models::User.make
           org.add_user(user)

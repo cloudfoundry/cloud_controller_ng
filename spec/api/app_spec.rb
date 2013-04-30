@@ -41,11 +41,7 @@ module VCAP::CloudController
     }
 
     include_examples "uaa authenticated api", path: "/v2/apps"
-
-    let(:admin_headers) do
-      user = Models::User.make(:admin => true)
-      headers_for(user)
-    end
+    include_examples "querying objects", path: "/v2/apps", model: Models::App, queryable_attributes: [:name]
 
     describe "create app" do
       let(:space_guid) { Models::Space.make.guid.to_s }

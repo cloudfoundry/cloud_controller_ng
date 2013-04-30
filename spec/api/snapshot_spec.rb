@@ -34,11 +34,6 @@ module VCAP::CloudController
       end
 
       context "for an admin" do
-        let(:admin_headers) do
-          user = Models::User.make(:admin => true)
-          headers_for(user)
-        end
-
         it "should allow them to create a snapshot" do
           post "/v2/snapshots", payload, admin_headers
           last_response.status.should == 201

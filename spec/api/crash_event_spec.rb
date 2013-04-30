@@ -32,7 +32,6 @@ module VCAP::CloudController
     let(:space_a_app_obj) { Models::App.make :space => space_a }
 
     let(:user) { Models::User.make(:admin => true).tap { |u| u.organizations << org } }
-    let(:admin_headers) { headers_for(user) }
 
     let(:base_timestamp)      { Time.now }
     let(:timestamp_one)       { base_timestamp + 100 }

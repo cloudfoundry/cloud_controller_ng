@@ -4,11 +4,6 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe AppSummary do
-    let(:admin_headers) do
-      user = VCAP::CloudController::Models::User.make(:admin => true)
-      headers_for(user)
-    end
-
     before(:all) do
       @num_services = 2
       @free_mem_size = 128

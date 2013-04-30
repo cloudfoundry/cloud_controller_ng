@@ -10,11 +10,6 @@ module VCAP::CloudController
     mem_size = 128
     num_apps = num_started_apps + num_stopped_apps
 
-    let(:admin_headers) do
-      user = VCAP::CloudController::Models::User.make(:admin => true)
-      headers_for(user)
-    end
-
     before :all do
       @space = Models::Space.make
       @route1 = Models::Route.make(:space => @space)

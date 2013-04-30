@@ -89,6 +89,10 @@ module VCAP::CloudController::ApiSpecHelper
     decoded_response["entity"]
   end
 
+  def admin_headers
+    @admin_headers ||= headers_for(VCAP::CloudController::Models::User.make(:admin => true))
+  end
+
   shared_examples "a CloudController API" do |opts|
     [:required_attributes, :unique_attributes, :basic_attributes,
      :extra_attributes, :sensitive_attributes,
@@ -103,14 +107,6 @@ module VCAP::CloudController::ApiSpecHelper
       opts[k] ||= {}
     end
 
-    def admin_headers
-      @admin_headers ||= begin
-        user = VCAP::CloudController::Models::User.make(:admin => true)
-        headers_for(user)
-      end
-    end
-
-    include_examples "querying objects", opts
     include_examples "enumerating objects", opts
     include_examples "reading a valid object", opts
     include_examples "operations on an invalid object", opts

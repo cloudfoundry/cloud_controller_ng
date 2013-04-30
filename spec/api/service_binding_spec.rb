@@ -34,11 +34,6 @@ module VCAP::CloudController
 
       let(:service_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
 
-      let(:admin_headers) do
-        user = Models::User.make(:admin => true)
-        headers_for(user)
-      end
-
       it "should flag app for restaging when creating a binding" do
         req = Yajl::Encoder.encode(:app_guid => app_obj.guid,
                                    :service_instance_guid => service_instance.guid)

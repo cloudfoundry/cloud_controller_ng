@@ -147,11 +147,6 @@ module VCAP::CloudController
       end
     end
 
-    let(:admin_headers) do
-      admin = Models::User.make(:admin => true)
-      headers_for(admin)
-    end
-
     describe "POST", "/v2/services" do
       it "accepts a request with unique_id" do
         payload = VCAP::CloudController::Service::CreateMessage.new(

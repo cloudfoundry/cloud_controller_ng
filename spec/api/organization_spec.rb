@@ -5,7 +5,6 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Organization do
     let(:org) { Models::Organization.make }
-    let(:admin_headers) { headers_for(Models::User.make(:admin => true)) }
 
     it_behaves_like "a CloudController API", {
       :path                => "/v2/organizations",
@@ -43,6 +42,7 @@ module VCAP::CloudController
     }
 
     include_examples "uaa authenticated api", path: "/v2/organizations"
+    include_examples "querying objects", path: "/v2/organizations", model: Models::Organization, queryable_attributes: [:name]
 
     describe "Permissions" do
       include_context "permissions"
