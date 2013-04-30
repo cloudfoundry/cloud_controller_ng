@@ -254,6 +254,7 @@ module VCAP::CloudController
                 AppStager.should_receive(:stage_app) do |app, options|
                   received_app = app
                   received_options = options
+                  AppStagerTask::Response.new({})
                 end
 
                 put "/v2/apps/#{app_obj.guid}?#{query_params}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)

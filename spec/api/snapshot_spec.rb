@@ -95,7 +95,10 @@ module VCAP::CloudController
           Models::ServiceInstance.should_receive(:find).
             with(:guid => service_instance.guid).
             and_return(service_instance)
-          service_instance.should_receive(:create_snapshot).with(new_name)
+          service_instance.should_receive(:create_snapshot).
+            with(new_name).
+            and_return(VCAP::Services::Api::SnapshotV2.new)
+
           post "/v2/snapshots", payload, headers_for(developer)
         end
 

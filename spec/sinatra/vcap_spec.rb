@@ -103,6 +103,7 @@ describe "Sinatra::VCAP" do
 
   describe "accessing a route that throws a low level exception" do
     before do
+      TestApp.any_instance.stub(:in_test_mode?).and_return(false)
       Steno.logger("vcap_spec").should_receive(:error).once
       get "/div_0"
     end

@@ -18,6 +18,7 @@ require "webmock/rspec"
 module VCAP::CloudController
   class SpecEnvironment
     def initialize
+      ENV["CC_TEST"] = "true"
       FileUtils.mkdir_p(artifacts_dir)
 
       # ignore the race when we run specs in parallel

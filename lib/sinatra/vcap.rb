@@ -67,6 +67,8 @@ module Sinatra
           request.env["vcap_exception_body_set"] = true
           body_from_vcap_exception(exception)
         else
+          raise exception if in_test_mode?
+
           msg = ["#{exception.class} - #{exception.message}"]
           msg[0] = msg[0] + ":"
           msg.concat(exception.backtrace)
@@ -144,6 +146,10 @@ module Sinatra
         Steno.config.context.data.delete("request_guid")
         nil
       end
+    end
+
+    def in_test_mode?
+      ENV["CC_TEST"]
     end
 
     private
