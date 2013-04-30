@@ -4,14 +4,14 @@ module VCAP::CloudController
   describe VCAP::CloudController::Models::ServiceBinding do
     it_behaves_like "a CloudController model", {
       :required_attributes => [:service_instance, :app],
-      :unique_attributes   => [:app, :service_instance],
-      :create_attribute    => lambda { |name|
+      :unique_attributes => [:app, :service_instance],
+      :create_attribute => lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym
-        when :app
-          Models::App.make(:space => @space)
-        when :service_instance
-          Models::ServiceInstance.make(:space => @space)
+          when :app
+            Models::App.make(:space => @space)
+          when :service_instance
+            Models::ServiceInstance.make(:space => @space)
         end
       },
       :create_attribute_reset => lambda { @space = nil },
@@ -126,7 +126,7 @@ module VCAP::CloudController
         VCAP::Services::Api::GatewayHandleResponse.new(
           :service_id => "gwname_instance",
           :configuration => "abc",
-          :credentials => { :password => "foo" }
+          :credentials => {:password => "foo"}
         )
       end
 
@@ -134,7 +134,7 @@ module VCAP::CloudController
         VCAP::Services::Api::GatewayHandleResponse.new(
           :service_id => "gwname_binding",
           :configuration => "abc",
-          :credentials => { :password => "foo" }
+          :credentials => {:password => "foo"}
         )
       end
 
@@ -155,7 +155,7 @@ module VCAP::CloudController
           binding = Models::ServiceBinding.make(:service_instance => service_instance)
           binding.gateway_name.should == "gwname_binding"
           binding.gateway_data.should == "abc"
-          binding.credentials.should == { "password" => "foo" }
+          binding.credentials.should == {"password" => "foo"}
         end
 
         it "should unbind a service on rollback after create" do
@@ -188,8 +188,8 @@ module VCAP::CloudController
           binding = Models::ServiceBinding.make(:service_instance => service_instance)
 
           gw_client.should_receive(:unbind).with(:service_id => "gwname_instance",
-                                                 :handle_id => "gwname_binding",
-                                                 :binding_options => {})
+            :handle_id => "gwname_binding",
+            :binding_options => {})
           binding.destroy
         end
       end

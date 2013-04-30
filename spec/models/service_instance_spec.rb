@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
@@ -31,8 +29,8 @@ module VCAP::CloudController
         :service_bindings  => {
           :delete_ok => true,
           :create_for => lambda { |service_instance|
-          make_service_binding_for_service_instance(service_instance)
-        }
+            make_service_binding_for_service_instance(service_instance)
+          }
         }
       }
     }

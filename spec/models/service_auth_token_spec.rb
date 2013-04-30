@@ -1,9 +1,12 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Models::ServiceAuthToken do
+
+    it_behaves_like "a model with an encrypted attribute" do
+      let(:encrypted_attr) { :token }
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:label, :provider, :token],
       :unique_attributes    => [:label, :provider],
