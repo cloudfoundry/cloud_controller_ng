@@ -37,7 +37,6 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/routes", model: Models::Route, basic_attributes: [:host, :domain_guid, :space_guid]
     include_examples "operations on an invalid object", path: "/v2/routes"
 
-
     context "with a wildcard domain" do
       it "should allow a nil host" do
         cf_admin = Models::User.make(:admin => true)

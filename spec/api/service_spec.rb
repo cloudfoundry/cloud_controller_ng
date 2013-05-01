@@ -20,7 +20,12 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/services", model: Models::Service
     include_examples "reading a valid object", path: "/v2/services", model: Models::Service, basic_attributes: [:label, :provider, :url, :description, :version]
     include_examples "operations on an invalid object", path: "/v2/services"
-
+    include_examples "collection operations", path: "/v2/services", model: Models::Service,
+      one_to_many_collection_ids: {
+        service_plans: lambda { |service| Models::ServicePlan.make(service: service) }
+      },
+      many_to_one_collection_ids: {},
+      many_to_many_collection_ids: {}
 
     shared_examples "enumerate and read service only" do |perm_name|
       include_examples "permission checks", perm_name,

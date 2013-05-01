@@ -4,13 +4,13 @@ module VCAP::CloudController
   describe VCAP::CloudController::ServicePlan do
 
     it_behaves_like "a CloudController API", {
-      :path                 => "/v2/service_plans",
-      :model                => Models::ServicePlan,
-      :basic_attributes     => [:name, :free, :description, :service_guid, :extra, :unique_id],
-      :required_attributes  => [:name, :free, :description, :service_guid],
-      :unique_attributes    => [:name, :service_guid],
-      :extra_attributes     => [:extra],
-      :one_to_many_collection_ids  => {
+      :path => "/v2/service_plans",
+      :model => Models::ServicePlan,
+      :basic_attributes => [:name, :free, :description, :service_guid, :extra, :unique_id],
+      :required_attributes => [:name, :free, :description, :service_guid],
+      :unique_attributes => [:name, :service_guid],
+      :extra_attributes => [:extra],
+      :one_to_many_collection_ids => {
         :service_instances => lambda { |service_plan| Models::ServiceInstance.make(:service_plan => service_plan) }
       }
     }
@@ -19,6 +19,12 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/service_plans", model: Models::ServicePlan
     include_examples "reading a valid object", path: "/v2/service_plans", model: Models::ServicePlan, basic_attributes: [:name, :free, :description, :service_guid, :extra, :unique_id]
     include_examples "operations on an invalid object", path: "/v2/service_plans"
+    include_examples "collection operations", path: "/v2/service_plans", model: Models::ServicePlan,
+      one_to_many_collection_ids: {
+        service_instances: lambda { |service_plan| Models::ServiceInstance.make(service_plan: service_plan) }
+      },
+      many_to_one_collection_ids: {},
+      many_to_many_collection_ids: {}
 
     shared_examples "enumerate and read plan only" do |perm_name|
       include_examples "permission checks", perm_name,

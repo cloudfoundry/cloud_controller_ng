@@ -21,6 +21,12 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/service_instances", model: Models::ServiceInstance
     include_examples "reading a valid object", path: "/v2/service_instances", model: Models::ServiceInstance, basic_attributes: [:name]
     include_examples "operations on an invalid object", path: "/v2/service_instances"
+    include_examples "collection operations", path: "/v2/service_instances", model: Models::ServiceInstance,
+      one_to_many_collection_ids: {
+        service_bindings: lambda { |service_instance| make_service_binding_for_service_instance(service_instance) }
+      },
+      many_to_one_collection_ids: {},
+      many_to_many_collection_ids: {}
 
     describe "Permissions" do
       include_context "permissions"

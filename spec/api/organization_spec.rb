@@ -46,8 +46,24 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/organizations", model: Models::Organization
     include_examples "reading a valid object", path: "/v2/organizations", model: Models::Organization, basic_attributes: [:name]
     include_examples "operations on an invalid object", path: "/v2/organizations"
+    include_examples "collection operations", path: "/v2/organizations", model: Models::Organization,
+      one_to_many_collection_ids: {
+        spaces: lambda { |org| Models::Space.make(organization: org) }
+      },
+      one_to_many_collection_ids_without_url: {
+        service_instances: lambda { |org| Models::ServiceInstance.make(space: Models::Space.make(organization: org)) },
+        apps: lambda { |org| Models::App.make(space: Models::Space.make(organization: org)) },
+        owned_domain: lambda { |org| Models::Domain.make(owning_organization: org) }
+      },
+      many_to_one_collection_ids: {},
+      many_to_many_collection_ids: {
+        users: lambda { |org| Models::User.make },
+        managers: lambda { |org| Models::User.make },
+        billing_managers: lambda { |org| Models::User.make },
+        domains: lambda { |org| Models::Domain.find_or_create_shared_domain(Sham.domain) }
+      }
 
-    describe "Permissions" do
+      describe "Permissions" do
       include_context "permissions"
 
       before do

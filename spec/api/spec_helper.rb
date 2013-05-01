@@ -107,8 +107,6 @@ module VCAP::CloudController::ApiSpecHelper
       opts[k] ||= {}
     end
 
-    include_examples "collection operations", opts
-
     if opts[:read_only]
       include_examples "rejects changes", opts
     else

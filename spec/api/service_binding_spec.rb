@@ -28,7 +28,6 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/service_bindings", model: Models::ServiceBinding, basic_attributes: [:app_guid, :service_instance_guid]
     include_examples "operations on an invalid object", path: "/v2/service_bindings"
 
-
     describe "staging" do
       let(:app_obj) do
         app = Models::App.make

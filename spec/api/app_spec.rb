@@ -45,6 +45,27 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/apps", model: Models::App
     include_examples "reading a valid object", path: "/v2/apps", model: Models::App, basic_attributes: [:name, :space_guid, :stack_guid]
     include_examples "operations on an invalid object", path: "/v2/apps"
+    include_examples "collection operations", path: "/v2/apps", model: Models::App,
+      one_to_many_collection_ids: {
+        service_bindings: lambda { |app|
+          service_instance = Models::ServiceInstance.make(space: app.space)
+          Models::ServiceBinding.make(app: app, service_instance: service_instance)
+        }
+      },
+      many_to_one_collection_ids: {
+        space: lambda { |app| Models::Space.make },
+        stack: lambda { |app| Models::Stack.make },
+      },
+      many_to_many_collection_ids: {
+        routes: lambda { |app|
+          domain = Models::Domain.make(owning_organization: app.space.organization)
+          app.space.organization.add_domain(domain)
+          app.space.add_domain(domain)
+          Models::Route.make(domain: domain, space: app.space)
+        }
+      }
+
+    
 
 
     describe "create app" do

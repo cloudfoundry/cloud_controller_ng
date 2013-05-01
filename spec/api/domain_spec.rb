@@ -41,8 +41,27 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/domains", model: Models::Domain
     include_examples "reading a valid object", path: "/v2/domains", model: Models::Domain, basic_attributes: [:name, :owning_organization_guid]
     include_examples "operations on an invalid object", path: "/v2/domains"
+    include_examples "collection operations", path: "/v2/domains", model: Models::Domain,
+      one_to_many_collection_ids: {
+        spaces: lambda { |domain|
+          org = domain.organizations.first || Models::Organization.make
+          Models::Space.make(organization: org)
+        },
+      },
+      one_to_many_collection_ids_without_url: {
+        :routes => lambda { |domain|
+          domain.update(wildcard: true)
+          space = Models::Space.make(organization: domain.owning_organization)
+          space.add_domain(domain)
+          Models::Route.make(host: Sham.host, domain: domain, space: space)
+        }
+      },
+      many_to_one_collection_ids: {
+        owning_organization: lambda { |user| user.organizations.first || Models::Organization.make }
+      },
+      many_to_many_collection_ids: {}
 
-    describe "Permissions" do
+      describe "Permissions" do
       include_context "permissions"
 
       before(:all) do

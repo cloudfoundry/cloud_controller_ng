@@ -5,20 +5,20 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Space do
     it_behaves_like "a CloudController API", {
-      :path                => "/v2/spaces",
-      :model               => Models::Space,
-      :basic_attributes    => [:name, :organization_guid],
+      :path => "/v2/spaces",
+      :model => Models::Space,
+      :basic_attributes => [:name, :organization_guid],
       :required_attributes => [:name, :organization_guid],
-      :unique_attributes   => [:name, :organization_guid],
+      :unique_attributes => [:name, :organization_guid],
       :queryable_attributes => :name,
       :many_to_many_collection_ids => {
         :developers => lambda { |space| make_user_for_space(space) },
-        :managers   => lambda { |space| make_user_for_space(space) },
-        :auditors   => lambda { |space| make_user_for_space(space) },
-        :domains    => lambda { |space| make_domain_for_space(space) }
+        :managers => lambda { |space| make_user_for_space(space) },
+        :auditors => lambda { |space| make_user_for_space(space) },
+        :domains => lambda { |space| make_domain_for_space(space) }
       },
       :one_to_many_collection_ids => {
-        :apps  => lambda { |space| Models::App.make(:space => space) },
+        :apps => lambda { |space| Models::App.make(:space => space) },
         :service_instances => lambda { |space| Models::ServiceInstance.make(:space => space) }
       },
       :one_to_many_collection_ids_without_url => {
@@ -40,6 +40,30 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/spaces", model: Models::Space
     include_examples "reading a valid object", path: "/v2/spaces", model: Models::Space, basic_attributes: [:name, :organization_guid]
     include_examples "operations on an invalid object", path: "/v2/spaces"
+    include_examples "collection operations", path: "/v2/spaces", model: Models::Space,
+      one_to_many_collection_ids: {
+        apps: lambda { |space| Models::App.make(space: space) },
+        service_instances: lambda { |space| Models::ServiceInstance.make(space: space) }
+      },
+      one_to_many_collection_ids_without_url: {
+        routes: lambda { |space| Models::Route.make(space: space) },
+        default_users: lambda { |space|
+          user = VCAP::CloudController::Models::User.make
+          space.organization.add_user(user)
+          space.add_developer(user)
+          space.save
+          user.default_space = space
+          user.save
+          user
+        }
+      },
+      many_to_one_collection_ids: {},
+      many_to_many_collection_ids: {
+        developers: lambda { |space| make_user_for_space(space) },
+        managers: lambda { |space| make_user_for_space(space) },
+        auditors: lambda { |space| make_user_for_space(space) },
+        domains: lambda { |space| make_domain_for_space(space) }
+      }
 
 
     describe "data integrity" do
