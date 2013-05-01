@@ -20,13 +20,13 @@ module VCAP::CloudController::ApiSpecHelper
           expected.each { |k, v| expected[k] = v.to_s if v.kind_of?(Time) }
 
           # filter out the relation urls.
-          parsed = entity.select do |k, v|
+          parsed = entity.select do |k, _|
             expected.has_key?(k) || (not k =~ /_url/)
           end
           parsed.should == expected
 
           opts[:basic_attributes].each do |attr|
-            parsed.should have_key(attr)
+            parsed.should have_key(attr.to_s)
           end
         end
       end

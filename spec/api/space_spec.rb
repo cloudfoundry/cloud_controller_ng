@@ -38,6 +38,7 @@ module VCAP::CloudController
     include_examples "uaa authenticated api", path: "/v2/spaces"
     include_examples "querying objects", path: "/v2/spaces", model: Models::Space, queryable_attributes: [:name]
     include_examples "enumerating objects", path: "/v2/spaces", model: Models::Space
+    include_examples "reading a valid object", path: "/v2/spaces", model: Models::Space, basic_attributes: [:name, :organization_guid]
 
     describe "data integrity" do
       let(:cf_admin) { Models::User.make(:admin => true) }

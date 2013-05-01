@@ -38,5 +38,6 @@ module VCAP::CloudController
 
     include_examples "uaa authenticated api", path: "/v2/users"
     include_examples "enumerating objects", path: "/v2/users", model: Models::User
+    include_examples "reading a valid object", path: "/v2/users", model: Models::User, basic_attributes: []
   end
 end

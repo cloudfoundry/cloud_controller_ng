@@ -17,6 +17,7 @@ module VCAP::CloudController
 
     include_examples "uaa authenticated api", path: "/v2/service_plans"
     include_examples "enumerating objects", path: "/v2/service_plans", model: Models::ServicePlan
+    include_examples "reading a valid object", path: "/v2/service_plans", model: Models::ServicePlan, basic_attributes: [:name, :free, :description, :service_guid, :extra, :unique_id]
 
     shared_examples "enumerate and read plan only" do |perm_name|
       include_examples "permission checks", perm_name,

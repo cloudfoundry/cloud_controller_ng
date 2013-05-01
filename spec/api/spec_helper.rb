@@ -107,7 +107,6 @@ module VCAP::CloudController::ApiSpecHelper
       opts[k] ||= {}
     end
 
-    include_examples "reading a valid object", opts
     include_examples "operations on an invalid object", opts
     include_examples "collection operations", opts
 

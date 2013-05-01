@@ -17,5 +17,6 @@ module VCAP::CloudController
 
     include_examples "uaa authenticated api", path: "/v2/service_auth_tokens"
     include_examples "enumerating objects", path: "/v2/service_auth_tokens", model: Models::ServiceAuthToken
+    include_examples "reading a valid object", path: "/v2/service_auth_tokens", model: Models::ServiceAuthToken, basic_attributes: [:label, :provider]
   end
 end

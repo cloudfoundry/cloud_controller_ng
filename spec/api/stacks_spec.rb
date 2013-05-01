@@ -17,5 +17,6 @@ module VCAP::CloudController
     include_examples "uaa authenticated api", path: "/v2/stacks"
     include_examples "querying objects", path: "/v2/stacks", model: Models::Stack, queryable_attributes: [:name]
     include_examples "enumerating objects", path: "/v2/stacks", model: Models::Stack
+    include_examples "reading a valid object", path: "/v2/stacks", model: Models::Stack, basic_attributes: [:name, :description]
   end
 end
