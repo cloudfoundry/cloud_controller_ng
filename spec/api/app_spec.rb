@@ -44,6 +44,8 @@ module VCAP::CloudController
     include_examples "querying objects", path: "/v2/apps", model: Models::App, queryable_attributes: [:name]
     include_examples "enumerating objects", path: "/v2/apps", model: Models::App
     include_examples "reading a valid object", path: "/v2/apps", model: Models::App, basic_attributes: [:name, :space_guid, :stack_guid]
+    include_examples "operations on an invalid object", path: "/v2/apps"
+
 
     describe "create app" do
       let(:space_guid) { Models::Space.make.guid.to_s }

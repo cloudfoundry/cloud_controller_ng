@@ -40,6 +40,7 @@ module VCAP::CloudController
     include_examples "uaa authenticated api", path: "/v2/domains"
     include_examples "enumerating objects", path: "/v2/domains", model: Models::Domain
     include_examples "reading a valid object", path: "/v2/domains", model: Models::Domain, basic_attributes: [:name, :owning_organization_guid]
+    include_examples "operations on an invalid object", path: "/v2/domains"
 
     describe "Permissions" do
       include_context "permissions"

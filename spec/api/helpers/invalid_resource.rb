@@ -14,7 +14,6 @@ module VCAP::CloudController::ApiSpecHelper
       end
 
       path = "#{opts[:path]}/999999"
-      expected_destructive_error = opts[:read_only] ? /Unknown request/ : "not be found: 999999"
 
       describe "GET #{opts[:path]}/:invalid_id/" do
         it_responds_to :get, path, 404, "not be found: 999999"
@@ -25,11 +24,11 @@ module VCAP::CloudController::ApiSpecHelper
       end
 
       describe "PUT #{opts[:path]}/:invalid_id/" do
-        it_responds_to :put, path, 404, expected_destructive_error
+        it_responds_to :put, path, 404, "not be found: 999999"
       end
 
       describe "DELETE #{opts[:path]}/:invalid_id/" do
-        it_responds_to :delete, path, 404, expected_destructive_error
+        it_responds_to :delete, path, 404, "not be found: 999999"
       end
     end
   end

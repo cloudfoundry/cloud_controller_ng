@@ -23,5 +23,6 @@ module VCAP::CloudController
     include_examples "uaa authenticated api", path: "/v2/quota_definitions"
     include_examples "enumerating objects", path: "/v2/quota_definitions", model: Models::QuotaDefinition
     include_examples "reading a valid object", path: "/v2/quota_definitions", model: Models::QuotaDefinition, basic_attributes: [:name, :non_basic_services_allowed, :total_services, :memory_limit]
+    include_examples "operations on an invalid object", path: "/v2/quota_definitions"
   end
 end

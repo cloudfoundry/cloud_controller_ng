@@ -39,6 +39,8 @@ module VCAP::CloudController
     include_examples "querying objects", path: "/v2/spaces", model: Models::Space, queryable_attributes: [:name]
     include_examples "enumerating objects", path: "/v2/spaces", model: Models::Space
     include_examples "reading a valid object", path: "/v2/spaces", model: Models::Space, basic_attributes: [:name, :organization_guid]
+    include_examples "operations on an invalid object", path: "/v2/spaces"
+
 
     describe "data integrity" do
       let(:cf_admin) { Models::User.make(:admin => true) }
