@@ -45,6 +45,9 @@ module VCAP::CloudController
             :domain => domain,
             :space => app.space
           )
+        },
+        :crash_events => lambda { |app|
+          Models::CrashEvent.make(:app => app)
         }
       }
     }
@@ -581,6 +584,16 @@ module VCAP::CloudController
         expect {
           app.destroy
         }.to change { Models::ServiceBinding.where(:id => service_binding.id).count }.from(1).to(0)
+      end
+
+      it "should destroy all dependent crash events" do
+        crash_event = Models::CrashEvent.make(:app => app)
+
+        expect {
+          app.destroy
+        }.to change {
+          Models::CrashEvent.where(:id => crash_event.id).count
+        }.from(1).to(0)
       end
     end
 

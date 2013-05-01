@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2012 VMware, Inc.
+require "time"
 
 module VCAP::RestAPI
   #
@@ -98,6 +98,8 @@ module VCAP::RestAPI
         val = clean_up_integer(val)
       when :boolean
         val = clean_up_boolean(key, val)
+      when :datetime
+        val = clean_up_datetime(val)
       end
 
       if val.nil?
@@ -143,6 +145,10 @@ module VCAP::RestAPI
       end
 
       q_val
+    end
+
+    def clean_up_datetime(q_val)
+      Time.parse(q_val).localtime
     end
 
     def clean_up_integer(q_val)

@@ -15,7 +15,7 @@ module VCAP::CloudController
     end
 
     def result(index)
-      body[:resources][index]
+      body[:resources][index][:entity]
     end
 
     def no_resource_has
@@ -40,6 +40,11 @@ module VCAP::CloudController
     let(:timestamp_after_two) { base_timestamp + 250 }
     let(:timestamp_three)     { base_timestamp + 300 }
 
+    # ; is %3B
+    #
+    # < is %3C
+    # = is %3D
+    # > is %3E
     shared_examples("filtering by time") do |endpoint, obj_name|
       let(:obj_guid) { get_obj_guid(obj_name) }
 
@@ -48,30 +53,30 @@ module VCAP::CloudController
       let!(:crash_event3) { Models::CrashEvent.make :app => space_a_app_obj, :timestamp => timestamp_three, :exit_description => "Crashed 3" }
 
       it "returns status code 200" do
-        get "/v2/#{endpoint}/#{obj_guid}/crash_events?start_date=#{timestamp_after_two.utc.iso8601}", {}, admin_headers
+        get "/v2/#{endpoint}/#{obj_guid}/crash_events?q=timestamp%3E%3D#{timestamp_after_two.utc.iso8601}", {}, admin_headers
         last_response.status.should == 200
       end
 
-      it "returns crash events after 'start_time' if start_time is specified" do
-        get "/v2/#{endpoint}/#{obj_guid}/crash_events?start_date=#{timestamp_after_two.utc.iso8601}", {}, admin_headers
+      it "returns crash events on or after start timestamp if specified" do
+        get "/v2/#{endpoint}/#{obj_guid}/crash_events?q=timestamp%3E%3D#{timestamp_after_two.utc.iso8601}", {}, admin_headers
         total_results.should == 1
         result(0)[:exit_description].should == "Crashed 3"
       end
 
-      it "returns crash events before 'end_time' if end_time is specified" do
-        get "/v2/#{endpoint}/#{obj_guid}/crash_events?end_date=#{timestamp_after_one.utc.iso8601}", {}, admin_headers
+      it "returns crash events on or before end timestamp if specified" do
+        get "/v2/#{endpoint}/#{obj_guid}/crash_events?q=timestamp%3C%3D#{timestamp_after_one.utc.iso8601}", {}, admin_headers
         total_results.should == 1
         result(0)[:exit_description].should == "Crashed 1"
       end
 
-      it "returns crash events between 'start_time' and 'end_time' if both are specified" do
-        get "/v2/#{endpoint}/#{obj_guid}/crash_events?start_date=#{base_timestamp.utc.iso8601}&end_date=#{timestamp_after_two.utc.iso8601}", {}, admin_headers
+      it "returns crash events between start and end timestamps (inclusive) if both are specified" do
+        get "/v2/#{endpoint}/#{obj_guid}/crash_events?q=timestamp%3E%3D#{base_timestamp.utc.iso8601}%3Btimestamp%3C%3D#{timestamp_after_two.utc.iso8601}", {}, admin_headers
         total_results.should == 2
         result(0)[:exit_description].should == "Crashed 1"
         result(1)[:exit_description].should == "Crashed 2"
       end
 
-      it "returns all crash events if neither are specified" do
+      it "returns all crash events if neither start nor end timestamp is specified" do
         get "/v2/#{endpoint}/#{obj_guid}/crash_events", {}, admin_headers
         total_results.should == 3
         result(0)[:exit_description].should == "Crashed 1"
@@ -93,7 +98,7 @@ module VCAP::CloudController
         get "/v2/apps/#{completely_unrelated_app.guid}/crash_events", {}, admin_headers
         body[:total_pages].should == 2
         body[:prev_url].should be_nil
-        body[:next_url].should == "/v2/apps?page=2&results-per-page=50"
+        body[:next_url].should == "/v2/apps/#{completely_unrelated_app.guid}/crash_events?page=2&results-per-page=50"
       end
     end
 
@@ -103,6 +108,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/spaces/:guid/crash_events' do
+      before { pending }
+
       include_examples("filtering by time", "spaces", :space_a)
 
       let(:space_a_app_obj2) { Models::App.make :space => space_a }
@@ -121,6 +128,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/organizations/:guid/crash_events' do
+      before { pending }
+
       include_examples("filtering by time", "organizations", :org)
       include_examples("pagination")
 

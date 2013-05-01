@@ -20,6 +20,7 @@ module VCAP::CloudController::Models
     one_to_many       :apps
     one_to_many       :service_instances
     one_to_many       :routes
+    # TODO: one_to_many       :crash_events, :dataset => lambda { VCAP::CloudController::Models::CrashEvent.filter(:app => apps) }
     one_to_many       :default_users, :class => "VCAP::CloudController::Models::User", :key => :default_space_id
     many_to_many      :domains, :before_add => :validate_domain
 

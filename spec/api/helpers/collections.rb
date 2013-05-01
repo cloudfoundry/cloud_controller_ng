@@ -17,6 +17,25 @@ module VCAP::CloudController::ApiSpecHelper
     end
   end
 
+  def normalize_attributes(value)
+    case value
+    when Hash
+      stringified = {}
+
+      value.each do |k, v|
+        stringified[k] = normalize_attributes(v)
+      end
+
+      stringified
+    when Array
+      value.collect { |x| normalize_attributes(x) }
+    when Numeric, nil, true, false
+      value
+    else
+      value.to_s
+    end
+  end
+
   shared_context "collections" do |opts, attr, make|
     define_method(:obj) do
       @obj ||= opts[:model].make
@@ -156,14 +175,8 @@ module VCAP::CloudController::ApiSpecHelper
           ar = opts[:model].association_reflection(attr)
           child_controller = VCAP::CloudController.controller_from_model_name(ar.associated_class.name)
 
-          c1 = os.to_hash(child_controller, @child1, {})
-          c2 = os.to_hash(child_controller, @child2, {})
-
-          [c1, c2].each do |c|
-            m = c["metadata"]
-            m["created_at"] = m["created_at"].to_s
-            m["updated_at"] = m["updated_at"].to_s if m["updated_at"]
-          end
+          c1 = normalize_attributes(os.to_hash(child_controller, @child1, {}))
+          c2 = normalize_attributes(os.to_hash(child_controller, @child2, {}))
 
           decoded_response["resources"].size.should == 2
           decoded_response["resources"].should =~ [c1, c2]
