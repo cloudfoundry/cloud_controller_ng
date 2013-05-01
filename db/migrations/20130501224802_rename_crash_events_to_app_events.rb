@@ -1,7 +1,7 @@
 Sequel.migration do
   change do
     alter_table :crash_events do
-      drop_foreign_key :fk_crash_events_app_id
+      drop_constraint :fk_crash_events_app_id, :type => :foreign_key
       add_foreign_key :app_id, :apps, :name => :fk_app_events_app_id
 
       drop_index :app_id
