@@ -5,8 +5,8 @@ module VCAP::RestAPI
   describe VCAP::RestAPI::Query do
     include VCAP::RestAPI
 
-    num_authors = 10
-    books_per_author = 2
+    let(:num_authors) { 10 }
+    let(:books_per_author) { 2 }
 
     class Author < Sequel::Model
       one_to_many :books
@@ -133,6 +133,15 @@ module VCAP::RestAPI
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
           }.to raise_error(VCAP::Errors::BadQueryParameter)
+        end
+      end
+
+      describe "querying multiple values" do
+        it "should return the correct record" do
+          q = "num_val:5;str_val:str 4"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+          ds.all.should == [Author[:num_val => 5, :str_val => "str 4"]]
         end
       end
 

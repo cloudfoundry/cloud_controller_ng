@@ -70,26 +70,36 @@ module VCAP::RestAPI
     def filter_args_from_query
       return {} unless query
 
-      q_key, q_val = parse
-      q_key, q_val = clean_up_foreign_key(q_key, q_val)
-      q_key, q_val = clean_up_boolean(q_key, q_val)
-      q_key, q_val = clean_up_integer(q_key, q_val)
+      keyvals = parse
 
-      {q_key => q_val}
+      filter = {}
+      keyvals.collect! do |key, val|
+        key, val = clean_up_foreign_key(key, val)
+        key, val = clean_up_boolean(key, val)
+        key, val = clean_up_integer(key, val)
+
+        filter[key] = val
+      end
+
+      filter
     end
 
     def parse
-      key, value, extra = query.split(":")
+      segments = query.split(";")
 
-      unless extra.nil?
-        raise VCAP::Errors::BadQueryParameter.new(query)
+      segments.collect do |segment|
+        key, value, extra = segment.split(":")
+
+        unless extra.nil?
+          raise VCAP::Errors::BadQueryParameter.new(segment)
+        end
+
+        unless queryable_attributes.include?(key)
+          raise VCAP::Errors::BadQueryParameter.new(key)
+        end
+
+        [key.to_sym, value]
       end
-
-      unless queryable_attributes.include?(key)
-        raise VCAP::Errors::BadQueryParameter.new(key)
-      end
-
-      [key.to_sym, value]
     end
 
     def clean_up_foreign_key(q_key, q_val)
