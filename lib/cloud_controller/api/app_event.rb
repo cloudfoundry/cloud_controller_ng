@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :CrashEvent do
+  rest_controller :AppEvent do
     permissions_required do
       read Permissions::CFAdmin
       read Permissions::OrgManager

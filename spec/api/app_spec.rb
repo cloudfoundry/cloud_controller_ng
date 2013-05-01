@@ -37,8 +37,8 @@ module VCAP::CloudController
             :service_instance => service_instance
           )
         },
-        :crash_events => lambda { |app|
-          Models::CrashEvent.make(:app => app)
+        :app_events => lambda { |app|
+          Models::AppEvent.make(:app => app)
         }
       }
     }

@@ -150,7 +150,7 @@ module VCAP::CloudController::Models
     app_run_id        { Sham.guid }
   end
 
-  CrashEvent.blueprint do
+  AppEvent.blueprint do
     app               { App.make }
     instance_guid     { Sham.guid }
     instance_index    { Sham.instance_index }

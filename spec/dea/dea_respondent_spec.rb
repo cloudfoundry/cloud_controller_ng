@@ -49,19 +49,19 @@ module VCAP::CloudController
     describe "#process_droplet_exited_message" do
       context "when the app crashed" do
         context "the app described in the event exists" do
-          it "adds a record in the CrashEvents table" do
+          it "adds a record in the AppEvents table" do
             time = Time.now
             Timecop.freeze(time) do
               respondent.process_droplet_exited_message(payload)
 
-              crash_event = Models::CrashEvent.find(:app_id => app.id)
+              app_event = Models::AppEvent.find(:app_id => app.id)
 
-              expect(crash_event).not_to be_nil
-              expect(crash_event.instance_guid).to eq(payload[:instance])
-              expect(crash_event.instance_index).to eq(payload[:index])
-              expect(crash_event.exit_status).to eq(payload[:exit_status])
-              expect(crash_event.exit_description).to eq(payload[:exit_description])
-              expect(crash_event.timestamp.to_i).to eq(time.to_i)
+              expect(app_event).not_to be_nil
+              expect(app_event.instance_guid).to eq(payload[:instance])
+              expect(app_event.instance_index).to eq(payload[:index])
+              expect(app_event.exit_status).to eq(payload[:exit_status])
+              expect(app_event.exit_description).to eq(payload[:exit_description])
+              expect(app_event.timestamp.to_i).to eq(time.to_i)
             end
           end
         end
@@ -69,8 +69,8 @@ module VCAP::CloudController
         context "the app described in the event does not exist" do
           let(:droplet) { "non existent droplet" }
 
-          it "does not add a record in the CrashEvents table" do
-            Models::CrashEvent.should_not_receive(:create)
+          it "does not add a record in the AppEvents table" do
+            Models::AppEvent.should_not_receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
@@ -80,15 +80,15 @@ module VCAP::CloudController
         let(:reason) { "STOPPED" }
 
         context "the app described in the event exists" do
-          it "does not add a record in the CrashEvents table" do
-            Models::CrashEvent.should_not_receive(:create)
+          it "does not add a record in the AppEvents table" do
+            Models::AppEvent.should_not_receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
 
         context "the app described in the event does not exist" do
-          it "does not add a record in the CrashEvents table" do
-            Models::CrashEvent.should_not_receive(:create)
+          it "does not add a record in the AppEvents table" do
+            Models::AppEvent.should_not_receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
@@ -97,8 +97,8 @@ module VCAP::CloudController
       context "when the droplet.exited message contains no reason" do
         let(:reason) { nil }
 
-        it "does not add a record in the CrashEvents table" do
-          Models::CrashEvent.should_not_receive(:create)
+        it "does not add a record in the AppEvents table" do
+          Models::AppEvent.should_not_receive(:create)
           respondent.process_droplet_exited_message(payload)
         end
       end

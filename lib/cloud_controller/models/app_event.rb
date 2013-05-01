@@ -1,5 +1,5 @@
 module VCAP::CloudController::Models
-  class CrashEvent < Sequel::Model
+  class AppEvent < Sequel::Model
     many_to_one :app
 
     export_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp
