@@ -136,6 +136,7 @@ class VCAP::CloudController::Config < VCAP::Config
     mbus = VCAP::CloudController::MessageBus.new(config)
     VCAP::CloudController::MessageBus.instance = mbus
 
+    VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
     VCAP::CloudController::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.instance =
       VCAP::CloudController::ResourcePool.new(config)
