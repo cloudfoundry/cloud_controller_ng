@@ -44,5 +44,34 @@ module VCAP::CloudController
     describe "DELETE /v2/stacks/:invalid_id/" do
       it_responds_to :delete, "/v2/stacks/999999", 404, /Unknown request/
     end
+
+    describe "rejects changes" do
+      def self.it_responds_unknown_request
+        it "returns 404" do
+          last_response.status.should == 404
+        end
+
+        it_behaves_like "a vcap rest error response", /Unknown request/
+      end
+
+      def obj
+        @obj ||= Models::Stack.make
+      end
+
+      describe "POST /v2/stacks/" do
+        before(:all) { post("/v2/stacks", {}, json_headers(admin_headers)) }
+        it_responds_unknown_request
+      end
+
+      describe "PUT /v2/stacks/:id" do
+        before(:all) { put("/v2/stacks/#{obj.guid}", {}, json_headers(admin_headers)) }
+        it_responds_unknown_request
+      end
+
+      describe "DELETE /v2/stacks/:id" do
+        before(:all) { delete("/v2/stacks/#{obj.guid}", {}, json_headers(admin_headers)) }
+        it_responds_unknown_request
+      end
+    end
   end
 end

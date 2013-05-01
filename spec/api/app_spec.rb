@@ -65,9 +65,6 @@ module VCAP::CloudController
         }
       }
 
-    
-
-
     describe "create app" do
       let(:space_guid) { Models::Space.make.guid.to_s }
       let(:initial_hash) do

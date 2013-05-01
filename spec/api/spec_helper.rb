@@ -107,9 +107,7 @@ module VCAP::CloudController::ApiSpecHelper
       opts[k] ||= {}
     end
 
-    if opts[:read_only]
-      include_examples "rejects changes", opts
-    else
+    unless opts[:read_only]
       include_examples "creating and updating", opts
       include_examples "deleting a valid object", opts
     end
