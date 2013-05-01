@@ -140,6 +140,7 @@ GEM
     rspec-mocks (2.12.2)
     ruby-graphviz (1.0.5)
     ruby-hmac (0.4.0)
+    ruby-oci8 (2.1.5)
     sequel (3.45.0)
     simplecov (0.6.4)
       multi_json (~> 1.0)
@@ -196,6 +197,7 @@ DEPENDENCIES
   rfc822
   rspec
   ruby-graphviz
+  ruby-oci8
   sequel
   simplecov
   simplecov-rcov

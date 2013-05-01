@@ -9,7 +9,8 @@ module VCAP::CloudController
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :non_basic_services_allowed,
                                :total_services, :memory_limit],
-      :unique_attributes   => [:name]
+      :unique_attributes   => [:name],
+      :ci_attributes       => :name
     }
 
     describe ".populate_from_config" do

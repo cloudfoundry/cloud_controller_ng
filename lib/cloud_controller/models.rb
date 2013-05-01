@@ -4,6 +4,7 @@ module VCAP::CloudController::Models; end
 
 require "sequel_plugins/vcap_validations"
 require "sequel_plugins/vcap_serialization"
+require "sequel_plugins/vcap_case_insensitive"
 require "sequel_plugins/vcap_normalization"
 require "sequel_plugins/vcap_relations"
 require "sequel_plugins/vcap_guid"
@@ -64,6 +65,7 @@ end
 
 Sequel::Model.plugin :vcap_validations
 Sequel::Model.plugin :vcap_serialization
+Sequel::Model.plugin :vcap_case_insensitive
 Sequel::Model.plugin :vcap_normalization
 Sequel::Model.plugin :vcap_relations
 Sequel::Model.plugin :vcap_guid

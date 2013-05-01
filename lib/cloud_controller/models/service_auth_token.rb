@@ -9,12 +9,14 @@ module VCAP::CloudController::Models
     strip_attributes  :label, :provider
 
     many_to_one   :service, :key => [:label, :provider], :primary_key => [:label, :provider]
+    
+    ci_attributes  :label, :provider
 
     def validate
       validates_presence :label
       validates_presence :provider
       validates_presence :token
-      validates_unique   [:label, :provider]
+      validates_unique_ci   [:label, :provider]
     end
 
     def token_matches?(unencrypted_token)

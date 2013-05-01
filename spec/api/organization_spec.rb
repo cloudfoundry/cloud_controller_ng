@@ -14,6 +14,7 @@ module VCAP::CloudController
       :required_attributes => :name,
       :unique_attributes   => :name,
       :queryable_attributes => :name,
+      :ci_attributes       =>  :name,
       :many_to_many_collection_ids => {
         :users    => lambda { |org| Models::User.make },
         :managers => lambda { |org| Models::User.make },

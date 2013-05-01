@@ -9,6 +9,7 @@ module VCAP::CloudController
       :basic_attributes     => [:name, :free, :description, :service_guid, :extra, :unique_id],
       :required_attributes  => [:name, :free, :description, :service_guid],
       :unique_attributes    => [:name, :service_guid],
+      :ci_attributes        => :name,
       :extra_attributes     => [:extra],
       :one_to_many_collection_ids  => {
         :service_instances => lambda { |service_plan| Models::ServiceInstance.make(:service_plan => service_plan) }

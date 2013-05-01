@@ -10,6 +10,7 @@ module VCAP::CloudController
       :required_attributes          => :name,
       :unique_attributes            => :name,
       :stripped_string_attributes   => :name,
+      :ci_attributes                => :name,
       :many_to_zero_or_more => {
         :users      => lambda { |org| Models::User.make },
         :managers   => lambda { |org| Models::User.make },

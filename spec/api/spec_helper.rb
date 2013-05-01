@@ -92,7 +92,7 @@ module VCAP::CloudController::ApiSpecHelper
   shared_examples "a CloudController API" do |opts|
     [:required_attributes, :unique_attributes, :basic_attributes,
      :extra_attributes, :sensitive_attributes,
-     :queryable_attributes].each do |k|
+     :queryable_attributes, :ci_attributes].each do |k|
       opts[k] ||= []
       opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
       opts[k].map! { |v| v.to_s }
