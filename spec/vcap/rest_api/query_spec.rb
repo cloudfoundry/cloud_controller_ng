@@ -71,12 +71,68 @@ module VCAP::RestAPI
         end
       end
 
+      describe "greater-than comparison query on an integer within the range" do
+        it "should return no results" do
+          q = "num_val>#{num_authors - 5}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.num_val && a.num_val > num_authors - 5
+          end
+
+          ds.all.should =~ expected
+        end
+      end
+
+      describe "greater-than equals comparison query on an integer within the range" do
+        it "should return no results" do
+          q = "num_val>=#{num_authors - 5}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.num_val && a.num_val >= num_authors - 5
+          end
+
+          ds.all.should =~ expected
+        end
+      end
+
+      describe "less-than comparison query on an integer within the range" do
+        it "should return no results" do
+          q = "num_val<#{num_authors - 5}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.num_val && a.num_val < num_authors - 5
+          end
+
+          ds.all.should =~ expected
+        end
+      end
+
+      describe "less-than equals comparison query on an integer within the range" do
+        it "should return no results" do
+          q = "num_val<=#{num_authors - 5}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.num_val && a.num_val <= num_authors - 5
+          end
+
+          ds.all.should =~ expected
+        end
+      end
+
       describe "exact query on a nonexistent integer" do
         it "should return no results" do
           q = "num_val:#{num_authors + 10}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                        @queryable_attributes, :q => q)
-                                                        ds.count.should == 0
+            @queryable_attributes, :q => q)
+          ds.count.should == 0
         end
       end
 
@@ -148,16 +204,6 @@ module VCAP::RestAPI
       describe "without a key" do
         it "should raise BadQueryParameter" do
           q = ":10"
-          expect {
-            Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                          @queryable_attributes, :q => q)
-          }.to raise_error(VCAP::Errors::BadQueryParameter)
-        end
-      end
-
-      describe "with an extra :" do
-        it "should raise BadQueryParameter" do
-          q = "num_val:1:0"
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)

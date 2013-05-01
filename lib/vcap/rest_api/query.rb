@@ -10,10 +10,7 @@ module VCAP::RestAPI
   # filtered dataset.  Since datasets aren't bound to a particular model,
   # we need to pass both pieces of infomration.
   #
-  # TODO: >, < and * (at the end of strings only) will be added in the
-  # future.
-  #
-  # TODO: add support for an array of q values.
+  # TODO: * at the end of strings
   class Query
 
     # Create a new Query.
@@ -40,7 +37,9 @@ module VCAP::RestAPI
     #
     # @return [Sequel::Dataset]
     def filtered_dataset
-      @ds.filter(filter_args_from_query)
+      filter_args_from_query.inject(@ds) do |filter, cond|
+        filter.filter(cond)
+      end
     end
 
     # Return the dataset for the supplied query.
@@ -70,40 +69,46 @@ module VCAP::RestAPI
     def filter_args_from_query
       return {} unless query
 
-      keyvals = parse
-
-      filter = {}
-      keyvals.collect! do |key, val|
-        key, val = clean_up_foreign_key(key, val)
-        key, val = clean_up_boolean(key, val)
-        key, val = clean_up_integer(key, val)
-
-        filter[key] = val
+      parse.collect do |key, comparison, val|
+        query_filter(key, comparison, val)
       end
-
-      filter
     end
 
     def parse
       segments = query.split(";")
 
       segments.collect do |segment|
-        key, value, extra = segment.split(":")
+        key, comparison, value = segment.split(/(:|>=|<=|<|>)/, 2)
 
-        unless extra.nil?
-          raise VCAP::Errors::BadQueryParameter.new(segment)
-        end
+        comparison = "=" if comparison == ":"
 
         unless queryable_attributes.include?(key)
           raise VCAP::Errors::BadQueryParameter.new(key)
         end
 
-        [key.to_sym, value]
+        [key.to_sym, comparison, value]
+      end
+    end
+
+    def query_filter(key, comparison, val)
+      case column_type(key)
+      when :foreign_key
+        return clean_up_foreign_key(key, val)
+      when :integer
+        val = clean_up_integer(val)
+      when :boolean
+        val = clean_up_boolean(key, val)
+      end
+
+      if val.nil?
+        { key => nil }
+      else
+        ["#{key} #{comparison} ?", val]
       end
     end
 
     def clean_up_foreign_key(q_key, q_val)
-      return [q_key, q_val] unless q_key =~ /(.*)_(gu)?id$/
+      return unless q_key =~ /(.*)_(gu)?id$/
 
       attr = $1
 
@@ -122,7 +127,7 @@ module VCAP::RestAPI
       id_key = other_model.columns.include?(:guid) ? :guid : :id
       f_val = other_model.filter(id_key => q_val)
 
-      [f_key, f_val]
+      { f_key => f_val }
     end
 
     TINYINT_TYPE = "tinyint(1)".freeze
@@ -132,28 +137,26 @@ module VCAP::RestAPI
     # Mysql does not support using 't'/'f' for querying.
     def clean_up_boolean(q_key, q_val)
       column = model.db_schema[q_key.to_sym]
-      unless column && column[:type] == :boolean
-        return [q_key, q_val]
-      end
 
       if column[:db_type] == TINYINT_TYPE
         q_val = TINYINT_FROM_TRUE_FALSE.fetch(q_val, q_val)
       end
 
-      [q_key, q_val]
+      q_val
     end
 
-    def clean_up_integer(q_key, q_val)
-      column = model.db_schema[q_key.to_sym]
-      unless column
-        return [q_key, q_val]
+    def clean_up_integer(q_val)
+      if q_val.empty?
+        nil
+      else
+        q_val.to_i
       end
+    end
 
-      if column[:type] == :integer
-        q_val = q_val.to_i if q_val
-      end
-
-      [q_key, q_val]
+    def column_type(query_key)
+      return :foreign_key if query_key =~ /(.*)_(gu)?id$/
+      column = model.db_schema[query_key.to_sym]
+      column && column[:type]
     end
 
     attr_accessor :model, :access_filter, :queryable_attributes, :query
