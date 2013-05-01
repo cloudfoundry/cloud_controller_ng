@@ -68,7 +68,9 @@ describe "NATS", :type => :integration do
   describe "NATS fails and comes back up" do
     before(:all) do
       kill_nats
+      sleep NATS::MAX_RECONNECT_ATTEMPTS * NATS::RECONNECT_TIME_WAIT + 1
       start_nats
+      wait_for_nats_to_start
     end
 
     after(:all) do

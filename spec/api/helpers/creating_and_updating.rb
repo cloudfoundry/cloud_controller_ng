@@ -118,13 +118,13 @@ module VCAP::CloudController::ApiSpecHelper
           #
           # Test each of the required attributes
           #
-          req_attrs = opts[:required_attributes].dup
-          req_attrs = req_attrs - ["id"] if verb == :put
+          req_attrs = opts[:required_attributes]
+          req_attrs = req_attrs - ['id'] if verb == :put
           req_attrs.each do |without_attr|
             context "without the :#{without_attr.to_s} attribute" do
               define_method(:filtered_opts) do
                 @filtered_opts ||= begin
-                  creation_opts.select do |k, v|
+                  creation_opts.select do |k, _|
                     k != without_attr.to_s and k != "#{without_attr}_id"
                   end
                 end

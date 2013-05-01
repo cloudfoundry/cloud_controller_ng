@@ -18,7 +18,7 @@ module VCAP::CloudController::ModelSpecHelper
           }.to raise_error Sequel::ValidationFailed, /#{without_attr}/
         end
 
-        if (!opts[:db_required_attributes] || opts[:db_required_attributes].include?(without_attr))
+        if !opts[:db_required_attributes] || opts[:db_required_attributes].include?(without_attr)
           it "should fail due to database integrity checks" do
             expect {
               described_class.new do |instance|

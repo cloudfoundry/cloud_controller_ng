@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2011 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
@@ -18,8 +16,9 @@ module VCAP::CloudController
 
     include_examples "uaa authenticated api", path: "/v2/services"
     include_examples "enumerating objects", path: "/v2/services", model: Models::Service
-    include_examples "reading a valid object", path: "/v2/services", model: Models::Service, basic_attributes: [:label, :provider, :url, :description, :version]
+    include_examples "reading a valid object", path: "/v2/services", model: Models::Service, basic_attributes: %w(label provider url description version)
     include_examples "operations on an invalid object", path: "/v2/services"
+    include_examples "creating and updating", path: "/v2/services", model: Models::Service, required_attributes: %w(label provider url description version), unique_attributes: %w(label provider), extra_attributes: %w(extra)
     include_examples "collection operations", path: "/v2/services", model: Models::Service,
       one_to_many_collection_ids: {
         service_plans: lambda { |service| Models::ServicePlan.make(service: service) }

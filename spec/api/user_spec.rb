@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2011 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
@@ -40,6 +38,7 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/users", model: Models::User
     include_examples "reading a valid object", path: "/v2/users", model: Models::User, basic_attributes: []
     include_examples "operations on an invalid object", path: "/v2/users"
+    include_examples "creating and updating", path: "/v2/users", model: Models::User, required_attributes: %w(guid), unique_attributes: %w(guid), extra_attributes: []
     include_examples "collection operations", path: "/v2/users", model: Models::User,
       one_to_many_collection_ids: {},
       many_to_one_collection_ids: {

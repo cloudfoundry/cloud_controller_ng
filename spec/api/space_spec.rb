@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2011 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
@@ -36,10 +34,11 @@ module VCAP::CloudController
     }
 
     include_examples "uaa authenticated api", path: "/v2/spaces"
-    include_examples "querying objects", path: "/v2/spaces", model: Models::Space, queryable_attributes: [:name]
+    include_examples "querying objects", path: "/v2/spaces", model: Models::Space, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/spaces", model: Models::Space
-    include_examples "reading a valid object", path: "/v2/spaces", model: Models::Space, basic_attributes: [:name, :organization_guid]
+    include_examples "reading a valid object", path: "/v2/spaces", model: Models::Space, basic_attributes: %w(name organization_guid)
     include_examples "operations on an invalid object", path: "/v2/spaces"
+    include_examples "creating and updating", path: "/v2/spaces", model: Models::Space, required_attributes: %w(name organization_guid), unique_attributes: %w(name organization_guid), extra_attributes: []
     include_examples "collection operations", path: "/v2/spaces", model: Models::Space,
       one_to_many_collection_ids: {
         apps: lambda { |space| Models::App.make(space: space) },

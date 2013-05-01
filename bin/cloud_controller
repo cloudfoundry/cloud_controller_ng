@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2009-2011 VMware, Inc.
 
 $:.unshift(File.expand_path("../../lib", __FILE__))
 

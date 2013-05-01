@@ -34,8 +34,23 @@ module VCAP::CloudController
 
     include_examples "uaa authenticated api", path: "/v2/routes"
     include_examples "enumerating objects", path: "/v2/routes", model: Models::Route
-    include_examples "reading a valid object", path: "/v2/routes", model: Models::Route, basic_attributes: [:host, :domain_guid, :space_guid]
+    include_examples "reading a valid object", path: "/v2/routes", model: Models::Route, basic_attributes: %w(host domain_guid space_guid)
     include_examples "operations on an invalid object", path: "/v2/routes"
+    include_examples "creating and updating", path: "/v2/routes", model: Models::Route, required_attributes: %w(domain_guid space_guid), unique_attributes: %w(host domain_guid), extra_attributes: %w(host),
+      create_attribute: lambda { |name|
+        @space ||= Models::Space.make
+        case name.to_sym
+          when :space_guid
+            @space.guid
+          when :domain_guid
+            domain = Models::Domain.make(wildcard: true, owning_organization: @space.organization,)
+            @space.add_domain(domain)
+            domain.guid
+          when :host
+            Sham.host
+        end
+      },
+      create_attribute_reset: lambda { @space = nil }
 
     context "with a wildcard domain" do
       it "should allow a nil host" do
@@ -272,7 +287,7 @@ module VCAP::CloudController
       MessageBus.instance.should_receive(:publish).with(
         "dea.update",
         json_match(hash_including(
-          "uris" => ["foo.jesse.cloud"],
+          "uris" => %w(foo.jesse.cloud),
           "droplet" => @bar_app.guid,
         )),
       )
