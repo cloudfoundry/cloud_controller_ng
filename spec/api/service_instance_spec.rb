@@ -18,6 +18,7 @@ module VCAP::CloudController
     }
 
     include_examples "uaa authenticated api", path: "/v2/service_instances"
+    include_examples "enumerating objects", path: "/v2/service_instances", model: Models::ServiceInstance
 
     describe "Permissions" do
       include_context "permissions"

@@ -43,6 +43,7 @@ module VCAP::CloudController
 
     include_examples "uaa authenticated api", path: "/v2/organizations"
     include_examples "querying objects", path: "/v2/organizations", model: Models::Organization, queryable_attributes: [:name]
+    include_examples "enumerating objects", path: "/v2/organizations", model: Models::Organization
 
     describe "Permissions" do
       include_context "permissions"

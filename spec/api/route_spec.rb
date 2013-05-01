@@ -33,6 +33,7 @@ module VCAP::CloudController
     }
 
     include_examples "uaa authenticated api", path: "/v2/routes"
+    include_examples "enumerating objects", path: "/v2/routes", model: Models::Route
 
     context "with a wildcard domain" do
       it "should allow a nil host" do

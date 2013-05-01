@@ -2,6 +2,8 @@
 
 module VCAP::CloudController::ApiSpecHelper
   shared_examples "creating and updating" do |opts|
+    before(:all) { reset_database }
+
     describe "creating and updating" do
       define_method(:creation_opts) do
         @creation_opts ||= begin

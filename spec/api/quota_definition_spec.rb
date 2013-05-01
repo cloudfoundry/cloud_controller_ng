@@ -21,5 +21,6 @@ module VCAP::CloudController
     }
 
     include_examples "uaa authenticated api", path: "/v2/quota_definitions"
+    include_examples "enumerating objects", path: "/v2/quota_definitions", model: Models::QuotaDefinition
   end
 end

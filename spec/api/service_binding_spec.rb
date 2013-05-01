@@ -24,6 +24,7 @@ module VCAP::CloudController
     }
 
     include_examples "uaa authenticated api", path: "/v2/service_bindings"
+    include_examples "enumerating objects", path: "/v2/service_bindings", model: Models::ServiceBinding
 
     describe "staging" do
       let(:app_obj) do
