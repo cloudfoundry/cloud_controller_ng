@@ -77,12 +77,14 @@ module VCAP::CloudController::Models
                       :space_guid, :gateway_data
 
     strip_attributes  :name
+    
+    ci_attributes  :name
 
     def validate
       validates_presence :name
       validates_presence :space
       validates_presence :service_plan
-      validates_unique   [:space_id, :name]
+      validates_unique_ci   [:space_id, :name]
       check_quota
     end
 

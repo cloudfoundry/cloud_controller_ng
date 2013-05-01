@@ -11,6 +11,7 @@ module VCAP::CloudController
       :basic_attributes     => [:label, :provider],
       :required_attributes  => [:label, :provider, :token],
       :unique_attributes    => [:label, :provider],
+      :ci_attributes        => [:label, :provider],
       :extra_attributes     => :token,
       :sensitive_attributes => :token
     }

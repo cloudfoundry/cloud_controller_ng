@@ -11,7 +11,6 @@ module VCAP::CloudController
       :basic_attributes     => [:name, :owning_organization_guid],
       :required_attributes  => [:name, :owning_organization_guid, :wildcard],
       :unique_attributes    => :name,
-
       :one_to_many_collection_ids => {
         :spaces => lambda { |domain|
           org = domain.organizations.first || Models::Organization.make

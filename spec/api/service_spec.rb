@@ -11,6 +11,7 @@ module VCAP::CloudController
       :required_attributes  => [:label, :provider, :url, :description, :version],
       :extra_attributes     => [:extra],
       :unique_attributes    => [:label, :provider],
+      :ci_attributes        => [:label, :provider],
       :one_to_many_collection_ids  => {
         :service_plans => lambda { |service| Models::ServicePlan.make(:service => service) }
       }

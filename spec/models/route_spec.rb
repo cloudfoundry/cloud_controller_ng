@@ -8,6 +8,7 @@ module VCAP::CloudController
       :required_attributes  => [:domain, :space, :host],
       :db_required_attributes => [:domain, :space],
       :unique_attributes    => [:host, :domain],
+      :ci_attributes       =>  :host,
       :create_attribute => lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym

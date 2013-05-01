@@ -8,6 +8,7 @@ module VCAP::CloudController::Models
       :required_attributes        => [:name, :description],
       :unique_attributes          => :name,
       :stripped_string_attributes => :name,
+      :ci_attributes              => :name,
       :one_to_zero_or_more => {
         :apps              => {
           :delete_ok => true,

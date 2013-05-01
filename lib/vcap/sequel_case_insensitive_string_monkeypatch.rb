@@ -29,13 +29,23 @@ require "sequel/adapters/mysql2"
 # In the above migration, name will will have case insensitive comparisions,
 # but case preserving data, whereas base64_data will be case sensitive.
 
+Sequel::Database.class_eval do
+  def use_lower_where?
+    true
+  end
+end
+
 Sequel::SQLite::Database.class_eval do
   def case_insensitive_string_column_type
     "String"
   end
 
   def case_insensitive_string_column_opts
-    { :collate => :nocase }
+    {}
+  end
+  
+  def use_lower_where?
+    true
   end
 end
 
@@ -46,6 +56,9 @@ Sequel::Postgres::Database.class_eval do
 
   def case_insensitive_string_column_opts
     {}
+  end
+  def use_lower_where?
+    false
   end
 end
 
@@ -58,13 +71,16 @@ Sequel::Mysql2::Database.class_eval do
   def case_insensitive_string_column_opts
     { :collate => "latin1_general_ci" }
   end
+  def use_lower_where?
+    false
+  end
 end
 
 Sequel::Schema::Generator.class_eval do
   def String(name, opts = {})
     if opts[:case_insensitive]
       unless @db.respond_to?(:case_insensitive_string_column_type)
-        raise Error, "DB adapater does not support case insensitive strings"
+        raise Sequel::Error, "DB adapater does not support case insensitive strings"
       end
 
       column(
@@ -84,7 +100,7 @@ Sequel::Schema::AlterTableGenerator.class_eval do
   def set_column_type(name, type, opts = {})
     if type.to_s == "String" && opts[:case_insensitive]
       unless @db.respond_to?(:case_insensitive_string_column_type)
-        raise Error, "DB adapater does not support case insensitive strings"
+        raise Sequel::Error, "DB adapter does not support case insensitive strings"
       end
 
       set_column_type_original(
