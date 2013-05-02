@@ -5,40 +5,6 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Organization do
     let(:org) { Models::Organization.make }
-
-    it_behaves_like "a CloudController API", {
-      :path                => "/v2/organizations",
-      :model               => Models::Organization,
-      :basic_attributes    => :name,
-      :required_attributes => :name,
-      :unique_attributes   => :name,
-      :queryable_attributes => :name,
-      :many_to_many_collection_ids => {
-        :users    => lambda { |org| Models::User.make },
-        :managers => lambda { |org| Models::User.make },
-        :billing_managers => lambda { |org| Models::User.make },
-        :domains => lambda { |org|
-          Models::Domain.find_or_create_shared_domain(Sham.domain)
-        }
-      },
-      :one_to_many_collection_ids  => {
-        :spaces => lambda { |org| Models::Space.make(:organization => org) }
-      },
-      :one_to_many_collection_ids_without_url => {
-        :service_instances => lambda { |org|
-          space = Models::Space.make(:organization => org)
-          Models::ServiceInstance.make(:space => space)
-        },
-        :apps => lambda { |org|
-          space = Models::Space.make(:organization => org)
-          Models::App.make(:space => space)
-        },
-        :owned_domain => lambda { |org|
-          Models::Domain.make(:owning_organization => org)
-        }
-      },
-    }
-
     include_examples "uaa authenticated api", path: "/v2/organizations"
     include_examples "querying objects", path: "/v2/organizations", model: Models::Organization, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/organizations", model: Models::Organization

@@ -2,27 +2,6 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceBinding do
-
-    it_behaves_like "a CloudController API", {
-      :path                 => "/v2/service_bindings",
-      :model                => Models::ServiceBinding,
-      :basic_attributes     => [:app_guid, :service_instance_guid],
-      :required_attributes  => [:app_guid, :service_instance_guid],
-      :unique_attributes    => [:app_guid, :service_instance_guid],
-      :create_attribute     => lambda { |name|
-        @space ||= Models::Space.make
-        case name.to_sym
-        when :app_guid
-          app = Models::App.make(:space => @space)
-          app.guid
-        when :service_instance_guid
-          service_instance = Models::ServiceInstance.make(:space => @space)
-          service_instance.guid
-        end
-      },
-      :create_attribute_reset => lambda { @space = nil }
-    }
-
     include_examples "uaa authenticated api", path: "/v2/service_bindings"
     include_examples "enumerating objects", path: "/v2/service_bindings", model: Models::ServiceBinding
     include_examples "reading a valid object", path: "/v2/service_bindings", model: Models::ServiceBinding, basic_attributes: %w(app_guid service_instance_guid)

@@ -2,21 +2,6 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceInstance do
-
-    it_behaves_like "a CloudController API", {
-      :path                 => "/v2/service_instances",
-      :model                => Models::ServiceInstance,
-      :basic_attributes     => [:name],
-      :required_attributes  => [:name, :space_guid, :service_plan_guid],
-      :unique_attributes    => [:space_guid, :name],
-      :one_to_many_collection_ids => {
-        :service_bindings => lambda { |service_instance|
-          make_service_binding_for_service_instance(service_instance)
-        }
-      },
-      :create_attribute_reset => lambda {}
-    }
-
     include_examples "uaa authenticated api", path: "/v2/service_instances"
     include_examples "enumerating objects", path: "/v2/service_instances", model: Models::ServiceInstance
     include_examples "reading a valid object", path: "/v2/service_instances", model: Models::ServiceInstance, basic_attributes: %w(name)

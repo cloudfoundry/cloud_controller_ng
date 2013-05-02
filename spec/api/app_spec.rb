@@ -3,46 +3,6 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::App do
     before { configure_stacks }
-
-    # FIXME: make space_id a relation check that checks the id and the url
-    # part.  do everywhere
-    it_behaves_like "a CloudController API", {
-      :path                => "/v2/apps",
-      :model               => Models::App,
-      :basic_attributes    => [:name, :space_guid, :stack_guid],
-      :required_attributes => [:name, :space_guid],
-      :unique_attributes   => [:name, :space_guid],
-      :queryable_attributes => :name,
-      :many_to_one_collection_ids => {
-        :space      => lambda { |app| Models::Space.make },
-        :stack      => lambda { |app| Models::Stack.make },
-      },
-      :many_to_many_collection_ids => {
-        :routes => lambda { |app|
-          domain = Models::Domain.make(
-            :owning_organization => app.space.organization
-          )
-          app.space.organization.add_domain(domain)
-          app.space.add_domain(domain)
-          route = Models::Route.make(:domain => domain, :space => app.space)
-        }
-      },
-      :one_to_many_collection_ids  => {
-        :service_bindings => lambda { |app|
-          service_instance = Models::ServiceInstance.make(
-            :space => app.space
-          )
-          Models::ServiceBinding.make(
-            :app => app,
-            :service_instance => service_instance
-          )
-        },
-        :app_events => lambda { |app|
-          Models::AppEvent.make(:app => app)
-        }
-      }
-    }
-
     include_examples "uaa authenticated api", path: "/v2/apps"
     include_examples "querying objects", path: "/v2/apps", model: Models::App, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/apps", model: Models::App

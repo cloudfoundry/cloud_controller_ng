@@ -13,22 +13,17 @@ module IntegrationSetup
     sleep 2
   end
 
-  def start_cc(opts={})
+  def start_cc(opts={}, wait_cycles = 20)
     run_cmd("bundle exec rake db:migrate")
     @cc_pid = run_cmd("bin/cloud_controller -m config/cloud_controller.yml", opts)
-    wait_cycles = 0
-    while wait_cycles < 20
+
+    wait_cycles.times do
       sleep 1
-      begin
-        result = Net::HTTP.get_response(URI.parse("http://localhost:8181/info"))
-      rescue Errno::ECONNREFUSED
-        # ignore
-      end
-      break if result && result.code.to_i == 200
-      wait_cycles += 1
+      result = Net::HTTP.get_response(URI.parse("http://localhost:8181/info")) rescue nil
+      return if result && result.code.to_i == 200
     end
 
-    raise "Cloud controller did not start up after #{wait_cycles}s" if wait_cycles == 20
+    raise "Cloud controller did not start up after #{wait_cycles}s"
   end
 
   def stop_cc

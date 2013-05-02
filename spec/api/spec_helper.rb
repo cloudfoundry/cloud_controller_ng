@@ -93,27 +93,6 @@ module VCAP::CloudController::ApiSpecHelper
     @admin_headers ||= headers_for(VCAP::CloudController::Models::User.make(:admin => true))
   end
 
-  shared_examples "a CloudController API" do |opts|
-    [:required_attributes, :unique_attributes, :basic_attributes,
-     :extra_attributes, :sensitive_attributes,
-     :queryable_attributes].each do |k|
-      opts[k] ||= []
-      opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
-      opts[k].map! { |v| v.to_s }
-    end
-
-    [:many_to_many_collection_ids, :one_to_many_collection_ids,
-     :many_to_one_collection_ids, :one_to_many_collection_ids_without_url].each do |k|
-      opts[k] ||= {}
-    end
-
-    unless opts[:read_only]
-
-    end
-
-    # FIXME: add update of :created_at, :updated_at, :id, should all fail
-  end
-
   shared_examples "return a vcap rest encoded object" do
     it "should return a metadata hash in the response" do
       metadata.should_not be_nil

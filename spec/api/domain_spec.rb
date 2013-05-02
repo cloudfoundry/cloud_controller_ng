@@ -4,39 +4,6 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Domain do
-
-    it_behaves_like "a CloudController API", {
-      :path                 => "/v2/domains",
-      :model                => Models::Domain,
-      :basic_attributes     => [:name, :owning_organization_guid],
-      :required_attributes  => [:name, :owning_organization_guid, :wildcard],
-      :unique_attributes    => :name,
-
-      :one_to_many_collection_ids => {
-        :spaces => lambda { |domain|
-          org = domain.organizations.first || Models::Organization.make
-          Models::Space.make(:organization => org)
-        },
-      },
-      :one_to_many_collection_ids_without_url => {
-          :routes => lambda { |domain|
-            domain.update(:wildcard => true)
-            space = Models::Space.make(:organization => domain.owning_organization)
-            space.add_domain(domain)
-            Models::Route.make(
-                :host => Sham.host,
-                :domain => domain,
-                :space => space,
-            )
-          }
-      },
-      :many_to_one_collection_ids => {
-        :owning_organization => lambda { |user|
-          user.organizations.first || Models::Organization.make
-        }
-      }
-    }
-
     include_examples "uaa authenticated api", path: "/v2/domains"
     include_examples "enumerating objects", path: "/v2/domains", model: Models::Domain
     include_examples "reading a valid object", path: "/v2/domains", model: Models::Domain, basic_attributes: %w(name owning_organization_guid)

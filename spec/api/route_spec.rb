@@ -4,34 +4,6 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::Route do
-
-    it_behaves_like "a CloudController API", {
-      :path                 => "/v2/routes",
-      :model                => Models::Route,
-      :basic_attributes     => [:host, :domain_guid, :space_guid],
-      :required_attributes  => [:domain_guid, :space_guid],
-      :extra_attributes     => [:host],
-      :update_attributes    => [:host],
-      :unique_attributes    => [:host, :domain_guid],
-      :create_attribute     => lambda { |name|
-        @space ||= Models::Space.make
-        case name.to_sym
-        when :space_guid
-          @space.guid
-        when :domain_guid
-          d = Models::Domain.make(
-            :wildcard => true,
-            :owning_organization => @space.organization,
-          )
-          @space.add_domain(d)
-          d.guid
-        when :host
-          Sham.host
-        end
-      },
-      :create_attribute_reset => lambda { @space = nil }
-    }
-
     include_examples "uaa authenticated api", path: "/v2/routes"
     include_examples "enumerating objects", path: "/v2/routes", model: Models::Route
     include_examples "reading a valid object", path: "/v2/routes", model: Models::Route, basic_attributes: %w(host domain_guid space_guid)
