@@ -83,6 +83,12 @@ module VCAP::CloudController
                                :host => "")
           end
 
+          it "should allow an '#{Models::Route::WILDCARD_HOST}' host" do
+            Models::Route.make(:space => space,
+                               :domain => domain,
+                               :host => Models::Route::WILDCARD_HOST)
+          end
+
           it "should not allow a blank host" do
             expect {
               Models::Route.make(:space => space,
@@ -125,6 +131,12 @@ module VCAP::CloudController
                                :host => "").should be_valid
           end
 
+          it "should allow an '#{Models::Route::WILDCARD_HOST}' host" do
+            Models::Route.make(:space => space,
+                               :domain => domain,
+                               :host => Models::Route::WILDCARD_HOST).should be_valid
+          end
+
           it "should not allow a blank host" do
             expect {
               Models::Route.make(:space => space,
@@ -160,10 +172,21 @@ module VCAP::CloudController
           end
         end
 
-        context "for a nil host" do
+        context "for a empty host" do
           it "should return the fqdn for the route" do
             r = Models::Route.make(
               :host => "",
+              :domain => domain,
+              :space => space,
+            )
+            r.fqdn.should == domain.name
+          end
+        end
+
+        context "for a '#{Models::Route::WILDCARD_HOST}' host" do
+          it "should return the fqdn for the route" do
+            r = Models::Route.make(
+              :host => Models::Route::WILDCARD_HOST,
               :domain => domain,
               :space => space,
             )

@@ -13,6 +13,10 @@ module VCAP::CloudController::Models
     import_attributes :app_guid, :service_instance_guid, :credentials,
                       :binding_options, :gateway_data
 
+    def gateway_name
+      self[:gateway_name].nil? ? "" : self[:gateway_name]
+    end
+
     def validate
       validates_presence :app
       validates_presence :service_instance
