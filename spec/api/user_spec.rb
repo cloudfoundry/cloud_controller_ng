@@ -39,6 +39,7 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/users", model: Models::User, basic_attributes: []
     include_examples "operations on an invalid object", path: "/v2/users"
     include_examples "creating and updating", path: "/v2/users", model: Models::User, required_attributes: %w(guid), unique_attributes: %w(guid), extra_attributes: []
+    include_examples "deleting a valid object", path: "/v2/users", model: Models::User, one_to_many_collection_ids: {}, one_to_many_collection_ids_without_url: {}
     include_examples "collection operations", path: "/v2/users", model: Models::User,
       one_to_many_collection_ids: {},
       many_to_one_collection_ids: {

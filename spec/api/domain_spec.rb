@@ -42,6 +42,25 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/domains", model: Models::Domain, basic_attributes: %w(name owning_organization_guid)
     include_examples "operations on an invalid object", path: "/v2/domains"
     include_examples "creating and updating", path: "/v2/domains", model: Models::Domain, required_attributes: %w(name owning_organization_guid wildcard), unique_attributes: %w(name), extra_attributes: []
+    include_examples "deleting a valid object", path: "/v2/domains", model: Models::Domain,
+      one_to_many_collection_ids: {
+        :spaces => lambda { |domain|
+          org = domain.organizations.first || Models::Organization.make
+          Models::Space.make(:organization => org)
+        },
+      },
+      one_to_many_collection_ids_without_url: {
+        :routes => lambda { |domain|
+          domain.update(:wildcard => true)
+          space = Models::Space.make(:organization => domain.owning_organization)
+          space.add_domain(domain)
+          Models::Route.make(
+            :host => Sham.host,
+            :domain => domain,
+            :space => space,
+          )
+        }
+      }
     include_examples "collection operations", path: "/v2/domains", model: Models::Domain,
       one_to_many_collection_ids: {
         spaces: lambda { |domain|

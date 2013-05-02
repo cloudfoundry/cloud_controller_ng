@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module VCAP::CloudController::ApiSpecHelper
   shared_examples "creating and updating" do |opts|
     before(:all) do

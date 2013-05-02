@@ -16,7 +16,10 @@ module VCAP::CloudController
       :many_to_many_collection_ids => {
         :users    => lambda { |org| Models::User.make },
         :managers => lambda { |org| Models::User.make },
-        :billing_managers => lambda { |org| Models::User.make }
+        :billing_managers => lambda { |org| Models::User.make },
+        :domains => lambda { |org|
+          Models::Domain.find_or_create_shared_domain(Sham.domain)
+        }
       },
       :one_to_many_collection_ids  => {
         :spaces => lambda { |org| Models::Space.make(:organization => org) }
@@ -34,11 +37,6 @@ module VCAP::CloudController
           Models::Domain.make(:owning_organization => org)
         }
       },
-      :many_to_many_collection_ids  => {
-        :domains => lambda { |org|
-          Models::Domain.find_or_create_shared_domain(Sham.domain)
-        }
-      }
     }
 
     include_examples "uaa authenticated api", path: "/v2/organizations"
@@ -47,6 +45,21 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/organizations", model: Models::Organization, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/organizations"
     include_examples "creating and updating", path: "/v2/organizations", model: Models::Organization, required_attributes: %w(name), unique_attributes: %w(name), extra_attributes: []
+    include_examples "deleting a valid object", path: "/v2/organizations", model: Models::Organization,
+      one_to_many_collection_ids: {:spaces => lambda { |org| Models::Space.make(:organization => org) }},
+      one_to_many_collection_ids_without_url: {
+        :service_instances => lambda { |org|
+          space = Models::Space.make(:organization => org)
+          Models::ServiceInstance.make(:space => space)
+        },
+        :apps => lambda { |org|
+          space = Models::Space.make(:organization => org)
+          Models::App.make(:space => space)
+        },
+        :owned_domain => lambda { |org|
+          Models::Domain.make(:owning_organization => org)
+        }
+      }
     include_examples "collection operations", path: "/v2/organizations", model: Models::Organization,
       one_to_many_collection_ids: {
         spaces: lambda { |org| Models::Space.make(organization: org) }

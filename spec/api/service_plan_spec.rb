@@ -20,6 +20,10 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/service_plans", model: Models::ServicePlan, basic_attributes: %w(name free description service_guid extra unique_id)
     include_examples "operations on an invalid object", path: "/v2/service_plans"
     include_examples "creating and updating", path: "/v2/service_plans", model: Models::ServicePlan, required_attributes: %w(name free description service_guid), unique_attributes: %w(name service_guid), extra_attributes: %w(extra)
+    include_examples "deleting a valid object", path: "/v2/service_plans", model: Models::ServicePlan,
+      one_to_many_collection_ids: {:service_instances => lambda { |service_plan| Models::ServiceInstance.make(:service_plan => service_plan) }
+      },
+      one_to_many_collection_ids_without_url: {}
     include_examples "collection operations", path: "/v2/service_plans", model: Models::ServicePlan,
       one_to_many_collection_ids: {
         service_instances: lambda { |service_plan| Models::ServiceInstance.make(service_plan: service_plan) }

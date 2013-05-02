@@ -108,7 +108,7 @@ module VCAP::CloudController::ApiSpecHelper
     end
 
     unless opts[:read_only]
-      include_examples "deleting a valid object", opts
+
     end
 
     # FIXME: add update of :created_at, :updated_at, :id, should all fail

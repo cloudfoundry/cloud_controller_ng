@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module VCAP::CloudController::ApiSpecHelper
   shared_examples "deleting a valid object" do |opts|
     describe "deleting a valid object" do
