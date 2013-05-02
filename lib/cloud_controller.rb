@@ -63,27 +63,9 @@ module VCAP::CloudController
       validate_scheme(user, VCAP::CloudController::SecurityContext.current_user_is_admin?)
     end
 
-    # All manual routes here will be removed prior to final release.
-    # They are manual ad-hoc testing entry points.
+    # TODO: remove from usage in cloud_controller_spec.rb
     get "/hello/sync" do
       "sync return\n"
-    end
-
-    get "/hello/async" do
-      sleep 5
-      "async return\n"
-    end
-
-    get "/hello/em_sync" do
-      EM.schedule_sync do
-        "async return from the EM thread\n"
-      end
-    end
-
-    get "/hello/em_async" do
-      EM.schedule_sync do |promise|
-        EM::Timer.new(5) { promise.deliver("async return from an EM timer\n") }
-      end
     end
 
     private
