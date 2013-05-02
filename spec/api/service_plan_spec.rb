@@ -182,7 +182,6 @@ module VCAP::CloudController
         :unique_id => Sham.unique_id,
       ).encode
       post "/v2/service_plans", payload, admin_headers
-      puts last_response.body
       last_response.status.should eq(201)
     end
   end
