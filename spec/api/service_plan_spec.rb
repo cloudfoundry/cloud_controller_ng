@@ -169,4 +169,31 @@ module VCAP::CloudController
       end
     end
   end
+
+  describe "POST", "/v2/service_plans" do
+    let(:service) { Models::Service.make }
+    it "accepts a request with unique_id" do
+      payload = ServicePlan::CreateMessage.new(
+        :name => 'foo',
+        :free => false,
+        :description => "We don't need no stinking plan'",
+        :extra => '{"thing": 2}',
+        :service_guid => service.guid,
+        :unique_id => Sham.unique_id,
+      ).encode
+      post "/v2/service_plans", payload, admin_headers
+      puts last_response.body
+      last_response.status.should eq(201)
+    end
+  end
+
+  describe "PUT", "/v2/service_plans/:guid" do
+    it "rejects updating unique_id" do
+      service_plan = Models::ServicePlan.make
+      new_unique_id = service_plan.unique_id.reverse
+      payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
+      put "/v2/service_plans/#{service_plan.guid}", payload, admin_headers
+      last_response.status.should eq 400
+    end
+  end
 end
