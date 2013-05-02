@@ -9,19 +9,15 @@ Sequel::Oracle::Database.class_eval do
   
   def initialize(opts={})
     initialize_original(opts)
-    @conversion_procs = {
-      :blob=>lambda{|b| Sequel::SQL::Blob.new(b.read)},
-      :clob=>lambda{|b| b.read},
-      :char=>lambda{|b|
-        if b == 'Y'
-          true
-        elsif b == 'N'
-          false
-        else
-          b 
-        end
-      }
-    }
+    @conversion_procs[:char] = lambda{|b|
+      if b == 'Y'
+        true
+      elsif b == 'N'
+        false
+      else
+        b 
+      end
+    } 
   end
   
   def oracle_column_type(h)

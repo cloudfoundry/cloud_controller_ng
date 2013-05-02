@@ -4,7 +4,6 @@ require "sequel"
 require "sequel/adapters/sqlite"
 require "sequel/adapters/postgres"
 require "sequel/adapters/mysql2"
-require "sequel/adapters/oracle"
 
 # Add :case_insensitive as an option to the string type during migrations.
 # This results in case insensitive comparisions for indexing and querying, but
@@ -90,23 +89,30 @@ Sequel::Mysql2::Database.class_eval do
   end
 end
 
-Sequel::Oracle::Database.class_eval do
-  def case_insensitive_string_column_type
-    "VARCHAR2(255)"
-  end
-
-  def case_insensitive_string_column_opts
-    { }
-  end
+begin
+  gem "ruby-oci8"
+  require "sequel/adapters/oracle"  
+  Sequel::Oracle::Database.class_eval do
+    def case_insensitive_string_column_type
+      "VARCHAR2(255)"
+    end
   
-  def use_lower_where?
-    true
+    def case_insensitive_string_column_opts
+      { }
+    end
+    
+    def use_lower_where?
+      true
+    end
+    
+    def use_lower_index?
+      true
+    end
   end
-  
-  def use_lower_index?
-    true
-  end
+rescue Gem::LoadError
+  # not installed
 end
+
 
 Sequel::Schema::Generator.class_eval do
   alias_method :index_original, :index
