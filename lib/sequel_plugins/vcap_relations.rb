@@ -18,6 +18,15 @@ module Sequel::Plugins::VcapRelations
     def association_type(association)
       self.class.association_reflection(association)[:type]
     end
+
+    def relationship_dataset(association)
+      reflection = self.class.association_reflection(association)
+      if (dataset = reflection[:dataset])
+        instance_exec(&dataset)
+      else
+        reflection.associated_class.dataset
+      end
+    end
   end
 
   module ClassMethods

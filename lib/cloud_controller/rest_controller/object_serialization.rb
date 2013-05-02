@@ -90,7 +90,7 @@ module VCAP::CloudController::RestController
         res["#{name}_url"] = "#{controller.url_for_id(obj.guid)}/#{name}"
 
         if depth < target_depth && !parents.include?(other_controller)
-          others = other_model.user_visible.filter(ar[:reciprocal] => [obj])
+          others = obj.user_visible_relationship_dataset(name)
           if others.count <= max_inline
             res[name.to_s] = others.map do |other|
               other_controller = VCAP::CloudController.controller_from_model(other)

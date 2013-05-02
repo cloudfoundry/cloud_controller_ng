@@ -30,7 +30,9 @@ module VCAP::CloudController::ApiSpecHelper
         context "when the object has a child associations" do
           let(:one_to_one_or_many) do
             obj.class.associations.select do |association|
-              [:one_to_many, :one_to_one].include?(obj.class.association_reflection(association)[:type])
+              reflection = obj.class.association_reflection(association)
+              !reflection[:dataset] && \
+                [:one_to_many, :one_to_one].include?(reflection[:type])
             end
           end
 

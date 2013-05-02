@@ -25,16 +25,27 @@ module Sequel::Plugins::VcapUserGroup
 end
 
 module Sequel::Plugins::VcapUserVisibility
+  module InstanceMethods
+    def user_visible_relationship_dataset(name)
+      associated_model = self.class.association_reflection(name).associated_class
+      relationship_dataset(name).filter(associated_model.user_visibility)
+    end
+  end
+
   module ClassMethods
     def user_visible
-      user = VCAP::CloudController::SecurityContext.current_user
-      if(user)
-        dataset.filter(user_visibility_filter(user))
+      dataset.filter(user_visibility)
+    end
+
+    def user_visibility
+      if (user = VCAP::CloudController::SecurityContext.current_user)
+        user_visibility_filter(user)
       else
-        dataset.filter(user_visibility_filter_with_admin_override(empty_dataset_filter))
+        user_visibility_filter_with_admin_override(empty_dataset_filter)
       end
     end
 
+    # this is overridden by models
     def user_visibility_filter(user)
       # TODO: replace with empty_dataset_filter once all perms are in place
       user_visibility_filter_with_admin_override(full_dataset_filter)

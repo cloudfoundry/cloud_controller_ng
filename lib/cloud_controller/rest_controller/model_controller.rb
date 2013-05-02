@@ -90,19 +90,24 @@ module VCAP::CloudController::RestController
     # @param [Symbol] name The name of the relation to enumerate.
     def enumerate_related(id, name)
       logger.debug "enumerate_related: #{id} #{name}"
+
       obj = find_id_and_validate_access(:read, id)
 
-      a_model = model.association_reflection(name).associated_class
-      a_controller = VCAP::CloudController.controller_from_model_name(a_model)
-      ar = model.association_reflection(name)
-      a_path = "#{self.class.url_for_id(id)}/#{name}"
+      associated_model = model.association_reflection(name).associated_class
 
-      f_key = ar[:reciprocal]
-      ds = a_model.user_visible.filter(f_key => obj)
-      qp = a_controller.query_parameters
+      associated_controller =
+        VCAP::CloudController.controller_from_model_name(associated_model)
 
-      ds = Query.filtered_dataset_from_query_params(a_model, ds, qp, @opts)
-      Paginator.render_json(a_controller, ds, a_path, @opts)
+      associated_path = "#{self.class.url_for_id(id)}/#{name}"
+
+      dataset = Query.filtered_dataset_from_query_params(
+        associated_model,
+        obj.user_visible_relationship_dataset(name),
+        associated_controller.query_parameters,
+        @opts)
+
+      Paginator.render_json(
+        associated_controller, dataset, associated_path, @opts)
     end
 
     # Add a related object.
