@@ -22,7 +22,7 @@ module VCAP::CloudController
       to_many   :managers
       to_many   :billing_managers
       to_many   :auditors
-      # TODO: to_many   :app_events
+      to_many   :app_events
     end
 
     query_parameters :name, :space_guid,
