@@ -228,7 +228,7 @@ module VCAP::CloudController::Models
         :provider => service.provider,
         :space_guid => space.guid,
         :organization_guid => space.organization_guid,
-        :unique_id => service.unique_id,
+        :unique_id => service_plan.unique_id,
       )
 
       logger.debug "provision response for instance #{guid} #{gw_attrs.inspect}"

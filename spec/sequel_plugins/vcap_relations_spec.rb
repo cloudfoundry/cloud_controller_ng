@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 describe "Sequel::Plugins::VcapRelations" do
@@ -34,6 +32,20 @@ describe "Sequel::Plugins::VcapRelations" do
       index [:dog_id, :name_id], :unique => true, :name => :dn_dog_id_name_id_index
     end
 
+    db.create_table :tops do
+      primary_key :id
+    end
+
+    db.create_table :middles do
+      primary_key :id
+      foreign_key :top_id, :tops
+    end
+
+    db.create_table :bottoms do
+      primary_key :id
+      foreign_key :middle_id, :middles
+    end
+
     # we need new classes each time to reset the class level state
     def define_model(name, db)
       c = Class.new(Sequel::Model) do
@@ -48,11 +60,18 @@ describe "Sequel::Plugins::VcapRelations" do
     define_model :Owner, db
     define_model :Dog, db
     define_model :Name, db
+
+    define_model :Top, db
+    define_model :Middle, db
+    define_model :Bottom, db
   end
 
   let(:owner_klass) { self.class.const_get(:Owner) }
   let(:dog_klass) { self.class.const_get(:Dog) }
   let(:name_klass) { self.class.const_get(:Name) }
+  let(:top_klass) { self.class.const_get(:Top) }
+  let(:middle_klass) { self.class.const_get(:Middle) }
+  let(:bottom_klass) { self.class.const_get(:Bottom) }
 
   describe ".one_to_many" do
     before do
@@ -360,6 +379,58 @@ describe "Sequel::Plugins::VcapRelations" do
     it "should return one_to_many association type when it is defined" do
       owner_klass.one_to_many :dog
       owner.association_type(:dog).should == :one_to_many
+    end
+  end
+
+  describe "relationship_dataset" do
+    before do
+      bottom = bottom_klass
+
+      top_klass.one_to_many :middles
+      top_klass.one_to_many :bottoms, :dataset => lambda {
+        bottom.filter(:middle => middles)
+      }
+
+      middle_klass.one_to_one :top
+      middle_klass.one_to_many :bottoms
+
+      bottom_klass.many_to_one :middle
+    end
+
+    let!(:bottoms) do
+      10.times.collect do
+        bottom_klass.create
+      end
+    end
+
+    let!(:middle) do
+      middle_klass.create.tap do |m|
+        m.bottom_ids = bottoms.collect(&:id)
+        m.save
+      end
+    end
+
+    let!(:top) do
+      top_klass.create.tap do |t|
+        t.middle_ids = [middle.id]
+        t.save
+      end
+    end
+
+    context "with no custom dataset defined" do
+      it "uses the full dataset of the related model" do
+        all = middle.relationship_dataset(:bottoms).all
+        all.size.should == 10
+        all.should == bottom_klass.all
+      end
+    end
+
+    context "with a custom dataset for the relationship" do
+      it "uses the custom dataset" do
+        all = top.relationship_dataset(:bottoms).all
+        all.size.should == 10
+        all.should == bottom_klass.all
+      end
     end
   end
 end

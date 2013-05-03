@@ -205,7 +205,7 @@ module VCAP::CloudController
            :plan_option => {}, # TODO: remove this
            :provider => service_instance.service_plan.service.provider,
            :version => service_instance.service_plan.service.version,
-           :unique_id => service_instance.service_plan.service.unique_id,
+           :unique_id => service_instance.service_plan.unique_id,
            :space_guid => service_instance.space.guid,
            :organization_guid => service_instance.space.organization_guid
           )

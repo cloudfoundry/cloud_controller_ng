@@ -3,7 +3,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::AppEvent do
     def get_obj_guid(obj_name)
-      self.method(obj_name).call.guid
+      send(obj_name).guid
     end
 
     def body
@@ -102,39 +102,37 @@ module VCAP::CloudController
       end
     end
 
-
     describe 'GET /v2/apps/:guid/app_events' do
       include_examples("filtering by time", "apps", :space_a_app_obj)
+      include_examples("pagination")
     end
 
     describe 'GET /v2/spaces/:guid/app_events' do
-      before { pending }
-
       include_examples("filtering by time", "spaces", :space_a)
+      include_examples("pagination")
 
-      let(:space_a_app_obj2) { Models::App.make :space => space_a }
-
-      let(:space_b) { Models::Space.make :organization => org }
-      let(:space_b_app_obj) { Models::App.make :space => space_b }
-      let!(:space_b_app_event) { Models::AppEvent.make :app => space_b_app_obj, :exit_description => "Space B" }
+      before do
+        Models::AppEvent.make(
+          :app => Models::App.make,
+          :exit_description => "Wrong Space")
+      end
 
       it "aggregates over a space" do
-        Models::AppEvent.make :app => space_a_app_obj2, :exit_description => "Other Space A"
-
         get "/v2/spaces/#{space_a.guid}/app_events", {}, admin_headers
-        total_results.should == 4
-        no_resource_has { |r| r[:exit_description] == "Space B" }
+        total_results.should == 3
+        no_resource_has { |r| r[:exit_description] == "Wrong Space" }
       end
     end
 
     describe 'GET /v2/organizations/:guid/app_events' do
-      before { pending }
-
       include_examples("filtering by time", "organizations", :org)
       include_examples("pagination")
 
-      let!(:org_b_app_obj) { Models::App.make }
-      let!(:org_b_app_event) { Models::AppEvent.make :app => org_b_app_obj, :exit_description => "Wrong Org" }
+      before do
+        Models::AppEvent.make(
+          :app => Models::App.make,
+          :exit_description => "Wrong Org")
+      end
 
       it "aggregates over an org" do
         get "/v2/organizations/#{org.guid}/app_events", {}, admin_headers
