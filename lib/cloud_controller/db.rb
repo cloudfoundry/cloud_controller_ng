@@ -1,6 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/sequel_varz"
+require "vcap/sequel_case_insensitive_string_monkeypatch"
 
 module VCAP::CloudController
   class DB
@@ -56,7 +57,6 @@ module VCAP::CloudController
     # @param [Sequel::Database]  Database to apply migrations to
     def self.apply_migrations(db)
       Sequel.extension :migration
-      require "vcap/sequel_case_insensitive_string_monkeypatch"
       migrations_dir ||= File.expand_path("../../../db/migrations", __FILE__)
       Sequel::Migrator.apply(db, migrations_dir)
     end
