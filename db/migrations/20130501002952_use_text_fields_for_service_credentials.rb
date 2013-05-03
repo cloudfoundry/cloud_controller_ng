@@ -1,3 +1,4 @@
+#Oracle doesn't support converting a column directly from a varchar to a clob.
 Sequel.migration do
   change do
     alter_table :service_instances do
