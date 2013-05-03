@@ -35,6 +35,8 @@ module VCAP::CloudController::Models
                       :manager_guids, :auditor_guids, :domain_guids
 
     strip_attributes  :name
+    
+    ci_attributes  :name
 
     def in_organization?(user)
       organization && organization.users.include?(user)
@@ -48,7 +50,7 @@ module VCAP::CloudController::Models
     def validate
       validates_presence :name
       validates_presence :organization
-      validates_unique   [:organization_id, :name]
+      validates_unique_ci   [:organization_id, :name]
     end
 
     def validate_developer(user)

@@ -38,11 +38,13 @@ module VCAP::CloudController
                         :environment_json, :memory, :instances, :disk_quota,
                         :state, :command, :console, :debug,
                         :staging_task_id, :service_binding_guids, :route_guids
-
+                        
       strip_attributes  :name
 
       serialize_attributes :json, :metadata
 
+      ci_attributes  :name
+      
       APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
       PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
 
@@ -54,11 +56,11 @@ module VCAP::CloudController
 
       # Last staging response which might contain streaming log url
       attr_accessor :last_stager_response
-
+      
       def validate
         validates_presence :name
         validates_presence :space
-        validates_unique   [:space_id, :name]
+        validates_unique_ci [:space_id, :name]
 
         validates_git_url :buildpack
 

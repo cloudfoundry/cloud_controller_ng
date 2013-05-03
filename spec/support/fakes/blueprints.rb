@@ -57,7 +57,7 @@ module VCAP::CloudController::Models
       if domain && domain.wildcard
         Sham.host
       else
-        ""
+        Route::WILDCARD_HOST
       end
     end
   end

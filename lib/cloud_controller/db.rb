@@ -30,6 +30,11 @@ module VCAP::CloudController
         require "vcap/sequel_sqlite_monkeypatch"
       end
 
+      using_oracle = opts[:database].index("oracle://") == 0
+      if using_oracle
+        require "vcap/sequel_oracle_monkeypatch"
+      end
+      
       db = Sequel.connect(opts[:database], connection_options)
       db.logger = logger
       db.sql_log_level = opts[:log_level] || :debug2
@@ -37,6 +42,9 @@ module VCAP::CloudController
       if db.database_type == :mysql
         Sequel::MySQL.default_collate = "latin1_general_cs"
       end
+
+      db.autosequence = true if using_oracle
+
 
       validate_sqlite_version(db) if using_sqlite
       VCAP::SequelVarz.start(db)
@@ -120,30 +128,33 @@ end
 # the migration methods.
 module VCAP
   module Migration
-    def self.timestamps(migration)
+    def self.timestamps(migration, table_key)
+      created_at_idx = "#{table_key}_created_at_index".to_sym if table_key
+      updated_at_idx = "#{table_key}_updated_at_index".to_sym if table_key
       migration.Timestamp :created_at, :null => false
       migration.Timestamp :updated_at
-
-      migration.index :created_at
-      migration.index :updated_at
+      migration.index :created_at, :name => created_at_idx
+      migration.index :updated_at, :name => updated_at_idx
     end
 
-    def self.guid(migration)
+    def self.guid(migration, table_key)
+      guid_idx = "#{table_key}_guid_index".to_sym if table_key
       migration.String :guid, :null => false
-      migration.index :guid, :unique => true
+      migration.index :guid, :unique => true, :name => guid_idx
     end
 
-    def self.common(migration)
+    def self.common(migration, table_key = nil)
       migration.primary_key :id
-      guid(migration)
-      timestamps(migration)
+      guid(migration, table_key)
+      timestamps(migration, table_key)
     end
 
-    def self.create_permission_table(migration, name, permission)
+    def self.create_permission_table(migration, name, short_name, permission)
       name = name.to_s
       join_table = "#{name.pluralize}_#{permission}".to_sym
       id_attr = "#{name}_id".to_sym
       fk_name = "#{name}_fk".to_sym
+      idx_name = "#{short_name}_#{permission}_index".to_sym
       table = name.pluralize.to_sym
 
       migration.create_table(join_table) do
@@ -153,7 +164,7 @@ module VCAP
         Integer :user_id, :null => false
         foreign_key :user_id, :users, :name => :user_fk
 
-        index [id_attr, :user_id], :unique => true
+        index [id_attr, :user_id], :unique => true, :name => idx_name
       end
     end
   end

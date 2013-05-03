@@ -3,12 +3,13 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::App do
     before { configure_stacks }
+
     include_examples "uaa authenticated api", path: "/v2/apps"
-    include_examples "querying objects", path: "/v2/apps", model: Models::App, queryable_attributes: %w(name)
+    include_examples "querying objects", path: "/v2/apps", model: Models::App, queryable_attributes: %w(name), ci_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/apps", model: Models::App
     include_examples "reading a valid object", path: "/v2/apps", model: Models::App, basic_attributes: %w(name space_guid stack_guid)
     include_examples "operations on an invalid object", path: "/v2/apps"
-    include_examples "creating and updating", path: "/v2/apps", model: Models::App, required_attributes: %w(name space_guid), unique_attributes: %w(name space_guid), :extra_attributes => []
+    include_examples "creating and updating", path: "/v2/apps", model: Models::App, required_attributes: %w(name space_guid), unique_attributes: %w(name space_guid), ci_attributes: %w(name), :extra_attributes => []
     include_examples "deleting a valid object", path: "/v2/apps", model: Models::App, one_to_many_collection_ids: {
       :service_bindings => lambda { |app|
         service_instance = Models::ServiceInstance.make(
