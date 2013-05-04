@@ -1,0 +1,3 @@
+#!/bin/bash
+
+irb -I . -r lib/cloud_controller/console

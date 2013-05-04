@@ -60,6 +60,12 @@ variable to test against postgres and mysql. Examples:
 
 Travis currently runs 3 build jobs against sqlite, postgres, and mysql.
 
+## Development
+
+To run an interactive console with the cloud controller code loaded:
+
+    bin/console
+
 ## Logs
 
 Cloud Controller uses [Steno](http://github.com/cloudfoundry/steno) to manage its logs.
