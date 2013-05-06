@@ -232,6 +232,53 @@ module VCAP::CloudController
                                      :non_basic_services_allowed => true)
       end
 
+      context "with a free rds allowed" do
+        before do
+          reset_database
+        end
+
+        let(:trial_rds_plan) { Models::ServicePlan.make(:unique_id => "aws_rds_mysql_10mb") }
+        let(:paid_rds_plan) { Models::ServicePlan.make(:unique_id => "aws_rds_mysql_cfinternal") }
+
+        let(:trial_quota) do
+          Models::QuotaDefinition.make(:total_services => 0,
+            :non_basic_services_allowed => false,
+            :free_rds => true)
+        end
+
+        let(:org) { Models::Organization.make(:quota_definition => trial_quota)}
+        let(:space) { Models::Space.make(:organization => org) }
+
+        context "when the service instance is a trial rds instance" do
+          def allocate_trial_rds
+            Models::ServiceInstance.make(:space => space,
+              :service_plan => trial_rds_plan)
+          end
+
+          it "raises an error if an rds instance has already been allocated" do
+            allocate_trial_rds.save(:validate => false)
+            space.refresh
+            expect do
+              allocate_trial_rds
+            end.to raise_error(Sequel::ValidationFailed, /space trial_quota_exceeded/)
+          end
+
+          it "does not raise an error if an rds instance has not already been allocated" do
+            expect do
+              allocate_trial_rds
+            end.not_to raise_error
+          end
+        end
+
+        context "when the service instance is not a trial rds instance" do
+          it "raises an error" do
+            expect do
+              Models::ServiceInstance.make(:space => space, :service_plan => paid_rds_plan)
+            end.to raise_error(Sequel::ValidationFailed, /space free_quota_exceeded/)
+          end
+        end
+      end
+
       context "exceed quota" do
         it "should raise paid quota error when paid quota is exceeded" do
           org = Models::Organization.make(:quota_definition => paid_quota)

@@ -117,6 +117,13 @@ module VCAP::CloudController::Models
         service_instances.count < quota_definition.total_services
     end
 
+    def service_plan_quota_remaining?(service_plan)
+      if service_plan && service_plan.trial_rds?
+        return quota_definition.free_rds && !spaces.collect(&:service_instances).flatten.collect(&:service_plan).collect(&:unique_id).include?("aws_rds_mysql_10mb")
+      end
+      false
+    end
+
     def paid_services_allowed?
       quota_definition.non_basic_services_allowed
     end

@@ -140,6 +140,13 @@ module VCAP::CloudController::Models
 
     def check_quota
       if space
+        if service_plan && service_plan.trial_rds?
+          if !space.organization.service_plan_quota_remaining?(service_plan)
+            errors.add(:space, :trial_quota_exceeded)
+          end
+          return
+        end
+
         if !space.organization.service_instance_quota_remaining?
           if space.organization.paid_services_allowed?
             errors.add(:space, :paid_quota_exceeded)

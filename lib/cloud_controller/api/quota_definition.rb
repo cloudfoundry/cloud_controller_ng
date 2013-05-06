@@ -12,6 +12,7 @@ module VCAP::CloudController
       attribute  :non_basic_services_allowed, Message::Boolean
       attribute  :total_services,             Integer
       attribute  :memory_limit,               Integer
+      attribute  :free_rds,                   Message::Boolean, :default => false
     end
 
     query_parameters :name

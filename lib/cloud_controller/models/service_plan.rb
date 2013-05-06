@@ -28,5 +28,9 @@ module VCAP::CloudController::Models
       opts = user.can_access_non_public_plans? ? {} : {public: true}
       user_visibility_filter_with_admin_override(opts)
     end
+
+    def trial_rds?
+      unique_id == "aws_rds_mysql_10mb"
+    end
   end
 end
