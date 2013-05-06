@@ -289,6 +289,14 @@ module VCAP::CloudController
           bus.start_nats_recovery
         end
       end
+
+      it "registers legacy bulk subscription" do
+        VCAP::CloudController::LegacyBulk.should_receive(:register_subscription)
+
+        with_em_and_thread do
+          bus.start_nats_recovery
+        end
+      end
     end
   end
 end

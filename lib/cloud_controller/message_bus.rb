@@ -63,6 +63,9 @@ class VCAP::CloudController::MessageBus
         nats.connect(nats_options) do
           update_nats_varz(nil)
           register_routes
+          # We call legacy bulk register subscription because there is a dependency on this in health manager.
+          # TODO: figure out how to remove this dependency... either here or on the health manager side.
+          VCAP::CloudController::LegacyBulk.register_subscription
 
           @subscriptions.each do |subject, options|
             subscribe(subject, options[0], &options[1])
