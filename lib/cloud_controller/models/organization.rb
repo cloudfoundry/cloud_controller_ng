@@ -117,15 +117,50 @@ module VCAP::CloudController::Models
         service_instances.count < quota_definition.total_services
     end
 
-    def service_plan_quota_remaining?(service_plan)
-      if service_plan && service_plan.trial_rds?
-        return quota_definition.free_rds && !spaces.collect(&:service_instances).flatten.collect(&:service_plan).collect(&:unique_id).include?("aws_rds_mysql_10mb")
+    def check_quota?(service_plan)
+      return check_quota_for_trial_rds if service_plan.trial_rds?
+      check_quota_without_trial_rds(service_plan)
+    end
+
+    def check_quota_for_trial_rds
+      if trial_rds_allowed?
+        return {:type => :org, :name => :trial_quota_exceeded} if trial_rds_allocated?
+      elsif paid_services_allowed?
+        return {:type => :org, :name => :paid_quota_exceeded} unless service_instance_quota_remaining?
+      else
+        return {:type => :service_plan, :name => :paid_services_not_allowed }
       end
-      false
+
+      {}
+    end
+
+    def check_quota_without_trial_rds(service_plan)
+      if paid_services_allowed?
+        return {:type => :org, :name => :paid_quota_exceeded } unless service_instance_quota_remaining?
+      elsif service_plan.free
+        return {:type => :org, :name => :free_quota_exceeded } unless service_instance_quota_remaining?
+      else
+        return {:type => :service_plan, :name => :paid_services_not_allowed }
+      end
+
+      {}
     end
 
     def paid_services_allowed?
       quota_definition.non_basic_services_allowed
+    end
+
+    def trial_rds_allowed?
+      quota_definition.free_rds
+    end
+
+    # Does any service instance in any space have a trial RDS plan?
+    def trial_rds_allocated?
+      service_instances.each do |svc_instance|
+        return true if svc_instance.service_plan.trial_rds?
+      end
+
+      false
     end
 
     def memory_remaining

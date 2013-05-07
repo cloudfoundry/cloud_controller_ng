@@ -27,12 +27,13 @@ module VCAP::CloudController
 
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
-      quota_errors = e.errors.on(:space)
+      quota_errors = e.errors.on(:org)
       service_plan_errors = e.errors.on(:service_plan)
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::ServiceInstanceNameTaken.new(attributes["name"])
       elsif quota_errors
-        if quota_errors.include?(:free_quota_exceeded)
+        if quota_errors.include?(:free_quota_exceeded) ||
+          quota_errors.include?(:trial_quota_exceeded)
           Errors::ServiceInstanceFreeQuotaExceeded.new
         elsif quota_errors.include?(:paid_quota_exceeded)
           Errors::ServiceInstancePaidQuotaExceeded.new

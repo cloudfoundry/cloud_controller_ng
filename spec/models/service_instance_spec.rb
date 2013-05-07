@@ -232,7 +232,7 @@ module VCAP::CloudController
                                      :non_basic_services_allowed => true)
       end
 
-      context "with a free rds allowed" do
+      context "with a trial quota" do
         before do
           reset_database
         end
@@ -260,7 +260,7 @@ module VCAP::CloudController
             space.refresh
             expect do
               allocate_trial_rds
-            end.to raise_error(Sequel::ValidationFailed, /space trial_quota_exceeded/)
+            end.to raise_error(Sequel::ValidationFailed, /org trial_quota_exceeded/)
           end
 
           it "does not raise an error if an rds instance has not already been allocated" do
@@ -274,7 +274,7 @@ module VCAP::CloudController
           it "raises an error" do
             expect do
               Models::ServiceInstance.make(:space => space, :service_plan => paid_rds_plan)
-            end.to raise_error(Sequel::ValidationFailed, /space free_quota_exceeded/)
+            end.to raise_error(Sequel::ValidationFailed, /service_plan paid_services_not_allowed/)
           end
         end
       end
@@ -290,7 +290,7 @@ module VCAP::CloudController
           expect do
             Models::ServiceInstance.make(:space => space,
                                          :service_plan => free_plan)
-          end.to raise_error(Sequel::ValidationFailed, /space paid_quota_exceeded/)
+          end.to raise_error(Sequel::ValidationFailed, /org paid_quota_exceeded/)
         end
 
         it "should raise free quota error when free quota is exceeded" do
@@ -303,7 +303,7 @@ module VCAP::CloudController
           expect do
             Models::ServiceInstance.make(:space => space,
                                          :service_plan => free_plan)
-          end.to raise_error(Sequel::ValidationFailed, /space free_quota_exceeded/)
+          end.to raise_error(Sequel::ValidationFailed, /org free_quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
