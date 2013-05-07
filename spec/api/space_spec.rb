@@ -3,11 +3,11 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Space do
     include_examples "uaa authenticated api", path: "/v2/spaces"
-    include_examples "querying objects", path: "/v2/spaces", model: Models::Space, queryable_attributes: %w(name)
+    include_examples "querying objects", path: "/v2/spaces", model: Models::Space, queryable_attributes: %w(name), ci_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/spaces", model: Models::Space
     include_examples "reading a valid object", path: "/v2/spaces", model: Models::Space, basic_attributes: %w(name organization_guid)
     include_examples "operations on an invalid object", path: "/v2/spaces"
-    include_examples "creating and updating", path: "/v2/spaces", model: Models::Space, required_attributes: %w(name organization_guid), unique_attributes: %w(name organization_guid), extra_attributes: []
+    include_examples "creating and updating", path: "/v2/spaces", model: Models::Space, required_attributes: %w(name organization_guid), unique_attributes: %w(name organization_guid), ci_attributes: %w(name), extra_attributes: []
     include_examples "deleting a valid object", path: "/v2/spaces", model: Models::Space,
       one_to_many_collection_ids: {
         :apps => lambda { |space| Models::App.make(:space => space) },

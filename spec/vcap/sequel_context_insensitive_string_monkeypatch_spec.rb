@@ -25,7 +25,7 @@ describe "String :name" do
       @c.dataset[:str => "abc"].should_not be_nil
       @c.dataset[:str => "aBC"].should be_nil
     end
-  end
+  end unless $spec_env.db.use_lower_where?
 
   context "with :context_insensitive => false" do
     before do
@@ -49,20 +49,21 @@ describe "String :name" do
       @c.dataset[:str => "abc"].should_not be_nil
       @c.dataset[:str => "aBC"].should be_nil
     end
-  end
+  end unless $spec_env.db.use_lower_where?
 
   context "with :context_insensitive => true" do
     before do
       table_name = Sham.name.to_sym
 
       db.create_table table_name do
-        primary_key :id
-        String :str, :unique => true, :case_insensitive => true
+        String :str, :case_insensitive => true
+        index :str, :unique => true, :case_insensitive => true
       end
 
       @c = Class.new(Sequel::Model) do
+        ci_attributes :str
         def validate
-          validates_unique :str
+          validates_unique_ci :str
         end
       end
       @c.set_dataset(db[table_name])
@@ -84,7 +85,7 @@ describe "String :name" do
     it "should perform case sensitive search" do
       @c.dataset[:str => "abc"].should_not be_nil
       @c.dataset[:str => "aBC"].should_not be_nil
-    end
+    end unless $spec_env.db.use_lower_where?
   end
 
   context "alter table set_column_type" do
@@ -141,5 +142,5 @@ describe "String :name" do
         @c.dataset[:str => "ABC"].should_not be_nil
       end
     end
-  end
+  end unless $spec_env.db.use_lower_where?
 end
