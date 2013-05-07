@@ -145,9 +145,9 @@ module VCAP::CloudController
         VCAP::CloudController::AppStager.run
 
         VCAP::CloudController::LegacyBulk.register_subscription
-        VCAP::CloudController.health_manager_respondent = \
+        VCAP::CloudController.health_manager_respondent =
           VCAP::CloudController::HealthManagerRespondent.new(config)
-        VCAP::CloudController.dea_respondent = \
+        VCAP::CloudController.dea_respondent =
           VCAP::CloudController::DeaRespondent.new(config, VCAP::CloudController::MessageBus.instance)
         map "/" do
           run VCAP::CloudController::Controller.new(config, token_decoder)

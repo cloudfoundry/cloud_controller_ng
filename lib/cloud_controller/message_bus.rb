@@ -20,58 +20,48 @@ class VCAP::CloudController::MessageBus
     @config = config
     @nats = config[:nats] || NATS
     @subscriptions = {}
-  end
-
-  def nats_options
-    { :uri => config[:nats_uri] }
+    @recovering = false
   end
 
   def register_components
     # TODO: put useful metrics in varz
     # TODO: subscribe to the two DEA channels
-    EM.error_handler do |e|
-      if e.class == NATS::ConnectError
-        logger.warn("NATS connection failed. Starting nats recovery")
+    nats.on_error do
+      unless @recovering
+        @recovering = true
+        logger.error("NATS connection failed. Starting nats recovery")
         update_nats_varz(Time.now)
         start_nats_recovery
-      else
-        raise e
       end
     end
 
     EM.schedule do
-      nats.start(nats_options) do
-        VCAP::Component.register(
-          :type => 'CloudController',
-          :host => @config[:bind_address],
-          :index => config[:index],
-          :config => config,
-          # leaving the varz port / user / pwd blank to be random
-        )
-       update_nats_varz(nil)
+      nats.start(:uri => config[:nats_uri]) do
+        logger.info("Connected to NATS")
+        register_cloud_controller
+        update_nats_varz(nil)
       end
     end
   end
 
   def start_nats_recovery
     EM.defer do
-      unless nats.connected?
-        nats.on_error do
-          start_nats_recovery
-        end
-        nats.wait_for_server(nats_options[:uri])
-        nats.connect(nats_options) do
-          update_nats_varz(nil)
-          register_routes
-          # We call legacy bulk register subscription because there is a dependency on this in health manager.
-          # TODO: figure out how to remove this dependency... either here or on the health manager side.
-          VCAP::CloudController::LegacyBulk.register_subscription
+      nats.wait_for_server(URI(config[:nats_uri]), Float::INFINITY)
+      nats.start(:uri => config[:nats_uri]) do
+        logger.info("Reconnected to NATS.")
 
-          @subscriptions.each do |subject, options|
-            subscribe(subject, options[0], &options[1])
-          end
+        update_nats_varz(nil)
+        register_routes
+        # We call legacy bulk register subscription because there is a dependency on this in health manager.
+        # TODO: figure out how to remove this dependency... either here or on the health manager side.
+        VCAP::CloudController::LegacyBulk.register_subscription
+
+        @subscriptions.each do |subject, options|
+          logger.info("Resubscribing to #{subject}")
+          subscribe(subject, options[0], &options[1])
         end
       end
+      @recovering = false
     end
   end
 
@@ -153,6 +143,16 @@ class VCAP::CloudController::MessageBus
   end
 
   private
+
+  def register_cloud_controller
+    VCAP::Component.register(
+      :type => 'CloudController',
+      :host => @config[:bind_address],
+      :index => config[:index],
+      :config => config,
+    # leaving the varz port / user / pwd blank to be random
+    )
+  end
 
   def subscribe_on_reactor(subject, opts = {}, &blk)
     EM.schedule do

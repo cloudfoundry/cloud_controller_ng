@@ -9,16 +9,18 @@ module VCAP::CloudController
       nats.stub(:subscribe)
       nats.stub(:connected?)
       nats.stub(:on_error)
-      nats.stub(:connect) { |_, &blk| blk.call }
+      nats.stub(:start) { |_, &blk| blk.call }
       nats.stub(:publish)
       nats.stub(:options) { {} }
       nats.stub(:wait_for_server)
       nats
     end
-    let(:bus) { MessageBus.new(:nats => nats) }
+    let(:bus) { MessageBus.new(:nats => nats, :nats_uri => "nats://localhost:4222") }
 
     let(:msg) { {:foo => "bar"} }
     let(:msg_json) { Yajl::Encoder.encode(msg) }
+
+    before { bus.stub(:register_cloud_controller) }
 
     describe "#subscribe" do
       it "should receive nats messages" do
@@ -228,8 +230,8 @@ module VCAP::CloudController
     describe "#register_components" do
       describe "nats goes down" do
         before do
-          nats.stub(:start) { raise NATS::ConnectError }
-          nats.stub(:connect) { }
+          nats.stub(:on_error) { |&blk| blk.call }
+          nats.stub(:start)
         end
 
         it "starts subscription recovery" do
