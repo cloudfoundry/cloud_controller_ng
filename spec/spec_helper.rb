@@ -206,6 +206,7 @@ module VCAP::CloudController::SpecHelper
 
     VCAP::CloudController::LegacyBulk.configure(config, mbus)
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
+    VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
 
     configure_stacks
   end

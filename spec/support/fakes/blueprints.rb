@@ -186,6 +186,6 @@ module VCAP::CloudController::Models
     non_basic_services_allowed { true }
     total_services { 60 }
     memory_limit { 20480 } # 20 GB
-    free_rds { false }
+    trial_db_allowed { false }
   end
 end

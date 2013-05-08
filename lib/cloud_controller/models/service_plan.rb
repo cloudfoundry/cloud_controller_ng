@@ -15,6 +15,14 @@ module VCAP::CloudController::Models
 
     strip_attributes  :name
 
+    def self.configure(trial_db_config)
+      @trial_db_guid = trial_db_config ? trial_db_config[:guid] : nil
+    end
+
+    def self.trial_db_guid
+      @trial_db_guid
+    end
+
     def validate
       self.unique_id = [service.unique_id, name].join("_") if !unique_id && service
       validates_presence :name
@@ -29,8 +37,8 @@ module VCAP::CloudController::Models
       user_visibility_filter_with_admin_override(opts)
     end
 
-    def trial_rds?
-      unique_id == "aws_rds_mysql_10mb"
+    def trial_db?
+      unique_id == self.class.trial_db_guid
     end
   end
 end

@@ -237,43 +237,44 @@ module VCAP::CloudController
           reset_database
         end
 
-        let(:trial_rds_plan) { Models::ServicePlan.make(:unique_id => "aws_rds_mysql_10mb") }
-        let(:paid_rds_plan) { Models::ServicePlan.make(:unique_id => "aws_rds_mysql_cfinternal") }
+        let(:trial_db_guid) { Models::ServicePlan.trial_db_guid }
+        let(:trial_db_plan) { Models::ServicePlan.make(:unique_id => trial_db_guid) }
+        let(:paid_db_plan) { Models::ServicePlan.make(:unique_id => "aws_rds_mysql_cfinternal") }
 
         let(:trial_quota) do
           Models::QuotaDefinition.make(:total_services => 0,
             :non_basic_services_allowed => false,
-            :free_rds => true)
+            :trial_db_allowed => true)
         end
 
         let(:org) { Models::Organization.make(:quota_definition => trial_quota)}
         let(:space) { Models::Space.make(:organization => org) }
 
-        context "when the service instance is a trial rds instance" do
-          def allocate_trial_rds
+        context "when the service instance is a trial db instance" do
+          def allocate_trial_db
             Models::ServiceInstance.make(:space => space,
-              :service_plan => trial_rds_plan)
+              :service_plan => trial_db_plan)
           end
 
-          it "raises an error if an rds instance has already been allocated" do
-            allocate_trial_rds.save(:validate => false)
+          it "raises an error if an db instance has already been allocated" do
+            allocate_trial_db.save(:validate => false)
             space.refresh
             expect do
-              allocate_trial_rds
+              allocate_trial_db
             end.to raise_error(Sequel::ValidationFailed, /org trial_quota_exceeded/)
           end
 
-          it "does not raise an error if an rds instance has not already been allocated" do
+          it "does not raise an error if a db instance has not already been allocated" do
             expect do
-              allocate_trial_rds
+              allocate_trial_db
             end.not_to raise_error
           end
         end
 
-        context "when the service instance is not a trial rds instance" do
+        context "when the service instance is not a trial db instance" do
           it "raises an error" do
             expect do
-              Models::ServiceInstance.make(:space => space, :service_plan => paid_rds_plan)
+              Models::ServiceInstance.make(:space => space, :service_plan => paid_db_plan)
             end.to raise_error(Sequel::ValidationFailed, /service_plan paid_services_not_allowed/)
           end
         end

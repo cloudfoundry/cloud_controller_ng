@@ -118,13 +118,13 @@ module VCAP::CloudController::Models
     end
 
     def check_quota?(service_plan)
-      return check_quota_for_trial_rds if service_plan.trial_rds?
-      check_quota_without_trial_rds(service_plan)
+      return check_quota_for_trial_db if service_plan.trial_db?
+      check_quota_without_trial_db(service_plan)
     end
 
-    def check_quota_for_trial_rds
-      if trial_rds_allowed?
-        return {:type => :org, :name => :trial_quota_exceeded} if trial_rds_allocated?
+    def check_quota_for_trial_db
+      if trial_db_allowed?
+        return {:type => :org, :name => :trial_quota_exceeded} if trial_db_allocated?
       elsif paid_services_allowed?
         return {:type => :org, :name => :paid_quota_exceeded} unless service_instance_quota_remaining?
       else
@@ -134,7 +134,7 @@ module VCAP::CloudController::Models
       {}
     end
 
-    def check_quota_without_trial_rds(service_plan)
+    def check_quota_without_trial_db(service_plan)
       if paid_services_allowed?
         return {:type => :org, :name => :paid_quota_exceeded } unless service_instance_quota_remaining?
       elsif service_plan.free
@@ -150,14 +150,14 @@ module VCAP::CloudController::Models
       quota_definition.non_basic_services_allowed
     end
 
-    def trial_rds_allowed?
-      quota_definition.free_rds
+    def trial_db_allowed?
+      quota_definition.trial_db_allowed
     end
 
-    # Does any service instance in any space have a trial RDS plan?
-    def trial_rds_allocated?
+    # Does any service instance in any space have a trial DB plan?
+    def trial_db_allocated?
       service_instances.each do |svc_instance|
-        return true if svc_instance.service_plan.trial_rds?
+        return true if svc_instance.service_plan.trial_db?
       end
 
       false

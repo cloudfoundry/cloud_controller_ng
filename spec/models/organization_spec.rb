@@ -253,10 +253,33 @@ module VCAP::CloudController
       end
     end
 
+    describe "#trial_db_allocated?" do
+      let(:org) { Models::Organization.make }
+      let(:space) { Models::Space.make :organization => org }
+      let(:trial_db_guid) { Models::ServicePlan.trial_db_guid }
+      subject { org.trial_db_allocated? }
+
+      context "when a trial db instance has not been allocated" do
+        it "retruns false" do
+          expect(subject).to eq false
+        end
+      end
+
+      context "when a trial db instance has been allocated" do
+        let(:service_plan) { Models::ServicePlan.make :unique_id => trial_db_guid}
+        it "returns true" do
+          Models::ServiceInstance.make(:space => space, :service_plan => service_plan)
+          expect(subject).to eq true
+        end
+      end
+    end
+
     describe "#service_plan_quota_remaining?" do
       let(:org) do
         Models::Organization.make :quota_definition => quota
       end
+
+      let(:trial_db_guid) { Models::ServicePlan.trial_db_guid }
 
       let!(:space) do
         Models::Space.make(:organization => org)
@@ -264,10 +287,10 @@ module VCAP::CloudController
 
       subject { org.check_quota?(service_plan) }
 
-      context "when the service plan requested is the trial rds" do
+      context "when the service plan requested is the trial db" do
         let(:service_plan) do
-            Models::ServicePlan.find(:unique_id => "aws_rds_mysql_10mb") ||
-              Models::ServicePlan.make(:unique_id => "aws_rds_mysql_10mb")
+            Models::ServicePlan.find(:unique_id => trial_db_guid) ||
+              Models::ServicePlan.make(:unique_id => trial_db_guid)
         end
 
         context "and the org's quota definition is paid" do
@@ -305,22 +328,22 @@ module VCAP::CloudController
 
         context "and the org's quota definition is trial" do
           let(:quota) do
-            Models::QuotaDefinition.find(:non_basic_services_allowed => false, :free_rds => true)
+            Models::QuotaDefinition.find(:non_basic_services_allowed => false, :trial_db_allowed => true)
           end
 
-          it "returns no error if the org has not allocated a trial rds" do
+          it "returns no error if the org has not allocated a trial db" do
             expect(subject).to be_empty
           end
 
-          it "returns a :trial_quota_exceeded error if the org has allocated a trial rds" do
-            Models::Organization.any_instance.stub(:trial_rds_allocated?).and_return(true)
+          it "returns a :trial_quota_exceeded error if the org has allocated a trial db" do
+            Models::Organization.any_instance.stub(:trial_db_allocated?).and_return(true)
             expect(subject).to eq({ :type => :org, :name => :trial_quota_exceeded })
           end
 
         end
       end
 
-      context "when the service plan requested is not trial rds" do
+      context "when the service plan requested is not trial db" do
         context "and the service plan is free" do
           let(:service_plan) { Models::ServicePlan.make :free => true }
 

@@ -123,7 +123,11 @@ class VCAP::CloudController::Config < VCAP::Config
         }
       },
 
-      :db_encryption_key => String
+      :db_encryption_key => String,
+
+      optional(:trial_db) => {
+        :guid => String,
+      },
     }
   end
 
@@ -154,6 +158,7 @@ class VCAP::CloudController::Config < VCAP::Config
 
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
     VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
+    VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
   end
 
   class << self
