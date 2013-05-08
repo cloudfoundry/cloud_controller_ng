@@ -17,7 +17,9 @@ class VCAP::CloudController::Config < VCAP::Config
         :description     => String,
       },
 
-      :system_domains => [ String ],
+      :system_domain => String,
+      :system_domain_organization => String,
+      :app_domains => [ String ],
 
       optional(:allow_debug) => bool,
 

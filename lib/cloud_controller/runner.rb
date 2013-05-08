@@ -89,15 +89,11 @@ module VCAP::CloudController
       config = @config.dup
 
       if @insert_seed_data
-        VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
-        VCAP::CloudController::Models::Stack.populate
+        Models::QuotaDefinition.populate_from_config(config)
+        Models::Stack.populate
+        organization = Models::Organization.create_from_config(config)
+        Models::Domain.populate_from_config(config, organization)
       end
-
-      config[:system_domains].each do |name|
-        VCAP::CloudController::Models::Domain.find_or_create_shared_domain(name)
-      end
-
-      VCAP::CloudController::Models::Domain.default_serving_domain_name = config[:system_domains].first
 
       app = create_app(config)
       start_thin_server(app, config)

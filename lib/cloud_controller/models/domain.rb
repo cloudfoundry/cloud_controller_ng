@@ -127,10 +127,10 @@ module VCAP::CloudController::Models
 
     def self.default_serving_domain_name=(name)
       @default_serving_domain_name = name
-      unless name
-        @default_serving_domain = nil
-      else
+      if name
         @default_serving_domain = find_or_create_shared_domain(name)
+      else
+        @default_serving_domain = nil
       end
       name
     end
@@ -155,6 +155,17 @@ module VCAP::CloudController::Models
       end
 
       return d
+    end
+
+    def self.populate_from_config(config, organization)
+      find_or_create(
+        :name => config[:system_domain],
+        :wildcard => true,
+        :owning_organization => organization
+      )
+      config[:app_domains].each do |domain|
+        find_or_create_shared_domain(domain)
+      end
     end
   end
 end

@@ -5,10 +5,14 @@ pid_filename: /tmp/cloud_controller.pid
 nats_uri: nats://127.0.0.1:4222
 
 external_domain: api2.vcap.me
-system_domains:
-  - vcap.me
 
 bootstrap_admin_email: sre@vmware.com
+
+system_domain_organization: the-system_domain-org-name
+system_domain: vcap.me
+app_domains:
+  - customer-app-domain1.com
+  - customer-app-domain2.com
 
 info:
   name: "vcap"

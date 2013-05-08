@@ -8,8 +8,11 @@ info:
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
 
-system_domains:
-  - vcap.me
+system_domain_organization: the-system-domain-org-name
+system_domain: the-system-domain.com
+app_domains:
+  - customer-app-domain1.com
+  - customer-app-domain2.com
 
 uaa:
   url: "http://localhost:8080/uaa"
@@ -35,7 +38,16 @@ nginx:
   use_nginx: false
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
 
-quota_definitions: {}
+quota_definitions:
+  free:
+    non_basic_services_allowed: false
+    total_services: 2
+    memory_limit: 512 # 0.5 GB
+  paid:
+    non_basic_services_allowed: true
+    total_services: 500
+    memory_limit: 204800 # 200 GB
+
 default_quota_definition: free
 
 resource_pool:
