@@ -169,6 +169,17 @@ module VCAP::CloudController
       end
     end
 
+    describe "getting a service instance" do
+      let(:space) { Models::Space.make }
+      let(:developer) { make_developer_for_space(space)}
+      it "shows the dashboard_url if there is" do
+        service_instance = Models::ServiceInstance.make
+        service_instance.update(dashboard_url: 'http://dashboard.io')
+        get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+        decoded_response.fetch('entity').fetch('dashboard_url').should == 'http://dashboard.io'
+      end
+    end
+
     describe "Quota enforcement" do
       let(:paid_quota) { Models::QuotaDefinition.make(:total_services => 0) }
       let(:free_quota_with_no_services) do

@@ -59,6 +59,14 @@ module VCAP::CloudController
       let(:encrypted_attr) { :credentials }
     end
 
+    describe "serialization" do
+      let(:dashboard_url) { 'http://dashboard.io' }
+
+      it "allows export of dashboard_url"  do
+        service_instance.dashboard_url = dashboard_url
+        Yajl::Parser.parse(service_instance.to_json).fetch("dashboard_url").should == dashboard_url
+      end
+    end
 
     describe "#add_service_binding" do
       it "should not bind an app and a service instance from different app spaces" do
@@ -186,12 +194,13 @@ module VCAP::CloudController
       context "when a service_gateway_client exists" do
         it 'provisions the service_gateway_client' do
           provision_hash = nil
-          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.should_receive(:provision).with(any_args) do |h|
+          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.should_receive(:provision) do |h|
             provision_hash = h
             VCAP::Services::Api::GatewayHandleResponse.new(
               :service_id => '',
               :configuration => '',
               :credentials => '',
+              :dashboard_url => 'http://dashboard.io'
             )
           end
           service_instance
@@ -210,11 +219,20 @@ module VCAP::CloudController
           )
         end
 
-        it 'sets up the gateway' do
+        it 'fills in the service details' do
+          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.stub(:provision) do |_|
+            VCAP::Services::Api::GatewayHandleResponse.new(
+              :service_id => 'service_id',
+              :configuration => 'configuration',
+              :credentials => 'credentials',
+              :dashboard_url => 'http://dashboard.io'
+            )
+          end
           service_instance
-          expect(service_instance.gateway_name).to be_a String
-          expect(service_instance.gateway_data).to be_a String
-          expect(service_instance.credentials).to be_a Hash
+          service_instance.gateway_name.should == 'service_id'
+          service_instance.gateway_data.should == 'configuration'
+          service_instance.credentials.should == 'credentials'
+          service_instance.dashboard_url.should == 'http://dashboard.io'
         end
       end
     end

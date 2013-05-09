@@ -71,7 +71,7 @@ module VCAP::CloudController::Models
     default_order_by  :id
 
     export_attributes :name, :credentials, :service_plan_guid,
-                      :space_guid, :gateway_data
+                      :space_guid, :gateway_data, :dashboard_url
 
     import_attributes :name, :service_plan_guid,
                       :space_guid, :gateway_data
@@ -228,6 +228,7 @@ module VCAP::CloudController::Models
       self.gateway_name = gw_attrs.service_id
       self.gateway_data = gw_attrs.configuration
       self.credentials  = gw_attrs.credentials
+      self.dashboard_url= gw_attrs.dashboard_url
 
       @provisioned_on_gateway_for_plan = service_plan
     end
