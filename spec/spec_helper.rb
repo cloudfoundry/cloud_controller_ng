@@ -125,7 +125,7 @@ module VCAP::CloudController::SpecHelper
 
   def reset_database
     $spec_env.reset_database
-    VCAP::CloudController::Models::QuotaDefinition.populate_from_config(config)
+    VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
   end
 
   # Note that this method is mixed into each example, and so the instance

@@ -175,17 +175,5 @@ module VCAP::CloudController::Models
         :billing_managers => [user],
         :auditors => [user] }.sql_or)
     end
-
-    def self.create_from_config(config)
-      quota_definition = QuotaDefinition.find(:name => "paid")
-
-      unless quota_definition
-        raise ArgumentError, "Missing 'paid' quota definition in config file"
-      end
-
-      find_or_create(:name => config[:system_domain_organization]) do |org|
-        org.quota_definition = quota_definition
-      end
-    end
   end
 end

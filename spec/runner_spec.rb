@@ -57,6 +57,14 @@ module VCAP::CloudController
             cider.should be_valid
           end
 
+          it "should load quota definitions" do
+            Models::QuotaDefinition.count.should == 2
+            paid = Models::QuotaDefinition[:name => "paid"]
+            paid.non_basic_services_allowed.should == true
+            paid.total_services.should == 500
+            paid.memory_limit.should == 204800
+          end
+
           it "creates the system domain organization" do
             expect(Models::Organization.last.name).to eq("the-system-domain-org-name")
             expect(Models::Organization.last.quota_definition.name).to eq("paid")

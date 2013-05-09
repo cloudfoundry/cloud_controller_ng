@@ -20,14 +20,6 @@ module VCAP::CloudController::Models
       validates_presence :memory_limit
     end
 
-    def self.populate_from_config(config)
-      config[:quota_definitions].each do |k, v|
-        QuotaDefinition.update_or_create(:name => k.to_s) do |r|
-          r.update_from_hash(v)
-        end
-      end
-    end
-
     def self.configure(config)
       @default_quota_name = config[:default_quota_definition]
     end

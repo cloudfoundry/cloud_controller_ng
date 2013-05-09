@@ -4,6 +4,7 @@ require "steno"
 require "optparse"
 require "vcap/uaa_util"
 require File.expand_path("../message_bus.rb", __FILE__)
+require File.expand_path("../seeds", __FILE__)
 
 module VCAP::CloudController
   class Runner
@@ -88,13 +89,7 @@ module VCAP::CloudController
 
       config = @config.dup
 
-      if @insert_seed_data
-        Models::QuotaDefinition.populate_from_config(config)
-        Models::Stack.populate
-        organization = Models::Organization.create_from_config(config)
-        Models::Domain.populate_from_config(config, organization)
-      end
-
+      Seeds.write_seed_data(config) if @insert_seed_data
       app = create_app(config)
       start_thin_server(app, config)
     end

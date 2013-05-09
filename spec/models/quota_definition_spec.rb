@@ -12,21 +12,6 @@ module VCAP::CloudController
       :unique_attributes   => [:name]
     }
 
-    describe ".populate_from_config" do
-      it "should load quota definitions" do
-        reset_database
-
-        # see config/cloud_controller.yml
-        Models::QuotaDefinition.populate_from_config(config)
-
-        Models::QuotaDefinition.count.should == 3
-        paid = Models::QuotaDefinition[:name => "paid"]
-        paid.non_basic_services_allowed.should == true
-        paid.total_services.should == 500
-        paid.memory_limit.should == 204800
-      end
-    end
-
     describe ".default" do
       it "should return the default quota" do
         Models::QuotaDefinition.default.name.should == "free"
