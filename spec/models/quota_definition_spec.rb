@@ -7,13 +7,19 @@ module VCAP::CloudController
     let(:quota_definition) { Models::QuotaDefinition.make }
 
     it_behaves_like "a CloudController model", {
-      :required_attributes => [:name, :non_basic_services_allowed,
-                               :total_services, :memory_limit],
-      :unique_attributes   => [:name]
+      :required_attributes => [
+        :name,
+        :non_basic_services_allowed,
+        :total_services,
+        :memory_limit,
+      ],
+      :unique_attributes => [:name]
     }
 
     describe ".default" do
-      it "should return the default quota" do
+      before { reset_database }
+
+      it "returns the default quota" do
         Models::QuotaDefinition.default.name.should == "free"
       end
     end
@@ -21,7 +27,11 @@ module VCAP::CloudController
     describe "#destroy" do
       it "nullifies the organization quota definition" do
         org = Models::Organization.make(:quota_definition => quota_definition)
-        expect { quota_definition.destroy }.to change { Models::Organization.where(:id => org.id).count }.by(-1)
+        expect {
+          quota_definition.destroy
+        }.to change {
+          Models::Organization.count(:id => org.id)
+        }.by(-1)
       end
     end
   end
