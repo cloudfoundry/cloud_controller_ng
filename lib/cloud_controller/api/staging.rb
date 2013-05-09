@@ -60,7 +60,7 @@ module VCAP::CloudController
 
       def droplet_download_uri(guid)
         if local?
-          staging_uri("#{DROPLET_PATH}/#{guid}")
+          staging_uri("#{DROPLET_PATH}/#{guid}/download")
         else
           droplet_uri(guid)
         end
@@ -116,7 +116,7 @@ module VCAP::CloudController
 
       def buildpack_cache_download_uri(guid)
         if AppPackage.local?
-          staging_uri("#{BUILDPACK_CACHE_PATH}/#{guid}")
+          staging_uri("#{BUILDPACK_CACHE_PATH}/#{guid}/download")
         else
           package_uri(guid, :buildpack_cache)
         end
@@ -155,11 +155,8 @@ module VCAP::CloudController
       end
 
       def upload_uri(guid, type)
-        if type == :buildpack_cache
-          staging_uri("#{BUILDPACK_CACHE_PATH}/#{guid}")
-        else
-          staging_uri("#{DROPLET_PATH}/#{guid}")
-        end
+        prefix = type == :buildpack_cache ? BUILDPACK_CACHE_PATH : DROPLET_PATH
+        staging_uri("#{prefix}/#{guid}/upload")
       end
 
       def package_uri(guid, type)
@@ -371,10 +368,12 @@ module VCAP::CloudController
     end
 
     get  "/staging/apps/:guid", :download_app
-    post "#{DROPLET_PATH}/:guid", :upload_droplet
-    get  "#{DROPLET_PATH}/:guid", :download_droplet
 
-    post "#{BUILDPACK_CACHE_PATH}/:guid", :upload_buildpack_cache
-    get "#{BUILDPACK_CACHE_PATH}/:guid", :download_buildpack_cache
+    # Make sure that nginx upload path rules do not apply to download paths!
+    post "#{DROPLET_PATH}/:guid/upload", :upload_droplet
+    get  "#{DROPLET_PATH}/:guid/download", :download_droplet
+
+    post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
+    get "#{BUILDPACK_CACHE_PATH}/:guid/download", :download_buildpack_cache
   end
 end

@@ -149,27 +149,36 @@ module VCAP::CloudController
     describe "droplet_upload_uri" do
       it "should return a uri to our cc" do
         uri = Staging.droplet_upload_uri(app_guid)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}"
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}/upload"
+      end
+    end
+
+    describe "droplet_download_uri" do
+      let(:droplet) { Tempfile.new(app_guid) }
+      before { Staging.store_droplet(app_guid, droplet.path) }
+      after { FileUtils.rm(droplet.path) }
+
+      it "returns internal cc uri" do
+        uri = Staging.droplet_download_uri(app_guid)
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}/download"
       end
     end
 
     describe "buildpack_cache_upload_uri" do
       it "should return a uri to our cc" do
         uri = Staging.buildpack_cache_upload_uri(app_guid)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}"
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}/upload"
       end
     end
 
     describe "buildpack_cache_download_uri" do
       let(:buildpack_cache) { Tempfile.new(app_guid) }
-
+      before { Staging.store_buildpack_cache(app_guid, buildpack_cache.path) }
       after { FileUtils.rm(buildpack_cache.path) }
 
-      it "should return a uri to our cc" do
-        Staging.store_buildpack_cache(app_guid, buildpack_cache.path)
-
+      it "returns internal cc uri" do
         uri = Staging.buildpack_cache_download_uri(app_guid)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}"
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}/download"
       end
     end
 
@@ -231,7 +240,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "POST /staging/droplets/:guid" do
+    describe "POST /staging/droplets/:guid/upload" do
       let(:app_obj) { Models::App.make }
       let(:tmpfile) { Tempfile.new("droplet.tgz") }
       let(:upload_req) do
@@ -244,7 +253,7 @@ module VCAP::CloudController
       end
 
       def make_request(droplet_guid=app_obj.guid)
-        post "/staging/droplets/#{droplet_guid}", upload_req
+        post "/staging/droplets/#{droplet_guid}/upload", upload_req
       end
 
       context "with a valid upload handle" do
@@ -281,7 +290,7 @@ module VCAP::CloudController
       include_examples "staging bad auth", :post
     end
 
-    describe "GET /staging/droplets/:guid" do
+    describe "GET /staging/droplets/:guid/download" do
       let(:app_obj) { Models::App.make }
 
       before do
@@ -307,7 +316,7 @@ module VCAP::CloudController
           droplet.close
           Staging.store_droplet(app_obj.guid, droplet.path)
 
-          get "/staging/droplets/#{app_obj.guid}"
+          get "/staging/droplets/#{app_obj.guid}/download"
           last_response.status.should == 200
           last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
         end
@@ -315,20 +324,20 @@ module VCAP::CloudController
 
       context "with a valid app but no droplet" do
         it "should return an error" do
-          get "/staging/droplets/#{app_obj.guid}"
+          get "/staging/droplets/#{app_obj.guid}/download"
           last_response.status.should == 400
         end
       end
 
       context "with an invalid app" do
         it "should return an error" do
-          get "/staging/droplets/bad"
+          get "/staging/droplets/bad/download"
           last_response.status.should == 404
         end
       end
     end
 
-    describe "POST /staging/buildpack_cache/:guid" do
+    describe "POST /staging/buildpack_cache/:guid/upload" do
       let(:app_obj) { Models::App.make }
       let(:tmpfile) { Tempfile.new("droplet.tgz") }
       let(:upload_req) do
@@ -341,7 +350,7 @@ module VCAP::CloudController
       end
 
       def make_request(droplet_guid=app_obj.guid)
-        post "/staging/buildpack_cache/#{droplet_guid}", upload_req
+        post "/staging/buildpack_cache/#{droplet_guid}/upload", upload_req
       end
 
       context "with a valid buildpack cache upload handle" do
@@ -376,7 +385,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "GET /staging/buildpack_cache/:guid" do
+    describe "GET /staging/buildpack_cache/:guid/download" do
       let(:app_obj) { Models::App.make }
       let(:buildpack_cache) { Tempfile.new(app_obj.guid) }
 
@@ -390,7 +399,7 @@ module VCAP::CloudController
       after { FileUtils.rm(buildpack_cache.path) }
 
       def make_request(droplet_guid=app_obj.guid)
-        get "/staging/buildpack_cache/#{droplet_guid}"
+        get "/staging/buildpack_cache/#{droplet_guid}/download"
       end
 
       context "with a valid buildpack cache" do
