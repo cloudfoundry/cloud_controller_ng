@@ -18,7 +18,7 @@ class VCAP::CloudController::Config < VCAP::Config
       },
 
       :system_domain => String,
-      :system_domain_organization => String,
+      :system_domain_organization => enum(String, NilClass),
       :app_domains => [ String ],
 
       optional(:allow_debug) => bool,
