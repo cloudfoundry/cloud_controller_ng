@@ -99,6 +99,24 @@ module VCAP::CloudController
             }.to raise_error(ArgumentError, /Missing .*paid.* quota/)
           end
         end
+
+        context "when the app domains include the system domain" do
+          let(:config_file_path) do
+            config = YAML.load_file(valid_config_file_path)
+            config["app_domains"].push("the-system-domain.com")
+            file = Tempfile.new("config")
+            file.write(YAML.dump(config))
+            file.rewind
+            file.path
+          end
+
+          it "creates the system domain as a shared domain" do
+            subject.run!
+            domain = Models::Domain.find(:name => "the-system-domain.com")
+            expect(domain.owning_organization).to be_nil
+            expect(domain.wildcard).to be_true
+          end
+        end
       end
 
       context "when the run migrations flag is not passed in" do

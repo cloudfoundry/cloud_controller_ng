@@ -158,13 +158,16 @@ module VCAP::CloudController::Models
     end
 
     def self.populate_from_config(config, organization)
-      find_or_create(
-        :name => config[:system_domain],
-        :wildcard => true,
-        :owning_organization => organization
-      )
       config[:app_domains].each do |domain|
         find_or_create_shared_domain(domain)
+      end
+
+      unless config[:app_domains].include?(config[:system_domain])
+        find_or_create(
+          :name => config[:system_domain],
+          :wildcard => true,
+          :owning_organization => organization
+        )
       end
     end
   end
