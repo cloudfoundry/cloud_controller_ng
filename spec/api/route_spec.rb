@@ -9,7 +9,7 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/routes", model: Models::Route, basic_attributes: %w(host domain_guid space_guid)
     include_examples "operations on an invalid object", path: "/v2/routes"
     include_examples "deleting a valid object", path: "/v2/routes", model: Models::Route, one_to_many_collection_ids: {}, one_to_many_collection_ids_without_url: {}
-    include_examples "creating and updating", path: "/v2/routes", model: Models::Route, required_attributes: %w(domain_guid space_guid), unique_attributes: %w(host domain_guid), extra_attributes: %w(host),
+    include_examples "creating and updating", path: "/v2/routes", model: Models::Route, required_attributes: %w(domain_guid space_guid), unique_attributes: %w(host domain_guid), ci_attributes: %w(host), extra_attributes: %w(host),
       create_attribute: lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym
@@ -26,17 +26,52 @@ module VCAP::CloudController
       create_attribute_reset: lambda { @space = nil }
 
     context "with a wildcard domain" do
-      it "should allow a nil host" do
-        cf_admin = Models::User.make(:admin => true)
-        domain = Models::Domain.make(:wildcard => true)
+      let(:cf_admin) {
+        Models::User.make(:admin => true)
+      }
+      let(:domain) {
+        Models::Domain.make(:wildcard => true)
+      }
+      let(:space) {
         space = Models::Space.make(:organization => domain.owning_organization)
         space.add_domain(domain)
+        space
+      }
+
+      it "should correctly handle a nil host" do
         post "/v2/routes",
           Yajl::Encoder.encode(:host => nil,
                                :domain_guid => domain.guid,
                                :space_guid => space.guid),
           headers_for(cf_admin)
         last_response.status.should == 201
+        get decoded_response["metadata"]["url"], {}, headers_for(cf_admin)
+        last_response.status.should == 200
+        expect(decoded_response["entity"]["host"]).to be_empty
+      end
+
+      it "should correctly handle a empty host" do
+        post "/v2/routes",
+          Yajl::Encoder.encode(:host => "",
+                               :domain_guid => domain.guid,
+                               :space_guid => space.guid),
+          headers_for(cf_admin)
+        last_response.status.should == 201
+        get decoded_response["metadata"]["url"], {}, headers_for(cf_admin)
+        last_response.status.should == 200
+        expect(decoded_response["entity"]["host"]).to be_empty
+      end
+
+      it "should correctly handle a '#{Models::Route::WILDCARD_HOST}' host" do
+        post "/v2/routes",
+          Yajl::Encoder.encode(:host => Models::Route::WILDCARD_HOST,
+                               :domain_guid => domain.guid,
+                               :space_guid => space.guid),
+          headers_for(cf_admin)
+        last_response.status.should == 201
+        get decoded_response["metadata"]["url"], {}, headers_for(cf_admin)
+        last_response.status.should == 200
+        expect(decoded_response["entity"]["host"]).to be_empty
       end
     end
 

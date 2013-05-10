@@ -13,7 +13,8 @@ module VCAP::CloudController
         :total_services,
         :memory_limit,
       ],
-      :unique_attributes => [:name]
+      :unique_attributes => [:name],
+      :ci_attributes       => :name
     }
 
     describe ".default" do

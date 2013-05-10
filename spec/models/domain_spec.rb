@@ -11,6 +11,7 @@ module VCAP::CloudController
       :db_required_attributes       => [:name],
       :unique_attributes            => :name,
       :stripped_string_attributes   => :name,
+      :ci_attributes                => :name,
       :many_to_zero_or_one => {
         :owning_organization => {
           :delete_ok => true,
@@ -310,13 +311,6 @@ module VCAP::CloudController
         it "should not allow a domain with a 6 char top level domain" do
           domain.name = "b.c.abcefg"
           domain.should_not be_valid
-        end
-
-        it "should perform case insensitive uniqueness" do
-          d = Models::Domain.new(
-            :owning_organization => domain.owning_organization,
-            :name => domain.name.upcase)
-            d.should_not be_valid
         end
 
         it "should not remove the wildcard flag if routes are using it" do

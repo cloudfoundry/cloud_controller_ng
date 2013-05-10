@@ -2,11 +2,12 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServicePlan do
+
     include_examples "uaa authenticated api", path: "/v2/service_plans"
     include_examples "enumerating objects", path: "/v2/service_plans", model: Models::ServicePlan
     include_examples "reading a valid object", path: "/v2/service_plans", model: Models::ServicePlan, basic_attributes: %w(name free description service_guid extra unique_id)
     include_examples "operations on an invalid object", path: "/v2/service_plans"
-    include_examples "creating and updating", path: "/v2/service_plans", model: Models::ServicePlan, required_attributes: %w(name free description service_guid), unique_attributes: %w(name service_guid), extra_attributes: %w(extra)
+    include_examples "creating and updating", path: "/v2/service_plans", model: Models::ServicePlan, required_attributes: %w(name free description service_guid), unique_attributes: %w(name service_guid), ci_attributes: %w(name), extra_attributes: %w(extra)
     include_examples "deleting a valid object", path: "/v2/service_plans", model: Models::ServicePlan,
       one_to_many_collection_ids: {:service_instances => lambda { |service_plan| Models::ServiceInstance.make(:service_plan => service_plan) }
       },

@@ -15,11 +15,13 @@ module VCAP::CloudController::Models
     import_attributes :name, :description
 
     strip_attributes  :name
+    
+    ci_attributes  :name
 
     def validate
       validates_presence :name
       validates_presence :description
-      validates_unique   :name
+      validates_unique_ci   :name
     end
 
     def self.configure(file_path)
