@@ -20,10 +20,12 @@ env:
       # Oracle DB URL
     - DB=oracle
 
+before_install:
+  - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
+
 before_script:
   - sh -c "if [ '$DB' = 'postgres' ]; then psql  -c 'create database ccng;' -U postgres; fi"
   - sh -c "if [ '$DB' = 'mysql' ];    then mysql -e 'create database ccng;'; fi"
-  - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
 
 script: bundle exec rake spec
 
