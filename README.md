@@ -118,3 +118,5 @@ However, if querying for `empty` Oracle will not match `null`.
 - Oracle doesn't provide an auto increment PK type.  To compensate for this Sequel will automatically
 create a sequence and a trigger to update the PK with the latest sequence value.  This works great.
 However, when renaming a table you will need to rename the sequence and re-make the trigger for that table.
+- Count query limitation.  For some reason Oracle-Sequel doesn't support filter parameters in count().  So, queries
+like `Models::Organization.count(:id => org.id)` need to change to `Models::Organization.filter(:id => org.id).count`

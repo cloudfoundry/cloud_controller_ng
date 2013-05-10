@@ -31,7 +31,7 @@ module VCAP::CloudController
         expect {
           quota_definition.destroy
         }.to change {
-          Models::Organization.count(:id => org.id)
+          Models::Organization.filter(:id => org.id).count
         }.by(-1)
       end
     end
