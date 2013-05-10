@@ -4,14 +4,25 @@ rvm:
   - 1.9.3
 
 env:
-  - DB=sqlite
-    # http://about.travis-ci.org/docs/user/database-setup/#MySQL
-  - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306/ccng"
-    # http://about.travis-ci.org/docs/user/database-setup/#PostgreSQL
-  - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432/ccng"
+  global:
+    # ORACLE_INSTANT_CLIENT_URL
+    - secure: "FRGSEphLd3OI7jq/lAjckx54apn6bdVBRwH1trALI6nRsAb8XTS9t3MdEFqu\nsHvy2DlO6bxGcUpLAAvWLwqXt4uEoPwCYfELxhWdhtU2H5Kz6oQd/VGRQY+d\nJUBdWoI+cWEZG7MF/ThIa7Y0tsNas4RDyohbqDIBLiOO4Okjp7M="
+    # ORACLE_INSTANT_CLIENT_ZIP
+    - secure: "f++eGeMZVZd5Z1hXvwb7iIkoQqjxcryBI/PFVFTUyHRUgxp5FLcAHHPB4BFa\n8Fp/GQGG66J7s0UpE1WWQ7eRGoWgg7P8jLcuxMqbhlZ005fJZ8cAOOYMBUyF\n0Xqhg8JdahAxLA+1HmJn2Lg1CmM0ST8Jcsl3A8Ky2cA9T5N4zr0="
+    # Oracle DB URL
+    - secure: "QfoHfCgXvXU/2l/UFj8TyBp08tiJ+etht7SQXOoektzCF/ThLg3EhfAUHKAt\nZz0kAHoiyMqsGAd00ylyk1XYq2YLN+ihvh2Tk7MPN4QvzqHIik2XOPfAEZuL\n9HodxKKYbAubWuRAuY0eNYeH6Ks03VSfO1Iu9wIgD5QHDmpFGhk="
+  matrix:
+    - DB=sqlite
+      # http://about.travis-ci.org/docs/user/database-setup/#MySQL
+    - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306/ccng"
+      # http://about.travis-ci.org/docs/user/database-setup/#PostgreSQL
+    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432/ccng"
+      # Oracle DB URL
+    - DB=oracle
 
 before_script:
   - sh -c "if [ '$DB' = 'postgres' ]; then psql  -c 'create database ccng;' -U postgres; fi"
   - sh -c "if [ '$DB' = 'mysql' ];    then mysql -e 'create database ccng;'; fi"
+  - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
 
 script: bundle exec rake spec
