@@ -29,7 +29,7 @@ describe "Sequel::Plugins::VcapRelations" do
       foreign_key :name_id, :names, :null => false
 
       # needed to expose the many_to_many add flaw in native Sequel
-      index [:dog_id, :name_id], :unique => true
+      index [:dog_id, :name_id], :unique => true, :name => :dn_dog_id_name_id_index
     end
 
     db.create_table :tops do
