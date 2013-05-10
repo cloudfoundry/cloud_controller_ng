@@ -1,9 +1,5 @@
 #!/bin/sh
 
-ORACLE_BASE=/opt/oracle
-export ORACLE_HOME=$ORACLE_BASE/instantclient_11_2
-export LD_LIBRARY_PATH=${ORACLE_HOME}:${LD_LIBRARY_PATH}
-
 echo "*** install oracle ***"
 sudo mkdir -p $ORACLE_HOME
 cd $ORACLE_BASE

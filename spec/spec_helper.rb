@@ -78,7 +78,7 @@ module VCAP::CloudController
       db_connection = "sqlite:///"
       db_index = ""
 
-      if ENV["DB_CONNECTION"]
+      if ENV['DB'] != 'sqlite' && ENV["DB_CONNECTION"]
         db_connection = ENV["DB_CONNECTION"]
         db_index = ENV["TEST_ENV_NUMBER"]
       end
