@@ -26,3 +26,8 @@ before_script:
   - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
 
 script: bundle exec rake spec
+
+branches:
+  only:
+    - master
+    - youngm-OracleSupportSingleCommit
