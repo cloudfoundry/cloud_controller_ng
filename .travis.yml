@@ -5,10 +5,12 @@ rvm:
 
 env:
   global:
-    # ORACLE_INSTANT_CLIENT_URL
-    - secure: "FRGSEphLd3OI7jq/lAjckx54apn6bdVBRwH1trALI6nRsAb8XTS9t3MdEFqu\nsHvy2DlO6bxGcUpLAAvWLwqXt4uEoPwCYfELxhWdhtU2H5Kz6oQd/VGRQY+d\nJUBdWoI+cWEZG7MF/ThIa7Y0tsNas4RDyohbqDIBLiOO4Okjp7M="
-    # ORACLE_INSTANT_CLIENT_ZIP
-    - secure: "f++eGeMZVZd5Z1hXvwb7iIkoQqjxcryBI/PFVFTUyHRUgxp5FLcAHHPB4BFa\n8Fp/GQGG66J7s0UpE1WWQ7eRGoWgg7P8jLcuxMqbhlZ005fJZ8cAOOYMBUyF\n0Xqhg8JdahAxLA+1HmJn2Lg1CmM0ST8Jcsl3A8Ky2cA9T5N4zr0="
+    # CLIENT_BASIC
+    - secure: "qUgIq/nxPuqWLPu4szGAq6qX9X32nu0OVeDHeBxihtgYJTy4EkY7F/CWFVbk\njOB9QA5kM48cj1K2QTNLskqaI6zDIfkFQNHN8rqQRcaZsF4TuoeaH1q9b6LD\nSmQ6zJ6WVbI/5OODyQWKTrZrKEIqXrf7CETjIUsaHCeCX4LEaxQ="
+    # CLIENT_SDK
+    - secure: "e5ipMUQt3JU3irnu3aCWUUi9v+F/GBRsyO8H05h4kNBmAgOt6kWJ9qnqV3xs\n/ElTiO2QO4a2PAyBeYdvnxgMFW4JmuKQ+PnFFqFerL6yK79UIcgKTkyZB1EJ\n8eY2j2dlfCI6dbG5Y+nW/aERk04Y51C5/1tveX0QEDv8dSfOLFk="
+    # CLIENT_SQLPLUS
+    - secure: "Rz6G1Iwf4wkiUM9C/v2dzza9ZO5iyrIC9971VAF5vQxGHvm4YdDZali/vvsH\nsoYfMmZPabQIjPBVKKVMPDgQAjCcLaBn96hDYHeT5Ueh93cbcS/Xr8Bd/cBu\n1ZohrzIjth6/a0EX9urv8UeB6oIrqD3SaXRoGAOb8eiSoviPXHI="
     # Oracle DB URL
     - secure: "QfoHfCgXvXU/2l/UFj8TyBp08tiJ+etht7SQXOoektzCF/ThLg3EhfAUHKAt\nZz0kAHoiyMqsGAd00ylyk1XYq2YLN+ihvh2Tk7MPN4QvzqHIik2XOPfAEZuL\n9HodxKKYbAubWuRAuY0eNYeH6Ks03VSfO1Iu9wIgD5QHDmpFGhk="
   matrix:
@@ -26,6 +28,7 @@ before_install:
 before_script:
   - sh -c "if [ '$DB' = 'postgres' ]; then psql  -c 'create database ccng;' -U postgres; fi"
   - sh -c "if [ '$DB' = 'mysql' ];    then mysql -e 'create database ccng;'; fi"
+  - sh -c "if [ '$DB' = 'oracle' ];   then echo $LD_LIBRARY_PATH; ls -la $ORACLE_HOME; fi"
 
 script: bundle exec rake spec
 
