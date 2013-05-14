@@ -316,7 +316,7 @@ module VCAP::CloudController
       begin
         File.rename(upload_path, final_path)
       rescue => e
-        raise StagingError.new("failed renaming #{tag} droplet: #{e}")
+        raise StagingError.new("failed renaming #{tag} droplet from #{upload_path} to #{final_path}: #{e.inspect}\n#{e.backtrace.join("\n")}")
       end
 
       if type == :buildpack_cache
