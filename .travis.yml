@@ -12,7 +12,7 @@ env:
     # CLIENT_SQLPLUS
     - secure: "Rz6G1Iwf4wkiUM9C/v2dzza9ZO5iyrIC9971VAF5vQxGHvm4YdDZali/vvsH\nsoYfMmZPabQIjPBVKKVMPDgQAjCcLaBn96hDYHeT5Ueh93cbcS/Xr8Bd/cBu\n1ZohrzIjth6/a0EX9urv8UeB6oIrqD3SaXRoGAOb8eiSoviPXHI="
     # Oracle DB URL
-    - secure: "QfoHfCgXvXU/2l/UFj8TyBp08tiJ+etht7SQXOoektzCF/ThLg3EhfAUHKAt\nZz0kAHoiyMqsGAd00ylyk1XYq2YLN+ihvh2Tk7MPN4QvzqHIik2XOPfAEZuL\n9HodxKKYbAubWuRAuY0eNYeH6Ks03VSfO1Iu9wIgD5QHDmpFGhk="
+    - secure: "gzR/UWk2SssaEKFBukzxti21/m6wHURM+OnTsdR7UsWXmaz/SyAfb9CUoJqa\naSTi8kHxb34ulTjgrrwNCt0HVI+o/8EcCae/QoqGWRtmHgKJ0kswkIagh5PK\nXP0Rq2pF8dHH5CreF3Z7CaoaGknrcpufKd3iC6Nar6+nsB6HhSs="
   matrix:
     - DB=sqlite
       # http://about.travis-ci.org/docs/user/database-setup/#MySQL
