@@ -145,11 +145,6 @@ module VCAP::CloudController
           process_hm_request
         end
 
-        it "updates the app model to have fewer instances" do
-          dea_client.stub(:stop_instances)
-          expect { process_hm_request }.to change { app.reload.instances }.by(-1)
-        end
-
         context "when the timestamps mismatch" do
           let(:last_updated) { Time.now - 86400 }
           let(:instances) { [1] }
@@ -197,10 +192,6 @@ module VCAP::CloudController
           it "logs an error since HM should have sent the spindown command" do
             respondent.logger.should_receive(:error).with(error_regex)
             process_hm_request
-          end
-
-          it "marks the app as stopped" do
-            expect { process_hm_request }.to change { app.reload.state }.from("STARTED").to("STOPPED")
           end
 
           it "sends a stop request to the dea" do
@@ -258,19 +249,6 @@ module VCAP::CloudController
             respond_with(:guid => app.guid),
           )
           process_hm_request
-        end
-
-        it "should update the state of an app to stopped" do
-          app.update(
-            :state => "STARTED",
-            :package_hash => "abc",
-            :package_state => "STAGED",
-          )
-
-          dea_client.should_receive(:stop)
-          process_hm_request
-
-          app.reload.should be_stopped
         end
       end
     end
