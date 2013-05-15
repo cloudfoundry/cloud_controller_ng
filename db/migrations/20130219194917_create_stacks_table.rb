@@ -9,7 +9,7 @@ Sequel.migration do
       String :name, :null => false, :case_insenstive => true
       String :description, :null => false
 
-      index :name, :unique => true
+      index :name, :unique => true, :case_insensitive => true
     end
 
     # Create single stack to be able to
