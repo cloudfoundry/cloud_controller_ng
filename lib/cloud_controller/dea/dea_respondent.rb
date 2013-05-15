@@ -26,14 +26,15 @@ module VCAP::CloudController
       app_guid = decoded_message[:droplet]
       app = Models::App[:guid => app_guid]
       if app && crashed_app?(decoded_message)
-        Models::AppEvent.create(
-          :app_id => app.id,
-          :instance_guid => decoded_message[:instance],
-          :instance_index => decoded_message[:index],
-          :exit_status => decoded_message[:exit_status],
-          :exit_description => decoded_message[:exit_description],
-          :timestamp => Time.now,
-        )
+        Models::AppEvent.find_or_create(
+            :app_id => app.id,
+            :instance_guid => decoded_message[:instance],
+            :instance_index => decoded_message[:index],
+            :exit_status => decoded_message[:exit_status],
+            :exit_description => decoded_message[:exit_description]
+          ) do |event|
+          event.timestamp = Time.now
+        end
       end
     end
   end

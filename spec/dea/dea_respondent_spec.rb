@@ -102,6 +102,18 @@ module VCAP::CloudController
           respondent.process_droplet_exited_message(payload)
         end
       end
+
+      context "when the app event has already been registered (by another CC)" do
+        it "does not duplicate the same event" do
+          expect {
+            respondent.process_droplet_exited_message(payload)
+          }.to change { Models::AppEvent.count }.by(1)
+
+          expect {
+            respondent.process_droplet_exited_message(payload)
+          }.to_not change { Models::AppEvent.count }
+        end
+      end
     end
   end
 end
