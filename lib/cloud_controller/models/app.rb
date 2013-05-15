@@ -55,6 +55,8 @@ module VCAP::CloudController
       # Last staging response which might contain streaming log url
       attr_accessor :last_stager_response
 
+      alias :kill_after_multiple_restarts? :kill_after_multiple_restarts
+
       def validate
         validates_presence :name
         validates_presence :space
