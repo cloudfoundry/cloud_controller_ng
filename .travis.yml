@@ -5,6 +5,16 @@ rvm:
 
 env:
   global:
+    # The secure URLs below are generated using the following command:
+    #
+    # $> gem install travis
+    # $> travis -v
+    # 1.2.0
+    # $> travis encrypt DB_CONNECTION="<DB_TYPE>://<USERNAME>:<PASSWORD>@<DB_HOSTNAME>:<DB_PORT>/<DB_NAME>"
+    #
+    # Example:
+    # $> travis encrypt DB_CONNECTION="oracle://travis:password@ccdb.gjkasebg.us-east-1.rds.amazonaws.com:1521/some_db"
+    #
     # CLIENT_BASIC
     - secure: "qUgIq/nxPuqWLPu4szGAq6qX9X32nu0OVeDHeBxihtgYJTy4EkY7F/CWFVbk\njOB9QA5kM48cj1K2QTNLskqaI6zDIfkFQNHN8rqQRcaZsF4TuoeaH1q9b6LD\nSmQ6zJ6WVbI/5OODyQWKTrZrKEIqXrf7CETjIUsaHCeCX4LEaxQ="
     # CLIENT_SDK
@@ -12,7 +22,7 @@ env:
     # CLIENT_SQLPLUS
     - secure: "Rz6G1Iwf4wkiUM9C/v2dzza9ZO5iyrIC9971VAF5vQxGHvm4YdDZali/vvsH\nsoYfMmZPabQIjPBVKKVMPDgQAjCcLaBn96hDYHeT5Ueh93cbcS/Xr8Bd/cBu\n1ZohrzIjth6/a0EX9urv8UeB6oIrqD3SaXRoGAOb8eiSoviPXHI="
     # Oracle DB URL
-    - secure: "gzR/UWk2SssaEKFBukzxti21/m6wHURM+OnTsdR7UsWXmaz/SyAfb9CUoJqa\naSTi8kHxb34ulTjgrrwNCt0HVI+o/8EcCae/QoqGWRtmHgKJ0kswkIagh5PK\nXP0Rq2pF8dHH5CreF3Z7CaoaGknrcpufKd3iC6Nar6+nsB6HhSs="
+    - secure: "ceBD/N7pOMq6xIG9/ie/Z9TQyhhDoTaQAu+RL87ekMviPPkYLssXdkIuLXV1\nASN4A8TvHy+cdUV/N9Ji0/DmUe0tFFqCMWdJT3e2SikFed3GrBSpimcAR8Y0\nHk3nnU0V151sh/CdlGH7JjUlklSPWa8tCvT+oK7NU/UhcQHEAmg="
   matrix:
     - DB=sqlite
       # http://about.travis-ci.org/docs/user/database-setup/#MySQL
