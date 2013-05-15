@@ -224,7 +224,7 @@ module VCAP::CloudController
           it "logs StagingError instead of raising to avoid stopping main runloop" do
             logger = mock(:logger, :info => nil)
             logger.should_receive(:error) do |msg|
-              msg.should match /failed to stage/
+              msg.should match(/failed to stage/)
             end
 
             Steno.stub(:logger => logger)
@@ -554,10 +554,10 @@ module VCAP::CloudController
         request.tap do |r|
           r[:app_id].should == app.guid
           r[:task_id].should eq(staging_task.task_id)
-          r[:download_uri].should match /^http/
-          r[:upload_uri].should match /^http/
-          r[:buildpack_cache_upload_uri].should match /^http/
-          r[:buildpack_cache_download_uri].should match /^http/
+          r[:download_uri].should match(/^http/)
+          r[:upload_uri].should match(/^http/)
+          r[:buildpack_cache_upload_uri].should match(/^http/)
+          r[:buildpack_cache_download_uri].should match(/^http/)
         end
       end
 
