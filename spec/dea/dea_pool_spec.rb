@@ -29,15 +29,14 @@ module VCAP::CloudController
     end
 
     describe "#find_dea" do
+      let(:dea_advertise_msg) do
+        {
+          :id => "dea-id",
+          :stacks => ["stack"],
+          :available_memory => 1024
+        }
+      end
       describe "dea availability" do
-        let(:dea_advertise_msg) do
-          {
-            :id => "dea-id",
-            :stacks => ["stack"],
-            :available_memory => 1024
-          }
-        end
-
         it "only finds registered deas" do
           expect {
             subject.process_advertise_message(dea_advertise_msg)
@@ -46,14 +45,6 @@ module VCAP::CloudController
       end
 
       describe "dea advertisement expiration (10sec)" do
-        let(:dea_advertise_msg) do
-          {
-            :id => "dea-id",
-            :stacks => ["stack"],
-            :available_memory => 1024
-          }
-        end
-
         it "only finds deas with that have not expired" do
           Timecop.freeze do
             subject.process_advertise_message(dea_advertise_msg)
@@ -68,14 +59,6 @@ module VCAP::CloudController
       end
 
       describe "memory capacity" do
-        let(:dea_advertise_msg) do
-          {
-            :id => "dea-id",
-            :stacks => ["stack"],
-            :available_memory => 1024
-          }
-        end
-
         it "only finds deas that can satisfy memory request" do
           subject.process_advertise_message(dea_advertise_msg)
           subject.find_dea(1025, "stack").should be_nil
@@ -84,18 +67,10 @@ module VCAP::CloudController
       end
 
       describe "stacks availability" do
-        let(:dea_advertise_msg) do
-          {
-            :id => "dea-id",
-            :available_memory => 1024,
-            :stacks => ["known-stack"]
-          }
-        end
-
         it "only finds deas that can satisfy stack request" do
           subject.process_advertise_message(dea_advertise_msg)
           subject.find_dea(0, "unknown-stack").should be_nil
-          subject.find_dea(0, "known-stack").should == "dea-id"
+          subject.find_dea(0, "stack").should == "dea-id"
         end
       end
     end
