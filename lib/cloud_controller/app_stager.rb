@@ -213,6 +213,8 @@ module VCAP::CloudController
       @app.refresh
 
       @app.staging_task_id == task_id
+    rescue Exception
+      false
     end
 
     def staging_completion(stager_response)
