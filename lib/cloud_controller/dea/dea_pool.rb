@@ -11,7 +11,7 @@ module VCAP::CloudController
     def initialize(config, message_bus)
       @config = config
       @message_bus = message_bus
-      @deas = {}
+      @dea_advertisements = []
     end
 
     def register_subscriptions
@@ -20,45 +20,66 @@ module VCAP::CloudController
       end
     end
 
-    def process_advertise_message(msg)
+    def process_advertise_message(message)
       mutex.synchronize do
-        @deas[msg[:id]] = {
-          :advertisement => msg,
-          :last_update => Time.now,
-        }
+        advertisement = DeaAdvertisement.new(message, Time.now)
+
+        # remove older advertisements for the same dea_id
+        @dea_advertisements.delete_if { |ad| ad.dea_id == advertisement.dea_id }
+        @dea_advertisements << advertisement
       end
     end
 
-    def find_dea(mem, stack)
+    def find_dea(mem, stack, app_id)
       mutex.synchronize do
         prune_stale_deas
-        @deas.keys.shuffle.each do |id|
-          return id if dea_meets_needs?(@deas[id], mem, stack)
-        end
-        nil
+        eligible_ads = @dea_advertisements.select { |ad| dea_meets_needs?(ad, mem, stack) }
+        best_dea_ad = eligible_ads.min_by { |ad| ad.num_instances_of(app_id) }
+        best_dea_ad && best_dea_ad.dea_id
       end
     end
 
     private
 
     def prune_stale_deas
-      @deas.delete_if { |_, dea| dea_expired?(dea) }
+      @dea_advertisements.delete_if { |ad| advertisement_expired?(ad) }
     end
 
-    def dea_expired?(dea)
-      (Time.now.to_i - dea[:last_update].to_i) > ADVERTISEMENT_EXPIRATION
+    def advertisement_expired?(ad)
+      (Time.now.to_i - ad.last_update.to_i) > ADVERTISEMENT_EXPIRATION
     end
 
-    def dea_meets_needs?(dea, mem, stack)
-      stats = dea[:advertisement]
-
-      has_stack = stats[:stacks].include?(stack)
-
-      (stats[:available_memory] >= mem) && has_stack
+    def dea_meets_needs?(advertisement, mem, stack)
+      advertisement.has_sufficient_memory?(mem) && advertisement.has_stack?(stack)
     end
 
     def mutex
       @mutex ||= Mutex.new
+    end
+
+    class DeaAdvertisement
+      attr_reader :stats, :last_update
+
+      def initialize(stats, last_update)
+        @stats = stats
+        @last_update = last_update
+      end
+
+      def num_instances_of(app_id)
+        stats[:app_id_to_count].fetch(app_id, 0)
+      end
+
+      def dea_id
+        stats[:id]
+      end
+
+      def has_stack?(stack)
+        stats[:stacks].include?(stack)
+      end
+
+      def has_sufficient_memory?(mem)
+        stats[:available_memory] >= mem
+      end
     end
   end
 end
