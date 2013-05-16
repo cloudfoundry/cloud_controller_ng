@@ -12,7 +12,8 @@ module VCAP::CloudController
       :unique_attributes    => [:label, :provider],
       :sensitive_attributes => :token,
       :extra_json_attributes => :token,
-      :stripped_string_attributes => [:label, :provider]
+      :stripped_string_attributes => [:label, :provider],
+      :ci_attributes              => [:label, :provider]
     }
   end
 end

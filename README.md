@@ -19,7 +19,7 @@ tables for orgs, spaces, apps, services, service instances, user roles, and more
 
 ### Database (CC_DB)
 
-The Cloud Controller database has been tested with Postgres.
+The Cloud Controller database has been tested with Postgres, Mysql, and Oracle.
 
 ### Blob Store
 
@@ -53,10 +53,11 @@ platform using the NATS message bus. For example, it performs the following usin
 
 By default `rspec` will run test suite with sqlite3 in-memory database;
 however, you can specify connection string via `DB_CONNECTION` environment
-variable to test against postgres and mysql. Examples:
+variable to test against postgres, mysql, and oracle. Examples:
 
     DB_CONNECTION="postgres://postgres@localhost:5432/ccng" rspec
     DB_CONNECTION="mysql2://root:password@localhost:3306/ccng" rspec
+    DB_CONNECTION="oracle://root:password@localhost:1521/xe" rspec
 
 Travis currently runs 3 build jobs against sqlite, postgres, and mysql.
 
@@ -96,3 +97,26 @@ this endpoint is used by the health manager to retrieve the expected state of ev
 application.
 * `uaa` - URL and credentials for connecting to the [UAA](github.com/cloudfoundry/uaa),
 Cloud Foundry's OAuth 2.0 server.
+
+## Development Notes
+
+### Oracle Considerations
+
+Several key differences exist in Oracle compared to other databases that need to be taken into
+account when developing a feature:
+
+- Oracle has a 30 character identifier limit.  This effects column names, index names,
+foreign key names, etc.  Make sure to keep all identifiers short.
+- In Oracle `timestamp` is a reserved word.  Choose a different name for timestamp
+columns then alias it using `def_column_alias` if needed.   
+- Oracle has no boolean.  Instead Sequel will use a single char (Y,N) for boolean.  Because
+of this `char(1)` has been hijacked by Oracle for all databases.
+- Oracle has no `case insensitive` column support.  Use the framework provided to simplify
+adding support for queries and indexes that use the `lower()` function.
+- Oracle doesn't support 'empty'.  When you attempt to insert `empty` it gets converted to `null`.
+However, if querying for `empty` Oracle will not match `null`.
+- Oracle doesn't provide an auto increment PK type.  To compensate for this Sequel will automatically
+create a sequence and a trigger to update the PK with the latest sequence value.  This works great.
+However, when renaming a table you will need to rename the sequence and re-make the trigger for that table.
+- Count query limitation.  For some reason Oracle-Sequel doesn't support filter parameters in count().  So, queries
+like `Models::Organization.count(:id => org.id)` need to change to `Models::Organization.filter(:id => org.id).count`
