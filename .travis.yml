@@ -49,4 +49,3 @@ script: bundle exec rake spec
 branches:
   only:
     - master
-    - youngm-OracleSupportSingleCommit
