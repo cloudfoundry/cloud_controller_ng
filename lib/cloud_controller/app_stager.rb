@@ -143,6 +143,7 @@ module VCAP::CloudController
         process_sync_response(stager_response, promise)
       end
     rescue => e
+      logger.warn("exception handling first response #{e.inspect}, backtrace: #{e.backtrace.join("\n")}")
       destroy_upload_handle if staging_is_current?
       promise.fail(e)
     end
