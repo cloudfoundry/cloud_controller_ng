@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     describe "all" do
       it "should return an array of all events" do
-        Models::BillingEvent.all.should == [
+        Models::BillingEvent.all.should =~ [
           @org_event,
           @app_start_event,
           @app_stop_event,
@@ -25,7 +25,7 @@ module VCAP::CloudController
       end
 
       it "should return events with the correct event_type strings" do
-        Models::BillingEvent.map(&:event_type).should == [
+        Models::BillingEvent.order(:id).map(&:event_type).should == [
           "organization_billing_start",
           "app_start",
           "app_stop",
