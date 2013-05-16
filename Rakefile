@@ -35,6 +35,14 @@ end
 
 desc "Run specs"
 RSpec::Core::RakeTask.new do |t|
+  # Tests against Oracle take a really long time to run, so we run only
+  # a random 25% of all tests.
+  if ENV['ORACLE_HOME']
+    files = Dir.glob("./spec/**/*_spec.rb")
+    raise 'No tests to run' if files.empty?
+    t.pattern =  files.sample(files.length * 0.25)
+  end
+
   # Keep --backtrace for CI backtraces to be useful
   t.rspec_opts = %w(
     --backtrace
@@ -42,7 +50,6 @@ RSpec::Core::RakeTask.new do |t|
     --colour
   )
 end
-
 
 desc "Run specs with code coverage"
 task :coverage do
