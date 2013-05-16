@@ -14,7 +14,7 @@ module IntegrationSetup
   end
 
   def start_cc(opts={}, wait_cycles = 20)
-    run_cmd("bundle exec rake db:migrate")
+    run_cmd("bundle exec rake db:migrate", :wait => true)
     @cc_pid = run_cmd("bin/cloud_controller -m config/cloud_controller.yml", opts)
 
     wait_cycles.times do
