@@ -12,7 +12,6 @@ module VCAP::CloudController
       :required_attributes => [:name, :organization],
       :unique_attributes   => [:organization, :name],
       :stripped_string_attributes => :name,
-      :ci_attributes        => :name,
       :many_to_one => {
         :organization      => {
           :delete_ok => true,

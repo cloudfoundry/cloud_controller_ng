@@ -4,7 +4,7 @@ module VCAP::CloudController::ApiSpecHelper
   shared_examples "querying objects" do |opts|
     describe "querying objects" do
       before(:all) { 5.times { opts[:model].make } }
-        
+
       opts[:queryable_attributes].each do |attr|
         describe "#{opts[:path]}?q=#{attr}:<val>" do
           before(:all) do
@@ -23,13 +23,6 @@ module VCAP::CloudController::ApiSpecHelper
 
             it "should return total_results => 1" do
               decoded_response["total_results"].should == 1
-            end
-
-            if opts[:ci_attributes].include?(attr)
-              it "should return the same result in a different case" do
-                get "#{opts[:path]}?q=#{attr}:#{@val.swapcase}", {}, json_headers(admin_headers)
-                decoded_response["total_results"].should == 1
-              end
             end
           end
 

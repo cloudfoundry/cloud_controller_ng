@@ -24,7 +24,7 @@ module VCAP::CloudController::ModelSpecHelper
               described_class.new do |instance|
                 instance.set_all(filtered_opts)
               end.save(:validate => false)
-            }.to raise_error Sequel::DatabaseError, /#{without_attr}/i
+            }.to raise_error Sequel::DatabaseError, /#{without_attr}/
           end
         end
       end

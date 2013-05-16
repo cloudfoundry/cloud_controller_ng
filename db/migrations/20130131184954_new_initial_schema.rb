@@ -30,9 +30,8 @@ Sequel.migration do
     # We don't use foreign keys here because the objects may get deleted after
     # the billing records are generated, and that should be allowed.
     create_table :billing_events do
-      VCAP::Migration.common(self, :be)
-      #'timestamp' is a reserved work in Oracle
-      DateTime :event_timestamp, :null => false
+      VCAP::Migration.common(self)
+      DateTime :timestamp, :null => false
       String :kind, :null => false
       String :organization_guid, :null => false
       String :organization_name, :null => false
@@ -53,28 +52,28 @@ Sequel.migration do
       String :service_plan_guid
       String :service_plan_name
 
-      index :event_timestamp, :name => :be_event_timestamp_index
+      index :timestamp
     end
 
     create_table :quota_definitions do
-      VCAP::Migration.common(self, :qd)
+      VCAP::Migration.common(self)
 
-      String :name, :null => false, :case_insensitive => true
-      TrueClass :non_basic_services_allowed, :null => false
+      String :name, :null => false, :unique => true, :case_insensitive => true
+      Boolean :non_basic_services_allowed, :null => false
       Integer :total_services, :null => false
       Integer :memory_limit, :null => false
 
-      index :name, :unique => true, :case_insensitive => true, :name => :qd_name_index
+      index :name, :unique => true
     end
 
     create_table :service_auth_tokens do
-      VCAP::Migration.common(self, :sat)
+      VCAP::Migration.common(self)
 
       String :label,         :null => false, :case_insensitive => true
       String :provider,      :null => false, :case_insensitive => true
       String :token,         :null => false
 
-      index [:label, :provider], :unique => true, :case_insensitive => true, :name => :sat_label_provider_index
+      index [:label, :provider], :unique => true
     end
 
     create_table :services do
@@ -89,10 +88,10 @@ Sequel.migration do
       String  :info_url
       String  :acls
       Integer :timeout
-      TrueClass :active, :default => false
+      Boolean :active, :default => false
 
-      index :label, :case_insensitive => true
-      index [:label, :provider], :case_insensitive => true, :unique => true, :name => :services_label_provider_index
+      index :label
+      index [:label, :provider], :unique => true
     end
 
     create_table :organizations do
@@ -100,9 +99,9 @@ Sequel.migration do
       String :name, :null => false, :case_insensitive => true
       TrueClass :billing_enabled, :null => false, :default => false
       Integer :quota_definition_id, :null => false
-      foreign_key [:quota_definition_id], :quota_definitions, :name => :fk_org_quota_definition_id
+      foreign_key [:quota_definition_id], :quota_definitions, :name => :fk_organizations_quota_definition_id
 
-      index :name, :unique => true, :case_insensitive => true, :name => :organizations_name_index
+      index :name, :unique => true
     end
 
     create_table :frameworks do
@@ -112,7 +111,7 @@ Sequel.migration do
       String :description, :null => false
       String :internal_info, :null => false, :size => 2048
 
-      index :name, :unique => true, :case_insensitive => true
+      index :name, :unique => true
     end
 
     create_table :runtimes do
@@ -122,7 +121,7 @@ Sequel.migration do
       String :description, :null => false
       String :internal_info, :null => false, :size => 2048
 
-      index :name, :unique => true, :case_insensitive => true
+      index :name, :unique => true
     end
 
     create_table :service_plans do
@@ -134,7 +133,7 @@ Sequel.migration do
       Integer :service_id, :null => false
       foreign_key [:service_id], :services, :name => :fk_service_plans_service_id
 
-      index [:service_id, :name], :unique => true, :case_insensitive => [:name], :name => :svc_plan_svc_id_name_index
+      index [:service_id, :name], :unique => true
     end
 
     create_table :domains do
@@ -143,9 +142,9 @@ Sequel.migration do
       String :name, :null => false, :case_insensitive => true
       TrueClass :wildcard, :default => true, :null => false
       Integer :owning_organization_id
-      foreign_key [:owning_organization_id], :organizations, :name => :fk_domains_owning_org_id
+      foreign_key [:owning_organization_id], :organizations, :name => :fk_domains_owning_organization_id
 
-      index :name, :unique => true, :case_insensitive => true
+      index :name, :unique => true
     end
 
     create_table :spaces do
@@ -155,7 +154,7 @@ Sequel.migration do
       Integer :organization_id, :null => false
       foreign_key [:organization_id], :organizations, :name => :fk_spaces_organization_id
 
-      index [:organization_id, :name], :unique => true, :case_insensitive => [:name], :name => :spaces_org_id_name_index
+      index [:organization_id, :name], :unique => true
     end
 
     create_table :apps do
@@ -165,7 +164,7 @@ Sequel.migration do
 
       # Do the bare miminum for now.  We'll migrate this to something
       # fancier later if we need it.
-      TrueClass :production, :default => false
+      Boolean :production, :default => false
 
       # environment provided by the developer.
       # does not include environment from service
@@ -206,18 +205,18 @@ Sequel.migration do
       foreign_key [:runtime_id],   :runtimes,   :name => :fk_apps_runtime_id
       foreign_key [:framework_id], :frameworks, :name => :fk_apps_framework_id
 
-      index :name, :case_insensitive => true
-      index [:space_id, :name], :unique => true, :case_insensitive => [:name], :name => :apps_space_id_name_index
+      index :name
+      index [:space_id, :name], :unique => true
     end
 
     create_table :domains_organizations do
       Integer :domain_id, :null => false
-      foreign_key [:domain_id], :domains, :name => :fk_domains_orgs_domain_id
+      foreign_key [:domain_id], :domains, :name => :fk_domains_organizations_domain_id
 
       Integer :organization_id, :null => false
-      foreign_key [:organization_id], :organizations, :name => :fk_domains_orgs_org_id
+      foreign_key [:organization_id], :organizations, :name => :fk_domains_organizations_organization_id
 
-      index [:domain_id, :organization_id], :unique => true, :name => :do_domain_id_org_id_index
+      index [:domain_id, :organization_id], :unique => true
     end
 
     create_table :domains_spaces do
@@ -227,7 +226,7 @@ Sequel.migration do
       Integer :domain_id, :null => false
       foreign_key [:domain_id], :domains, :name => :fk_domains_spaces_domain_id
 
-      index [:space_id, :domain_id], :unique => true, :name => :ds_space_id_domain_id_index
+      index [:space_id, :domain_id], :unique => true
     end
 
     create_table :routes do
@@ -241,11 +240,11 @@ Sequel.migration do
       Integer :space_id, :null => false
       foreign_key [:space_id], :spaces, :name => :fk_routes_space_id
 
-      index [:host, :domain_id], :unique => true, :case_insensitive => [:host], :name => :routes_host_domain_id_index
+      index [:host, :domain_id], :unique => true
     end
 
     create_table :service_instances do
-      VCAP::Migration.common(self, :si)
+      VCAP::Migration.common(self)
 
       String :name, :null => false, :case_insensitive => true
       String :credentials, :null => false, :size => 2048
@@ -256,10 +255,10 @@ Sequel.migration do
       foreign_key [:space_id], :spaces, :name => :service_instances_space_id
 
       Integer :service_plan_id, :null => false
-      foreign_key [:service_plan_id], :service_plans, :name => :svc_instances_service_plan_id
+      foreign_key [:service_plan_id], :service_plans, :name => :service_instances_service_plan_id
 
-      index :name, :case_insensitive => true, :name => :service_instances_name_index
-      index [:space_id, :name], :unique => true, :case_insensitive => [:name], :name => :si_space_id_name_index
+      index :name
+      index [:space_id, :name], :unique => true #, :name => :space_id_name_index
     end
 
     create_table :users do
@@ -268,8 +267,8 @@ Sequel.migration do
       Integer :default_space_id
       foreign_key [:default_space_id], :spaces, :name => :fk_users_default_space_id
 
-      TrueClass :admin,  :default => false
-      TrueClass :active, :default => false
+      Boolean :admin,  :default => false
+      Boolean :active, :default => false
     end
 
     create_table :apps_routes do
@@ -279,16 +278,16 @@ Sequel.migration do
       Integer :route_id, :null => false
       foreign_key [:route_id], :routes, :name => :fk_apps_routes_route_id
 
-      index [:app_id, :route_id], :unique => true, :name => :ar_app_id_route_id_index
+      index [:app_id, :route_id], :unique => true
     end
 
     # Organization permissions
     [:users, :managers, :billing_managers, :auditors].each do |perm|
-      VCAP::Migration.create_permission_table(self, :organization, :org, perm)
+      VCAP::Migration.create_permission_table(self, :organization, perm)
     end
 
     create_table(:service_bindings) do
-      VCAP::Migration.common(self, :sb)
+      VCAP::Migration.common(self)
 
       String :credentials, :null => false, :size => 2048
       String :binding_options
@@ -301,14 +300,14 @@ Sequel.migration do
       foreign_key [:app_id], :apps, :name => :fk_service_bindings_app_id
 
       Integer :service_instance_id, :null => false
-      foreign_key [:service_instance_id], :service_instances, :name => :fk_sb_service_instance_id
+      foreign_key [:service_instance_id], :service_instances, :name => :fk_service_bindings_service_instance_id
 
-      index [:app_id, :service_instance_id], :unique => true, :name => :sb_app_id_srv_inst_id_index
+      index [:app_id, :service_instance_id], :unique => true
     end
 
     # App Space permissions
     [:developers, :managers, :auditors].each do |perm|
-      VCAP::Migration.create_permission_table(self, :space, :space, perm)
+      VCAP::Migration.create_permission_table(self, :space, perm)
     end
   end
 end

@@ -91,8 +91,6 @@ module VCAP::RestAPI
     end
 
     def query_filter(key, comparison, val)
-      key = fix_column_alias(key)
-     
       case column_type(key)
       when :foreign_key
         return clean_up_foreign_key(key, val)
@@ -102,8 +100,6 @@ module VCAP::RestAPI
         val = clean_up_boolean(key, val)
       when :datetime
         val = clean_up_datetime(val)
-      when :string
-        key, val = make_case_insensitive(key, val)        
       end
 
       if val.nil?
@@ -111,13 +107,6 @@ module VCAP::RestAPI
       else
         ["#{key} #{comparison} ?", val]
       end
-    end
-    
-    def fix_column_alias(key)
-      if model.column_aliases && model.column_aliases.include?(key)
-        key = model.column_aliases[key]
-      end
-      key
     end
 
     def clean_up_foreign_key(q_key, q_val)
@@ -145,7 +134,6 @@ module VCAP::RestAPI
 
     TINYINT_TYPE = "tinyint(1)".freeze
     TINYINT_FROM_TRUE_FALSE = {"t" => 1, "f" => 0}.freeze
-    BOOLEAN_FROM_TRUE_FALSE = {"t" => true, "f" => false}.freeze
 
     # Sequel uses tinyint(1) to store booleans in Mysql.
     # Mysql does not support using 't'/'f' for querying.
@@ -154,10 +142,6 @@ module VCAP::RestAPI
 
       if column[:db_type] == TINYINT_TYPE
         q_val = TINYINT_FROM_TRUE_FALSE.fetch(q_val, q_val)
-      end
-
-      if column[:type] == :boolean
-        q_val = BOOLEAN_FROM_TRUE_FALSE.fetch(q_val, q_val)
       end
 
       q_val
@@ -179,14 +163,6 @@ module VCAP::RestAPI
       return :foreign_key if query_key =~ /(.*)_(gu)?id$/
       column = model.db_schema[query_key.to_sym]
       column && column[:type]
-    end
-    
-    def make_case_insensitive(q_key, q_val)
-      if model.db.use_lower_where? && (model.ci_attrs && model.ci_attrs.include?(q_key))
-        q_key = "lower(#{q_key})"
-        q_val = q_val.downcase
-      end
-      return q_key, q_val
     end
 
     attr_accessor :model, :access_filter, :queryable_attributes, :query

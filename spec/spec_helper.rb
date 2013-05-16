@@ -53,20 +53,6 @@ module VCAP::CloudController
     def reset_database
       prepare_database
 
-      #Disable all constraints before dropping the tables
-      if db.database_type == :oracle
-        db.execute("BEGIN
-          FOR c IN
-          (SELECT c.owner, c.table_name, c.constraint_name
-           FROM user_constraints c, user_tables t
-           WHERE c.table_name = t.table_name
-           ORDER BY c.constraint_type DESC)
-          LOOP
-            dbms_utility.exec_ddl_statement('alter table \"' || c.owner || '\".\"' || c.table_name || '\" drop constraint ' || c.constraint_name);
-          END LOOP;
-        END;")
-      end
-      
       db.tables.each do |table|
         drop_table_unsafely(table)
       end
@@ -78,7 +64,7 @@ module VCAP::CloudController
       db_connection = "sqlite:///"
       db_index = ""
 
-      if ENV['DB'] != 'sqlite' && ENV["DB_CONNECTION"]
+      if ENV["DB_CONNECTION"]
         db_connection = ENV["DB_CONNECTION"]
         db_index = ENV["TEST_ENV_NUMBER"]
       end
@@ -119,17 +105,6 @@ module VCAP::CloudController
           db.execute("SET foreign_key_checks = 0")
           db.drop_table(table)
           db.execute("SET foreign_key_checks = 1")
-
-        when :oracle
-          #Skip Oracle 'recycle bin' tables.  Let Oracle or a DBA take care of these.
-          unless table.to_s.downcase.start_with?("bin$")
-            db.drop_table(table)
-            #it appears Sequel creates sequences that need to be dropped too.
-            begin
-              db.run("drop sequence SEQ_#{table.upcase}_ID")
-            rescue Sequel::DatabaseError
-            end
-          end 
 
         # Postgres uses CASCADE directive in DROP TABLE
         # to remove foreign key contstraints.

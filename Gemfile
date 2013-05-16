@@ -25,7 +25,6 @@ group :db do
   gem "mysql2"
   gem "pg"
   gem "sqlite3"
-  gem "ruby-oci8" if ENV['DB'] == 'oracle'
 end
 
 group :development do

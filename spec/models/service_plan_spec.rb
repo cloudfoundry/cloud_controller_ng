@@ -8,7 +8,6 @@ module VCAP::CloudController
       :required_attributes => [:name, :free, :description, :service],
       :unique_attributes => [:service, :name],
       :stripped_string_attributes => :name,
-      :ci_attributes        => :name,
       :many_to_one => {
         :service => {
           :delete_ok => true,

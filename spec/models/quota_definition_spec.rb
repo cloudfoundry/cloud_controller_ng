@@ -13,8 +13,7 @@ module VCAP::CloudController
         :total_services,
         :memory_limit,
       ],
-      :unique_attributes => [:name],
-      :ci_attributes       => :name
+      :unique_attributes => [:name]
     }
 
     describe ".default" do
@@ -31,7 +30,7 @@ module VCAP::CloudController
         expect {
           quota_definition.destroy
         }.to change {
-          Models::Organization.filter(:id => org.id).count
+          Models::Organization.count(:id => org.id)
         }.by(-1)
       end
     end

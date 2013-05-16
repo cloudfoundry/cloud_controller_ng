@@ -14,8 +14,6 @@ module VCAP::CloudController::Models
     import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public
 
     strip_attributes  :name
-    
-    ci_attributes  :name
 
     def self.configure(trial_db_config)
       @trial_db_guid = trial_db_config ? trial_db_config[:guid] : nil
@@ -31,7 +29,7 @@ module VCAP::CloudController::Models
       validates_presence :description
       validates_presence :free
       validates_presence :service
-      validates_unique_ci   [:service_id, :name]
+      validates_unique   [:service_id, :name]
     end
 
     def self.user_visibility_filter(user)

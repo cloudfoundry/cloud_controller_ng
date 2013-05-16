@@ -224,7 +224,7 @@ module VCAP::CloudController::ApiSpecHelper
 
           #
           # make sure we get failures if all of the unique attributes are the
-          # same or different case where applicable
+          # same
           #
           dup_attrs = opts[:unique_attributes].dup
           dup_attrs = dup_attrs - ["id"] if verb == :put
@@ -235,12 +235,6 @@ module VCAP::CloudController::ApiSpecHelper
               before(:all) do
                 obj = opts[:model].make creation_opts
                 obj.should be_valid
-                
-                if opts[:ci_attributes]
-                  opts[:ci_attributes].each do | attribute |
-                    creation_opts[attribute] = creation_opts[attribute].swapcase 
-                  end 
-                end
 
                 case verb
                 when :post

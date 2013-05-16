@@ -8,7 +8,6 @@ module VCAP::CloudController
       :required_attributes  => [:domain, :space, :host],
       :db_required_attributes => [:domain, :space],
       :unique_attributes    => [:host, :domain],
-      :ci_attributes       =>  :host,
       :create_attribute => lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym
@@ -83,14 +82,6 @@ module VCAP::CloudController
                                :domain => domain,
                                :host => "")
           end
-          
-          it "should not allow a empty host in the database", :skip_mysql => true do
-            expect {
-              Models::Route.new(:space => space,
-                                 :domain => domain,
-                                 :host => "").save(:validate => false)
-            }.to raise_error(Sequel::DatabaseError)
-          end
 
           it "should not allow a blank host" do
             expect {
@@ -98,12 +89,6 @@ module VCAP::CloudController
                                  :domain => domain,
                                  :host => " ")
             }.to raise_error(Sequel::ValidationFailed)
-          end
-          
-          it "should allow an '#{Models::Route::WILDCARD_HOST}' host" do
-            Models::Route.make(:space => space,
-                               :domain => domain,
-                               :host => Models::Route::WILDCARD_HOST)
           end
         end
 
@@ -138,12 +123,6 @@ module VCAP::CloudController
             Models::Route.make(:space => space,
                                :domain => domain,
                                :host => "").should be_valid
-          end
-
-          it "should allow an '#{Models::Route::WILDCARD_HOST}' host" do
-            Models::Route.make(:space => space,
-                               :domain => domain,
-                               :host => Models::Route::WILDCARD_HOST).should be_valid
           end
 
           it "should not allow a blank host" do
@@ -181,21 +160,10 @@ module VCAP::CloudController
           end
         end
 
-        context "for a empty host" do
+        context "for a nil host" do
           it "should return the fqdn for the route" do
             r = Models::Route.make(
               :host => "",
-              :domain => domain,
-              :space => space
-            )
-            r.fqdn.should == domain.name
-          end
-        end
-
-        context "for a '#{Models::Route::WILDCARD_HOST}' host" do
-          it "should return the fqdn for the route" do
-            r = Models::Route.make(
-              :host => Models::Route::WILDCARD_HOST,
               :domain => domain,
               :space => space,
             )

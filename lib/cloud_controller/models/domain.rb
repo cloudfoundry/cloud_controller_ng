@@ -21,8 +21,6 @@ module VCAP::CloudController::Models
     import_attributes :name, :owning_organization_guid, :wildcard,
                       :space_guids
     strip_attributes  :name
-    
-    ci_attributes  :name
 
     subset(:shared_domains) { {:owning_organization_id => nil} }
 
@@ -33,10 +31,10 @@ module VCAP::CloudController::Models
 
     def validate
       validates_presence :name
-      validates_unique_ci :name
+      validates_unique   :name
       validates_presence :wildcard
 
-      if !new? && column_changed?(:wildcard) && !wildcard && routes_dataset.filter(~{:host => Route::WILDCARD_HOST}).count > 0
+      if !new? && column_changed?(:wildcard) && !wildcard && routes_dataset.filter(~{:host => ""}).count > 0
         errors.add(:wildcard, :wildcard_routes_in_use)
       end
 

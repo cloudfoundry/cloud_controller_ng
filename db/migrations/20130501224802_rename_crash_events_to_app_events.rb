@@ -16,18 +16,7 @@ Sequel.migration do
       drop_index :guid
       add_index :guid, :name => :app_events_guid_index, :unique => true
     end
+
     rename_table(:crash_events, :app_events)
-    
-    if self.class.name.match /oracle/i
-      run "drop trigger BI_CRASH_EVENTS_ID"
-      run "rename SEQ_CRASH_EVENTS_ID to SEQ_APP_EVENTS_ID"
-      run "CREATE TRIGGER \"BI_APP_EVENTS_ID\" BEFORE INSERT ON \"APP_EVENTS\"
-        REFERENCING NEW AS NEW FOR EACH ROW
-        BEGIN
-          IF :NEW.\"ID\" IS NULL THEN
-            SELECT seq_app_events_id.nextval INTO :NEW.\"ID\" FROM dual;
-          END IF;
-        END;"
-    end
   end
 end

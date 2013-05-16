@@ -11,11 +11,10 @@ module VCAP::CloudController::Models
                       :memory_limit, :trial_db_allowed
     import_attributes :name, :non_basic_services_allowed, :total_services,
                       :memory_limit, :trial_db_allowed
-    ci_attributes     :name
 
     def validate
       validates_presence :name
-      validates_unique_ci :name
+      validates_unique :name
       validates_presence :non_basic_services_allowed
       validates_presence :total_services
       validates_presence :memory_limit

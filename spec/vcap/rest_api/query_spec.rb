@@ -10,8 +10,6 @@ module VCAP::RestAPI
 
     class Author < Sequel::Model
       one_to_many :books
-      ci_attributes :ci_str_val
-      vcap_column_alias :alias, :aliased
     end
 
     class Book < Sequel::Model
@@ -26,10 +24,8 @@ module VCAP::RestAPI
 
         Integer :num_val
         String  :str_val
-        String  :ci_str_val, :case_insensitive => true
-        String  :aliased
         Integer :protected
-        TrueClass :published
+        Boolean :published
       end
 
       db.create_table :books do
@@ -47,14 +43,14 @@ module VCAP::RestAPI
       (num_authors - 1).times do |i|
         # mysql does typecasting of strings to ints, so start values at 0
         # so that the query using string tests don't find the 0 values.
-        a = Author.create(:num_val => i + 1, :str_val => "str #{i}", :ci_str_val => i % 2 == 1 ? "ci_str" : "Ci_Str", :aliased => "alias_val", :published => (i == 0))
+        a = Author.create(:num_val => i + 1, :str_val => "str #{i}", :published => (i == 0))
         books_per_author.times do |j|
           a.add_book(Book.create(:num_val => j + 1, :str_val => "str #{i} #{j}"))
         end
       end
 
       @owner_nil_num = Author.create(:str_val => "no num", :published => false)
-      @queryable_attributes = Set.new(%w(num_val str_val ci_str_val alias author_id book_id published))
+      @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published))
     end
 
     describe "#filtered_dataset_from_query_params" do
@@ -155,15 +151,6 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
           ds.all.should == [Author[:str_val => "str 5"]]
-        end
-      end
-
-      describe "case insensitive query on a unique string" do
-        it "should return the correct number of records" do
-          q = "ci_str_val:cI_stR"
-          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                        @queryable_attributes, :q => q)
-          ds.count.should == num_authors - 1
         end
       end
 
@@ -280,20 +267,6 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(
             Author, Author.dataset, @queryable_attributes, :q => "published:f")
           ds.all.should == Author.all - [Author.first]
-        end
-      end
-      
-      describe "aliased column" do
-        it "should convert the alias param to db column" do
-          ds = Query.filtered_dataset_from_query_params(
-            Author, Author.dataset, @queryable_attributes, :q => "alias:alias_val")
-          ds.count.should > 0
-        end
-        it "should fail if querying with the column name" do
-          expect {
-            ds = Query.filtered_dataset_from_query_params(
-              Author, Author.dataset, @queryable_attributes, :q => "aliased:alias_val")
-          }.to raise_error(VCAP::Errors::BadQueryParameter)
         end
       end
     end
