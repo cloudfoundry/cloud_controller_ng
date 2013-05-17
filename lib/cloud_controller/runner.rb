@@ -121,19 +121,24 @@ module VCAP::CloudController
       Rack::Builder.new do
         use Rack::CommonLogger
 
-        VCAP::CloudController::MessageBus.instance.register_components
-        VCAP::CloudController::MessageBus.instance.register_routes
+        message_bus = VCAP::CloudController::MessageBus.instance
+        message_bus.register_components
+        message_bus.register_routes
 
-        VCAP::CloudController::DeaClient.run
-        VCAP::CloudController::AppStager.run
+        DeaClient.run
+        AppStager.run
 
-        VCAP::CloudController::LegacyBulk.register_subscription
+        LegacyBulk.register_subscription
+
         VCAP::CloudController.health_manager_respondent =
-          VCAP::CloudController::HealthManagerRespondent.new(config)
-        VCAP::CloudController.dea_respondent =
-          VCAP::CloudController::DeaRespondent.new(config, VCAP::CloudController::MessageBus.instance)
+          HealthManagerRespondent.new(config)
+
+        VCAP::CloudController.dea_respondent = DeaRespondent.new(message_bus)
+
+        VCAP::CloudController.dea_respondent.start
+
         map "/" do
-          run VCAP::CloudController::Controller.new(config, token_decoder)
+          run Controller.new(config, token_decoder)
         end
       end
     end
