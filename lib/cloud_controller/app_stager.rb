@@ -171,7 +171,7 @@ module VCAP::CloudController
       process_async_response(response)
     rescue => e
       destroy_upload_handle if staging_is_current?
-      logger.error "Encountered error: #{e}\n#{e.backtrace}"
+      logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
     end
 
     def process_async_response(response)
@@ -182,7 +182,7 @@ module VCAP::CloudController
           staging_completion(Response.new(response))
           trigger_completion_callback
         rescue => e
-          logger.error "Encountered error: #{e}\n#{e.backtrace}"
+          logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
         end
       end
     end
@@ -214,7 +214,8 @@ module VCAP::CloudController
       @app.refresh
 
       @app.staging_task_id == task_id
-    rescue Exception
+    rescue Exception => e
+      logger.warn("Exception checking staging status: #{e.inspect}\n  #{e.backtrace.join("\n  ")}")
       false
     end
 
