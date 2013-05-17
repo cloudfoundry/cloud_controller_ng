@@ -15,7 +15,7 @@ module VCAP::CloudController
         :description => config[:info][:description],
         :authorization_endpoint => config[:login] ? config[:login][:url] : config[:uaa][:url],
         :token_endpoint => config[:uaa][:url],
-        :allow_debug => config[:allow_debug] || true
+        :allow_debug => config.fetch(:allow_debug, true)
       }
 
       # If there is a logged in user, give out additional information
