@@ -113,9 +113,9 @@ Sequel.migration do
         end
       }
 
-      schema(:crash_events).each { |column|
+      schema(:app_events).each { |column|
         if column[0] == :timestamp
-          rename_column(:crash_events, :timestamp, :event_timestamp)
+          rename_column(:app_events, :timestamp, :event_timestamp)
         end
       }
     end
