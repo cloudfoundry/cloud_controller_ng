@@ -26,7 +26,7 @@ env:
     # CLIENT_SQLPLUS
     - secure: "Rz6G1Iwf4wkiUM9C/v2dzza9ZO5iyrIC9971VAF5vQxGHvm4YdDZali/vvsH\nsoYfMmZPabQIjPBVKKVMPDgQAjCcLaBn96hDYHeT5Ueh93cbcS/Xr8Bd/cBu\n1ZohrzIjth6/a0EX9urv8UeB6oIrqD3SaXRoGAOb8eiSoviPXHI="
     # Oracle DB URL
-    - secure: "P5OhdFmceSPln40trVus+haLWq+3prl4+26zXtHPOMrPTmUAssYpzNxCn/fh\nnxzez9Y4D+NV98+BpM2PwBlGpcmVZd2MmcdcRgIPZCN0y+t7QQ9qjTYjMEKM\nsoUUa5W/kKD0JCTINtdqWMzPu3gcEuwmF3hIpCj0m0W7TsZCyS4="
+#    - secure: "P5OhdFmceSPln40trVus+haLWq+3prl4+26zXtHPOMrPTmUAssYpzNxCn/fh\nnxzez9Y4D+NV98+BpM2PwBlGpcmVZd2MmcdcRgIPZCN0y+t7QQ9qjTYjMEKM\nsoUUa5W/kKD0JCTINtdqWMzPu3gcEuwmF3hIpCj0m0W7TsZCyS4="
   matrix:
     - DB=sqlite
       # http://about.travis-ci.org/docs/user/database-setup/#MySQL
@@ -34,7 +34,7 @@ env:
       # http://about.travis-ci.org/docs/user/database-setup/#PostgreSQL
     - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432/ccng"
       # Oracle DB URL
-    - DB=oracle ORACLE_BASE=/opt/oracle ORACLE_HOME=$ORACLE_BASE/instantclient_11_2 LD_LIBRARY_PATH=${ORACLE_HOME}:${LD_LIBRARY_PATH}
+#    - DB=oracle ORACLE_BASE=/opt/oracle ORACLE_HOME=$ORACLE_BASE/instantclient_11_2 LD_LIBRARY_PATH=${ORACLE_HOME}:${LD_LIBRARY_PATH}
 
 before_install:
   - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
