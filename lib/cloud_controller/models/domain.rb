@@ -163,6 +163,8 @@ module VCAP::CloudController::Models
       end
 
       unless config[:app_domains].include?(config[:system_domain])
+        raise 'The organization that owns the system domain cannot be nil' unless organization
+
         find_or_create(
           :name => config[:system_domain],
           :wildcard => true,
