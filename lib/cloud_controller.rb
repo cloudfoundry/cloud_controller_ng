@@ -36,29 +36,25 @@ module VCAP::CloudController
       super()
     end
 
+
     before do
       VCAP::CloudController::SecurityContext.clear
       auth_token = env["HTTP_AUTHORIZATION"]
 
-      begin
-        token_information = @token_decoder.decode_token(auth_token)
-        logger.info("Token received from the UAA #{token_information.inspect}")
+      token_information = decode_token(auth_token)
 
-        if token_information
-          token_information['user_id'] ||= token_information['client_id']
-          uaa_id = token_information['user_id']
-        end
-
-        if uaa_id
-          user = Models::User.find(:guid => uaa_id.to_s)
-          user ||= create_admin_if_in_config(token_information)
-          user ||= create_admin_if_in_token(token_information)
-        end
-
-        VCAP::CloudController::SecurityContext.set(user, token_information)
-      rescue => e
-        logger.warn("Invalid bearer token: #{e.message} #{e.backtrace}")
+      if token_information
+        token_information['user_id'] ||= token_information['client_id']
+        uaa_id = token_information['user_id']
       end
+
+      if uaa_id
+        user = Models::User.find(:guid => uaa_id.to_s)
+        user ||= create_admin_if_in_config(token_information)
+        user ||= create_admin_if_in_token(token_information)
+      end
+
+      VCAP::CloudController::SecurityContext.set(user, token_information)
 
       validate_scheme(user, VCAP::CloudController::SecurityContext.current_user_is_admin?)
     end
@@ -69,6 +65,16 @@ module VCAP::CloudController
     end
 
     private
+
+    def decode_token(auth_token)
+      token_information = @token_decoder.decode_token(auth_token)
+      logger.info("Token received from the UAA #{token_information.inspect}")
+      token_information
+    rescue CF::UAA::TokenExpired
+      logger.info('Token expired')
+    rescue CF::UAA::DecodeError, CF::UAA::AuthError => e
+      logger.warn("Invalid bearer token: #{e.inspect} #{e.backtrace}")
+    end
 
     def validate_scheme(user, admin)
       return unless user || admin

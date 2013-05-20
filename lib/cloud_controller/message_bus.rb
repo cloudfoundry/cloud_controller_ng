@@ -105,7 +105,7 @@ class VCAP::CloudController::MessageBus
           # we might do it if we are propelled to supply a lambda here...
           blk.yield(payload, inbox)
         rescue => e
-          logger.error "exception processing: '#{subject}' '#{payload}'"
+          logger.error "exception processing: '#{subject}' '#{payload}': #{e.inspect} #{e.backtrace.join("\n")}"
         end
       end
     end
@@ -166,7 +166,7 @@ class VCAP::CloudController::MessageBus
     payload = Yajl::Parser.parse(msg, :symbolize_keys => true)
     blk.yield(payload, inbox)
   rescue => e
-    logger.error "exception processing: '#{msg}' '#{e}'"
+    logger.error "exception processing: '#{msg}' '#{e.message}'"
   end
 
   def logger
