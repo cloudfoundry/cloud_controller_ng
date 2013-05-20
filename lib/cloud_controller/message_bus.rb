@@ -166,7 +166,7 @@ class VCAP::CloudController::MessageBus
     payload = Yajl::Parser.parse(msg, :symbolize_keys => true)
     blk.yield(payload, inbox)
   rescue => e
-    logger.error "exception processing: '#{msg}' '#{e.message}'"
+    logger.error "exception processing: '#{msg}' '#{e.inspect}' #{e.backtrace}"
   end
 
   def logger

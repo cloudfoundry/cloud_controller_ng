@@ -86,7 +86,7 @@ module VCAP::CloudController::RestController
     #
     # @param [Symbol] op The method to dispatch to.
     #
-    # @param [Array] args The arguments to the method beign disptched to.
+    # @param [Array] args The arguments to the method being dispatched to.
     #
     # @return [Object] Returns an array of [http response code, Header hash,
     # body string], or just a body string.
