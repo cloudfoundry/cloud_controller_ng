@@ -188,12 +188,7 @@ module VCAP::CloudController
           end
         end
 
-        shared_examples "health manager is wrong" do |error_regex|
-          it "logs an error since HM should have sent the spindown command" do
-            respondent.logger.should_receive(:error).with(error_regex)
-            process_hm_request
-          end
-
+        shared_examples "health manager scales all the way down" do
           it "sends a stop request to the dea" do
             dea_client.should_receive(:stop) do |changed_app|
               reloaded_app = app.reload
@@ -205,50 +200,22 @@ module VCAP::CloudController
           end
         end
 
-        context "when health manager incorrectly scales down to 0 instances" do
+        context "when health manager scales down to 0 instances" do
           let(:instances) { [0, 1] }
           before { dea_client.stub(:stop) }
-          it_should_behave_like "health manager is wrong", /spindown/i
+          it_should_behave_like "health manager scales all the way down"
         end
 
-        context "when health manager incorrectly scales down to less than 0 instances" do
+        context "when health manager scales down to less than 0 instances" do
           let(:instances) { [0, 1, 2] }
           before { dea_client.stub(:stop) }
-          it_should_behave_like "health manager is wrong", /negative/i
-        end
-      end
 
-      describe "on SPINDOWN request" do
+          it "logs an warning" do
+            respondent.logger.should_receive(:warn).with(/negative/i)
+            process_hm_request
+          end
 
-        let(:op) { "SPINDOWN" }
-
-        it_should_behave_like "common test for all health manager respondents"
-
-        it "should drop the request if app already stopped" do
-          app.update(
-            :state => "STOPPED",
-          )
-
-          dea_client.should_not_receive(:stop)
-          mbus.should_not_receive(:publish).with(
-            "dea.stop",
-            anything,
-          )
-
-          process_hm_request
-        end
-
-        it "should stop an app" do
-          app.update(
-            :state => "STARTED",
-            :package_hash => "abc",
-            :package_state => "STAGED",
-          )
-
-          dea_client.should_receive(:stop).with(
-            respond_with(:guid => app.guid),
-          )
-          process_hm_request
+          it_should_behave_like "health manager scales all the way down"
         end
       end
     end

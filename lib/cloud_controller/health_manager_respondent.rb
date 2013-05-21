@@ -38,8 +38,6 @@ module VCAP::CloudController
         process_hm_start(payload)
       when "STOP"
         process_hm_stop(payload)
-      when "SPINDOWN"
-        process_hm_spindown(payload)
       else
         logger.warn("Unknown operated requested: #{payload[:op]}, payload: #{payload.inspect}")
       end
@@ -86,29 +84,13 @@ module VCAP::CloudController
 
       return if stop_runway_app(app, app_id)
       return if last_updated != app.updated_at.to_i
-      return if hm_sent_wrong_command(app, indices)
+      return if scaled_to_zero(app, indices)
 
       dea_client.stop_instances(app, indices)
     end
 
-    def process_hm_spindown(payload)
-      # TODO: Ideally we should validate the message here with Membrane
-      begin
-        app_id = payload.fetch(:droplet)
-      rescue KeyError => e
-        logger.error("Malformed spindown request: #{payload}, #{e.message}")
-        return
-      end
-
-      app = Models::App[:guid => app_id]
-
-      return if stop_runway_app(app, app_id)
-
-      stop_app(app)
-    end
-
     def stop_app(app)
-      dea_client.stop(app) unless app.stopped?
+      dea_client.stop(app)
     end
 
     def stop_runway_app(app, app_id)
@@ -118,15 +100,13 @@ module VCAP::CloudController
       end
     end
 
-    def hm_sent_wrong_command(app, indices)
+    def scaled_to_zero(app, indices)
       instances_remaining = app.instances - indices.size
       if instances_remaining <= 0
         stop_app(app)
-        logger.error(
-          instances_remaining == 0 ?
-            "HM scales down to 0 -- should have sent a SPINDOWN request" :
-            "HM scaling down to negative number of instances"
-        )
+        if instances_remaining < 0
+          logger.warn("HM scaling down to negative number of instances")
+        end
         true
       end
     end
