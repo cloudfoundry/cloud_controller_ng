@@ -39,6 +39,13 @@ module VCAP::CloudController
       end
     end
 
+    def mark_app_staged(opts)
+      dea_id = opts[:dea_id]
+      app_id = opts[:app_id]
+
+      @dea_advertisements.find { |ad| ad.dea_id == dea_id }.increment_instance_count(app_id)
+    end
+
     private
 
     def prune_stale_deas
@@ -63,6 +70,10 @@ module VCAP::CloudController
       def initialize(stats, last_update)
         @stats = stats
         @last_update = last_update
+      end
+
+      def increment_instance_count(app_id)
+        stats[:app_id_to_count][app_id] = num_instances_of(app_id) + 1
       end
 
       def num_instances_of(app_id)

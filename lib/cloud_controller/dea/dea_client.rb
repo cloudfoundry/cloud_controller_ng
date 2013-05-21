@@ -228,6 +228,7 @@ module VCAP::CloudController
           dea_id = dea_pool.find_dea(app.memory, app.stack.name, app.guid)
           if dea_id
             dea_publish("#{dea_id}.start", msg.merge(message_override))
+            dea_pool.mark_app_staged(dea_id: dea_id, app_id: app.guid)
           else
             logger.error "no resources available #{msg}"
           end
