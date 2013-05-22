@@ -18,7 +18,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: 129ef520424a81155c097b7a79aa13bb8b736fd7
+  revision: 98463856010d63227315b54fb9bf80f220cddbdd
   specs:
     vcap_common (2.0.10)
       em-http-request (~> 1.0)
@@ -30,6 +30,7 @@ GIT
       nats (~> 0.4.24)
       posix-spawn (~> 0.3.6)
       thin
+      vmstat (~> 2.0)
       yajl-ruby
 
 GIT
@@ -101,7 +102,7 @@ GEM
     http_parser.rb (0.5.3)
     httpclient (2.3.3)
     i18n (0.6.1)
-    json_pure (1.7.7)
+    json_pure (1.8.0)
     listen (0.5.3)
     machinist (1.0.6)
     membrane (0.0.2)
@@ -173,6 +174,7 @@ GEM
     timecop (0.5.9.1)
     virtus (0.5.2)
       backports (~> 2.6.1)
+    vmstat (2.0.0)
     webmock (1.8.11)
       addressable (>= 2.2.7)
       crack (>= 0.1.7)
