@@ -105,7 +105,7 @@ module VCAP::CloudController
       if instances_remaining <= 0
         stop_app(app)
         if instances_remaining < 0
-          logger.warn("HM scaling down to negative number of instances")
+          logger.warn("Health manager scaling down to negative number of instances. Instances remaining: #{instances_remaining}.")
         end
         true
       end
