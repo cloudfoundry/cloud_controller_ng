@@ -18,6 +18,15 @@ module VCAP::CloudController
         }
       end
 
+      let(:dea_shutdown_msg) do
+        {
+          :id => "dea-id",
+          :ip => "123.123.123.123",
+          :version => "1.2.3",
+          :app_id_to_count => {}
+        }
+      end
+
       it "finds advertised dea" do
         with_em_and_thread do
           subject.register_subscriptions
@@ -26,6 +35,18 @@ module VCAP::CloudController
           end
         end
         subject.find_dea(0, "stack", "app-id").should == "dea-id"
+      end
+
+      it "clears advertisements of DEAs being shut down" do
+        with_em_and_thread do
+          subject.register_subscriptions
+          EM.next_tick do
+            mock_nats.publish("dea.advertise", JSON.dump(dea_advertise_msg))
+            mock_nats.publish("dea.shutdown", JSON.dump(dea_shutdown_msg))
+          end
+        end
+
+        subject.find_dea(0, "stack", "app-id").should be_nil
       end
     end
 

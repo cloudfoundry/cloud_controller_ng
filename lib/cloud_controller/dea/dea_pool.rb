@@ -18,6 +18,10 @@ module VCAP::CloudController
       message_bus.subscribe("dea.advertise") do |msg|
         process_advertise_message(msg)
       end
+
+      message_bus.subscribe("dea.shutdown") do |msg|
+        process_shutdown_message(msg)
+      end
     end
 
     def process_advertise_message(message)
@@ -27,6 +31,12 @@ module VCAP::CloudController
         # remove older advertisements for the same dea_id
         @dea_advertisements.delete_if { |ad| ad.dea_id == advertisement.dea_id }
         @dea_advertisements << advertisement
+      end
+    end
+
+    def process_shutdown_message(message)
+      mutex.synchronize do
+        @dea_advertisements.delete_if { |ad| ad.dea_id == message[:id] }
       end
     end
 
