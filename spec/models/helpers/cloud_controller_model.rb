@@ -22,10 +22,8 @@ module VCAP::CloudController::ModelSpecHelper
        opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
      end
 
-     %w[instance relationships enumeration].each do |examples|
-       describe examples do
-         include_examples "model #{examples}", opts
-       end
-     end
+    include_examples "model instance", opts
+    include_examples "model relationships", opts
+    include_examples "model enumeration", opts
   end
 end
