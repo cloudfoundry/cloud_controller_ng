@@ -125,6 +125,7 @@ module VCAP::CloudController::Models
         :guid => guid,
         :name => name,
         :bound_app_count => service_bindings_dataset.count,
+        :dashboard_url => dashboard_url,
         :service_plan => {
           :guid => service_plan.guid,
           :name => service_plan.name,

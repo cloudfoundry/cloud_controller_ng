@@ -135,6 +135,7 @@ module VCAP::CloudController
           :guid => subject.guid,
           :name => subject.name,
           :bound_app_count => 0,
+          :dashboard_url => subject.dashboard_url,
           :service_plan => {
             :guid => subject.service_plan.guid,
             :name => subject.service_plan.name,
