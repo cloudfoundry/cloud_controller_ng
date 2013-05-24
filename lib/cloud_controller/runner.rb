@@ -86,20 +86,29 @@ module VCAP::CloudController
 
     def run!
       start_cloud_controller
-
       config = @config.dup
 
       Seeds.write_seed_data(config) if @insert_seed_data
       app = create_app(config)
+
       start_thin_server(app, config)
     end
 
     def trap_signals
       %w(TERM INT QUIT).each do |signal|
         trap(signal) do
-          @thin_server.stop! if @thin_server
-          EM.stop
+          logger.warn("Caught signal #{signal}")
+          stop!
         end
+      end
+    end
+
+    def stop!
+      logger.info("Unregistering routes.")
+
+      message_bus.unregister_routes do
+        stop_thin_server
+        EM.stop
       end
     end
 
@@ -118,12 +127,13 @@ module VCAP::CloudController
     def create_app(config)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
+      mbus = message_bus
+
       Rack::Builder.new do
         use Rack::CommonLogger
 
-        message_bus = VCAP::CloudController::MessageBus.instance
-        message_bus.register_components
-        message_bus.register_routes
+        mbus.register_components
+        mbus.register_routes
 
         DeaClient.run
         AppStager.run
@@ -133,7 +143,7 @@ module VCAP::CloudController
         VCAP::CloudController.health_manager_respondent =
           HealthManagerRespondent.new(config)
 
-        VCAP::CloudController.dea_respondent = DeaRespondent.new(message_bus)
+        VCAP::CloudController.dea_respondent = DeaRespondent.new(mbus)
 
         VCAP::CloudController.dea_respondent.start
 
@@ -161,6 +171,14 @@ module VCAP::CloudController
       @thin_server.timeout = 15 * 60 # 15 min
       @thin_server.threaded = true
       @thin_server.start!
+    end
+
+    def stop_thin_server
+      @thin_server.stop if @thin_server
+    end
+
+    def message_bus
+      VCAP::CloudController::MessageBus.instance
     end
   end
 end

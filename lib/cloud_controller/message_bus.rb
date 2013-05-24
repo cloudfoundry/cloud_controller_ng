@@ -70,10 +70,10 @@ class VCAP::CloudController::MessageBus
       # TODO: blacklist api2 in legacy CC
       # TODO: Yajl should probably also be injected
       router_register_message = Yajl::Encoder.encode({
-        :host => @config[:bind_address],
+        :host => config[:bind_address],
         :port => config[:port],
         :uris => config[:external_domain],
-        :tags => {:component => "CloudController" },
+        :tags => { :component => "CloudController" },
       })
 
       nats.publish("router.register", router_register_message)
@@ -82,6 +82,20 @@ class VCAP::CloudController::MessageBus
       nats.subscribe("router.start") do
         nats.publish("router.register", router_register_message)
       end
+    end
+  end
+
+  def unregister_routes(&callback)
+    EM.schedule do
+      router_unregister_message = Yajl::Encoder.encode({
+        :host => config[:bind_address],
+        :port => config[:port],
+        :uris => config[:external_domain],
+        :tags => { :component => "CloudController" },
+      })
+
+      logger.info("Sending router.unregister: #{router_unregister_message}")
+      nats.publish("router.unregister", router_unregister_message, &callback)
     end
   end
 

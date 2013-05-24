@@ -227,6 +227,33 @@ module VCAP::CloudController
       end
     end
 
+    describe "#unregister_routes" do
+      let(:config) { {
+        :bind_address => '1.2.3.4',
+        :port => 4222,
+        :external_domain => ['ccng.vcap.me', 'api.vcap.me'],
+        :nats => nats,
+      } }
+
+      let(:bus) { MessageBus.new(config) }
+
+      let(:msg) { {
+        :host => config[:bind_address],
+        :port => config[:port],
+        :uris => config[:external_domain],
+        :tags => {:component => "CloudController"}
+      } }
+
+      it "publishes router.unregister with the configured route" do
+        nats.should_receive(:publish).once.
+          with("router.unregister", msg_json)
+
+        with_em_and_thread do
+          bus.unregister_routes
+        end
+      end
+    end
+
     describe "#register_components" do
       describe "nats goes down" do
         before do
