@@ -26,6 +26,7 @@ module VCAP::RestAPI
         String  :str_val
         Integer :protected
         Boolean :published
+        DateTime :published_at
       end
 
       db.create_table :books do
@@ -43,14 +44,17 @@ module VCAP::RestAPI
       (num_authors - 1).times do |i|
         # mysql does typecasting of strings to ints, so start values at 0
         # so that the query using string tests don't find the 0 values.
-        a = Author.create(:num_val => i + 1, :str_val => "str #{i}", :published => (i == 0))
+        a = Author.create(:num_val => i + 1,
+                          :str_val => "str #{i}",
+                          :published => (i == 0),
+                          :published_at => (i == 0) ? nil : Time.at(0) + i)
         books_per_author.times do |j|
           a.add_book(Book.create(:num_val => j + 1, :str_val => "str #{i} #{j}"))
         end
       end
 
-      @owner_nil_num = Author.create(:str_val => "no num", :published => false)
-      @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published))
+      @owner_nil_num = Author.create(:str_val => "no num", :published => false, :published_at => Time.at(0) + num_authors)
+      @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published published_at))
     end
 
     describe "#filtered_dataset_from_query_params" do
@@ -267,6 +271,107 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(
             Author, Author.dataset, @queryable_attributes, :q => "published:f")
           ds.all.should == Author.all - [Author.first]
+        end
+      end
+
+      describe "exact query on a timestamp" do
+        context "when the timestamp is null" do
+          it "should return the correct record" do
+            q = "published_at:"
+            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+              @queryable_attributes, :q => q)
+            ds.all.should == [Author[:num_val => 1]]
+          end
+        end
+
+        context "when the timestamp is valid" do
+          it "should return the correct record" do
+            query_value = Author[:num_val => 5].published_at
+            q = "published_at:#{query_value}"
+            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+              @queryable_attributes, :q => q)
+            ds.all.should == [Author[:num_val => 5]]
+          end
+        end
+      end
+
+      describe "greater-than comparison query on a timestamp within the range" do
+        it "should return 5 records" do
+          query_value = Author[:num_val => 5].published_at
+          q = "published_at>#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.published_at && a.published_at > query_value
+          end
+
+          ds.all.should =~ expected
+        end
+      end
+
+      describe "greater-than equals comparison query on a timestamp within the range" do
+        it "should return 6 records" do
+          query_value = Author[:num_val => 5].published_at
+          q = "published_at>=#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.published_at && a.published_at >= query_value
+          end
+
+          ds.all.should =~ expected
+        end
+      end
+
+      describe "less-than comparison query on a timestamp within the range" do
+        it "should return 3 records" do
+          query_value = Author[:num_val => 5].published_at
+          q = "published_at<#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.published_at && a.published_at < query_value
+          end
+
+          ds.all.should =~ expected
+        end
+      end
+
+      describe "less-than equals comparison query on a timestamp within the range" do
+        it "should returns 4 records" do
+          query_value = Author[:num_val => 5].published_at
+          q = "published_at<=#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.published_at && a.published_at <= query_value
+          end
+
+          ds.all.should =~ expected
+        end
+      end
+
+      describe "exact query on a invalid timestamp" do
+        it "should return no results" do
+          query_value = Author.all.last.published_at + 1
+          q = "published_at:#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          ds.count.should == 0
+        end
+      end
+
+      describe "exact query on a malformed timestamp" do
+        it "should raise argument error" do
+          q = "published_at:asdf"
+
+          expect { Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q) }.to raise_error(ArgumentError)
         end
       end
     end

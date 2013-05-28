@@ -85,6 +85,8 @@ Sequel::Model.plugin :update_or_create
 Sequel::Model.plugin :typecast_on_load,
                      :name, :label, :provider, :description, :host
 
+require "vcap/sequel_add_association_dependencies_monkeypatch"
+
 require "cloud_controller/models/billing_event"
 require "cloud_controller/models/organization_start_event"
 require "cloud_controller/models/app_start_event"

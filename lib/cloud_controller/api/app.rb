@@ -53,6 +53,56 @@ module VCAP::CloudController
       end
     end
 
+
+    # Override this method because we want to enable the concept of
+    # deleted apps. We allow enumeration only on apps which are NOT
+    # marked as deleted.
+    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+      if opts.include?(:q)
+        qp << "deleted_at"
+        opts[:q] << ";deleted_at:"
+      end
+
+      super(model, ds, qp, opts)
+    end
+
+    # Override this method because we want to enable the concept of
+    # deleted apps. This is necessary because we have an app events table
+    # which is a foreign key constraint on apps. Thus, we can't actually delete
+    # the app itself. So, if an app is marked as deleted, we never want it to
+    # be accessible to the end user and it becomes a Not Found Exception.
+    # In the future, this method may be expanded to allow users of certain roles
+    # to be able to access deleted apps.
+    def find_id_and_validate_access(op, id)
+      obj = super(op, id)
+      if obj.deleted?
+        raise self.class.not_found_exception.new(obj.guid)
+      end
+      obj
+    end
+
+    # Override this method because we want to enable the concept of
+    # deleted apps. This is necessary because we have an app events table
+    # which is a foreign key constraint on apps. Thus, we can't actually delete
+    # the app itself, but instead mark it as deleted.
+    #
+    # @param [String] id The GUID of the object to delete.
+    def delete(id)
+      app = find_id_and_validate_access(:delete, id)
+      recursive = params.has_key?("recursive") ? true : false
+
+      if v2_api? && !recursive
+        if app.has_deletable_associations?
+          message = app.deletable_association_names.join(", ")
+          raise VCAP::Errors::AssociationNotEmpty.new(message, app.class.table_name)
+        end
+      end
+
+      app.soft_delete
+
+      [ HTTP::NO_CONTENT, nil ]
+    end
+
     private
 
     def before_modify(app)

@@ -17,21 +17,21 @@ module VCAP::CloudController
     let(:route) { Models::Route.make(:domain => domain, :space => space) }
 
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:name, :space],
-      :unique_attributes    => [:space, :name],
+      :required_attributes => [:name, :space],
+      :unique_attributes => [:space, :name],
       :stripped_string_attributes => :name,
       :many_to_one => {
-        :space              => {
+        :space => {
           :delete_ok => true,
-          :create_for => lambda { |app| Models::Space.make  },
+          :create_for => lambda { |app| Models::Space.make },
         },
-        :stack              => {
+        :stack => {
           :delete_ok => true,
           :create_for => lambda { |app| Models::Stack.make },
         }
       },
-      :one_to_zero_or_more  => {
-        :service_bindings   => lambda { |app|
+      :one_to_zero_or_more => {
+        :service_bindings => lambda { |app|
           service_binding = Models::ServiceBinding.make
           service_binding.service_instance.space = app.space
           service_binding
@@ -162,7 +162,7 @@ module VCAP::CloudController
 
       it "should not associate an app with a route created on another space with a shared domain" do
         shared_domain = Models::Domain.new(:name => Sham.name,
-                                           :owning_organization => nil)
+          :owning_organization => nil)
         shared_domain.save(:validate => false)
         app = Models::App.make
         app.space.add_domain(shared_domain)
@@ -203,13 +203,13 @@ module VCAP::CloudController
 
       context "if env changes" do
         let(:old_env_json) { {} }
-        let(:new_env_json) { { "key" => "value" } }
+        let(:new_env_json) { {"key" => "value"} }
         it_does_not_mark_for_re_staging
       end
 
       context "if BUNDLE_WITHOUT in env changes" do
-        let(:old_env_json) { { "BUNDLE_WITHOUT" => "test" } }
-        let(:new_env_json) { { "BUNDLE_WITHOUT" => "development" } }
+        let(:old_env_json) { {"BUNDLE_WITHOUT" => "test"} }
+        let(:new_env_json) { {"BUNDLE_WITHOUT" => "development"} }
         it_does_not_mark_for_re_staging
       end
     end
@@ -217,7 +217,7 @@ module VCAP::CloudController
     describe "metadata" do
       it "deserializes the serialized value" do
         app = Models::App.make(
-          :metadata => { "jesse" => "super awesome" },
+          :metadata => {"jesse" => "super awesome"},
         )
         app.metadata.should eq("jesse" => "super awesome")
       end
@@ -303,13 +303,13 @@ module VCAP::CloudController
         end
 
         it "should allow multiple variables" do
-          app.environment_json = { :abc => 123, :def => "hi" }
+          app.environment_json = {:abc => 123, :def => "hi"}
           app.should be_valid
         end
 
-        [ "VMC", "vmc", "VCAP", "vcap" ].each do |k|
+        ["VMC", "vmc", "VCAP", "vcap"].each do |k|
           it "should not allow entries to start with #{k}" do
-            app.environment_json = { :abc => 123, "#{k}_abc" => "hi" }
+            app.environment_json = {:abc => 123, "#{k}_abc" => "hi"}
             app.should_not be_valid
           end
         end
@@ -329,7 +329,7 @@ module VCAP::CloudController
         end
 
         it "should allow multiple variables" do
-          app.metadata = { :abc => 123, :def => "hi" }
+          app.metadata = {:abc => 123, :def => "hi"}
           app.should be_valid
         end
 
@@ -534,8 +534,8 @@ module VCAP::CloudController
     describe "adding routes to unsaved apps" do
       it "should set a route by guid on a new but unsaved app" do
         app = Models::App.new(:name => Sham.name,
-                              :space => space,
-                              :stack => Models::Stack.make)
+          :space => space,
+          :stack => Models::Stack.make)
         app.add_route_by_guid(route.guid)
         app.save
         app.routes.should == [route]
@@ -543,8 +543,8 @@ module VCAP::CloudController
 
       it "should not allow a route on a domain from another org" do
         app = Models::App.new(:name => Sham.name,
-                              :space => space,
-                              :stack => Models::Stack.make)
+          :space => space,
+          :stack => Models::Stack.make)
         app.add_route_by_guid(Models::Route.make.guid)
         expect { app.save }.to raise_error(Models::App::InvalidRouteRelation)
         app.routes.should be_empty
@@ -795,10 +795,10 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::App.make(:space => space,
-                             :memory => 65,
-                             :instances => 2)
+              :memory => 65,
+              :instances => 2)
           end.to raise_error(Sequel::ValidationFailed,
-                             /memory quota_exceeded/)
+            /memory quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
@@ -806,8 +806,8 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::App.make(:space => space,
-                             :memory => 64,
-                             :instances => 2)
+              :memory => 64,
+              :instances => 2)
           end.to_not raise_error
         end
       end
@@ -817,19 +817,19 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => quota)
           space = Models::Space.make(:organization => org)
           app = Models::App.make(:space => space,
-                                 :memory => 64,
-                                 :instances => 2)
+            :memory => 64,
+            :instances => 2)
           app.memory = 65
           expect { app.save }.to raise_error(Sequel::ValidationFailed,
-                                             /memory quota_exceeded/)
+            /memory quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
           org = Models::Organization.make(:quota_definition => quota)
           space = Models::Space.make(:organization => org)
           app = Models::App.make(:space => space,
-                                 :memory => 63,
-                                 :instances => 2)
+            :memory => 63,
+            :instances => 2)
           app.memory = 64
           expect { app.save }.to_not raise_error
         end
@@ -838,8 +838,8 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => quota)
           space = Models::Space.make(:organization => org)
           app = Models::App.make(:space => space,
-                                 :memory => 64,
-                                 :instances => 2)
+            :memory => 64,
+            :instances => 2)
 
           quota.memory_limit = 32
           quota.save
@@ -1104,6 +1104,76 @@ module VCAP::CloudController
           subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
           it_does_not_stage
           it_notifies_dea
+        end
+      end
+    end
+
+    describe "soft deletion" do
+      let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+
+      context "recursive soft deletion with app events" do
+        let!(:app_event) { Models::AppEvent.make(:app => app_obj) }
+
+        context "with other empty associations" do
+          it "should soft delete the app" do
+            app_obj.soft_delete
+          end
+        end
+
+        context "with NON-empty deletable associations" do
+          context "with NON-empty service_binding associations" do
+            let!(:svc_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+            let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
+
+            it "should delete the service bindings" do
+              app_obj.soft_delete
+
+              Models::ServiceBinding.find(:id => service_binding.id).should be_nil
+            end
+          end
+        end
+
+        context "with NON-empty nullifyable associations" do
+          context "with NON-empty routes associations" do
+            let!(:route) { Models::Route.make(:space => app_obj.space) }
+
+            before do
+              app_obj.add_route(route)
+              app_obj.save
+            end
+
+            it "should nullify routes" do
+              app_obj.soft_delete
+
+              app_obj.refresh
+              app_obj.routes.should be_empty
+              route.apps.should be_empty
+            end
+          end
+
+          context "with NON-empty service_instances association" do
+            let!(:service_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+            let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => service_instance) }
+
+            before do
+              app_obj.add_service_instance(service_instance)
+              app_obj.save
+            end
+
+            it "should nullify service instances" do
+              app_obj.soft_delete
+
+              app_obj.refresh
+              app_obj.service_instances.should be_empty
+              # service_instances.apps does NOT exist because the many_to_many relation is based on a join with
+              # service bindings table.
+            end
+          end
+        end
+
+        after do
+          Models::AppEvent.find(:id => app_event.id).should_not be_nil
+          Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
         end
       end
     end
