@@ -59,8 +59,8 @@ module VCAP::CloudController
     # marked as deleted.
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       if opts.include?(:q)
-        qp << "deleted_at"
-        opts[:q] << ";deleted_at:"
+        qp << "not_deleted"
+        opts[:q] << ";not_deleted:t"
       end
 
       super(model, ds, qp, opts)

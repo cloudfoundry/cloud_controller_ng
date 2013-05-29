@@ -131,7 +131,11 @@ module VCAP::CloudController
       end
 
       context "when the app is already deleted" do
-        let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name", :deleted_at => Time.now) }
+        let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+
+        before do
+          app_obj.soft_delete
+        end
 
         it "should raise error" do
           subject
@@ -154,7 +158,11 @@ module VCAP::CloudController
       end
 
       context "when the app is already deleted" do
-        let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name", :deleted_at => Time.now) }
+        let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+
+        before do
+          app_obj.soft_delete
+        end
 
         it "should raise error" do
           subject
@@ -180,7 +188,11 @@ module VCAP::CloudController
         end
 
         context "when the app is already deleted" do
-          let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name", :deleted_at => Time.now) }
+          let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+
+          before do
+            app_obj.soft_delete
+          end
 
           it "should raise error" do
             subject
@@ -205,6 +217,7 @@ module VCAP::CloudController
           last_response.status.should == 204
 
           Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
+          Models::App.find(:id => app_obj.id).not_deleted.should be_nil
           Models::AppEvent.find(:id => app_event.id).should_not be_nil
         end
       end
@@ -218,6 +231,7 @@ module VCAP::CloudController
 
             last_response.status.should == 204
             Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
+            Models::App.find(:id => app_obj.id).not_deleted.should be_nil
             Models::AppEvent.find(:id => app_event.id).should_not be_nil
           end
         end

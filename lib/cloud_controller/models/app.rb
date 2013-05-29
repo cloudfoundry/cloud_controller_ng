@@ -291,7 +291,7 @@ module VCAP::CloudController
       end
 
       def deleted?
-        !self.deleted_at.nil?
+        !self.not_deleted
       end
 
       def nullifyable_association_names

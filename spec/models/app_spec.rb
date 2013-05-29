@@ -1179,6 +1179,7 @@ module VCAP::CloudController
         after do
           Models::AppEvent.find(:id => app_event.id).should_not be_nil
           Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
+          Models::App.find(:id => app_obj.id).not_deleted.should be_nil
         end
       end
 

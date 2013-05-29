@@ -5,7 +5,7 @@ module VCAP::CloudController::Models
     class MissingConfigFileError < StandardError; end
     class MissingDefaultStackError < StandardError; end
 
-    one_to_many :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:stack => self, :deleted_at => nil) }
+    one_to_many :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:stack => self, :not_deleted => true) }
 
     add_association_dependencies :apps => :destroy
 
