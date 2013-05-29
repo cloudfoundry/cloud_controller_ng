@@ -76,7 +76,7 @@ module VCAP::CloudController::ModelSpecHelper
             when :mysql
               "Duplicate entry"
             when :sqlite
-              "columns? #{column_list.join(", ")} .* not unique".sub("uaa_id", "guid")
+              "columns? #{column_list.join(", ")}.* not unique".sub("uaa_id", "guid")
             else
               ".*"
             end

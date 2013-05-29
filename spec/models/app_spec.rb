@@ -1111,7 +1111,12 @@ module VCAP::CloudController
     describe "soft deletion" do
       let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
 
-      context "recursive soft deletion with app events" do
+      it "should not allow the same object to be deleted twice" do
+        app_obj.soft_delete
+        expect { app_obj.soft_delete }.to raise_error(Models::App::AlreadyDeletedError)
+      end
+
+      context "with app events" do
         let!(:app_event) { Models::AppEvent.make(:app => app_obj) }
 
         context "with other empty associations" do
@@ -1174,6 +1179,31 @@ module VCAP::CloudController
         after do
           Models::AppEvent.find(:id => app_event.id).should_not be_nil
           Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
+        end
+      end
+
+      context "recreation" do
+        describe "create an already soft deleted app" do
+          before do
+            app_obj.soft_delete
+          end
+
+          it "should allow recreation and soft deletion of a soft deleted app" do
+            expect do
+              deleted_app = Models::App.make(:space => app_obj.space, :name => app_obj.name)
+              deleted_app.soft_delete
+            end.to_not raise_error
+          end
+
+          it "should allow only 1 active recreation at a time" do
+            expect do
+              Models::App.make(:space => app_obj.space, :name => app_obj.name)
+            end.to_not raise_error
+
+            expect do
+              Models::App.make(:space => app_obj.space, :name => app_obj.name)
+            end.to raise_error
+          end
         end
       end
     end

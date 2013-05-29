@@ -15,6 +15,8 @@ module VCAP::CloudController
 
       class InvalidBindingRelation < InvalidRelation; end
 
+      class AlreadyDeletedError < StandardError; end
+
       one_to_many       :service_bindings, :after_remove => :after_remove_binding
       one_to_many       :app_events
 
@@ -62,7 +64,7 @@ module VCAP::CloudController
       def validate
         validates_presence :name
         validates_presence :space
-        validates_unique   [:space_id, :name]
+        validates_unique   [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
 
         validates_git_url :buildpack
 
@@ -347,10 +349,13 @@ module VCAP::CloudController
       end
 
       def soft_delete
+        raise AlreadyDeletedError, "App: #{self} was already soft deleted on: #{deleted_at}" if deleted_at
+
         model.db.transaction do
           lock!
           cleanup_associations
           self.deleted_at = Time.now
+          self.not_deleted = nil
           save
         end
       end
