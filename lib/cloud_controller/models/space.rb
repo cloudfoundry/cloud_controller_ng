@@ -18,6 +18,7 @@ module VCAP::CloudController::Models
 
     many_to_one       :organization
     one_to_many       :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => self, :deleted_at => nil) }
+    one_to_many       :all_apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => self) }
     one_to_many       :service_instances
     one_to_many       :routes
     one_to_many       :app_events, :dataset => lambda { VCAP::CloudController::Models::AppEvent.filter(:app => apps) }
@@ -25,7 +26,7 @@ module VCAP::CloudController::Models
     many_to_many      :domains, :before_add => :validate_domain
 
     add_association_dependencies :domains => :nullify, :default_users => :nullify,
-      :apps => :destroy, :service_instances => :destroy, :routes => :destroy
+      :all_apps => :destroy, :service_instances => :destroy, :routes => :destroy
 
     default_order_by  :name
 

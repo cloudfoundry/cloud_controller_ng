@@ -106,7 +106,9 @@ module VCAP::CloudController
 
       it "destroys all apps" do
         app = Models::App.make(:space => space)
-        expect { subject }.to change { Models::App.where(:id => app.id).count }.by(-1)
+        soft_deleted_app = Models::App.make(:space => space)
+        soft_deleted_app.soft_delete
+        expect { subject }.to change { Models::App.where(:id => [app.id, soft_deleted_app.id]).count }.by(-2)
       end
 
       it "destroys all service instances" do
