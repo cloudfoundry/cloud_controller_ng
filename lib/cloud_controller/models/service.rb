@@ -28,5 +28,11 @@ module VCAP::CloudController::Models
       validates_url      :info_url
       validates_unique   [:label, :provider]
     end
+
+    def self.user_visibility_filter(current_user)
+      plans_I_can_see = ServicePlan.filter(ServicePlan.user_visibility_filter(current_user))
+      opts = {id: plans_I_can_see.map(&:service_id).uniq}
+      user_visibility_filter_with_admin_override(opts)
+    end
   end
 end

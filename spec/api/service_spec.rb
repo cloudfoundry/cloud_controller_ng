@@ -35,10 +35,10 @@ module VCAP::CloudController
       before(:all) do
         reset_database
         5.times do
-          Models::Service.make
+          Models::ServicePlan.make
         end
-        @obj_a = Models::Service.make
-        @obj_b = Models::Service.make
+        @obj_a = Models::ServicePlan.make.service
+        @obj_b = Models::ServicePlan.make.service
       end
 
       let(:creation_req_for_a) do
@@ -108,16 +108,16 @@ module VCAP::CloudController
       end
     end
 
-    describe "get /v2/services?q=active:<t|f>" do
+    describe "get /v2/services" do
+      let(:user) {VCAP::CloudController::Models::User.make  }
       let (:headers) do
-        user = VCAP::CloudController::Models::User.make
         headers_for(user)
       end
 
-      before(:all) do
+      before(:each) do
         reset_database
-        @active = 3.times.map { Models::Service.make(:active => true) }
-        @inactive = 2.times.map { Models::Service.make(:active => false) }
+        @active = 3.times.map { Models::Service.make(:active => true).tap{|svc| Models::ServicePlan.make(:service => svc) } }
+        @inactive = 2.times.map { Models::Service.make(:active => false).tap{|svc| Models::ServicePlan.make(:service => svc) } }
       end
 
       def decoded_guids
@@ -130,19 +130,46 @@ module VCAP::CloudController
         decoded_guids.should =~ (@active + @inactive).map(&:guid)
       end
 
-      it "should filter inactive services" do
-        # Sequel stores 'true' and 'false' as 't' and 'f' in sqlite, so with
-        # sqlite, instead of 'true' or 'false', the parameter must be specified
-        # as 't' or 'f'. But in postgresql, either way is ok.
-        get "/v2/services?q=active:t", {}, headers
-        last_response.should be_ok
-        decoded_guids.should =~ @active.map(&:guid)
+
+      context "with an offering that has private plans" do
+        before(:each) do
+          @svc_all_private = @active.first
+          @svc_all_private.service_plans.each{|plan| plan.update(:public => false) }
+          @svc_one_public = @active.last
+          Models::ServicePlan.make(service: @svc_one_public, public: false)
+        end
+
+        it "should remove the offering when I cannot see any of the plans" do
+          get "/v2/services", {}, headers
+          last_response.should be_ok
+          decoded_guids.should include(@svc_one_public.guid)
+          decoded_guids.should_not include(@svc_all_private.guid)
+        end
+
+        it "should return the offering when I can see at least one of the plans" do
+          user.update(:admin => true)
+          get "/v2/services", {}, headers
+          last_response.should be_ok
+          decoded_guids.should include(@svc_one_public.guid)
+          decoded_guids.should include(@svc_all_private.guid)
+        end
       end
 
-      it "should get inactive services" do
-        get "/v2/services?q=active:f", {}, headers
-        last_response.should be_ok
-        decoded_guids.should =~ @inactive.map(&:guid)
+      describe "get /v2/services?q=active:<t|f>" do
+        it "can remove inactive services" do
+          # Sequel stores 'true' and 'false' as 't' and 'f' in sqlite, so with
+          # sqlite, instead of 'true' or 'false', the parameter must be specified
+          # as 't' or 'f'. But in postgresql, either way is ok.
+          get "/v2/services?q=active:t", {}, headers
+          last_response.should be_ok
+          decoded_guids.should =~ @active.map(&:guid)
+        end
+
+        it "can only get inactive services" do
+          get "/v2/services?q=active:f", {}, headers
+          last_response.should be_ok
+          decoded_guids.should =~ @inactive.map(&:guid)
+        end
       end
     end
 
