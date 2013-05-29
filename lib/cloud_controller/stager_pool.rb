@@ -22,10 +22,9 @@ module VCAP::CloudController
 
     def process_advertise_message(msg)
       mutex.synchronize do
-        advertisement = StagerAdvertisement.new(msg, Time.now)
+        advertisement = StagerAdvertisement.new(msg)
 
-        # remove older advertisements for the same stager_id
-        @stager_advertisements.delete_if { |ad| ad.stager_id == advertisement.stager_id }
+        remove_advertisement_for_id(advertisement.stager_id)
         @stager_advertisements << advertisement
       end
     end
@@ -52,15 +51,19 @@ module VCAP::CloudController
       @stager_advertisements.delete_if { |ad| ad.expired? }
     end
 
+    def remove_advertisement_for_id(id)
+      @stager_advertisements.delete_if { |ad| ad.stager_id == id }
+    end
+
     def mutex
       @mutex ||= Mutex.new
     end
 
     class StagerAdvertisement
-      attr_reader :stats, :updated_at
-      def initialize(stats, updated_at)
+      attr_reader :stats
+      def initialize(stats)
         @stats = stats
-        @updated_at = updated_at
+        @updated_at = Time.now
       end
 
       def stager_id
@@ -68,7 +71,7 @@ module VCAP::CloudController
       end
 
       def expired?
-        (Time.now.to_i - updated_at.to_i) > ADVERTISEMENT_EXPIRATION
+        (Time.now.to_i - @updated_at.to_i) > ADVERTISEMENT_EXPIRATION
       end
 
       def meets_needs?(mem, stack)

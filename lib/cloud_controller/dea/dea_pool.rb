@@ -26,19 +26,18 @@ module VCAP::CloudController
 
     def process_advertise_message(message)
       mutex.synchronize do
-        advertisement = DeaAdvertisement.new(message, Time.now)
+        advertisement = DeaAdvertisement.new(message)
 
-        # remove older advertisements for the same dea_id
-        @dea_advertisements.delete_if { |ad| ad.dea_id == advertisement.dea_id }
+        remove_advertisement_for_id(advertisement.dea_id)
         @dea_advertisements << advertisement
       end
     end
 
     def process_shutdown_message(message)
-      fake_advertisement = DeaAdvertisement.new(message, Time.now)
+      fake_advertisement = DeaAdvertisement.new(message)
 
       mutex.synchronize do
-        @dea_advertisements.delete_if { |ad| ad.dea_id == fake_advertisement.dea_id }
+        remove_advertisement_for_id(fake_advertisement.dea_id)
       end
     end
 
@@ -64,16 +63,20 @@ module VCAP::CloudController
       @dea_advertisements.delete_if { |ad| ad.expired? }
     end
 
+    def remove_advertisement_for_id(id)
+      @dea_advertisements.delete_if { |ad| ad.dea_id == id }
+    end
+
     def mutex
       @mutex ||= Mutex.new
     end
 
     class DeaAdvertisement
-      attr_reader :stats, :updated_at
+      attr_reader :stats
 
-      def initialize(stats, updated_at)
+      def initialize(stats)
         @stats = stats
-        @updated_at = updated_at
+        @updated_at = Time.now
       end
 
       def increment_instance_count(app_id)
@@ -89,7 +92,7 @@ module VCAP::CloudController
       end
 
       def expired?
-        (Time.now.to_i - updated_at.to_i) > ADVERTISEMENT_EXPIRATION
+        (Time.now.to_i - @updated_at.to_i) > ADVERTISEMENT_EXPIRATION
       end
 
       def meets_needs?(mem, stack)
