@@ -32,7 +32,14 @@ describe "Cloud controller", :type => :integration do
 
       thd.join
 
-      received.should eq("{\"host\":\"127.0.0.1\",\"port\":8181,\"uris\":\"api2.vcap.me\",\"tags\":{\"component\":\"CloudController\"}}")
+      expected = {
+        "host" => "127.0.0.1",
+        "port" => 8181,
+        "tags" => {"component" => "CloudController"},
+        "uris" => "api2.vcap.me"
+      }
+
+      received.should json_match(expected)
     end
   end
 end
