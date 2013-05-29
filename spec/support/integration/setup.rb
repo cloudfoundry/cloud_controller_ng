@@ -14,12 +14,16 @@ module IntegrationSetup
   end
 
   def start_cc(opts={}, wait_cycles = 20)
+    config_file = opts[:config] || "config/cloud_controller.yml"
+    config = YAML.load_file(config_file)
     run_cmd("bundle exec rake db:migrate", :wait => true)
-    @cc_pid = run_cmd("bin/cloud_controller -m config/cloud_controller.yml", opts)
+    @cc_pids ||= []
+    @cc_pids << run_cmd("bin/cloud_controller -m -c #{config_file}", opts)
 
+    info_endpoint = "http://localhost:#{config["port"]}/info"
     wait_cycles.times do
       sleep 1
-      result = Net::HTTP.get_response(URI.parse("http://localhost:8181/info")) rescue nil
+      result = Net::HTTP.get_response(URI.parse(info_endpoint)) rescue nil
       return if result && result.code.to_i == 200
     end
 
@@ -27,7 +31,8 @@ module IntegrationSetup
   end
 
   def stop_cc
-    graceful_kill(:cc, @cc_pid)
+    return unless @cc_pids
+    @cc_pids.each { |pid| graceful_kill(:cc, pid) }
   end
 
   def wait_for_nats_to_start

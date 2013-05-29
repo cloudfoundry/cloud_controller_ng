@@ -86,7 +86,7 @@ module VCAP::CloudController::RestController
     #
     # @param [Symbol] op The method to dispatch to.
     #
-    # @param [Array] args The arguments to the method beign disptched to.
+    # @param [Array] args The arguments to the method being dispatched to.
     #
     # @return [Object] Returns an array of [http response code, Header hash,
     # body string], or just a body string.
@@ -102,6 +102,11 @@ module VCAP::CloudController::RestController
       raise MessageParseError.new(e)
     rescue Models::InvalidRelation => e
       raise InvalidRelation.new(e)
+    rescue VCAP::Errors::Error
+      raise
+    rescue => e
+      logger.error(["An unhandled exception has occurred #{e.class} - #{e.message}:"].concat(e.backtrace).join("\\n"))
+      raise Errors::ServerError
     end
 
     # Fetch the current active user.  May be nil
@@ -170,14 +175,14 @@ module VCAP::CloudController::RestController
       # @param [String] base path to the api endpoint, e.g. the apps part of
       # /v2/apps/...
       #
-      # @return [String] base path to the api endoint
+      # @return [String] base path to the api endpoint
       def path_base(base = nil)
         @path_base = base if base
         @path_base || class_basename.underscore.pluralize
       end
 
-      # Get and set the allowed query paramaeters (sent via the q http
-      # query parmameter) for this rest/api endpoint.
+      # Get and set the allowed query parameters (sent via the q http
+      # query parameter) for this rest/api endpoint.
       #
       # @param [Array] args One or more attributes that can be used
       # as query parameters.

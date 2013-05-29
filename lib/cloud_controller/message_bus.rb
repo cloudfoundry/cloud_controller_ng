@@ -12,6 +12,10 @@ class VCAP::CloudController::MessageBus
       raise ArgumentError, "instance must not be nil" unless instance
       @instance = instance
     end
+
+    def nats_timeout
+      2.0
+    end
   end
 
   attr_reader :config, :nats, :subscriptions
@@ -70,10 +74,10 @@ class VCAP::CloudController::MessageBus
       # TODO: blacklist api2 in legacy CC
       # TODO: Yajl should probably also be injected
       router_register_message = Yajl::Encoder.encode({
-        :host => @config[:bind_address],
+        :host => config[:bind_address],
         :port => config[:port],
         :uris => config[:external_domain],
-        :tags => {:component => "CloudController" },
+        :tags => { :component => "CloudController" },
       })
 
       nats.publish("router.register", router_register_message)
@@ -82,6 +86,26 @@ class VCAP::CloudController::MessageBus
       nats.subscribe("router.start") do
         nats.publish("router.register", router_register_message)
       end
+    end
+  end
+
+  def unregister_routes(&cb)
+    called = false
+    callback = proc {
+      cb.call unless called || cb.nil?
+      called = true
+    }
+    EM.schedule do
+      router_unregister_message = Yajl::Encoder.encode({
+        :host => config[:bind_address],
+        :port => config[:port],
+        :uris => config[:external_domain],
+        :tags => { :component => "CloudController" },
+      })
+
+      logger.info("Sending router.unregister: #{router_unregister_message}")
+      nats.publish("router.unregister", router_unregister_message, &callback)
+      EM.add_timer(self.class.nats_timeout, &callback)
     end
   end
 
@@ -105,7 +129,7 @@ class VCAP::CloudController::MessageBus
           # we might do it if we are propelled to supply a lambda here...
           blk.yield(payload, inbox)
         rescue => e
-          logger.error "exception processing: '#{subject}' '#{payload}'"
+          logger.error "exception processing: '#{subject}' '#{payload}': #{e.inspect} #{e.backtrace.join("\n")}"
         end
       end
     end
@@ -166,7 +190,7 @@ class VCAP::CloudController::MessageBus
     payload = Yajl::Parser.parse(msg, :symbolize_keys => true)
     blk.yield(payload, inbox)
   rescue => e
-    logger.error "exception processing: '#{msg}' '#{e}'"
+    logger.error "exception processing: '#{msg}' '#{e.inspect}' #{e.backtrace}"
   end
 
   def logger

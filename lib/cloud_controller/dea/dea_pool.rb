@@ -4,7 +4,7 @@ require "vcap/stager/client"
 
 module VCAP::CloudController
   class DeaPool
-    ADVERTISEMENT_EXPIRATION = 10.freeze
+    ADVERTISEMENT_EXPIRATION = 10
 
     attr_reader :config, :message_bus
 
@@ -18,39 +18,53 @@ module VCAP::CloudController
       message_bus.subscribe("dea.advertise") do |msg|
         process_advertise_message(msg)
       end
+
+      message_bus.subscribe("dea.shutdown") do |msg|
+        process_shutdown_message(msg)
+      end
     end
 
     def process_advertise_message(message)
       mutex.synchronize do
-        advertisement = DeaAdvertisement.new(message, Time.now)
+        advertisement = DeaAdvertisement.new(message)
 
-        # remove older advertisements for the same dea_id
-        @dea_advertisements.delete_if { |ad| ad.dea_id == advertisement.dea_id }
+        remove_advertisement_for_id(advertisement.dea_id)
         @dea_advertisements << advertisement
+      end
+    end
+
+    def process_shutdown_message(message)
+      fake_advertisement = DeaAdvertisement.new(message)
+
+      mutex.synchronize do
+        remove_advertisement_for_id(fake_advertisement.dea_id)
       end
     end
 
     def find_dea(mem, stack, app_id)
       mutex.synchronize do
         prune_stale_deas
-        eligible_ads = @dea_advertisements.select { |ad| dea_meets_needs?(ad, mem, stack) }
+        eligible_ads = @dea_advertisements.select { |ad| ad.meets_needs?(mem, stack) }
         best_dea_ad = eligible_ads.min_by { |ad| ad.num_instances_of(app_id) }
         best_dea_ad && best_dea_ad.dea_id
       end
     end
 
+    def mark_app_staged(opts)
+      dea_id = opts[:dea_id]
+      app_id = opts[:app_id]
+
+      @dea_advertisements.find { |ad| ad.dea_id == dea_id }.increment_instance_count(app_id)
+    end
+
     private
 
     def prune_stale_deas
-      @dea_advertisements.delete_if { |ad| advertisement_expired?(ad) }
+      @dea_advertisements.delete_if { |ad| ad.expired? }
     end
 
-    def advertisement_expired?(ad)
-      (Time.now.to_i - ad.last_update.to_i) > ADVERTISEMENT_EXPIRATION
-    end
-
-    def dea_meets_needs?(advertisement, mem, stack)
-      advertisement.has_sufficient_memory?(mem) && advertisement.has_stack?(stack)
+    def remove_advertisement_for_id(id)
+      @dea_advertisements.delete_if { |ad| ad.dea_id == id }
     end
 
     def mutex
@@ -58,11 +72,15 @@ module VCAP::CloudController
     end
 
     class DeaAdvertisement
-      attr_reader :stats, :last_update
+      attr_reader :stats
 
-      def initialize(stats, last_update)
+      def initialize(stats)
         @stats = stats
-        @last_update = last_update
+        @updated_at = Time.now
+      end
+
+      def increment_instance_count(app_id)
+        stats[:app_id_to_count][app_id] = num_instances_of(app_id) + 1
       end
 
       def num_instances_of(app_id)
@@ -71,6 +89,14 @@ module VCAP::CloudController
 
       def dea_id
         stats[:id]
+      end
+
+      def expired?
+        (Time.now.to_i - @updated_at.to_i) > ADVERTISEMENT_EXPIRATION
+      end
+
+      def meets_needs?(mem, stack)
+        has_sufficient_memory?(mem) && has_stack?(stack)
       end
 
       def has_stack?(stack)

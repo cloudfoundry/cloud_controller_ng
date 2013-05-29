@@ -12,6 +12,10 @@ class MockMessageBus
   def register_routes
   end
 
+  def unregister_routes
+    yield if block_given?
+  end
+
   def subscribe(subject, opts = {}, &blk)
   end
 

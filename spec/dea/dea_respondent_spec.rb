@@ -6,9 +6,6 @@ module VCAP::CloudController
     before { message_bus.stub(:subscribe).with(anything) }
 
     let(:message_bus) { mock("message_bus") }
-    let(:configuration) do
-      {}
-    end
 
     let(:app) do
       Models::App.make(
@@ -31,7 +28,7 @@ module VCAP::CloudController
       }
     end
 
-    subject(:respondent) { DeaRespondent.new(configuration, message_bus) }
+    subject(:respondent) { DeaRespondent.new(message_bus) }
 
     describe "#initialize" do
       it "sets logger to a Steno Logger with tag 'cc.dea_respondent'" do
@@ -39,10 +36,14 @@ module VCAP::CloudController
         expect(logger).to be_a_kind_of Steno::Logger
         expect(logger.name).to eq("cc.dea_respondent")
       end
+    end
 
-      it "subscribes to 'droplet.exited'" do
-        message_bus.should_receive(:subscribe).with("droplet.exited")
-        respondent
+    describe "#start" do
+      it "subscribes to 'droplet.exited' with a queue" do
+        message_bus.should_receive(:subscribe).with("droplet.exited",
+          :queue => VCAP::CloudController::DeaRespondent::CRASH_EVENT_QUEUE)
+
+        respondent.start
       end
     end
 
@@ -100,18 +101,6 @@ module VCAP::CloudController
         it "does not add a record in the AppEvents table" do
           Models::AppEvent.should_not_receive(:create)
           respondent.process_droplet_exited_message(payload)
-        end
-      end
-
-      context "when the app event has already been registered (by another CC)" do
-        it "does not duplicate the same event" do
-          expect {
-            respondent.process_droplet_exited_message(payload)
-          }.to change { Models::AppEvent.count }.by(1)
-
-          expect {
-            respondent.process_droplet_exited_message(payload)
-          }.to_not change { Models::AppEvent.count }
         end
       end
     end

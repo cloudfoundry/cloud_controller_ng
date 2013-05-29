@@ -21,6 +21,10 @@ module VCAP::CloudController
       end
 
       def create_seed_organizations(config)
+        # It is assumed that if no system domain organization is present,
+        # then the 'system domain' feature is unused.
+        return unless config[:system_domain_organization]
+
         quota_definition = Models::QuotaDefinition.find(:name => "paid")
 
         unless quota_definition

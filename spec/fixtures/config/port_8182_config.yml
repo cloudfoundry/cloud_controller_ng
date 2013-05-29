@@ -1,0 +1,67 @@
+---
+local_route: 127.0.0.1
+port: 8182
+pid_filename: /tmp/cloud_controller.8182.pid
+
+info:
+  name: "vcap"
+  build: "2222"
+  version: 2
+  support_address: "http://support.cloudfoundry.com"
+  description: "Cloud Foundry sponsored by Pivotal"
+
+system_domain_organization: the-system-domain-org-name
+system_domain: the-system-domain.com
+app_domains:
+  - customer-app-domain1.com
+  - customer-app-domain2.com
+
+uaa:
+  url: "http://localhost:8080/uaa"
+  resource_id: "cloud_controller"
+  symmetric_secret: "tokensecret"
+
+logging:
+  file: /tmp/cloud_controller.8182.log
+  level: fatal # Keep at fatal to avoid lots of extraneous output in tests
+
+nats_uri: nats://127.0.0.1:4222
+
+db:
+  database: "sqlite:///tmp/cloud_controller.db"
+
+bulk_api:
+  auth_user: bulk_user
+  auth_password: bulk_password
+
+cc_partition: ng
+
+nginx:
+  use_nginx: false
+  instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
+
+quota_definitions:
+  free:
+    non_basic_services_allowed: false
+    total_services: 2
+    memory_limit: 512 # 0.5 GB
+  paid:
+    non_basic_services_allowed: true
+    total_services: 500
+    memory_limit: 204800 # 200 GB
+
+default_quota_definition: free
+
+resource_pool:
+  fog_connection:
+    provider: Local
+
+packages:
+  fog_connection:
+    provider: Local
+
+droplets:
+  fog_connection:
+    provider: Local
+
+db_encryption_key: some-key
