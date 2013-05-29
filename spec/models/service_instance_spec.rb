@@ -15,6 +15,7 @@ module VCAP::CloudController
       :db_required_attributes => [:name],
       :unique_attributes   => [:space, :name],
       :stripped_string_attributes => :name,
+      :ci_attributes       =>  :name,
       :many_to_one         => {
         :service_plan      => {
           :delete_ok => true,

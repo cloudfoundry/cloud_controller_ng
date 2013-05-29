@@ -96,7 +96,7 @@ module VCAP::CloudController::ModelSpecHelper
             orig_opts
           end
 
-          it "should fail due to Sequel validations" do
+          it "should fail if the same" do
             # TODO: swap out everything but the unique entries for more
             # accurate testing
             expect {
@@ -106,6 +106,24 @@ module VCAP::CloudController::ModelSpecHelper
             }.to raise_error Sequel::ValidationFailed, /#{sequel_exception_match}/
           end
 
+          if opts[:ci_attributes]
+            let(:ci_dup_opts) do
+              ci_opts = dup_opts.clone
+              opts[:ci_attributes].each do |attribute|
+                ci_opts[attribute] = ci_opts[attribute].swapcase
+              end
+              ci_opts
+            end
+
+            it "should fail if different case" do
+              expect {
+                described_class.create do |instance|
+                  instance.set_all(ci_dup_opts)
+                end
+              }.to raise_error Sequel::ValidationFailed, /#{sequel_exception_match}/
+            end
+          end
+          
           unless opts[:skip_database_constraints]
             it "should fail due to database integrity checks" do
               expect {

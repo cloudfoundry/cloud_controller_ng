@@ -8,6 +8,7 @@ module VCAP::CloudController
       :required_attributes  => [:label, :provider, :url, :description, :version],
       :unique_attributes    => [:label, :provider],
       :stripped_string_attributes => [:label, :provider],
+      :ci_attributes              => [:label, :provider],
       :one_to_zero_or_more   => {
         :service_plans      => {
           :delete_ok => true,
@@ -25,7 +26,7 @@ module VCAP::CloudController
         expect {
           subject
         }.to_not change {
-          Models::ServiceAuthToken.count(:label => service.label, :provider => service.provider)
+          Models::ServiceAuthToken.filter(:label => service.label, :provider => service.provider).count
         }
       end
     end

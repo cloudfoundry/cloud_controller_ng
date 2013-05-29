@@ -6,7 +6,7 @@ module VCAP::CloudController::Models
   class Route < Sequel::Model
     class InvalidDomainRelation < InvalidRelation; end
     class InvalidAppRelation < InvalidRelation; end
-
+      
     many_to_one :domain
     many_to_one :space
 
@@ -20,10 +20,12 @@ module VCAP::CloudController::Models
     export_attributes :host, :domain_guid, :space_guid
     import_attributes :host, :domain_guid, :space_guid, :app_guids
 
+    ci_attributes  :host
+    
     def fqdn
-      !host.empty? ? "#{host}.#{domain.name}" : domain.name
+      !host_wildcard? ? "#{host}.#{domain.name}" : domain.name
     end
-
+    
     def as_summary_json
       {
         :guid => guid,
@@ -38,19 +40,34 @@ module VCAP::CloudController::Models
     def organization
       space.organization if space
     end
+    
+    WILDCARD_HOST = "*"
+    
+    def before_validation
+      self[:host] = WILDCARD_HOST if !self[:host].nil? && self[:host].empty?
+      super
+    end
+    
+    def host
+      self[:host] == WILDCARD_HOST ? "" : self[:host]
+    end
+
+    def host_wildcard?
+      self[:host] == WILDCARD_HOST
+    end
 
     def validate
       validates_presence :domain
       validates_presence :space
+      
+      errors.add(:host, :presence) if self[:host].nil?
 
-      errors.add(:host, :presence) if host.nil?
-
-      validates_format   /^([\w\-]+)$/, :host if (host && !host.empty?)
-      validates_unique   [:host, :domain_id]
+      validates_format   /^([\w\-]+)$/, :host unless host_wildcard?
+      validates_unique_ci   [:host, :domain_id]
 
       if domain
         unless domain.wildcard
-          errors.add(:host, :host_not_empty) unless (host.nil? || host.empty?)
+          errors.add(:host, :host_not_wildcard) unless host_wildcard?
         end
 
         if space && space.domains_dataset.filter(:id => domain.id).count < 1

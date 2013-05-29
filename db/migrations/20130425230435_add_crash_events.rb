@@ -9,7 +9,7 @@ Sequel.migration do
       String :instance_guid, :null => false
       Integer :instance_index, :null => false
       Integer :exit_status, :null => false
-      DateTime :timestamp, :null => false
+      DateTime :event_timestamp, :null => false
       String :exit_description
 
       index :app_id
