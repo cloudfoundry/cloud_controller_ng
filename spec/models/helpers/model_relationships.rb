@@ -68,6 +68,7 @@ module VCAP::CloudController::ModelSpecHelper
               obj.send(add_attribute, related)
               obj.save
             end
+
             obj.send(association).length.should == 2
           end
         end

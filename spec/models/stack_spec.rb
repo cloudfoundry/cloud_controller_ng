@@ -1,5 +1,4 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController::Models
@@ -122,6 +121,21 @@ module VCAP::CloudController::Models
       it "destroys the apps" do
         app = App.make(:stack => stack)
         expect { stack.destroy }.to change { App.where(:id => app.id).count }.by(-1)
+      end
+    end
+
+    describe "filter deleted apps" do
+      let(:stack) { Stack.make }
+
+      context "when deleted apps exist in the space" do
+        it "should not return the deleted app" do
+          deleted_app = App.make(:stack => stack)
+          deleted_app.soft_delete
+
+          non_deleted_app = App.make(:stack => stack)
+
+          stack.apps.should == [non_deleted_app]
+        end
       end
     end
   end

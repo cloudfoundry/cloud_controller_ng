@@ -133,5 +133,20 @@ module VCAP::CloudController
         expect { subject }.to change { user.reload.default_space }.from(space).to(nil)
       end
     end
+
+    describe "filter deleted apps" do
+      let(:space) { Models::Space.make }
+
+      context "when deleted apps exist in the space" do
+        it "should not return the deleted app" do
+          deleted_app = Models::App.make(:space => space)
+          deleted_app.soft_delete
+
+          non_deleted_app = Models::App.make(:space => space)
+
+          space.apps.should == [non_deleted_app]
+        end
+      end
+    end
   end
 end

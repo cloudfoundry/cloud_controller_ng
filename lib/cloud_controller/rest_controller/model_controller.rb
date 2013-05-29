@@ -68,6 +68,7 @@ module VCAP::CloudController::RestController
       obj = find_id_and_validate_access(:delete, id)
       raise_if_has_associations!(obj) if v2_api? && !params["recursive"]
       obj.destroy
+
       [ HTTP::NO_CONTENT, nil ]
     end
 
@@ -77,9 +78,13 @@ module VCAP::CloudController::RestController
       ds = model.user_visible
       logger.debug "enumerate: #{ds.sql}"
       qp = self.class.query_parameters
-      ds = Query.filtered_dataset_from_query_params(model, ds, qp, @opts)
-      Paginator.render_json(self.class, ds, self.class.path,
+      filtered_dataset = get_filtered_dataset_for_enumeration(model, ds, qp, @opts)
+      Paginator.render_json(self.class, filtered_dataset, self.class.path,
                             @opts.merge(:serialization => serialization))
+    end
+
+    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+      Query.filtered_dataset_from_query_params(model, ds, qp, opts)
     end
 
     # Enumerate the related objects to the one with the given id.
@@ -100,14 +105,13 @@ module VCAP::CloudController::RestController
 
       associated_path = "#{self.class.url_for_id(id)}/#{name}"
 
-      dataset = Query.filtered_dataset_from_query_params(
-        associated_model,
+      filtered_dataset = Query.filtered_dataset_from_query_params(associated_model,
         obj.user_visible_relationship_dataset(name),
         associated_controller.query_parameters,
         @opts)
 
       Paginator.render_json(
-        associated_controller, dataset, associated_path, @opts)
+        associated_controller, filtered_dataset, associated_path, @opts)
     end
 
     # Add a related object.
@@ -248,7 +252,7 @@ module VCAP::CloudController::RestController
         "#{path}/:guid"
       end
 
-      # Return the url for a specfic id
+      # Return the url for a specific id
       #
       # @return [String] The url for a specific instance of this class.
       def url_for_id(id)

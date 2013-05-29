@@ -101,32 +101,19 @@ module VCAP::CloudController
     end
 
     describe "update app" do
-      let(:space_guid) { Models::Space.make.guid.to_s }
-      let(:initial_hash) do
-        { :name => "maria",
-          :space_guid => space_guid,
-        }
-      end
-
       let(:update_hash) do
-        { :name => "maria",
-          :space_guid => space_guid,
+        {
           :detected_buildpack => "buildpack"
         }
       end
 
-      before do
-        post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers)
-        @new_app_guid = decoded_response["metadata"]["guid"]
-      end
+      let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
 
-      subject { put "/v2/apps/#{@new_app_guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers) }
+      subject { put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers) }
 
       context "when detected buildpack is not provided" do
         let(:update_hash) do
-          { :name => "maria",
-            :space_guid => space_guid
-          }
+          {}
         end
 
         it "should work" do
@@ -142,6 +129,16 @@ module VCAP::CloudController
           last_response.body.should match /.*error.*detected_buildpack.*/i
         end
       end
+
+      context "when the app is already deleted" do
+        let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name", :deleted_at => Time.now) }
+
+        it "should raise error" do
+          subject
+
+          last_response.status.should == 404
+        end
+      end
     end
 
     describe "read an app" do
@@ -154,6 +151,89 @@ module VCAP::CloudController
         subject
         last_response.status.should == 200
         decoded_response["entity"]["detected_buildpack"].should eq("buildpack-name")
+      end
+
+      context "when the app is already deleted" do
+        let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name", :deleted_at => Time.now) }
+
+        it "should raise error" do
+          subject
+          last_response.status.should == 404
+        end
+      end
+    end
+
+    describe "delete an app" do
+      let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+
+      subject { delete "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers) }
+
+      context "access checks" do
+        context "when the app is not deleted" do
+          let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+
+          it "should delete the app" do
+            subject
+            last_response.status.should == 204
+          end
+        end
+
+        context "when the app is already deleted" do
+          let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name", :deleted_at => Time.now) }
+
+          it "should raise error" do
+            subject
+            last_response.status.should == 404
+          end
+        end
+      end
+
+      context "recursive deletion with dependencies" do
+        let!(:app_event) { Models::AppEvent.make(:app => app_obj) }
+        let!(:route) { Models::Route.make(:space => app_obj.space) }
+
+        before do
+          app_obj.add_route(route)
+          app_obj.save
+        end
+
+        subject { delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers) }
+
+        it "should delete the dependencies" do
+          subject
+          last_response.status.should == 204
+
+          Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
+          Models::AppEvent.find(:id => app_event.id).should_not be_nil
+        end
+      end
+
+      context "non recursive deletion with app events" do
+        let!(:app_event) { Models::AppEvent.make(:app => app_obj) }
+
+        context "with other empty associations" do
+          it "should soft delete the app and NOT delete the app event" do
+            subject
+
+            last_response.status.should == 204
+            Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
+            Models::AppEvent.find(:id => app_event.id).should_not be_nil
+          end
+        end
+
+        context "with NON-empty service_binding (one_to_many) association" do
+          let!(:svc_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+          let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
+
+          it "should raise an error" do
+            subject
+
+            last_response.status.should == 400
+            decoded_response["description"].should =~ /service_bindings/i
+          end
+        end
+
       end
     end
 

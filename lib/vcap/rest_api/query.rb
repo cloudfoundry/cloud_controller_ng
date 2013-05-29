@@ -148,15 +148,11 @@ module VCAP::RestAPI
     end
 
     def clean_up_datetime(q_val)
-      Time.parse(q_val).localtime
+      return q_val.empty? ? nil : Time.parse(q_val).localtime
     end
 
     def clean_up_integer(q_val)
-      if q_val.empty?
-        nil
-      else
-        q_val.to_i
-      end
+      return q_val.empty? ? nil : q_val.to_i
     end
 
     def column_type(query_key)

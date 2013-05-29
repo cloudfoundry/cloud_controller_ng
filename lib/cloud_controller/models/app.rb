@@ -15,12 +15,16 @@ module VCAP::CloudController
 
       class InvalidBindingRelation < InvalidRelation; end
 
+      class AlreadyDeletedError < StandardError; end
+
       one_to_many       :service_bindings, :after_remove => :after_remove_binding
+      one_to_many       :app_events
+
       many_to_one       :space
       many_to_one       :stack
+
       many_to_many      :routes, :before_add => :validate_route, :after_add => :mark_routes_changed, :after_remove => :mark_routes_changed
       many_to_many      :service_instances, :join_table => :service_bindings
-      one_to_many       :app_events
 
       add_association_dependencies :routes => :nullify, :service_instances => :nullify,
         :service_bindings => :destroy, :app_events => :destroy
@@ -60,7 +64,7 @@ module VCAP::CloudController
       def validate
         validates_presence :name
         validates_presence :space
-        validates_unique   [:space_id, :name]
+        validates_unique   [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
 
         validates_git_url :buildpack
 
@@ -284,6 +288,76 @@ module VCAP::CloudController
 
       def stopped?
         self.state == "STOPPED"
+      end
+
+      def deleted?
+        !self.deleted_at.nil?
+      end
+
+      def nullifyable_association_names
+        @nullifyable_association_names ||= model.association_dependencies_hash.select do |association, action|
+          action == :nullify
+        end.keys
+      end
+
+      def has_deletable_associations?
+        deletable_association_names.each do |association|
+          data = send(association)
+          return true unless data.nil? || data.empty?
+        end
+
+        false
+      end
+
+      # We do NOT delete app events for audit reasons.
+      def deletable_association?(association)
+        association != :app_events
+      end
+
+      def deletable_association_names
+        @deletable_association_names ||= model.association_dependencies_hash.select do |association, action|
+          action == :destroy && deletable_association?(association)
+        end.keys
+      end
+
+      def cleanup_deletable_associations
+        deletable_association_names.each do |association|
+          data = send(association)
+          data = [data] unless data.kind_of?(Array)
+          data.each do |associated_obj|
+            associated_obj.destroy
+          end
+        end
+      end
+
+      def cleanup_nullifyable_associations
+        nullifyable_association_names.each do |association|
+          data = send(association)
+          if data.kind_of?(Array)
+            data.each do |associated_obj|
+              associated_obj.remove_app(self) if associated_obj.respond_to?(:remove_app)
+            end
+          else
+            data.app = nil
+          end
+        end
+      end
+
+      def cleanup_associations
+        cleanup_deletable_associations
+        cleanup_nullifyable_associations
+      end
+
+      def soft_delete
+        raise AlreadyDeletedError, "App: #{self} was already soft deleted on: #{deleted_at}" if deleted_at
+
+        model.db.transaction do
+          lock!
+          cleanup_associations
+          self.deleted_at = Time.now
+          self.not_deleted = nil
+          save
+        end
       end
 
       def uris

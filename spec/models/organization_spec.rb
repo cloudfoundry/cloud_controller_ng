@@ -399,5 +399,21 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "filter deleted apps" do
+      let(:org) { Models::Organization.make }
+      let(:space) { Models::Space.make(:organization => org) }
+
+      context "when deleted apps exist in the organization" do
+        it "should not return the deleted apps" do
+          deleted_app = Models::App.make(:space => space)
+          deleted_app.soft_delete
+
+          non_deleted_app = Models::App.make(:space => space)
+
+          org.apps.should == [non_deleted_app]
+        end
+      end
+    end
   end
 end
