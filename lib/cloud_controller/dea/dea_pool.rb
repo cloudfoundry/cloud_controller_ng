@@ -4,7 +4,7 @@ require "vcap/stager/client"
 
 module VCAP::CloudController
   class DeaPool
-    ADVERTISEMENT_EXPIRATION = 10.freeze
+    ADVERTISEMENT_EXPIRATION = 10
 
     attr_reader :config, :message_bus
 
@@ -35,15 +35,17 @@ module VCAP::CloudController
     end
 
     def process_shutdown_message(message)
+      fake_advertisement = DeaAdvertisement.new(message, Time.now)
+
       mutex.synchronize do
-        @dea_advertisements.delete_if { |ad| ad.dea_id == message[:id] }
+        @dea_advertisements.delete_if { |ad| ad.dea_id == fake_advertisement.dea_id }
       end
     end
 
     def find_dea(mem, stack, app_id)
       mutex.synchronize do
         prune_stale_deas
-        eligible_ads = @dea_advertisements.select { |ad| dea_meets_needs?(ad, mem, stack) }
+        eligible_ads = @dea_advertisements.select { |ad| ad.meets_needs?(mem, stack) }
         best_dea_ad = eligible_ads.min_by { |ad| ad.num_instances_of(app_id) }
         best_dea_ad && best_dea_ad.dea_id
       end
@@ -59,15 +61,7 @@ module VCAP::CloudController
     private
 
     def prune_stale_deas
-      @dea_advertisements.delete_if { |ad| advertisement_expired?(ad) }
-    end
-
-    def advertisement_expired?(ad)
-      (Time.now.to_i - ad.last_update.to_i) > ADVERTISEMENT_EXPIRATION
-    end
-
-    def dea_meets_needs?(advertisement, mem, stack)
-      advertisement.has_sufficient_memory?(mem) && advertisement.has_stack?(stack)
+      @dea_advertisements.delete_if { |ad| ad.expired? }
     end
 
     def mutex
@@ -75,11 +69,11 @@ module VCAP::CloudController
     end
 
     class DeaAdvertisement
-      attr_reader :stats, :last_update
+      attr_reader :stats, :updated_at
 
-      def initialize(stats, last_update)
+      def initialize(stats, updated_at)
         @stats = stats
-        @last_update = last_update
+        @updated_at = updated_at
       end
 
       def increment_instance_count(app_id)
@@ -92,6 +86,14 @@ module VCAP::CloudController
 
       def dea_id
         stats[:id]
+      end
+
+      def expired?
+        (Time.now.to_i - updated_at.to_i) > ADVERTISEMENT_EXPIRATION
+      end
+
+      def meets_needs?(mem, stack)
+        has_sufficient_memory?(mem) && has_stack?(stack)
       end
 
       def has_stack?(stack)
