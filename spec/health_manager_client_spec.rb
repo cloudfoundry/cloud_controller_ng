@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
@@ -7,9 +5,10 @@ module VCAP::CloudController
     let(:app) { Models::App.make }
     let(:apps) { [Models::App.make, Models::App.make, Models::App.make] }
     let(:message_bus) { double(:message_bus) }
+    let(:configuration) { {} }
 
     before do
-      HealthManagerClient.configure(message_bus)
+      HealthManagerClient.configure(configuration, message_bus)
     end
 
     describe "find_status" do
@@ -19,7 +18,7 @@ module VCAP::CloudController
 
         status_json = "\"status\""
         encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
-        message_bus.should_receive(:request).
+        message_bus.should_receive(:synchronous_request).
           with("healthmanager.status", encoded, {:expected => 2, :timeout => 2}).
           and_return([status_json])
 
@@ -38,7 +37,7 @@ module VCAP::CloudController
           }
           resp_json = Yajl::Encoder.encode(resp)
 
-          message_bus.should_receive(:request).and_return([resp_json])
+          message_bus.should_receive(:synchronous_request).and_return([resp_json])
           HealthManagerClient.healthy_instances(app).should == 3
         end
       end
@@ -52,7 +51,7 @@ module VCAP::CloudController
           }
           resp_json = Yajl::Encoder.encode(resp)
 
-          message_bus.should_receive(:request).and_return([resp_json])
+          message_bus.should_receive(:synchronous_request).and_return([resp_json])
           HealthManagerClient.healthy_instances([app]).should == {
             app.guid => 3
           }
@@ -69,7 +68,7 @@ module VCAP::CloudController
                                  })
           end
 
-          message_bus.should_receive(:request).and_return(resp)
+          message_bus.should_receive(:synchronous_request).and_return(resp)
 
           expected = {}
           apps.each { |app| expected[app.guid] = 3 }
@@ -88,8 +87,16 @@ module VCAP::CloudController
         }
         resp_json = Yajl::Encoder.encode(resp)
 
-        message_bus.should_receive(:request).and_return([resp_json])
+        message_bus.should_receive(:synchronous_request).and_return([resp_json])
         HealthManagerClient.find_crashes(app).should == resp[:instances]
+      end
+    end
+
+    describe 'notify_app_updated' do
+      let(:configuration) { { :cc_partition => 'foo' } }
+      it 'should publish droplet.updated' do
+        message_bus.should_receive(:publish).with("droplet.updated", :droplet => app.guid, :cc_partition => 'foo')
+        HealthManagerClient.notify_app_updated(app.guid)
       end
     end
   end

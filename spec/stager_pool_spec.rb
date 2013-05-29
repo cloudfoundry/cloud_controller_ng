@@ -4,13 +4,12 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::StagerPool do
-    let(:mock_nats) { NatsClientMock.new({}) }
-    let(:message_bus) { MessageBus.new(:nats => mock_nats) }
+    let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:staging_advertise_msg) do
       {
-        :id => "staging-id",
-        :stacks => ["stack-name"],
-        :available_memory => 1024,
+          :id => "staging-id",
+          :stacks => ["stack-name"],
+          :available_memory => 1024,
       }
     end
 
@@ -21,7 +20,7 @@ module VCAP::CloudController
         with_em_and_thread do
           subject.register_subscriptions
           EM.next_tick do
-            mock_nats.publish("staging.advertise", JSON.dump(staging_advertise_msg))
+            message_bus.publish("staging.advertise", staging_advertise_msg)
           end
         end
         subject.find_stager("stack-name", 0).should == "staging-id"

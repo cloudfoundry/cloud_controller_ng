@@ -1,12 +1,9 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DeaPool do
-    let(:mock_nats) { NatsClientMock.new({}) }
-    let(:message_bus) { MessageBus.new(:nats => mock_nats) }
-    subject { DeaPool.new(config, message_bus) }
+    let(:message_bus) { CfMessageBus::MockMessageBus.new }
+    subject { DeaPool.new(message_bus) }
 
     describe "#register_subscriptions" do
       let(:dea_advertise_msg) do
@@ -28,12 +25,8 @@ module VCAP::CloudController
       end
 
       it "finds advertised dea" do
-        with_em_and_thread do
-          subject.register_subscriptions
-          EM.next_tick do
-            mock_nats.publish("dea.advertise", JSON.dump(dea_advertise_msg))
-          end
-        end
+        subject.register_subscriptions
+        message_bus.publish("dea.advertise", dea_advertise_msg)
         subject.find_dea(0, "stack", "app-id").should == "dea-id"
       end
 
@@ -41,8 +34,8 @@ module VCAP::CloudController
         with_em_and_thread do
           subject.register_subscriptions
           EM.next_tick do
-            mock_nats.publish("dea.advertise", JSON.dump(dea_advertise_msg))
-            mock_nats.publish("dea.shutdown", JSON.dump(dea_shutdown_msg))
+            message_bus.publish("dea.advertise", dea_advertise_msg)
+            message_bus.publish("dea.shutdown", dea_shutdown_msg)
           end
         end
 

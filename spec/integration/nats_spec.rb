@@ -5,7 +5,7 @@ require "json"
 describe "NATS", :type => :integration do
   before(:all) do
     start_nats
-    start_cc(:env => {"NATS_MAX_RECONNECT_ATTEMPTS" => "0"})
+    start_cc
   end
 
   after(:all) do
@@ -61,42 +61,6 @@ describe "NATS", :type => :integration do
 
         response = make_post_request("/v2/apps", data, authorized_token)
         response.code.should == "201"
-      end
-    end
-  end
-
-  describe "NATS fails and comes back up" do
-    before(:all) do
-      kill_nats
-      sleep NATS::MAX_RECONNECT_ATTEMPTS * NATS::RECONNECT_TIME_WAIT + 1
-      start_nats
-      wait_for_nats_to_start
-    end
-
-    after(:all) do
-      stop_nats
-    end
-
-    let(:router_register_message) do
-      Yajl::Encoder.encode(
-        {
-          :host => "127.0.0.1",
-          :port => 8181,
-          :uris => "api2.vcap.me",
-          :tags => {:component => "CloudController"}
-        }
-      )
-    end
-
-    it "re-subscribes" do
-      NATS.start do
-        sid = NATS.subscribe("router.register") do |received_msg|
-          received_msg.should eq(router_register_message)
-          NATS.stop
-        end
-
-        NATS.publish("router.start", {})
-        NATS.timeout(sid, 10) { fail "NATS timed out while waiting for re-subscribe to propagate" }
       end
     end
   end

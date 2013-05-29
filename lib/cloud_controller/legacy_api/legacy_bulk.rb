@@ -1,4 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
 require "sinatra"
 require "cloud_controller/rest_controller/base"
 
@@ -38,9 +37,7 @@ module VCAP::CloudController
       attr_reader :config, :message_bus
 
       def configure(config, message_bus)
-        @config = config[:bulk_api].merge(
-          :cc_partition => config.fetch(:cc_partition),
-        )
+        @config = config[:bulk_api].merge(:cc_partition => config.fetch(:cc_partition))
         @message_bus = message_bus
       end
 

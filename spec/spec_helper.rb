@@ -1,4 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
 $:.unshift(File.expand_path("../../lib", __FILE__))
 
 require "rubygems"
@@ -14,6 +13,7 @@ require "steno"
 require "cloud_controller"
 require "rspec_let_monkey_patch"
 require "webmock/rspec"
+require "cf_message_bus/mock_message_bus"
 
 module VCAP::CloudController
   class SpecEnvironment
@@ -184,11 +184,10 @@ module VCAP::CloudController::SpecHelper
 
   def configure_components(config)
     VCAP::CloudController::Config.db_encryption_key = "some-key"
-    mbus = MockMessageBus.new(config)
-    VCAP::CloudController::MessageBus.instance = mbus
+    mbus = CfMessageBus::MockMessageBus.new
+
     # FIXME: this is better suited for a before-each stub so that we can unstub it in examples
-    VCAP::CloudController::Models::ServiceInstance.gateway_client_class =
-      VCAP::Services::Api::ServiceGatewayClientFake
+    VCAP::CloudController::Models::ServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
 
     VCAP::CloudController::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.instance =
@@ -199,10 +198,10 @@ module VCAP::CloudController::SpecHelper
     VCAP::CloudController::AppStager.configure(config, mbus, stager_pool)
     VCAP::CloudController::Staging.configure(config)
 
-    dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)
+    dea_pool = VCAP::CloudController::DeaPool.new(mbus)
     VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
 
-    VCAP::CloudController::HealthManagerClient.configure(mbus)
+    VCAP::CloudController::HealthManagerClient.configure(config, mbus)
 
     VCAP::CloudController::LegacyBulk.configure(config, mbus)
     VCAP::CloudController::Models::QuotaDefinition.configure(config)

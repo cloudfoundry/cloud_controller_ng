@@ -1,16 +1,18 @@
-require "spec_helper"
+require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe Runner do
-    let(:valid_config_file_path) do
-      File.expand_path("../fixtures/config/minimal_config.yml", __FILE__)
-    end
-
+    let(:valid_config_file_path) { File.expand_path("../fixtures/config/minimal_config.yml", __FILE__) }
     let(:config_file_path) { valid_config_file_path }
+    let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
     let(:argv) { [] }
 
-    before { MessageBus.stub(:new => MockMessageBus.new({})) }
+    before do
+      MessageBusConfigurer::Configurer.any_instance.stub(:go).and_return(message_bus)
+      VCAP::Component.stub(:register)
+      EM.stub(:run).and_yield
+    end
 
     subject do
       Runner.new(argv + ["-c", config_file_path]).tap do |r|
@@ -143,25 +145,11 @@ module VCAP::CloudController
     end
 
     describe "#stop!" do
-      before do
-        subject.run!
-        subject.stub(:stop_thin_server)
-        EM.stub(:stop)
-      end
-
-      it "stops thin" do
+      it 'should stop thin and EM after unregistering routes' do
+        RouterClient.should_receive(:unregister).and_yield
         subject.should_receive(:stop_thin_server)
-        subject.stop!
-      end
-
-      it "stops EM" do
         EM.should_receive(:stop)
-        subject.stop!
-      end
-
-      it "unregisters its route" do
-        VCAP::CloudController::MessageBus.instance.should_receive(:unregister_routes)
-        subject.stop!
+        subject.stop!(message_bus)
       end
     end
 
@@ -174,7 +162,7 @@ module VCAP::CloudController
         subject.should_receive(:trap).with("TERM")
         subject.should_receive(:trap).with("INT")
         subject.should_receive(:trap).with("QUIT")
-        subject.trap_signals
+        subject.trap_signals(message_bus)
       end
 
       it "calls #stop! when the handlers are triggered" do
@@ -192,7 +180,7 @@ module VCAP::CloudController
           callbacks << blk
         end
 
-        subject.trap_signals
+        subject.trap_signals(message_bus)
 
         subject.should_receive(:stop!).exactly(3).times
         callbacks.each(&:call)

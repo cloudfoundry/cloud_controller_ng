@@ -1,4 +1,14 @@
 GIT
+  remote: git://github.com/cloudfoundry/cf-message-bus.git
+  revision: 13749d133390bc391e5c9cdd511b2fdaa1299665
+  specs:
+    cf-message-bus (0.0.1)
+      eventmachine (~> 1.0.0)
+      nats (= 0.4.26)
+      vcap-concurrency
+      yajl-ruby
+
+GIT
   remote: https://github.com/cloudfoundry/cf-uaa-lib.git
   revision: 8d34eede588c7620eb22031369f9515f602df68b
   ref: 8d34eede
@@ -185,6 +195,7 @@ PLATFORMS
 
 DEPENDENCIES
   bcrypt-ruby
+  cf-message-bus!
   cf-uaa-lib (~> 1.3.7)!
   ci_reporter
   debugger

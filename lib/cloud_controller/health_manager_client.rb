@@ -5,7 +5,8 @@ module VCAP::CloudController
     class << self
       attr_reader :message_bus
 
-      def configure(message_bus)
+      def configure(config, message_bus)
+        @config = config
         @message_bus = message_bus
       end
 
@@ -60,6 +61,10 @@ module VCAP::CloudController
         end
       end
 
+      def notify_app_updated(guid)
+        @message_bus.publish("droplet.updated", :droplet => guid, :cc_partition => @config[:cc_partition])
+      end
+
       private
 
       def hm_request(cmd, args = {}, opts = {})
@@ -69,7 +74,7 @@ module VCAP::CloudController
         logger.debug msg
         json = Yajl::Encoder.encode(args)
 
-        response = message_bus.request(subject, json, opts)
+        response = message_bus.synchronous_request(subject, json, opts)
         parsed_response = []
         response.each do |json_str|
           parsed_response << Yajl::Parser.parse(json_str,

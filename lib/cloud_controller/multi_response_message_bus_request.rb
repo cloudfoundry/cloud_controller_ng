@@ -1,9 +1,9 @@
-# Can be used to run custom callback for each NATS response
-class MultiResponseNatsRequest
+# Can be used to run different callbacks for each message bus response
+class MultiResponseMessageBusRequest
   class Error < StandardError; end
 
-  def initialize(nats, subject)
-    @nats = nats
+  def initialize(message_bus, subject)
+    @message_bus = message_bus
     @subject = subject
     @responses = []
     @response_timeouts = []
@@ -18,8 +18,8 @@ class MultiResponseNatsRequest
     raise ArgumentError, "at least one callback must be provided" if @responses.empty?
     raise ArgumentError, "request was already made" if @sid
 
-    @sid = @nats.request(@subject, Yajl.dump(data)) do |response|
-      handle_received_response(response)
+    @sid = @message_bus.request(@subject, data) do |response, error|
+      handle_received_response(response, error)
     end
 
     logger.info "request: sid=#{@sid} response='#{data}'"
@@ -35,30 +35,23 @@ class MultiResponseNatsRequest
 
   private
 
-  def handle_received_response(response)
+  def handle_received_response(response, response_error = nil)
     logger.info "handle_received_response: sid=#{@sid} response='#{response}'"
 
-    begin
-      parsed_response = Yajl.load(response)
-    rescue Yajl::ParseError => e
-      logger.info("Failed decoding response: #{e}\n#{e.backtrace}")
-      error = Error.new("Internal error: failed to decode response")
-    end
-
+    error = Error.new("Internal error: failed to decode response") if response_error
     timeout_request
-    trigger_on_response(parsed_response, error)
+    trigger_on_response(response, error)
   end
 
   def trigger_on_response(response, error)
-    if response_callback = @responses.pop
-      response_callback.call(response, error)
-    end
+    return unless (response_callback = @responses.pop)
+    response_callback.call(response, error)
   end
 
   def timeout_request
     EM.cancel_timer(@timeout) if @timeout
 
-    if secs = @response_timeouts.pop
+    if (secs = @response_timeouts.pop)
       logger.info "timeout_request: sid=#{@sid} timeout=#{secs}"
 
       @timeout = EM.add_timer(secs) do
@@ -70,7 +63,7 @@ class MultiResponseNatsRequest
 
   def unsubscribe
     logger.info "unsubscribe: sid=#{@sid}"
-    @nats.unsubscribe(@sid)
+    @message_bus.unsubscribe(@sid)
   end
 
   def logger

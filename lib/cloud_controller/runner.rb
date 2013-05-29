@@ -3,8 +3,9 @@
 require "steno"
 require "optparse"
 require "vcap/uaa_util"
-require File.expand_path("../message_bus.rb", __FILE__)
+require "cf_message_bus/message_bus"
 require File.expand_path("../seeds", __FILE__)
+require_relative "message_bus_configurer"
 
 module VCAP::CloudController
   class Runner
@@ -85,74 +86,94 @@ module VCAP::CloudController
     end
 
     def run!
-      start_cloud_controller
-      config = @config.dup
+      EM.run do
+        config = @config.dup
 
-      Seeds.write_seed_data(config) if @insert_seed_data
-      app = create_app(config)
+        message_bus = MessageBusConfigurer::Configurer.new(:uri => config[:message_bus_uri], :logger => logger).go
 
-      start_thin_server(app, config)
+        start_cloud_controller(message_bus)
+
+        if @insert_seed_data
+          Seeds.write_seed_data(config)
+          VCAP::CloudController::Models::Stack.populate
+        end
+
+        system_domains = Array(config[:system_domains])
+        system_domains.each do |name|
+          VCAP::CloudController::Models::Domain.find_or_create_shared_domain(name)
+        end
+
+        VCAP::CloudController::Models::Domain.default_serving_domain_name = system_domains.first
+
+        app = create_app(config, message_bus)
+
+        start_thin_server(app, config, message_bus)
+      end
     end
 
-    def trap_signals
+    def trap_signals(message_bus)
       %w(TERM INT QUIT).each do |signal|
         trap(signal) do
           logger.warn("Caught signal #{signal}")
-          stop!
+          stop!(message_bus)
         end
       end
     end
 
-    def stop!
+    def stop!(message_bus)
       logger.info("Unregistering routes.")
-      message_bus.unregister_routes do
+
+      RouterClient.unregister do
         stop_thin_server
         EM.stop
       end
     end
 
+    def merge_vcap_config
+      services = JSON.parse(ENV["VCAP_SERVICES"])
+      pg_key = services.keys.select { |svc| svc =~ /postgres/i }.first
+      c = services[pg_key].first["credentials"]
+      @config[:db][:database] = "postgres://#{c["user"]}:#{c["password"]}@#{c["hostname"]}:#{c["port"]}/#{c["name"]}"
+      @config[:port] = ENV["VCAP_APP_PORT"].to_i
+    end
+
     private
 
-    def start_cloud_controller
+    def start_cloud_controller(message_bus)
       create_pidfile
 
       setup_logging
       setup_db
 
       @config[:bind_address] = VCAP.local_ip(@config[:local_route])
-      VCAP::CloudController::Config.configure(@config)
+
+      VCAP::CloudController::Config.configure(@config, message_bus)
     end
 
-    def create_app(config)
+    def create_app(config, message_bus)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
-      mbus = message_bus
+      register_component
 
       Rack::Builder.new do
         use Rack::CommonLogger
 
-        mbus.register_components
-        mbus.register_routes
+        VCAP::CloudController::DeaClient.run
+        VCAP::CloudController::AppStager.run
 
-        DeaClient.run
-        AppStager.run
-
-        LegacyBulk.register_subscription
-
-        VCAP::CloudController.health_manager_respondent =
-          HealthManagerRespondent.new(config)
-
-        VCAP::CloudController.dea_respondent = DeaRespondent.new(mbus)
+        VCAP::CloudController::LegacyBulk.register_subscription
+        VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
+        VCAP::CloudController.dea_respondent = VCAP::CloudController::DeaRespondent.new(message_bus)
 
         VCAP::CloudController.dea_respondent.start
 
         map "/" do
-          run Controller.new(config, token_decoder)
+          run VCAP::CloudController::Controller.new(config, token_decoder)
         end
       end
     end
 
-    def start_thin_server(app, config)
+    def start_thin_server(app, config, message_bus)
       if @config[:nginx][:use_nginx]
         @thin_server = Thin::Server.new(
           config[:nginx][:instance_socket],
@@ -163,7 +184,7 @@ module VCAP::CloudController
       end
 
       @thin_server.app = app
-      trap_signals
+      trap_signals(message_bus)
 
       # The routers proxying to us handle killing inactive connections.
       # Set an upper limit just to be safe.
@@ -176,8 +197,14 @@ module VCAP::CloudController
       @thin_server.stop if @thin_server
     end
 
-    def message_bus
-      VCAP::CloudController::MessageBus.instance
+    def register_component
+      VCAP::Component.register(
+          :type => 'CloudController',
+          :host => @config[:bind_address],
+          :index => @config[:index],
+          :config => @config,
+      # leaving the varz port / user / pwd blank to be random
+      )
     end
   end
 end

@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
@@ -8,7 +6,7 @@ module VCAP::CloudController
 
     before(:all) do
       @app = Models::App.make
-      @message_bus = double(:message_bus)
+      @message_bus = CfMessageBus::MockMessageBus.new
       @dea_pool = double(:dea_pool)
 
       NUM_SVC_INSTANCES.times do
@@ -193,13 +191,12 @@ module VCAP::CloudController
 
         instance_json = "\"instance\""
         encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
-        @message_bus.should_receive(:request).
+        @message_bus.should_receive(:synchronous_request).
           with("dea.find.droplet", encoded, {:timeout=>2}).
           and_return([instance_json])
 
         with_em_and_thread do
-          DeaClient.find_specific_instance(@app, { :other_opt => "value" })
-          .should == "instance"
+          DeaClient.find_specific_instance(@app, { :other_opt => "value" }).should == "instance"
         end
       end
     end
@@ -215,7 +212,7 @@ module VCAP::CloudController
           "other_opt_0" => "value_0",
           "other_opt_1" => "value_1",
         })
-        @message_bus.should_receive(:request).
+        @message_bus.should_receive(:synchronous_request).
           with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
 
@@ -236,7 +233,7 @@ module VCAP::CloudController
 
         instance_json = "\"instance\""
         encoded = Yajl::Encoder.encode({ "droplet" => 1 })
-        @message_bus.should_receive(:request).
+        @message_bus.should_receive(:synchronous_request).
           with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
 
@@ -251,7 +248,7 @@ module VCAP::CloudController
 
         instance_json = "\"instance\""
         encoded = Yajl::Encoder.encode({ "droplet" => 1, "other_opt" => "value" })
-        @message_bus.should_receive(:request).
+        @message_bus.should_receive(:synchronous_request).
           with("dea.find.droplet", encoded, { :expected => 5, :timeout => 10 }).
           and_return([instance_json, instance_json])
 

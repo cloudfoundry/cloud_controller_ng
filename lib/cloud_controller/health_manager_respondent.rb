@@ -2,7 +2,6 @@
 
 require "steno"
 
-require File.expand_path("../message_bus.rb", __FILE__)
 require File.expand_path("../dea/dea_client", __FILE__)
 
 module VCAP::CloudController

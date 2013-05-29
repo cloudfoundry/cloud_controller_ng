@@ -25,7 +25,7 @@ logging:
   file: /tmp/cloud_controller.8181.log
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
 
-nats_uri: nats://127.0.0.1:4222
+message_bus_uri: nats://127.0.0.1:4222
 
 db:
   database: "sqlite:///tmp/cloud_controller.db"

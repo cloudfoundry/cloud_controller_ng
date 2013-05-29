@@ -7,13 +7,12 @@ module VCAP::CloudController
   describe HealthManagerRespondent do
     shared_examples "common test for all health manager respondents" do
       before do
-        # we are only testing if NATS is subscribed
         dea_client.stub(:stop_instances)
         dea_client.stub(:stop)
         dea_client.stub(:start_instances_with_message)
       end
 
-      it "CC subscribes to the Health Mangager NATS" do
+      it "CC subscribes to the Health Manager messages" do
         mbus.should_receive(:subscribe).with("cloudcontrollers.hm.requests.ng", :queue => "cc")
         process_hm_request
       end
@@ -21,7 +20,7 @@ module VCAP::CloudController
 
     before { mbus.stub(:subscribe).with(anything, anything) }
 
-    let(:mbus) { double("mock nats") }
+    let(:mbus) { double("mock message bus") }
     let(:dea_client) { double("mock dea client", :message_bus => mbus) }
     let(:respondent) do
       HealthManagerRespondent.new(

@@ -2,13 +2,14 @@
 
 require "membrane"
 require "json_message"
-require File.expand_path("../spec_helper.rb", __FILE__)
+require File.expand_path("../spec_helper", __FILE__)
 require "cloud_controller/models"
+require "cf_message_bus/mock_message_bus"
 
 module VCAP::CloudController
   module VCAP::CloudController
     describe LegacyBulk do
-      let(:mbus) { MockMessageBus.new({}) }
+      let(:mbus) { CfMessageBus::MockMessageBus.new({}) }
 
       before do
         @bulk_user = "bulk_user"
@@ -16,7 +17,7 @@ module VCAP::CloudController
       end
 
       describe ".register_subscription" do
-        it "should be able to discover credentials through NATS" do
+        it "should be able to discover credentials through message bus" do
           LegacyBulk.configure(config, mbus)
 
           mbus.should_receive(:subscribe)

@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
@@ -905,7 +903,7 @@ module VCAP::CloudController
         def self.it_does_not_notify_dea
           it "does not notify dea of app update" do
             DeaClient.should_not_receive(:change_running_instances)
-            MessageBus.instance.should_not_receive(:publish)
+            HealthManagerClient.should_not_receive(:notify_app_updated)
             update
           end
         end
@@ -913,12 +911,7 @@ module VCAP::CloudController
         def self.it_notifies_dea
           it "notifies dea of update" do
             DeaClient.should_receive(:change_running_instances).with(subject, after_update_instances)
-            MessageBus.instance.should_receive(:publish).with(
-              "droplet.updated",
-              json_match(hash_including(
-                "droplet" => subject.guid,
-              )),
-            )
+            HealthManagerClient.should_receive(:notify_app_updated).with(subject.guid)
             update
           end
         end
@@ -957,7 +950,7 @@ module VCAP::CloudController
         def self.it_does_not_notify_dea
           it "does not notify dea of stop or update" do
             DeaClient.should_not_receive(:stop)
-            MessageBus.instance.should_not_receive(:publish)
+            HealthManagerClient.should_not_receive(:notify_app_updated)
             update
           end
         end
@@ -965,12 +958,7 @@ module VCAP::CloudController
         def self.it_notifies_dea
           it "notifies dea of stop and update" do
             DeaClient.should_receive(:stop).with(subject)
-            MessageBus.instance.should_receive(:publish).with(
-              "droplet.updated",
-              json_match(hash_including(
-                "droplet" => subject.guid,
-              )),
-            )
+            HealthManagerClient.should_receive(:notify_app_updated).with(subject.guid)
             update
           end
         end
@@ -1009,7 +997,7 @@ module VCAP::CloudController
         def self.it_does_not_notify_dea
           it "does not notify dea of app update" do
             DeaClient.should_not_receive(:start)
-            MessageBus.instance.should_not_receive(:publish)
+            HealthManagerClient.should_not_receive(:notify_app_updated)
             update
           end
         end
@@ -1017,12 +1005,7 @@ module VCAP::CloudController
         def self.it_notifies_dea
           it "notifies dea of start and update" do
             DeaClient.should_receive(:start).with(subject)
-            MessageBus.instance.should_receive(:publish).with(
-              "droplet.updated",
-              json_match(hash_including(
-                "droplet" => subject.guid,
-              )),
-            )
+            HealthManagerClient.should_receive(:notify_app_updated).with(subject.guid)
             update
           end
         end

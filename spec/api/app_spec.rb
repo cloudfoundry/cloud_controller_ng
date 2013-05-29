@@ -325,7 +325,7 @@ module VCAP::CloudController
               end
 
               it "returns X-App-Staging-Log header with staging log url" do
-                stager_response = AppStagerTask::Response.new("task_streaming_log_url" => "streaming-log-url")
+                stager_response = AppStagerTask::Response.new(:task_streaming_log_url => "streaming-log-url")
                 AppStager.stub(:stage_app => stager_response)
 
                 put "/v2/apps/#{app_obj.guid}?#{query_params}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
@@ -395,18 +395,15 @@ module VCAP::CloudController
         @app_url = "/v2/apps/#{@app.guid}"
       end
 
-      it "sends a dea.update message when we add one url through PUT /v2/apps/:guid" do
+      it "tells the dea client to update when we add one url through PUT /v2/apps/:guid" do
         route = domain.add_route(
           :host => "app",
           :space => space,
         )
 
-        MessageBus.instance.should_receive(:publish).with(
-          "dea.update",
-          json_match(hash_including(
-            "uris" => ["app.jesse.cloud"]
-          )),
-        )
+        DeaClient.should_receive(:update_uris).with(an_instance_of(VCAP::CloudController::Models::App)) do |app|
+          expect(app.uris).to include("app.jesse.cloud")
+        end
 
         put(
           @app_url,
@@ -418,9 +415,7 @@ module VCAP::CloudController
         last_response.status.should == 201
       end
 
-      it "sends a dea.update message when we add one url through PUT /v2/apps/:guid/routes"
-
-      it "sends a dea.update message dea.update when we remove a url through PUT /v2/apps/:guid" do
+      it "tells the dea client to update when we remove a url through PUT /v2/apps/:guid" do
         bar_route = @app.add_route(
           :host => "bar",
           :space => space,
@@ -436,12 +431,9 @@ module VCAP::CloudController
           r["metadata"]["guid"]
         }.sort.should == [bar_route.guid, route.guid].sort
 
-        MessageBus.instance.should_receive(:publish).with(
-          "dea.update",
-          json_match(hash_including(
-            "uris" => ["foo.jesse.cloud"],
-          )),
-        )
+        DeaClient.should_receive(:update_uris).with(an_instance_of(VCAP::CloudController::Models::App)) do |app|
+          expect(app.uris).to include("foo.jesse.cloud")
+        end
 
         put(
           @app_url,
@@ -452,8 +444,6 @@ module VCAP::CloudController
         )
         last_response.status.should == 201
       end
-
-      it "sends a dea.update message when we remove one url through PUT /v2/apps/:guid/routes"
     end
 
     describe "Permissions" do

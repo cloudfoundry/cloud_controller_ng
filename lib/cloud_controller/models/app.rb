@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require "cloud_controller/app_stager"
 
 module VCAP::CloudController
@@ -13,7 +11,8 @@ module VCAP::CloudController
         end
       end
 
-      class InvalidBindingRelation < InvalidRelation; end
+      class InvalidBindingRelation < InvalidRelation;
+      end
 
       class AlreadyDeletedError < StandardError; end
 
@@ -29,21 +28,21 @@ module VCAP::CloudController
       add_association_dependencies :routes => :nullify, :service_instances => :nullify,
         :service_bindings => :destroy, :app_events => :destroy
 
-      default_order_by  :name
+      default_order_by :name
 
       export_attributes :name, :production,
-                        :space_guid, :stack_guid, :buildpack, :detected_buildpack,
-                        :environment_json, :memory, :instances, :disk_quota,
-                        :state, :version, :command, :console, :debug,
-                        :staging_task_id
+        :space_guid, :stack_guid, :buildpack, :detected_buildpack,
+        :environment_json, :memory, :instances, :disk_quota,
+        :state, :version, :command, :console, :debug,
+        :staging_task_id
 
       import_attributes :name, :production,
-                        :space_guid, :stack_guid, :buildpack, :detected_buildpack,
-                        :environment_json, :memory, :instances, :disk_quota,
-                        :state, :command, :console, :debug,
-                        :staging_task_id, :service_binding_guids, :route_guids
+        :space_guid, :stack_guid, :buildpack, :detected_buildpack,
+        :environment_json, :memory, :instances, :disk_quota,
+        :state, :command, :console, :debug,
+        :staging_task_id, :service_binding_guids, :route_guids
 
-      strip_attributes  :name
+      strip_attributes :name
 
       serialize_attributes :json, :metadata
 
@@ -138,7 +137,7 @@ module VCAP::CloudController
 
       def footprint_changed?
         (column_changed?(:production) || column_changed?(:memory) ||
-         column_changed?(:instances))
+          column_changed?(:instances))
       end
 
       def after_destroy
@@ -219,8 +218,8 @@ module VCAP::CloudController
 
       def validate_route(route)
         unless (route && space &&
-                route.domain_dataset.filter(:spaces => [space]).count == 1 &&
-                route.space_id == space.id)
+          route.domain_dataset.filter(:spaces => [space]).count == 1 &&
+          route.space_id == space.id)
           raise InvalidRouteRelation.new(route.guid)
         end
       end
@@ -416,8 +415,7 @@ module VCAP::CloudController
 
       def stage_if_needed(&success_callback)
         if needs_staging? && started?
-          self.last_stager_response = \
-            AppStager.stage_app(self, {:async => stage_async}, &success_callback)
+          self.last_stager_response = AppStager.stage_app(self, {:async => stage_async}, &success_callback)
         else
           success_callback.call
         end
@@ -454,10 +452,7 @@ module VCAP::CloudController
       end
 
       def send_droplet_updated_message
-        MessageBus.instance.publish("droplet.updated", Yajl::Encoder.encode(
-          :droplet => guid,
-          :cc_partition => MessageBus.instance.config[:cc_partition]
-        ))
+        HealthManagerClient.notify_app_updated(guid)
       end
 
       def mark_routes_changed(_)

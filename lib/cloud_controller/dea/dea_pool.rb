@@ -6,10 +6,7 @@ module VCAP::CloudController
   class DeaPool
     ADVERTISEMENT_EXPIRATION = 10
 
-    attr_reader :config, :message_bus
-
-    def initialize(config, message_bus)
-      @config = config
+    def initialize(message_bus)
       @message_bus = message_bus
       @dea_advertisements = []
     end
@@ -58,6 +55,8 @@ module VCAP::CloudController
     end
 
     private
+
+    attr_reader :message_bus
 
     def prune_stale_deas
       @dea_advertisements.delete_if { |ad| ad.expired? }

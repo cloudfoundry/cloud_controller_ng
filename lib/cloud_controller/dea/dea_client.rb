@@ -358,7 +358,7 @@ module VCAP::CloudController
         logger.debug msg
         json = Yajl::Encoder.encode(args)
 
-        response = message_bus.request(subject, json, opts)
+        response = message_bus.synchronous_request(subject, json, opts)
         parsed_response = []
         response.each do |json_str|
           parsed_response << Yajl::Parser.parse(json_str,

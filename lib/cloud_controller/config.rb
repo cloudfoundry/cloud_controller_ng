@@ -39,7 +39,7 @@ class VCAP::CloudController::Config < VCAP::Config
         optional(:syslog)   => String,      # Name to associate with syslog messages (should start with 'vcap.')
       },
 
-      :nats_uri              => String,     # NATS uri of the form nats://<user>:<pass>@<host>:<port>
+      :message_bus_uri              => String,     # Currently a NATS uri of the form nats://<user>:<pass>@<host>:<port>
       :pid_filename          => String,     # Pid filename to use
 
       optional(:directories) => {
@@ -138,25 +138,24 @@ class VCAP::CloudController::Config < VCAP::Config
     merge_defaults(config)
   end
 
-  def self.configure(config)
-    mbus = VCAP::CloudController::MessageBus.new(config)
-    VCAP::CloudController::MessageBus.instance = mbus
-
+  def self.configure(config, message_bus)
     VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
     VCAP::CloudController::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.instance =
       VCAP::CloudController::ResourcePool.new(config)
     VCAP::CloudController::AppPackage.configure(config)
 
-    stager_pool = VCAP::CloudController::StagerPool.new(config, mbus)
-    VCAP::CloudController::AppStager.configure(config, mbus, stager_pool)
+    stager_pool = VCAP::CloudController::StagerPool.new(config, message_bus)
+    VCAP::CloudController::AppStager.configure(config, message_bus, stager_pool)
     VCAP::CloudController::Staging.configure(config)
 
-    dea_pool = VCAP::CloudController::DeaPool.new(config, mbus)
-    VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
+    dea_pool = VCAP::CloudController::DeaPool.new(message_bus)
+    VCAP::CloudController::DeaClient.configure(config, message_bus, dea_pool)
 
-    VCAP::CloudController::LegacyBulk.configure(config, mbus)
-    VCAP::CloudController::HealthManagerClient.configure(mbus)
+    VCAP::CloudController::LegacyBulk.configure(config, message_bus)
+    VCAP::CloudController::HealthManagerClient.configure(config, message_bus)
+
+    VCAP::CloudController::RouterClient.setup(config, message_bus)
 
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
     VCAP::CloudController::Models::Stack.configure(config[:stacks_file])

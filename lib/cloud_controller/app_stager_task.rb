@@ -6,15 +6,15 @@ module VCAP::CloudController
       end
 
       def log
-        @response["task_log"]
+        @response[:task_log]
       end
 
       def streaming_log_url
-        @response["task_streaming_log_url"]
+        @response[:task_streaming_log_url]
       end
 
       def detected_buildpack
-        @response["detected_buildpack"]
+        @response[:detected_buildpack]
       end
     end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
       raise Errors::StagingError, "no available stagers" unless stager_id
 
       subject = "staging.#{stager_id}.start"
-      @responses = MultiResponseNatsRequest.new(MessageBus.instance.nats.client, subject)
+      @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
       # The creation of upload handle only guarantees that this cloud controller
       # is disallowed from trying to stage this app again. It does NOT guarantee that a different
       # cloud controller will NOT start staging the app in parallel. Therefore, we need to
@@ -46,8 +46,10 @@ module VCAP::CloudController
       # this cloud controller completes the staging.
       @current_droplet_hash = @app.droplet_hash
 
-      save_latest_staging_task
-      stop_other_staging_tasks
+      @app.staging_task_id = task_id
+      @app.save
+
+      @message_bus.publish("staging.stop", :app_id => @app.guid)
 
       @upload_handle = Staging.create_handle(@app.guid)
       @completion_callback = completion_callback
@@ -56,18 +58,18 @@ module VCAP::CloudController
         # First message might be SYNC or ASYNC staging response
         # since stager might not support async staging process.
         # First response is blocking stage_app.
-        @responses.on_response(staging_timeout) do |response, error|
+        @multi_message_bus_request.on_response(staging_timeout) do |response, error|
           handle_first_response(response, error, promise)
         end
 
         # Second message is received after app staging finished and
         # droplet was uploaded to the CC.
         # Second response does NOT block stage_app
-        @responses.on_response(staging_timeout) do |response, error|
+        @multi_message_bus_request.on_response(staging_timeout) do |response, error|
           handle_second_response(response, error)
         end
 
-        @responses.request(staging_request(options[:async]))
+        @multi_message_bus_request.request(staging_request(options[:async]))
       end
 
       staging_result
@@ -86,17 +88,6 @@ module VCAP::CloudController
 
     private
 
-    def save_latest_staging_task
-      @app.staging_task_id = task_id
-      @app.save
-    end
-
-    def stop_other_staging_tasks
-      MessageBus.instance.publish("staging.stop", Yajl::Encoder.encode(
-        :app_id => @app.guid
-      ))
-    end
-
     def handle_first_response(response, error, promise)
       check_staging_error!(response, error)
       ensure_staging_is_current!
@@ -105,7 +96,7 @@ module VCAP::CloudController
       if stager_response.streaming_log_url
         promise.deliver(stager_response)
       else
-        @responses.ignore_subsequent_responses
+        @multi_message_bus_request.ignore_subsequent_responses
         process_sync_response(stager_response, promise)
       end
     rescue => e
@@ -130,7 +121,7 @@ module VCAP::CloudController
     end
 
     def handle_second_response(response, error)
-      @responses.ignore_subsequent_responses
+      @multi_message_bus_request.ignore_subsequent_responses
       check_staging_error!(response, error)
 
       ensure_staging_is_current!
@@ -154,17 +145,17 @@ module VCAP::CloudController
     end
 
     def check_staging_error!(response, error)
-      if (msg = error_message(response, error))
+      if (msg = error_message(response))
         @app.mark_as_failed_to_stage
         raise Errors::StagingError, msg
       end
     end
 
-    def error_message(response, error)
-      if error
-        "failed to stage application:\n#{error}"
-      elsif response["error"]
-        "failed to stage application:\n#{response["error"]}\n#{response["task_log"]}"
+    def error_message(response)
+      if response.is_a?(String) || response.nil?
+        "failed to stage application:\n#{response}"
+      elsif response[:error]
+        "failed to stage application:\n#{response[:error]}\n#{response[:task_log]}"
       end
     end
 
