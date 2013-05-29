@@ -344,6 +344,10 @@ module VCAP::CloudController::SpecHelper
     end
   end
 
+  def instant_stop_em
+    EM.next_tick { EM.stop }
+  end
+
   def stop_em_when_all_defers_are_done
     stop_em = lambda {
       # Account for defers/timers made from within defers/timers

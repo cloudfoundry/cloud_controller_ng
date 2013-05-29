@@ -105,7 +105,6 @@ module VCAP::CloudController
 
     def stop!
       logger.info("Unregistering routes.")
-
       message_bus.unregister_routes do
         stop_thin_server
         EM.stop

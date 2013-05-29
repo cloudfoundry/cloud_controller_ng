@@ -244,13 +244,59 @@ module VCAP::CloudController
         :tags => {:component => "CloudController"}
       } }
 
+      before do
+        MessageBus.stub(:nats_timeout).and_return(0.4)
+      end
+
       it "publishes router.unregister with the configured route" do
         nats.should_receive(:publish).once.
           with("router.unregister", msg_json)
 
-        with_em_and_thread do
+        with_em_and_thread(auto_stop: false) do
           bus.unregister_routes
+          instant_stop_em
         end
+      end
+
+      it "invokes the callback when publish finishes" do
+        nats.should_receive(:publish).once.
+          with("router.unregister", msg_json).and_yield
+
+        called = false
+        with_em_and_thread(auto_stop: false) do
+          bus.unregister_routes do
+            called = true
+          end
+          instant_stop_em
+        end
+        called.should be_true
+      end
+
+      it "invokes the callback after 2 seconds due to timeout" do
+        called = false
+        with_em_and_thread(auto_stop: false) do
+          bus.unregister_routes do
+            called = true
+          end
+          sleep 0.5
+          instant_stop_em
+        end
+        called.should be_true
+      end
+
+      it "only invokes the callback once" do
+        nats.should_receive(:publish).once.
+          with("router.unregister", msg_json).and_yield
+
+        called = 0
+        with_em_and_thread(auto_stop: false) do
+          bus.unregister_routes do
+            called += 1
+          end
+          sleep 0.5
+          instant_stop_em
+        end
+        called.should == 1
       end
     end
 

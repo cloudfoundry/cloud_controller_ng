@@ -12,6 +12,10 @@ class VCAP::CloudController::MessageBus
       raise ArgumentError, "instance must not be nil" unless instance
       @instance = instance
     end
+
+    def nats_timeout
+      2.0
+    end
   end
 
   attr_reader :config, :nats, :subscriptions
@@ -85,7 +89,12 @@ class VCAP::CloudController::MessageBus
     end
   end
 
-  def unregister_routes(&callback)
+  def unregister_routes(&cb)
+    called = false
+    callback = proc {
+      cb.call unless called || cb.nil?
+      called = true
+    }
     EM.schedule do
       router_unregister_message = Yajl::Encoder.encode({
         :host => config[:bind_address],
@@ -96,6 +105,7 @@ class VCAP::CloudController::MessageBus
 
       logger.info("Sending router.unregister: #{router_unregister_message}")
       nats.publish("router.unregister", router_unregister_message, &callback)
+      EM.add_timer(self.class.nats_timeout, &callback)
     end
   end
 
