@@ -102,7 +102,17 @@ module VCAP::CloudController
         droplet_dir.files.destroy(key)
       rescue Errno::ENOTEMPTY => e
         logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
-        true
+        true  
+      rescue StandardError => e
+        # NotFound errors do not share a common superclass so we have to determine it by name
+        # A github issue for fog will be created.
+        if e.class.name.split('::').last.eql?("NotFound")
+          logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
+          true
+        else
+          # None-NotFound errors will be raised again
+          raise e
+        end      
       end
 
       def droplet_exists?(guid)
@@ -166,11 +176,11 @@ module VCAP::CloudController
 
         # unfortunately fog doesn't have a unified interface for non-public
         # urls
-        if local?
-          f.public_url
-        else
+        if f.respond_to?(:url)
           f.url(Time.now + 3600)
-        end
+        else
+          f.public_url
+        end        
       end
 
       def staging_uri(path)

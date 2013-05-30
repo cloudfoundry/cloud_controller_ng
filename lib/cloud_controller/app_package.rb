@@ -68,10 +68,10 @@ module VCAP::CloudController
 
         # unfortunately fog doesn't have a unified interface for non-public
         # urls
-        if local?
-          f.public_url
-        else
+        if f.respond_to?(:url)
           f.url(Time.now + 3600)
+        else
+          f.public_url
         end
       end
 
