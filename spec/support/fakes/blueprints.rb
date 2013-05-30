@@ -23,6 +23,7 @@ Sham.define do
   extra               { |index| "extra-#{index}"}
   instance_index      { |index| index }
   unique_id           { |index| "unique-id-#{index}" }
+  status              { |_| ["active", "suspended", "cancelled"].sample(1).first }
 end
 
 module VCAP::CloudController::Models
@@ -33,6 +34,7 @@ module VCAP::CloudController::Models
   Organization.blueprint do
     name              { Sham.name }
     quota_definition  { QuotaDefinition.make }
+    status            { "active" }
   end
 
   Domain.blueprint do

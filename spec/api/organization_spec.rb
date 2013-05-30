@@ -6,7 +6,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::Organization do
     let(:org) { Models::Organization.make }
     include_examples "uaa authenticated api", path: "/v2/organizations"
-    include_examples "querying objects", path: "/v2/organizations", model: Models::Organization, queryable_attributes: %w(name)
+    include_examples "querying objects", path: "/v2/organizations", model: Models::Organization, queryable_attributes: %w(name status)
     include_examples "enumerating objects", path: "/v2/organizations", model: Models::Organization
     include_examples "reading a valid object", path: "/v2/organizations", model: Models::Organization, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/organizations"

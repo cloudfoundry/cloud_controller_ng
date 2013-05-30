@@ -15,6 +15,7 @@ module VCAP::CloudController
       attribute :name, String
       attribute :billing_enabled, Message::Boolean, :default => false
       attribute :can_access_non_public_plans, Message::Boolean, :default => false
+      attribute :status, String, :default => 'active'
       to_one    :quota_definition, :optional_in => :create
       to_many   :spaces, :exclude_in => :create
       to_many   :domains
@@ -25,9 +26,9 @@ module VCAP::CloudController
       to_many   :app_events
     end
 
-    query_parameters :name, :space_guid,
-                     :user_guid, :manager_guid, :billing_manager_guid,
-                     :auditor_guid
+    query_parameters :name, :space_guid, :user_guid,
+                    :manager_guid, :billing_manager_guid,
+                    :auditor_guid, :status
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
