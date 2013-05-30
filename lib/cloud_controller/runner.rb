@@ -153,7 +153,7 @@ module VCAP::CloudController
     def create_app(config, message_bus)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
-      register_component
+      register_component(message_bus)
 
       Rack::Builder.new do
         use Rack::CommonLogger
@@ -197,13 +197,13 @@ module VCAP::CloudController
       @thin_server.stop if @thin_server
     end
 
-    def register_component
+    def register_component(message_bus)
       VCAP::Component.register(
           :type => 'CloudController',
           :host => @config[:bind_address],
           :index => @config[:index],
           :config => @config,
-      # leaving the varz port / user / pwd blank to be random
+          :nats => message_bus
       )
     end
   end

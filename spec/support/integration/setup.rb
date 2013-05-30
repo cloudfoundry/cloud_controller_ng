@@ -1,7 +1,8 @@
 module IntegrationSetup
   def start_nats(opts={})
-    @nats_pid = run_cmd("nats-server -V -D", opts)
-    wait_for_nats_to_start
+    port = opts[:port] || 4222
+    @nats_pid = run_cmd("nats-server -V -D -p #{port}", opts)
+    wait_for_nats_to_start(port)
   end
 
   def stop_nats
@@ -35,17 +36,17 @@ module IntegrationSetup
     @cc_pids.each { |pid| graceful_kill(:cc, pid) }
   end
 
-  def wait_for_nats_to_start
+  def wait_for_nats_to_start(port)
     Timeout::timeout(10) do
       loop do
         sleep 0.2
-        break if nats_up?
+        break if nats_up?(port)
       end
     end
   end
 
-  def nats_up?
-    NATS.start do
+  def nats_up?(port)
+    NATS.start(:uri => "nats://127.0.0.1:#{port}") do
       NATS.stop
       return true
     end
