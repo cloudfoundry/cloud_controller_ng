@@ -232,6 +232,10 @@ module VCAP::CloudController::Models
       self.dashboard_url= gw_attrs.dashboard_url
 
       @provisioned_on_gateway_for_plan = service_plan
+
+    rescue VCAP::Services::Api::ServiceGatewayClient::UnexpectedResponse=>e
+      raise unless e.message =~ /Error Code: 33106,/
+      raise VCAP::Errors::ServiceInstanceDuplicateNotAllowede
     end
 
     def deprovision_on_gateway

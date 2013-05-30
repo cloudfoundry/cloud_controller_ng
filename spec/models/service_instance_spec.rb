@@ -235,6 +235,13 @@ module VCAP::CloudController
           service_instance.credentials.should == 'credentials'
           service_instance.dashboard_url.should == 'http://dashboard.io'
         end
+
+        it 'translates duplicate service errors' do
+          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.stub(:provision).and_raise(
+              VCAP::Services::Api::ServiceGatewayClient::UnexpectedResponse.new "Can't decode gateway response. status code:500, response body: Error Code: 33106,"
+          )
+          expect { service_instance }.to raise_error(Errors::ServiceInstanceDuplicateNotAllowed)
+        end
       end
     end
 
