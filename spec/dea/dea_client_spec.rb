@@ -73,14 +73,12 @@ module VCAP::CloudController
         @app.update(:package_state => "STAGED")
         @message_bus.should_receive(:publish).with(
           "dea.update",
-          json_match(
-            hash_including(
-              # XXX: change this to actual URLs from user once we do it
-              "uris" => kind_of(Array),
-            )
-          ),
+          hash_including(
+            # XXX: change this to actual URLs from user once we do it
+            :uris => kind_of(Array),
+          )
         )
-          DeaClient.update_uris(@app)
+        DeaClient.update_uris(@app)
       end
     end
 
@@ -92,12 +90,10 @@ module VCAP::CloudController
         @dea_pool.should_receive(:mark_app_staged).with(dea_id: "dea_123", app_id: @app.guid)
         @message_bus.should_receive(:publish).with(
           "dea.dea_123.start",
-          json_match(
-            hash_including(
-              "foo"   => "bar",
-              "index" => 1,
-            )
-          ),
+          hash_including(
+            :foo   => "bar",
+            :index => 1,
+          )
         )
 
         with_em_and_thread do
@@ -113,8 +109,8 @@ module VCAP::CloudController
         @dea_pool.should_receive(:find_dea).and_return("def")
         @dea_pool.should_receive(:mark_app_staged).with(dea_id: "abc", app_id: @app.guid)
         @dea_pool.should_receive(:mark_app_staged).with(dea_id: "def", app_id: @app.guid)
-        @message_bus.should_receive(:publish).with("dea.abc.start", kind_of(String))
-        @message_bus.should_receive(:publish).with("dea.def.start", kind_of(String))
+        @message_bus.should_receive(:publish).with("dea.abc.start", kind_of(Hash))
+        @message_bus.should_receive(:publish).with("dea.def.start", kind_of(Hash))
         with_em_and_thread do
           DeaClient.start(@app)
         end
@@ -127,9 +123,7 @@ module VCAP::CloudController
         @app.instances = 1
         @dea_pool.should_receive(:find_dea).and_return("abc")
         @dea_pool.should_receive(:mark_app_staged).with(dea_id: "abc", app_id: @app.guid)
-        @message_bus.should_receive(:publish).with("dea.abc.start", anything) do |_, json|
-          Yajl::Parser.parse(json).should include("cc_partition" => "ngFTW")
-        end
+        @message_bus.should_receive(:publish).with("dea.abc.start", hash_including(:cc_partition => "ngFTW"))
 
         with_em_and_thread do
           DeaClient.start(@app)
@@ -142,12 +136,10 @@ module VCAP::CloudController
         @app.instances = 3
         @message_bus.should_receive(:publish).with(
           "dea.stop",
-          json_match(
-            hash_including(
-              "droplet"   => @app.guid,
-              "indices"   => [0, 2],
-            )
-          ),
+          hash_including(
+            :droplet   => @app.guid,
+            :indices   => [0, 2],
+          )
         )
           with_em_and_thread do
             DeaClient.stop_indices(@app, [0,2])
@@ -160,14 +152,12 @@ module VCAP::CloudController
         @app.instances = 3
         @message_bus.should_receive(:publish).with(
           "dea.stop",
-          json_match(
-            hash_including(
-              "droplet"   => @app.guid,
-              "instances"   => ["a", "b"]
-            )
-          ),
+          hash_including(
+            :droplet   => @app.guid,
+            :instances   => ["a", "b"]
+          )
         ) do |_, payload|
-          Yajl::Parser.parse(payload).should_not include("version")
+          payload.should_not include(:version)
         end
           with_em_and_thread do
             DeaClient.stop_instances(@app, ["a", "b"])
@@ -178,7 +168,7 @@ module VCAP::CloudController
     describe "stop" do
       it "should send a stop messages to deas" do
         @app.instances = 2
-        @message_bus.should_receive(:publish).with("dea.stop", kind_of(String))
+        @message_bus.should_receive(:publish).with("dea.stop", kind_of(Hash))
         with_em_and_thread do
           DeaClient.stop(@app)
         end
@@ -189,11 +179,10 @@ module VCAP::CloudController
       it "should find a specific instance" do
         @app.should_receive(:guid).and_return(1)
 
-        instance_json = "\"instance\""
-        encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
+        encoded = {:droplet => 1, :other_opt => "value"}
         @message_bus.should_receive(:synchronous_request).
           with("dea.find.droplet", encoded, {:timeout=>2}).
-          and_return([instance_json])
+          and_return(["instance"])
 
         with_em_and_thread do
           DeaClient.find_specific_instance(@app, { :other_opt => "value" }).should == "instance"
@@ -206,12 +195,12 @@ module VCAP::CloudController
         @app.should_receive(:guid).and_return(1)
         @app.should_receive(:instances).and_return(2)
 
-        instance_json = "\"instance\""
-        encoded = Yajl::Encoder.encode({
-          "droplet" => 1,
-          "other_opt_0" => "value_0",
-          "other_opt_1" => "value_1",
-        })
+        instance_json = "instance"
+        encoded = {
+          :droplet => 1,
+          :other_opt_0 => "value_0",
+          :other_opt_1 => "value_1",
+        }
         @message_bus.should_receive(:synchronous_request).
           with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
@@ -231,8 +220,8 @@ module VCAP::CloudController
         @app.should_receive(:guid).and_return(1)
         @app.should_receive(:instances).and_return(2)
 
-        instance_json = "\"instance\""
-        encoded = Yajl::Encoder.encode({ "droplet" => 1 })
+        instance_json = "instance"
+        encoded = { :droplet => 1 }
         @message_bus.should_receive(:synchronous_request).
           with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
@@ -246,8 +235,8 @@ module VCAP::CloudController
       it "should use the specified values for expected instances and timeout" do
         @app.should_receive(:guid).and_return(1)
 
-        instance_json = "\"instance\""
-        encoded = Yajl::Encoder.encode({ "droplet" => 1, "other_opt" => "value" })
+        instance_json = "instance"
+        encoded = { :droplet => 1, :other_opt => "value" }
         @message_bus.should_receive(:synchronous_request).
           with("dea.find.droplet", encoded, { :expected => 5, :timeout => 10 }).
           and_return([instance_json, instance_json])
@@ -952,9 +941,9 @@ module VCAP::CloudController
           @dea_pool.should_receive(:mark_app_staged).with(dea_id: "abc", app_id: @app.guid)
           @dea_pool.should_receive(:mark_app_staged).with(dea_id: "def", app_id: @app.guid)
           @dea_pool.should_receive(:mark_app_staged).with(dea_id: "efg", app_id: @app.guid)
-          @message_bus.should_receive(:publish).with("dea.abc.start", kind_of(String))
-          @message_bus.should_receive(:publish).with("dea.def.start", kind_of(String))
-          @message_bus.should_receive(:publish).with("dea.efg.start", kind_of(String))
+          @message_bus.should_receive(:publish).with("dea.abc.start", kind_of(Hash))
+          @message_bus.should_receive(:publish).with("dea.def.start", kind_of(Hash))
+          @message_bus.should_receive(:publish).with("dea.efg.start", kind_of(Hash))
 
           @app.instances = 4
           @app.save
@@ -966,7 +955,7 @@ module VCAP::CloudController
 
       context "decreasing the instance count" do
         it "should stop the higher indices" do
-          @message_bus.should_receive(:publish).with("dea.stop", kind_of(String))
+          @message_bus.should_receive(:publish).with("dea.stop", kind_of(Hash))
           @app.instances = 5
           @app.save
           with_em_and_thread do

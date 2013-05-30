@@ -346,9 +346,7 @@ module VCAP::CloudController
       def dea_publish(cmd, args = {})
         subject = "dea.#{cmd}"
         logger.debug "sending '#{subject}' with '#{args}'"
-        json = Yajl::Encoder.encode(args)
-
-        message_bus.publish(subject, json)
+        message_bus.publish(subject, args)
       end
 
       def dea_request(cmd, args, opts = {})
@@ -356,16 +354,8 @@ module VCAP::CloudController
         msg = "sending subject: '#{subject}' with args: '#{args}'"
         msg << " and opts: '#{opts}'"
         logger.debug msg
-        json = Yajl::Encoder.encode(args)
 
-        response = message_bus.synchronous_request(subject, json, opts)
-        parsed_response = []
-        response.each do |json_str|
-          parsed_response << Yajl::Parser.parse(json_str,
-                                                :symbolize_keys => true)
-        end
-
-        parsed_response
+        message_bus.synchronous_request(subject, args, opts)
       end
 
       def logger

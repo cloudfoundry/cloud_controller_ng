@@ -44,10 +44,11 @@ module VCAP::CloudController
       def register_subscription
         subject = "cloudcontroller.bulk.credentials.#{config[:cc_partition]}"
         message_bus.subscribe(subject) do |_, reply|
-          message_bus.publish(reply, Yajl::Encoder.encode(
-            "user"      => config[:auth_user],
-            "password"  => config[:auth_password],
-          ))
+          message_bus.publish(
+              reply,
+              "user"      => config[:auth_user],
+              "password"  => config[:auth_password],
+          )
         end
       end
 

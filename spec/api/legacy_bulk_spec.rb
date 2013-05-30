@@ -25,7 +25,7 @@ module VCAP::CloudController
             .and_yield("xxx", "inbox")
 
           mbus.should_receive(:publish).with("inbox", anything) do |_, msg|
-            Yajl::Parser.parse(msg).should == {
+            msg.should == {
               "user"      => @bulk_user,
               "password"  => @bulk_password,
             }

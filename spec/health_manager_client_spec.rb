@@ -16,11 +16,10 @@ module VCAP::CloudController
         app.should_receive(:guid).and_return(1)
         app.should_receive(:instances).and_return(2)
 
-        status_json = "\"status\""
-        encoded = Yajl::Encoder.encode({"droplet" => 1, "other_opt" => "value"})
+        encoded = { :droplet => 1, :other_opt => "value" }
         message_bus.should_receive(:synchronous_request).
           with("healthmanager.status", encoded, {:expected => 2, :timeout => 2}).
-          and_return([status_json])
+          and_return(["status"])
 
         HealthManagerClient.find_status(app, { :other_opt => "value" }).
           should == "status"
@@ -35,9 +34,8 @@ module VCAP::CloudController
             :version => app.version,
             :healthy => 3
           }
-          resp_json = Yajl::Encoder.encode(resp)
 
-          message_bus.should_receive(:synchronous_request).and_return([resp_json])
+          message_bus.should_receive(:synchronous_request).and_return([resp])
           HealthManagerClient.healthy_instances(app).should == 3
         end
       end
@@ -49,9 +47,8 @@ module VCAP::CloudController
             :version => app.version,
             :healthy => 3
           }
-          resp_json = Yajl::Encoder.encode(resp)
 
-          message_bus.should_receive(:synchronous_request).and_return([resp_json])
+          message_bus.should_receive(:synchronous_request).and_return([resp])
           HealthManagerClient.healthy_instances([app]).should == {
             app.guid => 3
           }
@@ -61,11 +58,11 @@ module VCAP::CloudController
       context "multiple apps" do
         it "should return num healthy instances for each app" do
           resp = apps.map do |app|
-            Yajl::Encoder.encode({
-                                   :droplet => app.guid,
-                                   :version => app.version,
-                                   :healthy => 3,
-                                 })
+            {
+              :droplet => app.guid,
+              :version => app.version,
+              :healthy => 3,
+            }
           end
 
           message_bus.should_receive(:synchronous_request).and_return(resp)
@@ -85,9 +82,8 @@ module VCAP::CloudController
                          { :instance => "instance_2", :since => 1 },
                         ]
         }
-        resp_json = Yajl::Encoder.encode(resp)
 
-        message_bus.should_receive(:synchronous_request).and_return([resp_json])
+        message_bus.should_receive(:synchronous_request).and_return([resp])
         HealthManagerClient.find_crashes(app).should == resp[:instances]
       end
     end
