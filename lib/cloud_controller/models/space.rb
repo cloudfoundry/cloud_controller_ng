@@ -17,7 +17,7 @@ module VCAP::CloudController::Models
                       :before_add => :validate_auditor
 
     many_to_one       :organization
-    one_to_many       :apps
+    one_to_many       :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => self, :deleted_at => nil) }
     one_to_many       :service_instances
     one_to_many       :routes
     one_to_many       :app_events, :dataset => lambda { VCAP::CloudController::Models::AppEvent.filter(:app => apps) }

@@ -6,16 +6,19 @@ describe VCAP::CloudController::Controller do
     let(:user_id) { Sham.guid }
     let(:token_info) { {} }
 
-    let(:config) {{
-      :quota_definitions => [],
-      :uaa => {
-        :resource_id => "cloud_controller",
-      },
-    }}
-
-    def app
+    let(:config) do
+      {
+          :quota_definitions => [],
+          :uaa => { :resource_id => "cloud_controller" }
+      }
+    end
+    let(:token_decoder) do
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
       token_decoder.stub(:decode_token => token_info)
+      token_decoder
+    end
+
+    def app
       described_class.new(config, token_decoder)
     end
 
@@ -143,6 +146,39 @@ describe VCAP::CloudController::Controller do
       end
 
       it_sets_token_info
+    end
+
+    context "when the bearer token is invalid" do
+      before do
+        token_decoder.stub(:decode_token).and_raise(exception_class)
+        Steno.stub(:logger).and_return(mock_logger)
+      end
+      let(:mock_logger) { double(:mock_logger) }
+
+      %w[SignatureNotSupported SignatureNotAccepted InvalidSignature InvalidTokenFormat InvalidAudience].each do |exception|
+        context "when the auth token raises #{exception}" do
+          let(:exception_class) { "CF::UAA::#{exception}".constantize }
+          it "should log to warn" do
+            mock_logger.should_receive(:warn).with(/^Invalid bearer token: .+/)
+            make_request
+          end
+        end
+      end
+
+      context "when the auth token raises TokenExpired" do
+        let(:exception_class) { CF::UAA::TokenExpired }
+        it "should log to info" do
+          mock_logger.should_receive(:info).with(/^Token expired$/)
+          make_request
+        end
+      end
+
+      context "when an unknown exception is raised" do
+        let(:exception_class) { RuntimeError }
+        it 'should no rescue' do
+          expect { make_request }.to raise_error(RuntimeError)
+        end
+      end
     end
 
     def user_count

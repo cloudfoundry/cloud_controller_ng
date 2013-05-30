@@ -86,29 +86,29 @@ module VCAP::CloudController
 
     def run!
       start_cloud_controller
-
       config = @config.dup
 
       Seeds.write_seed_data(config) if @insert_seed_data
       app = create_app(config)
+
       start_thin_server(app, config)
     end
 
     def trap_signals
       %w(TERM INT QUIT).each do |signal|
         trap(signal) do
-          @thin_server.stop! if @thin_server
-          EM.stop
+          logger.warn("Caught signal #{signal}")
+          stop!
         end
       end
     end
 
-    def merge_vcap_config
-      services = JSON.parse(ENV["VCAP_SERVICES"])
-      pg_key = services.keys.select { |svc| svc =~ /postgres/i }.first
-      c = services[pg_key].first["credentials"]
-      @config[:db][:database] = "postgres://#{c["user"]}:#{c["password"]}@#{c["hostname"]}:#{c["port"]}/#{c["name"]}"
-      @config[:port] = ENV["VCAP_APP_PORT"].to_i
+    def stop!
+      logger.info("Unregistering routes.")
+      message_bus.unregister_routes do
+        stop_thin_server
+        EM.stop
+      end
     end
 
     private
@@ -126,22 +126,28 @@ module VCAP::CloudController
     def create_app(config)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
+      mbus = message_bus
+
       Rack::Builder.new do
         use Rack::CommonLogger
 
-        VCAP::CloudController::MessageBus.instance.register_components
-        VCAP::CloudController::MessageBus.instance.register_routes
+        mbus.register_components
+        mbus.register_routes
 
-        VCAP::CloudController::DeaClient.run
-        VCAP::CloudController::AppStager.run
+        DeaClient.run
+        AppStager.run
 
-        VCAP::CloudController::LegacyBulk.register_subscription
+        LegacyBulk.register_subscription
+
         VCAP::CloudController.health_manager_respondent =
-          VCAP::CloudController::HealthManagerRespondent.new(config)
-        VCAP::CloudController.dea_respondent =
-          VCAP::CloudController::DeaRespondent.new(config, VCAP::CloudController::MessageBus.instance)
+          HealthManagerRespondent.new(config)
+
+        VCAP::CloudController.dea_respondent = DeaRespondent.new(mbus)
+
+        VCAP::CloudController.dea_respondent.start
+
         map "/" do
-          run VCAP::CloudController::Controller.new(config, token_decoder)
+          run Controller.new(config, token_decoder)
         end
       end
     end
@@ -164,6 +170,14 @@ module VCAP::CloudController
       @thin_server.timeout = 15 * 60 # 15 min
       @thin_server.threaded = true
       @thin_server.start!
+    end
+
+    def stop_thin_server
+      @thin_server.stop if @thin_server
+    end
+
+    def message_bus
+      VCAP::CloudController::MessageBus.instance
     end
   end
 end

@@ -6,7 +6,7 @@ module VCAP::CloudController::Models
 
     one_to_many       :spaces
     one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::Models::ServiceInstance.filter(:space => spaces) }
-    one_to_many       :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => spaces) }
+    one_to_many       :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => spaces, :deleted_at => nil) }
     one_to_many       :app_events, :dataset => lambda { VCAP::CloudController::Models::AppEvent.filter(:app => apps) }
     one_to_many       :owned_domain, :class => "VCAP::CloudController::Models::Domain", :key => :owning_organization_id
     many_to_many      :domains, :before_add => :validate_domain

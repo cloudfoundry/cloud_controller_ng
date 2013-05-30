@@ -18,7 +18,7 @@ module VCAP::CloudController
     describe ".run" do
       it "registers subscriptions for dea_pool" do
         stager_pool.should_receive(:register_subscriptions)
-        described_class.run
+        VCAP::CloudController::AppStager.run
       end
     end
 
@@ -46,8 +46,7 @@ module VCAP::CloudController
       context "when the app package is valid" do
         let(:staging_task) { AppStagerTask.new(nil, nil, app, stager_pool) }
         let(:app) { Models::App.make(:package_hash => "abc") }
-        before { app.staged?.should be_false }
-
+        let(:options) { {} }
         let(:upload_handle) do
           Staging::DropletUploadHandle.new(app.guid).tap do |h|
             h.upload_path = Tempfile.new("tmp_droplet")
@@ -55,6 +54,7 @@ module VCAP::CloudController
         end
 
         before do
+          app.staged?.should be_false
           AppStagerTask.any_instance.stub(:task_id) { "some_task_id" }
           Staging.stub(:create_handle => upload_handle)
         end
@@ -273,27 +273,44 @@ module VCAP::CloudController
           end
         end
 
+        def self.it_copes_when_the_app_gets_deleted_while_staging
+          context "when an exception occurs" do
+            def reply_with_staging_completion
+              mock_nats.reply_to_last_request("staging", {})
+            end
+
+            it "copes when the app is destroyed halfway between staging (currently we dont know why this happened but seen on tabasco)" do
+              VCAP::CloudController::AppStagerTask::Response.stub(:new) do
+                app.destroy # We saw that app maybe destroyed half-way through staging
+                raise ArgumentError, "Some Fake Error"
+              end
+
+              expect { with_em_and_thread { stage } }.to raise_error ArgumentError, "Some Fake Error"
+            end
+          end
+        end
+
         describe "staging synchronously and stager returning sync staging response" do
           describe "receiving staging completion message" do
+            let(:reply_json) do
+              {
+                "task_id" => "task-id",
+                "task_log" => "task-log",
+                "task_streaming_log_url" => nil,
+                "detected_buildpack" => "buildpack-name",
+                "error" => nil,
+              }
+            end
+
             def stage(&blk)
               stub_schedule_sync do
                 @before_staging_completion.call if @before_staging_completion
-                reply_with_staging_completion
+                mock_nats.reply_to_last_request("staging", reply_json, options)
               end
               AppStager.stage_app(app, &blk)
             end
 
             context "when staging succeeds" do
-              def reply_with_staging_completion
-                mock_nats.reply_to_last_request("staging", {
-                  "task_id" => "task-id",
-                  "task_log" => "task-log",
-                  "task_streaming_log_url" => nil,
-                  "detected_buildpack" => "buildpack-name",
-                  "error" => nil,
-                })
-              end
-
               it "does not return streaming log url in response" do
                 with_em_and_thread { stage.streaming_log_url.should be_nil }
               end
@@ -303,9 +320,8 @@ module VCAP::CloudController
             end
 
             context "when staging fails without a reason" do
-              def reply_with_staging_completion
-                mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
-              end
+              let(:reply_json) { nil }
+              let(:options) { {:invalid_json => true} }
 
               it_raises_staging_error
               it_does_not_complete_staging
@@ -313,29 +329,41 @@ module VCAP::CloudController
             end
 
             context "when staging returned an error response" do
-              def reply_with_staging_completion
-                mock_nats.reply_to_last_request("staging", {
+              let(:reply_json) do
+                {
                   "task_id" => "task-id",
                   "task_log" => "task-log",
                   "task_streaming_log_url" => nil,
                   "detected_buildpack" => nil,
                   "error" => "staging failed",
-                })
+                }
               end
 
               it_raises_staging_error
               it_does_not_complete_staging
               it_marks_staging_as_failed
             end
+
+            it_copes_when_the_app_gets_deleted_while_staging
           end
         end
 
         describe "staging asynchronously and stager returning async staging responses" do
           describe "receiving staging setup completion message" do
+            let(:reply_json) do
+              {
+                "task_id" => "task-id",
+                "task_log" => "task-log",
+                "task_streaming_log_url" => "task-streaming-log-url",
+                "detected_buildpack" => nil,
+                "error" => nil,
+              }
+            end
+
             def stage(&blk)
               stub_schedule_sync do
                 @before_staging_completion.call if @before_staging_completion
-                reply_with_staging_setup_completion
+                mock_nats.reply_to_last_request("staging", reply_json, options)
               end
               response = AppStager.stage_app(app, :async => true, &blk)
               EM.stop # explicitly
@@ -343,16 +371,6 @@ module VCAP::CloudController
             end
 
             context "when staging setup succeeds" do
-              def reply_with_staging_setup_completion
-                mock_nats.reply_to_last_request("staging", {
-                  "task_id" => "task-id",
-                  "task_log" => "task-log",
-                  "task_streaming_log_url" => "task-streaming-log-url",
-                  "detected_buildpack" => nil,
-                  "error" => nil,
-                })
-              end
-
               it "returns streaming log url and rest will happen asynchronously" do
                 with_em_and_thread { stage.streaming_log_url.should == "task-streaming-log-url" }
               end
@@ -367,9 +385,8 @@ module VCAP::CloudController
             end
 
             context "when staging setup fails without a reason" do
-              def reply_with_staging_setup_completion
-                mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
-              end
+              let(:reply_json) { nil }
+              let(:options) { {:invalid_json => true} }
 
               it_raises_staging_error
               it_does_not_complete_staging
@@ -377,60 +394,67 @@ module VCAP::CloudController
             end
 
             context "when staging setup returned an error response" do
-              def reply_with_staging_setup_completion
-                mock_nats.reply_to_last_request("staging", {
+              let(:reply_json) do
+                {
                   "task_id" => "task-id",
                   "task_log" => "task-log",
                   "task_streaming_log_url" => nil,
                   "detected_buildpack" => nil,
                   "error" => "staging failed",
-                })
+                }
               end
 
               it_raises_staging_error
               it_does_not_complete_staging
               it_marks_staging_as_failed
             end
+
+            it_copes_when_the_app_gets_deleted_while_staging
           end
 
           describe "receiving staging completion message" do
-            def stage(&blk)
-              stub_schedule_sync do
-                @before_staging_completion.call if @before_staging_completion
-                reply_with_staging_setup_completion
-              end
-              AppStager.stage_app(app, :async => true, &blk)
-              reply_with_staging_completion
-            end
-
-            def reply_with_staging_setup_completion
-              mock_nats.reply_to_last_request("staging", {
+            let(:reply_json) do
+              {
                 "task_id" => "task-id",
                 "task_log" => "task-log",
                 "task_streaming_log_url" => "task-streaming-log-url",
                 "detected_buildpack" => "buildpack-name",
                 "error" => nil,
-              })
+              }
+            end
+
+            def stage(&blk)
+              stub_schedule_sync do
+                @before_staging_completion.call if @before_staging_completion
+                mock_nats.reply_to_last_request("staging", {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => "task-streaming-log-url",
+                  "detected_buildpack" => "buildpack-name",
+                  "error" => nil,
+                })
+              end
+              AppStager.stage_app(app, :async => true, &blk)
+              mock_nats.reply_to_last_request("staging", reply_json, options)
             end
 
             context "when app staging succeeds" do
-              def reply_with_staging_completion
-                mock_nats.reply_to_last_request("staging", {
+              let(:reply_json) do
+                {
                   "task_id" => "task-id",
                   "task_log" => "task-log",
                   "task_streaming_log_url" => nil,
                   "detected_buildpack" => "buildpack-name",
                   "error" => nil,
-                })
+                }
               end
 
               it_completes_staging
             end
 
             context "when app staging fails without a reason" do
-              def reply_with_staging_completion
-                mock_nats.reply_to_last_request("staging", nil, :invalid_json => true)
-              end
+              let(:reply_json) { nil }
+              let(:options) { {:invalid_json => true} }
 
               it_logs_staging_error
               it_does_not_complete_staging
@@ -438,14 +462,14 @@ module VCAP::CloudController
             end
 
             context "when app staging returned an error response" do
-              def reply_with_staging_completion
-                mock_nats.reply_to_last_request("staging", {
+              let(:reply_json) do
+                {
                   "task_id" => "task-id",
                   "task_log" => "task-log",
                   "task_streaming_log_url" => nil,
                   "detected_buildpack" => nil,
                   "error" => "staging failed",
-                })
+                }
               end
 
               it_logs_staging_error
@@ -509,6 +533,8 @@ module VCAP::CloudController
               it_does_not_complete_staging
               it_marks_staging_as_failed
             end
+
+            it_copes_when_the_app_gets_deleted_while_staging
           end
         end
       end

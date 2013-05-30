@@ -85,6 +85,10 @@ Sequel.migration do
         end
       end
 
+      rename_foreign_key(:apps, :fk_apps_space_id, :fk_apps_space_id) do | db, alter_table |
+        rename_index_internal(db, alter_table, :apps, [:space_id, :name, :not_deleted], :unique => true, :case_insensitive => [:name], :name => :apps_space_name_nd_index)
+      end
+      
       rename_foreign_key(:service_bindings, :fk_service_bindings_service_instance_id, :fk_sb_service_instance_id) do | db, alter_table |
         rename_foreign_key_internal(db, alter_table, :service_bindings, :fk_service_bindings_app_id, :fk_service_bindings_app_id) do | db, alter_table |
           rename_index_internal(db, alter_table, :service_bindings, [:app_id, :service_instance_id], :unique => true, :name => :sb_app_id_srv_inst_id_index)

@@ -184,7 +184,7 @@ module VCAP::CloudController
           ResourcePool.instance.copy(descriptor, path)
         end
       rescue => e
-        logger.error "failed synchronizing resource pool with '#{working_dir}' #{e}"
+        logger.error "failed synchronizing resource pool with '#{working_dir}' #{e.inspect} #{e.backtrace}"
         raise Errors::AppPackageInvalid.new("failed synchronizing resource pool #{e}")
       end
 

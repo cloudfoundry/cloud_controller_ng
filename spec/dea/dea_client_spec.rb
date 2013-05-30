@@ -90,9 +90,10 @@ module VCAP::CloudController
       it "should send a start messages to deas with message override" do
         @app.instances = 2
 
-        @dea_pool.should_receive(:find_dea).and_return("abc")
+        @dea_pool.should_receive(:find_dea).and_return("dea_123")
+        @dea_pool.should_receive(:mark_app_staged).with(dea_id: "dea_123", app_id: @app.guid)
         @message_bus.should_receive(:publish).with(
-          "dea.abc.start",
+          "dea.dea_123.start",
           json_match(
             hash_including(
               "foo"   => "bar",
@@ -100,9 +101,10 @@ module VCAP::CloudController
             )
           ),
         )
-          with_em_and_thread do
-            DeaClient.start_instances_with_message(@app, [1], :foo => "bar")
-          end
+
+        with_em_and_thread do
+          DeaClient.start_instances_with_message(@app, [1], :foo => "bar")
+        end
       end
     end
 
@@ -111,6 +113,8 @@ module VCAP::CloudController
         @app.instances = 2
         @dea_pool.should_receive(:find_dea).and_return("abc")
         @dea_pool.should_receive(:find_dea).and_return("def")
+        @dea_pool.should_receive(:mark_app_staged).with(dea_id: "abc", app_id: @app.guid)
+        @dea_pool.should_receive(:mark_app_staged).with(dea_id: "def", app_id: @app.guid)
         @message_bus.should_receive(:publish).with("dea.abc.start", kind_of(String))
         @message_bus.should_receive(:publish).with("dea.def.start", kind_of(String))
         with_em_and_thread do
@@ -124,6 +128,7 @@ module VCAP::CloudController
 
         @app.instances = 1
         @dea_pool.should_receive(:find_dea).and_return("abc")
+        @dea_pool.should_receive(:mark_app_staged).with(dea_id: "abc", app_id: @app.guid)
         @message_bus.should_receive(:publish).with("dea.abc.start", anything) do |_, json|
           Yajl::Parser.parse(json).should include("cc_partition" => "ngFTW")
         end
@@ -947,6 +952,9 @@ module VCAP::CloudController
           @dea_pool.should_receive(:find_dea).and_return("abc")
           @dea_pool.should_receive(:find_dea).and_return("def")
           @dea_pool.should_receive(:find_dea).and_return("efg")
+          @dea_pool.should_receive(:mark_app_staged).with(dea_id: "abc", app_id: @app.guid)
+          @dea_pool.should_receive(:mark_app_staged).with(dea_id: "def", app_id: @app.guid)
+          @dea_pool.should_receive(:mark_app_staged).with(dea_id: "efg", app_id: @app.guid)
           @message_bus.should_receive(:publish).with("dea.abc.start", kind_of(String))
           @message_bus.should_receive(:publish).with("dea.def.start", kind_of(String))
           @message_bus.should_receive(:publish).with("dea.efg.start", kind_of(String))

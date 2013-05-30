@@ -2,18 +2,24 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Runner do
-    describe "#run!" do
-      before { MessageBus.stub(:new => MockMessageBus.new({})) }
-      let(:valid_config_file_path) { File.expand_path("../fixtures/config/minimal_config.yml", __FILE__) }
-      let(:config_file_path) { valid_config_file_path }
+    let(:valid_config_file_path) do
+      File.expand_path("../fixtures/config/minimal_config.yml", __FILE__)
+    end
 
-      subject do
-        Runner.new(argv + ["-c", config_file_path]).tap do |r|
-          r.stub(:start_thin_server)
-          r.stub(:create_pidfile)
-        end
+    let(:config_file_path) { valid_config_file_path }
+
+    let(:argv) { [] }
+
+    before { MessageBus.stub(:new => MockMessageBus.new({})) }
+
+    subject do
+      Runner.new(argv + ["-c", config_file_path]).tap do |r|
+        r.stub(:start_thin_server)
+        r.stub(:create_pidfile)
       end
+    end
 
+    describe "#run!" do
       def self.it_configures_stacks
         it "configures the stacks" do
           Models::Stack.should_receive(:configure)
@@ -133,6 +139,63 @@ module VCAP::CloudController
         it_configures_stacks
         it_runs_dea_client
         it_runs_app_stager
+      end
+    end
+
+    describe "#stop!" do
+      before do
+        subject.run!
+        subject.stub(:stop_thin_server)
+        EM.stub(:stop)
+      end
+
+      it "stops thin" do
+        subject.should_receive(:stop_thin_server)
+        subject.stop!
+      end
+
+      it "stops EM" do
+        EM.should_receive(:stop)
+        subject.stop!
+      end
+
+      it "unregisters its route" do
+        VCAP::CloudController::MessageBus.instance.should_receive(:unregister_routes)
+        subject.stop!
+      end
+    end
+
+    describe "#trap_signals" do
+      context "when TERM is sent" do
+
+      end
+
+      it "registers TERM, INT, and QUIT handlers" do
+        subject.should_receive(:trap).with("TERM")
+        subject.should_receive(:trap).with("INT")
+        subject.should_receive(:trap).with("QUIT")
+        subject.trap_signals
+      end
+
+      it "calls #stop! when the handlers are triggered" do
+        callbacks = []
+
+        subject.should_receive(:trap).with("TERM") do |_, &blk|
+          callbacks << blk
+        end
+
+        subject.should_receive(:trap).with("INT") do |_, &blk|
+          callbacks << blk
+        end
+
+        subject.should_receive(:trap).with("QUIT") do |_, &blk|
+          callbacks << blk
+        end
+
+        subject.trap_signals
+
+        subject.should_receive(:stop!).exactly(3).times
+        callbacks.each(&:call)
       end
     end
   end

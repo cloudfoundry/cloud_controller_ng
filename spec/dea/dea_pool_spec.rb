@@ -18,6 +18,15 @@ module VCAP::CloudController
         }
       end
 
+      let(:dea_shutdown_msg) do
+        {
+          :id => "dea-id",
+          :ip => "123.123.123.123",
+          :version => "1.2.3",
+          :app_id_to_count => {}
+        }
+      end
+
       it "finds advertised dea" do
         with_em_and_thread do
           subject.register_subscriptions
@@ -26,6 +35,18 @@ module VCAP::CloudController
           end
         end
         subject.find_dea(0, "stack", "app-id").should == "dea-id"
+      end
+
+      it "clears advertisements of DEAs being shut down" do
+        with_em_and_thread do
+          subject.register_subscriptions
+          EM.next_tick do
+            mock_nats.publish("dea.advertise", JSON.dump(dea_advertise_msg))
+            mock_nats.publish("dea.shutdown", JSON.dump(dea_shutdown_msg))
+          end
+        end
+
+        subject.find_dea(0, "stack", "app-id").should be_nil
       end
     end
 
@@ -94,6 +115,35 @@ module VCAP::CloudController
         it "picks DEAs that have no existing instances of the app" do
           subject.find_dea(0, "stack", "app-id").should == "dea-id"
           subject.find_dea(0, "stack", "other-app-id").should == "other-dea-id"
+        end
+      end
+
+      describe "multiple instances of an app" do
+        before do
+          subject.process_advertise_message({
+            :id => "dea-id1",
+            :stacks => ["stack"],
+            :available_memory => 1024,
+            :app_id_to_count => {}
+          })
+
+          subject.process_advertise_message({
+            :id => "dea-id2",
+            :stacks => ["stack"],
+            :available_memory => 1024,
+            :app_id_to_count => {}
+          })
+        end
+
+        it "will use different DEAs when starting an app with multiple instances" do
+          dea_ids = []
+          10.times do
+            dea_id = subject.find_dea(0, "stack", "app-id")
+            dea_ids << dea_id
+            subject.mark_app_staged(dea_id: dea_id, app_id: "app-id")
+          end
+
+          dea_ids.should match_array((["dea-id1", "dea-id2"] * 5))
         end
       end
 
