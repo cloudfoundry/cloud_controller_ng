@@ -153,6 +153,11 @@
   http_code: 400
   message: "The service instance cannot be created because paid service plans are not allowed."
 
+60008:
+  name: ServiceInstanceDuplicateNotAllowed
+  http_code: 400
+  message: "A service of this type is already present in this space.  Some services disallow duplicates."
+
 70001:
   name: RuntimeInvalid
   http_code: 400
