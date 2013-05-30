@@ -18,7 +18,7 @@ module Sequel::Plugins::VcapNormalization
   end
 
   module ClassMethods
-    # Specify the attributes to perform whitespace normaliation on
+    # Specify the attributes to perform whitespace normalization on
     #
     # @param [Array<Symbol>] List of attributes to include when performing
     # whitespace normalization.
