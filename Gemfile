@@ -16,7 +16,7 @@ gem "cf-uaa-lib", "~> 1.3.7", :git => "https://github.com/cloudfoundry/cf-uaa-li
 gem "httpclient"
 gem "steno", "~> 1.0.0"
 gem "stager-client", "~> 0.0.02", :git => "https://github.com/cloudfoundry/stager-client.git", :ref => "04c2aee9"
-gem "cf-message-bus", :github => "cloudfoundry/cf-message-bus"
+gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.git"
 
 # These are outside the test group in order to run rake tasks
 gem "rspec"
