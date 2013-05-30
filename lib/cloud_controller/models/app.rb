@@ -66,7 +66,18 @@ module VCAP::CloudController
       def validate
         validates_presence :name
         validates_presence :space
-        validates_unique_ci [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
+        validates_unique [:space_id, :name], :where => proc { |ds, obj, cols|
+          if db.use_lower_where?
+            lowername = obj.name == nil ? nil : obj.name.downcase
+            ds.filter(:not_deleted => true,
+                      :space_id => obj.space_id,
+                      Sequel.function(:lower, :name) => lowername)
+          else
+            ds.filter(:not_deleted => true,
+                      :space_id => obj.space_id,
+                      :name => obj.name)
+          end
+        }
 
         validates_git_url :buildpack
 
