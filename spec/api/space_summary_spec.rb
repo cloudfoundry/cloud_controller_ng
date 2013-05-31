@@ -18,7 +18,7 @@ module VCAP::CloudController
       @apps = []
 
       num_services.times do
-        @services << Models::ServiceInstance.make(:space => @space)
+        @services << Models::ServiceInstance.make(:space => @space, :dashboard_url => "https://example.com/sso")
       end
 
       num_started_apps.times do |i|
@@ -131,6 +131,7 @@ module VCAP::CloudController
           "guid" => svc.guid,
           "name" => svc.name,
           "bound_app_count" => num_apps,
+          "dashboard_url" => svc.dashboard_url,
           "service_plan" => {
             "guid" => svc.service_plan.guid,
             "name" => svc.service_plan.name,

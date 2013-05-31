@@ -64,6 +64,7 @@ module VCAP::CloudController
         :guid => instance.guid,
         :name => instance.name,
         :bound_app_count => instance.service_bindings_dataset.count,
+        :dashboard_url => instance.dashboard_url,
         :service_plan => {
           :guid => instance.service_plan.guid,
           :name => instance.service_plan.name,
