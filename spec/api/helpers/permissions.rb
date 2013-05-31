@@ -56,25 +56,33 @@ module VCAP::CloudController::ApiSpecHelper
 
   shared_examples "permission enumeration" do |perm_name, model, name, path, path_suffix, expected, perms_overlap|
     describe "GET #{path}" do
-      it "should return #{expected} #{name.pluralize} to a user that has #{perm_name} permissions" do
+      it "should return #{name.pluralize} to a user that has #{perm_name} permissions" do
+        expected_count = expected.respond_to?(:call) ? expected.call : expected
         get path, {}, headers_a
-        last_response.should be_ok
-        decoded_response["total_results"].should == expected
-        guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
-        if respond_to?(:enumeration_expectation_a)
-          guids.sort.should == enumeration_expectation_a.map(&:guid).sort
+        if expected_count == :not_allowed
+          last_response.status.should == 403
         else
-          guids.should include(@obj_a.guid) if expected > 0
+          last_response.should be_ok
+          decoded_response["total_results"].should == expected_count
+          guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
+          if respond_to?(:enumeration_expectation_a)
+            guids.sort.should == enumeration_expectation_a.map(&:guid).sort
+          else
+            guids.should include(@obj_a.guid) if expected_count > 0
+          end
         end
 
         get path, {}, headers_b
-        last_response.should be_ok
-        decoded_response["total_results"].should == expected
-        guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
-        if respond_to?(:enumeration_expectation_b)
-          expect(guids.sort).to eq enumeration_expectation_b.map(&:guid).sort
+        if expected_count == :not_allowed
+          last_response.status.should == 403
         else
-          guids.should include(@obj_b.guid) if expected > 0
+          decoded_response["total_results"].should == expected_count
+          guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
+          if respond_to?(:enumeration_expectation_b)
+            expect(guids.sort).to eq enumeration_expectation_b.map(&:guid).sort
+          else
+            guids.should include(@obj_b.guid) if expected_count > 0
+          end
         end
       end
 

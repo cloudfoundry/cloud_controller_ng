@@ -34,5 +34,11 @@ module VCAP::CloudController
         Errors::UserInvalid.new(e.errors.full_messages)
       end
     end
+
+    def enumerate
+      raise Errors::NotAuthenticated unless user
+      raise Errors::NotAuthorized unless user.admin? || roles.admin?
+      super
+    end
   end
 end

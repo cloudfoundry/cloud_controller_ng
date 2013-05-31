@@ -51,11 +51,11 @@ module Sequel::Plugins::VcapUserVisibility
       user_visibility_filter_with_admin_override(full_dataset_filter)
     end
 
-    def user_visibility_filter_with_admin_override(filt)
+    def user_visibility_filter_with_admin_override(filter)
       if VCAP::CloudController::SecurityContext.current_user_is_admin?
         full_dataset_filter
       else
-        filt
+        filter
       end
     end
 
