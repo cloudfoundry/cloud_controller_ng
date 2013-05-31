@@ -44,7 +44,7 @@ module VCAP::CloudController
             :space => app.space
           )
         },
-        :events => lambda { |app|
+        :app_events => lambda { |app|
           Models::AppEvent.make(:app => app)
         }
       }

@@ -19,7 +19,7 @@ module VCAP::CloudController
           :service_instance => service_instance
         )
       },
-      :events => lambda { |app|
+      :app_events => lambda { |app|
         Models::AppEvent.make(:app => app)
       }
     },
