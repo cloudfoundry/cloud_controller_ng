@@ -55,22 +55,43 @@ module VCAP::CloudController::ApiSpecHelper
           end
 
           context "and the recursive param is passed in" do
-            subject { delete "#{opts[:path]}/#{obj.guid}?recursive=true", {}, admin_headers }
+            subject { delete "#{opts[:path]}/#{obj.guid}?recursive=#{recursive}", {}, admin_headers }
 
-            it "should return 204" do
-              subject
-              last_response.status.should == 204
+            context "and its true" do
+              let(:recursive) { "true" }
+
+              it "should return 204" do
+                subject
+                last_response.status.should == 204
+              end
+
+              it "should return an empty response body" do
+                subject
+                last_response.body.should be_empty
+              end
+
+              it "should delete all the child associations" do
+                subject
+                (associations_without_url | associations_with_url).map do |name, association|
+                  association.class[:id => association.id].should be_nil unless obj.class.association_reflection(name)[:type] == :many_to_many || name == :default_users
+                end
+              end
             end
 
-            it "should return an empty response body" do
-              subject
-              last_response.body.should be_empty
-            end
+            context "and its false" do
+              let(:recursive) { "false" }
 
-            it "should delete all the child associations" do
-              subject
-              (associations_without_url | associations_with_url).map do |name, association|
-                association.class[:id => association.id].should be_nil unless obj.class.association_reflection(name)[:type] == :many_to_many || name == :default_users
+              it "should return 400" do
+                subject
+                last_response.status.should == 400
+              end
+
+              it "should return the expected response body" do
+                subject
+                Yajl::Parser.parse(last_response.body).should == {
+                  "code" => 10006,
+                  "description" => "Please delete the #{one_to_one_or_many.join(", ")} associations for your #{obj.class.table_name}.",
+                }
               end
             end
           end

@@ -66,7 +66,7 @@ module VCAP::CloudController::RestController
     def delete(id)
       logger.debug "delete: #{id}"
       obj = find_id_and_validate_access(:delete, id)
-      raise_if_has_associations!(obj) if v2_api? && !params["recursive"]
+      raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
       obj.destroy
 
       [ HTTP::NO_CONTENT, nil ]
