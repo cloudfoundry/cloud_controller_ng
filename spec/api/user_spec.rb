@@ -67,7 +67,7 @@ module VCAP::CloudController
       context 'admin user' do
         let(:member_a) { @org_a_manager }
         let(:member_b) { @space_a_manager }
-        let(:enumeration_expectation_a) { Models::User.limit(50) }
+        let(:enumeration_expectation_a) { Models::User.order(:id).limit(50) }
         let(:enumeration_expectation_b) { enumeration_expectation_a }
 
         before do
