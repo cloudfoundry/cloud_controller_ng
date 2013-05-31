@@ -145,7 +145,7 @@ module VCAP::CloudController
       end
 
       def after_destroy_commit
-        VCAP::CloudController::DeaClient.stop(self) if started?
+        stop_droplet
         VCAP::CloudController::AppStager.delete_droplet(self)
         VCAP::CloudController::AppPackage.delete_package(self.guid)
       end
@@ -356,7 +356,11 @@ module VCAP::CloudController
           self.deleted_at = Time.now
           self.not_deleted = nil
           save
+
+          after_destroy
         end
+
+        stop_droplet
       end
 
       def uris
@@ -412,6 +416,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def stop_droplet
+        VCAP::CloudController::DeaClient.stop(self) if started?
+      end
 
       def stage_if_needed(&success_callback)
         if needs_staging? && started?

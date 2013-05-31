@@ -172,32 +172,59 @@ module VCAP::CloudController
     end
 
     describe "delete an app" do
-      let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+      let(:app_obj) { Models::App.make }
+
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
       subject { delete "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers) }
 
-      context "access checks" do
-        context "when the app is not deleted" do
-          let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+      context "when the app is not deleted" do
+        let(:app_obj) { Models::App.make }
 
-          it "should delete the app" do
-            subject
-            last_response.status.should == 204
-          end
+        it "should delete the app" do
+          subject
+          last_response.status.should == 204
+        end
+      end
+
+      context "when the app is already deleted" do
+        let(:app_obj) { Models::App.make }
+
+        before do
+          app_obj.soft_delete
         end
 
-        context "when the app is already deleted" do
-          let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+        it "should raise error" do
+          subject
+          last_response.status.should == 404
+        end
+      end
 
-          before do
-            app_obj.soft_delete
+      context "when the app is running" do
+        let(:app_obj) { Models::App.make :state => "STARTED", :package_hash => "abc" }
+
+        it "tells the DEAs to stop it" do
+          called = false
+          DeaClient.should_receive(:stop) do |app|
+            app.guid.should == app_obj.guid
+            called = true
           end
 
-          it "should raise error" do
-            subject
-            last_response.status.should == 404
+          subject
+
+          called.should be_true
+        end
+
+        it "registers a billing stop event" do
+          called = false
+          Models::AppStopEvent.should_receive(:create_from_app) do |app|
+            app.guid.should == app_obj.guid
+            called = true
           end
+
+          subject
+
+          called.should be_true
         end
       end
 
