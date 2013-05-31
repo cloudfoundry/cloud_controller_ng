@@ -57,7 +57,7 @@ module VCAP::CloudController
 
     def registered_events
       make_get_request(
-        "/v2/apps/#{@app["metadata"]["guid"]}/app_events",
+        "/v2/apps/#{@app["metadata"]["guid"]}/events",
         @authed_headers
       ).json_body["resources"]
     end

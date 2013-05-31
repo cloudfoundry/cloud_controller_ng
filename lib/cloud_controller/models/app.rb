@@ -17,7 +17,7 @@ module VCAP::CloudController
       class AlreadyDeletedError < StandardError; end
 
       one_to_many       :service_bindings, :after_remove => :after_remove_binding
-      one_to_many       :app_events
+      one_to_many       :events, :class => VCAP::CloudController::Models::AppEvent
 
       many_to_one       :space
       many_to_one       :stack
@@ -26,7 +26,7 @@ module VCAP::CloudController
       many_to_many      :service_instances, :join_table => :service_bindings
 
       add_association_dependencies :routes => :nullify, :service_instances => :nullify,
-        :service_bindings => :destroy, :app_events => :destroy
+        :service_bindings => :destroy, :events => :destroy
 
       default_order_by :name
 
@@ -310,7 +310,7 @@ module VCAP::CloudController
 
       # We do NOT delete app events for audit reasons.
       def deletable_association?(association)
-        association != :app_events
+        association != :events
       end
 
       def deletable_association_names
