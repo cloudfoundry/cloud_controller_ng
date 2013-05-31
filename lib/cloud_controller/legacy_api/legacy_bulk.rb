@@ -76,9 +76,10 @@ module VCAP::CloudController
       id_for_next_token = nil
 
       apps = {}
-      Models::App.where { |app|
-        app.id > last_id
-      }.order(:id).limit(batch_size).each do |app|
+      Models::App.where(
+          ["id > ?", last_id],
+          "deleted_at IS NULL"
+      ).order(:id).limit(batch_size).each do |app|
         hash = {}
         export_attributes = [
           :instances,
