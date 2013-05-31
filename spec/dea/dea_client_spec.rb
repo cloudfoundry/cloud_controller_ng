@@ -202,7 +202,7 @@ module VCAP::CloudController
           :other_opt_1 => "value_1",
         }
         @message_bus.should_receive(:synchronous_request).
-          with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
+          with("dea.find.droplet", encoded, { :result_count => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
 
         message_options = {
@@ -223,7 +223,7 @@ module VCAP::CloudController
         instance_json = "instance"
         encoded = { :droplet => 1 }
         @message_bus.should_receive(:synchronous_request).
-          with("dea.find.droplet", encoded, { :expected => 2, :timeout => 2 }).
+          with("dea.find.droplet", encoded, { :result_count => 2, :timeout => 2 }).
           and_return([instance_json, instance_json])
 
         with_em_and_thread do
@@ -238,12 +238,12 @@ module VCAP::CloudController
         instance_json = "instance"
         encoded = { :droplet => 1, :other_opt => "value" }
         @message_bus.should_receive(:synchronous_request).
-          with("dea.find.droplet", encoded, { :expected => 5, :timeout => 10 }).
+          with("dea.find.droplet", encoded, { :result_count => 5, :timeout => 10 }).
           and_return([instance_json, instance_json])
 
         with_em_and_thread do
           DeaClient.find_instances(@app, { :other_opt => "value" },
-                                   { :expected => 5, :timeout => 10 }).
+                                   { :result_count => 5, :timeout => 10 }).
                                    should == ["instance", "instance"]
         end
       end

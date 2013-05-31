@@ -25,7 +25,7 @@ module VCAP::CloudController
         message.merge!(message_options)
 
         request_options = {
-          :expected => app.instances,
+          :result_count => app.instances,
           :timeout => 2,
         }
 
@@ -43,7 +43,7 @@ module VCAP::CloudController
         }
 
         request_options = {
-          :expected => apps.size,
+          :result_count => apps.size,
           :timeout => 1,
         }
 

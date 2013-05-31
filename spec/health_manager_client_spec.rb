@@ -18,7 +18,7 @@ module VCAP::CloudController
 
         encoded = { :droplet => 1, :other_opt => "value" }
         message_bus.should_receive(:synchronous_request).
-          with("healthmanager.status", encoded, {:expected => 2, :timeout => 2}).
+          with("healthmanager.status", encoded, {:result_count => 2, :timeout => 2}).
           and_return(["status"])
 
         HealthManagerClient.find_status(app, { :other_opt => "value" }).

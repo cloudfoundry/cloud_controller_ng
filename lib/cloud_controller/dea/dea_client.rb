@@ -64,7 +64,7 @@ module VCAP::CloudController
         message = { :droplet => app.guid }
         message.merge!(message_options)
 
-        request_options[:expected] ||= app.instances
+        request_options[:result_count] ||= app.instances
         request_options[:timeout] ||= 2
 
         dea_request("find.droplet", message, request_options)
