@@ -143,15 +143,16 @@ module VCAP
       name = name.to_s
       join_table = "#{name.pluralize}_#{permission}".to_sym
       id_attr = "#{name}_id".to_sym
-      fk_name = "#{name}_fk".to_sym
+      fk_name = "#{join_table}_#{name}_fk".to_sym
+      fk_user = "#{join_table}_user_fk".to_sym
       table = name.pluralize.to_sym
 
       migration.create_table(join_table) do
         Integer id_attr, :null => false
-        foreign_key id_attr, table, :name => fk_name
+        foreign_key [id_attr], table, :name => fk_name
 
         Integer :user_id, :null => false
-        foreign_key :user_id, :users, :name => :user_fk
+        foreign_key [:user_id], :users, :name => fk_user
 
         index [id_attr, :user_id], :unique => true
       end
