@@ -25,6 +25,10 @@ module VCAP::CloudController
         connection_options[key] = opts[key] if opts[key]
       end
 
+      if opts[:database].index("mysql") == 0
+        connection_options[:charset] = "utf8"
+      end
+
       using_sqlite = opts[:database].index("sqlite://") == 0
       if using_sqlite
         require "vcap/sequel_sqlite_monkeypatch"
@@ -35,7 +39,8 @@ module VCAP::CloudController
       db.sql_log_level = opts[:log_level] || :debug2
 
       if db.database_type == :mysql
-        Sequel::MySQL.default_collate = "latin1_general_cs"
+        # TODO: should be utf8_unicode_ci till story https://www.pivotaltracker.com/story/show/51039807
+        Sequel::MySQL.default_collate = "utf8_bin"
       end
 
       validate_sqlite_version(db) if using_sqlite
