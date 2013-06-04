@@ -55,56 +55,56 @@ module VCAP::CloudController
       end
     end
 
-    #describe '.delete_droplet' do
-    #  let(:app) { double(:app, :guid => 'hey you guys!') }
-    #
-    #  it 'should delete the droplet from staging' do
-    #    AppStager.unstub(:delete_droplet)
-    #    Staging.should_receive(:delete_droplet).with('hey you guys!')
-    #    a = app
-    #    AppStager.delete_droplet(a)
-    #  end
-    #
-    #  describe ".delete_droplet" do
-    #    before { AppStager.unstub(:delete_droplet) }
-    #    let(:app) { Models::App.make }
-    #
-    #    context "when droplet does not exist" do
-    #      it "does nothing" do
-    #        Staging.droplet_exists?(app.guid).should == false
-    #        AppStager.delete_droplet(app)
-    #        Staging.droplet_exists?(app.guid).should == false
-    #      end
-    #    end
-    #
-    #    context "when droplet exists" do
-    #      before { Staging.store_droplet(app.guid, droplet.path) }
-    #
-    #      let(:droplet) do
-    #        Tempfile.new(app.guid).tap do |f|
-    #          f.write("droplet-contents")
-    #          f.close
-    #        end
-    #      end
-    #
-    #      it "deletes the droplet if it exists" do
-    #        expect {
-    #          AppStager.delete_droplet(app)
-    #        }.to change {
-    #          Staging.droplet_exists?(app.guid)
-    #        }.from(true).to(false)
-    #      end
-    #
-    #      # Fog (local) tries to delete parent directories that might be empty
-    #      # when deleting a file. Sometimes it will fail due to a race
-    #      # since those directories might have been populated in between
-    #      # emptiness check and actual deletion.
-    #      it "does not raise error when it fails to delete directory structure" do
-    #        Fog::Collection.any_instance.should_receive(:destroy).and_raise(Errno::ENOTEMPTY)
-    #        AppStager.delete_droplet(app)
-    #      end
-    #    end
-    #  end
-    #end
+    describe '.delete_droplet' do
+      let(:app) { double(:app, :guid => 'hey you guys!') }
+
+      it 'should delete the droplet from staging' do
+        AppStager.unstub(:delete_droplet)
+        Staging.should_receive(:delete_droplet).with('hey you guys!')
+        a = app
+        AppStager.delete_droplet(a)
+      end
+
+      describe ".delete_droplet" do
+        before { AppStager.unstub(:delete_droplet) }
+        let(:app) { Models::App.make }
+
+        context "when droplet does not exist" do
+          it "does nothing" do
+            Staging.droplet_exists?(app.guid).should == false
+            AppStager.delete_droplet(app)
+            Staging.droplet_exists?(app.guid).should == false
+          end
+        end
+
+        context "when droplet exists" do
+          before { Staging.store_droplet(app.guid, droplet.path) }
+
+          let(:droplet) do
+            Tempfile.new(app.guid).tap do |f|
+              f.write("droplet-contents")
+              f.close
+            end
+          end
+
+          it "deletes the droplet if it exists" do
+            expect {
+              AppStager.delete_droplet(app)
+            }.to change {
+              Staging.droplet_exists?(app.guid)
+            }.from(true).to(false)
+          end
+
+          # Fog (local) tries to delete parent directories that might be empty
+          # when deleting a file. Sometimes it will fail due to a race
+          # since those directories might have been populated in between
+          # emptiness check and actual deletion.
+          it "does not raise error when it fails to delete directory structure" do
+            Fog::Collection.any_instance.should_receive(:destroy).and_raise(Errno::ENOTEMPTY)
+            AppStager.delete_droplet(app)
+          end
+        end
+      end
+    end
   end
 end
