@@ -203,7 +203,8 @@ module VCAP::CloudController
           :host => @config[:bind_address],
           :index => @config[:index],
           :config => @config,
-          :nats => message_bus
+          :nats => message_bus,
+          :logger => logger
       )
     end
   end
