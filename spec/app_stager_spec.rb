@@ -629,10 +629,70 @@ module VCAP::CloudController
       let(:app) { Models::App.make }
 
       context "when droplet does not exist" do
-        it "does nothing" do
-          Staging.droplet_exists?(app.guid).should == false
-          AppStager.delete_droplet(app)
-          Staging.droplet_exists?(app.guid).should == false
+        
+        context "local fog provider" do
+          it "does nothing" do
+            Staging.droplet_exists?(app.guid).should == false
+            AppStager.delete_droplet(app)
+            Staging.droplet_exists?(app.guid).should == false
+          end
+        end
+        
+        context "AWS fog provider" do
+          
+          before do
+            Fog.unmock!
+            
+            fog_credentials = {
+              :provider => "AWS",
+              :aws_access_key_id => "fake_aws_key_id",
+              :aws_secret_access_key => "fake_secret_access_key",
+            }
+                                       
+            config_override(config_override(stager_config(fog_credentials)))
+            config
+          end
+          
+          it "does nothing" do
+            Staging.droplet_exists?(app.guid).should == false
+            AppStager.delete_droplet(app)
+            Staging.droplet_exists?(app.guid).should == false
+          end
+        end
+                
+        context "HP fog provider" do          
+          before do
+            Fog.unmock!
+            
+            fog_credentials = {
+              :provider => "HP",
+              :hp_access_key => "fake_credentials",
+              :hp_secret_key => "fake_credentials",
+              :hp_tenant_id => "fake_credentials",
+              :hp_auth_uri =>  'https://auth.example.com:5000/v2.0/',
+              :hp_use_upass_auth_style => true,
+              :hp_avl_zone => 'nova'              
+            }
+   
+            config_override(stager_config(fog_credentials))
+            config
+          end
+          
+          it "does nothing" do
+            Staging.droplet_exists?(app.guid).should == false
+            AppStager.delete_droplet(app)
+            Staging.droplet_exists?(app.guid).should == false
+          end
+        end
+        
+        context "Non NotFound error" do
+          before do
+            Staging.should_receive(:droplet_dir).and_raise(StandardError.new("This is an intended error."))
+          end
+        
+          it "should not rescue non-NotFound errors" do
+            expect { AppStager.delete_droplet(app) }.to raise_error(StandardError)
+          end
         end
       end
 
@@ -667,6 +727,23 @@ module VCAP::CloudController
         end
       end
     end
+  end
+  
+  def stager_config(fog_credentials)
+    {
+      :resource_pool => {
+        :resource_directory_key => "spec-cc-resources",
+        :fog_connection => fog_credentials
+      },
+      :packages => {
+        :app_package_directory_key => "cc-packages",
+        :fog_connection => fog_credentials
+      },
+      :droplets => {
+        :droplet_directory_key => "cc-droplets",
+        :fog_connection => fog_credentials
+      } 
+    }    
   end
 
   def stub_schedule_sync(&before_resolve)
