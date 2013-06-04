@@ -19,7 +19,7 @@ tables for orgs, spaces, apps, services, service instances, user roles, and more
 
 ### Database (CC_DB)
 
-The Cloud Controller database has been tested with Postgres.
+The Cloud Controller database has been tested with Postgres, Mysql, and Sqlite.
 
 ### Blob Store
 
