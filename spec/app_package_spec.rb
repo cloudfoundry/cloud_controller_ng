@@ -256,11 +256,7 @@ module VCAP::CloudController
       it "should delete the droplet if it exists" do
         guid = Sham.guid
 
-        AppPackage.package_exists?(guid).should == false
-        zipname = File.join(tmpdir, "test.zip")
-        create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(guid, [], File.new(zipname))
-        AppPackage.package_exists?(guid).should == true
+        create_app_package(guid)
 
         AppPackage.delete_package(guid)
         AppPackage.package_exists?(guid).should == false
@@ -268,38 +264,85 @@ module VCAP::CloudController
     end
 
     describe "package_uri" do
-      before do
-        @guid = Sham.guid
+      
+      context "fog AWS" do      
+        before do
+          @guid = Sham.guid
 
-        AppPackage.configure(
-          :packages => {
-            :fog_connection => {
-              :provider => "AWS",
-              :aws_access_key_id => "fake_aws_key_id",
-              :aws_secret_access_key => "fake_secret_access_key",
+          AppPackage.configure(
+            :packages => {
+              :fog_connection => {
+                :provider => "AWS",
+                :aws_access_key_id => "fake_aws_key_id",
+                :aws_secret_access_key => "fake_secret_access_key",
+              }
             }
-          }
-        )
-        Fog.mock!
+          )
+          Fog.mock!
 
-        tmpdir = Dir.mktmpdir
-        AppPackage.package_exists?(@guid).should == false
-        zipname = File.join(tmpdir, "test.zip")
-        create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(@guid, [], File.new(zipname))
-        AppPackage.package_exists?(@guid).should == true
-        FileUtils.rm_rf(tmpdir)
-      end
+          create_app_package(@guid)
+          
+          FileUtils.rm_rf(tmpdir)
+        end
 
-      it "should return a URL for a valid guid" do
-        uri = AppPackage.package_uri(@guid)
-        uri.should match(/https:\/\/.*s3.amazonaws.com\/.*/)
-      end
+        it "should return a URL for a valid guid" do
+          uri = AppPackage.package_uri(@guid)
+          uri.should match(/https:\/\/.*s3.amazonaws.com\/.*/)
+        end
 
-      it "should return nil for an invalid guid" do
-        uri = AppPackage.package_uri(Sham.guid)
-        uri.should be_nil
+        it "should return nil for an invalid guid" do
+          uri = AppPackage.package_uri(Sham.guid)
+          uri.should be_nil
+        end
+        
+        it "should not call a file's public_url method if there's a url method" do
+          Fog::Storage::AWS::File.any_instance.should_not_receive(:public_url)
+          uri = AppPackage.package_uri(@guid)
+        end        
       end
-    end
+      
+      context "fog non-AWS" do      
+        before do
+          @guid = Sham.guid
+
+          AppPackage.configure(
+            :packages => {
+              :fog_connection => {
+                :provider => 'HP',
+                :hp_access_key => "fake_credentials",
+                :hp_secret_key => "fake_credentials",
+                :hp_tenant_id => "fake_credentials",
+                :hp_auth_uri =>  'https://auth.example.com:5000/v2.0/',
+                :hp_use_upass_auth_style => true,
+                :hp_avl_zone => 'nova'
+              }
+            }
+          )
+          Fog.mock!
+
+          create_app_package(@guid)
+          
+          FileUtils.rm_rf(tmpdir)
+        end
+        
+        it "should call a file's public_url method if there's no url method" do
+          Fog::Storage::HP::File.any_instance.should_receive(:public_url)
+          uri = AppPackage.package_uri(@guid)
+        end
+
+        it "should return nil for an invalid guid" do
+          uri = AppPackage.package_uri(Sham.guid)
+          uri.should be_nil
+        end
+      end
+    end    
+  end
+  
+  def create_app_package(guid)
+    AppPackage.package_exists?(guid).should == false
+    zipname = File.join(tmpdir, "test.zip")
+    create_zip(zipname, 10, 1024)
+    AppPackage.to_zip(guid, [], File.new(zipname))
+    AppPackage.package_exists?(guid).should == true     
   end
 end

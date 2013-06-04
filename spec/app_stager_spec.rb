@@ -37,7 +37,7 @@ module VCAP::CloudController
       end
 
       context "when the app package is valid" do
-        let(:app) { double(:app, :package_hash => 'abc')}
+        let(:app) { double(:app, :package_hash => 'abc') }
 
         it 'should make a task and stage it' do
           task = double(:stager_task)
@@ -56,20 +56,18 @@ module VCAP::CloudController
     end
 
     describe '.delete_droplet' do
-      let(:app) { double(:app, :guid => 'hey you guys!') }
-
-      it 'should delete the droplet from staging' do
+      let(:app) { Models::App.make }
+      before do
         AppStager.unstub(:delete_droplet)
-        Staging.should_receive(:delete_droplet).with('hey you guys!')
-        a = app
-        AppStager.delete_droplet(a)
       end
 
-      describe ".delete_droplet" do
-        before { AppStager.unstub(:delete_droplet) }
-        let(:app) { Models::App.make }
+      it 'should delete the droplet from staging' do
+        Staging.should_receive(:delete_droplet).with(app.guid)
+        AppStager.delete_droplet(app)
+      end
 
-        context "when droplet does not exist" do
+      context "when droplet does not exist" do
+        context "local fog provider" do
           it "does nothing" do
             Staging.droplet_exists?(app.guid).should == false
             AppStager.delete_droplet(app)
@@ -77,34 +75,110 @@ module VCAP::CloudController
           end
         end
 
-        context "when droplet exists" do
-          before { Staging.store_droplet(app.guid, droplet.path) }
+        context "AWS fog provider" do
+          before do
+            Fog.unmock!
 
-          let(:droplet) do
-            Tempfile.new(app.guid).tap do |f|
-              f.write("droplet-contents")
-              f.close
-            end
+            fog_credentials = {
+              :provider => "AWS",
+              :aws_access_key_id => "fake_aws_key_id",
+              :aws_secret_access_key => "fake_secret_access_key",
+            }
+
+            config_override(config_override(stager_config(fog_credentials)))
+            config
           end
 
-          it "deletes the droplet if it exists" do
-            expect {
-              AppStager.delete_droplet(app)
-            }.to change {
-              Staging.droplet_exists?(app.guid)
-            }.from(true).to(false)
-          end
-
-          # Fog (local) tries to delete parent directories that might be empty
-          # when deleting a file. Sometimes it will fail due to a race
-          # since those directories might have been populated in between
-          # emptiness check and actual deletion.
-          it "does not raise error when it fails to delete directory structure" do
-            Fog::Collection.any_instance.should_receive(:destroy).and_raise(Errno::ENOTEMPTY)
+          it "does nothing" do
+            Staging.droplet_exists?(app.guid).should == false
             AppStager.delete_droplet(app)
+            Staging.droplet_exists?(app.guid).should == false
+          end
+        end
+
+        context "HP fog provider" do
+          before do
+            Fog.unmock!
+
+            fog_credentials = {
+              :provider => "HP",
+              :hp_access_key => "fake_credentials",
+              :hp_secret_key => "fake_credentials",
+              :hp_tenant_id => "fake_credentials",
+              :hp_auth_uri => 'https://auth.example.com:5000/v2.0/',
+              :hp_use_upass_auth_style => true,
+              :hp_avl_zone => 'nova'
+            }
+
+            config_override(stager_config(fog_credentials))
+            config
+          end
+
+          it "does nothing" do
+            Staging.droplet_exists?(app.guid).should == false
+            AppStager.delete_droplet(app)
+            Staging.droplet_exists?(app.guid).should == false
+          end
+        end
+
+        context "Non NotFound error" do
+          before do
+            Staging.should_receive(:droplet_dir).and_raise(StandardError.new("This is an intended error."))
+          end
+
+          it "should not rescue non-NotFound errors" do
+            expect { AppStager.delete_droplet(app) }.to raise_error(StandardError)
           end
         end
       end
+
+      context "when droplet exists" do
+        before { Staging.store_droplet(app.guid, droplet.path) }
+
+        let(:droplet) do
+          Tempfile.new(app.guid).tap do |f|
+            f.write("droplet-contents")
+            f.close
+          end
+        end
+
+        it "deletes the droplet if it exists" do
+          expect {
+            AppStager.delete_droplet(app)
+          }.to change {
+            Staging.droplet_exists?(app.guid)
+          }.from(true).to(false)
+        end
+
+        # Fog (local) tries to delete parent directories that might be empty
+        # when deleting a file. Sometimes it will fail due to a race
+        # since those directories might have been populated in between
+        # emptiness check and actual deletion.
+        it "does not raise error when it fails to delete directory structure" do
+          Fog::Collection
+          .any_instance
+          .should_receive(:destroy)
+          .and_raise(Errno::ENOTEMPTY)
+          AppStager.delete_droplet(app)
+        end
+      end
     end
+  end
+
+  def stager_config(fog_credentials)
+    {
+      :resource_pool => {
+        :resource_directory_key => "spec-cc-resources",
+        :fog_connection => fog_credentials
+      },
+      :packages => {
+        :app_package_directory_key => "cc-packages",
+        :fog_connection => fog_credentials
+      },
+      :droplets => {
+        :droplet_directory_key => "cc-droplets",
+        :fog_connection => fog_credentials
+      }
+    }
   end
 end
