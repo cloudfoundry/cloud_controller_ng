@@ -144,16 +144,6 @@ module VCAP::CloudController
           process_hm_request
         end
 
-        context "when the timestamps mismatch" do
-          let(:last_updated) { Time.now - 86400 }
-          let(:instances) { [1] }
-          it "drops the request" do
-            dea_client.should_not_receive(:stop_instances)
-            mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
-            process_hm_request
-          end
-        end
-
         context "with a runaway app" do
           let(:instances) { [1] }
 

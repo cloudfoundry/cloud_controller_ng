@@ -73,7 +73,6 @@ module VCAP::CloudController
       begin
         app_id = payload.fetch(:droplet)
         indices = payload.fetch(:instances)
-        last_updated = payload.fetch(:last_updated).to_i
       rescue KeyError => e
         logger.error("Malformed stop request: #{payload}, #{e.message}")
         return
@@ -82,7 +81,6 @@ module VCAP::CloudController
       app = Models::App[:guid => app_id]
 
       return if stop_runway_app(app, app_id)
-      return if last_updated != app.updated_at.to_i
       return if scaled_to_zero(app, indices)
 
       dea_client.stop_instances(app, indices)
