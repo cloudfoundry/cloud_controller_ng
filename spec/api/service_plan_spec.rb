@@ -175,6 +175,20 @@ module VCAP::CloudController
       post "/v2/service_plans", payload, admin_headers
       last_response.status.should eq(201)
     end
+
+    it 'makes the service plan private by default' do
+      payload_without_public = ServicePlan::CreateMessage.new(
+        :name => 'foo',
+        :free => false,
+        :description => "We don't need no stinking plan'",
+        :service_guid => service.guid,
+        :unique_id => Sham.unique_id,
+      ).encode
+      post '/v2/service_plans', payload_without_public, admin_headers
+      last_response.status.should eq(201)
+      plan_guid = decoded_response.fetch('metadata').fetch('guid')
+      Models::ServicePlan.first(:guid => plan_guid).public.should be_false
+    end
   end
 
   describe "PUT", "/v2/service_plans/:guid" do
