@@ -17,6 +17,8 @@ module VCAP::CloudController
       @config_file = File.expand_path("../../../config/cloud_controller.yml", __FILE__)
       parse_options!
       parse_config
+
+      @log_counter = Steno::Sink::Counter.new
     end
 
     def logger
@@ -72,6 +74,7 @@ module VCAP::CloudController
     def setup_logging
       steno_config = Steno::Config.to_config_hash(@config[:logging])
       steno_config[:context] = Steno::Context::ThreadLocal.new
+      steno_config[:sinks] << @log_counter
       Steno.init(Steno::Config.new(steno_config))
     end
 
@@ -204,7 +207,8 @@ module VCAP::CloudController
           :index => @config[:index],
           :config => @config,
           :nats => message_bus,
-          :logger => logger
+          :logger => logger,
+          :log_counter => @log_counter
       )
     end
   end

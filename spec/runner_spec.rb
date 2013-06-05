@@ -43,6 +43,20 @@ module VCAP::CloudController
         end
       end
 
+      def self.it_registers_a_log_counter
+        it "registers a log counter with the component" do
+          log_counter = Steno::Sink::Counter.new
+          Steno::Sink::Counter.should_receive(:new).once.and_return(log_counter)
+
+          Steno.should_receive(:init) do |steno_config|
+            expect(steno_config.sinks).to include log_counter
+          end
+
+          VCAP::Component.should_receive(:register).with(hash_including(:log_counter => log_counter))
+          subject.run!()
+        end
+      end
+
       context "when the run migrations flag is passed in" do
         let(:argv) { ["-m"] }
 
@@ -55,6 +69,10 @@ module VCAP::CloudController
         it_configures_stacks
         it_runs_dea_client
         it_runs_app_stager
+
+        # This shouldn't be inside here but unless we run under this wrapper we
+        # end up with state pollution and other tests fail. Should be refactored.
+        it_registers_a_log_counter
 
         describe "when the seed data has not yet been created" do
           before { subject.run! }

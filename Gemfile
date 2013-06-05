@@ -14,7 +14,7 @@ gem "membrane", "~> 0.0.2"
 gem "vcap_common", :git => "https://github.com/cloudfoundry/vcap-common.git"
 gem "cf-uaa-lib", "~> 1.3.7", :git => "https://github.com/cloudfoundry/cf-uaa-lib.git", :ref =>  "8d34eede"
 gem "httpclient"
-gem "steno", "~> 1.0.0"
+gem "steno", "~> 1.1.0"
 gem "stager-client", "~> 0.0.02", :git => "https://github.com/cloudfoundry/stager-client.git", :ref => "04c2aee9"
 gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.git"
 
