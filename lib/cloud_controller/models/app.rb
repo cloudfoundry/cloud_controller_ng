@@ -16,6 +16,22 @@ module VCAP::CloudController
 
       class AlreadyDeletedError < StandardError; end
 
+      dataset_module do
+        def existing
+          filter(not_deleted: true)
+        end
+
+        def deleted
+          unfiltered.filter(not_deleted: nil)
+        end
+
+        def with_deleted
+          unfiltered
+        end
+      end
+
+      set_dataset(existing)
+
       one_to_many       :service_bindings, :after_remove => :after_remove_binding
       one_to_many       :events, :class => VCAP::CloudController::Models::AppEvent
 
@@ -259,6 +275,11 @@ module VCAP::CloudController
       # do so with the _ prefixed private method like we do here.
       def _remove_service_binding(binding)
         binding.destroy
+      end
+
+      # When hard-deleting apps through spaces, we need to include soft-deleted apps
+      def _delete_dataset
+        self.class.with_deleted.filter(:id => id)
       end
 
       def self.user_visibility_filter(user)

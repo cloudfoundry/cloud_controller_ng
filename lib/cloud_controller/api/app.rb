@@ -53,19 +53,6 @@ module VCAP::CloudController
       end
     end
 
-
-    # Override this method because we want to enable the concept of
-    # deleted apps. We allow enumeration only on apps which are NOT
-    # marked as deleted.
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      if opts.include?(:q)
-        qp << "not_deleted"
-        opts[:q] << ";not_deleted:t"
-      end
-
-      super(model, ds, qp, opts)
-    end
-
     # Override this method because we want to enable the concept of
     # deleted apps. This is necessary because we have an app events table
     # which is a foreign key constraint on apps. Thus, we can't actually delete

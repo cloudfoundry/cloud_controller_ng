@@ -17,11 +17,11 @@ module VCAP::CloudController::Models
                       :before_add => :validate_auditor
 
     many_to_one       :organization
-    one_to_many       :apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => self, :not_deleted => true) }
-    one_to_many       :all_apps, :dataset => lambda { VCAP::CloudController::Models::App.filter(:space => self) }
+    one_to_many       :apps
+    one_to_many       :all_apps, :dataset => lambda { App.with_deleted.filter(:space => self) }
     one_to_many       :service_instances
     one_to_many       :routes
-    one_to_many       :app_events, :dataset => lambda { VCAP::CloudController::Models::AppEvent.filter(:app => apps) }
+    one_to_many       :app_events, :dataset => lambda { AppEvent.filter(:app => apps) }
     one_to_many       :default_users, :class => "VCAP::CloudController::Models::User", :key => :default_space_id
     many_to_many      :domains, :before_add => :validate_domain
 

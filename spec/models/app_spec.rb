@@ -50,6 +50,42 @@ module VCAP::CloudController
       }
     }
 
+    describe ".deleted" do
+      it "includes deleted apps" do
+        app = Models::App.make
+        app.soft_delete
+        Models::App.deleted[:id => app.id].should_not be_nil
+      end
+
+      it "does not include non-deleted apps" do
+        app = Models::App.make
+        Models::App.deleted[:id => app.id].should be_nil
+      end
+    end
+
+    describe ".existing" do
+      it "includes non-deleted apps" do
+        app = Models::App.make
+        Models::App.existing[:id => app.id].should_not be_nil
+      end
+
+      it "does not include deleted apps" do
+        deleted_app = Models::App.make
+        deleted_app.soft_delete
+        Models::App.existing[:id => deleted_app.id].should be_nil
+      end
+    end
+
+    describe ".with_deleted" do
+      it "includes both deleted and non-deleted apps" do
+        app = Models::App.make
+        deleted_app = Models::App.make
+        deleted_app.soft_delete
+        Models::App.with_deleted[:id => app.id].should_not be_nil
+        Models::App.with_deleted[:id => deleted_app.id].should_not be_nil
+      end
+    end
+
     describe "#stack" do
       def self.it_always_sets_stack
         context "when stack was already set" do
@@ -1099,6 +1135,12 @@ module VCAP::CloudController
         expect { app_obj.soft_delete }.to raise_error(Models::App::AlreadyDeletedError)
       end
 
+      it "does not show up in normal queries" do
+        expect {
+          app_obj.soft_delete
+        }.to change { Models::App[:guid => app_obj.guid] }.to(nil)
+      end
+
       context "with app events" do
         let!(:app_event) { Models::AppEvent.make(:app => app_obj) }
 
@@ -1133,8 +1175,8 @@ module VCAP::CloudController
             it "should nullify routes" do
               app_obj.soft_delete
 
-              app_obj.refresh
-              app_obj.routes.should be_empty
+              deleted_app = Models::App.deleted[:id => app_obj.id]
+              deleted_app.routes.should be_empty
               route.apps.should be_empty
             end
           end
@@ -1151,8 +1193,8 @@ module VCAP::CloudController
             it "should nullify service instances" do
               app_obj.soft_delete
 
-              app_obj.refresh
-              app_obj.service_instances.should be_empty
+              deleted_app = Models::App.deleted[:id => app_obj.id]
+              deleted_app.service_instances.should be_empty
               # service_instances.apps does NOT exist because the many_to_many relation is based on a join with
               # service bindings table.
             end
@@ -1160,9 +1202,9 @@ module VCAP::CloudController
         end
 
         after do
-          Models::AppEvent.find(:id => app_event.id).should_not be_nil
-          Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
-          Models::App.find(:id => app_obj.id).not_deleted.should be_nil
+          Models::AppEvent.where(:id => app_event.id).should_not be_empty
+          Models::App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
+          Models::App.deleted[:id => app_obj.id].not_deleted.should be_false
         end
       end
 

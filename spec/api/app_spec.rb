@@ -243,8 +243,8 @@ module VCAP::CloudController
           subject
           last_response.status.should == 204
 
-          Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
-          Models::App.find(:id => app_obj.id).not_deleted.should be_nil
+          Models::App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
+          Models::App.deleted[:id => app_obj.id].not_deleted.should be_nil
           Models::AppEvent.find(:id => app_event.id).should_not be_nil
         end
       end
@@ -257,8 +257,8 @@ module VCAP::CloudController
             subject
 
             last_response.status.should == 204
-            Models::App.find(:id => app_obj.id).deleted_at.should_not be_nil
-            Models::App.find(:id => app_obj.id).not_deleted.should be_nil
+            Models::App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
+            Models::App.deleted[:id => app_obj.id].not_deleted.should be_nil
             Models::AppEvent.find(:id => app_event.id).should_not be_nil
           end
         end

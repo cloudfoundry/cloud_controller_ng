@@ -100,39 +100,51 @@ module VCAP::CloudController
     end
 
     describe "#destroy" do
-      let(:space) { Models::Space.make }
-
-      subject { space.destroy }
+      subject(:space) { Models::Space.make }
 
       it "destroys all apps" do
         app = Models::App.make(:space => space)
         soft_deleted_app = Models::App.make(:space => space)
         soft_deleted_app.soft_delete
-        expect { subject }.to change { Models::App.where(:id => [app.id, soft_deleted_app.id]).count }.by(-2)
+
+        expect {
+          subject.destroy
+        }.to change {
+          Models::App.with_deleted.where(:id => [app.id, soft_deleted_app.id]).count
+        }.from(2).to(0)
       end
 
       it "destroys all service instances" do
         service_instance = Models::ServiceInstance.make(:space => space)
-        expect { subject }.to change { Models::ServiceInstance.where(:id => service_instance.id).count }.by(-1)
+
+        expect {
+          subject.destroy
+        }.to change {
+          Models::ServiceInstance.where(:id => service_instance.id).count
+        }.by(-1)
       end
 
       it "destroys all routes" do
         route = Models::Route.make(:space => space)
-        expect { subject }.to change { Models::Route.where(:id => route.id).count }.by(-1)
+        expect {
+          subject.destroy
+        }.to change {
+          Models::Route.where(:id => route.id).count
+        }.by(-1)
       end
 
       it "nullifies any domains" do
         domain = Models::Domain.make(:owning_organization => space.organization)
         space.add_domain(domain)
         space.save
-        expect { subject }.to change { domain.reload.spaces.count }.by(-1)
+        expect { subject.destroy }.to change { domain.reload.spaces.count }.by(-1)
       end
 
       it "nullifies any default_users" do
         user = Models::User.make
         space.add_default_user(user)
         space.save
-        expect { subject }.to change { user.reload.default_space }.from(space).to(nil)
+        expect { subject.destroy }.to change { user.reload.default_space }.from(space).to(nil)
       end
     end
 
