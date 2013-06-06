@@ -211,14 +211,8 @@ module VCAP::CloudController::Models
       logger.debug "provisioning service for instance #{guid}"
 
       gw_attrs = service_gateway_client.provision(
-        # TODO: we shouldn't still be using this compound label
-        :label => "#{service.label}-#{service.version}",
         :name  => name,
         :email => VCAP::CloudController::SecurityContext.current_user_email,
-        :plan  => service_plan.name,
-        :plan_option => {}, # TODO: remove this
-        :version => service.version,
-        :provider => service.provider,
         :space_guid => space.guid,
         :organization_guid => space.organization_guid,
         :unique_id => service_plan.unique_id,
