@@ -6,64 +6,64 @@ module VCAP::CloudController::ModelSpecHelper
     # If there are multiple unique attributes, vary them one a time
     #
     if opts[:unique_attributes]
-      if opts[:unique_attributes].length > 1
-        opts[:unique_attributes].each do |changed_attr|
-          context "with duplicate attributes other than #{changed_attr}" do
-            def valid_attributes(opts)
-              opts[:create_attribute_reset].call if opts[:create_attribute_reset]
+      opts[:unique_attributes].each do |unique_key|
+        if unique_key.respond_to?(:each)
+          unique_key.each do |changed_attr|
+            context "with duplicate attributes other than #{changed_attr}" do
+              def valid_attributes(opts)
+                opts[:create_attribute_reset].call if opts[:create_attribute_reset]
 
-              initial_template = described_class.make
-              orig_opts = creation_opts_from_obj(initial_template, opts)
-              initial_template.delete
+                initial_template = described_class.make
+                orig_opts = creation_opts_from_obj(initial_template, opts)
+                initial_template.delete
 
-              orig_obj = described_class.make orig_opts
-              orig_obj.should be_valid
-              creation_opts_from_obj(orig_obj, opts)
-            end
-
-            def value_for_attr(attr, opts)
-              # create the attribute using the caller supplied lambda,
-              # otherwise, create a second object and fetch
-              # the value from that
-              val = nil
-              if opts[:create_attribute]
-                val = opts[:create_attribute].call(attr)
+                orig_obj = described_class.make orig_opts
+                orig_obj.should be_valid
+                creation_opts_from_obj(orig_obj, opts)
               end
 
-              if val.nil?
-                another_obj = described_class.make
-                val = another_obj.send(attr)
-                another_obj.delete
-              end
-              val
-            end
+              def value_for_attr(attr, opts)
+                # create the attribute using the caller supplied lambda,
+                # otherwise, create a second object and fetch
+                # the value from that
+                val = nil
+                if opts[:create_attribute]
+                  val = opts[:create_attribute].call(attr)
+                end
 
-            let(:dup_opts) do
-              valid_attributes(opts).merge(
-                changed_attr => value_for_attr(changed_attr, opts)
-              )
-            end
-
-            it "should succeed" do
-              obj = described_class.create do |instance|
-                instance.set_all(dup_opts)
+                if val.nil?
+                  another_obj = described_class.make
+                  val = another_obj.send(attr)
+                  another_obj.delete
+                end
+                val
               end
-              obj.should be_valid
+
+              let(:dup_opts) do
+                valid_attributes(opts).merge(
+                  changed_attr => value_for_attr(changed_attr, opts)
+                )
+              end
+
+              it "should succeed" do
+                obj = described_class.create do |instance|
+                  instance.set_all(dup_opts)
+                end
+                obj.should be_valid
+              end
             end
           end
         end
-      end
 
-      #
-      # make sure we get failures if all of the unique attributes are the
-      # same
-      #
-      if opts[:unique_attributes].length >= 1
+        #
+        # make sure we get failures if all of the unique attributes are the
+        # same
+        #
         desc = opts[:unique_attributes].map { |v| ":#{v}" }.join(", ")
         desc = "[#{desc}]" if opts[:unique_attributes].length > 1
         context "with duplicate #{desc}" do
           let(:column_list) do
-            opts[:unique_attributes].map do |v|
+            opts[:unique_attributes].flatten.map do |v|
               if described_class.associations.include?(v.to_sym)
                 v = v.to_s.concat("_id")
               end
@@ -89,7 +89,7 @@ module VCAP::CloudController::ModelSpecHelper
           let(:dup_opts) do
             opts[:create_attribute_reset].call if opts[:create_attribute_reset]
             new_opts = opts.dup
-            new_opts[:required_attributes] |= new_opts[:unique_attributes]
+            new_opts[:required_attributes] |= new_opts[:unique_attributes].flatten
 
             initial_template = described_class.make
             orig_opts = creation_opts_from_obj(initial_template, new_opts)

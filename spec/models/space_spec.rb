@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :organization],
-      :unique_attributes   => [:organization, :name],
+      :unique_attributes   => [ [:organization, :name] ],
       :stripped_string_attributes => :name,
       :many_to_one => {
         :organization      => {

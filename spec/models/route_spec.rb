@@ -7,7 +7,7 @@ module VCAP::CloudController
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:domain, :space, :host],
       :db_required_attributes => [:domain, :space],
-      :unique_attributes    => [:host, :domain],
+      :unique_attributes    => [ [:host, :domain] ],
       :create_attribute => lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym

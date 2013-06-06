@@ -6,7 +6,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::Models::Service do
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:label, :provider, :url, :description, :version],
-      :unique_attributes    => [:label, :provider],
+      :unique_attributes    => [ [:label, :provider] ],
       :stripped_string_attributes => [:label, :provider],
       :one_to_zero_or_more   => {
         :service_plans      => {
