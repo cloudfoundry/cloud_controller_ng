@@ -91,25 +91,10 @@ module VCAP::CloudController
     def run!
       EM.run do
         config = @config.dup
-
         message_bus = MessageBusConfigurer::Configurer.new(:uri => config[:message_bus_uri], :logger => logger).go
-
         start_cloud_controller(message_bus)
-
-        if @insert_seed_data
-          Seeds.write_seed_data(config)
-          VCAP::CloudController::Models::Stack.populate
-        end
-
-        system_domains = Array(config[:system_domains])
-        system_domains.each do |name|
-          VCAP::CloudController::Models::Domain.find_or_create_shared_domain(name)
-        end
-
-        VCAP::CloudController::Models::Domain.default_serving_domain_name = system_domains.first
-
+        Seeds.write_seed_data(config) if @insert_seed_data
         app = create_app(config, message_bus)
-
         start_thin_server(app, config, message_bus)
       end
     end
