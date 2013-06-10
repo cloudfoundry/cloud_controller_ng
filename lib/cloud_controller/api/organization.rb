@@ -31,9 +31,9 @@ module VCAP::CloudController
                     :auditor_guid, :status
 
     def self.translate_validation_exception(e, attributes)
-      quota_def_errors = e.errors.on(:quota_definition_id).select{ |error| error == :not_authorized }
+      quota_def_errors = e.errors.on(:quota_definition_id)
       name_errors = e.errors.on(:name)
-      if quota_def_errors
+      if quota_def_errors && quota_def_errors.include?(:not_authorized)
         Errors::NotAuthorized.new(attributes["quota_definition_id"])
       elsif name_errors && name_errors.include?(:unique)
         Errors::OrganizationNameTaken.new(attributes["name"])

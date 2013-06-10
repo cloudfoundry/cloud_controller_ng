@@ -25,9 +25,11 @@ module VCAP::CloudController
   end
 
   describe "permissions" do
+    after(:all) { reset_database }
+
     let(:quota_attributes) {
       {
-        :name => "quota name",
+        :name => quota_name,
         :non_basic_services_allowed => false,
         :total_services => 1,
         :memory_limit => 1024
@@ -37,6 +39,8 @@ module VCAP::CloudController
 
     context "when the user is a cf admin" do
       let(:headers) { headers_for(VCAP::CloudController::Models::User.make(:admin => true)) }
+      let(:quota_name) { "quota 1" }
+
       it "does allow creation of a quota def" do
         post "/v2/quota_definitions", Yajl::Encoder.encode(quota_attributes), headers
         last_response.status.should == 201
@@ -49,7 +53,6 @@ module VCAP::CloudController
 
       it "does allow update of a quota def" do
         put "/v2/quota_definitions/#{existing_quota.guid}", Yajl::Encoder.encode({:total_services => 2}), headers
-        puts last_response.inspect
         last_response.status.should == 201
       end
 
@@ -61,6 +64,7 @@ module VCAP::CloudController
 
     context "when the user is not a cf admin" do
       let(:headers) { headers_for(VCAP::CloudController::Models::User.make(:admin => false)) }
+      let(:quota_name) { "quota 2" }
 
       it "does not allow creation of a quota def" do
         post "/v2/quota_definitions", Yajl::Encoder.encode(quota_attributes), headers
