@@ -23,4 +23,64 @@ module VCAP::CloudController
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {}
   end
+
+  describe "permissions" do
+    let(:quota_attributes) {
+      {
+        :name => "quota name",
+        :non_basic_services_allowed => false,
+        :total_services => 1,
+        :memory_limit => 1024
+      }
+    }
+    let(:existing_quota) { VCAP::CloudController::Models::QuotaDefinition.make }
+
+    context "when the user is a cf admin" do
+      let(:headers) { headers_for(VCAP::CloudController::Models::User.make(:admin => true)) }
+      it "does allow creation of a quota def" do
+        post "/v2/quota_definitions", Yajl::Encoder.encode(quota_attributes), headers
+        last_response.status.should == 201
+      end
+
+      it "does allow read of a quota def" do
+        get "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
+        last_response.status.should == 200
+      end
+
+      it "does allow update of a quota def" do
+        put "/v2/quota_definitions/#{existing_quota.guid}", Yajl::Encoder.encode({:total_services => 2}), headers
+        puts last_response.inspect
+        last_response.status.should == 201
+      end
+
+      it "does allow deletion of a quota def" do
+        delete "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
+        last_response.status.should == 204
+      end
+    end
+
+    context "when the user is not a cf admin" do
+      let(:headers) { headers_for(VCAP::CloudController::Models::User.make(:admin => false)) }
+
+      it "does not allow creation of a quota def" do
+        post "/v2/quota_definitions", Yajl::Encoder.encode(quota_attributes), headers
+        last_response.status.should == 403
+      end
+
+      it "does allow read of a quota def" do
+        get "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
+        last_response.status.should == 200
+      end
+
+      it "does not allow update of a quota def" do
+        put "/v2/quota_definitions/#{existing_quota.guid}", Yajl::Encoder.encode(quota_attributes), headers
+        last_response.status.should == 403
+      end
+
+      it "does not allow deletion of a quota def" do
+        delete "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
+        last_response.status.should == 403
+      end
+    end
+  end
 end
