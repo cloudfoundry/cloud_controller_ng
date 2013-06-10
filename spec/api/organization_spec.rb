@@ -43,7 +43,7 @@ module VCAP::CloudController
         domains: lambda { |org| Models::Domain.find_or_create_shared_domain(Sham.domain) }
       }
 
-      describe "Permissions" do
+    describe "Permissions" do
       include_context "permissions"
 
       before do
@@ -57,6 +57,41 @@ module VCAP::CloudController
 
       let(:update_req_for_a) do
         Yajl::Encoder.encode(:name => Sham.name)
+      end
+
+      describe "Org Quota Definitions" do
+        before(:all) {
+          @unpaid_quota_def = VCAP::CloudController::Models::QuotaDefinition.make(name: "my unpaid")
+          @paid_quota_def = VCAP::CloudController::Models::QuotaDefinition.make(name: "my paid", non_basic_services_allowed: true)
+        }
+
+        let(:org) do
+          VCAP::CloudController::Models::Organization.make.tap do |org|
+            org.quota_definition = @unpaid_quota_def
+            org.add_user(org_manager)
+            org.add_manager(org_manager)
+          end
+        end
+        let(:org_manager) { VCAP::CloudController::Models::User.make(:admin => false) }
+
+        let(:update_req) { Yajl::Encoder.encode({quota_definition_guid: @paid_quota_def.guid}) }
+
+        context "when the user is a cf admin" do
+          let(:headers) { admin_headers }
+          it "allows the user to update the org's quota definition" do
+            put "v2/organizations/#{org.guid}", update_req, headers
+            last_response.status.should == 201
+          end
+        end
+
+        context "when the user is not a cf admin" do
+          let(:headers) { headers_for(org_manager) }
+          it "does not allow the user to update the org's quota definition" do
+            put "v2/organizations/#{org.guid}", update_req, headers
+            puts last_response.inspect.gsub(',', ",\n")
+            last_response.status.should == 403
+          end
+        end
       end
 
       describe "Org Level Permissions" do
