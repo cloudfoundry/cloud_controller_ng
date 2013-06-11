@@ -2,11 +2,11 @@ require "cloudfront-signer"
 
 module CCInitializers
   def self.cloudfront_signer(cc_config)
-    return unless cc_config[:droplets][:cdn] && cc_config[:droplets][:cdn][:private_key]
+    return unless cc_config[:droplets][:cdn] && !cc_config[:droplets][:cdn][:private_key].empty?
 
-    key_file = Tempfile.new("pk-cdn.pem")
-    key_file.write(cc_config[:droplets][:cdn][:private_key])
-    key_file.close
+    key_file = Tempfile.open("pk-cdn.pem") do |file|
+      file.write(cc_config[:droplets][:cdn][:private_key])
+    end
 
     AWS::CF::Signer.configure do |config|
       config.key_path = key_file.path
