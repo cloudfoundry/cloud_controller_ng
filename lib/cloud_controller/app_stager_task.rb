@@ -79,10 +79,10 @@ module VCAP::CloudController
       { :app_id => @app.guid,
         :task_id => task_id,
         :properties => staging_task_properties(@app),
-        :download_uri => Staging.app_uri(@app.guid),
-        :upload_uri => Staging.droplet_upload_uri(@app.guid),
-        :buildpack_cache_download_uri => Staging.buildpack_cache_download_uri(@app.guid),
-        :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app.guid),
+        :download_uri => Staging.app_uri(@app),
+        :upload_uri => Staging.droplet_upload_uri(@app),
+        :buildpack_cache_download_uri => Staging.buildpack_cache_download_uri(@app),
+        :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app),
         :async => async }
     end
 
@@ -177,15 +177,15 @@ module VCAP::CloudController
     end
 
     def staging_completion(stager_response)
-      droplet_hash = Digest::SHA1.file(@upload_handle.upload_path).hexdigest
-      Staging.store_droplet(@app.guid, @upload_handle.upload_path)
+      @app.droplet_hash = Digest::SHA1.file(@upload_handle.upload_path).hexdigest
+      @app.detected_buildpack = stager_response.detected_buildpack
+
+      Staging.store_droplet(@app, @upload_handle.upload_path)
 
       if (buildpack_cache = @upload_handle.buildpack_cache_upload_path)
-        Staging.store_buildpack_cache(@app.guid, buildpack_cache)
+        Staging.store_buildpack_cache(@app, buildpack_cache)
       end
 
-      @app.detected_buildpack = stager_response.detected_buildpack
-      @app.droplet_hash = droplet_hash
       @app.save
     ensure
       destroy_upload_handle

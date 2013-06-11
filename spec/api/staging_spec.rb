@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:cc_port) { 5678 }
     let(:staging_user) { "user" }
     let(:staging_password) { "password" }
-    let(:app_guid) { "abc" }
+    let(:app_obj) { Models::App.make :droplet_hash => "some-droplet-hash" }
     let(:workspace) { Dir.mktmpdir }
     let(:original_staging_config) do
       {
@@ -141,44 +141,98 @@ module VCAP::CloudController
 
     describe "app_uri" do
       it "should return a uri to our cc" do
-        uri = Staging.app_uri(app_guid)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/apps/#{app_guid}"
+        uri = Staging.app_uri(app_obj)
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/apps/#{app_obj.guid}"
       end
     end
 
     describe "droplet_upload_uri" do
       it "should return a uri to our cc" do
-        uri = Staging.droplet_upload_uri(app_guid)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}/upload"
+        uri = Staging.droplet_upload_uri(app_obj)
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_obj.guid}/upload"
       end
     end
 
     describe "droplet_download_uri" do
-      let(:droplet) { Tempfile.new(app_guid) }
-      before { Staging.store_droplet(app_guid, droplet.path) }
-      after { FileUtils.rm(droplet.path) }
-
       it "returns internal cc uri" do
-        uri = Staging.droplet_download_uri(app_guid)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_guid}/download"
+        uri = Staging.droplet_download_uri(app_obj)
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_obj.guid}/download"
+      end
+
+      context "when Fog is configured for AWS" do
+        let(:staging_config) do
+          original_staging_config.tap do |cfg|
+            cfg[:droplets] = droplet_config
+          end
+        end
+
+        let(:droplet_config) do
+          {
+            :fog_connection => {
+                :provider => "AWS"
+            }
+          }
+        end
+
+        let(:key) { "ab/cd/abcdefg" }
+        let(:url) { "https://some-bucket.humbug.com/#{key}" }
+        let(:file) { double :file, :url => url, :key => key }
+        let(:dirs) { double :dirs, :create => double(:dir, :files => double(:files, :head => file)) }
+        let(:fog_mock) { double :fog, :directories => dirs }
+
+        before { Staging.stub(:connection => fog_mock) }
+
+        it "returns an AWS url" do
+          uri = Staging.droplet_download_uri(app_obj)
+          uri.should == "https://some-bucket.humbug.com/ab/cd/abcdefg"
+        end
+
+        context "with a CDN" do
+          let(:droplet_config) do
+            {
+              :fog_connection => {
+                :provider => "AWS"
+              },
+              :cdn => {
+                  :uri => "http://google.com"
+              }
+            }
+          end
+
+          it "returns a URL with the CDN and the file's key" do
+            uri = Staging.droplet_download_uri(app_obj)
+            uri.should == "http://google.com/ab/cd/abcdefg"
+          end
+
+          context "when CloudFront Signer is configured" do
+            before do
+              ::AWS::CF::Signer.stub(:is_configured?).and_return(true)
+            end
+
+            it "returns a signed URI using the CDN" do
+              ::AWS::CF::Signer.should_receive(:sign_url).with("http://google.com/ab/cd/abcdefg").and_return("signed_url")
+              Staging.droplet_uri(app_obj).should == "signed_url"
+            end
+          end
+        end
       end
     end
 
     describe "buildpack_cache_upload_uri" do
       it "should return a uri to our cc" do
-        uri = Staging.buildpack_cache_upload_uri(app_guid)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}/upload"
+        uri = Staging.buildpack_cache_upload_uri(app_obj)
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_obj.guid}/upload"
       end
     end
 
     describe "buildpack_cache_download_uri" do
-      let(:buildpack_cache) { Tempfile.new(app_guid) }
-      before { Staging.store_buildpack_cache(app_guid, buildpack_cache.path) }
+      let(:buildpack_cache) { Tempfile.new(app_obj.guid) }
+      before { Staging.store_buildpack_cache(app_obj, buildpack_cache.path) }
       after { FileUtils.rm(buildpack_cache.path) }
 
       it "returns internal cc uri" do
-        uri = Staging.buildpack_cache_download_uri(app_guid)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_guid}/download"
+        uri = Staging.buildpack_cache_download_uri(app_obj)
+        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_obj.guid}/download"
       end
     end
 
@@ -191,7 +245,6 @@ module VCAP::CloudController
     end
 
     describe "GET /staging/apps/:guid" do
-      let(:app_obj) { Models::App.make }
       let(:app_obj_without_pkg) { Models::App.make }
       let(:app_package_path) { AppPackage.package_path(app_obj.guid) }
 
@@ -241,7 +294,6 @@ module VCAP::CloudController
     end
 
     describe "POST /staging/droplets/:guid/upload" do
-      let(:app_obj) { Models::App.make }
       let(:tmpfile) { Tempfile.new("droplet.tgz") }
       let(:upload_req) do
         { :upload => { :droplet => Rack::Test::UploadedFile.new(tmpfile) } }
@@ -258,6 +310,7 @@ module VCAP::CloudController
 
       context "with a valid upload handle" do
         let!(:handle) { Staging.create_handle(app_obj.guid) }
+
         after { Staging.destroy_handle(handle) }
 
         context "with valid app" do
@@ -291,8 +344,6 @@ module VCAP::CloudController
     end
 
     describe "GET /staging/droplets/:guid/download" do
-      let(:app_obj) { Models::App.make }
-
       before do
         config_override(staging_config)
         authorize staging_user, staging_password
@@ -303,7 +354,7 @@ module VCAP::CloudController
           droplet = Tempfile.new(app_obj.guid)
           droplet.write("droplet contents")
           droplet.close
-          Staging.store_droplet(app_obj.guid, droplet.path)
+          Staging.store_droplet(app_obj, droplet.path)
 
           get "/staging/droplets/#{app_obj.guid}"
           last_response.status.should == 200
@@ -314,7 +365,7 @@ module VCAP::CloudController
           droplet = Tempfile.new(app_obj.guid)
           droplet.write("droplet contents")
           droplet.close
-          Staging.store_droplet(app_obj.guid, droplet.path)
+          Staging.store_droplet(app_obj, droplet.path)
 
           get "/staging/droplets/#{app_obj.guid}/download"
           last_response.status.should == 200
@@ -338,7 +389,6 @@ module VCAP::CloudController
     end
 
     describe "POST /staging/buildpack_cache/:guid/upload" do
-      let(:app_obj) { Models::App.make }
       let(:tmpfile) { Tempfile.new("droplet.tgz") }
       let(:upload_req) do
         { :upload => { :droplet => Rack::Test::UploadedFile.new(tmpfile) } }
@@ -386,7 +436,6 @@ module VCAP::CloudController
     end
 
     describe "GET /staging/buildpack_cache/:guid/download" do
-      let(:app_obj) { Models::App.make }
       let(:buildpack_cache) { Tempfile.new(app_obj.guid) }
 
       before do
@@ -405,7 +454,7 @@ module VCAP::CloudController
       context "with a valid buildpack cache" do
         context "when nginx is enabled" do
           it "redirects nginx to serve staged droplet" do
-            Staging.store_buildpack_cache(app_obj.guid, buildpack_cache.path)
+            Staging.store_buildpack_cache(app_obj, buildpack_cache.path)
 
             make_request
             last_response.status.should == 200
@@ -419,7 +468,7 @@ module VCAP::CloudController
           end
 
           it "should return the buildpack cache" do
-            Staging.store_buildpack_cache(app_obj.guid, buildpack_cache.path)
+            Staging.store_buildpack_cache(app_obj, buildpack_cache.path)
 
             make_request
             last_response.status.should == 200
@@ -439,6 +488,61 @@ module VCAP::CloudController
         it "should return an error" do
           get "/staging/buildpack_cache/bad"
           last_response.status.should == 404
+        end
+      end
+    end
+
+    describe ".delete_droplet" do
+      context "when droplet does not exist" do
+        it "does nothing" do
+          Staging.droplet_exists?(app_obj).should == false
+          Staging.delete_droplet(app_obj)
+          Staging.droplet_exists?(app_obj).should == false
+        end
+      end
+
+      context "when droplet exists" do
+        let(:droplet) { Tempfile.new(app_obj.guid) }
+
+        context "under the new path format" do
+          before { Staging.store_droplet(app_obj, droplet.path) }
+
+          it "deletes the droplet if it exists" do
+            expect {
+              Staging.delete_droplet(app_obj)
+            }.to change {
+              Staging.droplet_exists?(app_obj)
+            }.from(true).to(false)
+          end
+
+          # Fog (local) tries to delete parent directories that might be empty
+          # when deleting a file. Sometimes it will fail due to a race
+          # since those directories might have been populated in between
+          # emptiness check and actual deletion.
+          it "does not raise error when it fails to delete directory structure" do
+            Fog::Storage::Local::File.any_instance.should_receive(:destroy).and_raise(Errno::ENOTEMPTY)
+            Staging.delete_droplet(app_obj)
+          end
+        end
+
+        context "under the old path format" do
+          before do
+            File.open(droplet.path) do |file|
+              Staging.send(:droplet_dir).files.create(
+                :key => Staging.send(:key_from_guid, app_obj.guid, :droplet),
+                :body => file,
+                :public => true
+              )
+            end
+          end
+
+          it "deletes the old droplet" do
+            expect {
+              Staging.delete_droplet(app_obj)
+            }.to change {
+              Staging.droplet_exists?(app_obj)
+            }.from(true).to(false)
+          end
         end
       end
     end

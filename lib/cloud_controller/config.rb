@@ -2,10 +2,12 @@ require "vcap/config"
 require "cloud_controller/account_capacity"
 require "uri"
 
+module CCInitializers
+
+end
+
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
-  DEFAULT_CONFIG_PATH = File.expand_path("../../../../config/dev.yml", __FILE__)
-
   define_schema do
     {
       :port => Integer,
@@ -160,6 +162,12 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
     VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
     VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
+
+    Dir.glob(File.expand_path('../../../config/initializers/*.rb', __FILE__)).each do |file|
+      require file
+      method = File.basename(file).sub(".rb", "").gsub("-", "_")
+      CCInitializers.send(method, config)
+    end
   end
 
   class << self

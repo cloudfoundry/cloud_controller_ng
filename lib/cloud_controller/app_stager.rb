@@ -28,7 +28,7 @@ module VCAP::CloudController
       end
 
       def delete_droplet(app)
-        Staging.delete_droplet(app.guid)
+        Staging.delete_droplet(app)
       end
     end
   end

@@ -5,7 +5,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::AppBits do
     describe "PUT /v2/app/:id/bits" do
-      let(:app_obj) { Models::App.make }
+      let(:app_obj) { Models::App.make :droplet_hash => nil, :package_state => "PENDING" }
 
       let(:tmpdir) { Dir.mktmpdir }
       after { FileUtils.rm_rf(tmpdir) }

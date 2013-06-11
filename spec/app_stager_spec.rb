@@ -62,16 +62,16 @@ module VCAP::CloudController
       end
 
       it 'should delete the droplet from staging' do
-        Staging.should_receive(:delete_droplet).with(app.guid)
+        Staging.should_receive(:delete_droplet).with(app)
         AppStager.delete_droplet(app)
       end
 
       context "when droplet does not exist" do
         context "local fog provider" do
           it "does nothing" do
-            Staging.droplet_exists?(app.guid).should == false
+            Staging.droplet_exists?(app).should == false
             AppStager.delete_droplet(app)
-            Staging.droplet_exists?(app.guid).should == false
+            Staging.droplet_exists?(app).should == false
           end
         end
 
@@ -90,9 +90,9 @@ module VCAP::CloudController
           end
 
           it "does nothing" do
-            Staging.droplet_exists?(app.guid).should == false
+            Staging.droplet_exists?(app).should == false
             AppStager.delete_droplet(app)
-            Staging.droplet_exists?(app.guid).should == false
+            Staging.droplet_exists?(app).should == false
           end
         end
 
@@ -115,9 +115,9 @@ module VCAP::CloudController
           end
 
           it "does nothing" do
-            Staging.droplet_exists?(app.guid).should == false
+            Staging.droplet_exists?(app).should == false
             AppStager.delete_droplet(app)
-            Staging.droplet_exists?(app.guid).should == false
+            Staging.droplet_exists?(app).should == false
           end
         end
 
@@ -133,7 +133,7 @@ module VCAP::CloudController
       end
 
       context "when droplet exists" do
-        before { Staging.store_droplet(app.guid, droplet.path) }
+        before { Staging.store_droplet(app, droplet.path) }
 
         let(:droplet) do
           Tempfile.new(app.guid).tap do |f|
@@ -146,7 +146,7 @@ module VCAP::CloudController
           expect {
             AppStager.delete_droplet(app)
           }.to change {
-            Staging.droplet_exists?(app.guid)
+            Staging.droplet_exists?(app)
           }.from(true).to(false)
         end
 
@@ -155,10 +155,11 @@ module VCAP::CloudController
         # since those directories might have been populated in between
         # emptiness check and actual deletion.
         it "does not raise error when it fails to delete directory structure" do
-          Fog::Collection
-          .any_instance
-          .should_receive(:destroy)
-          .and_raise(Errno::ENOTEMPTY)
+          Fog::Storage::HP::File
+            .any_instance
+            .should_receive(:destroy)
+            .and_raise(Errno::ENOTEMPTY)
+
           AppStager.delete_droplet(app)
         end
       end

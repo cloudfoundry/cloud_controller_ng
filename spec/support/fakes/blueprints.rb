@@ -105,6 +105,7 @@ module VCAP::CloudController::Models
     name              { Sham.name }
     space             { Space.make }
     stack             { Stack.make }
+    droplet_hash      { Sham.guid }
   end
 
   ServiceBinding.blueprint do

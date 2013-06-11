@@ -891,6 +891,8 @@ module VCAP::CloudController
     end
 
     describe "changes to the app that trigger staging/dea notifications" do
+      subject { Models::App.make :droplet_hash => nil, :package_state => "PENDING" }
+
       # Mark app as staged when AppStager.stage_app is called
       before do
         AppStager.stub(:stage_app) do |app, options={}, &success_callback|
@@ -965,13 +967,13 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and not staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc") }
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and not staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
           it_stages
           it_notifies_dea
         end
@@ -1059,14 +1061,14 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and not staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc") }
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
           it_stages
           it_notifies_dea
         end
 
         # Original change to app that moved state into STARTED staged the app and notified dea
         context "when app is already started and not staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
           it_does_not_stage
           it_does_not_notify_dea
         end

@@ -413,7 +413,7 @@ module VCAP::CloudController
       end
 
       def droplet_hash=(hash)
-        self.package_state = "STAGED"
+        self.package_state = "STAGED" if hash
         super(hash)
       end
 

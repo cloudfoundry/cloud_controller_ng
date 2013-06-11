@@ -17,6 +17,7 @@ gem "httpclient"
 gem "steno", "~> 1.1.0"
 gem "stager-client", "~> 0.0.02", :git => "https://github.com/cloudfoundry/stager-client.git", :ref => "04c2aee9"
 gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.git"
+gem "cloudfront-signer"
 
 # These are outside the test group in order to run rake tasks
 gem "rspec"

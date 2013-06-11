@@ -250,12 +250,16 @@ module VCAP::CloudController
       end
 
       context "when app is not staged and running" do
-        let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "FAILED"} }
+        let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "FAILED", :droplet_hash => nil} }
 
         it "does not notify DEAs of route change for apps that are not started" do
-          Models::App.make(:space => route.space, :state => "STOPPED", :route_guids => [route.guid])
+          Models::App.make(
+              :space => route.space, :state => "STOPPED",
+              :route_guids => [route.guid], :droplet_hash => nil, :package_state => "PENDING")
+
           VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
-          Models::Route[:guid => route.guid].destroy
+
+          route.destroy
         end
       end
 

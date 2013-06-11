@@ -10,6 +10,8 @@
 # dropping Fog in place directly.  However, now that there is more going on at
 # the storage layer than FileUtils.mv, this should get refactored.
 
+require "cloudfront-signer"
+
 module VCAP::CloudController
   class Staging < RestController::Base
     include VCAP::Errors
@@ -39,30 +41,27 @@ module VCAP::CloudController
         opts = config[:droplets]
         @droplet_directory_key = opts[:droplet_directory_key] || "cc-droplets"
         @connection_config = opts[:fog_connection]
+        @cdn = opts[:cdn]
         @directory = nil
       end
 
-      def app_uri(guid)
+      def app_uri(app)
         if AppPackage.local?
-          staging_uri("#{APP_PATH}/#{guid}")
+          staging_uri("#{APP_PATH}/#{app.guid}")
         else
-          AppPackage.package_uri(guid)
+          AppPackage.package_uri(app.guid)
         end
       end
 
-      def droplet_upload_uri(guid)
-        upload_uri(guid, :droplet)
+      def droplet_upload_uri(app)
+        upload_uri(app, :droplet)
       end
 
-      def buildpack_cache_upload_uri(guid)
-        upload_uri(guid, :buildpack_cache)
-      end
-
-      def droplet_download_uri(guid)
+      def droplet_download_uri(app)
         if local?
-          staging_uri("#{DROPLET_PATH}/#{guid}/download")
+          staging_uri("#{DROPLET_PATH}/#{app.guid}/download")
         else
-          droplet_uri(guid)
+          droplet_uri(app)
         end
       end
 
@@ -89,17 +88,17 @@ module VCAP::CloudController
         end
       end
 
-      def store_droplet(guid, path)
-        store_package(guid, path, :droplet)
+      def store_droplet(app, path)
+        store_package(app, path, :droplet)
       end
 
-      def store_buildpack_cache(guid, path)
-        store_package(guid, path, :buildpack_cache)
+      def store_buildpack_cache(app, path)
+        store_package(app, path, :buildpack_cache)
       end
 
-      def delete_droplet(guid)
-        key = key_from_guid(guid, :droplet)
-        droplet_dir.files.destroy(key)
+      def delete_droplet(app)
+        file = app_droplet(app)
+        file.destroy if file
       rescue Errno::ENOTEMPTY => e
         logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
         true  
@@ -115,68 +114,84 @@ module VCAP::CloudController
         end      
       end
 
-      def droplet_exists?(guid)
-        key = key_from_guid(guid, :droplet)
-        !droplet_dir.files.head(key).nil?
+      def droplet_exists?(app)
+        !!app_droplet(app)
       end
 
       def local?
         @connection_config[:provider].downcase == "local"
       end
 
-      def buildpack_cache_download_uri(guid)
+      def buildpack_cache_upload_uri(app)
+        upload_uri(app, :buildpack_cache)
+      end
+
+      def buildpack_cache_download_uri(app)
         if AppPackage.local?
-          staging_uri("#{BUILDPACK_CACHE_PATH}/#{guid}/download")
+          staging_uri("#{BUILDPACK_CACHE_PATH}/#{app.guid}/download")
         else
-          package_uri(guid, :buildpack_cache)
+          package_uri(app, :buildpack_cache)
         end
       end
 
-      def droplet_local_path(guid)
-        local_path(guid, :droplet)
+      def droplet_local_path(app)
+        file = app_droplet(app)
+        file.send(:path) if file
       end
 
-      def buildpack_cache_local_path(guid)
-        local_path(guid, :buildpack_cache)
+      def buildpack_cache_local_path(app)
+        file = app_buildpack_cache(app)
+        file.send(:path) if file
       end
 
       # Return droplet uri for path for a given app's guid.
       #
       # The url is valid for 1 hour when using aws.
       # TODO: The expiration should be configurable.
-      def droplet_uri(guid)
-        package_uri(guid, :droplet)
+      def droplet_uri(app)
+        package_uri(app, :droplet)
       end
 
-      def buildpack_cache_uri(guid)
-        package_uri(guid, :buildpack_cache)
+      def buildpack_cache_uri(app)
+        package_uri(app, :buildpack_cache)
       end
 
       private
 
-      def store_package(guid, path, type)
+      def store_package(app, path, type)
         File.open(path) do |file|
           droplet_dir.files.create(
-            :key => key_from_guid(guid, type),
+            :key => key_from_app(app, type),
             :body => file,
             :public => local?
           )
         end
       end
 
-      def upload_uri(guid, type)
+      def upload_uri(app, type)
         prefix = type == :buildpack_cache ? BUILDPACK_CACHE_PATH : DROPLET_PATH
-        staging_uri("#{prefix}/#{guid}/upload")
+        staging_uri("#{prefix}/#{app.guid}/upload")
       end
 
-      def package_uri(guid, type)
-        key = key_from_guid(guid, type)
-        f = droplet_dir.files.head(key)
+      def package_uri(app, type)
+        if type == :buildpack_cache
+          f = app_buildpack_cache(app)
+        elsif type == :droplet
+          f = app_droplet(app)
+        else
+          raise "unknown type #{type}"
+        end
+
         return nil unless f
 
         # unfortunately fog doesn't have a unified interface for non-public
         # urls
-        if f.respond_to?(:url)
+        if local?
+          f.public_url
+        elsif @cdn && @cdn[:uri]
+          uri = "#{@cdn[:uri]}/#{f.key}"
+          AWS::CF::Signer.is_configured? ? AWS::CF::Signer.sign_url(uri) : uri
+        elsif f.respond_to?(:url)
           f.url(Time.now + 3600)
         else
           f.public_url
@@ -218,28 +233,38 @@ module VCAP::CloudController
         )
       end
 
+      def app_droplet(app)
+        return unless app.staged?
+
+        key = key_from_app(app, :droplet)
+        old_key = key_from_guid(app.guid, :droplet)
+        droplet_dir.files.head(key) || droplet_dir.files.head(old_key)
+      end
+
+      def app_buildpack_cache(app)
+        key = key_from_guid(app.guid, :buildpack_cache)
+        droplet_dir.files.head(key)
+      end
+
+      def key_from_app(app, type)
+        if type == :droplet
+          File.join(key_from_guid(app.guid, type), app.droplet_hash)
+        else
+          key_from_guid(app.guid, type)
+        end
+      end
+
       def key_from_guid(guid, type)
         guid = guid.to_s.downcase
+
         if type == :buildpack_cache
           File.join("buildpack_cache", guid[0..1], guid[2..3], guid)
         else
           File.join(guid[0..1], guid[2..3], guid)
         end
       end
-
-      def local_path(guid, type)
-        raise ArgumentError unless local?
-        key = key_from_guid(guid, type)
-        f = droplet_dir.files.head(key)
-        return nil unless f
-        # Yes, this is bad.  But, we really need a handle to the actual path in
-        # order to serve the file using send_file since send_file only takes a
-        # path as an argument
-        f.send(:path)
-      end
     end
 
-    # Handles an app download from a stager
     def download_app(guid)
       raise InvalidRequest unless AppPackage.local?
 
@@ -257,70 +282,74 @@ module VCAP::CloudController
       if config[:nginx][:use_nginx]
         url = AppPackage.package_uri(guid)
         logger.debug "nginx redirect #{url}"
-        return [200, { "X-Accel-Redirect" => url }, ""]
+        [200, { "X-Accel-Redirect" => url }, ""]
       else
         logger.debug "send_file #{package_path}"
-        return send_file package_path
+        send_file package_path
       end
     end
 
-    # Handles a droplet upload from a stager
     def upload_droplet(guid)
-      upload(guid, :droplet)
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
+
+      upload(app, :droplet)
     end
 
-    # Handles a buildpack cache upload from a stager
     def upload_buildpack_cache(guid)
-      upload(guid, :buildpack_cache)
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
+
+      upload(app, :buildpack_cache)
     end
 
     def download_droplet(guid)
-      droplet_path = Staging.droplet_local_path(guid)
-      droplet_url = Staging.droplet_uri(guid)
-      download(guid, droplet_path, droplet_url)
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
+
+      droplet_path = Staging.droplet_local_path(app)
+      droplet_url = Staging.droplet_uri(app)
+      download(app, droplet_path, droplet_url)
     end
 
     def download_buildpack_cache(guid)
-      buildpack_cache_path = Staging.buildpack_cache_local_path(guid)
-      buildpack_cache_url = Staging.buildpack_cache_uri(guid)
-      download(guid, buildpack_cache_path, buildpack_cache_url)
+      app = Models::App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
+
+      buildpack_cache_path = Staging.buildpack_cache_local_path(app)
+      buildpack_cache_url = Staging.buildpack_cache_uri(app)
+      download(app, buildpack_cache_path, buildpack_cache_url)
     end
 
     private
 
-    def download(guid, droplet_path, url)
+    def download(app, droplet_path, url)
       raise InvalidRequest unless Staging.local?
 
-      app = Models::App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
-
-      logger.debug "guid: #{guid} droplet_path #{droplet_path}"
+      logger.debug "guid: #{app.guid} droplet_path #{droplet_path}"
 
       unless droplet_path
-        logger.error "could not find droplet for #{guid}"
-        raise StagingError.new("droplet not found for #{guid}")
+        logger.error "could not find droplet for #{app.guid}"
+        raise StagingError.new("droplet not found for #{app.guid}")
       end
 
       if config[:nginx][:use_nginx]
         logger.debug "nginx redirect #{url}"
-        return [200, { "X-Accel-Redirect" => url }, ""]
+        [200, { "X-Accel-Redirect" => url }, ""]
       else
         logger.debug "send_file #{droplet_path}"
-        return send_file droplet_path
+        send_file droplet_path
       end
     end
 
-    def upload(guid, type)
+    def upload(app, type)
       tag = (type == :buildpack_cache) ? "buildpack_cache" : "staged_droplet"
-      app = Models::App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
 
-      handle = self.class.lookup_handle(guid)
-      raise StagingError.new("staging not in progress for #{guid}") unless handle
-      raise StagingError.new("malformed droplet upload request for #{guid}") unless upload_file
+      handle = self.class.lookup_handle(app.guid)
+      raise StagingError.new("staging not in progress for #{app.guid}") unless handle
+      raise StagingError.new("malformed droplet upload request for #{app.guid}") unless upload_path
 
-      upload_path = upload_file.path
-      final_path = save_path(guid, tag)
+      final_path = save_path(app.guid, tag)
       logger.debug "renaming #{tag} from '#{upload_path}' to '#{final_path}'"
 
       begin
@@ -335,19 +364,17 @@ module VCAP::CloudController
         handle.upload_path = final_path
       end
 
-      logger.debug "uploaded #{tag} for #{guid} to #{final_path}"
+      logger.debug "uploaded #{tag} for #{app.guid} to #{final_path}"
 
       HTTP::OK
     end
 
-    # returns an object that responds to #path pointing to the uploaded file
-    # @return [#path]
-    def upload_file
-      @upload_file ||=
+    def upload_path
+      @upload_path ||=
         if get_from_hash_tree(config, :nginx, :use_nginx)
-          Struct.new(:path).new(params["droplet_path"])
-        else
-          get_from_hash_tree(params, "upload", "droplet", :tempfile)
+          params["droplet_path"]
+        elsif (tempfile = get_from_hash_tree(params, "upload", "droplet", :tempfile))
+          tempfile.path
         end
     end
 
@@ -370,9 +397,9 @@ module VCAP::CloudController
     # (and add a test for /staging/droplets with bad auth)
     controller.before "#{APP_PATH}/*" do
       auth =  Rack::Auth::Basic::Request.new(env)
-      unless (auth.provided? && auth.basic? && auth.credentials &&
+      unless auth.provided? && auth.basic? &&
               auth.credentials == [@config[:staging][:auth][:user],
-                                   @config[:staging][:auth][:password]])
+                                   @config[:staging][:auth][:password]]
         raise NotAuthorized
       end
     end
