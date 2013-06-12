@@ -24,26 +24,6 @@ module VCAP::CloudController
       }
     }
 
-    describe "validation" do
-      let!(:org) do
-        Models::Organization.make(can_access_non_public_plans: false)
-      end
-
-      it "allows cf admins to change 'can_access_non_public_plans'" do
-        SecurityContext.stub(:current_user_is_admin? => true)
-        expect {
-          org.update(:can_access_non_public_plans => true)
-        }.to_not raise_error Sequel::ValidationFailed, /can_access_non_public_plans/
-      end
-
-      it "does not allow non-admins to change 'can_access_non_public_plans'" do
-        SecurityContext.stub(:current_user_is_admin? => false)
-        expect {
-          org.update(:can_access_non_public_plans => true)
-        }.to raise_error Sequel::ValidationFailed, /can_access_non_public_plans/
-      end
-    end
-
     describe "default domains" do
       context "with the default serving domain name set" do
         before do
@@ -59,12 +39,6 @@ module VCAP::CloudController
           d = Models::Domain.default_serving_domain
           org.domains.map(&:guid) == [d.guid]
         end
-      end
-    end
-
-    describe "default access control" do
-      it "cannot access non-public service plans" do
-        Models::Organization.make.can_access_non_public_plans.should eq(false)
       end
     end
 
