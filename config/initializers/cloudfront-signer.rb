@@ -6,6 +6,7 @@ module CCInitializers
 
     key_file = Tempfile.open("pk-cdn.pem") do |file|
       file.write(cc_config[:droplets][:cdn][:private_key])
+      file
     end
 
     AWS::CF::Signer.configure do |config|
