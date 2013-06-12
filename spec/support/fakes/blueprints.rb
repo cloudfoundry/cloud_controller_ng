@@ -121,6 +121,11 @@ module VCAP::CloudController::Models
     unique_id         { [service.provider, service.label, name].join("_") }
   end
 
+  ServicePlanVisibility.blueprint do
+    service_plan { ServicePlan.make }
+    organization { Organization.make }
+  end
+
   BillingEvent.blueprint do
     timestamp         { Time.now }
     organization_guid { Sham.guid }

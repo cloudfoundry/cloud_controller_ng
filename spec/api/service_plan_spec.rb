@@ -146,10 +146,12 @@ module VCAP::CloudController
         plan_guids.should_not include(private_plan.guid)
       end
 
-      it "is visible to users from privileged organizations" do
+      it "is visible to users from organizations with access to the plan" do
         organization = developer.organizations.first
-        VCAP::CloudController::SecurityContext.stub(:current_user_is_admin?) { true }
-        organization.update(:can_access_non_public_plans => true)
+        VCAP::CloudController::Models::ServicePlanVisibility.create(
+          organization: organization,
+          service_plan: private_plan,
+        )
         get '/v2/service_plans', {}, headers_for(developer)
         plan_guids.should include(private_plan.guid)
       end

@@ -74,9 +74,5 @@ module VCAP::CloudController::Models
     def active?
       active
     end
-
-    def can_access_non_public_plans?
-      organizations_dataset.filter(:can_access_non_public_plans => true).count > 0
-    end
   end
 end

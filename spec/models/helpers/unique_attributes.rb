@@ -71,18 +71,20 @@ module VCAP::CloudController::ModelSpecHelper
             end
           end
 
-          let(:sequel_exception_match) do
-            "#{column_list.join(" and ")} unique"
+          def sequel_error_for_all_columns?(column_list, error)
+            columns_in_error = error.message[/^(.*) unique$/, 1].split(" and ")
+            columns_in_error.sort == column_list.sort
           end
 
-          let(:db_exception_match) do
+          def requires_uniqueness_for_columns?(column_list, error)
             case described_class.db.database_type
             when :mysql
-              "Duplicate entry"
+              error.message == "Duplicate entry"
             when :sqlite
-              "columns? #{column_list.join(", ")}.* not unique".sub("uaa_id", "guid")
+              columns_in_error = error.message[/columns? (.*?) (is|are) not unique/, 1]
+              columns_in_error.split(', ').sort == column_list.sort
             else
-              ".*"
+              true
             end
           end
 
@@ -107,7 +109,9 @@ module VCAP::CloudController::ModelSpecHelper
               described_class.create do |instance|
                 instance.set_all(dup_opts)
               end
-            }.to raise_error Sequel::ValidationFailed, /#{sequel_exception_match}/
+            }.to raise_error Sequel::ValidationFailed do |err|
+              sequel_error_for_all_columns?(column_list, err)
+            end
           end
 
           unless opts[:skip_database_constraints]
@@ -117,7 +121,9 @@ module VCAP::CloudController::ModelSpecHelper
                   instance.set_all(dup_opts)
                   instance.valid?  # run validations but ignore results
                 end.save(:validate => false)
-              }.to raise_error Sequel::DatabaseError, /#{db_exception_match}/
+              }.to raise_error Sequel::DatabaseError do |err|
+                requires_uniqueness_for_columns?(column_list, err)
+              end
             end
           end
         end

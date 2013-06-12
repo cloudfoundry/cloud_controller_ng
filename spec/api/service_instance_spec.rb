@@ -145,9 +145,10 @@ module VCAP::CloudController
 
           it "allows user with privileged organization to create a service instance" do
             organization = developer.organizations.first
-            act_as_cf_admin do
-              organization.update(:can_access_non_public_plans => true)
-            end
+            Models::ServicePlanVisibility.create(
+              organization: organization,
+              service_plan: private_plan
+            )
             post('v2/service_instances', payload, headers_for(developer))
             last_response.status.should == 201
           end
