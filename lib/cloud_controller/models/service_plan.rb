@@ -33,8 +33,12 @@ module VCAP::CloudController::Models
     end
 
     def self.user_visibility_filter(user)
-      opts = user.can_access_non_public_plans? ? {} : {public: true}
-      user_visibility_filter_with_admin_override(opts)
+      filter = Sequel.|(
+        {public: true},
+        {id: ServicePlanVisibility.visible_private_plan_ids_for_user(user)}
+      )
+
+      user_visibility_filter_with_admin_override(filter)
     end
 
     def trial_db?

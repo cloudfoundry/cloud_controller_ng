@@ -30,7 +30,7 @@ module VCAP::CloudController::Models
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
                       :auditor_guids, :domain_guids, :quota_definition_guid,
-                      :can_access_non_public_plans, :status
+                      :status
 
     def billing_enabled?
       billing_enabled
@@ -46,9 +46,7 @@ module VCAP::CloudController::Models
       validates_presence :name
       validates_unique   :name
       validate_only_admin_can_update(:billing_enabled)
-      validate_only_admin_can_update(:can_access_non_public_plans)
       validate_only_admin_can_update(:quota_definition_id)
-      validate_only_admin_can_enable_on_new(:can_access_non_public_plans)
     end
 
     def validate_only_admin_can_enable_on_new(field_name)

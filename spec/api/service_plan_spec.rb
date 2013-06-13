@@ -146,10 +146,12 @@ module VCAP::CloudController
         plan_guids.should_not include(private_plan.guid)
       end
 
-      it "is visible to users from privileged organizations" do
+      it "is visible to users from organizations with access to the plan" do
         organization = developer.organizations.first
-        VCAP::CloudController::SecurityContext.stub(:current_user_is_admin?) { true }
-        organization.update(:can_access_non_public_plans => true)
+        VCAP::CloudController::Models::ServicePlanVisibility.create(
+          organization: organization,
+          service_plan: private_plan,
+        )
         get '/v2/service_plans', {}, headers_for(developer)
         plan_guids.should include(private_plan.guid)
       end
@@ -174,6 +176,20 @@ module VCAP::CloudController
       ).encode
       post "/v2/service_plans", payload, admin_headers
       last_response.status.should eq(201)
+    end
+
+    it 'makes the service plan private by default' do
+      payload_without_public = ServicePlan::CreateMessage.new(
+        :name => 'foo',
+        :free => false,
+        :description => "We don't need no stinking plan'",
+        :service_guid => service.guid,
+        :unique_id => Sham.unique_id,
+      ).encode
+      post '/v2/service_plans', payload_without_public, admin_headers
+      last_response.status.should eq(201)
+      plan_guid = decoded_response.fetch('metadata').fetch('guid')
+      Models::ServicePlan.first(:guid => plan_guid).public.should be_false
     end
   end
 

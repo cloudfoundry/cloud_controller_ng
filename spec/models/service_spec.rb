@@ -2,8 +2,8 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-module VCAP::CloudController
-  describe VCAP::CloudController::Models::Service do
+module VCAP::CloudController::Models
+  describe Service do
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:label, :provider, :url, :description, :version],
       :unique_attributes    => [ [:label, :provider] ],
@@ -11,13 +11,13 @@ module VCAP::CloudController
       :one_to_zero_or_more   => {
         :service_plans      => {
           :delete_ok => true,
-          :create_for => lambda { |_| Models::ServicePlan.make }
+          :create_for => lambda { |_| ServicePlan.make }
         }
       }
     }
 
     describe "#destroy" do
-      let!(:service) { Models::Service.make }
+      let!(:service) { Service.make }
       subject { service.destroy }
 
       it "doesn't remove the associated ServiceAuthToken" do
@@ -25,7 +25,7 @@ module VCAP::CloudController
         expect {
           subject
         }.to_not change {
-          Models::ServiceAuthToken.count(:label => service.label, :provider => service.provider)
+          ServiceAuthToken.count(:label => service.label, :provider => service.provider)
         }
       end
     end
@@ -33,7 +33,7 @@ module VCAP::CloudController
     describe "validation" do
       context "when unique_id is not provided" do
         it "creates a composite unique_id" do
-          service = Models::Service.new(provider: "core", label: "ponies")
+          service = Service.new(provider: "core", label: "ponies")
           service.valid?
           service.unique_id.should == "core_ponies"
         end
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
       context "when unique_id is provided" do
         it "uses provided unique_id" do
-          service = Models::Service.new(provider: "core", label: "ponies", unique_id: "glue-factory")
+          service = Service.new(provider: "core", label: "ponies", unique_id: "glue-factory")
           service.valid?
           service.unique_id.should == "glue-factory"
         end
@@ -51,7 +51,7 @@ module VCAP::CloudController
     describe "serialization" do
       let(:extra) { 'extra' }
       let(:unique_id) { 'glue-factory' }
-      let(:service) { Models::Service.new_from_hash(extra: extra, unique_id: unique_id) }
+      let(:service) { Service.new_from_hash(extra: extra, unique_id: unique_id) }
 
       it "allows mass assignment of extra" do
         service.extra.should == extra
@@ -71,29 +71,27 @@ module VCAP::CloudController
     end
 
     describe "#user_visibility_filter" do
-      let(:private_org) { Models::Organization.make(:can_access_non_public_plans => true) }
-      let(:private_service) { Models::Service.make }
-      let(:public_service) { Models::Service.make }
-      let(:admin_user) { Models::User.make(:admin => true, :active => true) }
-      let(:nonadmin_user) { Models::User.make(:admin => false, :active => true) }
-      let(:private_user) { Models::User.make(:admin => false, :active => true) }
+      let(:private_service) { Service.make }
+      let(:public_service) { Service.make }
+      let(:nonadmin_org) { Organization.make }
+      let(:admin_user) { User.make(:admin => true, :active => true) }
+      let(:nonadmin_user) { User.make(:admin => false, :active => true) }
+      let!(:private_plan) { ServicePlan.make :service => private_service, :public => false }
       before do
-        Models::ServicePlan.make :service => private_service, :public => false
-        Models::ServicePlan.make :service => public_service, :public => true
-        Models::ServicePlan.make :service => public_service, :public => false
+        ServicePlan.make :service => public_service, :public => true
+        ServicePlan.make :service => public_service, :public => false
         VCAP::CloudController::SecurityContext.set(admin_user)
-        private_user.add_organization private_org
+        nonadmin_user.add_organization nonadmin_org
         VCAP::CloudController::SecurityContext.clear
       end
 
       def records(user)
         VCAP::CloudController::SecurityContext.set(user)
-        Models::Service.filter(Models::Service.user_visibility_filter(user))
+        Service.filter(Service.user_visibility_filter(user)).all
       end
 
       it "returns all services for admins" do
-        records(admin_user).should include(private_service)
-        records(admin_user).should include(public_service)
+        records(admin_user).should include(private_service, public_service)
       end
 
       it "only returns public services for nonadmins" do
@@ -102,8 +100,11 @@ module VCAP::CloudController
       end
 
       it "returns private services if a user can see a plan inside them" do
-        records(private_user).should include(private_service)
-        records(private_user).should include(public_service)
+        ServicePlanVisibility.create(
+          organization: nonadmin_org,
+          service_plan: private_plan,
+        )
+        records(nonadmin_user).should include(private_service, public_service)
       end
     end
   end
