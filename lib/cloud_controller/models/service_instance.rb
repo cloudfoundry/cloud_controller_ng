@@ -237,8 +237,11 @@ module VCAP::CloudController::Models
       return unless service_gateway_client(plan) # TODO: see service_gateway_client
       @provisioned_on_gateway_for_plan = nil
       service_gateway_client(plan).unprovision(:service_id => gateway_name)
+    rescue VCAP::Services::Api::ServiceGatewayClient::GatewayExternalError => e
+      logger.error("wont delete instance_guid:#{guid} due to external error")
+      raise Sequel::Rollback
     rescue => e
-      logger.error "deprovision failed #{e}"
+      logger.warn "deleting in spite of failure on gateway: #{e} for instance_guid:#{guid}"
     end
 
     def create_snapshot(name)

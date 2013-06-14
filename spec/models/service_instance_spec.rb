@@ -380,16 +380,65 @@ module VCAP::CloudController
       end
     end
 
-    describe "#destroy" do
-      subject { service_instance.destroy }
+    describe "destroy" do
+      let!(:service_instance) { described_class.make }
+      let(:service_binding) do
+        Models::ServiceBinding.make(
+          app: Models::App.make(:space => service_instance.space),
+          service_instance: service_instance,
+        )
+      end
 
       it "destroys the service bindings" do
-        service_binding = Models::ServiceBinding.make(
-          :app => Models::App.make(:space => service_instance.space),
-          :service_instance => service_instance
-        )
-        expect { subject }.to change { Models::ServiceBinding.where(:id => service_binding.id).count }.by(-1)
+        expect{ service_instance.destroy }.to change { Models::ServiceBinding.where(:id => service_binding.id).count }.by(-1)
       end
+
+      it 'deletes the record if the call to the gateway times out' do
+        pending "ServiceGatewayClient ignores timeout for now"
+      end
+
+      context 'when gateway returns 422 due to gateway external error' do
+        let(:error_message) do
+          VCAP::Services::Api::ServiceErrorResponse.new(code: 422, description: 'external error')
+        end
+        let(:error) do
+          VCAP::Services::Api::ServiceGatewayClient::GatewayExternalError.new(error_message)
+        end
+
+        before do
+          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.
+            should_receive(:unprovision).and_raise(error)
+        end
+
+        it 'does not delete the record' do
+          expect { service_instance.destroy }.not_to change { Models::ServiceInstance.count }
+        end
+
+        it 'logs when it rollbacks the transaction' do
+          Steno::Logger.any_instance.should_receive(:error).
+            with(/wont delete instance_guid:#{service_instance.guid} due to external error/)
+          service_instance.destroy
+        end
+      end
+
+      context 'when the gateway fails' do
+        let(:error) { 'failed to unprovision' }
+        before do
+          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.should_receive(:unprovision).
+            and_raise error
+        end
+
+        it 'deletes the service_instance' do
+          expect { service_instance.destroy }.to change { Models::ServiceInstance.count }.by(-1)
+        end
+
+        it 'logs the error' do
+          Steno::Logger.any_instance.should_receive(:warn).
+            with(/deleting in spite of failure on gateway: #{error} for instance_guid:#{service_instance.guid}/)
+          service_instance.destroy
+        end
+      end
+
     end
   end
 
