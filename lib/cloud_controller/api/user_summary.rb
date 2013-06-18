@@ -1,3 +1,5 @@
+require_relative '../presenters/user_summary_presenter'
+
 module VCAP::CloudController
   rest_controller :UserSummary do
     disable_default_routes
@@ -15,12 +17,7 @@ module VCAP::CloudController
 
     def summary(id)
       user = find_id_and_validate_access(:read, id)
-      orgs =  user.organizations
-
-      Yajl::Encoder.encode(
-        :guid => id,
-        :organizations => orgs
-      )
+      Yajl::Encoder.encode UserSummaryPresenter.new(user).to_hash
     end
 
     get "#{path_id}/summary", :summary

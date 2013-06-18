@@ -47,8 +47,6 @@ module VCAP::CloudController::RestController
     #
     # @param [Sequel::Model] obj Object to encode.
     #
-    # @param [Sequel::Model] obj Object to encode.
-    #
     # @option opts [Integer] :inline_relations_depth Depth to recursively
     # exapend relationships in addition to providing the URLs.
     #

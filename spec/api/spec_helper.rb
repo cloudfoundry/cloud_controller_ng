@@ -77,8 +77,8 @@ module VCAP::CloudController::ApiSpecHelper
     headers.merge({ "CONTENT_TYPE" => "application/json"})
   end
 
-  def decoded_response
-    Yajl::Parser.parse(last_response.body)
+  def decoded_response(options={})
+    Yajl::Parser.parse(last_response.body, options)
   end
 
   def metadata
