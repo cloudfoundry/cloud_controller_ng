@@ -1,5 +1,6 @@
 require_relative 'abstract_presenter'
 require_relative 'quota_definition_presenter'
+require_relative 'space_presenter'
 
 class OrganizationPresenter < AbstractPresenter
   def entity_hash
@@ -7,6 +8,7 @@ class OrganizationPresenter < AbstractPresenter
       name: @object.name,
       billing_enabled: @object.billing_enabled,
       status: @object.status,
+      spaces: @object.spaces.map { |space| SpacePresenter.new(space).to_hash },
       quota_definition: QuotaDefinitionPresenter.new(@object.quota_definition).to_hash
     }
   end

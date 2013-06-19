@@ -3,6 +3,7 @@ require 'spec_helper'
 describe OrganizationPresenter do
   describe "#to_hash" do
     let(:org) { VCAP::CloudController::Models::Organization.make }
+    before { VCAP::CloudController::Models::Space.make(organization: org) }
     subject { OrganizationPresenter.new(org) }
 
     it "creates a valid JSON" do
@@ -16,6 +17,7 @@ describe OrganizationPresenter do
           name: org.name,
           billing_enabled: org.billing_enabled,
           status: org.status,
+          spaces: org.spaces.map { |space| SpacePresenter.new(space).to_hash },
           quota_definition: QuotaDefinitionPresenter.new(org.quota_definition).to_hash
         }
       })
