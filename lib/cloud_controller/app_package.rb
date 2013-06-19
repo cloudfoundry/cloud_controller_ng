@@ -175,7 +175,7 @@ module VCAP::CloudController
         expanded_path
       end
 
-      # Do resource pool synch
+      # Do resource pool sync
       def synchronize_pool_with(working_dir, resource_descriptors)
         ResourcePool.instance.add_directory(working_dir)
         resource_descriptors.each do |descriptor|

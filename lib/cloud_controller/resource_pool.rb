@@ -73,10 +73,14 @@ class VCAP::CloudController::ResourcePool
 
   def copy(descriptor, destination)
     if resource_known?(descriptor)
-      logger.debug "resource pool sync #{descriptor}"
+      logger.debug "resource_pool.sync.start", :resource => descriptor,
+        :destination => destination
+
       overwrite_destination_with!(descriptor, destination)
     else
-      logger.warn "resource pool sync error #{descriptor}"
+      logger.warn "resource_pool.sync.failed", :unknown_resource => descriptor,
+        :destination => destination
+
       raise ArgumentError, "Can not copy bits we do not have #{descriptor}"
     end
   end
@@ -109,10 +113,20 @@ class VCAP::CloudController::ResourcePool
   def overwrite_destination_with!(descriptor, destination)
     FileUtils.mkdir_p File.dirname(destination)
     s3_key = key_from_sha1(descriptor["sha1"])
-    s3_file = resource_dir.files.get(s3_key)
+
+    logger.debug "resource_pool.download.starting",
+      :destination => destination
+
+    start = Time.now
     File.open(destination, "w") do |file|
-      file.write(s3_file.body)
+      resource_dir.files.get(s3_key) do |chunk, _, _|
+        file.write(chunk)
+      end
     end
+    took = Time.now - start
+
+    logger.debug "resource_pool.download.complete", :took => took,
+      :destination => destination
   end
 
   def connection

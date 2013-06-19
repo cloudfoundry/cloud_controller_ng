@@ -69,5 +69,38 @@ module VCAP::CloudController
         @resource_pool.send(:size_allowed?, nil).should be_false
       end
     end
+
+    describe "#copy" do
+      let(:fake_io) { double :dest }
+      let(:files) { double :files }
+      let(:resource_dir) { double :resource_dir, :files => files }
+
+      let(:descriptor) do
+        { "sha1" => "deadbeef" }
+      end
+
+      before do
+        @resource_pool.stub(:resource_known?).and_return(true)
+        @resource_pool.stub(:resource_dir).and_return(resource_dir)
+        files.stub(:get)
+        File.stub(:open).and_yield(fake_io)
+      end
+
+      it "creates the path to the destination" do
+        FileUtils.should_receive(:mkdir_p).with("some")
+        @resource_pool.copy(descriptor, "some/destination")
+      end
+
+      it "streams the resource to the destination" do
+        fake_io.should_receive(:write).with("chunk one")
+        fake_io.should_receive(:write).with("chunk two")
+
+        files.should_receive(:get).with("de/ad/deadbeef").
+          and_yield("chunk one", 9, 18).
+          and_yield("chunk two", 0, 18)
+
+        @resource_pool.copy(descriptor, "some/destination")
+      end
+    end
   end
 end
