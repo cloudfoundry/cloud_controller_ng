@@ -9,7 +9,7 @@ describe UserSummaryPresenter do
     let(:managed_space) { VCAP::CloudController::Models::Space.make(organization: managed_org) }
     let(:user) do
       u = make_developer_for_space(space)
-      u.add_organization(managed_org)
+      u.add_managed_organization(managed_org)
       managed_space.add_manager(u)
       u
     end
