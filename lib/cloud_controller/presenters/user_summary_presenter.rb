@@ -6,8 +6,11 @@ class UserSummaryPresenter < AbstractPresenter
     {
       organizations: present_orgs(@object.organizations),
       managed_organizations: present_orgs(@object.managed_organizations),
+      billing_managed_organizations: present_orgs(@object.billing_managed_organizations),
+      audited_organizations: present_orgs(@object.audited_organizations),
       spaces: present_spaces(@object.spaces),
-      managed_spaces: present_spaces(@object.managed_spaces)
+      managed_spaces: present_spaces(@object.managed_spaces),
+      audited_spaces: present_spaces(@object.audited_spaces)
     }
   end
 
