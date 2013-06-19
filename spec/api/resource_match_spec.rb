@@ -6,7 +6,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::ResourceMatch do
     include_context "resource pool"
 
-    before(:all) do
+    before do
       @resource_pool.add_directory(@tmpdir)
     end
 

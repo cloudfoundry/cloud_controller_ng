@@ -7,6 +7,7 @@
 # they will be ignored and preserved.
 
 require "fog"
+require "httpclient"
 require "steno"
 
 class VCAP::CloudController::ResourcePool
@@ -19,6 +20,7 @@ class VCAP::CloudController::ResourcePool
   def initialize(config = {})
     opts = config[:resource_pool] || {}
     @connection_config = opts[:fog_connection]
+    @cdn = opts[:cdn]
     @resource_directory_key = opts[:resource_directory_key] || "cc-resources"
     @minimum_size = opts[:minimum_size] || 0
     @maximum_size = opts[:maximum_size] || 512 * 1024 * 1024 # MB
@@ -118,11 +120,26 @@ class VCAP::CloudController::ResourcePool
       :destination => destination
 
     start = Time.now
-    File.open(destination, "w") do |file|
-      resource_dir.files.get(s3_key) do |chunk, _, _|
-        file.write(chunk)
+
+    if @cdn && @cdn[:uri]
+      logger.debug "resource_pool.download.using-cdn"
+
+      uri = "#{@cdn[:uri]}/#{s3_key}"
+      for_real_uri = AWS::CF::Signer.is_configured? ? AWS::CF::Signer.sign_url(uri) : uri
+
+      File.open(destination, "w") do |file|
+        HTTPClient.new.get(for_real_uri) do |_, chunk|
+          file.write(chunk)
+        end
+      end
+    else
+      File.open(destination, "w") do |file|
+        resource_dir.files.get(s3_key) do |chunk, _, _|
+          file.write(chunk)
+        end
       end
     end
+
     took = Time.now - start
 
     logger.debug "resource_pool.download.complete", :took => took,

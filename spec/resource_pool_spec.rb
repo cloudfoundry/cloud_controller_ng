@@ -7,7 +7,7 @@ module VCAP::CloudController
     include_context "resource pool"
 
     describe "#match_resources" do
-      before(:all) do
+      before do
         @resource_pool.add_directory(@tmpdir)
       end
 
@@ -100,6 +100,35 @@ module VCAP::CloudController
           and_yield("chunk two", 0, 18)
 
         @resource_pool.copy(descriptor, "some/destination")
+      end
+
+      context "when a cdn is configured" do
+        let(:resource_pool_config) do
+          {
+            :maximum_size => @max_file_size,
+            :resource_directory_key => "spec-cc-resources",
+            :fog_connection => {
+              :provider => "AWS",
+              :aws_access_key_id => "fake_aws_key_id",
+              :aws_secret_access_key => "fake_secret_access_key",
+            },
+            :cdn => {
+              :uri => "http://example.com",
+            }
+          }
+        end
+
+        it "downloads the resource via the CDN" do
+          HTTPClient.any_instance.stub(:get) do |&blk|
+            blk.call(nil, "chunk one")
+            blk.call(nil, "chunk two")
+          end
+
+          fake_io.should_receive(:write).with("chunk one")
+          fake_io.should_receive(:write).with("chunk two")
+
+          @resource_pool.copy(descriptor, "some/destination")
+        end
       end
     end
   end
