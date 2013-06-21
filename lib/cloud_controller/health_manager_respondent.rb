@@ -51,7 +51,9 @@ module VCAP::CloudController
         last_updated = payload.fetch(:last_updated).to_i
         version = payload.fetch(:version)
       rescue KeyError => e
-        logger.error("Malformed start request: #{payload}, #{e.message}")
+        logger.error "cloudcontroller.hm.malformed-request",
+          :error => e.message,
+          :payload => payload
         return
       end
 
@@ -65,6 +67,7 @@ module VCAP::CloudController
       if payload[:flapping]
         message_override[:flapping] = true
       end
+
       dea_client.start_instances_with_message(app, indices, message_override)
     end
 
@@ -74,45 +77,48 @@ module VCAP::CloudController
         app_id = payload.fetch(:droplet)
         indices = payload.fetch(:instances)
       rescue KeyError => e
-        logger.error("Malformed stop request: #{payload}, #{e.message}")
+        logger.error "cloudcontroller.hm.malformed-request",
+          :error => e.message,
+          :payload => payload
         return
       end
 
       app = Models::App[:guid => app_id]
 
-      return if stop_runway_app(app, app_id)
+      instances_remaining = (app ? app.instances : 0) - indices.size
 
-      instances_remaining = app.instances - indices.size
-      if instances_remaining < app.instances && app.started?
-        logger.warn("Health Manager made an invalid request to stop an application.")
-        return
+      if !app
+        stop_runaway_app(app_id)
+      elsif instances_remaining < app.instances && app.started?
+        logger.error "cloudcontroller.hm.invalid-request", :op => "STOP",
+          :indices => indices, :app => app.guid,
+          :desired_instances => app.instances,
+          :remaining_instances => instances_remaining
+      elsif instances_remaining <= 0
+        scale_to_zero(app, indices)
+      else
+        dea_client.stop_instances(app, indices)
       end
-
-      return if scaled_to_zero(app, indices)
-
-      dea_client.stop_instances(app, indices)
     end
 
     def stop_app(app)
       dea_client.stop(app)
     end
 
-    def stop_runway_app(app, app_id)
-      unless app
-        dea_client.stop(Models::App.new(:guid => app_id))
-        true
-      end
+    def stop_runaway_app(app_id)
+      dea_client.stop(Models::App.new(:guid => app_id))
     end
 
-    def scaled_to_zero(app, indices)
+    def scale_to_zero(app, indices)
       instances_remaining = app.instances - indices.size
 
-      if instances_remaining <= 0
-        stop_app(app)
-        if instances_remaining < 0
-          logger.warn("Health manager scaling down to negative number of instances. Instances remaining: #{instances_remaining}.")
-        end
-        true
+      stop_app(app)
+
+      if instances_remaining < 0
+        logger.warn "cloudcontroller.hm.negative-scale",
+          :indices => indices, :app => app.guid,
+          :remaining_instances => instances_remaining,
+          :desired_instances => app.instances
       end
     end
   end

@@ -190,7 +190,7 @@ module VCAP::CloudController
           end
 
           it "logs an error" do
-            respondent.logger.should_receive(:error).with(/malformed/i)
+            respondent.logger.should_receive(:error).with(/malformed/i, instance_of(Hash))
             process_hm_request
           end
         end
@@ -233,7 +233,7 @@ module VCAP::CloudController
           before { dea_client.stub(:stop) }
 
           it "logs an warning" do
-            respondent.logger.should_receive(:warn).with(/negative/i)
+            respondent.logger.should_receive(:warn).with(/negative/i, instance_of(Hash))
             process_hm_request
           end
 
