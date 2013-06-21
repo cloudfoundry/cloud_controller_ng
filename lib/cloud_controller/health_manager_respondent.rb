@@ -81,6 +81,13 @@ module VCAP::CloudController
       app = Models::App[:guid => app_id]
 
       return if stop_runway_app(app, app_id)
+
+      instances_remaining = app.instances - indices.size
+      if instances_remaining < app.instances && app.started?
+        logger.warn("Health Manager made an invalid request to stop an application.")
+        return
+      end
+
       return if scaled_to_zero(app, indices)
 
       dea_client.stop_instances(app, indices)
@@ -99,6 +106,7 @@ module VCAP::CloudController
 
     def scaled_to_zero(app, indices)
       instances_remaining = app.instances - indices.size
+
       if instances_remaining <= 0
         stop_app(app)
         if instances_remaining < 0

@@ -27,21 +27,20 @@ module VCAP::CloudController
         config.merge(:message_bus => mbus, :dea_client => dea_client)
       )
     end
-    let(:last_updated) { app.updated_at }
-    let(:version) { app.version }
-    let(:indices) { [1] }
+
     let(:app) do
       Models::App.make(
         :instances => 2, :state => 'STARTED', :package_hash => "SOME_HASH", :package_state => "STAGED"
       ).save
     end
+
     let(:payload) do
       {
         :droplet        => app.guid,
         :op             => op,
-        :last_updated   => last_updated,
-        :version        => version,
-        :indices        => indices,
+        :last_updated   => app.updated_at,
+        :version        => app.version,
+        :indices        => [1],
       }
     end
 
@@ -83,7 +82,8 @@ module VCAP::CloudController
         end
 
         context "when the times mismatch" do
-          let(:last_updated) { Time.now - 86400 }
+          before { app.updated_at = Time.now - 86400 }
+
           it "drops the request" do
             dea_client.should_not_receive(:start_instances_with_message)
             mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
@@ -92,7 +92,8 @@ module VCAP::CloudController
         end
 
         context "when the versions mismatch" do
-          let(:version) { 'deadbeaf-0' }
+          before { app.version = 'deadbeaf-0' }
+
           it "drops the request" do
             dea_client.should_not_receive(:start_instances_with_message)
             mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
@@ -127,10 +128,16 @@ module VCAP::CloudController
           {
             :droplet        => app.guid,
             :op             => op,
-            :last_updated   => last_updated,
-            :version        => version,
-            :instances        => instances,
+            :last_updated   => app.updated_at,
+            :version        => app.version,
+            :instances      => instances,
           }
+        end
+
+        let(:app) do
+          Models::App.make(
+            :instances => 2, :state => 'STOPPED'
+          ).save
         end
 
         it_should_behave_like "common test for all health manager respondents"
@@ -144,13 +151,24 @@ module VCAP::CloudController
           process_hm_request
         end
 
-        context "with a runaway app" do
+        context "with a runaway app (deleted but still running)" do
           let(:instances) { [1] }
 
+          let(:app) { nil }
+
+          let(:payload) do
+            {
+              :droplet        => "some-guid",
+              :op             => op,
+              :last_updated   => Time.new,
+              :version        => "some-version",
+              :instances      => instances,
+            }
+          end
+
           it "sends a stop request to dea" do
-            app.destroy
             dea_client.should_receive(:stop) do |new_app|
-              expect(new_app.guid).to eq app.guid
+              expect(new_app.guid).to eq "some-guid"
             end
 
             process_hm_request
@@ -192,7 +210,22 @@ module VCAP::CloudController
         context "when health manager scales down to 0 instances" do
           let(:instances) { [0, 1] }
           before { dea_client.stub(:stop) }
+
           it_should_behave_like "health manager scales all the way down"
+
+          context "and the CC has desired state of 2 running instances" do
+            let(:app) do
+              Models::App.make(
+                :instances => 2, :state => 'STARTED',
+                :package_hash => "SOME_HASH", :package_state => "STAGED"
+              ).save
+            end
+
+            it "does not act on HM's request" do
+              dea_client.should_not_receive(:stop)
+              process_hm_request
+            end
+          end
         end
 
         context "when health manager scales down to less than 0 instances" do
