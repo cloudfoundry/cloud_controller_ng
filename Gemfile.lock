@@ -28,9 +28,10 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: f7653c1140e6818fca6dd9a7591c2e3dc8d2e24b
+  revision: 635f60e92f54c3dd3458aa2001c94b292953dee1
   specs:
-    vcap_common (2.0.11)
+    vcap_common (2.1.0)
+      addressable (~> 2.2)
       em-http-request (~> 1.0)
       eventmachine
       httpclient
@@ -39,6 +40,7 @@ GIT
       multipart-post
       nats (~> 0.4.24)
       posix-spawn (~> 0.3.6)
+      squash_ruby
       thin
       vmstat (~> 2.0)
       yajl-ruby
@@ -81,7 +83,7 @@ GEM
       em-socksify
       eventmachine (>= 1.0.0.beta.4)
       http_parser.rb (>= 0.5.3)
-    em-socksify (0.2.1)
+    em-socksify (0.3.0)
       eventmachine (>= 1.0.0.beta.4)
     eventmachine (1.0.3)
     excon (0.22.1)
@@ -180,6 +182,8 @@ GEM
       sinatra (~> 1.3.0)
       tilt (~> 1.3)
     sqlite3 (1.3.6)
+    squash_ruby (1.2.0)
+      json
     steno (1.1.0)
       fluent-logger
       grape

@@ -207,11 +207,16 @@ module VCAP::CloudController
           service_instance
 
           expect(provision_hash).to eq(
-            :name => service_instance.name,
-            :email => email,
-            :unique_id => service_instance.service_plan.unique_id,
-            :space_guid => service_instance.space.guid,
-            :organization_guid => service_instance.space.organization_guid
+           :label => "#{service_instance.service_plan.service.label}-#{service_instance.service_plan.service.version}",
+           :name => service_instance.name,
+           :email => email,
+           :plan => service_instance.service_plan.name,
+           :plan_option => {}, # TODO: remove this
+           :provider => service_instance.service_plan.service.provider,
+           :version => service_instance.service_plan.service.version,
+           :unique_id => service_instance.service_plan.unique_id,
+           :space_guid => service_instance.space.guid,
+           :organization_guid => service_instance.space.organization_guid
           )
         end
 
