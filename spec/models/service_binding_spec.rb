@@ -178,11 +178,13 @@ module VCAP::CloudController
 
       it "should trigger restaging when creating a binding" do
         Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+        app.refresh
         app.needs_staging?.should be_true
       end
 
       it "should trigger restaging when directly destroying a binding" do
         binding = Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+        app.refresh
         fake_app_staging(app)
         app.needs_staging?.should be_false
 
@@ -193,6 +195,7 @@ module VCAP::CloudController
 
       it "should trigger restaging when indirectly destroying a binding" do
         binding = Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+        app.refresh
         fake_app_staging(app)
         app.needs_staging?.should be_false
 
