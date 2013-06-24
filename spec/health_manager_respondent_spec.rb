@@ -91,6 +91,17 @@ module VCAP::CloudController
           end
         end
 
+        context "when the payload's last_updated field is nil" do
+          before do
+            payload[:last_updated] = nil
+          end
+
+          it "still tries to start the instance" do
+            dea_client.should_receive(:start_instances_with_message).with(respond_with(:guid => app.guid), [1], {})
+            process_hm_request
+          end
+        end
+
         context "when the versions mismatch" do
           before { app.version = 'deadbeaf-0' }
 

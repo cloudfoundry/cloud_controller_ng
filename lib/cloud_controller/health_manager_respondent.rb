@@ -48,7 +48,7 @@ module VCAP::CloudController
       begin
         app_id = payload.fetch(:droplet)
         indices = payload.fetch(:indices)
-        last_updated = payload.fetch(:last_updated).to_i
+        last_updated = payload.fetch(:last_updated)
         version = payload.fetch(:version)
       rescue KeyError => e
         logger.error "cloudcontroller.hm.malformed-request",
@@ -61,7 +61,7 @@ module VCAP::CloudController
       return unless app
       return unless app.started?
       return unless version == app.version
-      return unless last_updated == app.updated_at.to_i
+      return if last_updated && (last_updated.to_i != app.updated_at.to_i)
 
       message_override = {}
       if payload[:flapping]
