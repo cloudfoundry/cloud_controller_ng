@@ -1,28 +1,13 @@
 require 'services/api'
 
 module VCAP::CloudController
-  
-  rest_controller :ManagedServiceInstance do
-    permissions_required do
-      #read Permissions::CFAdmin
-      #read Permissions::OrgManager
-      #read Permissions::SpaceDeveloper
-      #read Permissions::SpaceAuditor
+  class ManagedServiceInstance < RestController::ModelController
+    allow_unauthenticated_access
+
+    def read(guid)
+      redirect "v2/service_instances/#{guid}"
     end
 
-    define_attributes do
-      #attribute :name,  String
-      #to_one    :space
-      #to_one    :service_plan
-      #to_many   :service_bindings
-      #attribute :dashboard_url, String, exclude_in: [:create, :update]
-    end
-
-    #query_parameters(
-    #  :name,
-    #  :space_guid,
-    #  :service_plan_guid,
-    #  :service_binding_guid,
-    #)
+    get '/v2/managed_service_instances/:guid', :read
   end
 end
