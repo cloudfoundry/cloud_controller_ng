@@ -162,16 +162,16 @@ module VCAP::CloudController::Models
     end
 
     def memory_remaining
-      memory_used = apps_dataset.sum(:memory * :instances) || 0
+      memory_used = apps_dataset.sum(Sequel.*(:memory, :instances)) || 0
       quota_definition.memory_limit - memory_used
     end
 
     def self.user_visibility_filter(user)
-      user_visibility_filter_with_admin_override({
+      user_visibility_filter_with_admin_override(Sequel.or({
         :managers => [user],
         :users => [user],
         :billing_managers => [user],
-        :auditors => [user] }.sql_or)
+        :auditors => [user] }))
     end
   end
 end

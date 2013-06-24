@@ -82,7 +82,7 @@ module Sequel::Plugins::VcapSerialization
     def to_json(opts = {})
       # TODO: pagination
       order_attr = @default_order_by || :id
-      elements = order_by(order_attr.asc).map { |e| e.to_hash(opts) }
+      elements = order_by(Sequel.asc(order_attr)).map { |e| e.to_hash(opts) }
       Yajl::Encoder.encode(elements)
     end
 

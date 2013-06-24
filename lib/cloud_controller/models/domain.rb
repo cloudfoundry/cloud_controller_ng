@@ -34,7 +34,7 @@ module VCAP::CloudController::Models
       validates_unique   :name
       validates_presence :wildcard
 
-      if !new? && column_changed?(:wildcard) && !wildcard && routes_dataset.filter(~{:host => ""}).count > 0
+      if !new? && column_changed?(:wildcard) && !wildcard && routes_dataset.filter(Sequel.~({:host => ""})).count > 0
         errors.add(:wildcard, :wildcard_routes_in_use)
       end
 
@@ -103,22 +103,22 @@ module VCAP::CloudController::Models
     end
 
     def self.user_visibility_filter(user)
-      orgs = Organization.filter({
+      orgs = Organization.filter(Sequel.or({
         :managers => [user],
         :auditors => [user]
-      }.sql_or)
+      }))
 
-      spaces = Space.filter({
+      spaces = Space.filter(Sequel.or({
         :developers => [user],
         :managers => [user],
         :auditors => [user]
-      }.sql_or)
+      }))
 
-      user_visibility_filter_with_admin_override({
+      user_visibility_filter_with_admin_override(Sequel.or({
         :owning_organization => orgs,
         :owning_organization_id => nil,
         :spaces => spaces
-      }.sql_or)
+      }))
     end
 
     def self.default_serving_domain

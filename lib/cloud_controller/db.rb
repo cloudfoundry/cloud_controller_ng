@@ -96,7 +96,6 @@ EOF
   end
 end
 
-Sequel.extension :pagination
 Sequel.extension :inflector
 Sequel::Model.raise_on_typecast_failure = false
 

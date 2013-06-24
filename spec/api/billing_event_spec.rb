@@ -18,6 +18,7 @@ module VCAP::CloudController
         end
 
         before(:all) do
+          Models::BillingEvent.plugin :scissors
           Models::BillingEvent.delete
 
           timestamp = Time.new(2012, 01, 01, 00, 00, 01)

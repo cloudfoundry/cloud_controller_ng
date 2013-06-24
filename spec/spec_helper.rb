@@ -11,7 +11,6 @@ require "timecop"
 
 require "steno"
 require "cloud_controller"
-require "rspec_let_monkey_patch"
 require "webmock/rspec"
 require "cf_message_bus/mock_message_bus"
 

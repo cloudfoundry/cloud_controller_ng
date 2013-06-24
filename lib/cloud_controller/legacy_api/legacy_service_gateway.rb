@@ -73,7 +73,8 @@ module VCAP::CloudController
       old_plan_names = Models::ServicePlan.dataset.
         join(:services, :id => :service_id).
         filter(:label => label, :provider => DEFAULT_PROVIDER).
-        select_map(:name.qualify(:service_plans))
+        select_map(Sequel.qualify(:service_plans, :name))
+
 
       new_plan_attrs.each do |attrs|
         Models::ServicePlan.update_or_create(
@@ -219,8 +220,8 @@ module VCAP::CloudController
         instance.save_changes
       elsif binding = bindings_ds[:gateway_name => id]
         binding.set(
-          :configuration => req.configuration,
-          :credentials => req.credentials,
+          :configuration => req.configuration.to_s,
+          :credentials => req.credentials.to_s,
         )
         binding.save_changes
       else
