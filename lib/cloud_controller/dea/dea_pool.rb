@@ -42,7 +42,7 @@ module VCAP::CloudController
       mutex.synchronize do
         prune_stale_deas
         eligible_ads = @dea_advertisements.select { |ad| ad.meets_needs?(mem, stack) }
-        best_dea_ad = eligible_ads.min_by { |ad| ad.num_instances_of(app_id) }
+        best_dea_ad = eligible_ads.shuffle.min_by { |ad| ad.num_instances_of(app_id) }
         best_dea_ad && best_dea_ad.dea_id
       end
     end

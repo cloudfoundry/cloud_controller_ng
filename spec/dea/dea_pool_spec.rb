@@ -111,6 +111,34 @@ module VCAP::CloudController
         end
       end
 
+      context "DEA randomization" do
+        before do
+          subject.process_advertise_message({
+            :id => "dea-id1",
+            :stacks => ["stack"],
+            :available_memory => 1024,
+            :app_id_to_count => {
+            }
+          })
+          subject.process_advertise_message({
+            :id => "dea-id2",
+            :stacks => ["stack"],
+            :available_memory => 1024,
+            :app_id_to_count => {
+            }
+          })
+        end
+
+        it "randomly picks one of the eligible DEAs" do
+          found_dea_ids = []
+          20.times do
+            found_dea_ids << subject.find_dea(0, "stack", "app-id")
+          end
+
+          found_dea_ids.uniq.should =~ %w(dea-id1 dea-id2)
+        end
+      end
+
       describe "multiple instances of an app" do
         before do
           subject.process_advertise_message({
