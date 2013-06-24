@@ -221,7 +221,7 @@ module VCAP::CloudController
               ).save
             end
 
-            it "does not act on HM's request" do
+            xit "does not act on HM's request" do
               dea_client.should_not_receive(:stop)
               process_hm_request
             end

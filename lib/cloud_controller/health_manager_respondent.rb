@@ -89,11 +89,11 @@ module VCAP::CloudController
 
       if !app
         stop_runaway_app(app_id)
-      elsif instances_remaining < app.instances && app.started?
-        logger.error "cloudcontroller.hm.invalid-request", :op => "STOP",
-          :indices => indices, :app => app.guid,
-          :desired_instances => app.instances,
-          :remaining_instances => instances_remaining
+      #elsif instances_remaining < app.instances && app.started?
+      #  logger.error "cloudcontroller.hm.invalid-request", :op => "STOP",
+      #    :indices => indices, :app => app.guid,
+      #    :desired_instances => app.instances,
+      #    :remaining_instances => instances_remaining
       elsif instances_remaining <= 0
         scale_to_zero(app, indices)
       else
