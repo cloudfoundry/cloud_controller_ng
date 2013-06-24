@@ -3,18 +3,18 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceInstance do
     include_examples "uaa authenticated api", path: "/v2/service_instances"
-    include_examples "enumerating objects", path: "/v2/service_instances", model: Models::ServiceInstance
-    include_examples "reading a valid object", path: "/v2/service_instances", model: Models::ServiceInstance, basic_attributes: %w(name)
+    include_examples "enumerating objects", path: "/v2/service_instances", model: Models::ManagedServiceInstance
+    include_examples "reading a valid object", path: "/v2/service_instances", model: Models::ManagedServiceInstance, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/service_instances"
-    include_examples "creating and updating", path: "/v2/service_instances", model: Models::ServiceInstance, required_attributes: %w(name space_guid service_plan_guid), unique_attributes: %w(space_guid name), extra_attributes: []
-    include_examples "deleting a valid object", path: "/v2/service_instances", model: Models::ServiceInstance,
+    include_examples "creating and updating", path: "/v2/service_instances", model: Models::ManagedServiceInstance, required_attributes: %w(name space_guid service_plan_guid), unique_attributes: %w(space_guid name), extra_attributes: []
+    include_examples "deleting a valid object", path: "/v2/service_instances", model: Models::ManagedServiceInstance,
       one_to_many_collection_ids: {
         :service_bindings => lambda { |service_instance|
           make_service_binding_for_service_instance(service_instance)
         }
       },
       one_to_many_collection_ids_without_url: {}
-    include_examples "collection operations", path: "/v2/service_instances", model: Models::ServiceInstance,
+    include_examples "collection operations", path: "/v2/service_instances", model: Models::ManagedServiceInstance,
       one_to_many_collection_ids: {
         service_bindings: lambda { |service_instance| make_service_binding_for_service_instance(service_instance) }
       },
@@ -25,8 +25,8 @@ module VCAP::CloudController
       include_context "permissions"
 
       before do
-        @obj_a = Models::ServiceInstance.make(:space => @space_a)
-        @obj_b = Models::ServiceInstance.make(:space => @space_b)
+        @obj_a = Models::ManagedServiceInstance.make(:space => @space_a)
+        @obj_b = Models::ManagedServiceInstance.make(:space => @space_b)
       end
 
       let(:creation_req_for_a) do
@@ -47,7 +47,7 @@ module VCAP::CloudController
           let(:member_b) { @org_b_manager }
 
           include_examples "permission checks", "OrgManager",
-            :model => Models::ServiceInstance,
+            :model => Models::ManagedServiceInstance,
             :path => "/v2/service_instances",
             :enumerate => 0,
             :create => :not_allowed,
@@ -61,7 +61,7 @@ module VCAP::CloudController
           let(:member_b) { @org_b_member }
 
           include_examples "permission checks", "OrgUser",
-            :model => Models::ServiceInstance,
+            :model => Models::ManagedServiceInstance,
             :path => "/v2/service_instances",
             :enumerate => 0,
             :create => :not_allowed,
@@ -75,7 +75,7 @@ module VCAP::CloudController
           let(:member_b) { @org_b_billing_manager }
 
           include_examples "permission checks", "BillingManager",
-            :model => Models::ServiceInstance,
+            :model => Models::ManagedServiceInstance,
             :path => "/v2/service_instances",
             :enumerate => 0,
             :create => :not_allowed,
@@ -89,7 +89,7 @@ module VCAP::CloudController
           let(:member_b) { @org_b_auditor }
 
           include_examples "permission checks", "Auditor",
-            :model => Models::ServiceInstance,
+            :model => Models::ManagedServiceInstance,
             :path => "/v2/service_instances",
             :enumerate => 0,
             :create => :not_allowed,
@@ -105,7 +105,7 @@ module VCAP::CloudController
           let(:member_b) { @space_b_manager }
 
           include_examples "permission checks", "SpaceManager",
-            :model => Models::ServiceInstance,
+            :model => Models::ManagedServiceInstance,
             :path => "/v2/service_instances",
             :enumerate => 0,
             :create => :not_allowed,
@@ -119,7 +119,7 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples "permission checks", "Developer",
-            :model => Models::ServiceInstance,
+            :model => Models::ManagedServiceInstance,
             :path => "/v2/service_instances",
             :enumerate => 1,
             :create => :allowed,
@@ -159,7 +159,7 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples "permission checks", "SpaceAuditor",
-            :model => Models::ServiceInstance,
+            :model => Models::ManagedServiceInstance,
             :path => "/v2/service_instances",
             :enumerate => 0,
             :create => :not_allowed,
@@ -174,7 +174,7 @@ module VCAP::CloudController
       let(:space) { Models::Space.make }
       let(:developer) { make_developer_for_space(space)}
       it "shows the dashboard_url if there is" do
-        service_instance = Models::ServiceInstance.make
+        service_instance = Models::ManagedServiceInstance.make
         service_instance.update(dashboard_url: 'http://dashboard.io')
         get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
         decoded_response.fetch('entity').fetch('dashboard_url').should == 'http://dashboard.io'
@@ -262,7 +262,7 @@ module VCAP::CloudController
     describe "PUT /v2/service_instances/internal/:instance_id" do
       let(:service)          { Models::Service.make }
       let(:plan)             { Models::ServicePlan.make({ :service => service })}
-      let(:service_instance) { Models::ServiceInstance.make({ :service_plan => plan })}
+      let(:service_instance) { Models::ManagedServiceInstance.make({ :service_plan => plan })}
       let(:admin)            { Models::User.make({ :admin => true })}
 
       let(:new_configuration) {{ :plan => "100" }}

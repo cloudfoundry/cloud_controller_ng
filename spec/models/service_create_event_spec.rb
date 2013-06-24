@@ -32,7 +32,7 @@ module VCAP::CloudController
       context "on an org without billing enabled" do
         it "should do nothing" do
           Models::ServiceCreateEvent.should_not_receive(:create)
-          si = Models::ServiceInstance.make
+          si = Models::ManagedServiceInstance.make
           org = si.space.organization
           org.billing_enabled = false
           org.save(:validate => false)
@@ -42,7 +42,7 @@ module VCAP::CloudController
 
       context "on an org with billing enabled" do
         it "should create an service create event" do
-          si = Models::ServiceInstance.make
+          si = Models::ManagedServiceInstance.make
           org = si.space.organization
           org.billing_enabled = true
           org.save(:validate => false)

@@ -958,7 +958,7 @@ module VCAP::CloudController
 
       before do
         3.times do
-          instance = Models::ServiceInstance.make(:space => app.space)
+          instance = Models::ManagedServiceInstance.make(:space => app.space)
           binding = Models::ServiceBinding.make(:app => app, :service_instance => instance)
           app.add_service_binding(binding)
         end

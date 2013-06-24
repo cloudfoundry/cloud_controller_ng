@@ -35,7 +35,7 @@ module VCAP::CloudController
       binding_handle = Models::ServiceBinding[:gateway_name => gateway_name]
       raise Errors::ServiceBindingNotFound, "gateway_name=#{gateway_name}" unless binding_handle
 
-      instance_handle = Models::ServiceInstance[:id => binding_handle[:service_instance_id]]
+      instance_handle = Models::ManagedServiceInstance[:id => binding_handle[:service_instance_id]]
       plan_handle = Models::ServicePlan[:id => instance_handle[:service_plan_id]]
       service_handle = Models::Service[:id => plan_handle[:service_id]]
 

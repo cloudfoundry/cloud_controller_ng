@@ -159,7 +159,7 @@ module VCAP::CloudController
             end
 
             3.times do
-              Models::ServiceInstance.make(:space => current_user.default_space)
+              Models::ManagedServiceInstance.make(:space => current_user.default_space)
             end
           end
 

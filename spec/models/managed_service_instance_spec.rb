@@ -1,8 +1,8 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::ServiceInstance do
-    let(:service_instance) { VCAP::CloudController::Models::ServiceInstance.make }
+  describe VCAP::CloudController::Models::ManagedServiceInstance do
+    let(:service_instance) { VCAP::CloudController::Models::ManagedServiceInstance.make }
     let(:email) { Sham.email }
     let(:guid) { Sham.guid }
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
     it_behaves_like "a model with an encrypted attribute" do
       def new_model
-        Models::ServiceInstance.new.tap do |instance|
+        Models::ManagedServiceInstance.new.tap do |instance|
           instance.set(
             :name => Sham.name,
             :space => Models::Space.make,
@@ -74,7 +74,7 @@ module VCAP::CloudController
         service_binding = Models::ServiceBinding.make
         expect {
           service_instance.add_service_binding(service_binding)
-        }.to raise_error Models::ServiceInstance::InvalidServiceBinding
+        }.to raise_error Models::ManagedServiceInstance::InvalidServiceBinding
       end
     end
 
@@ -82,7 +82,7 @@ module VCAP::CloudController
       context "service provisioning" do
         it "should deprovision a service on rollback after a create" do
           expect {
-            Models::ServiceInstance.db.transaction do
+            Models::ManagedServiceInstance.db.transaction do
               gw_client.should_receive(:unprovision)
               service_instance
               raise "something bad which causes the unprovision to happen"
@@ -92,7 +92,7 @@ module VCAP::CloudController
 
         it "should not deprovision a service on rollback after update" do
           expect {
-            Models::ServiceInstance.db.transaction do
+            Models::ManagedServiceInstance.db.transaction do
               service_instance.update(:name => "newname")
               raise "something bad"
             end
@@ -128,7 +128,7 @@ module VCAP::CloudController
     end
 
     describe "#as_summary_json" do
-      subject { Models::ServiceInstance.make }
+      subject { Models::ManagedServiceInstance.make }
 
       it "returns detailed summary" do
         subject.as_summary_json.should == {
@@ -168,8 +168,8 @@ module VCAP::CloudController
 
         it "raises an error" do
           expect {
-            VCAP::CloudController::Models::ServiceInstance.new.service_gateway_client(plan)
-          }.to raise_error(VCAP::CloudController::Models::ServiceInstance::InvalidServiceBinding, /no service_auth_token/i)
+            VCAP::CloudController::Models::ManagedServiceInstance.new.service_gateway_client(plan)
+          }.to raise_error(VCAP::CloudController::Models::ManagedServiceInstance::InvalidServiceBinding, /no service_auth_token/i)
         end
       end
 
@@ -181,7 +181,7 @@ module VCAP::CloudController
         end
 
         it "sets the service_gateway_client" do
-          instance = VCAP::CloudController::Models::ServiceInstance.new
+          instance = VCAP::CloudController::Models::ManagedServiceInstance.new
           instance.service_gateway_client(plan)
 
           expect(instance.service_gateway_client.instance_variable_get(:@url)).to eq("https://fake.example.com/fake")
@@ -278,7 +278,7 @@ module VCAP::CloudController
 
         context "when the service instance is a trial db instance" do
           def allocate_trial_db
-            Models::ServiceInstance.make(:space => space,
+            Models::ManagedServiceInstance.make(:space => space,
               :service_plan => trial_db_plan)
           end
 
@@ -300,7 +300,7 @@ module VCAP::CloudController
         context "when the service instance is not a trial db instance" do
           it "raises an error" do
             expect do
-              Models::ServiceInstance.make(:space => space, :service_plan => paid_db_plan)
+              Models::ManagedServiceInstance.make(:space => space, :service_plan => paid_db_plan)
             end.to raise_error(Sequel::ValidationFailed, /service_plan paid_services_not_allowed/)
           end
         end
@@ -310,12 +310,12 @@ module VCAP::CloudController
         it "should raise paid quota error when paid quota is exceeded" do
           org = Models::Organization.make(:quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
-          Models::ServiceInstance.make(:space => space,
+          Models::ManagedServiceInstance.make(:space => space,
                                        :service_plan => free_plan).
             save(:validate => false)
           space.refresh
           expect do
-            Models::ServiceInstance.make(:space => space,
+            Models::ManagedServiceInstance.make(:space => space,
                                          :service_plan => free_plan)
           end.to raise_error(Sequel::ValidationFailed, /org paid_quota_exceeded/)
         end
@@ -323,12 +323,12 @@ module VCAP::CloudController
         it "should raise free quota error when free quota is exceeded" do
           org = Models::Organization.make(:quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
-          Models::ServiceInstance.make(:space => space,
+          Models::ManagedServiceInstance.make(:space => space,
                                        :service_plan => free_plan).
             save(:validate => false)
           space.refresh
           expect do
-            Models::ServiceInstance.make(:space => space,
+            Models::ManagedServiceInstance.make(:space => space,
                                          :service_plan => free_plan)
           end.to raise_error(Sequel::ValidationFailed, /org free_quota_exceeded/)
         end
@@ -337,7 +337,7 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           expect do
-            Models::ServiceInstance.make(:space => space,
+            Models::ManagedServiceInstance.make(:space => space,
                                          :service_plan => free_plan)
           end.to_not raise_error
         end
@@ -348,7 +348,7 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           expect do
-            Models::ServiceInstance.make(:space => space,
+            Models::ManagedServiceInstance.make(:space => space,
                                          :service_plan => free_plan)
           end.to_not raise_error
         end
@@ -357,7 +357,7 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           expect do
-            Models::ServiceInstance.make(:space => space,
+            Models::ManagedServiceInstance.make(:space => space,
                                          :service_plan => free_plan)
           end.to_not raise_error
         end
@@ -368,7 +368,7 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           expect do
-            Models::ServiceInstance.make(:space => space,
+            Models::ManagedServiceInstance.make(:space => space,
                                          :service_plan => paid_plan)
           end.to raise_error(Sequel::ValidationFailed,
                              /service_plan paid_services_not_allowed/)
@@ -378,7 +378,7 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           expect do
-            Models::ServiceInstance.make(:space => space,
+            Models::ManagedServiceInstance.make(:space => space,
                                          :service_plan => paid_plan)
           end.to_not raise_error
         end
@@ -399,7 +399,7 @@ module VCAP::CloudController
   end
 
   describe "#enum_snapshots" do
-    subject { Models::ServiceInstance.make()}
+    subject { Models::ManagedServiceInstance.make()}
     let(:enum_snapshots_url_matcher) {"gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots"}
     let(:service_auth_token) { "tokenvalue" }
     before do
@@ -413,7 +413,7 @@ module VCAP::CloudController
         subject.refresh
         expect do
           subject.enum_snapshots
-        end.to raise_error(Models::ServiceInstance::MissingServiceAuthToken)
+        end.to raise_error(Models::ManagedServiceInstance::MissingServiceAuthToken)
       end
     end
 
@@ -441,7 +441,7 @@ module VCAP::CloudController
 
   describe "#create_snapshot" do
     let(:name) { 'New snapshot' }
-    subject { Models::ServiceInstance.make()}
+    subject { Models::ManagedServiceInstance.make()}
     let(:create_snapshot_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
     before do
       subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
@@ -454,7 +454,7 @@ module VCAP::CloudController
         subject.refresh
         expect do
           subject.create_snapshot(name)
-        end.to raise_error(Models::ServiceInstance::MissingServiceAuthToken)
+        end.to raise_error(Models::ManagedServiceInstance::MissingServiceAuthToken)
       end
     end
 
@@ -495,7 +495,7 @@ module VCAP::CloudController
     context "when the request fails" do
       it "should raise an error" do
         stub_request(:post, create_snapshot_url_matcher).to_return(:body => "Something went wrong", :status => 500)
-        expect { subject.create_snapshot(name) }.to raise_error(Models::ServiceInstance::ServiceGatewayError, /upstream failure/)
+        expect { subject.create_snapshot(name) }.to raise_error(Models::ManagedServiceInstance::ServiceGatewayError, /upstream failure/)
       end
     end
   end

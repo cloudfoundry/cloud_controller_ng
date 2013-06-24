@@ -89,7 +89,7 @@ module VCAP::CloudController::Models
     end
   end
 
-  ServiceInstance.blueprint do
+  ManagedServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
     space             { Space.make }
@@ -110,7 +110,7 @@ module VCAP::CloudController::Models
 
   ServiceBinding.blueprint do
     credentials       { Sham.service_credentials }
-    service_instance  { ServiceInstance.make }
+    service_instance  { ManagedServiceInstance.make }
     app               { App.make(:space => service_instance.space) }
   end
 

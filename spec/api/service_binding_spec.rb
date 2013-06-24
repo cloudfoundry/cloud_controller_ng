@@ -15,7 +15,7 @@ module VCAP::CloudController
             app = Models::App.make(space: @space)
             app.guid
           when :service_instance_guid
-            service_instance = Models::ServiceInstance.make(space: @space)
+            service_instance = Models::ManagedServiceInstance.make(space: @space)
             service_instance.guid
         end
       },
@@ -28,7 +28,7 @@ module VCAP::CloudController
         app
       end
 
-      let(:service_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+      let(:service_instance) { Models::ManagedServiceInstance.make(:space => app_obj.space) }
 
       it "should flag app for restaging when creating a binding" do
         req = Yajl::Encoder.encode(:app_guid => app_obj.guid,
@@ -58,12 +58,12 @@ module VCAP::CloudController
 
       before do
         @app_a = Models::App.make(:space => @space_a)
-        @service_instance_a = Models::ServiceInstance.make(:space => @space_a)
+        @service_instance_a = Models::ManagedServiceInstance.make(:space => @space_a)
         @obj_a = Models::ServiceBinding.make(:app => @app_a,
                                              :service_instance => @service_instance_a)
 
         @app_b = Models::App.make(:space => @space_b)
-        @service_instance_b = Models::ServiceInstance.make(:space => @space_b)
+        @service_instance_b = Models::ManagedServiceInstance.make(:space => @space_b)
         @obj_b = Models::ServiceBinding.make(:app => @app_b,
                                              :service_instance => @service_instance_b)
       end
@@ -71,7 +71,7 @@ module VCAP::CloudController
       let(:creation_req_for_a) do
         Yajl::Encoder.encode(
           :app_guid => Models::App.make(:space => @space_a).guid,
-          :service_instance_guid => Models::ServiceInstance.make(:space => @space_a).guid
+          :service_instance_guid => Models::ManagedServiceInstance.make(:space => @space_a).guid
         )
       end
 
@@ -185,7 +185,7 @@ module VCAP::CloudController
     describe "PUT /v2/service_bindings/internal/:id" do
       let(:service)          { Models::Service.make }
       let(:plan)             { Models::ServicePlan.make({ :service => service })}
-      let(:service_instance) { Models::ServiceInstance.make({ :service_plan => plan })}
+      let(:service_instance) { Models::ManagedServiceInstance.make({ :service_plan => plan })}
       let(:service_binding)  { Models::ServiceBinding.make({ :service_instance => service_instance })}
       let(:admin)            { Models::User.make({ :admin => true })}
 

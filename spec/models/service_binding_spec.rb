@@ -11,7 +11,7 @@ module VCAP::CloudController
           when :app
             Models::App.make(:space => @space)
           when :service_instance
-            Models::ServiceInstance.make(:space => @space)
+            Models::ManagedServiceInstance.make(:space => @space)
         end
       },
       :create_attribute_reset => lambda { @space = nil },
@@ -25,7 +25,7 @@ module VCAP::CloudController
         :service_instance => {
           :delete_ok => true,
           :create_for => lambda { |service_binding|
-            Models::ServiceInstance.make(:space => service_binding.space)
+            Models::ManagedServiceInstance.make(:space => service_binding.space)
           }
         }
       }
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
     it_behaves_like "a model with an encrypted attribute" do
       let(:service_instance) do
-        service_instance = Models::ServiceInstance.make.tap do |instance|
+        service_instance = Models::ManagedServiceInstance.make.tap do |instance|
           instance.stub(:service_gateway_client).and_return(
             double("Service Gateway Client",
               :bind => VCAP::Services::Api::GatewayHandleResponse.new(
@@ -59,7 +59,7 @@ module VCAP::CloudController
     describe "bad relationships" do
       before do
         # since we don't set them, these will have different app spaces
-        @service_instance = Models::ServiceInstance.make
+        @service_instance = Models::ManagedServiceInstance.make
         @app = Models::App.make
         @service_binding = Models::ServiceBinding.make
       end
@@ -87,7 +87,7 @@ module VCAP::CloudController
       let(:service) { Models::Service.make }
       let(:service_plan) { Models::ServicePlan.make(:service => service) }
       let(:service_instance) do
-        Models::ServiceInstance.new(
+        Models::ManagedServiceInstance.new(
           :service_plan => service_plan,
           :name => "my-postgresql",
           :space => Models::Space.make
@@ -111,7 +111,7 @@ module VCAP::CloudController
       end
 
       before do
-        Models::ServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
+        Models::ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
         gw_client.stub(:provision).and_return(provision_resp)
         service_instance.save
       end
@@ -132,7 +132,7 @@ module VCAP::CloudController
 
         it "should unbind a service on rollback after create" do
           expect {
-            Models::ServiceInstance.db.transaction do
+            Models::ManagedServiceInstance.db.transaction do
               gw_client.should_receive(:bind).and_return(bind_resp)
               gw_client.should_receive(:unbind)
               binding = Models::ServiceBinding.make(:service_instance => service_instance)
@@ -146,7 +146,7 @@ module VCAP::CloudController
           binding = Models::ServiceBinding.make(:service_instance => service_instance)
 
           expect {
-            Models::ServiceInstance.db.transaction do
+            Models::ManagedServiceInstance.db.transaction do
               binding.update(:name => "newname")
               raise "something bad"
             end
@@ -174,7 +174,7 @@ module VCAP::CloudController
         app
       end
 
-      let(:service_instance) { Models::ServiceInstance.make(:space => app.space) }
+      let(:service_instance) { Models::ManagedServiceInstance.make(:space => app.space) }
 
       it "should trigger restaging when creating a binding" do
         Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
