@@ -5,7 +5,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController
   describe VCAP::CloudController::Models::BillingEvent do
     before(:all) do
-      Models::BillingEvent.delete
+      Models::BillingEvent.dataset.destroy
       @org_event = Models::OrganizationStartEvent.make
       @app_start_event = Models::AppStartEvent.make
       @app_stop_event = Models::AppStopEvent.make
