@@ -5,250 +5,180 @@ require "cloud_controller/health_manager_respondent"
 
 module VCAP::CloudController
   describe HealthManagerRespondent do
-    shared_examples "common test for all health manager respondents" do
-      before do
-        dea_client.stub(:stop_instances)
-        dea_client.stub(:stop)
-        dea_client.stub(:start_instances_with_message)
-      end
+    let(:message_bus) { CfMessageBus::MockMessageBus.new }
+    let(:dea_client) { double("dea client", :message_bus => message_bus) }
 
-      it "CC subscribes to the Health Manager messages" do
-        mbus.should_receive(:subscribe).with("cloudcontrollers.hm.requests.ng", :queue => "cc")
-        process_hm_request
-      end
-    end
-
-    before { mbus.stub(:subscribe).with(anything, anything) }
-
-    let(:mbus) { double("mock message bus") }
-    let(:dea_client) { double("mock dea client", :message_bus => mbus) }
-    let(:respondent) do
-      HealthManagerRespondent.new(
-        config.merge(:message_bus => mbus, :dea_client => dea_client)
-      )
-    end
-
-    let(:app) do
-      Models::App.make(
-        :instances => 2, :state => 'STARTED', :package_hash => "SOME_HASH", :package_state => "STAGED"
-      ).save
-    end
+    let(:droplet) { app.guid }
+    let(:indices) { [2] }
+    let(:version) { app.version }
+    let(:running) { {} }
+    let(:instances) { [] }
 
     let(:payload) do
-      {
-        :droplet        => app.guid,
-        :op             => op,
-        :last_updated   => app.updated_at,
-        :version        => app.version,
-        :indices        => [1],
+      { :droplet => droplet,
+        :indices => indices,
+        :version => version,
+        :running => running,
+        :instances => instances # used for stop requests
       }
     end
 
-    subject(:process_hm_request) { respondent.process_hm_request(payload) }
+    subject { HealthManagerRespondent.new(dea_client, message_bus) }
 
-    describe "#process_hm_request" do
-      describe "on START request" do
-        let(:op) { "START" }
+    before do
+      dea_client.stub(:stop_instances)
+      dea_client.stub(:stop)
+      dea_client.stub(:start_instances_with_message)
+    end
 
-        it_should_behave_like "common test for all health manager respondents"
+    describe "#handle_requests" do
+      before { message_bus.stub(:subscribe) }
 
-        it "sends a start request to dea" do
-          app.update(
-            :state => "STARTED",
-            :package_hash => "abc",
-            :package_state => "STAGED",
-          )
-
-          dea_client.should_receive(:start_instances_with_message).with(
-            # XXX: we should do something about this, like overriding
-            # Sequel::Model#eql? or something that ignores the nanosecond
-            # nonsense
-            respond_with(:guid => app.guid),
-            [1],
-            {},
-          )
-
-          process_hm_request
+      it "subscribes health.stop and sets up callback to process_stop" do
+        message_bus.should_receive(:subscribe).with("health.stop", :queue => "cc") do |&callback|
+          callback.call("some payload")
         end
 
-        context "when the app isn't started" do
-          let(:app) { Models::App.make(:instances => 2).save }
+        subject.should_receive(:process_stop).with("some payload")
 
-          it "drops the request" do
+        subject.handle_requests
+      end
+
+      it "subscribes health.start and sets up callback to process_start" do
+        message_bus.should_receive(:subscribe).with("health.start", :queue => "cc") do |&callback|
+          callback.call("some payload")
+        end
+
+        subject.should_receive(:process_start).with("some payload")
+
+        subject.handle_requests
+      end
+    end
+
+    describe "#process_start" do
+      context "when the app does not exist" do
+        let(:droplet) { "some-bogus-app-guid" }
+        let(:version) { "some-version" }
+
+        it "ignores the request" do
+          dea_client.should_not_receive(:start_instances_with_message)
+
+          subject.process_start(payload)
+        end
+      end
+
+      context "when the app is NOT started" do
+        let(:app) do
+          Models::App.make :version => "some-version", :instances => 2,
+                           :state => "STOPPED"
+        end
+
+        it "ignores the request" do
+          dea_client.should_not_receive(:start_instances_with_message)
+
+          subject.process_start(payload)
+        end
+      end
+
+      context "when running instances of current version is < desired instances" do
+        let(:app) do
+          Models::App.make :version => "some-version", :instances => 2,
+                           :state => "STARTED", :package_hash => "abcd"
+        end
+
+        let(:running) { { "some-version" => 1 } }
+
+        context "and the version requested to start is current" do
+          it "starts the instance" do
+            dea_client.should_receive(:start_instances_with_message).with(app, [2])
+
+            subject.process_start(payload)
+          end
+        end
+
+        context "and the version requested to start is NOT current" do
+          let(:version) { "some-bogus-version" }
+          it "ignores the request" do
             dea_client.should_not_receive(:start_instances_with_message)
-            mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
-            process_hm_request
-          end
-        end
 
-        context "when the times mismatch" do
-          before { app.updated_at = Time.now - 86400 }
-
-          it "drops the request" do
-            dea_client.should_not_receive(:start_instances_with_message)
-            mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
-            process_hm_request
-          end
-        end
-
-        context "when the payload's last_updated field is nil" do
-          before do
-            payload[:last_updated] = nil
-          end
-
-          it "still tries to start the instance" do
-            dea_client.should_receive(:start_instances_with_message).with(respond_with(:guid => app.guid), [1], {})
-            process_hm_request
-          end
-        end
-
-        context "when the versions mismatch" do
-          before { app.version = 'deadbeaf-0' }
-
-          it "drops the request" do
-            dea_client.should_not_receive(:start_instances_with_message)
-            mbus.should_not_receive(:publish).with(/^dea.+.start$/, anything)
-            process_hm_request
-          end
-        end
-
-        context "when the app is flapping" do
-          it "should send a start request indicating a flapping app" do
-            app.update(
-              :state => "STARTED",
-              :package_hash => "abc",
-              :package_state => "STAGED",
-            )
-            payload.merge!(:flapping => true)
-
-            dea_client.should_receive(:start_instances_with_message).with(
-              respond_with(:guid => app.guid),
-              [1],
-              :flapping => true,
-            )
-
-            process_hm_request
+            subject.process_start(payload)
           end
         end
       end
 
-      describe "on STOP request" do
-        let(:instances) { [2] }
-        let(:op) { "STOP" }
-        let(:payload) do
-          {
-            :droplet        => app.guid,
-            :op             => op,
-            :last_updated   => app.updated_at,
-            :version        => app.version,
-            :instances      => instances,
-          }
-        end
-
+      context "when running instances of current version is >= desired instances" do
         let(:app) do
-          Models::App.make(
-            :instances => 2, :state => 'STOPPED'
-          ).save
+          Models::App.make :version => "some-version", :instances => 2,
+                           :state => "STARTED", :package_hash => "abcd"
         end
 
-        it_should_behave_like "common test for all health manager respondents"
+        let(:running) { { "some-version" => 2 } }
 
-        it "sends a stop request to dea" do
-          dea_client.should_receive(:stop_instances).with(
-            respond_with(:guid => app.guid),
-            [2],
-          )
+        it "ignores the request" do
+          dea_client.should_not_receive(:start_instances_with_message)
 
-          process_hm_request
+          subject.process_start(payload)
         end
+      end
+    end
 
-        context "with a runaway app (deleted but still running)" do
-          let(:instances) { [1] }
+    describe "#process_stop" do
+      let(:app) do
+        Models::App.make :version => "some-version", :instances => 2,
+                         :state => "STARTED", :package_hash => "abcd"
+      end
 
-          let(:app) { nil }
+      context "when the app does not exist" do
+        let(:droplet) { "some-bogus-app-guid" }
+        let(:version) { "some-version" }
 
-          let(:payload) do
-            {
-              :droplet        => "some-guid",
-              :op             => op,
-              :last_updated   => Time.new,
-              :version        => "some-version",
-              :instances      => instances,
-            }
+        it "stops the instance" do
+          dea_client.should_receive(:stop) do |app|
+            expect(app.guid).to eq("some-bogus-app-guid")
           end
 
-          it "sends a stop request to dea" do
-            dea_client.should_receive(:stop) do |new_app|
-              expect(new_app.guid).to eq "some-guid"
-            end
+          subject.process_stop(payload)
+        end
+      end
 
-            process_hm_request
+      context "when stopping this instance leaves us with at least the desired number of instances" do
+        let(:instances) { ["some-instance"] }
+        let(:running) { { "some-version" => 3 } }
+
+        it "stops the instance" do
+          dea_client.should_receive(:stop_instances).with(app, instances)
+          subject.process_stop(payload)
+        end
+      end
+
+      context "when stopping this instance would leave us with below the desired number of instances" do
+        let(:instances) { ["some-instance", "some-other-instance"] }
+        let(:running) { { "some-version" => 2 } }
+
+        it "ignores the request" do
+          dea_client.should_not_receive(:stop_instances)
+          dea_client.should_not_receive(:stop)
+          subject.process_stop(payload)
+        end
+      end
+
+      context "when the requested version is not current" do
+        let(:version) { "some-bogus-version" }
+
+        context "and there are running instances the current version" do
+          let(:running) { { "some-version" => 2 } }
+
+          it "stops the requested (non-current) instance" do
+            dea_client.should_receive(:stop_instances).with(app, instances)
+            subject.process_stop(payload)
           end
         end
 
-        context "when the payload is malformed" do
-          before { payload.delete(:droplet) }
-
-          it "does not send a stop request to the dea" do
+        context "and there are NO running instances of the current version" do
+          it "ignores the request" do
             dea_client.should_not_receive(:stop_instances)
-            process_hm_request
+            subject.process_stop(payload)
           end
-
-          it "does not stop any runway apps" do
-            app.destroy
-            dea_client.should_not_receive(:stop)
-            process_hm_request
-          end
-
-          it "logs an error" do
-            respondent.logger.should_receive(:error).with(/malformed/i, instance_of(Hash))
-            process_hm_request
-          end
-        end
-
-        shared_examples "health manager scales all the way down" do
-          it "sends a stop request to the dea" do
-            dea_client.should_receive(:stop) do |changed_app|
-              reloaded_app = app.reload
-              [:id, :guid, :state, :instances].each do |field|
-                changed_app.send(field).should == reloaded_app.send(field)
-              end
-            end
-            process_hm_request
-          end
-        end
-
-        context "when health manager scales down to 0 instances" do
-          let(:instances) { [0, 1] }
-          before { dea_client.stub(:stop) }
-
-          it_should_behave_like "health manager scales all the way down"
-
-          context "and the CC has desired state of 2 running instances" do
-            let(:app) do
-              Models::App.make(
-                :instances => 2, :state => 'STARTED',
-                :package_hash => "SOME_HASH", :package_state => "STAGED"
-              ).save
-            end
-
-            xit "does not act on HM's request" do
-              dea_client.should_not_receive(:stop)
-              process_hm_request
-            end
-          end
-        end
-
-        context "when health manager scales down to less than 0 instances" do
-          let(:instances) { [0, 1, 2] }
-          before { dea_client.stub(:stop) }
-
-          it "logs an warning" do
-            respondent.logger.should_receive(:warn).with(/negative/i, instance_of(Hash))
-            process_hm_request
-          end
-
-          it_should_behave_like "health manager scales all the way down"
         end
       end
     end

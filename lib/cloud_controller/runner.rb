@@ -150,7 +150,12 @@ module VCAP::CloudController
         VCAP::CloudController::AppStager.run
 
         VCAP::CloudController::LegacyBulk.register_subscription
-        VCAP::CloudController.health_manager_respondent = VCAP::CloudController::HealthManagerRespondent.new(config)
+
+        VCAP::CloudController.health_manager_respondent = \
+          VCAP::CloudController::HealthManagerRespondent.new(
+            VCAP::CloudController::DeaClient,
+            message_bus)
+
         VCAP::CloudController.dea_respondent = VCAP::CloudController::DeaRespondent.new(message_bus)
 
         VCAP::CloudController.dea_respondent.start
