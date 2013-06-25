@@ -15,7 +15,19 @@ describe VCAP::CloudController::Models::ProvidedServiceInstance do
     let(:encrypted_attr) { :credentials }
   end
 
-  it_behaves_like 'attribute normalization', {
-    stripped_string_attributes: [:name],
-  }
+  it_behaves_like "a CloudController model", {
+    :required_attributes => [:name, :space, :credentials],
+    :stripped_string_attributes => :name,
+    many_to_one: {
+      space: {
+        delete_ok: true,
+        create_for: proc { VCAP::CloudController::Models::Space.make },
+      },
+    },
+  } do
+    before(:all) do
+      # encrypted attributes with changing keys, duh
+      described_class.dataset.destroy
+    end
+  end
 end
