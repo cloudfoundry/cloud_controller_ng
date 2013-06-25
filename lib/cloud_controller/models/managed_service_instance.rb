@@ -73,10 +73,8 @@ module VCAP::CloudController::Models
     strip_attributes  :name
 
     def validate
-      validates_presence :name
-      validates_presence :space
+      super
       validates_presence :service_plan
-      validates_unique   [:space_id, :name]
       check_quota
     end
 

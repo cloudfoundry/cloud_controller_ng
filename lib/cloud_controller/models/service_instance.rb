@@ -12,6 +12,12 @@ module VCAP::CloudController::Models
         :space => user.spaces_dataset)
     end
 
+    def validate
+      validates_presence :name
+      validates_presence :space
+      validates_unique   [:space_id, :name]
+    end
+
     def credentials=(val)
       json = Yajl::Encoder.encode(val)
       generate_salt
