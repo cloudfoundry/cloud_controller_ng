@@ -96,6 +96,12 @@ module VCAP::CloudController::Models
     service_plan      { ServicePlan.make }
   end
 
+  ProvidedServiceInstance.blueprint do
+    name              { Sham.name }
+    credentials       { Sham.service_credentials }
+    space             { Space.make }
+  end
+
   Stack.blueprint do
     name              { Sham.name }
     description       { Sham.description }

@@ -15,4 +15,7 @@ describe VCAP::CloudController::Models::ProvidedServiceInstance do
     let(:encrypted_attr) { :credentials }
   end
 
+  it_behaves_like 'attribute normalization', {
+    stripped_string_attributes: [:name],
+  }
 end
