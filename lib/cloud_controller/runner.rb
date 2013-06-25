@@ -155,6 +155,7 @@ module VCAP::CloudController
           VCAP::CloudController::HealthManagerRespondent.new(
             VCAP::CloudController::DeaClient,
             message_bus)
+        VCAP::CloudController.health_manager_respondent.handle_requests
 
         VCAP::CloudController.dea_respondent = VCAP::CloudController::DeaRespondent.new(message_bus)
 
