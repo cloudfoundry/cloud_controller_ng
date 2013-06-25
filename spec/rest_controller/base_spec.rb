@@ -11,9 +11,9 @@ describe VCAP::CloudController::RestController::Base do
     VCAP::CloudController::RestController::Base.new(double(:config), logger, double(:env), double(:params, :[] => nil), double(:body))
   }
 
-  describe "#disptach" do
+  describe "#dispatch" do
     context "when the dispatch is succesful" do
-      it "should dipatch the request" do
+      it "should dispatch the request" do
         subject.should_receive(:to_s).with([:a, :b])
         subject.dispatch(:to_s, [:a, :b])
       end
@@ -78,6 +78,23 @@ describe VCAP::CloudController::RestController::Base do
           logger.should_receive(:error).with(/message/)
           subject.dispatch(:to_s)
         }.to raise_exception VCAP::Errors::ServerError
+      end
+
+      describe '#redirect' do
+        let(:sinatra) { double('sinatra') }
+        let(:app) do
+          described_class.new(
+            double(:config),
+            logger, double(:env), double(:params, :[] => nil),
+            double(:body),
+            sinatra,
+          )
+        end
+
+        it 'delegates #redirect to the injected sinatra' do
+          sinatra.should_receive(:redirect).with('redirect_url')
+          app.redirect('redirect_url')
+        end
       end
     end
   end

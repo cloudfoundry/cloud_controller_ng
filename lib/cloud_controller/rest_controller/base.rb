@@ -12,6 +12,9 @@ module VCAP::CloudController::RestController
     include PermissionManager
     include Messages
     include Routes
+    extend Forwardable
+
+    def_delegators :@sinatra, :redirect
 
     # Tell the PermissionManager the types of operations that can be performed.
     define_permitted_operation :create
