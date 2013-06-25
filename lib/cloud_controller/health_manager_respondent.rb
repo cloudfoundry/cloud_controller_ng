@@ -49,7 +49,9 @@ module VCAP::CloudController
       return unless app
       return unless app.started?
       return unless version == app.version
-      return unless running[app.version] < app.instances
+
+      current_running = running[app.version.to_sym] || 0
+      return unless current_running < app.instances
 
       dea_client.start_instances_with_message(app, indices)
     end
@@ -70,8 +72,8 @@ module VCAP::CloudController
       app = Models::App[:guid => app_id]
 
       instances_remaining =
-        if running.key?(version) then
-          running[version] - instances.size
+        if running.key?(version.to_sym)
+          running[version.to_sym] - instances.size
         else
           0
         end
@@ -79,7 +81,7 @@ module VCAP::CloudController
       if !app
         stop_runaway_app(app_id)
       elsif version != app.version
-        if (running[app.version] || 0) > 0
+        if (running[app.version.to_sym] || 0) > 0
           dea_client.stop_instances(app, instances)
         end
       elsif instances_remaining < app.instances && app.started?
