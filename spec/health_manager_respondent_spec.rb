@@ -137,7 +137,6 @@ module VCAP::CloudController
 
       context "when the app does not exist" do
         let(:droplet) { "some-bogus-app-guid" }
-        let(:version) { "some-version" }
 
         it "stops the instance" do
           dea_client.should_receive(:stop) do |app|
@@ -149,17 +148,17 @@ module VCAP::CloudController
       end
 
       context "when stopping this instance leaves us with at least the desired number of instances" do
-        let(:instances) { ["some-instance"] }
+        let(:instances) { { "some-instance" => "some-version" } }
         let(:running) { { "some-version" => 3 } }
 
         it "stops the instance" do
-          dea_client.should_receive(:stop_instances).with(app, instances)
+          dea_client.should_receive(:stop_instances).with(app, ["some-instance"])
           subject.process_stop(payload)
         end
       end
 
       context "when stopping this instance would leave us with below the desired number of instances" do
-        let(:instances) { ["some-instance", "some-other-instance"] }
+        let(:instances) { { "some-instance" => "some-version", "some-other-instance" => "some-version" } }
         let(:running) { { "some-version" => 2 } }
 
         it "ignores the request" do
@@ -170,7 +169,7 @@ module VCAP::CloudController
       end
 
       context "when stopping all of the requested instances would leave us with below the desired number of instances" do
-        let(:instances) { ["some-instance", "some-other-instance"] }
+        let(:instances) { { "some-instance" => "some-version", "some-other-instance" => "some-version" } }
         let(:running) { { "some-version" => 3 } }
 
         it "ignores the request" do
@@ -181,18 +180,20 @@ module VCAP::CloudController
       end
 
       context "when the requested version is not current" do
-        let(:version) { "some-bogus-version" }
+        let(:instances) { { "some-instance" => "some-bogus-version" } }
 
         context "and there are running instances the current version" do
           let(:running) { { "some-version" => 2 } }
 
           it "stops the requested (non-current) instance" do
-            dea_client.should_receive(:stop_instances).with(app, instances)
+            dea_client.should_receive(:stop_instances).with(app, ["some-instance"])
             subject.process_stop(payload)
           end
         end
 
         context "and there are NO running instances of the current version" do
+          let(:running) { { "some-version" => 0 } }
+
           it "ignores the request" do
             dea_client.should_not_receive(:stop_instances)
             subject.process_stop(payload)

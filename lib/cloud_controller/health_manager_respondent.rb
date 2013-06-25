@@ -60,7 +60,6 @@ module VCAP::CloudController
       begin
         app_id = payload.fetch(:droplet)
         instances = payload.fetch(:instances)
-        version = payload.fetch(:version)
         running = payload.fetch(:running)
       rescue KeyError => e
         logger.error "cloudcontroller.hm.malformed-request",
@@ -71,26 +70,10 @@ module VCAP::CloudController
 
       app = Models::App[:guid => app_id]
 
-      instances_remaining =
-        if running.key?(version.to_sym)
-          running[version.to_sym] - instances.size
-        else
-          0
-        end
-
       if !app
         stop_runaway_app(app_id)
-      elsif version != app.version
-        if (running[app.version.to_sym] || 0) > 0
-          dea_client.stop_instances(app, instances)
-        end
-      elsif instances_remaining < app.instances && app.started?
-        logger.error "cloudcontroller.hm.invalid-request",
-          :instances => instances, :app => app.guid,
-          :desired_instances => app.instances,
-          :remaining_instances => instances_remaining
-      else
-        dea_client.stop_instances(app, instances)
+      elsif stop_instances?(app, instances, running)
+        dea_client.stop_instances(app, instances.keys)
       end
     end
 
@@ -100,6 +83,32 @@ module VCAP::CloudController
 
     def stop_runaway_app(app_id)
       dea_client.stop(Models::App.new(:guid => app_id))
+    end
+
+    def stop_instances?(app, instances, running)
+      instances.group_by { |_, v| v }.each do |version, versions|
+        instances_remaining =
+          if running.key?(version.to_sym)
+            running[version.to_sym] - versions.size
+          else
+            0
+          end
+
+        if version != app.version
+          unless (running[app.version.to_sym] || 0) > 0
+            return false
+          end
+        elsif instances_remaining < app.instances && app.started?
+          logger.error "cloudcontroller.hm.invalid-request",
+                       :instances => instances, :app => app.guid,
+                       :desired_instances => app.instances,
+                       :remaining_instances => instances_remaining
+
+          return false
+        end
+      end
+
+      true
     end
   end
 end
