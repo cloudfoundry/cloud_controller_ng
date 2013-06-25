@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require 'sinatra/base'
 
 module Sinatra
   module Consumes
