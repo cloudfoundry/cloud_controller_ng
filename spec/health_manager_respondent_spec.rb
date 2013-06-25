@@ -162,6 +162,17 @@ module VCAP::CloudController
         end
       end
 
+      context "when stopping all of the requested instances would leave us with below the desired number of instances" do
+        let(:instances) { ["some-instance", "some-other-instance"] }
+        let(:running) { { "some-version" => 3 } }
+
+        it "ignores the request" do
+          dea_client.should_not_receive(:stop_instances)
+          dea_client.should_not_receive(:stop)
+          subject.process_stop(payload)
+        end
+      end
+
       context "when the requested version is not current" do
         let(:version) { "some-bogus-version" }
 

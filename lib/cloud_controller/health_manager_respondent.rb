@@ -69,7 +69,12 @@ module VCAP::CloudController
 
       app = Models::App[:guid => app_id]
 
-      instances_remaining = running.key?(version) ? running[version] - 1 : 0
+      instances_remaining =
+        if running.key?(version) then
+          running[version] - instances.size
+        else
+          0
+        end
 
       if !app
         stop_runaway_app(app_id)
