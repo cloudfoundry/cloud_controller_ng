@@ -11,5 +11,22 @@ module VCAP::CloudController::Models
       user_visibility_filter_with_admin_override(
         :space => user.spaces_dataset)
     end
+
+    def credentials=(val)
+      json = Yajl::Encoder.encode(val)
+      generate_salt
+      encrypted_string = VCAP::CloudController::Encryptor.encrypt(json, salt)
+      super(encrypted_string)
+    end
+
+    def credentials
+      return unless super
+      json = VCAP::CloudController::Encryptor.decrypt(super, salt)
+      Yajl::Parser.parse(json) if json
+    end
+
+    def generate_salt
+      self.salt ||= VCAP::CloudController::Encryptor.generate_salt
+    end
   end
 end
