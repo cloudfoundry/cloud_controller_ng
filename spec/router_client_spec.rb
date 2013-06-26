@@ -76,6 +76,24 @@ module VCAP::CloudController
 
           message_bus.publish("router.start")
         end
+
+        it 'should set up a periodic timer with router.register announcements' do
+          setup
+          EM.should_receive(:add_periodic_timer).with(22)
+
+          message_bus.publish("router.start", {minimumRegisterIntervalInSeconds: 22})
+        end
+
+        it 'should clear an existing timer when registering a new one' do
+          setup
+          EM.should_receive(:add_periodic_timer).with(22).and_return(:hahaha)
+
+          message_bus.publish("router.start", {minimumRegisterIntervalInSeconds: 22})
+
+          EM.should_receive(:cancel_timer).with(:hahaha)
+          EM.should_receive(:add_periodic_timer).with(55)
+          message_bus.publish("router.start", {minimumRegisterIntervalInSeconds: 55})
+        end
       end
 
       it 'should publish router.register immediately' do

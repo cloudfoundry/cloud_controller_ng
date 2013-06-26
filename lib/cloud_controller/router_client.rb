@@ -5,8 +5,9 @@ module VCAP::CloudController
         @config = config
         @message_bus = message_bus
 
-        @message_bus.subscribe("router.start") do
-          register
+        @message_bus.subscribe("router.start") do |message|
+          interval = message.nil? ? nil : message[:minimumRegisterIntervalInSeconds]
+          register(interval)
         end
 
         register
@@ -33,8 +34,15 @@ module VCAP::CloudController
 
       private
 
-      def register
+      def register(interval=nil)
         @message_bus.publish("router.register", register_message)
+
+        if interval
+          EM.cancel_timer(@registration_timer) if @registration_timer
+          @registration_timer = EM.add_periodic_timer(interval) do
+            @message_bus.publish("router.register", register_message)
+          end
+        end
       end
 
       def register_message
