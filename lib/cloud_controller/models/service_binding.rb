@@ -123,6 +123,7 @@ module VCAP::CloudController::Models
         :label      => "#{service.label}-#{service.version}",
         :email      => VCAP::CloudController::SecurityContext.
                              current_user_email,
+        :service_instance_guid => service_instance.guid,
         :binding_options => {}
       )
 
