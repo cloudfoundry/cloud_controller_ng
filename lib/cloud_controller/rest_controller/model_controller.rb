@@ -75,11 +75,8 @@ module VCAP::CloudController::RestController
     # Enumerate operation
     def enumerate
       raise NotAuthenticated unless user || roles.admin?
-      ds = model.user_visible
-      logger.debug "enumerate: #{ds.sql}"
-      qp = self.class.query_parameters
-      filtered_dataset = get_filtered_dataset_for_enumeration(model, ds, qp, @opts)
-      Paginator.render_json(self.class, filtered_dataset, self.class.path,
+      ds = enumerate_dataset()
+      Paginator.render_json(self.class, ds, self.class.path,
                             @opts.merge(:serialization => serialization))
     end
 
@@ -220,6 +217,12 @@ module VCAP::CloudController::RestController
     end
 
     private
+    def enumerate_dataset
+      qp = self.class.query_parameters
+      ds = get_filtered_dataset_for_enumeration(model, model.user_visible, qp, @opts)
+      logger.debug "enumerate: #{ds.sql}"
+      ds
+    end
 
     def before_modify(obj)
     end

@@ -63,7 +63,7 @@ module VCAP::CloudController
 
       it 'paginates the dataset with query params' do
         fake_class_path = double('class path')
-        filtered_dataset = double('dataset for enumeration')
+        filtered_dataset = double('dataset for enumeration', sql: 'SELECT *')
         Query.stub(filtered_dataset_from_query_params: filtered_dataset)
         controller_class.stub(path: fake_class_path)
         RestController::Paginator.should_receive(:render_json).with(
