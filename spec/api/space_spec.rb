@@ -181,5 +181,22 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'GET /v2/spaces/:guid/service_instances' do
+      let(:space) { Models::Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      context 'when there are provided service instances' do
+        it 'returns only the managed service instances' do
+          Models::ProvidedServiceInstance.make(space: space)
+          managed_service_instance = Models::ManagedServiceInstance.make(space: space)
+
+          get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
+
+          last_response.status.should == 200
+          decoded_response["resources"].should have(1).item
+          decoded_response["resources"][0]["metadata"]["guid"].should == managed_service_instance.guid
+        end
+      end
+    end
   end
 end

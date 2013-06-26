@@ -33,5 +33,18 @@ module VCAP::CloudController
         Errors::SpaceInvalid.new(e.errors.full_messages)
       end
     end
+
+    get "/v2/spaces/:guid/service_instances", :enumerate_service_instances
+
+    def enumerate_service_instances(guid)
+      space = Models::Space.first(guid: guid)
+      RestController::Paginator.render_json(
+        ServiceInstance,
+        Models::ManagedServiceInstance.dataset.filter(space: space),
+        "/v2/spaces/#{guid}/service_instances",
+        @opts
+      )
+    end
+
   end
 end
