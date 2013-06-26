@@ -170,7 +170,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "getting a service instance" do
+    describe 'GET', '/v2/service_instances' do
       let(:space) { Models::Space.make }
       let(:developer) { make_developer_for_space(space)}
       it "shows the dashboard_url if there is" do
