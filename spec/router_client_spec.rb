@@ -56,17 +56,20 @@ module VCAP::CloudController
       end
     end
 
-    describe 'setup' do
+    describe "setup" do
       let(:setup) { RouterClient.setup(configuration, message_bus) }
 
-      it 'should subscribe to router.start' do
+      before { EM.stub(:cancel_timer) }
+
+      it "subscribes to router.start" do
         message_bus.should_receive(:subscribe).with("router.start")
         setup
       end
 
-      context 'when router.start comes in' do
-        it 'should publish router.register' do
+      context "when router.start comes in" do
+        it "publishes router.register" do
           setup
+
           message_bus.stub(:publish).and_call_original
           message_bus.should_receive(:publish).with(
               "router.register",
@@ -77,42 +80,65 @@ module VCAP::CloudController
           message_bus.publish("router.start")
         end
 
-        it 'should set up a periodic timer with router.register announcements' do
+        it "sets up a periodic timer with router.register announcements" do
           setup
+
           EM.should_receive(:add_periodic_timer).with(22)
 
-          message_bus.publish("router.start", {minimumRegisterIntervalInSeconds: 22})
+          message_bus.publish("router.start", minimumRegisterIntervalInSeconds: 22)
         end
 
-        it 'should clear an existing timer when registering a new one' do
+        it "clears an existing timer when registering a new one" do
           setup
+
           EM.should_receive(:add_periodic_timer).with(22).and_return(:hahaha)
 
-          message_bus.publish("router.start", {minimumRegisterIntervalInSeconds: 22})
+          message_bus.publish("router.start", minimumRegisterIntervalInSeconds: 22)
 
           EM.should_receive(:cancel_timer).with(:hahaha)
           EM.should_receive(:add_periodic_timer).with(55)
-          message_bus.publish("router.start", {minimumRegisterIntervalInSeconds: 55})
+
+          message_bus.publish("router.start", minimumRegisterIntervalInSeconds: 55)
         end
       end
 
-      it 'should publish router.register immediately' do
+      it "publishes router.register immediately" do
+        message_bus.stub(:publish).and_call_original
         message_bus.should_receive(:publish).with(
             "router.register",
             hash_including(:host => "1.2.3.4",
                            :port => 5678,
                            :uris => "api.thebestcloud.com"))
+
         setup
       end
 
-      it 'should recover by publishing router.register' do
+      it "recovers by publishing router.register" do
         setup
 
+        message_bus.stub(:publish).and_call_original
         message_bus.should_receive(:publish).with(
             "router.register",
             hash_including(:host => "1.2.3.4",
                            :port => 5678,
                            :uris => "api.thebestcloud.com"))
+
+        message_bus.do_recovery
+      end
+
+      it "requests router.greet and registers in response" do
+        EM.should_receive(:add_periodic_timer).with(42).and_return(:hahaha)
+
+        setup
+
+        message_bus.respond_to_request(
+          "router.greet", minimumRegisterIntervalInSeconds: 42)
+      end
+
+      it "recovers by requesting router.greet again" do
+        message_bus.should_receive(:request).with("router.greet").twice
+
+        setup
 
         message_bus.do_recovery
       end
