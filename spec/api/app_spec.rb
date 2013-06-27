@@ -11,7 +11,7 @@ module VCAP::CloudController
     include_examples "creating and updating", path: "/v2/apps", model: Models::App, required_attributes: %w(name space_guid), unique_attributes: %w(name space_guid), :extra_attributes => []
     include_examples "deleting a valid object", path: "/v2/apps", model: Models::App, one_to_many_collection_ids: {
       :service_bindings => lambda { |app|
-        service_instance = Models::ServiceInstance.make(
+        service_instance = Models::ManagedServiceInstance.make(
           :space => app.space
         )
         Models::ServiceBinding.make(
@@ -28,7 +28,7 @@ module VCAP::CloudController
     include_examples "collection operations", path: "/v2/apps", model: Models::App,
       one_to_many_collection_ids: {
         service_bindings: lambda { |app|
-          service_instance = Models::ServiceInstance.make(space: app.space)
+          service_instance = Models::ManagedServiceInstance.make(space: app.space)
           Models::ServiceBinding.make(app: app, service_instance: service_instance)
         }
       },
@@ -264,7 +264,7 @@ module VCAP::CloudController
         end
 
         context "with NON-empty service_binding (one_to_many) association" do
-          let!(:svc_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+          let!(:svc_instance) { Models::ManagedServiceInstance.make(:space => app_obj.space) }
           let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
 
           it "should raise an error" do

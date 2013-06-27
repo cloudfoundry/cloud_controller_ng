@@ -29,7 +29,7 @@ module VCAP::CloudController
       )
 
       @num_services.times do
-        instance = Models::ServiceInstance.make(:space => @space)
+        instance = Models::ManagedServiceInstance.make(:space => @space)
         @services << instance
         Models::ServiceBinding.make(:app => @app, :service_instance => instance)
       end

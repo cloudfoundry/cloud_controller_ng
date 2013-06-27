@@ -10,7 +10,7 @@ module VCAP::CloudController
       @dea_pool = double(:dea_pool)
 
       NUM_SVC_INSTANCES.times do
-        instance = Models::ServiceInstance.make(:space => @app.space)
+        instance = Models::ManagedServiceInstance.make(:space => @app.space)
         binding = Models::ServiceBinding.make(
           :app => @app,
           :service_instance => instance

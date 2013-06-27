@@ -15,7 +15,7 @@ module VCAP::CloudController
         },
       },
       :one_to_zero_or_more => {
-        :service_instances => lambda { |service_plan| Models::ServiceInstance.make }
+        :service_instances => lambda { |service_plan| Models::ManagedServiceInstance.make }
       },
     }
 
@@ -23,8 +23,8 @@ module VCAP::CloudController
       let(:service_plan) { Models::ServicePlan.make }
 
       it "destroys all service instances" do
-        service_instance = Models::ServiceInstance.make(:service_plan => service_plan)
-        expect { service_plan.destroy }.to change { Models::ServiceInstance.where(:id => service_instance.id).count }.by(-1)
+        service_instance = Models::ManagedServiceInstance.make(:service_plan => service_plan)
+        expect { service_plan.destroy }.to change { Models::ManagedServiceInstance.where(:id => service_instance.id).count }.by(-1)
       end
     end
 

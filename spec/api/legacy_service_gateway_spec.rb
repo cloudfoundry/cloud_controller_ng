@@ -28,8 +28,8 @@ module VCAP::CloudController
         )
         mock_client.stub(:unprovision)
         mock_client.stub(:unbind)
-        Models::ServiceInstance.any_instance.stub(:service_gateway_client).and_return(mock_client)
-        Models::ServiceInstance.any_instance.stub(:client).and_return(mock_client)
+        Models::ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(mock_client)
+        Models::ManagedServiceInstance.any_instance.stub(:client).and_return(mock_client)
       end
 
       describe "POST services/v1/offerings" do
@@ -313,7 +313,7 @@ module VCAP::CloudController
           plan1 = Models::ServicePlan.make(:service => svc1)
           plan2 = Models::ServicePlan.make(:service => svc2)
 
-          cfg1 = Models::ServiceInstance.make(
+          cfg1 = Models::ManagedServiceInstance.make(
             :name => "bar1",
             :service_plan => plan1
           )
@@ -321,7 +321,7 @@ module VCAP::CloudController
           cfg1.gateway_data = { :config => "foo1" }
           cfg1.save
 
-          cfg2 = Models::ServiceInstance.make(
+          cfg2 = Models::ManagedServiceInstance.make(
             :name => "bar2",
             :service_plan => plan2
           )
@@ -397,7 +397,7 @@ module VCAP::CloudController
           before :each do
 
             plan = Models::ServicePlan.make(:service => svc)
-            cfg = Models::ServiceInstance.make(:name => "bar1", :service_plan => plan)
+            cfg = Models::ManagedServiceInstance.make(:name => "bar1", :service_plan => plan)
             cfg.gateway_name = "foo1"
             cfg.save
 
@@ -450,7 +450,7 @@ module VCAP::CloudController
               :service => svc
             )
 
-            cfg = Models::ServiceInstance.make(
+            cfg = Models::ManagedServiceInstance.make(
               :name         => "bar2",
               :service_plan => plan,
             )

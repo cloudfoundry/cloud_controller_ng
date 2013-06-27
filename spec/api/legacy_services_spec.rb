@@ -10,14 +10,14 @@ module VCAP::CloudController
           core_service = Models::Service.make(:provider => "core")
           core_plan = Models::ServicePlan.make(:service => core_service)
           3.times.map do |i|
-            Models::ServiceInstance.make(
+            Models::ManagedServiceInstance.make(
               :name => "core-#{i}",
               :space => user.default_space,
               :service_plan => core_plan,
             )
           end
           2.times do |i|
-            Models::ServiceInstance.make(
+            Models::ManagedServiceInstance.make(
               :name => "noncore-#{i}",
               :space => user.default_space,
             )
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
           3.times do
             space = make_space_for_user(user)
-            Models::ServiceInstance.make(:space => space)
+            Models::ManagedServiceInstance.make(:space => space)
           end
 
           get "/services", {}, headers_for(user)
@@ -91,10 +91,10 @@ module VCAP::CloudController
         before do
           svc = Models::Service.make(:label => "postgres", :version => "9.0")
           Models::ServicePlan.make(:service => svc, :name => LegacyService::LEGACY_PLAN_OVERIDE)
-          Models::ServiceInstance.make(:space => user.default_space, :name => "duplicate")
+          Models::ManagedServiceInstance.make(:space => user.default_space, :name => "duplicate")
 
-          3.times { Models::ServiceInstance.make(:space => user.default_space) }
-          @num_instances_before = Models::ServiceInstance.count
+          3.times { Models::ManagedServiceInstance.make(:space => user.default_space) }
+          @num_instances_before = Models::ManagedServiceInstance.count
           @req = {
             :type => "database",
             :tier => "free",
@@ -117,7 +117,7 @@ module VCAP::CloudController
           it "should add the servicew the default app space" do
             svc = user.default_space.service_instances.find(:name => "instance_name")
             svc.should_not be_nil
-            Models::ServiceInstance.count.should == @num_instances_before + 1
+            Models::ManagedServiceInstance.count.should == @num_instances_before + 1
           end
         end
 
@@ -133,7 +133,7 @@ module VCAP::CloudController
           end
 
           it "should not add a service instance " do
-            Models::ServiceInstance.count.should == @num_instances_before
+            Models::ManagedServiceInstance.count.should == @num_instances_before
           end
 
           it_behaves_like "a vcap rest error response", /service is invalid: invalid-9.0/
@@ -151,7 +151,7 @@ module VCAP::CloudController
           end
 
           it "should not add a service instance " do
-            Models::ServiceInstance.count.should == @num_instances_before
+            Models::ManagedServiceInstance.count.should == @num_instances_before
           end
 
           it_behaves_like "a vcap rest error response", /service is invalid: postgres-invalid/
@@ -168,7 +168,7 @@ module VCAP::CloudController
           end
 
           it "should not add a service instance " do
-            Models::ServiceInstance.count.should == @num_instances_before
+            Models::ManagedServiceInstance.count.should == @num_instances_before
           end
 
           it_behaves_like "a vcap rest error response", /service instance name is taken: duplicate/
@@ -177,7 +177,7 @@ module VCAP::CloudController
 
       describe "GET /services/:name" do
         before do
-          @svc = Models::ServiceInstance.make(:space => user.default_space)
+          @svc = Models::ManagedServiceInstance.make(:space => user.default_space)
         end
 
         describe "with a valid name" do
@@ -216,9 +216,9 @@ module VCAP::CloudController
 
       describe "DELETE /services/:name" do
         before do
-          3.times { Models::ServiceInstance.make(:space => user.default_space) }
-          @svc = Models::ServiceInstance.make(:space => user.default_space)
-          @num_instances_before = Models::ServiceInstance.count
+          3.times { Models::ManagedServiceInstance.make(:space => user.default_space) }
+          @svc = Models::ManagedServiceInstance.make(:space => user.default_space)
+          @num_instances_before = Models::ManagedServiceInstance.count
         end
 
         describe "with a valid name" do
@@ -231,7 +231,7 @@ module VCAP::CloudController
           end
 
           it "should reduce the services count by 1" do
-            Models::ServiceInstance.count.should == @num_instances_before - 1
+            Models::ManagedServiceInstance.count.should == @num_instances_before - 1
           end
         end
 

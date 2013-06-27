@@ -626,7 +626,7 @@ module VCAP::CloudController
       it "should destroy all dependent service bindings" do
         service_binding = Models::ServiceBinding.make(
           :app => app,
-          :service_instance => Models::ServiceInstance.make(:space => app.space)
+          :service_instance => Models::ManagedServiceInstance.make(:space => app.space)
         )
         expect {
           app.destroy
@@ -1154,7 +1154,7 @@ module VCAP::CloudController
 
         context "with NON-empty deletable associations" do
           context "with NON-empty service_binding associations" do
-            let!(:svc_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+            let!(:svc_instance) { Models::ManagedServiceInstance.make(:space => app_obj.space) }
             let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
 
             it "should delete the service bindings" do
@@ -1184,7 +1184,7 @@ module VCAP::CloudController
           end
 
           context "with NON-empty service_instances association" do
-            let!(:service_instance) { Models::ServiceInstance.make(:space => app_obj.space) }
+            let!(:service_instance) { Models::ManagedServiceInstance.make(:space => app_obj.space) }
             let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => service_instance) }
 
             before do

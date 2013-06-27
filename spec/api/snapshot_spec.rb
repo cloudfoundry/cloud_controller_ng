@@ -6,7 +6,7 @@ module VCAP::CloudController
       service = Models::Service.make(
         :url => "http://horsemeat.com",
       )
-      Models::ServiceInstance.make(
+      Models::ManagedServiceInstance.make(
         :service_plan => Models::ServicePlan.make(:service => service),
       )
     end
@@ -60,7 +60,7 @@ module VCAP::CloudController
           end
 
           it "does not create a snapshot" do
-            Models::ServiceInstance.any_instance.should_not_receive(:create_snapshot)
+            Models::ManagedServiceInstance.any_instance.should_not_receive(:create_snapshot)
             post "/v2/snapshots", '{}', headers_for(developer)
             a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
           end
@@ -70,7 +70,7 @@ module VCAP::CloudController
           let(:new_name) {nil}
 
           it "returns a 400 status code and does not create a snapshot" do
-            Models::ServiceInstance.any_instance.should_not_receive(:create_snapshot)
+            Models::ManagedServiceInstance.any_instance.should_not_receive(:create_snapshot)
             post "/v2/snapshots", payload, headers_for(developer)
             last_response.status.should == 400
             a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
@@ -87,7 +87,7 @@ module VCAP::CloudController
         end
 
         it "invokes create_snapshot on the corresponding service instance" do
-          Models::ServiceInstance.should_receive(:find).
+          Models::ManagedServiceInstance.should_receive(:find).
             with(:guid => service_instance.guid).
             and_return(service_instance)
           service_instance.should_receive(:create_snapshot).
@@ -126,7 +126,7 @@ module VCAP::CloudController
       context "once authenticated" do
         let(:developer) {make_developer_for_space(service_instance.space)}
         before do
-          Models::ServiceInstance.stub(:find).
+          Models::ManagedServiceInstance.stub(:find).
             with(:guid => service_instance.guid).
             and_return(service_instance)
         end
