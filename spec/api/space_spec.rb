@@ -197,6 +197,111 @@ module VCAP::CloudController
           decoded_response["resources"][0]["metadata"]["guid"].should == managed_service_instance.guid
         end
       end
+
+      describe 'Permissions' do
+        include_context "permissions"
+        shared_examples "disallow enumerating service instances" do |perm_name|
+          describe "disallowing enumerating service instances" do
+            it "disallows a user that only has #{perm_name} permission on the space" do
+              get "/v2/spaces/#{@space_a.guid}/service_instances", {}, headers_for(member_a)
+
+              last_response.status.should == 403
+            end
+          end
+        end
+
+        shared_examples "enumerating service instances" do |perm_name, opts|
+          expected = opts.fetch(:expected)
+          let(:path) { "/v2/spaces/#{@space_a.guid}/service_instances" }
+          let!(:managed_service_instance) do
+            Models::ManagedServiceInstance.make(
+              space: @space_a,
+            )
+          end
+
+          it "should return service instances to a user that has #{perm_name} permissions" do
+            get path, {}, headers_for(member_a)
+
+            last_response.should be_ok
+            decoded_response["total_results"].should == expected
+            guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
+            guids.should include(managed_service_instance.guid) if expected > 0
+          end
+
+          it "should not return a service instance to a user with the #{perm_name} permission on a different space" do
+            get path, {}, headers_for(member_b)
+            last_response.status.should eq(403)
+          end
+        end
+
+        describe "Org Level" do
+          describe "OrgManager" do
+            include_examples(
+              "enumerating service instances", "OrgManager",
+              expected: 1,
+            ) do
+              let(:member_a) { @org_a_manager }
+              let(:member_b) { @org_b_manager }
+            end
+          end
+
+          describe "OrgUser" do
+            include_examples(
+              "disallow enumerating service instances", "OrgUser",
+            ) do
+              let(:member_a) { @org_a_member }
+            end
+          end
+
+          describe "BillingManager" do
+            include_examples(
+              "disallow enumerating service instances", "BillingManager",
+            ) do
+              let(:member_a) { @org_a_billing_manager }
+            end
+          end
+
+          describe "Auditor" do
+            include_examples(
+              "disallow enumerating service instances", "Auditor",
+            ) do
+              let(:member_a) { @org_a_auditor }
+            end
+          end
+        end
+
+        describe "App Space Level Permissions" do
+          describe "SpaceManager" do
+            include_examples(
+              "enumerating service instances", "SpaceManager",
+              expected: 1,
+            ) do
+              let(:member_a) { @space_a_manager }
+              let(:member_b) { @space_b_manager }
+            end
+          end
+
+          describe "Developer" do
+            include_examples(
+              "enumerating service instances", "Developer",
+              expected: 1,
+            ) do
+              let(:member_a) { @space_a_developer }
+              let(:member_b) { @space_b_developer }
+            end
+          end
+
+          describe "SpaceAuditor" do
+            include_examples(
+              "enumerating service instances", "SpaceAuditor",
+              expected: 1,
+            ) do
+              let(:member_a) { @space_a_auditor }
+              let(:member_b) { @space_b_auditor }
+            end
+          end
+        end
+      end
     end
   end
 end
