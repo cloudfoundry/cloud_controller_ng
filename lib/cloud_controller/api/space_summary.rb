@@ -34,7 +34,7 @@ module VCAP::CloudController
       end
 
       services_summary = space.service_instances.map do |instance|
-        service_instance_summary(instance)
+        instance.as_summary_json
       end
 
       Yajl::Encoder.encode(
@@ -55,25 +55,6 @@ module VCAP::CloudController
         :service_count => app.service_bindings_dataset.count,
         :running_instances => nil,
       }.merge(app.to_hash)
-    end
-
-    def service_instance_summary(instance)
-      {
-        :guid => instance.guid,
-        :name => instance.name,
-        :bound_app_count => instance.service_bindings_dataset.count,
-        :dashboard_url => instance.dashboard_url,
-        :service_plan => {
-          :guid => instance.service_plan.guid,
-          :name => instance.service_plan.name,
-          :service => {
-            :guid => instance.service_plan.service.guid,
-            :label => instance.service_plan.service.label,
-            :provider => instance.service_plan.service.provider,
-            :version => instance.service_plan.service.version,
-          }
-        }
-      }
     end
 
     get "#{path_id}/summary", :summary
