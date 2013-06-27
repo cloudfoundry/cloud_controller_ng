@@ -66,27 +66,31 @@ module VCAP::CloudController
       before do
         HealthManagerClient.should_receive(:healthy_instances).
           and_return(health_response)
-
-        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
       end
 
       it "should return 200" do
+        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
+
         last_response.status.should == 200
       end
 
       it "should return the space guid" do
+        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
         decoded_response["guid"].should == @space.guid
       end
 
       it "should return the space name" do
+        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
         decoded_response["name"].should == @space.name
       end
 
       it "should return num_apps apps" do
+        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
         decoded_response["apps"].size.should == num_apps
       end
 
       it "should return the correct info for the apps" do
+        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
         decoded_response["apps"].each do |app_resp|
           app = @apps.find { |a| a.guid == app_resp["guid"] }
 
@@ -120,10 +124,12 @@ module VCAP::CloudController
       end
 
       it "should return num_services services" do
+        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
         decoded_response["services"].size.should == num_services
       end
 
       it "should return the correct info for a service" do
+        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
         svc_resp = decoded_response["services"][0]
         svc = @services.find { |s| s.guid == svc_resp["guid"] }
 
@@ -169,6 +175,7 @@ module VCAP::CloudController
         end
 
         it "has nil for its running_instances" do
+          get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
           response_apps = decoded_response["apps"]
 
           missing_apps.should_not be_empty
