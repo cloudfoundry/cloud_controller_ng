@@ -128,22 +128,25 @@ module VCAP::CloudController
     end
 
     describe "#as_summary_json" do
-      subject { Models::ManagedServiceInstance.make }
+      let(:service) { Models::Service.make(label: "YourSQL", guid: "9876XZ", provider: "Bill Gates", version: "1.2.3")}
+      let(:service_plan) { Models::ServicePlan.make(name: "Gold Plan", guid: "12763abc", service: service)}
+      subject(:service_instance) { Models::ManagedServiceInstance.make(service_plan: service_plan) }
 
       it "returns detailed summary" do
-        subject.as_summary_json.should == {
+        service_instance.dashboard_url = "http://dashboard.example.com"
+        service_instance.as_summary_json.should == {
           :guid => subject.guid,
           :name => subject.name,
           :bound_app_count => 0,
-          :dashboard_url => subject.dashboard_url,
+          :dashboard_url => "http://dashboard.example.com",
           :service_plan => {
-            :guid => subject.service_plan.guid,
-            :name => subject.service_plan.name,
+            :guid => "12763abc",
+            :name => "Gold Plan",
             :service => {
-              :guid => subject.service_plan.service.guid,
-              :label => subject.service_plan.service.label,
-              :provider => subject.service_plan.service.provider,
-              :version => subject.service_plan.service.version,
+              :guid => "9876XZ",
+              :label => "YourSQL",
+              :provider => "Bill Gates",
+              :version => "1.2.3",
             }
           }
         }
