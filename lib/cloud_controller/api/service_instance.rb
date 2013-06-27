@@ -10,6 +10,8 @@ module VCAP::CloudController
       read Permissions::SpaceAuditor
     end
 
+    model_class_name :ManagedServiceInstance
+
     define_attributes do
       attribute :name,  String
       to_one    :space
@@ -48,10 +50,14 @@ module VCAP::CloudController
       end
     end
 
+    def self.not_found_exception
+      Errors::ServiceInstanceNotFound
+    end
+
     def update_instance(gateway_name)
       req = decode_message_body
 
-      instance_handle = Models::ServiceInstance[:gateway_name => gateway_name]
+      instance_handle = Models::ManagedServiceInstance[:gateway_name => gateway_name]
       raise Errors::ServiceInstanceNotFound, "gateway_name=#{gateway_name}" unless instance_handle
 
       plan_handle = Models::ServicePlan[:id => instance_handle[:service_plan_id]]

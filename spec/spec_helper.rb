@@ -186,7 +186,7 @@ module VCAP::CloudController::SpecHelper
     mbus = CfMessageBus::MockMessageBus.new
 
     # FIXME: this is better suited for a before-each stub so that we can unstub it in examples
-    VCAP::CloudController::Models::ServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
+    VCAP::CloudController::Models::ManagedServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
 
     VCAP::CloudController::AccountCapacity.configure(config)
     VCAP::CloudController::ResourcePool.instance =

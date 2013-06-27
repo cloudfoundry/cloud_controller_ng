@@ -76,7 +76,7 @@ module VCAP::CloudController
                 :space => space,
                 :state => "STOPPED",
               )
-              service_instance = Models::ServiceInstance.make(
+              service_instance = Models::ManagedServiceInstance.make(
                 :space => space,
               )
             end
@@ -141,7 +141,7 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           org.service_instance_quota_remaining?.should be_true
-          Models::ServiceInstance.make(:space => space,
+          Models::ManagedServiceInstance.make(:space => space,
                                        :service_plan => free_plan).
             save(:validate => false)
           org.refresh
@@ -209,8 +209,8 @@ module VCAP::CloudController
       end
 
       it "destroys all service instances" do
-        service_instance = Models::ServiceInstance.make(:space => space)
-        expect { subject }.to change { Models::ServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
+        service_instance = Models::ManagedServiceInstance.make(:space => space)
+        expect { subject }.to change { Models::ManagedServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
       end
 
       it "destroys the owned domain" do
@@ -242,7 +242,7 @@ module VCAP::CloudController
       context "when a trial db instance has been allocated" do
         let(:service_plan) { Models::ServicePlan.make :unique_id => trial_db_guid}
         it "returns true" do
-          Models::ServiceInstance.make(:space => space, :service_plan => service_plan)
+          Models::ManagedServiceInstance.make(:space => space, :service_plan => service_plan)
           expect(subject).to eq true
         end
       end

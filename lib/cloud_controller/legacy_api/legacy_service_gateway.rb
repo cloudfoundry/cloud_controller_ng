@@ -108,7 +108,7 @@ module VCAP::CloudController
 
       handles = []
       plans_ds = service.service_plans_dataset
-      instances_ds = Models::ServiceInstance.filter(:service_plan => plans_ds)
+      instances_ds = Models::ManagedServiceInstance.filter(:service_plan => plans_ds)
       handles += instances_ds.map do |si|
         {
           :service_id => si.gateway_name,
@@ -209,7 +209,7 @@ module VCAP::CloudController
 
 
       plans_ds = service.service_plans_dataset
-      instances_ds = Models::ServiceInstance.filter(:service_plan => plans_ds)
+      instances_ds = Models::ManagedServiceInstance.filter(:service_plan => plans_ds)
       bindings_ds = Models::ServiceBinding.filter(:service_instance => instances_ds)
 
       if instance = instances_ds[:gateway_name => id]

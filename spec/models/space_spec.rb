@@ -25,7 +25,7 @@ module VCAP::CloudController
         },
         :service_instances => {
           :delete_ok => true,
-          :create_for => lambda { |space| Models::ServiceInstance.make }
+          :create_for => lambda { |space| Models::ManagedServiceInstance.make }
         },
         :routes            => {
           :delete_ok => true,
@@ -115,12 +115,12 @@ module VCAP::CloudController
       end
 
       it "destroys all service instances" do
-        service_instance = Models::ServiceInstance.make(:space => space)
+        service_instance = Models::ManagedServiceInstance.make(:space => space)
 
         expect {
           subject.destroy
         }.to change {
-          Models::ServiceInstance.where(:id => service_instance.id).count
+          Models::ManagedServiceInstance.where(:id => service_instance.id).count
         }.by(-1)
       end
 

@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       num_services.times do
-        Models::ServiceInstance.make(:space => @spaces.first)
+        Models::ManagedServiceInstance.make(:space => @spaces.first)
       end
 
       num_free_apps.times do

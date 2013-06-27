@@ -3,7 +3,7 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe "Sequel::Plugins::VcapNormalization" do
-  before do
+  let!(:model_class) do
     reset_database
 
     db.create_table :test do
@@ -14,28 +14,30 @@ describe "Sequel::Plugins::VcapNormalization" do
       String :val3
     end
 
-    @c = Class.new(Sequel::Model)
-    @c.plugin :vcap_normalization
-    @c.set_dataset(db[:test])
-    @m = @c.new
+    Class.new(Sequel::Model) do
+      plugin :vcap_normalization
+      set_dataset(db[:test])
+    end
   end
 
-  describe "#strip_attributes" do
+  let(:model_object) { model_class.new }
+
+  describe ".strip_attributes" do
     it "should not cause anything to be normalized if not called" do
-      @m.val1 = "hi "
-      @m.val2 = " bye"
-      @m.val1.should == "hi "
-      @m.val2.should == " bye"
+      model_object.val1 = "hi "
+      model_object.val2 = " bye"
+      model_object.val1.should == "hi "
+      model_object.val2.should == " bye"
     end
 
     it "should only result in provided strings being normalized" do
-      @c.strip_attributes :val2, :val3
-      @m.val1 = "hi "
-      @m.val2 = " bye"
-      @m.val3 = " with spaces "
-      @m.val1.should == "hi "
-      @m.val2.should == "bye"
-      @m.val3.should == "with spaces"
+      model_class.strip_attributes :val2, :val3
+      model_object.val1 = "hi "
+      model_object.val2 = " bye"
+      model_object.val3 = " with spaces "
+      model_object.val1.should == "hi "
+      model_object.val2.should == "bye"
+      model_object.val3.should == "with spaces"
     end
   end
 end

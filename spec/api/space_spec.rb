@@ -11,7 +11,7 @@ module VCAP::CloudController
     include_examples "deleting a valid object", path: "/v2/spaces", model: Models::Space,
       one_to_many_collection_ids: {
         :apps => lambda { |space| Models::App.make(:space => space) },
-        :service_instances => lambda { |space| Models::ServiceInstance.make(:space => space) }
+        :service_instances => lambda { |space| Models::ManagedServiceInstance.make(:space => space) }
       },
       one_to_many_collection_ids_without_url: {
         :routes => lambda { |space| Models::Route.make(:space => space) },
@@ -28,7 +28,7 @@ module VCAP::CloudController
     include_examples "collection operations", path: "/v2/spaces", model: Models::Space,
       one_to_many_collection_ids: {
         apps: lambda { |space| Models::App.make(space: space) },
-        service_instances: lambda { |space| Models::ServiceInstance.make(space: space) }
+        service_instances: lambda { |space| Models::ManagedServiceInstance.make(space: space) }
       },
       one_to_many_collection_ids_without_url: {
         routes: lambda { |space| Models::Route.make(space: space) },
