@@ -28,28 +28,5 @@ module VCAP::CloudController
         Errors::ServiceBindingInvalid.new(e.errors.full_messages)
       end
     end
-
-    def update_binding(gateway_name)
-      req = decode_message_body
-
-      binding_handle = Models::ServiceBinding[:gateway_name => gateway_name]
-      raise Errors::ServiceBindingNotFound, "gateway_name=#{gateway_name}" unless binding_handle
-
-      instance_handle = Models::ManagedServiceInstance[:id => binding_handle[:service_instance_id]]
-      plan_handle = Models::ServicePlan[:id => instance_handle[:service_plan_id]]
-      service_handle = Models::Service[:id => plan_handle[:service_id]]
-
-      ServiceValidator.validate_auth_token(req.token, service_handle)
-
-      binding_handle.update(:gateway_data => req.gateway_data, :credentials => req.credentials)
-    end
-
-    put "/v2/service_bindings/internal/:gateway_name", :update_binding
-  end
-
-  def decode_message_body
-    VCAP::Services::Api::HandleUpdateRequestV2.decode(body)
-  rescue
-    raise Errors::InvalidRequest
   end
 end
