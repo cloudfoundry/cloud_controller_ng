@@ -54,7 +54,8 @@ module VCAP::CloudController::ApiSpecHelper
     end
   end
 
-  shared_examples "permission enumeration" do |perm_name, model, name, path, path_suffix, expected, perms_overlap|
+
+  shared_examples "permission enumeration" do |perm_name, name, path, path_suffix, expected, perms_overlap|
     describe "GET #{path}" do
       it "should return #{name.pluralize} to a user that has #{perm_name} permissions" do
         expected_count = expected.respond_to?(:call) ? expected.call : expected
@@ -220,7 +221,7 @@ module VCAP::CloudController::ApiSpecHelper
     perms_overlap = opts[:permissions_overlap]
 
     include_examples "permission enumeration",
-      perm_name, model, name, path, path_suffix, opts[:enumerate], perms_overlap
+      perm_name, name, path, path_suffix, opts[:enumerate], perms_overlap
 
     [:create, :read, :modify, :delete].each do |op|
       include_examples "permission #{op} #{opts[op]}", perm_name, model, name, path, path_suffix, perms_overlap
