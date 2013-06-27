@@ -134,6 +134,7 @@ module VCAP::CloudController
 
       it "returns detailed summary" do
         service_instance.dashboard_url = "http://dashboard.example.com"
+
         service_instance.as_summary_json.should == {
           :guid => subject.guid,
           :name => subject.name,

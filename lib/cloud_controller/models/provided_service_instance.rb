@@ -10,5 +10,12 @@ module VCAP::CloudController::Models
       super
       validates_presence :credentials
     end
+
+    def as_summary_json
+      {
+        "guid" => guid,
+        "name" => name
+      }
+    end
   end
 end

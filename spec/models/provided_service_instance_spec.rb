@@ -1,8 +1,6 @@
 require_relative 'spec_helper'
 
 describe VCAP::CloudController::Models::ProvidedServiceInstance do
-  subject(:instance) { described_class.new }
-
   it_behaves_like "a model with an encrypted attribute" do
     def new_model
       described_class.create(
@@ -28,6 +26,16 @@ describe VCAP::CloudController::Models::ProvidedServiceInstance do
     before(:all) do
       # encrypted attributes with changing keys, duh
       described_class.dataset.destroy
+    end
+  end
+
+  describe "#as_summary_json" do
+    it "contains name and guid" do
+      instance = described_class.new(guid: "ABCDEFG12", name: "Random-Number-Service")
+      instance.as_summary_json.should == {
+        "guid" => "ABCDEFG12",
+        "name" => "Random-Number-Service",
+      }
     end
   end
 end
