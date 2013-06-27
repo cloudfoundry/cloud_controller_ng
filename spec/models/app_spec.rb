@@ -1182,25 +1182,6 @@ module VCAP::CloudController
               route.apps.should be_empty
             end
           end
-
-          context "with NON-empty service_instances association" do
-            let!(:service_instance) { Models::ManagedServiceInstance.make(:space => app_obj.space) }
-            let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => service_instance) }
-
-            before do
-              app_obj.add_service_instance(service_instance)
-              app_obj.save
-            end
-
-            it "should nullify service instances" do
-              app_obj.soft_delete
-
-              deleted_app = Models::App.deleted[:id => app_obj.id]
-              deleted_app.service_instances.should be_empty
-              # service_instances.apps does NOT exist because the many_to_many relation is based on a join with
-              # service bindings table.
-            end
-          end
         end
 
         after do
