@@ -139,7 +139,7 @@ module VCAP::CloudController
           )}
 
           it "does not allow to create a service instance" do
-            post('v2/service_instances', payload, headers_for(developer))
+            post 'v2/service_instances', payload, json_headers(headers_for(developer))
             last_response.status.should == 403
           end
 
@@ -149,7 +149,7 @@ module VCAP::CloudController
               organization: organization,
               service_plan: private_plan
             )
-            post('v2/service_instances', payload, headers_for(developer))
+            post 'v2/service_instances', payload, json_headers(headers_for(developer))
             last_response.status.should == 201
           end
         end
@@ -202,8 +202,7 @@ module VCAP::CloudController
                                      :space_guid => space.guid,
                                      :service_plan_guid => paid_plan.guid)
 
-          post("/v2/service_instances",
-               req, headers_for(make_developer_for_space(space)))
+          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
           last_response.status.should == 400
           decoded_response["description"].should =~ /file a support ticket to request additional resources/
         end
@@ -217,8 +216,7 @@ module VCAP::CloudController
                                      :space_guid => space.guid,
                                      :service_plan_guid => free_plan.guid)
 
-          post("/v2/service_instances",
-               req, headers_for(make_developer_for_space(space)))
+          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
           last_response.status.should == 400
           decoded_response["description"].should =~ /login to your account and upgrade/
         end
@@ -230,8 +228,7 @@ module VCAP::CloudController
                                      :space_guid => space.guid,
                                      :service_plan_guid => paid_plan.guid)
 
-          post("/v2/service_instances",
-               req, headers_for(make_developer_for_space(space)))
+          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
           last_response.status.should == 400
           decoded_response["description"].should =~ /paid service plans are not allowed/
         end
@@ -250,9 +247,7 @@ module VCAP::CloudController
             "service_plan_guid" => plan.guid
           }
 
-          post("/v2/service_instances",
-               Yajl::Encoder.encode(body),
-               headers_for(make_developer_for_space(space)))
+          post "/v2/service_instances", Yajl::Encoder.encode(body), json_headers(headers_for(make_developer_for_space(space)))
           decoded_response["description"].should =~ /invalid.*space.*/
           last_response.status.should == 400
         end

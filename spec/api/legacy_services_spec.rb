@@ -107,7 +107,7 @@ module VCAP::CloudController
 
         context "with all required parameters" do
           before do
-            post "/services", Yajl::Encoder.encode(@req), headers_for(user)
+            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
           end
 
           it "should return success" do
@@ -125,7 +125,7 @@ module VCAP::CloudController
           before do
             @req[:vendor] = "invalid"
 
-            post "/services", Yajl::Encoder.encode(@req), headers_for(user)
+            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
           end
 
           it "should return bad request" do
@@ -143,7 +143,7 @@ module VCAP::CloudController
           before do
             @req[:version] = "invalid"
 
-            post "/services", Yajl::Encoder.encode(@req), headers_for(user)
+            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
           end
 
           it "should return bad request" do
@@ -160,7 +160,7 @@ module VCAP::CloudController
         context "with a duplicate name" do
           before do
             @req[:name] = "duplicate"
-            post "/services", Yajl::Encoder.encode(@req), headers_for(user)
+            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
           end
 
           it "should return bad request" do

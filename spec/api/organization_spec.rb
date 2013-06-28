@@ -182,7 +182,7 @@ module VCAP::CloudController
         it "should be allowed to set billing_enabled flag to true" do
           org.billing_enabled.should == false
           req = Yajl::Encoder.encode(:billing_enabled => true)
-          put "/v2/organizations/#{org.guid}", req, admin_headers
+          put "/v2/organizations/#{org.guid}", req, json_headers(admin_headers)
           last_response.status.should == 201
           decoded_response["entity"]["billing_enabled"].should == true
           org.refresh
@@ -194,7 +194,7 @@ module VCAP::CloudController
         it "should not be allowed to set billing_enabled flag to true" do
           org.billing_enabled.should == false
           req = Yajl::Encoder.encode(:billing_enabled => true)
-          put "/v2/organizations/#{org.guid}", req, org_admin_headers
+          put "/v2/organizations/#{org.guid}", req, json_headers(org_admin_headers)
           last_response.status.should == 400
           org.refresh
           org.billing_enabled.should == false
@@ -204,7 +204,7 @@ module VCAP::CloudController
           org.billing_enabled = true
           org.save(:validate => false)
           req = Yajl::Encoder.encode(:billing_enabled => false)
-          put "/v2/organizations/#{org.guid}", req, org_admin_headers
+          put "/v2/organizations/#{org.guid}", req, json_headers(org_admin_headers)
           last_response.status.should == 400
           org.refresh
           org.billing_enabled.should == true
@@ -231,7 +231,7 @@ module VCAP::CloudController
 
       describe "cf admins" do
         it "should be allowed to set the quota definition" do
-          put "/v2/organizations/#{org.guid}", update_request, admin_headers
+          put "/v2/organizations/#{org.guid}", update_request, json_headers(admin_headers)
           last_response.status.should == 201
           org.refresh
           org.quota_definition.should == quota_definition
@@ -241,7 +241,7 @@ module VCAP::CloudController
       describe "org admins" do
         it "should not be allowed to set the quota definition" do
           orig_quota_definition = org.quota_definition
-          put "/v2/organizations/#{org.guid}", update_request, org_admin_headers
+          put "/v2/organizations/#{org.guid}", update_request, json_headers(org_admin_headers)
           last_response.status.should == 403
           org.refresh
           org.quota_definition.should == orig_quota_definition

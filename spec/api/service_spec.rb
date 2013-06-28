@@ -183,7 +183,7 @@ module VCAP::CloudController
           :version => 'v',
           :unique_id => Sham.unique_id,
         ).encode
-        post "/v2/services", payload, admin_headers
+        post "/v2/services", payload, json_headers(admin_headers)
         last_response.status.should eq(201)
       end
     end
@@ -193,7 +193,7 @@ module VCAP::CloudController
         service = Models::Service.make
         new_unique_id = service.unique_id.reverse
         payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
-        put "/v2/services/#{service.guid}", payload, admin_headers
+        put "/v2/services/#{service.guid}", payload, json_headers(admin_headers)
         last_response.status.should eq 400
       end
     end

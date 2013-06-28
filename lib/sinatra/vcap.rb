@@ -3,7 +3,6 @@
 require "vcap/component"
 require "vcap/ring_buffer"
 require "vcap/rest_api"
-require "sinatra/consumes"
 require "sinatra/reloader"
 require "securerandom"
 require "steno"
@@ -35,6 +34,10 @@ module Sinatra
       def varz
         ::VCAP::Component.varz[:vcap_sinatra]
       end
+
+      def in_test_mode?
+        ENV["CC_TEST"]
+      end
     end
 
     # Called when the caller registers the sinatra extension.  Sets up
@@ -42,7 +45,6 @@ module Sinatra
     def self.registered(app)
       init_varz
 
-      app.helpers Sinatra::Consumes
       app.helpers VCAP::Helpers
 
       app.not_found do
@@ -148,9 +150,6 @@ module Sinatra
       end
     end
 
-    def in_test_mode?
-      ENV["CC_TEST"]
-    end
 
     private
 
@@ -173,6 +172,4 @@ module Sinatra
       end
     end
   end
-
-  register VCAP
 end

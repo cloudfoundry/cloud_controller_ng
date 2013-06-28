@@ -117,7 +117,7 @@ module VCAP::CloudController
 
       context "a cf admin" do
         it "can modify service plans" do
-          put "/v2/service_plans/#{plan.guid}", body, headers_for(admin)
+          put "/v2/service_plans/#{plan.guid}", body, json_headers(headers_for(admin))
           last_response.status.should == 201
           plan.reload.public.should be_false
         end
@@ -125,7 +125,7 @@ module VCAP::CloudController
 
       context "otherwise" do
         it "cannot modify service plans" do
-          put "/v2/service_plans/#{plan.guid}", body, headers_for(developer)
+          put "/v2/service_plans/#{plan.guid}", body, json_headers(headers_for(developer))
           last_response.status.should == 403
           plan.reload.public.should be_true
         end
@@ -174,7 +174,7 @@ module VCAP::CloudController
         :service_guid => service.guid,
         :unique_id => Sham.unique_id,
       ).encode
-      post "/v2/service_plans", payload, admin_headers
+      post "/v2/service_plans", payload, json_headers(admin_headers)
       last_response.status.should eq(201)
     end
 
@@ -186,7 +186,7 @@ module VCAP::CloudController
         :service_guid => service.guid,
         :unique_id => Sham.unique_id,
       ).encode
-      post '/v2/service_plans', payload_without_public, admin_headers
+      post '/v2/service_plans', payload_without_public, json_headers(admin_headers)
       last_response.status.should eq(201)
       plan_guid = decoded_response.fetch('metadata').fetch('guid')
       Models::ServicePlan.first(:guid => plan_guid).public.should be_false
@@ -198,7 +198,7 @@ module VCAP::CloudController
       service_plan = Models::ServicePlan.make
       new_unique_id = service_plan.unique_id.reverse
       payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
-      put "/v2/service_plans/#{service_plan.guid}", payload, admin_headers
+      put "/v2/service_plans/#{service_plan.guid}", payload, json_headers(admin_headers)
       last_response.status.should eq 400
     end
   end

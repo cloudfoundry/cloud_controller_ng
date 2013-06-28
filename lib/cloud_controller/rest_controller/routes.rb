@@ -7,7 +7,6 @@ module VCAP::CloudController::RestController
     module ClassMethods
       def define_route(verb, path, method = nil, &blk)
         opts = {}
-        opts[:consumes] = [:json] if [:put, :post].include?(verb)
         klass = self
         controller.send(verb, path, opts) do |*args|
           logger.debug "dispatch #{klass} #{verb} #{path}"

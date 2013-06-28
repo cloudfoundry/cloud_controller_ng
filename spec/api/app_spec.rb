@@ -440,7 +440,7 @@ module VCAP::CloudController
           App::UpdateMessage.new(
             :route_guids => [route.guid],
           ).encode,
-          @headers_for_user,
+          json_headers(@headers_for_user)
         )
         last_response.status.should == 201
       end
@@ -470,7 +470,7 @@ module VCAP::CloudController
           App::UpdateMessage.new(
             :route_guids => [route.guid],
           ).encode,
-          @headers_for_user,
+          json_headers(@headers_for_user)
         )
         last_response.status.should == 201
       end
@@ -608,7 +608,7 @@ module VCAP::CloudController
                                      :space_guid => space.guid,
                                      :memory => 128)
 
-          post("/v2/apps", req, headers_for(make_developer_for_space(space)))
+          post "/v2/apps", req, json_headers(headers_for(make_developer_for_space(space)))
 
           last_response.status.should == 400
           decoded_response["description"].should =~ /exceeded your organization's memory limit/

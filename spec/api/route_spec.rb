@@ -29,11 +29,7 @@ module VCAP::CloudController
         domain = Models::Domain.make(:wildcard => true)
         space = Models::Space.make(:organization => domain.owning_organization)
         space.add_domain(domain)
-        post "/v2/routes",
-          Yajl::Encoder.encode(:host => nil,
-                               :domain_guid => domain.guid,
-                               :space_guid => space.guid),
-          headers_for(cf_admin)
+        post "/v2/routes", Yajl::Encoder.encode(:host => nil, :domain_guid => domain.guid, :space_guid => space.guid), json_headers(headers_for(cf_admin))
         last_response.status.should == 201
       end
     end
@@ -262,7 +258,7 @@ module VCAP::CloudController
         Route::UpdateMessage.new(
           :app_guids => [@foo_app.guid, @bar_app.guid],
         ).encode,
-        @headers_for_user,
+        json_headers(@headers_for_user)
       )
       last_response.status.should == 201
     end
@@ -286,7 +282,7 @@ module VCAP::CloudController
         Route::UpdateMessage.new(
           :app_guids => [@bar_app.guid],
         ).encode,
-        @headers_for_user,
+        json_headers(@headers_for_user)
       )
       last_response.status.should == 201
     end

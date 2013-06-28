@@ -55,19 +55,19 @@ module VCAP::CloudController
         end
 
         it "should reject requests without auth tokens" do
-          post path, build_offering.encode, {}
+          post path, build_offering.encode, json_headers({})
           last_response.status.should == 403
         end
 
         it "should should reject posts with malformed bodies" do
-          post path, Yajl::Encoder.encode(:bla => "foobar"), auth_header
+          post path, Yajl::Encoder.encode(:bla => "foobar"), json_headers(auth_header)
           last_response.status.should == 400
         end
 
         it "should reject requests with missing parameters" do
           msg = { :label => "foobar-2.2",
                   :description => "the foobar svc" }
-          post path, Yajl::Encoder.encode(msg), auth_header
+          post path, Yajl::Encoder.encode(msg), json_headers(auth_header)
           last_response.status.should == 400
         end
 
@@ -75,17 +75,17 @@ module VCAP::CloudController
           msg = { :label => "foobar-2.2",
                   :description => "the foobar svc",
                   :url => "zazzle" }
-          post path, Yajl::Encoder.encode(msg), auth_header
+          post path, Yajl::Encoder.encode(msg), json_headers(auth_header)
           last_response.status.should == 400
         end
 
         it "should reject requests with extra dash in label" do
-          post path, foo_bar_dash_offering.encode, auth_header
+          post path, foo_bar_dash_offering.encode, json_headers(auth_header)
           last_response.status.should == 400
         end
 
         it "should create service offerings for label/provider services and generate a unique_id" do
-          post path, build_offering.encode, auth_header
+          post path, build_offering.encode, json_headers(auth_header)
           last_response.status.should == 200
           svc = Models::Service.find(:label => "foobar", :provider => "core")
           svc.should_not be_nil
@@ -97,7 +97,7 @@ module VCAP::CloudController
           extra_data = "{\"I\": \"am json #{'more' * 100}\"}"
           o = build_offering
           o.extra = extra_data
-          post path, o.encode, auth_header
+          post path, o.encode, json_headers(auth_header)
 
           last_response.status.should == 200
           service = Models::Service[:label => "foobar", :provider => "core"]
@@ -106,23 +106,23 @@ module VCAP::CloudController
 
         shared_examples_for "offering containing service plans" do
           it "should create service plans" do
-            post path, both_plans.encode, auth_header
+            post path, both_plans.encode, json_headers(auth_header)
 
             service = Models::Service[:label => "foobar", :provider => "core"]
             service.service_plans.map(&:name).should include("free", "nonfree")
           end
 
           it "should update service plans" do
-            post path, just_free_plan.encode, auth_header
-            post path, both_plans.encode, auth_header
+            post path, just_free_plan.encode, json_headers(auth_header)
+            post path, both_plans.encode, json_headers(auth_header)
 
             service = Models::Service[:label => "foobar", :provider => "core"]
             service.service_plans.map(&:name).should include("free", "nonfree")
           end
 
           it "should remove plans not posted" do
-            post path, both_plans.encode, auth_header
-            post path, just_free_plan.encode, auth_header
+            post path, both_plans.encode, json_headers(auth_header)
+            post path, just_free_plan.encode, json_headers(auth_header)
 
             service = Models::Service[:label => "foobar", :provider => "core"]
             service.service_plans.map(&:name).should == ["free"]
@@ -160,7 +160,7 @@ module VCAP::CloudController
                 }
               ]
             )
-            post path, offer.encode, auth_header
+            post path, offer.encode, json_headers(auth_header)
             last_response.status.should == 200
 
             service = Models::Service[:label => "foobar", :provider => "core"]
@@ -172,11 +172,11 @@ module VCAP::CloudController
           end
 
           it "does not add plans with identical names but different freeness under the same service" do
-            post path, just_free_plan.encode, auth_header
+            post path, just_free_plan.encode, json_headers(auth_header)
             last_response.status.should == 200
 
             offer2 = build_offering(plan_details: [{"name" => "free", "free" => false, "description" => "tetris"}])
-            post path, offer2.encode, auth_header
+            post path, offer2.encode, json_headers(auth_header)
             last_response.status.should == 200
 
             service = Models::Service[:label => "foobar", :provider => "core"]
@@ -189,7 +189,7 @@ module VCAP::CloudController
             offer = build_offering(
               plan_details:[{"name" => "plan name", "free" => true, "guid" => "myguid"}]
             )
-            post path, offer.encode, auth_header
+            post path, offer.encode, json_headers(auth_header)
             last_response.status.should == 200
 
             service = Models::Service[:label => "foobar", :provider => "core"]
@@ -220,10 +220,10 @@ module VCAP::CloudController
         end
 
         it "should update service offerings for label/provider services" do
-          post path, build_offering.encode, auth_header
+          post path, build_offering.encode, json_headers(auth_header)
           offer = build_offering
           offer.url = "http://newurl.com"
-          post path, offer.encode, auth_header
+          post path, offer.encode, json_headers(auth_header)
           last_response.status.should == 200
           svc = Models::Service.find(:label => "foobar", :provider => "core")
           svc.should_not be_nil
@@ -417,7 +417,7 @@ module VCAP::CloudController
                 :service_id => "xxx",
                 :configuration => [],
                 :credentials   => []
-            ).encode, @auth_header
+            ).encode, json_headers(@auth_header)
             last_response.status.should == 404
           end
 
@@ -427,7 +427,7 @@ module VCAP::CloudController
                 :service_id => "foo1",
                 :configuration => [],
                 :credentials   => []
-            ).encode, @auth_header
+            ).encode, json_headers(@auth_header)
             last_response.status.should == 200
           end
 
@@ -437,7 +437,7 @@ module VCAP::CloudController
                 :service_id => "bind1",
                 :configuration => [],
                 :credentials   => []
-            ).encode, @auth_header
+            ).encode, json_headers(@auth_header)
             last_response.status.should == 200
           end
         end
@@ -475,7 +475,7 @@ module VCAP::CloudController
                 :service_id => "foo2",
                 :configuration => [],
                 :credentials   => []
-            ).encode, @auth_header
+            ).encode, json_headers(@auth_header)
             last_response.status.should == 200
           end
 
@@ -485,7 +485,7 @@ module VCAP::CloudController
                 :service_id => "bind2",
                 :configuration => [],
                 :credentials   => []
-            ).encode, @auth_header
+            ).encode, json_headers(@auth_header)
             last_response.status.should == 200
           end
         end

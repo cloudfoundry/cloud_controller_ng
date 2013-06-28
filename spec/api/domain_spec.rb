@@ -156,7 +156,7 @@ module VCAP::CloudController
 
             put "/v2/domains/#{@bare_domain.guid}",
                 Yajl::Encoder.encode(:space_guids => [@space_a.guid]),
-                headers_for(@org_a_manager)
+                json_headers(headers_for(@org_a_manager))
             last_response.status.should == 201
 
             @bare_domain.reload
@@ -171,7 +171,7 @@ module VCAP::CloudController
             @system_domain.add_organization(@org_a)
             put "/v2/domains/#{@system_domain.guid}",
                 Yajl::Encoder.encode(:name => Sham.domain),
-                headers_for(@org_a_manager)
+                json_headers(headers_for(@org_a_manager))
             last_response.status.should == 403
           end
         end
