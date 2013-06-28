@@ -1,13 +1,36 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
+
   describe VCAP::CloudController::ServiceBinding do
-    include_examples "uaa authenticated api", path: "/v2/service_bindings"
-    include_examples "enumerating objects", path: "/v2/service_bindings", model: Models::ServiceBinding
-    include_examples "reading a valid object", path: "/v2/service_bindings", model: Models::ServiceBinding, basic_attributes: %w(app_guid service_instance_guid)
-    include_examples "operations on an invalid object", path: "/v2/service_bindings"
-    include_examples "deleting a valid object", path: "/v2/service_bindings", model: Models::ServiceBinding, one_to_many_collection_ids: {}, one_to_many_collection_ids_without_url: {}
-    include_examples "creating and updating", path: "/v2/service_bindings", model: Models::ServiceBinding, required_attributes: %w(app_guid service_instance_guid), unique_attributes: %w(app_guid service_instance_guid), extra_attributes: [],
+
+    include_examples "uaa authenticated api",
+      path: "/v2/service_bindings"
+
+    include_examples "enumerating objects",
+      path: "/v2/service_bindings",
+      model: Models::ServiceBinding
+
+    include_examples "reading a valid object",
+      path: "/v2/service_bindings",
+      model: Models::ServiceBinding,
+      basic_attributes: %w(app_guid service_instance_guid)
+
+    include_examples "operations on an invalid object",
+      path: "/v2/service_bindings"
+
+    include_examples "deleting a valid object",
+      path: "/v2/service_bindings",
+      model: Models::ServiceBinding,
+      one_to_many_collection_ids: {},
+      one_to_many_collection_ids_without_url: {}
+    
+    include_examples "creating and updating",
+      path: "/v2/service_bindings",
+      model: Models::ServiceBinding,
+      required_attributes: %w(app_guid service_instance_guid),
+      unique_attributes: %w(app_guid service_instance_guid),
+      extra_attributes: %w(binding_options),
       create_attribute: lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym
