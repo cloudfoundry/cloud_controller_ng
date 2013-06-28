@@ -123,7 +123,7 @@ module VCAP::CloudController::Models
         :label      => "#{service.label}-#{service.version}",
         :email      => VCAP::CloudController::SecurityContext.
                              current_user_email,
-        :binding_options => {}
+        :binding_options => binding_options,
       )
 
       logger.debug "binding response for #{guid} #{gw_attrs.inspect}"
@@ -141,7 +141,7 @@ module VCAP::CloudController::Models
       client.unbind(
         :service_id      => service_instance.gateway_name,
         :handle_id       => gateway_name,
-        :binding_options => {}
+        :binding_options => binding_options,
       )
     rescue => e
       logger.error "unbind failed #{e}"
@@ -154,5 +154,16 @@ module VCAP::CloudController::Models
     def generate_salt
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt
     end
+
+    DEFAULT_BINDING_OPTIONS = '{}'
+
+    def binding_options
+      Yajl::Parser.parse(super || DEFAULT_BINDING_OPTIONS)
+    end
+
+    def binding_options=(bo)
+      super(Yajl::Encoder.encode(bo))
+    end
+
   end
 end
