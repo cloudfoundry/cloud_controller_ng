@@ -36,7 +36,7 @@ describe "Cloud controller", :type => :integration do
         "host" => "127.0.0.1",
         "port" => 8181,
         "tags" => {"component" => "CloudController"},
-        "uris" => "api2.vcap.me"
+        "uris" => ["api2.vcap.me"]
       }
 
       received.should json_match(expected)

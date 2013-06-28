@@ -5,6 +5,7 @@ module VCAP::CloudController
     let(:valid_config_file_path) { File.expand_path("../fixtures/config/minimal_config.yml", __FILE__) }
     let(:config_file_path) { valid_config_file_path }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
+    let(:registrar) { CfRegistrar::Registrar.new }
 
     let(:argv) { [] }
 
@@ -12,12 +13,16 @@ module VCAP::CloudController
       MessageBusConfigurer::Configurer.any_instance.stub(:go).and_return(message_bus)
       VCAP::Component.stub(:register)
       EM.stub(:run).and_yield
+
+      registrar.stub(:message_bus => message_bus)
+      registrar.stub(:register_with_router)
     end
 
     subject do
       Runner.new(argv + ["-c", config_file_path]).tap do |r|
         r.stub(:start_thin_server)
         r.stub(:create_pidfile)
+        r.stub(:registrar => registrar)
       end
     end
 
@@ -60,7 +65,7 @@ module VCAP::CloudController
           end
 
           VCAP::Component.should_receive(:register).with(hash_including(:log_counter => log_counter))
-          subject.run!()
+          subject.run!
         end
       end
 
@@ -81,6 +86,11 @@ module VCAP::CloudController
         # This shouldn't be inside here but unless we run under this wrapper we
         # end up with state pollution and other tests fail. Should be refactored.
         it_registers_a_log_counter
+
+        it "registers with the router" do
+          registrar.should_receive(:register_with_router)
+          subject.run!
+        end
 
         describe "when the seed data has not yet been created" do
           before { subject.run! }
@@ -172,24 +182,20 @@ module VCAP::CloudController
     end
 
     describe "#stop!" do
-      it 'should stop thin and EM after unregistering routes' do
-        RouterClient.should_receive(:unregister).and_yield
+      it "should stop thin and EM after unregistering routes" do
+        registrar.should_receive(:shutdown).and_yield
         subject.should_receive(:stop_thin_server)
         EM.should_receive(:stop)
-        subject.stop!(message_bus)
+        subject.stop!
       end
     end
 
     describe "#trap_signals" do
-      context "when TERM is sent" do
-
-      end
-
       it "registers TERM, INT, and QUIT handlers" do
         subject.should_receive(:trap).with("TERM")
         subject.should_receive(:trap).with("INT")
         subject.should_receive(:trap).with("QUIT")
-        subject.trap_signals(message_bus)
+        subject.trap_signals
       end
 
       it "calls #stop! when the handlers are triggered" do
@@ -207,7 +213,7 @@ module VCAP::CloudController
           callbacks << blk
         end
 
-        subject.trap_signals(message_bus)
+        subject.trap_signals
 
         subject.should_receive(:stop!).exactly(3).times
         callbacks.each(&:call)

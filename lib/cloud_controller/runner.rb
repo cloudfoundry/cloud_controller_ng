@@ -4,7 +4,9 @@ require "steno"
 require "optparse"
 require "vcap/uaa_util"
 require "cf_message_bus/message_bus"
-require File.expand_path("../seeds", __FILE__)
+require "cf-registrar"
+
+require_relative "seeds"
 require_relative "message_bus_configurer"
 
 module VCAP::CloudController
@@ -95,23 +97,23 @@ module VCAP::CloudController
         start_cloud_controller(message_bus)
         Seeds.write_seed_data(config) if @insert_seed_data
         app = create_app(config, message_bus)
-        start_thin_server(app, config, message_bus)
+        start_thin_server(app, config)
       end
     end
 
-    def trap_signals(message_bus)
+    def trap_signals
       %w(TERM INT QUIT).each do |signal|
         trap(signal) do
           logger.warn("Caught signal #{signal}")
-          stop!(message_bus)
+          stop!
         end
       end
     end
 
-    def stop!(message_bus)
+    def stop!
       logger.info("Unregistering routes.")
 
-      RouterClient.unregister do
+      registrar.shutdown do
         stop_thin_server
         EM.stop
       end
@@ -142,6 +144,7 @@ module VCAP::CloudController
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
       register_component(message_bus)
+      registrar.register_with_router
 
       Rack::Builder.new do
         use Rack::CommonLogger
@@ -167,7 +170,7 @@ module VCAP::CloudController
       end
     end
 
-    def start_thin_server(app, config, message_bus)
+    def start_thin_server(app, config)
       if @config[:nginx][:use_nginx]
         @thin_server = Thin::Server.new(
           config[:nginx][:instance_socket],
@@ -178,7 +181,7 @@ module VCAP::CloudController
       end
 
       @thin_server.app = app
-      trap_signals(message_bus)
+      trap_signals
 
       # The routers proxying to us handle killing inactive connections.
       # Set an upper limit just to be safe.
@@ -189,6 +192,10 @@ module VCAP::CloudController
 
     def stop_thin_server
       @thin_server.stop if @thin_server
+    end
+
+    def registrar
+      @registrar ||= CfRegistrar::Registrar.new
     end
 
     def register_component(message_bus)

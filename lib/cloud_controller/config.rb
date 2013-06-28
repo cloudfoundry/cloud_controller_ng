@@ -157,11 +157,18 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::LegacyBulk.configure(config, message_bus)
     VCAP::CloudController::HealthManagerClient.configure(config, message_bus)
 
-    VCAP::CloudController::RouterClient.setup(config, message_bus)
-
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
     VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
     VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
+
+    CfRegistrar::Config.configure(
+      "mbus" => config[:message_bus_uri],
+      "host" => config[:bind_address],
+      "port" => config[:port],
+      "uri" => config[:external_domain],
+      "tags" => { :component => "CloudController" },
+      "index" => config[:index]
+    )
 
     Dir.glob(File.expand_path('../../../config/initializers/*.rb', __FILE__)).each do |file|
       require file
