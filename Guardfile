@@ -1,7 +1,7 @@
 # ccng Guardfile
 # More info at https://github.com/guard/guard#readme
 
-guard 'rspec', :version => 2, :cli => '--color --format doc --fail-fast', :all_on_start => false, :all_after_pass => false do
+guard 'rspec', :cli => '--color --format doc --fail-fast', :all_on_start => false, :all_after_pass => false do
   watch(%r{^spec/.+_spec\.rb$})
   watch("lib/cloud_controller/api/app.rb")       { "spec/api/legacy_apps_spec.rb" }
   watch(%r{^lib/(.+)\.rb$})                      { |m| "spec/#{m[1]}_spec.rb" }
