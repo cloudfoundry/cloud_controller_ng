@@ -9,16 +9,6 @@ GIT
       yajl-ruby
 
 GIT
-  remote: https://github.com/cloudfoundry/cf-registrar.git
-  revision: 0ba969abc3d2c1aaed75d85defc37e1fb3bcab96
-  specs:
-    cf-registrar (1.0.0)
-      cf-message-bus
-      eventmachine (~> 1.0.0)
-      steno
-      vcap-concurrency
-
-GIT
   remote: https://github.com/cloudfoundry/cf-uaa-lib.git
   revision: 8d34eede588c7620eb22031369f9515f602df68b
   ref: 8d34eede
@@ -38,9 +28,10 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: 635f60e92f54c3dd3458aa2001c94b292953dee1
+  revision: 41c927ee34491144924f11d1b13b12f38783431f
+  tag: v2.2.0
   specs:
-    vcap_common (2.1.0)
+    vcap_common (2.2.0)
       addressable (~> 2.2)
       em-http-request (~> 1.0)
       eventmachine
@@ -51,6 +42,7 @@ GIT
       nats (~> 0.4.24)
       posix-spawn (~> 0.3.6)
       squash_ruby
+      steno
       thin
       vmstat (~> 2.0)
       yajl-ruby
@@ -71,7 +63,7 @@ GEM
       multi_json (~> 1.3)
       thread_safe (~> 0.1)
       tzinfo (~> 0.3.37)
-    addressable (2.3.4)
+    addressable (2.3.5)
     atomic (1.1.10)
     backports (3.3.2)
     bcrypt-ruby (3.0.1)
@@ -251,7 +243,6 @@ PLATFORMS
 DEPENDENCIES
   bcrypt-ruby
   cf-message-bus!
-  cf-registrar!
   cf-uaa-lib (~> 1.3.7)!
   ci_reporter
   cloudfront-signer

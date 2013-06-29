@@ -4,7 +4,7 @@ require "steno"
 require "optparse"
 require "vcap/uaa_util"
 require "cf_message_bus/message_bus"
-require "cf-registrar"
+require "cf/registrar"
 
 require_relative "seeds"
 require_relative "message_bus_configurer"
@@ -64,13 +64,11 @@ module VCAP::CloudController
     end
 
     def create_pidfile
-      begin
-        pid_file = VCAP::PidFile.new(@config[:pid_filename])
-        pid_file.unlink_at_exit
-      rescue => e
-        puts "ERROR: Can't create pid file #{@config[:pid_filename]}"
-        exit 1
-      end
+      pid_file = VCAP::PidFile.new(@config[:pid_filename])
+      pid_file.unlink_at_exit
+    rescue
+      puts "ERROR: Can't create pid file #{@config[:pid_filename]}"
+      exit 1
     end
 
     def setup_logging
@@ -195,7 +193,14 @@ module VCAP::CloudController
     end
 
     def registrar
-      @registrar ||= CfRegistrar::Registrar.new
+      @registrar ||= Cf::Registrar.new(
+        :mbus => @config[:message_bus_uri],
+        :host => @config[:bind_address],
+        :port => @config[:port],
+        :uri => @config[:external_domain],
+        :tags => { :component => "CloudController" },
+        :index => @config[:index]
+      )
     end
 
     def register_component(message_bus)

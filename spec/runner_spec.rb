@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:valid_config_file_path) { File.expand_path("../fixtures/config/minimal_config.yml", __FILE__) }
     let(:config_file_path) { valid_config_file_path }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:registrar) { CfRegistrar::Registrar.new }
+    let(:registrar) { Cf::Registrar.new({}) }
 
     let(:argv) { [] }
 
