@@ -128,7 +128,7 @@ class VCAP::CloudController::ResourcePool
       for_real_uri = AWS::CF::Signer.is_configured? ? AWS::CF::Signer.sign_url(uri) : uri
 
       File.open(destination, "w") do |file|
-        HTTPClient.new.get(for_real_uri) do |_, chunk|
+        HTTPClient.new.get(for_real_uri) do |chunk|
           file.write(chunk)
         end
       end

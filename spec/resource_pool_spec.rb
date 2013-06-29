@@ -120,8 +120,8 @@ module VCAP::CloudController
 
         it "downloads the resource via the CDN" do
           HTTPClient.any_instance.stub(:get) do |&blk|
-            blk.call(nil, "chunk one")
-            blk.call(nil, "chunk two")
+            blk.call("chunk one")
+            blk.call("chunk two")
           end
 
           fake_io.should_receive(:write).with("chunk one")
