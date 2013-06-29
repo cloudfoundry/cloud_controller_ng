@@ -53,26 +53,5 @@ module VCAP::CloudController
     def self.not_found_exception
       Errors::ServiceInstanceNotFound
     end
-
-    def update_instance(gateway_name)
-      req = decode_message_body
-
-      instance_handle = Models::ManagedServiceInstance[:gateway_name => gateway_name]
-      raise Errors::ServiceInstanceNotFound, "gateway_name=#{gateway_name}" unless instance_handle
-
-      plan_handle = Models::ServicePlan[:id => instance_handle[:service_plan_id]]
-      service_handle = Models::Service[:id => plan_handle[:service_id]]
-
-      ServiceValidator.validate_auth_token(req.token, service_handle)
-      instance_handle.update(:gateway_data => req.gateway_data, :credentials => req.credentials)
-    end
-
-    put "/v2/service_instances/internal/:gateway_name", :update_instance
-  end
-
-  def decode_message_body
-    VCAP::Services::Api::HandleUpdateRequestV2.decode(body)
-  rescue
-    raise Errors::InvalidRequest
   end
 end
