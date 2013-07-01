@@ -10,7 +10,8 @@ module VCAP::CloudController
       read Permissions::SpaceAuditor
     end
 
-    model_class_name :ManagedServiceInstance
+    model_class_name :ManagedServiceInstance # Must do this to be backwards compatible with actions other than enumerate
+
 
     define_attributes do
       attribute :name,  String

@@ -15,7 +15,7 @@ module VCAP::CloudController
             app = Models::App.make(space: @space)
             app.guid
           when :service_instance_guid
-            service_instance = Models::ManagedServiceInstance.make(space: @space)
+            service_instance = Models::ServiceInstance.make(space: @space)
             service_instance.guid
         end
       },
@@ -71,7 +71,7 @@ module VCAP::CloudController
       let(:creation_req_for_a) do
         Yajl::Encoder.encode(
           :app_guid => Models::App.make(:space => @space_a).guid,
-          :service_instance_guid => Models::ManagedServiceInstance.make(:space => @space_a).guid
+          :service_instance_guid => Models::ServiceInstance.make(:space => @space_a).guid
         )
       end
 

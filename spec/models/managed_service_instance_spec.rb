@@ -13,20 +13,20 @@ module VCAP::CloudController
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :service_plan, :space],
       :db_required_attributes => [:name],
-      :unique_attributes   => [ [:space, :name] ],
+      :unique_attributes => [[:space, :name]],
       :stripped_string_attributes => :name,
-      :many_to_one         => {
-        :service_plan      => {
+      :many_to_one => {
+        :service_plan => {
           :delete_ok => true,
           :create_for => lambda { |service_instance| Models::ServicePlan.make },
         },
-        :space             => {
+        :space => {
           :delete_ok => true,
           :create_for => lambda { |service_instance| Models::Space.make },
         }
       },
       :one_to_zero_or_more => {
-        :service_bindings  => {
+        :service_bindings => {
           :delete_ok => true,
           :create_for => lambda { |service_instance|
             make_service_binding_for_service_instance(service_instance)
@@ -34,6 +34,13 @@ module VCAP::CloudController
         }
       }
     }
+
+    describe "#create" do
+      it "saves with is_gateway_service true" do
+        instance = described_class.create(name: 'awesome-service', space: Models::Space.make, service_plan: Models::ServicePlan.make)
+        instance.refresh.is_gateway_service.should == true
+      end
+    end
 
     it_behaves_like "a model with an encrypted attribute" do
       def new_model
@@ -45,11 +52,11 @@ module VCAP::CloudController
           )
           instance.stub(:service_gateway_client).and_return(
             double("Service Gateway Client",
-              :provision => VCAP::Services::Api::GatewayHandleResponse.new(
-                :service_id => "gwname_binding",
-                :configuration => "abc",
-                :credentials => value_to_encrypt
-              )
+                   :provision => VCAP::Services::Api::GatewayHandleResponse.new(
+                     :service_id => "gwname_binding",
+                     :configuration => "abc",
+                     :credentials => value_to_encrypt
+                   )
             )
           )
           instance.save
@@ -62,7 +69,7 @@ module VCAP::CloudController
     describe "serialization" do
       let(:dashboard_url) { 'http://dashboard.io' }
 
-      it "allows export of dashboard_url"  do
+      it "allows export of dashboard_url" do
         service_instance.dashboard_url = dashboard_url
         Yajl::Parser.parse(service_instance.to_json).fetch("dashboard_url").should == dashboard_url
       end
@@ -128,8 +135,8 @@ module VCAP::CloudController
     end
 
     describe "#as_summary_json" do
-      let(:service) { Models::Service.make(label: "YourSQL", guid: "9876XZ", provider: "Bill Gates", version: "1.2.3")}
-      let(:service_plan) { Models::ServicePlan.make(name: "Gold Plan", guid: "12763abc", service: service)}
+      let(:service) { Models::Service.make(label: "YourSQL", guid: "9876XZ", provider: "Bill Gates", version: "1.2.3") }
+      let(:service_plan) { Models::ServicePlan.make(name: "Gold Plan", guid: "12763abc", service: service) }
       subject(:service_instance) { Models::ManagedServiceInstance.make(service_plan: service_plan) }
 
       it "returns detailed summary" do
@@ -211,17 +218,17 @@ module VCAP::CloudController
           service_instance
 
           expect(provision_hash).to eq(
-           :label => "#{service_instance.service_plan.service.label}-#{service_instance.service_plan.service.version}",
-           :name => service_instance.name,
-           :email => email,
-           :plan => service_instance.service_plan.name,
-           :plan_option => {}, # TODO: remove this
-           :provider => service_instance.service_plan.service.provider,
-           :version => service_instance.service_plan.service.version,
-           :unique_id => service_instance.service_plan.unique_id,
-           :space_guid => service_instance.space.guid,
-           :organization_guid => service_instance.space.organization_guid
-          )
+                                      :label => "#{service_instance.service_plan.service.label}-#{service_instance.service_plan.service.version}",
+                                      :name => service_instance.name,
+                                      :email => email,
+                                      :plan => service_instance.service_plan.name,
+                                      :plan_option => {}, # TODO: remove this
+                                      :provider => service_instance.service_plan.service.provider,
+                                      :version => service_instance.service_plan.service.version,
+                                      :unique_id => service_instance.service_plan.unique_id,
+                                      :space_guid => service_instance.space.guid,
+                                      :organization_guid => service_instance.space.organization_guid
+                                    )
         end
 
         it 'fills in the service details' do
@@ -242,7 +249,7 @@ module VCAP::CloudController
 
         it 'translates duplicate service errors' do
           VCAP::Services::Api::ServiceGatewayClientFake.any_instance.stub(:provision).and_raise(
-              VCAP::Services::Api::ServiceGatewayClient::UnexpectedResponse.new "Can't decode gateway response. status code:500, response body: Error Code: 33106,"
+            VCAP::Services::Api::ServiceGatewayClient::UnexpectedResponse.new "Can't decode gateway response. status code:500, response body: Error Code: 33106,"
           )
           expect { service_instance }.to raise_error(Errors::ServiceInstanceDuplicateNotAllowed)
         end
@@ -250,8 +257,8 @@ module VCAP::CloudController
     end
 
     context "quota" do
-      let(:free_plan) { Models::ServicePlan.make(:free => true)}
-      let(:paid_plan) { Models::ServicePlan.make(:free => false)}
+      let(:free_plan) { Models::ServicePlan.make(:free => true) }
+      let(:paid_plan) { Models::ServicePlan.make(:free => false) }
 
       let(:free_quota) do
         Models::QuotaDefinition.make(:total_services => 1,
@@ -273,17 +280,17 @@ module VCAP::CloudController
 
         let(:trial_quota) do
           Models::QuotaDefinition.make(:total_services => 0,
-            :non_basic_services_allowed => false,
-            :trial_db_allowed => true)
+                                       :non_basic_services_allowed => false,
+                                       :trial_db_allowed => true)
         end
 
-        let(:org) { Models::Organization.make(:quota_definition => trial_quota)}
+        let(:org) { Models::Organization.make(:quota_definition => trial_quota) }
         let(:space) { Models::Space.make(:organization => org) }
 
         context "when the service instance is a trial db instance" do
           def allocate_trial_db
             Models::ManagedServiceInstance.make(:space => space,
-              :service_plan => trial_db_plan)
+                                                :service_plan => trial_db_plan)
           end
 
           it "raises an error if an db instance has already been allocated" do
@@ -315,12 +322,12 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => paid_quota)
           space = Models::Space.make(:organization => org)
           Models::ManagedServiceInstance.make(:space => space,
-                                       :service_plan => free_plan).
+                                              :service_plan => free_plan).
             save(:validate => false)
           space.refresh
           expect do
             Models::ManagedServiceInstance.make(:space => space,
-                                         :service_plan => free_plan)
+                                                :service_plan => free_plan)
           end.to raise_error(Sequel::ValidationFailed, /org paid_quota_exceeded/)
         end
 
@@ -328,12 +335,12 @@ module VCAP::CloudController
           org = Models::Organization.make(:quota_definition => free_quota)
           space = Models::Space.make(:organization => org)
           Models::ManagedServiceInstance.make(:space => space,
-                                       :service_plan => free_plan).
+                                              :service_plan => free_plan).
             save(:validate => false)
           space.refresh
           expect do
             Models::ManagedServiceInstance.make(:space => space,
-                                         :service_plan => free_plan)
+                                                :service_plan => free_plan)
           end.to raise_error(Sequel::ValidationFailed, /org free_quota_exceeded/)
         end
 
@@ -342,7 +349,7 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::ManagedServiceInstance.make(:space => space,
-                                         :service_plan => free_plan)
+                                                :service_plan => free_plan)
           end.to_not raise_error
         end
       end
@@ -353,7 +360,7 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::ManagedServiceInstance.make(:space => space,
-                                         :service_plan => free_plan)
+                                                :service_plan => free_plan)
           end.to_not raise_error
         end
 
@@ -362,7 +369,7 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::ManagedServiceInstance.make(:space => space,
-                                         :service_plan => free_plan)
+                                                :service_plan => free_plan)
           end.to_not raise_error
         end
       end
@@ -373,7 +380,7 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::ManagedServiceInstance.make(:space => space,
-                                         :service_plan => paid_plan)
+                                                :service_plan => paid_plan)
           end.to raise_error(Sequel::ValidationFailed,
                              /service_plan paid_services_not_allowed/)
         end
@@ -383,7 +390,7 @@ module VCAP::CloudController
           space = Models::Space.make(:organization => org)
           expect do
             Models::ManagedServiceInstance.make(:space => space,
-                                         :service_plan => paid_plan)
+                                                :service_plan => paid_plan)
           end.to_not raise_error
         end
       end
@@ -403,8 +410,8 @@ module VCAP::CloudController
   end
 
   describe "#enum_snapshots" do
-    subject { Models::ManagedServiceInstance.make()}
-    let(:enum_snapshots_url_matcher) {"gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots"}
+    subject { Models::ManagedServiceInstance.make() }
+    let(:enum_snapshots_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
     let(:service_auth_token) { "tokenvalue" }
     before do
       subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
@@ -423,7 +430,7 @@ module VCAP::CloudController
 
     context "returns a list of snapshots" do
       let(:success_response) { Yajl::Encoder.encode({snapshots: [{snapshot_id: '1', name: 'foo', state: 'ok', size: 0},
-                                                                 {snapshot_id: '2', name: 'bar', state: 'bad', size: 0} ]}) }
+                                                                 {snapshot_id: '2', name: 'bar', state: 'bad', size: 0}]}) }
       before do
         stub_request(:get, enum_snapshots_url_matcher).to_return(:body => success_response)
       end
@@ -445,7 +452,7 @@ module VCAP::CloudController
 
   describe "#create_snapshot" do
     let(:name) { 'New snapshot' }
-    subject { Models::ManagedServiceInstance.make()}
+    subject { Models::ManagedServiceInstance.make() }
     let(:create_snapshot_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
     before do
       subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
@@ -485,7 +492,7 @@ module VCAP::CloudController
         subject.create_snapshot(name)
 
         a_request(:post, create_snapshot_url_matcher).with(
-        headers: {"X-VCAP-Service-Token" => 'tokenvalue'}).should have_been_made
+          headers: {"X-VCAP-Service-Token" => 'tokenvalue'}).should have_been_made
       end
 
       it "has the name in the payload" do

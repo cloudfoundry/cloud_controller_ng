@@ -65,55 +65,73 @@ module VCAP::CloudController::RestController
 
       id = obj.guid || obj.id
       metadata_hash = {
-        "guid"  => id,
+        "guid" => id,
         "url" => controller.url_for_id(id),
         "created_at" => obj.created_at,
         "updated_at" => obj.updated_at
       }
 
-      { "metadata" => metadata_hash, "entity" => entity_hash }
+      {"metadata" => metadata_hash, "entity" => entity_hash}
     end
 
     def self.relations_hash(controller, obj, opts, depth, parents)
-      target_depth = opts[:inline_relations_depth] || INLINE_RELATIONS_DEFAULT
-      max_inline = opts[:max_inline] || MAX_INLINE_DEFAULT
-      res = {}
+      inline_relations_depth = opts[:inline_relations_depth] || INLINE_RELATIONS_DEFAULT
+      max_number_of_associated_objects_to_inline = opts[:max_inline] || MAX_INLINE_DEFAULT
 
-      parents.push(controller)
+      {}.tap do |res|
+        parents.push(controller)
+        res.merge!(serialize_relationships(controller.to_one_relationships, controller, depth, obj, opts, parents, inline_relations_depth))
+        res.merge!(serialize_relationships(controller.to_many_relationships, controller, depth, obj, opts, parents, inline_relations_depth, max_number_of_associated_objects_to_inline))
+        parents.pop
+      end
+    end
 
-      (controller.to_many_relationships || {}).each do |name, attr|
-        ar = controller.model.association_reflection(name)
-        other_model = ar.associated_class
-        other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
-        res["#{name}_url"] = "#{controller.url_for_id(obj.guid)}/#{name}"
 
-        if depth < target_depth && !parents.include?(other_controller)
-          others = obj.user_visible_relationship_dataset(name)
-          if others.count <= max_inline
-            res[name.to_s] = others.map do |other|
-              other_controller = VCAP::CloudController.controller_from_model(other)
-              to_hash(other_controller, other, opts, depth + 1, parents)
+    def self.serialize_relationships(relationships, controller, depth, obj, opts, parents, inline_relations_depth, max_number_of_associated_objects_to_inline= nil)
+      response = {}
+      (relationships || {}).each do |association_name, association|
+
+        associated_model = get_associated_model_klazz_for(obj, association_name)
+        next unless associated_model
+        associated_controller = get_controller_for(associated_model)
+
+        response["#{association_name}_url"] = association_endpoint(controller, obj, association)
+
+        if depth < inline_relations_depth && !parents.include?(associated_controller)
+          if association.is_a?(ControllerDSL::ToOneAttribute)
+            associated_model_instance = obj.user_visible_relationship_dataset(association_name).first
+            if associated_model_instance
+              response[association_name.to_s] = to_hash(associated_controller, associated_model_instance, opts, depth + 1, parents)
+            end
+          else
+            associated_model_instances = obj.user_visible_relationship_dataset(association_name)
+            if associated_model_instances.count <= max_number_of_associated_objects_to_inline
+              response[association_name.to_s] = associated_model_instances.map do |associated_model_instance|
+                to_hash(associated_controller, associated_model_instance, opts, depth + 1, parents)
+              end
             end
           end
         end
       end
-
-      (controller.to_one_relationships || {}).each do |name, attr|
-        ar = controller.model.association_reflection(name)
-        other_model = ar.associated_class
-        other_controller = VCAP::CloudController.controller_from_model_name(other_model.name)
-        other = obj.send(name)
-        res["#{name}_url"] = other_controller.url_for_id(other.guid) if other
-        if other && depth < target_depth && !parents.include?(other_controller)
-          other_controller = VCAP::CloudController.controller_from_model(other)
-          res[name.to_s] = to_hash(other_controller, other, opts, depth + 1, parents)
-        end
-      end
-
-      parents.pop
-      res
+      response
     end
 
+    private
+
+    def self.get_associated_model_klazz_for(obj, name)
+      ar = obj.model.association_reflection(name)
+      return unless ar
+      ar.associated_class
+    end
+
+    def self.get_controller_for(model)
+      VCAP::CloudController.controller_from_model_name(model.name)
+    end
+
+    def self.association_endpoint(controller, obj, association)
+      association_base_url = controller.url_for_id(obj.guid)
+      association.is_a?(ControllerDSL::ToOneAttribute) ? association_base_url : "#{association_base_url}/#{association.name}"
+    end
   end
 
   module EntityOnlyObjectSerialization

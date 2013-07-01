@@ -13,6 +13,17 @@ describe VCAP::CloudController::Models::ProvidedServiceInstance do
     let(:encrypted_attr) { :credentials }
   end
 
+  describe "#create" do
+    it "saves with is_gateway_service false" do
+      instance = described_class.create(
+        name: 'awesome-service',
+        space: VCAP::CloudController::Models::Space.make,
+        credentials: {"foo" => "bar"}
+      )
+      instance.refresh.is_gateway_service.should be_false
+    end
+  end
+
   it_behaves_like "a CloudController model", {
     :required_attributes => [:name, :space, :credentials],
     :stripped_string_attributes => :name,

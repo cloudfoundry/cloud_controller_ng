@@ -89,7 +89,15 @@ module VCAP::CloudController::Models
     end
   end
 
+  ServiceInstance.blueprint do
+    name              { Sham.name }
+    credentials       { Sham.service_credentials }
+    space             { Space.make }
+    is_gateway_service { true }    #because this is true it always creates ProvidedServiceInstances.
+  end
+
   ManagedServiceInstance.blueprint do
+    is_gateway_service { true }
     name              { Sham.name }
     credentials       { Sham.service_credentials }
     space             { Space.make }
@@ -100,6 +108,7 @@ module VCAP::CloudController::Models
     name              { Sham.name }
     credentials       { Sham.service_credentials }
     space             { Space.make }
+    is_gateway_service { false }
   end
 
   Stack.blueprint do

@@ -185,16 +185,26 @@ module VCAP::CloudController
     describe 'GET /v2/spaces/:guid/service_instances' do
       let(:space) { Models::Space.make }
       let(:developer) { make_developer_for_space(space) }
+
       context 'when there are provided service instances' do
-        it 'returns only the managed service instances' do
-          Models::ProvidedServiceInstance.make(space: space)
-          managed_service_instance = Models::ManagedServiceInstance.make(space: space)
+        let!(:provided_service_instance) { Models::ProvidedServiceInstance.make(space: space) }
+        let!(:managed_service_instance) { Models::ManagedServiceInstance.make(space: space) }
 
-          get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
+        describe 'when return_provided_service_instances is true' do
+          it 'returns ManagedServiceInstances and ProvidedServiceInstances' do
+            get "v2/spaces/#{space.guid}/service_instances", {return_provided_service_instances: true}, headers_for(developer)
 
-          last_response.status.should == 200
-          decoded_response["resources"].should have(1).item
-          decoded_response["resources"][0]["metadata"]["guid"].should == managed_service_instance.guid
+            guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
+            guids.should include(provided_service_instance.guid, managed_service_instance.guid)
+          end
+        end
+
+        describe 'when return_provided_service_instances flag is not present' do
+          it 'returns only the managed service instances' do
+            get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
+            guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
+            guids.should include(managed_service_instance.guid)
+          end
         end
       end
 

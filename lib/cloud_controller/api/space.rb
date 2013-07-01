@@ -38,9 +38,16 @@ module VCAP::CloudController
 
     def enumerate_service_instances(guid)
       space = find_id_and_validate_access(:read, guid)
+
+      if params['return_provided_service_instances'] == 'true'
+        service_instances = Models::ServiceInstance.dataset.filter(space: space)
+      else
+        service_instances = Models::ManagedServiceInstance.dataset.filter(space: space)
+      end
+
       RestController::Paginator.render_json(
         ServiceInstance,
-        Models::ManagedServiceInstance.dataset.filter(space: space),
+        service_instances,
         "/v2/spaces/#{guid}/service_instances",
         @opts
       )
