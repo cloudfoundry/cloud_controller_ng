@@ -32,6 +32,7 @@ end
 
 group :development do
   gem "ruby-graphviz"
+  gem "debugger"
 end
 
 group :test do
@@ -41,6 +42,5 @@ group :test do
   gem "webmock"
   gem "guard-rspec"
   gem "timecop"
-  gem "debugger"
   gem "rack-test"
 end
