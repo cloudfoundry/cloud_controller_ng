@@ -4,7 +4,7 @@ bundler_args: --deployment --without development
 
 rvm:
   - 1.9.3-p392
-  - 1.9.3-HEAD
+  - 1.9.3
 
 env:
   global:
