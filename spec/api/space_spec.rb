@@ -186,6 +186,23 @@ module VCAP::CloudController
       let(:space) { Models::Space.make }
       let(:developer) { make_developer_for_space(space) }
 
+      context 'when filtering results' do
+        it 'returns only matching results' do
+          provided_service_instance_1 = Models::ProvidedServiceInstance.make(space: space, name: 'provided service 1')
+          provided_service_instance_2 = Models::ProvidedServiceInstance.make(space: space, name: 'provided service 2')
+          managed_service_instance_1 = Models::ManagedServiceInstance.make(space: space, name: 'managed service 1')
+          managed_service_instance_2 = Models::ManagedServiceInstance.make(space: space, name: 'managed service 2')
+
+          get "v2/spaces/#{space.guid}/service_instances", {'q' => 'name:provided service 1;', 'return_provided_service_instances' => true}, headers_for(developer)
+          guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
+          guids.should == [provided_service_instance_1.guid]
+
+          get "v2/spaces/#{space.guid}/service_instances", {'q' => 'name:managed service 1;', 'return_provided_service_instances' => true}, headers_for(developer)
+          guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
+          guids.should == [managed_service_instance_1.guid]
+        end
+      end
+
       context 'when there are provided service instances' do
         let!(:provided_service_instance) { Models::ProvidedServiceInstance.make(space: space) }
         let!(:managed_service_instance) { Models::ManagedServiceInstance.make(space: space) }
@@ -248,7 +265,7 @@ module VCAP::CloudController
           describe "OrgManager" do
             include_examples(
               "enumerating service instances", "OrgManager",
-              expected: 1,
+              expected: 0,
             ) do
               let(:member_a) { @org_a_manager }
               let(:member_b) { @org_b_manager }
@@ -284,7 +301,7 @@ module VCAP::CloudController
           describe "SpaceManager" do
             include_examples(
               "enumerating service instances", "SpaceManager",
-              expected: 1,
+              expected: 0,
             ) do
               let(:member_a) { @space_a_manager }
               let(:member_b) { @space_b_manager }
@@ -304,7 +321,7 @@ module VCAP::CloudController
           describe "SpaceAuditor" do
             include_examples(
               "enumerating service instances", "SpaceAuditor",
-              expected: 1,
+              expected: 0,
             ) do
               let(:member_a) { @space_a_auditor }
               let(:member_b) { @space_b_auditor }

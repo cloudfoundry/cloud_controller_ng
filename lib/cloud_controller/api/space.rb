@@ -40,10 +40,16 @@ module VCAP::CloudController
       space = find_id_and_validate_access(:read, guid)
 
       if params['return_provided_service_instances'] == 'true'
-        service_instances = Models::ServiceInstance.dataset.filter(space: space)
+        model_class = Models::ServiceInstance
       else
-        service_instances = Models::ManagedServiceInstance.dataset.filter(space: space)
+        model_class = Models::ManagedServiceInstance
       end
+
+      service_instances = Query.filtered_dataset_from_query_params(model_class,
+                                                                  space.user_visible_relationship_dataset(:service_instances),
+                                                                  ServiceInstance.query_parameters,
+                                                                  @opts)
+      service_instances.filter(space: space)
 
       RestController::Paginator.render_json(
         ServiceInstance,
