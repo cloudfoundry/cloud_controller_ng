@@ -178,7 +178,7 @@ module VCAP::CloudController
       last_response.status.should eq(201)
     end
 
-    it 'makes the service plan private by default' do
+    it 'makes the service plan public by default' do
       payload_without_public = ServicePlan::CreateMessage.new(
         :name => 'foo',
         :free => false,
@@ -189,7 +189,7 @@ module VCAP::CloudController
       post '/v2/service_plans', payload_without_public, json_headers(admin_headers)
       last_response.status.should eq(201)
       plan_guid = decoded_response.fetch('metadata').fetch('guid')
-      Models::ServicePlan.first(:guid => plan_guid).public.should be_false
+      Models::ServicePlan.first(:guid => plan_guid).public.should be_true
     end
   end
 

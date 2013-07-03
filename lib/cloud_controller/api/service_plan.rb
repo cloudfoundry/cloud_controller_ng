@@ -15,7 +15,7 @@ module VCAP::CloudController
       attribute :unique_id, String, default: nil, exclude_in: [:update]
       to_one    :service
       to_many   :service_instances
-      attribute :public, Message::Boolean, default: false
+      attribute :public, Message::Boolean, default: true
     end
 
     query_parameters :service_guid, :service_instance_guid
