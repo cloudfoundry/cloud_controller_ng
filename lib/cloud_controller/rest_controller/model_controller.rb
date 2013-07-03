@@ -8,10 +8,10 @@ module VCAP::CloudController::RestController
 
     # Create operation
     def create
-      logger.debug "create: #{request_attrs}"
 
       json_msg = self.class::CreateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
+      logger.debug "create: #{request_attrs}"
       raise InvalidRequest unless request_attrs
 
       before_create if respond_to? :before_create

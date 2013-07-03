@@ -8,18 +8,18 @@ module VCAP::CloudController
     include_examples "operations on an invalid object", path: "/v2/service_instances"
     include_examples "creating and updating", path: "/v2/service_instances", model: Models::ManagedServiceInstance, required_attributes: %w(name space_guid service_plan_guid), unique_attributes: %w(space_guid name), extra_attributes: []
     include_examples "deleting a valid object", path: "/v2/service_instances", model: Models::ManagedServiceInstance,
-      one_to_many_collection_ids: {
-        :service_bindings => lambda { |service_instance|
-          make_service_binding_for_service_instance(service_instance)
-        }
-      },
-      one_to_many_collection_ids_without_url: {}
+                     one_to_many_collection_ids: {
+                       :service_bindings => lambda { |service_instance|
+                         make_service_binding_for_service_instance(service_instance)
+                       }
+                     },
+                     one_to_many_collection_ids_without_url: {}
     include_examples "collection operations", path: "/v2/service_instances", model: Models::ManagedServiceInstance,
-      one_to_many_collection_ids: {
-        service_bindings: lambda { |service_instance| make_service_binding_for_service_instance(service_instance) }
-      },
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {}
+                     one_to_many_collection_ids: {
+                       service_bindings: lambda { |service_instance| make_service_binding_for_service_instance(service_instance) }
+                     },
+                     many_to_one_collection_ids: {},
+                     many_to_many_collection_ids: {}
 
     describe "Permissions" do
       include_context "permissions"
@@ -41,102 +41,55 @@ module VCAP::CloudController
         Yajl::Encoder.encode(:name => "#{@obj_a.name}_renamed")
       end
 
-      describe "Org Level Permissions" do
-        describe "OrgManager" do
-          let(:member_a) { @org_a_manager }
-          let(:member_b) { @org_b_manager }
+      def self.user_does_not_have_access(user_role, member_a_ivar, member_b_ivar)
+        describe user_role do
+          let(:member_a) { instance_variable_get(member_a_ivar) }
+          let(:member_b) { instance_variable_get(member_b_ivar) }
 
-          include_examples "permission checks", "OrgManager",
-            :model => Models::ManagedServiceInstance,
-            :path => "/v2/service_instances",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :not_allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
-        end
-
-        describe "OrgUser" do
-          let(:member_a) { @org_a_member }
-          let(:member_b) { @org_b_member }
-
-          include_examples "permission checks", "OrgUser",
-            :model => Models::ManagedServiceInstance,
-            :path => "/v2/service_instances",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :not_allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
-        end
-
-        describe "BillingManager" do
-          let(:member_a) { @org_a_billing_manager }
-          let(:member_b) { @org_b_billing_manager }
-
-          include_examples "permission checks", "BillingManager",
-            :model => Models::ManagedServiceInstance,
-            :path => "/v2/service_instances",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :not_allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
-        end
-
-        describe "Auditor" do
-          let(:member_a) { @org_a_auditor }
-          let(:member_b) { @org_b_auditor }
-
-          include_examples "permission checks", "Auditor",
-            :model => Models::ManagedServiceInstance,
-            :path => "/v2/service_instances",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :not_allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
+          include_examples "permission checks", user_role,
+                           :model => Models::ManagedServiceInstance,
+                           :path => "/v2/service_instances",
+                           :enumerate => 0,
+                           :create => :not_allowed,
+                           :read => :not_allowed,
+                           :modify => :not_allowed,
+                           :delete => :not_allowed
         end
       end
 
-      describe "App Space Level Permissions" do
-        describe "SpaceManager" do
-          let(:member_a) { @space_a_manager }
-          let(:member_b) { @space_b_manager }
+      describe "Org Level Permissions" do
+        user_does_not_have_access("OrgManager",     :@org_a_manager,         :@org_b_manager)
+        user_does_not_have_access("OrgUser",        :@org_a_member,          :@org_b_member)
+        user_does_not_have_access("BillingManager", :@org_a_billing_manager, :@org_b_billing_manager)
+        user_does_not_have_access("Auditor",        :@org_a_auditor,         :@org_b_auditor)
+      end
 
-          include_examples "permission checks", "SpaceManager",
-            :model => Models::ManagedServiceInstance,
-            :path => "/v2/service_instances",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :not_allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
-        end
+      describe "App Space Level Permissions" do
+        user_does_not_have_access("SpaceManager", :@space_a_manager, :@space_b_manager)
 
         describe "Developer" do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
           include_examples "permission checks", "Developer",
-            :model => Models::ManagedServiceInstance,
-            :path => "/v2/service_instances",
-            :enumerate => 1,
-            :create => :allowed,
-            :read => :allowed,
-            :modify => :allowed,
-            :delete => :allowed
+                           :model => Models::ManagedServiceInstance,
+                           :path => "/v2/service_instances",
+                           :enumerate => 1,
+                           :create => :allowed,
+                           :read => :allowed,
+                           :modify => :allowed,
+                           :delete => :allowed
         end
 
         describe "private plans" do
           let(:space) { Models::Space.make }
-          let(:developer) { make_developer_for_space(space)}
+          let(:developer) { make_developer_for_space(space) }
           let!(:private_plan) { Models::ServicePlan.make(public: false) }
           let(:payload) { Yajl::Encoder.encode(
             'space_guid' => space.guid,
             'name' => Sham.name,
             'service_plan_guid' => private_plan.guid,
-          )}
+          ) }
 
           it "does not allow to create a service instance" do
             post 'v2/service_instances', payload, json_headers(headers_for(developer))
@@ -159,20 +112,20 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples "permission checks", "SpaceAuditor",
-            :model => Models::ManagedServiceInstance,
-            :path => "/v2/service_instances",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
+                           :model => Models::ManagedServiceInstance,
+                           :path => "/v2/service_instances",
+                           :enumerate => 0,
+                           :create => :not_allowed,
+                           :read => :allowed,
+                           :modify => :not_allowed,
+                           :delete => :not_allowed
         end
       end
     end
 
     describe 'GET', '/v2/service_instances' do
       let(:space) { Models::Space.make }
-      let(:developer) { make_developer_for_space(space)}
+      let(:developer) { make_developer_for_space(space) }
       it "shows the dashboard_url if there is" do
         service_instance = Models::ManagedServiceInstance.make
         service_instance.update(dashboard_url: 'http://dashboard.io')
@@ -239,11 +192,11 @@ module VCAP::CloudController
           org = Models::Organization.make()
           space = Models::Space.make(:organization => org)
           service = Models::Service.make
-          plan =  Models::ServicePlan.make(free: true)
+          plan = Models::ServicePlan.make(free: true)
 
           body = {
             "space_guid" => "bogus",
-            "name"       => 'name',
+            "name" => 'name',
             "service_plan_guid" => plan.guid
           }
 
