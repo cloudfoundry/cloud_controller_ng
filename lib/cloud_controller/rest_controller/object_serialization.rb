@@ -93,18 +93,23 @@ module VCAP::CloudController::RestController
 
         associated_model = get_associated_model_klazz_for(obj, association_name)
         next unless associated_model
+
         associated_controller = get_controller_for(associated_model)
 
-        response["#{association_name}_url"] = association_endpoint(controller, obj, association)
+        associated_model_instances = obj.user_visible_relationship_dataset(association_name)
+
+        associated_url = association_endpoint(
+          controller, associated_controller, obj, associated_model_instances, association)
+
+        response["#{association_name}_url"] = associated_url if associated_url
 
         if depth < inline_relations_depth && !parents.include?(associated_controller)
           if association.is_a?(ControllerDSL::ToOneAttribute)
-            associated_model_instance = obj.user_visible_relationship_dataset(association_name).first
+            associated_model_instance = associated_model_instances.first
             if associated_model_instance
               response[association_name.to_s] = to_hash(associated_controller, associated_model_instance, opts, depth + 1, parents)
             end
           else
-            associated_model_instances = obj.user_visible_relationship_dataset(association_name)
             if associated_model_instances.count <= max_number_of_associated_objects_to_inline
               response[association_name.to_s] = associated_model_instances.map do |associated_model_instance|
                 to_hash(associated_controller, associated_model_instance, opts, depth + 1, parents)
@@ -113,6 +118,7 @@ module VCAP::CloudController::RestController
           end
         end
       end
+
       response
     end
 
@@ -128,9 +134,14 @@ module VCAP::CloudController::RestController
       VCAP::CloudController.controller_from_model_name(model.name)
     end
 
-    def self.association_endpoint(controller, obj, association)
-      association_base_url = controller.url_for_id(obj.guid)
-      association.is_a?(ControllerDSL::ToOneAttribute) ? association_base_url : "#{association_base_url}/#{association.name}"
+    def self.association_endpoint(controller, associated_controller, obj, associated_model_instances, association)
+      if association.is_a?(ControllerDSL::ToOneAttribute)
+        if (associated_model_instance = associated_model_instances.first)
+          associated_controller.url_for_id(associated_model_instance.guid)
+        end
+      else
+        "#{controller.url_for_id(obj.guid)}/#{association.name}"
+      end
     end
   end
 

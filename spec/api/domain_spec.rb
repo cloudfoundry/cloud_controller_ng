@@ -48,7 +48,7 @@ module VCAP::CloudController
       },
       many_to_many_collection_ids: {}
 
-      describe "Permissions" do
+    describe "Permissions" do
       include_context "permissions"
 
       before(:all) do
@@ -238,6 +238,53 @@ module VCAP::CloudController
             :read => :allowed,
             :modify => :not_allowed,
             :delete => :not_allowed
+        end
+      end
+    end
+
+    describe "GET /v2/domains/:id" do
+      let(:user) { Models::User.make :admin => true }
+      let(:organization) { Models::Organization.make }
+      let(:domain) { Models::Domain.make }
+
+      before do
+        organization.add_user(user)
+        organization.add_manager(user)
+        organization.add_billing_manager(user)
+        organization.add_auditor(user)
+      end
+
+      context "when the domain has an owning organization" do
+        before { domain.update(:owning_organization => organization) }
+
+        it "has its GUID and URL in the response body" do
+          get "/v2/domains/#{domain.guid}", {},
+            json_headers(headers_for(user))
+
+          last_response.status.should == 200
+
+          json = Yajl::Parser.parse(last_response.body)
+          json["entity"]["owning_organization_guid"].should == \
+            organization.guid
+
+          json["entity"]["owning_organization_url"].should == \
+            "/v2/organizations/#{organization.guid}"
+        end
+      end
+
+      context "when the domain does NOT have an owning organization" do
+        before { domain.update(:owning_organization => nil) }
+
+        it "has its GUID as null, and no url key in the response body" do
+          get "/v2/domains/#{domain.guid}", {},
+            json_headers(headers_for(user))
+
+          last_response.status.should == 200
+
+          json = Yajl::Parser.parse(last_response.body)
+          json["entity"]["owning_organization_guid"].should be_nil
+
+          json["entity"].should_not include("owning_organization_url")
         end
       end
     end
