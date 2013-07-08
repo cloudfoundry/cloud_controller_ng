@@ -220,7 +220,7 @@ module VCAP::CloudController
           it 'returns only the managed service instances' do
             get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
             guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
-            guids.should include(managed_service_instance.guid)
+            guids.should =~ [managed_service_instance.guid]
           end
         end
       end

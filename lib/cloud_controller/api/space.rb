@@ -41,12 +41,14 @@ module VCAP::CloudController
 
       if params['return_provided_service_instances'] == 'true'
         model_class = Models::ServiceInstance
+        relation_name = :service_instances
       else
         model_class = Models::ManagedServiceInstance
+        relation_name = :managed_service_instances
       end
 
       service_instances = Query.filtered_dataset_from_query_params(model_class,
-                                                                  space.user_visible_relationship_dataset(:service_instances),
+                                                                  space.user_visible_relationship_dataset(relation_name),
                                                                   ServiceInstance.query_parameters,
                                                                   @opts)
       service_instances.filter(space: space)

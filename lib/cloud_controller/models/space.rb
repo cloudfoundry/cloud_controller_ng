@@ -20,6 +20,7 @@ module VCAP::CloudController::Models
     one_to_many       :apps
     one_to_many       :all_apps, :dataset => lambda { App.with_deleted.filter(:space => self) }
     one_to_many       :service_instances
+    one_to_many       :managed_service_instances
     one_to_many       :routes
     one_to_many       :app_events, :dataset => lambda { AppEvent.filter(:app => apps) }
     one_to_many       :default_users, :class => "VCAP::CloudController::Models::User", :key => :default_space_id
