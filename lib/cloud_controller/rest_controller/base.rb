@@ -102,6 +102,7 @@ module VCAP::CloudController::RestController
     rescue Sequel::DatabaseError => e
       raise self.class.translate_and_log_exception(logger, e)
     rescue JsonMessage::Error => e
+      logger.debug("Rescued JsonMessage::Error at #{__FILE__}:#{__LINE__}\n#{e.inspect}\n#{e.backtrace.join("\n")}")
       raise MessageParseError.new(e)
     rescue Models::InvalidRelation => e
       raise InvalidRelation.new(e)
