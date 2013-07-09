@@ -214,6 +214,17 @@ module VCAP::CloudController
             guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
             guids.should include(provided_service_instance.guid, managed_service_instance.guid)
           end
+
+          it 'includes service_plan_url for managed service instaces' do
+            get "/v2/spaces/#{space.guid}/service_instances", {return_provided_service_instances: true}, headers_for(developer)
+            service_instances_response = decoded_response.fetch('resources')
+            managed_service_instance_response = service_instances_response.detect {|si|
+              si.fetch('metadata').fetch('guid') == managed_service_instance.guid
+            }
+            managed_service_instance_response.fetch('entity').fetch('service_plan_url').should be
+            managed_service_instance_response.fetch('entity').fetch('space_url').should be
+            managed_service_instance_response.fetch('entity').fetch('service_bindings_url').should be
+          end
         end
 
         describe 'when return_provided_service_instances flag is not present' do
@@ -221,6 +232,17 @@ module VCAP::CloudController
             get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
             guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
             guids.should =~ [managed_service_instance.guid]
+          end
+
+          it 'includes service_plan_url for managed service instaces' do
+            get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
+            service_instances_response = decoded_response.fetch('resources')
+            managed_service_instance_response = service_instances_response.detect {|si|
+              si.fetch('metadata').fetch('guid') == managed_service_instance.guid
+            }
+            managed_service_instance_response.fetch('entity').fetch('service_plan_url').should be
+            managed_service_instance_response.fetch('entity').fetch('space_url').should be
+            managed_service_instance_response.fetch('entity').fetch('service_bindings_url').should be
           end
         end
       end
