@@ -22,7 +22,7 @@ describe "Cloud controller", :type => :integration do
             NATS.stop
           end
 
-          NATS.timeout(sid, 10) do
+          NATS.timeout(sid, 15) do
             fail "never got anything over NATS"
           end
         end
