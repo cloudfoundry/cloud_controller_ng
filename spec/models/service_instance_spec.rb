@@ -10,14 +10,13 @@ describe VCAP::CloudController::Models::ServiceInstance do
       }
     end
 
-
     describe "when is_gateway_service is false" do
-       it "returns a ProvidedServiceInstance" do
-         service_instance_attrs[:is_gateway_service] = false
-         service_instance = described_class.create(service_instance_attrs)
-         described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::Models::ProvidedServiceInstance
-       end
-     end
+      it "returns a ProvidedServiceInstance" do
+        service_instance_attrs[:is_gateway_service] = false
+        service_instance = described_class.create(service_instance_attrs)
+        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::Models::ProvidedServiceInstance
+      end
+    end
 
     describe "when is_gateway_service is true" do
       it "returns a ManagedServiceInstance" do
@@ -26,6 +25,5 @@ describe VCAP::CloudController::Models::ServiceInstance do
         described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::Models::ManagedServiceInstance
       end
     end
-
   end
 end
