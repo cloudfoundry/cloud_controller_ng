@@ -154,6 +154,9 @@ GEM
       net-ssh (>= 2.6.5)
     net-ssh (2.6.7)
     nokogiri (1.5.10)
+    parallel (0.7.1)
+    parallel_tests (0.15.0)
+      parallel
     pg (0.15.1)
     posix-spawn (0.3.6)
     pry (0.9.12.2)
@@ -247,6 +250,7 @@ DEPENDENCIES
   machinist (~> 1.0.6)
   membrane (~> 0.0.2)
   mysql2
+  parallel_tests
   pg
   rack-test
   rake
