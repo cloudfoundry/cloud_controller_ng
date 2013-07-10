@@ -161,8 +161,8 @@ module VCAP::CloudController::Models
       Yajl::Parser.parse(super || DEFAULT_BINDING_OPTIONS)
     end
 
-    def binding_options=(bo)
-      super(Yajl::Encoder.encode(bo))
+    def binding_options=(values)
+      super(Yajl::Encoder.encode(values))
     end
 
   end

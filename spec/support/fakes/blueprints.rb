@@ -16,7 +16,9 @@ Sham.define do
   service_credentials { |index|
     { "creds-key-#{index}" => "creds-val-#{index}" }
   }
-  binding_options     { |index| "binding-options-#{index}" }
+  binding_options     { |index|
+    {"binding-options-#{index}" => "value-#{index}"}
+  }
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }

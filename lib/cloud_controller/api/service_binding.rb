@@ -15,7 +15,7 @@ module VCAP::CloudController
     define_attributes do
       to_one    :app
       to_one    :service_instance
-      attribute :binding_options, String, :default => nil
+      attribute :binding_options, Hash, :default => {}
     end
 
     query_parameters :app_guid, :service_instance_guid
