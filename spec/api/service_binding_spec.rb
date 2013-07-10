@@ -24,6 +24,8 @@ module VCAP::CloudController
     describe "staging" do
       let(:app_obj) do
         app = Models::App.make
+        app.state = "STARTED"
+        app.instances = 1
         fake_app_staging(app)
         app
       end

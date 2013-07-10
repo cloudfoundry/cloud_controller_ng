@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
     let(:config_hash) { { :config => 'hash' } }
-    let(:app) { Models::App.make(:package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
+    let(:app) { Models::App.make(:package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :state => "STARTED", :instances => 1) }
     let(:stager_id) { "my_stager" }
 
     let(:options) { {} }

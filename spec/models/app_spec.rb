@@ -145,7 +145,9 @@ module VCAP::CloudController
       context "app needs staging" do
         subject { Models::App.make(
           :package_hash => "package-hash",
-          :package_state => "PENDING"
+          :package_state => "PENDING",
+          :instances => 1,
+          :state => "STARTED"
         ) }
 
         it "keeps app as needs staging" do
@@ -156,7 +158,7 @@ module VCAP::CloudController
       end
 
       context "app is already staged" do
-        subject { Models::App.make(:package_hash => "package-hash") }
+        subject { Models::App.make(:package_hash => "package-hash", :instances => 1, :state => "STARTED") }
         before { subject.droplet_hash = "droplet-hash" }
 
         it "marks the app for re-staging" do
@@ -438,23 +440,53 @@ module VCAP::CloudController
     end
 
     describe "needs_staging?" do
-      let(:app) { Models::App.make }
+      subject(:app) { Models::App.make }
 
-      it "should return false if the package_hash is nil" do
-        app.package_hash.should be_nil
-        app.needs_staging?.should be_false
+      context "when the app is started" do
+        before do
+          app.state = "STARTED"
+          app.instances = 1
+        end
+
+        it "should return false if the package_hash is nil" do
+          app.package_hash.should be_nil
+          app.needs_staging?.should be_false
+        end
+
+        it "should return true if PENDING is set" do
+          app.package_hash = "abc"
+          app.package_state = "PENDING"
+          app.needs_staging?.should be_true
+        end
+
+        it "should return false if STAGING is set" do
+          app.package_hash = "abc"
+          app.package_state = "STAGED"
+          app.needs_staging?.should be_false
+        end
       end
 
-      it "should return true if PENDING is set" do
-        app.package_hash = "abc"
-        app.package_state = "PENDING"
-        app.needs_staging?.should be_true
+      context "when the app is not started" do
+        before do
+          app.state = "STOPPED"
+          app.package_hash = "abc"
+          app.package_state = "PENDING"
+        end
+
+        it 'should return false' do
+          app.should_not be_needs_staging
+        end
       end
 
-      it "should return false if STAGING is set" do
-        app.package_hash = "abc"
-        app.package_state = "STAGED"
-        app.needs_staging?.should be_false
+      context "when the app has no instances" do
+        before do
+          app.state = "STARTED"
+          app.package_hash = "abc"
+          app.package_state = "PENDING"
+          app.instances = 0
+        end
+
+        it { should_not be_needs_staging }
       end
     end
 
@@ -549,6 +581,8 @@ module VCAP::CloudController
       let(:app) { Models::App.make }
 
       it "should set the state to staged" do
+        app.state = "STARTED"
+        app.instances = 1
         app.package_hash = "abc"
         app.needs_staging?.should be_true
         app.droplet_hash = "def"
@@ -891,7 +925,7 @@ module VCAP::CloudController
     end
 
     describe "changes to the app that trigger staging/dea notifications" do
-      subject { Models::App.make :droplet_hash => nil, :package_state => "PENDING" }
+      subject { Models::App.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
 
       # Mark app as staged when AppStager.stage_app is called
       before do
@@ -1049,26 +1083,26 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and already staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is already started and already staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
+          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
           it_stages
           it_notifies_dea
         end
 
         # Original change to app that moved state into STARTED staged the app and notified dea
         context "when app is already started and not staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
+          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
           it_does_not_stage
           it_does_not_notify_dea
         end

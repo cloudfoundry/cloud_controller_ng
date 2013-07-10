@@ -286,7 +286,7 @@ module VCAP::CloudController
       end
 
       def needs_staging?
-        self.package_hash && !self.staged?
+        package_hash && !staged? && started? && instances > 0
       end
 
       def staged?
@@ -442,7 +442,7 @@ module VCAP::CloudController
       end
 
       def stage_if_needed(&success_callback)
-        if needs_staging? && started?
+        if needs_staging?
           self.last_stager_response = AppStager.stage_app(self, {:async => stage_async}, &success_callback)
         else
           success_callback.call

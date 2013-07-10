@@ -170,6 +170,8 @@ module VCAP::CloudController
     describe "restaging" do
       let(:app) do
         app = Models::App.make
+        app.state = "STARTED"
+        app.instances = 1
         fake_app_staging(app)
         app
       end

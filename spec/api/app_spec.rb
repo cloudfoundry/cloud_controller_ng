@@ -333,7 +333,8 @@ module VCAP::CloudController
       context "when app will be staged" do
         let(:app_obj) do
           Models::App.make(:package_hash => "abc", :state => "STOPPED",
-                           :droplet_hash => nil, :package_state => "PENDING")
+                           :droplet_hash => nil, :package_state => "PENDING",
+                           :instances => 1)
         end
 
         context "when stage_async query param is true" do
