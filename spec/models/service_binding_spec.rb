@@ -205,5 +205,43 @@ module VCAP::CloudController
         app.needs_staging?.should be_true
       end
     end
+
+    describe "binding options" do
+
+      let(:gw_client) { double(:client) }
+      let(:response) do
+        VCAP::Services::Api::GatewayHandleResponse.new(
+          :service_id => "gwname_instance",
+          :configuration => "abc",
+          :credentials => {:password => "foo"}
+        )
+      end
+
+      before do
+        Models::ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
+        gw_client.stub(:provision).and_return(response)
+        gw_client.stub(:bind).and_return(response)
+      end
+
+      context "service gateway" do
+
+        it "send binding_options to gateway" do
+          binding_options = Sham.binding_options
+          gw_client.
+            should_receive(:bind).
+            with(hash_including(:binding_options => binding_options))
+          Models::ServiceBinding.make(:binding_options => binding_options)
+        end
+
+        it "send default binding_options to gateway" do
+          gw_client.
+            should_receive(:bind).
+            with(hash_including(:binding_options => {}))
+          Models::ServiceBinding.make
+        end
+
+      end
+    end
+
   end
 end
