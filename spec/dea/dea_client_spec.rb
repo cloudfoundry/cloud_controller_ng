@@ -116,6 +116,18 @@ module VCAP::CloudController
         end
       end
 
+      it "should start the specified number of instances" do
+        @app.instances = 2
+        @dea_pool.stub(:find_dea).and_return("abc", "def")
+
+        @dea_pool.should_receive(:mark_app_staged).with(dea_id: "abc", app_id: @app.guid)
+        @dea_pool.should_not_receive(:mark_app_staged).with(dea_id: "def", app_id: @app.guid)
+
+        with_em_and_thread do
+          DeaClient.start(@app, :instances_to_start => 1)
+        end
+      end
+
       it "sends a dea start message that includes cc_partition" do
         config_override(:cc_partition => "ngFTW")
         DeaClient.configure(config, @message_bus, @dea_pool)

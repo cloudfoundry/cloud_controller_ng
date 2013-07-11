@@ -34,8 +34,9 @@ module VCAP::CloudController
         @dea_pool.register_subscriptions
       end
 
-      def start(app)
-        start_instances_in_range(app, (0...app.instances))
+      def start(app, options={})
+        instances_to_start = options[:instances_to_start] || app.instances
+        start_instances_in_range(app, (0...instances_to_start))
         app.routes_changed = false
       end
 
