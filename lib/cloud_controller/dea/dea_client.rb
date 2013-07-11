@@ -40,7 +40,7 @@ module VCAP::CloudController
       end
 
       def stop(app)
-        dea_publish("stop", :droplet => app.guid)
+        dea_publish_stop(:droplet => app.guid)
       end
 
       def change_running_instances(app, delta)
@@ -57,7 +57,7 @@ module VCAP::CloudController
         message = { :droplet => app.guid }
         message.merge!(options)
 
-        dea_request("find.droplet", message, :timeout => 2).first
+        dea_request_find_droplet(message, :timeout => 2).first
       end
 
       def find_instances(app, message_options = {}, request_options = {})
@@ -67,7 +67,7 @@ module VCAP::CloudController
         request_options[:result_count] ||= app.instances
         request_options[:timeout] ||= 2
 
-        dea_request("find.droplet", message, request_options)
+        dea_request_find_droplet(message, request_options)
       end
 
       def get_file_uri_for_instance(app, path, instance)
@@ -224,7 +224,7 @@ module VCAP::CloudController
           msg[:index] = idx
           dea_id = dea_pool.find_dea(app.memory, app.stack.name, app.guid)
           if dea_id
-            dea_publish("#{dea_id}.start", msg.merge(message_override))
+            dea_publish_start(dea_id, msg.merge(message_override))
             dea_pool.mark_app_staged(dea_id: dea_id, app_id: app.guid)
           else
             logger.error "no resources available #{msg}"
@@ -234,25 +234,24 @@ module VCAP::CloudController
 
       # @param [Array] indices an Enumerable of integer indices
       def stop_indices(app, indices)
-        dea_publish("stop",
-                    :droplet => app.guid,
+        dea_publish_stop(:droplet => app.guid,
                     :version => app.version,
-                    :indices => indices,
+                    :indices => indices
                    )
       end
 
       # @param [Array] indices an Enumerable of guid instance ids
       def stop_instances(app, instances)
-        dea_publish("stop",
+        dea_publish_stop(
                     :droplet => app.guid,
-                    :instances => instances,
+                    :instances => instances
                    )
       end
 
       def update_uris(app)
         return unless app.staged?
         message = dea_update_message(app)
-        dea_publish("update", message)
+        dea_publish_update(message)
         app.routes_changed = false
       end
 
@@ -340,19 +339,24 @@ module VCAP::CloudController
         }
       end
 
-      def dea_publish(cmd, args = {})
-        subject = "dea.#{cmd}"
-        logger.debug "sending '#{subject}' with '#{args}'"
-        message_bus.publish(subject, args)
+      def dea_publish_stop(args)
+        logger.debug "sending 'dea.stop' with '#{args}'"
+        message_bus.publish("dea.stop", args)
       end
 
-      def dea_request(cmd, args, opts = {})
-        subject = "dea.#{cmd}"
-        msg = "sending subject: '#{subject}' with args: '#{args}'"
-        msg << " and opts: '#{opts}'"
-        logger.debug msg
+      def dea_publish_update(args)
+        logger.debug "sending 'dea.update' with '#{args}'"
+        message_bus.publish("dea.update", args)
+      end
 
-        message_bus.synchronous_request(subject, args, opts)
+      def dea_publish_start(dea_id, args)
+        logger.debug "sending 'dea.start' for dea_id: #{dea_id} with '#{args}'"
+        message_bus.publish("dea.#{dea_id}.start", args)
+      end
+
+      def dea_request_find_droplet(args, opts = {})
+        logger.debug "sending dea.find.droplet with args: '#{args}' and opts: '#{opts}'"
+        message_bus.synchronous_request("dea.find.droplet", args, opts)
       end
 
       def logger
