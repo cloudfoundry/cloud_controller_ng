@@ -10,6 +10,16 @@ describe VCAP::CloudController::Models::ServiceInstance do
       }
     end
 
+    let(:create_instance) { described_class.create(service_instance_attrs) }
+
+    context "when the name is longer than 50 characters" do
+      let(:very_long_name){ 's' * 51 }
+      it "refuses to create this service instance" do
+        service_instance_attrs[:name] = very_long_name
+        expect {create_instance}.to raise_error Sequel::ValidationFailed
+      end
+    end
+
     describe "when is_gateway_service is false" do
       it "returns a ProvidedServiceInstance" do
         service_instance_attrs[:is_gateway_service] = false

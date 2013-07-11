@@ -123,6 +123,25 @@ module VCAP::CloudController
       end
     end
 
+    describe 'POST', '/v2/service_instance' do
+      context 'creating a service instance with a name over 50 characters' do
+        let(:space) { Models::Space.make }
+        let(:plan) { Models::ServicePlan.make }
+        let(:developer) { make_developer_for_space(space) }
+        let(:very_long_name) { 's' * 51 }
+
+        it "returns an error if the service instance name is over 50 characters" do
+          req = Yajl::Encoder.encode(:name => very_long_name,
+                                     :space_guid => space.guid,
+                                     :service_plan_guid => plan.guid)
+
+          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
+          last_response.status.should == 400
+          decoded_response["description"].should =~ /service instance name.*limited to 50 characters/
+        end
+      end
+    end
+
     describe 'GET', '/v2/service_instances' do
       let(:space) { Models::Space.make }
       let(:developer) { make_developer_for_space(space) }

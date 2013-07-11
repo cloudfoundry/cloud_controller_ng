@@ -26,6 +26,7 @@ module VCAP::CloudController::Models
       validates_presence :name
       validates_presence :space
       validates_unique [:space_id, :name]
+      validates_max_length 50, :name
     end
 
     def credentials=(val)

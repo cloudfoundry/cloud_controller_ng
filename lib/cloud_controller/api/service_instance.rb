@@ -33,6 +33,7 @@ module VCAP::CloudController
       space_and_name_errors = e.errors.on([:space_id, :name])
       quota_errors = e.errors.on(:org)
       service_plan_errors = e.errors.on(:service_plan)
+      service_instance_name_errors = e.errors.on(:name)
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::ServiceInstanceNameTaken.new(attributes["name"])
       elsif quota_errors
@@ -46,6 +47,8 @@ module VCAP::CloudController
         end
       elsif service_plan_errors
         Errors::ServiceInstanceServicePlanNotAllowed.new
+      elsif service_instance_name_errors && service_instance_name_errors.include?(:max_length)
+        Errors::ServiceInstanceNameTooLong.new
       else
         Errors::ServiceInstanceInvalid.new(e.errors.full_messages)
       end
