@@ -1,4 +1,4 @@
-require "cloud_controller/app_stager"
+require "cloud_controller/app_manager"
 
 module VCAP::CloudController
   module Models
@@ -158,8 +158,8 @@ module VCAP::CloudController
       end
 
       def after_destroy_commit
-        stop_droplet
-        VCAP::CloudController::AppStager.delete_droplet(self)
+        AppManager.stop_droplet(self)
+        VCAP::CloudController::AppManager.delete_droplet(self)
         VCAP::CloudController::AppPackage.delete_package(self.guid)
       end
 
@@ -378,7 +378,7 @@ module VCAP::CloudController
           after_destroy
         end
 
-        stop_droplet
+        AppManager.stop_droplet(self)
       end
 
       def uris
@@ -430,7 +430,7 @@ module VCAP::CloudController
 
       def after_commit
         super
-        react_to_saved_changes(previous_changes || {})
+        AppManager.app_changed(self, previous_changes || {})
       end
 
       private
@@ -438,52 +438,6 @@ module VCAP::CloudController
       def requested_memory
         default_memory = db_schema[:memory][:default].to_i
         memory ? memory : default_memory
-      end
-
-      def stop_droplet
-        VCAP::CloudController::DeaClient.stop(self) if started?
-      end
-
-      def stage_if_needed(&success_callback)
-        if needs_staging?
-          self.last_stager_response = AppStager.stage_app(self, &success_callback)
-        else
-          success_callback.call
-        end
-      end
-
-      def react_to_saved_changes(changes)
-        if changes.has_key?(:state)
-          react_to_state_change
-        elsif changes.has_key?(:instances)
-          delta = changes[:instances][1] - changes[:instances][0]
-          react_to_instances_change(delta)
-        end
-      end
-
-      def react_to_state_change
-        if started?
-          stage_if_needed do
-            DeaClient.start(self)
-            send_droplet_updated_message
-          end
-        elsif stopped?
-          DeaClient.stop(self)
-          send_droplet_updated_message
-        end
-      end
-
-      def react_to_instances_change(delta)
-        if started?
-          stage_if_needed do
-            DeaClient.change_running_instances(self, delta)
-            send_droplet_updated_message
-          end
-        end
-      end
-
-      def send_droplet_updated_message
-        HealthManagerClient.notify_app_updated(guid)
       end
 
       def mark_routes_changed(_)

@@ -641,7 +641,7 @@ module VCAP::CloudController
       end
 
       it "should remove the droplet" do
-        AppStager.should_receive(:delete_droplet).with(app)
+        AppManager.should_receive(:delete_droplet).with(app)
         app.destroy
       end
 
@@ -927,9 +927,9 @@ module VCAP::CloudController
     describe "changes to the app that trigger staging/dea notifications" do
       subject { Models::App.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
 
-      # Mark app as staged when AppStager.stage_app is called
+      # Mark app as staged when AppManager.stage_app is called
       before do
-        AppStager.stub(:stage_app) do |app, options={}, &success_callback|
+        AppManager.stub(:stage_app) do |app, options={}, &success_callback|
           app.droplet_hash = "droplet-hash"
           success_callback.call
           AppStagerTask::Response.new({})
@@ -938,7 +938,7 @@ module VCAP::CloudController
 
       def self.it_does_not_stage
         it "does not stage app" do
-          AppStager.should_not_receive(:stage_app)
+          AppManager.should_not_receive(:stage_app)
           expect {
             update
           }.to_not change { subject.last_stager_response }.from(nil)
@@ -947,7 +947,7 @@ module VCAP::CloudController
 
       def self.it_stages
         it "stages" do
-          AppStager.should_receive(:stage_app).with(subject)
+          AppManager.should_receive(:stage_app).with(subject)
           expect {
             update
           }.to change { subject.last_stager_response }.from(nil)

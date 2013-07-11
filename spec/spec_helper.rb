@@ -194,7 +194,7 @@ module VCAP::CloudController::SpecHelper
     VCAP::CloudController::AppPackage.configure(config)
 
     stager_pool = VCAP::CloudController::StagerPool.new(config, mbus)
-    VCAP::CloudController::AppStager.configure(config, mbus, stager_pool)
+    VCAP::CloudController::AppManager.configure(config, mbus, stager_pool)
     VCAP::CloudController::Staging.configure(config)
 
     dea_pool = VCAP::CloudController::DeaPool.new(mbus)
