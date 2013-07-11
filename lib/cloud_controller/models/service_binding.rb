@@ -37,7 +37,10 @@ module VCAP::CloudController::Models
 
     def before_create
       super
-      bind_on_gateway
+      self.gateway_name = ""
+      self.gateway_data = nil
+      self.credentials = {}
+      service_instance.bind_on_gateway(self) if service_instance
     end
 
     def after_create
@@ -49,17 +52,13 @@ module VCAP::CloudController::Models
     end
 
     def before_destroy
-      unbind_on_gateway
+      service_instance.unbind_on_gateway(self)
       mark_app_for_restaging
     end
 
     def after_rollback
-      unbind_on_gateway if @bound_on_gateway
+      service_instance.unbind_on_gateway(self) if service_instance
       super
-    end
-
-    def after_commit
-      @bound_on_gateway = false
     end
 
     def mark_app_for_restaging
@@ -94,57 +93,6 @@ module VCAP::CloudController::Models
       val = super
       val = Yajl::Parser.parse(val) if val
       val
-    end
-
-    def service_gateway_client
-      # this shouldn't happen under normal circumstances, but will if we are
-      # running tests that bypass validations
-      return unless service_instance
-      service_instance.service_gateway_client
-    end
-
-    def bind_on_gateway
-      client = service_gateway_client
-
-      # TODO: see service_gateway_client
-      unless client
-        self.gateway_name = ""
-        self.gateway_data = nil
-        self.credentials = {}
-        return
-      end
-
-      logger.debug "binding service on gateway for #{guid}"
-
-      service = service_instance.service_plan.service
-      gw_attrs = client.bind(
-        :service_id => service_instance.gateway_name,
-        # TODO: we shouldn't still be using this compound label
-        :label      => "#{service.label}-#{service.version}",
-        :email      => VCAP::CloudController::SecurityContext.
-                             current_user_email,
-        :binding_options => binding_options,
-      )
-
-      logger.debug "binding response for #{guid} #{gw_attrs.inspect}"
-
-      self.gateway_name = gw_attrs.service_id
-      self.gateway_data = gw_attrs.configuration
-      self.credentials  = gw_attrs.credentials
-
-      @bound_on_gateway = true
-    end
-
-    def unbind_on_gateway
-      client = service_gateway_client
-      return unless client # TODO see service_gateway_client
-      client.unbind(
-        :service_id      => service_instance.gateway_name,
-        :handle_id       => gateway_name,
-        :binding_options => binding_options,
-      )
-    rescue => e
-      logger.error "unbind failed #{e}"
     end
 
     def logger

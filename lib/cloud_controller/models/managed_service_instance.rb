@@ -260,5 +260,36 @@ module VCAP::CloudController::Models
     def logger
       @logger ||= Steno.logger("cc.models.service_instance")
     end
+
+    def unbind_on_gateway(service_binding)
+      return unless service_gateway_client
+      service_gateway_client.unbind(
+        :service_id      => self.gateway_name,
+        :handle_id       => service_binding.gateway_name,
+        :binding_options => service_binding.binding_options,
+      )
+    rescue => e
+      logger.error "unbind failed #{e}"
+    end
+
+    def bind_on_gateway(service_binding)
+      logger.debug "binding service on gateway for #{service_binding.guid}"
+
+      service = service_plan.service
+
+      gw_attrs = service_gateway_client.bind(
+        :service_id => service_binding.gateway_name,
+        # TODO: we shouldn't still be using this compound label
+        :label      => "#{service.label}-#{service.version}",
+        :email      => VCAP::CloudController::SecurityContext.current_user_email,
+        :binding_options => service_binding.binding_options,
+      )
+
+      logger.debug "binding response for #{service_binding.guid} #{gw_attrs.inspect}"
+
+      service_binding.gateway_name = gw_attrs.service_id
+      service_binding.gateway_data = gw_attrs.configuration
+      service_binding.credentials  = gw_attrs.credentials
+    end
   end
 end
