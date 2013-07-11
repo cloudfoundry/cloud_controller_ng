@@ -66,6 +66,19 @@ module VCAP::CloudController
         end
       end
 
+
+      context "when memory is 0" do
+        before do
+          initial_hash[:memory] = 0
+        end
+
+        it "responds invalid arguments" do
+          subject
+          last_response.status.should == 400
+          last_response.body.should match /invalid amount of memory/
+        end
+      end
+
       context "when name is not provided" do
         let(:initial_hash) {{ :space_guid => space_guid }}
         it "responds with missing field name error" do

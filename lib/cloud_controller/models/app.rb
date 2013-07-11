@@ -240,12 +240,10 @@ module VCAP::CloudController
       end
 
       def additional_memory_requested
-        default_memory = db_schema[:memory][:default].to_i
         default_instances = db_schema[:instances][:default].to_i
 
-        mem = memory ? memory : default_memory
         num_instances = instances ? instances : default_instances
-        total_requested_memory = mem * num_instances
+        total_requested_memory = requested_memory * num_instances
 
         return total_requested_memory if new?
 
@@ -257,6 +255,8 @@ module VCAP::CloudController
       end
 
       def check_memory_quota
+        errors.add(:memory, :zero_or_less ) unless requested_memory > 0
+
         if space && (space.organization.memory_remaining < additional_memory_requested)
           errors.add(:memory, :quota_exceeded)
         end
@@ -436,6 +436,11 @@ module VCAP::CloudController
       end
 
       private
+
+      def requested_memory
+        default_memory = db_schema[:memory][:default].to_i
+        memory ? memory : default_memory
+      end
 
       def stop_droplet
         VCAP::CloudController::DeaClient.stop(self) if started?
