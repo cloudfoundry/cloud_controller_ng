@@ -84,11 +84,17 @@ module VCAP::CloudController
         :upload_uri => Staging.droplet_upload_uri(@app),
         :buildpack_cache_download_uri => Staging.buildpack_cache_download_uri(@app),
         :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app),
-        :start_message => DeaClient.start_app_message(@app)
+        :start_message => start_app_message
       }
     end
 
     private
+
+    def start_app_message
+      msg = DeaClient.start_app_message(@app)
+      msg[:index] = 0
+      msg
+    end
 
     def handle_first_response(response, error, promise)
       check_staging_error!(response, error)

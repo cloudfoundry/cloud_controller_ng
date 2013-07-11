@@ -526,10 +526,12 @@ module VCAP::CloudController
       end
 
       it "includes start app message" do
-        DeaClient.stub(:start_app_message).and_return("start app message")
+        dea_client_message = {:dea_client_message => "start app message"}
+        DeaClient.stub(:start_app_message).and_return(dea_client_message)
 
         request = staging_task.staging_request
-        request[:start_message].should eq "start app message"
+        request[:start_message].should include dea_client_message
+        request[:start_message].should include ({:index => 0})
       end
     end
   end
