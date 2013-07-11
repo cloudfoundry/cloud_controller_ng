@@ -11,7 +11,6 @@ module IntegrationSetup
 
   def kill_nats
     Process.kill("KILL", @nats_pid)
-    sleep 2
   end
 
   def start_cc(opts={}, wait_cycles = 20)
@@ -77,12 +76,13 @@ module IntegrationSetupHelpers
 
   def graceful_kill(name, pid)
     Process.kill("TERM", pid)
-    Timeout.timeout(1) do
-      while process_alive?(pid) do
-      end
+    Timeout::timeout(1) do
+      Process.wait(pid)
     end
   rescue Timeout::Error
     Process.kill("KILL", pid)
+  rescue Errno::ESRCH
+    true
   end
 
   def process_alive?(pid)
