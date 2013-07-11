@@ -50,14 +50,15 @@ module VCAP::CloudController
         if app.needs_staging?
           app.last_stager_response = stage_app(app, &success_callback)
         else
-          success_callback.call
+          success_callback.call(:started_instances => 0)
         end
       end
 
       def react_to_state_change(app)
         if app.started?
-          stage_if_needed(app) do
-            DeaClient.start(app)
+          stage_if_needed(app) do |staging_result|
+            started_instances = staging_result[:started_instances] || 0
+            DeaClient.start(app, :instances_to_start => app.instances - started_instances)
             send_droplet_updated_message(app)
           end
         else
@@ -68,7 +69,7 @@ module VCAP::CloudController
 
       def react_to_instances_change(app, delta)
         if app.started?
-          stage_if_needed(app) do
+          stage_if_needed(app) do |staging_result|
             DeaClient.change_running_instances(app, delta)
             send_droplet_updated_message(app)
           end

@@ -929,9 +929,9 @@ module VCAP::CloudController
 
       # Mark app as staged when AppManager.stage_app is called
       before do
-        AppManager.stub(:stage_app) do |app, options={}, &success_callback|
+        AppManager.stub(:stage_app) do |app, &success_callback|
           app.droplet_hash = "droplet-hash"
-          success_callback.call
+          success_callback.call(:started_instances => 1)
           AppStagerTask::Response.new({})
         end
       end
@@ -1052,6 +1052,7 @@ module VCAP::CloudController
       end
 
       describe "updating state to STARTED" do
+        let(:instances_to_start) { 0 }
         def update
           subject.state = "STARTED"
           subject.save
@@ -1067,13 +1068,15 @@ module VCAP::CloudController
 
         def self.it_notifies_dea
           it "notifies dea of start and update" do
-            DeaClient.should_receive(:start).with(subject)
+            DeaClient.should_receive(:start).with(subject, :instances_to_start => instances_to_start)
             HealthManagerClient.should_receive(:notify_app_updated).with(subject.guid)
             update
           end
         end
 
         context "when app is stopped and already staged" do
+          let(:instances_to_start) { 1 }
+
           subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
           it_does_not_stage
           it_notifies_dea

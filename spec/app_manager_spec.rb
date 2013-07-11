@@ -152,6 +152,29 @@ module VCAP::CloudController
     end
 
     describe ".app_changed" do
+      let(:package_hash) { "bar" }
+      let(:needs_staging) { false }
+      let(:started_instances) { 1 }
+      let(:stager_task) { double(:stager_task) }
+
+      let(:app) do
+        double(:app,
+          :last_stager_response= => nil,
+          :needs_staging? => needs_staging,
+          :instances => 1,
+          :guid => "foo",
+          :package_hash => package_hash
+        )
+      end
+
+      before do
+        AppStagerTask.stub(:new).with(config_hash, message_bus, app, stager_pool).and_return(stager_task)
+
+        stager_task.stub(:stage) do |&callback|
+          callback.call(:started_instances => started_instances)
+        end
+      end
+
       shared_examples_for(:stages_if_needed) do
         context "when the app needs staging" do
           let(:needs_staging) { true }
@@ -178,12 +201,13 @@ module VCAP::CloudController
 
           context "when the app package is valid" do
             let(:package_hash) { 'abc' }
+            let(:started_instances) { 1 }
 
             it "should make a task and stage it" do
-              task = double(:stager_task)
-
-              AppStagerTask.stub(:new).with(config_hash, message_bus, app, stager_pool).and_return(task)
-              task.should_receive(:stage).and_yield.and_return("stager response")
+              stager_task.should_receive(:stage) do |&callback|
+                callback.call(:started_instances => started_instances)
+                "stager response"
+              end
 
               app.should_receive(:last_stager_response=).with("stager response")
 
@@ -209,9 +233,6 @@ module VCAP::CloudController
         end
       end
 
-      let(:app) { double(:app, :needs_staging? => needs_staging, :instances => 1, :guid => "foo", :package_hash => package_hash) }
-      let(:package_hash) { "bar" }
-      let(:needs_staging) { false }
       subject { AppManager.app_changed(app, changes) }
 
       before do
@@ -224,6 +245,8 @@ module VCAP::CloudController
         let(:changes) { { :state => "anything" } }
 
         context "when the app is started" do
+          let(:needs_staging) { true }
+
           before do
             app.stub(:started?) { true }
           end
@@ -231,8 +254,8 @@ module VCAP::CloudController
           it_behaves_like :stages_if_needed
           it_behaves_like :sends_droplet_updated
 
-          it "should start the app" do
-            DeaClient.should_receive(:start).with(app)
+          it "should start the app with specified number of instances" do
+            DeaClient.should_receive(:start).with(app, :instances_to_start => app.instances - started_instances)
             subject
           end
         end
