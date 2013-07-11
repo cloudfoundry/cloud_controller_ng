@@ -228,6 +228,11 @@
   http_code: 400
   message: "You have exceeded your organization's memory limit. Please login to your account and upgrade. If you are trying to scale down and you are receiving this error, you can either delete an app or contact support."
 
+100006:
+  name: AppMemoryInvalid
+  http_code: 400
+  message: "You have specified an invalid amount of memory for your application."
+
 110001:
   name: ServicePlanInvalid
   http_code: 400
