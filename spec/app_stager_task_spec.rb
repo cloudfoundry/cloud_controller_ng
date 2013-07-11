@@ -524,6 +524,13 @@ module VCAP::CloudController
           request[:properties][:buildpack].should == "git://example.com/foo.git"
         end
       end
+
+      it "includes start app message" do
+        DeaClient.stub(:start_app_message).and_return("start app message")
+
+        request = staging_task.staging_request
+        request[:start_message].should eq "start app message"
+      end
     end
   end
 end

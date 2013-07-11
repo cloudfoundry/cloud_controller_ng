@@ -255,6 +255,32 @@ module VCAP::CloudController
         app.routes_changed = false
       end
 
+      def start_app_message(app)
+        # TODO: add debug support
+        {
+          :droplet => app.guid,
+          :name => app.name,
+          :uris => app.uris,
+          :prod => app.production,
+          :sha1 => app.droplet_hash,
+          :executableFile => "deprecated",
+          :executableUri => Staging.droplet_download_uri(app),
+          :version => app.version,
+          :services => app.service_bindings.map do |sb|
+            ServiceBindingPresenter.new(sb).to_hash
+          end,
+          :limits => {
+            :mem => app.memory,
+            :disk => app.disk_quota,
+            :fds => app.file_descriptors
+          },
+          :cc_partition => config[:cc_partition],
+          :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
+          :console => app.console,
+          :debug => app.debug,
+        }
+      end
+
       private
 
       # @param [Enumerable, #each] indices the range / sequence of instances to start
@@ -301,32 +327,6 @@ module VCAP::CloudController
         {
           :droplet  => app.guid,
           :uris     => app.uris,
-        }
-      end
-
-      def start_app_message(app)
-        # TODO: add debug support
-        {
-          :droplet => app.guid,
-          :name => app.name,
-          :uris => app.uris,
-          :prod => app.production,
-          :sha1 => app.droplet_hash,
-          :executableFile => "deprecated",
-          :executableUri => Staging.droplet_download_uri(app),
-          :version => app.version,
-          :services => app.service_bindings.map do |sb|
-            ServiceBindingPresenter.new(sb).to_hash
-          end,
-          :limits => {
-            :mem => app.memory,
-            :disk => app.disk_quota,
-            :fds => app.file_descriptors
-          },
-          :cc_partition => config[:cc_partition],
-          :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
-          :console => app.console,
-          :debug => app.debug,
         }
       end
 

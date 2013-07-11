@@ -75,6 +75,7 @@ module VCAP::CloudController
       staging_result
     end
 
+    # We never stage if there is not a start request
     def staging_request
       { :app_id => @app.guid,
         :task_id => task_id,
@@ -82,7 +83,8 @@ module VCAP::CloudController
         :download_uri => Staging.app_uri(@app),
         :upload_uri => Staging.droplet_upload_uri(@app),
         :buildpack_cache_download_uri => Staging.buildpack_cache_download_uri(@app),
-        :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app)
+        :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app),
+        :start_message => DeaClient.start_app_message(@app)
       }
     end
 
