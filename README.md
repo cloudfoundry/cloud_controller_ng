@@ -46,7 +46,6 @@ platform using the NATS message bus. For example, it performs the following usin
 - Instructs a DEA to stage an application (processes a buildpack for the app) to prepare it to run
 - Instructs a DEA to start or stop an application
 - Receives information from the Health Manager about applications
-- Instructs Service Gateways to handle provisioning, unprovision, bind and unbind operations for services
 
 ## Testing
 
