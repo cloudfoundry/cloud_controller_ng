@@ -18,7 +18,7 @@ module VCAP::CloudController::ModelSpecHelper
           }.to raise_error Sequel::ValidationFailed, /#{without_attr}/
         end
 
-        if !opts[:db_required_attributes] || opts[:db_required_attributes].include?(without_attr)
+        if !opts[:db_required_attributes]
           it "should fail due to database integrity checks" do
             expect {
               described_class.new do |instance|
@@ -27,6 +27,14 @@ module VCAP::CloudController::ModelSpecHelper
             }.to raise_error Sequel::DatabaseError, /#{without_attr}/
           end
         end
+      end
+    end
+
+    opts.fetch(:db_required_attributes, []).each do |db_required_attr|
+      it "does not allow null value in the database for #{db_required_attr}" do
+        Hash[described_class.db.schema(described_class.table_name)]
+        .fetch(db_required_attr)
+        .fetch(:allow_null).should == false
       end
     end
   end

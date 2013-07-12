@@ -4,7 +4,6 @@ module VCAP::CloudController::Models
   describe ServicePlanVisibility do
     it_behaves_like "a CloudController model", {
       :required_attributes    => [:service_plan, :organization],
-      :db_required_attributes => [:service_plan, :organization],
       :unique_attributes      => [:service_plan, :organization],
     }
   end

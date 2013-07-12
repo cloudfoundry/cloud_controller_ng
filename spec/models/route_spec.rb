@@ -6,7 +6,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::Models::Route do
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:domain, :space, :host],
-      :db_required_attributes => [:domain, :space],
+      :db_required_attributes => [:domain_id, :space_id],
       :unique_attributes    => [ [:host, :domain] ],
       :create_attribute => lambda { |name|
         @space ||= Models::Space.make
