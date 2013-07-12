@@ -17,7 +17,7 @@ module VCAP::CloudController::RestController
       before_create if respond_to? :before_create
       obj = nil
       model.db.transaction do
-        obj = model.create_from_hash(request_attrs)
+        obj = create_object
         validate_access(:create, obj, user, roles)
       end
 
@@ -217,6 +217,10 @@ module VCAP::CloudController::RestController
     end
 
     private
+    def create_object
+      model.create_from_hash(request_attrs)
+    end
+
     def enumerate_dataset
       qp = self.class.query_parameters
       ds = get_filtered_dataset_for_enumeration(model, model.user_visible, qp, @opts)
