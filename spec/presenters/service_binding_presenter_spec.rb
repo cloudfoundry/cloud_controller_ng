@@ -22,7 +22,9 @@ describe ServiceBindingPresenter do
       subject.should have_key(:credentials)
       subject.should have_key(:options)
       subject.should have_key(:plan)
-      subject.should have_key(:plan_options)
+      subject.should have_key(:provider)
+      subject.should have_key(:version)
+      subject.should have_key(:vendor)
     end
 
     specify "should " do
@@ -31,7 +33,9 @@ describe ServiceBindingPresenter do
       subject.fetch(:credentials).should == service_binding.credentials
       subject.fetch(:options).should == service_binding.binding_options
       subject.fetch(:plan).should == service_plan.name
-      subject.fetch(:plan_options).should == {}
+      subject.fetch(:provider).should == service.provider
+      subject.fetch(:version).should == service.version
+      subject.fetch(:vendor).should == service.label
     end
   end
 end

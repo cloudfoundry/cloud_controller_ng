@@ -12,10 +12,12 @@ class ServiceBindingPresenter
     {
       label: [service.label, service.version].join('-'),
       name: @service_binding.service_instance.name,
-      :credentials  => @service_binding.credentials,
-      :options      => @service_binding.binding_options,
-      :plan         => @service_binding.service_instance.service_plan.name,
-      :plan_options => {},
+      credentials: @service_binding.credentials,
+      options: @service_binding.binding_options,
+      plan: @service_binding.service_instance.service_plan.name,
+      provider: service.provider,
+      version: service.version,
+      vendor: service.label,
     }
   end
 end
