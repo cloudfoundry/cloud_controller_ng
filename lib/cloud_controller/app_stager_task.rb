@@ -1,3 +1,5 @@
+require 'cloud_controller/presenters/service_binding_presenter'
+
 module VCAP::CloudController
   class AppStagerTask
     class Response
@@ -192,20 +194,8 @@ module VCAP::CloudController
       }
     end
 
-    def service_binding_to_staging_request(sb)
-      instance = sb.service_instance
-      plan = instance.service_plan
-      service = plan.service
-
-      {
-        :label        => "#{service.label}-#{service.version}",
-        :tags         => {}, # TODO: can this be removed?
-        :name         => instance.name,
-        :credentials  => sb.credentials,
-        :options      => sb.binding_options || {},
-        :plan         => instance.service_plan.name,
-        :plan_options => {} # TODO: can this be removed?
-      }
+    def service_binding_to_staging_request(service_binding)
+      ServiceBindingPresenter.new(service_binding).to_hash
     end
 
     def staging_timeout
