@@ -15,7 +15,7 @@ module VCAP::CloudController
       end
     end
 
-    describe ".stage_app (stages sync/async)" do
+    describe ".stage_app stages" do
       context "when the app package hash is nil" do
         let(:app) { double(:app, :package_hash => nil) }
 
@@ -41,13 +41,12 @@ module VCAP::CloudController
 
         it 'should make a task and stage it' do
           task = double(:stager_task)
-          opts = {:foo => 'bar'}
 
           AppStagerTask.stub(:new).with(config_hash, message_bus, app, stager_pool).and_return(task)
-          task.should_receive(:stage).with(opts).and_yield
+          task.should_receive(:stage).and_yield
 
           called = false
-          AppStager.stage_app(app, opts) do
+          AppStager.stage_app(app) do
             called = true
           end
           expect(called).to eql(true)

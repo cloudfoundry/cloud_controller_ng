@@ -18,13 +18,13 @@ module VCAP::CloudController
         stager_pool.register_subscriptions
       end
 
-      def stage_app(app, options={}, &completion_callback)
+      def stage_app(app, &completion_callback)
         if app.package_hash.nil? || app.package_hash.empty?
           raise Errors::AppPackageInvalid, "The app package hash is empty"
         end
 
         task = AppStagerTask.new(config, message_bus, app, stager_pool)
-        task.stage(options, &completion_callback)
+        task.stage(&completion_callback)
       end
 
       def delete_droplet(app)

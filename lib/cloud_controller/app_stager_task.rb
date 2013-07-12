@@ -32,7 +32,7 @@ module VCAP::CloudController
       @task_id ||= VCAP.secure_uuid
     end
 
-    def stage(options={}, &completion_callback)
+    def stage(&completion_callback)
       stager_id = @stager_pool.find_stager(@app.stack.name, 1024)
       raise Errors::StagingError, "no available stagers" unless stager_id
 
@@ -55,8 +55,6 @@ module VCAP::CloudController
       @completion_callback = completion_callback
 
       staging_result = EM.schedule_sync do |promise|
-        # First message might be SYNC or ASYNC staging response
-        # since stager might not support async staging process.
         # First response is blocking stage_app.
         @multi_message_bus_request.on_response(staging_timeout) do |response, error|
           handle_first_response(response, error, promise)
@@ -69,21 +67,21 @@ module VCAP::CloudController
           handle_second_response(response, error)
         end
 
-        @multi_message_bus_request.request(staging_request(options[:async]))
+        @multi_message_bus_request.request(staging_request)
       end
 
       staging_result
     end
 
-    def staging_request(async)
+    def staging_request
       { :app_id => @app.guid,
         :task_id => task_id,
         :properties => staging_task_properties(@app),
         :download_uri => Staging.app_uri(@app),
         :upload_uri => Staging.droplet_upload_uri(@app),
         :buildpack_cache_download_uri => Staging.buildpack_cache_download_uri(@app),
-        :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app),
-        :async => async }
+        :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app)
+      }
     end
 
     private
@@ -91,47 +89,25 @@ module VCAP::CloudController
     def handle_first_response(response, error, promise)
       check_staging_error!(response, error)
       ensure_staging_is_current!
-
-      stager_response = Response.new(response)
-      if stager_response.streaming_log_url
-        promise.deliver(stager_response)
-      else
-        @multi_message_bus_request.ignore_subsequent_responses
-        process_sync_response(stager_response, promise)
-      end
+      promise.deliver(Response.new(response))
     rescue => e
       logger.error("exception handling first response #{e.inspect}, backtrace: #{e.backtrace.join("\n")}")
       destroy_upload_handle if staging_is_current?
       promise.fail(e)
     end
 
-    def process_sync_response(stager_response, promise)
-      # Defer potentially expensive operation
-      # to avoid executing on reactor thread
-      EM.defer do
-        begin
-          staging_completion(stager_response)
-          trigger_completion_callback
-          promise.deliver(stager_response)
-        rescue => e
-          logger.error "Encountered error: #{e}\n#{e.backtrace}"
-          promise.fail(e)
-        end
-      end
-    end
 
     def handle_second_response(response, error)
       @multi_message_bus_request.ignore_subsequent_responses
       check_staging_error!(response, error)
-
       ensure_staging_is_current!
-      process_async_response(response)
+      process_response(response)
     rescue => e
       destroy_upload_handle if staging_is_current?
       logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
     end
 
-    def process_async_response(response)
+    def process_response(response)
       # Defer potentially expensive operation
       # to avoid executing on reactor thread
       EM.defer do

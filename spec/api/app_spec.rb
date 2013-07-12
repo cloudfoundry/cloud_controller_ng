@@ -342,7 +342,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "sync/async staging" do
+    describe "staging" do
       context "when app will be staged" do
         let(:app_obj) do
           Models::App.make(:package_hash => "abc", :state => "STOPPED",
@@ -350,63 +350,33 @@ module VCAP::CloudController
                            :instances => 1)
         end
 
-        context "when stage_async query param is true" do
-          ["stage_async=1", "stage_async=true"].each do |query_params|
-            describe "with '#{query_params}' query params" do
-              it "stages the app asynchronously" do
-                received_app = nil
-                received_options = nil
+        it "stages the app asynchronously" do
+          received_app = nil
 
-                AppStager.should_receive(:stage_app) do |app, options|
-                  received_app = app
-                  received_options = options
-                  AppStagerTask::Response.new({})
-                end
-
-                put "/v2/apps/#{app_obj.guid}?#{query_params}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
-                received_app.id.should == app_obj.id
-                received_options.should == {:async => true}
-              end
-
-              it "returns X-App-Staging-Log header with staging log url" do
-                stager_response = AppStagerTask::Response.new(:task_streaming_log_url => "streaming-log-url")
-                AppStager.stub(:stage_app => stager_response)
-
-                put "/v2/apps/#{app_obj.guid}?#{query_params}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
-                last_response.status.should == 201
-                last_response.headers["X-App-Staging-Log"].should == "streaming-log-url"
-              end
-            end
+          AppStager.should_receive(:stage_app) do |app|
+            received_app = app
+            AppStagerTask::Response.new({})
           end
+
+          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
+          received_app.id.should == app_obj.id
         end
 
-        context "when stage_async query param is false" do
-          ["", "stage_async=0", "stage_async=false"].each do |query_params|
-            describe "with '#{query_params}' query params" do
-              it "stages the app synchronously" do
-                received_app = nil
-                received_options = nil
+        it "returns X-App-Staging-Log header with staging log url" do
+          stager_response = AppStagerTask::Response.new(:task_streaming_log_url => "streaming-log-url")
+          AppStager.stub(:stage_app => stager_response)
 
-                AppStager.should_receive(:stage_app) do |app, options|
-                  received_app = app
-                  received_options = options
-                  AppStagerTask::Response.new({})
-                end
-
-                put "/v2/apps/#{app_obj.guid}?#{query_params}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
-                received_app.id.should == app_obj.id
-                received_options.should == {:async => false}
-              end
-            end
+          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
+          last_response.status.should == 201
+          last_response.headers["X-App-Staging-Log"].should == "streaming-log-url"
           end
-        end
       end
 
       context "when app will not be staged" do
         let(:app_obj) { Models::App.make(:state => "STOPPED") }
 
         it "does not add X-App-Staging-Log" do
-          put "/v2/apps/#{app_obj.guid}?stage_async=1", Yajl::Encoder.encode({}), json_headers(admin_headers)
+          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode({}), json_headers(admin_headers)
           last_response.status.should == 201
           last_response.headers.should_not have_key("X-App-Staging-Log")
         end

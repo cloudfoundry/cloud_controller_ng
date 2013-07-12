@@ -946,18 +946,9 @@ module VCAP::CloudController
       end
 
       def self.it_stages
-        it "stages sync" do
-          AppStager.should_receive(:stage_app).with(subject, :async => false)
+        it "stages" do
+          AppStager.should_receive(:stage_app).with(subject)
           expect {
-            subject.stage_async = false
-            update
-          }.to change { subject.last_stager_response }.from(nil)
-        end
-
-        it "stages async" do
-          AppStager.should_receive(:stage_app).with(subject, :async => true)
-          expect {
-            subject.stage_async = true
             update
           }.to change { subject.last_stager_response }.from(nil)
         end

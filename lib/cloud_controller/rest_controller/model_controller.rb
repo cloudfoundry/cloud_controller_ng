@@ -48,8 +48,6 @@ module VCAP::CloudController::RestController
       @request_attrs = json_msg.extract(:stringify_keys => true)
       raise InvalidRequest unless request_attrs
 
-      before_modify(obj)
-
       model.db.transaction do
         obj.lock!
         obj.update_from_hash(request_attrs)
@@ -226,9 +224,6 @@ module VCAP::CloudController::RestController
       ds = get_filtered_dataset_for_enumeration(model, model.user_visible, qp, @opts)
       logger.debug "enumerate: #{ds.sql}"
       ds
-    end
-
-    def before_modify(obj)
     end
 
     # Hook called at the end of +update+, +add_related+ and +remove_related+

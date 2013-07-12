@@ -68,9 +68,7 @@ module VCAP::CloudController
       # +DeaClient.start+
       attr_accessor :routes_changed
 
-      attr_accessor :stage_async
-
-      # Last staging response which might contain streaming log url
+      # Last staging response which will contain streaming log url
       attr_accessor :last_stager_response
 
       alias :kill_after_multiple_restarts? :kill_after_multiple_restarts
@@ -448,7 +446,7 @@ module VCAP::CloudController
 
       def stage_if_needed(&success_callback)
         if needs_staging?
-          self.last_stager_response = AppStager.stage_app(self, {:async => stage_async}, &success_callback)
+          self.last_stager_response = AppStager.stage_app(self, &success_callback)
         else
           success_callback.call
         end
