@@ -17,5 +17,12 @@ module VCAP::CloudController::Models
         "name" => name
       }
     end
+
+    def unbind_on_gateway(_)
+    end
+
+    def bind_on_gateway(new_service_binding)
+      new_service_binding.credentials = self.credentials
+    end
   end
 end

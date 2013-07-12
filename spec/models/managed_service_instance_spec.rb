@@ -75,16 +75,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "#add_service_binding" do
-      it "should not bind an app and a service instance from different app spaces" do
-        Models::App.make(:space => service_instance.space)
-        service_binding = Models::ServiceBinding.make
-        expect {
-          service_instance.add_service_binding(service_binding)
-        }.to raise_error Models::ManagedServiceInstance::InvalidServiceBinding
-      end
-    end
-
     describe "lifecycle" do
       context "service provisioning" do
         it "should deprovision a service on rollback after a create" do
@@ -407,107 +397,130 @@ module VCAP::CloudController
         expect { subject }.to change { Models::ServiceBinding.where(:id => service_binding.id).count }.by(-1)
       end
     end
-  end
 
-  describe "#enum_snapshots" do
-    subject { Models::ManagedServiceInstance.make() }
-    let(:enum_snapshots_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
-    let(:service_auth_token) { "tokenvalue" }
-    before do
-      subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
-      subject.service_plan.service.service_auth_token.update(:token => service_auth_token)
-    end
-
-    context "when there isn't a service auth token" do
-      it "fails" do
-        subject.service_plan.service.service_auth_token.destroy
-        subject.refresh
-        expect do
-          subject.enum_snapshots
-        end.to raise_error(Models::ManagedServiceInstance::MissingServiceAuthToken)
+    describe "validations" do
+      it "should not bind an app and a service instance from different app spaces" do
+        Models::App.make(:space => service_instance.space)
+        service_binding = Models::ServiceBinding.make
+        expect {
+          service_instance.add_service_binding(service_binding)
+        }.to raise_error Models::ServiceInstance::InvalidServiceBinding
       end
     end
 
-    context "returns a list of snapshots" do
-      let(:success_response) { Yajl::Encoder.encode({snapshots: [{snapshot_id: '1', name: 'foo', state: 'ok', size: 0},
-                                                                 {snapshot_id: '2', name: 'bar', state: 'bad', size: 0}]}) }
+    describe "#create_binding" do
+      let(:app) { VCAP::CloudController::Models::App.make }
+      let(:instance) { described_class.make(space: app.space) }
+      let(:binding_options) { Sham.binding_options }
+
+      it 'creates a service binding' do
+        new_binding = instance.create_binding(app.guid, binding_options)
+        new_binding.app_id.should == app.id
+        new_binding.binding_options.should == binding_options
+      end
+    end
+
+    describe "#enum_snapshots" do
+      subject { Models::ManagedServiceInstance.make() }
+      let(:enum_snapshots_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
+      let(:service_auth_token) { "tokenvalue" }
       before do
-        stub_request(:get, enum_snapshots_url_matcher).to_return(:body => success_response)
+        subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
+        subject.service_plan.service.service_auth_token.update(:token => service_auth_token)
       end
 
-      it "return a list of snapshot from the gateway" do
-        snapshots = subject.enum_snapshots
-        snapshots.should have(2).items
-        snapshots.first.snapshot_id.should == '1'
-        snapshots.first.state.should == 'ok'
-        snapshots.last.snapshot_id.should == '2'
-        snapshots.last.state.should == 'bad'
-        a_request(:get, enum_snapshots_url_matcher).with(:headers => {
-          "Content-Type" => "application/json",
-          "X-Vcap-Service-Token" => "tokenvalue"
-        }).should have_been_made
+      context "when there isn't a service auth token" do
+        it "fails" do
+          subject.service_plan.service.service_auth_token.destroy
+          subject.refresh
+          expect do
+            subject.enum_snapshots
+          end.to raise_error(Models::ManagedServiceInstance::MissingServiceAuthToken)
+        end
+      end
+
+      context "returns a list of snapshots" do
+        let(:success_response) { Yajl::Encoder.encode({snapshots: [{snapshot_id: '1', name: 'foo', state: 'ok', size: 0},
+                                                                   {snapshot_id: '2', name: 'bar', state: 'bad', size: 0}]}) }
+        before do
+          stub_request(:get, enum_snapshots_url_matcher).to_return(:body => success_response)
+        end
+
+        it "return a list of snapshot from the gateway" do
+          snapshots = subject.enum_snapshots
+          snapshots.should have(2).items
+          snapshots.first.snapshot_id.should == '1'
+          snapshots.first.state.should == 'ok'
+          snapshots.last.snapshot_id.should == '2'
+          snapshots.last.state.should == 'bad'
+          a_request(:get, enum_snapshots_url_matcher).with(:headers => {
+            "Content-Type" => "application/json",
+            "X-Vcap-Service-Token" => "tokenvalue"
+          }).should have_been_made
+        end
       end
     end
-  end
 
-  describe "#create_snapshot" do
-    let(:name) { 'New snapshot' }
-    subject { Models::ManagedServiceInstance.make() }
-    let(:create_snapshot_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
-    before do
-      subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
-      subject.service_plan.service.service_auth_token.update(:token => "tokenvalue")
-    end
+    describe "#create_snapshot" do
+      let(:name) { 'New snapshot' }
+      subject { Models::ManagedServiceInstance.make() }
+      let(:create_snapshot_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
+      before do
+        subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
+        subject.service_plan.service.service_auth_token.update(:token => "tokenvalue")
+      end
 
-    context "when there isn't a service auth token" do
-      it "fails" do
-        subject.service_plan.service.service_auth_token.destroy
-        subject.refresh
+      context "when there isn't a service auth token" do
+        it "fails" do
+          subject.service_plan.service.service_auth_token.destroy
+          subject.refresh
+          expect do
+            subject.create_snapshot(name)
+          end.to raise_error(Models::ManagedServiceInstance::MissingServiceAuthToken)
+        end
+      end
+
+      it "rejects empty string as name" do
         expect do
+          subject.create_snapshot("")
+        end.to raise_error(JsonMessage::ValidationError, /Field: name/)
+      end
+
+      context "when the request succeeds" do
+        let(:success_response) { %Q({"snapshot_id": "1", "state": "empty", "name": "foo", "size": 0}) }
+        before do
+          stub_request(:post, create_snapshot_url_matcher).to_return(:body => success_response)
+        end
+
+        it "makes an HTTP call to the corresponding service gateway and returns the decoded response" do
+          snapshot = subject.create_snapshot(name)
+          snapshot.snapshot_id.should == '1'
+          snapshot.state.should == 'empty'
+          a_request(:post, create_snapshot_url_matcher).should have_been_made
+        end
+
+        it "uses the correct svc auth token" do
           subject.create_snapshot(name)
-        end.to raise_error(Models::ManagedServiceInstance::MissingServiceAuthToken)
-      end
-    end
 
-    it "rejects empty string as name" do
-      expect do
-        subject.create_snapshot("")
-      end.to raise_error(JsonMessage::ValidationError, /Field: name/)
-    end
+          a_request(:post, create_snapshot_url_matcher).with(
+            headers: {"X-VCAP-Service-Token" => 'tokenvalue'}).should have_been_made
+        end
 
-    context "when the request succeeds" do
-      let(:success_response) { %Q({"snapshot_id": "1", "state": "empty", "name": "foo", "size": 0}) }
-      before do
-        stub_request(:post, create_snapshot_url_matcher).to_return(:body => success_response)
+        it "has the name in the payload" do
+          payload = Yajl::Encoder.encode({name: name})
+          subject.create_snapshot(name)
+
+          a_request(:post, create_snapshot_url_matcher).with(:body => payload).should have_been_made
+        end
       end
 
-      it "makes an HTTP call to the corresponding service gateway and returns the decoded response" do
-        snapshot = subject.create_snapshot(name)
-        snapshot.snapshot_id.should == '1'
-        snapshot.state.should == 'empty'
-        a_request(:post, create_snapshot_url_matcher).should have_been_made
-      end
-
-      it "uses the correct svc auth token" do
-        subject.create_snapshot(name)
-
-        a_request(:post, create_snapshot_url_matcher).with(
-          headers: {"X-VCAP-Service-Token" => 'tokenvalue'}).should have_been_made
-      end
-
-      it "has the name in the payload" do
-        payload = Yajl::Encoder.encode({name: name})
-        subject.create_snapshot(name)
-
-        a_request(:post, create_snapshot_url_matcher).with(:body => payload).should have_been_made
-      end
-    end
-
-    context "when the request fails" do
-      it "should raise an error" do
-        stub_request(:post, create_snapshot_url_matcher).to_return(:body => "Something went wrong", :status => 500)
-        expect { subject.create_snapshot(name) }.to raise_error(Models::ManagedServiceInstance::ServiceGatewayError, /upstream failure/)
+      context "when the request fails" do
+        it "should raise an error" do
+          stub_request(:post, create_snapshot_url_matcher).to_return(:body => "Something went wrong", :status => 500)
+          expect { subject.create_snapshot(name) }.to raise_error(Models::ManagedServiceInstance::ServiceGatewayError, /upstream failure/)
+        end
       end
     end
   end
 end
+

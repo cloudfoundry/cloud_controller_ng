@@ -206,5 +206,30 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'for provided instances' do
+      let(:space) { Models::Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:application) { Models::App.make(:space => space) }
+      let(:service_instance) { Models::ProvidedServiceInstance.make(:space => space) }
+      let(:params) do
+        {
+          "app_guid" => application.guid,
+          "service_instance_guid" => service_instance.guid
+        }
+      end
+
+      it 'creates a service binding' do
+        post "/v2/service_bindings", params.to_json, headers_for(developer)
+        last_response.status.should == 201
+      end
+
+      it 'honors the binding options' do
+        binding_options = Sham.binding_options
+        body =  params.merge("binding_options" => binding_options).to_json
+        post "/v2/service_bindings", body, headers_for(developer)
+        Models::ServiceBinding.last.binding_options.should == binding_options
+      end
+    end
   end
 end

@@ -1,6 +1,5 @@
 module VCAP::CloudController::Models
   class ManagedServiceInstance < ServiceInstance
-    class InvalidServiceBinding < StandardError; end
     class MissingServiceAuthToken < StandardError; end
     class ServiceGatewayError < StandardError; end
 
@@ -102,14 +101,6 @@ module VCAP::CloudController::Models
     def after_rollback
       deprovision_on_gateway if @provisioned_on_gateway_for_plan
       super
-    end
-
-    def validate_service_binding(service_binding)
-      if service_binding && service_binding.app.space != space
-        # FIXME: unlike most other validations, this is *NOT* being enforced
-        # by the underlying db.
-        raise InvalidServiceBinding.new(service_binding.id)
-      end
     end
 
     def as_summary_json

@@ -1,5 +1,7 @@
 module VCAP::CloudController::Models
   class ServiceInstance < Sequel::Model
+    class InvalidServiceBinding < StandardError; end
+
     plugin :single_table_inheritance, :is_gateway_service,
            model_map: lambda { |is_gateway_service|
              if is_gateway_service
@@ -44,6 +46,17 @@ module VCAP::CloudController::Models
 
     def generate_salt
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt
+    end
+
+    def create_binding(app_guid, binding_options)
+      add_service_binding(app_guid: app_guid, binding_options: binding_options)
+    end
+
+    private
+    def validate_service_binding(service_binding)
+      if service_binding && service_binding.app.space != space
+        raise InvalidServiceBinding.new(service_binding.id)
+      end
     end
   end
 end

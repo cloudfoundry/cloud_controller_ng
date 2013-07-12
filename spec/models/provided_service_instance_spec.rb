@@ -49,4 +49,32 @@ describe VCAP::CloudController::Models::ProvidedServiceInstance do
       }
     end
   end
+
+  describe "validations" do
+    it "should not bind an app and a service instance from different app spaces" do
+      service_instance = described_class.make
+      VCAP::CloudController::Models::App.make(:space => service_instance.space)
+      service_binding = VCAP::CloudController::Models::ServiceBinding.make
+      expect {
+        service_instance.add_service_binding(service_binding)
+      }.to raise_error VCAP::CloudController::Models::ServiceInstance::InvalidServiceBinding
+    end
+  end
+
+  describe "#create_binding" do
+    let(:app) { VCAP::CloudController::Models::App.make }
+    let(:instance) { described_class.make(space: app.space, credentials: {a: 'b'}) }
+    let(:binding_options) { Sham.binding_options }
+
+    it 'creates a service binding' do
+      new_binding = instance.create_binding(app.guid, binding_options)
+      new_binding.app_id.should == app.id
+      new_binding.binding_options.should == binding_options
+    end
+
+    it 'has the same credentials as the service instance' do
+      new_binding = instance.create_binding(app.guid, binding_options)
+      new_binding.credentials.should == {'a' => 'b'}
+    end
+  end
 end
