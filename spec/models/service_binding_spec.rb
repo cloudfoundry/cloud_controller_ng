@@ -4,6 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::Models::ServiceBinding do
     it_behaves_like "a CloudController model", {
       :required_attributes => [:service_instance, :app],
+      :db_required_attributes => [:service_instance_id, :app_id, :credentials],
       :unique_attributes => [ [:app, :service_instance] ],
       :create_attribute => lambda { |name|
         @space ||= Models::Space.make

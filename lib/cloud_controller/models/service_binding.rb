@@ -37,9 +37,6 @@ module VCAP::CloudController::Models
 
     def before_create
       super
-      self.gateway_name = ""
-      self.gateway_data = nil
-      self.credentials = {}
       service_instance.bind_on_gateway(self) if service_instance
     end
 
