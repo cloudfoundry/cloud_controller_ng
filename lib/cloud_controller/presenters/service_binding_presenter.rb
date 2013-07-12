@@ -1,23 +1,17 @@
+require 'cloud_controller/presenters/service_instance_presenter'
+
 class ServiceBindingPresenter
 
   def initialize(service_binding)
     @service_binding = service_binding
   end
 
-  def service
-    @service_binding.service_instance.service
-  end
-
   def to_hash
     {
-      label: [service.label, service.version].join('-'),
-      name: @service_binding.service_instance.name,
       credentials: @service_binding.credentials,
       options: @service_binding.binding_options,
-      plan: @service_binding.service_instance.service_plan.name,
-      provider: service.provider,
-      version: service.version,
-      vendor: service.label,
-    }
+    }.merge(ServiceInstancePresenter.new(@service_binding.service_instance).to_hash)
   end
 end
+
+
