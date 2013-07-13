@@ -91,7 +91,8 @@ module VCAP::CloudController
         Models::ManagedServiceInstance.new(
           :service_plan => service_plan,
           :name => "my-postgresql",
-          :space => Models::Space.make
+          :space => Models::Space.make,
+          :gateway_name => 'named stored in gateway',
         )
       end
 
@@ -114,6 +115,7 @@ module VCAP::CloudController
       before do
         Models::ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
         gw_client.stub(:provision).and_return(provision_resp)
+        gw_client.stub(:bind).and_return(bind_resp)
         service_instance.save
       end
 
@@ -122,9 +124,8 @@ module VCAP::CloudController
           VCAP::CloudController::SecurityContext.
             should_receive(:current_user_email).
             and_return("a@b.c")
-          gw_client.should_receive(:bind).
-            with(hash_including(:email => "a@b.c")).
-            and_return(bind_resp)
+          gw_client.should_receive(:bind).with(hash_including(:email => "a@b.c", service_id: service_instance.gateway_name))
+
           binding = Models::ServiceBinding.make(:service_instance => service_instance)
           binding.gateway_name.should == "gwname_binding"
           binding.gateway_data.should == "abc"

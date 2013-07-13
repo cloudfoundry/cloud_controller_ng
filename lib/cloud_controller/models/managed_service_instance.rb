@@ -269,7 +269,7 @@ module VCAP::CloudController::Models
       service = service_plan.service
 
       gw_attrs = service_gateway_client.bind(
-        :service_id => service_binding.gateway_name,
+        :service_id => gateway_name,
         # TODO: we shouldn't still be using this compound label
         :label      => "#{service.label}-#{service.version}",
         :email      => VCAP::CloudController::SecurityContext.current_user_email,
