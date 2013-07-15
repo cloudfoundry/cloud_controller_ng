@@ -9,7 +9,7 @@ class ServiceBindingPresenter
   def to_hash
     {
       credentials: @service_binding.credentials,
-      options: @service_binding.binding_options,
+      options: @service_binding.binding_options || {},
     }.merge(ServiceInstancePresenter.new(@service_binding.service_instance).to_hash)
   end
 end
