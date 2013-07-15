@@ -1,5 +1,6 @@
 module VCAP::CloudController::ApiSpecHelper
   shared_examples "creating" do |opts|
+    opts[:extra_attributes] ||= []
     before(:all) do
       reset_database
       configure_stacks
