@@ -66,6 +66,11 @@ To run an interactive console with the cloud controller code loaded:
 
     bin/console
 
+## API documentation
+
+You can generate the API documentation by running `bin/document_api`. You can then use the
+`cf curl` command to interact with the API.
+
 ## Logs
 
 Cloud Controller uses [Steno](http://github.com/cloudfoundry/steno) to manage its logs.
