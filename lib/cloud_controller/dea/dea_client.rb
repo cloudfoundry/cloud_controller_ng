@@ -316,16 +316,7 @@ module VCAP::CloudController
           :executableUri => Staging.droplet_download_uri(app),
           :version => app.version,
           :services => app.service_bindings.map do |sb|
-            svc = sb.service_instance.service_plan.service
-            {
-              :name => sb.service_instance.name,
-              :label => "#{svc.label}-#{svc.version}",
-              :plan => sb.service_instance.service_plan.name,
-              :provider => svc.provider,
-              :version => svc.version,
-              :credentials => sb.credentials,
-              :vendor => svc.label
-            }
+            ServiceBindingPresenter.new(sb).to_hash
           end,
           :limits => {
             :mem => app.memory,
