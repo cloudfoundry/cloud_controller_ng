@@ -289,9 +289,9 @@ module VCAP::CloudController
             end
 
             it "calls provided callback" do
-              callback_called = false
-              stage { callback_called = true }
-              callback_called.should be_true
+              callback_options = nil
+              stage { |options| callback_options = options }
+              callback_options[:started_instances].should equal(1)
             end
           end
 

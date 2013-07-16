@@ -184,7 +184,7 @@ module VCAP::CloudController
     end
 
     def trigger_completion_callback
-      @completion_callback.call if @completion_callback
+      @completion_callback.call(:started_instances => 1) if @completion_callback
     end
 
     def destroy_upload_handle

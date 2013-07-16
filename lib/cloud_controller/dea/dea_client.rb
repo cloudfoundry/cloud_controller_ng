@@ -36,7 +36,7 @@ module VCAP::CloudController
 
       def start(app, options={})
         instances_to_start = options[:instances_to_start] || app.instances
-        start_instances_in_range(app, (app.instances - instances_to_start...app.instances))
+        start_instances_in_range(app, ((app.instances - instances_to_start)...app.instances))
         app.routes_changed = false
       end
 
