@@ -52,7 +52,7 @@ module VCAP::CloudController
       end
     end
 
-    def mark_app_staged(opts)
+    def mark_app_started(opts)
       dea_id = opts[:dea_id]
       app_id = opts[:app_id]
 

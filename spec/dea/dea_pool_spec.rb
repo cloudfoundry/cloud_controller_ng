@@ -203,7 +203,7 @@ module VCAP::CloudController
           10.times do
             dea_id = subject.find_dea(0, "stack", "app-id")
             dea_ids << dea_id
-            subject.mark_app_staged(dea_id: dea_id, app_id: "app-id")
+            subject.mark_app_started(dea_id: dea_id, app_id: "app-id")
           end
 
           dea_ids.should match_array((["dea-id1", "dea-id2"] * 5))

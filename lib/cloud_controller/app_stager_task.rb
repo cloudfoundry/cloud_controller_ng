@@ -39,10 +39,10 @@ module VCAP::CloudController
     end
 
     def stage(&completion_callback)
-      stager_id = @stager_pool.find_stager(@app.stack.name, 1024)
-      raise Errors::StagingError, "no available stagers" unless stager_id
+      @stager_id = @stager_pool.find_stager(@app.stack.name, 1024)
+      raise Errors::StagingError, "no available stagers" unless @stager_id
 
-      subject = "staging.#{stager_id}.start"
+      subject = "staging.#{@stager_id}.start"
       @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
       # The creation of upload handle only guarantees that this cloud controller
       # is disallowed from trying to stage this app again. It does NOT guarantee that a different
@@ -179,6 +179,8 @@ module VCAP::CloudController
       end
 
       @app.save
+
+      DeaClient.dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid)
     ensure
       destroy_upload_handle
     end

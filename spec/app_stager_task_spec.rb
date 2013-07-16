@@ -258,6 +258,10 @@ module VCAP::CloudController
           let(:detected_buildpack) { "buildpack-name" }
 
           context "when no other staging has happened" do
+            before do
+              DeaClient.dea_pool.stub(:mark_app_started)
+            end
+
             it "stages the app" do
               expect {
                 stage
@@ -281,6 +285,11 @@ module VCAP::CloudController
 
             it "saves the detected buildpack" do
               expect { stage }.to change { app.detected_buildpack }.from(nil)
+            end
+
+            it "marks app started in dea pool" do
+              DeaClient.dea_pool.should_receive(:mark_app_started).with( {:dea_id => stager_id, :app_id => app.guid } )
+              stage
             end
 
             it "removes upload handle" do
