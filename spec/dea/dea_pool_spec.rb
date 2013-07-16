@@ -50,7 +50,7 @@ module VCAP::CloudController
           :stacks => ["stack"],
           :available_memory => 1024,
           :app_id_to_count => {
-            "other-app-id" => 1
+            :"other-app-id" => 1
           }
         }
       end
@@ -98,7 +98,7 @@ module VCAP::CloudController
           subject.process_advertise_message(dea_advertise_msg.merge(
             :id => "other-dea-id",
             :app_id_to_count => {
-              "app-id" => 1
+              :"app-id" => 1
             }
           ))
         end
@@ -116,7 +116,7 @@ module VCAP::CloudController
           subject.process_advertise_message(
             dea_advertise_msg.merge(:id => "dea-id-already-has-an-instance",
                                     :available_memory => 2048,
-                                    :app_id_to_count => { "app-id" => 1 })
+                                    :app_id_to_count => { :"app-id" => 1 })
           )
         end
         context "when all DEAs have the same available memory" do
@@ -213,7 +213,7 @@ module VCAP::CloudController
       describe "changing advertisements for the same dea" do
         it "only uses the newest message from a given dea" do
           Timecop.freeze do
-            advertisement = dea_advertise_msg.merge(:app_id_to_count => {"app-id" => 1})
+            advertisement = dea_advertise_msg.merge(:app_id_to_count => {:"app-id" => 1})
             subject.process_advertise_message(advertisement)
 
             Timecop.travel(5)

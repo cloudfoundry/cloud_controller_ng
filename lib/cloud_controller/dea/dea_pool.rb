@@ -84,11 +84,11 @@ module VCAP::CloudController
       end
 
       def increment_instance_count(app_id)
-        stats[:app_id_to_count][app_id] = num_instances_of(app_id) + 1
+        stats[:app_id_to_count][app_id.to_sym] = num_instances_of(app_id.to_sym) + 1
       end
 
       def num_instances_of(app_id)
-        stats[:app_id_to_count].fetch(app_id, 0)
+        stats[:app_id_to_count].fetch(app_id.to_sym, 0)
       end
 
       def available_memory
