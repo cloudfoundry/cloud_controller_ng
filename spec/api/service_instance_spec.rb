@@ -145,11 +145,40 @@ module VCAP::CloudController
     describe 'GET', '/v2/service_instances' do
       let(:space) { Models::Space.make }
       let(:developer) { make_developer_for_space(space) }
+      let(:service_instance) {Models::ManagedServiceInstance.make}
+
       it "shows the dashboard_url if there is" do
-        service_instance = Models::ManagedServiceInstance.make
         service_instance.update(dashboard_url: 'http://dashboard.io')
         get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
         decoded_response.fetch('entity').fetch('dashboard_url').should == 'http://dashboard.io'
+      end
+
+      context "filtering" do
+        let(:first_found_instance) { decoded_response.fetch('resources').first }
+        
+        it 'allows filtering by gateway_name' do
+          get "v2/service_instances?q=gateway_name:#{service_instance.gateway_name}", {}, admin_headers
+          last_response.status.should == 200
+          first_found_instance.fetch('metadata').fetch('guid').should == service_instance.guid
+        end
+
+        it 'allows filtering by name' do
+          get "v2/service_instances?q=name:#{service_instance.name}", {}, admin_headers
+          last_response.status.should == 200
+          first_found_instance.fetch('entity').fetch('name').should == service_instance.name
+        end
+
+        it 'allows filtering by space_guid' do
+          get "v2/service_instances?q=space_guid:#{service_instance.space_guid}", {}, admin_headers
+          last_response.status.should == 200
+          first_found_instance.fetch('entity').fetch('space_guid').should == service_instance.space_guid
+        end
+
+        it 'allows filtering by service_plan_guid' do
+          get "v2/service_instances?q=service_plan_guid:#{service_instance.service_plan_guid}", {}, admin_headers
+          last_response.status.should == 200
+          first_found_instance.fetch('entity').fetch('service_plan_guid').should == service_instance.service_plan_guid
+        end
       end
     end
 

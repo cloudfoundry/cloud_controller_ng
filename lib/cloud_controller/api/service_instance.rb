@@ -21,7 +21,7 @@ module VCAP::CloudController
       attribute :dashboard_url, String, exclude_in: [:create, :update]
     end
 
-    query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid
+    query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name
 
     def before_create
       unless Models::ServicePlan.user_visible.filter(:guid => request_attrs['service_plan_guid']).count > 0
