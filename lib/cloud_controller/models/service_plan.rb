@@ -4,8 +4,10 @@ module VCAP::CloudController::Models
   class ServicePlan < Sequel::Model
     many_to_one       :service
     one_to_many       :service_instances
+    one_to_many       :service_plan_visibilities
 
-    add_association_dependencies :service_instances => :destroy
+    add_association_dependencies :service_instances => :destroy,
+                                 :service_plan_visibilities => :destroy
 
     default_order_by  :name
 

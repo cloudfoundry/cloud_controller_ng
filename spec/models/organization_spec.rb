@@ -197,25 +197,35 @@ module VCAP::CloudController
       let(:org) { Models::Organization.make }
       let(:space) { Models::Space.make(:organization => org) }
 
-      subject { org.reload.destroy }
+      before { org.reload }
 
       it "destroys all apps" do
         app = Models::App.make(:space => space)
-        expect { subject }.to change { Models::App[:id => app.id] }.from(app).to(nil)
+        expect { org.destroy }.to change { Models::App[:id => app.id] }.from(app).to(nil)
       end
 
       it "destroys all spaces" do
-        expect { subject }.to change { Models::Space[:id => space.id] }.from(space).to(nil)
+        expect { org.destroy }.to change { Models::Space[:id => space.id] }.from(space).to(nil)
       end
 
       it "destroys all service instances" do
         service_instance = Models::ManagedServiceInstance.make(:space => space)
-        expect { subject }.to change { Models::ManagedServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
+        expect { org.destroy }.to change { Models::ManagedServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
       end
+
+      it "destroys all service plan visibilities" do
+        service_plan_visibility = Models::ServicePlanVisibility.make(:organization => org)
+        expect {
+          org.destroy
+        }.to change {
+          Models::ServicePlanVisibility.where(:id => service_plan_visibility.id).any?
+        }.to(false)
+      end
+
 
       it "destroys the owned domain" do
         domain = Models::Domain.make(:owning_organization => org)
-        expect { subject }.to change { Models::Domain[:id => domain.id] }.from(domain).to(nil)
+        expect { org.destroy }.to change { Models::Domain[:id => domain.id] }.from(domain).to(nil)
       end
 
       it "nullify domains" do
@@ -223,7 +233,7 @@ module VCAP::CloudController
         domain = Models::Domain.make(:owning_organization => nil)
         domain.add_organization(org)
         domain.save
-        expect { subject }.to change { domain.reload.organizations.count }.by(-1)
+        expect { org.destroy }.to change { domain.reload.organizations.count }.by(-1)
       end
     end
 

@@ -9,11 +9,15 @@ module VCAP::CloudController::Models
     one_to_many       :apps, :dataset => lambda { App.filter(:space => spaces) }
     one_to_many       :app_events, :dataset => lambda { VCAP::CloudController::Models::AppEvent.filter(:app => apps) }
     one_to_many       :owned_domain, :class => "VCAP::CloudController::Models::Domain", :key => :owning_organization_id
+    one_to_many       :service_plan_visibilities
     many_to_many      :domains, :before_add => :validate_domain
     many_to_one       :quota_definition
 
     add_association_dependencies :domains => :nullify,
-      :spaces => :destroy, :service_instances => :destroy, :owned_domain => :destroy
+      :spaces => :destroy,
+      :service_instances => :destroy,
+      :owned_domain => :destroy,
+      :service_plan_visibilities => :destroy
 
     define_user_group :users
     define_user_group :managers, :reciprocal => :managed_organizations

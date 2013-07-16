@@ -24,7 +24,16 @@ module VCAP::CloudController
 
       it "destroys all service instances" do
         service_instance = Models::ManagedServiceInstance.make(:service_plan => service_plan)
-        expect { service_plan.destroy }.to change { Models::ManagedServiceInstance.where(:id => service_instance.id).count }.by(-1)
+        expect { service_plan.destroy }.to change {
+          Models::ManagedServiceInstance.where(:id => service_instance.id).any?
+        }.to(false)
+      end
+
+      it "destroys all service plan visibilities" do
+        service_plan_visibility = Models::ServicePlanVisibility.make(:service_plan => service_plan)
+        expect { service_plan.destroy }.to change {
+          Models::ServicePlanVisibility.where(:id => service_plan_visibility.id).any?
+        }.to(false)
       end
     end
 
