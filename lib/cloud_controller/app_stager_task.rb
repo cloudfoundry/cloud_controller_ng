@@ -18,6 +18,10 @@ module VCAP::CloudController
       def detected_buildpack
         @response[:detected_buildpack]
       end
+
+      def droplet_hash
+        @response[:droplet_sha1]
+      end
     end
 
     attr_reader :config
@@ -163,7 +167,7 @@ module VCAP::CloudController
     end
 
     def staging_completion(stager_response)
-      @app.droplet_hash = Digest::SHA1.file(@upload_handle.upload_path).hexdigest
+      @app.droplet_hash = stager_response.droplet_hash
       @app.detected_buildpack = stager_response.detected_buildpack
 
       Staging.store_droplet(@app, @upload_handle.upload_path)

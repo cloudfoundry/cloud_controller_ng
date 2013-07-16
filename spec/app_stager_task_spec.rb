@@ -13,6 +13,32 @@ module VCAP::CloudController
 
     subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, stager_pool) }
 
+    let(:reply_json_error) { nil }
+    let(:task_streaming_log_url) { "task-streaming-log-url" }
+    let(:detected_buildpack) { nil }
+
+    let(:first_reply_json) do
+      {
+        "task_id" => "task-id",
+        "task_log" => "task-log",
+        "task_streaming_log_url" => "task-streaming-log-url",
+        "detected_buildpack" => "buildpack-name",
+        "error" => nil,
+        "droplet_sha1" => nil
+      }
+    end
+
+    let(:reply_json) do
+      {
+        "task_id" => "task-id",
+        "task_log" => "task-log",
+        "task_streaming_log_url" => task_streaming_log_url,
+        "detected_buildpack" => detected_buildpack,
+        "error" => reply_json_error,
+        "droplet_sha1" => "droplet-sha1"
+      }
+    end
+
     before do
       app.staged?.should be_false
 
@@ -27,8 +53,6 @@ module VCAP::CloudController
       Staging.stub(:store_droplet)
       Staging.stub(:store_buildpack_cache)
       Staging.stub(:destroy_handle)
-
-      Digest::SHA1.stub(:file).with('/upload/path').and_return(double(:sha, hexdigest: 'droplet_hash'))
     end
 
     context 'when no stager can be found' do
@@ -50,16 +74,6 @@ module VCAP::CloudController
 
     describe "staging" do
       describe "receiving the first response from the stager (the staging setup completion message)" do
-        let(:reply_json) do
-          {
-              "task_id" => "task-id",
-              "task_log" => "task-log",
-              "task_streaming_log_url" => "task-streaming-log-url",
-              "detected_buildpack" => nil,
-              "error" => nil,
-          }
-        end
-
         def stage(&blk)
           stub_schedule_sync do
             @before_staging_completion.call if @before_staging_completion
@@ -171,15 +185,7 @@ module VCAP::CloudController
         end
 
         context "when staging setup returned an error response" do
-          let(:reply_json) do
-            {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "detected_buildpack" => nil,
-                "error" => "staging failed",
-            }
-          end
+          let(:reply_json_error) { "staging failed" }
 
           it "raises a StagingError" do
             expect { stage }.to raise_error(Errors::StagingError, /failed to stage/)
@@ -238,41 +244,18 @@ module VCAP::CloudController
       end
 
       describe "receiving staging completion message" do
-        let(:reply_json) do
-          {
-              "task_id" => "task-id",
-              "task_log" => "task-log",
-              "task_streaming_log_url" => "task-streaming-log-url",
-              "detected_buildpack" => "buildpack-name",
-              "error" => nil,
-          }
-        end
-
         def stage(&blk)
           stub_schedule_sync do
             @before_staging_completion.call if @before_staging_completion
-            message_bus.respond_to_request("staging.#{stager_id}.start", {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => "task-streaming-log-url",
-                "detected_buildpack" => "buildpack-name",
-                "error" => nil,
-            })
+            message_bus.respond_to_request("staging.#{stager_id}.start", first_reply_json)
           end
+
           staging_task.stage(&blk)
           message_bus.respond_to_request("staging.#{stager_id}.start", reply_json)
         end
 
         context "when app staging succeeds" do
-          let(:reply_json) do
-            {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "detected_buildpack" => "buildpack-name",
-                "error" => nil,
-            }
-          end
+          let(:detected_buildpack) { "buildpack-name" }
 
           context "when no other staging has happened" do
             it "stages the app" do
@@ -289,7 +272,7 @@ module VCAP::CloudController
             end
 
             it "updates droplet hash on the app" do
-              expect { stage }.to change { app.droplet_hash }.from(nil)
+              expect { stage }.to change { app.droplet_hash }.from(nil).to("droplet-sha1")
             end
 
             it "marks the app as having staged successfully" do
@@ -409,15 +392,7 @@ module VCAP::CloudController
         end
 
         context "when app staging returned an error response" do
-          let(:reply_json) do
-            {
-                "task_id" => "task-id",
-                "task_log" => "task-log",
-                "task_streaming_log_url" => nil,
-                "detected_buildpack" => nil,
-                "error" => "staging failed",
-            }
-          end
+          let(:reply_json_error) { "staging failed" }
 
           it "logs StagingError instead of raising to avoid stopping main runloop" do
             logger = mock(:logger, :info => nil)
