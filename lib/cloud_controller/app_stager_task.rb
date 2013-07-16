@@ -97,6 +97,8 @@ module VCAP::CloudController
     def start_app_message
       msg = DeaClient.start_app_message(@app)
       msg[:index] = 0
+      msg[:sha1] = nil
+      msg[:executableUri] = nil
       msg
     end
 

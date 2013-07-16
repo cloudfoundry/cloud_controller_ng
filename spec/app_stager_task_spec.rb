@@ -445,6 +445,7 @@ module VCAP::CloudController
     describe ".staging_request" do
       let(:staging_task) { AppStagerTask.new(nil, message_bus, app, stager_pool) }
       let(:app) { Models::App.make :droplet_hash => nil, :package_state => "PENDING" }
+      let(:dea_start_message) { {:dea_client_message => "start app message"} }
 
       before do
         3.times do
@@ -452,6 +453,8 @@ module VCAP::CloudController
           binding = Models::ServiceBinding.make(:app => app, :service_instance => instance)
           app.add_service_binding(binding)
         end
+
+        DeaClient.stub(:start_app_message).and_return(dea_start_message)
       end
 
       it "includes app guid, task id and download/upload uris" do
@@ -501,12 +504,23 @@ module VCAP::CloudController
       end
 
       it "includes start app message" do
-        dea_client_message = {:dea_client_message => "start app message"}
-        DeaClient.stub(:start_app_message).and_return(dea_client_message)
-
         request = staging_task.staging_request
-        request[:start_message].should include dea_client_message
+        request[:start_message].should include dea_start_message
+      end
+
+      it "includes app index 0" do
+        request = staging_task.staging_request
         request[:start_message].should include ({:index => 0})
+      end
+
+      it "overwrites droplet sha" do
+        request = staging_task.staging_request
+        request[:start_message].should include ({:sha1 => nil})
+      end
+
+      it "overwrites droplet download uri" do
+        request = staging_task.staging_request
+        request[:start_message].should include ({:executableUri => nil})
       end
     end
   end
