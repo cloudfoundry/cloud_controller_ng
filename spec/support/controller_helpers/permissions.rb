@@ -184,7 +184,7 @@ module ControllerHelpers
   end
 
   shared_examples "permission delete allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
-    describe "DELETE /v2/apps/:id" do
+    describe "DELETE #{path}/:id" do
       it "should allow a user with the #{perm_name} permission to delete a #{name}" do
         delete "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_a
         last_response.status.should == 204
