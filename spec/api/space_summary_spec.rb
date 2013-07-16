@@ -4,26 +4,15 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::SpaceSummary do
-    num_services = 2
-    num_started_apps = 3
-    num_stopped_apps = 5
-    mem_size = 128
-    num_apps = num_started_apps + num_stopped_apps
+    let(:mem_size) { 128 }
+    let(:space) { Models::Space.make }
+    let(:routes) { 2.times.map { Models::Route.make(:space => space) } }
+    let(:services) { 2.times.map { Models::ManagedServiceInstance.make(:space => space) } }
 
-    before :all do
-      @space = Models::Space.make
-      @route1 = Models::Route.make(:space => @space)
-      @route2 = Models::Route.make(:space => @space)
-      @services = []
-      @apps = []
-
-      num_services.times do
-        @services << Models::ManagedServiceInstance.make(:space => @space, :dashboard_url => "https://example.com/sso")
-      end
-
-      num_started_apps.times do |i|
-        @apps << Models::App.make(
-          :space => @space,
+    let!(:apps) do
+      started_apps = 2.times.map do |i|
+        Models::App.make(
+          :space => space,
           :instances => i,
           :memory => mem_size,
           :state => "STARTED",
@@ -32,130 +21,103 @@ module VCAP::CloudController
         )
       end
 
-      num_stopped_apps.times do |i|
-        @apps << Models::App.make(
-          :space => @space,
+      stopped_apps = 2.times.map do |i|
+        Models::App.make(
+          :space => space,
           :instances => i,
           :memory => mem_size,
           :state => "STOPPED",
         )
       end
 
-      @apps.each do |app|
-        app.add_route(@route1)
-        app.add_route(@route2)
-        @services.each do |svc|
-          Models::ServiceBinding.make(:app => app, :service_instance => svc)
-        end
+      (started_apps + stopped_apps).map do |app|
+        routes.each { |route| app.add_route(route) }
+        services.each { |service| Models::ServiceBinding.make(:app => app, :service_instance => service) }
+        app
       end
     end
 
-    describe "GET /v2/spaces/:id/summary" do
-      let(:health_response) do
-        hm_resp = {}
+    subject(:request) { get "/v2/spaces/#{space.guid}/summary", {}, admin_headers }
 
-        @apps.each do |app|
-          if app.started?
-            hm_resp[app.guid] = app.instances
+    describe "GET /v2/spaces/:id/summary" do
+      let(:health_response) { Hash[apps.select { |app| app.started? }.map { |app| [app.guid, app.instances] }] }
+
+      before { HealthManagerClient.stub(:healthy_instances) { health_response } }
+
+      its(:status) { should eq 200 }
+
+      describe "the json" do
+        subject(:request) do
+          get "/v2/spaces/#{space.guid}/summary", {}, admin_headers
+          decoded_response
+        end
+
+        its(["guid"]) { should eq space.guid }
+        its(["name"]) { should eq space.name }
+        its(["apps"]) { should have(apps.count).entries }
+        its(["services"]) { should have(services.count).entries }
+
+        it "returns the correct info for the apps" do
+          request["apps"].each do |app_resp|
+            app = apps.find { |a| a.guid == app_resp["guid"] }
+            expected_running_instances = app.started? ? app.instances : 0
+
+            expect(app_resp).to eq({
+              "guid" => app.guid,
+              "name" => app.name,
+              "urls" => routes.map(&:fqdn),
+              "routes" => [
+                {
+                  "guid" => routes[0].guid,
+                  "host" => routes[0].host,
+                  "domain" => {
+                    "guid" => routes[0].domain.guid,
+                    "name" => routes[0].domain.name
+                  }
+                }, {
+                "guid" => routes[1].guid,
+                "host" => routes[1].host,
+                "domain" => {
+                  "guid" => routes[1].domain.guid,
+                  "name" => routes[1].domain.name}
+              }
+              ],
+              "service_count" => services.count,
+              "service_names" => services.map(&:name),
+              "instances" => app.instances,
+              "running_instances" => expected_running_instances
+            }.merge(app.to_hash))
           end
         end
 
-        hm_resp
-      end
+        it "returns the correct info for a service" do
+          service_response = request["services"][0]
+          service = services.find { |service| service.guid == service_response["guid"] }
 
-      before do
-        HealthManagerClient.should_receive(:healthy_instances).
-          and_return(health_response)
-      end
-
-      it "should return 200" do
-        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
-
-        last_response.status.should == 200
-      end
-
-      it "should return the space guid" do
-        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
-        decoded_response["guid"].should == @space.guid
-      end
-
-      it "should return the space name" do
-        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
-        decoded_response["name"].should == @space.name
-      end
-
-      it "should return num_apps apps" do
-        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
-        decoded_response["apps"].size.should == num_apps
-      end
-
-      it "should return the correct info for the apps" do
-        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
-        decoded_response["apps"].each do |app_resp|
-          app = @apps.find { |a| a.guid == app_resp["guid"] }
-
-          expected_running_instances = app.started? ? app.instances : 0
-
-          app_resp.should == {
-            "guid" => app.guid,
-            "name" => app.name,
-            "urls" => [@route1.fqdn, @route2.fqdn],
-            "routes" => [
-              {
-                "guid" => @route1.guid,
-                "host" => @route1.host,
-                "domain" => {
-                  "guid" => @route1.domain.guid,
-                  "name" => @route1.domain.name
-                }
-              }, {
-                "guid" => @route2.guid,
-                "host" => @route2.host,
-                "domain" => {
-                  "guid" => @route2.domain.guid,
-                  "name" => @route2.domain.name}
+          expect(service_response).to eq(
+            "guid" => service.guid,
+            "name" => service.name,
+            "bound_app_count" => apps.count,
+            "dashboard_url" => service.dashboard_url,
+            "service_plan" => {
+              "guid" => service.service_plan.guid,
+              "name" => service.service_plan.name,
+              "service" => {
+                "guid" => service.service_plan.service.guid,
+                "label" => service.service_plan.service.label,
+                "provider" => service.service_plan.service.provider,
+                "version" => service.service_plan.service.version,
               }
-            ],
-            "service_count" => num_services,
-            "instances" => app.instances,
-            "running_instances" => expected_running_instances
-          }.merge(app.to_hash)
-        end
-      end
-
-      it "should return num_services services" do
-        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
-        decoded_response["services"].size.should == num_services
-      end
-
-      it "should return the correct info for a service" do
-        get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
-        svc_resp = decoded_response["services"][0]
-        svc = @services.find { |s| s.guid == svc_resp["guid"] }
-
-        svc_resp.should == {
-          "guid" => svc.guid,
-          "name" => svc.name,
-          "bound_app_count" => num_apps,
-          "dashboard_url" => svc.dashboard_url,
-          "service_plan" => {
-            "guid" => svc.service_plan.guid,
-            "name" => svc.service_plan.name,
-            "service" => {
-              "guid" => svc.service_plan.service.guid,
-              "label" => svc.service_plan.service.label,
-              "provider" => svc.service_plan.service.provider,
-              "version" => svc.service_plan.service.version,
             }
-          }
-        }
+          )
+        end
       end
 
       context "when the health manager does not return the healthy instances for an app" do
         let(:missing_apps) do
           missing = []
 
-          @apps.each_with_index do |app, i|
+          apps.each_with_index do |app, i|
             if app.started? && i.even?
               missing << app.guid
             end
@@ -165,7 +127,7 @@ module VCAP::CloudController
         end
 
         let(:health_response) do
-          @apps.inject({}) do |response, app|
+          apps.inject({}) do |response, app|
             unless missing_apps.include?(app.guid)
               response[app.guid] = app.instances
             end
@@ -175,13 +137,13 @@ module VCAP::CloudController
         end
 
         it "has nil for its running_instances" do
-          get "/v2/spaces/#{@space.guid}/summary", {}, admin_headers
+          request
           response_apps = decoded_response["apps"]
 
-          missing_apps.should_not be_empty
+          expect(missing_apps).not_to be_empty
           missing_apps.each do |guid|
             responded = response_apps.find { |a| a["guid"] == guid }
-            responded["running_instances"].should be_nil
+            expect(responded["running_instances"]).to be_nil
           end
         end
       end
