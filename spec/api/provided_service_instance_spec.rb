@@ -50,7 +50,6 @@ module VCAP::CloudController
 
       describe "App Space Level Permissions" do
         user_does_not_have_access("SpaceManager", :@space_a_manager, :@space_b_manager)
-        user_does_not_have_access("SpaceAuditor", :@space_a_auditor, :@space_b_auditor)
 
         describe "Developer" do
           let(:member_a) { @space_a_developer }
@@ -61,10 +60,25 @@ module VCAP::CloudController
                            :path => "/v2/provided_service_instances",
                            :enumerate => 1,
                            :create => :allowed,
-                           :read => :not_allowed,
+                           :read => :allowed,
+                           :modify => :allowed,
+                           :delete => :allowed
+        end
+
+        describe "SpaceAuditor" do
+          let(:member_a) { @space_a_auditor }
+          let(:member_b) { @space_b_auditor }
+
+          include_examples "permission checks", "SpaceAuditor",
+                           :model => Models::ProvidedServiceInstance,
+                           :path => "/v2/provided_service_instances",
+                           :enumerate => 0,
+                           :create => :not_allowed,
+                           :read => :allowed,
                            :modify => :not_allowed,
                            :delete => :not_allowed
-        end
+      end
+
       end
 
     end

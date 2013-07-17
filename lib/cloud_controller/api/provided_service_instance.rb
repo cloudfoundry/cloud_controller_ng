@@ -3,8 +3,9 @@ require 'cloud_controller/rest_controller'
 module VCAP::CloudController
   rest_controller :ProvidedServiceInstance do
     permissions_required do
-      create Permissions::SpaceDeveloper
-      create Permissions::CFAdmin
+      full Permissions::SpaceDeveloper
+      full Permissions::CFAdmin
+      read Permissions::SpaceAuditor
     end
 
     define_attributes do
