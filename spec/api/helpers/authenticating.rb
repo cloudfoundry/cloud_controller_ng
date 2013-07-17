@@ -21,17 +21,24 @@ module VCAP::CloudController::ApiSpecHelper
     end
 
     context "with valid auth header" do
-      context "for a known user" do
+      context "for an existing user" do
         it "should return 200" do
           get opts[:path], {}, headers_for(Models::User.make)
-          last_response.status.should == 200
+          last_response.status.should == 200 # finds the user
+        end
+      end
+
+      context "for a new user" do
+        it "should return 200" do
+          get opts[:path], {}, headers_for(Machinist.with_save_nerfed { Models::User.make })
+          last_response.status.should == 200 # creates the user
         end
       end
 
       context "for an admin" do
         it "should return 200" do
           get opts[:path], {}, headers_for(nil, :admin_scope => true)
-          last_response.status.should == 200
+          last_response.status.should == 200 # creates the admin
         end
       end
 
@@ -42,19 +49,14 @@ module VCAP::CloudController::ApiSpecHelper
         end
       end
 
-      context "for a user that no longer exists" do
-        before(:all) do
+      context "for a deleted user" do
+        it "should return 200" do
           user = Models::User.make
           headers = headers_for(user)
           user.delete
           get opts[:path], {}, headers
+          last_response.status.should == 200 # recreates the user
         end
-
-        it "should return 403" do
-          last_response.status.should == 403
-        end
-
-        it_behaves_like "a vcap rest error response", /You are not authorized/
       end
     end
   end
