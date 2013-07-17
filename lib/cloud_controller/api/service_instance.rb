@@ -5,7 +5,6 @@ module VCAP::CloudController
   rest_controller :ServiceInstance do
     permissions_required do
       full Permissions::CFAdmin
-      read Permissions::OrgManager
       full Permissions::SpaceDeveloper
       read Permissions::SpaceAuditor
     end
