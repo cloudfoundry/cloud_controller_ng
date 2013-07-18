@@ -49,6 +49,27 @@ describe VCAP::CloudController::Controller do
       end
     end
 
+    def self.it_creates_and_sets_non_admin_user
+      it "creates non-admin user" do
+        expect {
+          make_request
+        }.to change { user_count }.by(1)
+
+        VCAP::CloudController::Models::User.order(:id).last.tap do |u|
+          expect(u.guid).to eq(user_id)
+          expect(u.admin).to be_false
+          expect(u.active).to be_true
+        end
+      end
+
+      it "sets user to created non-admin user" do
+        make_request
+        expect(VCAP::CloudController::SecurityContext.current_user).to eq(
+          VCAP::CloudController::Models::User.order(:id).last
+        )
+      end
+    end
+
     def self.it_sets_token_info
       it "sets token info" do
         make_request
@@ -95,8 +116,7 @@ describe VCAP::CloudController::Controller do
 
           context "when there are >0 users" do
             before { VCAP::CloudController::Models::User.make }
-            it_does_not_create_user
-            it_sets_found_user
+            it_creates_and_sets_non_admin_user
             it_sets_token_info
           end
         end
@@ -106,15 +126,13 @@ describe VCAP::CloudController::Controller do
 
           context "when there are 0 users in the ccdb" do
             before { reset_database }
-            it_does_not_create_user
-            it_sets_found_user
+            it_creates_and_sets_non_admin_user
             it_sets_token_info
           end
 
           context "when there are >0 users" do
             before { VCAP::CloudController::Models::User.make }
-            it_does_not_create_user
-            it_sets_found_user
+            it_creates_and_sets_non_admin_user
             it_sets_token_info
           end
         end
