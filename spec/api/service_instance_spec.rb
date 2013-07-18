@@ -6,7 +6,7 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/service_instances", model: Models::ManagedServiceInstance
     include_examples "reading a valid object", path: "/v2/service_instances", model: Models::ManagedServiceInstance, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/service_instances"
-    include_examples "creating and updating", path: "/v2/service_instances", model: Models::ManagedServiceInstance, required_attributes: %w(name space_guid service_plan_guid), unique_attributes: %w(space_guid name), extra_attributes: []
+    include_examples "creating and updating", path: "/v2/service_instances", model: Models::ManagedServiceInstance, required_attributes: %w(name space_guid service_plan_guid), unique_attributes: %w(space_guid name)
     include_examples "deleting a valid object", path: "/v2/service_instances", model: Models::ManagedServiceInstance,
                      one_to_many_collection_ids: {
                        :service_bindings => lambda { |service_instance|

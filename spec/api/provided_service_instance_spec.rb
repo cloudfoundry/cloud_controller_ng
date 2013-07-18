@@ -5,8 +5,7 @@ module VCAP::CloudController
     include_examples "creating", path: "/v2/provided_service_instances",
                      model: Models::ProvidedServiceInstance,
                      required_attributes: %w(name space_guid credentials),
-                     unique_attributes: %w(space_guid name),
-                     extra_attributes: []
+                     unique_attributes: %w(space_guid name)
 
     describe "Permissions" do
       include_context "permissions"

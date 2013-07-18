@@ -1,5 +1,6 @@
 module VCAP::CloudController::ApiSpecHelper
   shared_examples "updating" do |opts|
+    opts[:extra_attributes] ||= {}
     before(:all) do
       reset_database
       configure_stacks
@@ -24,8 +25,8 @@ module VCAP::CloudController::ApiSpecHelper
             end
           end
 
-          opts[:extra_attributes].each do |attr|
-            attrs[attr.to_s] = Sham.send(attr)
+          opts[:extra_attributes].each do |attr, val|
+            attrs[attr.to_s] = val.respond_to?(:call) ? val.call : val
           end
 
           attrs
@@ -35,7 +36,7 @@ module VCAP::CloudController::ApiSpecHelper
       let(:non_synthetic_creation_opts) do
         res = {}
         creation_opts.each do |k, v|
-          res[k] = v unless opts[:extra_attributes].include?(k)
+          res[k] = v unless opts[:extra_attributes].keys.include?(k.to_sym)
         end
         res
       end

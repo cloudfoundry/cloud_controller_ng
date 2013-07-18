@@ -10,7 +10,7 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/organizations", model: Models::Organization
     include_examples "reading a valid object", path: "/v2/organizations", model: Models::Organization, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/organizations"
-    include_examples "creating and updating", path: "/v2/organizations", model: Models::Organization, required_attributes: %w(name), unique_attributes: %w(name), extra_attributes: []
+    include_examples "creating and updating", path: "/v2/organizations", model: Models::Organization, required_attributes: %w(name), unique_attributes: %w(name)
     include_examples "deleting a valid object", path: "/v2/organizations", model: Models::Organization,
       one_to_many_collection_ids: {:spaces => lambda { |org| Models::Space.make(:organization => org) }},
       one_to_many_collection_ids_without_url: {

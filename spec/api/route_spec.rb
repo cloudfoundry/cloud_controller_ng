@@ -7,21 +7,24 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/routes", model: Models::Route, basic_attributes: %w(host domain_guid space_guid)
     include_examples "operations on an invalid object", path: "/v2/routes"
     include_examples "deleting a valid object", path: "/v2/routes", model: Models::Route, one_to_many_collection_ids: {}, one_to_many_collection_ids_without_url: {}
-    include_examples "creating and updating", path: "/v2/routes", model: Models::Route, required_attributes: %w(domain_guid space_guid), unique_attributes: %w(host domain_guid), extra_attributes: %w(host),
-      create_attribute: lambda { |name|
-        @space ||= Models::Space.make
-        case name.to_sym
-          when :space_guid
-            @space.guid
-          when :domain_guid
-            domain = Models::Domain.make(wildcard: true, owning_organization: @space.organization,)
-            @space.add_domain(domain)
-            domain.guid
-          when :host
-            Sham.host
-        end
-      },
-      create_attribute_reset: lambda { @space = nil }
+    include_examples "creating and updating", path: "/v2/routes", model: Models::Route,
+                     required_attributes: %w(domain_guid space_guid),
+                     unique_attributes: %w(host domain_guid),
+                     extra_attributes: {host: -> { Sham.host }},
+                     create_attribute: lambda { |name|
+                       @space ||= Models::Space.make
+                       case name.to_sym
+                         when :space_guid
+                           @space.guid
+                         when :domain_guid
+                           domain = Models::Domain.make(wildcard: true, owning_organization: @space.organization,)
+                           @space.add_domain(domain)
+                           domain.guid
+                         when :host
+                           Sham.host
+                       end
+                     },
+                     create_attribute_reset: lambda { @space = nil }
 
     context "with a wildcard domain" do
       it "should allow a nil host" do

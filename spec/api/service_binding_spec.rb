@@ -30,7 +30,7 @@ module VCAP::CloudController
       model: Models::ServiceBinding,
       required_attributes: %w(app_guid service_instance_guid),
       unique_attributes: %w(app_guid service_instance_guid),
-      extra_attributes: %w(binding_options),
+      extra_attributes: {binding_options: ->{Sham.binding_options}},
       create_attribute: lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym
