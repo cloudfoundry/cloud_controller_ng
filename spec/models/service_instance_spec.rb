@@ -21,10 +21,10 @@ describe VCAP::CloudController::Models::ServiceInstance do
     end
 
     describe "when is_gateway_service is false" do
-      it "returns a ProvidedServiceInstance" do
+      it "returns a UserProvidedServiceInstance" do
         service_instance_attrs[:is_gateway_service] = false
         service_instance = described_class.create(service_instance_attrs)
-        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::Models::ProvidedServiceInstance
+        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::Models::UserProvidedServiceInstance
       end
     end
 

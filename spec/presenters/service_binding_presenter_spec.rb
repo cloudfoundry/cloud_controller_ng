@@ -58,7 +58,7 @@ describe ServiceBindingPresenter do
 
   context 'for a provided service instance' do
     let(:service_instance) do
-      VCAP::CloudController::Models::ProvidedServiceInstance.make
+      VCAP::CloudController::Models::UserProvidedServiceInstance.make
     end
 
     let(:service_binding) do

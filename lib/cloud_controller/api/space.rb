@@ -39,7 +39,7 @@ module VCAP::CloudController
     def enumerate_service_instances(guid)
       space = find_id_and_validate_access(:read, guid)
 
-      if params['return_provided_service_instances'] == 'true'
+      if params['return_user_provided_service_instances'] == 'true'
         model_class = Models::ServiceInstance
         relation_name = :service_instances
       else

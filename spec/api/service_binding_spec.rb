@@ -24,7 +24,7 @@ module VCAP::CloudController
       model: Models::ServiceBinding,
       one_to_many_collection_ids: {},
       one_to_many_collection_ids_without_url: {}
-    
+
     include_examples "creating and updating",
       path: "/v2/service_bindings",
       model: Models::ServiceBinding,
@@ -211,7 +211,7 @@ module VCAP::CloudController
       let(:space) { Models::Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:application) { Models::App.make(:space => space) }
-      let(:service_instance) { Models::ProvidedServiceInstance.make(:space => space) }
+      let(:service_instance) { Models::UserProvidedServiceInstance.make(:space => space) }
       let(:params) do
         {
           "app_guid" => application.guid,

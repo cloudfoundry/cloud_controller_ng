@@ -1,9 +1,9 @@
 require_relative 'spec_helper'
 
 module VCAP::CloudController
-  describe ProvidedServiceInstance do
-    include_examples "creating", path: "/v2/provided_service_instances",
-                     model: Models::ProvidedServiceInstance,
+  describe UserProvidedServiceInstance do
+    include_examples "creating", path: "/v2/user_provided_service_instances",
+                     model: Models::UserProvidedServiceInstance,
                      required_attributes: %w(name space_guid credentials),
                      unique_attributes: %w(space_guid name)
 
@@ -11,8 +11,8 @@ module VCAP::CloudController
       include_context "permissions"
 
       before do
-        @obj_a = Models::ProvidedServiceInstance.make(:space => @space_a)
-        @obj_b = Models::ProvidedServiceInstance.make(:space => @space_b)
+        @obj_a = Models::UserProvidedServiceInstance.make(:space => @space_a)
+        @obj_b = Models::UserProvidedServiceInstance.make(:space => @space_b)
       end
 
       let(:creation_req_for_a) do
@@ -30,8 +30,8 @@ module VCAP::CloudController
           let(:member_b) { instance_variable_get(member_b_ivar) }
 
           include_examples "permission checks", user_role,
-                           :model => Models::ProvidedServiceInstance,
-                           :path => "/v2/provided_service_instances",
+                           :model => Models::UserProvidedServiceInstance,
+                           :path => "/v2/user_provided_service_instances",
                            :enumerate => 0,
                            :create => :not_allowed,
                            :read => :not_allowed,
@@ -55,8 +55,8 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples "permission checks", "Developer",
-                           :model => Models::ProvidedServiceInstance,
-                           :path => "/v2/provided_service_instances",
+                           :model => Models::UserProvidedServiceInstance,
+                           :path => "/v2/user_provided_service_instances",
                            :enumerate => 1,
                            :create => :allowed,
                            :read => :allowed,
@@ -69,8 +69,8 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples "permission checks", "SpaceAuditor",
-                           :model => Models::ProvidedServiceInstance,
-                           :path => "/v2/provided_service_instances",
+                           :model => Models::UserProvidedServiceInstance,
+                           :path => "/v2/user_provided_service_instances",
                            :enumerate => 0,
                            :create => :not_allowed,
                            :read => :allowed,

@@ -29,7 +29,7 @@ describe ServiceInstancePresenter do
     end
 
     context "for a provided service instance" do
-      let(:service_instance) { VCAP::CloudController::Models::ProvidedServiceInstance.make }
+      let(:service_instance) { VCAP::CloudController::Models::UserProvidedServiceInstance.make }
 
       specify do
         subject.keys.should == [:label, :name]

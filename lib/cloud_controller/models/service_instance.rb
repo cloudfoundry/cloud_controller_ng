@@ -7,7 +7,7 @@ module VCAP::CloudController::Models
              if is_gateway_service
                VCAP::CloudController::Models::ManagedServiceInstance
              else
-               VCAP::CloudController::Models::ProvidedServiceInstance
+               VCAP::CloudController::Models::UserProvidedServiceInstance
              end
            },
            key_map: lambda { |klazz|
