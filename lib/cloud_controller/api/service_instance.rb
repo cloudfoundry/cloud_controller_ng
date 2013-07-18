@@ -26,6 +26,11 @@ module VCAP::CloudController
       unless Models::ServicePlan.user_visible.filter(:guid => request_attrs['service_plan_guid']).count > 0
         raise Errors::NotAuthorized
       end
+
+      organization = Models::Space.filter(:guid => request_attrs['space_guid']).first.organization
+      unless Models::ServicePlan.organization_visible(organization).filter(:guid => request_attrs['service_plan_guid']).count > 0
+        raise Errors::ServiceInstanceOrganizationNotAuthorized
+      end
     end
 
     def self.translate_validation_exception(e, attributes)

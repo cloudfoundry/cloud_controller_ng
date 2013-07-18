@@ -18,6 +18,12 @@ module VCAP::CloudController::Models
         map(:service_plan_id).uniq
     end
 
+    def self.visible_private_plan_ids_for_organization(organization)
+      dataset.
+        where(organization_id: organization.id).
+        map(:service_plan_id).uniq
+    end
+
     def self.user_visibility_filter(user)
       user_visibility_filter_with_admin_override(id: []) # awful hack: non-admins see no records
     end

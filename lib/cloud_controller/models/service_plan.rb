@@ -33,6 +33,13 @@ module VCAP::CloudController::Models
       validates_unique   [:service_id, :name]
     end
 
+    def self.organization_visible(organization)
+      dataset.filter(Sequel.|(
+        {public: true},
+        {id: ServicePlanVisibility.visible_private_plan_ids_for_organization(organization)}
+      ))
+    end
+
     def self.user_visibility_filter(user)
       filter = Sequel.|(
         {public: true},

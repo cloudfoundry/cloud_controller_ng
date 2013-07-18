@@ -36,4 +36,18 @@ module VCAP::CloudController::Models
       ]
     end
   end
+
+  describe ".visible_private_plan_ids_for_organization" do
+    let!(:organization) { Organization.make }
+    let!(:visible_plan) { ServicePlan.make(public: false) }
+    let!(:hidden_plan) { ServicePlan.make(public: false) }
+
+    before do
+      ServicePlanVisibility.make(organization: organization, service_plan: visible_plan)
+    end
+
+    it "returns the list of ids for plans the user's orgs can see" do
+      ServicePlanVisibility.visible_private_plan_ids_for_organization(organization).should =~ [visible_plan.id]
+    end
+  end
 end

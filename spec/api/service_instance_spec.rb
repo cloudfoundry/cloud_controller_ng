@@ -82,28 +82,65 @@ module VCAP::CloudController
         end
 
         describe "private plans" do
-          let(:space) { Models::Space.make }
-          let(:developer) { make_developer_for_space(space) }
+          let!(:unprivileged_organization) { Models::Organization.make }
           let!(:private_plan) { Models::ServicePlan.make(public: false) }
-          let(:payload) { Yajl::Encoder.encode(
-            'space_guid' => space.guid,
-            'name' => Sham.name,
-            'service_plan_guid' => private_plan.guid,
-          ) }
+          let!(:unprivileged_space) { Models::Space.make(organization: unprivileged_organization) }
+          let!(:developer) { make_developer_for_space(unprivileged_space) }
 
-          it "does not allow to create a service instance" do
-            post 'v2/service_instances', payload, json_headers(headers_for(developer))
-            last_response.status.should == 403
+          describe "a user who does not belong to a privileged organization" do
+            it "does not allow a user to create a service instance" do
+              payload = Yajl::Encoder.encode(
+                'space_guid' => unprivileged_space.guid,
+                'name' => Sham.name,
+                'service_plan_guid' => private_plan.guid,
+              )
+
+              post 'v2/service_instances', payload, json_headers(headers_for(developer))
+
+              last_response.status.should == 403
+              Yajl::Parser.parse(last_response.body)['description'].should == VCAP::CloudController::Errors::NotAuthorized.new.message
+            end
           end
 
-          it "allows user with privileged organization to create a service instance" do
-            organization = developer.organizations.first
-            Models::ServicePlanVisibility.create(
-              organization: organization,
-              service_plan: private_plan
-            )
-            post 'v2/service_instances', payload, json_headers(headers_for(developer))
-            last_response.status.should == 201
+          describe "a user who belongs to a privileged organization" do
+            let!(:privileged_organization) do
+              Models::Organization.make.tap do |org|
+                Models::ServicePlanVisibility.create(
+                  organization: org,
+                  service_plan: private_plan
+                )
+              end
+            end
+            let!(:privileged_space) { Models::Space.make(organization: privileged_organization) }
+
+            before do
+              developer.add_organization(privileged_organization)
+              privileged_space.add_developer(developer)
+            end
+
+            it "allows user to create a service instance in a privileged organization" do
+              payload = Yajl::Encoder.encode(
+                'space_guid' => privileged_space.guid,
+                'name' => Sham.name,
+                'service_plan_guid' => private_plan.guid,
+              )
+
+              post 'v2/service_instances', payload, json_headers(headers_for(developer))
+              last_response.status.should == 201
+            end
+
+            it "does not allow a user to create a service instance in an unprivileged organization" do
+              payload = Yajl::Encoder.encode(
+                'space_guid' => unprivileged_space.guid,
+                'name' => Sham.name,
+                'service_plan_guid' => private_plan.guid,
+              )
+
+              post 'v2/service_instances', payload, json_headers(headers_for(developer))
+
+              last_response.status.should == 403
+              Yajl::Parser.parse(last_response.body)['description'].should == VCAP::CloudController::Errors::ServiceInstanceOrganizationNotAuthorized.new.message
+            end
           end
         end
 

@@ -37,6 +37,22 @@ module VCAP::CloudController
       end
     end
 
+    describe ".organization_visible" do
+      it "returns plans that are visible to the organization" do
+        hidden_private_plan = Models::ServicePlan.make(public: false)
+        visible_public_plan = Models::ServicePlan.make(public: true)
+        visible_private_plan = Models::ServicePlan.make(public: false)
+
+        organization = Models::Organization.make
+        Models::ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
+
+        visible = Models::ServicePlan.organization_visible(organization).all
+        visible.should include(visible_public_plan)
+        visible.should include(visible_private_plan)
+        visible.should_not include(hidden_private_plan)
+      end
+    end
+
     describe "serialization" do
       let(:service_plan) {
         Models::ServicePlan.new_from_hash(extra: "extra", public: false, unique_id: "unique-id")
