@@ -27,8 +27,7 @@ module VCAP::CloudController
 
     attr_reader :config
 
-    vcap_configure(:logger_name => "cc.api",
-                   :reload_path => File.dirname(__FILE__))
+    vcap_configure(logger_name: "cc.api", reload_path: File.dirname(__FILE__))
 
     def initialize(config, token_decoder)
       @config = config
@@ -50,8 +49,7 @@ module VCAP::CloudController
 
       if uaa_id
         user = Models::User.find(:guid => uaa_id.to_s)
-        user ||= create_admin_if_in_config(token_information)
-        user ||= create_admin_if_in_token(token_information)
+        user ||= Models::User.create(guid: token_information['user_id'], admin: current_user_admin?(token_information), active: true)
       end
 
       VCAP::CloudController::SecurityContext.set(user, token_information)
@@ -88,21 +86,13 @@ module VCAP::CloudController
       end
     end
 
-    def create_admin_if_in_config(token_information)
-      if Models::User.count == 0 && current_user_admin?(token_information)
-        Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
-      end
-    end
-
-    def create_admin_if_in_token(token_information)
-      if VCAP::CloudController::Roles.new(token_information).admin?
-        Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
-      end
-    end
-
     def current_user_admin?(token_information)
-      admin_email = config[:bootstrap_admin_email]
-      admin_email && (admin_email == token_information['email'])
+      if Models::User.count.zero?
+        admin_email = config[:bootstrap_admin_email]
+        admin_email && (admin_email == token_information['email'])
+      else
+        VCAP::CloudController::Roles.new(token_information).admin?
+      end
     end
   end
 end
