@@ -163,6 +163,12 @@
   http_code: 400
   message: "You have requested an invalid service instance name.  Names are limited to 50 characters."
 
+60010:
+  name: ServiceInstanceOrganizationNotAuthorized
+  http_code: 403
+  message: A service instance for the selected plan cannot be created in this organization.\n
+           **You can see this plan because one or more of the organizations you belong to has access to it.
+
 70001:
   name: RuntimeInvalid
   http_code: 400
