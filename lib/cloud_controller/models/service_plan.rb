@@ -26,7 +26,6 @@ module VCAP::CloudController::Models
     end
 
     def validate
-      self.unique_id = [service.unique_id, name].join("_") if !unique_id && service
       validates_presence :name
       validates_presence :description
       validates_presence :free
