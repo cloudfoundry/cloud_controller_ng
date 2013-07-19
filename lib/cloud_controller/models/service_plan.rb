@@ -11,9 +11,9 @@ module VCAP::CloudController::Models
 
     default_order_by  :name
 
-    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id
+    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :bindable
 
-    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public
+    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :bindable, :public
 
     strip_attributes  :name
 
@@ -30,6 +30,7 @@ module VCAP::CloudController::Models
       validates_presence :description
       validates_presence :free
       validates_presence :service
+      validates_presence :bindable
       validates_unique   [:service_id, :name]
     end
 

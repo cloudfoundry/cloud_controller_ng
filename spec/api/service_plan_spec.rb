@@ -4,12 +4,13 @@ module VCAP::CloudController
   describe VCAP::CloudController::ServicePlan do
     include_examples "uaa authenticated api", path: "/v2/service_plans"
     include_examples "enumerating objects", path: "/v2/service_plans", model: Models::ServicePlan
-    include_examples "reading a valid object", path: "/v2/service_plans", model: Models::ServicePlan, basic_attributes: %w(name free description service_guid extra unique_id)
+    include_examples "reading a valid object", path: "/v2/service_plans", model: Models::ServicePlan,
+                     basic_attributes: %w(name free description service_guid extra unique_id bindable)
     include_examples "operations on an invalid object", path: "/v2/service_plans"
     include_examples "creating and updating", path: "/v2/service_plans", model: Models::ServicePlan,
                      required_attributes: %w(name free description service_guid),
                      unique_attributes: %w(name service_guid),
-                     extra_attributes: {extra: ->{Sham.extra}}
+                     extra_attributes: {extra: ->{Sham.extra}, bindable: false}
     include_examples "deleting a valid object", path: "/v2/service_plans", model: Models::ServicePlan,
       one_to_many_collection_ids: {:service_instances => lambda { |service_plan| Models::ManagedServiceInstance.make(:service_plan => service_plan) }
       },
@@ -193,6 +194,20 @@ module VCAP::CloudController
       last_response.status.should eq(201)
       plan_guid = decoded_response.fetch('metadata').fetch('guid')
       Models::ServicePlan.first(:guid => plan_guid).public.should be_true
+    end
+
+    it 'makes the service plan bindable by default' do
+      payload_without_bindable = ServicePlan::CreateMessage.new(
+        :name => 'foo',
+        :free => false,
+        :description => "We don't need no stinking plan'",
+        :service_guid => service.guid,
+        :unique_id => Sham.unique_id,
+      ).encode
+      post '/v2/service_plans', payload_without_bindable, json_headers(admin_headers)
+      last_response.status.should eq(201)
+      plan_guid = decoded_response.fetch('metadata').fetch('guid')
+      Models::ServicePlan.first(:guid => plan_guid).bindable.should be_true
     end
   end
 
