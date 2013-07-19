@@ -198,12 +198,17 @@ module VCAP::CloudController
       # more
       def environment_json=(env)
         json = Yajl::Encoder.encode(env)
-        super(json)
+        generate_salt
+        encrypted_string = VCAP::CloudController::Encryptor.encrypt(json, salt)
+        super(encrypted_string)
       end
+
+
 
       def environment_json
         json = super
         if json
+          json = VCAP::CloudController::Encryptor.decrypt(json, salt)
           Yajl::Parser.parse(json)
         end
       end
@@ -442,6 +447,10 @@ module VCAP::CloudController
 
       def mark_routes_changed(_)
         @routes_changed = true
+      end
+
+      def generate_salt
+        self.salt ||= VCAP::CloudController::Encryptor.generate_salt.freeze
       end
     end
   end

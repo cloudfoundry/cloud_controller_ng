@@ -248,6 +248,35 @@ module VCAP::CloudController
         let(:new_env_json) { {"BUNDLE_WITHOUT" => "development"} }
         it_does_not_mark_for_re_staging
       end
+
+      describe "env is encrypted" do
+        let(:env) { {"jesse" => "awesome"} }
+        let!(:app) { Models::App.make(:environment_json => env) }
+        let(:last_row) { VCAP::CloudController::Models::App.dataset.naked.order_by(:id).last }
+
+        it "is encrypted" do
+          expect(last_row[:environment_json]).not_to eq Yajl::Encoder.encode(env).to_s
+        end
+
+        it "is decrypted" do
+          app.reload
+          expect(app.environment_json).to eq env
+        end
+
+        it "salt is unique for each app" do
+          app_2 = Models::App.make(:environment_json => env)
+          expect(app.salt).not_to eq app_2.salt
+        end
+
+        it "must have a salt of length 8" do
+          expect(app.salt.length).to eq 8
+        end
+
+        #it_behaves_like "a model with an encrypted attribute" do
+        #  let(:encrypted_attr) { :environment_json }
+        #  let(:value_to_encrypt) { env }
+        #end
+      end
     end
 
     describe "metadata" do
