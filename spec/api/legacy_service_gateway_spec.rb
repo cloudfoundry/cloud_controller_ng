@@ -103,6 +103,14 @@ module VCAP::CloudController
           service.extra.should == extra_data
         end
 
+        it "should set bindable to true" do
+          post path, build_offering.encode, json_headers(auth_header)
+
+          last_response.status.should == 200
+          service = Models::Service[:label => "foobar", :provider => "core"]
+          service.bindable.should == true
+        end
+
         shared_examples_for "offering containing service plans" do
           it "should create service plans" do
             post path, both_plans.encode, json_headers(auth_header)

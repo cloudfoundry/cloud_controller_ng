@@ -5,7 +5,7 @@ require File.expand_path("../spec_helper", __FILE__)
 module VCAP::CloudController::Models
   describe Service do
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:label, :provider, :url, :description, :version],
+      :required_attributes  => [:label, :provider, :url, :description, :version, :bindable],
       :unique_attributes    => [ [:label, :provider] ],
       :stripped_string_attributes => [:label, :provider],
       :one_to_zero_or_more   => {
@@ -33,7 +33,7 @@ module VCAP::CloudController::Models
     describe "serialization" do
       let(:extra) { 'extra' }
       let(:unique_id) { 'glue-factory' }
-      let(:service) { Service.new_from_hash(extra: extra, unique_id: unique_id) }
+      let(:service) { Service.new_from_hash(extra: extra, unique_id: unique_id, bindable: true) }
 
       it "allows mass assignment of extra" do
         service.extra.should == extra
@@ -49,6 +49,10 @@ module VCAP::CloudController::Models
 
       it "allows export of unique_id" do
         Yajl::Parser.parse(service.to_json)["unique_id"].should == unique_id
+      end
+
+      it "allows export of bindable" do
+        Yajl::Parser.parse(service.to_json)["bindable"].should == true
       end
     end
 

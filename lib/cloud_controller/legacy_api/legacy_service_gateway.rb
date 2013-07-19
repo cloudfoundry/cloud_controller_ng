@@ -47,6 +47,7 @@ module VCAP::CloudController
             :info_url    => req.info_url,
             :active      => req.active,
             :extra       => req.extra,
+            :bindable    => true,
           )
         end
 

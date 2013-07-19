@@ -90,6 +90,7 @@ module VCAP::CloudController::Models
       ServiceAuthToken.make(:label => label, :provider => provider, :token => Sham.token)
       Sham.description
     end
+    bindable          { true }
   end
 
   ManagedServiceInstance.blueprint do
