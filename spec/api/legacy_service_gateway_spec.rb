@@ -84,13 +84,12 @@ module VCAP::CloudController
           last_response.status.should == 400
         end
 
-        it "should create service offerings for label/provider services and generate a unique_id" do
+        it "should create service offerings for label/provider services" do
           post path, build_offering.encode, json_headers(auth_header)
           last_response.status.should == 200
           svc = Models::Service.find(:label => "foobar", :provider => "core")
           svc.should_not be_nil
           svc.version.should == "2.0"
-          svc.unique_id.should == "core_foobar"
         end
 
         it "should create services with 'extra' data" do

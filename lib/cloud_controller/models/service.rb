@@ -18,7 +18,6 @@ module VCAP::CloudController::Models
     strip_attributes  :label, :provider
 
     def validate
-      self.unique_id ||= "#{provider}_#{label}"
       validates_presence :label
       validates_presence :provider
       validates_presence :url
