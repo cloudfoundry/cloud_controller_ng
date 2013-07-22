@@ -273,14 +273,14 @@ module VCAP::CloudController
       end
 
       context 'invalid space guid' do
-        it "does not raise error" do
+        it "returns a user friendly error" do
           org = Models::Organization.make()
           space = Models::Space.make(:organization => org)
           service = Models::Service.make
           plan = Models::ServicePlan.make(free: true)
 
           body = {
-            "space_guid" => "bogus",
+            "space_guid" => "invalid_space_guid",
             "name" => 'name',
             "service_plan_guid" => plan.guid
           }
