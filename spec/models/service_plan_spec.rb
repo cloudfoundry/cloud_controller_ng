@@ -74,5 +74,19 @@ module VCAP::CloudController
         service_plan.unique_id.should == "unique-id"
       end
     end
+
+    describe "#bindable?" do
+      let(:service_plan) { Models::ServicePlan.make(service: service) }
+
+      context "when the service is bindable" do
+        let(:service) { Models::Service.make(bindable: true) }
+        specify { service_plan.should be_bindable }
+      end
+
+      context "when the service is unbindable" do
+        let(:service) { Models::Service.make(bindable: false) }
+        specify { service_plan.should_not be_bindable }
+      end
+    end
   end
 end

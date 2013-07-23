@@ -52,5 +52,9 @@ module VCAP::CloudController::Models
     def trial_db?
       unique_id == self.class.trial_db_guid
     end
+
+    def bindable?
+      service.bindable?
+    end
   end
 end

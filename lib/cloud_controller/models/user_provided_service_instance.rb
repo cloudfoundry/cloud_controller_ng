@@ -24,5 +24,9 @@ module VCAP::CloudController::Models
     def bind_on_gateway(new_service_binding)
       new_service_binding.credentials = self.credentials
     end
+
+    def bindable?
+      true
+    end
   end
 end

@@ -1,7 +1,7 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::ManagedServiceInstance do
+  describe Models::ManagedServiceInstance do
     let(:service_instance) { VCAP::CloudController::Models::ManagedServiceInstance.make }
     let(:email) { Sham.email }
     let(:guid) { Sham.guid }
@@ -519,6 +519,23 @@ module VCAP::CloudController
           stub_request(:post, create_snapshot_url_matcher).to_return(:body => "Something went wrong", :status => 500)
           expect { subject.create_snapshot(name) }.to raise_error(Models::ManagedServiceInstance::ServiceGatewayError, /upstream failure/)
         end
+      end
+    end
+
+    describe "#bindable?" do
+      let(:service_instance) { Models::ManagedServiceInstance.make(service_plan: service_plan) }
+      let(:service_plan) { Models::ServicePlan.make(service: service) }
+
+      context "when the service is bindable" do
+        let(:service) { Models::Service.make(bindable: true) }
+
+        specify { service_instance.should be_bindable }
+      end
+
+      context "when the service is not bindable" do
+        let(:service) { Models::Service.make(bindable: false) }
+
+        specify { service_instance.should_not be_bindable }
       end
     end
   end

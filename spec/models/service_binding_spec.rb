@@ -83,7 +83,7 @@ module VCAP::CloudController
     end
 
     describe "binding" do
-      let(:gw_client) { double(:client) }
+      let(:gw_client) { double(:client).as_null_object }
 
       let(:service) { Models::Service.make }
       let(:service_plan) { Models::ServicePlan.make(:service => service) }
@@ -153,6 +153,27 @@ module VCAP::CloudController
               raise "something bad"
             end
           }.to raise_error
+        end
+      end
+
+      context "when the service is unbindable" do
+        let(:service) do
+          Models::Service.make(bindable: false)
+        end
+
+          it "raises an UnbindableService" do
+          expect {
+            Models::ServiceBinding.make(:service_instance => service_instance)
+          }.to raise_error(Errors::UnbindableService)
+          end
+
+        it "should not bind a service on the gw during create" do
+          gw_client.should_not_receive(:bind)
+
+          begin
+            Models::ServiceBinding.make(:service_instance => service_instance)
+          rescue Errors::UnbindableService
+          end
         end
       end
 

@@ -282,5 +282,9 @@ module VCAP::CloudController::Models
       service_binding.gateway_data = gw_attrs.configuration
       service_binding.credentials  = gw_attrs.credentials
     end
+
+    def bindable?
+      service_plan.bindable?
+    end
   end
 end

@@ -31,6 +31,8 @@ module VCAP::CloudController::Models
       validates_unique   [:label, :provider]
     end
 
+    alias_method :bindable?, :bindable
+
     def self.user_visibility_filter(current_user)
       plans_I_can_see = ServicePlan.filter(ServicePlan.user_visibility_filter(current_user))
       opts = {id: plans_I_can_see.map(&:service_id).uniq}

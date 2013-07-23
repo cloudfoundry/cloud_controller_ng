@@ -77,4 +77,9 @@ describe VCAP::CloudController::Models::UserProvidedServiceInstance do
       new_binding.credentials.should == {'a' => 'b'}
     end
   end
+
+  describe "#bindable?" do
+    let(:service_instance) { described_class.make }
+    specify { service_instance.should be_bindable }
+  end
 end
