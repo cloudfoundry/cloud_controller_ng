@@ -33,9 +33,18 @@ module VCAP::CloudController
         expect(Encryptor.encrypt(input, salt)).not_to eql(encrypted_string)
       end
 
+      it "does not encrypt null values" do
+        VCAP::CloudController::Config.stub(:db_encryption_key).and_return("a-totally-different-key")
+        expect(Encryptor.encrypt(nil, salt)).to be_nil
+      end
+
       describe "decrypting the string" do
         it "returns the original string" do
           expect(Encryptor.decrypt(encrypted_string, salt)).to eq(input)
+        end
+
+        it "returns nil if the encrypted string is nil" do
+          expect(Encryptor.decrypt(nil, salt)).to be_nil
         end
       end
     end

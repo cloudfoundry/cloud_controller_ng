@@ -203,8 +203,6 @@ module VCAP::CloudController
         super(encrypted_string)
       end
 
-
-
       def environment_json
         json = super
         if json

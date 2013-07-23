@@ -272,10 +272,10 @@ module VCAP::CloudController
           expect(app.salt.length).to eq 8
         end
 
-        #it_behaves_like "a model with an encrypted attribute" do
-        #  let(:encrypted_attr) { :environment_json }
-        #  let(:value_to_encrypt) { env }
-        #end
+        it "must deal with null env_json to remain null after encryption" do
+          null_json_app = Models::App.make()
+          expect(null_json_app.environment_json).to be_nil
+        end
       end
     end
 
