@@ -219,6 +219,11 @@
   http_code: 404
   message: "The service binding could not be found: %s"
 
+90005:
+  name: UnbindableService
+  http_code: 400
+  message: "The service doesn't support binding."
+
 100001:
   name: AppInvalid
   http_code: 400
