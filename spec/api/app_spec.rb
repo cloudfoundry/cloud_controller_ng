@@ -126,6 +126,68 @@ module VCAP::CloudController
 
       subject { put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers) }
 
+      describe "update app debug" do
+        context "set debug" do
+          let(:update_hash) do
+            {"debug" => "run"}
+          end
+
+          it "should work" do
+            subject
+            app_obj.refresh
+            app_obj.debug.should == "run"
+            last_response.status.should == 201
+          end
+                    
+        end
+        
+        context "change debug" do
+          let(:app_obj) { Models::App.make(:debug => "run") }
+
+          let(:update_hash) do
+            {"debug" => "suspend"}
+          end
+
+          it "should work" do
+            subject
+            app_obj.refresh
+            app_obj.debug.should == "suspend"
+            last_response.status.should == 201
+          end
+        end
+
+        context "reset debug" do
+          let(:app_obj) { Models::App.make(:debug => "run") }
+
+          let(:update_hash) do
+            {"debug" => "none"}
+          end
+
+          it "should work" do
+            subject
+            app_obj.refresh
+            app_obj.debug.should be_nil
+            last_response.status.should == 201
+          end
+        end
+
+        context "passing in nil" do
+          let(:app_obj) { Models::App.make(:debug => "run") }
+
+          let(:update_hash) do
+            {"debug" => nil}
+          end
+
+          it "should do nothing" do
+            subject
+            app_obj.refresh
+            app_obj.debug.should == "run"
+            last_response.status.should == 201
+          end
+        end
+      end
+
+        
       context "when detected buildpack is not provided" do
         let(:update_hash) do
           {}
