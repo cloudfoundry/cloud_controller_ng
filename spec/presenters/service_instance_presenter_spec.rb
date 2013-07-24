@@ -36,7 +36,7 @@ describe ServiceInstancePresenter do
       end
 
       specify do
-        subject.fetch(:label).should == "Unmanaged Service #{service_instance.guid}"
+        subject.fetch(:label).should == "user-provided"
         subject.fetch(:name).should == service_instance.name
       end
     end
