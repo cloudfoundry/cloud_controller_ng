@@ -20,6 +20,7 @@ module VCAP::CloudController
       Yajl::Encoder.encode(
         :guid => org.guid,
         :name => org.name,
+        :status => org.status,
         :spaces => org.spaces.map do |space|
           # when we do the quota work, this and the service counts will be kept
           # as a running total so that we don't have to compute them on the

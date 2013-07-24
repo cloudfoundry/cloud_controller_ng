@@ -66,6 +66,10 @@ module VCAP::CloudController
         decoded_response["name"].should == @org.name
       end
 
+      it "returns the org's status" do
+        decoded_response["status"].should == "active"
+      end
+
       it "should return num_spaces spaces" do
         decoded_response["spaces"].size.should == num_spaces
       end
