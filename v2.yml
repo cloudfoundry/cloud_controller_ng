@@ -166,8 +166,7 @@
 60010:
   name: ServiceInstanceOrganizationNotAuthorized
   http_code: 403
-  message: A service instance for the selected plan cannot be created in this organization.\n
-           **You can see this plan because one or more of the organizations you belong to has access to it.
+  message: A service instance for the selected plan cannot be created in this organization. The plan is visible because another organization you belong to has access to it.
 
 70001:
   name: RuntimeInvalid
