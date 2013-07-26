@@ -11,7 +11,6 @@ module VCAP::CloudController
 
     model_class_name :ManagedServiceInstance # Must do this to be backwards compatible with actions other than enumerate
 
-
     define_attributes do
       attribute :name,  String
       to_one    :space
@@ -40,7 +39,6 @@ module VCAP::CloudController
       space
     end
 
-
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       quota_errors = e.errors.on(:org)
@@ -68,6 +66,22 @@ module VCAP::CloudController
 
     def self.not_found_exception
       Errors::ServiceInstanceNotFound
+    end
+
+    get "/v2/service_instances/:guid", :read
+
+    def read(guid)
+      logger.debug "cc.read", :model => :ServiceInstance, :guid => guid
+
+      obj = Models::ServiceInstance.find(:guid => guid)
+
+      if obj
+        validate_access(:read, obj, user, roles)
+      else
+        raise self.class.not_found_exception.new(guid)
+      end
+
+      serialization.render_json(self.class, obj, @opts)
     end
   end
 end

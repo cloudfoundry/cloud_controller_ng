@@ -192,7 +192,7 @@ module VCAP::CloudController
 
       context "filtering" do
         let(:first_found_instance) { decoded_response.fetch('resources').first }
-        
+
         it 'allows filtering by gateway_name' do
           get "v2/service_instances?q=gateway_name:#{service_instance.gateway_name}", {}, admin_headers
           last_response.status.should == 200
@@ -215,6 +215,28 @@ module VCAP::CloudController
           get "v2/service_instances?q=service_plan_guid:#{service_instance.service_plan_guid}", {}, admin_headers
           last_response.status.should == 200
           first_found_instance.fetch('entity').fetch('service_plan_guid').should == service_instance.service_plan_guid
+        end
+      end
+    end
+
+    describe 'GET', '/v2/service_instances/:service_instance_guid' do
+      context 'with a managed service instance' do
+        let(:service_instance) { Models::ManagedServiceInstance.make }
+
+        it "returns the service instance with the given guid" do
+          get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+          last_response.status.should == 200
+          decoded_response.fetch('metadata').fetch('guid').should == service_instance.guid
+        end
+      end
+
+      context 'with a user provided service instance' do
+        let(:service_instance) { Models::UserProvidedServiceInstance.make }
+
+        it "returns the service instance with the given guid" do
+          get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+          last_response.status.should == 200
+          decoded_response.fetch('metadata').fetch('guid').should == service_instance.guid
         end
       end
     end
