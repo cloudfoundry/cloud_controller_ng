@@ -58,8 +58,18 @@ module VCAP::CloudController
           end
         end
 
-        it "should raise an exception if a corresponding AppStartEvent is not found" do
-          expect { Models::AppStopEvent.create_from_app(app) }.to raise_error( VCAP::CloudController::Models::MissingAppStartEvent )
+        context "when a corresponding AppStartEvent is not found" do
+          it "does NOT raise an exception" do
+            expect {
+              Models::AppStopEvent.create_from_app(app)
+            }.to_not raise_error
+          end
+
+          it "does not create a StopEvent" do
+            expect {
+              Models::AppStopEvent.create_from_app(app)
+            }.to_not change { Models::AppStopEvent.count }
+          end
         end
       end
     end
