@@ -145,6 +145,16 @@ module VCAP::CloudController::Models
     organization_name { Sham.name }
   end
 
+  Event.blueprint do
+    timestamp  { Time.now }
+    type       { Sham.name}
+    actor      { Sham.guid }
+    actor_type { Sham.name }
+    actee      { Sham.guid }
+    actee_type { Sham.name }
+    space      { Space.make }
+  end
+
   OrganizationStartEvent.blueprint do
     BillingEvent.blueprint
   end

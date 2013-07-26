@@ -18,6 +18,7 @@ module VCAP::CloudController::Models
 
     many_to_one       :organization
     one_to_many       :apps
+    one_to_many       :events
     one_to_many       :all_apps, :dataset => lambda { App.with_deleted.filter(:space => self) }
     one_to_many       :service_instances
     one_to_many       :managed_service_instances

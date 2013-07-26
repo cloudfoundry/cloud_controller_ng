@@ -98,6 +98,7 @@ require "cloud_controller/models/service_delete_event"
 
 require "cloud_controller/models/app"
 require "cloud_controller/models/domain"
+require "cloud_controller/models/event"
 require "cloud_controller/models/organization"
 require "cloud_controller/models/route"
 require "cloud_controller/models/service"
