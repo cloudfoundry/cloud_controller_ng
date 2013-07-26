@@ -378,7 +378,7 @@
   http_code: 400
   message: "Billing event query start_date and/or end_date are missing or invalid"
 
-230001:
+230002:
   name: EventNotFound
   http_code: 404
   message: "Event could not be found: %s"
