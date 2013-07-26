@@ -255,7 +255,7 @@ module VCAP::CloudController
         let(:last_row) { VCAP::CloudController::Models::App.dataset.naked.order_by(:id).last }
 
         it "is encrypted" do
-          expect(last_row[:environment_json]).not_to eq Yajl::Encoder.encode(env).to_s
+          expect(last_row[:encrypted_environment_json]).not_to eq Yajl::Encoder.encode(env).to_s
         end
 
         it "is decrypted" do
