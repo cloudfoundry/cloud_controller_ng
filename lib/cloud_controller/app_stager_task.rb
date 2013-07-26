@@ -129,7 +129,6 @@ module VCAP::CloudController
       EM.defer do
         begin
           staging_completion(Response.new(response))
-          trigger_completion_callback
         rescue => e
           logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
         end
@@ -169,7 +168,9 @@ module VCAP::CloudController
     end
 
     def staging_completion(stager_response)
-      @app.droplet_hash = stager_response.droplet_hash
+      instance_was_started_by_dea = !!stager_response.droplet_hash
+
+      @app.droplet_hash = instance_was_started_by_dea ? stager_response.droplet_hash : Digest::SHA1.file(@upload_handle.upload_path).hexdigest
       @app.detected_buildpack = stager_response.detected_buildpack
 
       Staging.store_droplet(@app, @upload_handle.upload_path)
@@ -180,14 +181,13 @@ module VCAP::CloudController
 
       @app.save
 
-      DeaClient.dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid)
+      DeaClient.dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
+
+      @completion_callback.call(:started_instances => instance_was_started_by_dea ? 1 : 0) if @completion_callback
     ensure
       destroy_upload_handle
     end
 
-    def trigger_completion_callback
-      @completion_callback.call(:started_instances => 1) if @completion_callback
-    end
 
     def destroy_upload_handle
       Staging.destroy_handle(@upload_handle)
