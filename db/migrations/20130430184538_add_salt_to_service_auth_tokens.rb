@@ -21,7 +21,7 @@ Sequel.migration do
     end
 
     alter_table :service_auth_tokens do
-      remove_column :salt
+      drop_column :salt
     end
   end
 end

@@ -23,7 +23,7 @@ Sequel.migration do
     end
 
     alter_table :service_bindings do
-      remove_column :salt
+      drop_column :salt
     end
   end
 end
