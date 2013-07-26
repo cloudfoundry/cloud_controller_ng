@@ -378,6 +378,11 @@
   http_code: 400
   message: "Billing event query start_date and/or end_date are missing or invalid"
 
+230001:
+  name: EventNotFound
+  http_code: 404
+  message: "Event could not be found: %s"
+
 240001:
   name: QuotaDefinitionNotFound
   http_code: 404
