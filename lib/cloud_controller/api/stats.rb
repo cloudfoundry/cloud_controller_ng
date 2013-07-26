@@ -12,12 +12,12 @@ module VCAP::CloudController
       read Permissions::SpaceAuditor
     end
 
-    def stats(id, opts = {})
-      app = find_id_and_validate_access(:read, id)
+    def stats(guid, opts = {})
+      app = find_guid_and_validate_access(:read, guid)
       stats = DeaClient.find_stats(app, opts)
       [HTTP::OK, Yajl::Encoder.encode(stats)]
     end
 
-    get  "#{path_id}/stats", :stats
+    get  "#{path_guid}/stats", :stats
   end
 end

@@ -11,8 +11,8 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def instances(id)
-      app = find_id_and_validate_access(:read, id)
+    def instances(guid)
+      app = find_guid_and_validate_access(:read, guid)
 
       if app.failed?
         raise VCAP::Errors::StagingError.new("cannot get instances since staging failed")
@@ -24,6 +24,6 @@ module VCAP::CloudController
       Yajl::Encoder.encode(instances)
     end
 
-    get  "#{path_id}/instances", :instances
+    get  "#{path_guid}/instances", :instances
   end
 end

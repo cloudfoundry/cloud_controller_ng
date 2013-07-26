@@ -14,9 +14,9 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def files(id, search_param, path = nil, opts = {})
+    def files(guid, search_param, path = nil, opts = {})
       opts = { :allow_redirect => true }.merge(opts)
-      app = find_id_and_validate_access(:read, id)
+      app = find_guid_and_validate_access(:read, guid)
 
       info = get_file_uri_for_search_param(app, path, search_param)
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
       end
     end
 
-    get  "#{path_id}/instances/:instance_id/files", :files
-    get  "#{path_id}/instances/:instance_id/files/*", :files
+    get "#{path_guid}/instances/:instance_id/files", :files
+    get "#{path_guid}/instances/:instance_id/files/*", :files
   end
 end

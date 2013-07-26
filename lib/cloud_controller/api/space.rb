@@ -38,7 +38,7 @@ module VCAP::CloudController
     get "/v2/spaces/:guid/service_instances", :enumerate_service_instances
 
     def enumerate_service_instances(guid)
-      space = find_id_and_validate_access(:read, guid)
+      space = find_guid_and_validate_access(:read, guid)
 
       if params['return_user_provided_service_instances'] == 'true'
         model_class = Models::ServiceInstance

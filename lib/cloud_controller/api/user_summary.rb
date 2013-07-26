@@ -15,11 +15,11 @@ module VCAP::CloudController
       read Permissions::SpaceAuditor
     end
 
-    def summary(id)
-      user = find_id_and_validate_access(:read, id)
+    def summary(guid)
+      user = find_guid_and_validate_access(:read, guid)
       Yajl::Encoder.encode UserSummaryPresenter.new(user).to_hash
     end
 
-    get "#{path_id}/summary", :summary
+    get "#{path_guid}/summary", :summary
   end
 end

@@ -11,11 +11,11 @@ module VCAP::CloudController
       read Permissions::SpaceDeveloper
     end
 
-    def crashes(id)
-      app = find_id_and_validate_access(:read, id)
+    def crashes(guid)
+      app = find_guid_and_validate_access(:read, guid)
       Yajl::Encoder.encode(HealthManagerClient.find_crashes(app))
     end
 
-    get  "#{path_id}/crashes", :crashes
+    get  "#{path_guid}/crashes", :crashes
   end
 end

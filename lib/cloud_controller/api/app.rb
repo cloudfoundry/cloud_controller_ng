@@ -59,27 +59,12 @@ module VCAP::CloudController
     # Override this method because we want to enable the concept of
     # deleted apps. This is necessary because we have an app events table
     # which is a foreign key constraint on apps. Thus, we can't actually delete
-    # the app itself. So, if an app is marked as deleted, we never want it to
-    # be accessible to the end user and it becomes a Not Found Exception.
-    # In the future, this method may be expanded to allow users of certain roles
-    # to be able to access deleted apps.
-    def find_id_and_validate_access(op, id)
-      obj = super(op, id)
-      if obj.deleted?
-        raise self.class.not_found_exception.new(obj.guid)
-      end
-      obj
-    end
-
-    # Override this method because we want to enable the concept of
-    # deleted apps. This is necessary because we have an app events table
-    # which is a foreign key constraint on apps. Thus, we can't actually delete
     # the app itself, but instead mark it as deleted.
     #
-    # @param [String] id The GUID of the object to delete.
-    def delete(id)
-      app = find_id_and_validate_access(:delete, id)
-      recursive = params.has_key?("recursive") ? true : false
+    # @param [String] guid The GUID of the object to delete.
+    def delete(guid)
+      app = find_guid_and_validate_access(:delete, guid)
+      recursive = params["recursive"] == "true"
 
       if v2_api? && !recursive
         if app.has_deletable_associations?
@@ -95,7 +80,7 @@ module VCAP::CloudController
 
     private
 
-    def after_modify(app)
+    def after_update(app)
       stager_response = app.last_stager_response
       if stager_response && stager_response.streaming_log_url
         set_header("X-App-Staging-Log", stager_response.streaming_log_url)

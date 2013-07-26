@@ -63,10 +63,9 @@ module VCAP::CloudController::RestController
       rel_hash = relations_hash(controller, obj, opts, depth, parents)
       entity_hash = obj.to_hash.merge(rel_hash)
 
-      id = obj.guid || obj.id
       metadata_hash = {
-        "guid" => id,
-        "url" => controller.url_for_id(id),
+        "guid" => obj.guid,
+        "url" => controller.url_for_guid(obj.guid),
         "created_at" => obj.created_at,
         "updated_at" => obj.updated_at
       }
@@ -137,10 +136,10 @@ module VCAP::CloudController::RestController
     def self.association_endpoint(controller, associated_controller, obj, associated_model_instances, association)
       if association.is_a?(ControllerDSL::ToOneAttribute)
         if (associated_model_instance = associated_model_instances.first)
-          associated_controller.url_for_id(associated_model_instance.guid)
+          associated_controller.url_for_guid(associated_model_instance.guid)
         end
       else
-        "#{controller.url_for_id(obj.guid)}/#{association.name}"
+        "#{controller.url_for_guid(obj.guid)}/#{association.name}"
       end
     end
   end

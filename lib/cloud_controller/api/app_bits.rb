@@ -11,8 +11,8 @@ module VCAP::CloudController
       full Permissions::SpaceDeveloper
     end
 
-    def upload(id)
-      app = find_id_and_validate_access(:update, id)
+    def upload(guid)
+      app = find_guid_and_validate_access(:update, guid)
 
       unless params["resources"]
         raise Errors::AppBitsUploadInvalid.new("missing :resources")
@@ -45,15 +45,15 @@ module VCAP::CloudController
       raise
     end
 
-    def download(id)
-      find_id_and_validate_access(:read, id)
+    def download(guid)
+      find_guid_and_validate_access(:read, guid)
 
-      package_uri = AppPackage.package_uri(id)
-      logger.debug "id: #{id} package_uri: #{package_uri}"
+      package_uri = AppPackage.package_uri(guid)
+      logger.debug "guid: #{guid} package_uri: #{package_uri}"
 
       if package_uri.nil?
-        logger.error "could not find package for #{id}"
-        raise Errors::AppPackageNotFound.new(id)
+        logger.error "could not find package for #{guid}"
+        raise Errors::AppPackageNotFound.new(guid)
       end
 
       if AppPackage.local?
@@ -74,7 +74,7 @@ module VCAP::CloudController
       raise Errors::AppBitsUploadInvalid.new("invalid :#{name}")
     end
 
-    put "#{path_id}/bits", :upload
-    get "#{path_id}/download", :download
+    put "#{path_guid}/bits", :upload
+    get "#{path_guid}/download", :download
   end
 end

@@ -17,6 +17,6 @@ module VCAP::CloudController
     query_parameters :name
 
     get path, :enumerate
-    get path_id, :read
+    get path_guid, :read
   end
 end

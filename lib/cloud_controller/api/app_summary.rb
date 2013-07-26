@@ -14,8 +14,8 @@ module VCAP::CloudController
       read Permissions::SpaceAuditor
     end
 
-    def summary(id)
-      app = find_id_and_validate_access(:read, id)
+    def summary(guid)
+      app = find_guid_and_validate_access(:read, guid)
       app_info = {
         :guid => app.guid,
         :name => app.name,
@@ -30,6 +30,6 @@ module VCAP::CloudController
 
     private
 
-    get "#{path_id}/summary", :summary
+    get "#{path_guid}/summary", :summary
   end
 end

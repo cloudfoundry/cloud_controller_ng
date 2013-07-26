@@ -12,8 +12,8 @@ module VCAP::CloudController
       read Permissions::SpaceAuditor
     end
 
-    def summary(id)
-      space = find_id_and_validate_access(:read, id)
+    def summary(guid)
+      space = find_guid_and_validate_access(:read, guid)
 
       apps = {}
       space.apps.each do |app|
@@ -22,8 +22,8 @@ module VCAP::CloudController
 
       started_apps = space.apps.select(&:started?)
       unless started_apps.empty?
-        HealthManagerClient.healthy_instances(started_apps).each do |guid, num|
-          apps[guid][:running_instances] = num
+        HealthManagerClient.healthy_instances(started_apps).each do |app_guid, num|
+          apps[app_guid][:running_instances] = num
         end
       end
 
@@ -58,6 +58,6 @@ module VCAP::CloudController
       }.merge(app.to_hash)
     end
 
-    get "#{path_id}/summary", :summary
+    get "#{path_guid}/summary", :summary
   end
 end

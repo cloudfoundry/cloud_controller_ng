@@ -14,8 +14,8 @@ module VCAP::CloudController
       read Permissions::Auditor
     end
 
-    def summary(id)
-      org = find_id_and_validate_access(:read, id)
+    def summary(guid)
+      org = find_guid_and_validate_access(:read, guid)
 
       Yajl::Encoder.encode(
         :guid => org.guid,
@@ -48,6 +48,6 @@ module VCAP::CloudController
       )
     end
 
-    get "#{path_id}/summary", :summary
+    get "#{path_guid}/summary", :summary
   end
 end
