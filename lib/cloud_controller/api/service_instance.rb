@@ -83,5 +83,29 @@ module VCAP::CloudController
 
       serialization.render_json(self.class, obj, @opts)
     end
+
+    delete "/v2/service_instances/:guid", :delete
+
+    def delete(guid)
+      logger.debug "cc.delete", :guid => guid
+
+      obj = Models::ServiceInstance.find(:guid => guid)
+
+      if obj
+        validate_access(:delete, obj, user, roles)
+      else
+        raise self.class.not_found_exception.new(guid)
+      end
+
+      raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
+
+      before_destroy(obj)
+
+      obj.destroy
+
+      after_destroy(obj)
+
+      [ HTTP::NO_CONTENT, nil ]
+    end
   end
 end

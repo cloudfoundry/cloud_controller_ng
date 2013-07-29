@@ -241,6 +241,32 @@ module VCAP::CloudController
       end
     end
 
+    describe 'DELETE', '/v2/service_instances/:service_instance_guid' do
+      context 'with a managed service instance' do
+        let!(:service_instance) { Models::ManagedServiceInstance.make }
+
+        it "deletes the service instance with the given guid" do
+          expect {
+            delete "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+          }.to change(Models::ServiceInstance, :count).by(-1)
+          last_response.status.should == 204
+          Models::ServiceInstance.find(:guid => service_instance.guid).should be_nil
+        end
+      end
+
+      context 'with a user provided service instance' do
+        let!(:service_instance) { Models::UserProvidedServiceInstance.make }
+
+        it "deletes the service instance with the given guid" do
+          expect {
+            delete "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+          }.to change(Models::ServiceInstance, :count).by(-1)
+          last_response.status.should == 204
+          Models::ServiceInstance.find(:guid => service_instance.guid).should be_nil
+        end
+      end
+    end
+
     describe "Quota enforcement" do
       let(:paid_quota) { Models::QuotaDefinition.make(:total_services => 0) }
       let(:free_quota_with_no_services) do
