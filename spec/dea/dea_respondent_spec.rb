@@ -71,7 +71,7 @@ module VCAP::CloudController
             Timecop.freeze(time) do
               respondent.process_droplet_exited_message(payload)
 
-              app_event = Models::Event.find(:actee => app.id)
+              app_event = Models::Event.find(:actee => app.guid)
 
               expect(app_event).to be
               expect(app_event.space).to eq(app.space)

@@ -35,7 +35,7 @@ module VCAP::CloudController::Models
       create(
         space: app.space,
         type: "app.crash",
-        actee: app.id,
+        actee: app.guid,
         actee_type: "app",
         actor: app.guid,
         actor_type: "app",
