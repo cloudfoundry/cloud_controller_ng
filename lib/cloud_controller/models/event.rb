@@ -1,6 +1,5 @@
 module VCAP::CloudController::Models
   class Event < Sequel::Model
-    plugin :single_table_inheritance, :type
     plugin :serialization
 
     many_to_one :space
@@ -28,6 +27,21 @@ module VCAP::CloudController::Models
           }, {
             :space => user.spaces_dataset
           }
+        )
+      )
+    end
+
+    def self.create_app_exit_event(app, droplet_exited_payload)
+      create(
+        space: app.space,
+        type: "app.crash",
+        actee: app.id,
+        actee_type: "app",
+        actor: app.guid,
+        actor_type: "app",
+        timestamp: Time.now,
+        metadata: droplet_exited_payload.slice(
+          :instance, :index, :exit_status, :exit_description, :reason
         )
       )
     end
