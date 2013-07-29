@@ -1,9 +1,7 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::ServiceCreateEvent do
+  describe VCAP::CloudController::Models::ServiceDeleteEvent, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes => [
         :timestamp,
@@ -13,12 +11,6 @@ module VCAP::CloudController
         :space_name,
         :service_instance_guid,
         :service_instance_name,
-        :service_guid,
-        :service_label,
-        :service_provider,
-        :service_version,
-        :service_plan_guid,
-        :service_plan_name,
       ],
       :db_required_attributes => [
         :timestamp,
@@ -31,23 +23,23 @@ module VCAP::CloudController
     describe "create_from_service_instance" do
       context "on an org without billing enabled" do
         it "should do nothing" do
-          Models::ServiceCreateEvent.should_not_receive(:create)
+          Models::ServiceDeleteEvent.should_not_receive(:create)
           si = Models::ManagedServiceInstance.make
           org = si.space.organization
           org.billing_enabled = false
           org.save(:validate => false)
-          Models::ServiceCreateEvent.create_from_service_instance(si)
+          Models::ServiceDeleteEvent.create_from_service_instance(si)
         end
       end
 
       context "on an org with billing enabled" do
-        it "should create an service create event" do
+        it "should create an service delete event" do
+          Models::ServiceDeleteEvent.should_receive(:create)
           si = Models::ManagedServiceInstance.make
           org = si.space.organization
           org.billing_enabled = true
           org.save(:validate => false)
-          Models::ServiceCreateEvent.should_receive(:create)
-          Models::ServiceCreateEvent.create_from_service_instance(si)
+          Models::ServiceDeleteEvent.create_from_service_instance(si)
         end
       end
     end

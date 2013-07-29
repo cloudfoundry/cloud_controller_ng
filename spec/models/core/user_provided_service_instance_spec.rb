@@ -1,6 +1,6 @@
-require_relative 'spec_helper'
+require "spec_helper"
 
-describe VCAP::CloudController::Models::UserProvidedServiceInstance do
+describe VCAP::CloudController::Models::UserProvidedServiceInstance, type: :model do
   it_behaves_like "a model with an encrypted attribute" do
     def new_model
       described_class.create(

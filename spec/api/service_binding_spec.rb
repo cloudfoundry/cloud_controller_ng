@@ -2,7 +2,7 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
 
-  describe VCAP::CloudController::ServiceBinding do
+  describe VCAP::CloudController::ServiceBinding, :services do
 
     include_examples "uaa authenticated api",
       path: "/v2/service_bindings"

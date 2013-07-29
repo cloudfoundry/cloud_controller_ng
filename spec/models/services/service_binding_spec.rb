@@ -1,7 +1,7 @@
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::ServiceBinding do
+  describe VCAP::CloudController::Models::ServiceBinding, :services, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes => [:service_instance, :app],
       :db_required_attributes => [:service_instance_id, :app_id, :credentials],

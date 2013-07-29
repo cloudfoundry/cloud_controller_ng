@@ -12,7 +12,7 @@ module VCAP::CloudController
       end
 
       it "adds default stack file path" do
-        config = Config.from_file(File.expand_path("../fixtures/config/minimal_config.yml", __FILE__))
+        config = Config.from_file(File.join(fixture_path, "config/minimal_config.yml"))
         config[:stacks_file].should == File.join(Config.config_dir, "stacks.yml")
       end
     end

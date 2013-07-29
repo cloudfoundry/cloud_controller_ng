@@ -1,9 +1,7 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::Domain do
+  describe VCAP::CloudController::Models::Domain, type: :model do
     let(:domain) { Models::Domain.make }
 
     it_behaves_like "a CloudController model", {

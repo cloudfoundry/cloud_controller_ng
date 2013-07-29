@@ -1,7 +1,7 @@
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
-  describe Models::Event do
+  describe Models::Event, type: :model do
     let(:space) { Models::Space.make :name => "myspace" }
 
     subject(:event) do

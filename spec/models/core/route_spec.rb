@@ -1,9 +1,7 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::Route do
+  describe VCAP::CloudController::Models::Route, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:domain, :space, :host],
       :db_required_attributes => [:domain_id, :space_id],

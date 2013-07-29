@@ -11,9 +11,10 @@ require "rack/test"
 require "timecop"
 
 require "steno"
-require "cloud_controller"
 require "webmock/rspec"
 require "cf_message_bus/mock_message_bus"
+
+require "cloud_controller"
 
 module VCAP::CloudController
   class SpecEnvironment
@@ -211,7 +212,7 @@ module VCAP::CloudController::SpecHelper
   end
 
   def configure_stacks
-    stacks_file = File.expand_path("../fixtures/config/stacks.yml", __FILE__)
+    stacks_file = File.join(fixture_path, "config/stacks.yml")
     VCAP::CloudController::Models::Stack.configure(stacks_file)
     VCAP::CloudController::Models::Stack.populate
   end
@@ -373,6 +374,10 @@ module VCAP::CloudController::SpecHelper
     puts EM.instance_variable_get("@timers").inspect
   end
 
+  def fixture_path
+    File.expand_path("../fixtures", __FILE__)
+  end
+
   RSpec::Matchers.define :be_recent do |expected|
     match do |actual|
       actual.should be_within(5).of(Time.now)
@@ -521,18 +526,32 @@ class Redis
   end
 end
 
+Dir[File.expand_path("../support/**/*.rb", __FILE__)].each { |file| require file }
+
 RSpec.configure do |rspec_config|
+  rspec_config.treat_symbols_as_metadata_keys_with_true_values = true
+
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController
   rspec_config.include VCAP::CloudController::SpecHelper
+  rspec_config.include ModelCreation
+  rspec_config.extend ModelCreation
+  rspec_config.include ServicesHelpers, services: true
 
   rspec_config.before(:all) do
     VCAP::CloudController::SecurityContext.clear
     configure
+  end
+
+  rspec_config.before :each do
+    # We need to stub out this because it's in an after_destroy_commit hook
+    # Is event emitter our salvation?
+    VCAP::CloudController::AppManager.stub(:delete_droplet)
+    VCAP::CloudController::AppPackage.stub(:delete_package)
   end
 end
 
 require "cloud_controller/models"
 Dir.glob(File.join(File.dirname(__FILE__), "support/**/*.rb")).each { |f| require f }
 
-require "models/spec_helper"
+require "cloud_controller/models"

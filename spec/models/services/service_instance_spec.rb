@@ -1,6 +1,6 @@
-require_relative "../spec_helper"
+require "spec_helper"
 
-describe VCAP::CloudController::Models::ServiceInstance do
+describe VCAP::CloudController::Models::ServiceInstance, type: :model do
   describe "#create" do
     let(:service_instance_attrs)  do
       {

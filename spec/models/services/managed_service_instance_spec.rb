@@ -1,7 +1,7 @@
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
-  describe Models::ManagedServiceInstance do
+  describe Models::ManagedServiceInstance, type: :model do
     let(:service_instance) { VCAP::CloudController::Models::ManagedServiceInstance.make }
     let(:email) { Sham.email }
     let(:guid) { Sham.guid }

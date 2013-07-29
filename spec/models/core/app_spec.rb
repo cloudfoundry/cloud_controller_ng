@@ -1,7 +1,7 @@
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::CloudController
-  describe Models::App do
+  describe Models::App, type: :model do
     let(:org) { Models::Organization.make }
     let(:space) { Models::Space.make(:organization => org) }
 
