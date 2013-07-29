@@ -1,4 +1,4 @@
-require_relative '../presenters/user_summary_presenter'
+require 'cloud_controller/presenters/user_summary_presenter'
 
 module VCAP::CloudController
   rest_controller :UserSummary do

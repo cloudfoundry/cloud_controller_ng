@@ -551,7 +551,3 @@ RSpec.configure do |rspec_config|
   end
 end
 
-require "cloud_controller/models"
-Dir.glob(File.join(File.dirname(__FILE__), "support/**/*.rb")).each { |f| require f }
-
-require "cloud_controller/models"
