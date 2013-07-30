@@ -22,7 +22,7 @@ module VCAP::CloudController
         subject.stub(:find_guid_and_validate_access).with(:update, guid) { app }
       end
 
-      it "prevent other processes from updating the same row until the transaction finishes" do
+      it "prevents other processes from updating the same row until the transaction finishes" do
         app.should_receive(:lock!).ordered
         app.should_receive(:update_from_hash).ordered
         controller.update(guid)

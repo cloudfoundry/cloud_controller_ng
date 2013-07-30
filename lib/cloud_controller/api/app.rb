@@ -78,6 +78,28 @@ module VCAP::CloudController
       [ HTTP::NO_CONTENT, nil ]
     end
 
+    def update(guid)
+      obj = find_guid_and_validate_access(:update, guid)
+
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(:stringify_keys => true)
+
+      logger.debug "cc.update", :guid => guid,
+        :attributes => request_attrs
+
+      raise InvalidRequest unless request_attrs
+
+      model.db.transaction do
+        obj.lock!
+        obj.update_from_hash(request_attrs)
+        Models::Event.record_app_update(obj, SecurityContext.current_user) if obj.previous_changes
+      end
+
+      after_update(obj)
+
+      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
+    end
+
     private
 
     def after_update(app)

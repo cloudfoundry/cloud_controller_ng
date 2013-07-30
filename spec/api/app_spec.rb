@@ -116,11 +116,7 @@ module VCAP::CloudController
     end
 
     describe "update app" do
-      let(:update_hash) do
-        {
-          :detected_buildpack => "buildpack"
-        }
-      end
+      let(:update_hash) { {} }
 
       let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
 
@@ -138,6 +134,8 @@ module VCAP::CloudController
       end
 
       context "when detected buildpack is provided" do
+        before { update_hash[:detected_buildpack] = "buildpack" }
+
         it "should raise error" do
           subject
           last_response.status.should == 400
@@ -148,14 +146,24 @@ module VCAP::CloudController
       context "when the app is already deleted" do
         let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
 
-        before do
-          app_obj.soft_delete
-        end
+        before { app_obj.soft_delete }
 
         it "should raise error" do
           subject
 
           last_response.status.should == 404
+        end
+      end
+
+      describe "events" do
+        before { update_hash[:instances] = 2 }
+
+        it "registers an app.start event" do
+          subject
+
+          event = Models::Event.find(:type => "app.update", :actee => app_obj.guid)
+          expect(event).to be
+          expect(event.actor).to eq(admin_user.guid)
         end
       end
     end

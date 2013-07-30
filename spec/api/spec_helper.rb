@@ -89,8 +89,12 @@ module VCAP::CloudController::ApiSpecHelper
     decoded_response["entity"]
   end
 
+  def admin_user
+    @admin_user ||= VCAP::CloudController::Models::User.make(:admin => true)
+  end
+
   def admin_headers
-    @admin_headers ||= headers_for(VCAP::CloudController::Models::User.make(:admin => true))
+    @admin_headers ||= headers_for(admin_user)
   end
 
   shared_examples "return a vcap rest encoded object" do

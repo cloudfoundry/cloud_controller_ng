@@ -59,5 +59,29 @@ module VCAP::CloudController
         )
       end
     end
+
+    describe ".record_app_update" do
+      let(:app) { Models::App.make(instances: 1) }
+      let(:user) { Models::User.make }
+
+      it "records the changes in metadata" do
+        app.instances = 2
+        app.save
+
+        event = described_class.record_app_update(app, user)
+        expect(event.actor_type).to eq("user")
+        expect(event.metadata).to eq("changes" => { "instances" => [1, 2] })
+      end
+
+      it "does not expose the ENV variables" do
+        app.environment_json = { "foo" => 1 }
+        app.save
+
+        event = described_class.record_app_update(app, user)
+        expect(event.metadata).to eq(
+          "changes" => { "environment_json" => ['PRIVATE DATA HIDDEN'] * 2 }
+        )
+      end
+    end
   end
 end

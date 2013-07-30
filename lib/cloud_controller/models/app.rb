@@ -64,6 +64,23 @@ module VCAP::CloudController
       APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
       PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
 
+      AUDITABLE_FIELDS = [:instances]
+      CENSORED_FIELDS = [:environment_json]
+
+      CENSORED_MESSAGE = "PRIVATE DATA HIDDEN".freeze
+
+      def auditable_changes
+        changes = previous_changes
+
+        censored = changes.slice(*CENSORED_FIELDS)
+        visible = changes.slice(*AUDITABLE_FIELDS)
+
+        censored.inject(visible) do |h, (k, _)|
+          h[k] = [CENSORED_MESSAGE] * 2
+          h
+        end
+      end
+
       # marked as true on changing the associated routes, and reset by
       # +DeaClient.start+
       attr_accessor :routes_changed

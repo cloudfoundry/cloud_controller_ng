@@ -45,5 +45,20 @@ module VCAP::CloudController::Models
         )
       )
     end
+
+    def self.record_app_update(actee, actor)
+      create(
+        space: actee.space,
+        type: "app.update",
+        actee: actee.guid,
+        actee_type: "app",
+        actor: actor.guid,
+        actor_type: "user",
+        timestamp: Time.now,
+        metadata: {
+          changes: actee.auditable_changes
+        }
+      )
+    end
   end
 end
