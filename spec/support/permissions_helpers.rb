@@ -1,7 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
-require File.expand_path("../../spec_helper", __FILE__)
-
 shared_examples "a cf permission" do |name, nil_granted|
   nil_granted ||= false
   let(:no_role) { VCAP::CloudController::Roles.new }

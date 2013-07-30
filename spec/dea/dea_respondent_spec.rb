@@ -1,4 +1,4 @@
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 require "cloud_controller/dea/dea_respondent"
 
 module VCAP::CloudController
