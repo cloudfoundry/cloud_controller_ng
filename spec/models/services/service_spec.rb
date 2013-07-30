@@ -91,5 +91,14 @@ module VCAP::CloudController::Models
         records(nonadmin_user).should include(private_service, public_service)
       end
     end
+
+    describe "#tags" do
+      context 'null tags in the database' do
+        it 'returns an empty array' do
+          service = Service.make(tags: nil)
+          expect(service.tags).to eq []
+        end
+      end
+    end
   end
 end

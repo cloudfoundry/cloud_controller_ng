@@ -42,5 +42,9 @@ module VCAP::CloudController::Models
       opts = {id: plans_I_can_see.map(&:service_id).uniq}
       user_visibility_filter_with_admin_override(opts)
     end
+
+    def tags
+      super || []
+    end
   end
 end
