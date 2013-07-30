@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::ModelSpecHelper
+module ModelHelpers
   # This is used by the specs to construct an object with known properties
   # that can be used over and over between examples along with regenerating
   # the relevant assocations (via refresh).

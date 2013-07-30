@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::ModelSpecHelper
+module ModelHelpers
   shared_examples "creation without an attribute" do |opts|
     opts[:required_attributes].each do |without_attr|
       context "without the :#{without_attr.to_s} attribute" do

@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::ModelSpecHelper
+module ModelHelpers
   def self.relation_types
     relations = []
     %w[one many].each do |cardinality_left|
@@ -14,7 +14,7 @@ module VCAP::CloudController::ModelSpecHelper
   shared_examples "a CloudController model" do |opts|
     # the later code is simplified if we can assume that these are always
     # arrays
-    relation_types = VCAP::CloudController::ModelSpecHelper.relation_types
+    relation_types = ModelHelpers.relation_types
     ([:required_attributes, :unique_attributes, :stripped_string_attributes,
      :sensitive_attributes, :extra_json_attributes, :disable_examples] +
      relation_types).each do |k|

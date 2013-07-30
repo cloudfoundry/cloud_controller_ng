@@ -1,7 +1,7 @@
-require File.expand_path("../api/spec_helper", __FILE__)
+require "spec_helper"
 
 describe VCAP::CloudController::Controller do
-  describe "validating the auth token" do
+  describe "validating the auth token", type: :controller do
     let(:email) { Sham.email }
     let(:user_id) { Sham.guid }
     let(:token_info) { {} }

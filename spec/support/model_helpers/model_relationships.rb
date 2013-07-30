@@ -2,8 +2,8 @@
 
 require File.expand_path("../cloud_controller_model", __FILE__)
 
-module VCAP::CloudController::ModelSpecHelper
-  relation_types = VCAP::CloudController::ModelSpecHelper.relation_types
+module ModelHelpers
+  relation_types = ModelHelpers.relation_types
 
   shared_examples "model relationships" do |opts|
     # make array of [assocation, test_opts, relation_type]

@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::ModelSpecHelper
+module ModelHelpers
   shared_examples "creation of unique attributes" do |opts|
     #
     # If there are multiple unique attributes, vary them one a time

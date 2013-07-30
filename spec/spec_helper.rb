@@ -529,6 +529,10 @@ end
 Dir[File.expand_path("../support/**/*.rb", __FILE__)].each { |file| require file }
 
 RSpec.configure do |rspec_config|
+  def rspec_config.escaped_path(*parts)
+    Regexp.compile(parts.join('[\\\/]'))
+  end
+
   rspec_config.treat_symbols_as_metadata_keys_with_true_values = true
 
   rspec_config.include Rack::Test::Methods
@@ -537,6 +541,11 @@ RSpec.configure do |rspec_config|
   rspec_config.include ModelCreation
   rspec_config.extend ModelCreation
   rspec_config.include ServicesHelpers, services: true
+  rspec_config.include ModelHelpers
+
+  rspec_config.include ControllerHelpers, type: :controller, :example_group => {
+    :file_path => rspec_config.escaped_path(%w[spec controllers])
+  }
 
   rspec_config.before(:all) do
     VCAP::CloudController::SecurityContext.clear
@@ -551,3 +560,11 @@ RSpec.configure do |rspec_config|
   end
 end
 
+# Ensures that entries are not returned ordered by the id field by
+# default. Breaks the tests (deliberately) unless we order by id
+# explicitly. In sqlite, the default ordering, although not guaranteed,
+# is de facto by id. In postgres the order is random unless specified.
+
+class VCAP::CloudController::Models::App
+  set_dataset dataset.order(:guid)
+end

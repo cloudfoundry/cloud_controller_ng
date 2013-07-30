@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::ModelSpecHelper
+module ModelHelpers
   shared_examples "creation with all required attributes" do
     describe "with all required attributes" do
       before(:all) do

@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::ModelSpecHelper
+module ModelHelpers
   shared_examples "attribute normalization" do |opts|
     let(:obj) { described_class.make }
 

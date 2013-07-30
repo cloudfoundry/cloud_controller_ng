@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::ModelSpecHelper
+module ModelHelpers
   shared_examples "serialization" do |opts|
     before(:all) do
       @obj = described_class.make
