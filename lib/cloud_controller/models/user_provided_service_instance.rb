@@ -28,5 +28,9 @@ module VCAP::CloudController::Models
     def bindable?
       true
     end
+
+    def tags
+      []
+    end
   end
 end

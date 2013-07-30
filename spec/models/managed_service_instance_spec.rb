@@ -538,6 +538,16 @@ module VCAP::CloudController
         specify { service_instance.should_not be_bindable }
       end
     end
+
+    describe "#tags" do
+      let(:service_instance) { Models::ManagedServiceInstance.make(service_plan: service_plan) }
+      let(:service_plan) { Models::ServicePlan.make(service: service) }
+      let(:service) { Models::Service.make(tags: %w(relational mysql)) }
+
+      it 'gets tags from the service' do
+        expect(service_instance.tags).to eq %w(relational mysql)
+      end
+    end
   end
 end
 

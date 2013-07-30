@@ -82,4 +82,11 @@ describe VCAP::CloudController::Models::UserProvidedServiceInstance do
     let(:service_instance) { described_class.make }
     specify { service_instance.should be_bindable }
   end
+
+  describe "#tags" do
+    it 'does not have tags' do
+      service_instance = described_class.make
+      expect(service_instance.tags).to eq []
+    end
+  end
 end

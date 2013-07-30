@@ -19,7 +19,8 @@ class ServiceInstancePresenter
     def to_hash
       {
         label: "user-provided",
-        name: @service_instance.name
+        name: @service_instance.name,
+        tags: @service_instance.tags
       }
     end
   end
@@ -36,7 +37,8 @@ class ServiceInstancePresenter
         version: @service_instance.service.version,
         vendor: @service_instance.service.label,
         plan: @service_instance.service_plan.name,
-        name: @service_instance.name
+        name: @service_instance.name,
+        tags: @service_instance.tags
       }
     end
   end

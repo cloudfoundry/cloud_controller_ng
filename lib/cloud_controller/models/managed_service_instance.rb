@@ -286,5 +286,9 @@ module VCAP::CloudController::Models
     def bindable?
       service_plan.bindable?
     end
+
+    def tags
+      service.tags
+    end
   end
 end

@@ -2,6 +2,8 @@
 
 module VCAP::CloudController::Models
   class Service < Sequel::Model
+    plugin :serialization
+
     one_to_many :service_plans
     one_to_one  :service_auth_token, :key => [:label, :provider], :primary_key => [:label, :provider]
 
@@ -30,6 +32,8 @@ module VCAP::CloudController::Models
       validates_url      :info_url
       validates_unique   [:label, :provider]
     end
+
+    serialize_attributes :json, :tags
 
     alias_method :bindable?, :bindable
 

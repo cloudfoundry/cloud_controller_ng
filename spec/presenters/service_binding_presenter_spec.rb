@@ -34,6 +34,7 @@ describe ServiceBindingPresenter do
           subject.should have_key(:provider)
           subject.should have_key(:version)
           subject.should have_key(:vendor)
+          subject.should have_key(:tags)
         end
 
         specify do
@@ -73,6 +74,7 @@ describe ServiceBindingPresenter do
         subject.should have_key(:label)
         subject.should have_key(:credentials)
         subject.should have_key(:options)
+        subject.should have_key(:tags)
       end
     end
   end
