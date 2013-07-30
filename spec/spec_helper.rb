@@ -16,6 +16,8 @@ require "cf_message_bus/mock_message_bus"
 
 require "cloud_controller"
 
+require "pry"
+
 module VCAP::CloudController
   class SpecEnvironment
     def initialize
