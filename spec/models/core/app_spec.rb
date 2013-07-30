@@ -251,6 +251,7 @@ module VCAP::CloudController
 
       describe "env is encrypted" do
         let(:env) { {"jesse" => "awesome"} }
+        let(:long_env) { {"many_os" => "o" * 10_000} }
         let!(:app) { Models::App.make(:environment_json => env) }
         let(:last_row) { VCAP::CloudController::Models::App.dataset.naked.order_by(:id).last }
 
@@ -275,6 +276,12 @@ module VCAP::CloudController
         it "must deal with null env_json to remain null after encryption" do
           null_json_app = Models::App.make()
           expect(null_json_app.environment_json).to be_nil
+        end
+
+        it "works with long serialized environments" do
+          app = Models::App.make(:environment_json => long_env)
+          app.reload
+          expect(app.environment_json).to eq(long_env)
         end
       end
     end
