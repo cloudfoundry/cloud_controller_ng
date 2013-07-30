@@ -3,10 +3,6 @@ require "cloud_controller/account_capacity"
 require "uri"
 require "cloud_controller/controllers"
 
-module CCInitializers
-
-end
-
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
   define_schema do
