@@ -1,2 +1,6 @@
 #!/usr/bin/env ruby
-require "./lib/cloud_controller/console"
+
+$:.unshift(File.expand_path("../../lib", __FILE__))
+$:.unshift(File.expand_path("../../app", __FILE__))
+
+require "cloud_controller/console"
