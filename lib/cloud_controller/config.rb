@@ -1,6 +1,7 @@
 require "vcap/config"
 require "cloud_controller/account_capacity"
 require "uri"
+require "cloud_controller/controllers"
 
 module CCInitializers
 
