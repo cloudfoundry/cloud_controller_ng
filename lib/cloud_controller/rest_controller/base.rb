@@ -206,7 +206,7 @@ module VCAP::CloudController::RestController
       # @return [String] base path to the api endpoint
       def path_base(base = nil)
         @path_base = base if base
-        @path_base || class_basename.underscore.pluralize
+        @path_base ||= class_basename.underscore.sub(/_controller$/, '')
       end
 
       # Get and set the allowed query parameters (sent via the q http

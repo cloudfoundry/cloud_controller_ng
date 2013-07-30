@@ -49,10 +49,10 @@ module VCAP::CloudController
       EM.stub(:defer).and_yield
       EM.stub(:schedule_sync)
 
-      Staging.stub(:create_handle).and_return(upload_handle)
-      Staging.stub(:store_droplet)
-      Staging.stub(:store_buildpack_cache)
-      Staging.stub(:destroy_handle)
+      StagingsController.stub(:create_handle).and_return(upload_handle)
+      StagingsController.stub(:store_droplet)
+      StagingsController.stub(:store_buildpack_cache)
+      StagingsController.stub(:destroy_handle)
     end
 
     context 'when no stager can be found' do
@@ -103,7 +103,7 @@ module VCAP::CloudController
           end
 
           it "creates upload handle for stager to upload droplet" do
-            Staging.should_receive(:create_handle).and_return(upload_handle)
+            StagingsController.should_receive(:create_handle).and_return(upload_handle)
             stage
           end
 
@@ -129,7 +129,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { Staging.droplet_exists?(app) }.from(false)
+            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -157,7 +157,7 @@ module VCAP::CloudController
           end
 
           it "removes upload handle" do
-            Staging.should_receive(:destroy_handle).with(upload_handle)
+            StagingsController.should_receive(:destroy_handle).with(upload_handle)
             ignore_error(Errors::StagingError) { stage }
           end
           it "keeps the app as not staged" do
@@ -169,7 +169,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { Staging.droplet_exists?(app) }.from(false)
+            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -200,7 +200,7 @@ module VCAP::CloudController
           end
 
           it "removes upload handle" do
-            Staging.should_receive(:destroy_handle).with(upload_handle)
+            StagingsController.should_receive(:destroy_handle).with(upload_handle)
             ignore_error(Errors::StagingError) { stage }
           end
           it "keeps the app as not staged" do
@@ -212,7 +212,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { Staging.droplet_exists?(app) }.from(false)
+            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -280,7 +280,7 @@ module VCAP::CloudController
               end
 
               it "stores droplet" do
-                Staging.should_receive(:store_droplet).with(app, '/upload/path')
+                StagingsController.should_receive(:store_droplet).with(app, '/upload/path')
                 stage
               end
 
@@ -302,7 +302,7 @@ module VCAP::CloudController
               end
 
               it "removes upload handle" do
-                Staging.should_receive(:destroy_handle).with(upload_handle)
+                StagingsController.should_receive(:destroy_handle).with(upload_handle)
                 stage
               end
 
@@ -341,7 +341,7 @@ module VCAP::CloudController
               end
 
               it "stores droplet" do
-                Staging.should_receive(:store_droplet).with(app, __FILE__)
+                StagingsController.should_receive(:store_droplet).with(app, __FILE__)
                 stage
               end
 
@@ -363,7 +363,7 @@ module VCAP::CloudController
               end
 
               it "removes upload handle" do
-                Staging.should_receive(:destroy_handle).with(upload_handle)
+                StagingsController.should_receive(:destroy_handle).with(upload_handle)
                 stage
               end
 
@@ -395,7 +395,7 @@ module VCAP::CloudController
             it "does not store droplet" do
               expect {
                 ignore_error(Errors::StagingError) { stage }
-              }.to_not change { Staging.droplet_exists?(app) }.from(false)
+              }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
             end
 
             it "does not update droplet hash on the app" do
@@ -436,7 +436,7 @@ module VCAP::CloudController
           end
 
           it "removes upload handle" do
-            Staging.should_receive(:destroy_handle).with(upload_handle)
+            StagingsController.should_receive(:destroy_handle).with(upload_handle)
             stage
           end
           it "keeps the app as not staged" do
@@ -448,7 +448,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { Staging.droplet_exists?(app) }.from(false)
+            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -485,7 +485,7 @@ module VCAP::CloudController
           end
 
           it "removes upload handle" do
-            Staging.should_receive(:destroy_handle).with(upload_handle)
+            StagingsController.should_receive(:destroy_handle).with(upload_handle)
             stage
           end
           it "keeps the app as not staged" do
@@ -497,7 +497,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { Staging.droplet_exists?(app) }.from(false)
+            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -538,10 +538,10 @@ module VCAP::CloudController
       end
 
       it "includes app guid, task id and download/upload uris" do
-        Staging.stub(:app_uri).with(app).and_return("http://www.app.uri")
-        Staging.stub(:droplet_upload_uri).with(app).and_return("http://www.droplet.upload.uri")
-        Staging.stub(:buildpack_cache_download_uri).with(app).and_return("http://www.buildpack.cache.download.uri")
-        Staging.stub(:buildpack_cache_upload_uri).with(app).and_return("http://www.buildpack.cache.upload.uri")
+        StagingsController.stub(:app_uri).with(app).and_return("http://www.app.uri")
+        StagingsController.stub(:droplet_upload_uri).with(app).and_return("http://www.droplet.upload.uri")
+        StagingsController.stub(:buildpack_cache_download_uri).with(app).and_return("http://www.buildpack.cache.download.uri")
+        StagingsController.stub(:buildpack_cache_upload_uri).with(app).and_return("http://www.buildpack.cache.upload.uri")
 
         request = staging_task.staging_request
 

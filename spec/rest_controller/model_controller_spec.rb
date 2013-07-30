@@ -8,7 +8,7 @@ module VCAP::CloudController
     subject(:controller) { controller_class.new({}, logger, {}, {}, request_body) }
 
     describe "#update" do
-      let(:controller_class) { App }
+      let(:controller_class) { AppsController }
       let(:app) { Models::App.make }
       let(:guid) { app.guid }
 

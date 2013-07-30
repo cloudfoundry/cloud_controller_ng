@@ -23,7 +23,8 @@ uaa:
   symmetric_secret: "tokensecret"
 
 logging:
-  level: fatal # Keep at fatal to avoid lots of extraneous output in tests
+  file: spec/artifacts/spec.log
+  level: debug
 
 message_bus_uri: nats://127.0.0.1:4223
 pid_filename: /tmp/cloud_controller.pid

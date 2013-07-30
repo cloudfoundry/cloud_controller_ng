@@ -22,16 +22,16 @@ module VCAP::CloudController
       end
 
       it 'should delete the droplet from staging' do
-        Staging.should_receive(:delete_droplet).with(app)
+        StagingsController.should_receive(:delete_droplet).with(app)
         AppManager.delete_droplet(app)
       end
 
       context "when droplet does not exist" do
         context "local fog provider" do
           it "does nothing" do
-            Staging.droplet_exists?(app).should == false
+            StagingsController.droplet_exists?(app).should == false
             AppManager.delete_droplet(app)
-            Staging.droplet_exists?(app).should == false
+            StagingsController.droplet_exists?(app).should == false
           end
         end
 
@@ -50,9 +50,9 @@ module VCAP::CloudController
           end
 
           it "does nothing" do
-            Staging.droplet_exists?(app).should == false
+            StagingsController.droplet_exists?(app).should == false
             AppManager.delete_droplet(app)
-            Staging.droplet_exists?(app).should == false
+            StagingsController.droplet_exists?(app).should == false
           end
         end
 
@@ -75,15 +75,15 @@ module VCAP::CloudController
           end
 
           it "does nothing" do
-            Staging.droplet_exists?(app).should == false
+            StagingsController.droplet_exists?(app).should == false
             AppManager.delete_droplet(app)
-            Staging.droplet_exists?(app).should == false
+            StagingsController.droplet_exists?(app).should == false
           end
         end
 
         context "Non NotFound error" do
           before do
-            Staging.should_receive(:droplet_dir).and_raise(StandardError.new("This is an intended error."))
+            StagingsController.should_receive(:droplet_dir).and_raise(StandardError.new("This is an intended error."))
           end
 
           it "should not rescue non-NotFound errors" do
@@ -93,7 +93,7 @@ module VCAP::CloudController
       end
 
       context "when droplet exists" do
-        before { Staging.store_droplet(app, droplet.path) }
+        before { StagingsController.store_droplet(app, droplet.path) }
 
         let(:droplet) do
           Tempfile.new(app.guid).tap do |f|
@@ -106,7 +106,7 @@ module VCAP::CloudController
           expect {
             AppManager.delete_droplet(app)
           }.to change {
-            Staging.droplet_exists?(app)
+            StagingsController.droplet_exists?(app)
           }.from(true).to(false)
         end
 

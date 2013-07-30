@@ -138,7 +138,7 @@ module VCAP::CloudController
 
       VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
       svc_guid = Models::Service[:label => label, :provider => provider].guid
-      svc_api = VCAP::CloudController::Service.new(config, logger, env, params, body)
+      svc_api = VCAP::CloudController::ServicesController.new(config, logger, env, params, body)
       svc_api.dispatch(:delete, svc_guid)
 
       empty_json

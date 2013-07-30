@@ -266,7 +266,7 @@ module VCAP::CloudController
           :prod => app.production,
           :sha1 => app.droplet_hash,
           :executableFile => "deprecated",
-          :executableUri => Staging.droplet_download_uri(app),
+          :executableUri => StagingsController.droplet_download_uri(app),
           :version => app.version,
           :services => app.service_bindings.map do |sb|
             ServiceBindingPresenter.new(sb).to_hash

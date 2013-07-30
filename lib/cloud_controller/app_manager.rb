@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       def delete_droplet(app)
-        Staging.delete_droplet(app)
+        StagingsController.delete_droplet(app)
       end
 
       def stop_droplet(app)

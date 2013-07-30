@@ -276,8 +276,8 @@ module VCAP::CloudController::RestController
       #
       # @return [Sequel::Model] The class of the model associated with
       # this rest endpoint.
-      def model(name = model_class_name)
-        @model ||= Models.const_get(name)
+      def model(name = nil)
+        @model ||= Models.const_get(model_class_name(name))
       end
 
       # Get and set the model class name associated with this rest/api endpoint.
@@ -289,7 +289,11 @@ module VCAP::CloudController::RestController
       # this rest endpoint.
       def model_class_name(name = nil)
         @model_class_name = name if name
-        @model_class_name || class_basename
+        @model_class_name ||= guess_model_class_name
+      end
+
+      def guess_model_class_name
+        class_basename.sub(/Controller$/, '').singularize
       end
 
       def serialization(klass = nil)

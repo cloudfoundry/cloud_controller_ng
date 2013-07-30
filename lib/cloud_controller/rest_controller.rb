@@ -11,7 +11,7 @@ require "cloud_controller/rest_controller/model_controller"
 module VCAP::CloudController
   def self.rest_controller(name, &blk)
     klass = Class.new RestController::ModelController
-    self.const_set name, klass
+    self.const_set "#{name}Controller", klass
     klass.class_eval &blk
     if klass.default_routes?
       klass.class_eval do
@@ -22,7 +22,7 @@ module VCAP::CloudController
   end
 
   def self.controller_from_name(name)
-    VCAP::CloudController.const_get(name.to_s.singularize.camelize)
+    VCAP::CloudController.const_get("#{name.to_s.pluralize.camelize}Controller")
   end
 
   def self.controller_from_model(model)
