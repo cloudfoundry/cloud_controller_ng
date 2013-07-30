@@ -195,20 +195,14 @@ module VCAP::CloudController::RestController
     # the use has access.
     def find_guid_and_validate_access(op, guid)
       obj = model.find(:guid => guid)
-
-      if obj
-        validate_access(op, obj, user, roles)
-      else
-        raise self.class.not_found_exception.new(guid) if obj.nil?
-      end
-
+      raise self.class.not_found_exception.new(guid) if obj.nil?
+      validate_access(op, obj, user, roles)
       obj
     end
 
-    # Find an object and validate that the given user has rights
-    # to access the instance.
+    # Validate that the current logged in user can have access to the target object.
     #
-    # Raises an exception if the user does not have rights to peform
+    # Raises an exception if the user does not have rights to perform
     # the operation on the object.
     #
     # @param [Symbol] op The type of operation to check for access
