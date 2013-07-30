@@ -1,7 +1,6 @@
 require "vcap/config"
 require "cloud_controller/account_capacity"
 require "uri"
-require "cloud_controller/controllers"
 
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
