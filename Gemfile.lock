@@ -252,6 +252,7 @@ DEPENDENCIES
   mysql2
   parallel_tests
   pg
+  pry
   rack-test
   rake
   rfc822
