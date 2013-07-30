@@ -41,13 +41,18 @@ module VCAP::CloudController
     def find_dea(mem, stack, app_id)
       mutex.synchronize do
         prune_stale_deas
-        eligible_ads = @dea_advertisements.select { |ad| ad.meets_needs?(mem, stack) }
-        best_dea_ad = eligible_ads.shuffle.min_by { |ad| ad.num_instances_of(app_id) }
+
+        best_dea_ad = EligibleDeaAdvertisementFilter.new(@dea_advertisements).
+                       only_meets_needs(mem, stack).
+                       only_fewest_instances_of_app(app_id).
+                       upper_half_by_memory.
+                       sample
+
         best_dea_ad && best_dea_ad.dea_id
       end
     end
 
-    def mark_app_staged(opts)
+    def mark_app_started(opts)
       dea_id = opts[:dea_id]
       app_id = opts[:app_id]
 
@@ -79,11 +84,15 @@ module VCAP::CloudController
       end
 
       def increment_instance_count(app_id)
-        stats[:app_id_to_count][app_id] = num_instances_of(app_id) + 1
+        stats[:app_id_to_count][app_id.to_sym] = num_instances_of(app_id.to_sym) + 1
       end
 
       def num_instances_of(app_id)
-        stats[:app_id_to_count].fetch(app_id, 0)
+        stats[:app_id_to_count].fetch(app_id.to_sym, 0)
+      end
+
+      def available_memory
+        stats[:available_memory]
       end
 
       def dea_id
@@ -103,7 +112,38 @@ module VCAP::CloudController
       end
 
       def has_sufficient_memory?(mem)
-        stats[:available_memory] >= mem
+        available_memory >= mem
+      end
+    end
+
+    class EligibleDeaAdvertisementFilter
+      def initialize(dea_advertisements)
+        @dea_advertisements = dea_advertisements.dup
+      end
+
+      def only_meets_needs(mem, stack)
+        @dea_advertisements.select! { |ad| ad.meets_needs?(mem, stack) }
+        self
+      end
+
+      def only_fewest_instances_of_app(app_id)
+        fewest_instances_of_app = @dea_advertisements.map { |ad| ad.num_instances_of(app_id) }.min
+        @dea_advertisements.select! { |ad| ad.num_instances_of(app_id) == fewest_instances_of_app }
+        self
+      end
+
+      def upper_half_by_memory
+        unless @dea_advertisements.empty?
+          @dea_advertisements.sort_by! { |ad| ad.available_memory }
+          min_eligible_memory = @dea_advertisements[@dea_advertisements.size/2].available_memory
+          @dea_advertisements.select! { |ad| ad.available_memory >= min_eligible_memory }
+        end
+
+        self
+      end
+
+      def sample
+        @dea_advertisements.sample
       end
     end
   end

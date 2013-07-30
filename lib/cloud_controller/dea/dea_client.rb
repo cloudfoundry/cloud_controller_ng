@@ -34,8 +34,9 @@ module VCAP::CloudController
         @dea_pool.register_subscriptions
       end
 
-      def start(app)
-        start_instances_in_range(app, (0...app.instances))
+      def start(app, options={})
+        instances_to_start = options[:instances_to_start] || app.instances
+        start_instances_in_range(app, ((app.instances - instances_to_start)...app.instances))
         app.routes_changed = false
       end
 
@@ -225,7 +226,7 @@ module VCAP::CloudController
           dea_id = dea_pool.find_dea(app.memory, app.stack.name, app.guid)
           if dea_id
             dea_publish_start(dea_id, msg.merge(message_override))
-            dea_pool.mark_app_staged(dea_id: dea_id, app_id: app.guid)
+            dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
           else
             logger.error "no resources available #{msg}"
           end
@@ -253,6 +254,33 @@ module VCAP::CloudController
         message = dea_update_message(app)
         dea_publish_update(message)
         app.routes_changed = false
+      end
+
+      def start_app_message(app)
+        # TODO: add debug support
+        {
+          :droplet => app.guid,
+          :tags => {:space => app.space_guid},
+          :name => app.name,
+          :uris => app.uris,
+          :prod => app.production,
+          :sha1 => app.droplet_hash,
+          :executableFile => "deprecated",
+          :executableUri => StagingsController.droplet_download_uri(app),
+          :version => app.version,
+          :services => app.service_bindings.map do |sb|
+            ServiceBindingPresenter.new(sb).to_hash
+          end,
+          :limits => {
+            :mem => app.memory,
+            :disk => app.disk_quota,
+            :fds => app.file_descriptors
+          },
+          :cc_partition => config[:cc_partition],
+          :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
+          :console => app.console,
+          :debug => app.debug,
+        }
       end
 
       private
@@ -301,41 +329,6 @@ module VCAP::CloudController
         {
           :droplet  => app.guid,
           :uris     => app.uris,
-        }
-      end
-
-      def start_app_message(app)
-        # TODO: add debug support
-        {
-          :droplet => app.guid,
-          :name => app.name,
-          :uris => app.uris,
-          :prod => app.production,
-          :sha1 => app.droplet_hash,
-          :executableFile => "deprecated",
-          :executableUri => Staging.droplet_download_uri(app),
-          :version => app.version,
-          :services => app.service_bindings.map do |sb|
-            svc = sb.service_instance.service_plan.service
-            {
-              :name => sb.service_instance.name,
-              :label => "#{svc.label}-#{svc.version}",
-              :plan => sb.service_instance.service_plan.name,
-              :provider => svc.provider,
-              :version => svc.version,
-              :credentials => sb.credentials,
-              :vendor => svc.label
-            }
-          end,
-          :limits => {
-            :mem => app.memory,
-            :disk => app.disk_quota,
-            :fds => app.file_descriptors
-          },
-          :cc_partition => config[:cc_partition],
-          :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
-          :console => app.console,
-          :debug => app.debug,
         }
       end
 

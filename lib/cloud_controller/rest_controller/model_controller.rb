@@ -8,21 +8,26 @@ module VCAP::CloudController::RestController
 
     # Create operation
     def create
-
       json_msg = self.class::CreateMessage.decode(body)
+
       @request_attrs = json_msg.extract(:stringify_keys => true)
-      logger.debug "create: #{request_attrs}"
+
+      logger.debug "cc.create", :model => self.class.model_class_name,
+        :attributes => request_attrs
+
       raise InvalidRequest unless request_attrs
 
-      before_create if respond_to? :before_create
+      before_create
+
       obj = nil
       model.db.transaction do
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user, roles)
       end
 
-      [
-        HTTP::CREATED,
+      after_create(obj)
+
+      [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{obj.guid}" },
         serialization.render_json(self.class, obj, @opts)
       ]
@@ -30,44 +35,52 @@ module VCAP::CloudController::RestController
 
     # Read operation
     #
-    # @param [String] id The GUID of the object to read.
-    def read(id)
-      logger.debug "read: #{id}"
-      obj = find_id_and_validate_access(:read, id)
+    # @param [String] guid The GUID of the object to read.
+    def read(guid)
+      logger.debug "cc.read", :model => self.class.model_class_name,
+        :guid => guid
+
+      obj = find_guid_and_validate_access(:read, guid)
       serialization.render_json(self.class, obj, @opts)
     end
 
     # Update operation
     #
-    # @param [String] id The GUID of the object to update.
-    def update(id)
-      logger.debug "update: #{id} #{request_attrs}"
+    # @param [String] guid The GUID of the object to update.
+    def update(guid)
+      obj = find_guid_and_validate_access(:update, guid)
 
-      obj = find_id_and_validate_access(:update, id)
       json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
-      raise InvalidRequest unless request_attrs
 
-      before_modify(obj)
+      logger.debug "cc.update", :guid => guid,
+        :attributes => request_attrs
+
+      raise InvalidRequest unless request_attrs
 
       model.db.transaction do
         obj.lock!
         obj.update_from_hash(request_attrs)
       end
 
-      after_modify(obj)
-
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end
 
     # Delete operation
     #
-    # @param [String] id The GUID of the object to delete.
-    def delete(id)
-      logger.debug "delete: #{id}"
-      obj = find_id_and_validate_access(:delete, id)
+    # @param [String] guid The GUID of the object to delete.
+    def delete(guid)
+      logger.debug "cc.delete", :guid => guid
+
+      obj = find_guid_and_validate_access(:delete, guid)
+
       raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
+
+      before_destroy(obj)
+
       obj.destroy
+
+      after_destroy(obj)
 
       [ HTTP::NO_CONTENT, nil ]
     end
@@ -75,32 +88,34 @@ module VCAP::CloudController::RestController
     # Enumerate operation
     def enumerate
       raise NotAuthenticated unless user || roles.admin?
-      ds = enumerate_dataset()
-      Paginator.render_json(self.class, ds, self.class.path,
-                            @opts.merge(:serialization => serialization))
+
+      Paginator.render_json(
+        self.class, enumerate_dataset, self.class.path,
+        @opts.merge(:serialization => serialization))
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       Query.filtered_dataset_from_query_params(model, ds, qp, opts)
     end
 
-    # Enumerate the related objects to the one with the given id.
+    # Enumerate the related objects to the one with the given guid.
     #
-    # @param [String] id The GUID of the object for which to enumerate related
+    # @param [String] guid The GUID of the object for which to enumerate related
     # objects.
     #
     # @param [Symbol] name The name of the relation to enumerate.
-    def enumerate_related(id, name)
-      logger.debug "enumerate_related: #{id} #{name}"
+    def enumerate_related(guid, name)
+      logger.debug "cc.enumerate.related", :guid => guid,
+        :association => name
 
-      obj = find_id_and_validate_access(:read, id)
+      obj = find_guid_and_validate_access(:read, guid)
 
       associated_model = model.association_reflection(name).associated_class
 
       associated_controller =
         VCAP::CloudController.controller_from_model_name(associated_model)
 
-      associated_path = "#{self.class.url_for_id(id)}/#{name}"
+      associated_path = "#{self.class.url_for_guid(guid)}/#{name}"
 
       filtered_dataset = Query.filtered_dataset_from_query_params(associated_model,
         obj.user_visible_relationship_dataset(name),
@@ -113,47 +128,56 @@ module VCAP::CloudController::RestController
 
     # Add a related object.
     #
-    # @param [String] id The GUID of the object for which to add a related
+    # @param [String] guid The GUID of the object for which to add a related
     # object.
     #
     # @param [Symbol] name The name of the relation.
     #
-    # @param [String] other_id The GUID of the object to add to the relation
-    def add_related(id, name, other_id)
-      do_related("add", id, name, other_id)
+    # @param [String] other_guid The GUID of the object to add to the relation
+    def add_related(guid, name, other_guid)
+      do_related("add", guid, name, other_guid)
     end
 
     # Remove a related object.
     #
-    # @param [String] id The GUID of the object for which to delete a related
+    # @param [String] guid The GUID of the object for which to delete a related
     # object.
     #
     # @param [Symbol] name The name of the relation.
     #
-    # @param [String] other_id The GUID of the object to delete from the
+    # @param [String] other_guid The GUID of the object to delete from the
     # relation.
-    def remove_related(id, name, other_id)
-      do_related("remove", id, name, other_id)
+    def remove_related(guid, name, other_guid)
+      do_related("remove", guid, name, other_guid)
     end
 
     # Remove a related object.
     #
     # @param [String] verb The type of operation to perform.
     #
-    # @param [String] id The GUID of the object for which to perform
+    # @param [String] guid The GUID of the object for which to perform
     # the requested operation.
     #
     # @param [Symbol] name The name of the relation.
     #
-    # @param [String] other_id The GUID of the object to be "verb"ed to the
+    # @param [String] other_guid The GUID of the object to be "verb"ed to the
     # relation.
-    def do_related(verb, id, name, other_id)
-      logger.debug "#{verb}_related: #{id} #{name}"
+    def do_related(verb, guid, name, other_guid)
+      logger.debug "cc.association.#{verb}", :guid => guid,
+        :assocation => name, :other_guid => other_guid
+
       singular_name = "#{name.to_s.singularize}"
-      @request_attrs = { singular_name => other_id }
-      obj = find_id_and_validate_access(:update, id)
-      obj.send("#{verb}_#{singular_name}_by_guid", other_id)
-      after_modify(obj)
+
+      @request_attrs = { singular_name => other_guid }
+
+      obj = find_guid_and_validate_access(:update, guid)
+
+      before_update(obj)
+
+      obj.send("#{verb}_#{singular_name}_by_guid", other_guid)
+
+      after_update(obj)
+
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end
 
@@ -165,27 +189,20 @@ module VCAP::CloudController::RestController
     #
     # @param [Symbol] op The type of operation to check for access
     #
-    # @param [String] id The GUID of the object to find.
+    # @param [String] guid The GUID of the object to find.
     #
     # @return [Sequel::Model] The sequel model for the object, only if
     # the use has access.
-    def find_id_and_validate_access(op, id)
-      logger.debug("find_id_and_validate_access: #{op} #{id}")
-      obj = model.find(:guid => id)
-      logger.debug("found: #{op} #{id}")
-      if obj
-        validate_access(op, obj, user, roles)
-      else
-        raise self.class.not_found_exception.new(id) if obj.nil?
-      end
-      logger.debug("find_id_and_validate_access OK: #{op} #{id}")
+    def find_guid_and_validate_access(op, guid)
+      obj = model.find(:guid => guid)
+      raise self.class.not_found_exception.new(guid) if obj.nil?
+      validate_access(op, obj, user, roles)
       obj
     end
 
-    # Find an object and validate that the given user has rights
-    # to access the instance.
+    # Validate that the current logged in user can have access to the target object.
     #
-    # Raises an exception if the user does not have rights to peform
+    # Raises an exception if the user does not have rights to perform
     # the operation on the object.
     #
     # @param [Symbol] op The type of operation to check for access
@@ -196,13 +213,12 @@ module VCAP::CloudController::RestController
     #
     # @param [Roles] The roles for the current user or client.
     def validate_access(op, obj, user, roles)
-      logger.debug("validate access: #{op} #{obj.guid}")
       user_perms = Permissions.permissions_for(obj, user, roles)
+
       unless self.class.op_allowed_by?(op, user_perms)
         raise NotAuthenticated if user.nil? && roles.none?
         raise NotAuthorized
       end
-      logger.debug("validate access OK: #{op} #{obj.guid}")
     end
 
     # The model associated with this api endpoint.
@@ -217,18 +233,10 @@ module VCAP::CloudController::RestController
     end
 
     private
+
     def enumerate_dataset
       qp = self.class.query_parameters
-      ds = get_filtered_dataset_for_enumeration(model, model.user_visible, qp, @opts)
-      logger.debug "enumerate: #{ds.sql}"
-      ds
-    end
-
-    def before_modify(obj)
-    end
-
-    # Hook called at the end of +update+, +add_related+ and +remove_related+
-    def after_modify(obj)
+      get_filtered_dataset_for_enumeration(model, model.user_visible, qp, @opts)
     end
 
     def raise_if_has_associations!(obj)
@@ -248,18 +256,18 @@ module VCAP::CloudController::RestController
       attr_accessor :to_many_relationships
       attr_accessor :to_one_relationships
 
-      # path_id
+      # path_guid
       #
       # @return [String] The path/route to an instance of this class.
-      def path_id
+      def path_guid
         "#{path}/:guid"
       end
 
-      # Return the url for a specific id
+      # Return the url for a specific guid
       #
       # @return [String] The url for a specific instance of this class.
-      def url_for_id(id)
-        "#{path}/#{id}"
+      def url_for_guid(guid)
+        "#{path}/#{guid}"
       end
 
       # Model associated with this rest/api endpoint
@@ -268,8 +276,8 @@ module VCAP::CloudController::RestController
       #
       # @return [Sequel::Model] The class of the model associated with
       # this rest endpoint.
-      def model(name = model_class_name)
-        @model ||= Models.const_get(name)
+      def model(name = nil)
+        @model ||= Models.const_get(model_class_name(name))
       end
 
       # Get and set the model class name associated with this rest/api endpoint.
@@ -281,7 +289,11 @@ module VCAP::CloudController::RestController
       # this rest endpoint.
       def model_class_name(name = nil)
         @model_class_name = name if name
-        @model_class_name || class_basename
+        @model_class_name ||= guess_model_class_name
+      end
+
+      def guess_model_class_name
+        class_basename.sub(/Controller$/, '').singularize
       end
 
       def serialization(klass = nil)

@@ -27,7 +27,7 @@ module VCAP::CloudController
       it "finds advertised dea" do
         subject.register_subscriptions
         message_bus.publish("dea.advertise", dea_advertise_msg)
-        subject.find_dea(0, "stack", "app-id").should == "dea-id"
+        subject.find_dea(1, "stack", "app-id").should == "dea-id"
       end
 
       it "clears advertisements of DEAs being shut down" do
@@ -39,7 +39,7 @@ module VCAP::CloudController
           end
         end
 
-        subject.find_dea(0, "stack", "app-id").should be_nil
+        subject.find_dea(1, "stack", "app-id").should be_nil
       end
     end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
           :stacks => ["stack"],
           :available_memory => 1024,
           :app_id_to_count => {
-            "other-app-id" => 1
+            :"other-app-id" => 1
           }
         }
       end
@@ -58,7 +58,7 @@ module VCAP::CloudController
         it "only finds registered deas" do
           expect {
             subject.process_advertise_message(dea_advertise_msg)
-          }.to change { subject.find_dea(0, "stack", "app-id") }.from(nil).to("dea-id")
+          }.to change { subject.find_dea(1, "stack", "app-id") }.from(nil).to("dea-id")
         end
       end
 
@@ -95,47 +95,89 @@ module VCAP::CloudController
       describe "existing apps on the instance" do
         before do
           subject.process_advertise_message(dea_advertise_msg)
-          subject.process_advertise_message({
+          subject.process_advertise_message(dea_advertise_msg.merge(
             :id => "other-dea-id",
-            :stacks => ["stack"],
-            :available_memory => 1024,
             :app_id_to_count => {
-              "app-id" => 1
+              :"app-id" => 1
             }
-          })
+          ))
         end
 
         it "picks DEAs that have no existing instances of the app" do
-          subject.find_dea(0, "stack", "app-id").should == "dea-id"
-          subject.find_dea(0, "stack", "other-app-id").should == "other-dea-id"
+          subject.find_dea(1, "stack", "app-id").should == "dea-id"
+          subject.find_dea(1, "stack", "other-app-id").should == "other-dea-id"
         end
       end
 
       context "DEA randomization" do
         before do
-          subject.process_advertise_message({
-            :id => "dea-id1",
-            :stacks => ["stack"],
-            :available_memory => 1024,
-            :app_id_to_count => {
-            }
-          })
-          subject.process_advertise_message({
-            :id => "dea-id2",
-            :stacks => ["stack"],
-            :available_memory => 1024,
-            :app_id_to_count => {
-            }
-          })
+          # Even though this fake DEA has more than enough memory, it should not affect results
+          # because it already has an instance of the app.
+          subject.process_advertise_message(
+            dea_advertise_msg.merge(:id => "dea-id-already-has-an-instance",
+                                    :available_memory => 2048,
+                                    :app_id_to_count => { :"app-id" => 1 })
+          )
         end
-
-        it "randomly picks one of the eligible DEAs" do
-          found_dea_ids = []
-          20.times do
-            found_dea_ids << subject.find_dea(0, "stack", "app-id")
+        context "when all DEAs have the same available memory" do
+          before do
+            subject.process_advertise_message(dea_advertise_msg.merge(:id => "dea-id1"))
+            subject.process_advertise_message(dea_advertise_msg.merge(:id => "dea-id2"))
           end
 
-          found_dea_ids.uniq.should =~ %w(dea-id1 dea-id2)
+          it "randomly picks one of the eligible DEAs" do
+            found_dea_ids = []
+            20.times do
+              found_dea_ids << subject.find_dea(1, "stack", "app-id")
+            end
+
+            found_dea_ids.uniq.should =~ %w(dea-id1 dea-id2)
+          end
+        end
+
+        context "when DEAs have different amounts of available memory" do
+          before do
+            subject.process_advertise_message(
+              dea_advertise_msg.merge(:id => "dea-id1", :available_memory => 1024)
+            )
+            subject.process_advertise_message(
+              dea_advertise_msg.merge(:id => "dea-id2", :available_memory => 1023)
+            )
+          end
+
+          context "and there are only two DEAs" do
+            it "always picks the one with the greater memory" do
+              found_dea_ids = []
+              20.times do
+                found_dea_ids << subject.find_dea(1, "stack", "app-id")
+              end
+
+              found_dea_ids.uniq.should =~ %w(dea-id1)
+            end
+          end
+
+          context "and there are many DEAs" do
+            before do
+              subject.process_advertise_message(
+                dea_advertise_msg.merge(:id => "dea-id3", :available_memory => 1022)
+              )
+              subject.process_advertise_message(
+                dea_advertise_msg.merge(:id => "dea-id4", :available_memory => 1021)
+              )
+              subject.process_advertise_message(
+                dea_advertise_msg.merge(:id => "dea-id5", :available_memory => 1020)
+              )
+            end
+
+            it "always picks from the half of the list (rounding up) with greater memory" do
+              found_dea_ids = []
+              40.times do
+                found_dea_ids << subject.find_dea(1, "stack", "app-id")
+              end
+
+              found_dea_ids.uniq.should =~ %w(dea-id1 dea-id2 dea-id3)
+            end
+          end
         end
       end
 
@@ -161,7 +203,7 @@ module VCAP::CloudController
           10.times do
             dea_id = subject.find_dea(0, "stack", "app-id")
             dea_ids << dea_id
-            subject.mark_app_staged(dea_id: dea_id, app_id: "app-id")
+            subject.mark_app_started(dea_id: dea_id, app_id: "app-id")
           end
 
           dea_ids.should match_array((["dea-id1", "dea-id2"] * 5))
@@ -171,14 +213,7 @@ module VCAP::CloudController
       describe "changing advertisements for the same dea" do
         it "only uses the newest message from a given dea" do
           Timecop.freeze do
-            advertisement = {
-              :id => "dea-id",
-              :stacks => ["stack"],
-              :available_memory => 1024,
-              :app_id_to_count => {
-                "app-id" => 1
-              }
-            }
+            advertisement = dea_advertise_msg.merge(:app_id_to_count => {:"app-id" => 1})
             subject.process_advertise_message(advertisement)
 
             Timecop.travel(5)

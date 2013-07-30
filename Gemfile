@@ -33,6 +33,7 @@ end
 group :development do
   gem "ruby-graphviz"
   gem "debugger"
+  gem "pry"
 end
 
 group :test do

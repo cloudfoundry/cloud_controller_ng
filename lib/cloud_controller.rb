@@ -15,6 +15,7 @@ require "uaa/token_coder"
 
 require "sinatra/vcap"
 require "cloud_controller/security_context"
+require "active_support/core_ext/hash"
 
 module VCAP::CloudController
   autoload :Models, "cloud_controller/models"
@@ -27,8 +28,7 @@ module VCAP::CloudController
 
     attr_reader :config
 
-    vcap_configure(:logger_name => "cc.api",
-                   :reload_path => File.dirname(__FILE__))
+    vcap_configure(logger_name: "cc.api", reload_path: File.dirname(__FILE__))
 
     def initialize(config, token_decoder)
       @config = config
@@ -50,8 +50,7 @@ module VCAP::CloudController
 
       if uaa_id
         user = Models::User.find(:guid => uaa_id.to_s)
-        user ||= create_admin_if_in_config(token_information)
-        user ||= create_admin_if_in_token(token_information)
+        user ||= Models::User.create(guid: token_information['user_id'], admin: current_user_admin?(token_information), active: true)
       end
 
       VCAP::CloudController::SecurityContext.set(user, token_information)
@@ -88,21 +87,13 @@ module VCAP::CloudController
       end
     end
 
-    def create_admin_if_in_config(token_information)
-      if Models::User.count == 0 && current_user_admin?(token_information)
-        Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
-      end
-    end
-
-    def create_admin_if_in_token(token_information)
-      if VCAP::CloudController::Roles.new(token_information).admin?
-        Models::User.create(:guid => token_information['user_id'], :admin => true, :active => true)
-      end
-    end
-
     def current_user_admin?(token_information)
-      admin_email = config[:bootstrap_admin_email]
-      admin_email && (admin_email == token_information['email'])
+      if Models::User.count.zero?
+        admin_email = config[:bootstrap_admin_email]
+        admin_email && (admin_email == token_information['email'])
+      else
+        VCAP::CloudController::Roles.new(token_information).admin?
+      end
     end
   end
 end
@@ -114,10 +105,10 @@ require "cloud_controller/db"
 require "cloud_controller/permissions"
 require "cloud_controller/runner"
 require "cloud_controller/app_package"
-require "cloud_controller/app_stager"
+require "cloud_controller/app_manager"
 require "cloud_controller/app_stager_task"
 require "cloud_controller/stager_pool"
-require "cloud_controller/api"
+require "cloud_controller/controllers"
 require "cloud_controller/roles"
 require "cloud_controller/encryptor"
 

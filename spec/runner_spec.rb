@@ -2,7 +2,7 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe Runner do
-    let(:valid_config_file_path) { File.expand_path("../fixtures/config/minimal_config.yml", __FILE__) }
+    let(:valid_config_file_path) { File.join(fixture_path, "config/minimal_config.yml") }
     let(:config_file_path) { valid_config_file_path }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:registrar) { Cf::Registrar.new({}) }
@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       def self.it_runs_app_stager
         it "starts running app stager (one time set up to start tracking stagers)" do
-          AppStager.should_receive(:run)
+          AppManager.should_receive(:run)
           subject.run!
         end
       end

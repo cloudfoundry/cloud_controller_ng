@@ -2,10 +2,6 @@ require "vcap/config"
 require "cloud_controller/account_capacity"
 require "uri"
 
-module CCInitializers
-
-end
-
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
   define_schema do
@@ -148,8 +144,8 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::AppPackage.configure(config)
 
     stager_pool = VCAP::CloudController::StagerPool.new(config, message_bus)
-    VCAP::CloudController::AppStager.configure(config, message_bus, stager_pool)
-    VCAP::CloudController::Staging.configure(config)
+    VCAP::CloudController::AppManager.configure(config, message_bus, stager_pool)
+    VCAP::CloudController::StagingsController.configure(config)
 
     dea_pool = VCAP::CloudController::DeaPool.new(message_bus)
     VCAP::CloudController::DeaClient.configure(config, message_bus, dea_pool)

@@ -1,3 +1,5 @@
+require 'cloud_controller/presenters/service_binding_presenter'
+
 module VCAP::CloudController
   class AppStagerTask
     class Response
@@ -16,6 +18,10 @@ module VCAP::CloudController
       def detected_buildpack
         @response[:detected_buildpack]
       end
+
+      def droplet_hash
+        @response[:droplet_sha1]
+      end
     end
 
     attr_reader :config
@@ -32,11 +38,11 @@ module VCAP::CloudController
       @task_id ||= VCAP.secure_uuid
     end
 
-    def stage(options={}, &completion_callback)
-      stager_id = @stager_pool.find_stager(@app.stack.name, 1024)
-      raise Errors::StagingError, "no available stagers" unless stager_id
+    def stage(&completion_callback)
+      @stager_id = @stager_pool.find_stager(@app.stack.name, [1024, @app.memory].max)
+      raise Errors::StagingError, "no available stagers" unless @stager_id
 
-      subject = "staging.#{stager_id}.start"
+      subject = "staging.#{@stager_id}.start"
       @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
       # The creation of upload handle only guarantees that this cloud controller
       # is disallowed from trying to stage this app again. It does NOT guarantee that a different
@@ -51,12 +57,10 @@ module VCAP::CloudController
 
       @message_bus.publish("staging.stop", :app_id => @app.guid)
 
-      @upload_handle = Staging.create_handle(@app.guid)
+      @upload_handle = StagingsController.create_handle(@app.guid)
       @completion_callback = completion_callback
 
       staging_result = EM.schedule_sync do |promise|
-        # First message might be SYNC or ASYNC staging response
-        # since stager might not support async staging process.
         # First response is blocking stage_app.
         @multi_message_bus_request.on_response(staging_timeout) do |response, error|
           handle_first_response(response, error, promise)
@@ -69,75 +73,62 @@ module VCAP::CloudController
           handle_second_response(response, error)
         end
 
-        @multi_message_bus_request.request(staging_request(options[:async]))
+        @multi_message_bus_request.request(staging_request)
       end
 
       staging_result
     end
 
-    def staging_request(async)
+    # We never stage if there is not a start request
+    def staging_request
       { :app_id => @app.guid,
         :task_id => task_id,
         :properties => staging_task_properties(@app),
-        :download_uri => Staging.app_uri(@app),
-        :upload_uri => Staging.droplet_upload_uri(@app),
-        :buildpack_cache_download_uri => Staging.buildpack_cache_download_uri(@app),
-        :buildpack_cache_upload_uri => Staging.buildpack_cache_upload_uri(@app),
-        :async => async }
+        :download_uri => StagingsController.app_uri(@app),
+        :upload_uri => StagingsController.droplet_upload_uri(@app),
+        :buildpack_cache_download_uri => StagingsController.buildpack_cache_download_uri(@app),
+        :buildpack_cache_upload_uri => StagingsController.buildpack_cache_upload_uri(@app),
+        :start_message => start_app_message
+      }
     end
 
     private
 
+    def start_app_message
+      msg = DeaClient.start_app_message(@app)
+      msg[:index] = 0
+      msg[:sha1] = nil
+      msg[:executableUri] = nil
+      msg
+    end
+
     def handle_first_response(response, error, promise)
       check_staging_error!(response, error)
       ensure_staging_is_current!
-
-      stager_response = Response.new(response)
-      if stager_response.streaming_log_url
-        promise.deliver(stager_response)
-      else
-        @multi_message_bus_request.ignore_subsequent_responses
-        process_sync_response(stager_response, promise)
-      end
+      promise.deliver(Response.new(response))
     rescue => e
       logger.error("exception handling first response #{e.inspect}, backtrace: #{e.backtrace.join("\n")}")
       destroy_upload_handle if staging_is_current?
       promise.fail(e)
     end
 
-    def process_sync_response(stager_response, promise)
-      # Defer potentially expensive operation
-      # to avoid executing on reactor thread
-      EM.defer do
-        begin
-          staging_completion(stager_response)
-          trigger_completion_callback
-          promise.deliver(stager_response)
-        rescue => e
-          logger.error "Encountered error: #{e}\n#{e.backtrace}"
-          promise.fail(e)
-        end
-      end
-    end
 
     def handle_second_response(response, error)
       @multi_message_bus_request.ignore_subsequent_responses
       check_staging_error!(response, error)
-
       ensure_staging_is_current!
-      process_async_response(response)
+      process_response(response)
     rescue => e
       destroy_upload_handle if staging_is_current?
       logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
     end
 
-    def process_async_response(response)
+    def process_response(response)
       # Defer potentially expensive operation
       # to avoid executing on reactor thread
       EM.defer do
         begin
           staging_completion(Response.new(response))
-          trigger_completion_callback
         rescue => e
           logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
         end
@@ -177,26 +168,29 @@ module VCAP::CloudController
     end
 
     def staging_completion(stager_response)
-      @app.droplet_hash = Digest::SHA1.file(@upload_handle.upload_path).hexdigest
+      instance_was_started_by_dea = !!stager_response.droplet_hash
+
+      @app.droplet_hash = instance_was_started_by_dea ? stager_response.droplet_hash : Digest::SHA1.file(@upload_handle.upload_path).hexdigest
       @app.detected_buildpack = stager_response.detected_buildpack
 
-      Staging.store_droplet(@app, @upload_handle.upload_path)
+      StagingsController.store_droplet(@app, @upload_handle.upload_path)
 
       if (buildpack_cache = @upload_handle.buildpack_cache_upload_path)
-        Staging.store_buildpack_cache(@app, buildpack_cache)
+        StagingsController.store_buildpack_cache(@app, buildpack_cache)
       end
 
       @app.save
+
+      DeaClient.dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
+
+      @completion_callback.call(:started_instances => instance_was_started_by_dea ? 1 : 0) if @completion_callback
     ensure
       destroy_upload_handle
     end
 
-    def trigger_completion_callback
-      @completion_callback.call if @completion_callback
-    end
 
     def destroy_upload_handle
-      Staging.destroy_handle(@upload_handle)
+      StagingsController.destroy_handle(@upload_handle)
     end
 
     def staging_task_properties(app)
@@ -216,20 +210,8 @@ module VCAP::CloudController
       }
     end
 
-    def service_binding_to_staging_request(sb)
-      instance = sb.service_instance
-      plan = instance.service_plan
-      service = plan.service
-
-      {
-        :label        => "#{service.label}-#{service.version}",
-        :tags         => {}, # TODO: can this be removed?
-        :name         => instance.name,
-        :credentials  => sb.credentials,
-        :options      => sb.binding_options || {},
-        :plan         => instance.service_plan.name,
-        :plan_options => {} # TODO: can this be removed?
-      }
+    def service_binding_to_staging_request(service_binding)
+      ServiceBindingPresenter.new(service_binding).to_hash
     end
 
     def staging_timeout

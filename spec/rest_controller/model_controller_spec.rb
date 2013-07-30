@@ -8,7 +8,7 @@ module VCAP::CloudController
     subject(:controller) { controller_class.new({}, logger, {}, {}, request_body) }
 
     describe "#update" do
-      let(:controller_class) { App }
+      let(:controller_class) { AppsController }
       let(:app) { Models::App.make }
       let(:guid) { app.guid }
 
@@ -19,10 +19,10 @@ module VCAP::CloudController
       end
 
       before do
-        subject.stub(:find_id_and_validate_access).with(:update, guid) { app }
+        subject.stub(:find_guid_and_validate_access).with(:update, guid) { app }
       end
 
-      it "prevent other processes from updating the same row until the transaction finishes" do
+      it "prevents other processes from updating the same row until the transaction finishes" do
         app.should_receive(:lock!).ordered
         app.should_receive(:update_from_hash).ordered
         controller.update(guid)
@@ -55,11 +55,6 @@ module VCAP::CloudController
       end
 
       let(:request_body) { StringIO.new('') }
-      it 'logs the dataset' do
-        controller_class.stub(:path)
-        logger.should_receive(:debug).with(/^enumerate: SELECT/)
-        controller.enumerate
-      end
 
       it 'paginates the dataset with query params' do
         fake_class_path = double('class path')

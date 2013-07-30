@@ -1,4 +1,5 @@
 $:.unshift(File.expand_path("../../lib", __FILE__))
+$:.unshift(File.expand_path("../../app", __FILE__))
 
 require "rubygems"
 require "bundler"
@@ -10,9 +11,12 @@ require "rack/test"
 require "timecop"
 
 require "steno"
-require "cloud_controller"
 require "webmock/rspec"
 require "cf_message_bus/mock_message_bus"
+
+require "cloud_controller"
+
+require "pry"
 
 module VCAP::CloudController
   class SpecEnvironment
@@ -194,8 +198,8 @@ module VCAP::CloudController::SpecHelper
     VCAP::CloudController::AppPackage.configure(config)
 
     stager_pool = VCAP::CloudController::StagerPool.new(config, mbus)
-    VCAP::CloudController::AppStager.configure(config, mbus, stager_pool)
-    VCAP::CloudController::Staging.configure(config)
+    VCAP::CloudController::AppManager.configure(config, mbus, stager_pool)
+    VCAP::CloudController::StagingsController.configure(config)
 
     dea_pool = VCAP::CloudController::DeaPool.new(mbus)
     VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
@@ -210,7 +214,7 @@ module VCAP::CloudController::SpecHelper
   end
 
   def configure_stacks
-    stacks_file = File.expand_path("../fixtures/config/stacks.yml", __FILE__)
+    stacks_file = File.join(fixture_path, "config/stacks.yml")
     VCAP::CloudController::Models::Stack.configure(stacks_file)
     VCAP::CloudController::Models::Stack.populate
   end
@@ -372,6 +376,10 @@ module VCAP::CloudController::SpecHelper
     puts EM.instance_variable_get("@timers").inspect
   end
 
+  def fixture_path
+    File.expand_path("../fixtures", __FILE__)
+  end
+
   RSpec::Matchers.define :be_recent do |expected|
     match do |actual|
       actual.should be_within(5).of(Time.now)
@@ -520,18 +528,45 @@ class Redis
   end
 end
 
+Dir[File.expand_path("../support/**/*.rb", __FILE__)].each { |file| require file }
+
 RSpec.configure do |rspec_config|
+  def rspec_config.escaped_path(*parts)
+    Regexp.compile(parts.join('[\\\/]'))
+  end
+
+  rspec_config.treat_symbols_as_metadata_keys_with_true_values = true
+
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController
   rspec_config.include VCAP::CloudController::SpecHelper
+  rspec_config.include ModelCreation
+  rspec_config.extend ModelCreation
+  rspec_config.include ServicesHelpers, services: true
+  rspec_config.include ModelHelpers
+
+  rspec_config.include ControllerHelpers, type: :controller, :example_group => {
+    :file_path => rspec_config.escaped_path(%w[spec controllers])
+  }
 
   rspec_config.before(:all) do
     VCAP::CloudController::SecurityContext.clear
     configure
   end
+
+  rspec_config.before :each do
+    # We need to stub out this because it's in an after_destroy_commit hook
+    # Is event emitter our salvation?
+    VCAP::CloudController::AppManager.stub(:delete_droplet)
+    VCAP::CloudController::AppPackage.stub(:delete_package)
+  end
 end
 
-require "cloud_controller/models"
-Dir.glob(File.join(File.dirname(__FILE__), "support/**/*.rb")).each { |f| require f }
+# Ensures that entries are not returned ordered by the id field by
+# default. Breaks the tests (deliberately) unless we order by id
+# explicitly. In sqlite, the default ordering, although not guaranteed,
+# is de facto by id. In postgres the order is random unless specified.
 
-require "models/spec_helper"
+class VCAP::CloudController::Models::App
+  set_dataset dataset.order(:guid)
+end

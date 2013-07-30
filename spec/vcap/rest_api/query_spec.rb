@@ -1,5 +1,4 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 
 module VCAP::RestAPI
   describe VCAP::RestAPI::Query do

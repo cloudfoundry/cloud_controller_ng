@@ -46,8 +46,6 @@ platform using the NATS message bus. For example, it performs the following usin
 - Instructs a DEA to stage an application (processes a buildpack for the app) to prepare it to run
 - Instructs a DEA to start or stop an application
 - Receives information from the Health Manager about applications
-- Subscribes to Service Gateways that advertise available services
-- Instructs Service Gateways to handle provisioning, unprovision, bind and unbind operations for services
 
 ## Testing
 
@@ -59,12 +57,6 @@ variable to test against postgres and mysql. Examples:
     DB_CONNECTION="mysql2://root:password@localhost:3306/ccng" rspec
 
 Travis currently runs 3 build jobs against sqlite, postgres, and mysql.
-
-## Development
-
-To run an interactive console with the cloud controller code loaded:
-
-    bin/console
 
 ## API documentation
 

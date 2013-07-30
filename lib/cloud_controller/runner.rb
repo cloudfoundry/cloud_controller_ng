@@ -148,7 +148,7 @@ module VCAP::CloudController
         use Rack::CommonLogger
 
         VCAP::CloudController::DeaClient.run
-        VCAP::CloudController::AppStager.run
+        VCAP::CloudController::AppManager.run
 
         VCAP::CloudController::LegacyBulk.register_subscription
 

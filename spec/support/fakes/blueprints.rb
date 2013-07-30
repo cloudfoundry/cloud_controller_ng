@@ -90,13 +90,7 @@ module VCAP::CloudController::Models
       ServiceAuthToken.make(:label => label, :provider => provider, :token => Sham.token)
       Sham.description
     end
-  end
-
-  ServiceInstance.blueprint do
-    name              { Sham.name }
-    credentials       { Sham.service_credentials }
-    space             { Space.make }
-    is_gateway_service { true }    #because this is true it always creates ProvidedServiceInstances.
+    bindable          { true }
   end
 
   ManagedServiceInstance.blueprint do
@@ -107,7 +101,7 @@ module VCAP::CloudController::Models
     service_plan      { ServicePlan.make }
   end
 
-  ProvidedServiceInstance.blueprint do
+  UserProvidedServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
     space             { Space.make }
@@ -149,6 +143,16 @@ module VCAP::CloudController::Models
     timestamp         { Time.now }
     organization_guid { Sham.guid }
     organization_name { Sham.name }
+  end
+
+  Event.blueprint do
+    timestamp  { Time.now }
+    type       { Sham.name}
+    actor      { Sham.guid }
+    actor_type { Sham.name }
+    actee      { Sham.guid }
+    actee_type { Sham.name }
+    space      { Space.make }
   end
 
   OrganizationStartEvent.blueprint do

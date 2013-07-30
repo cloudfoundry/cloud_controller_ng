@@ -37,9 +37,9 @@ module VCAP::CloudController::RestController
         [
           [:post,   path,    :create],
           [:get,    path,    :enumerate],
-          [:get,    path_id, :read],
-          [:put,    path_id, :update],
-          [:delete, path_id, :delete]
+          [:get,    path_guid, :read],
+          [:put,    path_guid, :update],
+          [:delete, path_guid, :delete]
         ].each do |verb, path, method|
           define_route(verb, path, method)
         end
@@ -47,15 +47,15 @@ module VCAP::CloudController::RestController
 
       def define_to_many_routes
         to_many_relationships.each do |name, attr|
-          get "#{path_id}/#{name}" do |api, id|
+          get "#{path_guid}/#{name}" do |api, id|
             api.dispatch(:enumerate_related, id, name)
           end
 
-          put "#{path_id}/#{name}/:other_id" do |api, id, other_id|
+          put "#{path_guid}/#{name}/:other_id" do |api, id, other_id|
             api.dispatch(:add_related, id, name, other_id)
           end
 
-          delete "#{path_id}/#{name}/:other_id" do |api, id, other_id|
+          delete "#{path_guid}/#{name}/:other_id" do |api, id, other_id|
             api.dispatch(:remove_related, id, name, other_id)
           end
         end

@@ -1,4 +1,4 @@
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 require "cloud_controller/dea/dea_respondent"
 
 module VCAP::CloudController
@@ -50,7 +50,7 @@ module VCAP::CloudController
     describe "#process_droplet_exited_message" do
       context "when the app crashed" do
         context "the app described in the event exists" do
-          it "adds a record in the AppEvents table" do
+          it "adds a record in the AppEvents table for legacy purposes" do
             time = Time.now
             Timecop.freeze(time) do
               respondent.process_droplet_exited_message(payload)
@@ -63,6 +63,27 @@ module VCAP::CloudController
               expect(app_event.exit_status).to eq(payload[:exit_status])
               expect(app_event.exit_description).to eq(payload[:exit_description])
               expect(app_event.timestamp.to_i).to eq(time.to_i)
+            end
+          end
+
+          it "adds a record in the Events table" do
+            time = Time.now
+            Timecop.freeze(time) do
+              respondent.process_droplet_exited_message(payload)
+
+              app_event = Models::Event.find(:actee => app.guid)
+
+              expect(app_event).to be
+              expect(app_event.space).to eq(app.space)
+              expect(app_event.type).to eq("app.crash")
+              expect(app_event.timestamp.to_i).to eq(time.to_i)
+              expect(app_event.actor_type).to eq("app")
+              expect(app_event.actor).to eq(app.guid)
+              expect(app_event.metadata["instance"]).to eq(payload[:instance])
+              expect(app_event.metadata["index"]).to eq(payload[:index])
+              expect(app_event.metadata["exit_status"]).to eq(payload[:exit_status])
+              expect(app_event.metadata["exit_description"]).to eq(payload[:exit_description])
+              expect(app_event.metadata["reason"]).to eq(reason)
             end
           end
         end
