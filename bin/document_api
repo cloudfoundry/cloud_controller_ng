@@ -24,7 +24,8 @@ module Docs
         VCAP::CloudController::ServicePlan,
         VCAP::CloudController::ServiceInstance,
         VCAP::CloudController::ServiceBinding,
-        VCAP::CloudController::ServiceAuthToken
+        VCAP::CloudController::ServiceAuthToken,
+        VCAP::CloudController::UserProvidedServiceInstance
       ]
     end
 
