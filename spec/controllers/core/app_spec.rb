@@ -68,7 +68,6 @@ module VCAP::CloudController
         end
       end
 
-
       context "when memory is 0" do
         before do
           initial_hash[:memory] = 0
@@ -112,6 +111,18 @@ module VCAP::CloudController
           last_response.status.should == 400
           last_response.body.should match /.*error.*detected_buildpack.*/i
         end
+      end
+
+      it "records a app.create event" do
+        subject
+
+        last_response.status.should == 201
+
+        new_app_guid = decoded_response['metadata']['guid']
+        event = Models::Event.find(:type => "app.create", :actee => new_app_guid)
+
+        expect(event).to be
+        expect(event.actor).to eq(admin_user.guid)
       end
     end
 

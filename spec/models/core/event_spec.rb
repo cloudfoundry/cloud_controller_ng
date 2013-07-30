@@ -74,6 +74,7 @@ module VCAP::CloudController
         app.save
 
         event = described_class.record_app_update(app, user)
+        expect(event.type).to eq("app.update")
         expect(event.actor_type).to eq("user")
         changes = event.metadata.fetch("changes")
         expect(changes).to eq(
@@ -92,6 +93,30 @@ module VCAP::CloudController
         changes = event.metadata.fetch("changes")
         expect(changes).to eq(
           "environment_json" => ['PRIVATE DATA HIDDEN'] * 2
+        )
+      end
+    end
+
+    describe ".record_app_create" do
+      let(:app) do
+        Models::App.make(
+          name: 'new', instances: 1, memory: 84,
+          state: "STOPPED", environment_json: { "super" => "secret "})
+      end
+
+      let(:user) { Models::User.make }
+
+      it "records the changes in metadata" do
+        event = described_class.record_app_create(app, user)
+        expect(event.actor_type).to eq("user")
+        expect(event.type).to eq("app.create")
+        changes = event.metadata.fetch("changes")
+        expect(changes).to eq(
+          "name" => "new",
+          "instances" => 1,
+          "memory" => 84,
+          "state" => "STOPPED",
+          "environment_json" => "PRIVATE DATA HIDDEN",
         )
       end
     end

@@ -77,6 +77,14 @@ module VCAP::CloudController
         end
       end
 
+      def auditable_values
+        values.slice(*AUDITABLE_FIELDS).tap do |changes|
+          CENSORED_FIELDS.each do |censored|
+            changes[censored] = CENSORED_MESSAGE if changes.has_key?(censored)
+          end
+        end
+      end
+
       # marked as true on changing the associated routes, and reset by
       # +DeaClient.start+
       attr_accessor :routes_changed
