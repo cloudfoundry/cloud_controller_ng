@@ -1,3 +1,2 @@
-#!/bin/bash
-
-irb -I . -r lib/cloud_controller/console
+#!/usr/bin/env ruby
+require "./lib/cloud_controller/console"
