@@ -46,32 +46,36 @@ module VCAP::CloudController::Models
       )
     end
 
-    def self.record_app_update(actee, actor)
+    def self.record_app_update(app, actor)
       create(
-        space: actee.space,
+        space: app.space,
         type: "app.update",
-        actee: actee.guid,
+        actee: app.guid,
         actee_type: "app",
         actor: actor.guid,
         actor_type: "user",
         timestamp: Time.now,
         metadata: {
-          changes: actee.auditable_changes
+          changes: app.auditable_changes,
+          footprints: {
+            memory: app.memory,
+            instances: app.instances,
+          }
         }
       )
     end
 
-    def self.record_app_create(actee, actor)
+    def self.record_app_create(app, actor)
       create(
-        space: actee.space,
+        space: app.space,
         type: "app.create",
-        actee: actee.guid,
+        actee: app.guid,
         actee_type: "app",
         actor: actor.guid,
         actor_type: "user",
         timestamp: Time.now,
         metadata: {
-          changes: actee.auditable_values
+          changes: app.auditable_values,
         }
       )
     end
@@ -85,7 +89,8 @@ module VCAP::CloudController::Models
         actor: actor.guid,
         actor_type: "user",
         timestamp: Time.now,
-        metadata: {}
+        metadata: {
+        }
       )
     end
   end

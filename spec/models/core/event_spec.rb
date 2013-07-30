@@ -95,6 +95,21 @@ module VCAP::CloudController
           "environment_json" => ['PRIVATE DATA HIDDEN'] * 2
         )
       end
+
+      it "records the current footprints of the app" do
+        app.instances = 2
+        app.memory = 42
+        app.package_hash = 'abc'
+        app.package_state = 'STAGED'
+        app.save
+
+        event = described_class.record_app_update(app, user)
+        footprints = event.metadata.fetch("footprints")
+        expect(footprints).to eq(
+          "instances" => 2,
+          "memory" => 42,
+        )
+      end
     end
 
     describe ".record_app_create" do
@@ -126,7 +141,7 @@ module VCAP::CloudController
 
       let(:user) { Models::User.make }
 
-      it "records the changes in metadata" do
+      it "records an empty changes in metadata" do
         event = described_class.record_app_delete(deleting_app, user)
         expect(event.actor_type).to eq("user")
         expect(event.type).to eq("app.delete")
