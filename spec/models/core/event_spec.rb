@@ -120,5 +120,20 @@ module VCAP::CloudController
         )
       end
     end
+
+    describe ".record_app_delete" do
+      let(:deleting_app) { Models::App.make }
+
+      let(:user) { Models::User.make }
+
+      it "records the changes in metadata" do
+        event = described_class.record_app_delete(deleting_app, user)
+        expect(event.actor_type).to eq("user")
+        expect(event.type).to eq("app.delete")
+        expect(event.actee).to eq(deleting_app.guid)
+        expect(event.actee_type).to eq("app")
+        expect(event.metadata["changes"]).to eq(nil)
+      end
+    end
   end
 end

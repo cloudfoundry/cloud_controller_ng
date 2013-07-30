@@ -73,7 +73,11 @@ module VCAP::CloudController
         end
       end
 
-      app.soft_delete
+      app.db.transaction do
+        app.soft_delete
+        Models::Event.record_app_delete(app, SecurityContext.current_user)
+      end
+
 
       [ HTTP::NO_CONTENT, nil ]
     end

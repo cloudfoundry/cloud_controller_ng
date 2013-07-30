@@ -75,5 +75,18 @@ module VCAP::CloudController::Models
         }
       )
     end
+
+    def self.record_app_delete(deleting_app, actor)
+      create(
+        space: deleting_app.space,
+        type: "app.delete",
+        actee: deleting_app.guid,
+        actee_type: "app",
+        actor: actor.guid,
+        actor_type: "user",
+        timestamp: Time.now,
+        metadata: {}
+      )
+    end
   end
 end

@@ -310,6 +310,14 @@ module VCAP::CloudController
         end
 
       end
+
+      it "records an app.deleted event" do
+        subject
+        last_response.status.should == 204
+        event = Models::Event.find(:type => "app.delete", :actee => app_obj.guid)
+        expect(event).to be
+        expect(event.actor).to eq(admin_user.guid)
+      end
     end
 
     describe "validations" do
