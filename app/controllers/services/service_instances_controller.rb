@@ -68,8 +68,6 @@ module VCAP::CloudController
       Errors::ServiceInstanceNotFound
     end
 
-    get "/v2/service_instances/:guid", :read
-
     def read(guid)
       logger.debug "cc.read", :model => :ServiceInstance, :guid => guid
 
@@ -84,8 +82,6 @@ module VCAP::CloudController
       serialization.render_json(self.class, obj, @opts)
     end
 
-    delete "/v2/service_instances/:guid", :delete
-
     def delete(guid)
       logger.debug "cc.delete", :guid => guid
 
@@ -99,11 +95,7 @@ module VCAP::CloudController
 
       raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
 
-      before_destroy(obj)
-
       obj.destroy
-
-      after_destroy(obj)
 
       [ HTTP::NO_CONTENT, nil ]
     end
