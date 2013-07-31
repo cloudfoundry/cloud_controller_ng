@@ -1,9 +1,9 @@
-require_relative 'abstract_presenter'
+require_relative 'api_presenter'
 require_relative 'quota_definition_presenter'
 require_relative 'space_presenter'
 require_relative 'user_presenter'
 
-class OrganizationPresenter < AbstractPresenter
+class OrganizationPresenter < ApiPresenter
   def entity_hash
     {
       name: @object.name,

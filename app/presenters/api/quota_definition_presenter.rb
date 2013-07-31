@@ -1,6 +1,6 @@
-require_relative 'abstract_presenter'
+require_relative 'api_presenter'
 
-class QuotaDefinitionPresenter < AbstractPresenter
+class QuotaDefinitionPresenter < ApiPresenter
   def entity_hash
     {
       name: @object.name,

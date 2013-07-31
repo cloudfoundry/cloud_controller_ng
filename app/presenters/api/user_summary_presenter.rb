@@ -1,7 +1,7 @@
-require_relative 'abstract_presenter'
+require_relative 'api_presenter'
 require_relative 'organization_presenter'
 
-class UserSummaryPresenter < AbstractPresenter
+class UserSummaryPresenter < ApiPresenter
   def entity_hash
     {
       organizations: present_orgs(@object.organizations),

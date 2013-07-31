@@ -1,4 +1,4 @@
-require 'cloud_controller/presenters/user_summary_presenter'
+require 'presenters/api/user_summary_presenter'
 
 module VCAP::CloudController
   rest_controller :UserSummaries do

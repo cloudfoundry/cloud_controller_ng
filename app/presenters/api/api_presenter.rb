@@ -1,4 +1,4 @@
-class AbstractPresenter
+class ApiPresenter
   def initialize(object)
     @object = object
   end

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/presenters/service_binding_presenter'
+require 'presenters/message_bus/service_binding_presenter'
 
 describe ServiceBindingPresenter do
   context 'for a managed service instance' do

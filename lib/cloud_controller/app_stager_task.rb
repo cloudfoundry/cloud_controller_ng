@@ -1,4 +1,4 @@
-require 'cloud_controller/presenters/service_binding_presenter'
+require 'presenters/message_bus/service_binding_presenter'
 
 module VCAP::CloudController
   class AppStagerTask

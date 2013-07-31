@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/presenters/service_instance_presenter'
+require 'presenters/message_bus/service_instance_presenter'
 
 describe ServiceInstancePresenter do
 

@@ -1,6 +1,6 @@
-require_relative 'abstract_presenter'
+require_relative 'api_presenter'
 
-class UserPresenter < AbstractPresenter
+class UserPresenter < ApiPresenter
   def entity_hash
     {
         admin: @object.admin?,
