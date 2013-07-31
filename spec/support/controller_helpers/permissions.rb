@@ -147,7 +147,7 @@ module ControllerHelpers
   end
 
   shared_examples "permission modify not_allowed" do |perm_name, model, name, path, path_suffix, perms_overlap|
-    describe "PUT /v2/service_instances/:id" do
+    describe "PUT #{path}/:id" do
       it "should not allow a user with only the #{perm_name} permission to modify a #{name}" do
         put "#{path}/#{@obj_a.guid}#{path_suffix}", update_req_for_a, json_headers(headers_a)
         last_response.status.should == 403
