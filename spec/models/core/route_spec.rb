@@ -6,6 +6,17 @@ module VCAP::CloudController
       :required_attributes  => [:domain, :space, :host],
       :db_required_attributes => [:domain_id, :space_id],
       :unique_attributes    => [ [:host, :domain] ],
+      :custom_attributes_for_uniqueness_tests => -> do
+        @space ||= Models::Space.make
+        unless @domain
+          @domain = Models::Domain.make(
+            :owning_organization => @space.organization,
+            :wildcard => true
+          )
+          @space.add_domain(@domain)
+        end
+        { space: @space, domain: @domain }
+      end,
       :create_attribute => lambda { |name|
         @space ||= Models::Space.make
         case name.to_sym

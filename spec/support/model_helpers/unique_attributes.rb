@@ -1,133 +1,110 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ModelHelpers
-  shared_examples "creation of unique attributes" do |opts|
-    #
-    # If there are multiple unique attributes, vary them one a time
-    #
-    if opts[:unique_attributes]
-      opts[:unique_attributes].each do |unique_key|
-        if unique_key.respond_to?(:each)
-          unique_key.each do |changed_attr|
-            context "with duplicate attributes other than #{changed_attr}" do
-              def valid_attributes(opts)
-                opts[:create_attribute_reset].call if opts[:create_attribute_reset]
+  shared_examples "creation of unique attributes" do |example_opts|
+    if example_opts[:unique_attributes]
+      example_opts[:unique_attributes].map{|keys| Array(keys)}.each do |unique_key|
+        column_list = unique_key.flatten.map do |v|
+          if described_class.associations.include?(v.to_sym)
+            v = v.to_s.concat("_id")
+          end
+          v
+        end
 
-                initial_template = described_class.make
-                orig_opts = creation_opts_from_obj(initial_template, opts)
-                initial_template.delete
+        factory = ->(attrs={}, opts={save: true}) do
+          actual_attrs = attrs
+          if example_opts[:custom_attributes_for_uniqueness_tests]
+            actual_attrs = actual_attrs.merge(example_opts[:custom_attributes_for_uniqueness_tests].call)
+          end
 
-                orig_obj = described_class.make orig_opts
-                orig_obj.should be_valid
-                creation_opts_from_obj(orig_obj, opts)
-              end
-
-              def value_for_attr(attr, opts)
-                # create the attribute using the caller supplied lambda,
-                # otherwise, create a second object and fetch
-                # the value from that
-                val = nil
-                if opts[:create_attribute]
-                  val = opts[:create_attribute].call(attr)
-                end
-
-                if val.nil?
-                  another_obj = described_class.make
-                  val = another_obj.send(attr)
-                  another_obj.delete
-                end
-                val
-              end
-
-              let(:dup_opts) do
-                valid_attributes(opts).merge(
-                  changed_attr => value_for_attr(changed_attr, opts)
-                )
-              end
-
-              it "should succeed" do
-                obj = described_class.create do |instance|
-                  instance.set_all(dup_opts)
-                end
-                obj.should be_valid
-              end
-            end
+          if opts[:save]
+            described_class.make(actual_attrs)
+          else
+            described_class.make_unsaved(actual_attrs)
           end
         end
 
-        #
-        # make sure we get failures if all of the unique attributes are the
-        # same
-        #
-        desc = opts[:unique_attributes].map { |v| ":#{v}" }.join(", ")
-        desc = "[#{desc}]" if opts[:unique_attributes].length > 1
-        context "with duplicate #{desc}" do
-          let(:column_list) do
-            opts[:unique_attributes].flatten.map do |v|
-              if described_class.associations.include?(v.to_sym)
-                v = v.to_s.concat("_id")
-              end
-              v
-            end
-          end
-
-          def sequel_error_for_all_columns?(column_list, error)
-            columns_in_error = error.message[/^(.*) unique$/, 1].split(" and ")
-            columns_in_error.sort == column_list.sort
-          end
-
-          def requires_uniqueness_for_columns?(column_list, error)
-            case described_class.db.database_type
-            when :mysql
-              error.message == "Duplicate entry"
-            when :sqlite
-              columns_in_error = error.message[/columns? (.*?) (is|are) not unique/, 1]
-              columns_in_error.split(', ').sort == column_list.sort
-            else
-              true
-            end
-          end
-
-          let(:dup_opts) do
-            opts[:create_attribute_reset].call if opts[:create_attribute_reset]
-            new_opts = opts.dup
-            new_opts[:required_attributes] |= new_opts[:unique_attributes].flatten
-
-            initial_template = described_class.make
-            orig_opts = creation_opts_from_obj(initial_template, new_opts)
-
-            initial_template.destroy
-
-            described_class.make orig_opts
-            orig_opts
-          end
-
-          it "should fail due to Sequel validations" do
-            # TODO: swap out everything but the unique entries for more
-            # accurate testing
-            expect {
-              described_class.create do |instance|
-                instance.set_all(dup_opts)
-              end
-            }.to raise_error Sequel::ValidationFailed do |err|
-              sequel_error_for_all_columns?(column_list, err)
-            end
-          end
-
-          unless opts[:skip_database_constraints]
-            it "should fail due to database integrity checks" do
-              expect {
-                described_class.new do |instance|
-                  instance.set_all(dup_opts)
-                  instance.valid?  # run validations but ignore results
-                end.save(:validate => false)
-              }.to raise_error Sequel::DatabaseError do |err|
-                requires_uniqueness_for_columns?(column_list, err)
-              end
-            end
-          end
+        it_validates_the_uniqueness_of_attrs_in_model(*column_list, factory: factory)
+        unless example_opts[:skip_database_constraints]
+          it_validates_the_uniqueness_of_columns_in_database(*column_list, factory: factory)
         end
       end
     end
   end
+end
+
+def it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
+  opts = unique_keys.last.is_a?(Hash) ? unique_keys.pop : {}
+  factory = opts[:factory] || ->(attrs={}, opts={save: true}) do
+    if opts[:save]
+      described_class.make(attrs)
+    else
+      described_class.make_unsaved(attrs)
+    end
+  end
+
+  context "creating a second instance with the same value for #{unique_keys.inspect}" do
+    let!(:existing_instance) { factory.call }
+    let(:duplicate_attrs_for_unique_fields) do
+      unique_keys.each.with_object({}) { |unique_key, dup_attrs|
+        dup_attrs[unique_key] = existing_instance.public_send(unique_key)
+      }
+    end
+
+    def ensure_sequel_error_for_all_columns!(column_list, error)
+      error.message.should =~ / unique$/
+      columns_in_error = error.message[/^(.*) unique$/, 1].split(" and ")
+      columns_in_error.should =~ column_list.map(&:to_s)
+    end
+
+    it "should fail to validate" do
+      expect {
+        factory.call(duplicate_attrs_for_unique_fields)
+      }.to raise_error(Sequel::ValidationFailed) { |error|
+        ensure_sequel_error_for_all_columns!(unique_keys, error)
+      }
+    end
+  end
+end
+
+def it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
+  opts = unique_keys.last.is_a?(Hash) ? unique_keys.pop : {}
+  factory = opts[:factory] || ->(attrs={}, opts={save: true}) do
+    if opts[:save]
+      described_class.make(attrs)
+    else
+      described_class.make_unsaved(attrs)
+    end
+  end
+
+  context "saving a second instance with the same values for #{unique_keys.inspect} to the database without validation" do
+    let!(:existing_instance) { factory.call }
+    let(:duplicate_attrs_for_unique_fields) do
+      unique_keys.each.with_object({}) { |unique_key, dup_attrs|
+        dup_attrs[unique_key] = existing_instance.public_send(unique_key)
+      }
+    end
+
+    def ensure_uniqueness_required_for_columns!(column_list, error)
+      case described_class.db.database_type
+      when :mysql
+        error.message.should == "Duplicate entry"
+      when :sqlite
+        columns_in_error = error.message[/columns? (.*?) (is|are) not unique/, 1]
+        columns_in_error.split(', ').should =~ column_list
+      end
+    end
+
+    it "fails due to database integrity checks" do
+      expect {
+        instance_with_duplicate_fields = factory.call(duplicate_attrs_for_unique_fields, save: false)
+        instance_with_duplicate_fields.save(:validate => false)
+      }.to raise_error Sequel::DatabaseError do |error|
+        ensure_uniqueness_required_for_columns!(unique_keys, error)
+      end
+    end
+  end
+end
+
+def it_validates_the_uniqueness_of(*unique_keys)
+  it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
+  it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
 end

@@ -1,12 +1,13 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::Organization, type: :model do
+  describe Models::Organization, type: :model do
     before(:all) { reset_database }
 
     it_behaves_like "a CloudController model", {
       :required_attributes          => :name,
       :unique_attributes            => :name,
+      :custom_attributes_for_uniqueness_tests => ->{ {quota_definition: Models::QuotaDefinition.make} },
       :stripped_string_attributes   => :name,
       :many_to_zero_or_more => {
         :users      => lambda { |org| Models::User.make },

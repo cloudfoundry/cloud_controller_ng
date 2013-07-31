@@ -8,6 +8,7 @@ require "sequel_plugins/vcap_normalization"
 require "sequel_plugins/vcap_relations"
 require "sequel_plugins/vcap_guid"
 require "sequel_plugins/update_or_create"
+require "sequel_plugins/machinist_monkey_patch"
 
 module Sequel::Plugins::VcapUserGroup
   module ClassMethods

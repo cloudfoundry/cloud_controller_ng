@@ -28,6 +28,12 @@ module ModelHelpers
   end
 
   shared_examples "model instance" do |opts|
+    ([:required_attributes, :unique_attributes, :stripped_string_attributes,
+      :sensitive_attributes, :extra_json_attributes, :disable_examples]).each do |k|
+      opts[k] ||= []
+      opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
+    end
+
     include_context "model template", opts
 
     unless opts[:disable_examples].include? :creation

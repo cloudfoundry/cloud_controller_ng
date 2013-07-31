@@ -1,13 +1,17 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::Domain, type: :model do
+  describe Models::Domain, type: :model do
     let(:domain) { Models::Domain.make }
 
     it_behaves_like "a CloudController model", {
       :required_attributes          => [:name, :owning_organization, :wildcard],
       :db_required_attributes       => [:name],
       :unique_attributes            => :name,
+      :custom_attributes_for_uniqueness_tests =>  -> do
+        @owning_organization ||= Models::Organization.make
+        { owning_organization: @owning_organization }
+      end,
       :stripped_string_attributes   => :name,
       :many_to_zero_or_one => {
         :owning_organization => {
