@@ -17,11 +17,15 @@ module VCAP::CloudController::RestController
 
       raise InvalidRequest unless request_attrs
 
+      before_create
+
       obj = nil
       model.db.transaction do
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user, roles)
       end
+
+      after_create(obj)
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{obj.guid}" },
@@ -72,7 +76,11 @@ module VCAP::CloudController::RestController
 
       raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
 
+      before_destroy(obj)
+
       obj.destroy
+
+      after_destroy(obj)
 
       [ HTTP::NO_CONTENT, nil ]
     end
@@ -164,7 +172,11 @@ module VCAP::CloudController::RestController
 
       obj = find_guid_and_validate_access(:update, guid)
 
+      before_update(obj)
+
       obj.send("#{verb}_#{singular_name}_by_guid", other_guid)
+
+      after_update(obj)
 
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end

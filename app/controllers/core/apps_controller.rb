@@ -78,11 +78,12 @@ module VCAP::CloudController
         Models::Event.record_app_delete(app, SecurityContext.current_user)
       end
 
+
       [ HTTP::NO_CONTENT, nil ]
     end
 
     def update(guid)
-      app = find_guid_and_validate_access(:update, guid)
+      obj = find_guid_and_validate_access(:update, guid)
 
       json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
@@ -93,15 +94,14 @@ module VCAP::CloudController
       raise InvalidRequest unless request_attrs
 
       model.db.transaction do
-        app.lock!
-        app.update_from_hash(request_attrs)
-        Models::Event.record_app_update(app, SecurityContext.current_user) if app.previous_changes
+        obj.lock!
+        obj.update_from_hash(request_attrs)
+        Models::Event.record_app_update(obj, SecurityContext.current_user) if obj.previous_changes
       end
 
-      set_staging_log_header(app)
-      update_uris(app)
+      after_update(obj)
 
-      [HTTP::CREATED, serialization.render_json(self.class, app, @opts)]
+      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end
 
     def create
@@ -121,6 +121,8 @@ module VCAP::CloudController
         Models::Event.record_app_create(obj, SecurityContext.current_user)
       end
 
+      after_create(obj)
+
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{obj.guid}" },
         serialization.render_json(self.class, obj, @opts)
@@ -129,16 +131,15 @@ module VCAP::CloudController
 
     private
 
-    def set_staging_log_header(app)
+    def after_update(app)
       stager_response = app.last_stager_response
-
       if stager_response && stager_response.streaming_log_url
         set_header("X-App-Staging-Log", stager_response.streaming_log_url)
       end
-    end
 
-    def update_uris(app)
-      DeaClient.update_uris(app) if app.dea_update_pending?
+      if app.dea_update_pending?
+        DeaClient.update_uris(app)
+      end
     end
   end
 end

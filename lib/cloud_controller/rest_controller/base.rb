@@ -154,6 +154,30 @@ module VCAP::CloudController::RestController
       env["PATH_INFO"] =~ /#{ROUTE_PREFIX}/i
     end
 
+    # hook called before +create+
+    def before_create
+    end
+
+    # hook called after +create+
+    def after_create(obj)
+    end
+
+    # hook called before +update+, +add_related+ or +remove_related+
+    def before_update(obj)
+    end
+
+    # hook called after +update+, +add_related+ or +remove_related+
+    def after_update(obj)
+    end
+
+    # hook called before +destroy+
+    def before_destroy(obj)
+    end
+
+    # hook called after +destroy+
+    def after_destroy(obj)
+    end
+
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self
