@@ -144,6 +144,16 @@ module VCAP::CloudController
         space.save
         expect { subject.destroy }.to change { user.reload.default_space }.from(space).to(nil)
       end
+
+      it "destroys all events" do
+        event = Models::Event.make(:space => space)
+
+        expect {
+          subject.destroy
+        }.to change {
+          Models::Event.where(:id => [event.id]).count
+        }.from(1).to(0)
+      end
     end
 
     describe "filter deleted apps" do
