@@ -5,13 +5,13 @@ module VCAP::CloudController
     include_examples "uaa authenticated api", path: "/v2/services"
     include_examples "enumerating objects", path: "/v2/services", model: Models::Service
     include_examples "reading a valid object", path: "/v2/services", model: Models::Service,
-      basic_attributes: %w(label provider url description version bindable)
+      basic_attributes: %w(label provider url description version bindable tags)
     include_examples "operations on an invalid object", path: "/v2/services"
     include_examples "creating and updating", path: "/v2/services",
                      model: Models::Service,
                      required_attributes: %w(label provider url description version),
                      unique_attributes: %w(label provider),
-                     extra_attributes: {extra: ->{Sham.extra}, bindable: false}
+                     extra_attributes: {extra: ->{Sham.extra}, bindable: false, tags: ["relational"]}
     include_examples "deleting a valid object", path: "/v2/services", model: Models::Service,
       one_to_many_collection_ids: {:service_plans => lambda { |service| Models::ServicePlan.make(:service => service) }},
       one_to_many_collection_ids_without_url: {}
@@ -205,6 +205,37 @@ module VCAP::CloudController
         last_response.status.should eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
         Models::Service.first(:guid => service_guid).bindable.should be_true
+      end
+
+      it 'creates the service with default tags' do
+        payload_without_tags = ServicesController::CreateMessage.new(
+          :label => Sham.label,
+          :provider => Sham.provider,
+          :url => Sham.url,
+          :description => 'd',
+          :version => 'v',
+          :unique_id => Sham.unique_id
+        ).encode
+        post "/v2/services", payload_without_tags, json_headers(admin_headers)
+        last_response.status.should eq(201)
+        service_guid = decoded_response.fetch('metadata').fetch('guid')
+        Models::Service.first(:guid => service_guid).tags.should == []
+      end
+
+      it 'creates the service with specified tags' do
+        payload_without_tags = ServicesController::CreateMessage.new(
+          :label => Sham.label,
+          :provider => Sham.provider,
+          :url => Sham.url,
+          :description => 'd',
+          :version => 'v',
+          :unique_id => Sham.unique_id,
+          :tags => ["relational"]
+        ).encode
+        post "/v2/services", payload_without_tags, json_headers(admin_headers)
+        last_response.status.should eq(201)
+        service_guid = decoded_response.fetch('metadata').fetch('guid')
+        Models::Service.first(:guid => service_guid).tags.should == ["relational"]
       end
     end
 

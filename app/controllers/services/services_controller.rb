@@ -18,6 +18,7 @@ module VCAP::CloudController
       attribute :bindable,       Message::Boolean, :default => true
       attribute :extra,          String, :default => nil
       attribute :unique_id,      String, :default => nil, :exclude_in => [:update]
+      attribute :tags,           [String], :default => []
       to_many   :service_plans
     end
 
