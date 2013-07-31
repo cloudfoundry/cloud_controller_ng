@@ -136,6 +136,25 @@ module VCAP::CloudController
         FileUtils.rm_rf(tmpdir)
       end
 
+      context "when app is local" do
+        before do
+          AppPackage.stub(:local?) { true }
+          AppPackage.stub(:package_uri) { |guid| "droplets/#{guid}" }
+        end
+
+        context "when using nginx" do
+          it "redirects to correct nginx URL" do
+            get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
+            last_response.status.should == 200
+            last_response.headers.should include(
+              {
+                "X-Accel-Redirect" => "droplets/#{app_obj.guid}"
+              }
+            )
+          end
+        end
+      end
+
       context "dev app download" do
         it "should return 404 for an app without a package" do
           get "/v2/apps/#{app_obj_without_pkg.guid}/download", {}, headers_for(developer2)

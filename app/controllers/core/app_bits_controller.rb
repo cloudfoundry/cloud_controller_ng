@@ -56,7 +56,7 @@ module VCAP::CloudController
 
       if AppPackage.local?
         if config[:nginx][:use_nginx]
-          return [200, { "X-Accel-Redirect" => "/droplets#{package_uri}" }, ""]
+          return [200, { "X-Accel-Redirect" => "#{package_uri}" }, ""]
         else
           return send_file package_path, :filename => File.basename("#{path}.zip")
         end
