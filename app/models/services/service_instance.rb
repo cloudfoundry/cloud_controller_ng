@@ -24,6 +24,10 @@ module VCAP::CloudController::Models
         :space => user.spaces_dataset)
     end
 
+    def type
+      self.class.name.demodulize.underscore
+    end
+
     def validate
       validates_presence :name
       validates_presence :space

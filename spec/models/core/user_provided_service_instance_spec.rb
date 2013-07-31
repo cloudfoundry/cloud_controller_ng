@@ -40,6 +40,14 @@ describe VCAP::CloudController::Models::UserProvidedServiceInstance, type: :mode
     end
   end
 
+  let(:service_instance) { VCAP::CloudController::Models::UserProvidedServiceInstance.make }
+
+  describe "serialization" do
+    it "includes its type" do
+      expect(Yajl::Parser.parse(service_instance.to_json).fetch("type")).to eq "user_provided_service_instance"
+    end
+  end
+
   describe "#as_summary_json" do
     it "contains name and guid" do
       instance = described_class.new(guid: "ABCDEFG12", name: "Random-Number-Service")

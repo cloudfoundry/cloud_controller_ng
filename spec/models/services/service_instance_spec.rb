@@ -36,4 +36,14 @@ describe VCAP::CloudController::Models::ServiceInstance, type: :model do
       end
     end
   end
+
+  describe "#type" do
+    it "returns the model name for API consumption" do
+      managed_instance = VCAP::CloudController::Models::ManagedServiceInstance.new
+      expect(managed_instance.type).to eq "managed_service_instance"
+
+      user_provided_instance = VCAP::CloudController::Models::UserProvidedServiceInstance.new
+      expect(user_provided_instance.type).to eq "user_provided_service_instance"
+    end
+  end
 end

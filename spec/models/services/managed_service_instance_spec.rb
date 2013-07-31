@@ -74,6 +74,10 @@ module VCAP::CloudController
         service_instance.dashboard_url = dashboard_url
         Yajl::Parser.parse(service_instance.to_json).fetch("dashboard_url").should == dashboard_url
       end
+
+      it "includes its type" do
+        expect(Yajl::Parser.parse(service_instance.to_json).fetch("type")).to eq "managed_service_instance"
+      end
     end
 
     describe "lifecycle" do

@@ -64,7 +64,7 @@ module VCAP::CloudController::Models
     default_order_by  :id
 
     export_attributes :name, :credentials, :service_plan_guid,
-                      :space_guid, :gateway_data, :dashboard_url
+                      :space_guid, :gateway_data, :dashboard_url, :type
 
     import_attributes :name, :service_plan_guid,
                       :space_guid, :gateway_data
