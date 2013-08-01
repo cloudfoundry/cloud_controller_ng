@@ -25,6 +25,8 @@ module VCAP::CloudController::RestController
         validate_access(:create, obj, user, roles)
       end
 
+      after_create(obj)
+
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{obj.guid}" },
         serialization.render_json(self.class, obj, @opts)
@@ -74,7 +76,11 @@ module VCAP::CloudController::RestController
 
       raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
 
+      before_destroy(obj)
+
       obj.destroy
+
+      after_destroy(obj)
 
       [ HTTP::NO_CONTENT, nil ]
     end
@@ -165,7 +171,12 @@ module VCAP::CloudController::RestController
       @request_attrs = { singular_name => other_guid }
 
       obj = find_guid_and_validate_access(:update, guid)
+
+      before_update(obj)
+
       obj.send("#{verb}_#{singular_name}_by_guid", other_guid)
+
+      after_update(obj)
 
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end

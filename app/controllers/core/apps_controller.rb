@@ -121,6 +121,8 @@ module VCAP::CloudController
         Models::Event.record_app_create(obj, SecurityContext.current_user)
       end
 
+      after_create(obj)
+
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{obj.guid}" },
         serialization.render_json(self.class, obj, @opts)
