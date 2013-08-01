@@ -10,9 +10,10 @@ module ModelHelpers
         end
 
         factory = ->(attrs={}, opts={save: true}) do
-          actual_attrs = attrs
           if example_opts[:custom_attributes_for_uniqueness_tests]
-            actual_attrs = actual_attrs.merge(example_opts[:custom_attributes_for_uniqueness_tests].call)
+            actual_attrs = example_opts[:custom_attributes_for_uniqueness_tests].call.merge(attrs)
+          else
+            actual_attrs = attrs
           end
 
           if opts[:save]
@@ -29,6 +30,11 @@ module ModelHelpers
       end
     end
   end
+end
+
+def it_validates_the_uniqueness_of(*unique_keys)
+  it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
+  it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
 end
 
 def it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
@@ -50,7 +56,15 @@ def it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
     end
 
     def ensure_sequel_error_for_all_columns!(column_list, error)
-      error.message.should =~ / unique$/
+      number_of_uniqueness_errors = error.message.scan(/\bunique\b/).count
+      if number_of_uniqueness_errors == 0
+        fail "There was no uniqueness error"
+      elsif number_of_uniqueness_errors > 1
+        fail "Received multiple uniqueness validation errors." +
+             " You may be enforcing uniqueness on multiple columns individually instead of as a group." +
+             " For example, you may think that [:name, :email] are unique as a pair, but instead" +
+             " :name is globally unique and :email is globally unique"
+      end
       columns_in_error = error.message[/^(.*) unique$/, 1].split(" and ")
       columns_in_error.should =~ column_list.map(&:to_s)
     end
@@ -102,9 +116,20 @@ def it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
       end
     end
   end
-end
 
-def it_validates_the_uniqueness_of(*unique_keys)
-  it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
-  it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
+  if unique_keys.length > 1
+    # this proves that it is a multi-field unique key instead of multiple single-field unique keys
+    unique_keys.each do |subkey|
+      context "saving a second instance with the same values for only #{subkey.inspect} to the database without validation" do
+        let!(:existing_instance) { factory.call }
+
+        it "saves successfully" do
+          expect {
+            unsaved_instance = factory.call({subkey => existing_instance.public_send(subkey)}, save: false)
+            unsaved_instance.save(:validate => false)
+          }.not_to raise_error Sequel::DatabaseError
+        end
+      end
+    end
+  end
 end
