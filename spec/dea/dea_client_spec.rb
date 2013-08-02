@@ -63,6 +63,16 @@ module VCAP::CloudController
       end
     end
 
+    describe "#add_buildpack" do
+      it "publishes the buildpacks.add message onto the message bus" do
+        DeaClient.add_buildpack("foo", "http://example.com/repo.git")
+        published_message = @message_bus.published_messages.last
+
+        expect(published_message[:subject]).to eq("buildpacks.add")
+        expect(published_message[:message]).to eq({name: "foo", url: "http://example.com/repo.git"})
+      end
+    end
+
     describe "update_uris" do
       it "does not update deas if app isn't staged" do
         @app.update(:package_state => "PENDING")
