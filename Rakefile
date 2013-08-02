@@ -78,18 +78,39 @@ end
     end
   end
 
+  def config
+    @config ||= begin
+      config_file = ENV["CLOUD_CONTROLLER_NG_CONFIG"] || File.expand_path("../config/cloud_controller.yml", __FILE__)
+      VCAP::CloudController::Config.from_file(config_file)
+    end
+  end
+
+  def db
+    @db ||= begin
+      VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
+
+      Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
+      db_logger = Steno.logger("cc.db.migrations")
+
+      VCAP::CloudController::DB.connect(db_logger, config[:db])
+    end
+  end
+
   desc "Perform Sequel migration to database"
   task :migrate do
-    config_file = ENV["CLOUD_CONTROLLER_NG_CONFIG"]
-    config_file ||= File.expand_path("../config/cloud_controller.yml", __FILE__)
-
-    config = VCAP::CloudController::Config.from_file(config_file)
-    VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
-
-    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
-    db_logger = Steno.logger("cc.db.migrations")
-
-    db = VCAP::CloudController::DB.connect(db_logger, config[:db])
     VCAP::CloudController::DB.apply_migrations(db)
+  end
+
+  desc "Rollback a single migration to the database"
+  task :rollback do
+    number_to_rollback = 1
+    recent_migrations = db[:schema_migrations].order(Sequel.desc(:filename)).limit(number_to_rollback + 1).all
+    recent_migrations = recent_migrations.collect {|hash| hash[:filename].split("_", 2).first.to_i }
+    VCAP::CloudController::DB.apply_migrations(db, :current => recent_migrations.first, :target => recent_migrations.last)
+  end
+
+  namespace :migrate do
+    desc "Rollback the most recent migration and remigrate to current"
+    task :redo => [:rollback, :migrate]
   end
 end

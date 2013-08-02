@@ -51,11 +51,11 @@ module VCAP::CloudController
     # Apply migrations to a database
     #
     # @param [Sequel::Database]  Database to apply migrations to
-    def self.apply_migrations(db)
+    def self.apply_migrations(db, opts = {})
       Sequel.extension :migration
       require "vcap/sequel_case_insensitive_string_monkeypatch"
       migrations_dir ||= File.expand_path("../../../db/migrations", __FILE__)
-      Sequel::Migrator.apply(db, migrations_dir)
+      Sequel::Migrator.run(db, migrations_dir, opts)
     end
 
     private
