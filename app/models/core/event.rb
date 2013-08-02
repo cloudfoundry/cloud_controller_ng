@@ -49,7 +49,7 @@ module VCAP::CloudController::Models
     def self.record_app_update(app, actor)
       create(
         space: app.space,
-        type: "app.update",
+        type: "audit.app.update",
         actee: app.guid,
         actee_type: "app",
         actor: actor.guid,
@@ -68,7 +68,7 @@ module VCAP::CloudController::Models
     def self.record_app_create(app, actor)
       create(
         space: app.space,
-        type: "app.create",
+        type: "audit.app.create",
         actee: app.guid,
         actee_type: "app",
         actor: actor.guid,
@@ -83,7 +83,7 @@ module VCAP::CloudController::Models
     def self.record_app_delete(deleting_app, actor)
       create(
         space: deleting_app.space,
-        type: "app.delete",
+        type: "audit.app.delete",
         actee: deleting_app.guid,
         actee_type: "app",
         actor: actor.guid,

@@ -74,7 +74,7 @@ module VCAP::CloudController
         app.save
 
         event = described_class.record_app_update(app, user)
-        expect(event.type).to eq("app.update")
+        expect(event.type).to eq("audit.app.update")
         expect(event.actor_type).to eq("user")
         changes = event.metadata.fetch("changes")
         expect(changes).to eq(
@@ -124,7 +124,7 @@ module VCAP::CloudController
       it "records the changes in metadata" do
         event = described_class.record_app_create(app, user)
         expect(event.actor_type).to eq("user")
-        expect(event.type).to eq("app.create")
+        expect(event.type).to eq("audit.app.create")
         changes = event.metadata.fetch("changes")
         expect(changes).to eq(
           "name" => "new",
@@ -144,7 +144,7 @@ module VCAP::CloudController
       it "records an empty changes in metadata" do
         event = described_class.record_app_delete(deleting_app, user)
         expect(event.actor_type).to eq("user")
-        expect(event.type).to eq("app.delete")
+        expect(event.type).to eq("audit.app.delete")
         expect(event.actee).to eq(deleting_app.guid)
         expect(event.actee_type).to eq("app")
         expect(event.metadata["changes"]).to eq(nil)
