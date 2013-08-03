@@ -119,7 +119,7 @@ module VCAP::CloudController
         last_response.status.should == 201
 
         new_app_guid = decoded_response['metadata']['guid']
-        event = Models::Event.find(:type => "app.create", :actee => new_app_guid)
+        event = Models::Event.find(:type => "audit.app.create", :actee => new_app_guid)
 
         expect(event).to be
         expect(event.actor).to eq(admin_user.guid)
@@ -234,7 +234,7 @@ module VCAP::CloudController
         it "registers an app.start event" do
           subject
 
-          event = Models::Event.find(:type => "app.update", :actee => app_obj.guid)
+          event = Models::Event.find(:type => "audit.app.update", :actee => app_obj.guid)
           expect(event).to be
           expect(event.actor).to eq(admin_user.guid)
         end
@@ -376,7 +376,7 @@ module VCAP::CloudController
       it "records an app.deleted event" do
         subject
         last_response.status.should == 204
-        event = Models::Event.find(:type => "app.delete", :actee => app_obj.guid)
+        event = Models::Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
         expect(event).to be
         expect(event.actor).to eq(admin_user.guid)
       end
