@@ -83,16 +83,6 @@ module VCAP::RestAPI
         permissions[op] && (permissions[op] & perms).size > 0
       end
 
-      # Predicate to check if a certain type of operation is defined.
-      #
-      # @param [Symbol] op The operation to check.
-      #
-      # @return [Boolean] True if the given type of access has been defined via
-      # define_access_type.
-      def is_operation?(op)
-        permitted_ops.include?(op)
-      end
-
       # For internal use by this class and the DSL.
       def permitted_ops
         @@permitted_ops ||= Set.new

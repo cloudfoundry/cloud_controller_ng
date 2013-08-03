@@ -17,14 +17,14 @@ module VCAP::RestAPI
     describe "#define_permitted_operation" do
       it "should define global permitted operations" do
         klass_a.define_permitted_operation(:some_op)
-        klass_a.is_operation?(:some_op).should be_true
-        klass_b.is_operation?(:some_op).should be_true
+        klass_a.permitted_ops.should include :some_op
+        klass_b.permitted_ops.should include :some_op
         klass_b.define_permitted_operation(:another_op)
-        klass_a.is_operation?(:some_op).should be_true
-        klass_b.is_operation?(:some_op).should be_true
-        klass_a.is_operation?(:another_op).should be_true
-        klass_b.is_operation?(:another_op).should be_true
-        klass_b.is_operation?(:non_existent).should be_false
+        klass_a.permitted_ops.should include :some_op
+        klass_b.permitted_ops.should include :some_op
+        klass_a.permitted_ops.should include :another_op
+        klass_b.permitted_ops.should include :another_op
+        klass_b.permitted_ops.should_not include :non_existent
       end
     end
 
