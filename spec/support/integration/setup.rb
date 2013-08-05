@@ -6,11 +6,17 @@ module IntegrationSetup
   end
 
   def stop_nats
-    graceful_kill(:nats, @nats_pid)
+    if @nats_pid
+      graceful_kill(:nats, @nats_pid)
+      @nats_pid = nil
+    end
   end
 
   def kill_nats
-    Process.kill("KILL", @nats_pid)
+    if @nats_pid
+      Process.kill("KILL", @nats_pid)
+      @nats_pid = nil
+    end
   end
 
   def start_cc(opts={}, wait_cycles = 20)
@@ -31,8 +37,7 @@ module IntegrationSetup
   end
 
   def stop_cc
-    return unless @cc_pids
-    @cc_pids.each { |pid| graceful_kill(:cc, pid) }
+    @cc_pids.each { |pid| graceful_kill(:cc, @cc_pids.delete(pid)) }
   end
 
   def wait_for_nats_to_start(port)
@@ -80,6 +85,7 @@ module IntegrationSetupHelpers
       Process.wait(pid)
     end
   rescue Timeout::Error
+    Process.detach(pid)
     Process.kill("KILL", pid)
   rescue Errno::ESRCH
     true
