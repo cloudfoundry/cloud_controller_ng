@@ -12,8 +12,15 @@ module VCAP::CloudController
 
       start_nats :debug => false
 
-      start_cc(:debug => false, :config => "spec/fixtures/config/port_8181_config.yml")
-      start_cc(:debug => false, :config => "spec/fixtures/config/port_8182_config.yml")
+      start_cc(
+        debug: false,
+        config: "spec/fixtures/config/port_8181_config.yml"
+      )
+      start_cc(
+        debug: false,
+        config: "spec/fixtures/config/port_8182_config.yml",
+        preserve_database: true
+      )
 
       org = make_post_request(
         "/v2/organizations",

@@ -22,6 +22,12 @@ module IntegrationSetup
   def start_cc(opts={}, wait_cycles = 20)
     config_file = opts[:config] || "config/cloud_controller.yml"
     config = YAML.load_file(config_file)
+
+    database_file = config["db"]["database"].gsub('sqlite://', '')
+    if !opts[:preserve_database] && File.file?(database_file)
+      run_cmd("rm -f #{database_file}", wait: true)
+    end
+
     run_cmd("bundle exec rake db:migrate", :wait => true)
     @cc_pids ||= []
     @cc_pids << run_cmd("bin/cloud_controller -m -c #{config_file}", opts)
