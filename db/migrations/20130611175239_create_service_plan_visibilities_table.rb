@@ -1,7 +1,7 @@
 Sequel.migration do
   change do
     create_table :service_plan_visibilities do
-      VCAP::Migration.common(self)
+      VCAP::Migration.common(self, :spv)
       Integer :service_plan_id, null: false
       Integer :organization_id, null: false
       index [:organization_id, :service_plan_id], unique: true

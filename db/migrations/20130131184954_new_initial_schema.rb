@@ -30,7 +30,7 @@ Sequel.migration do
     # We don't use foreign keys here because the objects may get deleted after
     # the billing records are generated, and that should be allowed.
     create_table :billing_events do
-      VCAP::Migration.common(self)
+      VCAP::Migration.common(self, :be)
       DateTime :timestamp, :null => false
       String :kind, :null => false
       String :organization_guid, :null => false
@@ -56,7 +56,7 @@ Sequel.migration do
     end
 
     create_table :quota_definitions do
-      VCAP::Migration.common(self)
+      VCAP::Migration.common(self, :qd)
 
       String :name, :null => false, :unique => true, :case_insensitive => true
       Boolean :non_basic_services_allowed, :null => false
@@ -67,7 +67,7 @@ Sequel.migration do
     end
 
     create_table :service_auth_tokens do
-      VCAP::Migration.common(self)
+      VCAP::Migration.common(self, :sat)
 
       String :label,         :null => false, :case_insensitive => true
       String :provider,      :null => false, :case_insensitive => true
@@ -244,7 +244,7 @@ Sequel.migration do
     end
 
     create_table :service_instances do
-      VCAP::Migration.common(self)
+      VCAP::Migration.common(self, :si)
 
       String :name, :null => false, :case_insensitive => true
       String :credentials, :null => false, :size => 2048
@@ -283,11 +283,11 @@ Sequel.migration do
 
     # Organization permissions
     [:users, :managers, :billing_managers, :auditors].each do |perm|
-      VCAP::Migration.create_permission_table(self, :organization, perm)
+      VCAP::Migration.create_permission_table(self, :organization, :org, perm)
     end
 
     create_table(:service_bindings) do
-      VCAP::Migration.common(self)
+      VCAP::Migration.common(self, :sb)
 
       String :credentials, :null => false, :size => 2048
       String :binding_options
@@ -307,7 +307,7 @@ Sequel.migration do
 
     # App Space permissions
     [:developers, :managers, :auditors].each do |perm|
-      VCAP::Migration.create_permission_table(self, :space, perm)
+      VCAP::Migration.create_permission_table(self, :space, :space, perm)
     end
   end
 end
