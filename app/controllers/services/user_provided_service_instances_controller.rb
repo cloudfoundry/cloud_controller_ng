@@ -13,6 +13,7 @@ module VCAP::CloudController
       attribute :credentials, Hash
 
       to_one :space
+      to_many :service_bindings
     end
 
     def self.translate_validation_exception(e, attributes)

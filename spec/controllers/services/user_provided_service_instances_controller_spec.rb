@@ -6,6 +6,19 @@ module VCAP::CloudController
                      model: Models::UserProvidedServiceInstance,
                      required_attributes: %w(name space_guid credentials),
                      unique_attributes: %w(space_guid name)
+    include_examples "collection operations", path: "/v2/user_provided_service_instances", model: Models::UserProvidedServiceInstance,
+      one_to_many_collection_ids: {
+        service_bindings: lambda { |service_instance| make_service_binding_for_service_instance(service_instance) }
+      },
+      many_to_one_collection_ids: {},
+      many_to_many_collection_ids: {}
+    include_examples "deleting a valid object", path: "/v2/user_provided_service_instances", model: Models::UserProvidedServiceInstance,
+      one_to_many_collection_ids: {
+        :service_bindings => lambda { |service_instance|
+          make_service_binding_for_service_instance(service_instance)
+        }
+      },
+      one_to_many_collection_ids_without_url: {}
 
     describe "Permissions" do
       include_context "permissions"
@@ -76,10 +89,8 @@ module VCAP::CloudController
                            :read => :allowed,
                            :modify => :not_allowed,
                            :delete => :not_allowed
+        end
       end
-
-      end
-
     end
   end
 end
