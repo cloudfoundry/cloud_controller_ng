@@ -126,6 +126,12 @@ module VCAP::CloudController::Models
     app               { App.make(:space => service_instance.space) }
   end
 
+  ServiceBroker.blueprint do
+    name              { Sham.name }
+    broker_url        { Sham.url }
+    token             { Sham.token }
+  end
+
   ServicePlan.blueprint do
     name              { Sham.name }
     free              { false }
