@@ -156,7 +156,7 @@
 60008:
   name: ServiceInstanceDuplicateNotAllowed
   http_code: 400
-  message: "A service of this type is already present in this space.  Some services disallow duplicates."
+  message: "An instance of this service is already present in this space.  Some services only support one instance per space."
 
 60009:
   name: ServiceInstanceNameTooLong
