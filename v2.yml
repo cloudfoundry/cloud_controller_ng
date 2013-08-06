@@ -423,3 +423,17 @@
   http_code: 400
   message: "This combination of ServicePlan and Organization is already taken: %s"
 
+270001:
+  name: ServiceBrokerInvalid
+  http_code: 400
+  message: "Service Broker is invalid: %s"
+
+270002:
+  name: ServiceBrokerNameTaken
+  http_code: 400
+  message: "The service broker name is taken: %s"
+
+270003:
+  name: ServiceBrokerUrlTaken
+  http_code: 400
+  message: "The service broker url is taken: %s"
