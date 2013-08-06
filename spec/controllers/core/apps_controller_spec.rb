@@ -57,13 +57,13 @@ module VCAP::CloudController
 
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
-      subject do
+      def create_app
         post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers)
       end
 
       context "when name and space provided" do
         it "responds with new app data" do
-          subject
+          create_app
           last_response.status.should == 201
           decoded_response["entity"]["name"].should == "maria"
           decoded_response["entity"]["space_guid"].should == space_guid
@@ -76,7 +76,7 @@ module VCAP::CloudController
         end
 
         it "responds invalid arguments" do
-          subject
+          create_app
           last_response.status.should == 400
           last_response.body.should match /invalid amount of memory/
         end
@@ -85,7 +85,7 @@ module VCAP::CloudController
       context "when name is not provided" do
         let(:initial_hash) {{ :space_guid => space_guid }}
         it "responds with missing field name error" do
-          subject
+          create_app
           last_response.status.should == 400
           last_response.body.should match /Error: Missing field name/
         end
@@ -94,7 +94,7 @@ module VCAP::CloudController
       context "when space is not provided" do
         let(:initial_hash) {{ :name => "maria" }}
         it "responds with missing field space error" do
-          subject
+          create_app
           last_response.status.should == 400
           last_response.body.should match /Error: Missing field space/
         end
@@ -105,7 +105,7 @@ module VCAP::CloudController
 
         it "ignores the attribute" do
           expect {
-            subject
+            create_app
           }.to change(Models::App, :count).by(1)
 
           last_response.status.should == 201
@@ -117,7 +117,7 @@ module VCAP::CloudController
       end
 
       it "records a app.create event" do
-        subject
+        create_app
 
         last_response.status.should == 201
 
@@ -134,7 +134,7 @@ module VCAP::CloudController
 
       let(:app_obj) { Models::App.make(:detected_buildpack => 'buildpack-name') }
 
-      subject do
+      def update_app
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
       end
 
@@ -145,7 +145,7 @@ module VCAP::CloudController
           end
 
           it "should work" do
-            subject
+            update_app
             app_obj.refresh
             app_obj.debug.should == "run"
             last_response.status.should == 201
@@ -161,7 +161,7 @@ module VCAP::CloudController
           end
 
           it "should work" do
-            subject
+            update_app
             app_obj.refresh
             app_obj.debug.should == "suspend"
             last_response.status.should == 201
@@ -176,7 +176,7 @@ module VCAP::CloudController
           end
 
           it "should work" do
-            subject
+            update_app
             app_obj.refresh
             app_obj.debug.should be_nil
             last_response.status.should == 201
@@ -191,7 +191,7 @@ module VCAP::CloudController
           end
 
           it "should do nothing" do
-            subject
+            update_app
             app_obj.refresh
             app_obj.debug.should == "run"
             last_response.status.should == 201
@@ -205,7 +205,7 @@ module VCAP::CloudController
         end
 
         it "should work" do
-          subject
+          update_app
           last_response.status.should == 201
         end
       end
@@ -214,7 +214,7 @@ module VCAP::CloudController
         before { update_hash[:detected_buildpack] = 'new-buildpack-name' }
 
         it "should ignore the attribute" do
-          subject
+          update_app
 
           last_response.status.should == 201
 
@@ -228,7 +228,7 @@ module VCAP::CloudController
         before { app_obj.soft_delete }
 
         it "should raise error" do
-          subject
+          update_app
 
           last_response.status.should == 404
         end
@@ -238,7 +238,7 @@ module VCAP::CloudController
         before { update_hash[:instances] = 2 }
 
         it "registers an app.start event" do
-          subject
+          update_app
 
           event = Models::Event.find(:type => "audit.app.update", :actee => app_obj.guid)
           expect(event).to be
@@ -251,10 +251,12 @@ module VCAP::CloudController
       let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
-      subject { get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers) }
+      def get_app
+        get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
+      end
 
       it "should return the detected buildpack" do
-        subject
+        get_app
         last_response.status.should == 200
         decoded_response["entity"]["detected_buildpack"].should eq("buildpack-name")
       end
@@ -267,7 +269,7 @@ module VCAP::CloudController
         end
 
         it "should raise error" do
-          subject
+          get_app
           last_response.status.should == 404
         end
       end
@@ -278,13 +280,15 @@ module VCAP::CloudController
 
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
-      subject { delete "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers) }
+      def delete_app
+        delete "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
+      end
 
       context "when the app is not deleted" do
         let(:app_obj) { Models::App.make }
 
         it "should delete the app" do
-          subject
+          delete_app
           last_response.status.should == 204
         end
       end
@@ -297,7 +301,7 @@ module VCAP::CloudController
         end
 
         it "should raise error" do
-          subject
+          delete_app
           last_response.status.should == 404
         end
       end
@@ -312,7 +316,7 @@ module VCAP::CloudController
             called = true
           end
 
-          subject
+          delete_app
 
           called.should be_true
         end
@@ -324,7 +328,7 @@ module VCAP::CloudController
             called = true
           end
 
-          subject
+          delete_app
 
           called.should be_true
         end
@@ -339,10 +343,12 @@ module VCAP::CloudController
           app_obj.save
         end
 
-        subject { delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers) }
+        def delete_app_recursively
+          delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
+        end
 
         it "should delete the dependencies" do
-          subject
+          delete_app_recursively
           last_response.status.should == 204
 
           Models::App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
@@ -356,7 +362,7 @@ module VCAP::CloudController
 
         context "with other empty associations" do
           it "should soft delete the app and NOT delete the app event" do
-            subject
+            delete_app
 
             last_response.status.should == 204
             Models::App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
@@ -370,7 +376,7 @@ module VCAP::CloudController
           let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
 
           it "should raise an error" do
-            subject
+            delete_app
 
             last_response.status.should == 400
             decoded_response["description"].should =~ /service_bindings/i
@@ -380,7 +386,7 @@ module VCAP::CloudController
       end
 
       it "records an app.deleted event" do
-        subject
+        delete_app
         last_response.status.should == 204
         event = Models::Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
         expect(event).to be
