@@ -283,6 +283,10 @@ module VCAP::CloudController
         }
       end
 
+      def add_buildpack(buildpack_name, buildpack_url)
+        message_bus.publish("buildpacks.add", {name: buildpack_name, url: buildpack_url})
+      end
+
       private
 
       # @param [Enumerable, #each] indices the range / sequence of instances to start

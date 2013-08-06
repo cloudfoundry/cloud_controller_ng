@@ -224,4 +224,9 @@ module VCAP::CloudController::Models
     memory_limit { 20480 } # 20 GB
     trial_db_allowed { false }
   end
+
+  Buildpack.blueprint do
+    name { Sham.name }
+    url { "https://example.com/repos/#{name}.git"}
+  end
 end
