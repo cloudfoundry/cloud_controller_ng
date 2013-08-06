@@ -57,7 +57,9 @@ module VCAP::CloudController
 
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
-      subject { post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers) }
+      subject do
+        post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers)
+      end
 
       context "when name and space provided" do
         it "responds with new app data" do
@@ -99,17 +101,18 @@ module VCAP::CloudController
       end
 
       context "when detected_buildpack is provided" do
-        let(:initial_hash) do
-          { :name => "maria",
-            :space_guid => space_guid,
-            :detected_buildpack => "buildpack"
-          }
-        end
+        before { initial_hash[:detected_buildpack] = 'buildpack-name' }
 
-        it "responds with error" do
-          subject
-          last_response.status.should == 400
-          last_response.body.should match /.*error.*detected_buildpack.*/i
+        it "ignores the attribute" do
+          expect {
+            subject
+          }.to change(Models::App, :count).by(1)
+
+          last_response.status.should == 201
+
+          app = Models::App.last
+          expect(app.detected_buildpack).to be_nil
+          expect(decoded_response['entity'].fetch('detected_buildpack')).to be_nil
         end
       end
 
@@ -129,9 +132,11 @@ module VCAP::CloudController
     describe "update app" do
       let(:update_hash) { {} }
 
-      let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+      let(:app_obj) { Models::App.make(:detected_buildpack => 'buildpack-name') }
 
-      subject { put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers) }
+      subject do
+        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
+      end
 
       describe "update app debug" do
         context "set debug" do
@@ -193,7 +198,6 @@ module VCAP::CloudController
           end
         end
       end
-
         
       context "when detected buildpack is not provided" do
         let(:update_hash) do
@@ -207,18 +211,20 @@ module VCAP::CloudController
       end
 
       context "when detected buildpack is provided" do
-        before { update_hash[:detected_buildpack] = "buildpack" }
+        before { update_hash[:detected_buildpack] = 'new-buildpack-name' }
 
-        it "should raise error" do
+        it "should ignore the attribute" do
           subject
-          last_response.status.should == 400
-          last_response.body.should match /.*error.*detected_buildpack.*/i
+
+          last_response.status.should == 201
+
+          app_obj.reload
+          expect(app_obj.detected_buildpack).to be == 'buildpack-name'
+          expect(decoded_response['entity'].fetch('detected_buildpack')).to be == 'buildpack-name'
         end
       end
 
       context "when the app is already deleted" do
-        let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
-
         before { app_obj.soft_delete }
 
         it "should raise error" do

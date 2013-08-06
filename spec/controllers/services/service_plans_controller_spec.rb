@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ServicePlansController, :services, type: :controller do
+  describe ServicePlansController, :services, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/service_plans"
     include_examples "enumerating objects", path: "/v2/service_plans", model: Models::ServicePlan
     include_examples "reading a valid object", path: "/v2/service_plans", model: Models::ServicePlan,
@@ -198,12 +198,17 @@ module VCAP::CloudController
   end
 
   describe "PUT", "/v2/service_plans/:guid" do
-    it "rejects updating unique_id" do
+    it "ignores the unique_id attribute" do
       service_plan = Models::ServicePlan.make
-      new_unique_id = service_plan.unique_id.reverse
+      old_unique_id = service_plan.unique_id
+      new_unique_id = old_unique_id.reverse
       payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
+
       put "/v2/service_plans/#{service_plan.guid}", payload, json_headers(admin_headers)
-      last_response.status.should eq 400
+
+      service_plan.reload
+      expect(last_response.status).to be == 201
+      expect(service_plan.unique_id).to be == old_unique_id
     end
   end
 end

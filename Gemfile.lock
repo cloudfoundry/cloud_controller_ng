@@ -28,10 +28,9 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: 41c927ee34491144924f11d1b13b12f38783431f
-  tag: v2.2.0
+  revision: 6151095cb223bc31feb6fd15612f09f1fae4a86c
   specs:
-    vcap_common (2.2.0)
+    vcap_common (2.2.1)
       addressable (~> 2.2)
       em-http-request (~> 1.0)
       eventmachine
@@ -57,11 +56,11 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (3.2.13)
-      i18n (= 0.6.1)
+    activesupport (3.2.14)
+      i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.5)
-    backports (3.3.2)
+    backports (3.3.3)
     bcrypt-ruby (3.0.1)
     builder (3.2.2)
     ci_reporter (1.8.4)
@@ -127,8 +126,8 @@ GEM
       rspec (~> 2.13)
     hashie (2.0.5)
     http_parser.rb (0.6.0.beta.2)
-    httpclient (2.3.3)
-    i18n (0.6.1)
+    httpclient (2.3.4.1)
+    i18n (0.6.4)
     json (1.8.0)
     json_pure (1.8.0)
     listen (1.2.2)
@@ -141,8 +140,8 @@ GEM
     method_source (0.8.1)
     mime-types (1.23)
     msgpack (0.5.5)
-    multi_json (1.7.7)
-    multi_xml (0.5.4)
+    multi_json (1.7.8)
+    multi_xml (0.5.5)
     multipart-post (1.2.0)
     mysql2 (0.3.11)
     nats (0.4.26)

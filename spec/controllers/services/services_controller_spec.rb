@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ServicesController, :services, type: :controller do
+  describe ServicesController, :services, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/services"
     include_examples "enumerating objects", path: "/v2/services", model: Models::Service
     include_examples "reading a valid object", path: "/v2/services", model: Models::Service,
@@ -240,12 +240,17 @@ module VCAP::CloudController
     end
 
     describe "PUT", "/v2/services/:guid" do
-      it "rejects updating unique_id" do
+      it "ignores the unique_id attribute" do
         service = Models::Service.make
-        new_unique_id = service.unique_id.reverse
+        old_unique_id = service.unique_id
+        new_unique_id = old_unique_id.reverse
         payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
+
         put "/v2/services/#{service.guid}", payload, json_headers(admin_headers)
-        last_response.status.should eq 400
+
+        service.reload
+        expect(last_response.status).to be == 201
+        expect(service.unique_id).to be == old_unique_id
       end
     end
   end
