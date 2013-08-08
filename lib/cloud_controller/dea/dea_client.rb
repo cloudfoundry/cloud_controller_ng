@@ -24,14 +24,11 @@ module VCAP::CloudController
 
       attr_reader :config, :message_bus, :dea_pool
 
+
       def configure(config, message_bus, dea_pool)
         @config = config
         @message_bus = message_bus
         @dea_pool = dea_pool
-      end
-
-      def run
-        @dea_pool.register_subscriptions
       end
 
       def start(app, options={})
@@ -40,19 +37,15 @@ module VCAP::CloudController
         app.routes_changed = false
       end
 
+      def run
+        @dea_pool.register_subscriptions
+      end
+
       def stop(app)
         dea_publish_stop(:droplet => app.guid)
       end
 
-      def change_running_instances(app, delta)
-        if delta > 0
-          range = (app.instances - delta...app.instances)
-          start_instances_in_range(app, range)
-        elsif delta < 0
-          range = (app.instances...app.instances - delta)
-          stop_indices_in_range(app, range)
-        end
-      end
+
 
       def find_specific_instance(app, options = {})
         message = { :droplet => app.guid }
@@ -70,6 +63,118 @@ module VCAP::CloudController
 
         dea_request_find_droplet(message, request_options)
       end
+
+      def find_all_instances(app)
+        if app.stopped?
+          msg = "Request failed for app: #{app.name}"
+          msg << " as the app is in stopped state."
+
+          raise InstancesError.new(msg)
+        end
+
+        num_instances = app.instances
+        message = {
+            :state => :FLAPPING,
+            :version => app.version,
+        }
+
+        flapping_indices = HealthManagerClient.find_status(app, message)
+
+        all_instances = {}
+        if flapping_indices && flapping_indices[:indices]
+          flapping_indices[:indices].each do |entry|
+            index = entry[:index]
+            if index >= 0 && index < num_instances
+              all_instances[index] = {
+                  :state => "FLAPPING",
+                  :since => entry[:since],
+              }
+            end
+          end
+        end
+
+        message = {
+            :states => [:STARTING, :RUNNING],
+            :version => app.version,
+        }
+
+        expected_running_instances = num_instances - all_instances.length
+        if expected_running_instances > 0
+          request_options = { :expected => expected_running_instances }
+          running_instances = find_instances(app, message, request_options)
+
+          running_instances.each do |instance|
+            index = instance[:index]
+            if index >= 0 && index < num_instances
+              all_instances[index] = {
+                  :state => instance[:state],
+                  :since => instance[:state_timestamp],
+                  :debug_ip => instance[:debug_ip],
+                  :debug_port => instance[:debug_port],
+                  :console_ip => instance[:console_ip],
+                  :console_port => instance[:console_port]
+              }
+            end
+          end
+        end
+
+        num_instances.times do |index|
+          unless all_instances[index]
+            all_instances[index] = {
+                :state => "DOWN",
+                :since => Time.now.to_i,
+            }
+          end
+        end
+
+        all_instances
+      end
+
+
+
+      def change_running_instances(app, delta)
+        if delta > 0
+          range = (app.instances - delta...app.instances)
+          start_instances_in_range(app, range)
+        elsif delta < 0
+          range = (app.instances...app.instances - delta)
+          stop_indices_in_range(app, range)
+        end
+      end
+
+      # @param [Enumerable, #each] indices an Enumerable of indices / indexes
+      def start_instances_with_message(app, indices, message_override = {})
+        msg = start_app_message(app)
+
+        indices.each do |idx|
+          msg[:index] = idx
+          dea_id = dea_pool.find_dea(app.memory, app.stack.name, app.guid)
+          if dea_id
+            dea_publish_start(dea_id, msg.merge(message_override))
+            dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
+          else
+            logger.error "no resources available #{msg}"
+          end
+        end
+      end
+
+      # @param [Array] indices an Enumerable of integer indices
+      def stop_indices(app, indices)
+        dea_publish_stop(:droplet => app.guid,
+                         :version => app.version,
+                         :indices => indices
+        )
+      end
+
+      # @param [Array] indices an Enumerable of guid instance ids
+      def stop_instances(app, instances)
+        dea_publish_stop(
+            :droplet => app.guid,
+            :instances => instances
+        )
+      end
+
+
 
       def get_file_uri_for_instance(app, path, instance)
         if instance < 0 || instance >= app.instances
@@ -104,6 +209,15 @@ module VCAP::CloudController
         end
         result
       end
+
+      def update_uris(app)
+        return unless app.staged?
+        message = dea_update_message(app)
+        dea_publish_update(message)
+        app.routes_changed = false
+      end
+
+
 
       def find_stats(app, opts = {})
         opts = { :allow_stopped_state => false }.merge(opts)
@@ -151,110 +265,6 @@ module VCAP::CloudController
         stats
       end
 
-      def find_all_instances(app)
-        if app.stopped?
-          msg = "Request failed for app: #{app.name}"
-          msg << " as the app is in stopped state."
-
-          raise InstancesError.new(msg)
-        end
-
-        num_instances = app.instances
-        message = {
-          :state => :FLAPPING,
-          :version => app.version,
-        }
-
-        flapping_indices = HealthManagerClient.find_status(app, message)
-
-        all_instances = {}
-        if flapping_indices && flapping_indices[:indices]
-          flapping_indices[:indices].each do |entry|
-            index = entry[:index]
-            if index >= 0 && index < num_instances
-              all_instances[index] = {
-                :state => "FLAPPING",
-                :since => entry[:since],
-              }
-            end
-          end
-        end
-
-        message = {
-          :states => [:STARTING, :RUNNING],
-          :version => app.version,
-        }
-
-        expected_running_instances = num_instances - all_instances.length
-        if expected_running_instances > 0
-          request_options = { :expected => expected_running_instances }
-          running_instances = find_instances(app, message, request_options)
-
-          running_instances.each do |instance|
-            index = instance[:index]
-            if index >= 0 && index < num_instances
-              all_instances[index] = {
-                :state => instance[:state],
-                :since => instance[:state_timestamp],
-                :debug_ip => instance[:debug_ip],
-                :debug_port => instance[:debug_port],
-                :console_ip => instance[:console_ip],
-                :console_port => instance[:console_port]
-              }
-            end
-          end
-        end
-
-        num_instances.times do |index|
-          unless all_instances[index]
-            all_instances[index] = {
-              :state => "DOWN",
-              :since => Time.now.to_i,
-            }
-          end
-        end
-
-        all_instances
-      end
-
-      # @param [Enumerable, #each] indices an Enumerable of indices / indexes
-      def start_instances_with_message(app, indices, message_override = {})
-        msg = start_app_message(app)
-
-        indices.each do |idx|
-          msg[:index] = idx
-          dea_id = dea_pool.find_dea(app.memory, app.stack.name, app.guid)
-          if dea_id
-            dea_publish_start(dea_id, msg.merge(message_override))
-            dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
-          else
-            logger.error "no resources available #{msg}"
-          end
-        end
-      end
-
-      # @param [Array] indices an Enumerable of integer indices
-      def stop_indices(app, indices)
-        dea_publish_stop(:droplet => app.guid,
-                    :version => app.version,
-                    :indices => indices
-                   )
-      end
-
-      # @param [Array] indices an Enumerable of guid instance ids
-      def stop_instances(app, instances)
-        dea_publish_stop(
-                    :droplet => app.guid,
-                    :instances => instances
-                   )
-      end
-
-      def update_uris(app)
-        return unless app.staged?
-        message = dea_update_message(app)
-        dea_publish_update(message)
-        app.routes_changed = false
-      end
 
       def start_app_message(app)
         # TODO: add debug support
