@@ -1,3 +1,5 @@
+require "cloud_controller/upload_handler"
+
 module VCAP::CloudController
   rest_controller :AppBits do
     disable_default_routes
@@ -22,16 +24,8 @@ module VCAP::CloudController
       end
 
       # TODO: validate upload path
-      if config[:nginx][:use_nginx]
-        if path = params["application_path"]
-          uploaded_zip_of_files_not_in_blobstore = Struct.new(:path).new(path)
-        end
-      else
-        application = params["application"]
-        if application.kind_of?(Hash) && application[:tempfile]
-          uploaded_zip_of_files_not_in_blobstore = application[:tempfile]
-        end
-      end
+      upload_handler = UploadHandler.new(config)
+      uploaded_zip_of_files_not_in_blobstore = upload_handler.uploaded_file(params, "application")
 
       sha1 = AppPackage.to_zip(app.guid, fingerprints_already_in_blobstore, uploaded_zip_of_files_not_in_blobstore)
       app.package_hash = sha1
