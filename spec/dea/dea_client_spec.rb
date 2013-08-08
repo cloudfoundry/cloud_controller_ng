@@ -30,11 +30,11 @@ module VCAP::CloudController
       end
     end
 
-    describe "start_app_message" do
+    describe ".start_app_message" do
       NUM_SVC_INSTANCES = 3
 
       it "should return a serialized dea message" do
-        res = DeaClient.send(:start_app_message, @app)
+        res = DeaClient.start_app_message(@app)
         res.should be_kind_of(Hash)
         res[:droplet].should == @app.guid
         res[:tags].should == {space: @app.space_guid, organization: @app.space.organization_guid }
@@ -49,7 +49,7 @@ module VCAP::CloudController
       context "with an app enabled for console support" do
         it "should enable console in the start message" do
           @app.update(:console => true)
-          res = DeaClient.send(:start_app_message, @app)
+          res = DeaClient.start_app_message(@app)
           res[:console].should == true
         end
       end
@@ -57,7 +57,7 @@ module VCAP::CloudController
       context "with an app enabled for debug support" do
         it "should pass debug mode in the start message" do
           @app.update(:debug => "run")
-          res = DeaClient.send(:start_app_message, @app)
+          res = DeaClient.start_app_message(@app)
           res[:debug].should == "run"
         end
       end
