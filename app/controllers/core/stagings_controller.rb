@@ -11,6 +11,7 @@
 # the storage layer than FileUtils.mv, this should get refactored.
 
 require "cloudfront-signer"
+require "cloud_controller/blob_store"
 
 module VCAP::CloudController
   class StagingsController < RestController::Base
@@ -35,18 +36,18 @@ module VCAP::CloudController
     attr_reader :config
 
     class << self
+      attr_reader :blob_store
+
       def configure(config)
         @config = config
 
-        opts = config[:droplets]
-        @droplet_directory_key = opts[:droplet_directory_key] || "cc-droplets"
-        @connection_config = opts[:fog_connection]
-        @cdn = opts[:cdn]
-        @directory = nil
+        options = config[:droplets]
+        @blob_store = VCAP::CloudController::BlobStore.new(options[:fog_connection], options[:droplet_directory_key] || "cc-droplets")
+        @cdn = options[:cdn]
       end
 
       def app_uri(app)
-        if AppPackage.local?
+        if AppPackage.blob_store.local?
           staging_uri("#{APP_PATH}/#{app.guid}")
         else
           AppPackage.package_uri(app.guid)
@@ -58,7 +59,7 @@ module VCAP::CloudController
       end
 
       def droplet_download_uri(app)
-        if local?
+        if blob_store.local?
           staging_uri("#{DROPLET_PATH}/#{app.guid}/download")
         else
           droplet_uri(app)
@@ -118,16 +119,12 @@ module VCAP::CloudController
         !!app_droplet(app)
       end
 
-      def local?
-        @connection_config[:provider].downcase == "local"
-      end
-
       def buildpack_cache_upload_uri(app)
         upload_uri(app, :buildpack_cache)
       end
 
       def buildpack_cache_download_uri(app)
-        if AppPackage.local?
+        if AppPackage.blob_store.local?
           staging_uri("#{BUILDPACK_CACHE_PATH}/#{app.guid}/download")
         else
           package_uri(app, :buildpack_cache)
@@ -160,10 +157,10 @@ module VCAP::CloudController
 
       def store_package(app, path, type)
         File.open(path) do |file|
-          droplet_dir.files.create(
+          blob_store.files.create(
             :key => key_from_app(app, type),
             :body => file,
-            :public => local?
+            :public => blob_store.local?
           )
         end
       end
@@ -186,7 +183,7 @@ module VCAP::CloudController
 
         # unfortunately fog doesn't have a unified interface for non-public
         # urls
-        if local?
+        if blob_store.local?
           f.public_url
         elsif @cdn && @cdn[:uri]
           uri = "#{@cdn[:uri]}/#{f.key}"
@@ -195,7 +192,7 @@ module VCAP::CloudController
           f.url(Time.now + 3600)
         else
           f.public_url
-        end        
+        end
       end
 
       def staging_uri(path)
@@ -220,30 +217,17 @@ module VCAP::CloudController
         @logger ||= Steno.logger("cc.legacy_staging")
       end
 
-      def connection
-        opts = @connection_config
-        opts = opts.merge(:endpoint => "") if local?
-        Fog::Storage.new(opts)
-      end
-
-      def droplet_dir
-        @directory ||= connection.directories.create(
-          :key    => @droplet_directory_key,
-          :public => false,
-        )
-      end
-
       def app_droplet(app)
         return unless app.staged?
 
         key = key_from_app(app, :droplet)
         old_key = key_from_guid(app.guid, :droplet)
-        droplet_dir.files.head(key) || droplet_dir.files.head(old_key)
+        blob_store.files.head(key) || blob_store.files.head(old_key)
       end
 
       def app_buildpack_cache(app)
         key = key_from_guid(app.guid, :buildpack_cache)
-        droplet_dir.files.head(key)
+        blob_store.files.head(key)
       end
 
       def key_from_app(app, type)
@@ -266,7 +250,7 @@ module VCAP::CloudController
     end
 
     def download_app(guid)
-      raise InvalidRequest unless AppPackage.local?
+      raise InvalidRequest unless AppPackage.blob_store.local?
 
       app = Models::App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
@@ -324,7 +308,7 @@ module VCAP::CloudController
     private
 
     def download(app, droplet_path, url)
-      raise InvalidRequest unless StagingsController.local?
+      raise InvalidRequest unless self.class.blob_store.local?
 
       logger.debug "guid: #{app.guid} droplet_path #{droplet_path}"
 

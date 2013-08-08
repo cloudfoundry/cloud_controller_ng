@@ -166,7 +166,7 @@ module VCAP::CloudController
       def self.it_packages(expected_file_paths)
         def packaged_app_file
           file_key = AppPackage.key_from_guid(guid)
-          file = AppPackage.package_dir.files.get(file_key)
+          file = AppPackage.blob_store.files.get(file_key)
           Tempfile.new("package").tap do |f|
             f.write(file.body)
             f.close
