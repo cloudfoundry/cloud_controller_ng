@@ -28,7 +28,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: 6151095cb223bc31feb6fd15612f09f1fae4a86c
+  revision: b22f146f6445d62e340c3b75ff971d7baf76c6c7
   specs:
     vcap_common (2.2.1)
       addressable (~> 2.2)

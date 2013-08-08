@@ -163,7 +163,6 @@ module VCAP::CloudController::Models
           plan.service.url,
           plan.service.service_auth_token.token,
           plan.service.timeout,
-          :requester => requester
         )
       end
     end

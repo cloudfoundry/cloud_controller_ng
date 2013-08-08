@@ -186,13 +186,16 @@ module VCAP::CloudController
           end
         end
 
-        it "sets the service_gateway_client" do
+        it "sets the service_gateway_client correctly" do
           instance = VCAP::CloudController::Models::ManagedServiceInstance.new
-          instance.service_gateway_client(plan)
+          client = double(:service_gateway_client)
 
-          expect(instance.service_gateway_client.instance_variable_get(:@url)).to eq("https://fake.example.com/fake")
-          expect(instance.service_gateway_client.instance_variable_get(:@token)).to eq("le_token")
-          expect(instance.service_gateway_client.instance_variable_get(:@timeout)).to eq(999999)
+          VCAP::Services::Api::ServiceGatewayClient.should_receive(:new).
+            with("https://fake.example.com/fake", "le_token", 999999).
+            and_return(client)
+
+          instance.service_gateway_client(plan).should == client
+          instance.service_gateway_client.should == client # the client is cached
         end
       end
     end
