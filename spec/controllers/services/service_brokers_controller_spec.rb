@@ -4,7 +4,14 @@ module VCAP::CloudController
   describe ServiceBrokersController, :services, type: :controller do
     let(:headers) { json_headers(headers_for(admin_user, admin_scope: true)) }
 
-    before { reset_database }
+    before do
+      reset_database
+
+      Steno.init(Steno::Config.new(
+        :default_log_level => "debug2",
+        :sinks => [Steno::Sink::IO.for_file("/tmp/cloud_controller_test.log")]
+      ))
+    end
 
     describe '#create' do
       let(:name) { Sham.name }
@@ -160,6 +167,30 @@ module VCAP::CloudController
         metadata = decoded_response.fetch('metadata')
         headers.fetch('Location').should == "/v2/service_brokers/#{metadata.fetch('guid')}"
       end
+
+      pending 'authentication'
+    end
+
+    describe "#enumerate" do
+      let(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+
+      before do
+        broker.save
+      end
+
+      it "enumerates the things" do
+        get '/v2/service_brokers', {}, headers
+
+        expect(decoded_response).to eq({
+         'service_brokers' => [
+            'guid' => broker.guid,
+            'name' => broker.name,
+            'broker_url' => broker.broker_url,
+          ]
+        })
+      end
+
+      pending "authentication"
     end
   end
 end

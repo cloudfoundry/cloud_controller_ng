@@ -37,6 +37,23 @@ module VCAP::CloudController
       end
     end
 
+    get '/v2/service_brokers', :enumerate
+    def enumerate
+      status = HTTP::OK
+      headers = {}
+      body = {
+        service_brokers: Models::ServiceBroker.map do |broker|
+          {
+            'guid' => broker.guid,
+            'name' => broker.name,
+            'broker_url' => broker.broker_url,
+          }
+        end
+      }.to_json
+
+      [status, headers, body]
+    end
+
     private
 
     def params
