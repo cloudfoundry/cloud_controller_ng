@@ -16,24 +16,24 @@ module VCAP::CloudController
         raise Errors::AppBitsUploadInvalid.new("missing :resources")
       end
 
-      resources = json_param("resources")
-      unless resources.kind_of?(Array)
+      fingerprints_already_in_blobstore = json_param("resources")
+      unless fingerprints_already_in_blobstore.kind_of?(Array)
         raise Errors::AppBitsUploadInvalid.new("invalid :resources")
       end
 
       # TODO: validate upload path
       if config[:nginx][:use_nginx]
         if path = params["application_path"]
-          uploaded_file = Struct.new(:path).new(path)
+          uploaded_zip_of_files_not_in_blobstore = Struct.new(:path).new(path)
         end
       else
         application = params["application"]
         if application.kind_of?(Hash) && application[:tempfile]
-          uploaded_file = application[:tempfile]
+          uploaded_zip_of_files_not_in_blobstore = application[:tempfile]
         end
       end
 
-      sha1 = AppPackage.to_zip(app.guid, resources, uploaded_file)
+      sha1 = AppPackage.to_zip(app.guid, fingerprints_already_in_blobstore, uploaded_zip_of_files_not_in_blobstore)
       app.package_hash = sha1
       app.save
 
