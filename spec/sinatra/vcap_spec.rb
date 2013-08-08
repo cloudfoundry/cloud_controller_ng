@@ -15,7 +15,7 @@ describe "Sinatra::VCAP" do
     end
 
     get "/request_id" do
-      Thread.current[:vcap_request_id]
+      VCAP::Request.current_id
     end
   end
 

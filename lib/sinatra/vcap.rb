@@ -3,6 +3,7 @@
 require "vcap/component"
 require "vcap/ring_buffer"
 require "vcap/rest_api"
+require "vcap/request"
 require "sinatra/reloader"
 require "securerandom"
 require "steno"
@@ -132,7 +133,7 @@ module Sinatra
           @request_guid ||= SecureRandom.uuid
         end
 
-        Thread.current[:vcap_request_id] = @request_guid
+        ::VCAP::Request.current_id = @request_guid
         Steno.config.context.data["request_guid"] = @request_guid
       end
 
@@ -143,8 +144,8 @@ module Sinatra
           varz[:http_status][response.status] += 1
         end
         headers["Content-Type"] = "application/json;charset=utf-8"
-        headers["X-VCAP-Request-ID"] = @request_guid
-        Thread.current[:vcap_request_id] = nil
+        headers[::VCAP::Request::HEADER_NAME] = @request_guid
+        ::VCAP::Request.current_id = nil
         Steno.config.context.data.delete("request_guid")
         nil
       end
