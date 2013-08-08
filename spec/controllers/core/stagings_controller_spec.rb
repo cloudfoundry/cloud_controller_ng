@@ -49,7 +49,6 @@ module VCAP::CloudController
     before do
       Fog.unmock!
       config_override(staging_config)
-      config
     end
 
     after { FileUtils.rm_rf(workspace) }
@@ -159,47 +158,43 @@ module VCAP::CloudController
 
       context "when Fog is configured for AWS" do
         let(:staging_config) do
-          original_staging_config.tap do |cfg|
-            cfg[:droplets] = droplet_config
+          original_staging_config.tap do |config|
+            config[:droplets] = {:fog_connection => {
+                :provider => "AWS",
+            }}
           end
         end
 
-        let(:droplet_config) do
-          {
-            :fog_connection => {
-                :provider => "AWS"
-            }
-          }
+        before do
+          file = double(:file, {
+              :public_url => "https://some-bucket.example.com/ab/cd/abcdefg",
+              :key => "123-456",
+          })
+          StagingsController.blob_store.stub(:files).and_return(double(:files, :head => file))
         end
-
-        let(:key) { "ab/cd/abcdefg" }
-        let(:url) { "https://some-bucket.humbug.com/#{key}" }
-        let(:file) { double :file, :url => url, :key => key }
-        let(:dirs) { double :dirs, :create => double(:dir, :files => double(:files, :head => file)) }
-        let(:fog_mock) { double :fog, :directories => dirs }
-
-        before { StagingsController.stub(:connection => fog_mock) }
 
         it "returns an AWS url" do
           uri = StagingsController.droplet_download_uri(app_obj)
-          uri.should == "https://some-bucket.humbug.com/ab/cd/abcdefg"
+          uri.should == "https://some-bucket.example.com/ab/cd/abcdefg"
         end
 
         context "with a CDN" do
-          let(:droplet_config) do
-            {
-              :fog_connection => {
-                :provider => "AWS"
-              },
-              :cdn => {
-                  :uri => "http://google.com"
+          let(:staging_config) do
+            original_staging_config.tap do |config|
+              config[:droplets] = {
+                :fog_connection => {
+                    :provider => "AWS",
+                },
+                :cdn => {
+                    :uri => "https://cdn.example.com/some-bucket/ab/cd/abcdefg"
+                },
               }
-            }
+            end
           end
 
           it "returns a URL with the CDN and the file's key" do
             uri = StagingsController.droplet_download_uri(app_obj)
-            uri.should == "http://google.com/ab/cd/abcdefg"
+            uri.should == "https://cdn.example.com/some-bucket/ab/cd/abcdefg/123-456"
           end
 
           context "when CloudFront Signer is configured" do
@@ -208,7 +203,7 @@ module VCAP::CloudController
             end
 
             it "returns a signed URI using the CDN" do
-              ::AWS::CF::Signer.should_receive(:sign_url).with("http://google.com/ab/cd/abcdefg").and_return("signed_url")
+              ::AWS::CF::Signer.should_receive(:sign_url).with("https://cdn.example.com/some-bucket/ab/cd/abcdefg/123-456").and_return("signed_url")
               StagingsController.droplet_uri(app_obj).should == "signed_url"
             end
           end
@@ -526,7 +521,7 @@ module VCAP::CloudController
         context "under the old path format" do
           before do
             File.open(droplet.path) do |file|
-              StagingsController.send(:droplet_dir).files.create(
+              StagingsController.blob_store.files.create(
                 :key => StagingsController.send(:key_from_guid, app_obj.guid, :droplet),
                 :body => file,
                 :public => true

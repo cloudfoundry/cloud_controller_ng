@@ -48,7 +48,7 @@ module VCAP::CloudController
         raise Errors::AppPackageNotFound.new(guid)
       end
 
-      if AppPackage.local?
+      if AppPackage.blob_store.local?
         if config[:nginx][:use_nginx]
           return [200, { "X-Accel-Redirect" => "#{package_uri}" }, ""]
         else

@@ -12,18 +12,22 @@ require "steno"
 
 class VCAP::CloudController::ResourcePool
   attr_accessor :minimum_size, :maximum_size
+  attr_reader :blob_store
 
   class << self
     attr_accessor :instance
   end
 
   def initialize(config = {})
-    opts = config[:resource_pool] || {}
-    @connection_config = opts[:fog_connection]
-    @cdn = opts[:cdn]
-    @resource_directory_key = opts[:resource_directory_key] || "cc-resources"
-    @minimum_size = opts[:minimum_size] || 0
-    @maximum_size = opts[:maximum_size] || 512 * 1024 * 1024 # MB
+    options = config[:resource_pool] || {}
+    @cdn = options[:cdn]
+    @blob_store = VCAP::CloudController::BlobStore.new(
+        options[:fog_connection],
+        options[:resource_directory_key] || "cc-resources"
+    )
+
+    @minimum_size = options[:minimum_size] || 0
+    @maximum_size = options[:maximum_size] || 512 * 1024 * 1024 # MB
   end
 
   def match_resources(descriptors)
@@ -49,10 +53,10 @@ class VCAP::CloudController::ResourcePool
   def add_path(path)
     sha1 = Digest::SHA1.file(path).hexdigest
     key = key_from_sha1(sha1)
-    return if resource_dir.files.head(sha1)
+    return if blob_store.files.head(sha1)
 
     File.open(path) do |file|
-      resource_dir.files.create(
+      blob_store.files.create(
         :key    => key,
         :body   => file,
         :public => false,
@@ -64,7 +68,7 @@ class VCAP::CloudController::ResourcePool
     sizes = []
     resources.each do |descriptor|
       key = key_from_sha1(descriptor["sha1"])
-      if head = resource_dir.files.head(key)
+      if (head = blob_store.files.head(key))
         entry = descriptor.dup
         entry["size"] = head.content_length
         sizes << entry
@@ -97,7 +101,7 @@ class VCAP::CloudController::ResourcePool
     size = descriptor["size"]
     if size_allowed?(size)
       key = key_from_sha1(descriptor["sha1"])
-      resource_dir.files.head(key)
+      blob_store.files.head(key)
     end
   end
 
@@ -134,7 +138,7 @@ class VCAP::CloudController::ResourcePool
       end
     else
       File.open(destination, "w") do |file|
-        resource_dir.files.get(s3_key) do |chunk, _, _|
+        blob_store.files.get(s3_key) do |chunk, _, _|
           file.write(chunk)
         end
       end
@@ -144,17 +148,6 @@ class VCAP::CloudController::ResourcePool
 
     logger.debug "resource_pool.download.complete", :took => took,
       :destination => destination
-  end
-
-  def connection
-    Fog::Storage.new(@connection_config)
-  end
-
-  def resource_dir
-    @directory ||= connection.directories.create(
-      :key    => @resource_directory_key,
-      :public => false,
-    )
   end
 
   def key_from_sha1(sha1)

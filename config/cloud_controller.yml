@@ -80,7 +80,7 @@ resource_pool:
     local_root: /tmp
 
 packages:
-  resource_directory_key: cc-packages
+  app_package_directory_key: cc-app-packages
   fog_connection:
     provider: Local
     local_root: /tmp
