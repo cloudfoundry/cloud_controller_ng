@@ -3,6 +3,8 @@
 module VCAP::CloudController::Models
   class BillingEvent < Sequel::Model
     plugin :single_table_inheritance, :kind
+    
+    def_column_alias :timestamp, :event_timestamp
 
     def validate
       validates_presence :timestamp

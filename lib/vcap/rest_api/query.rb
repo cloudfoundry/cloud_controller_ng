@@ -81,13 +81,25 @@ module VCAP::RestAPI
         key, comparison, value = segment.split(/(:|>=|<=|<|>)/, 2)
 
         comparison = "=" if comparison == ":"
-
-        unless queryable_attributes.include?(key)
+        
+        unless valid_query_param?(key)
           raise VCAP::Errors::BadQueryParameter.new(key)
         end
 
-        [key.to_sym, comparison, value]
+        [query_column_name(key).to_sym, comparison, value]
       end
+    end
+    
+    def valid_query_param?(key)
+      !query_column_name(key).nil?
+    end
+    
+    def query_column_name(key)
+      queryable_attributes.each do | attribute |
+        return attribute if key == attribute
+        return attribute[key] if attribute.is_a?(Hash) && attribute.has_key?(key)
+      end
+      nil
     end
 
     def query_filter(key, comparison, val)

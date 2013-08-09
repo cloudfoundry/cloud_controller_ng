@@ -1,7 +1,7 @@
 require "spec_helper"
 
-describe "DB Schema" do
-  context "To support Oracle" do
+describe "For the DB schema" do
+  context "to support Oracle" do
     $spec_env.db.tables.each do |table|
       
       it "the table #{table}'s name should not be longer than 30 characters" do
@@ -9,9 +9,14 @@ describe "DB Schema" do
       end
       
       $spec_env.db.schema(table).each do |column|
-        it "the column #{table}.#{column}'s name should not be longer than 30 characters" do          
+        it "the column #{table}.#{column[0]}'s name should not be longer than 30 characters" do          
           column[0].length.should <= 30
         end
+        
+        it "the column #{table}.#{column[0]} cannot be named 'timestamp'" do
+          column[0].should_not eq(:timestamp)
+        end
+        
       end if $spec_env.db.supports_schema_parsing?
 
       $spec_env.db.foreign_key_list(table).each do |fk|

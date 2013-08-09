@@ -19,7 +19,7 @@ module VCAP::CloudController
         :service_plan_name,
       ],
       :db_required_attributes => [
-        :timestamp,
+        :event_timestamp,
         :organization_guid,
         :organization_name,
       ],

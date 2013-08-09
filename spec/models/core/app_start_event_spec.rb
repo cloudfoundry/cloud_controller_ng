@@ -17,7 +17,7 @@ module VCAP::CloudController
         :app_instance_count,
       ],
       :db_required_attributes => [
-        :timestamp,
+        :event_timestamp,
         :organization_guid,
         :organization_name,
       ],

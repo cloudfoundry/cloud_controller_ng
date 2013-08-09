@@ -1,6 +1,8 @@
 module VCAP::CloudController::Models
   class AppEvent < Sequel::Model
     many_to_one :app
+    
+    def_column_alias :timestamp, :event_timestamp
 
     export_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp
     import_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp

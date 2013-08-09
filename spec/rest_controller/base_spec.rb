@@ -10,6 +10,31 @@ describe VCAP::CloudController::RestController::Base do
   subject {
     VCAP::CloudController::RestController::Base.new(double(:config), logger, double(:env), double(:params, :[] => nil), double(:body))
   }
+  
+  describe "query_parameters" do
+    it "should convert symbols to strings" do
+      module VCAP::CloudController
+        rest_controller :SymbolToStrings do
+          query_parameters(:param1,:param2)
+          query_parameters.each do | a |
+            a.is_a?(String).should == true
+          end
+        end
+      end
+    end
+    
+    it "should convert the param of a Hash to string but not touch column" do
+      module VCAP::CloudController
+        rest_controller :HashSymbolsToStrings do
+          query_parameters({:param1 => :column1},{:param2 => :column2})
+          query_parameters.each do | a |
+            a.each_key.next.is_a?(String).should == true
+            a.each_value.next.is_a?(Symbol).should == true
+          end
+        end
+      end
+    end
+  end
 
   describe "#dispatch" do
     context "when the dispatch is succesful" do
