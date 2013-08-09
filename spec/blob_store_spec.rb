@@ -2,6 +2,21 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe VCAP::CloudController::BlobStore do
+    let(:content) { "Some Nonsense" }
+    let(:sha_of_nothing) { Digest::SHA1.hexdigest("") }
+    let(:sha_of_content) { Digest::SHA1.hexdigest(content) }
+    let(:blob_store_dir) { Dir.mktmpdir }
+    let(:local_dir) { Dir.mktmpdir }
+    let(:blob_store) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "a-directory-key") }
+
+    around do |example|
+      FakeFS do
+        Fog.unmock!
+        example.call
+        Fog.mock!
+      end
+    end
+
     describe "#local?" do
       it "is true if the provider is local" do
         blob_store = BlobStore.new({provider: "Local"}, "a-directory-key")
@@ -15,20 +30,7 @@ module VCAP::CloudController
     end
 
     describe "#files" do
-      before do
-        Fog.unmock!
-        @local_storage_dir = Dir.tmpdir
-      end
-
-      after do
-        FileUtils.rm_rf(File.join @local_storage_dir, "a-directory-key")
-        Fog.mock!
-      end
-
       it "returns the files matching the directory key" do
-        connection_config = {provider: "Local", local_root: @local_storage_dir}
-
-        blob_store = BlobStore.new(connection_config, "a-directory-key")
         blob_store.files.create(key: "file-key-1", body: "file content", public: true)
         blob_store.files.create(key: "file-key-2", body: "file content", public: true)
 
@@ -39,23 +41,21 @@ module VCAP::CloudController
       end
     end
 
-    describe "#cp_r_from_local" do
-      let(:content) { "Some Nonsense" }
-      let(:sha_of_nothing) { Digest::SHA1.hexdigest("") }
-      let(:sha_of_content) { Digest::SHA1.hexdigest(content) }
+    describe "#exists?" do
+      it "exists if the file is there" do
+        base_dir = File.join(blob_store_dir, "a-directory-key", sha_of_content[0..1], sha_of_content[2..3])
+        FileUtils.mkdir_p(base_dir)
+        File.open(File.join(base_dir, sha_of_content), "w") { |file| file.write(content) }
 
-      around do |example|
-        FakeFS do
-          Fog.unmock!
-          example.call
-          Fog.mock!
-        end
+        expect(blob_store.exists?(sha_of_content)).to be_true
       end
 
-      let(:blob_store_dir) { Dir.mktmpdir }
-      let(:local_dir) { Dir.mktmpdir }
-      let(:blob_store) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "a-directory-key") }
+      it "does not exist if not present" do
+        expect(blob_store.exists?("foobar")).to be_false
+      end
+    end
 
+    describe "#cp_r_from_local" do
       it "ensure that the sha of nothing and sha of content are different for subsequent tests" do
         expect(sha_of_nothing[0..1]).not_to eq(sha_of_content[0..1])
       end
@@ -93,6 +93,20 @@ module VCAP::CloudController
           blob_store.cp_r_from_local(local_dir)
           blob_store.cp_r_from_local(local_dir)
         end
+      end
+    end
+
+    describe "#cp_to_local" do
+      it "downloads the file, creating missing parent directories" do
+        base_dir = File.join(blob_store_dir, "a-directory-key", sha_of_content[0..1], sha_of_content[2..3])
+        FileUtils.mkdir_p(base_dir)
+        File.open(File.join(base_dir, sha_of_content), "w") { |file| file.write(content) }
+
+        destination = File.join(local_dir, "dir1", "dir2", "downloaded_file")
+        expect(File.exists?(destination)).to be_false
+        blob_store.cp_to_local(sha_of_content, destination)
+        expect(File.exists?(destination)).to be_true
+        expect(File.read(destination)).to eq(content)
       end
     end
   end

@@ -1,3 +1,4 @@
+require "fileutils"
 require "find"
 
 module VCAP::CloudController
@@ -15,25 +16,41 @@ module VCAP::CloudController
       dir.files
     end
 
-    def cp_r_from_local(local_dir_path)
-      Find.find(local_dir_path).each do |local_file_path|
-        next unless File.file?(local_file_path)
+    def exists?(sha1)
+      files.head(key_from_sha1(sha1))
+    end
 
-        sha1 = Digest::SHA1.file(local_file_path).hexdigest
-        key = key_from_sha1(sha1)
-        next if files.head(key)
-
-        File.open(local_file_path) do |file|
-          files.create(
-            :key    => key,
-            :body   => file,
-            :public => false,
-          )
+    def cp_to_local(sha1, local_destination)
+      FileUtils.mkdir_p(File.dirname(local_destination))
+      File.open(local_destination, "w") do |file|
+        files.get(key_from_sha1(sha1)) do |chunk, _, _|
+          file.write(chunk)
         end
       end
     end
 
+    def cp_r_from_local(local_dir_path)
+      Find.find(local_dir_path).each do |local_file_path|
+        next unless File.file?(local_file_path)
+
+        cp_from_local(local_file_path)
+      end
+    end
+
     private
+
+    def cp_from_local(path)
+      sha1 = Digest::SHA1.file(path).hexdigest
+      return if exists?(sha1)
+
+      File.open(path) do |file|
+        files.create(
+          :key    => key_from_sha1(sha1),
+          :body   => file,
+          :public => false,
+        )
+      end
+    end
 
     def dir
       @dir ||= connection.directories.create(:key => @directory_key, :public => false)
