@@ -1,4 +1,8 @@
 module VCAP::CloudController
+
+  # This controller is an experiment breaking away from the old
+  # cloudcontroller metaprogramming. We manually generate the JSON
+  # expected by CFoundry and CF.
   class ServiceBrokersController < RestController::Base
 
     post '/v2/service_brokers', :create
@@ -41,17 +45,31 @@ module VCAP::CloudController
     def enumerate
       status = HTTP::OK
       headers = {}
+      brokers = Models::ServiceBroker.all
+
       body = {
-        service_brokers: Models::ServiceBroker.map do |broker|
-          {
+        'total_results' => brokers.length,
+        'total_pages' => 1,
+        'prev_url' => nil,
+        'next_url' => nil,
+      }
+      body['resources'] = brokers.map do |broker|
+        {
+          'metadata' => {
             'guid' => broker.guid,
+            # Normal restcontroller behavior includes a url
+            #'url' => 'someurl',
+            'created_at' => broker.created_at,
+            'updated_at' => broker.updated_at,
+          },
+          'entity' => {
             'name' => broker.name,
             'broker_url' => broker.broker_url,
           }
-        end
-      }.to_json
+        }
+      end
 
-      [status, headers, body]
+      [status, headers, body.to_json]
     end
 
     private

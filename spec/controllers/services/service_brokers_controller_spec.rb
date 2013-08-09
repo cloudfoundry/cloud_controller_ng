@@ -182,11 +182,25 @@ module VCAP::CloudController
         get '/v2/service_brokers', {}, headers
 
         expect(decoded_response).to eq({
-         'service_brokers' => [
-            'guid' => broker.guid,
-            'name' => broker.name,
-            'broker_url' => broker.broker_url,
-          ]
+          'total_results' => 1,
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
+            {
+              'metadata' => {
+                'guid' => broker.guid,
+                # Normal restcontroller behavior includes a url
+                #'url' => "http://localhost:8181/service_brokers/#{broker.guid}",
+                'created_at' => broker.created_at.to_s,
+                'updated_at' => broker.updated_at.to_s,
+              },
+              'entity' => {
+                'name' => broker.name,
+                'broker_url' => broker.broker_url,
+              }
+            }
+          ],
         })
       end
 
