@@ -5,6 +5,7 @@ require "rubygems"
 require "bundler"
 require "bundler/setup"
 
+require "fakefs/safe"
 require "machinist/sequel"
 require "machinist/object"
 require "rack/test"
