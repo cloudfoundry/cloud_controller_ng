@@ -11,7 +11,6 @@ require "eventmachine/schedule_sync"
 
 require "vcap/common"
 require "vcap/errors"
-require "vcap/request"
 require "uaa/token_coder"
 
 require "sinatra/vcap"

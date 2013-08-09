@@ -1,3 +1,5 @@
+require 'vcap/request'
+
 module VCAP::CloudController::Models
   class ManagedServiceInstance < ServiceInstance
     class MissingServiceAuthToken < StandardError; end
@@ -163,6 +165,7 @@ module VCAP::CloudController::Models
           plan.service.url,
           plan.service.service_auth_token.token,
           plan.service.timeout,
+          VCAP::Request.current_id,
         )
       end
     end
