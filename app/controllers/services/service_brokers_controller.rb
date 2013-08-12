@@ -26,9 +26,9 @@ module VCAP::CloudController
           name: broker.name,
           broker_url: broker.broker_url
         }
-      }.to_json
+      }
 
-      [status, headers, body]
+      [status, headers, body.to_json]
     end
 
     def self.translate_validation_exception(e, _)
