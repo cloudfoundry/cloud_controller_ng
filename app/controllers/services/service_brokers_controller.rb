@@ -4,7 +4,6 @@ module VCAP::CloudController
   # cloudcontroller metaprogramming. We manually generate the JSON
   # expected by CFoundry and CF.
   class ServiceBrokersController < RestController::Base
-
     post '/v2/service_brokers', :create
     def create
       raise NotAuthorized unless roles.admin?
@@ -43,6 +42,8 @@ module VCAP::CloudController
 
     get '/v2/service_brokers', :enumerate
     def enumerate
+      raise NotAuthorized unless roles.admin?
+
       status = HTTP::OK
       headers = {}
       brokers = Models::ServiceBroker.all
@@ -70,6 +71,16 @@ module VCAP::CloudController
       end
 
       [status, headers, body.to_json]
+    end
+
+    delete '/v2/service_brokers/:guid', :delete
+    def delete(guid)
+      raise NotAuthorized unless roles.admin?
+
+      broker = Models::ServiceBroker.find(:guid => guid)
+      return HTTP::NOT_FOUND unless broker
+      broker.destroy
+      HTTP::NO_CONTENT
     end
 
     private

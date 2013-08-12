@@ -4,6 +4,11 @@ module VCAP::CloudController
   describe ServiceBrokersController, :services, type: :controller do
     let(:headers) { json_headers(headers_for(admin_user, admin_scope: true)) }
 
+    let(:non_admin_headers) do
+      user = VCAP::CloudController::Models::User.make(admin: false)
+      json_headers(headers_for(user))
+    end
+
     before do
       reset_database
 
@@ -72,20 +77,6 @@ module VCAP::CloudController
 
         metadata = decoded_response.fetch('entity')
         metadata.fetch('broker_url').should == broker_url
-      end
-
-      it 'returns a forbidden status for non-admin users' do
-        user = VCAP::CloudController::Models::User.make(admin: false)
-        headers = json_headers(headers_for(user))
-        post '/v2/service_brokers', body, headers
-
-        last_response.should be_forbidden
-      end
-
-      it 'returns 401 for logged-out users' do
-        post '/v2/service_brokers', body
-
-        last_response.status.should == 401
       end
 
       it "returns an error if the broker name is not present" do
@@ -168,43 +159,97 @@ module VCAP::CloudController
         headers.fetch('Location').should == "/v2/service_brokers/#{metadata.fetch('guid')}"
       end
 
-      pending 'authentication'
+      describe 'authentication' do
+        it 'returns a forbidden status for non-admin users' do
+          post '/v2/service_brokers', body, non_admin_headers
+          expect(last_response).to be_forbidden
+        end
+
+        it 'returns 401 for logged-out users' do
+          post '/v2/service_brokers', body
+          expect(last_response.status).to eq(401)
+        end
+      end
     end
 
-    describe "#enumerate" do
-      let(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+    context "with existing service broker" do
+      let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
 
-      before do
-        broker.save
-      end
+      describe "#enumerate" do
+        it "enumerates the things" do
+          get '/v2/service_brokers', {}, headers
 
-      it "enumerates the things" do
-        get '/v2/service_brokers', {}, headers
-
-        expect(decoded_response).to eq({
-          'total_results' => 1,
-          'total_pages' => 1,
-          'prev_url' => nil,
-          'next_url' => nil,
-          'resources' => [
-            {
-              'metadata' => {
-                'guid' => broker.guid,
-                # Normal restcontroller behavior includes a url
-                #'url' => "http://localhost:8181/service_brokers/#{broker.guid}",
-                'created_at' => broker.created_at.to_s,
-                'updated_at' => broker.updated_at.to_s,
-              },
-              'entity' => {
-                'name' => broker.name,
-                'broker_url' => broker.broker_url,
+          expect(decoded_response).to eq({
+            'total_results' => 1,
+            'total_pages' => 1,
+            'prev_url' => nil,
+            'next_url' => nil,
+            'resources' => [
+              {
+                'metadata' => {
+                  'guid' => broker.guid,
+                  # Normal restcontroller behavior includes a url, but we seem to be able to ignore it
+                  #'url' => "http://localhost:8181/service_brokers/#{broker.guid}",
+                  'created_at' => broker.created_at.to_s,
+                  'updated_at' => nil,
+                },
+                'entity' => {
+                  'name' => broker.name,
+                  'broker_url' => broker.broker_url,
+                }
               }
-            }
-          ],
-        })
+            ],
+          })
+        end
+
+        describe 'authentication' do
+          it 'returns a forbidden status for non-admin users' do
+            get '/v2/service_brokers', {}, non_admin_headers
+            expect(last_response).to be_forbidden
+          end
+
+          it 'returns 401 for logged-out users' do
+            get '/v2/service_brokers'
+            expect(last_response.status).to eq(401)
+          end
+        end
       end
 
-      pending "authentication"
+      describe "DELETE /v2/service_brokers/:guid" do
+        it "deletes the service broker" do
+          delete "/v2/service_brokers/#{broker.guid}", {}, headers
+
+          expect(last_response.status).to eq(204)
+
+          get '/v2/service_brokers', {}, headers
+          expect(decoded_response).to include('total_results' => 0)
+        end
+
+        it "returns 404 when deleting a service broker that does not exist" do
+          delete "/v2/service_brokers/1234", {}, headers
+          expect(last_response.status).to eq(404)
+        end
+
+        describe 'authentication' do
+          it 'returns a forbidden status for non-admin users' do
+            delete "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
+            expect(last_response).to be_forbidden
+
+            # make sure it still exists
+            get '/v2/service_brokers', {}, headers
+            expect(decoded_response).to include('total_results' => 1)
+          end
+
+          it 'returns 401 for logged-out users' do
+            delete "/v2/service_brokers/#{broker.guid}"
+            expect(last_response.status).to eq(401)
+
+            # make sure it still exists
+            get '/v2/service_brokers', {}, headers
+            expect(decoded_response).to include('total_results' => 1)
+          end
+        end
+      end
     end
   end
 end
