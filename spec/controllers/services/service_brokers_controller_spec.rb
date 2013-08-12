@@ -174,32 +174,43 @@ module VCAP::CloudController
 
     context "with existing service broker" do
       let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+      let(:single_broker_response) do
+        {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
+            {
+              'metadata' => {
+                'guid' => broker.guid,
+                # Normal restcontroller behavior includes a url, but we seem to be able to ignore it
+                #'url' => "http://localhost:8181/service_brokers/#{broker.guid}",
+                'created_at' => broker.created_at.to_s,
+                'updated_at' => nil,
+              },
+              'entity' => {
+                'name' => broker.name,
+                'broker_url' => broker.broker_url,
+              }
+            }
+          ],
+        }
+      end
 
       describe "#enumerate" do
         it "enumerates the things" do
           get '/v2/service_brokers', {}, headers
+          expect(decoded_response).to eq(single_broker_response)
+        end
 
-          expect(decoded_response).to eq({
-            'total_results' => 1,
-            'total_pages' => 1,
-            'prev_url' => nil,
-            'next_url' => nil,
-            'resources' => [
-              {
-                'metadata' => {
-                  'guid' => broker.guid,
-                  # Normal restcontroller behavior includes a url, but we seem to be able to ignore it
-                  #'url' => "http://localhost:8181/service_brokers/#{broker.guid}",
-                  'created_at' => broker.created_at.to_s,
-                  'updated_at' => nil,
-                },
-                'entity' => {
-                  'name' => broker.name,
-                  'broker_url' => broker.broker_url,
-                }
-              }
-            ],
-          })
+        context "with a second service broker" do
+          let!(:broker2) { Models::ServiceBroker.make(name: 'FreeWidgets2', broker_url: 'http://example.com/2', token: 'secret2') }
+
+          it "filters the things" do
+            get "/v2/service_brokers?q=name%3A#{broker.name}", {}, headers
+            expect(decoded_response).to eq(single_broker_response)
+          end
         end
 
         describe 'authentication' do

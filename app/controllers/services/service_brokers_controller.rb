@@ -8,7 +8,7 @@ module VCAP::CloudController
     def create
       raise NotAuthorized unless roles.admin?
 
-      broker = Models::ServiceBroker.new(params)
+      broker = Models::ServiceBroker.new(Yajl::Parser.parse(body))
       broker.save
 
       resource_url = "#{self.class.path}/#{broker.guid}"
@@ -44,12 +44,19 @@ module VCAP::CloudController
     def enumerate
       raise NotAuthorized unless roles.admin?
 
+      q = params['q']
+      if q && q.start_with?('name:')
+        filter = { :name => q.split(':')[1] }
+      else
+        filter = {}
+      end
+
       status = HTTP::OK
       headers = {}
-      brokers = Models::ServiceBroker.all
+      brokers = Models::ServiceBroker.filter(filter)
 
       body = {
-        'total_results' => brokers.length,
+        'total_results' => brokers.count,
         'total_pages' => 1,
         'prev_url' => nil,
         'next_url' => nil,
@@ -84,9 +91,5 @@ module VCAP::CloudController
     end
 
     private
-
-    def params
-      Yajl::Parser.parse(body)
-    end
   end
 end
