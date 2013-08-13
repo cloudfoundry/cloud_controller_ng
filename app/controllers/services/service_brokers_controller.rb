@@ -4,34 +4,18 @@ module VCAP::CloudController
   # cloudcontroller metaprogramming. We manually generate the JSON
   # expected by CFoundry and CF.
   class ServiceBrokersController < RestController::Base
-    post '/v2/service_brokers', :create
-    def create
-      raise NotAuthorized unless roles.admin?
-
-      broker = Models::ServiceBroker.new(Yajl::Parser.parse(body))
-      broker.save
-
-      body = broker_hash(broker)
-      status = HTTP::CREATED
-      headers = {"Location" => url_of(broker) }
-
-      [status, headers, body.to_json]
-    end
-
-    def self.translate_validation_exception(e, _)
-      if e.errors.on(:name) && e.errors.on(:name).include?(:unique)
-        Errors::ServiceBrokerNameTaken.new(e.model.name)
-      elsif e.errors.on(:broker_url) && e.errors.on(:broker_url).include?(:unique)
-        Errors::ServiceBrokerUrlTaken.new(e.model.broker_url)
-      else
-        Errors::ServiceBrokerInvalid.new(e.errors.full_messages)
-      end
-    end
-
     get '/v2/service_brokers', :enumerate
-    def enumerate
-      raise NotAuthorized unless roles.admin?
+    post '/v2/service_brokers', :create
+    put '/v2/service_brokers/:guid', :update
+    delete '/v2/service_brokers/:guid', :delete
 
+    # poor man's before filter
+    def dispatch(op, *args)
+      require_admin
+      super
+    end
+
+    def enumerate
       q = params['q']
       if q && q.start_with?('name:')
         filter = { :name => q.split(':')[1] }
@@ -54,13 +38,22 @@ module VCAP::CloudController
       [status, headers, body.to_json]
     end
 
-    put '/v2/service_brokers/:guid', :update
-    def update(guid)
-      raise NotAuthorized unless roles.admin?
+    def create
+      broker = Models::ServiceBroker.new(Yajl::Parser.parse(body))
+      broker.save
 
+      body = broker_hash(broker)
+      status = HTTP::CREATED
+      headers = {"Location" => url_of(broker) }
+
+      [status, headers, body.to_json]
+    end
+
+    def update(guid)
       parsed = Yajl::Parser.parse(body)
 
       b = Models::ServiceBroker.find(:guid => guid)
+      return HTTP::NOT_FOUND unless b
 
       b.name = parsed['name'] if parsed.key?('name')
       b.broker_url = parsed['broker_url'] if parsed.key?('broker_url')
@@ -72,17 +65,29 @@ module VCAP::CloudController
       [ HTTP::OK, {}, body.to_json ]
     end
 
-    delete '/v2/service_brokers/:guid', :delete
     def delete(guid)
-      raise NotAuthorized unless roles.admin?
-
       broker = Models::ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker
       broker.destroy
       HTTP::NO_CONTENT
     end
 
+    def self.translate_validation_exception(e, _)
+      if e.errors.on(:name) && e.errors.on(:name).include?(:unique)
+        Errors::ServiceBrokerNameTaken.new(e.model.name)
+      elsif e.errors.on(:broker_url) && e.errors.on(:broker_url).include?(:unique)
+        Errors::ServiceBrokerUrlTaken.new(e.model.broker_url)
+      else
+        Errors::ServiceBrokerInvalid.new(e.errors.full_messages)
+      end
+    end
+
     private
+
+    def require_admin
+      raise NotAuthenticated unless user
+      raise NotAuthorized unless roles.admin?
+    end
 
     def broker_hash(broker)
       {

@@ -18,7 +18,7 @@ module VCAP::CloudController
       ))
     end
 
-    describe '#create' do
+    describe 'POST /v2/service_brokers' do
       let(:name) { Sham.name }
       let(:broker_url) { Sham.url }
       let(:token) { 'you should never see me in the response' }
@@ -172,7 +172,7 @@ module VCAP::CloudController
       end
     end
 
-    context "with existing service broker" do
+    describe "GET /v2/service_brokers" do
       let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
       let(:single_broker_response) do
         {
@@ -197,146 +197,159 @@ module VCAP::CloudController
         }
       end
 
-      describe "#enumerate" do
-        it "enumerates the things" do
-          get '/v2/service_brokers', {}, headers
+      it "enumerates the things" do
+        get '/v2/service_brokers', {}, headers
+        expect(decoded_response).to eq(single_broker_response)
+      end
+
+      context "with a second service broker" do
+        let!(:broker2) { Models::ServiceBroker.make(name: 'FreeWidgets2', broker_url: 'http://example.com/2', token: 'secret2') }
+
+        it "filters the things" do
+          get "/v2/service_brokers?q=name%3A#{broker.name}", {}, headers
           expect(decoded_response).to eq(single_broker_response)
         end
+      end
 
-        context "with a second service broker" do
-          let!(:broker2) { Models::ServiceBroker.make(name: 'FreeWidgets2', broker_url: 'http://example.com/2', token: 'secret2') }
-
-          it "filters the things" do
-            get "/v2/service_brokers?q=name%3A#{broker.name}", {}, headers
-            expect(decoded_response).to eq(single_broker_response)
-          end
+      describe 'authentication' do
+        it 'returns a forbidden status for non-admin users' do
+          get '/v2/service_brokers', {}, non_admin_headers
+          expect(last_response).to be_forbidden
         end
 
-        describe 'authentication' do
-          it 'returns a forbidden status for non-admin users' do
-            get '/v2/service_brokers', {}, non_admin_headers
-            expect(last_response).to be_forbidden
-          end
+        it 'returns 401 for logged-out users' do
+          get '/v2/service_brokers'
+          expect(last_response.status).to eq(401)
+        end
+      end
+    end
 
-          it 'returns 401 for logged-out users' do
-            get '/v2/service_brokers'
-            expect(last_response.status).to eq(401)
-          end
+    describe "DELETE /v2/service_brokers/:guid" do
+      let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+
+      it "deletes the service broker" do
+        delete "/v2/service_brokers/#{broker.guid}", {}, headers
+
+        expect(last_response.status).to eq(204)
+
+        get '/v2/service_brokers', {}, headers
+        expect(decoded_response).to include('total_results' => 0)
+      end
+
+      it "returns 404 when deleting a service broker that does not exist" do
+        delete "/v2/service_brokers/1234", {}, headers
+        expect(last_response.status).to eq(404)
+      end
+
+      describe 'authentication' do
+        it 'returns a forbidden status for non-admin users' do
+          delete "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
+          expect(last_response).to be_forbidden
+
+          # make sure it still exists
+          get '/v2/service_brokers', {}, headers
+          expect(decoded_response).to include('total_results' => 1)
+        end
+
+        it 'returns 401 for logged-out users' do
+          delete "/v2/service_brokers/#{broker.guid}"
+          expect(last_response.status).to eq(401)
+
+          # make sure it still exists
+          get '/v2/service_brokers', {}, headers
+          expect(decoded_response).to include('total_results' => 1)
+        end
+      end
+    end
+
+    describe 'PUT /v2/service_brokers/:guid' do
+      let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+
+      it "updates the name and url of an existing service broker" do
+        payload = {
+          "name" => "expensiveWidgets",
+          "broker_url" => "http://blah.example.com/",
+        }.to_json
+        put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+        expect(last_response.status).to eq(HTTP::OK)
+        expect(decoded_response["entity"]).to eq(
+          "name" => "expensiveWidgets",
+          "broker_url" => "http://blah.example.com/",
+        )
+
+        get '/v2/service_brokers', {}, headers
+        entity = decoded_response.fetch('resources').fetch(0).fetch('entity')
+        expect(entity).to eq(
+          "name" => "expensiveWidgets",
+          "broker_url" => "http://blah.example.com/",
+        )
+      end
+
+      it "updates the token of an existing service broker" do
+        payload = {
+          "token" => "seeeecret",
+        }.to_json
+        put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+        expect(last_response.status).to eq(HTTP::OK)
+        broker.reload
+        expect(broker.token).to eq("seeeecret")
+      end
+
+      it 'does not allow blank name' do
+        payload = {
+          "name" => "",
+        }.to_json
+        put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+        expect(last_response.status).to eq(HTTP::BAD_REQUEST)
+        expect(decoded_response.fetch('code')).to eq(270001)
+        expect(decoded_response.fetch('description')).to match(/name presence/)
+      end
+
+      it 'does not allow blank url' do
+        payload = {
+          "broker_url" => "",
+        }.to_json
+        put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+        expect(last_response.status).to eq(HTTP::BAD_REQUEST)
+        expect(decoded_response.fetch('code')).to eq(270001)
+        expect(decoded_response.fetch('description')).to match(/broker_url presence/)
+      end
+
+      it 'does not allow blank token' do
+        payload = {
+          "token" => "",
+        }.to_json
+        put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+        expect(last_response.status).to eq(HTTP::BAD_REQUEST)
+        expect(decoded_response.fetch('code')).to eq(270001)
+        expect(decoded_response.fetch('description')).to match(/token presence/)
+      end
+
+      context 'when specifying an unknown broker' do
+        it 'returns 404' do
+          payload = {
+            "name" => "whatever",
+          }.to_json
+          put "/v2/service_brokers/nonexistent", payload, headers
+
+          expect(last_response.status).to eq(HTTP::NOT_FOUND)
         end
       end
 
-      describe "DELETE /v2/service_brokers/:guid" do
-        it "deletes the service broker" do
-          delete "/v2/service_brokers/#{broker.guid}", {}, headers
-
-          expect(last_response.status).to eq(204)
-
-          get '/v2/service_brokers', {}, headers
-          expect(decoded_response).to include('total_results' => 0)
+      describe 'authentication' do
+        it 'returns a forbidden status for non-admin users' do
+          put "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
+          expect(last_response).to be_forbidden
         end
 
-        it "returns 404 when deleting a service broker that does not exist" do
-          delete "/v2/service_brokers/1234", {}, headers
-          expect(last_response.status).to eq(404)
-        end
-
-        describe 'authentication' do
-          it 'returns a forbidden status for non-admin users' do
-            delete "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
-            expect(last_response).to be_forbidden
-
-            # make sure it still exists
-            get '/v2/service_brokers', {}, headers
-            expect(decoded_response).to include('total_results' => 1)
-          end
-
-          it 'returns 401 for logged-out users' do
-            delete "/v2/service_brokers/#{broker.guid}"
-            expect(last_response.status).to eq(401)
-
-            # make sure it still exists
-            get '/v2/service_brokers', {}, headers
-            expect(decoded_response).to include('total_results' => 1)
-          end
-        end
-      end
-
-      describe 'PUT /v2/service_brokers/:guid' do
-        it "updates the name and url of an existing service broker" do
-          payload = {
-            "name" => "expensiveWidgets",
-            "broker_url" => "http://blah.example.com/",
-          }.to_json
-          put "/v2/service_brokers/#{broker.guid}", payload, headers
-
-          expect(last_response.status).to eq(HTTP::OK)
-          expect(decoded_response["entity"]).to eq(
-            "name" => "expensiveWidgets",
-            "broker_url" => "http://blah.example.com/",
-          )
-
-          get '/v2/service_brokers', {}, headers
-          entity = decoded_response.fetch('resources').fetch(0).fetch('entity')
-          expect(entity).to eq(
-            "name" => "expensiveWidgets",
-            "broker_url" => "http://blah.example.com/",
-          )
-        end
-
-        it "updates the token of an existing service broker" do
-          payload = {
-            "token" => "seeeecret",
-          }.to_json
-          put "/v2/service_brokers/#{broker.guid}", payload, headers
-
-          expect(last_response.status).to eq(HTTP::OK)
-          broker.reload
-          expect(broker.token).to eq("seeeecret")
-        end
-
-        it 'does not allow blank name' do
-          payload = {
-            "name" => "",
-          }.to_json
-          put "/v2/service_brokers/#{broker.guid}", payload, headers
-
-          expect(last_response.status).to eq(HTTP::BAD_REQUEST)
-          expect(decoded_response.fetch('code')).to eq(270001)
-          expect(decoded_response.fetch('description')).to match(/name presence/)
-        end
-
-        it 'does not allow blank url' do
-          payload = {
-            "broker_url" => "",
-          }.to_json
-          put "/v2/service_brokers/#{broker.guid}", payload, headers
-
-          expect(last_response.status).to eq(HTTP::BAD_REQUEST)
-          expect(decoded_response.fetch('code')).to eq(270001)
-          expect(decoded_response.fetch('description')).to match(/broker_url presence/)
-        end
-
-        it 'does not allow blank token' do
-          payload = {
-            "token" => "",
-          }.to_json
-          put "/v2/service_brokers/#{broker.guid}", payload, headers
-
-          expect(last_response.status).to eq(HTTP::BAD_REQUEST)
-          expect(decoded_response.fetch('code')).to eq(270001)
-          expect(decoded_response.fetch('description')).to match(/token presence/)
-        end
-
-        describe 'authentication' do
-          it 'returns a forbidden status for non-admin users' do
-            put "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
-            expect(last_response).to be_forbidden
-          end
-
-          it 'returns 401 for logged-out users' do
-            put "/v2/service_brokers/#{broker.guid}", {}
-            expect(last_response.status).to eq(401)
-          end
+        it 'returns 401 for logged-out users' do
+          put "/v2/service_brokers/#{broker.guid}", {}
+          expect(last_response.status).to eq(401)
         end
       end
     end
