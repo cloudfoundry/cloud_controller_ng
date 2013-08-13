@@ -11,21 +11,9 @@ module VCAP::CloudController
       broker = Models::ServiceBroker.new(Yajl::Parser.parse(body))
       broker.save
 
-      resource_url = "#{self.class.path}/#{broker.guid}"
-
+      body = broker_hash(broker)
       status = HTTP::CREATED
-      headers = {"Location" => resource_url}
-
-      body = {
-        metadata: {
-          guid: broker.guid,
-          url: resource_url
-        },
-        entity: {
-          name: broker.name,
-          broker_url: broker.broker_url
-        }
-      }
+      headers = {"Location" => url_of(broker) }
 
       [status, headers, body.to_json]
     end
@@ -61,23 +49,27 @@ module VCAP::CloudController
         'prev_url' => nil,
         'next_url' => nil,
       }
-      body['resources'] = brokers.map do |broker|
-        {
-          'metadata' => {
-            'guid' => broker.guid,
-            # Normal restcontroller behavior includes a url
-            #'url' => 'someurl',
-            'created_at' => broker.created_at,
-            'updated_at' => broker.updated_at,
-          },
-          'entity' => {
-            'name' => broker.name,
-            'broker_url' => broker.broker_url,
-          }
-        }
-      end
+      body['resources'] = brokers.map { |broker| broker_hash(broker) }
 
       [status, headers, body.to_json]
+    end
+
+    put '/v2/service_brokers/:guid', :update
+    def update(guid)
+      raise NotAuthorized unless roles.admin?
+
+      parsed = Yajl::Parser.parse(body)
+
+      b = Models::ServiceBroker.find(:guid => guid)
+
+      b.name = parsed['name'] if parsed.key?('name')
+      b.broker_url = parsed['broker_url'] if parsed.key?('broker_url')
+      b.token = parsed['token'] if parsed.key?('token')
+
+      b.save
+
+      body = broker_hash(b)
+      [ HTTP::OK, {}, body.to_json ]
     end
 
     delete '/v2/service_brokers/:guid', :delete
@@ -91,5 +83,24 @@ module VCAP::CloudController
     end
 
     private
+
+    def broker_hash(broker)
+      {
+        'metadata' => {
+          'guid' => broker.guid,
+          'url' => url_of(broker),
+          'created_at' => broker.created_at,
+          'updated_at' => broker.updated_at,
+        },
+        'entity' => {
+          'name' => broker.name,
+          'broker_url' => broker.broker_url,
+        }
+      }
+    end
+
+    def url_of(broker)
+      "#{self.class.path}/#{broker.guid}"
+    end
   end
 end

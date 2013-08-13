@@ -184,8 +184,7 @@ module VCAP::CloudController
             {
               'metadata' => {
                 'guid' => broker.guid,
-                # Normal restcontroller behavior includes a url, but we seem to be able to ignore it
-                #'url' => "http://localhost:8181/service_brokers/#{broker.guid}",
+                'url' => "/v2/service_brokers/#{broker.guid}",
                 'created_at' => broker.created_at.to_s,
                 'updated_at' => nil,
               },
@@ -258,6 +257,85 @@ module VCAP::CloudController
             # make sure it still exists
             get '/v2/service_brokers', {}, headers
             expect(decoded_response).to include('total_results' => 1)
+          end
+        end
+      end
+
+      describe 'PUT /v2/service_brokers/:guid' do
+        it "updates the name and url of an existing service broker" do
+          payload = {
+            "name" => "expensiveWidgets",
+            "broker_url" => "http://blah.example.com/",
+          }.to_json
+          put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+          expect(last_response.status).to eq(HTTP::OK)
+          expect(decoded_response["entity"]).to eq(
+            "name" => "expensiveWidgets",
+            "broker_url" => "http://blah.example.com/",
+          )
+
+          get '/v2/service_brokers', {}, headers
+          entity = decoded_response.fetch('resources').fetch(0).fetch('entity')
+          expect(entity).to eq(
+            "name" => "expensiveWidgets",
+            "broker_url" => "http://blah.example.com/",
+          )
+        end
+
+        it "updates the token of an existing service broker" do
+          payload = {
+            "token" => "seeeecret",
+          }.to_json
+          put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+          expect(last_response.status).to eq(HTTP::OK)
+          broker.reload
+          expect(broker.token).to eq("seeeecret")
+        end
+
+        it 'does not allow blank name' do
+          payload = {
+            "name" => "",
+          }.to_json
+          put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+          expect(last_response.status).to eq(HTTP::BAD_REQUEST)
+          expect(decoded_response.fetch('code')).to eq(270001)
+          expect(decoded_response.fetch('description')).to match(/name presence/)
+        end
+
+        it 'does not allow blank url' do
+          payload = {
+            "broker_url" => "",
+          }.to_json
+          put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+          expect(last_response.status).to eq(HTTP::BAD_REQUEST)
+          expect(decoded_response.fetch('code')).to eq(270001)
+          expect(decoded_response.fetch('description')).to match(/broker_url presence/)
+        end
+
+        it 'does not allow blank token' do
+          payload = {
+            "token" => "",
+          }.to_json
+          put "/v2/service_brokers/#{broker.guid}", payload, headers
+
+          expect(last_response.status).to eq(HTTP::BAD_REQUEST)
+          expect(decoded_response.fetch('code')).to eq(270001)
+          expect(decoded_response.fetch('description')).to match(/token presence/)
+        end
+
+        describe 'authentication' do
+          it 'returns a forbidden status for non-admin users' do
+            put "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
+            expect(last_response).to be_forbidden
+          end
+
+          it 'returns 401 for logged-out users' do
+            put "/v2/service_brokers/#{broker.guid}", {}
+            expect(last_response.status).to eq(401)
           end
         end
       end
