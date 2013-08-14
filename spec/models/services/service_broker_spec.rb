@@ -1,0 +1,107 @@
+require 'spec_helper'
+
+module VCAP::CloudController::Models
+  describe ServiceBroker, :services, type: :model do
+    before do
+      reset_database
+    end
+
+    describe '#check!' do
+      let(:name) { Sham.name }
+      let(:broker_url) { 'http://cf-service-broker.example.com' }
+      let(:broker_api_url) { "http://cc:#{token}@cf-service-broker.example.com/v3" }
+      let(:token) { 'abc123' }
+
+      subject(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, token: token) }
+
+      before do
+        stub_request(:get, broker_api_url).to_return(status: 200, body: '["OK"]')
+      end
+
+      it 'should ping the broker API' do
+        broker.check!
+
+        expect(a_request(:get, broker_api_url)).to have_been_made.once
+      end
+
+      context 'when the API is not reachable' do
+        before do
+          stub_request(:get, broker_api_url).to_raise(SocketError)
+        end
+
+        it 'should raise an unreachable error' do
+          expect {
+            broker.check!
+          }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiUnreachable)
+        end
+      end
+
+      context 'when the API times out' do
+        context 'because the server gave up' do
+          before do
+            # We have to instantiate the error object to keep WebMock from initializing
+            # it with a String message. KeepAliveDisconnected actually takes an optional
+            # Session object, which later HTTPClient code attempts to use.
+            stub_request(:get, broker_api_url).to_raise(HTTPClient::KeepAliveDisconnected.new)
+          end
+
+          it 'should raise a timeout error' do
+            expect {
+              broker.check!
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiTimeout)
+          end
+        end
+
+        context 'because the client gave up' do
+          before do
+            stub_request(:get, broker_api_url).to_raise(HTTPClient::ReceiveTimeoutError)
+          end
+
+          it 'should raise a timeout error' do
+            expect {
+              broker.check!
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiTimeout)
+          end
+        end
+      end
+
+      context 'when the API returns an invalid response' do
+        context 'because of an unexpected status code' do
+          before do
+            stub_request(:get, broker_api_url).to_return(status: 201, body: '["OK"]')
+          end
+
+          it 'should raise an invalid response error' do
+            expect {
+              broker.check!
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiInvalid)
+          end
+        end
+
+        context 'because of an unexpected body' do
+          before do
+            stub_request(:get, broker_api_url).to_return(status: 200, body: '["BAD"]')
+          end
+
+          it 'should raise an invalid response error' do
+            expect {
+              broker.check!
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiInvalid)
+          end
+        end
+      end
+
+      context 'when the API cannot authenticate the client' do
+        before do
+          stub_request(:get, broker_api_url).to_return(status: 401)
+        end
+
+        it 'should raise an authentication error' do
+          expect {
+            broker.check!
+          }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiAuthenticationFailed)
+        end
+      end
+    end
+  end
+end

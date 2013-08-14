@@ -14,5 +14,29 @@ module VCAP::CloudController::Models
       validates_unique :name
       validates_unique :broker_url
     end
+
+    def check!
+      raise unless broker_url && token
+
+      api_base_url = broker_url + '/v3'
+      api_status_uri = URI(api_base_url)
+
+      http = HTTPClient.new
+      http.set_auth(api_base_url, 'cc', token)
+
+      begin
+        response = http.get(api_status_uri)
+      rescue SocketError
+        raise VCAP::Errors::ServiceBrokerApiUnreachable.new(broker_url)
+      rescue HTTPClient::KeepAliveDisconnected, HTTPClient::ReceiveTimeoutError
+        raise VCAP::Errors::ServiceBrokerApiTimeout.new(broker_url)
+      end
+
+      if response.code.to_i == HTTP::Status::UNAUTHORIZED
+        raise VCAP::Errors::ServiceBrokerApiAuthenticationFailed.new(broker_url)
+      elsif response.code.to_i != HTTP::Status::OK || response.body != '["OK"]'
+        raise VCAP::Errors::ServiceBrokerApiInvalid.new(broker_url)
+      end
+    end
   end
 end

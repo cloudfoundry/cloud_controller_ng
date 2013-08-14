@@ -40,6 +40,7 @@ module VCAP::CloudController
 
     def create
       broker = Models::ServiceBroker.new(Yajl::Parser.parse(body))
+      broker.check! if broker.valid?
       broker.save
 
       body = broker_hash(broker)
@@ -59,6 +60,7 @@ module VCAP::CloudController
       b.broker_url = parsed['broker_url'] if parsed.key?('broker_url')
       b.token = parsed['token'] if parsed.key?('token')
 
+      b.check! if b.valid?
       b.save
 
       body = broker_hash(b)
