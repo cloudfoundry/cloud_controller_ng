@@ -16,26 +16,11 @@ module VCAP::CloudController
     end
 
     def enumerate
-      q = params['q']
-      if q && q.start_with?('name:')
-        filter = { :name => q.split(':')[1] }
-      else
-        filter = {}
-      end
-
-      status = HTTP::OK
       headers = {}
-      brokers = Models::ServiceBroker.filter(filter)
+      brokers = Models::ServiceBroker.filter(build_filter)
 
-      body = {
-        'total_results' => brokers.count,
-        'total_pages' => 1,
-        'prev_url' => nil,
-        'next_url' => nil,
-      }
-      body['resources'] = brokers.map { |broker| broker_hash(broker) }
-
-      [status, headers, body.to_json]
+      body = paginate( brokers.map { |broker| broker_hash(broker) } )
+      [HTTP::OK, headers, body.to_json]
     end
 
     def create
@@ -44,10 +29,9 @@ module VCAP::CloudController
       broker.save
 
       body = broker_hash(broker)
-      status = HTTP::CREATED
       headers = {"Location" => url_of(broker) }
 
-      [status, headers, body.to_json]
+      [HTTP::CREATED, headers, body.to_json]
     end
 
     def update(guid)
@@ -89,6 +73,25 @@ module VCAP::CloudController
     def require_admin
       raise NotAuthenticated unless user
       raise NotAuthorized unless roles.admin?
+    end
+
+    def build_filter
+      q = params['q']
+      if q && q.start_with?('name:')
+        {:name => q.split(':')[1]}
+      else
+        {}
+      end
+    end
+
+    def paginate(resources)
+      {
+        'total_results' => resources.count,
+        'total_pages' => 1,
+        'prev_url' => nil,
+        'next_url' => nil,
+        'resources' => resources
+      }
     end
 
     def broker_hash(broker)
