@@ -253,7 +253,13 @@ module VCAP::CloudController
 
         it 'translates duplicate service errors' do
           VCAP::Services::Api::ServiceGatewayClientFake.any_instance.stub(:provision).and_raise(
-            VCAP::Services::Api::ServiceGatewayClient::UnexpectedResponse.new "Can't decode gateway response. status code:500, response body: Error Code: 33106,"
+            VCAP::Services::Api::ServiceGatewayClient::ErrorResponse.new(
+              500,
+              VCAP::Services::Api::ServiceErrorResponse.new(
+                code: 33106,
+                description: "AppDirect does not allow multiple instances of edition-based services in a space. AppDirect response: {}"
+              )
+            )
           )
           expect { service_instance }.to raise_error(Errors::ServiceInstanceDuplicateNotAllowed)
         end

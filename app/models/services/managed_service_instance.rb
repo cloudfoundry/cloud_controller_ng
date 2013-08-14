@@ -203,6 +203,12 @@ module VCAP::CloudController::Models
     rescue VCAP::Services::Api::ServiceGatewayClient::UnexpectedResponse=>e
       raise unless e.message =~ /Error Code: 33106,/
       raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
+    rescue VCAP::Services::Api::ServiceGatewayClient::ErrorResponse => e
+      if e.error.code == 33106
+        raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
+      else
+        raise
+      end
     end
 
     def deprovision_on_gateway
