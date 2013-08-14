@@ -28,6 +28,46 @@ module VCAP::CloudController
         SecureRandom.should_receive(:urlsafe_base64).and_return(secure_token)
         expect(subject.secure_token).to eq(secure_token)
       end
+
+      it "returns the same token every time" do
+        SecureRandom.unstub!(:urlsafe_base64)
+
+        secure_token = subject.secure_token
+        expect(subject.reload.secure_token).to eq(secure_token)
+      end
+    end
+
+    describe "secure token encryption" do
+      let!(:task) { Models::Task.make(:app => app) }
+
+      let(:last_row) { VCAP::CloudController::Models::Task.dataset.naked.order_by(:id).last }
+
+      it "is encrypted" do
+        expect(last_row[:secure_token]).not_to eq(secure_token)
+      end
+
+      it "is decrypted" do
+        task.reload
+        expect(task.secure_token).to eq secure_token
+      end
+
+      it "salt is unique for each task" do
+        other_task = Models::Task.make(:app => app)
+        expect(task.salt).not_to eq other_task.salt
+      end
+
+      it "must have a salt of length 8" do
+        expect(task.salt.length).to eq 8
+      end
+
+      it "works with long secure tokens" do
+        maddeningly_long_secure_token = "supercalifredgilisticexpialidocious"*1000
+        SecureRandom.stub(:urlsafe_base64).and_return(maddeningly_long_secure_token)
+
+        long_secure_token_task = Models::Task.make(:app => app)
+        long_secure_token_task.reload
+        expect(long_secure_token_task.secure_token).to eq(maddeningly_long_secure_token)
+      end
     end
 
     describe "#to_json" do
