@@ -119,36 +119,24 @@ module VCAP::CloudController
       end
 
       it "returns an error if the broker name is not unique" do
-        broker = Models::ServiceBroker.make(name: 'Non-unique name')
-
-        body = {
-          name: broker.name,
-          broker_url: broker_url,
-          token: token
-        }.to_json
+        Models::ServiceBroker.make(name: name)
 
         post '/v2/service_brokers', body, headers
 
         last_response.should be_bad_request
         decoded_response.fetch('code').should == 270002
-        decoded_response.fetch('description').should == "The service broker name is taken: #{broker.name}"
+        decoded_response.fetch('description').should == "The service broker name is taken: #{name}"
       end
 
       it "returns an error if the broker url is not unique" do
-        broker = Models::ServiceBroker.make(broker_url: 'http://example.com/')
-
-        body = {
-          name: name,
-          broker_url: broker.broker_url,
-          token: token
-        }.to_json
+        Models::ServiceBroker.make(broker_url: broker_url)
 
         post '/v2/service_brokers', body, headers
 
         last_response.should be_bad_request
 
         decoded_response.fetch('code').should == 270003
-        decoded_response.fetch('description').should == "The service broker url is taken: #{broker.broker_url}"
+        decoded_response.fetch('description').should == "The service broker url is taken: #{broker_url}"
       end
 
       it 'includes a location header for the resource' do
