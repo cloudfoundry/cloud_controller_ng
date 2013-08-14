@@ -26,7 +26,7 @@ module VCAP::CloudController::Models
 
       begin
         response = http.get(api_status_uri)
-      rescue SocketError
+      rescue SocketError, HTTPClient::ConnectTimeoutError, Errno::ECONNREFUSED
         raise VCAP::Errors::ServiceBrokerApiUnreachable.new(broker_url)
       rescue HTTPClient::KeepAliveDisconnected, HTTPClient::ReceiveTimeoutError
         raise VCAP::Errors::ServiceBrokerApiTimeout.new(broker_url)

@@ -25,14 +25,40 @@ module VCAP::CloudController::Models
       end
 
       context 'when the API is not reachable' do
-        before do
-          stub_request(:get, broker_api_url).to_raise(SocketError)
+        context 'because the host could not be resolved' do
+          before do
+            stub_request(:get, broker_api_url).to_raise(SocketError)
+          end
+
+          it 'should raise an unreachable error' do
+            expect {
+              broker.check!
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiUnreachable)
+          end
         end
 
-        it 'should raise an unreachable error' do
-          expect {
-            broker.check!
-          }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiUnreachable)
+        context 'because the server connection attempt timed out' do
+          before do
+            stub_request(:get, broker_api_url).to_raise(HTTPClient::ConnectTimeoutError)
+          end
+
+          it 'should raise an unreachable error' do
+            expect {
+              broker.check!
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiUnreachable)
+          end
+        end
+
+        context 'because the server refused our connection' do
+          before do
+            stub_request(:get, broker_api_url).to_raise(Errno::ECONNREFUSED)
+          end
+
+          it 'should raise an unreachable error' do
+            expect {
+              broker.check!
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiUnreachable)
+          end
         end
       end
 
