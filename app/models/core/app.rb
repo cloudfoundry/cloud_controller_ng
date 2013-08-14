@@ -180,8 +180,8 @@ module VCAP::CloudController
 
       def after_destroy_commit
         AppManager.stop_droplet(self)
-        VCAP::CloudController::AppManager.delete_droplet(self)
-        VCAP::CloudController::AppPackage.delete_package(self.guid)
+        AppManager.delete_droplet(self)
+        AppPackage.delete_package(self.guid)
       end
 
       def command=(cmd)

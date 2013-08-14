@@ -98,6 +98,7 @@ require "models/core/event"
 require "models/core/organization"
 require "models/core/quota_definition"
 require "models/core/route"
+require "models/core/task"
 require "models/core/space"
 require "models/core/stack"
 require "models/core/user"
@@ -114,5 +115,3 @@ require "models/services/service_plan_visibility"
 require "models/services/service_base_event"
 require "models/services/service_create_event"
 require "models/services/service_delete_event"
-
-

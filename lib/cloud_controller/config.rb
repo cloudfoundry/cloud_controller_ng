@@ -157,6 +157,8 @@ class VCAP::CloudController::Config < VCAP::Config
     VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
     VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
 
+    CloudController::TaskClient.configure(message_bus)
+
     Dir.glob(File.expand_path('../../../config/initializers/*.rb', __FILE__)).each do |file|
       require file
       method = File.basename(file).sub(".rb", "").gsub("-", "_")

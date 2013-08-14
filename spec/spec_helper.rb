@@ -210,6 +210,8 @@ module VCAP::CloudController::SpecHelper
     VCAP::CloudController::Models::QuotaDefinition.configure(config)
     VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
 
+    CloudController::TaskClient.configure(mbus)
+
     configure_stacks
   end
 

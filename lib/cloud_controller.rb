@@ -127,3 +127,5 @@ require "cloud_controller/dea/dea_respondent"
 
 require "cloud_controller/health_manager_client"
 require "cloud_controller/health_manager_respondent"
+
+require "cloud_controller/task_client"
