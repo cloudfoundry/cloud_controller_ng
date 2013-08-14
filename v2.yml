@@ -437,3 +437,23 @@
   name: ServiceBrokerUrlTaken
   http_code: 400
   message: "The service broker url is taken: %s"
+
+270004:
+  name: ServiceBrokerApiUnreachable
+  http_code: 400
+  message: "The Service Broker API could not be reached: %s"
+
+270005:
+  name: ServiceBrokerApiTimeout
+  http_code: 400
+  message: "The Service Broker API timed out: %s"
+
+270006:
+  name: ServiceBrokerApiInvalid
+  http_code: 400
+  message: "The Service Broker API returned an invalid response: %s"
+
+270007:
+  name: ServiceBrokerApiAuthenticationFailed
+  http_code: 400
+  message: "The Service Broker API authentication failed: %s"
