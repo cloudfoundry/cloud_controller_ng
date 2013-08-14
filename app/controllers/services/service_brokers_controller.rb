@@ -4,6 +4,16 @@ module VCAP::CloudController
   # cloudcontroller metaprogramming. We manually generate the JSON
   # expected by CFoundry and CF.
   class ServiceBrokersController < RestController::Base
+    class ServiceBrokerMessage < VCAP::RestAPI::Message
+      optional :name,       String
+      optional :broker_url, String
+      optional :token,      String
+
+      def self.extract(json)
+        decode(json).extract
+      end
+    end
+
     get '/v2/service_brokers', :enumerate
     post '/v2/service_brokers', :create
     put '/v2/service_brokers/:guid', :update
@@ -24,7 +34,7 @@ module VCAP::CloudController
     end
 
     def create
-      broker = Models::ServiceBroker.new(Yajl::Parser.parse(body))
+      broker = Models::ServiceBroker.new(ServiceBrokerMessage.extract(body))
       broker.check! if broker.valid?
       broker.save
 
@@ -35,19 +45,15 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      parsed = Yajl::Parser.parse(body)
+      broker = Models::ServiceBroker.find(:guid => guid)
+      return HTTP::NOT_FOUND unless broker
 
-      b = Models::ServiceBroker.find(:guid => guid)
-      return HTTP::NOT_FOUND unless b
+      broker.set(ServiceBrokerMessage.extract(body))
 
-      b.name = parsed['name'] if parsed.key?('name')
-      b.broker_url = parsed['broker_url'] if parsed.key?('broker_url')
-      b.token = parsed['token'] if parsed.key?('token')
+      broker.check! if broker.valid?
+      broker.save
 
-      b.check! if b.valid?
-      b.save
-
-      body = broker_hash(b)
+      body = broker_hash(broker)
       [ HTTP::OK, {}, body.to_json ]
     end
 
@@ -69,6 +75,7 @@ module VCAP::CloudController
     end
 
     private
+
 
     def require_admin
       raise NotAuthenticated unless user

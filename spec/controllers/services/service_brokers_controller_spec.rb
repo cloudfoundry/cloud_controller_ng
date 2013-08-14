@@ -24,13 +24,14 @@ module VCAP::CloudController
       let(:broker_api_url) { "http://cc:#{token}@cf-service-broker.example.com/v3" }
       let(:token) { 'abc123' }
 
-      let(:body) do
+      let(:body_hash) do
         {
           name: name,
           broker_url: broker_url,
           token: token
-        }.to_json
+        }
       end
+      let(:body) { body_hash.to_json }
 
       before do
         stub_request(:get, broker_api_url).to_return(status: 200, body: '["OK"]')
@@ -150,6 +151,12 @@ module VCAP::CloudController
         headers = last_response.original_headers
         metadata = decoded_response.fetch('metadata')
         headers.fetch('Location').should == "/v2/service_brokers/#{metadata.fetch('guid')}"
+      end
+
+      it 'does not set fields that are unmodifiable' do
+        body_with_guid = body_hash.merge(guid: 'mycustomguid').to_json
+        post '/v2/service_brokers', body_with_guid, headers
+        Models::ServiceBroker.order(:id).last.guid.should_not == 'mycustomguid'
       end
 
       context 'when the broker API check fails' do
@@ -365,6 +372,12 @@ module VCAP::CloudController
         expect(last_response.status).to eq(HTTP::BAD_REQUEST)
         expect(decoded_response.fetch('code')).to eq(270001)
         expect(decoded_response.fetch('description')).to match(/token presence/)
+      end
+
+      it 'does not set fields that are unmodifiable' do
+        expect {
+          put "/v2/service_brokers/#{broker.guid}", {guid: 'mycustomguid'}, headers
+        }.not_to change { broker.reload.guid }
       end
 
       context 'when specifying an unknown broker' do
