@@ -128,6 +128,8 @@ class VCAP::CloudController::Config < VCAP::Config
       optional(:trial_db) => {
         :guid => String,
       },
+
+      optional(:tasks_disabled) => bool
     }
   end
 

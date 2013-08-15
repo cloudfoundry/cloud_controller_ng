@@ -34,6 +34,19 @@ module VCAP::CloudController
               Models::Task.all.size
             }.by(1)
           end
+
+          context "when tasks endpoint is disabled" do
+            before do
+              config_override(:tasks_disabled => true)
+            end
+            it "returns 404" do
+              post "/v2/tasks",
+                '{"app_guid":"some-app-guid"}',
+                json_headers(headers_for(admin_user))
+
+              last_response.status.should == 404
+            end
+          end
         end
 
         context "and the app is not found" do
@@ -112,6 +125,18 @@ module VCAP::CloudController
 
               parsed_body = Yajl::Parser.parse(last_response.body)
               expect(parsed_body["entity"]["app_guid"]).to eq(@task_a.app_guid)
+            end
+
+            context "when tasks endpoint is disabled" do
+              before do
+                config_override(:tasks_disabled => true)
+              end
+              it "returns 404" do
+                get "/v2/tasks/#{@task_a.guid}", {},
+                  headers_for(@user_a)
+
+                last_response.status.should == 404
+              end
             end
           end
 
@@ -205,6 +230,15 @@ module VCAP::CloudController
         it_deletes_the_task
       end
 
+      context "when tasks endpoint is disabled" do
+        let(:visiting_user) { @admin }
+        before do
+          config_override(:tasks_disabled => true)
+        end
+        it_returns_status_code 404
+        it_does_not_delete_the_task
+      end
+
       context "if the user is an Organization Manager" do
         let(:visiting_user) { @org_manager }
         it_returns_status_code 403
@@ -227,6 +261,21 @@ module VCAP::CloudController
         let(:visiting_user) { @space_auditor }
         it_returns_status_code 403
         it_does_not_delete_the_task
+      end
+    end
+
+    describe "PUT /v2/tasks/:guid" do
+      context "when tasks endpoint is disabled" do
+        before do
+          config_override(:tasks_disabled => true)
+        end
+        it "returns 404" do
+          put "/v2/tasks/some-app-guid",
+            '{"app_guid":"some-app-guid"}',
+            json_headers(headers_for(admin_user))
+
+          last_response.status.should == 404
+        end
       end
     end
   end
