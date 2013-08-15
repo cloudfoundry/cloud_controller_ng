@@ -19,30 +19,30 @@ class BlobStore
     files.head(key_from_sha1(sha1))
   end
 
-  def cp_to_local(sha1, local_destination)
-    FileUtils.mkdir_p(File.dirname(local_destination))
-    File.open(local_destination, "w") do |file|
-      files.get(key_from_sha1(sha1)) do |chunk, _, _|
+  def cp_to_local(source_sha, destination_path)
+    FileUtils.mkdir_p(File.dirname(destination_path))
+    File.open(destination_path, "w") do |file|
+      files.get(key_from_sha1(source_sha)) do |chunk, _, _|
         file.write(chunk)
       end
     end
   end
 
   def cp_r_from_local(local_dir_path)
-    Find.find(local_dir_path).each do |local_file_path|
-      next unless File.file?(local_file_path)
+    Find.find(local_dir_path).each do |path|
+      next unless File.file?(path)
 
       sha1 = Digest::SHA1.file(path).hexdigest
       next if exists?(sha1)
 
-      cp_from_local(local_file_path, sha1)
+      cp_from_local(path, sha1)
     end
   end
 
-  def cp_from_local(path, sha1)
-    File.open(path) do |file|
+  def cp_from_local(source_path, destination_sha)
+    File.open(source_path) do |file|
       files.create(
-        :key => key_from_sha1(sha1),
+        :key => key_from_sha1(destination_sha),
         :body => file,
         :public => false,
       )
