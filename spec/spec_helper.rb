@@ -199,6 +199,8 @@ module VCAP::CloudController::SpecHelper
     # reset the dependency locator
     CloudController::DependencyLocator.instance.send(:initialize)
 
+    RailsConfig.load_and_set_settings(File.expand_path("../../config/cloud_controller.yml", __FILE__))
+
     configure_stacks
   end
 
