@@ -135,6 +135,10 @@ module VCAP::CloudController
         decoded_guids.should =~ (@active + @inactive).map(&:guid)
       end
 
+      it "has a documentation URL field" do
+        get "/v2/services", {}, headers
+        decoded_response["resources"].first["entity"].keys.should include "documentation_url"
+      end
 
       context "with an offering that has private plans" do
         before(:each) do

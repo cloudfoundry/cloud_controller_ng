@@ -6,19 +6,20 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :label,          String
-      attribute :provider,       String
-      attribute :url,            Message::URL
-      attribute :description,    String
-      attribute :version,        String
-      attribute :info_url,       Message::URL, :default => nil
-      attribute :acls,           {"users" => [String], "wildcards" => [String]}, :default => nil
-      attribute :timeout,        Integer, :default => nil
-      attribute :active,         Message::Boolean, :default => false
-      attribute :bindable,       Message::Boolean, :default => true
-      attribute :extra,          String, :default => nil
-      attribute :unique_id,      String, :default => nil, :exclude_in => [:update]
-      attribute :tags,           [String], :default => []
+      attribute :label,             String
+      attribute :provider,          String
+      attribute :url,               Message::URL
+      attribute :description,       String
+      attribute :version,           String
+      attribute :info_url,          Message::URL, :default => nil
+      attribute :documentation_url, Message::URL, :default => nil
+      attribute :acls,              {"users" => [String], "wildcards" => [String]}, :default => nil
+      attribute :timeout,           Integer, :default => nil
+      attribute :active,            Message::Boolean, :default => false
+      attribute :bindable,          Message::Boolean, :default => true
+      attribute :extra,             String, :default => nil
+      attribute :unique_id,         String, :default => nil, :exclude_in => [:update]
+      attribute :tags,              [String], :default => []
       to_many   :service_plans
     end
 

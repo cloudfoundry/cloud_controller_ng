@@ -100,5 +100,17 @@ module VCAP::CloudController::Models
         end
       end
     end
+
+    describe "#documentation_url" do
+      context 'with a URL in the database' do
+        it 'returns the appropriate URL' do
+          sham_url = Sham.url
+          service = Service.make(documentation_url: sham_url)
+          expect(service.documentation_url).to eq sham_url
+        end
+      end
+    end
+
+
   end
 end
