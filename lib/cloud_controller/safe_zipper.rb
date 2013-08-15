@@ -1,4 +1,3 @@
-require "zipruby"
 require "find"
 
 class SafeZipper

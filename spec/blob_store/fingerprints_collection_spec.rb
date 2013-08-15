@@ -10,14 +10,19 @@ describe FingerprintsCollection do
       {"fn" => "path/to/file3.txt", "size" => 112, "sha1" => "fad"}
     ]
   end
+  let(:collection) {FingerprintsCollection.new(fingerprints)}
 
-  describe "#each_sha" do
-    let(:collection) {FingerprintsCollection.new(fingerprints)}
-
+  describe "#each" do
     it "returns each sha one by one" do
       expect { |yielded|
-        collection.each_sha(&yielded)
-      }.to yield_successive_args("abc", "def", "fad")
+        collection.each(&yielded)
+      }.to yield_successive_args(["path/to/file.txt", "abc"], ["path/to/file2.txt", "def"], ["path/to/file3.txt", "fad"])
+    end
+  end
+
+  describe "#storage_size" do
+    it "sums the sizes" do
+      expect(collection.storage_size).to eq 123 + 321 + 112
     end
   end
 end

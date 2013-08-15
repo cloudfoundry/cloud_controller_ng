@@ -35,9 +35,9 @@ describe LocalAppBits do
       end
     end
 
-    it "gets the size of the unzipped files" do
+    it "gets the storage_size of the unzipped files" do
       LocalAppBits.from_zip_of_new_files(zip_path) do |local_app_bits|
-        expect(local_app_bits.size).to eq 123
+        expect(local_app_bits.storage_size).to eq 123
       end
     end
   end

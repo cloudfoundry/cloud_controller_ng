@@ -5,16 +5,16 @@ class LocalAppBits
 
   def self.from_zip_of_new_files(zip_path, &block)
     Dir.mktmpdir("unzipped", Settings.tmp_dir) do |unzip_path|
-      size = SafeZipper.unzip(zip_path, unzip_path)
-      block.yield new(unzip_path, size)
+      storage_size = SafeZipper.unzip(zip_path, unzip_path)
+      block.yield new(unzip_path, storage_size)
     end
   end
 
-  attr_reader :root_path, :size
+  attr_reader :root_path, :storage_size
 
-  def initialize(unzip_path, size)
+  def initialize(unzip_path, storage_size)
     @root_path = unzip_path
-    @size = size
+    @storage_size = storage_size
   end
 
   def create_package
