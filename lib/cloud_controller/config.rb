@@ -133,42 +133,43 @@ class VCAP::CloudController::Config < VCAP::Config
     }
   end
 
-  def self.from_file(file_name)
-    config = super(file_name)
-    merge_defaults(config)
-  end
-
-  def self.configure(config, message_bus)
-    VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
-    VCAP::CloudController::AccountCapacity.configure(config)
-    VCAP::CloudController::ResourcePool.instance =
-      VCAP::CloudController::ResourcePool.new(config)
-    VCAP::CloudController::AppPackage.configure(config)
-
-    stager_pool = VCAP::CloudController::StagerPool.new(config, message_bus)
-    VCAP::CloudController::AppManager.configure(config, message_bus, stager_pool)
-    VCAP::CloudController::StagingsController.configure(config)
-
-    dea_pool = VCAP::CloudController::DeaPool.new(message_bus)
-    VCAP::CloudController::DeaClient.configure(config, message_bus, dea_pool)
-
-    VCAP::CloudController::LegacyBulk.configure(config, message_bus)
-    VCAP::CloudController::HealthManagerClient.configure(config, message_bus)
-
-    VCAP::CloudController::Models::QuotaDefinition.configure(config)
-    VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
-    VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
-
-    CloudController::TaskClient.configure(message_bus)
-
-    Dir.glob(File.expand_path('../../../config/initializers/*.rb', __FILE__)).each do |file|
-      require file
-      method = File.basename(file).sub(".rb", "").gsub("-", "_")
-      CCInitializers.send(method, config)
-    end
-  end
 
   class << self
+    def from_file(file_name)
+      config = super(file_name)
+      merge_defaults(config)
+    end
+
+    def configure(config, message_bus)
+      VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
+      VCAP::CloudController::AccountCapacity.configure(config)
+      VCAP::CloudController::ResourcePool.instance =
+        VCAP::CloudController::ResourcePool.new(config)
+      VCAP::CloudController::AppPackage.configure(config)
+
+      stager_pool = VCAP::CloudController::StagerPool.new(config, message_bus)
+      VCAP::CloudController::AppManager.configure(config, message_bus, stager_pool)
+      VCAP::CloudController::StagingsController.configure(config)
+
+      dea_pool = VCAP::CloudController::DeaPool.new(message_bus)
+      VCAP::CloudController::DeaClient.configure(config, message_bus, dea_pool)
+
+      VCAP::CloudController::LegacyBulk.configure(config, message_bus)
+      VCAP::CloudController::HealthManagerClient.configure(config, message_bus)
+
+      VCAP::CloudController::Models::QuotaDefinition.configure(config)
+      VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
+      VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
+
+      CloudController::TaskClient.configure(message_bus)
+
+      Dir.glob(File.expand_path('../../../config/initializers/*.rb', __FILE__)).each do |file|
+        require file
+        method = File.basename(file).sub(".rb", "").gsub("-", "_")
+        CCInitializers.send(method, config)
+      end
+    end
+
     attr_accessor :db_encryption_key
 
     def config_dir
