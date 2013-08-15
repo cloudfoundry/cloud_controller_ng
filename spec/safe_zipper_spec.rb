@@ -93,7 +93,7 @@ describe SafeZipper do
     let(:root_path) { File.expand_path("../fixtures/fake_package/", __FILE__) }
     let(:tmp_zip) { File.join(@tmpdir, "tmp.zip") }
 
-    it "zips the file to an IO stream" do
+    it "zips the file" do
       SafeZipper.zip(root_path, tmp_zip)
 
       output = `zipinfo #{tmp_zip}`

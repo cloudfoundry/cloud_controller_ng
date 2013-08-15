@@ -21,7 +21,7 @@ class VCAP::CloudController::ResourcePool
   def initialize(config = {})
     options = config[:resource_pool] || {}
     @cdn = options[:cdn]
-    @blob_store = VCAP::CloudController::BlobStore.new(
+    @blob_store = BlobStore.new(
         options[:fog_connection],
         options[:resource_directory_key] || "cc-resources"
     )

@@ -11,7 +11,7 @@
 # the storage layer than FileUtils.mv, this should get refactored.
 
 require "cloudfront-signer"
-require "cloud_controller/blob_store"
+require "cloud_controller/blob_store/blob_store"
 
 module VCAP::CloudController
   class StagingsController < RestController::Base
@@ -42,7 +42,7 @@ module VCAP::CloudController
         @config = config
 
         options = config[:droplets]
-        @blob_store = VCAP::CloudController::BlobStore.new(options[:fog_connection], options[:droplet_directory_key] || "cc-droplets")
+        @blob_store = BlobStore.new(options[:fog_connection], options[:droplet_directory_key] || "cc-droplets")
         @cdn = options[:cdn]
       end
 
