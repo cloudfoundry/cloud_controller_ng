@@ -1,5 +1,4 @@
 require 'services/api'
-require_relative 'service_validator'
 
 module VCAP::CloudController
   rest_controller :ServiceInstances do
