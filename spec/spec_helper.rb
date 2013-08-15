@@ -154,7 +154,7 @@ module VCAP::CloudController::SpecHelper
             :provider => "AWS",
             :aws_access_key_id => "fake_aws_key_id",
             :aws_secret_access_key => "fake_secret_access_key",
-          }
+          },
         },
         :packages => {
           :app_package_directory_key => "cc-packages",
@@ -162,7 +162,7 @@ module VCAP::CloudController::SpecHelper
             :provider => "AWS",
             :aws_access_key_id => "fake_aws_key_id",
             :aws_secret_access_key => "fake_secret_access_key",
-          }
+          },
         },
         :droplets => {
           :droplet_directory_key => "cc-droplets",
@@ -170,8 +170,8 @@ module VCAP::CloudController::SpecHelper
             :provider => "AWS",
             :aws_access_key_id => "fake_aws_key_id",
             :aws_secret_access_key => "fake_secret_access_key",
-          }
-        }
+          },
+        },
       )
 
       config_hash.merge!(@config_override || {})
@@ -187,30 +187,12 @@ module VCAP::CloudController::SpecHelper
 
   def configure_components(config)
     VCAP::CloudController::Config.db_encryption_key = "some-key"
-    mbus = CfMessageBus::MockMessageBus.new
+    message_bus = CfMessageBus::MockMessageBus.new
 
     # FIXME: this is better suited for a before-each stub so that we can unstub it in examples
     VCAP::CloudController::Models::ManagedServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
 
-    VCAP::CloudController::AccountCapacity.configure(config)
-    VCAP::CloudController::ResourcePool.instance =
-      VCAP::CloudController::ResourcePool.new(config)
-    VCAP::CloudController::AppPackage.configure(config)
-
-    stager_pool = VCAP::CloudController::StagerPool.new(config, mbus)
-    VCAP::CloudController::AppManager.configure(config, mbus, stager_pool)
-    VCAP::CloudController::StagingsController.configure(config)
-
-    dea_pool = VCAP::CloudController::DeaPool.new(mbus)
-    VCAP::CloudController::DeaClient.configure(config, mbus, dea_pool)
-
-    VCAP::CloudController::HealthManagerClient.configure(config, mbus)
-
-    VCAP::CloudController::LegacyBulk.configure(config, mbus)
-    VCAP::CloudController::Models::QuotaDefinition.configure(config)
-    VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
-
-    CloudController::TaskClient.configure(mbus)
+    VCAP::CloudController::Config.configure(config, message_bus)
 
     configure_stacks
   end
