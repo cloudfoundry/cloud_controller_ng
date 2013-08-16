@@ -11,7 +11,7 @@ describe AppBitsPacker do
     FingerprintsCollection.new([{"fn" => "path/to/content.txt", "size" => 123, "sha1" => sha}])
   end
 
-  let(:zip) { mock(:zip, path: File.expand_path("../../../fixtures/good.zip", __FILE__)) }
+  let(:compressed_path) { File.expand_path("../../../fixtures/good.zip", __FILE__) }
   let(:app) { VCAP::CloudController::Models::App.make }
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
@@ -37,7 +37,7 @@ describe AppBitsPacker do
   end
 
   describe "#perform" do
-    subject(:perform) { packer.perform(app, zip, fingerprints_in_app_cache) }
+    subject(:perform) { packer.perform(app, compressed_path, fingerprints_in_app_cache) }
 
     it "uploads the new app bits to the app bit cache" do
       perform
@@ -94,7 +94,7 @@ describe AppBitsPacker do
           [{"fn" => "file.txt", "size" => (512 * 1024 * 1024) + 1, "sha1" => 'a_sha'}]
         )
         expect {
-          packer.perform(app, zip, fingerprints_in_app_cache)
+          packer.perform(app, compressed_path, fingerprints_in_app_cache)
         }.to raise_exception VCAP::Errors::AppPackageInvalid
       end
     end

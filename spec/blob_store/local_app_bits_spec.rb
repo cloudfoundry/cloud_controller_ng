@@ -2,7 +2,7 @@ require "spec_helper"
 require "cloud_controller/blob_store/local_app_bits"
 
 describe LocalAppBits do
-  let(:zip) { mock(:file, path: "/tmp/zipped.zip") }
+  let(:compressed_zip_path) { "/tmp/zipped.compressed_zip_path" }
   let(:uncompressed_path) { "/tmp/uncompressed" }
   let(:tmp_dir) { "/tmp" }
 
@@ -16,14 +16,14 @@ describe LocalAppBits do
 
     it "yields a block" do
       expect { |yielded|
-        LocalAppBits.from_compressed_bits(zip, &yielded)
+        LocalAppBits.from_compressed_bits(compressed_zip_path, &yielded)
       }.to yield_control
     end
 
     it "unzips the folder" do
-      SafeZipper.should_receive(:unzip).with(zip.path, uncompressed_path)
+      SafeZipper.should_receive(:unzip).with(compressed_zip_path, uncompressed_path)
 
-      LocalAppBits.from_compressed_bits(zip) do |local_app_bits|
+      LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
         expect(local_app_bits.root_path).to eq uncompressed_path
       end
     end
@@ -31,33 +31,33 @@ describe LocalAppBits do
     it "create and delete the tmp dir where its uncompressed" do
       Dir.should_receive(:mktmpdir).with("uncompressed", tmp_dir)
 
-      LocalAppBits.from_compressed_bits(zip) do |local_app_bits|
+      LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
         expect(local_app_bits.root_path).to start_with uncompressed_path
       end
     end
 
     it "gets the storage_size of the uncompressed files" do
-      LocalAppBits.from_compressed_bits(zip) do |local_app_bits|
+      LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
         expect(local_app_bits.storage_size).to eq 123
       end
     end
 
     context "when the zip file is pointing to a non existent file" do
       it "does not unzip anything" do
-        File.should_receive(:exists?).with(zip.path).and_return(false)
+        File.should_receive(:exists?).with(compressed_zip_path).and_return(false)
         SafeZipper.should_not_receive(:unzip)
-        LocalAppBits.from_compressed_bits(zip) do |local_app_bits|
+        LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
           expect(local_app_bits.storage_size).to eq 0
         end
       end
     end
 
     context "when the zip file does not exist" do
-      let(:zip) { nil }
+      let(:compressed_zip_path) { nil }
 
       it "does not unzip anything" do
         SafeZipper.should_not_receive(:unzip)
-        LocalAppBits.from_compressed_bits(zip) do |local_app_bits|
+        LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
           expect(local_app_bits.storage_size).to eq 0
         end
       end

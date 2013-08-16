@@ -3,9 +3,10 @@ require "find"
 require "fog"
 
 class BlobStore
-  def initialize(connection_config, directory_key)
+  def initialize(connection_config, directory_key, cdn=nil)
     @connection_config = connection_config.to_hash
     @directory_key = directory_key
+    @cdn = cdn
   end
 
   def local?
@@ -23,8 +24,8 @@ class BlobStore
   def cp_to_local(source_sha, destination_path)
     FileUtils.mkdir_p(File.dirname(destination_path))
     File.open(destination_path, "w") do |file|
-      files.get(key_from_sha1(source_sha)) do |chunk, _, _|
-        file.write(chunk)
+      (@cdn || files).get(key_from_sha1(source_sha)) do |*chunk|
+        file.write(chunk[0])
       end
     end
   end

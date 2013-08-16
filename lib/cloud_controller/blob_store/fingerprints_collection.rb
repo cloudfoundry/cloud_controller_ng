@@ -1,5 +1,9 @@
 class FingerprintsCollection
   def initialize(fingerprints)
+    #unless fingerprints.kind_of?(Array)
+    #  raise Errors::AppBitsUploadInvalid.new("invalid :resources")
+    #end
+
     @fingerprints = fingerprints
   end
 

@@ -10,8 +10,8 @@ class AppBitsPacker
     @app_bit_cache = app_bit_cache
   end
 
-  def perform(app, uploaded_compressed_bits, fingerprints_in_app_cache)
-    LocalAppBits.from_compressed_bits(uploaded_compressed_bits) do |local_app_bits|
+  def perform(app, uploaded_compressed_path, fingerprints_in_app_cache)
+    LocalAppBits.from_compressed_bits(uploaded_compressed_path) do |local_app_bits|
       validate_size!(fingerprints_in_app_cache, local_app_bits)
 
       app_bit_cache.cp_r_from_local(local_app_bits.root_path)

@@ -97,16 +97,38 @@ describe BlobStore do
   end
 
   describe "#cp_to_local" do
-    it "downloads the file, creating missing parent directories" do
-      base_dir = File.join(blob_store_dir, "a-directory-key", sha_of_content[0..1], sha_of_content[2..3])
-      FileUtils.mkdir_p(base_dir)
-      File.open(File.join(base_dir, sha_of_content), "w") { |file| file.write(content) }
+    context "when from a cdn" do
+      let(:cdn) { mock(:cdn) }
 
-      destination = File.join(local_dir, "dir1", "dir2", "downloaded_file")
-      expect(File.exists?(destination)).to be_false
-      blob_store.cp_to_local(sha_of_content, destination)
-      expect(File.exists?(destination)).to be_true
-      expect(File.read(destination)).to eq(content)
+      subject(:blob_store) {  BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "a-directory-key", cdn) }
+
+      it "downloads through the CDN" do
+        cdn.should_receive(:get).with("#{sha_of_content[0..1]}/#{sha_of_content[2..3]}/#{sha_of_content}").and_yield("foobar").and_yield(" barbaz")
+
+        destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
+        expect(File.exists?(destination)).to be_false
+
+        blob_store.cp_to_local(sha_of_content, destination)
+
+        expect(File.exists?(destination)).to be_true
+        expect(File.read(destination)).to eq("foobar barbaz")
+      end
+    end
+
+    context "when directly to the blobstore" do
+      it "downloads the file, creating missing parent directories" do
+        base_dir = File.join(blob_store_dir, "a-directory-key", sha_of_content[0..1], sha_of_content[2..3])
+        FileUtils.mkdir_p(base_dir)
+        File.open(File.join(base_dir, sha_of_content), "w") { |file| file.write(content) }
+
+        destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
+        expect(File.exists?(destination)).to be_false
+
+        blob_store.cp_to_local(sha_of_content, destination)
+
+        expect(File.exists?(destination)).to be_true
+        expect(File.read(destination)).to eq(content)
+      end
     end
   end
 

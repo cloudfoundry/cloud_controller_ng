@@ -1,5 +1,5 @@
 require "cloud_controller/upload_handler"
-require "workers/runtime/app_bits_packer"
+require "workers/runtime/app_bits_packer_job"
 
 module VCAP::CloudController
   rest_controller :AppBits do
@@ -17,13 +17,8 @@ module VCAP::CloudController
 
       raise Errors::AppBitsUploadInvalid, "missing :resources" unless params["resources"]
 
-      fingerprints_already_in_blobstore = FingerprintsCollection.new(json_param("resources"))
       uploaded_zip_of_files_not_in_blobstore = UploadHandler.new(config).uploaded_file(params, "application")
-      package_blob_store = BlobStore.new(Settings.resource_pool.fog_connection, Settings.resource_pool.resource_directory_key || "cc-resources")
-      app_bit_cache = BlobStore.new(Settings.packages.fog_connection, Settings.packages.app_package_directory_key || "cc-app-packages")
-
-      app_bits_packer = AppBitsPacker.new(package_blob_store, app_bit_cache)
-      app_bits_packer.perform(app, uploaded_zip_of_files_not_in_blobstore, fingerprints_already_in_blobstore)
+      AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore.try(:path), json_param("resources")).perform # check zip.nil
 
       HTTP::CREATED
     rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid
