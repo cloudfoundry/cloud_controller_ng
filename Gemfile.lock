@@ -28,7 +28,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: b739949a57a984d6f43d0d30a9f6844e92c9281e
+  revision: b6e174330efb45b80902807d3b9d888ad8c75973
   specs:
     vcap_common (2.2.1)
       addressable (~> 2.2)
@@ -138,7 +138,7 @@ GEM
     machinist (1.0.6)
     membrane (0.0.2)
     method_source (0.8.1)
-    mime-types (1.23)
+    mime-types (1.24)
     msgpack (0.5.5)
     multi_json (1.7.9)
     multi_xml (0.5.5)
