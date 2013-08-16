@@ -16,11 +16,11 @@ module VCAP::CloudController::Models
     end
 
     def after_commit
-      CloudController::TaskClient.start_task(self)
+      task_client.start_task(self)
     end
 
     def after_destroy
-      CloudController::TaskClient.stop_task(self)
+      task_client.stop_task(self)
     end
 
     def secure_token=(token)
@@ -39,6 +39,10 @@ module VCAP::CloudController::Models
     end
 
     private
+
+    def task_client
+      @task_client ||= CloudController::TaskClient.new
+    end
 
     def generate_salt
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt.freeze

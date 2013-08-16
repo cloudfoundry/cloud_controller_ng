@@ -140,7 +140,12 @@ class VCAP::CloudController::Config < VCAP::Config
       merge_defaults(config)
     end
 
+    attr_reader :config, :message_bus
+
     def configure(config, message_bus)
+      @config = config
+      @message_bus = message_bus
+
       VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
       VCAP::CloudController::AccountCapacity.configure(config)
       VCAP::CloudController::ResourcePool.instance =
@@ -160,8 +165,6 @@ class VCAP::CloudController::Config < VCAP::Config
       VCAP::CloudController::Models::QuotaDefinition.configure(config)
       VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
       VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
-
-      CloudController::TaskClient.configure(message_bus)
 
       Dir.glob(File.expand_path('../../../config/initializers/*.rb', __FILE__)).each do |file|
         require file

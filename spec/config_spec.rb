@@ -109,11 +109,6 @@ module VCAP::CloudController
         VCAP::CloudController::Models::ServicePlan.should_receive(:configure).with("no quota")
         Config.configure(config, nil)
       end
-
-      it "sets up the task client" do
-        CloudController::TaskClient.should_receive(:configure).with("some message bus")
-        Config.configure(@test_config, "some message bus")
-      end
     end
   end
 end
