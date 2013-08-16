@@ -40,8 +40,8 @@ class SafeZipper
 
   def zip
     @zip ||= begin
-      output = `zip -r --symlinks #{@zip_destination} .`
-      raise VCAP::Errors::AppPackageInvalid, "Could not zip the package" unless $?.success?
+      output = `zip -q -r --symlinks #{@zip_destination} .`
+      raise VCAP::Errors::AppPackageInvalid, "Could not zip the package:" unless $?.success?
       output
     end
   end

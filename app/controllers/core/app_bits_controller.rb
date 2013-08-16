@@ -1,4 +1,5 @@
 require "cloud_controller/upload_handler"
+require "workers/runtime/app_bits_packer"
 
 module VCAP::CloudController
   rest_controller :AppBits do
@@ -14,22 +15,15 @@ module VCAP::CloudController
     def upload(guid)
       app = find_guid_and_validate_access(:update, guid)
 
-      unless params["resources"]
-        raise Errors::AppBitsUploadInvalid.new("missing :resources")
-      end
+      raise Errors::AppBitsUploadInvalid, "missing :resources" unless params["resources"]
 
-      fingerprints_already_in_blobstore = json_param("resources")
-      unless fingerprints_already_in_blobstore.kind_of?(Array)
-        raise Errors::AppBitsUploadInvalid.new("invalid :resources")
-      end
+      fingerprints_already_in_blobstore = FingerprintsCollection.new(json_param("resources"))
+      uploaded_zip_of_files_not_in_blobstore = UploadHandler.new(config).uploaded_file(params, "application")
+      package_blob_store = BlobStore.new(Settings.resource_pool.fog_connection, Settings.resource_pool.resource_directory_key || "cc-resources")
+      app_bit_cache = BlobStore.new(Settings.packages.fog_connection, Settings.packages.app_package_directory_key || "cc-app-packages")
 
-      # TODO: validate upload path
-      upload_handler = UploadHandler.new(config)
-      uploaded_zip_of_files_not_in_blobstore = upload_handler.uploaded_file(params, "application")
-
-      sha1 = AppPackage.to_zip(app.guid, fingerprints_already_in_blobstore, uploaded_zip_of_files_not_in_blobstore)
-      app.package_hash = sha1
-      app.save
+      app_bits_packer = AppBitsPacker.new(package_blob_store, app_bit_cache)
+      app_bits_packer.perform(app, uploaded_zip_of_files_not_in_blobstore, fingerprints_already_in_blobstore)
 
       HTTP::CREATED
     rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid

@@ -116,7 +116,6 @@ describe BlobStore do
       FileUtils.touch(path)
 
       blob_store.cp_from_local(path, "abcdef123456")
-      p Find.find(File.join(blob_store_dir)).to_a
       expect(File.exists?(File.join(blob_store_dir, "a-directory-key", "ab", "cd", "abcdef123456"))).to be_true
     end
   end

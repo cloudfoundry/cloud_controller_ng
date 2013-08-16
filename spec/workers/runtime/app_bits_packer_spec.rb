@@ -1,7 +1,6 @@
 require "spec_helper"
 require "workers/runtime/app_bits_packer"
 
-
 describe AppBitsPacker do
   let(:fingerprints_in_app_cache) do
     path = File.join(local_tmp_dir, "content")
@@ -12,8 +11,8 @@ describe AppBitsPacker do
     FingerprintsCollection.new([{"fn" => "path/to/content.txt", "size" => 123, "sha1" => sha}])
   end
 
-  let(:zip_path) { File.expand_path("../../../fixtures/good.zip", __FILE__) }
-  let(:app_guid) { "fake_app_guid" }
+  let(:zip) { mock(:zip, path: File.expand_path("../../../fixtures/good.zip", __FILE__)) }
+  let(:app) { VCAP::CloudController::Models::App.make }
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
   let(:app_bit_cache) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "app_bit_cache") }
@@ -22,7 +21,7 @@ describe AppBitsPacker do
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:max_droplet_size) { 1_073_741_824 }
   let!(:settings) do
-    Settings.stub(:max_droplet_size) { max_droplet_size  }
+    Settings.stub_chain(:packages, :max_droplet_size) { max_droplet_size  }
     Settings.stub(:tmp_dir) { local_tmp_dir }
   end
 
@@ -38,7 +37,7 @@ describe AppBitsPacker do
   end
 
   describe "#perform" do
-    subject(:perform) { packer.perform(app_guid, zip_path, fingerprints_in_app_cache) }
+    subject(:perform) { packer.perform(app, zip, fingerprints_in_app_cache) }
 
     it "uploads the new app bits to the app bit cache" do
       perform
@@ -48,19 +47,27 @@ describe AppBitsPacker do
 
     it "uploads the new app bits to the package blob store" do
       perform
-      package_blob_store.cp_to_local(app_guid, File.join(local_tmp_dir, "package.zip"))
+      package_blob_store.cp_to_local(app.guid, File.join(local_tmp_dir, "package.zip"))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include("bye")
     end
 
     it "uploads the old app bits already in the app bits cache to the package blob store" do
       perform
-      package_blob_store.cp_to_local(app_guid, File.join(local_tmp_dir, "package.zip"))
+      package_blob_store.cp_to_local(app.guid, File.join(local_tmp_dir, "package.zip"))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include("path/to/content.txt")
     end
 
     it "uploads the package zip to the package blob store" do
       perform
-      expect(package_blob_store.exists?(app_guid)).to be_true
+      expect(package_blob_store.exists?(app.guid)).to be_true
+    end
+
+    it "sets the package sha to the app" do
+      expect {
+        perform
+      }.to change {
+        app.refresh.package_hash
+      }.from(nil).to(/.+/)
     end
 
     context "when the app bits are too large" do
@@ -70,6 +77,25 @@ describe AppBitsPacker do
         expect {
           perform
         }.to raise_exception VCAP::Errors::AppPackageInvalid, /package.+larger/i
+      end
+    end
+
+    context "when the max droplet size is not configured" do
+      let(:max_droplet_size) { nil }
+
+      it "works for app bit size below 512MB" do
+        expect {
+          perform
+        }.to_not raise_exception VCAP::Errors::AppPackageInvalid
+      end
+
+      it "raises exception for app bit size greater or equal" do
+        fingerprints_in_app_cache = FingerprintsCollection.new(
+          [{"fn" => "file.txt", "size" => (512 * 1024 * 1024) + 1, "sha1" => 'a_sha'}]
+        )
+        expect {
+          packer.perform(app, zip, fingerprints_in_app_cache)
+        }.to raise_exception VCAP::Errors::AppPackageInvalid
       end
     end
   end

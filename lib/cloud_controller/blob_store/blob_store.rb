@@ -1,9 +1,10 @@
 require "fileutils"
 require "find"
+require "fog"
 
 class BlobStore
   def initialize(connection_config, directory_key)
-    @connection_config = connection_config
+    @connection_config = connection_config.to_hash
     @directory_key = directory_key
   end
 
@@ -28,8 +29,8 @@ class BlobStore
     end
   end
 
-  def cp_r_from_local(local_dir_path)
-    Find.find(local_dir_path).each do |path|
+  def cp_r_from_local(source_dir)
+    Find.find(source_dir).each do |path|
       next unless File.file?(path)
 
       sha1 = Digest::SHA1.file(path).hexdigest
