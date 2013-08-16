@@ -187,12 +187,16 @@ module VCAP::CloudController::SpecHelper
 
   def configure_components(config)
     VCAP::CloudController::Config.db_encryption_key = "some-key"
-    message_bus = CfMessageBus::MockMessageBus.new
+
+    # DO NOT override the message bus, use the same mock that's set the first time
+    message_bus = VCAP::CloudController::Config.message_bus || CfMessageBus::MockMessageBus.new
 
     # FIXME: this is better suited for a before-each stub so that we can unstub it in examples
     VCAP::CloudController::Models::ManagedServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
 
     VCAP::CloudController::Config.configure(config, message_bus)
+    # reset the dependency locator
+    CloudController::DependencyLocator.instance.send(:initialize)
 
     configure_stacks
   end

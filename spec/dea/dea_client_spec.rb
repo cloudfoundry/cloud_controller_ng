@@ -677,6 +677,8 @@ module VCAP::CloudController
     end
 
     describe "find_all_instances" do
+      let(:health_manager_client) { CloudController::DependencyLocator.instance.health_manager_client }
+
       include Errors
 
       it "should raise an error if the app is in stopped state" do
@@ -708,8 +710,9 @@ module VCAP::CloudController
           ],
         }
 
-        HealthManagerClient.should_receive(:find_status).
-            with(@app, search_options).and_return(flapping_instances)
+        health_manager_client.should_receive(:find_status).
+            with(@app, search_options).
+            and_return(flapping_instances)
 
         # Should not find starting or running instances if all instances are
         # flapping.
@@ -746,7 +749,7 @@ module VCAP::CloudController
           ],
         }
 
-        HealthManagerClient.should_receive(:find_status).
+        health_manager_client.should_receive(:find_status).
             with(@app, search_options).and_return(flapping_instances)
 
         search_options = {
@@ -790,7 +793,7 @@ module VCAP::CloudController
           ],
         }
 
-        HealthManagerClient.should_receive(:find_status).
+        health_manager_client.should_receive(:find_status).
           with(@app, search_options).and_return(flapping_instances)
 
         search_options = {
@@ -858,7 +861,7 @@ module VCAP::CloudController
           :version => @app.version,
         }
 
-        HealthManagerClient.should_receive(:find_status).
+        health_manager_client.should_receive(:find_status).
           with(@app, search_options)
 
         search_options = {
@@ -915,7 +918,7 @@ module VCAP::CloudController
           :version => @app.version,
         }
 
-        HealthManagerClient.should_receive(:find_status).
+        health_manager_client.should_receive(:find_status).
           with(@app, search_options)
 
         search_options = {

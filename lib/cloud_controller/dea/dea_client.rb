@@ -45,8 +45,6 @@ module VCAP::CloudController
         dea_publish_stop(:droplet => app.guid)
       end
 
-
-
       def find_specific_instance(app, options = {})
         message = { :droplet => app.guid }
         message.merge!(options)
@@ -78,7 +76,7 @@ module VCAP::CloudController
             :version => app.version,
         }
 
-        flapping_indices = HealthManagerClient.find_status(app, message)
+        flapping_indices = health_manager_client.find_status(app, message)
 
         all_instances = {}
         if flapping_indices && flapping_indices[:indices]
@@ -130,8 +128,6 @@ module VCAP::CloudController
         all_instances
       end
 
-
-
       def change_running_instances(app, delta)
         if delta > 0
           range = (app.instances - delta...app.instances)
@@ -174,8 +170,6 @@ module VCAP::CloudController
         )
       end
 
-
-
       def get_file_uri_for_instance(app, path, instance)
         if instance < 0 || instance >= app.instances
           msg = "Request failed for app: #{app.name}, instance: #{instance}"
@@ -216,8 +210,6 @@ module VCAP::CloudController
         dea_publish_update(message)
         app.routes_changed = false
       end
-
-
 
       def find_stats(app, opts = {})
         opts = { :allow_stopped_state => false }.merge(opts)
@@ -265,7 +257,6 @@ module VCAP::CloudController
         stats
       end
 
-
       def start_app_message(app)
         # TODO: add debug support
         {
@@ -294,6 +285,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def health_manager_client
+        @health_manager_client ||= CloudController::DependencyLocator.instance.health_manager_client
+      end
 
       # @param [Enumerable, #each] indices the range / sequence of instances to start
       def start_instances_in_range(app, indices)

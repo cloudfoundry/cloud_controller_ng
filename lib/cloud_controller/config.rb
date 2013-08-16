@@ -160,7 +160,6 @@ class VCAP::CloudController::Config < VCAP::Config
       VCAP::CloudController::DeaClient.configure(config, message_bus, dea_pool)
 
       VCAP::CloudController::LegacyBulk.configure(config, message_bus)
-      VCAP::CloudController::HealthManagerClient.configure(config, message_bus)
 
       VCAP::CloudController::Models::QuotaDefinition.configure(config)
       VCAP::CloudController::Models::Stack.configure(config[:stacks_file])

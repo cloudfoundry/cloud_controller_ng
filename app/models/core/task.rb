@@ -41,7 +41,7 @@ module VCAP::CloudController::Models
     private
 
     def task_client
-      @task_client ||= CloudController::TaskClient.new
+      @task_client ||= CloudController::DependencyLocator.instance.task_client
     end
 
     def generate_salt

@@ -77,7 +77,13 @@ module VCAP::CloudController
       end
 
       def send_droplet_updated_message(app)
-        HealthManagerClient.notify_app_updated(app.guid)
+        health_manager_client.notify_app_updated(app.guid)
+      end
+
+      private
+
+      def health_manager_client
+        @health_manager_client ||= CloudController::DependencyLocator.instance.health_manager_client
       end
     end
   end

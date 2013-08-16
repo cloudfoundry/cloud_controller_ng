@@ -22,7 +22,7 @@ module VCAP::CloudController
 
       started_apps = space.apps.select(&:started?)
       unless started_apps.empty?
-        HealthManagerClient.healthy_instances(started_apps).each do |app_guid, num|
+        health_manager_client.healthy_instances(started_apps).each do |app_guid, num|
           apps[app_guid][:running_instances] = num
         end
       end
@@ -43,6 +43,14 @@ module VCAP::CloudController
         :apps => apps.values,
         :services => services_summary,
       )
+    end
+
+    protected
+
+    attr_reader :health_manager_client
+
+    def inject_dependencies(dependencies)
+      @health_manager_client = dependencies[:health_manager_client]
     end
 
     private

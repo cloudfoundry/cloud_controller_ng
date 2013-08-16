@@ -4,6 +4,8 @@ require File.expand_path("../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe Config do
+    let(:message_bus) { Config.message_bus }
+
     describe ".from_file" do
       it "raises if the file does not exist" do
         expect {
@@ -27,45 +29,43 @@ module VCAP::CloudController
         }
       end
 
-
       it "sets up the db encryption key" do
-        Config.configure(@test_config.merge(db_encryption_key: "123-456"), nil)
+        Config.configure(@test_config.merge(db_encryption_key: "123-456"), message_bus)
         expect(Config.db_encryption_key).to eq("123-456")
       end
 
       it "sets up the account capacity" do
-        Config.configure(@test_config.merge(admin_account_capacity: {memory: 64*1024}), nil)
+        Config.configure(@test_config.merge(admin_account_capacity: {memory: 64*1024}), message_bus)
         expect(VCAP::CloudController::AccountCapacity.admin[:memory]).to eq(64*1024)
 
         VCAP::CloudController::AccountCapacity.admin[:memory] = AccountCapacity::ADMIN_MEM
       end
 
       it "sets up the resource pool instance" do
-        Config.configure(@test_config.merge(resource_pool: {minimum_size: 9001}), nil)
+        Config.configure(@test_config.merge(resource_pool: {minimum_size: 9001}), message_bus)
         expect(VCAP::CloudController::ResourcePool.instance.minimum_size).to eq(9001)
       end
 
       it "sets up the app package" do
         VCAP::CloudController::AppPackage.should_receive(:configure).with(@test_config)
-        Config.configure(@test_config, nil)
+        Config.configure(@test_config, message_bus)
       end
 
       it "sets up the app manager" do
-        Config.configure(@test_config, "some message bus")
+        Config.configure(@test_config, message_bus)
         expect(VCAP::CloudController::AppManager.config).to eq(@test_config)
-        expect(VCAP::CloudController::AppManager.message_bus).to eq("some message bus")
+        expect(VCAP::CloudController::AppManager.message_bus).to eq(message_bus)
 
         expect(VCAP::CloudController::AppManager.stager_pool.config).to eq(@test_config)
-        expect(VCAP::CloudController::AppManager.stager_pool.message_bus).to eq("some message bus")
+        expect(VCAP::CloudController::AppManager.stager_pool.message_bus).to eq(message_bus)
       end
 
       it "sets the stagings controller" do
         VCAP::CloudController::StagingsController.should_receive(:configure).with(@test_config)
-        Config.configure(@test_config, nil)
+        Config.configure(@test_config, message_bus)
       end
 
       it "sets the dea client" do
-        message_bus = mock
         Config.configure(@test_config, message_bus)
         expect(VCAP::CloudController::DeaClient.config).to eq(@test_config)
         expect(VCAP::CloudController::DeaClient.message_bus).to eq(message_bus)
@@ -76,38 +76,33 @@ module VCAP::CloudController
 
       it "sets the legacy bulk" do
         bulk_config = {bulk_api: {auth_user: "user", auth_password: "password"}}
-        Config.configure(@test_config.merge(bulk_config), "some message bus")
+        Config.configure(@test_config.merge(bulk_config), message_bus)
         expect(VCAP::CloudController::LegacyBulk.config[:auth_user]).to eq("user")
         expect(VCAP::CloudController::LegacyBulk.config[:auth_password]).to eq("password")
-        expect(VCAP::CloudController::LegacyBulk.message_bus).to eq("some message bus")
-      end
-
-      it "sets the health manager client" do
-        VCAP::CloudController::HealthManagerClient.should_receive(:configure).with(@test_config, "some message bus")
-        Config.configure(@test_config, "some message bus")
+        expect(VCAP::CloudController::LegacyBulk.message_bus).to eq(message_bus)
       end
 
       it "sets up the quota definition" do
         VCAP::CloudController::Models::QuotaDefinition.should_receive(:configure).with(@test_config)
-        Config.configure(@test_config, nil)
+        Config.configure(@test_config, message_bus)
       end
 
       it "sets up the stack" do
         config = @test_config.merge(stacks_file: "path/to/stacks/file")
         VCAP::CloudController::Models::Stack.should_receive(:configure).with("path/to/stacks/file")
-        Config.configure(config, nil)
+        Config.configure(config, message_bus)
       end
 
       it "sets up the service plan" do
         config = @test_config.merge(trial_db: "no quota")
         VCAP::CloudController::Models::ServicePlan.should_receive(:configure).with("no quota")
-        Config.configure(config, nil)
+        Config.configure(config, message_bus)
       end
 
       it "sets up the service plan" do
         config = @test_config.merge(trial_db: "no quota")
         VCAP::CloudController::Models::ServicePlan.should_receive(:configure).with("no quota")
-        Config.configure(config, nil)
+        Config.configure(config, message_bus)
       end
     end
   end

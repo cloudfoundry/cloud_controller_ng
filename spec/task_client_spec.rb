@@ -6,7 +6,7 @@ module CloudController
 
     before do
       @message_bus = VCAP::CloudController::Config.message_bus
-      @task_client = TaskClient.new
+      @task_client = TaskClient.new(@message_bus)
 
       @app = double(:app).as_null_object
       @task = VCAP::CloudController::Models::Task.new(guid: "some guid", app: @app, secure_token: "42")

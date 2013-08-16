@@ -1,6 +1,8 @@
 module CloudController
   class TaskClient
-    def initialize(message_bus = VCAP::CloudController::Config.message_bus)
+    attr_reader :message_bus
+
+    def initialize(message_bus)
       @message_bus = message_bus
     end
 
