@@ -21,7 +21,6 @@ module VCAP::CloudController
     describe 'POST /v2/service_brokers' do
       let(:name) { Sham.name }
       let(:broker_url) { 'http://cf-service-broker.example.com' }
-      let(:broker_api_url) { "http://cc:#{token}@cf-service-broker.example.com/v3" }
       let(:token) { 'abc123' }
 
       let(:body_hash) do
@@ -31,153 +30,149 @@ module VCAP::CloudController
           token: token
         }
       end
-      let(:body) { body_hash.to_json }
+
+      def body
+        body_hash.to_json
+      end
+
+      let(:errors) { double(Sequel::Model::Errors, on: nil) }
+      let(:broker) { double(Models::ServiceBroker, guid: '123') }
+      let(:registration) do
+        reg = double(Models::ServiceBrokerRegistration, {
+          guid: broker.guid,
+          broker: broker,
+          broker_url: Sham.url,
+          name: Sham.name,
+          errors: errors
+        })
+        reg.stub(:save).and_return(reg)
+        reg
+      end
+      let(:presenter) { double(ServiceBrokerRegistrationPresenter, {
+        to_json: "{\"metadata\":{\"guid\":\"#{broker.guid}\"}}"
+      }) }
 
       before do
-        stub_request(:get, broker_api_url).to_return(status: 200, body: '["OK"]')
+        Models::ServiceBrokerRegistration.stub(:new).and_return(registration)
+        ServiceBrokerRegistrationPresenter.stub(:new).with(registration).and_return(presenter)
       end
 
       it 'returns a 201 status' do
         post '/v2/service_brokers', body, headers
 
-        last_response.status.should == 201
+        expect(last_response.status).to eq(201)
       end
 
-      it 'creates a service broker' do
-        expect {
-          post '/v2/service_brokers', body, headers
-        }.to change(Models::ServiceBroker, :count).by(1)
-
-        broker = Models::ServiceBroker.last
-        broker.name.should == name
-        broker.broker_url.should == broker_url
-        broker.token.should == token
-      end
-
-      it 'omits the token from the response' do
+      it 'creates a service broker registration' do
         post '/v2/service_brokers', body, headers
 
-        metadata = decoded_response.fetch('metadata')
-        entity = decoded_response.fetch('entity')
-
-        metadata.fetch('guid').should == Models::ServiceBroker.last.guid
-        entity.should_not have_key('token')
+        expect(registration).to have_received(:save)
       end
 
-      it 'includes the url of the resource in the response metadata' do
+      it 'returns the serialized registration' do
         post '/v2/service_brokers', body, headers
 
-        metadata = decoded_response.fetch('metadata')
-        metadata.fetch('url').should == "/v2/service_brokers/#{metadata.fetch('guid')}"
-      end
-
-      it 'includes the broker name in the response entity' do
-        post '/v2/service_brokers', body, headers
-
-        metadata = decoded_response.fetch('entity')
-        metadata.fetch('name').should == name
-      end
-
-      it 'includes the broker url in the response entity' do
-        post '/v2/service_brokers', body, headers
-
-        metadata = decoded_response.fetch('entity')
-        metadata.fetch('broker_url').should == broker_url
-      end
-
-      it "returns an error if the broker name is not present" do
-        body = {
-          broker_url: broker_url,
-          token: token
-        }.to_json
-
-        post '/v2/service_brokers', body, headers
-
-        last_response.should be_bad_request
-        decoded_response.fetch('code').should == 270001
-        decoded_response.fetch('description').should =~ /name presence/
-      end
-
-      it "returns an error if the broker url is not present" do
-        body = {
-          name: name,
-          token: token
-        }.to_json
-
-        post '/v2/service_brokers', body, headers
-
-        last_response.should be_bad_request
-        decoded_response.fetch('code').should == 270001
-        decoded_response.fetch('description').should =~ /broker_url presence/
-      end
-
-      it "returns an error if the token is not present" do
-        body = {
-          name: name,
-          broker_url: broker_url
-        }.to_json
-
-        post '/v2/service_brokers', body, headers
-
-        last_response.should be_bad_request
-        decoded_response.fetch('code').should == 270001
-        decoded_response.fetch('description').should =~ /token presence/
-      end
-
-      it "returns an error if the broker name is not unique" do
-        Models::ServiceBroker.make(name: name)
-
-        post '/v2/service_brokers', body, headers
-
-        last_response.should be_bad_request
-        decoded_response.fetch('code').should == 270002
-        decoded_response.fetch('description').should == "The service broker name is taken: #{name}"
-      end
-
-      it "returns an error if the broker url is not unique" do
-        Models::ServiceBroker.make(broker_url: broker_url)
-
-        post '/v2/service_brokers', body, headers
-
-        last_response.should be_bad_request
-
-        decoded_response.fetch('code').should == 270003
-        decoded_response.fetch('description').should == "The service broker url is taken: #{broker_url}"
+        expect(last_response.body).to eq(presenter.to_json)
       end
 
       it 'includes a location header for the resource' do
         post '/v2/service_brokers', body, headers
 
         headers = last_response.original_headers
-        metadata = decoded_response.fetch('metadata')
-        headers.fetch('Location').should == "/v2/service_brokers/#{metadata.fetch('guid')}"
+        headers.fetch('Location').should == '/v2/service_brokers/123'
       end
 
       it 'does not set fields that are unmodifiable' do
-        body_with_guid = body_hash.merge(guid: 'mycustomguid').to_json
-        post '/v2/service_brokers', body_with_guid, headers
-        Models::ServiceBroker.order(:id).last.guid.should_not == 'mycustomguid'
+        body_hash[:guid] = 'mycustomguid'
+        post '/v2/service_brokers', body, headers
+        expect(Models::ServiceBrokerRegistration).to_not have_received(:new).with(hash_including('guid' => 'mycustomguid'))
       end
 
-      context 'when the broker API check fails' do
-        before do
-          stub_request(:get, broker_api_url).to_raise(SocketError)
-        end
+      context 'when there is an error in Broker Registration' do
+        before { registration.stub(:save).and_return(nil) }
 
-        it 'returns an error' do
-          error = Errors::ServiceBrokerApiUnreachable.new(broker_url)
+        context 'when there is an error in API authentication' do
+          before { errors.stub(:on).with(:broker_api).and_return([:authentication_failed]) }
 
-          post '/v2/service_brokers', body, headers
-
-          last_response.status.should == error.response_code
-          decoded_response.fetch('code').should == error.error_code
-          decoded_response.fetch('description').should == error.message
-        end
-
-        it 'does not create a broker record' do
-          expect {
+          it 'returns an error' do
             post '/v2/service_brokers', body, headers
-          }.to_not change(Models::ServiceBroker, :count)
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270007
+            decoded_response.fetch('description').should =~ /The Service Broker API authentication failed/
+          end
+        end
+
+        context 'when the broker API is unreachable' do
+          before { errors.stub(:on).with(:broker_api).and_return([:unreachable]) }
+
+          it 'returns an error' do
+            post '/v2/service_brokers', body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270004
+            decoded_response.fetch('description').should =~ /The Service Broker API could not be reached/
+          end
+        end
+
+        context 'when the broker API times out' do
+          before { errors.stub(:on).with(:broker_api).and_return([:timeout]) }
+
+          it 'returns an error' do
+            post '/v2/service_brokers', body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270005
+            decoded_response.fetch('description').should =~ /The Service Broker API timed out/
+          end
+        end
+
+        context 'when the broker API is invalid' do
+          before { errors.stub(:on).with(:broker_api).and_return([:invalid]) }
+
+          it 'returns an error' do
+            post '/v2/service_brokers', body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270006
+            decoded_response.fetch('description').should =~ /The Service Broker API returned an invalid response/
+          end
+        end
+
+        context 'when the broker url is taken' do
+          before { errors.stub(:on).with(:broker_url).and_return([:unique]) }
+
+          it 'returns an error' do
+            post '/v2/service_brokers', body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270003
+            decoded_response.fetch('description').should =~ /The service broker url is taken/
+          end
+        end
+
+        context 'when the broker name is taken' do
+          before { errors.stub(:on).with(:name).and_return([:unique]) }
+
+          it 'returns an error' do
+            post '/v2/service_brokers', body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270002
+            decoded_response.fetch('description').should =~ /The service broker name is taken/
+          end
+        end
+
+        context 'when there are other errors on the registration' do
+          before { errors.stub(:full_messages).and_return('A bunch of stuff was wrong') }
+
+          it 'returns an error' do
+            post '/v2/service_brokers', body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270001
+            decoded_response.fetch('description').should == 'Service Broker is invalid: A bunch of stuff was wrong'
+          end
         end
       end
 
@@ -194,7 +189,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "GET /v2/service_brokers" do
+    describe 'GET /v2/service_brokers' do
       let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
       let(:single_broker_response) do
         {
@@ -246,7 +241,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "DELETE /v2/service_brokers/:guid" do
+    describe 'DELETE /v2/service_brokers/:guid' do
       let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
 
       it "deletes the service broker" do

@@ -10,6 +10,10 @@ class ApiPresenter
     }
   end
 
+  def to_json
+    Yajl::Encoder.encode(to_hash)
+  end
+
   protected
 
   def metadata_hash

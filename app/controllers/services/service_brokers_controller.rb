@@ -1,3 +1,5 @@
+require 'presenters/api/service_broker_registration_presenter'
+
 module VCAP::CloudController
 
   # This controller is an experiment breaking away from the old
@@ -34,14 +36,17 @@ module VCAP::CloudController
     end
 
     def create
-      broker = Models::ServiceBroker.new(ServiceBrokerMessage.extract(body))
-      broker.check! if broker.valid?
-      broker.save
+      params = ServiceBrokerMessage.extract(body)
 
-      body = broker_hash(broker)
-      headers = {"Location" => url_of(broker) }
+      registration = Models::ServiceBrokerRegistration.new(params)
 
-      [HTTP::CREATED, headers, body.to_json]
+      unless registration.save(raise_on_failure: false)
+        raise get_exception_from_errors(registration)
+      end
+
+      headers = {'Location' => "/v2/service_brokers/#{registration.broker.guid}"}
+      body = ServiceBrokerRegistrationPresenter.new(registration).to_json
+      [HTTP::CREATED, headers, body]
     end
 
     def update(guid)
@@ -75,7 +80,6 @@ module VCAP::CloudController
     end
 
     private
-
 
     def require_admin
       raise NotAuthenticated unless user
@@ -118,6 +122,28 @@ module VCAP::CloudController
 
     def url_of(broker)
       "#{self.class.path}/#{broker.guid}"
+    end
+
+    private
+
+    def get_exception_from_errors(registration)
+      errors = registration.errors
+
+      if errors.on(:broker_api) && errors.on(:broker_api).include?(:authentication_failed)
+        Errors::ServiceBrokerApiAuthenticationFailed.new(registration.broker_url)
+      elsif errors.on(:broker_api) && errors.on(:broker_api).include?(:unreachable)
+        Errors::ServiceBrokerApiUnreachable.new(registration.broker_url)
+      elsif errors.on(:broker_api) && errors.on(:broker_api).include?(:timeout)
+        Errors::ServiceBrokerApiTimeout.new(registration.broker_url)
+      elsif errors.on(:broker_api) && errors.on(:broker_api).include?(:invalid)
+        Errors::ServiceBrokerApiInvalid.new(registration.broker_url)
+      elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:unique)
+        Errors::ServiceBrokerUrlTaken.new(registration.broker_url)
+      elsif errors.on(:name) && errors.on(:name).include?(:unique)
+        Errors::ServiceBrokerNameTaken.new(registration.name)
+      else
+        Errors::ServiceBrokerInvalid.new(errors.full_messages)
+      end
     end
   end
 end

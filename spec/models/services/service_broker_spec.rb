@@ -2,17 +2,55 @@ require 'spec_helper'
 
 module VCAP::CloudController::Models
   describe ServiceBroker, :services, type: :model do
+    let(:name) { Sham.name }
+    let(:broker_url) { 'http://cf-service-broker.example.com' }
+    let(:token) { 'abc123' }
+
+    subject(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, token: token) }
+
     before do
       reset_database
     end
 
-    describe '#check!' do
-      let(:name) { Sham.name }
-      let(:broker_url) { 'http://cf-service-broker.example.com' }
-      let(:broker_api_url) { "http://cc:#{token}@cf-service-broker.example.com/v3" }
-      let(:token) { 'abc123' }
+    describe '#valid?' do
+      it 'validates the name is present' do
+        expect(broker).to be_valid
+        broker.name = ''
+        expect(broker).to_not be_valid
+        expect(broker.errors.on(:name)).to include(:presence)
+      end
 
-      subject(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, token: token) }
+      it 'validates the url is present' do
+        expect(broker).to be_valid
+        broker.broker_url = ''
+        expect(broker).to_not be_valid
+        expect(broker.errors.on(:broker_url)).to include(:presence)
+      end
+
+      it 'validates the token is present' do
+        expect(broker).to be_valid
+        broker.token = ''
+        expect(broker).to_not be_valid
+        expect(broker.errors.on(:token)).to include(:presence)
+      end
+
+      it 'validates the name is unique' do
+        expect(broker).to be_valid
+        ServiceBroker.make(name: broker.name)
+        expect(broker).to_not be_valid
+        expect(broker.errors.on(:name)).to include(:unique)
+      end
+
+      it 'validates the url is unique' do
+        expect(broker).to be_valid
+        ServiceBroker.make(broker_url: broker.broker_url)
+        expect(broker).to_not be_valid
+        expect(broker.errors.on(:broker_url)).to include(:unique)
+      end
+    end
+
+    describe '#check!' do
+      let(:broker_api_url) { "http://cc:#{token}@cf-service-broker.example.com/v3" }
 
       before do
         stub_request(:get, broker_api_url).to_return(status: 200, body: '["OK"]')
