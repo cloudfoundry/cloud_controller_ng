@@ -46,16 +46,12 @@ module VCAP::CloudController
     end
     let(:staging_config) { original_staging_config }
 
-    around do |example|
-      begin
-        Fog.unmock!
-        #config_override(staging_config)
-        example.call
-      ensure
-        FileUtils.rm_rf(workspace)
-        Fog.mock!
-      end
+    before do
+      Fog.unmock!
+      config_override(staging_config)
     end
+
+    after { FileUtils.rm_rf(workspace) }
 
     describe "#create_handle" do
       let(:handle_id) { Sham.guid }
@@ -247,10 +243,11 @@ module VCAP::CloudController
 
       def self.it_downloads_staged_app
         it "succeeds for valid packages" do
+          guid = app_obj.guid
           tmpdir = Dir.mktmpdir
           zipname = File.join(tmpdir, "test.zip")
           create_zip(zipname, 10, 1024)
-          AppBitsPackerJob.new(app_obj.guid, zipname, []).perform
+          AppPackage.to_zip(guid, [], File.new(zipname))
           FileUtils.rm_rf(tmpdir)
 
           get "/staging/apps/#{app_obj.guid}"
@@ -270,13 +267,7 @@ module VCAP::CloudController
 
       context "when using with nginx" do
         before do
-          #config_override(staging_config)
-          Settings.stub(:resource_pool) do
-            mock(:resource_pool,
-              cdn: nil,
-              resource_directory_key: "foo",
-              fog_connection: mock(:fog, :provider => "Local", :local_root => Dir.mktmpdir("resourse_pool", workspace), to_hash: {}))
-          end
+          config_override(staging_config)
           authorize(staging_user, staging_password)
         end
 
