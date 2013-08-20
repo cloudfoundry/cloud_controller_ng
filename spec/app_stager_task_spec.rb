@@ -188,7 +188,7 @@ module VCAP::CloudController
           it "marks the app as having failed to stage" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to change { app.failed? }.to(true)
+            }.to change { app.staging_failed? }.to(true)
           end
         end
 
@@ -231,7 +231,7 @@ module VCAP::CloudController
           it "marks the app as having failed to stage" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to change { app.failed? }.to(true)
+            }.to change { app.staging_failed? }.to(true)
           end
         end
 
@@ -467,7 +467,7 @@ module VCAP::CloudController
           it "marks the app as having failed to stage" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to change { app.failed? }.to(true)
+            }.to change { app.staging_failed? }.to(true)
           end
         end
 
@@ -516,7 +516,7 @@ module VCAP::CloudController
           it "marks the app as having failed to stage" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to change { app.failed? }.to(true)
+            }.to change { app.staging_failed? }.to(true)
           end
         end
       end

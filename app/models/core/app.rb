@@ -317,7 +317,7 @@ module VCAP::CloudController
         self.package_state == "STAGED"
       end
 
-      def failed?
+      def staging_failed?
         self.package_state == "FAILED"
       end
 

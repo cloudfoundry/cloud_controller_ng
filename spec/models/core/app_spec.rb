@@ -467,12 +467,12 @@ module VCAP::CloudController
 
       it "should return true if package_state is FAILED" do
         app.package_state = "FAILED"
-        app.failed?.should be_true
+        app.staging_failed?.should be_true
       end
 
       it "should return false if package_state is not FAILED" do
         app.package_state = "STARTED"
-        app.failed?.should be_false
+        app.staging_failed?.should be_false
       end
     end
 

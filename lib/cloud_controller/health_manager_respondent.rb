@@ -49,7 +49,9 @@ module VCAP::CloudController
       return unless app
       return unless app.started?
       return unless version == app.version
-      return unless app.droplet_hash
+      # If staging has not failed, but bits were not uploaded
+      # ignore start command from HM
+      return if !app.droplet_hash && !app.staging_failed?
 
       current_running = running[app.version.to_sym] || 0
       return unless current_running < app.instances

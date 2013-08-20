@@ -75,16 +75,28 @@ module VCAP::CloudController
       end
 
       context "when the app exists but the droplet hash is not yet known" do
+        let(:package_state) { "PENDING" }
         let(:app) do
           Models::App.make :version => "some-version", :instances => 1, :state => "STARTED",
-            :package_hash => "dont_care", :droplet_hash => nil
+            :package_hash => "dont_care", :droplet_hash => nil, :package_state => package_state
         end
 
-        it "ignores the request" do
-          expect(app.droplet_hash).to be_nil
-          dea_client.should_not_receive(:start_instances_with_message)
+        context "when app staging has failed" do
+          let(:package_state) { "FAILED" }
+          it "starts the instance" do
+            dea_client.should_receive(:start_instances_with_message).with(app, [2])
 
-          subject.process_start(payload)
+            subject.process_start(payload)
+          end
+        end
+
+        context "when app was staged" do
+          it "ignores the request" do
+            expect(app.droplet_hash).to be_nil
+            dea_client.should_not_receive(:start_instances_with_message)
+
+            subject.process_start(payload)
+          end
         end
       end
 
