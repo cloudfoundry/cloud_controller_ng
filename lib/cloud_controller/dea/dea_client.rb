@@ -270,7 +270,6 @@ module VCAP::CloudController
         # TODO: add debug support
         {
           :droplet => app.guid,
-          :tags => {:space => app.space_guid, :organization => app.space.organization_guid},
           :name => app.name,
           :uris => app.uris,
           :prod => app.production,
