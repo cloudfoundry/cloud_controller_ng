@@ -442,7 +442,7 @@ module VCAP::CloudController
 
       def running_instances
         return 0 unless started?
-        VCAP::CloudController::HealthManagerClient.healthy_instances(self)
+        health_manager_client.healthy_instances(self)
       end
 
       # returns True if we need to update the DEA's with
@@ -460,6 +460,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def health_manager_client
+        @health_manager_client ||= CloudController::DependencyLocator.instance.health_manager_client
+      end
 
       def requested_memory
         default_memory = db_schema[:memory][:default].to_i

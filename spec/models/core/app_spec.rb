@@ -963,6 +963,7 @@ module VCAP::CloudController
 
     describe "changes to the app that trigger staging/dea notifications" do
       subject { Models::App.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
+      let(:health_manager_client) { CloudController::DependencyLocator.instance.health_manager_client }
 
       # Mark app as staged when AppManager.stage_app is called
       before do
@@ -1003,7 +1004,7 @@ module VCAP::CloudController
         def self.it_does_not_notify_dea
           it "does not notify dea of app update" do
             DeaClient.should_not_receive(:change_running_instances)
-            HealthManagerClient.should_not_receive(:notify_app_updated)
+            health_manager_client.should_not_receive(:notify_app_updated)
             update
           end
         end
@@ -1011,7 +1012,7 @@ module VCAP::CloudController
         def self.it_notifies_dea
           it "notifies dea of update" do
             DeaClient.should_receive(:change_running_instances).with(subject, after_update_instances)
-            HealthManagerClient.should_receive(:notify_app_updated).with(subject.guid)
+            health_manager_client.should_receive(:notify_app_updated).with(subject.guid)
             update
           end
         end
@@ -1050,7 +1051,7 @@ module VCAP::CloudController
         def self.it_does_not_notify_dea
           it "does not notify dea of stop or update" do
             DeaClient.should_not_receive(:stop)
-            HealthManagerClient.should_not_receive(:notify_app_updated)
+            health_manager_client.should_not_receive(:notify_app_updated)
             update
           end
         end
@@ -1058,7 +1059,7 @@ module VCAP::CloudController
         def self.it_notifies_dea
           it "notifies dea of stop and update" do
             DeaClient.should_receive(:stop).with(subject)
-            HealthManagerClient.should_receive(:notify_app_updated).with(subject.guid)
+            health_manager_client.should_receive(:notify_app_updated).with(subject.guid)
             update
           end
         end
@@ -1098,7 +1099,7 @@ module VCAP::CloudController
         def self.it_does_not_notify_dea
           it "does not notify dea of app update" do
             DeaClient.should_not_receive(:start)
-            HealthManagerClient.should_not_receive(:notify_app_updated)
+            health_manager_client.should_not_receive(:notify_app_updated)
             update
           end
         end
@@ -1106,7 +1107,7 @@ module VCAP::CloudController
         def self.it_notifies_dea
           it "notifies dea of start and update" do
             DeaClient.should_receive(:start).with(subject, :instances_to_start => instances_to_start)
-            HealthManagerClient.should_receive(:notify_app_updated).with(subject.guid)
+            health_manager_client.should_receive(:notify_app_updated).with(subject.guid)
             update
           end
         end
