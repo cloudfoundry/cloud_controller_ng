@@ -255,21 +255,22 @@ module VCAP::CloudController
       app = Models::App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
-      package_path = AppPackage.package_local_path(guid)
-      logger.debug "guid: #{guid} package_path: #{package_path}"
+      package_blob_store = BlobStoreFactory.get_package_blob_store
+      package_exists = package_blob_store.exists?(guid)
+      logger.debug "guid: #{guid} package_path: #{package_exists}"
 
-      unless package_path
+      unless package_exists
         logger.error "could not find package for #{guid}"
         raise AppPackageNotFound.new(guid)
       end
 
       if config[:nginx][:use_nginx]
-        url = AppPackage.package_uri(guid)
+        url = package_blob_store.url(guid)
         logger.debug "nginx redirect #{url}"
         [200, { "X-Accel-Redirect" => url }, ""]
       else
-        logger.debug "send_file #{package_path}"
-        send_file package_path
+        logger.debug "send_file #{url}"
+        send_file url
       end
     end
 

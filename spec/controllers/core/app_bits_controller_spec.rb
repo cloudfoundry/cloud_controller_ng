@@ -128,11 +128,10 @@ module VCAP::CloudController
 
       before do
         config
-        guid = app_obj.guid
         tmpdir = Dir.mktmpdir
         zipname = File.join(tmpdir, "test.zip")
         create_zip(zipname, 10, 1024)
-        AppPackage.to_zip(guid, [], File.new(zipname))
+        AppBitsPackerJob.new(app_obj.guid, zipname, []).perform
         FileUtils.rm_rf(tmpdir)
       end
 

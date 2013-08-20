@@ -18,7 +18,7 @@ module VCAP::CloudController
       raise Errors::AppBitsUploadInvalid, "missing :resources" unless params["resources"]
 
       uploaded_zip_of_files_not_in_blobstore = UploadHandler.new(config).uploaded_file(params, "application")
-      AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore.try(:path), json_param("resources")).perform # check zip.nil
+      AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore.try(:path), json_param("resources")).perform
 
       HTTP::CREATED
     rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid

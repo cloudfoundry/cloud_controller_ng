@@ -11,16 +11,6 @@ module VCAP::CloudController
 
     before do
       FileUtils.mkdir(config_tmpdir)
-      AppPackage.configure(
-        :packages => {
-          :fog_connection => {
-            :provider => "AWS",
-            :aws_access_key_id => "fake_aws_key_id",
-            :aws_secret_access_key => "fake_secret_access_key",
-          }
-        },
-        :directories => { :tmpdir => config_tmpdir }
-      )
       Fog.mock!
     end
 
@@ -46,44 +36,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "validate_package_size" do
-      before do
-        @saved_size = AppPackage.max_droplet_size
-      end
-
-      after :each do
-        AppPackage.max_droplet_size = @saved_size
-      end
-
-      it "should raise an instance of AppPackageInvalid if the unzipped size is too large" do
-        zipname = File.join(tmpdir, "test.zip")
-        unzipped_size = create_zip(zipname, 10, 1024)
-        AppPackage.max_droplet_size = unzipped_size - 1024
-
-        expect {
-          AppPackage.validate_package_size(File.new(zipname), [])
-        }.to raise_error(Errors::AppPackageInvalid, /exceeds/)
-      end
-
-      it "should raise an instance of AppPackageInvalid if the total size is too large" do
-        tf = Tempfile.new("mytemp")
-        tf.write("A" * 1024)
-        tf.close
-
-        ResourcePool.instance.add_path(tf.path)
-        sha1 = Digest::SHA1.file(tf.path).hexdigest
-        zipname = File.join(tmpdir, "test.zip")
-        unzipped_size = create_zip(zipname, 1, 1024)
-        AppPackage.max_droplet_size = unzipped_size + 512
-
-        expect {
-          AppPackage.validate_package_size(File.new(zipname),
-                                           [{"sha1" => sha1, "fn" => "test/path"}])
-        }.to raise_error(Errors::AppPackageInvalid, /exceeds/)
-      end
-    end
-
-    describe "unpack_upload" do
+      describe "unpack_upload" do
       it "should raise an instance of AppPackageInvalid if unzip exits with a nonzero status code" do
         invalid_zip = Tempfile.new("app_package_test")
         expect {
@@ -160,85 +113,85 @@ module VCAP::CloudController
       end
     end
 
-    describe ".to_zip" do
-      let(:guid) { Sham.guid }
-
-      def self.it_packages(expected_file_paths)
-        def packaged_app_file
-          file_key = AppPackage.key_from_guid(guid)
-          file = AppPackage.blob_store.files.get(file_key)
-          Tempfile.new("package").tap do |f|
-            f.write(file.body)
-            f.close
-          end
-        end
-
-        it "moves the app package to the droplets directory" do
-          expect {
-            AppPackage.to_zip(guid, resources, zip_file)
-          }.to change { AppPackage.package_exists?(guid) }.to(true)
-        end
-
-        it "packages correct files" do
-          AppPackage.to_zip(guid, resources, zip_file)
-          # do not inline this - otherwise the temp file might be GCed, which removes the files from disk before the assertion
-          f = packaged_app_file
-          list_files(unzip_zip(f.path)).should =~ expected_file_paths
-        end
-
-        it "packages in temporary directory specified in config" do
-          AppPackage.should_receive(:repack_app_in).with(anything, /#{config_tmpdir}\/app/).and_call_original
-          AppPackage.to_zip(guid, resources, zip_file)
-        end
-      end
-
-      def self.it_raises_error
-        it "raises error" do
-          expect {
-            AppPackage.to_zip(guid, resources, nil)
-          }.to raise_error(Errors::AppPackageInvalid, /app package is invalid/)
-        end
-      end
-
-      context "when the app does not need any file from resource pool" do
-        let(:resources) { [] }
-
-        context "when zip file was provided (with files)" do
-          let(:zip_file) { create_zip_with_named_files(:file_count => 2, :file_size => 2048) }
-          it_packages %w(ziptest_0 ziptest_1)
-        end
-
-        context "when the app has hidden files" do
-          let(:zip_file) { create_zip_with_named_files(:file_count => 2, :hidden_file_count => 2, :file_size => 2048) }
-          it_packages %w(ziptest_0 ziptest_1 .ziptest_0 .ziptest_1)
-        end
-
-        context "when zip file was not provided" do
-          let(:zip_file) { nil }
-          it_raises_error
-        end
-      end
-
-      context "when the app needs some files from resource pool" do
-        include_context "with valid resource in resource pool"
-        let(:resources) { [valid_resource] }
-
-        context "when zip file was provided (with files)" do
-          let(:zip_file) { create_zip_with_named_files(:file_count => 2, :file_size => 2048) }
-          it_packages %w(ziptest_0 ziptest_1 file/path)
-        end
-
-        context "when the app has hidden files" do
-          let(:zip_file) { create_zip_with_named_files(:file_count => 2, :hidden_file_count => 2, :file_size => 2048) }
-          it_packages %w(ziptest_0 ziptest_1 .ziptest_0 .ziptest_1 file/path)
-        end
-
-        context "when zip file was not provided" do
-          let(:zip_file) { nil }
-          it_packages %w(file/path)
-        end
-      end
-    end
+    #describe ".to_zip" do
+    #  let(:guid) { Sham.guid }
+    #
+    #  def self.it_packages(expected_file_paths)
+    #    def packaged_app_file
+    #      file_key = AppPackage.key_from_guid(guid)
+    #      file = AppPackage.blob_store.files.get(file_key)
+    #      Tempfile.new("package").tap do |f|
+    #        f.write(file.body)
+    #        f.close
+    #      end
+    #    end
+    #
+    #    it "moves the app package to the droplets directory" do
+    #      expect {
+    #        AppPackage.to_zip(guid, resources, zip_file)
+    #      }.to change { AppPackage.package_exists?(guid) }.to(true)
+    #    end
+    #
+    #    it "packages correct files" do
+    #      AppPackage.to_zip(guid, resources, zip_file)
+    #      # do not inline this - otherwise the temp file might be GCed, which removes the files from disk before the assertion
+    #      f = packaged_app_file
+    #      list_files(unzip_zip(f.path)).should =~ expected_file_paths
+    #    end
+    #
+    #    it "packages in temporary directory specified in config" do
+    #      AppPackage.should_receive(:repack_app_in).with(anything, /#{config_tmpdir}\/app/).and_call_original
+    #      AppPackage.to_zip(guid, resources, zip_file)
+    #    end
+    #  end
+    #
+    #  def self.it_raises_error
+    #    it "raises error" do
+    #      expect {
+    #        AppPackage.to_zip(guid, resources, nil)
+    #      }.to raise_error(Errors::AppPackageInvalid, /app package is invalid/)
+    #    end
+    #  end
+    #
+    #  context "when the app does not need any file from resource pool" do
+    #    let(:resources) { [] }
+    #
+    #    context "when zip file was provided (with files)" do
+    #      let(:zip_file) { create_zip_with_named_files(:file_count => 2, :file_size => 2048) }
+    #      it_packages %w(ziptest_0 ziptest_1)
+    #    end
+    #
+    #    context "when the app has hidden files" do
+    #      let(:zip_file) { create_zip_with_named_files(:file_count => 2, :hidden_file_count => 2, :file_size => 2048) }
+    #      it_packages %w(ziptest_0 ziptest_1 .ziptest_0 .ziptest_1)
+    #    end
+    #
+    #    context "when zip file was not provided" do
+    #      let(:zip_file) { nil }
+    #      it_raises_error
+    #    end
+    #  end
+    #
+    #  context "when the app needs some files from resource pool" do
+    #    include_context "with valid resource in resource pool"
+    #    let(:resources) { [valid_resource] }
+    #
+    #    context "when zip file was provided (with files)" do
+    #      let(:zip_file) { create_zip_with_named_files(:file_count => 2, :file_size => 2048) }
+    #      it_packages %w(ziptest_0 ziptest_1 file/path)
+    #    end
+    #
+    #    context "when the app has hidden files" do
+    #      let(:zip_file) { create_zip_with_named_files(:file_count => 2, :hidden_file_count => 2, :file_size => 2048) }
+    #      it_packages %w(ziptest_0 ziptest_1 .ziptest_0 .ziptest_1 file/path)
+    #    end
+    #
+    #    context "when zip file was not provided" do
+    #      let(:zip_file) { nil }
+    #      it_packages %w(file/path)
+    #    end
+    #  end
+    #end
 
     describe "delete_droplet" do
       before { AppPackage.unstub(:delete_package) }
@@ -254,7 +207,8 @@ module VCAP::CloudController
       end
 
       it "should delete the droplet if it exists" do
-        guid = Sham.guid
+        app = Models::App.make
+        guid = app.guid
 
         create_app_package(guid)
 
@@ -267,17 +221,8 @@ module VCAP::CloudController
       
       context "fog AWS" do      
         before do
-          @guid = Sham.guid
-
-          AppPackage.configure(
-            :packages => {
-              :fog_connection => {
-                :provider => "AWS",
-                :aws_access_key_id => "fake_aws_key_id",
-                :aws_secret_access_key => "fake_secret_access_key",
-              }
-            }
-          )
+          app = Models::App.make
+          @guid = app.guid
           Fog.mock!
 
           create_app_package(@guid)
@@ -300,49 +245,14 @@ module VCAP::CloudController
           uri = AppPackage.package_uri(@guid)
         end        
       end
-      
-      context "fog non-AWS" do      
-        before do
-          @guid = Sham.guid
-
-          AppPackage.configure(
-            :packages => {
-              :fog_connection => {
-                :provider => 'HP',
-                :hp_access_key => "fake_credentials",
-                :hp_secret_key => "fake_credentials",
-                :hp_tenant_id => "fake_credentials",
-                :hp_auth_uri =>  'https://auth.example.com:5000/v2.0/',
-                :hp_use_upass_auth_style => true,
-                :hp_avl_zone => 'nova'
-              }
-            }
-          )
-          Fog.mock!
-
-          create_app_package(@guid)
-          
-          FileUtils.rm_rf(tmpdir)
-        end
-        
-        it "should call a file's public_url method if there's no url method" do
-          Fog::Storage::HP::File.any_instance.should_receive(:public_url)
-          uri = AppPackage.package_uri(@guid)
-        end
-
-        it "should return nil for an invalid guid" do
-          uri = AppPackage.package_uri(Sham.guid)
-          uri.should be_nil
-        end
-      end
     end    
   end
   
-  def create_app_package(guid)
-    AppPackage.package_exists?(guid).should == false
+  def create_app_package(app_guid)
+    AppPackage.package_exists?(app_guid).should == false
     zipname = File.join(tmpdir, "test.zip")
     create_zip(zipname, 10, 1024)
-    AppPackage.to_zip(guid, [], File.new(zipname))
-    AppPackage.package_exists?(guid).should == true     
+    AppBitsPackerJob.new(app_guid, zipname, []).perform
+    AppPackage.package_exists?(app_guid).should == true
   end
 end
