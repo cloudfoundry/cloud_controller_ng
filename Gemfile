@@ -31,7 +31,6 @@ group :db do
 end
 
 group :development do
-  gem "ruby-graphviz"
   gem "debugger"
   gem "pry"
 end
