@@ -49,6 +49,7 @@ module VCAP::CloudController
       return unless app
       return unless app.started?
       return unless version == app.version
+      return unless app.droplet_hash
 
       current_running = running[app.version.to_sym] || 0
       return unless current_running < app.instances
