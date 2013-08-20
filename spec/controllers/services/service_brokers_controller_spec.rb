@@ -127,15 +127,15 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the broker API is invalid' do
-          before { errors.stub(:on).with(:broker_api).and_return([:invalid]) }
+        context "when the broker's catalog is malformed" do
+          before { errors.stub(:on).with(:catalog).and_return([:malformed]) }
 
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
             last_response.status.should == 400
             decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The Service Broker API returned an invalid response/
+            decoded_response.fetch('description').should =~ /The Service Broker's catalog endpoint did not return valid json/
           end
         end
 
@@ -280,27 +280,27 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/service_brokers/:guid' do
-      let(:old_broker_url) { 'http://old-cf-service-broker.example.com' }
+      let(:existing_broker_url) { 'http://old-cf-service-broker.example.com' }
 
-      def old_broker_api_url(token = nil)
+      def existing_broker_catalog_url(token = nil)
         token ||= self.token
-        "http://cc:#{token}@old-cf-service-broker.example.com/v3"
+        "http://cc:#{token}@old-cf-service-broker.example.com/v2/catalog"
       end
 
       let(:new_broker_url) { 'http://cf-service-broker.example.com' }
 
-      def new_broker_api_url(token = nil)
+      def new_broker_catalog_url(token = nil)
         token ||= self.token
-        "http://cc:#{token}@cf-service-broker.example.com/v3"
+        "http://cc:#{token}@cf-service-broker.example.com/v2/catalog"
       end
 
       let(:token) { 'secret' }
 
-      let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: old_broker_url, token: token) }
+      let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: existing_broker_url, token: token) }
 
       before do
-        stub_request(:get, old_broker_api_url).to_return(status: 200, body: '["OK"]')
-        stub_request(:get, new_broker_api_url).to_return(status: 200, body: '["OK"]')
+        stub_request(:get, existing_broker_catalog_url).to_return(status: 200, body: '{}')
+        stub_request(:get, new_broker_catalog_url).to_return(status: 200, body: '{}')
       end
 
       it "updates the name and url of an existing service broker" do
@@ -325,7 +325,7 @@ module VCAP::CloudController
       end
 
       it "updates the token of an existing service broker" do
-        stub_request(:get, old_broker_api_url('seeeecret')).to_return(status: 200, body: '["OK"]')
+        stub_request(:get, existing_broker_catalog_url('seeeecret')).to_return(status: 200, body: '{}')
         payload = {
           "token" => "seeeecret",
         }.to_json
@@ -394,7 +394,7 @@ module VCAP::CloudController
         end
 
         before do
-          stub_request(:get, new_broker_api_url).to_raise(SocketError)
+          stub_request(:get, new_broker_catalog_url).to_raise(SocketError)
         end
 
         it 'returns an error' do

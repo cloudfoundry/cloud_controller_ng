@@ -6,6 +6,6 @@ use Rack::Auth::Basic, 'Restricted Area' do |_, password|
   password == 'supersecretshh'
 end
 
-get '/v3' do
-  [200, {}, '["OK"]']
+get '/v2/catalog' do
+  [200, {}, '{}']
 end

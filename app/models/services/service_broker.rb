@@ -18,14 +18,14 @@ module VCAP::CloudController::Models
     def check!
       raise unless broker_url && token
 
-      api_base_url = broker_url + '/v3'
-      api_status_uri = URI(api_base_url)
+      catalog_url = broker_url + '/v2/catalog'
+      catalog_uri = URI(catalog_url)
 
       http = HTTPClient.new
-      http.set_auth(api_base_url, 'cc', token)
+      http.set_auth(catalog_url, 'cc', token)
 
       begin
-        response = http.get(api_status_uri)
+        response = http.get(catalog_uri)
       rescue SocketError, HTTPClient::ConnectTimeoutError, Errno::ECONNREFUSED
         raise VCAP::Errors::ServiceBrokerApiUnreachable.new(broker_url)
       rescue HTTPClient::KeepAliveDisconnected, HTTPClient::ReceiveTimeoutError
@@ -34,8 +34,17 @@ module VCAP::CloudController::Models
 
       if response.code.to_i == HTTP::Status::UNAUTHORIZED
         raise VCAP::Errors::ServiceBrokerApiAuthenticationFailed.new(broker_url)
-      elsif response.code.to_i != HTTP::Status::OK || response.body != '["OK"]'
-        raise VCAP::Errors::ServiceBrokerApiInvalid.new(broker_url)
+      elsif response.code.to_i != HTTP::Status::OK
+        raise VCAP::Errors::ServiceBrokerCatalogMalformed.new(broker_url)
+      else
+        begin
+          json = Yajl::Parser.parse(response.body)
+        rescue Yajl::ParseError
+        end
+
+        unless json.is_a?(Hash)
+          raise VCAP::Errors::ServiceBrokerCatalogMalformed.new(broker_url)
+        end
       end
     end
   end

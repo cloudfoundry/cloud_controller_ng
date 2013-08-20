@@ -15,7 +15,7 @@ module VCAP::CloudController::Models
       end
 
       before do
-        stub_request(:get, 'http://cc:auth1234@broker.example.com/v3').to_return(body: '["OK"]')
+        stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
       end
 
       it 'returns itself' do
@@ -36,10 +36,10 @@ module VCAP::CloudController::Models
         expect(broker).to be_exists
       end
 
-      it 'pings the broker' do
+      it 'fetches the catalog' do
         registration.save(raise_on_failure: false)
 
-        expect(a_request(:get, 'http://cc:auth1234@broker.example.com/v3')).to have_been_requested
+        expect(a_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog')).to have_been_requested
       end
 
       it 'resets errors before saving' do
@@ -64,10 +64,10 @@ module VCAP::CloudController::Models
             }.to_not change(ServiceBroker, :count)
           end
 
-          it 'does not ping the broker' do
+          it 'does not fetch the catalog' do
             registration.save(raise_on_failure: false)
 
-            expect(a_request(:get, 'http://cc:auth1234@broker.example.com/v3')).to_not have_been_requested
+            expect(a_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog')).to_not have_been_requested
           end
 
           it 'adds the broker errors to the registration errors' do
@@ -77,8 +77,8 @@ module VCAP::CloudController::Models
           end
         end
 
-        context 'because the broker ping failed' do
-          before { stub_request(:get, 'http://cc:auth1234@broker.example.com/v3').to_return(status: 500) }
+        context 'because the catalog fetch failed' do
+          before { stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(status: 500) }
 
           it 'raises an error, even though we\'d rather it not' do
             expect {

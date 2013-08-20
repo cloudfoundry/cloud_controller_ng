@@ -50,22 +50,22 @@ module VCAP::CloudController::Models
     end
 
     describe '#check!' do
-      let(:broker_api_url) { "http://cc:#{token}@cf-service-broker.example.com/v3" }
+      let(:broker_catalog_url) { "http://cc:#{token}@cf-service-broker.example.com/v2/catalog" }
 
       before do
-        stub_request(:get, broker_api_url).to_return(status: 200, body: '["OK"]')
+        stub_request(:get, broker_catalog_url).to_return(status: 200, body: '{}')
       end
 
       it 'should ping the broker API' do
         broker.check!
 
-        expect(a_request(:get, broker_api_url)).to have_been_made.once
+        expect(a_request(:get, broker_catalog_url)).to have_been_made.once
       end
 
       context 'when the API is not reachable' do
         context 'because the host could not be resolved' do
           before do
-            stub_request(:get, broker_api_url).to_raise(SocketError)
+            stub_request(:get, broker_catalog_url).to_raise(SocketError)
           end
 
           it 'should raise an unreachable error' do
@@ -77,7 +77,7 @@ module VCAP::CloudController::Models
 
         context 'because the server connection attempt timed out' do
           before do
-            stub_request(:get, broker_api_url).to_raise(HTTPClient::ConnectTimeoutError)
+            stub_request(:get, broker_catalog_url).to_raise(HTTPClient::ConnectTimeoutError)
           end
 
           it 'should raise an unreachable error' do
@@ -89,7 +89,7 @@ module VCAP::CloudController::Models
 
         context 'because the server refused our connection' do
           before do
-            stub_request(:get, broker_api_url).to_raise(Errno::ECONNREFUSED)
+            stub_request(:get, broker_catalog_url).to_raise(Errno::ECONNREFUSED)
           end
 
           it 'should raise an unreachable error' do
@@ -106,7 +106,7 @@ module VCAP::CloudController::Models
             # We have to instantiate the error object to keep WebMock from initializing
             # it with a String message. KeepAliveDisconnected actually takes an optional
             # Session object, which later HTTPClient code attempts to use.
-            stub_request(:get, broker_api_url).to_raise(HTTPClient::KeepAliveDisconnected.new)
+            stub_request(:get, broker_catalog_url).to_raise(HTTPClient::KeepAliveDisconnected.new)
           end
 
           it 'should raise a timeout error' do
@@ -118,7 +118,7 @@ module VCAP::CloudController::Models
 
         context 'because the client gave up' do
           before do
-            stub_request(:get, broker_api_url).to_raise(HTTPClient::ReceiveTimeoutError)
+            stub_request(:get, broker_catalog_url).to_raise(HTTPClient::ReceiveTimeoutError)
           end
 
           it 'should raise a timeout error' do
@@ -132,32 +132,44 @@ module VCAP::CloudController::Models
       context 'when the API returns an invalid response' do
         context 'because of an unexpected status code' do
           before do
-            stub_request(:get, broker_api_url).to_return(status: 201, body: '["OK"]')
+            stub_request(:get, broker_catalog_url).to_return(status: 201, body: '{}')
           end
 
           it 'should raise an invalid response error' do
             expect {
               broker.check!
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiInvalid)
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerCatalogMalformed)
           end
         end
 
         context 'because of an unexpected body' do
           before do
-            stub_request(:get, broker_api_url).to_return(status: 200, body: '["BAD"]')
+            stub_request(:get, broker_catalog_url).to_return(status: 200, body: '[]')
           end
 
           it 'should raise an invalid response error' do
             expect {
               broker.check!
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiInvalid)
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerCatalogMalformed)
+          end
+        end
+
+        context 'because of an invalid JSON body' do
+          before do
+            stub_request(:get, broker_catalog_url).to_return(status: 200, body: 'invalid')
+          end
+
+          it 'should raise an invalid response error' do
+            expect {
+              broker.check!
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerCatalogMalformed)
           end
         end
       end
 
       context 'when the API cannot authenticate the client' do
         before do
-          stub_request(:get, broker_api_url).to_return(status: 401)
+          stub_request(:get, broker_catalog_url).to_return(status: 401)
         end
 
         it 'should raise an authentication error' do
