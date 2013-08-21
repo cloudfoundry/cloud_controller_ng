@@ -17,13 +17,9 @@ describe AppBitsPacker do
   let(:local_tmp_dir) { Dir.mktmpdir }
   let(:app_bit_cache) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "app_bit_cache") }
   let(:package_blob_store) { BlobStore.new({provider: "Local", local_root: blob_store_dir}, "package") }
-  let(:packer) { AppBitsPacker.new(package_blob_store, app_bit_cache) }
+  let(:packer) { AppBitsPacker.new(package_blob_store, app_bit_cache, max_droplet_size, local_tmp_dir) }
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:max_droplet_size) { 1_073_741_824 }
-  let!(:settings) do
-    Settings.stub_chain(:packages, :max_droplet_size) { max_droplet_size  }
-    Settings.stub(:tmp_dir) { local_tmp_dir }
-  end
 
   around do |example|
     begin
@@ -83,19 +79,11 @@ describe AppBitsPacker do
     context "when the max droplet size is not configured" do
       let(:max_droplet_size) { nil }
 
-      it "works for app bit size below 512MB" do
-        expect {
-          perform
-        }.to_not raise_exception VCAP::Errors::AppPackageInvalid
-      end
-
-      it "raises exception for app bit size greater or equal" do
+      it "always accepts any droplet size" do
         fingerprints_in_app_cache = FingerprintsCollection.new(
-          [{"fn" => "file.txt", "size" => (512 * 1024 * 1024) + 1, "sha1" => 'a_sha'}]
+          [{"fn" => "file.txt", "size" => (2048 * 1024 * 1024) + 1, "sha1" => 'a_sha'}]
         )
-        expect {
-          packer.perform(app, compressed_path, fingerprints_in_app_cache)
-        }.to raise_exception VCAP::Errors::AppPackageInvalid
+        packer.perform(app, compressed_path, fingerprints_in_app_cache)
       end
     end
   end

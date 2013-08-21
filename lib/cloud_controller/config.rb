@@ -1,7 +1,6 @@
 require "vcap/config"
 require "cloud_controller/account_capacity"
 require "uri"
-require "rails_config"
 
 # Config template for cloud controller
 class VCAP::CloudController::Config < VCAP::Config
@@ -153,9 +152,9 @@ class VCAP::CloudController::Config < VCAP::Config
         VCAP::CloudController::ResourcePool.new(config)
       VCAP::CloudController::AppPackage.configure(config)
 
-      VCAP::CloudController::Models::QuotaDefinition.configure(config)
-      VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
-      VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
+      stager_pool = VCAP::CloudController::StagerPool.new(config, message_bus)
+      VCAP::CloudController::AppManager.configure(config, message_bus, stager_pool)
+      VCAP::CloudController::StagingsController.configure(config)
 
       dea_pool = VCAP::CloudController::DeaPool.new(message_bus)
       VCAP::CloudController::DeaClient.configure(config, message_bus, dea_pool)

@@ -4,7 +4,7 @@ require "fog"
 
 class BlobStore
   def initialize(connection_config, directory_key, cdn=nil)
-    @connection_config = connection_config.to_hash
+    @connection_config = connection_config
     @directory_key = directory_key
     @cdn = cdn
   end

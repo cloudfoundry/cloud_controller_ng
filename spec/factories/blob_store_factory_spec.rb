@@ -4,13 +4,13 @@ require "factories/blob_store_factory"
 describe BlobStoreFactory do
   describe "#get_package_blob_store" do
     before do
-      Settings.stub_chain(:packages).and_return(
-        mock(:packages,
+      VCAP::CloudController::Config.stub(:config).and_return(
+        packages: {
           fog_connection: 'fog_connection',
-          app_package_directory_key: 'key'
-        )
+          app_package_directory_key: 'key',
+          cdn: cdn_settings
+        }
       )
-      Settings.stub_chain(:packages, :cdn).and_return(cdn_settings)
     end
 
     context "when cdn is not configured" do
@@ -24,14 +24,8 @@ describe BlobStoreFactory do
 
     context "when cdn is configured for package blog store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
-      let(:cdn_settings) { mock(:cdn_settings, uri: cdn_host, key_pair_id: 'key_pair') }
+      let(:cdn_settings) { {uri: cdn_host, key_pair_id: 'key_pair'} }
       let(:cdn) { mock(:cdn) }
-
-      before do
-        Settings.stub_chain(:packages, :cdn).and_return(
-          mock(:cdn_config, uri: cdn_host, key_pair_id: 'key_pair')
-        )
-      end
 
       it "creates the blob stores with CDNs if configured" do
         Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
@@ -43,13 +37,13 @@ describe BlobStoreFactory do
 
   describe "#get_app_bit_cache" do
     before do
-      Settings.stub_chain(:resource_pool).and_return(
-        mock(:resource_pool,
+      VCAP::CloudController::Config.stub_chain(:config).and_return(
+        resource_pool: {
           fog_connection: 'fog_connection',
-          resource_directory_key: 'key'
-        )
+          resource_directory_key: 'key',
+          cdn: cdn_settings
+        }
       )
-      Settings.stub_chain(:resource_pool, :cdn).and_return(cdn_settings)
     end
 
     context "when cdn is not configured" do
@@ -63,14 +57,8 @@ describe BlobStoreFactory do
 
     context "when cdn is configured for package blog store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
-      let(:cdn_settings) { mock(:cdn_settings, uri: cdn_host, key_pair_id: 'key_pair') }
+      let(:cdn_settings) { {uri: cdn_host, key_pair_id: 'key_pair'} }
       let(:cdn) { mock(:cdn) }
-
-      before do
-        Settings.stub_chain(:resource_pool, :cdn).and_return(
-          mock(:cdn_config, uri: cdn_host, key_pair_id: 'key_pair')
-        )
-      end
 
       it "creates the blob stores with CDNs if configured" do
         Cdn.should_receive(:new).with(cdn_host).and_return(cdn)

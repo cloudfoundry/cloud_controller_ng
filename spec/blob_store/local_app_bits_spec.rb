@@ -11,19 +11,18 @@ describe LocalAppBits do
       File.stub(:exists?).and_return(true)
       SafeZipper.stub(:unzip).and_return(123)
       Dir.stub(:mktmpdir).and_yield(uncompressed_path)
-      Settings.stub(:tmp_dir).and_return(tmp_dir)
     end
 
     it "yields a block" do
       expect { |yielded|
-        LocalAppBits.from_compressed_bits(compressed_zip_path, &yielded)
+        LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir, &yielded)
       }.to yield_control
     end
 
     it "unzips the folder" do
       SafeZipper.should_receive(:unzip).with(compressed_zip_path, uncompressed_path)
 
-      LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
+      LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
         expect(local_app_bits.root_path).to eq uncompressed_path
       end
     end
@@ -31,13 +30,13 @@ describe LocalAppBits do
     it "create and delete the tmp dir where its uncompressed" do
       Dir.should_receive(:mktmpdir).with("uncompressed", tmp_dir)
 
-      LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
+      LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
         expect(local_app_bits.root_path).to start_with uncompressed_path
       end
     end
 
     it "gets the storage_size of the uncompressed files" do
-      LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
+      LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
         expect(local_app_bits.storage_size).to eq 123
       end
     end
@@ -46,7 +45,7 @@ describe LocalAppBits do
       it "does not unzip anything" do
         File.should_receive(:exists?).with(compressed_zip_path).and_return(false)
         SafeZipper.should_not_receive(:unzip)
-        LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
+        LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
           expect(local_app_bits.storage_size).to eq 0
         end
       end
@@ -57,7 +56,7 @@ describe LocalAppBits do
 
       it "does not unzip anything" do
         SafeZipper.should_not_receive(:unzip)
-        LocalAppBits.from_compressed_bits(compressed_zip_path) do |local_app_bits|
+        LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
           expect(local_app_bits.storage_size).to eq 0
         end
       end

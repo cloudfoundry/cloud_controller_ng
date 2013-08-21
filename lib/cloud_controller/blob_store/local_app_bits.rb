@@ -4,8 +4,8 @@ require "ext/file"
 class LocalAppBits
   PACKAGE_NAME = "package.zip".freeze
 
-  def self.from_compressed_bits(compressed_bits_path, &block)
-    Dir.mktmpdir("uncompressed", Settings.tmp_dir) do |unzip_path|
+  def self.from_compressed_bits(compressed_bits_path, tmp_dir, &block)
+    Dir.mktmpdir("uncompressed", tmp_dir) do |unzip_path|
       storage_size = 0
       if compressed_bits_path && File.exists?(compressed_bits_path)
         storage_size = SafeZipper.unzip(compressed_bits_path, unzip_path)

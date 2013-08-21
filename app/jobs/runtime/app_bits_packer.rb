@@ -1,17 +1,18 @@
 require "cloud_controller/blob_store/local_app_bits"
-require "rails_config"
 require "cloud_controller/blob_store/fingerprints_collection"
 
 class AppBitsPacker
-  attr_reader :package_blob_store, :app_bit_cache
+  attr_reader :package_blob_store, :app_bit_cache, :max_droplet_size, :tmp_dir
 
-  def initialize(package_blob_store, app_bit_cache)
+  def initialize(package_blob_store, app_bit_cache, max_droplet_size, tmp_dir)
     @package_blob_store = package_blob_store
     @app_bit_cache = app_bit_cache
+    @max_droplet_size = max_droplet_size
+    @tmp_dir = tmp_dir
   end
 
   def perform(app, uploaded_compressed_path, fingerprints_in_app_cache)
-    LocalAppBits.from_compressed_bits(uploaded_compressed_path) do |local_app_bits|
+    LocalAppBits.from_compressed_bits(uploaded_compressed_path, tmp_dir) do |local_app_bits|
       validate_size!(fingerprints_in_app_cache, local_app_bits)
 
       app_bit_cache.cp_r_from_local(local_app_bits.root_path)
@@ -30,10 +31,11 @@ class AppBitsPacker
   private
 
   def validate_size!(fingerprints_in_app_cache, local_app_bits)
+    return unless max_droplet_size
+
     total_size = local_app_bits.storage_size + fingerprints_in_app_cache.storage_size
-    max_allowed_package_size = Settings.packages.max_droplet_size || 512 * 1024 * 1024
-    if total_size > max_allowed_package_size
-      raise VCAP::Errors::AppPackageInvalid, "Package may not be larger than #{Settings.packages.max_droplet_size} bytes"
+    if total_size > max_droplet_size
+      raise VCAP::Errors::AppPackageInvalid, "Package may not be larger than #{max_droplet_size} bytes"
     end
   end
 end
