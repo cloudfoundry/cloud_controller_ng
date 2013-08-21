@@ -5,6 +5,7 @@ module VCAP::CloudController::RestController
   # Wraps models and presents collection and per object rest end points
   class ModelController < Base
     include Routes
+    include ::Allowy::Context
 
     # Create operation
     def create
@@ -213,11 +214,18 @@ module VCAP::CloudController::RestController
     #
     # @param [Roles] The roles for the current user or client.
     def validate_access(op, obj, user, roles)
-      user_perms = Permissions.permissions_for(obj, user, roles)
+      if current_allowy.access_control_for(obj)
+        if cannot? op, obj
+          raise NotAuthenticated if user.nil? && roles.none?
+          raise Errors::NotAuthorized
+        end
+      else
+        user_perms = Permissions.permissions_for(obj, user, roles)
 
-      unless self.class.op_allowed_by?(op, user_perms)
-        raise NotAuthenticated if user.nil? && roles.none?
-        raise NotAuthorized
+        unless self.class.op_allowed_by?(op, user_perms)
+          raise NotAuthenticated if user.nil? && roles.none?
+          raise NotAuthorized
+        end
       end
     end
 

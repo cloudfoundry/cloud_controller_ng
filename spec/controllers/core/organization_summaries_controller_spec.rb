@@ -48,8 +48,7 @@ module VCAP::CloudController
 
     describe "GET /v2/organizations/:id/summary" do
       before :all do
-        admin_user = VCAP::CloudController::Models::User.make(:admin => true)
-        get "/v2/organizations/#{@org.guid}/summary", {}, headers_for(admin_user)
+        get "/v2/organizations/#{@org.guid}/summary", {}, admin_headers
       end
 
       it "should return 200" do

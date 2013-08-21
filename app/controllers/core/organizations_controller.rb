@@ -21,12 +21,6 @@ module VCAP::CloudController
     define_messages
     define_routes
 
-    include ::Allowy::Context
-
-    def validate_access(op, obj, user, roles)
-      raise Errors::NotAuthorized if cannot? op, obj
-    end
-
     def self.translate_validation_exception(e, attributes)
       quota_def_errors = e.errors.on(:quota_definition_id)
       name_errors = e.errors.on(:name)

@@ -4,14 +4,6 @@ module VCAP::CloudController
     path_base "organizations"
     model_class_name :Organization
 
-    permissions_required do
-      full Permissions::CFAdmin
-      read Permissions::OrgManager
-      read Permissions::OrgUser
-      read Permissions::BillingManager
-      read Permissions::Auditor
-    end
-
     def summary(guid)
       org = find_guid_and_validate_access(:read, guid)
 
