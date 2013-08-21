@@ -1,4 +1,4 @@
-require "workers/runtime/app_bits_packer"
+require "jobs/runtime/app_bits_packer"
 require "cloud_controller/blob_store/cdn"
 require "factories/blob_store_factory"
 

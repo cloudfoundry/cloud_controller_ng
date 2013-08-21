@@ -1,5 +1,5 @@
 require "cloud_controller/upload_handler"
-require "workers/runtime/app_bits_packer_job"
+require "jobs/runtime/app_bits_packer_job"
 
 module VCAP::CloudController
   rest_controller :AppBits do

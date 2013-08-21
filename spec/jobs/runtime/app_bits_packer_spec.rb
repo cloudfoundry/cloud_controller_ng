@@ -1,5 +1,5 @@
 require "spec_helper"
-require "workers/runtime/app_bits_packer"
+require "jobs/runtime/app_bits_packer"
 
 describe AppBitsPacker do
   let(:fingerprints_in_app_cache) do

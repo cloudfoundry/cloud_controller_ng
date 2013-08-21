@@ -12,6 +12,14 @@ describe FingerprintsCollection do
   end
   let(:collection) {FingerprintsCollection.new(fingerprints)}
 
+  describe ".new" do
+    it "validates that the input is a array of hashes" do
+      expect {
+        FingerprintsCollection.new("")
+      }.to raise_error VCAP::Errors::AppBitsUploadInvalid, /invalid/
+    end
+  end
+
   describe "#each" do
     it "returns each sha one by one" do
       expect { |yielded|
