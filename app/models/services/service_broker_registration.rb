@@ -1,7 +1,5 @@
 module VCAP::CloudController::Models
   class ServiceBrokerRegistration
-    delegate :guid, :created_at, :updated_at, :name, :broker_url, :token, to: :broker
-
     attr_reader :broker
 
     def initialize(attrs)

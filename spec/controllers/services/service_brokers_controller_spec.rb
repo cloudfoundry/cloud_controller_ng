@@ -36,25 +36,29 @@ module VCAP::CloudController
       end
 
       let(:errors) { double(Sequel::Model::Errors, on: nil) }
-      let(:broker) { double(Models::ServiceBroker, guid: '123') }
+      let(:broker) do
+        double(Models::ServiceBroker, {
+          guid: '123',
+          name: 'My Custom Service',
+          broker_url: 'http://broker.example.com',
+          token: 'abc123'
+        })
+      end
       let(:registration) do
         reg = double(Models::ServiceBrokerRegistration, {
-          guid: broker.guid,
           broker: broker,
-          broker_url: Sham.url,
-          name: Sham.name,
           errors: errors
         })
         reg.stub(:save).and_return(reg)
         reg
       end
-      let(:presenter) { double(ServiceBrokerRegistrationPresenter, {
+      let(:presenter) { double(ServiceBrokerPresenter, {
         to_json: "{\"metadata\":{\"guid\":\"#{broker.guid}\"}}"
       }) }
 
       before do
         Models::ServiceBrokerRegistration.stub(:new).and_return(registration)
-        ServiceBrokerRegistrationPresenter.stub(:new).with(registration).and_return(presenter)
+        ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
       end
 
       it 'returns a 201 status' do
@@ -69,7 +73,7 @@ module VCAP::CloudController
         expect(registration).to have_received(:save)
       end
 
-      it 'returns the serialized registration' do
+      it 'returns the serialized broker' do
         post '/v2/service_brokers', body, headers
 
         expect(last_response.body).to eq(presenter.to_json)

@@ -1,4 +1,4 @@
-require 'presenters/api/service_broker_registration_presenter'
+require 'presenters/api/service_broker_presenter'
 
 module VCAP::CloudController
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
       end
 
       headers = {'Location' => "/v2/service_brokers/#{registration.broker.guid}"}
-      body = ServiceBrokerRegistrationPresenter.new(registration).to_json
+      body = ServiceBrokerPresenter.new(registration.broker).to_json
       [HTTP::CREATED, headers, body]
     end
 
@@ -128,17 +128,18 @@ module VCAP::CloudController
 
     def get_exception_from_errors(registration)
       errors = registration.errors
+      broker = registration.broker
 
       if errors.on(:broker_api) && errors.on(:broker_api).include?(:authentication_failed)
-        Errors::ServiceBrokerApiAuthenticationFailed.new(registration.broker_url)
+        Errors::ServiceBrokerApiAuthenticationFailed.new(broker.broker_url)
       elsif errors.on(:broker_api) && errors.on(:broker_api).include?(:unreachable)
-        Errors::ServiceBrokerApiUnreachable.new(registration.broker_url)
+        Errors::ServiceBrokerApiUnreachable.new(broker.broker_url)
       elsif errors.on(:broker_api) && errors.on(:broker_api).include?(:timeout)
-        Errors::ServiceBrokerApiTimeout.new(registration.broker_url)
+        Errors::ServiceBrokerApiTimeout.new(broker.broker_url)
       elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:unique)
-        Errors::ServiceBrokerUrlTaken.new(registration.broker_url)
+        Errors::ServiceBrokerUrlTaken.new(broker.broker_url)
       elsif errors.on(:name) && errors.on(:name).include?(:unique)
-        Errors::ServiceBrokerNameTaken.new(registration.name)
+        Errors::ServiceBrokerNameTaken.new(broker.name)
       elsif errors.on(:catalog) && errors.on(:catalog).include?(:malformed)
         Errors::ServiceBrokerCatalogMalformed.new
       else
