@@ -6,13 +6,15 @@ module VCAP::CloudController::Models
     before { reset_database }
 
     describe '#save' do
-      subject(:registration) do
-        ServiceBrokerRegistration.new(
-          'name' => 'Cool Broker',
-          'broker_url' => 'http://broker.example.com',
-          'token' => 'auth1234'
+      let(:broker) do
+        ServiceBroker.new(
+          name: 'Cool Broker',
+          broker_url: 'http://broker.example.com',
+          token: 'auth1234'
         )
       end
+
+      subject(:registration) { ServiceBrokerRegistration.new(broker) }
 
       before do
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
@@ -27,7 +29,6 @@ module VCAP::CloudController::Models
           registration.save(raise_on_failure: false)
         }.to change(ServiceBroker, :count).by(1)
 
-        broker = registration.broker
         expect(broker).to eq(ServiceBroker.last)
 
         expect(broker.name).to eq('Cool Broker')
@@ -52,7 +53,8 @@ module VCAP::CloudController::Models
 
       context 'when invalid' do
         context 'because the broker has errors' do
-          let(:registration) { ServiceBrokerRegistration.new({}) }
+          let(:broker) { ServiceBroker.new }
+          let(:registration) { ServiceBrokerRegistration.new(broker) }
 
           it 'returns nil' do
             expect(registration.save(raise_on_failure: false)).to be_nil

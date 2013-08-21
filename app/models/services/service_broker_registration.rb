@@ -2,8 +2,8 @@ module VCAP::CloudController::Models
   class ServiceBrokerRegistration
     attr_reader :broker
 
-    def initialize(attrs)
-      @broker = ServiceBroker.new(attrs.stringify_keys.slice('name', 'broker_url', 'token'))
+    def initialize(broker)
+      @broker = broker
     end
 
     def save(options = {})

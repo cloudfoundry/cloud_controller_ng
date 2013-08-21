@@ -14,8 +14,8 @@ describe ApiPresenter do
 
       it 'includes the guid and timestamps' do
         expect(metadata.fetch(:guid)).to eq('12345ac')
-        expect(metadata.fetch(:created_at)).to eq(created_at.to_s)
-        expect(metadata.fetch(:updated_at)).to eq(updated_at.to_s)
+        expect(metadata.fetch(:created_at)).to eq(created_at.iso8601)
+        expect(metadata.fetch(:updated_at)).to eq(updated_at.iso8601)
       end
     end
 

@@ -31,35 +31,40 @@ module VCAP::CloudController
       headers = {}
       brokers = Models::ServiceBroker.filter(build_filter)
 
-      body = paginate( brokers.map { |broker| broker_hash(broker) } )
+      body = paginate( brokers.map { |broker| ServiceBrokerPresenter.new(broker).to_hash } )
       [HTTP::OK, headers, body.to_json]
     end
 
     def create
       params = ServiceBrokerMessage.extract(body)
+      broker = Models::ServiceBroker.new(params)
 
-      registration = Models::ServiceBrokerRegistration.new(params)
+      registration = Models::ServiceBrokerRegistration.new(broker)
 
       unless registration.save(raise_on_failure: false)
         raise get_exception_from_errors(registration)
       end
 
-      headers = {'Location' => "/v2/service_brokers/#{registration.broker.guid}"}
-      body = ServiceBrokerPresenter.new(registration.broker).to_json
+      headers = {'Location' => url_of(broker)}
+      body = ServiceBrokerPresenter.new(broker).to_json
       [HTTP::CREATED, headers, body]
     end
 
     def update(guid)
-      broker = Models::ServiceBroker.find(:guid => guid)
+      params = ServiceBrokerMessage.extract(body)
+      broker = Models::ServiceBroker.find(guid: guid)
       return HTTP::NOT_FOUND unless broker
 
-      broker.set(ServiceBrokerMessage.extract(body))
+      registration = Models::ServiceBrokerRegistration.new(broker)
 
-      broker.check! if broker.valid?
-      broker.save
+      broker.set(params)
 
-      body = broker_hash(broker)
-      [ HTTP::OK, {}, body.to_json ]
+      unless registration.save(raise_on_failure: false)
+        raise get_exception_from_errors(registration)
+      end
+
+      body = ServiceBrokerPresenter.new(broker).to_json
+      [HTTP::OK, {}, body]
     end
 
     def delete(guid)
@@ -102,21 +107,6 @@ module VCAP::CloudController
         'prev_url' => nil,
         'next_url' => nil,
         'resources' => resources
-      }
-    end
-
-    def broker_hash(broker)
-      {
-        'metadata' => {
-          'guid' => broker.guid,
-          'url' => url_of(broker),
-          'created_at' => broker.created_at,
-          'updated_at' => broker.updated_at,
-        },
-        'entity' => {
-          'name' => broker.name,
-          'broker_url' => broker.broker_url,
-        }
       }
     end
 

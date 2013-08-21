@@ -9,8 +9,8 @@ describe UserPresenter do
       subject.to_hash.should eq({
         metadata: {
             guid: user.guid,
-            created_at: user.created_at.to_s,
-            updated_at: user.updated_at.to_s
+            created_at: user.created_at.iso8601,
+            updated_at: nil,
         },
         entity: {
             admin: true,

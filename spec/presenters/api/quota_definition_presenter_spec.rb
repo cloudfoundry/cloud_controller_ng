@@ -9,8 +9,8 @@ describe QuotaDefinitionPresenter do
       subject.to_hash.should eq({
         :metadata => {
           :guid => quota_definition.guid,
-          :created_at => quota_definition.created_at.to_s,
-          :updated_at => quota_definition.updated_at.to_s
+          :created_at => quota_definition.created_at.iso8601,
+          :updated_at => nil,
         },
         :entity => {
           :name => quota_definition.name,

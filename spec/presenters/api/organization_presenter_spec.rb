@@ -14,8 +14,8 @@ describe OrganizationPresenter do
       subject.to_hash.should eq({
         metadata: {
           guid: org.guid,
-          created_at: org.created_at.to_s,
-          updated_at: org.updated_at.to_s
+          created_at: org.created_at.iso8601,
+          updated_at: nil,
         },
         entity: {
           name: org.name,

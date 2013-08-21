@@ -34,8 +34,8 @@ describe UserSummaryPresenter do
       subject.to_hash.should eq({
         metadata: {
           guid: user.guid,
-          created_at: user.created_at.to_s,
-          updated_at: user.updated_at.to_s
+          created_at: user.created_at.iso8601,
+          updated_at: nil,
         },
         entity: {
           organizations: [OrganizationPresenter.new(org).to_hash, OrganizationPresenter.new(managed_org).to_hash, OrganizationPresenter.new(billing_managed_org).to_hash, OrganizationPresenter.new(audited_org).to_hash],

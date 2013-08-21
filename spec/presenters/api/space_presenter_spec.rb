@@ -9,8 +9,8 @@ describe SpacePresenter do
       subject.to_hash.should eq({
         :metadata => {
           :guid => space.guid,
-          :created_at => space.created_at.to_s,
-          :updated_at => space.updated_at.to_s
+          :created_at => space.created_at.iso8601,
+          :updated_at => nil,
         },
         :entity => {
           :name => space.name

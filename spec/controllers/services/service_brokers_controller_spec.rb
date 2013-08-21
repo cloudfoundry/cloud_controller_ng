@@ -57,7 +57,8 @@ module VCAP::CloudController
       }) }
 
       before do
-        Models::ServiceBrokerRegistration.stub(:new).and_return(registration)
+        Models::ServiceBroker.stub(:new).and_return(broker)
+        Models::ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
         ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
       end
 
@@ -89,7 +90,7 @@ module VCAP::CloudController
       it 'does not set fields that are unmodifiable' do
         body_hash[:guid] = 'mycustomguid'
         post '/v2/service_brokers', body, headers
-        expect(Models::ServiceBrokerRegistration).to_not have_received(:new).with(hash_including('guid' => 'mycustomguid'))
+        expect(Models::ServiceBroker).to_not have_received(:new).with(hash_including('guid' => 'mycustomguid'))
       end
 
       context 'when there is an error in Broker Registration' do
@@ -207,7 +208,7 @@ module VCAP::CloudController
                 'guid' => broker.guid,
                 'url' => "/v2/service_brokers/#{broker.guid}",
                 'created_at' => broker.created_at.iso8601,
-                'updated_at' => nil,
+                'updated_at' => nil
               },
               'entity' => {
                 'name' => broker.name,
@@ -284,140 +285,161 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/service_brokers/:guid' do
-      let(:existing_broker_url) { 'http://old-cf-service-broker.example.com' }
-
-      def existing_broker_catalog_url(token = nil)
-        token ||= self.token
-        "http://cc:#{token}@old-cf-service-broker.example.com/v2/catalog"
+      let(:body_hash) do
+        {
+          name: 'My Updated Service',
+          broker_url: 'http://new-broker.example.com',
+          token: 'new-token'
+        }
       end
 
-      let(:new_broker_url) { 'http://cf-service-broker.example.com' }
-
-      def new_broker_catalog_url(token = nil)
-        token ||= self.token
-        "http://cc:#{token}@cf-service-broker.example.com/v2/catalog"
+      def body
+        body_hash.to_json
       end
 
-      let(:token) { 'secret' }
-
-      let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: existing_broker_url, token: token) }
+      let(:errors) { double(Sequel::Model::Errors, on: nil) }
+      let(:broker) do
+        double(Models::ServiceBroker, {
+          guid: '123',
+          name: 'My Custom Service',
+          broker_url: 'http://broker.example.com',
+          token: 'abc123',
+          set: nil
+        })
+      end
+      let(:registration) do
+        reg = double(Models::ServiceBrokerRegistration, {
+          broker: broker,
+          errors: errors
+        })
+        reg.stub(:save).and_return(reg)
+        reg
+      end
+      let(:presenter) { double(ServiceBrokerPresenter, {
+        to_json: "{\"metadata\":{\"guid\":\"#{broker.guid}\"}}"
+      }) }
 
       before do
-        stub_request(:get, existing_broker_catalog_url).to_return(status: 200, body: '{}')
-        stub_request(:get, new_broker_catalog_url).to_return(status: 200, body: '{}')
+        Models::ServiceBroker.stub(:find)
+        Models::ServiceBroker.stub(:find).with(guid: broker.guid).and_return(broker)
+        Models::ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
+        ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
       end
 
-      it "updates the name and url of an existing service broker" do
-        payload = {
-          "name" => "expensiveWidgets",
-          "broker_url" => new_broker_url,
-        }.to_json
-        put "/v2/service_brokers/#{broker.guid}", payload, headers
+      it 'updates the broker' do
+        put "/v2/service_brokers/#{broker.guid}", body, headers
 
-        expect(last_response.status).to eq(HTTP::OK)
-        expect(decoded_response["entity"]).to eq(
-          "name" => "expensiveWidgets",
-          "broker_url" => new_broker_url,
-        )
-
-        get '/v2/service_brokers', {}, headers
-        entity = decoded_response.fetch('resources').fetch(0).fetch('entity')
-        expect(entity).to eq(
-          "name" => "expensiveWidgets",
-          "broker_url" => new_broker_url,
-        )
+        expect(broker).to have_received(:set).with(body_hash)
+        expect(registration).to have_received(:save)
       end
 
-      it "updates the token of an existing service broker" do
-        stub_request(:get, existing_broker_catalog_url('seeeecret')).to_return(status: 200, body: '{}')
-        payload = {
-          "token" => "seeeecret",
-        }.to_json
-        put "/v2/service_brokers/#{broker.guid}", payload, headers
 
-        expect(last_response.status).to eq(HTTP::OK)
-        broker.reload
-        expect(broker.token).to eq("seeeecret")
-      end
+      it 'returns the serialized broker' do
+        put "/v2/service_brokers/#{broker.guid}", body, headers
 
-      it 'does not allow blank name' do
-        payload = {
-          "name" => "",
-        }.to_json
-        put "/v2/service_brokers/#{broker.guid}", payload, headers
-
-        expect(last_response.status).to eq(HTTP::BAD_REQUEST)
-        expect(decoded_response.fetch('code')).to eq(270001)
-        expect(decoded_response.fetch('description')).to match(/name presence/)
-      end
-
-      it 'does not allow blank url' do
-        payload = {
-          "broker_url" => "",
-        }.to_json
-        put "/v2/service_brokers/#{broker.guid}", payload, headers
-
-        expect(last_response.status).to eq(HTTP::BAD_REQUEST)
-        expect(decoded_response.fetch('code')).to eq(270001)
-        expect(decoded_response.fetch('description')).to match(/broker_url presence/)
-      end
-
-      it 'does not allow blank token' do
-        payload = {
-          "token" => "",
-        }.to_json
-        put "/v2/service_brokers/#{broker.guid}", payload, headers
-
-        expect(last_response.status).to eq(HTTP::BAD_REQUEST)
-        expect(decoded_response.fetch('code')).to eq(270001)
-        expect(decoded_response.fetch('description')).to match(/token presence/)
+        expect(last_response.body).to eq(presenter.to_json)
       end
 
       it 'does not set fields that are unmodifiable' do
-        expect {
-          put "/v2/service_brokers/#{broker.guid}", {guid: 'mycustomguid'}, headers
-        }.not_to change { broker.reload.guid }
+        body_hash['guid'] = 'hacked'
+        put "/v2/service_brokers/#{broker.guid}", body, headers
+
+        expect(broker).to_not have_received(:set).with(hash_including('guid' => 'hacked'))
       end
 
       context 'when specifying an unknown broker' do
         it 'returns 404' do
-          payload = {
-            "name" => "whatever",
-          }.to_json
-          put "/v2/service_brokers/nonexistent", payload, headers
+          put '/v2/service_brokers/nonexistent', body, headers
 
           expect(last_response.status).to eq(HTTP::NOT_FOUND)
         end
       end
 
-      context 'when the broker API check fails' do
-        let(:body) do
-          {
-            broker_url: new_broker_url
-          }.to_json
-        end
+      context 'when there is an error in Broker Registration' do
+        before { registration.stub(:save).and_return(nil) }
 
-        before do
-          stub_request(:get, new_broker_catalog_url).to_raise(SocketError)
-        end
+        context 'when there is an error in API authentication' do
+          before { errors.stub(:on).with(:broker_api).and_return([:authentication_failed]) }
 
-        it 'returns an error' do
-          error = Errors::ServiceBrokerApiUnreachable.new(new_broker_url)
-
-          put "/v2/service_brokers/#{broker.guid}", body, headers
-
-          last_response.status.should == error.response_code
-          decoded_response.fetch('code').should == error.error_code
-          decoded_response.fetch('description').should == error.message
-        end
-
-        it 'does not update the broker record' do
-          expect {
+          it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
-          }.to_not change(Models::ServiceBroker, :count)
 
-          broker.reload
-          expect(broker.broker_url).to_not eq(new_broker_url)
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270007
+            decoded_response.fetch('description').should =~ /The Service Broker API authentication failed/
+          end
+        end
+
+        context 'when the broker API is unreachable' do
+          before { errors.stub(:on).with(:broker_api).and_return([:unreachable]) }
+
+          it 'returns an error' do
+            put "/v2/service_brokers/#{broker.guid}", body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270004
+            decoded_response.fetch('description').should =~ /The Service Broker API could not be reached/
+          end
+        end
+
+        context 'when the broker API times out' do
+          before { errors.stub(:on).with(:broker_api).and_return([:timeout]) }
+
+          it 'returns an error' do
+            put "/v2/service_brokers/#{broker.guid}", body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270005
+            decoded_response.fetch('description').should =~ /The Service Broker API timed out/
+          end
+        end
+
+        context "when the broker's catalog is malformed" do
+          before { errors.stub(:on).with(:catalog).and_return([:malformed]) }
+
+          it 'returns an error' do
+            put "/v2/service_brokers/#{broker.guid}", body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270006
+            decoded_response.fetch('description').should =~ /The Service Broker's catalog endpoint did not return valid json/
+          end
+        end
+
+        context 'when the broker url is taken' do
+          before { errors.stub(:on).with(:broker_url).and_return([:unique]) }
+
+          it 'returns an error' do
+            put "/v2/service_brokers/#{broker.guid}", body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270003
+            decoded_response.fetch('description').should =~ /The service broker url is taken/
+          end
+        end
+
+        context 'when the broker name is taken' do
+          before { errors.stub(:on).with(:name).and_return([:unique]) }
+
+          it 'returns an error' do
+            put "/v2/service_brokers/#{broker.guid}", body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270002
+            decoded_response.fetch('description').should =~ /The service broker name is taken/
+          end
+        end
+
+        context 'when there are other errors on the registration' do
+          before { errors.stub(:full_messages).and_return('A bunch of stuff was wrong') }
+
+          it 'returns an error' do
+            put "/v2/service_brokers/#{broker.guid}", body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270001
+            decoded_response.fetch('description').should == 'Service Broker is invalid: A bunch of stuff was wrong'
+          end
         end
       end
 
