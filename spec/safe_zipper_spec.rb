@@ -38,7 +38,7 @@ describe SafeZipper do
       let(:zip_path) { File.expand_path("../fixtures/corrupt.zip")}
 
       it "raises an exception" do
-        expect { unzip }.to raise_exception VCAP::Errors::AppBitsUploadInvalid, /unzipping had errors/i
+        expect { unzip }.to raise_exception VCAP::Errors::AppBitsUploadInvalid, /unzipping had errors\n STDOUT: ""\n STDERR: "unzip:\s+cannot find or open/im
       end
     end
 
@@ -132,7 +132,7 @@ describe SafeZipper do
 
         expect {
           SafeZipper.zip(root_path, tmp_zip)
-        }.to raise_exception VCAP::Errors::AppPackageInvalid, /could not zip the package/i
+        }.to raise_exception VCAP::Errors::AppPackageInvalid, /could not zip the package\n STDOUT: "zip .+?"\n STDERR: ""/im
       end
     end
   end

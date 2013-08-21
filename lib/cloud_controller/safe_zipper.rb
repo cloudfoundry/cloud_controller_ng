@@ -1,4 +1,5 @@
 require "find"
+require "open3"
 
 class SafeZipper
   def self.unzip(zip_path, zip_destination)
@@ -40,16 +41,16 @@ class SafeZipper
 
   def zip
     @zip ||= begin
-      output = `zip -q -r --symlinks #{@zip_destination} .`
-      raise VCAP::Errors::AppPackageInvalid, "Could not zip the package:" unless $?.success?
+      output, error, status = Open3.capture3(%Q{zip -q -r --symlinks #{@zip_destination} .})
+      raise VCAP::Errors::AppPackageInvalid, "Could not zip the package\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"" unless status.success?
       output
     end
   end
 
   def zip_info
     @zip_info ||= begin
-      output = `unzip -l #{@zip_path}`
-      raise VCAP::Errors::AppBitsUploadInvalid, "Unzipping had errors" unless $?.success?
+      output, error, status = Open3.capture3(%Q{unzip -l #{@zip_path}})
+      raise VCAP::Errors::AppBitsUploadInvalid, "Unzipping had errors\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"" unless status.success?
       output
     end
   end
