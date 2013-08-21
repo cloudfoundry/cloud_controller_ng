@@ -55,8 +55,7 @@ module ControllerHelpers
 
     def headers
       @header ||= begin
-        user = VCAP::CloudController::Models::User.make(:admin => true)
-        json_headers(headers_for(user))
+        json_headers(admin_headers)
       end
     end
 

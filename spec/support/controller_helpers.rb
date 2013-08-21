@@ -76,7 +76,7 @@ module ControllerHelpers
   end
 
   def admin_headers
-    @admin_headers ||= headers_for(admin_user)
+    @admin_headers ||= headers_for(admin_user, :admin_scope => true)
   end
 
   shared_examples "return a vcap rest encoded object" do

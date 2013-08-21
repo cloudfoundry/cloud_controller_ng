@@ -7,6 +7,8 @@ require "thin"
 require "yajl"
 # require "yaml"
 
+require "allowy"
+
 require "eventmachine/schedule_sync"
 
 require "vcap/common"

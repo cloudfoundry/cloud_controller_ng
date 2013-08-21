@@ -115,3 +115,8 @@ require "models/services/service_plan_visibility"
 require "models/services/service_base_event"
 require "models/services/service_create_event"
 require "models/services/service_delete_event"
+
+Dir[File.expand_path("../../../app/access/**/*.rb", __FILE__)].each do |file|
+  require file
+end
+
