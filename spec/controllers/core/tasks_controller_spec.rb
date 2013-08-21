@@ -4,8 +4,6 @@ module VCAP::CloudController
   describe TasksController, type: :controller do
     before { reset_database }
 
-    let(:admin_user) { Models::User.make :admin => true }
-
     describe "POST /v2/tasks" do
       context "when an app is given" do
         let!(:some_app) { Models::App.make :guid => "some-app-guid" }
@@ -14,7 +12,7 @@ module VCAP::CloudController
           it "returns 201 Created" do
             post "/v2/tasks",
               '{"app_guid":"some-app-guid"}',
-              json_headers(headers_for(admin_user))
+              json_headers(admin_headers)
 
             last_response.status.should == 201
           end
@@ -23,7 +21,7 @@ module VCAP::CloudController
             expect {
               post "/v2/tasks",
                 '{"app_guid":"some-app-guid"}',
-                json_headers(headers_for(admin_user))
+                json_headers(admin_headers)
 
               response = Yajl::Parser.parse(last_response.body)
               guid = response["metadata"]["guid"]
@@ -42,7 +40,7 @@ module VCAP::CloudController
             it "returns 404" do
               post "/v2/tasks",
                 '{"app_guid":"some-app-guid"}',
-                json_headers(headers_for(admin_user))
+                json_headers(admin_headers)
 
               last_response.status.should == 404
             end
@@ -55,7 +53,7 @@ module VCAP::CloudController
           it "returns HTTP status 400" do
             post "/v2/tasks",
               '{"app_guid":"some-bogus-app-guid"}',
-              json_headers(headers_for(admin_user))
+              json_headers(admin_headers)
 
             last_response.status.should == 400
           end
@@ -66,7 +64,7 @@ module VCAP::CloudController
         it "returns a 400-level error code" do
           post "/v2/tasks",
             '{}',
-            json_headers(headers_for(admin_user))
+            json_headers(admin_headers)
 
           last_response.status.should == 400
         end
@@ -76,7 +74,7 @@ module VCAP::CloudController
         it "returns a 400-level error code" do
           post "/v2/tasks",
             '{"app_guid":"some-app-guid"}',
-            json_headers(headers_for(admin_user))
+            json_headers(admin_headers)
 
           last_response.status.should == 400
         end
@@ -152,8 +150,7 @@ module VCAP::CloudController
 
         context "when the guid is invalid" do
           it "returns a 404 error" do
-            get "/v2/tasks/some-bogus-guid", {},
-              headers_for(admin_user)
+            get "/v2/tasks/some-bogus-guid", {}, admin_headers
 
             last_response.status.should == 404
           end
@@ -189,8 +186,7 @@ module VCAP::CloudController
 
       def self.it_returns_status_code(code)
         it "returns status code #{code}" do
-          delete "/v2/tasks/#{@task.guid}", {},
-            headers_for(visiting_user)
+          delete "/v2/tasks/#{@task.guid}", {}, headers
 
           last_response.status.should == code
         end
@@ -199,8 +195,7 @@ module VCAP::CloudController
       def self.it_deletes_the_task
         it "deletes the task" do
           expect {
-            delete "/v2/tasks/#{@task.guid}", {},
-              headers_for(visiting_user)
+            delete "/v2/tasks/#{@task.guid}", {}, headers
           }.to change {
             Models::Task.find(:guid => @task.guid)
           }.to(nil)
@@ -210,8 +205,7 @@ module VCAP::CloudController
       def self.it_does_not_delete_the_task
         it "does not delete the task" do
           expect {
-            delete "/v2/tasks/#{@task.guid}", {}
-            headers_for(visiting_user)
+            delete "/v2/tasks/#{@task.guid}", {}, headers
           }.to_not change {
             Models::Task.count
           }.by(-1)
@@ -219,19 +213,19 @@ module VCAP::CloudController
       end
 
       context "if there is no user logged in" do
-        let(:visiting_user) { nil }
+        let(:headers) { headers_for nil }
         it_returns_status_code 401
         it_does_not_delete_the_task
       end
 
       context "if the user is an admin" do
-        let(:visiting_user) { @admin }
+        let(:headers) { admin_headers }
         it_returns_status_code 204
         it_deletes_the_task
       end
 
       context "when tasks endpoint is disabled" do
-        let(:visiting_user) { @admin }
+        let(:headers) { admin_headers }
         before do
           config_override(:tasks_disabled => true)
         end
@@ -240,25 +234,25 @@ module VCAP::CloudController
       end
 
       context "if the user is an Organization Manager" do
-        let(:visiting_user) { @org_manager }
+        let(:headers) { headers_for @org_manager }
         it_returns_status_code 403
         it_does_not_delete_the_task
       end
 
       context "if the user is a Space Manager" do
-        let(:visiting_user) { @space_manager }
+        let(:headers) { headers_for @space_manager }
         it_returns_status_code 403
         it_does_not_delete_the_task
       end
 
       context "if the user is a Space Developer" do
-        let(:visiting_user) { @space_developer }
+        let(:headers) { headers_for @space_developer }
         it_returns_status_code 204
         it_deletes_the_task
       end
 
       context "if the user is a Space Auditor" do
-        let(:visiting_user) { @space_auditor }
+        let(:headers) { headers_for @space_auditor }
         it_returns_status_code 403
         it_does_not_delete_the_task
       end
@@ -270,9 +264,7 @@ module VCAP::CloudController
           config_override(:tasks_disabled => true)
         end
         it "returns 404" do
-          put "/v2/tasks/some-app-guid",
-            '{"app_guid":"some-app-guid"}',
-            json_headers(headers_for(admin_user))
+          put "/v2/tasks/some-app-guid", '{"app_guid":"some-app-guid"}', json_headers(admin_headers)
 
           last_response.status.should == 404
         end
