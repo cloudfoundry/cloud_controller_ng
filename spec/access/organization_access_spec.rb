@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'allowy/rspec'
 
 module VCAP::CloudController::Models
   describe OrganizationAccess do

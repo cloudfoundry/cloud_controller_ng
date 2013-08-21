@@ -1,9 +1,5 @@
 module VCAP::CloudController
   rest_controller :Users do
-    permissions_required do
-      full Permissions::CFAdmin
-    end
-
     define_attributes do
       attribute :guid, String
       to_many   :spaces
