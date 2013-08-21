@@ -2,8 +2,7 @@
 
 module VCAP::CloudController
   class HealthManagerClient
-    def initialize(config, message_bus)
-      @config = config
+    def initialize(message_bus)
       @message_bus = message_bus
     end
 
@@ -59,7 +58,7 @@ module VCAP::CloudController
     end
 
     def notify_app_updated(guid)
-      message_bus.publish("droplet.updated", :droplet => guid, :cc_partition => config[:cc_partition])
+      message_bus.publish("droplet.updated", :droplet => guid)
     end
 
     private

@@ -462,7 +462,7 @@ module VCAP::CloudController
       private
 
       def health_manager_client
-        @health_manager_client ||= CloudController::DependencyLocator.instance.health_manager_client
+        CloudController::DependencyLocator.instance.health_manager_client
       end
 
       def requested_memory

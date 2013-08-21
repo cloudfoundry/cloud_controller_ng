@@ -6,7 +6,7 @@ describe AppBitsPacker do
     path = File.join(local_tmp_dir, "content")
     sha = "some_fake_sha"
     File.open(path, "w" ) { |f| f.write "content"  }
-    app_bit_cache.cp_from_local(path, sha)
+    global_app_bits_cache.cp_from_local(path, sha)
 
     FingerprintsCollection.new([{"fn" => "path/to/content.txt", "size" => 123, "sha1" => sha}])
   end
@@ -15,9 +15,9 @@ describe AppBitsPacker do
   let(:app) { VCAP::CloudController::Models::App.make }
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
-  let(:app_bit_cache) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "app_bit_cache") }
+  let(:global_app_bits_cache) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "global_app_bits_cache") }
   let(:package_blob_store) { BlobStore.new({provider: "Local", local_root: blob_store_dir}, "package") }
-  let(:packer) { AppBitsPacker.new(package_blob_store, app_bit_cache, max_droplet_size, local_tmp_dir) }
+  let(:packer) { AppBitsPacker.new(package_blob_store, global_app_bits_cache, max_droplet_size, local_tmp_dir) }
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:max_droplet_size) { 1_073_741_824 }
 
@@ -38,7 +38,7 @@ describe AppBitsPacker do
     it "uploads the new app bits to the app bit cache" do
       perform
       sha_of_bye_file_in_good_zip = "ee9e51458f4642f48efe956962058245ee7127b1"
-      expect(app_bit_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
+      expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
     end
 
     it "uploads the new app bits to the package blob store" do

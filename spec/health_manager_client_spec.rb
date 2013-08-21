@@ -88,7 +88,7 @@ module VCAP::CloudController
 
     describe "notify_app_updated" do
       it "should publish droplet.updated" do
-        message_bus.should_receive(:publish).with("droplet.updated", :droplet => app.guid, :cc_partition => "ng")
+        message_bus.should_receive(:publish).with("droplet.updated", :droplet => app.guid)
         @health_manager_client.notify_app_updated(app.guid)
       end
     end

@@ -1,16 +1,18 @@
 require "spec_helper"
-require "factories/blob_store_factory"
+require "cloud_controller/dependency_locator"
 
-describe BlobStoreFactory do
-  describe "#get_package_blob_store" do
-    before do
-      VCAP::CloudController::Config.stub(:config).and_return(
+describe CloudController::DependencyLocator do
+  subject(:locator) { CloudController::DependencyLocator.send(:new, config) }
+
+  describe "#package_blob_store" do
+    let(:config) do
+      {
         packages: {
           fog_connection: 'fog_connection',
           app_package_directory_key: 'key',
           cdn: cdn_settings
         }
-      )
+      }
     end
 
     context "when cdn is not configured" do
@@ -18,7 +20,7 @@ describe BlobStoreFactory do
 
       it "creates blob stores without the CDN" do
         BlobStore.should_receive(:new).with('fog_connection', 'key', nil)
-        BlobStoreFactory.get_package_blob_store
+        locator.package_blob_store
       end
     end
 
@@ -30,20 +32,20 @@ describe BlobStoreFactory do
       it "creates the blob stores with CDNs if configured" do
         Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
         BlobStore.should_receive(:new).with('fog_connection', 'key', cdn)
-        BlobStoreFactory.get_package_blob_store
+        locator.package_blob_store
       end
     end
   end
 
-  describe "#get_app_bit_cache" do
-    before do
-      VCAP::CloudController::Config.stub_chain(:config).and_return(
+  describe "#global_app_bits_cache" do
+    let(:config) do
+      {
         resource_pool: {
           fog_connection: 'fog_connection',
           resource_directory_key: 'key',
           cdn: cdn_settings
         }
-      )
+      }
     end
 
     context "when cdn is not configured" do
@@ -51,7 +53,7 @@ describe BlobStoreFactory do
 
       it "creates blob stores without the CDN" do
         BlobStore.should_receive(:new).with('fog_connection', 'key', nil)
-        BlobStoreFactory.get_app_bit_cache
+        locator.global_app_bits_cache
       end
     end
 
@@ -63,7 +65,7 @@ describe BlobStoreFactory do
       it "creates the blob stores with CDNs if configured" do
         Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
         BlobStore.should_receive(:new).with('fog_connection', 'key', cdn)
-        BlobStoreFactory.get_app_bit_cache
+        locator.global_app_bits_cache
       end
     end
   end

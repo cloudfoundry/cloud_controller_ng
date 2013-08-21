@@ -7,7 +7,6 @@ describe AppBitsPackerJob do
     let(:fingerprints) { mock(:fingerprints) }
 
     before do
-      BlobStoreFactory.stub(:new) { mock(:blob_store) }
       FingerprintsCollection.stub(:new) { fingerprints }
       VCAP::CloudController::Models::App.stub(:find) { app }
       AppBitsPacker.stub(:new) { mock(:packer, perform: "done") }
@@ -22,8 +21,8 @@ describe AppBitsPackerJob do
     end
 
     it "creates blob stores" do
-      BlobStoreFactory.should_receive(:get_package_blob_store)
-      BlobStoreFactory.should_receive(:get_app_bit_cache)
+      CloudController::DependencyLocator.instance.should_receive(:package_blob_store)
+      CloudController::DependencyLocator.instance.should_receive(:global_app_bits_cache)
       job.perform
     end
 
