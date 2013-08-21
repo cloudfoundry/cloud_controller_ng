@@ -1,4 +1,4 @@
-require File.expand_path("../spec_helper", __FILE__)
+require "spec_helper"
 require "cloud_controller/multi_response_message_bus_request"
 
 describe MultiResponseMessageBusRequest do

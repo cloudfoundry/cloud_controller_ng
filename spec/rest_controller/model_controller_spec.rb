@@ -1,6 +1,5 @@
+require "spec_helper"
 require "stringio"
-
-require File.expand_path("../../spec_helper", __FILE__)
 
 module VCAP::CloudController
   describe RestController::ModelController do
