@@ -1,14 +1,5 @@
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
-    permissions_required do
-      full Permissions::CFAdmin
-      read Permissions::OrgManager
-      update Permissions::OrgManager
-      read Permissions::OrgUser
-      read Permissions::BillingManager
-      read Permissions::Auditor
-    end
-
     define_attributes do
       attribute :name, String
       attribute :billing_enabled, Message::Boolean, :default => false
@@ -32,26 +23,8 @@ module VCAP::CloudController
 
     include ::Allowy::Context
 
-    def update(guid)
-      obj = find_guid_and_validate_access(:update, guid)
-      if cannot? :update, obj
-        raise Errors::NotAuthorized
-      end
-
-      json_msg = self.class::UpdateMessage.decode(body)
-      @request_attrs = json_msg.extract(:stringify_keys => true)
-
-      logger.debug "cc.update", :guid => guid,
-                   :attributes => request_attrs
-
-      raise InvalidRequest unless request_attrs
-
-      model.db.transaction do
-        obj.lock!
-        obj.update_from_hash(request_attrs)
-      end
-
-      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
+    def validate_access(op, obj, user, roles)
+      raise Errors::NotAuthorized if cannot? op, obj
     end
 
     def self.translate_validation_exception(e, attributes)
