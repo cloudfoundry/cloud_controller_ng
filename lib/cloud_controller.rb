@@ -112,6 +112,8 @@ require "cloud_controller/controllers"
 require "cloud_controller/roles"
 require "cloud_controller/encryptor"
 require "cloud_controller/blob_store"
+require "cloud_controller/dependency_locator"
+require "cloud_controller/controller_factory"
 
 require "cloud_controller/legacy_api/legacy_api_base"
 require "cloud_controller/legacy_api/legacy_info"

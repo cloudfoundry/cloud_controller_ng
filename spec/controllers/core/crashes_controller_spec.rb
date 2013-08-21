@@ -21,12 +21,11 @@ module VCAP::CloudController
                       { "instance" => "instance_2", "since" => 1 },
 
                      ]
-          HealthManagerClient.should_receive(:find_crashes).with(@app).
-            and_return(crashed_instances)
 
-          get("/v2/apps/#{@app.guid}/crashes",
-              {},
-              headers_for(@developer))
+          health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
+          health_manager_client.should_receive(:find_crashes).with(@app).and_return(crashed_instances)
+
+          get("/v2/apps/#{@app.guid}/crashes", {}, headers_for(@developer))
 
           last_response.status.should == 200
           Yajl::Parser.parse(last_response.body).should == expected

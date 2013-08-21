@@ -40,7 +40,10 @@ module VCAP::CloudController
     describe "GET /v2/spaces/:id/summary" do
       let(:health_response) { Hash[apps.select { |app| app.started? }.map { |app| [app.guid, app.instances] }] }
 
-      before { HealthManagerClient.stub(:healthy_instances) { health_response } }
+      before do
+        health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
+        health_manager_client.stub(:healthy_instances) { health_response }
+      end
 
       its(:status) { should eq 200 }
 

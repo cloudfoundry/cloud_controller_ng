@@ -42,8 +42,8 @@ module VCAP::CloudController
 
     describe "GET /v2/apps/:id/summary" do
       before do
-        HealthManagerClient.should_receive(:healthy_instances).
-          and_return(@app.instances)
+        health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
+        health_manager_client.should_receive(:healthy_instances).and_return(@app.instances)
         get "/v2/apps/#{@app.guid}/summary", {}, admin_headers
       end
 

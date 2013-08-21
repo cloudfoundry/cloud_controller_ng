@@ -4,48 +4,35 @@ module CloudController
   describe TaskClient do
     include RSpec::Mocks::ExampleMethods # for double
 
-    let(:message_bus) { CfMessageBus::MockMessageBus.new }
+    before do
+      @message_bus = VCAP::CloudController::Config.message_bus
+      @task_client = TaskClient.new(@message_bus)
 
-    before { TaskClient.configure(message_bus) }
+      @app = double(:app).as_null_object
+      @task = VCAP::CloudController::Models::Task.new(guid: "some guid", app: @app, secure_token: "42")
+    end
 
     describe "#start_task" do
-      let(:app) { double :app }
-
-      let(:task) do
-        double :task, :guid => "some guid",
-         :app => app, :secure_token => "42"
-      end
-
       it "sends task.start with the public key and the app's droplet URI" do
-        VCAP::CloudController::StagingsController.stub(
-            :droplet_download_uri).with(app) do
+        VCAP::CloudController::StagingsController.stub(:droplet_download_uri).with(@app) do
           "https://some-download-uri"
         end
 
-        message_bus.should_receive(:publish).with(
-          "task.start",
-          hash_including(
-            :task => "some guid",
-            :secure_token => "42",
-            :package => "https://some-download-uri"))
+        @task_client.start_task(@task)
 
-        TaskClient.start_task(task)
+        expect(@message_bus).to have_published_with_message("task.start", {
+            task: "some guid",
+            secure_token: "42",
+            package: "https://some-download-uri"
+        })
       end
     end
 
     describe "#stop_task" do
-      let(:app) { double :app }
-
-      let(:task) do
-        double :task, :guid => "some guid", :app => app
-      end
-
       it "sends task.start with the public key and the app's droplet URI" do
-        message_bus.should_receive(:publish).with(
-          "task.stop",
-          hash_including(:task => task.guid))
+        @task_client.stop_task(@task)
 
-        TaskClient.stop_task(task)
+        expect(@message_bus).to have_published_with_message("task.stop", task: "some guid")
       end
     end
   end

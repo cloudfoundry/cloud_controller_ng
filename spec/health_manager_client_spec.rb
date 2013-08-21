@@ -4,11 +4,11 @@ module VCAP::CloudController
   describe VCAP::CloudController::HealthManagerClient do
     let(:app) { Models::App.make }
     let(:apps) { [Models::App.make, Models::App.make, Models::App.make] }
-    let(:message_bus) { double(:message_bus) }
-    let(:configuration) { {} }
+    #let(:message_bus) { Config.message_bus }
+    let(:message_bus) { @health_manager_client.send(:message_bus) }
 
     before do
-      HealthManagerClient.configure(configuration, message_bus)
+      @health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
     end
 
     describe "find_status" do
@@ -18,11 +18,9 @@ module VCAP::CloudController
 
         encoded = { :droplet => 1, :other_opt => "value" }
         message_bus.should_receive(:synchronous_request).
-          with("healthmanager.status", encoded, {:result_count => 2, :timeout => 2}).
-          and_return(["status"])
+          with("healthmanager.status", encoded, {:result_count => 2, :timeout => 2}).and_return(["status"])
 
-        HealthManagerClient.find_status(app, { :other_opt => "value" }).
-          should == "status"
+        @health_manager_client.find_status(app, { :other_opt => "value" }).should == "status"
       end
     end
 
@@ -36,7 +34,7 @@ module VCAP::CloudController
           }
 
           message_bus.should_receive(:synchronous_request).and_return([resp])
-          HealthManagerClient.healthy_instances(app).should == 3
+          @health_manager_client.healthy_instances(app).should == 3
         end
       end
 
@@ -49,7 +47,7 @@ module VCAP::CloudController
           }
 
           message_bus.should_receive(:synchronous_request).and_return([resp])
-          HealthManagerClient.healthy_instances([app]).should == {
+          @health_manager_client.healthy_instances([app]).should == {
             app.guid => 3
           }
         end
@@ -69,7 +67,7 @@ module VCAP::CloudController
 
           expected = {}
           apps.each { |app| expected[app.guid] = 3 }
-          HealthManagerClient.healthy_instances(apps).should == expected
+          @health_manager_client.healthy_instances(apps).should == expected
         end
       end
     end
@@ -84,15 +82,14 @@ module VCAP::CloudController
         }
 
         message_bus.should_receive(:synchronous_request).and_return([resp])
-        HealthManagerClient.find_crashes(app).should == resp[:instances]
+        @health_manager_client.find_crashes(app).should == resp[:instances]
       end
     end
 
-    describe 'notify_app_updated' do
-      let(:configuration) { { :cc_partition => 'foo' } }
-      it 'should publish droplet.updated' do
-        message_bus.should_receive(:publish).with("droplet.updated", :droplet => app.guid, :cc_partition => 'foo')
-        HealthManagerClient.notify_app_updated(app.guid)
+    describe "notify_app_updated" do
+      it "should publish droplet.updated" do
+        message_bus.should_receive(:publish).with("droplet.updated", :droplet => app.guid, :cc_partition => "ng")
+        @health_manager_client.notify_app_updated(app.guid)
       end
     end
   end

@@ -3,11 +3,10 @@ require "spec_helper"
 module VCAP::CloudController
   describe Models::Task, type: :model do
     let(:app) { Models::App.make :name => "my app" }
-    let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:secure_token) { '42' }
+    let(:message_bus) { Config.message_bus }
+    let(:secure_token) { "42" }
 
     before do
-      CloudController::TaskClient.configure(message_bus)
       SecureRandom.stub(:urlsafe_base64).and_return(secure_token)
     end
 

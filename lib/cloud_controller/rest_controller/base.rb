@@ -43,7 +43,7 @@ module VCAP::CloudController::RestController
     # agnostic in the base api and everthing build on it, but, the need to call
     # send_file changed that.
     #
-    def initialize(config, logger, env, params, body, sinatra = nil)
+    def initialize(config, logger, env, params, body, sinatra = nil, dependencies = {})
       @config  = config
       @logger  = logger
       @env     = env
@@ -51,6 +51,13 @@ module VCAP::CloudController::RestController
       @body    = body
       @opts    = parse_params(params)
       @sinatra = sinatra
+
+      inject_dependencies(dependencies)
+    end
+
+    # Override this to set dependencies
+    #
+    def inject_dependencies(dependencies = {})
     end
 
     # Parses and sanitizes query parameters from the sinatra request.
