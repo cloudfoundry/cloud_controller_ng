@@ -27,7 +27,7 @@ describe CloudController::DependencyLocator do
     context "when cdn is configured for package blog store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
       let(:cdn_settings) { {uri: cdn_host, key_pair_id: 'key_pair'} }
-      let(:cdn) { mock(:cdn) }
+      let(:cdn) { double(:cdn) }
 
       it "creates the blob stores with CDNs if configured" do
         Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
@@ -60,7 +60,7 @@ describe CloudController::DependencyLocator do
     context "when cdn is configured for package blog store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
       let(:cdn_settings) { {uri: cdn_host, key_pair_id: 'key_pair'} }
-      let(:cdn) { mock(:cdn) }
+      let(:cdn) { double(:cdn) }
 
       it "creates the blob stores with CDNs if configured" do
         Cdn.should_receive(:new).with(cdn_host).and_return(cdn)

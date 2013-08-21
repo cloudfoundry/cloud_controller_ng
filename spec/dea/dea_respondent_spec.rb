@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe DeaRespondent do
     before { message_bus.stub(:subscribe).with(anything) }
 
-    let(:message_bus) { mock("message_bus") }
+    let(:message_bus) { double("message_bus") }
 
     let(:app) do
       Models::App.make(

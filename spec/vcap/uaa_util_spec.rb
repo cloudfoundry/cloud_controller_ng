@@ -16,7 +16,7 @@ module VCAP
 
         context "when toke is valid" do
           it "uses UAA::TokenCoder to decode the token with skey" do
-            coder = mock(:token_coder)
+            coder = double(:token_coder)
             coder.should_receive(:decode)
               .with("bearer token")
               .and_return("decoded-info")

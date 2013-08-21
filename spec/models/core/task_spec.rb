@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       it "returns the same token every time" do
-        SecureRandom.unstub!(:urlsafe_base64)
+        SecureRandom.unstub(:urlsafe_base64)
 
         secure_token = subject.secure_token
         expect(subject.reload.secure_token).to eq(secure_token)

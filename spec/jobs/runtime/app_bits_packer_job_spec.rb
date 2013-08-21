@@ -2,14 +2,14 @@ require "spec_helper"
 
 describe AppBitsPackerJob do
   describe "#perform" do
-    let(:app) { mock(:app) }
+    let(:app) { double(:app) }
     let(:uploaded_path) { "tmp/uploaded.zip" }
-    let(:fingerprints) { mock(:fingerprints) }
+    let(:fingerprints) { double(:fingerprints) }
 
     before do
       FingerprintsCollection.stub(:new) { fingerprints }
       VCAP::CloudController::Models::App.stub(:find) { app }
-      AppBitsPacker.stub(:new) { mock(:packer, perform: "done") }
+      AppBitsPacker.stub(:new) { double(:packer, perform: "done") }
     end
 
     subject(:job) {
@@ -27,7 +27,7 @@ describe AppBitsPackerJob do
     end
 
     it "creates an app bit packer and performs" do
-      packer = mock
+      packer = double
       AppBitsPacker.should_receive(:new).and_return(packer)
       packer.should_receive(:perform).with(app, uploaded_path, fingerprints)
       job.perform

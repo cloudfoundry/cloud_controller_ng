@@ -98,7 +98,7 @@ describe BlobStore do
 
   describe "#cp_to_local" do
     context "when from a cdn" do
-      let(:cdn) { mock(:cdn) }
+      let(:cdn) { double(:cdn) }
 
       subject(:blob_store) {  BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "a-directory-key", cdn) }
 

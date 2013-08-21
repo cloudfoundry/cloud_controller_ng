@@ -57,11 +57,11 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance).
               with(@app, nil, 5).and_return(file_uri_result)
 
-            client = mock("http client")
+            client = double("http client")
             HTTPClient.should_receive(:new).and_return(client)
             client.should_receive(:set_auth).with(nil, "username", "password")
 
-            response = mock("http response")
+            response = double("http response")
             client.should_receive(:get).with(
                                              "file_uri/", :header => {}).and_return(response)
             response.should_receive(:status).and_return(400)
@@ -88,11 +88,11 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance).
               with(@app, "path", 5).and_return(file_uri_result)
 
-            client = mock("http client")
+            client = double("http client")
             HTTPClient.should_receive(:new).and_return(client)
             client.should_receive(:set_auth).with(nil, "username", "password")
 
-            response = mock("http response")
+            response = double("http response")
             client.should_receive(:get).with(
                                              "file_uri/path", :header => {}).and_return(response)
             response.should_receive(:status).at_least(:once).and_return(200)
@@ -121,11 +121,11 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance).
               with(@app, nil, 5).and_return(file_uri_result)
 
-            client = mock("http client")
+            client = double("http client")
             HTTPClient.should_receive(:new).and_return(client)
             client.should_receive(:set_auth).with(nil, "username", "password")
 
-            response = mock("http response")
+            response = double("http response")
             client.should_receive(:get).with(
                                              "file_uri/", :header => {}).and_return(response)
             response.should_receive(:status).at_least(:once).and_return(200)
@@ -155,11 +155,11 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance).
               with(@app, nil, 5).and_return(file_uri_result)
 
-            client = mock("http client")
+            client = double("http client")
             HTTPClient.should_receive(:new).and_return(client)
             client.should_receive(:set_auth).with(nil, "username", "password")
 
-            response = mock("http response")
+            response = double("http response")
             headers = { "Range" => range }
             client.should_receive(:get).with("file_uri/", :header => headers).
               and_return(response)
@@ -191,11 +191,11 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance).
               with(@app, nil, 5).and_return(to_return)
 
-            client = mock("http client")
+            client = double("http client")
             HTTPClient.should_receive(:new).and_return(client)
             client.should_receive(:set_auth).with(nil, "username", "password")
 
-            response = mock("http response")
+            response = double("http response")
             headers = { "Range" => range }
             client.should_receive(:get).with("file_uri/", :header => headers).
               and_return(response)
@@ -278,11 +278,11 @@ module VCAP::CloudController
             DeaClient.should_receive(:get_file_uri_for_instance_id).
               with(@app, "path", instance_id).and_return(file_uri_result)
 
-            client = mock("http client")
+            client = double("http client")
             HTTPClient.should_receive(:new).and_return(client)
             client.should_receive(:set_auth).with(nil, "username", "password")
 
-            response = mock("http response")
+            response = double("http response")
             client.should_receive(:get).with(
               "file_uri/path", :header => {}
             ).and_return(response)

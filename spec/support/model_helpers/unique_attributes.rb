@@ -125,9 +125,10 @@ def it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
 
         it "saves successfully" do
           expect {
-            unsaved_instance = factory.call({subkey => existing_instance.public_send(subkey)}, save: false)
+            unsaved_instance = factory.call
+            unsaved_instance.send(:"#{subkey}=", existing_instance.public_send(subkey))
             unsaved_instance.save(:validate => false)
-          }.not_to raise_error Sequel::DatabaseError
+          }.not_to raise_error
         end
       end
     end

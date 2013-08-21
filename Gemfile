@@ -6,7 +6,7 @@ gem "bcrypt-ruby"
 gem "eventmachine", "~> 1.0.0"
 gem "fog"
 gem "rfc822"
-gem "sequel"
+gem "sequel", "~> 3.48"
 gem "sinatra", "~> 1.4"
 gem "sinatra-contrib"
 gem "yajl-ruby"
@@ -20,6 +20,7 @@ gem "stager-client", "~> 0.0.02", :git => "https://github.com/cloudfoundry/stage
 gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.git"
 gem "vcap_common", :git => "https://github.com/cloudfoundry/vcap-common.git"
 gem "allowy"
+gem "delayed_job_active_record", "~> 4.0"
 
 # These are outside the test group in order to run rake tasks
 gem "rspec"

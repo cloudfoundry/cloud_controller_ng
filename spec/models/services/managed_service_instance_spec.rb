@@ -312,9 +312,7 @@ module VCAP::CloudController
           end
 
           it "does not raise an error if a db instance has not already been allocated" do
-            expect do
-              allocate_trial_db
-            end.not_to raise_error
+            expect { allocate_trial_db }.not_to raise_error
           end
         end
 

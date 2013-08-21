@@ -69,7 +69,7 @@ describe LocalAppBits do
     it "should zip up the file and yield the open stream of it" do
       path = "/tmp/uncompressed/package.zip"
       SafeZipper.should_receive(:zip).with(uncompressed_path, path)
-      File.should_receive(:new).with(path).and_return(mock(:file, path: path, hexdigest: "some_sha"))
+      File.should_receive(:new).with(path).and_return(double(:file, path: path, hexdigest: "some_sha"))
 
       package = local_app_bits.create_package
       expect(package.path).to eq path
