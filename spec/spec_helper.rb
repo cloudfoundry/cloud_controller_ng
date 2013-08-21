@@ -74,7 +74,7 @@ module VCAP::CloudController
         db_index = ENV["TEST_ENV_NUMBER"]
       end
 
-      @db ||= VCAP::CloudController::DB.connect(
+      Thread.current[:db] ||= VCAP::CloudController::DB.connect(
         db_logger,
         :database => "#{db_connection}#{db_index}",
         :log_level => "debug2"
@@ -199,8 +199,6 @@ module VCAP::CloudController::SpecHelper
     VCAP::CloudController::Config.configure(config, message_bus)
     # reset the dependency locator
     CloudController::DependencyLocator.instance.send(:initialize)
-
-    RailsConfig.load_and_set_settings(File.expand_path("../../config/cloud_controller.yml", __FILE__))
 
     configure_stacks
   end
