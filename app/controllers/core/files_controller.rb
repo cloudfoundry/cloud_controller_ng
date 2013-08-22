@@ -7,11 +7,6 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
-    permissions_required do
-      read Permissions::CFAdmin
-      read Permissions::SpaceDeveloper
-    end
-
     def files(guid, search_param, path = nil, opts = {})
       opts = { :allow_redirect => true }.merge(opts)
       app = find_guid_and_validate_access(:read, guid)

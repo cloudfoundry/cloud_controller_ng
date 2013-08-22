@@ -1,139 +1,52 @@
 require 'spec_helper'
 
 module VCAP::CloudController::Models
-  describe OrganizationAccess do
+  describe OrganizationAccess, type: :access do
     subject(:access) { OrganizationAccess.new(double(:context, user: user, roles: roles)) }
-    let(:org) { VCAP::CloudController::Models::Organization.make }
-    let(:other_org) { VCAP::CloudController::Models::Organization.make }
+    let(:object) { VCAP::CloudController::Models::Organization.make }
     let(:user) { VCAP::CloudController::Models::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
 
-    describe 'update?' do
-      context 'for an organization manager' do
-        before { org.add_manager(user) }
+    it_should_behave_like :admin_full_access
 
-        context 'with an active organization' do
-          it { should be_able_to :update, org }
-        end
+    context 'with a suspended organization' do
+      before { object.set(status: 'suspended') }
+      it_should_behave_like :admin_full_access
+    end
 
-        context 'with a suspended organization' do
-          before { org.set(status: 'suspended') }
+    context 'a user in the organization' do
+      before { object.add_user(user) }
+      it_behaves_like :read_only
+    end
 
-          it { should_not be_able_to :update, org }
-        end
+    context 'a user not in the organization' do
+      it_behaves_like :no_access
+    end
+
+    context 'a billing manager for the organization' do
+      before { object.add_billing_manager(user) }
+      it_behaves_like :read_only
+    end
+
+    context 'a manager for the organization' do
+      before { object.add_manager(user) }
+
+      context 'with an active organization' do
+        it { should_not be_able_to :create, object }
+        it { should be_able_to :read, object }
+        it { should be_able_to :update, object }
+        it { should_not be_able_to :delete, object }
       end
 
-      context 'for an org user' do
-        before { org.add_user(user) }
-
-        it { should_not be_able_to :update, org }
-      end
-
-      context 'for a cloud foundry admin' do
-        before { roles.stub(:admin?).and_return(true) }
-
-        context 'with a suspended organization' do
-          before { org.set(status: 'suspended') }
-
-          it { should be_able_to :update, org }
-        end
+      context 'with a suspended organization' do
+        before { object.set(status: 'suspended') }
+        it_behaves_like :read_only
       end
     end
 
-    describe 'read?' do
-      context 'for a user not in the org' do
-        before { other_org.add_user(user) }
-        it { should_not be_able_to :read, org }
-      end
-
-      context 'for a user in the org' do
-        before { org.add_user(user) }
-        it { should be_able_to :read, org }
-      end
-
-      context 'for a billing manager in the org' do
-        before { org.add_billing_manager(user) }
-        it { should be_able_to :read, org }
-      end
-
-      context 'for a manager in the org' do
-        before { org.add_manager(user) }
-        it { should be_able_to :read, org }
-      end
-
-      context 'for an auditor in the org' do
-        before { org.add_auditor(user) }
-        it { should be_able_to :read, org }
-      end
-
-      context 'for a cloud foundry admin' do
-        before { roles.stub(:admin?).and_return(true) }
-        it { should be_able_to :read, org }
-      end
-    end
-
-    describe 'create?' do
-      context 'for a user not in the org' do
-        before { other_org.add_user(user) }
-        it { should_not be_able_to :create }
-      end
-
-      context 'for a user in the org' do
-        before { org.add_user(user) }
-        it { should_not be_able_to :create, org }
-      end
-
-      context 'for a billing manager in the org' do
-        before { org.add_billing_manager(user) }
-        it { should_not be_able_to :create, org }
-      end
-
-      context 'for a manager in the org' do
-        before { org.add_manager(user) }
-        it { should_not be_able_to :create, org }
-      end
-
-      context 'for an auditor in the org' do
-        before { org.add_auditor(user) }
-        it { should_not be_able_to :create, org }
-      end
-
-      context 'for a cloud foundry admin' do
-        before { roles.stub(:admin?).and_return(true) }
-        it { should be_able_to :create }
-      end
-    end
-
-    describe 'delete?' do
-      context 'for a user not in the org' do
-        before { other_org.add_user(user) }
-        it { should_not be_able_to :delete, org }
-      end
-
-      context 'for a user in the org' do
-        before { org.add_user(user) }
-        it { should_not be_able_to :delete, org }
-      end
-
-      context 'for a billing manager in the org' do
-        before { org.add_billing_manager(user) }
-        it { should_not be_able_to :delete, org }
-      end
-
-      context 'for a manager in the org' do
-        before { org.add_manager(user) }
-        it { should_not be_able_to :delete, org }
-      end
-
-      context 'for an auditor in the org' do
-        before { org.add_auditor(user) }
-        it { should_not be_able_to :delete, org }
-      end
-
-      context 'for a cloud foundry admin' do
-        before { roles.stub(:admin?).and_return(true) }
-        it { should be_able_to :delete, org }
-      end
+    context 'an auditor for the organization' do
+      before { object.add_auditor(user) }
+      it_behaves_like :read_only
     end
   end
 end

@@ -4,11 +4,6 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
-    permissions_required do
-      read Permissions::CFAdmin
-      read Permissions::SpaceDeveloper
-    end
-
     def instances(guid)
       app = find_guid_and_validate_access(:read, guid)
 

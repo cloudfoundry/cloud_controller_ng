@@ -7,11 +7,6 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
-    permissions_required do
-      full Permissions::CFAdmin
-      full Permissions::SpaceDeveloper
-    end
-
     def upload(guid)
       app = find_guid_and_validate_access(:update, guid)
 

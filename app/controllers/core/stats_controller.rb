@@ -4,12 +4,6 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
-    permissions_required do
-      read Permissions::CFAdmin
-      read Permissions::SpaceDeveloper
-      read Permissions::SpaceAuditor
-    end
-
     def stats(guid, opts = {})
       app = find_guid_and_validate_access(:read, guid)
       stats = DeaClient.find_stats(app, opts)
