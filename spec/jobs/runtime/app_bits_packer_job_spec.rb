@@ -5,8 +5,14 @@ describe AppBitsPackerJob do
     let(:app) { double(:app) }
     let(:uploaded_path) { "tmp/uploaded.zip" }
     let(:fingerprints) { double(:fingerprints) }
+    let(:package_blob_store) { double(:package_blob_store) }
+    let(:global_app_bits_cache) { double(:global_app_bits_cache) }
+    let(:tmpdir) { "/tmp/special_temp" }
+    let(:max_droplet_size) { 256 }
 
     before do
+      config_override({:directories => {:tmpdir => tmpdir}, :packages => config[:packages].merge(:max_droplet_size => max_droplet_size)})
+
       FingerprintsCollection.stub(:new) { fingerprints }
       VCAP::CloudController::Models::App.stub(:find) { app }
       AppBitsPacker.stub(:new) { double(:packer, perform: "done") }
@@ -27,8 +33,11 @@ describe AppBitsPackerJob do
     end
 
     it "creates an app bit packer and performs" do
+      CloudController::DependencyLocator.instance.should_receive(:package_blob_store).and_return(package_blob_store)
+      CloudController::DependencyLocator.instance.should_receive(:global_app_bits_cache).and_return(global_app_bits_cache)
+
       packer = double
-      AppBitsPacker.should_receive(:new).and_return(packer)
+      AppBitsPacker.should_receive(:new).with(package_blob_store, global_app_bits_cache, max_droplet_size, tmpdir).and_return(packer)
       packer.should_receive(:perform).with(app, uploaded_path, fingerprints)
       job.perform
     end
