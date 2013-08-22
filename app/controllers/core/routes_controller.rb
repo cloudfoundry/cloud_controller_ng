@@ -1,14 +1,5 @@
 module VCAP::CloudController
   rest_controller :Routes do
-    permissions_required do
-      full Permissions::CFAdmin
-      full Permissions::OrgManager
-      read Permissions::Auditor
-      full Permissions::SpaceManager
-      full Permissions::SpaceDeveloper
-      read Permissions::SpaceAuditor
-    end
-
     define_attributes do
       attribute :host, String, :default => ""
       to_one    :domain

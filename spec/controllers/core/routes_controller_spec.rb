@@ -28,11 +28,10 @@ module VCAP::CloudController
 
     context "with a wildcard domain" do
       it "should allow a nil host" do
-        cf_admin = Models::User.make(:admin => true)
         domain = Models::Domain.make(:wildcard => true)
         space = Models::Space.make(:organization => domain.owning_organization)
         space.add_domain(domain)
-        post "/v2/routes", Yajl::Encoder.encode(:host => nil, :domain_guid => domain.guid, :space_guid => space.guid), json_headers(headers_for(cf_admin))
+        post "/v2/routes", Yajl::Encoder.encode(:host => nil, :domain_guid => domain.guid, :space_guid => space.guid), json_headers(admin_headers)
         last_response.status.should == 201
       end
     end
