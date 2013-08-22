@@ -36,7 +36,7 @@ module VCAP::CloudController
     let(:existing_quota) { VCAP::CloudController::Models::QuotaDefinition.make }
 
     context "when the user is a cf admin" do
-      let(:headers) { headers_for(VCAP::CloudController::Models::User.make(:admin => true)) }
+      let(:headers) { admin_headers }
       let(:quota_name) { "quota 1" }
 
       it "does allow creation of a quota def" do
