@@ -26,6 +26,9 @@ module CloudController
       case klass.name.demodulize
         when "CrashesController", "SpaceSummariesController"
           {health_manager_client: dependency_locator.health_manager_client}
+        when "CustomBuildpacksController"
+          {buildpack_blobstore: dependency_locator.buildpack_blobstore,
+          upload_handler: dependency_locator.upload_handler}
         else
           {}
       end
