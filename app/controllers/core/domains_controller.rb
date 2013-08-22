@@ -1,14 +1,5 @@
 module VCAP::CloudController
   rest_controller :Domains do
-    permissions_required do
-      full Permissions::CFAdmin
-      full Permissions::OrgManager
-      read Permissions::Auditor
-      read Permissions::SpaceManager
-      read Permissions::SpaceDeveloper
-      read Permissions::SpaceAuditor
-    end
-
     define_attributes do
       attribute :name, String
       attribute :wildcard, Message::Boolean

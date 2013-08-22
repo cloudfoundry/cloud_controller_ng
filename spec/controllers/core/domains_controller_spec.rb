@@ -241,7 +241,7 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/domains/:id" do
-      let(:user) { Models::User.make :admin => true }
+      let(:user) { Models::User.make }
       let(:organization) { Models::Organization.make }
       let(:domain) { Models::Domain.make }
 
@@ -256,8 +256,7 @@ module VCAP::CloudController
         before { domain.update(:owning_organization => organization) }
 
         it "has its GUID and URL in the response body" do
-          get "/v2/domains/#{domain.guid}", {},
-            json_headers(headers_for(user))
+          get "/v2/domains/#{domain.guid}", {}, json_headers(headers_for(user))
 
           last_response.status.should == 200
 
@@ -274,8 +273,7 @@ module VCAP::CloudController
         before { domain.update(:owning_organization => nil) }
 
         it "has its GUID as null, and no url key in the response body" do
-          get "/v2/domains/#{domain.guid}", {},
-            json_headers(headers_for(user))
+          get "/v2/domains/#{domain.guid}", {}, json_headers(admin_headers)
 
           last_response.status.should == 200
 
