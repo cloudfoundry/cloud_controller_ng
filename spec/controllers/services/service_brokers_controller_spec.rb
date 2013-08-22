@@ -207,7 +207,7 @@ module VCAP::CloudController
               'metadata' => {
                 'guid' => broker.guid,
                 'url' => "/v2/service_brokers/#{broker.guid}",
-                'created_at' => broker.created_at.to_s,
+                'created_at' => broker.created_at.iso8601,
                 'updated_at' => nil,
               },
               'entity' => {

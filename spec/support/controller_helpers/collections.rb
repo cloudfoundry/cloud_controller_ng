@@ -31,6 +31,8 @@ module ControllerHelpers
       value.collect { |x| normalize_attributes(x) }
     when Numeric, nil, true, false
       value
+    when Time
+      value.iso8601
     else
       value.to_s
     end

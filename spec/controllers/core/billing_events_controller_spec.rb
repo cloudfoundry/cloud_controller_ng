@@ -101,7 +101,7 @@ module VCAP::CloudController
                 "event_type" => "organization_billing_start",
                 "organization_guid" => @org_event.organization_guid,
                 "organization_name" => @org_event.organization_name,
-                "timestamp" => @org_event.timestamp.to_s,
+                "timestamp" => @org_event.timestamp.iso8601,
               }
             end
 
@@ -119,7 +119,7 @@ module VCAP::CloudController
                 "app_plan_name" => @app_start_event.app_plan_name,
                 "app_memory" => @app_start_event.app_memory,
                 "app_instance_count" => @app_start_event.app_instance_count,
-                "timestamp" => @app_start_event.timestamp.to_s,
+                "timestamp" => @app_start_event.timestamp.iso8601,
               }
             end
 
@@ -134,7 +134,7 @@ module VCAP::CloudController
                 "app_guid" => @app_stop_event.app_guid,
                 "app_name" => @app_stop_event.app_name,
                 "app_run_id" => @app_stop_event.app_run_id,
-                "timestamp" => @app_stop_event.timestamp.to_s,
+                "timestamp" => @app_stop_event.timestamp.iso8601,
               }
             end
 
@@ -154,7 +154,7 @@ module VCAP::CloudController
                 "service_version" => @service_create_event.service_version,
                 "service_plan_guid" => @service_create_event.service_plan_guid,
                 "service_plan_name" => @service_create_event.service_plan_name,
-                "timestamp" => @service_create_event.timestamp.to_s,
+                "timestamp" => @service_create_event.timestamp.iso8601,
               }
             end
 
@@ -168,7 +168,7 @@ module VCAP::CloudController
                 "space_name" => @service_delete_event.space_name,
                 "service_instance_guid" => @service_delete_event.service_instance_guid,
                 "service_instance_name" => @service_delete_event.service_instance_name,
-                "timestamp" => @service_delete_event.timestamp.to_s,
+                "timestamp" => @service_delete_event.timestamp.iso8601,
               }
             end
           end

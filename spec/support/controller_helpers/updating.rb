@@ -69,7 +69,7 @@ module ControllerHelpers
 
           it "should not update the created_at timestamp" do
             metadata["created_at"].should_not be_nil
-            metadata["created_at"].should == @orig_created_at.to_s
+            metadata["created_at"].should == @orig_created_at.iso8601
           end
 
           it "should have a recent updated_at timestamp" do

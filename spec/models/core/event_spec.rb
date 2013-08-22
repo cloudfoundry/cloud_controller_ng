@@ -53,7 +53,7 @@ module VCAP::CloudController
           "actor_type" => "One True God",
           "actee" => "John Travolta",
           "actee_type" => "Scientologist",
-          "timestamp" => Time.new(1997, 6, 27).to_s, # yes local time for now :(
+          "timestamp" => Time.new(1997, 6, 27).iso8601,
           "metadata" => {"popcorn_price" => "$(arm + leg)"},
           "space_guid" => space.guid
         )
