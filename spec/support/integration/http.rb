@@ -22,7 +22,7 @@ module IntegrationHttp
     url = URI.parse("http://localhost:#{port}#{path}")
 
     response = Net::HTTP.new(url.host, url.port).start do |http|
-      request = Net::HTTP::Get.new(url.path)
+      request = Net::HTTP::Get.new(url.request_uri)
       headers.each do |name, value|
         request.add_field(name, value)
       end
