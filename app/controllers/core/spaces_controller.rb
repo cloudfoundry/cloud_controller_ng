@@ -1,14 +1,5 @@
 module VCAP::CloudController
   rest_controller :Spaces do
-    permissions_required do
-      full Permissions::CFAdmin
-      full Permissions::OrgManager
-      read   Permissions::SpaceManager
-      update Permissions::SpaceManager
-      read Permissions::SpaceDeveloper
-      read Permissions::SpaceAuditor
-    end
-
     define_attributes do
       attribute  :name,            String
       to_one     :organization

@@ -52,13 +52,12 @@ module VCAP::CloudController
 
 
     describe "data integrity" do
-      let(:cf_admin) { Models::User.make(:admin => true) }
       let(:space) { Models::Space.make }
 
       it "should not make strings into integers" do
         space.name = "1234"
         space.save
-        get "/v2/spaces/#{space.guid}", {}, headers_for(cf_admin)
+        get "/v2/spaces/#{space.guid}", {}, admin_headers
         decoded_response["entity"]["name"].should == "1234"
       end
     end
