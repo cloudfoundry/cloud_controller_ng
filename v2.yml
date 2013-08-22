@@ -462,3 +462,8 @@
   name: TaskNotFound
   http_code: 404
   message: "The task could not be found: %s"
+  
+290001:
+  name: BuildpackNameTaken
+  http_code: 400
+  message: "The buildpack name is already in use: %s"
