@@ -15,10 +15,10 @@ class AppBitsPacker
     LocalAppBits.from_compressed_bits(uploaded_compressed_path, tmp_dir) do |local_app_bits|
       validate_size!(fingerprints_in_app_cache, local_app_bits)
 
-      global_app_bits_cache.cp_r_from_local(local_app_bits.root_path)
+      global_app_bits_cache.cp_r_from_local(local_app_bits.uncompressed_path)
 
       fingerprints_in_app_cache.each do |local_destination, app_bit_sha|
-        global_app_bits_cache.cp_to_local(app_bit_sha, File.join(local_app_bits.root_path, local_destination))
+        global_app_bits_cache.cp_to_local(app_bit_sha, File.join(local_app_bits.uncompressed_path, local_destination))
       end
 
       package = local_app_bits.create_package

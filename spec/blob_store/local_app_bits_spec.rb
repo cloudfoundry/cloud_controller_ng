@@ -3,14 +3,16 @@ require "cloud_controller/blob_store/local_app_bits"
 
 describe LocalAppBits do
   let(:compressed_zip_path) { "/tmp/zipped.compressed_zip_path" }
-  let(:uncompressed_path) { "/tmp/uncompressed" }
+  let(:root_path) { "/tmp/safezipper" }
+  let(:uncompressed_path) { File.join(root_path, LocalAppBits::UNCOMPRESSED_DIR) }
   let(:tmp_dir) { "/tmp" }
 
   describe ".from_compressed_bits" do
     before do
       File.stub(:exists?).and_return(true)
       SafeZipper.stub(:unzip).and_return(123)
-      Dir.stub(:mktmpdir).and_yield(uncompressed_path)
+      Dir.stub(:mktmpdir).and_yield(root_path)
+      FileUtils.stub(:mkdir)
     end
 
     it "yields a block" do
@@ -23,15 +25,15 @@ describe LocalAppBits do
       SafeZipper.should_receive(:unzip).with(compressed_zip_path, uncompressed_path)
 
       LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
-        expect(local_app_bits.root_path).to eq uncompressed_path
+        expect(local_app_bits.uncompressed_path).to eq uncompressed_path
       end
     end
 
     it "create and delete the tmp dir where its uncompressed" do
-      Dir.should_receive(:mktmpdir).with("uncompressed", tmp_dir)
+      Dir.should_receive(:mktmpdir).with("safezipper", tmp_dir)
 
       LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
-        expect(local_app_bits.root_path).to start_with uncompressed_path
+        expect(local_app_bits.uncompressed_path).to start_with uncompressed_path
       end
     end
 
@@ -64,16 +66,24 @@ describe LocalAppBits do
   end
 
   describe "#create_package" do
-    subject(:local_app_bits) { LocalAppBits.new(uncompressed_path, 123) }
+    subject(:local_app_bits) { LocalAppBits.new(root_path, 123) }
 
     it "should zip up the file and yield the open stream of it" do
-      path = "/tmp/uncompressed/package.zip"
+      path = "/tmp/safezipper/package.zip"
       SafeZipper.should_receive(:zip).with(uncompressed_path, path)
       File.should_receive(:new).with(path).and_return(double(:file, path: path, hexdigest: "some_sha"))
 
       package = local_app_bits.create_package
       expect(package.path).to eq path
       expect(package.hexdigest).to eq "some_sha"
+    end
+
+    it "its zip destination should be outside the source" do
+      File.should_receive(:new)
+      SafeZipper.should_receive(:zip) do |source, destination|
+        expect(File.dirname(destination)).to_not match /^#{source}/
+      end
+      local_app_bits.create_package
     end
   end
 end
