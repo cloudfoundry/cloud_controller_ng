@@ -28,6 +28,13 @@ module CloudController
         expect(controller).to be_instance_of(SpaceSummariesController)
         expect(controller.send(:health_manager_client)).to eq(@dependency_locator.health_manager_client)
       end
+
+      it "instantiates a CustomBuildpacksController" do
+        controller = @controller_factory.create_controller(CustomBuildpacksController)
+        expect(controller).to be_instance_of(CustomBuildpacksController)
+        expect(controller.send(:buildpack_blobstore)).to eq(@dependency_locator.buildpack_blobstore)
+        expect(controller.send(:upload_handler)).to eq(@dependency_locator.upload_handler)
+      end
     end
   end
 end
