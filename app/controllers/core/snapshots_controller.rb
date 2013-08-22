@@ -4,12 +4,6 @@ module VCAP::CloudController
     path_base "/v2"
     model_class_name :ManagedServiceInstance
 
-    permissions_required do
-      full Permissions::CFAdmin
-      update Permissions::SpaceDeveloper
-      read Permissions::SpaceDeveloper
-    end
-
     define_attributes do
       attribute :name, String
       to_one :service_instance

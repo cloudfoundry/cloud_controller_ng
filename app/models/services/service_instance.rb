@@ -56,6 +56,11 @@ module VCAP::CloudController::Models
       add_service_binding(app_guid: app_guid, binding_options: binding_options)
     end
 
+    # Make sure all derived classes use the base access class
+    def self.source_class
+      ServiceInstance
+    end
+
     private
     def validate_service_binding(service_binding)
       if service_binding && service_binding.app.space != space
