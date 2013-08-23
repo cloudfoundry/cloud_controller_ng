@@ -9,32 +9,17 @@ module VCAP::CloudController::Models
     def save(options = {})
       ensure_no_raise_on_failure!(options)
 
-      if valid?
-        broker.save
+      if broker.valid?
+        broker.db.transaction do
+          broker.save
+          broker.load_catalog
+        end
         self
       end
     end
 
     def errors
-      @errors ||= Sequel::Model::Errors.new
-    end
-
-    private
-
-    def valid?
-      errors.clear
-
-      if broker.valid?
-        broker.check!
-        true
-      else
-        broker.errors.each do |key, broker_errors|
-          broker_errors.each do |broker_error|
-            errors.add(key, broker_error)
-          end
-        end
-        false
-      end
+      broker.errors
     end
 
     def ensure_no_raise_on_failure!(options)

@@ -4,6 +4,7 @@ module VCAP::CloudController::Models
   class Service < Sequel::Model
     plugin :serialization
 
+    many_to_one :service_broker
     one_to_many :service_plans
     one_to_one  :service_auth_token, :key => [:label, :provider], :primary_key => [:label, :provider]
 
@@ -23,10 +24,7 @@ module VCAP::CloudController::Models
 
     def validate
       validates_presence :label
-      validates_presence :provider
-      validates_presence :url
       validates_presence :description
-      validates_presence :version
       validates_presence :bindable
       validates_url      :url
       validates_url      :info_url

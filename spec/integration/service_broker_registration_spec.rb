@@ -40,15 +40,15 @@ describe "Service Broker Management", :type => :integration do
     create_response = make_post_request('/v2/service_brokers', body, authed_headers)
     expect(create_response.code.to_i).to eq(201)
 
-    metadata = create_response.json_body.fetch('metadata')
-    guid = metadata.fetch('guid')
+    broker_metadata = create_response.json_body.fetch('metadata')
+    guid = broker_metadata.fetch('guid')
     expect(guid).to be
-    expect(metadata.fetch('url')).to eq("/v2/service_brokers/#{guid}")
+    expect(broker_metadata.fetch('url')).to eq("/v2/service_brokers/#{guid}")
 
-    entity = create_response.json_body.fetch('entity')
-    expect(entity.fetch('name')).to eq('BrokerDrug')
-    expect(entity.fetch('broker_url')).to eq('http://localhost:54329')
-    expect(entity).to_not have_key('token')
+    broker_entity = create_response.json_body.fetch('entity')
+    expect(broker_entity.fetch('name')).to eq('BrokerDrug')
+    expect(broker_entity.fetch('broker_url')).to eq('http://localhost:54329')
+    expect(broker_entity).to_not have_key('token')
 
     new_body = JSON.dump(
       name: 'Updated Name'
@@ -57,12 +57,26 @@ describe "Service Broker Management", :type => :integration do
     update_response = make_put_request("/v2/service_brokers/#{guid}", new_body, authed_headers)
     expect(update_response.code.to_i).to eq(200)
 
-    metadata = update_response.json_body.fetch('metadata')
-    expect(metadata.fetch('guid')).to eq(guid)
-    expect(metadata.fetch('url')).to eq("/v2/service_brokers/#{guid}")
+    broker_metadata = update_response.json_body.fetch('metadata')
+    expect(broker_metadata.fetch('guid')).to eq(guid)
+    expect(broker_metadata.fetch('url')).to eq("/v2/service_brokers/#{guid}")
 
-    entity = update_response.json_body.fetch('entity')
-    expect(entity.fetch('name')).to eq('Updated Name')
-    expect(entity).to_not have_key('token')
+    broker_entity = update_response.json_body.fetch('entity')
+    expect(broker_entity.fetch('name')).to eq('Updated Name')
+    expect(broker_entity).to_not have_key('token')
+
+    catalog_response = make_get_request('/v2/services?inline-relations-depth=1', authed_headers)
+    expect(catalog_response.code.to_i).to eq(200)
+
+    services = catalog_response.json_body.fetch('resources')
+    service = services.first
+
+    service_entity = service.fetch('entity')
+    expect(service_entity.fetch('label')).to eq('custom-service')
+
+    plans = service_entity.fetch('service_plans')
+    plan = plans.first
+    plan_entity = plan.fetch('entity')
+    expect(plan_entity.fetch('name')).to eq('free')
   end
 end

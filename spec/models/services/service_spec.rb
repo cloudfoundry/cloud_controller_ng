@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController::Models
   describe Service, type: :model do
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:label, :provider, :url, :description, :version, :bindable],
+      :required_attributes  => [:label, :description, :bindable],
       :unique_attributes    => [ [:label, :provider] ],
       :stripped_string_attributes => [:label, :provider],
       :one_to_zero_or_more   => {
@@ -110,7 +110,5 @@ module VCAP::CloudController::Models
         end
       end
     end
-
-
   end
 end
