@@ -43,7 +43,7 @@ module IntegrationSetup
   end
 
   def stop_cc
-    @cc_pids.each { |pid| graceful_kill(:cc, @cc_pids.delete(pid)) }
+    @cc_pids.dup.each { |pid| graceful_kill(:cc, @cc_pids.delete(pid)) }
   end
 
   def wait_for_nats_to_start(port)
