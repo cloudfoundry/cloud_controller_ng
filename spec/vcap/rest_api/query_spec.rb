@@ -8,6 +8,8 @@ module VCAP::RestAPI
     let(:books_per_author) { 2 }
 
     class Author < Sequel::Model
+      def_column_alias :aliased, :aliased_column
+      
       one_to_many :books
     end
 
@@ -26,6 +28,7 @@ module VCAP::RestAPI
         Integer :protected
         Boolean :published
         DateTime :published_at
+        Integer :aliased_column
       end
 
       db.create_table :books do
@@ -46,14 +49,15 @@ module VCAP::RestAPI
         a = Author.create(:num_val => i + 1,
                           :str_val => "str #{i}",
                           :published => (i == 0),
-                          :published_at => (i == 0) ? nil : Time.at(0) + i)
+                          :published_at => (i == 0) ? nil : Time.at(0) + i,
+                          :aliased => i + 1)
         books_per_author.times do |j|
           a.add_book(Book.create(:num_val => j + 1, :str_val => "str #{i} #{j}"))
         end
       end
 
       @owner_nil_num = Author.create(:str_val => "no num", :published => false, :published_at => Time.at(0) + num_authors)
-      @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published published_at))
+      @queryable_attributes = Set.new(["num_val", "str_val", "author_id", "book_id", "published", "published_at", {"aliased" => :aliased_column}])
     end
 
     describe "#filtered_dataset_from_query_params" do
@@ -371,6 +375,15 @@ module VCAP::RestAPI
 
           expect { Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q) }.to raise_error(ArgumentError)
+        end
+      end
+      describe "an aliased column" do
+        it "should support querying with alias" do
+          q = "aliased:5"
+
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                        @queryable_attributes, :q => q)
+          ds.all.should == [Author[:aliased_column => 5]]      
         end
       end
     end

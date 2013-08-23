@@ -144,6 +144,6 @@ Sequel.migration do
   end
 
   down do
-    raise Sequel::Error, "This migration cannot be reversed since we don't know if 'timestamp' and the fks were renamed originally."
+    raise Sequel::Error, "This migration cannot be reversed since we don't know if the common and permission table fk and indexes were renamed previously."
   end
 end

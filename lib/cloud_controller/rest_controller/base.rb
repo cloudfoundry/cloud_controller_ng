@@ -220,7 +220,7 @@ module VCAP::CloudController::RestController
       # query parameter) for this rest/api endpoint.
       #
       # @param [Array] args One or more attributes that can be used
-      # as query parameters.
+      # as query parameters.  Supports a Hash for column aliases {:alias => :column}.
       #
       # @return [Set] If called with no arguments, returns the list
       # of query parameters.
@@ -229,7 +229,11 @@ module VCAP::CloudController::RestController
           @query_parameters ||= Set.new
         else
           @query_parameters ||= Set.new
-          @query_parameters |= Set.new(args.map { |a| a.to_s })
+          @query_parameters |= Set.new(args.map do |a|
+            param = a.to_s
+            param = {a.each_key.next.to_s => a.each_value.next} if a.is_a?(Hash)
+            param
+          end)
         end
       end
 

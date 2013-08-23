@@ -1,6 +1,8 @@
 module VCAP::CloudController::Models
   class Event < Sequel::Model
     plugin :serialization
+    
+    def_column_alias :timestamp, :event_timestamp
 
     many_to_one :space
 

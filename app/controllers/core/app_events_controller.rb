@@ -8,6 +8,6 @@ module VCAP::CloudController
       attribute :timestamp, String
     end
 
-    query_parameters :timestamp, :app_guid
+    query_parameters({:timestamp => :event_timestamp}, :app_guid)
   end
 end
