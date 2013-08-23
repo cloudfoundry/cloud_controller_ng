@@ -1,6 +1,6 @@
 module VCAP::CloudController::Models
-  class QuotaDefinitionAccess < BaseAccess
-    def read?(quota_definition)
+  class ServicePlanAccess < BaseAccess
+    def read?(service_plan)
       super || logged_in?
     end
   end

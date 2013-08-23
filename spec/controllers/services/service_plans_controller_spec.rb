@@ -112,7 +112,6 @@ module VCAP::CloudController
       end
     end
 
-    let(:admin) { VCAP::CloudController::Models::User.make(:admin => true) }
     let(:developer) { make_developer_for_space(Models::Space.make) }
 
     describe "modifying service plans" do
@@ -121,7 +120,7 @@ module VCAP::CloudController
 
       context "a cf admin" do
         it "can modify service plans" do
-          put "/v2/service_plans/#{plan.guid}", body, json_headers(headers_for(admin))
+          put "/v2/service_plans/#{plan.guid}", body, json_headers(admin_headers)
           last_response.status.should == 201
           plan.reload.public.should be_false
         end
@@ -161,7 +160,7 @@ module VCAP::CloudController
       end
 
       it "is visible to cf admin" do
-        get '/v2/service_plans', {}, headers_for(admin)
+        get '/v2/service_plans', {}, admin_headers
         plan_guids.should include(private_plan.guid)
       end
     end
