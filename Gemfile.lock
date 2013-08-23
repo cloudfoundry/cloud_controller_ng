@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/cloudfoundry/cf-message-bus.git
-  revision: 0c96af0e40e4c4815fbe3cb19faa56f43424c8bd
+  revision: dbc2fc6e71b70980d6d4559b39ed9451449140eb
   specs:
     cf-message-bus (0.0.5)
       eventmachine (~> 1.0.0)

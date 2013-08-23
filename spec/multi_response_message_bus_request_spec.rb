@@ -10,7 +10,7 @@ describe MultiResponseMessageBusRequest do
   describe "#request" do
     it "makes a request" do
       requested_data = nil
-      expected_data = { :request => "request-value" }
+      expected_data = { "request" => "request-value" }
 
       message_bus.subscribe("subject") do |data|
         requested_data = data
@@ -37,7 +37,7 @@ describe MultiResponseMessageBusRequest do
 
       responses_count.should == 1
       last_error.should be_nil
-      last_response.should == { :response => "response-value" }
+      last_response.should == { "response" => "response-value" }
     end
 
     it "does not accept responses after the specified timeout and returns an error" do
