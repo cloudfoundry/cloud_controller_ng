@@ -105,7 +105,6 @@ require "vcap/errors"
 
 require "cloud_controller/config"
 require "cloud_controller/db"
-require "cloud_controller/permissions"
 require "cloud_controller/runner"
 require "cloud_controller/app_package"
 require "cloud_controller/app_manager"

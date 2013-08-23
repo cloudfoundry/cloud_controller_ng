@@ -9,19 +9,11 @@ module VCAP::CloudController::RestController
     include VCAP::CloudController
     include VCAP::Errors
     include VCAP::RestAPI
-    include PermissionManager
     include Messages
     include Routes
     extend Forwardable
 
     def_delegators :@sinatra, :redirect
-
-    # Tell the PermissionManager the types of operations that can be performed.
-    define_permitted_operation :create
-    define_permitted_operation :read
-    define_permitted_operation :update
-    define_permitted_operation :delete
-    define_permitted_operation :enumerate
 
     # Create a new rest api endpoint.
     #

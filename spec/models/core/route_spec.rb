@@ -37,7 +37,7 @@ module VCAP::CloudController
           :delete_ok => true,
           :create_for => lambda { |route|
             d = Models::Domain.make(
-              :owning_organization => route.domain.organization,
+              :owning_organization => route.domain.owning_organization,
               :wildcard => true
             )
             route.space.add_domain(d)

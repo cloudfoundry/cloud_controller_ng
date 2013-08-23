@@ -214,20 +214,11 @@ module VCAP::CloudController::RestController
     #
     # @param [Roles] The roles for the current user or client.
     def validate_access(op, obj, user, roles)
-      if current_allowy.access_control_for(obj)
-        if cannot? op, obj
-          raise NotAuthenticated if user.nil? && roles.none?
+      if cannot? op, obj
+        raise NotAuthenticated if user.nil? && roles.none?
 
-          logger.info("allowy.access-denied", op: op, obj: obj, user: user, roles: roles)
-          raise Errors::NotAuthorized
-        end
-      else
-        user_perms = Permissions.permissions_for(obj, user, roles)
-
-        unless self.class.op_allowed_by?(op, user_perms)
-          raise NotAuthenticated if user.nil? && roles.none?
-          raise NotAuthorized
-        end
+        logger.info("allowy.access-denied", op: op, obj: obj, user: user, roles: roles)
+        raise Errors::NotAuthorized
       end
     end
 

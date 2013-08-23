@@ -61,11 +61,6 @@ module VCAP::CloudController::Models
       end
     end
 
-    # For permission checks
-    def organization
-      owning_organization
-    end
-
     def overlaps_domain_in_other_org?
       domains_to_check = intermediate_domains
       return unless domains_to_check
