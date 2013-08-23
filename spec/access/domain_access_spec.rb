@@ -80,5 +80,18 @@ module VCAP::CloudController::Models
       let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
     end
+
+    context 'when the domain is not owned by any organization (global domain)' do
+      before { object.update(:owning_organization => nil) }
+
+      it_behaves_like :admin_full_access
+      it_behaves_like :read_only
+
+      context 'a user that isnt logged in (defensive)' do
+        let(:user) { nil }
+        let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
+        it_behaves_like :no_access
+      end
+    end
   end
 end

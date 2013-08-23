@@ -17,5 +17,9 @@ module VCAP::CloudController::Models
     def delete?(object)
       context.roles.admin?
     end
+
+    def logged_in?
+      !context.user.nil? || context.roles.present?
+    end
   end
 end
