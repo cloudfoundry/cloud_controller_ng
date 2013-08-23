@@ -1,11 +1,5 @@
 module VCAP::CloudController
   rest_controller :ServicePlanVisibilities do
-    permissions_required do
-      create Permissions::CFAdmin
-      enumerate Permissions::CFAdmin # this isn't actually required to get access to enumerate
-      delete Permissions::CFAdmin
-    end
-
     define_attributes do
       to_one :service_plan
       to_one :organization
