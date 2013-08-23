@@ -1,9 +1,5 @@
 module VCAP::CloudController
   rest_controller :ServiceAuthTokens do
-    permissions_required do
-      full Permissions::CFAdmin
-    end
-
     define_attributes do
       attribute :label,    String
       attribute :provider, String
