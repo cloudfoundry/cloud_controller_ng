@@ -217,6 +217,8 @@ module VCAP::CloudController::RestController
       if current_allowy.access_control_for(obj)
         if cannot? op, obj
           raise NotAuthenticated if user.nil? && roles.none?
+
+          logger.info("allowy.access-denied", op: op, obj: obj, user: user, roles: roles)
           raise Errors::NotAuthorized
         end
       else
