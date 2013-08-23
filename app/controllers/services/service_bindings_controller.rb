@@ -2,15 +2,6 @@ require 'services/api'
 
 module VCAP::CloudController
   rest_controller :ServiceBindings do
-    permissions_required do
-      full Permissions::CFAdmin
-      read Permissions::OrgManager
-      create Permissions::SpaceDeveloper
-      read   Permissions::SpaceDeveloper
-      delete Permissions::SpaceDeveloper
-      read Permissions::SpaceAuditor
-    end
-
     define_attributes do
       to_one    :app
       to_one    :service_instance
