@@ -1,10 +1,5 @@
 module VCAP::CloudController
   rest_controller :Services do
-    permissions_required do
-      full Permissions::CFAdmin
-      read Permissions::Authenticated
-    end
-
     define_attributes do
       attribute :label,             String
       attribute :provider,          String

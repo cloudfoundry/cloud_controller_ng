@@ -28,7 +28,7 @@ module VCAP::CloudController
       provider = DEFAULT_PROVIDER
       validate_access(label, provider)
 
-      VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
+      set_v2_security_context
       Sequel::Model.db.transaction do
         service = Models::Service.update_or_create(
           :label => label, :provider => provider
@@ -136,7 +136,7 @@ module VCAP::CloudController
 
       validate_access(label, provider)
 
-      VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
+      set_v2_security_context
       svc_guid = Models::Service[:label => label, :provider => provider].guid
       svc_api = VCAP::CloudController::ServicesController.new(config, logger, env, params, body)
       svc_api.dispatch(:delete, svc_guid)
@@ -201,7 +201,7 @@ module VCAP::CloudController
       (label, version) = label_and_version.split("-")
 
       validate_access(label, provider)
-      VCAP::CloudController::SecurityContext.set(self.class.legacy_api_user)
+      set_v2_security_context
 
       req = VCAP::Services::Api::HandleUpdateRequest.decode(body)
 
@@ -237,7 +237,7 @@ module VCAP::CloudController
       "{}"
     end
 
-    def self.legacy_api_user
+    def legacy_api_user
       user = Models::User.find(:guid => LEGACY_API_USER_GUID)
       if user.nil?
         user = Models::User.create(
@@ -247,6 +247,14 @@ module VCAP::CloudController
         )
       end
       user
+    end
+
+    def admin_token
+      { 'user_id' => legacy_api_user.id, 'email' => 'legacyapi@example.com', 'scope' => %w[cloud_controller.admin] }
+    end
+
+    def set_v2_security_context
+      VCAP::CloudController::SecurityContext.set(legacy_api_user, admin_token)
     end
 
     def self.setup_routes
