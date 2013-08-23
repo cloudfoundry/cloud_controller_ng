@@ -373,6 +373,20 @@ module VCAP::RestAPI
             @queryable_attributes, :q => q) }.to raise_error(ArgumentError)
         end
       end
+
+      describe "query on an array of possible values" do
+        it "returns all of the matching records" do
+          q = "str_val IN str 1,str 2,str IN 3"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                        @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.str_val == "str 1" || a.str_val == "str 2"
+          end
+
+          ds.all.should =~ expected
+        end
+      end
     end
   end
 end

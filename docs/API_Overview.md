@@ -180,7 +180,10 @@ both records shown in the pagination example above.
 String query values may contain a `*` which will be treated at a shell style
 glob.
 
-Query values may also contain `>` or `<`, e.g. `GET /v2/foo_bars?q=instances:>2`.
+Query values may also contain `>`, `<`, `>=`, or `<=, e.g. `GET /v2/foo_bars?q=instances>2`.
+
+Finally, to pick out records from an array of possible values use `GET /v2/foo_bars?q=color IN blue,red`
+Note the spaces (" IN ").  Also, the column in question *must* be a string/text type.
 
 The API endpoint may return an error if the resulting query performs an
 unindexed search.

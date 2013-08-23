@@ -78,7 +78,7 @@ module VCAP::RestAPI
       segments = query.split(";")
 
       segments.collect do |segment|
-        key, comparison, value = segment.split(/(:|>=|<=|<|>)/, 2)
+        key, comparison, value = segment.split(/(:|>=|<=|<|>| IN )/, 2)
 
         comparison = "=" if comparison == ":"
 
@@ -100,6 +100,10 @@ module VCAP::RestAPI
         val = clean_up_boolean(key, val)
       when :datetime
         val = clean_up_datetime(val)
+      end
+
+      if comparison == " IN "
+        val = val.split(",")
       end
 
       if val.nil?
