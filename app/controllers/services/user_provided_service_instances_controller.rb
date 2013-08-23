@@ -2,12 +2,6 @@ require 'cloud_controller/rest_controller'
 
 module VCAP::CloudController
   rest_controller :UserProvidedServiceInstances do
-    permissions_required do
-      full Permissions::SpaceDeveloper
-      full Permissions::CFAdmin
-      read Permissions::SpaceAuditor
-    end
-
     define_attributes do
       attribute :name, String
       attribute :credentials, Hash

@@ -1,10 +1,5 @@
 module VCAP::CloudController
   rest_controller :QuotaDefinitions do
-    permissions_required do
-      full Permissions::CFAdmin
-      read Permissions::Authenticated
-    end
-
     define_attributes do
       attribute  :name,                       String
       attribute  :non_basic_services_allowed, Message::Boolean
