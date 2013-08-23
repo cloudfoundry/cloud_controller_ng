@@ -115,16 +115,16 @@ describe MultiResponseMessageBusRequest do
       message_bus.respond_to_request("subject", "response2" => "response-value")
 
       response1_count.should == 1
-      last1_response.should == { :response1 => "response-value" }
+      last1_response.should == { "response1" => "response-value" }
       last1_error.should be_nil
 
       response2_count.should == 1
-      last2_response.should == { :response2 => "response-value" }
+      last2_response.should == { "response2" => "response-value" }
       last2_error.should be_nil
     end
 
     it "does nothing when callbacks were not provided" do
-      subject.on_response(0) { |*args| }
+      subject.on_response(0) { |*_| }
 
       subject.request(:request => "request-value")
       message_bus.respond_to_request("subject", :response => "response-value")

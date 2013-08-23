@@ -5,9 +5,9 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:staging_advertise_msg) do
       {
-          :id => "staging-id",
-          :stacks => ["stack-name"],
-          :available_memory => 1024,
+          "id" => "staging-id",
+          "stacks" => ["stack-name"],
+          "available_memory" => 1024,
       }
     end
 
@@ -15,12 +15,8 @@ module VCAP::CloudController
 
     describe "#register_subscriptions" do
       it "finds advertised stagers" do
-        with_em_and_thread do
-          subject.register_subscriptions
-          EM.next_tick do
-            message_bus.publish("staging.advertise", staging_advertise_msg)
-          end
-        end
+        subject.register_subscriptions
+        message_bus.publish("staging.advertise", staging_advertise_msg)
         subject.find_stager("stack-name", 0).should == "staging-id"
       end
     end

@@ -67,7 +67,7 @@ module VCAP::CloudController
       end
 
       def stager_id
-        stats[:id]
+        stats["id"]
       end
 
       def expired?
@@ -79,11 +79,11 @@ module VCAP::CloudController
       end
 
       def has_memory?(mem)
-        stats[:available_memory] >= mem
+        stats["available_memory"] >= mem
       end
 
       def has_stack?(stack)
-        stats[:stacks].include?(stack)
+        stats["stacks"].include?(stack)
       end
     end
   end

@@ -8,19 +8,19 @@ module VCAP::CloudController
     describe "#register_subscriptions" do
       let(:dea_advertise_msg) do
         {
-          :id => "dea-id",
-          :stacks => ["stack"],
-          :available_memory => 1024,
-          :app_id_to_count => {}
+          "id" => "dea-id",
+          "stacks" => ["stack"],
+          "available_memory" => 1024,
+          "app_id_to_count" => {}
         }
       end
 
       let(:dea_shutdown_msg) do
         {
-          :id => "dea-id",
-          :ip => "123.123.123.123",
-          :version => "1.2.3",
-          :app_id_to_count => {}
+          "id" => "dea-id",
+          "ip" => "123.123.123.123",
+          "version" => "1.2.3",
+          "app_id_to_count" => {}
         }
       end
 
@@ -31,13 +31,9 @@ module VCAP::CloudController
       end
 
       it "clears advertisements of DEAs being shut down" do
-        with_em_and_thread do
-          subject.register_subscriptions
-          EM.next_tick do
-            message_bus.publish("dea.advertise", dea_advertise_msg)
-            message_bus.publish("dea.shutdown", dea_shutdown_msg)
-          end
-        end
+        subject.register_subscriptions
+        message_bus.publish("dea.advertise", dea_advertise_msg)
+        message_bus.publish("dea.shutdown", dea_shutdown_msg)
 
         subject.find_dea(1, "stack", "app-id").should be_nil
       end
@@ -46,11 +42,11 @@ module VCAP::CloudController
     describe "#find_dea" do
       let(:dea_advertise_msg) do
         {
-          :id => "dea-id",
-          :stacks => ["stack"],
-          :available_memory => 1024,
-          :app_id_to_count => {
-            :"other-app-id" => 1
+          "id" => "dea-id",
+          "stacks" => ["stack"],
+          "available_memory" => 1024,
+          "app_id_to_count" => {
+            "other-app-id" => 1
           }
         }
       end
@@ -96,9 +92,9 @@ module VCAP::CloudController
         before do
           subject.process_advertise_message(dea_advertise_msg)
           subject.process_advertise_message(dea_advertise_msg.merge(
-            :id => "other-dea-id",
-            :app_id_to_count => {
-              :"app-id" => 1
+            "id" => "other-dea-id",
+            "app_id_to_count" => {
+              "app-id" => 1
             }
           ))
         end
@@ -114,15 +110,15 @@ module VCAP::CloudController
           # Even though this fake DEA has more than enough memory, it should not affect results
           # because it already has an instance of the app.
           subject.process_advertise_message(
-            dea_advertise_msg.merge(:id => "dea-id-already-has-an-instance",
-                                    :available_memory => 2048,
-                                    :app_id_to_count => { :"app-id" => 1 })
+            dea_advertise_msg.merge("id" => "dea-id-already-has-an-instance",
+                                    "available_memory" => 2048,
+                                    "app_id_to_count" => { "app-id" => 1 })
           )
         end
         context "when all DEAs have the same available memory" do
           before do
-            subject.process_advertise_message(dea_advertise_msg.merge(:id => "dea-id1"))
-            subject.process_advertise_message(dea_advertise_msg.merge(:id => "dea-id2"))
+            subject.process_advertise_message(dea_advertise_msg.merge("id" => "dea-id1"))
+            subject.process_advertise_message(dea_advertise_msg.merge("id" => "dea-id2"))
           end
 
           it "randomly picks one of the eligible DEAs" do
@@ -138,10 +134,10 @@ module VCAP::CloudController
         context "when DEAs have different amounts of available memory" do
           before do
             subject.process_advertise_message(
-              dea_advertise_msg.merge(:id => "dea-id1", :available_memory => 1024)
+              dea_advertise_msg.merge("id" => "dea-id1", "available_memory" => 1024)
             )
             subject.process_advertise_message(
-              dea_advertise_msg.merge(:id => "dea-id2", :available_memory => 1023)
+              dea_advertise_msg.merge("id" => "dea-id2", "available_memory" => 1023)
             )
           end
 
@@ -159,13 +155,13 @@ module VCAP::CloudController
           context "and there are many DEAs" do
             before do
               subject.process_advertise_message(
-                dea_advertise_msg.merge(:id => "dea-id3", :available_memory => 1022)
+                dea_advertise_msg.merge("id" => "dea-id3", "available_memory" => 1022)
               )
               subject.process_advertise_message(
-                dea_advertise_msg.merge(:id => "dea-id4", :available_memory => 1021)
+                dea_advertise_msg.merge("id" => "dea-id4", "available_memory" => 1021)
               )
               subject.process_advertise_message(
-                dea_advertise_msg.merge(:id => "dea-id5", :available_memory => 1020)
+                dea_advertise_msg.merge("id" => "dea-id5", "available_memory" => 1020)
               )
             end
 
@@ -184,17 +180,17 @@ module VCAP::CloudController
       describe "multiple instances of an app" do
         before do
           subject.process_advertise_message({
-            :id => "dea-id1",
-            :stacks => ["stack"],
-            :available_memory => 1024,
-            :app_id_to_count => {}
+            "id" => "dea-id1",
+            "stacks" => ["stack"],
+            "available_memory" => 1024,
+            "app_id_to_count" => {}
           })
 
           subject.process_advertise_message({
-            :id => "dea-id2",
-            :stacks => ["stack"],
-            :available_memory => 1024,
-            :app_id_to_count => {}
+            "id" => "dea-id2",
+            "stacks" => ["stack"],
+            "available_memory" => 1024,
+            "app_id_to_count" => {}
           })
         end
 
@@ -213,13 +209,13 @@ module VCAP::CloudController
       describe "changing advertisements for the same dea" do
         it "only uses the newest message from a given dea" do
           Timecop.freeze do
-            advertisement = dea_advertise_msg.merge(:app_id_to_count => {:"app-id" => 1})
+            advertisement = dea_advertise_msg.merge("app_id_to_count" => {"app-id" => 1})
             subject.process_advertise_message(advertisement)
 
             Timecop.travel(5)
 
             next_advertisement = advertisement.dup
-            next_advertisement[:available_memory] = 0
+            next_advertisement["available_memory"] = 0
             subject.process_advertise_message(next_advertisement)
 
             subject.find_dea(64, "stack", "foo").should be_nil

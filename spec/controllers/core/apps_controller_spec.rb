@@ -466,13 +466,13 @@ module VCAP::CloudController
         end
 
         it "returns X-App-Staging-Log header with staging log url" do
-          stager_response = AppStagerTask::Response.new(:task_streaming_log_url => "streaming-log-url")
-          AppManager.stub(:stage_app => stager_response)
+          stager_response = AppStagerTask::Response.new("task_streaming_log_url" => "streaming-log-url")
+          AppManager.stub(stage_app: stager_response)
 
           put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
           last_response.status.should == 201
           last_response.headers["X-App-Staging-Log"].should == "streaming-log-url"
-          end
+        end
       end
 
       context "when app will not be staged" do

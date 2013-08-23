@@ -8,19 +8,19 @@ module VCAP::CloudController
       end
 
       def log
-        @response[:task_log]
+        @response["task_log"]
       end
 
       def streaming_log_url
-        @response[:task_streaming_log_url]
+        @response["task_streaming_log_url"]
       end
 
       def detected_buildpack
-        @response[:detected_buildpack]
+        @response["detected_buildpack"]
       end
 
       def droplet_hash
-        @response[:droplet_sha1]
+        @response["droplet_sha1"]
       end
     end
 
@@ -145,8 +145,8 @@ module VCAP::CloudController
     def error_message(response)
       if response.is_a?(String) || response.nil?
         "failed to stage application:\n#{response}"
-      elsif response[:error]
-        "failed to stage application:\n#{response[:error]}\n#{response[:task_log]}"
+      elsif response["error"]
+        "failed to stage application:\n#{response["error"]}\n#{response["task_log"]}"
       end
     end
 

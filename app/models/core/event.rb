@@ -41,7 +41,7 @@ module VCAP::CloudController::Models
         actor_type: "app",
         timestamp: Time.now,
         metadata: droplet_exited_payload.slice(
-          :instance, :index, :exit_status, :exit_description, :reason
+          "instance", "index", "exit_status", "exit_description", "reason"
         )
       )
     end

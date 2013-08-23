@@ -9,11 +9,7 @@ module VCAP::CloudController
     def find_crashes(app)
       message = { :droplet => app.guid, :state => :CRASHED }
       crashed_instances = hm_request("status", message, :timeout => 2).first
-      if crashed_instances
-        crashed_instances[:instances]
-      else
-        []
-      end
+      crashed_instances ? crashed_instances["instances"] : []
     end
 
     def find_status(app, message_options = {})
@@ -47,11 +43,11 @@ module VCAP::CloudController
 
       if batch_request
         resp.inject({}) do |result, r|
-          result[r[:droplet]] = r[:healthy]
+          result[r["droplet"]] = r["healthy"]
           result
         end
       elsif resp && !resp.empty?
-        resp.first[:healthy]
+        resp.first["healthy"]
       else
         0
       end

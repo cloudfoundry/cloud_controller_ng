@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/cloudfoundry/cf-message-bus.git
-  revision: e7aeff24b3caf18f7f5cba0d98425fa9db372eb4
+  revision: 0c96af0e40e4c4815fbe3cb19faa56f43424c8bd
   specs:
-    cf-message-bus (0.0.4)
+    cf-message-bus (0.0.5)
       eventmachine (~> 1.0.0)
       nats (= 0.4.26)
       vcap-concurrency

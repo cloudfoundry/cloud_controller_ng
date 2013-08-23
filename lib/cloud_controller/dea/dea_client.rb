@@ -79,13 +79,13 @@ module VCAP::CloudController
         flapping_indices = health_manager_client.find_status(app, message)
 
         all_instances = {}
-        if flapping_indices && flapping_indices[:indices]
-          flapping_indices[:indices].each do |entry|
-            index = entry[:index]
+        if flapping_indices && flapping_indices["indices"]
+          flapping_indices["indices"].each do |entry|
+            index = entry["index"]
             if index >= 0 && index < num_instances
               all_instances[index] = {
                   :state => "FLAPPING",
-                  :since => entry[:since],
+                  :since => entry["since"],
               }
             end
           end
@@ -102,15 +102,15 @@ module VCAP::CloudController
           running_instances = find_instances(app, message, request_options)
 
           running_instances.each do |instance|
-            index = instance[:index]
+            index = instance["index"]
             if index >= 0 && index < num_instances
               all_instances[index] = {
-                  :state => instance[:state],
-                  :since => instance[:state_timestamp],
-                  :debug_ip => instance[:debug_ip],
-                  :debug_port => instance[:debug_port],
-                  :console_ip => instance[:console_ip],
-                  :console_port => instance[:console_port]
+                  :state => instance["state"],
+                  :since => instance["state_timestamp"],
+                  :debug_ip => instance["debug_ip"],
+                  :debug_port => instance["debug_port"],
+                  :console_ip => instance["console_ip"],
+                  :console_port => instance["console_port"]
               }
             end
           end
@@ -235,11 +235,11 @@ module VCAP::CloudController
 
         stats = {} # map of instance index to stats.
         running_instances.each do |instance|
-          index = instance[:index]
+          index = instance["index"]
           if index >= 0 && index < app.instances
             stats[index] = {
-              :state => instance[:state],
-              :stats => instance[:stats],
+              state: instance["state"],
+              stats: instance["stats"],
             }
           end
         end
@@ -315,13 +315,13 @@ module VCAP::CloudController
 
         if instance_found = find_specific_instance(app, search_options)
           result = FileUriResult.new
-          if instance_found[:file_uri_v2]
-            result.file_uri_v2 = instance_found[:file_uri_v2]
+          if instance_found["file_uri_v2"]
+            result.file_uri_v2 = instance_found["file_uri_v2"]
           end
 
-          uri_v1 = [instance_found[:file_uri], instance_found[:staged], "/", path].join("")
+          uri_v1 = [instance_found["file_uri"], instance_found["staged"], "/", path].join("")
           result.file_uri_v1 = uri_v1
-          result.credentials = instance_found[:credentials]
+          result.credentials = instance_found["credentials"]
 
           return result
         end

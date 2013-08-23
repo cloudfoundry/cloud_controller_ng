@@ -17,14 +17,14 @@ module VCAP::CloudController
     let(:reason) { "CRASHED" }
     let(:payload) do
       {
-        :cc_partition => "cc_partition",
-        :droplet => droplet,
-        :version => app.version,
-        :instance => "instance_id",
-        :index => 0,
-        :reason => reason,
-        :exit_status => 145,
-        :exit_description => "Exit description",
+        'cc_partition' => "cc_partition",
+        'droplet' => droplet,
+        'version' => app.version,
+        'instance' => "instance_id",
+        'index' => 0,
+        'reason' => reason,
+        'exit_status' => 145,
+        'exit_description' => "Exit description",
       }
     end
 
@@ -58,10 +58,10 @@ module VCAP::CloudController
               app_event = Models::AppEvent.find(:app_id => app.id)
 
               expect(app_event).not_to be_nil
-              expect(app_event.instance_guid).to eq(payload[:instance])
-              expect(app_event.instance_index).to eq(payload[:index])
-              expect(app_event.exit_status).to eq(payload[:exit_status])
-              expect(app_event.exit_description).to eq(payload[:exit_description])
+              expect(app_event.instance_guid).to eq(payload['instance'])
+              expect(app_event.instance_index).to eq(payload['index'])
+              expect(app_event.exit_status).to eq(payload['exit_status'])
+              expect(app_event.exit_description).to eq(payload['exit_description'])
               expect(app_event.timestamp.to_i).to eq(time.to_i)
             end
           end
@@ -79,10 +79,10 @@ module VCAP::CloudController
               expect(app_event.timestamp.to_i).to eq(time.to_i)
               expect(app_event.actor_type).to eq("app")
               expect(app_event.actor).to eq(app.guid)
-              expect(app_event.metadata["instance"]).to eq(payload[:instance])
-              expect(app_event.metadata["index"]).to eq(payload[:index])
-              expect(app_event.metadata["exit_status"]).to eq(payload[:exit_status])
-              expect(app_event.metadata["exit_description"]).to eq(payload[:exit_description])
+              expect(app_event.metadata["instance"]).to eq(payload['instance'])
+              expect(app_event.metadata["index"]).to eq(payload['index'])
+              expect(app_event.metadata["exit_status"]).to eq(payload['exit_status'])
+              expect(app_event.metadata["exit_description"]).to eq(payload['exit_description'])
               expect(app_event.metadata["reason"]).to eq(reason)
             end
           end
