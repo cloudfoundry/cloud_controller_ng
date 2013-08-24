@@ -23,15 +23,11 @@ module VCAP::CloudController
       many_to_many_collection_ids: {}
 
     shared_examples "enumerate and read plan only" do |perm_name|
-      include_examples "permission checks", perm_name,
-        :model => Models::ServicePlan,
+      include_examples "permission enumeration", perm_name,
+        :name => 'service plan',
         :path => "/v2/service_plans",
         :permissions_overlap => true,
-        :enumerate => 7,
-        :create => :not_allowed,
-        :read => :allowed,
-        :modify => :not_allowed,
-        :delete => :not_allowed
+        :enumerate => 7
     end
 
     describe "Permissions" do

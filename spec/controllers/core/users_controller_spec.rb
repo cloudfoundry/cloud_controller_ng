@@ -54,14 +54,10 @@ module VCAP::CloudController
       context 'normal user' do
         let(:member_a) { @org_a_manager }
         let(:member_b) { @space_a_manager }
-        include_examples "permission checks", "User",
-                         :model => Models::User,
+        include_examples "permission enumeration", "User",
+                         :name => 'user',
                          :path => "/v2/users",
-                         :enumerate => :not_allowed,
-                         :create => :not_allowed,
-                         :read => :not_allowed,
-                         :modify => :not_allowed,
-                         :delete => :not_allowed
+                         :enumerate => :not_allowed
       end
 
       context 'admin user' do
@@ -74,14 +70,10 @@ module VCAP::CloudController
           VCAP::CloudController::SecurityContext.stub(:token).and_return({'scope' => ['cloud_controller.admin']})
         end
 
-        include_examples "permission checks", "Admin",
-                         :model => Models::User,
+        include_examples "permission enumeration", "Admin",
+                         :name => 'user',
                          :path => "/v2/users",
                          :enumerate => Proc.new { Models::User.count },
-                         :create => :allowed,
-                         :read => :allowed,
-                         :modify => :allowed,
-                         :delete => :allowed,
                          :permissions_overlap => true
       end
     end

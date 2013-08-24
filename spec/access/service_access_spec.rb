@@ -9,7 +9,7 @@ module VCAP::CloudController::Models
 
     it_should_behave_like :admin_full_access
 
-    context 'for a logged in user (defensive)' do
+    context 'for a logged in user' do
       it_behaves_like :read_only
     end
 
