@@ -586,56 +586,40 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          include_examples "permission checks", "OrgManager",
-            :model => Models::App,
+          include_examples "permission enumeration", "OrgManager",
+            :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
+            :enumerate => 0
         end
 
         describe "OrgUser" do
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
 
-          include_examples "permission checks", "OrgUser",
-            :model => Models::App,
+          include_examples "permission enumeration", "OrgUser",
+            :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :not_allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
+            :enumerate => 0
         end
 
         describe "BillingManager" do
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
 
-          include_examples "permission checks", "BillingManager",
-            :model => Models::App,
+          include_examples "permission enumeration", "BillingManager",
+            :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :not_allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
+            :enumerate => 0
         end
 
         describe "Auditor" do
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
 
-          include_examples "permission checks", "Auditor",
-            :model => Models::App,
+          include_examples "permission enumeration", "Auditor",
+            :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :not_allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
+            :enumerate => 0
         end
       end
 
@@ -644,42 +628,30 @@ module VCAP::CloudController
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
 
-          include_examples "permission checks", "SpaceManager",
-            :model => Models::App,
+          include_examples "permission enumeration", "SpaceManager",
+            :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
+            :enumerate => 0
         end
 
         describe "Developer" do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
-          include_examples "permission checks", "Developer",
-            :model => Models::App,
+          include_examples "permission enumeration", "Developer",
+            :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 1,
-            :create => :allowed,
-            :read => :allowed,
-            :modify => :allowed,
-            :delete => :allowed
+            :enumerate => 1
         end
 
         describe "SpaceAuditor" do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
 
-          include_examples "permission checks", "SpaceAuditor",
-            :model => Models::App,
+          include_examples "permission enumeration", "SpaceAuditor",
+            :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0,
-            :create => :not_allowed,
-            :read => :allowed,
-            :modify => :not_allowed,
-            :delete => :not_allowed
+            :enumerate => 0
         end
       end
     end

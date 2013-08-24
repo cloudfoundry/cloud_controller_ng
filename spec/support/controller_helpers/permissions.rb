@@ -51,7 +51,12 @@ module ControllerHelpers
   end
 
 
-  shared_examples "permission enumeration" do |perm_name, name, path, path_suffix, expected, perms_overlap|
+  shared_examples "permission enumeration" do |perm_name, opts|
+    name = opts[:name]
+    path = opts[:path]
+    path_suffix = opts[:path_suffix]
+    expected = opts[:enumerate]
+    perms_overlap = opts[:permissions_overlap]
     describe "GET #{path}" do
       it "should return #{name.pluralize} to a user that has #{perm_name} permissions" do
         expected_count = expected.respond_to?(:call) ? expected.call : expected
@@ -209,15 +214,15 @@ module ControllerHelpers
   end
 
   shared_examples "permission checks" do |perm_name, opts|
-    model = opts[:model]
+    model = opts.delete :model
     name = model.name.split("::").last.underscore.gsub("_", " ")
+    opts[:name] = name
 
     path = opts[:path]
     path_suffix = opts[:path_suffix]
     perms_overlap = opts[:permissions_overlap]
 
-    include_examples "permission enumeration",
-      perm_name, name, path, path_suffix, opts[:enumerate], perms_overlap
+    include_examples "permission enumeration", perm_name, opts
 
     [:create, :read, :modify, :delete].each do |op|
       include_examples "permission #{op} #{opts[op]}", perm_name, model, name, path, path_suffix, perms_overlap

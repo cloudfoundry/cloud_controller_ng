@@ -57,6 +57,11 @@ module VCAP::CloudController::Models
       it_behaves_like :no_access
     end
 
+    context 'organization billing manager (defensive)' do
+      before { org.add_billing_manager(user) }
+      it_behaves_like :no_access
+    end
+
     context 'user in a different organization (defensive)' do
       before do
         different_organization = VCAP::CloudController::Models::Organization.make
