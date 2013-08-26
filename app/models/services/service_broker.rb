@@ -8,13 +8,9 @@ module VCAP::CloudController::Models
     def validate
       validates_presence :name
       validates_presence :broker_url
+      validates_presence :token
       validates_unique :name
       validates_unique :broker_url
-
-      #validates_presence :token
-      # validate_presence apparently uses the ivar instead of the method, which
-      # is bad because '' is encrypted to a real string and therefore is "present"
-      errors.add(:token, :presence) if !token || token.strip.empty?
     end
 
     def load_catalog
@@ -29,8 +25,13 @@ module VCAP::CloudController::Models
 
     def token=(value)
       generate_salt
-      value = ' ' if value == ''  # empty values will fail to encrypt but we want validation to fail later
-      super(VCAP::CloudController::Encryptor.encrypt(value, salt))
+
+      # Encryptor cannot encrypt an empty string
+      if value.blank?
+        super(nil)
+      else
+        super(VCAP::CloudController::Encryptor.encrypt(value, salt))
+      end
     end
 
     def generate_salt
