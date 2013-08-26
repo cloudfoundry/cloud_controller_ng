@@ -27,5 +27,9 @@ module VCAP::CloudController::Models
     def self.default
       @default ||= QuotaDefinition[:name => @default_quota_name]
     end
+
+    def self.user_visibility_filter(user)
+      user_visibility_filter_with_admin_override(full_dataset_filter)
+    end
   end
 end

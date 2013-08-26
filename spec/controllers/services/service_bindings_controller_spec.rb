@@ -174,7 +174,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "SpaceAuditor",
             :name => 'service binding',
             :path => "/v2/service_bindings",
-            :enumerate => 0
+            :enumerate => 1
         end
       end
     end

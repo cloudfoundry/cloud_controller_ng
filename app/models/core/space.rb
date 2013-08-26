@@ -84,9 +84,13 @@ module VCAP::CloudController::Models
     end
 
     def self.user_visibility_filter(user)
-      user_visibility_filter_with_admin_override(
-        :organization => user.organizations_dataset
-      )
+      user_visibility_filter_with_admin_override(Sequel.or({
+        :organization => user.managed_organizations_dataset,
+        :developers => [user],
+        :managers => [user],
+        :auditors => [user]
+      }
+      ))
     end
   end
 end

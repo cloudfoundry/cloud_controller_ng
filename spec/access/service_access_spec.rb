@@ -5,6 +5,7 @@ module VCAP::CloudController::Models
     subject(:access) { ServiceAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::Models::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
+    let!(:service_plan) { VCAP::CloudController::Models::ServicePlan.make(:service => object) }
     let(:object) { VCAP::CloudController::Models::Service.make }
 
     it_should_behave_like :admin_full_access

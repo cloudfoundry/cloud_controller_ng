@@ -96,7 +96,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "OrgUser",
             :name => 'space',
             :path => "/v2/spaces",
-            :enumerate => 1
+            :enumerate => 0
         end
 
         describe "BillingManager" do
@@ -106,7 +106,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "BillingManager",
             :name => 'space',
             :path => "/v2/spaces",
-            :enumerate => 1
+            :enumerate => 0
         end
 
         describe "Auditor" do
@@ -116,7 +116,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "Auditor",
             :name => 'space',
             :path => "/v2/spaces",
-            :enumerate => 1
+            :enumerate => 0
         end
       end
 
@@ -314,7 +314,7 @@ module VCAP::CloudController
           describe "SpaceAuditor" do
             include_examples(
               "enumerating service instances", "SpaceAuditor",
-              expected: 0,
+              expected: 1,
             ) do
               let(:member_a) { @space_a_auditor }
               let(:member_b) { @space_b_auditor }

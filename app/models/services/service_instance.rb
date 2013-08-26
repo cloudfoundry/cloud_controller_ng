@@ -20,8 +20,10 @@ module VCAP::CloudController::Models
     add_association_dependencies :service_bindings => :destroy
 
     def self.user_visibility_filter(user)
-      user_visibility_filter_with_admin_override(
-        :space => user.spaces_dataset)
+      user_visibility_filter_with_admin_override(Sequel.or([
+        [:space, user.spaces_dataset],
+        [:space, user.audited_spaces_dataset]
+      ]))
     end
 
     def type

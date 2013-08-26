@@ -35,7 +35,7 @@ module VCAP::CloudController::Models
 
     def self.user_visibility_filter(user)
       user_visibility_filter_with_admin_override(
-        :app => App.filter(:space => user.spaces_dataset))
+        :app => App.user_visible(user))
     end
 
     private

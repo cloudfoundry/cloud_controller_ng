@@ -49,6 +49,10 @@ module VCAP::CloudController::Models
       end
     end
 
+    def self.user_visibility_filter(user)
+      user_visibility_filter_with_admin_override(full_dataset_filter)
+    end
+
     private
 
     def self.populate_from_hash(hash)

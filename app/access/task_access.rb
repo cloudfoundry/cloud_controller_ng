@@ -6,11 +6,5 @@ module VCAP::CloudController::Models
 
     alias :update? :create?
     alias :delete? :create?
-
-    def read?(task)
-      super || task.space.organization.managers.include?(context.user) || [:developers, :managers, :auditors].any? do |type|
-        task.space.send(type).include?(context.user)
-      end
-    end
   end
 end

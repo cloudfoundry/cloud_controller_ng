@@ -5,7 +5,7 @@ module VCAP::CloudController::Models
     subject(:access) { BillingEventAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::Models::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:org) { VCAP::CloudController::Models::Organization.make }
+    let(:org) { VCAP::CloudController::Models::Organization.make(billing_enabled: true) }
     let(:space) { VCAP::CloudController::Models::Space.make(:organization => org) }
     let(:app) { VCAP::CloudController::Models::App.make(:space => space) }
     let(:object) { VCAP::CloudController::Models::AppStartEvent.create_from_app(app) }

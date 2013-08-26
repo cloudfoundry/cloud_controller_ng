@@ -6,11 +6,5 @@ module VCAP::CloudController::Models
 
     alias :update? :create?
     alias :delete? :create?
-
-    def read?(service_instance)
-      super || [:developers, :auditors].any? do |type|
-        service_instance.space.send(type).include?(context.user)
-      end
-    end
   end
 end

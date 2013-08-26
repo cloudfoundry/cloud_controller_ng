@@ -65,7 +65,7 @@ module VCAP::CloudController::Models
 
     def self.user_visibility_filter(user)
       user_visibility_filter_with_admin_override(
-        :service_instance => ServiceInstance.user_visible)
+        :service_instance => ServiceInstance.user_visible(user))
     end
 
     def credentials=(val)

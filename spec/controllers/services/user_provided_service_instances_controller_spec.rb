@@ -76,7 +76,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "SpaceAuditor",
                            :name => 'user provided service instance',
                            :path => "/v2/user_provided_service_instances",
-                           :enumerate => 0
+                           :enumerate => 1
         end
       end
     end

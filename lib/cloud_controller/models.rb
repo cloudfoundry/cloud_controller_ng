@@ -33,12 +33,12 @@ module Sequel::Plugins::VcapUserVisibility
   end
 
   module ClassMethods
-    def user_visible
-      dataset.filter(user_visibility)
+    def user_visible(user = VCAP::CloudController::SecurityContext.current_user) # controller calls this to get the list of objects
+      dataset.filter(user_visibility(user))
     end
 
-    def user_visibility
-      if (user = VCAP::CloudController::SecurityContext.current_user)
+    def user_visibility(user = VCAP::CloudController::SecurityContext.current_user) # determine if the user is logged in and find the right filter
+      if user
         user_visibility_filter(user)
       else
         user_visibility_filter_with_admin_override(empty_dataset_filter)
@@ -46,12 +46,11 @@ module Sequel::Plugins::VcapUserVisibility
     end
 
     # this is overridden by models
-    def user_visibility_filter(user)
-      # TODO: replace with empty_dataset_filter once all perms are in place
-      user_visibility_filter_with_admin_override(full_dataset_filter)
+    def user_visibility_filter(user) # determine which objects a user can see
+      user_visibility_filter_with_admin_override(empty_dataset_filter)
     end
 
-    def user_visibility_filter_with_admin_override(filter)
+    def user_visibility_filter_with_admin_override(filter) # allow user with admin permissions to see everything
       if VCAP::CloudController::SecurityContext.current_user_is_admin?
         full_dataset_filter
       else

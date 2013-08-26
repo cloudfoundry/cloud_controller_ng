@@ -589,7 +589,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "OrgManager",
             :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0
+            :enumerate => 1
         end
 
         describe "OrgUser" do
@@ -631,7 +631,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "SpaceManager",
             :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0
+            :enumerate => 1
         end
 
         describe "Developer" do
@@ -651,7 +651,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "SpaceAuditor",
             :name => 'app',
             :path => "/v2/apps",
-            :enumerate => 0
+            :enumerate => 1
         end
       end
     end
