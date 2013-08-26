@@ -1,3 +1,5 @@
+require_relative 'api_presenter'
+
 class ServiceBrokerPresenter < ApiPresenter
   def entity_hash
     {
