@@ -12,6 +12,10 @@ module VCAP::CloudController::Models
       reset_database
     end
 
+    it_behaves_like 'a model with an encrypted attribute' do
+      let(:encrypted_attr) { :token }
+    end
+
     describe '#valid?' do
       it 'validates the name is present' do
         expect(broker).to be_valid
