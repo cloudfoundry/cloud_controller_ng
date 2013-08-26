@@ -13,19 +13,12 @@ module VCAP::CloudController
     let(:instances) { [] }
 
     let(:payload) do
-      { :droplet => droplet,
-        :indices => indices,
-        :version => version,
-        :running => symbolize_keys(running), # ensure we handle this case
-        :instances => instances # used for stop requests
+      { "droplet" => droplet,
+        "indices" => indices,
+        "version" => version,
+        "running" => running,
+        "instances" => instances # used for stop requests
       }
-    end
-
-    def symbolize_keys(hash)
-      hash.inject({}) do |h, (k, v)|
-        h[k.to_sym] = v
-        h
-      end
     end
 
     subject { HealthManagerRespondent.new(dea_client, message_bus) }
