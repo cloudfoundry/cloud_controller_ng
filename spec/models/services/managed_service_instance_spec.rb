@@ -426,18 +426,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "#create_binding" do
-      let(:app) { VCAP::CloudController::Models::App.make }
-      let(:instance) { described_class.make(space: app.space) }
-      let(:binding_options) { Sham.binding_options }
-
-      it 'creates a service binding' do
-        new_binding = instance.create_binding(app.guid, binding_options)
-        new_binding.app_id.should == app.id
-        new_binding.binding_options.should == binding_options
-      end
-    end
-
     describe "#enum_snapshots" do
       subject { Models::ManagedServiceInstance.make() }
       let(:enum_snapshots_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }

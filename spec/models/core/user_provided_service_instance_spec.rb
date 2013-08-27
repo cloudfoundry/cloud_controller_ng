@@ -69,23 +69,6 @@ describe VCAP::CloudController::Models::UserProvidedServiceInstance, type: :mode
     end
   end
 
-  describe "#create_binding" do
-    let(:app) { VCAP::CloudController::Models::App.make }
-    let(:instance) { described_class.make(space: app.space, credentials: {a: 'b'}) }
-    let(:binding_options) { Sham.binding_options }
-
-    it 'creates a service binding' do
-      new_binding = instance.create_binding(app.guid, binding_options)
-      new_binding.app_id.should == app.id
-      new_binding.binding_options.should == binding_options
-    end
-
-    it 'has the same credentials as the service instance' do
-      new_binding = instance.create_binding(app.guid, binding_options)
-      new_binding.credentials.should == {'a' => 'b'}
-    end
-  end
-
   describe "#bindable?" do
     let(:service_instance) { described_class.make }
     specify { service_instance.should be_bindable }
