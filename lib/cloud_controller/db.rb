@@ -58,6 +58,7 @@ module VCAP::CloudController
 
       active_record_migrations = File.join(migrations_dir, "ar_migrations")
 
+      ActiveRecord::Migration.verbose = false
       ActiveRecord::Migrator.migrate(active_record_migrations, nil)
     end
 

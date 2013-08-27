@@ -11,4 +11,8 @@ class AppBitsPackerJob < Struct.new(:app_guid, :uploaded_compressed_path, :finge
     app_bits_packer = AppBitsPacker.new(package_blob_store, global_app_bits_cache, max_droplet_size, VCAP::CloudController::Config.config[:directories][:tmpdir])
     app_bits_packer.perform(app, uploaded_compressed_path, FingerprintsCollection.new(fingerprints))
   end
+
+  def max_attempts
+    3
+  end
 end

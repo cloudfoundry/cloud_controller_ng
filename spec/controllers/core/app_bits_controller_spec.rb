@@ -146,7 +146,7 @@ module VCAP::CloudController
             },
             :entity => {
               :guid => job.id,
-              :status => "queued"
+              :status => "started"
             }
           }.to_json)
         end

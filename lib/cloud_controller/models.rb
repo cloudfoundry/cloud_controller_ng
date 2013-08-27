@@ -107,6 +107,8 @@ require "models/services/service_base_event"
 require "models/services/service_create_event"
 require "models/services/service_delete_event"
 
+require "models/job"
+
 require File.expand_path("../../../app/access/base_access.rb", __FILE__)
 Dir[File.expand_path("../../../app/access/**/*.rb", __FILE__)].each do |file|
   require file
