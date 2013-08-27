@@ -19,16 +19,10 @@ module VCAP::CloudController::Models
       :actee_type, :timestamp, :metadata, :space_guid
 
     def self.user_visibility_filter(user)
-      user_visibility_filter_with_admin_override(
-        # buckle up
-        Sequel.|(
-          {
-            :space => user.audited_spaces_dataset
-          }, {
-            :space => user.spaces_dataset
-          }
-        )
-      )
+      Sequel.or([
+        [:space, user.audited_spaces_dataset],
+        [:space, user.spaces_dataset]
+      ])
     end
 
     def self.create_app_exit_event(app, droplet_exited_payload)

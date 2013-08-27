@@ -109,11 +109,11 @@ module VCAP::CloudController::Models
         :auditors => [user]
       }))
 
-      user_visibility_filter_with_admin_override(Sequel.or({
+      Sequel.or({
         :owning_organization => orgs,
         :owning_organization_id => nil,
         :spaces => spaces
-      }))
+      })
     end
 
     def self.default_serving_domain

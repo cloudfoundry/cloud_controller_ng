@@ -171,11 +171,11 @@ module VCAP::CloudController::Models
     end
 
     def self.user_visibility_filter(user)
-      user_visibility_filter_with_admin_override(Sequel.or({
+      Sequel.or({
         :managers => [user],
         :users => [user],
         :billing_managers => [user],
-        :auditors => [user] }))
+        :auditors => [user] })
     end
   end
 end

@@ -64,14 +64,16 @@ module VCAP::CloudController::Models
       before do
         ServicePlan.make :service => public_service, :public => true
         ServicePlan.make :service => public_service, :public => false
-        VCAP::CloudController::SecurityContext.set(admin_user)
+        VCAP::CloudController::SecurityContext.set(admin_user, {'scopes' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE]} )
         nonadmin_user.add_organization nonadmin_org
         VCAP::CloudController::SecurityContext.clear
       end
 
       def records(user)
-        VCAP::CloudController::SecurityContext.set(user)
-        Service.filter(Service.user_visibility_filter(user)).all
+        scopes = []
+        scopes << VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE if user.admin?
+        VCAP::CloudController::SecurityContext.set(user, {'scopes' => scopes })
+        Service.user_visible(user).all
       end
 
       it "returns all services for admins" do

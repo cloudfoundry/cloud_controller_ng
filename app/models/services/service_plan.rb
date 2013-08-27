@@ -41,12 +41,10 @@ module VCAP::CloudController::Models
     end
 
     def self.user_visibility_filter(user)
-      filter = Sequel.|(
-        {public: true},
-        {id: ServicePlanVisibility.visible_private_plan_ids_for_user(user)}
+      Sequel.or(
+        public: true,
+        id: ServicePlanVisibility.visible_private_plan_ids_for_user(user)
       )
-
-      user_visibility_filter_with_admin_override(filter)
     end
 
     def trial_db?

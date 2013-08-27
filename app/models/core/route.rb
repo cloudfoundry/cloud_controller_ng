@@ -84,7 +84,7 @@ module VCAP::CloudController::Models
         :organization => orgs,
       }))
 
-      user_visibility_filter_with_admin_override(:space => spaces)
+      {:space => spaces}
     end
 
     private
