@@ -61,20 +61,39 @@ namespace :db do
   desc "Create a Sequel migration in ./db/migrate"
   task :create_migration do
     name = ENV["NAME"]
-    abort("no NAME specified. use `rake db:create_migration NAME=add_users`") if !name
+    type = ENV.fetch("TYPE", "sequel")
 
-    migrations_dir = File.join("db", "migrations")
+    abort("no NAME specified. use `rake db:create_migration NAME=add_users TYPE=[active_record|sequel]`") if !name
+
+    migrations_dir = type == "sequel" ? File.join("db", "migrations") : File.join("db", "ar_migrations")
+
     version = ENV["VERSION"] || Time.now.utc.strftime("%Y%m%d%H%M%S")
     filename = "#{version}_#{name}.rb"
     FileUtils.mkdir_p(migrations_dir)
 
     open(File.join(migrations_dir, filename), "w") do |f|
-      f.write <<-Ruby
+      f.write migration_stub(type, name)
+    end
+  end
+
+  def migration_stub(type, name)
+    if type == "sequel"
+<<-Ruby
 Sequel.migration do
   change do
   end
 end
-      Ruby
+Ruby
+    elsif type == "active_record"
+      class_name = name.split("_").map(&:capitalize).join
+<<-Ruby
+class #{class_name} < ActiveRecord::Migration
+  def up
+  end
+  def down
+  end
+end
+Ruby
     end
   end
 
@@ -92,7 +111,7 @@ end
       Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
       db_logger = Steno.logger("cc.db.migrations")
 
-      VCAP::CloudController::DB.connect(db_logger, config[:db])
+      VCAP::CloudController::DB.connect(db_logger, config[:db], config[:active_record_db])
     end
   end
 

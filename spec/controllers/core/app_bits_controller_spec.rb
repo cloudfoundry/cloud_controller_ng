@@ -100,10 +100,12 @@ module VCAP::CloudController
         end
 
         context "with a valid zip file" do
-          let(:req_body) {{
-            :resources => "[]",
-            :application => valid_zip,
-          }}
+          let(:req_body) do
+            {
+              resources: "[]",
+              :application => valid_zip,
+            }
+          end
           it_succeeds_to_upload
         end
       end
@@ -115,6 +117,39 @@ module VCAP::CloudController
           :application => valid_zip,
         }}
         it_forbids_upload
+      end
+
+      context "when running async" do
+        let(:user) { make_developer_for_space(app_obj.space) }
+        let(:req_body) do
+          {
+            resources: "[]",
+            application: valid_zip,
+          }
+        end
+
+        it "creates a delayed job" do
+          expect {
+            put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
+          }.to change {
+            Delayed::Job.count
+          }.by(1)
+
+          job = Delayed::Job.last
+          expect(job.handler).to include(app_obj.guid)
+          expect(last_response.status).to eq 201
+          expect(last_response.body).to eq({
+            :metadata => {
+              :guid => job.id,
+              :created_at => job.created_at.iso8601,
+              :url => "/v2/jobs/#{job.id}"
+            },
+            :entity => {
+              :guid => job.id,
+              :status => "queued"
+            }
+          }.to_json)
+        end
       end
     end
 

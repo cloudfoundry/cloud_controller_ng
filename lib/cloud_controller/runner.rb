@@ -81,7 +81,7 @@ module VCAP::CloudController
     def setup_db
       logger.info "db config #{@config[:db]}"
       db_logger = Steno.logger("cc.db")
-      DB.connect(db_logger, @config[:db])
+      DB.connect(db_logger, @config[:db], @config[:active_record_db])
     end
 
     def development?

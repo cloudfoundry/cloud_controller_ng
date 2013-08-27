@@ -67,19 +67,17 @@ module VCAP::CloudController
     end
 
     def db
-      db_connection = "sqlite:///"
-      db_index = ""
+      Thread.current[:db] ||= begin
+        db_connection = ENV["DB_CONNECTION"] || "sqlite:///tmp"
+        db_index = "cc_test#{ENV["TEST_ENV_NUMBER"]}.db"
+        active_record_db_index = "cc_test_ar#{ENV["TEST_ENV_NUMBER"]}.db"
 
-      if ENV["DB_CONNECTION"]
-        db_connection = ENV["DB_CONNECTION"]
-        db_index = ENV["TEST_ENV_NUMBER"]
+        VCAP::CloudController::DB.connect(
+          db_logger,
+          { log_level: "debug2", database: "#{db_connection}/#{db_index}" },
+          database: "#{db_connection}/#{active_record_db_index}"
+        )
       end
-
-      Thread.current[:db] ||= VCAP::CloudController::DB.connect(
-        db_logger,
-        :database => "#{db_connection}#{db_index}",
-        :log_level => "debug2"
-      )
     end
 
     def db_logger
