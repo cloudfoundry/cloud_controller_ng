@@ -106,12 +106,7 @@ Ruby
 
   def db
     @db ||= begin
-      VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
-
-      Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
-      db_logger = Steno.logger("cc.db.migrations")
-
-      VCAP::CloudController::DB.connect(db_logger, config[:db], config[:active_record_db])
+      connect_to_database
     end
   end
 
@@ -132,4 +127,36 @@ Ruby
     desc "Rollback the most recent migration and remigrate to current"
     task :redo => [:rollback, :migrate]
   end
+end
+
+namespace :jobs do
+  desc "Clear the delayed_job queue."
+  task :clear do
+    connect_to_database
+    Delayed::Job.delete_all
+  end
+
+  desc "Start a delayed_job worker."
+  task :work => :environment_options do
+    connect_to_database
+    Delayed::Worker.new(@worker_options).start
+  end
+
+  task :environment_options do
+    @worker_options = {
+      :min_priority => ENV['MIN_PRIORITY'],
+      :max_priority => ENV['MAX_PRIORITY'],
+      :queues => (ENV['QUEUES'] || ENV['QUEUE'] || '').split(','),
+      :quiet => false
+    }
+  end
+end
+
+def connect_to_database
+  VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
+
+  Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
+  db_logger = Steno.logger("cc.db.migrations")
+
+  VCAP::CloudController::DB.connect(db_logger, config[:db], config[:active_record_db])
 end
