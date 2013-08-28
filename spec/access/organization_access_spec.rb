@@ -14,6 +14,12 @@ module VCAP::CloudController::Models
       it_should_behave_like :admin_full_access
     end
 
+    context 'changing the name' do
+      include_context :admin_setup
+      before { object.name = 'my new name' }
+      it { should be_able_to :update, object }
+    end
+
     context 'a user in the organization' do
       before { object.add_user(user) }
       it_behaves_like :read_only
@@ -36,6 +42,11 @@ module VCAP::CloudController::Models
         it { should be_able_to :read, object }
         it { should be_able_to :update, object }
         it { should_not be_able_to :delete, object }
+      end
+
+      context 'changing the name' do
+        before { object.name = 'my new name' }
+        it { should_not be_able_to :update, object }
       end
 
       context 'with a suspended organization' do
