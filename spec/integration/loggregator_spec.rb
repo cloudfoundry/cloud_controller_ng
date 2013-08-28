@@ -4,7 +4,7 @@ require "securerandom"
 module VCAP::CloudController
   describe "Cloud controller logs", :type => :integration do
     before(:all) do
-      @loggregator_server = FakeLoggregatorServer.new(3456)
+      @loggregator_server = FakeLoggregatorServer.new(12345)
       @loggregator_server.start
 
       authed_headers = @authed_headers = {
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       start_cc(
           debug: false,
-          config: "spec/fixtures/config/port_8181_config.yml"
+          config: "spec/fixtures/config/loggregator_config.yml"
       )
 
       org = make_post_request(
@@ -55,7 +55,7 @@ module VCAP::CloudController
       messages = @loggregator_server.messages
 
       expect(messages.length).to eq 1
-      
+
       message = messages[0]
       expect(message.message).to eq "Created app with guid #{@app_id} with attributes {\"name\"=>\"foo_app\", \"space_guid\"=>\"#{@space_guid}\", \"production\"=>false, \"environment_json\"=>{}, \"memory\"=>256, \"instances\"=>1, \"disk_quota\"=>1024, \"state\"=>\"STOPPED\", \"console\"=>false}"
       expect(message.app_id).to eq @app_id
