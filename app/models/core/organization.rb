@@ -170,6 +170,10 @@ module VCAP::CloudController::Models
       quota_definition.memory_limit - memory_used
     end
 
+    def active?
+      status == 'active'
+    end
+
     def self.user_visibility_filter(user)
       Sequel.or({
         :managers => [user],

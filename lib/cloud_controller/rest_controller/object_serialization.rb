@@ -95,7 +95,9 @@ module VCAP::CloudController::RestController
 
         associated_controller = get_controller_for(associated_model)
 
-        associated_model_instances = obj.user_visible_relationship_dataset(association_name, VCAP::CloudController::SecurityContext.current_user)
+        associated_model_instances = obj.user_visible_relationship_dataset(association_name,
+          VCAP::CloudController::SecurityContext.current_user,
+          VCAP::CloudController::SecurityContext.admin?)
 
         associated_url = association_endpoint(
           controller, associated_controller, obj, associated_model_instances, association)

@@ -38,7 +38,7 @@ module VCAP::CloudController
       end
 
       service_instances = Query.filtered_dataset_from_query_params(model_class,
-        space.user_visible_relationship_dataset(relation_name),
+        space.user_visible_relationship_dataset(relation_name, SecurityContext.current_user, SecurityContext.admin?),
         ServiceInstancesController.query_parameters,
         @opts)
       service_instances.filter(space: space)

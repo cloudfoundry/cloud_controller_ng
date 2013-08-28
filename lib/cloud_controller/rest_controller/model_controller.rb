@@ -119,7 +119,7 @@ module VCAP::CloudController::RestController
       associated_path = "#{self.class.url_for_guid(guid)}/#{name}"
 
       filtered_dataset = Query.filtered_dataset_from_query_params(associated_model,
-        obj.user_visible_relationship_dataset(name),
+        obj.user_visible_relationship_dataset(name, VCAP::CloudController::SecurityContext.current_user, SecurityContext.admin?),
         associated_controller.query_parameters,
         @opts)
 
@@ -237,7 +237,8 @@ module VCAP::CloudController::RestController
 
     def enumerate_dataset
       qp = self.class.query_parameters
-      get_filtered_dataset_for_enumeration(model, model.user_visible, qp, @opts)
+      visible_objects = model.user_visible(VCAP::CloudController::SecurityContext.current_user, SecurityContext.admin?)
+      get_filtered_dataset_for_enumeration(model, visible_objects, qp, @opts)
     end
 
     def raise_if_has_associations!(obj)

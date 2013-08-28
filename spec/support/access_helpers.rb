@@ -21,8 +21,11 @@ module AccessHelpers
   end
 
   shared_examples :admin_full_access do
-    subject { described_class.new(double(:context, user: nil, roles: double(:roles, :admin? => true))) }
-
+    include_context :admin_setup
     it_behaves_like :full_access
+  end
+
+  shared_context :admin_setup do
+    subject { described_class.new(double(:context, user: nil, roles: double(:roles, :admin? => true))) }
   end
 end
