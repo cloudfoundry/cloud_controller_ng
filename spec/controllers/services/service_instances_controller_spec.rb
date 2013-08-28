@@ -278,7 +278,7 @@ module VCAP::CloudController
 
           post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
           last_response.status.should == 400
-          decoded_response["description"].should =~ /file a support ticket to request additional resources/
+          decoded_response["description"].should =~ /exceeded your organization's services limit/
         end
       end
 
@@ -292,7 +292,7 @@ module VCAP::CloudController
 
           post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
           last_response.status.should == 400
-          decoded_response["description"].should =~ /login to your account and upgrade/
+          decoded_response["description"].should =~ /exceeded your organization's services limit/
         end
 
         it "should enforce quota check on service plan type during creation" do
