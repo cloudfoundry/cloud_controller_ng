@@ -141,12 +141,12 @@
 60005:
   name: ServiceInstanceFreeQuotaExceeded
   http_code: 400
-  message: "You have exceeded your organization's services limit. Please login to your account and upgrade."
+  message: "You have exceeded your organization's services limit."
 
 60006:
   name: ServiceInstancePaidQuotaExceeded
   http_code: 400
-  message: "You have exceeded your organization's services limit. Please file a support ticket to request additional resources."
+  message: "You have exceeded your organization's services limit."
 
 60007:
   name: ServiceInstanceServicePlanNotAllowed
@@ -241,7 +241,7 @@
 100005:
   name: AppMemoryQuotaExceeded
   http_code: 400
-  message: "You have exceeded your organization's memory limit. Please login to your account and upgrade. If you are trying to scale down and you are receiving this error, you can either delete an app or contact support."
+  message: "You have exceeded your organization's memory limit."
 
 100006:
   name: AppMemoryInvalid
