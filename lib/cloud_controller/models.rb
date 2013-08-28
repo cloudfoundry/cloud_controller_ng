@@ -26,9 +26,9 @@ end
 
 module Sequel::Plugins::VcapUserVisibility
   module InstanceMethods
-    def user_visible_relationship_dataset(name)
+    def user_visible_relationship_dataset(name, user = VCAP::CloudController::SecurityContext.current_user)
       associated_model = self.class.association_reflection(name).associated_class
-      relationship_dataset(name).filter(associated_model.user_visibility)
+      relationship_dataset(name).filter(associated_model.user_visibility(user))
     end
   end
 
@@ -38,8 +38,8 @@ module Sequel::Plugins::VcapUserVisibility
       dataset.filter(user_visibility(user))
     end
 
-    def user_visibility(user = VCAP::CloudController::SecurityContext.current_user)
-      if VCAP::CloudController::SecurityContext.current_user_is_admin?
+    def user_visibility(user)
+      if VCAP::CloudController::SecurityContext.admin?
         full_dataset_filter
       elsif user
         user_visibility_filter(user)
@@ -49,7 +49,7 @@ module Sequel::Plugins::VcapUserVisibility
     end
 
     # this is overridden by models to determine which objects a user can see
-    def user_visibility_filter(user)
+    def user_visibility_filter(_)
       {:id => nil}
     end
 
@@ -111,4 +111,3 @@ require File.expand_path("../../../app/access/base_access.rb", __FILE__)
 Dir[File.expand_path("../../../app/access/**/*.rb", __FILE__)].each do |file|
   require file
 end
-

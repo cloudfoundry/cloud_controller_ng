@@ -152,8 +152,7 @@ module VCAP::CloudController
         end
 
         it "should return the offering when I can see at least one of the plans" do
-          user.update(:admin => true)
-          get "/v2/services", {}, headers
+          get "/v2/services", {}, admin_headers
           last_response.should be_ok
           decoded_guids.should include(@svc_one_public.guid)
           decoded_guids.should include(@svc_all_private.guid)

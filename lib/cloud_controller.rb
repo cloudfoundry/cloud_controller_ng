@@ -58,7 +58,7 @@ module VCAP::CloudController
 
       VCAP::CloudController::SecurityContext.set(user, token_information)
 
-      validate_scheme(user, VCAP::CloudController::SecurityContext.current_user_is_admin?)
+      validate_scheme(user, VCAP::CloudController::SecurityContext.admin?)
     end
 
     # TODO: remove from usage in cloud_controller_spec.rb

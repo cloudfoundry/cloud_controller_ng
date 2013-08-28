@@ -315,10 +315,10 @@ module VCAP::CloudController::SpecHelper
   end
 
   def act_as_cf_admin(&block)
-    VCAP::CloudController::SecurityContext.stub(:current_user_is_admin? => true)
+    VCAP::CloudController::SecurityContext.stub(:admin? => true)
     block.call
   ensure
-    VCAP::CloudController::SecurityContext.unstub(:current_user_is_admin?)
+    VCAP::CloudController::SecurityContext.unstub(:admin?)
   end
 
   def with_em_and_thread(opts = {}, &blk)

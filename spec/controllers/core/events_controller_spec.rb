@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       context "as an admin" do
         it "includes all events" do
-          get "/v2/events", {}, headers_for(admin_user)
+          get "/v2/events", {}, admin_headers
 
           parsed_body = Yajl::Parser.parse(last_response.body)
           parsed_body["total_results"].should == 2
@@ -131,8 +131,7 @@ module VCAP::CloudController
 
         context "when the guid is invalid" do
           it "returns a 404 error" do
-            get "/v2/events/some-bogus-guid", {},
-                headers_for(admin_user)
+            get "/v2/events/some-bogus-guid", {}, admin_headers
 
             last_response.status.should == 404
           end
@@ -177,13 +176,13 @@ module VCAP::CloudController
       let!(:crash_event) { Models::Event.make type: "app.crash" }
 
       it "returns a 200 status code" do
-        get "/v2/events?q=type:audit.app.update", {}, headers_for(admin_user)
+        get "/v2/events?q=type:audit.app.update", {}, admin_headers
         last_response.status.should == 200
       end
 
       context "when passed one type" do
         it "should return events of that type" do
-          get "/v2/events?q=type:audit.app.update", {}, headers_for(admin_user)
+          get "/v2/events?q=type:audit.app.update", {}, admin_headers
           decoded_response["total_results"].should == 1
           decoded_response["resources"][0]["metadata"]["guid"].should == update_event.guid
         end
@@ -191,7 +190,7 @@ module VCAP::CloudController
 
       context "when passed multiple types" do
         it "should return events for matching all the types" do
-          get "/v2/events?q=type%20IN%20audit.app.update,app.crash", {}, headers_for(admin_user)
+          get "/v2/events?q=type%20IN%20audit.app.update,app.crash", {}, admin_headers
           decoded_response["total_results"].should == 2
           decoded_response["resources"][0]["metadata"]["guid"].should == update_event.guid
           decoded_response["resources"][1]["metadata"]["guid"].should == crash_event.guid
@@ -200,7 +199,7 @@ module VCAP::CloudController
 
       context "when passed an unknown type" do
         it "should succeed and return no events" do
-          get "/v2/events?q=type:audit.app.slartibartfast", {}, headers_for(admin_user)
+          get "/v2/events?q=type:audit.app.slartibartfast", {}, admin_headers
           last_response.status.should == 200
           decoded_response["total_results"].should == 0
         end
@@ -226,7 +225,7 @@ module VCAP::CloudController
 
       it "returns events within a timerange and type set" do
         get "/v2/events?q=timestamp#{gte}#{(timestamp_two).utc.iso8601}#{semi}timestamp#{lt}#{(timestamp_three+1).utc.iso8601}#{semi}type%20IN%20audit.app.update,app.crash",
-            {}, headers_for(admin_user)
+            {}, admin_headers
         decoded_response["total_results"].should == 1
         decoded_response["resources"][0]["metadata"]["guid"].should == event2.guid
       end
@@ -250,12 +249,12 @@ module VCAP::CloudController
       let!(:event3) { Models::Event.make :timestamp => timestamp_three }
 
       it "returns a 200 status code" do
-        get "/v2/events?q=timestamp#{gte}#{base_timestamp.utc.iso8601}", {}, headers_for(admin_user)
+        get "/v2/events?q=timestamp#{gte}#{base_timestamp.utc.iso8601}", {}, admin_headers
         last_response.status.should == 200
       end
 
       it "returns events on or after (>=) the timestamp" do
-        get "/v2/events?q=timestamp#{gte}#{(timestamp_one).utc.iso8601}", {}, headers_for(admin_user)
+        get "/v2/events?q=timestamp#{gte}#{(timestamp_one).utc.iso8601}", {}, admin_headers
         decoded_response["total_results"].should == 3
         decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
         decoded_response["resources"][1]["metadata"]["guid"].should == event2.guid
@@ -264,33 +263,33 @@ module VCAP::CloudController
 
       it "returns events after (>) the timestamp" do
         pending "This actually is a bug in Sequel as far as we can tell.  timestamp>X actually behaves like timestamp>=X"
-        get "/v2/events?q=timestamp#{gt}#{(timestamp_one).utc.iso8601}", {}, headers_for(admin_user)
+        get "/v2/events?q=timestamp#{gt}#{(timestamp_one).utc.iso8601}", {}, admin_headers
         decoded_response["total_results"].should == 1
         decoded_response["resources"][0]["metadata"]["guid"].should == event2.guid
       end
 
       it "returns events before (<=) the timestamp" do
-        get "/v2/events?q=timestamp#{lte}#{(timestamp_one + timestamp_delta / 2).utc.iso8601}", {}, headers_for(admin_user)
+        get "/v2/events?q=timestamp#{lte}#{(timestamp_one + timestamp_delta / 2).utc.iso8601}", {}, admin_headers
         decoded_response["total_results"].should == 1
         decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
       end
 
       it "returns events before (<) the timestamp" do
-        get "/v2/events?q=timestamp#{lt}#{timestamp_two.utc.iso8601}", {}, headers_for(admin_user)
+        get "/v2/events?q=timestamp#{lt}#{timestamp_two.utc.iso8601}", {}, admin_headers
         decoded_response["total_results"].should == 1
         decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
       end
 
       it "returns events on or before (<=) the timestamp" do
         pending "This actually is a bug in Sequel as far as we can tell.  timestamp<=X actually behaves like timestamp<X"
-        get "/v2/events?q=timestamp#{lte}#{timestamp_two.utc.iso8601}", {}, headers_for(admin_user)
+        get "/v2/events?q=timestamp#{lte}#{timestamp_two.utc.iso8601}", {}, admin_headers
         decoded_response["total_results"].should == 2
         decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
         decoded_response["resources"][1]["metadata"]["guid"].should == event2.guid
       end
 
       it "returns events within a timerange" do
-        get "/v2/events?q=timestamp#{gte}#{(timestamp_one).utc.iso8601}#{semi}timestamp#{lt}#{timestamp_three.utc.iso8601}", {}, headers_for(admin_user)
+        get "/v2/events?q=timestamp#{gte}#{(timestamp_one).utc.iso8601}#{semi}timestamp#{lt}#{timestamp_three.utc.iso8601}", {}, admin_headers
         decoded_response["total_results"].should == 2
         decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
         decoded_response["resources"][1]["metadata"]["guid"].should == event2.guid

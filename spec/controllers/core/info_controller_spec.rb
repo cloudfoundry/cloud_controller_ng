@@ -46,7 +46,8 @@ module VCAP::CloudController
 
           let(:headers) do
             headers_for(current_user,
-                        :https => scenario_vars[:protocol] == "https")
+                        :https => scenario_vars[:protocol] == "https",
+                        :admin_scope => current_user.admin?)
           end
 
           before do

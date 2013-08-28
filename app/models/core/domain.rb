@@ -39,7 +39,7 @@ module VCAP::CloudController::Models
       end
 
       if new? || column_changed?(:owning_organization)
-        unless VCAP::CloudController::SecurityContext.current_user_is_admin?
+        unless VCAP::CloudController::SecurityContext.admin?
           validates_presence :owning_organization
         end
       end

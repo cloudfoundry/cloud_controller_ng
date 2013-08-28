@@ -66,7 +66,7 @@ module VCAP::CloudController::Models
     end
 
     def require_admin_for(field_name)
-      unless VCAP::CloudController::SecurityContext.current_user_is_admin?
+      unless VCAP::CloudController::SecurityContext.admin?
         errors.add(field_name, :not_authorized)
       end
     end

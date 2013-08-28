@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceBrokersController, :services, type: :controller do
-    let(:headers) { json_headers(headers_for(admin_user, admin_scope: true)) }
+    let(:headers) { json_headers(admin_headers) }
 
     let(:non_admin_headers) do
       user = VCAP::CloudController::Models::User.make(admin: false)

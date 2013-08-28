@@ -5,12 +5,12 @@ module VCAP::CloudController
   # tokens only.
   describe VCAP::CloudController::LegacyInfo, type: :controller do
     it "can have allow_debug set to false" do
-      controller = described_class.new({:info => {}, :uaa => {}, :allow_debug => false}, Logger.new(nil), :why, :why, :why)
+      controller = described_class.new({ :info => {}, :uaa => {}, :allow_debug => false }, Logger.new(nil), :why, :why, :why)
       info = YAML.load(controller.info)
       info["allow_debug"].should == false
     end
 
-  shared_examples "legacy info response" do |expected_status, expect_user|
+    shared_examples "legacy info response" do |expected_status, expect_user|
       it "should return #{expected_status}" do
         last_response.status.should == expected_status
       end
@@ -46,7 +46,8 @@ module VCAP::CloudController
 
         let(:headers) do
           headers_for(current_user,
-                      :https => scenario_vars[:protocol] == "https")
+                      :https => scenario_vars[:protocol] == "https",
+                      :admin_scope => current_user.admin?)
         end
 
         before do
@@ -95,10 +96,10 @@ module VCAP::CloudController
           hash = Yajl::Parser.parse(last_response.body)
           hash.should have_key("limits")
           hash["limits"].should == {
-            "memory"   => AccountCapacity::ADMIN_MEM,
+            "memory" => AccountCapacity::ADMIN_MEM,
             "app_uris" => AccountCapacity::ADMIN_URIS,
             "services" => AccountCapacity::ADMIN_SERVICES,
-            "apps"     => AccountCapacity::ADMIN_APPS
+            "apps" => AccountCapacity::ADMIN_APPS
           }
         end
       end
@@ -123,10 +124,10 @@ module VCAP::CloudController
           hash = Yajl::Parser.parse(last_response.body)
           hash.should have_key("limits")
           hash["limits"].should == {
-            "memory"   => AccountCapacity::DEFAULT_MEM,
+            "memory" => AccountCapacity::DEFAULT_MEM,
             "app_uris" => AccountCapacity::DEFAULT_URIS,
             "services" => AccountCapacity::DEFAULT_SERVICES,
-            "apps"     => AccountCapacity::DEFAULT_APPS
+            "apps" => AccountCapacity::DEFAULT_APPS
           }
         end
 
@@ -138,8 +139,8 @@ module VCAP::CloudController
             hash.should have_key("usage")
 
             hash["usage"].should == {
-              "memory"   => 0,
-              "apps"     => 0,
+              "memory" => 0,
+              "apps" => 0,
               "services" => 0
             }
           end
@@ -170,8 +171,8 @@ module VCAP::CloudController
             hash.should have_key("usage")
 
             hash["usage"].should == {
-              "memory"   => 128 * 4,
-              "apps"     => 2,
+              "memory" => 128 * 4,
+              "apps" => 2,
               "services" => 3
             }
           end
@@ -181,28 +182,28 @@ module VCAP::CloudController
 
     describe "service info" do
       before(:all) do
-        @mysql_svc  = Models::Service.make(
+        @mysql_svc = Models::Service.make(
           :label => "mysql",
           :provider => "core",
         )
 
         Models::ServicePlan.make(:service => @mysql_svc, :name => "100")
 
-        @pg_svc     = Models::Service.make(
+        @pg_svc = Models::Service.make(
           :label => "postgresql",
           :provider => "core",
         )
 
         Models::ServicePlan.make(:service => @pg_svc, :name => "100")
 
-        @redis_svc  = Models::Service.make(
+        @redis_svc = Models::Service.make(
           :label => "redis",
           :provider => "core",
         )
 
         Models::ServicePlan.make(:service => @redis_svc, :name => "100")
 
-        @mongo_svc  = Models::Service.make(
+        @mongo_svc = Models::Service.make(
           :label => "mongodb",
           :provider => "core",
         )
@@ -258,7 +259,7 @@ module VCAP::CloudController
             "description" => @mysql_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -278,7 +279,7 @@ module VCAP::CloudController
             "description" => @pg_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -298,7 +299,7 @@ module VCAP::CloudController
             "description" => @redis_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -318,7 +319,7 @@ module VCAP::CloudController
             "description" => @mongo_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -338,7 +339,7 @@ module VCAP::CloudController
             "description" => @random_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -361,7 +362,7 @@ module VCAP::CloudController
           svc.service_plans_dataset.filter(:name => "100").destroy
           svc.destroy
         end
-        @mysql_svc  = Models::Service.make(
+        @mysql_svc = Models::Service.make(
           :label => "mysql_#{Sham.name}",
           :provider => "core",
         )
@@ -369,7 +370,7 @@ module VCAP::CloudController
           :service => @mysql_svc,
           :name => "100",
         )
-        @pg_svc     = Models::Service.make(
+        @pg_svc = Models::Service.make(
           :label => "postgresql_#{Sham.name}",
           :provider => "core",
         )
@@ -377,7 +378,7 @@ module VCAP::CloudController
           :service => @pg_svc,
           :name => "100",
         )
-        @redis_svc  = Models::Service.make(
+        @redis_svc = Models::Service.make(
           :label => "redis_#{Sham.name}",
           :provider => "core",
         )
@@ -385,7 +386,7 @@ module VCAP::CloudController
           :service => @redis_svc,
           :name => "100",
         )
-        @mongo_svc  = Models::Service.make(
+        @mongo_svc = Models::Service.make(
           :label => "mongodb_#{Sham.name}",
           :provider => "core",
         )
@@ -437,7 +438,7 @@ module VCAP::CloudController
             "description" => @mysql_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -457,7 +458,7 @@ module VCAP::CloudController
             "description" => @pg_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -477,7 +478,7 @@ module VCAP::CloudController
             "description" => @redis_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -497,7 +498,7 @@ module VCAP::CloudController
             "description" => @mongo_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }
@@ -517,7 +518,7 @@ module VCAP::CloudController
             "description" => @random_svc.description,
             "tiers" => {
               "free" => {
-                "options" =>{},
+                "options" => {},
                 "order" => 1
               }
             }

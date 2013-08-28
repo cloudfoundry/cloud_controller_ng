@@ -228,7 +228,7 @@ module VCAP::CloudController
       end
 
       it "nullify domains" do
-        SecurityContext.set(Models::User.make(:admin => true))
+        SecurityContext.set(nil, {'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE]})
         domain = Models::Domain.make(:owning_organization => nil)
         domain.add_organization(org)
         domain.save
