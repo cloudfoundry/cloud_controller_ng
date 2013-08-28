@@ -13,8 +13,9 @@ module VCAP::CloudController
           "Content-Type" => "application/json"
       }
 
+      start_nats :debug => false
       start_cc(
-          debug: true,
+          debug: false,
           config: "spec/fixtures/config/loggregator_config.yml"
       )
 
