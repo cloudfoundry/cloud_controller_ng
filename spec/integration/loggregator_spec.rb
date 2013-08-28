@@ -14,7 +14,7 @@ module VCAP::CloudController
       }
 
       start_cc(
-          debug: false,
+          debug: true,
           config: "spec/fixtures/config/loggregator_config.yml"
       )
 
