@@ -1,16 +1,18 @@
 module VCAP::CloudController
   rest_controller :CustomBuildpacks do
-    disable_default_routes
     model_class_name :Buildpack
 
     permissions_required do
       full Permissions::CFAdmin
+      read Permissions::Authenticated
+      enumerate Permissions::Authenticated
     end
 
     define_attributes do
       attribute :name, String
-      attribute :key,  String
     end
+
+    query_parameters :name
 
     def self.translate_validation_exception(e, attributes)
       buildpack_errors = e.errors.on([:name])
@@ -21,31 +23,55 @@ module VCAP::CloudController
       end
     end
 
-
     def create
-      file_struct = upload_handler.uploaded_file(params, "custom_buildpacks")
-      key = "#{params['name']}#{compute_file_extension}"
+      # multipart request so the body does not contain JSON
+      @request_attrs =  {name: params['name'], key: "#{params['name']}#{compute_file_extension}"}
 
+      logger.debug "cc.create", :model => self.class.model_class_name,
+        :attributes => request_attrs
+
+      raise InvalidRequest unless request_attrs
+
+      before_create
+
+      obj = nil
+      model.db.transaction do
+        obj = model.create_from_hash(request_attrs)
+        validate_access(:create, obj, user, roles)
+      end
+
+      after_create(obj)
+
+      [ HTTP::CREATED,
+        { "Location" => "#{self.class.path}/#{obj.guid}" },
+        serialization.render_json(self.class, obj, @opts)
+      ]
+    end
+
+    def after_create(obj)
+      file_struct = upload_handler.uploaded_file(params, "custom_buildpacks")
       File.open(file_struct.path) do |file|
         buildpack_blobstore.files.create(
-            :key => key,
+            :key => request_attrs[:key],
             :body => file,
             :public => buildpack_blobstore.local?
         )
       end
 
-      model.db.transaction do
-        model.create_from_hash({name: params["name"], key: key})
-      end
-
       logger.debug "uploaded file: #{file_struct}"
       logger.debug "blobstore file: #{buildpack_blobstore.files.head(params["custom_buildpacks_name"])}"
       logger.debug "db record: #{model.find(key: params["custom_buildpacks_name"])}"
-
-      return [HTTP::OK, Yajl::Encoder.encode({success: true})] if user.admin?
-      [HTTP::UNAUTHORIZED, Yajl::Encoder.encode({message: "not authorized"})]
     end
 
+    def update(guid)
+      [ HTTP::NOT_IMPLEMENTED, nil ]
+    end
+
+    def after_destroy(obj)
+      file = buildpack_blobstore.files.head(obj.key)
+      file.destroy if file
+    end
+    
     protected
 
     attr_reader :buildpack_blobstore, :upload_handler
@@ -55,12 +81,7 @@ module VCAP::CloudController
       @upload_handler = dependencies[:upload_handler]
     end
 
-    def read(name)
-      buildpack = model.find(name: name).to_json
-      [HTTP::OK, Yajl::Encoder.encode({success: true, model: buildpack})]
-    end
-
-    def get_bits(name)
+    def get_buildpack_bits(name)
       buildpack = model.find(name: name)
       if config[:nginx][:use_nginx]
         return [200, { "X-Accel-Redirect" => "#{bits_uri(buildpack.key)}" }, ""]
@@ -86,9 +107,10 @@ module VCAP::CloudController
       params["custom_buildpacks_name"].end_with?('.tar.gz') ? '.tar.gz' : File.extname(params["custom_buildpacks_name"])
     end
 
-    post path, :create
-    get path, :enumerate
-    get "#{path}/:name", :read
-    get "#{path}/:name/bits", :get_bits
+    def self.not_found_exception_name
+      "NotFound"
+    end
+
+    get "#{path}/:guid/bits", :get_buildpack_bits
   end
 end
