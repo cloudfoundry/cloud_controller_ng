@@ -97,13 +97,6 @@ Ruby
     end
   end
 
-  def config
-    @config ||= begin
-      config_file = ENV["CLOUD_CONTROLLER_NG_CONFIG"] || File.expand_path("../config/cloud_controller.yml", __FILE__)
-      VCAP::CloudController::Config.from_file(config_file)
-    end
-  end
-
   def db
     @db ||= begin
       connect_to_database
@@ -159,4 +152,13 @@ def connect_to_database
   db_logger = Steno.logger("cc.db.migrations")
 
   VCAP::CloudController::DB.connect(db_logger, config[:db], config[:active_record_db])
+end
+
+def config
+  @config ||= begin
+    config_file = ENV["CLOUD_CONTROLLER_NG_CONFIG"] || File.expand_path("../config/cloud_controller.yml", __FILE__)
+    config = VCAP::CloudController::Config.from_file(config_file)
+    VCAP::CloudController::Config.run_initializers(config)
+    config
+  end
 end

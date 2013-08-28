@@ -165,11 +165,18 @@ class VCAP::CloudController::Config < VCAP::Config
       VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
       VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
 
+      run_initializers(config)
+    end
+
+    def run_initializers(config)
+      return if @initialized
+
       Dir.glob(File.expand_path('../../../config/initializers/*.rb', __FILE__)).each do |file|
         require file
         method = File.basename(file).sub(".rb", "").gsub("-", "_")
         CCInitializers.send(method, config)
       end
+      @initialized = true
     end
 
     attr_accessor :db_encryption_key

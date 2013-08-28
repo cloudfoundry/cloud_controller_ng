@@ -128,6 +128,10 @@ module VCAP::CloudController
           }
         end
 
+        before do
+          config_override(:index => 99)
+        end
+
         it "creates a delayed job" do
           expect {
             put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
@@ -137,6 +141,7 @@ module VCAP::CloudController
 
           job = Delayed::Job.last
           expect(job.handler).to include(app_obj.guid)
+          expect(job.queue).to eq("cc99")
           expect(last_response.status).to eq 201
           expect(last_response.body).to eq({
             :metadata => {
