@@ -15,7 +15,7 @@ module VCAP::CloudController
     query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name
 
     def before_create
-      unless Models::ServicePlan.user_visible.filter(:guid => request_attrs['service_plan_guid']).count > 0
+      unless Models::ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.admin?).filter(:guid => request_attrs['service_plan_guid']).count > 0
         raise Errors::NotAuthorized
       end
 

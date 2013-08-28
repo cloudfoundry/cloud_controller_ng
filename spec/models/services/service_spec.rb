@@ -70,10 +70,7 @@ module VCAP::CloudController::Models
       end
 
       def records(user)
-        scopes = []
-        scopes << VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE if user.admin?
-        VCAP::CloudController::SecurityContext.set(user, {'scope' => scopes })
-        Service.user_visible(user).all
+        Service.user_visible(user, user.admin?).all
       end
 
       it "returns all services for admins" do

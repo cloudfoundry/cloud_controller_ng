@@ -96,8 +96,8 @@ module VCAP::CloudController
     end
 
     def service_instance_from_name(name)
-      svc = Models::ManagedServiceInstance.user_visible[:name => name,
-                                                 :space => default_space]
+      visible_instances = Models::ManagedServiceInstance.user_visible(SecurityContext.current_user, SecurityContext.admin?)
+      svc = visible_instances[:name => name, :space => default_space]
       raise ServiceInstanceNotFound.new(name) unless svc
       svc
     end

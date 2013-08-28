@@ -7,7 +7,7 @@ module VCAP::CloudController::Models
     end
 
     def read?(object)
-      context.roles.admin? || !object.class.user_visible(context.user).where(:guid => object.guid).empty?
+      context.roles.admin? || !object.class.user_visible(context.user, context.roles.admin?).where(:guid => object.guid).empty?
     end
 
     def update?(object)
