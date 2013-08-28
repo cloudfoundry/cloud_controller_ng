@@ -485,6 +485,29 @@ module VCAP::CloudController
       end
     end
 
+    describe ".delete_buildpack_cache" do
+      context "when buildpack cache does not exist" do
+        it "does nothing" do
+          StagingsController.buildpack_cache_exists?(app_obj).should == false
+          StagingsController.delete_buildpack_cache(app_obj)
+          StagingsController.buildpack_cache_exists?(app_obj).should == false
+        end
+      end
+
+      context "when buildpack cache exists" do
+        let(:buildpack_cache) { Tempfile.new(app_obj.guid) }
+        before { StagingsController.store_buildpack_cache(app_obj, buildpack_cache.path) }
+
+        it "deletes the buildpack cache if it exists" do
+          expect {
+            StagingsController.delete_buildpack_cache(app_obj)
+          }.to change {
+            StagingsController.buildpack_cache_exists?(app_obj)
+          }.from(true).to(false)
+        end
+      end
+    end
+
     describe ".delete_droplet" do
       context "when droplet does not exist" do
         it "does nothing" do

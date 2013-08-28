@@ -656,6 +656,25 @@ module VCAP::CloudController
       end
     end
 
+    shared_examples "cleans up after deletion" do |msg|
+      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
+
+      it "should remove the droplet" do
+        AppManager.should_receive(:delete_droplet).with(app)
+        app.send(msg)
+      end
+
+      it "should remove the buildpack cache" do
+        AppManager.should_receive(:delete_buildpack_cache).with(app)
+        app.send(msg)
+      end
+
+      it "should remove the package" do
+        AppPackage.should_receive(:delete_package).with(app.guid)
+        app.send(msg)
+      end
+    end
+
     describe "destroy" do
       let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
 
@@ -677,15 +696,7 @@ module VCAP::CloudController
         end
       end
 
-      it "should remove the droplet" do
-        AppManager.should_receive(:delete_droplet).with(app)
-        app.destroy
-      end
-
-      it "should remove the package" do
-        AppPackage.should_receive(:delete_package).with(app.guid)
-        app.destroy
-      end
+      include_examples "cleans up after deletion", :destroy
 
       it "should nullify the routes" do
         app.add_route(route)
@@ -1208,6 +1219,8 @@ module VCAP::CloudController
           app_obj.soft_delete
         }.to change { Models::App[:guid => app_obj.guid] }.to(nil)
       end
+
+      include_examples "cleans up after deletion", :soft_delete
 
       context "with app events" do
         let!(:app_event) { Models::AppEvent.make(:app => app_obj) }

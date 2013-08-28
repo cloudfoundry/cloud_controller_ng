@@ -15,6 +15,15 @@ module VCAP::CloudController
       end
     end
 
+    describe '.delete_buildpack_cache' do
+      let(:app) { Models::App.make }
+
+      it "should delete the buildpack cache from staging" do
+        StagingsController.should_receive(:delete_buildpack_cache).with(app)
+        AppManager.delete_buildpack_cache(app)
+      end
+    end
+
     describe '.delete_droplet' do
       let(:app) { Models::App.make }
       before do
