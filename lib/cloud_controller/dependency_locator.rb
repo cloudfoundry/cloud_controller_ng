@@ -17,21 +17,25 @@ module CloudController
     end
 
     def package_blob_store
-      package_cdn = Cdn.new(config[:packages][:cdn][:uri]) if config[:packages][:cdn]
+      packages = config.fetch(:packages)
+      cdn_uri = packages.fetch(:cdn, nil) && packages.fetch(:cdn).fetch(:uri, nil)
+      package_cdn = Cdn.make(cdn_uri)
 
       BlobStore.new(
-        config[:packages][:fog_connection],
-        config[:packages][:app_package_directory_key],
+        packages.fetch(:fog_connection),
+        packages.fetch(:app_package_directory_key),
         package_cdn
       )
     end
 
     def global_app_bits_cache
-      app_bit_cdn = Cdn.new(config[:resource_pool][:cdn][:uri]) if config[:resource_pool][:cdn]
+      resource_pool = config.fetch(:resource_pool)
+      cdn_uri = resource_pool.fetch(:cdn, nil) && resource_pool.fetch(:cdn).fetch(:uri, nil)
+      app_bit_cdn = Cdn.make(cdn_uri)
 
       BlobStore.new(
-        config[:resource_pool][:fog_connection],
-        config[:resource_pool][:resource_directory_key],
+        resource_pool.fetch(:fog_connection),
+        resource_pool.fetch(:resource_directory_key),
         app_bit_cdn
       )
     end
