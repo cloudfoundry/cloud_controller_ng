@@ -5,6 +5,8 @@ Sequel.migration do
 
       String :name, :null => false
       String :key, :null => false
+      
+      index :name, :unique => true
     end
   end
 end
