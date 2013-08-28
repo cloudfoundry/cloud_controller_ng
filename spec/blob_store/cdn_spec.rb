@@ -3,7 +3,26 @@ require "cloud_controller/blob_store/cdn"
 
 describe Cdn do
   let(:cdn_host) { "https://some_distribution.cloudfront.net"}
-  let(:cdn) { Cdn.new(cdn_host) }
+  let(:cdn) { Cdn.make(cdn_host) }
+
+  describe ".make" do
+    it "returns nil for an empty host" do
+      expect(Cdn.make(nil)).to be_nil
+      expect(Cdn.make("")).to be_nil
+    end
+
+    it "returns a real Cdn for a non-empty host" do
+      expect(Cdn.make("example.com")).to be_a(Cdn)
+    end
+  end
+
+  describe ".new" do
+    it "is private" do
+      expect {
+        Cdn.new("foo")
+      }.to raise_error(/private method/)
+    end
+  end
 
   describe "#get" do
     let(:path_location) { "ab/cd/abcdefghi" }

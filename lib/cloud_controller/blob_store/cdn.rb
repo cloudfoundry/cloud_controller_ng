@@ -1,4 +1,9 @@
 class Cdn
+  def self.make(host)
+    return nil if host.nil? || host == ""
+    new(host)
+  end
+
   attr_reader :host
 
   def initialize(host)
@@ -12,4 +17,7 @@ class Cdn
       block.yield chunk
     end
   end
+
+  # Don't call new directly because there's logic in .make
+  private_class_method(:new)
 end

@@ -18,7 +18,8 @@ module CloudController
 
     def package_blob_store
       packages = config.fetch(:packages)
-      package_cdn = Cdn.new(packages[:cdn].fetch(:uri, nil)) if packages.fetch(:cdn, nil)
+      cdn_uri = packages.fetch(:cdn, nil) && packages.fetch(:cdn).fetch(:uri, nil)
+      package_cdn = Cdn.make(cdn_uri)
 
       BlobStore.new(
         packages.fetch(:fog_connection),
@@ -29,7 +30,8 @@ module CloudController
 
     def global_app_bits_cache
       resource_pool = config.fetch(:resource_pool)
-      app_bit_cdn = Cdn.new(resource_pool[:cdn].fetch(:uri, nil)) if resource_pool.fetch(:cdn, nil)
+      cdn_uri = resource_pool.fetch(:cdn, nil) && resource_pool.fetch(:cdn).fetch(:uri, nil)
+      app_bit_cdn = Cdn.make(cdn_uri)
 
       BlobStore.new(
         resource_pool.fetch(:fog_connection),
