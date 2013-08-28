@@ -135,7 +135,8 @@ module VCAP::CloudController
 
       @config[:bind_address] = VCAP.local_ip(@config[:local_route])
 
-      VCAP::CloudController::Config.configure(@config, message_bus)
+      VCAP::CloudController::Config.configure(@config)
+      VCAP::CloudController::Config.configure_message_bus(message_bus)
     end
 
     def create_app(config, message_bus)

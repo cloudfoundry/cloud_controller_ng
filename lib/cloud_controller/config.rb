@@ -142,9 +142,8 @@ class VCAP::CloudController::Config < VCAP::Config
 
     attr_reader :config, :message_bus
 
-    def configure(config, message_bus)
+    def configure(config)
       @config = config
-      @message_bus = message_bus
 
       VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
       VCAP::CloudController::AccountCapacity.configure(config)
@@ -152,20 +151,23 @@ class VCAP::CloudController::Config < VCAP::Config
         VCAP::CloudController::ResourcePool.new(config)
       VCAP::CloudController::AppPackage.configure(config)
 
-      stager_pool = VCAP::CloudController::StagerPool.new(config, message_bus)
-      VCAP::CloudController::AppManager.configure(config, message_bus, stager_pool)
       VCAP::CloudController::StagingsController.configure(config)
-
-      dea_pool = VCAP::CloudController::DeaPool.new(message_bus)
-      VCAP::CloudController::DeaClient.configure(config, message_bus, dea_pool)
-
-      VCAP::CloudController::LegacyBulk.configure(config, message_bus)
 
       VCAP::CloudController::Models::QuotaDefinition.configure(config)
       VCAP::CloudController::Models::Stack.configure(config[:stacks_file])
       VCAP::CloudController::Models::ServicePlan.configure(config[:trial_db])
 
       run_initializers(config)
+    end
+
+    def configure_message_bus(message_bus)
+      @message_bus = message_bus
+      stager_pool = VCAP::CloudController::StagerPool.new(@config, message_bus)
+      VCAP::CloudController::AppManager.configure(@config, message_bus, stager_pool)
+      dea_pool = VCAP::CloudController::DeaPool.new(message_bus)
+      VCAP::CloudController::DeaClient.configure(@config, message_bus, dea_pool)
+
+      VCAP::CloudController::LegacyBulk.configure(@config, message_bus)
     end
 
     def run_initializers(config)

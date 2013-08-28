@@ -1,14 +1,13 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-$:.unshift File.expand_path("../lib", __FILE__)
+$:.unshift(File.expand_path("../lib", __FILE__))
+$:.unshift(File.expand_path("../app", __FILE__))
 
 require "rspec/core/rake_task"
 require "ci/reporter/rake/rspec"
 require "yaml"
 require "sequel"
 require "steno"
-require "vcap/config"
-require "cloud_controller/config"
-require "cloud_controller/db"
+require "cloud_controller"
 
 ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
 
@@ -99,6 +98,7 @@ Ruby
 
   def db
     @db ||= begin
+      run_initializers
       connect_to_database
     end
   end
@@ -125,13 +125,14 @@ end
 namespace :jobs do
   desc "Clear the delayed_job queue."
   task :clear do
-    connect_to_database
+    setup_environment
     Delayed::Job.delete_all
   end
 
   desc "Start a delayed_job worker."
   task :work => :environment_options do
-    connect_to_database
+    setup_environment
+    Delayed::Worker.destroy_failed_jobs = false
     Delayed::Worker.new(@worker_options).start
   end
 
@@ -154,11 +155,20 @@ def connect_to_database
   VCAP::CloudController::DB.connect(db_logger, config[:db], config[:active_record_db])
 end
 
+def setup_environment
+  run_initializers
+  connect_to_database
+  VCAP::CloudController::Config.configure(config)
+end
+
+def run_initializers
+  VCAP::CloudController::Config.run_initializers(config)
+end
+
 def config
   @config ||= begin
     config_file = ENV["CLOUD_CONTROLLER_NG_CONFIG"] || File.expand_path("../config/cloud_controller.yml", __FILE__)
     config = VCAP::CloudController::Config.from_file(config_file)
-    VCAP::CloudController::Config.run_initializers(config)
     config
   end
 end

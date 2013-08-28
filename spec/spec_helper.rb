@@ -195,7 +195,8 @@ module VCAP::CloudController::SpecHelper
     # FIXME: this is better suited for a before-each stub so that we can unstub it in examples
     VCAP::CloudController::Models::ManagedServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
 
-    VCAP::CloudController::Config.configure(config, message_bus)
+    VCAP::CloudController::Config.configure(config)
+    VCAP::CloudController::Config.configure_message_bus(message_bus)
     # reset the dependency locator
     CloudController::DependencyLocator.instance.send(:initialize)
 
