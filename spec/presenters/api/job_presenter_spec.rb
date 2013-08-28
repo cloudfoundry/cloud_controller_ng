@@ -25,7 +25,7 @@ describe JobPresenter do
     context "when the job has started" do
       let(:job) do
         job = Delayed::Job.enqueue double(:obj, perform: nil)
-        job.stub(:run_at) { Time.now.months_since(-1) }
+        job.stub(:locked_at) { Time.now }
         job
       end
 
@@ -38,7 +38,7 @@ describe JobPresenter do
           },
           entity: {
             guid: job.id,
-            status: "started"
+            status: "running"
           }
         )
       end

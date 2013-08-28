@@ -31,10 +31,10 @@ class JobPresenter < ApiPresenter
       "failed"
     elsif @object.is_a? NullJob
       "finished"
-    elsif @object.run_at <= Time.now
-      "started"
-    else
+    elsif @object.locked_at.nil?
       "queued"
+    else
+      "running"
     end
   end
 
