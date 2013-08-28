@@ -199,6 +199,13 @@ describe VCAP::CloudController::Controller do
       end
     end
 
+    describe "#after" do
+      it "closes ActiveRecord connection" do
+        ActiveRecord::Base.connection.should_receive(:close)
+        make_request
+      end
+    end
+
     def user_count
       VCAP::CloudController::Models::User.count
     end
