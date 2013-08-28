@@ -5,7 +5,10 @@ require "optparse"
 require "vcap/uaa_util"
 require "cf_message_bus/message_bus"
 require "cf/registrar"
+require "loggregator_emitter"
+require "loggregator_messages"
 
+require_relative "loggregator"
 require_relative "seeds"
 require_relative "message_bus_configurer"
 
@@ -84,6 +87,10 @@ module VCAP::CloudController
       DB.connect(db_logger, @config[:db])
     end
 
+    def setup_loggregator_emitter
+      VCAP::CloudController::Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], LogMessage::SourceType::CLOUD_CONTROLLER)
+    end
+
     def development?
       @development ||= false
     end
@@ -132,6 +139,7 @@ module VCAP::CloudController
 
       setup_logging
       setup_db
+      setup_loggregator_emitter
 
       @config[:bind_address] = VCAP.local_ip(@config[:local_route])
 

@@ -21,6 +21,8 @@ gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.gi
 gem "vcap_common", :git => "https://github.com/cloudfoundry/vcap-common.git"
 gem "allowy"
 gem "delayed_job_active_record", "~> 4.0"
+gem "loggregator_emitter", "~> 0.0.9.pre"
+gem "loggregator_messages", "~> 0.0.1.pre"
 
 # These are outside the test group in order to run rake tasks
 gem "rspec"
