@@ -2,7 +2,7 @@ class AddDelayedJobs < ActiveRecord::Migration
   def up
     create_table :delayed_jobs do |t|
       t.timestamps
-
+      t.string   :guid
       t.integer  :priority, :default => 0  # Allows some jobs to jump to the front of the queue
       t.integer  :attempts, :default => 0  # Provides for retries, but still fail eventually.
       t.text  :handler             # YAML-encoded string of the object that will do work

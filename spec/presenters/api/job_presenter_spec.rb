@@ -11,12 +11,12 @@ describe JobPresenter do
     it "creates a valid JSON" do
       expect(JobPresenter.new(job).to_hash).to eq(
         metadata: {
-          guid: job.id,
+          guid: job.guid,
           created_at: job.created_at.iso8601,
-          url: "/v2/jobs/#{job.id}"
+          url: "/v2/jobs/#{job.guid}"
         },
         entity: {
-          guid: job.id,
+          guid: job.guid,
           status: "queued"
         }
       )
@@ -32,12 +32,12 @@ describe JobPresenter do
       it "creates a valid JSON" do
         expect(JobPresenter.new(job).to_hash).to eq(
           metadata: {
-            guid: job.id,
+            guid: job.guid,
             created_at: job.created_at.iso8601,
-            url: "/v2/jobs/#{job.id}"
+            url: "/v2/jobs/#{job.guid}"
           },
           entity: {
-            guid: job.id,
+            guid: job.guid,
             status: "running"
           }
         )
@@ -72,12 +72,12 @@ describe JobPresenter do
       it "creates a valid JSON" do
         expect(JobPresenter.new(job).to_hash).to eq(
           metadata: {
-            guid: job.id,
+            guid: job.guid,
             created_at: job.created_at.iso8601,
-            url: "/v2/jobs/#{job.id}"
+            url: "/v2/jobs/#{job.guid}"
           },
           entity: {
-            guid: job.id,
+            guid: job.guid,
             status: "failed"
           }
         )

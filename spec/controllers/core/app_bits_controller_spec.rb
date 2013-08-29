@@ -142,16 +142,17 @@ module VCAP::CloudController
           job = Delayed::Job.last
           expect(job.handler).to include(app_obj.guid)
           expect(job.queue).to eq("cc99")
+          expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 201
           expect(last_response.body).to eq({
             :metadata => {
-              :guid => job.id,
+              :guid => job.guid,
               :created_at => job.created_at.iso8601,
-              :url => "/v2/jobs/#{job.id}"
+              :url => "/v2/jobs/#{job.guid}"
             },
             :entity => {
-              :guid => job.id,
-              :status => "started"
+              :guid => job.guid,
+              :status => "queued"
             }
           }.to_json)
         end

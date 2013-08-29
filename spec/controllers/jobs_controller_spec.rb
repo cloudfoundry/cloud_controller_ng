@@ -4,9 +4,9 @@ module VCAP::CloudController
   describe VCAP::CloudController::JobsController, type: :controller do
     let(:current_user_headers) { admin_headers }
     let(:job) { Delayed::Job.enqueue double(:perform => nil) }
-    let(:job_request_id) { job.id }
+    let(:job_request_id) { job.guid }
 
-    describe "GET /v2/jobs/:id" do
+    describe "GET /v2/jobs/:guid" do
       subject { get("/v2/jobs/#{job_request_id}", {}, current_user_headers) }
 
       context "when the job exists" do
@@ -16,6 +16,11 @@ module VCAP::CloudController
           expect(decoded_response(symbolize_keys: true)).to eq(
             ::JobPresenter.new(job).to_hash
           )
+        end
+
+        it "sets the job guid" do
+          subject
+          expect(decoded_response(symbolize_keys: true)[:metadata][:guid]).not_to be_nil
         end
       end
 

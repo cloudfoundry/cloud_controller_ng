@@ -76,6 +76,7 @@ Sequel::Model.plugin :typecast_on_load,
                      :name, :label, :provider, :description, :host
 
 require "vcap/sequel_add_association_dependencies_monkeypatch"
+require "vcap/delayed_job_guid_monkeypatch"
 
 require "models/core/billing_event"
 require "models/core/organization_start_event"
