@@ -5,6 +5,8 @@ module VCAP::CloudController::Models
     import_attributes :name, :broker_url, :token
     export_attributes :name, :broker_url
 
+    add_association_dependencies :services => :destroy
+
     def validate
       validates_presence :name
       validates_presence :broker_url

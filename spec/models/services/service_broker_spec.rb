@@ -299,5 +299,21 @@ module VCAP::CloudController::Models
         end
       end
     end
+
+    describe "#destroy" do
+      let(:service_broker) { ServiceBroker.make }
+
+      it "destroys all services associated with the broker" do
+        service = Service.make(:service_broker => service_broker)
+        expect {
+          begin
+            service_broker.destroy
+          rescue Sequel::ForeignKeyConstraintViolation
+          end
+        }.to change {
+          Service.where(:id => service.id).any?
+        }.to(false)
+      end
+    end
   end
 end
