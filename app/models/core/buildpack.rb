@@ -8,5 +8,9 @@ module VCAP::CloudController::Models
     def validate
       validates_unique   :name
     end
+
+    def self.user_visibility_filter(user)
+      full_dataset_filter
+    end
   end
 end

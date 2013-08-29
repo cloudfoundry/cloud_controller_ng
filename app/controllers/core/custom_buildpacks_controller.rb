@@ -2,12 +2,6 @@ module VCAP::CloudController
   rest_controller :CustomBuildpacks do
     model_class_name :Buildpack
 
-    permissions_required do
-      full Permissions::CFAdmin
-      read Permissions::Authenticated
-      enumerate Permissions::Authenticated
-    end
-
     define_attributes do
       attribute :name, String
     end

@@ -4,8 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::CustomBuildpacksController, type: :controller do
     describe "/v2/custom_buildpacks" do
       let(:tmpdir) { Dir.mktmpdir }
-      let(:admin){ VCAP::CloudController::Models::User.make(:admin => true, :active => true) }
-      let(:user) { VCAP::CloudController::Models::User.make(:admin => false, :active => true) }
+      let(:user) { make_user }
 
       after { FileUtils.rm_rf(tmpdir) }
 
@@ -39,14 +38,14 @@ module VCAP::CloudController
 
       context "POST - create a custom buildpack" do
         after { reset_database }
-        
+
         it "returns NOT AUTHORIZED (403) for non admins" do
           post "/v2/custom_buildpacks", req_body, headers_for(user)
           expect(last_response.status).to eq(403)
         end
 
         it "returns a CREATED (201) if an admin uploads a build pack" do
-          post "/v2/custom_buildpacks", req_body, headers_for(admin)
+          post "/v2/custom_buildpacks", req_body, admin_headers
           expect(last_response.status).to eq(201)
         end
 
@@ -59,7 +58,7 @@ module VCAP::CloudController
                                                                      :public => true
                                                                  })
 
-          post "/v2/custom_buildpacks", req_body, headers_for(admin)
+          post "/v2/custom_buildpacks", req_body, admin_headers
           expect(Models::Buildpack.find(name: "dynamic_test_buildpack").key).to eq("dynamic_test_buildpack.zip")
         end
 
@@ -67,7 +66,7 @@ module VCAP::CloudController
           upload_handler = CloudController::DependencyLocator.instance.upload_handler
           upload_handler.should_receive(:uploaded_file)
             .with(hash_including("name" => "dynamic_test_buildpack"),"custom_buildpacks")
-          post "/v2/custom_buildpacks", req_body, headers_for(admin)
+          post "/v2/custom_buildpacks", req_body, admin_headers
         end
 
         it "uses the correct file extension on the key" do
@@ -79,16 +78,16 @@ module VCAP::CloudController
                                                                  })
 
           req_body[:custom_buildpacks] = valid_tar_gz
-          post "/v2/custom_buildpacks", req_body, headers_for(admin)
+          post "/v2/custom_buildpacks", req_body, admin_headers
           response = Yajl::Parser.parse(last_response.body)
           entity = response['entity']
           expect(entity['name']).to eq('dynamic_test_buildpack')
           expect(entity['key']).to eq('dynamic_test_buildpack.tar.gz')
         end
-        
+
         it 'fails when duplicate name is used' do
-          post "/v2/custom_buildpacks", req_body, headers_for(admin)
-          post "/v2/custom_buildpacks", req_body, headers_for(admin)
+          post "/v2/custom_buildpacks", req_body, admin_headers
+          post "/v2/custom_buildpacks", req_body, admin_headers
           expect(last_response.status).to eq(400)
         end
       end
@@ -141,39 +140,39 @@ module VCAP::CloudController
           end
         end
       end
-      
+
       context 'UPDATE' do
         describe '/v2/custom_buildpacks/:guid' do
           it 'returns NOT_IMPLEMENTED (501)' do
-            put "/v2/custom_buildpacks/abcdef", {}, headers_for(admin)
+            put "/v2/custom_buildpacks/abcdef", {}, admin_headers
             expect(last_response.status).to eq(501)
           end
         end
-        
+
         describe '/v2/custom_buildpacks/:guid/bits' do
           it "returns NOT AUTHORIZED (403) for non admins"
           it "returns a CREATED (201) if an admin uploads a build pack"
           it "updates the file in the blobstore"
         end
       end
-      
+
       context 'DELETE' do
         it 'returns NOT FOUND (404) if the buildpack does not exist' do
-          delete "/v2/custom_buildpacks/abcd", req_body, headers_for(admin)
+          delete "/v2/custom_buildpacks/abcd", req_body, admin_headers
           expect(last_response.status).to eq(404)
         end
-        
+
         context 'create a default buildpack' do
           around(:each) do |test|
             @test_buildpack = VCAP::CloudController::Models::Buildpack[name: "test_buildpack"]
-            @test_buildpack.destroy if @test_buildpack            
+            @test_buildpack.destroy if @test_buildpack
             @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz"})
 
             test.run
 
             @test_buildpack.destroy if @test_buildpack.exists?
           end
-          
+
           it "returns NOT AUTHORIZED (403) for non admins" do
             delete "/v2/custom_buildpacks/#{@test_buildpack[:guid]}", req_body, headers_for(user)
             expect(last_response.status).to eq(403)
@@ -181,7 +180,7 @@ module VCAP::CloudController
 
           it "returns a NO CONTENT (204) if an admin deletes a build pack" do
             @file.should_receive(:destroy)
-            delete "/v2/custom_buildpacks/#{@test_buildpack[:guid]}", req_body, headers_for(admin)            
+            delete "/v2/custom_buildpacks/#{@test_buildpack[:guid]}", req_body, admin_headers
             expect(last_response.status).to eq(204)
           end
 
@@ -190,7 +189,7 @@ module VCAP::CloudController
             buildpack_blobstore.stub(:files).and_return(double(:files, :head => @file, create: {}))
             @file.should_receive(:destroy)
 
-            delete "/v2/custom_buildpacks/#{@test_buildpack[:guid]}", req_body, headers_for(admin)
+            delete "/v2/custom_buildpacks/#{@test_buildpack[:guid]}", req_body, admin_headers
             expect(Models::Buildpack.find(name: "dynamic_test_buildpack")).to be_nil
           end
         end
