@@ -29,9 +29,16 @@ module VCAP::CloudController
       end
     end
 
+    def read(guid)
+      # only admins should have unfettered access to all users
+      # UserAccess allows all to read so org and space user lists show all users in those lists
+      raise Errors::NotAuthorized unless roles.admin?
+      super
+    end
+
     def enumerate
       raise Errors::NotAuthenticated unless user
-      raise Errors::NotAuthorized unless user.admin? || roles.admin?
+      raise Errors::NotAuthorized unless roles.admin?
       super
     end
   end

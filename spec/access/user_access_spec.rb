@@ -9,7 +9,12 @@ module VCAP::CloudController::Models
 
     it_should_behave_like :admin_full_access
 
-    context 'for a non-admin' do
+    context 'for a logged in user' do
+      it_behaves_like :read_only
+    end
+
+    context 'for a non-logged in user' do
+      include_context :logged_out_setup
       it_behaves_like :no_access
     end
   end
