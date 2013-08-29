@@ -24,7 +24,7 @@ module VCAP::CloudController
 
         let(:req_body) {{
           :name => "dynamic_test_buildpack",
-          :custom_buildpacks => valid_zip,
+          :custom_buildpacks => valid_zip
       }}
 
       before do
@@ -47,6 +47,16 @@ module VCAP::CloudController
         it "returns a CREATED (201) if an admin uploads a build pack" do
           post "/v2/custom_buildpacks", req_body, admin_headers
           expect(last_response.status).to eq(201)
+        end
+
+        it 'creates a buildpack with a default priority' do
+          post "/v2/custom_buildpacks", req_body, admin_headers
+          expect(decoded_response['entity']['priority']).to eq(0)
+        end
+
+        it 'sets the priority if provided' do
+          post "/v2/custom_buildpacks", req_body.merge({priority: 10}), admin_headers
+          expect(decoded_response['entity']['priority']).to eq(10)
         end
 
         it "takes a buildpack file and adds it to the custom buildpacks blobstore with the correct key" do
@@ -93,7 +103,9 @@ module VCAP::CloudController
       end
 
       context "GET" do
-        before(:all) { @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz"})}
+        before(:all) { @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})}
+        after(:all) { @test_buildpack.destroy }
+
         describe "/v2/custom_buildpacks/:name" do
           it "lets you retrieve info for a specific buildpack" do
             get "/v2/custom_buildpacks/#{@test_buildpack[:guid]}", {}, headers_for(user)
@@ -136,16 +148,25 @@ module VCAP::CloudController
             get "/v2/custom_buildpacks", {}, headers_for(user)
             expect(last_response.status).to eq(200)
             expect(decoded_response['total_results']).to eq(1)
-            expect(decoded_response["resources"][0]["entity"]).to eq({"name" => "test_buildpack", "key"=>"xyz"})
+            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'test_buildpack', 'key'=>'xyz', 'priority' => 0})
           end
         end
       end
 
       context 'UPDATE' do
+        before(:all) { @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})}
+        after(:all) { @test_buildpack.destroy }
+
+        it "returns NOT AUTHORIZED (403) for non admins" do
+          put "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, headers_for(user)
+          expect(last_response.status).to eq(403)
+        end
+
         describe '/v2/custom_buildpacks/:guid' do
-          it 'returns NOT_IMPLEMENTED (501)' do
-            put "/v2/custom_buildpacks/abcdef", {}, admin_headers
-            expect(last_response.status).to eq(501)
+          it 'updates the priority' do
+            put "/v2/custom_buildpacks/#{@test_buildpack.guid}", '{"priority": 10}', admin_headers
+            expect(last_response.status).to eq(201)
+            expect(decoded_response['entity']['priority']).to eq(10)
           end
         end
 
@@ -166,7 +187,7 @@ module VCAP::CloudController
           around(:each) do |test|
             @test_buildpack = VCAP::CloudController::Models::Buildpack[name: "test_buildpack"]
             @test_buildpack.destroy if @test_buildpack
-            @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz"})
+            @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})
 
             test.run
 
