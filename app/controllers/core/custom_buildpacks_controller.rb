@@ -4,6 +4,7 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name, String
+      attribute :priority, Integer, :default => 0
     end
 
     query_parameters :name
@@ -19,7 +20,11 @@ module VCAP::CloudController
 
     def create
       # multipart request so the body does not contain JSON
-      @request_attrs =  {name: params['name'], key: "#{params['name']}#{compute_file_extension}"}
+      @request_attrs = {
+        name: params['name'], 
+        key: "#{params['name']}#{compute_file_extension}",
+        priority: params.fetch('priority', self.class.attributes[:priority].default)
+      }
 
       logger.debug "cc.create", :model => self.class.model_class_name,
         :attributes => request_attrs
@@ -55,10 +60,6 @@ module VCAP::CloudController
       logger.debug "uploaded file: #{file_struct}"
       logger.debug "blobstore file: #{buildpack_blobstore.files.head(params["custom_buildpacks_name"])}"
       logger.debug "db record: #{model.find(key: params["custom_buildpacks_name"])}"
-    end
-
-    def update(guid)
-      [ HTTP::NOT_IMPLEMENTED, nil ]
     end
 
     def after_destroy(obj)

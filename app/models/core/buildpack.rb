@@ -1,9 +1,9 @@
 module VCAP::CloudController::Models
   class Buildpack < Sequel::Model
 
-    export_attributes :name, :key
+    export_attributes :name, :key, :priority
 
-    import_attributes :name, :key
+    import_attributes :name, :key, :priority
 
     def validate
       validates_unique   :name
