@@ -150,7 +150,7 @@ module Sequel::Plugins::VcapSerialization
       self.import_attrs = attributes
     end
 
-    # Not intented to be called by consumers of the API, but needed
+    # Not intended to be called by consumers of the API, but needed
     # by instance of the class, so it can't be made private.
     def update_or_create_options(hash, opts)
       results = {}

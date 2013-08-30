@@ -2,7 +2,7 @@
 
 module ModelHelpers
   def creation_opts_from_obj(obj, opts)
-    attribute_names = opts[:required_attributes]
+    attribute_names = opts[:required_attributes] | opts.fetch(:db_required_attributes, [])
     create_attribute = opts[:create_attribute]
 
     attrs = {}

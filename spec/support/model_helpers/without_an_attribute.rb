@@ -6,7 +6,7 @@ module ModelHelpers
       context "without the :#{without_attr.to_s} attribute" do
         let(:filtered_opts) do
           creation_opts.select do |k, v|
-            k != without_attr and k != "#{without_attr}_id"
+            k != without_attr and k != "#{without_attr}_id".to_sym
           end
         end
 

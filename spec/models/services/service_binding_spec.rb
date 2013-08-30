@@ -92,15 +92,8 @@ module VCAP::CloudController
           :service_plan => service_plan,
           :name => "my-postgresql",
           :space => Models::Space.make,
-          :gateway_name => 'named stored in gateway',
-        )
-      end
-
-      let(:provision_resp) do
-        VCAP::Services::Api::GatewayHandleResponse.new(
-          :service_id => "gwname_instance",
-          :configuration => "abc",
-          :credentials => {:password => "foo"}
+          :gateway_name => 'gwname_instance',
+          :credentials => Sham.service_credentials
         )
       end
 
@@ -114,7 +107,6 @@ module VCAP::CloudController
 
       before do
         Models::ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
-        gw_client.stub(:provision).and_return(provision_resp)
         gw_client.stub(:bind).and_return(bind_resp)
         service_instance.save
       end
