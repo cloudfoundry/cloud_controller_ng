@@ -22,9 +22,6 @@ uaa:
 logging:
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
 
-loggregator:
-  router: "127.0.0.1:3456"
-
 message_bus_uri: nats://127.0.0.1:4222
 pid_filename: /tmp/cloud_controller.pid
 

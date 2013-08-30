@@ -26,9 +26,6 @@ logging:
   file: spec/artifacts/spec.log
   level: debug
 
-loggregator:
-  router: 127.0.0.1:3456
-
 message_bus_uri: nats://127.0.0.1:4223
 pid_filename: /tmp/cloud_controller.pid
 

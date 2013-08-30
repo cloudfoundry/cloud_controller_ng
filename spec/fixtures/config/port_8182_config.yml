@@ -25,9 +25,6 @@ logging:
   file: /tmp/cloud_controller.8182.log
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
 
-loggregator:
-  router: "127.0.0.1:3456"
-
 message_bus_uri: nats://127.0.0.1:4222
 
 db:

@@ -88,7 +88,9 @@ module VCAP::CloudController
     end
 
     def setup_loggregator_emitter
-      VCAP::CloudController::Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], LogMessage::SourceType::CLOUD_CONTROLLER)
+      if @config[:loggregator] && @config[:loggregator][:router]
+        VCAP::CloudController::Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], LogMessage::SourceType::CLOUD_CONTROLLER)
+      end
     end
 
     def development?
@@ -179,8 +181,8 @@ module VCAP::CloudController
     def start_thin_server(app, config)
       if @config[:nginx][:use_nginx]
         @thin_server = Thin::Server.new(
-          config[:nginx][:instance_socket],
-          :signals => false
+            config[:nginx][:instance_socket],
+            :signals => false
         )
       else
         @thin_server = Thin::Server.new(@config[:bind_address], @config[:port])
@@ -202,12 +204,12 @@ module VCAP::CloudController
 
     def registrar
       @registrar ||= Cf::Registrar.new(
-        :mbus => @config[:message_bus_uri],
-        :host => @config[:bind_address],
-        :port => @config[:port],
-        :uri => @config[:external_domain],
-        :tags => { :component => "CloudController" },
-        :index => @config[:index]
+          :mbus => @config[:message_bus_uri],
+          :host => @config[:bind_address],
+          :port => @config[:port],
+          :uri => @config[:external_domain],
+          :tags => {:component => "CloudController"},
+          :index => @config[:index]
       )
     end
 
