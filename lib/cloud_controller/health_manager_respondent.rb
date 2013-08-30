@@ -39,7 +39,7 @@ module VCAP::CloudController
         version = payload.fetch("version")
         running = payload.fetch("running")
       rescue KeyError => e
-        Loggregator.emit_error(app_id, "Bad request to health manager: #{e.message}, payload: #{payload}")
+        Loggregator.emit_error(app_id, "Bad request from health manager: #{e.message}, payload: #{payload}")
         logger.error "cloudcontroller.hm.malformed-request",
           :error => e.message,
           :payload => payload

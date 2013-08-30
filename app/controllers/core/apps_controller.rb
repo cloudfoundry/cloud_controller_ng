@@ -80,7 +80,7 @@ module VCAP::CloudController
       json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(:stringify_keys => true)
 
-      Loggregator.emit(guid, "Updated app with guid #{guid} with attributes #{request_attrs.inspect}")
+      Loggregator.emit(guid, "Updated app with guid #{guid}")
       logger.debug "cc.update", :guid => guid,
         :attributes => request_attrs
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
       end
 
       after_create(obj)
-      VCAP::CloudController::Loggregator.emit(obj.guid, "Created app with guid #{obj.guid} with attributes #{@request_attrs.inspect}")
+      VCAP::CloudController::Loggregator.emit(obj.guid, "Created app with guid #{obj.guid}")
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{obj.guid}" },

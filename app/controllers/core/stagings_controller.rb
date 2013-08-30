@@ -256,11 +256,9 @@ module VCAP::CloudController
       raise AppNotFound.new(guid) if app.nil?
 
       package_path = AppPackage.package_local_path(guid)
-      Loggregator.emit(guid, "Found app package for app with guid: #{guid} package_path: #{package_path}")
       logger.debug "guid: #{guid} package_path: #{package_path}"
 
       unless package_path
-        Loggregator.emit_error(guid, "Could not find package for #{guid}")
         logger.error "could not find package for #{guid}"
         raise AppPackageNotFound.new(guid)
       end
@@ -338,7 +336,6 @@ module VCAP::CloudController
       raise StagingError.new("malformed droplet upload request for #{app.guid}") unless upload_path
 
       final_path = save_path(app.guid, tag)
-      Loggregator.emit(app.guid, "renaming #{tag} from '#{upload_path}' to '#{final_path}'")
       logger.debug "renaming #{tag} from '#{upload_path}' to '#{final_path}'"
 
       begin
@@ -353,7 +350,6 @@ module VCAP::CloudController
         handle.upload_path = final_path
       end
 
-      Loggregator.emit(app.guid, "uploaded #{tag} for #{app.guid} to #{final_path}")
       logger.debug "uploaded #{tag} for #{app.guid} to #{final_path}"
 
       HTTP::OK

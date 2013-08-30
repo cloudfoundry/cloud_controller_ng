@@ -26,7 +26,6 @@ module VCAP::CloudController
 
       package_uri = AppPackage.package_uri(guid)
 
-      Loggregator.emit(guid, "Found app package for app with guid: #{guid} package_uri: #{package_uri}")
       logger.debug "guid: #{guid} package_uri: #{package_uri}"
 
       if package_uri.nil?

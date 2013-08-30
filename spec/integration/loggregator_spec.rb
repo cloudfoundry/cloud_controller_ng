@@ -58,7 +58,7 @@ module VCAP::CloudController
       expect(messages.length).to eq 1
 
       message = messages[0]
-      expect(message.message).to eq "Created app with guid #{@app_id} with attributes {\"name\"=>\"foo_app\", \"space_guid\"=>\"#{@space_guid}\", \"production\"=>false, \"environment_json\"=>{}, \"memory\"=>256, \"instances\"=>1, \"disk_quota\"=>1024, \"state\"=>\"STOPPED\", \"console\"=>false}"
+      expect(message.message).to eq "Created app with guid #{@app_id}"
       expect(message.app_id).to eq @app_id
       expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
       expect(message.message_type).to eq LogMessage::MessageType::OUT
