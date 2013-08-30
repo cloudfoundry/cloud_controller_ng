@@ -13,6 +13,6 @@ class AppBitsPackerJob < Struct.new(:app_guid, :uploaded_compressed_path, :finge
   end
 
   def max_attempts
-    3
+    1
   end
 end
