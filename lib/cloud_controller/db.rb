@@ -101,7 +101,7 @@ EOF
           password: uri.password,
           host: uri.host,
           port: uri.port,
-          adapter: uri.scheme,
+          adapter: (database_uri =~ /^postgres/) ? "postgresql" : uri.scheme,
           database: uri.path[1..-1]
         }
       end
