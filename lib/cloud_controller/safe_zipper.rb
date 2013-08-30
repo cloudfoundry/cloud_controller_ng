@@ -69,7 +69,7 @@ class SafeZipper
   end
 
   def size
-    @size ||= zip_info.split("\n").last.match(/^\s+(\d+)/)[1].to_i
+    @size ||= zip_info.split("\n").last.match(/^\s*(\d+)/)[1].to_i
   end
 
   def any_outside_relative_paths?

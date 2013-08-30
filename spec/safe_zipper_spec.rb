@@ -26,6 +26,16 @@ describe SafeZipper do
       expect(SafeZipper.unzip(zip_path, zip_destination)).to eq 17
     end
 
+    it "returns the size if it is large" do
+      Open3.stub(:capture3).with(%Q{unzip -l #{zip_path}}).and_return(
+        [
+          "\nArchive:\n Filename\n ---\n app.rb\n10000000001 1 file",
+          nil,
+          double("status", :success? => true)]
+      )
+      expect(SafeZipper.unzip(zip_path, zip_destination)).to eq 10000000001
+    end
+
     context "when the zip_destination doesn't exist" do
       let(:zip_destination) { 'bar' }
 
