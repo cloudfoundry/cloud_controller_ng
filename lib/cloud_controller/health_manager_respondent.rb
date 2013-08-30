@@ -66,7 +66,7 @@ module VCAP::CloudController
         instances = payload.fetch("instances")
         running = payload.fetch("running")
       rescue KeyError => e
-        Loggregator.emit_error(app_id, "Bad request to health manager: #{e.message}, payload: #{payload}")
+        Loggregator.emit_error(app_id, "Bad request from health manager: #{e.message}, payload: #{payload}")
         logger.error "cloudcontroller.hm.malformed-request",
           :error => e.message,
           :payload => payload
@@ -104,7 +104,7 @@ module VCAP::CloudController
             return false
           end
         elsif instances_remaining < app.instances && app.started?
-          Loggregator.emit_error(app.guid, "Bad request to health manager")
+          Loggregator.emit_error(app.guid, "Bad request from health manager")
           logger.error "cloudcontroller.hm.invalid-request",
                        :instances => instances, :app => app.guid,
                        :desired_instances => app.instances,
