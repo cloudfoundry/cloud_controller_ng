@@ -17,6 +17,48 @@ module VCAP::CloudController
       },
     }
 
+    describe '#save' do
+      context 'on create' do
+        context 'when no unique_id is set' do
+          let(:attrs) { {unique_id: nil} }
+
+          it 'generates guid for the unique_id' do
+            plan = Models::ServicePlan.make(attrs)
+            expect(plan.unique_id).to be_a_guid
+          end
+        end
+
+        context 'when a unique_id is set' do
+          let(:attrs) { {unique_id: Sham.guid} }
+
+          it 'persists the given unique_id' do
+            plan = Models::ServicePlan.make(attrs)
+            expect(plan.unique_id).to eq(attrs[:unique_id])
+          end
+        end
+      end
+
+      context 'on update' do
+        let(:plan) { Models::ServicePlan.make }
+
+        context 'when the unique_id is unset' do
+          before { plan.unique_id = nil }
+
+          it 'does not generate a unique_id' do
+            expect {
+              plan.save rescue nil
+            }.to_not change(plan, :unique_id)
+          end
+
+          it 'raises a validation error' do
+            expect {
+              plan.save
+            }.to raise_error(Sequel::ValidationFailed)
+          end
+        end
+      end
+    end
+
     describe "#destroy" do
       let(:service_plan) { Models::ServicePlan.make }
 
