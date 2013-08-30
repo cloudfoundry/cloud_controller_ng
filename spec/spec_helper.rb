@@ -37,6 +37,9 @@ module VCAP::CloudController
         :default_log_level => "debug",
         :sinks => [Steno::Sink::IO.for_file(log_filename)]
       ))
+
+      VCAP::CloudController::Config.run_initializers(config)
+
       reset_database
     end
 
@@ -67,19 +70,16 @@ module VCAP::CloudController
     end
 
     def db
-      db_connection = "sqlite:///"
-      db_index = ""
+      Thread.current[:db] ||= begin
+        db_connection = ENV["DB_CONNECTION"] || "sqlite:///tmp/cc_test#{ENV["TEST_ENV_NUMBER"]}.db"
+        ar_db_connection = ENV["AR_DB_CONNECTION"] || "sqlite:///tmp/cc_test_ar#{ENV["TEST_ENV_NUMBER"]}.db"
 
-      if ENV["DB_CONNECTION"]
-        db_connection = ENV["DB_CONNECTION"]
-        db_index = ENV["TEST_ENV_NUMBER"]
+        VCAP::CloudController::DB.connect(
+          db_logger,
+          { log_level: "debug2", database: "#{db_connection}" },
+          database: "#{ar_db_connection}"
+        )
       end
-
-      Thread.current[:db] ||= VCAP::CloudController::DB.connect(
-        db_logger,
-        :database => "#{db_connection}#{db_index}",
-        :log_level => "debug2"
-      )
     end
 
     def db_logger
@@ -92,60 +92,7 @@ module VCAP::CloudController
       @db_logger
     end
 
-    private
-
-    def prepare_database
-      if db.database_type == :postgres
-        db.execute("CREATE EXTENSION IF NOT EXISTS citext")
-      end
-    end
-
-    def drop_table_unsafely(table)
-      case db.database_type
-        when :sqlite
-          db.execute("PRAGMA foreign_keys = OFF")
-          db.drop_table(table)
-          db.execute("PRAGMA foreign_keys = ON")
-
-        when :mysql
-          db.execute("SET foreign_key_checks = 0")
-          db.drop_table(table)
-          db.execute("SET foreign_key_checks = 1")
-
-        # Postgres uses CASCADE directive in DROP TABLE
-        # to remove foreign key contstraints.
-        # http://www.postgresql.org/docs/9.2/static/sql-droptable.html
-        else
-          db.drop_table(table, :cascade => true)
-      end
-    end
-  end
-end
-
-$spec_env = VCAP::CloudController::SpecEnvironment.new
-
-module VCAP::CloudController::SpecHelper
-  def db
-    $spec_env.db
-  end
-
-  def reset_database
-    $spec_env.reset_database
-    VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
-  end
-
-  # Note that this method is mixed into each example, and so the instance
-  # variable we created here gets cleared automatically after each example
-  def config_override(hash)
-    @config_override ||= {}
-    @config_override.update(hash)
-
-    @config = nil
-    config
-  end
-
-  def config
-    @config ||= begin
+    def config(config_override={})
       config_file = File.expand_path("../../config/cloud_controller.yml", __FILE__)
       config_hash = VCAP::CloudController::Config.from_file(config_file)
 
@@ -177,15 +124,77 @@ module VCAP::CloudController::SpecHelper
         },
       )
 
-      config_hash.merge!(@config_override || {})
+      config_hash.merge!(config_override || {})
 
       res_pool_connection_provider = config_hash[:resource_pool][:fog_connection][:provider].downcase
       packages_connection_provider = config_hash[:packages][:fog_connection][:provider].downcase
       Fog.mock! unless (res_pool_connection_provider == "local" || packages_connection_provider == "local")
 
-      configure_components(config_hash)
       config_hash
     end
+
+    private
+
+    def prepare_database
+      if db.database_type == :postgres
+        db.execute("CREATE EXTENSION IF NOT EXISTS citext")
+      end
+    end
+
+    def drop_table_unsafely(table)
+      case db.database_type
+      when :sqlite
+        db.execute("PRAGMA foreign_keys = OFF")
+        db.drop_table(table)
+        db.execute("PRAGMA foreign_keys = ON")
+
+      when :mysql
+        db.execute("SET foreign_key_checks = 0")
+        db.drop_table(table)
+        db.execute("SET foreign_key_checks = 1")
+
+        # Postgres uses CASCADE directive in DROP TABLE
+        # to remove foreign key contstraints.
+        # http://www.postgresql.org/docs/9.2/static/sql-droptable.html
+      else
+        db.drop_table(table, :cascade => true)
+      end
+    end
+  end
+end
+
+$spec_env = VCAP::CloudController::SpecEnvironment.new
+
+module VCAP::CloudController::SpecHelper
+  def db
+    $spec_env.db
+  end
+
+  def reset_database
+    $spec_env.reset_database
+    VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+  end
+
+  # Note that this method is mixed into each example, and so the instance
+  # variable we created here gets cleared automatically after each example
+  def config_override(hash)
+    @config_override ||= {}
+    @config_override.update(hash)
+
+    @config = nil
+    config
+  end
+
+  def config
+    @config ||= begin
+      config = $spec_env.config(@config_override)
+      configure_components(config)
+      config
+    end
+  end
+
+  def configure
+    config
   end
 
   def configure_components(config)
@@ -197,7 +206,8 @@ module VCAP::CloudController::SpecHelper
     # FIXME: this is better suited for a before-each stub so that we can unstub it in examples
     VCAP::CloudController::Models::ManagedServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
 
-    VCAP::CloudController::Config.configure(config, message_bus)
+    VCAP::CloudController::Config.configure(config)
+    VCAP::CloudController::Config.configure_message_bus(message_bus)
     # reset the dependency locator
     CloudController::DependencyLocator.instance.send(:initialize)
 
@@ -208,10 +218,6 @@ module VCAP::CloudController::SpecHelper
     stacks_file = File.join(fixture_path, "config/stacks.yml")
     VCAP::CloudController::Models::Stack.configure(stacks_file)
     VCAP::CloudController::Models::Stack.populate
-  end
-
-  def configure
-    config
   end
 
   class TmpdirCleaner

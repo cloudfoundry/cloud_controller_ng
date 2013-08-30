@@ -32,9 +32,9 @@ env:
   matrix:
     - DB=sqlite
       # http://about.travis-ci.org/docs/user/database-setup/#MySQL
-    - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306/ccng"
+    - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306/ccng" AR_DB_CONNECTION="mysql2://root@localhost:3306/ccng"
       # http://about.travis-ci.org/docs/user/database-setup/#PostgreSQL
-    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432/ccng"
+    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432/ccng" AR_DB_CONNECTION="postgres://postgres@localhost:5432/ccng"
       # Oracle DB URL
 #    - DB=oracle ORACLE_BASE=/opt/oracle ORACLE_HOME=$ORACLE_BASE/instantclient_11_2 LD_LIBRARY_PATH=${ORACLE_HOME}:${LD_LIBRARY_PATH}
 

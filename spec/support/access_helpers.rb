@@ -28,4 +28,8 @@ module AccessHelpers
   shared_context :admin_setup do
     subject { described_class.new(double(:context, user: nil, roles: double(:roles, :admin? => true))) }
   end
+
+  shared_context :logged_out_setup do
+    subject { described_class.new(double(:context, user: nil, roles: double(:roles, :admin? => false, :none? => true, :present? => false)))}
+  end
 end

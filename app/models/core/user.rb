@@ -74,5 +74,9 @@ module VCAP::CloudController::Models
     def active?
       active
     end
+
+    def self.user_visibility_filter(_)
+      full_dataset_filter
+    end
   end
 end

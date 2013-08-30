@@ -61,6 +61,11 @@ module VCAP::CloudController
       validate_scheme(user, VCAP::CloudController::SecurityContext.admin?)
     end
 
+    after do
+      # Because we aren't using Rails, we need to manually ensure that AR connections are closed.
+      ActiveRecord::Base.connection.close
+    end
+
     # TODO: remove from usage in cloud_controller_spec.rb
     get "/hello/sync" do
       "sync return\n"

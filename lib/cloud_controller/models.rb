@@ -76,6 +76,7 @@ Sequel::Model.plugin :typecast_on_load,
                      :name, :label, :provider, :description, :host
 
 require "vcap/sequel_add_association_dependencies_monkeypatch"
+require "vcap/delayed_job_guid_monkeypatch"
 
 require "models/core/billing_event"
 require "models/core/organization_start_event"
@@ -106,6 +107,8 @@ require "models/services/service_plan_visibility"
 require "models/services/service_base_event"
 require "models/services/service_create_event"
 require "models/services/service_delete_event"
+
+require "models/job"
 
 require File.expand_path("../../../app/access/base_access.rb", __FILE__)
 Dir[File.expand_path("../../../app/access/**/*.rb", __FILE__)].each do |file|

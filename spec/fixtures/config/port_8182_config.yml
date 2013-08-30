@@ -30,6 +30,9 @@ message_bus_uri: nats://127.0.0.1:4222
 db:
   database: "sqlite:///tmp/cloud_controller.db"
 
+active_record_db:
+  database: "sqlite:///tmp/cloud_controller_ar.db"
+
 bulk_api:
   auth_user: bulk_user
   auth_password: bulk_password

@@ -1,5 +1,6 @@
 require "cloud_controller/upload_handler"
 require "jobs/runtime/app_bits_packer_job"
+require "presenters/api/job_presenter"
 
 module VCAP::CloudController
   rest_controller :AppBits do
@@ -13,9 +14,15 @@ module VCAP::CloudController
       raise Errors::AppBitsUploadInvalid, "missing :resources" unless params["resources"]
 
       uploaded_zip_of_files_not_in_blobstore = UploadHandler.new(config).uploaded_file(params, "application")
-      AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore.try(:path), json_param("resources")).perform
+      app_bits_packer_job = AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore.try(:path), json_param("resources"))
 
-      HTTP::CREATED
+      if params["async"] == "true"
+        job = Delayed::Job.enqueue(app_bits_packer_job, queue: "cc#{config[:index]}")
+        [HTTP::CREATED, JobPresenter.new(job).to_json]
+      else
+        app_bits_packer_job.perform
+        HTTP::CREATED
+      end
     rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid
       app.mark_as_failed_to_stage
       raise
