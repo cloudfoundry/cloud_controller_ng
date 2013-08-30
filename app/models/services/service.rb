@@ -18,7 +18,7 @@ module VCAP::CloudController::Models
 
     import_attributes :label, :provider, :url, :description,
                       :version, :info_url, :active, :bindable,
-                      :unique_id, :extra, :tags
+                      :unique_id, :extra, :tags, :documentation_url
 
     strip_attributes  :label, :provider
 

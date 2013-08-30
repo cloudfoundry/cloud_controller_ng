@@ -177,18 +177,38 @@ module VCAP::CloudController
       end
     end
 
-    describe "POST", "/v2/services" do
-      it "accepts a request with unique_id" do
+    describe 'POST', '/v2/services' do
+      it 'creates a service' do
+        unique_id = Sham.unique_id
+        url = Sham.url
+        documentation_url = Sham.url
+
         payload = ServicesController::CreateMessage.new(
-          :label => 'foo',
-          :provider => 'phan',
-          :url => Sham.url,
-          :description => 'd',
-          :version => 'v',
-          :unique_id => Sham.unique_id,
+          :unique_id => unique_id,
+          :url => url,
+          :documentation_url => documentation_url,
+          :description => 'delightful service',
+          :provider => 'widgets-inc',
+          :label => 'foo-db',
+          :version => 'v1.2.3'
         ).encode
-        post "/v2/services", payload, json_headers(admin_headers)
+
+        expect {
+          post '/v2/services', payload, json_headers(admin_headers)
+        }.to change(Models::Service, :count).by(1)
+
         last_response.status.should eq(201)
+        guid = decoded_response.fetch('metadata').fetch('guid')
+
+        service = Models::Service.last
+        expect(service.guid).to eq(guid)
+        expect(service.unique_id).to eq(unique_id)
+        expect(service.url).to eq(url)
+        expect(service.documentation_url).to eq(documentation_url)
+        expect(service.description).to eq('delightful service')
+        expect(service.provider).to eq('widgets-inc')
+        expect(service.label).to eq('foo-db')
+        expect(service.version).to eq('v1.2.3')
       end
 
       it 'makes the service bindable by default' do
