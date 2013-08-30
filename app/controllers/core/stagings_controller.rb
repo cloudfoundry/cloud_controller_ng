@@ -310,7 +310,6 @@ module VCAP::CloudController
     def download(app, droplet_path, url)
       raise InvalidRequest unless self.class.blob_store.local?
 
-      Loggregator.emit(app.guid, "Found droplet for app with guid: #{app.guid} droplet_path: #{droplet_path}")
       logger.debug "guid: #{app.guid} droplet_path #{droplet_path}"
 
       unless droplet_path
