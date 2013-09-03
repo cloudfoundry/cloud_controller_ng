@@ -200,9 +200,6 @@ module VCAP::CloudController::Models
 
       @provisioned_on_gateway_for_plan = service_plan
 
-    rescue VCAP::Services::Api::ServiceGatewayClient::UnexpectedResponse=>e
-      raise unless e.message =~ /Error Code: 33106,/
-      raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
     rescue VCAP::Services::Api::ServiceGatewayClient::ErrorResponse => e
       if e.error.code == 33106
         raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
