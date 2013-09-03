@@ -75,6 +75,7 @@ GEM
     arel (3.0.2)
     backports (3.3.3)
     bcrypt-ruby (3.1.1)
+    beefcake (0.3.7)
     builder (3.0.4)
     ci_reporter (1.9.0)
       builder (>= 2.1.2)
@@ -153,6 +154,10 @@ GEM
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
       rb-kqueue (>= 0.2)
+    loggregator_emitter (0.0.9.pre)
+      loggregator_messages (~> 0.0.1.pre)
+    loggregator_messages (0.0.1.pre)
+      beefcake (~> 0.3.7)
     lumberjack (1.0.4)
     machinist (1.0.6)
     membrane (0.0.2)
@@ -270,6 +275,8 @@ DEPENDENCIES
   fog
   guard-rspec
   httpclient
+  loggregator_emitter (~> 0.0.9.pre)
+  loggregator_messages (~> 0.0.1.pre)
   machinist (~> 1.0.6)
   membrane (~> 0.0.2)
   mysql2

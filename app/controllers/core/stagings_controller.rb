@@ -313,6 +313,7 @@ module VCAP::CloudController
       logger.debug "guid: #{app.guid} droplet_path #{droplet_path}"
 
       unless droplet_path
+        Loggregator.emit_error(app.guid, "Did not find droplet for app with guid: #{app.guid}")
         logger.error "could not find droplet for #{app.guid}"
         raise StagingError.new("droplet not found for #{app.guid}")
       end

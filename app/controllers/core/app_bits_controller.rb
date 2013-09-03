@@ -32,9 +32,11 @@ module VCAP::CloudController
       find_guid_and_validate_access(:read, guid)
 
       package_uri = AppPackage.package_uri(guid)
+
       logger.debug "guid: #{guid} package_uri: #{package_uri}"
 
       if package_uri.nil?
+        Loggregator.emit_error(guid, "Could not find package for #{guid}")
         logger.error "could not find package for #{guid}"
         raise Errors::AppPackageNotFound.new(guid)
       end

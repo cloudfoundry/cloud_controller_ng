@@ -149,6 +149,7 @@ module VCAP::CloudController
             dea_publish_start(dea_id, msg.merge(message_override))
             dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
           else
+            Loggregator.emit_error(app.guid, "no resources available #{msg}")
             logger.error "no resources available #{msg}"
           end
         end
