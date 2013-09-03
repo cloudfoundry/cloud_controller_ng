@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require "loggregator"
 
 module VCAP::CloudController::Models
   class MissingAppStartEvent < StandardError; end
@@ -35,6 +36,7 @@ module VCAP::CloudController::Models
         app_start_event = AppStartEvent.filter(:app_guid => app.guid).order(Sequel.desc(:id)).first
 
         unless app_start_event
+          Loggregator.emit(app.guid, "Tried to stop app that never received a start event")
           logger.warn("cc.app-stop-event.missing-start", :app => app.guid)
           return
         end

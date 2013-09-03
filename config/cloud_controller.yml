@@ -32,6 +32,9 @@ logging:
   file: /tmp/cloud_controller.log
   level: debug2
 
+loggregator:
+  router: "127.0.0.1:3456"
+
 db:
   database: "sqlite:///tmp/cloud_controller.db"
   max_connections: 32
