@@ -7,8 +7,8 @@ require "cf_message_bus/message_bus"
 require "cf/registrar"
 require "loggregator_emitter"
 require "loggregator_messages"
+require "loggregator"
 
-require_relative "loggregator"
 require_relative "seeds"
 require_relative "message_bus_configurer"
 
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
     def setup_loggregator_emitter
       if @config[:loggregator] && @config[:loggregator][:router]
-        VCAP::CloudController::Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], LogMessage::SourceType::CLOUD_CONTROLLER)
+        Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], LogMessage::SourceType::CLOUD_CONTROLLER)
       end
     end
 

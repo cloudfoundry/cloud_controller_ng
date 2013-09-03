@@ -115,7 +115,7 @@ module VCAP::CloudController
       end
 
       after_create(obj)
-      VCAP::CloudController::Loggregator.emit(obj.guid, "Created app with guid #{obj.guid}")
+      Loggregator.emit(obj.guid, "Created app with guid #{obj.guid}")
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{obj.guid}" },
