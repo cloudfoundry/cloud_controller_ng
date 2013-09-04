@@ -132,14 +132,14 @@ module VCAP::CloudController
           end
         end
 
-        describe "/v2/custom_buildpacks/:name/bits" do
+        describe "/v2/custom_buildpacks/:guid/bits" do
           it "lets you retrieve the bits for a specific buildpack" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             buildpack_blobstore.files.should_receive(:head).with('xyz').and_return(@file)
+            @file.should_receive(:path).and_return(__FILE__)
 
-            get "/v2/custom_buildpacks/test_buildpack/bits", {}, headers_for(user)
+            get "/v2/custom_buildpacks/#{@test_buildpack[:guid]}/bits", {}, admin_headers
             expect(last_response.status).to eq(200)
-            expect(last_response.headers).to include({"X-Accel-Redirect" => @file.public_url})
           end
         end
 
