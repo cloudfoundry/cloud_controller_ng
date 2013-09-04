@@ -48,13 +48,19 @@ module VCAP::CloudController::Models
       if response.code.to_i == HTTP::Status::UNAUTHORIZED
         raise VCAP::Errors::ServiceBrokerApiAuthenticationFailed.new(endpoint)
       elsif response.code.to_i != HTTP::Status::OK
-        raise "TODO: fix this error" #VCAP::Errors::ServiceBrokerCatalogMalformed.new(endpoint) # should not be a catalog
+        # TODO: this is really not an appropriate response
+        raise VCAP::Errors::ServiceBrokerResponseMalformed.new(endpoint)
       else
-        response_hash = Yajl::Parser.parse(response.body)
-        return response_hash
-        #unless raw_catalog.is_a?(Hash)
-        #  raise VCAP::Errors::ServiceBrokerCatalogMalformed.new(@broker.broker_url)
-        #end
+        begin
+          response_hash = Yajl::Parser.parse(response.body)
+        rescue Yajl::ParseError
+        end
+
+        unless response_hash.is_a?(Hash)
+          raise VCAP::Errors::ServiceBrokerResponseMalformed.new(endpoint)
+        end
+
+        response_hash
       end
     end
   end
