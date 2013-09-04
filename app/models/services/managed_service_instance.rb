@@ -59,6 +59,8 @@ module VCAP::CloudController::Models
       end
     end
 
+    plugin :after_initialize
+
     many_to_one :service_plan
 
     default_order_by  :id
@@ -86,6 +88,11 @@ module VCAP::CloudController::Models
       super
       deprovision_on_gateway
       ServiceDeleteEvent.create_from_service_instance(self)
+    end
+
+    def after_initialize
+      self.guid ||= SecureRandom.uuid
+      super
     end
 
     def as_summary_json

@@ -43,5 +43,14 @@ module VCAP::CloudController::Models
     def tags
       super || []
     end
+
+    def v2?
+      !service_broker.nil?
+    end
+
+    # The "unique_id" should really be called broker_id because it's the id assigned by the broker
+    def broker_id
+      unique_id
+    end
   end
 end

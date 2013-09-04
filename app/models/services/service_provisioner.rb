@@ -1,8 +1,21 @@
 module VCAP::CloudController::Models
   class ServiceProvisioner
-
     ProvisionResponse = Struct.new(:gateway_name, :gateway_data, :credentials, :dashboard_url)
 
+    def initialize(service_instance, opts={})
+      if service_instance.service.v2?
+        @provisioner = V2ServiceProvisioner.new(service_instance, opts)
+      else
+        @provisioner = V1ServiceProvisioner.new(service_instance)
+      end
+    end
+
+    def provision
+      @provisioner.provision
+    end
+  end
+
+  class V1ServiceProvisioner
     def initialize(service_instance)
       @service_instance = service_instance
     end
@@ -30,7 +43,7 @@ module VCAP::CloudController::Models
 
       logger.debug "provision response for instance #{service_instance.guid} #{gateway_response.inspect}"
 
-      ProvisionResponse.new(
+      ServiceProvisioner::ProvisionResponse.new(
         gateway_response.service_id,
         gateway_response.configuration,
         gateway_response.credentials,
@@ -69,5 +82,29 @@ module VCAP::CloudController::Models
         )
       end
     end
+  end
+
+  class V2ServiceProvisioner
+    def initialize(service_instance, opts={})
+      @service_instance = service_instance
+      @broker_client = opts.fetch(:broker_client) do
+        broker = service_instance.service_plan.service.service_broker
+        ServiceBrokerClient.new(broker.broker_url, broker.token)
+      end
+    end
+
+    def provision
+      provision_response = broker_client.provision(service_instance.service_plan.service.broker_id, service_instance.service_plan.broker_id, service_instance.guid)
+      ServiceProvisioner::ProvisionResponse.new(
+        provision_response[:id],
+        nil,
+        {},
+        nil
+      )
+    end
+
+    private
+
+    attr_reader :service_instance, :broker_client
   end
 end

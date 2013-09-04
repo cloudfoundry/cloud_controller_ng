@@ -108,6 +108,7 @@ require "models/services/service_base_event"
 require "models/services/service_create_event"
 require "models/services/service_delete_event"
 require "models/services/service_provisioner"
+require "models/services/service_broker_client"
 
 require "models/job"
 
