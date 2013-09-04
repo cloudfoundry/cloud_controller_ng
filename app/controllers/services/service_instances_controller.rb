@@ -14,18 +14,6 @@ module VCAP::CloudController
 
     query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name
 
-    def before_create
-      unless ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.admin?).filter(:guid => request_attrs['service_plan_guid']).count > 0
-        raise Errors::NotAuthorized
-      end
-
-      organization = requested_space.organization
-
-      unless ServicePlan.organization_visible(organization).filter(:guid => request_attrs['service_plan_guid']).count > 0
-        raise Errors::ServiceInstanceOrganizationNotAuthorized
-      end
-    end
-
     def requested_space
       space = Space.filter(:guid => request_attrs['space_guid']).first
       raise Errors::ServiceInstanceInvalid.new('not a valid space') unless space
@@ -59,6 +47,50 @@ module VCAP::CloudController
 
     def self.not_found_exception
       Errors::ServiceInstanceNotFound
+    end
+
+    post "/v2/service_instances", :create
+
+    def create
+      json_msg = self.class::CreateMessage.decode(body)
+
+      @request_attrs = json_msg.extract(:stringify_keys => true)
+
+      logger.debug "cc.create", :model => self.class.model_class_name,
+        :attributes => request_attrs
+
+      raise InvalidRequest unless request_attrs
+
+      unless ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.admin?).filter(:guid => request_attrs['service_plan_guid']).count > 0
+        raise Errors::NotAuthorized
+      end
+
+      organization = requested_space.organization
+
+      unless ServicePlan.organization_visible(organization).filter(:guid => request_attrs['service_plan_guid']).count > 0
+        raise Errors::ServiceInstanceOrganizationNotAuthorized
+      end
+
+      service_instance = ManagedServiceInstance.new(request_attrs)
+      validate_access(:create, service_instance, user, roles)
+
+      provision_response = ServiceProvisioner.new(service_instance).provision
+      service_instance.gateway_name = provision_response.gateway_name
+      service_instance.gateway_data = provision_response.gateway_data
+      service_instance.credentials = provision_response.credentials
+      service_instance.dashboard_url = provision_response.dashboard_url
+
+      begin
+        service_instance.save
+      rescue
+        service_instance.deprovision_on_gateway
+        raise
+      end
+
+      [ HTTP::CREATED,
+        { "Location" => "#{self.class.path}/#{service_instance.guid}" },
+        serialization.render_json(self.class, service_instance, @opts)
+      ]
     end
 
     get "/v2/service_instances/:guid", :read

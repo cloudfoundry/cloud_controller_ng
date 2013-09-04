@@ -1,5 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
+module VCAP::CloudController; end
+
 require "sequel_plugins/vcap_validations"
 require "sequel_plugins/vcap_serialization"
 require "sequel_plugins/vcap_normalization"
@@ -107,8 +109,10 @@ autoload :ServicePlanVisibility,       "models/services/service_plan_visibility"
 autoload :ServiceBaseEvent,            "models/services/service_base_event"
 autoload :ServiceCreateEvent,          "models/services/service_create_event"
 autoload :ServiceDeleteEvent,          "models/services/service_delete_event"
+autoload :ServiceProvisioner,          "models/services/service_provisioner"
+autoload :ServiceBrokerClient,         "models/services/service_broker_client"
 
-autoload :Job, "models/job"
+autoload :Job,                         "models/job"
 end
 
 require File.expand_path("../../../app/access/base_access.rb", __FILE__)

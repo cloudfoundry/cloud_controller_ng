@@ -131,7 +131,7 @@ module VCAP::CloudController
       elsif errors.on(:name) && errors.on(:name).include?(:unique)
         Errors::ServiceBrokerNameTaken.new(broker.name)
       elsif errors.on(:catalog) && errors.on(:catalog).include?(:malformed)
-        Errors::ServiceBrokerCatalogMalformed.new
+        Errors::ServiceBrokerResponseMalformed.new
       else
         Errors::ServiceBrokerInvalid.new(errors.full_messages)
       end

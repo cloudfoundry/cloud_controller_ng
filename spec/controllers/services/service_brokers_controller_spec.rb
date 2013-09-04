@@ -102,7 +102,7 @@ module VCAP::CloudController
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
-            last_response.status.should == 400
+            last_response.status.should == 500
             decoded_response.fetch('code').should == 270007
             decoded_response.fetch('description').should =~ /The Service Broker API authentication failed/
           end
@@ -114,7 +114,7 @@ module VCAP::CloudController
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
-            last_response.status.should == 400
+            last_response.status.should == 500
             decoded_response.fetch('code').should == 270004
             decoded_response.fetch('description').should =~ /The Service Broker API could not be reached/
           end
@@ -126,7 +126,7 @@ module VCAP::CloudController
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
-            last_response.status.should == 400
+            last_response.status.should == 500
             decoded_response.fetch('code').should == 270005
             decoded_response.fetch('description').should =~ /The Service Broker API timed out/
           end
@@ -138,9 +138,9 @@ module VCAP::CloudController
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
-            last_response.status.should == 400
+            last_response.status.should == 500
             decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The Service Broker's catalog endpoint did not return valid json/
+            decoded_response.fetch('description').should =~ /The Service Broker did not return valid json/
           end
         end
 
@@ -364,7 +364,7 @@ module VCAP::CloudController
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
 
-            last_response.status.should == 400
+            last_response.status.should == 500
             decoded_response.fetch('code').should == 270007
             decoded_response.fetch('description').should =~ /The Service Broker API authentication failed/
           end
@@ -376,7 +376,7 @@ module VCAP::CloudController
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
 
-            last_response.status.should == 400
+            last_response.status.should == 500
             decoded_response.fetch('code').should == 270004
             decoded_response.fetch('description').should =~ /The Service Broker API could not be reached/
           end
@@ -388,7 +388,7 @@ module VCAP::CloudController
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
 
-            last_response.status.should == 400
+            last_response.status.should == 500
             decoded_response.fetch('code').should == 270005
             decoded_response.fetch('description').should =~ /The Service Broker API timed out/
           end
@@ -400,9 +400,9 @@ module VCAP::CloudController
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
 
-            last_response.status.should == 400
+            last_response.status.should == 500
             decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The Service Broker's catalog endpoint did not return valid json/
+            decoded_response.fetch('description').should =~ /The Service Broker did not return valid json/
           end
         end
 

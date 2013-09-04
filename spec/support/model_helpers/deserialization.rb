@@ -26,7 +26,7 @@ module ModelHelpers
       end
 
       it "should succeed" do
-        obj = described_class.create_from_json(json_data)
+        obj = described_class.new_from_hash(Yajl::Parser.parse(json_data))
         obj.should be_valid
       end
     end

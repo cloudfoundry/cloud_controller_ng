@@ -36,10 +36,10 @@ module VCAP::CloudController
         u.path = "/gateway/v2/configurations/#{service_id}/snapshots"
 
         response = client.public_send(method, u,
-                                      :header => { VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token,
-                                                   "Content-Type" => "application/json"
-                                                },
-                                      :body   => payload)
+          :header => { VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token,
+            "Content-Type" => "application/json"
+          },
+          :body   => payload)
         if response.ok?
           response.body
         else
@@ -61,15 +61,13 @@ module VCAP::CloudController
 
     many_to_one :service_plan
 
-    attr_reader :provisioned_on_gateway_for_plan
-
     default_order_by  :id
 
     export_attributes :name, :credentials, :service_plan_guid,
-                      :space_guid, :gateway_data, :dashboard_url, :type
+      :space_guid, :gateway_data, :dashboard_url, :type
 
     import_attributes :name, :service_plan_guid,
-                      :space_guid, :gateway_data
+      :space_guid, :gateway_data
 
     strip_attributes  :name
 
@@ -77,11 +75,6 @@ module VCAP::CloudController
       super
       validates_presence :service_plan
       check_quota
-    end
-
-    def before_create
-      super
-      provision_on_gateway
     end
 
     def after_create
@@ -93,16 +86,6 @@ module VCAP::CloudController
       super
       deprovision_on_gateway
       ServiceDeleteEvent.create_from_service_instance(self)
-    end
-
-    def after_commit
-      @provisioned_on_gateway_for_plan = nil
-      super
-    end
-
-    def after_rollback
-      deprovision_on_gateway if @provisioned_on_gateway_for_plan
-      super
     end
 
     def as_summary_json
@@ -155,10 +138,6 @@ module VCAP::CloudController
 
     def service_gateway_client(plan = service_plan)
       @client ||= begin
-        # This should only happen during unit testing if we are saving without
-        # validations to test db constraints
-        return unless plan
-
         raise InvalidServiceBinding.new("no service_auth_token") unless plan.service.service_auth_token
 
         self.class.gateway_client_class.new(
@@ -174,45 +153,8 @@ module VCAP::CloudController
       service_plan.service
     end
 
-    def provision_on_gateway
-      logger.debug "provisioning service for instance #{guid}"
-
-      gw_attrs = service_gateway_client.provision(
-        # TODO: we shouldn't still be using this compound label
-        :label => "#{service.label}-#{service.version}",
-        :name  => name,
-        :email => VCAP::CloudController::SecurityContext.current_user_email,
-        :plan  => service_plan.name,
-        :plan_option => {}, # TODO: remove this
-        :version => service.version,
-        :provider => service.provider,
-        :space_guid => space.guid,
-        :organization_guid => space.organization_guid,
-        :unique_id => service_plan.unique_id,
-      )
-
-      logger.debug "provision response for instance #{guid} #{gw_attrs.inspect}"
-
-      self.gateway_name = gw_attrs.service_id
-      self.gateway_data = gw_attrs.configuration
-      self.credentials  = gw_attrs.credentials
-      self.dashboard_url= gw_attrs.dashboard_url
-
-      @provisioned_on_gateway_for_plan = service_plan
-
-    rescue VCAP::Services::Api::ServiceGatewayClient::ErrorResponse => e
-      if e.error.code == 33106
-        raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
-      else
-        raise
-      end
-    end
-
     def deprovision_on_gateway
-      plan = @provisioned_on_gateway_for_plan || service_plan
-      return unless service_gateway_client(plan) # TODO: see service_gateway_client
-      @provisioned_on_gateway_for_plan = nil
-      service_gateway_client(plan).unprovision(:service_id => gateway_name)
+      service_gateway_client.unprovision(:service_id => gateway_name)
     rescue => e
       logger.error "deprovision failed #{e}"
     end

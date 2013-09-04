@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :service_plan, :space],
-      :db_required_attributes => [:name],
+      :db_required_attributes => [:name, :credentials],
       :unique_attributes => [ [:space, :name] ],
       :custom_attributes_for_uniqueness_tests => ->{ {service_plan: ServicePlan.make} },
       :stripped_string_attributes => :name,
@@ -39,32 +39,12 @@ module VCAP::CloudController
 
     describe "#create" do
       it "saves with is_gateway_service true" do
-        instance = described_class.create(name: 'awesome-service', space: Space.make, service_plan: ServicePlan.make)
+        instance = described_class.make
         instance.refresh.is_gateway_service.should == true
       end
     end
 
     it_behaves_like "a model with an encrypted attribute" do
-      def new_model
-        ManagedServiceInstance.new.tap do |instance|
-          instance.set(
-            :name => Sham.name,
-            :space => Space.make,
-            :service_plan => ServicePlan.make
-          )
-          instance.stub(:service_gateway_client).and_return(
-            double("Service Gateway Client",
-                   :provision => VCAP::Services::Api::GatewayHandleResponse.new(
-                     :service_id => "gwname_binding",
-                     :configuration => "abc",
-                     :credentials => value_to_encrypt
-                   )
-            )
-          )
-          instance.save
-        end
-      end
-
       let(:encrypted_attr) { :credentials }
     end
 
@@ -202,66 +182,6 @@ module VCAP::CloudController
           expect {
             VCAP::CloudController::ManagedServiceInstance.new.service_gateway_client(plan)
           }.to raise_error(VCAP::CloudController::ManagedServiceInstance::InvalidServiceBinding, /no service_auth_token/i)
-        end
-      end
-    end
-
-    describe "#provision_on_gateway" do
-      context "when a service_gateway_client exists" do
-        it 'provisions the service_gateway_client' do
-          provision_hash = nil
-          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.should_receive(:provision) do |h|
-            provision_hash = h
-            VCAP::Services::Api::GatewayHandleResponse.new(
-              :service_id => '',
-              :configuration => '',
-              :credentials => '',
-              :dashboard_url => 'http://dashboard.io'
-            )
-          end
-          service_instance
-
-          expect(provision_hash).to eq(
-                                      :label => "#{service_instance.service_plan.service.label}-#{service_instance.service_plan.service.version}",
-                                      :name => service_instance.name,
-                                      :email => email,
-                                      :plan => service_instance.service_plan.name,
-                                      :plan_option => {}, # TODO: remove this
-                                      :provider => service_instance.service_plan.service.provider,
-                                      :version => service_instance.service_plan.service.version,
-                                      :unique_id => service_instance.service_plan.unique_id,
-                                      :space_guid => service_instance.space.guid,
-                                      :organization_guid => service_instance.space.organization_guid
-                                    )
-        end
-
-        it 'fills in the service details' do
-          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.stub(:provision) do |_|
-            VCAP::Services::Api::GatewayHandleResponse.new(
-              :service_id => 'service_id',
-              :configuration => 'configuration',
-              :credentials => 'credentials',
-              :dashboard_url => 'http://dashboard.io'
-            )
-          end
-          service_instance
-          service_instance.gateway_name.should == 'service_id'
-          service_instance.gateway_data.should == 'configuration'
-          service_instance.credentials.should == 'credentials'
-          service_instance.dashboard_url.should == 'http://dashboard.io'
-        end
-
-        it 'translates duplicate service errors' do
-          VCAP::Services::Api::ServiceGatewayClientFake.any_instance.stub(:provision).and_raise(
-            VCAP::Services::Api::ServiceGatewayClient::ErrorResponse.new(
-              500,
-              VCAP::Services::Api::ServiceErrorResponse.new(
-                code: 33106,
-                description: "AppDirect does not allow multiple instances of edition-based services in a space. AppDirect response: {}"
-              )
-            )
-          )
-          expect { service_instance }.to raise_error(Errors::ServiceInstanceDuplicateNotAllowed)
         end
       end
     end
@@ -423,18 +343,6 @@ module VCAP::CloudController
         expect {
           service_instance.add_service_binding(service_binding)
         }.to raise_error ServiceInstance::InvalidServiceBinding
-      end
-    end
-
-    describe "#create_binding" do
-      let(:app) { VCAP::CloudController::App.make }
-      let(:instance) { described_class.make(space: app.space) }
-      let(:binding_options) { Sham.binding_options }
-
-      it 'creates a service binding' do
-        new_binding = instance.create_binding(app.guid, binding_options)
-        new_binding.app_id.should == app.id
-        new_binding.binding_options.should == binding_options
       end
     end
 

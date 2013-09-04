@@ -258,7 +258,7 @@ module VCAP::CloudController
           it 'should raise an invalid response error' do
             expect {
               broker.load_catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerCatalogMalformed)
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerResponseMalformed)
           end
         end
 
@@ -270,7 +270,7 @@ module VCAP::CloudController
           it 'should raise an invalid response error' do
             expect {
               broker.load_catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerCatalogMalformed)
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerResponseMalformed)
           end
         end
 
@@ -282,7 +282,7 @@ module VCAP::CloudController
           it 'should raise an invalid response error' do
             expect {
               broker.load_catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerCatalogMalformed)
+            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerResponseMalformed)
           end
         end
       end

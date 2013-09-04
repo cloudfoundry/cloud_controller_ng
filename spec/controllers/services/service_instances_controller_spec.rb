@@ -6,7 +6,12 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/service_instances", model: ManagedServiceInstance
     include_examples "reading a valid object", path: "/v2/service_instances", model: ManagedServiceInstance, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/service_instances"
-    include_examples "creating and updating", path: "/v2/service_instances", model: ManagedServiceInstance, required_attributes: %w(name space_guid service_plan_guid), unique_attributes: %w(space_guid name)
+    include_examples "creating and updating",
+      path: "/v2/service_instances",
+      model: ManagedServiceInstance,
+      required_attributes: %w(name space_guid service_plan_guid),
+      unique_attributes: %w(space_guid name),
+      extra_attributes: { credentials: -> { Sham.service_credentials } }
     include_examples "deleting a valid object", path: "/v2/service_instances", model: ManagedServiceInstance,
                      one_to_many_collection_ids: {
                        :service_bindings => lambda { |service_instance|
@@ -20,6 +25,13 @@ module VCAP::CloudController
                      },
                      many_to_one_collection_ids: {},
                      many_to_many_collection_ids: {}
+
+    before do
+      Steno.init(Steno::Config.new(
+        :default_log_level => "debug2",
+        :sinks => [Steno::Sink::IO.for_file("/tmp/cloud_controller_test.log")]
+      ))
+    end
 
     describe "Permissions" do
       include_context "permissions"
@@ -71,6 +83,21 @@ module VCAP::CloudController
                            :name => 'managed service instance',
                            :path => "/v2/service_instances",
                            :enumerate => 1
+
+          it 'prevents a developer from creating a service instance in an unauthorized space' do
+            plan = ServicePlan.make
+
+            req = Yajl::Encoder.encode(
+              :name => 'foo',
+              :space_guid => @space_b.guid,
+              :service_plan_guid => plan.guid
+            )
+
+            post "/v2/service_instances", req, json_headers(headers_for(member_a))
+
+            last_response.status.should == 403
+            Yajl::Parser.parse(last_response.body)['description'].should == VCAP::CloudController::Errors::NotAuthorized.new.message
+          end
         end
 
         describe "private plans" do
@@ -149,10 +176,11 @@ module VCAP::CloudController
     end
 
     describe 'POST', '/v2/service_instance' do
+      let(:space) { Space.make }
+      let(:plan) { ServicePlan.make }
+      let(:developer) { make_developer_for_space(space) }
+
       context 'creating a service instance with a name over 50 characters' do
-        let(:space) { Space.make }
-        let(:plan) { ServicePlan.make }
-        let(:developer) { make_developer_for_space(space) }
         let(:very_long_name) { 's' * 51 }
 
         it "returns an error if the service instance name is over 50 characters" do
@@ -165,12 +193,61 @@ module VCAP::CloudController
           decoded_response["description"].should =~ /service instance name.*limited to 50 characters/
         end
       end
+
+      context 'with a provisioner' do
+        let(:provisioner) { double('provisioner') }
+        let(:provision_response) do
+          double(
+            gateway_name: 'the gateway name',
+            gateway_data: 'the gateway data',
+            credentials: 'the credentials',
+            dashboard_url: 'the dashboard_url',
+          )
+        end
+
+        before do
+          ServiceProvisioner.stub(:new).and_return(provisioner)
+          provisioner.stub(:provision).and_return(provision_response)
+        end
+
+        it 'provisions a service instance' do
+          req = Yajl::Encoder.encode(
+            :name => 'foo',
+            :space_guid => space.guid,
+            :service_plan_guid => plan.guid
+          )
+
+          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
+          expect(last_response.status).to eq(201)
+
+          instance = ServiceInstance.last
+
+          expect(instance.gateway_name).to eq(provision_response.gateway_name)
+          expect(instance.gateway_data).to eq(provision_response.gateway_data)
+          expect(instance.credentials).to eq(provision_response.credentials)
+          expect(instance.dashboard_url).to eq(provision_response.dashboard_url)
+        end
+
+        it 'deprovisions the service instance when an exception is raised' do
+          req = Yajl::Encoder.encode(
+            :name => 'foo',
+            :space_guid => space.guid,
+            :service_plan_guid => plan.guid
+          )
+
+          ManagedServiceInstance.any_instance.stub(:save).and_raise
+          ManagedServiceInstance.any_instance.should_receive(:deprovision_on_gateway)
+
+          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
+          expect(last_response.status).to eq(500)
+        end
+      end
     end
 
     describe 'GET', '/v2/service_instances' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:service_instance) {ManagedServiceInstance.make}
+      let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
 
       it "shows the dashboard_url if there is" do
         service_instance.update(dashboard_url: 'http://dashboard.io')
@@ -184,6 +261,8 @@ module VCAP::CloudController
         it 'allows filtering by gateway_name' do
           get "v2/service_instances?q=gateway_name:#{service_instance.gateway_name}", {}, admin_headers
           last_response.status.should == 200
+          first_found_instance.should be_present
+          first_found_instance.fetch('metadata').should be_present
           first_found_instance.fetch('metadata').fetch('guid').should == service_instance.guid
         end
 

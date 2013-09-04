@@ -109,5 +109,17 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "#v2?" do
+      it "returns true when the service is associated with a broker" do
+        service = Service.make(service_broker: ServiceBroker.make)
+        service.should be_v2
+      end
+
+      it "returns false when the service is not associated with a broker" do
+        service = Service.make(service_broker: nil)
+        service.should_not be_v2
+      end
+    end
   end
 end

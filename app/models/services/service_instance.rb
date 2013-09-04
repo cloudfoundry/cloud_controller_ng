@@ -54,10 +54,6 @@ module VCAP::CloudController
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt
     end
 
-    def create_binding(app_guid, binding_options)
-      add_service_binding(app_guid: app_guid, binding_options: binding_options)
-    end
-
     # Make sure all derived classes use the base access class
     def self.source_class
       ServiceInstance

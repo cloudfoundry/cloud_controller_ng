@@ -433,7 +433,7 @@ module VCAP::CloudController
               VCAP::Services::Api::HandleUpdateRequest.new(
                 :service_id => "foo1",
                 :configuration => [],
-                :credentials   => []
+                :credentials   => { foo: 'bar' }
             ).encode, json_headers(@auth_header)
             last_response.status.should == 200
           end
@@ -481,7 +481,7 @@ module VCAP::CloudController
               VCAP::Services::Api::HandleUpdateRequest.new(
                 :service_id => "foo2",
                 :configuration => [],
-                :credentials   => []
+                :credentials   => { foo: 'bar' }
             ).encode, json_headers(@auth_header)
             last_response.status.should == 200
           end
