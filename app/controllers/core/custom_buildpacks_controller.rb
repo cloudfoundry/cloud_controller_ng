@@ -21,7 +21,7 @@ module VCAP::CloudController
     def create
       # multipart request so the body does not contain JSON
       @request_attrs = {
-        name: params['name'], 
+        name: params['name'],
         key: "#{params['name']}#{compute_file_extension}",
         priority: params.fetch('priority', self.class.attributes[:priority].default)
       }
@@ -58,7 +58,7 @@ module VCAP::CloudController
       end
 
       logger.debug "uploaded file: #{file_struct}"
-      logger.debug "blobstore file: #{buildpack_blobstore.files.head(params["custom_buildpacks_name"])}"
+      logger.debug "blobstore file: #{buildpack_blobstore.files.head(request_attrs[:key])}"
       logger.debug "db record: #{model.find(key: params["custom_buildpacks_name"])}"
     end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
       file = buildpack_blobstore.files.head(obj.key)
       file.destroy if file
     end
-    
+
     protected
 
     attr_reader :buildpack_blobstore, :upload_handler
@@ -76,10 +76,16 @@ module VCAP::CloudController
       @upload_handler = dependencies[:upload_handler]
     end
 
-    def get_buildpack_bits(name)
-      buildpack = model.find(name: name)
-      if config[:nginx][:use_nginx]
-        return [200, { "X-Accel-Redirect" => "#{bits_uri(buildpack.key)}" }, ""]
+    def get_buildpack_bits(guid)
+      buildpack = find_guid_and_validate_access(:read_bits, guid)
+      if @buildpack_blobstore.local?
+        f = buildpack_blobstore.files.head(buildpack.key)
+        raise self.class.not_found_exception.new(guid) unless f
+        # hack to get the local path to the file
+        return send_file f.send(:path)
+      else
+        bits_uri = "#{bits_uri(buildpack.key)}"
+        return [HTTP::FOUND, {"Location" => bits_uri}, nil]
       end
     end
 
