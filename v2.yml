@@ -426,12 +426,12 @@
 270001:
   name: ServiceBrokerInvalid
   http_code: 400
-  message: "Service Broker is invalid: %s"
+  message: "Service broker is invalid: %s"
 
 270002:
   name: ServiceBrokerNameTaken
   http_code: 400
-  message: "The service broker name is taken: %s"
+  message: "The service broker name is taken"
 
 270003:
   name: ServiceBrokerUrlTaken
@@ -441,28 +441,28 @@
 270004:
   name: ServiceBrokerApiUnreachable
   http_code: 500
-  message: "The Service Broker API could not be reached: %s"
+  message: "The service broker API could not be reached: %s"
 
 270005:
   name: ServiceBrokerApiTimeout
   http_code: 500
-  message: "The Service Broker API timed out: %s"
+  message: "The service broker API timed out: %s"
 
 270006:
   name: ServiceBrokerResponseMalformed
   http_code: 500
-  message: "The Service Broker did not return valid json"
+  message: "The service broker did not return valid json"
 
 270007:
   name: ServiceBrokerApiAuthenticationFailed
   http_code: 500
-  message: "The Service Broker API authentication failed: %s"
+  message: "Authentication failed for the service broker API. Double-check that the token is correct: %s"
 
 280001:
   name: TaskNotFound
   http_code: 404
   message: "The task could not be found: %s"
-  
+
 290001:
   name: BuildpackNameTaken
   http_code: 400
