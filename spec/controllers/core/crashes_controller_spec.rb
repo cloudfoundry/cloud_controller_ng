@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::CrashesController, type: :controller do
     describe "GET /v2/apps/:id/crashes" do
       before :each do
-        @app = Models::App.make
+        @app = App.make
         @user =  make_user_for_space(@app.space)
         @developer = make_developer_for_space(@app.space)
       end

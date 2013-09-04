@@ -1,13 +1,13 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class Domain < Sequel::Model
     class InvalidSpaceRelation < InvalidRelation; end
     class InvalidOrganizationRelation < InvalidRelation; end
 
     DOMAIN_REGEX = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}$/ix.freeze
 
-    many_to_one       :owning_organization, :class => "VCAP::CloudController::Models::Organization"
+    many_to_one       :owning_organization, :class => "VCAP::CloudController::Organization"
     many_to_many      :organizations, :before_add => :validate_organization
     many_to_many      :spaces, :before_add => :validate_space
     one_to_many       :routes

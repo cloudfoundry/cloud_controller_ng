@@ -67,7 +67,7 @@ module VCAP::CloudController
 
       app.db.transaction do
         app.soft_delete
-        Models::Event.record_app_delete(app, SecurityContext.current_user)
+        Event.record_app_delete(app, SecurityContext.current_user)
       end
 
 
@@ -89,7 +89,7 @@ module VCAP::CloudController
       model.db.transaction do
         obj.lock!
         obj.update_from_hash(request_attrs)
-        Models::Event.record_app_update(obj, SecurityContext.current_user) if obj.previous_changes
+        Event.record_app_update(obj, SecurityContext.current_user) if obj.previous_changes
       end
 
       after_update(obj)
@@ -111,7 +111,7 @@ module VCAP::CloudController
       model.db.transaction do
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user, roles)
-        Models::Event.record_app_create(obj, SecurityContext.current_user)
+        Event.record_app_create(obj, SecurityContext.current_user)
       end
 
       after_create(obj)

@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class ServiceDeleteEvent < BillingEvent
     export_attributes(
       :timestamp,

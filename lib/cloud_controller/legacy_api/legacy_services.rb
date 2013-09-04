@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       logger.debug("legacy service create #{legacy_attrs}")
 
-      svc = Models::Service.find({:label => legacy_attrs["vendor"],
+      svc = Service.find({:label => legacy_attrs["vendor"],
                                   :version => legacy_attrs["version"]})
       unless svc
         msg = "#{legacy_attrs["vendor"]}-#{legacy_attrs["version"]}"
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
     def enumerate_offerings
       resp = {}
-      Models::Service.each do |svc|
+      Service.each do |svc|
         svc_type = LegacyService.synthesize_service_type(svc)
         resp[svc_type] ||= {}
         resp[svc_type][svc.label] ||= {}
@@ -96,7 +96,7 @@ module VCAP::CloudController
     end
 
     def service_instance_from_name(name)
-      visible_instances = Models::ManagedServiceInstance.user_visible(SecurityContext.current_user, SecurityContext.admin?)
+      visible_instances = ManagedServiceInstance.user_visible(SecurityContext.current_user, SecurityContext.admin?)
       svc = visible_instances[:name => name, :space => default_space]
       raise ServiceInstanceNotFound.new(name) unless svc
       svc

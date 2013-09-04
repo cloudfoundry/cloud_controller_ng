@@ -1,6 +1,6 @@
 require 'vcap/request'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class ManagedServiceInstance < ServiceInstance
     class MissingServiceAuthToken < StandardError; end
     class ServiceGatewayError < StandardError; end

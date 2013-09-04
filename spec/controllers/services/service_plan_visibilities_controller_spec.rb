@@ -4,28 +4,28 @@ module VCAP::CloudController
   describe ServicePlanVisibilitiesController, :services, type: :controller do
     service_plan_visibility_path = "/v2/service_plan_visibilities"
     include_examples "creating", path: service_plan_visibility_path,
-                     model: Models::ServicePlanVisibility,
+                     model: ServicePlanVisibility,
                      required_attributes: %w(organization_guid service_plan_guid),
                      unique_attributes: %w(organization_guid service_plan_guid)
 
     include_examples "enumerating objects", path: service_plan_visibility_path,
-                     model: Models::ServicePlanVisibility
+                     model: ServicePlanVisibility
 
     include_examples "deleting a valid object", path: service_plan_visibility_path,
-                     model: Models::ServicePlanVisibility
+                     model: ServicePlanVisibility
 
 
     describe "Permissions" do
       include_context "permissions"
 
       before do
-        @obj_a = Models::ServicePlanVisibility.make
-        @obj_b = Models::ServicePlanVisibility.make
+        @obj_a = ServicePlanVisibility.make
+        @obj_b = ServicePlanVisibility.make
       end
 
       let(:creation_req_for_a) do
         Yajl::Encoder.encode(
-          :service_plan_guid => Models::ServicePlan.make.guid,
+          :service_plan_guid => ServicePlan.make.guid,
           :organization_guid => @org_a.guid,
         )
       end

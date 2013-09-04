@@ -1,4 +1,4 @@
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class BaseAccess
     include Allowy::AccessControl
 

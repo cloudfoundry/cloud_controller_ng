@@ -19,9 +19,9 @@ require "sinatra/vcap"
 require "cloud_controller/security_context"
 require "active_support/core_ext/hash"
 require "active_support/json/encoding"
+require "cloud_controller/models"
 
 module VCAP::CloudController
-  autoload :Models, "cloud_controller/models"
   include VCAP::RestAPI
 
   Errors = VCAP::Errors
@@ -52,8 +52,8 @@ module VCAP::CloudController
       end
 
       if uaa_id
-        user = Models::User.find(:guid => uaa_id.to_s)
-        user ||= Models::User.create(guid: token_information['user_id'], admin: current_user_admin?(token_information), active: true)
+        user = User.find(:guid => uaa_id.to_s)
+        user ||= User.create(guid: token_information['user_id'], admin: current_user_admin?(token_information), active: true)
       end
 
       VCAP::CloudController::SecurityContext.set(user, token_information)
@@ -96,7 +96,7 @@ module VCAP::CloudController
     end
 
     def current_user_admin?(token_information)
-      if Models::User.count.zero?
+      if User.count.zero?
         admin_email = config[:bootstrap_admin_email]
         admin_email && (admin_email == token_information['email'])
       else

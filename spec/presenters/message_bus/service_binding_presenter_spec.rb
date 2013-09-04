@@ -3,16 +3,16 @@ require 'presenters/message_bus/service_binding_presenter'
 
 describe ServiceBindingPresenter do
   context 'for a managed service instance' do
-    let(:service) { VCAP::CloudController::Models::Service.make(label: Sham.label) }
-    let(:service_plan) { VCAP::CloudController::Models::ServicePlan.make(name: Sham.name, service: service) }
+    let(:service) { VCAP::CloudController::Service.make(label: Sham.label) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(name: Sham.name, service: service) }
     let(:service_instance) do
-      VCAP::CloudController::Models::ManagedServiceInstance.make(
+      VCAP::CloudController::ManagedServiceInstance.make(
         name: Sham.name,
         service_plan: service_plan
       )
     end
     let(:service_binding) do
-      VCAP::CloudController::Models::ServiceBinding.make(
+      VCAP::CloudController::ServiceBinding.make(
         service_instance: service_instance,
         binding_options: binding_options
       )
@@ -59,11 +59,11 @@ describe ServiceBindingPresenter do
 
   context 'for a provided service instance' do
     let(:service_instance) do
-      VCAP::CloudController::Models::UserProvidedServiceInstance.make
+      VCAP::CloudController::UserProvidedServiceInstance.make
     end
 
     let(:service_binding) do
-      VCAP::CloudController::Models::ServiceBinding.make(service_instance: service_instance)
+      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
     end
 
     describe "#to_hash" do

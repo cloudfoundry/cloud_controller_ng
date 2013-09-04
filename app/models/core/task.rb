@@ -1,6 +1,6 @@
 require "securerandom"
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class Task < Sequel::Model
     many_to_one :app
 

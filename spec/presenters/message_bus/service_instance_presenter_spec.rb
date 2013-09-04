@@ -8,14 +8,14 @@ describe ServiceInstancePresenter do
 
     context "for a managed service instance" do
       let(:service_instance) do
-        VCAP::CloudController::Models::ManagedServiceInstance.make(service_plan: service_plan)
+        VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan)
       end
 
       let(:service_plan) do
-        VCAP::CloudController::Models::ServicePlan.make(service: service)
+        VCAP::CloudController::ServicePlan.make(service: service)
       end
 
-      let(:service) { VCAP::CloudController::Models::Service.make(tags: ["relational", "mysql"]) }
+      let(:service) { VCAP::CloudController::Service.make(tags: ["relational", "mysql"]) }
 
       specify do
         subject.keys.should include(:label)
@@ -39,7 +39,7 @@ describe ServiceInstancePresenter do
     end
 
     context "for a provided service instance" do
-      let(:service_instance) { VCAP::CloudController::Models::UserProvidedServiceInstance.make }
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
       specify do
         subject.keys.should == [:label, :name, :tags]

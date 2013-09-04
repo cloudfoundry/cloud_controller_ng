@@ -102,7 +102,7 @@ module VCAP::CloudController
         file.destroy if file
       rescue Errno::ENOTEMPTY => e
         logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
-        true  
+        true
       rescue StandardError => e
         # NotFound errors do not share a common superclass so we have to determine it by name
         # A github issue for fog will be created.
@@ -112,7 +112,7 @@ module VCAP::CloudController
         else
           # None-NotFound errors will be raised again
           raise e
-        end      
+        end
       end
 
       def droplet_exists?(app)
@@ -252,7 +252,7 @@ module VCAP::CloudController
     def download_app(guid)
       raise InvalidRequest unless AppPackage.blob_store.local?
 
-      app = Models::App.find(:guid => guid)
+      app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
       package_path = AppPackage.package_local_path(guid)
@@ -274,21 +274,21 @@ module VCAP::CloudController
     end
 
     def upload_droplet(guid)
-      app = Models::App.find(:guid => guid)
+      app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
       upload(app, :droplet)
     end
 
     def upload_buildpack_cache(guid)
-      app = Models::App.find(:guid => guid)
+      app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
       upload(app, :buildpack_cache)
     end
 
     def download_droplet(guid)
-      app = Models::App.find(:guid => guid)
+      app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
       droplet_path = StagingsController.droplet_local_path(app)
@@ -297,7 +297,7 @@ module VCAP::CloudController
     end
 
     def download_buildpack_cache(guid)
-      app = Models::App.find(:guid => guid)
+      app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
       buildpack_cache_path = StagingsController.buildpack_cache_local_path(app)

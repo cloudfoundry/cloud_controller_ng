@@ -4,7 +4,7 @@ require "cloud_controller/dependency_locator"
 
 class AppBitsPackerJob < Struct.new(:app_guid, :uploaded_compressed_path, :fingerprints)
   def perform
-    app = VCAP::CloudController::Models::App.find(guid: app_guid)
+    app = VCAP::CloudController::App.find(guid: app_guid)
     package_blob_store = CloudController::DependencyLocator.instance.package_blob_store
     global_app_bits_cache = CloudController::DependencyLocator.instance.global_app_bits_cache
     max_droplet_size = VCAP::CloudController::Config.config[:packages][:max_droplet_size] || 512 * 1024 * 1024

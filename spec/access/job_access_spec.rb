@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe JobAccess, type: :access do
     subject(:access) { JobAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::Models::User.make }
+    let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:object) { VCAP::CloudController::Models::Job.new }
+    let(:object) { VCAP::CloudController::Job.new }
 
     it_should_behave_like :admin_full_access
 

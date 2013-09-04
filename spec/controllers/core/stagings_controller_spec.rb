@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:cc_port) { 5678 }
     let(:staging_user) { "user" }
     let(:staging_password) { "password" }
-    let(:app_obj) { Models::App.make :droplet_hash => "some-droplet-hash" }
+    let(:app_obj) { App.make :droplet_hash => "some-droplet-hash" }
     let(:workspace) { Dir.mktmpdir }
     let(:original_staging_config) do
       {
@@ -238,7 +238,7 @@ module VCAP::CloudController
     end
 
     describe "GET /staging/apps/:guid" do
-      let(:app_obj_without_pkg) { Models::App.make }
+      let(:app_obj_without_pkg) { App.make }
       let(:app_package_path) { AppPackage.package_path(app_obj.guid) }
 
       def self.it_downloads_staged_app

@@ -1,4 +1,4 @@
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class ServiceBroker < Sequel::Model
     one_to_many :services
 

@@ -1,17 +1,17 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe ServiceBindingAccess, type: :access do
     subject(:access) { ServiceBindingAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::Models::User.make }
+    let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:service) { VCAP::CloudController::Models::Service.make }
-    let(:org) { VCAP::CloudController::Models::Organization.make }
-    let(:space) { VCAP::CloudController::Models::Space.make(:organization => org) }
-    let(:app) { VCAP::CloudController::Models::App.make(:space => space) }
-    let(:service_instance) { VCAP::CloudController::Models::ManagedServiceInstance.make(:space => space) }
+    let(:service) { VCAP::CloudController::Service.make }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(:organization => org) }
+    let(:app) { VCAP::CloudController::App.make(:space => space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:space => space) }
 
-    let(:object) { VCAP::CloudController::Models::ServiceBinding.make(:app => app, :service_instance => service_instance) }
+    let(:object) { VCAP::CloudController::ServiceBinding.make(:app => app, :service_instance => service_instance) }
 
     it_should_behave_like :admin_full_access
 

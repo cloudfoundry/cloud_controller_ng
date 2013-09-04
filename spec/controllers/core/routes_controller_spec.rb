@@ -3,21 +3,21 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::RoutesController, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/routes"
-    include_examples "enumerating objects", path: "/v2/routes", model: Models::Route
-    include_examples "reading a valid object", path: "/v2/routes", model: Models::Route, basic_attributes: %w(host domain_guid space_guid)
+    include_examples "enumerating objects", path: "/v2/routes", model: Route
+    include_examples "reading a valid object", path: "/v2/routes", model: Route, basic_attributes: %w(host domain_guid space_guid)
     include_examples "operations on an invalid object", path: "/v2/routes"
-    include_examples "deleting a valid object", path: "/v2/routes", model: Models::Route, one_to_many_collection_ids: {}, one_to_many_collection_ids_without_url: {}
-    include_examples "creating and updating", path: "/v2/routes", model: Models::Route,
+    include_examples "deleting a valid object", path: "/v2/routes", model: Route, one_to_many_collection_ids: {}, one_to_many_collection_ids_without_url: {}
+    include_examples "creating and updating", path: "/v2/routes", model: Route,
                      required_attributes: %w(domain_guid space_guid),
                      unique_attributes: %w(host domain_guid),
                      extra_attributes: {host: -> { Sham.host }},
                      create_attribute: lambda { |name|
-                       @space ||= Models::Space.make
+                       @space ||= Space.make
                        case name.to_sym
                          when :space_guid
                            @space.guid
                          when :domain_guid
-                           domain = Models::Domain.make(wildcard: true, owning_organization: @space.organization,)
+                           domain = Domain.make(wildcard: true, owning_organization: @space.organization,)
                            @space.add_domain(domain)
                            domain.guid
                          when :host
@@ -28,8 +28,8 @@ module VCAP::CloudController
 
     context "with a wildcard domain" do
       it "should allow a nil host" do
-        domain = Models::Domain.make(:wildcard => true)
-        space = Models::Space.make(:organization => domain.owning_organization)
+        domain = Domain.make(:wildcard => true)
+        space = Space.make(:organization => domain.owning_organization)
         space.add_domain(domain)
         post "/v2/routes", Yajl::Encoder.encode(:host => nil, :domain_guid => domain.guid, :space_guid => space.guid), json_headers(admin_headers)
         last_response.status.should == 201
@@ -127,13 +127,13 @@ module VCAP::CloudController
         end
 
         before do
-          @domain_a = Models::Domain.make(:wildcard => true, :owning_organization => @org_a)
+          @domain_a = Domain.make(:wildcard => true, :owning_organization => @org_a)
           @space_a.add_domain(@domain_a)
-          @obj_a = Models::Route.make(:domain => @domain_a, :space => @space_a)
+          @obj_a = Route.make(:domain => @domain_a, :space => @space_a)
 
-          @domain_b = Models::Domain.make(:wildcard => true, :owning_organization => @org_b)
+          @domain_b = Domain.make(:wildcard => true, :owning_organization => @org_b)
           @space_b.add_domain(@domain_b)
-          @obj_b = Models::Route.make(:domain => @domain_b, :space => @space_b)
+          @obj_b = Route.make(:domain => @domain_b, :space => @space_b)
         end
 
         include_examples "route permissions"
@@ -145,7 +145,7 @@ module VCAP::CloudController
         let(:creation_req_for_a) do
           Yajl::Encoder.encode(
             :host => Sham.host,
-            :domain_guid => Models::Domain.default_serving_domain.guid,
+            :domain_guid => Domain.default_serving_domain.guid,
             :space_guid => @space_a.guid,
           )
         end
@@ -155,25 +155,25 @@ module VCAP::CloudController
         end
 
         before do
-          Models::Domain.default_serving_domain_name = "shared.com"
-          @space_a.add_domain(Models::Domain.default_serving_domain)
-          @space_b.add_domain(Models::Domain.default_serving_domain)
+          Domain.default_serving_domain_name = "shared.com"
+          @space_a.add_domain(Domain.default_serving_domain)
+          @space_b.add_domain(Domain.default_serving_domain)
 
-          @obj_a = Models::Route.make(
+          @obj_a = Route.make(
             :host => Sham.host,
-            :domain => Models::Domain.default_serving_domain,
+            :domain => Domain.default_serving_domain,
             :space => @space_a,
           )
 
-          @obj_b = Models::Route.make(
+          @obj_b = Route.make(
             :host => Sham.host,
-            :domain => Models::Domain.default_serving_domain,
+            :domain => Domain.default_serving_domain,
             :space => @space_b,
           )
         end
 
         after do
-          Models::Domain.default_serving_domain_name = nil
+          Domain.default_serving_domain_name = nil
         end
 
         include_examples "route permissions"
@@ -185,7 +185,7 @@ module VCAP::CloudController
     before :each do
       reset_database
 
-      space = Models::Space.make
+      space = Space.make
       user = make_developer_for_space(space)
       @headers_for_user = headers_for(user)
       @route = space.add_domain(
@@ -196,7 +196,7 @@ module VCAP::CloudController
         :host => "foo",
         :space => space,
       )
-      @foo_app = Models::App.make(
+      @foo_app = App.make(
         :name   => "foo",
         :space  => space,
         :state  => "STARTED",
@@ -205,7 +205,7 @@ module VCAP::CloudController
         :droplet_hash => "def",
         :package_state => "STAGED",
       )
-      @bar_app = Models::App.make(
+      @bar_app = App.make(
         :name   => "bar",
         :space  => space,
         :state  => "STARTED",

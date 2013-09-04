@@ -3,21 +3,21 @@ require "spec_helper"
 module VCAP::CloudController
   describe ServicesController, :services, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/services"
-    include_examples "enumerating objects", path: "/v2/services", model: Models::Service
-    include_examples "reading a valid object", path: "/v2/services", model: Models::Service,
+    include_examples "enumerating objects", path: "/v2/services", model: Service
+    include_examples "reading a valid object", path: "/v2/services", model: Service,
       basic_attributes: %w(label provider url description version bindable tags)
     include_examples "operations on an invalid object", path: "/v2/services"
     include_examples "creating and updating", path: "/v2/services",
-                     model: Models::Service,
+                     model: Service,
                      required_attributes: %w(label provider url description version),
                      unique_attributes: %w(label provider),
                      extra_attributes: {extra: ->{Sham.extra}, bindable: false, tags: ["relational"]}
-    include_examples "deleting a valid object", path: "/v2/services", model: Models::Service,
-      one_to_many_collection_ids: {:service_plans => lambda { |service| Models::ServicePlan.make(:service => service) }},
+    include_examples "deleting a valid object", path: "/v2/services", model: Service,
+      one_to_many_collection_ids: {:service_plans => lambda { |service| ServicePlan.make(:service => service) }},
       one_to_many_collection_ids_without_url: {}
-    include_examples "collection operations", path: "/v2/services", model: Models::Service,
+    include_examples "collection operations", path: "/v2/services", model: Service,
       one_to_many_collection_ids: {
-        service_plans: lambda { |service| Models::ServicePlan.make(service: service) }
+        service_plans: lambda { |service| ServicePlan.make(service: service) }
       },
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {}
@@ -36,10 +36,10 @@ module VCAP::CloudController
       before(:all) do
         reset_database
         5.times do
-          Models::ServicePlan.make
+          ServicePlan.make
         end
-        @obj_a = Models::ServicePlan.make.service
-        @obj_b = Models::ServicePlan.make.service
+        @obj_a = ServicePlan.make.service
+        @obj_b = ServicePlan.make.service
       end
 
       let(:creation_req_for_a) do
@@ -110,15 +110,15 @@ module VCAP::CloudController
     end
 
     describe "get /v2/services" do
-      let(:user) {VCAP::CloudController::Models::User.make  }
+      let(:user) {VCAP::CloudController::User.make  }
       let (:headers) do
         headers_for(user)
       end
 
       before(:each) do
         reset_database
-        @active = 3.times.map { Models::Service.make(:active => true).tap{|svc| Models::ServicePlan.make(:service => svc) } }
-        @inactive = 2.times.map { Models::Service.make(:active => false).tap{|svc| Models::ServicePlan.make(:service => svc) } }
+        @active = 3.times.map { Service.make(:active => true).tap{|svc| ServicePlan.make(:service => svc) } }
+        @inactive = 2.times.map { Service.make(:active => false).tap{|svc| ServicePlan.make(:service => svc) } }
       end
 
       def decoded_guids
@@ -141,7 +141,7 @@ module VCAP::CloudController
           @svc_all_private = @active.first
           @svc_all_private.service_plans.each{|plan| plan.update(:public => false) }
           @svc_one_public = @active.last
-          Models::ServicePlan.make(service: @svc_one_public, public: false)
+          ServicePlan.make(service: @svc_one_public, public: false)
         end
 
         it "should remove the offering when I cannot see any of the plans" do
@@ -195,12 +195,12 @@ module VCAP::CloudController
 
         expect {
           post '/v2/services', payload, json_headers(admin_headers)
-        }.to change(Models::Service, :count).by(1)
+        }.to change(Service, :count).by(1)
 
         last_response.status.should eq(201)
         guid = decoded_response.fetch('metadata').fetch('guid')
 
-        service = Models::Service.last
+        service = Service.last
         expect(service.guid).to eq(guid)
         expect(service.unique_id).to eq(unique_id)
         expect(service.url).to eq(url)
@@ -223,7 +223,7 @@ module VCAP::CloudController
         post "/v2/services", payload_without_bindable, json_headers(admin_headers)
         last_response.status.should eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Models::Service.first(:guid => service_guid).bindable.should be_true
+        Service.first(:guid => service_guid).bindable.should be_true
       end
 
       it 'creates the service with default tags' do
@@ -238,7 +238,7 @@ module VCAP::CloudController
         post "/v2/services", payload_without_tags, json_headers(admin_headers)
         last_response.status.should eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Models::Service.first(:guid => service_guid).tags.should == []
+        Service.first(:guid => service_guid).tags.should == []
       end
 
       it 'creates the service with specified tags' do
@@ -254,13 +254,13 @@ module VCAP::CloudController
         post "/v2/services", payload_without_tags, json_headers(admin_headers)
         last_response.status.should eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Models::Service.first(:guid => service_guid).tags.should == ["relational"]
+        Service.first(:guid => service_guid).tags.should == ["relational"]
       end
     end
 
     describe "PUT", "/v2/services/:guid" do
       it "ignores the unique_id attribute" do
-        service = Models::Service.make
+        service = Service.make
         old_unique_id = service.unique_id
         new_unique_id = old_unique_id.reverse
         payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})

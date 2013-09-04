@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::Space, type: :model do
+  describe VCAP::CloudController::Space, type: :model do
     before(:all) do
       reset_database
     end
@@ -13,21 +13,21 @@ module VCAP::CloudController
       :many_to_one => {
         :organization      => {
           :delete_ok => true,
-          :create_for => lambda { |space| Models::Organization.make }
+          :create_for => lambda { |space| Organization.make }
         }
       },
       :one_to_zero_or_more => {
         :apps              => {
           :delete_ok => true,
-          :create_for => lambda { |space| Models::App.make }
+          :create_for => lambda { |space| App.make }
         },
         :service_instances => {
           :delete_ok => true,
-          :create_for => lambda { |space| Models::ManagedServiceInstance.make }
+          :create_for => lambda { |space| ManagedServiceInstance.make }
         },
         :routes            => {
           :delete_ok => true,
-          :create_for => lambda { |space| Models::Route.make(:space => space) }
+          :create_for => lambda { |space| Route.make(:space => space) }
         },
       },
       :many_to_zero_or_more => {
@@ -39,13 +39,13 @@ module VCAP::CloudController
     }
 
     context "bad relationships" do
-      let(:space) { Models::Space.make }
+      let(:space) { Space.make }
 
       shared_examples "bad app space permission" do |perm|
         context perm do
           it "should not get associated with a #{perm.singularize} that isn't a member of the org" do
-            exception = Models::Space.const_get("Invalid#{perm.camelize}Relation")
-            wrong_org = Models::Organization.make
+            exception = Space.const_get("Invalid#{perm.camelize}Relation")
+            wrong_org = Organization.make
             user = make_user_for_org(wrong_org)
 
             expect {
@@ -61,25 +61,25 @@ module VCAP::CloudController
 
       it "should not associate an domain with a service from a different org" do
         expect {
-          domain = Models::Domain.make
+          domain = Domain.make
           space.add_domain domain
-        }.to raise_error Models::Space::InvalidDomainRelation
+        }.to raise_error Space::InvalidDomainRelation
       end
     end
 
     describe "default domains" do
       context "with the default serving domain name set" do
         before do
-          Models::Domain.default_serving_domain_name = "foo.com"
+          Domain.default_serving_domain_name = "foo.com"
         end
 
         after do
-          Models::Domain.default_serving_domain_name = nil
+          Domain.default_serving_domain_name = nil
         end
 
         it "should be associated with the default serving domain" do
-          space = Models::Space.make
-          d = Models::Domain.default_serving_domain
+          space = Space.make
+          d = Domain.default_serving_domain
           space.domains.map(&:guid) == [d.guid]
         end
       end
@@ -87,7 +87,7 @@ module VCAP::CloudController
 
     describe "data integrity" do
       it "should not make strings into integers" do
-        space = Models::Space.make
+        space = Space.make
         space.name.should be_kind_of(String)
         space.name = "1234"
         space.name.should be_kind_of(String)
@@ -98,73 +98,73 @@ module VCAP::CloudController
     end
 
     describe "#destroy" do
-      subject(:space) { Models::Space.make }
+      subject(:space) { Space.make }
 
       it "destroys all apps" do
-        app = Models::App.make(:space => space)
-        soft_deleted_app = Models::App.make(:space => space)
+        app = App.make(:space => space)
+        soft_deleted_app = App.make(:space => space)
         soft_deleted_app.soft_delete
 
         expect {
           subject.destroy
         }.to change {
-          Models::App.with_deleted.where(:id => [app.id, soft_deleted_app.id]).count
+          App.with_deleted.where(:id => [app.id, soft_deleted_app.id]).count
         }.from(2).to(0)
       end
 
       it "destroys all service instances" do
-        service_instance = Models::ManagedServiceInstance.make(:space => space)
+        service_instance = ManagedServiceInstance.make(:space => space)
 
         expect {
           subject.destroy
         }.to change {
-          Models::ManagedServiceInstance.where(:id => service_instance.id).count
+          ManagedServiceInstance.where(:id => service_instance.id).count
         }.by(-1)
       end
 
       it "destroys all routes" do
-        route = Models::Route.make(:space => space)
+        route = Route.make(:space => space)
         expect {
           subject.destroy
         }.to change {
-          Models::Route.where(:id => route.id).count
+          Route.where(:id => route.id).count
         }.by(-1)
       end
 
       it "nullifies any domains" do
-        domain = Models::Domain.make(:owning_organization => space.organization)
+        domain = Domain.make(:owning_organization => space.organization)
         space.add_domain(domain)
         space.save
         expect { subject.destroy }.to change { domain.reload.spaces.count }.by(-1)
       end
 
       it "nullifies any default_users" do
-        user = Models::User.make
+        user = User.make
         space.add_default_user(user)
         space.save
         expect { subject.destroy }.to change { user.reload.default_space }.from(space).to(nil)
       end
 
       it "destroys all events" do
-        event = Models::Event.make(:space => space)
+        event = Event.make(:space => space)
 
         expect {
           subject.destroy
         }.to change {
-          Models::Event.where(:id => [event.id]).count
+          Event.where(:id => [event.id]).count
         }.from(1).to(0)
       end
     end
 
     describe "filter deleted apps" do
-      let(:space) { Models::Space.make }
+      let(:space) { Space.make }
 
       context "when deleted apps exist in the space" do
         it "should not return the deleted app" do
-          deleted_app = Models::App.make(:space => space)
+          deleted_app = App.make(:space => space)
           deleted_app.soft_delete
 
-          non_deleted_app = Models::App.make(:space => space)
+          non_deleted_app = App.make(:space => space)
 
           space.apps.should == [non_deleted_app]
         end

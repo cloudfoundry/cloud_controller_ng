@@ -9,7 +9,7 @@ module CloudController
       @task_client = TaskClient.new(@message_bus)
 
       @app = double(:app).as_null_object
-      @task = VCAP::CloudController::Models::Task.new(guid: "some guid", app: @app, secure_token: "42")
+      @task = VCAP::CloudController::Task.new(guid: "some guid", app: @app, secure_token: "42")
     end
 
     describe "#start_task" do

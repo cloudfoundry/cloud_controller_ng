@@ -3,11 +3,11 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::SnapshotsController, type: :controller do
     let(:service_instance) do
-      service = Models::Service.make(
+      service = Service.make(
         :url => "http://horsemeat.com",
       )
-      Models::ManagedServiceInstance.make(
-        :service_plan => Models::ServicePlan.make(:service => service),
+      ManagedServiceInstance.make(
+        :service_plan => ServicePlan.make(:service => service),
       )
     end
 
@@ -41,7 +41,7 @@ module VCAP::CloudController
       end
 
       context "for a developer not in the space" do
-        let(:another_space) { Models::Space.make }
+        let(:another_space) { Space.make }
         let(:developer) { make_developer_for_space(another_space) }
         it "denies access" do
           post "/v2/snapshots", payload, json_headers(headers_for(developer))
@@ -60,7 +60,7 @@ module VCAP::CloudController
           end
 
           it "does not create a snapshot" do
-            Models::ManagedServiceInstance.any_instance.should_not_receive(:create_snapshot)
+            ManagedServiceInstance.any_instance.should_not_receive(:create_snapshot)
             post "/v2/snapshots", '{}', json_headers(headers_for(developer))
             a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
           end
@@ -70,7 +70,7 @@ module VCAP::CloudController
           let(:new_name) {nil}
 
           it "returns a 400 status code and does not create a snapshot" do
-            Models::ManagedServiceInstance.any_instance.should_not_receive(:create_snapshot)
+            ManagedServiceInstance.any_instance.should_not_receive(:create_snapshot)
             post "/v2/snapshots", payload, json_headers(headers_for(developer))
             last_response.status.should == 400
             a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
@@ -87,7 +87,7 @@ module VCAP::CloudController
         end
 
         it "invokes create_snapshot on the corresponding service instance" do
-          Models::ManagedServiceInstance.should_receive(:find).
+          ManagedServiceInstance.should_receive(:find).
             with(:guid => service_instance.guid).
             and_return(service_instance)
           service_instance.should_receive(:create_snapshot).
@@ -126,7 +126,7 @@ module VCAP::CloudController
       context "once authenticated" do
         let(:developer) {make_developer_for_space(service_instance.space)}
         before do
-          Models::ManagedServiceInstance.stub(:find).
+          ManagedServiceInstance.stub(:find).
             with(:guid => service_instance.guid).
             and_return(service_instance)
         end
@@ -173,7 +173,7 @@ module VCAP::CloudController
         end
 
         it "checks for permission to read the service" do
-          another_developer   =  make_developer_for_space(Models::Space.make)
+          another_developer   =  make_developer_for_space(Space.make)
           get snapshots_url, {} , headers_for(another_developer)
           last_response.status.should == 403
         end

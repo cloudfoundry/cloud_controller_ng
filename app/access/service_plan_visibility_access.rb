@@ -1,4 +1,4 @@
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class ServicePlanVisibilityAccess < BaseAccess
   end
 end

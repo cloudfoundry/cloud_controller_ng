@@ -14,7 +14,7 @@ describe AppBitsPackerJob do
       config_override({:directories => {:tmpdir => tmpdir}, :packages => config[:packages].merge(:max_droplet_size => max_droplet_size)})
 
       FingerprintsCollection.stub(:new) { fingerprints }
-      VCAP::CloudController::Models::App.stub(:find) { app }
+      VCAP::CloudController::App.stub(:find) { app }
       AppBitsPacker.stub(:new) { double(:packer, perform: "done") }
     end
 
@@ -22,7 +22,7 @@ describe AppBitsPackerJob do
       AppBitsPackerJob.new("app_guid", uploaded_path, [:fingerprints]) }
 
     it "finds the app from the guid" do
-      VCAP::CloudController::Models::App.should_receive(:find).with(guid: "app_guid")
+      VCAP::CloudController::App.should_receive(:find).with(guid: "app_guid")
       job.perform
     end
 

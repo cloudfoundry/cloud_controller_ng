@@ -46,7 +46,7 @@ module VCAP::CloudController
         return
       end
 
-      app = Models::App[:guid => app_id]
+      app = App[:guid => app_id]
       return unless app
       return unless app.started?
       return unless version == app.version
@@ -73,7 +73,7 @@ module VCAP::CloudController
         return
       end
 
-      app = Models::App[:guid => app_id]
+      app = App[:guid => app_id]
 
       if !app
         stop_runaway_app(app_id)
@@ -87,7 +87,7 @@ module VCAP::CloudController
     end
 
     def stop_runaway_app(app_id)
-      dea_client.stop(Models::App.new(:guid => app_id))
+      dea_client.stop(App.new(:guid => app_id))
     end
 
     def stop_instances?(app, instances, running)

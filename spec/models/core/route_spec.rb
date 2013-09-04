@@ -1,14 +1,14 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::Route, type: :model do
+  describe VCAP::CloudController::Route, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:domain, :space, :host],
       :db_required_attributes => [:domain_id, :space_id],
       :unique_attributes    => [ [:host, :domain] ],
       :custom_attributes_for_uniqueness_tests => -> do
-        space = Models::Space.make
-        domain = Models::Domain.make(
+        space = Space.make
+        domain = Domain.make(
           :owning_organization => space.organization,
           :wildcard => true
         )
@@ -16,12 +16,12 @@ module VCAP::CloudController
         { space: space, domain: domain }
       end,
       :create_attribute => lambda { |name|
-        @space ||= Models::Space.make
+        @space ||= Space.make
         case name.to_sym
         when :space
           @space
         when :domain
-          d = Models::Domain.make(
+          d = Domain.make(
             :owning_organization => @space.organization,
             :wildcard => true
           )
@@ -36,7 +36,7 @@ module VCAP::CloudController
         :domain => {
           :delete_ok => true,
           :create_for => lambda { |route|
-            d = Models::Domain.make(
+            d = Domain.make(
               :owning_organization => route.domain.owning_organization,
               :wildcard => true
             )
@@ -46,13 +46,13 @@ module VCAP::CloudController
       },
       :many_to_zero_or_more => {
         :apps => lambda { |route|
-          Models::App.make(:space => route.space)
+          App.make(:space => route.space)
         }
       }
     }
 
     describe "validations" do
-      let(:route) { Models::Route.make }
+      let(:route) { Route.make }
 
       describe "host" do
         it "should not allow . in the host name" do
@@ -66,9 +66,9 @@ module VCAP::CloudController
         end
 
         context "with a wildcard domain" do
-          let(:space) { Models::Space.make }
+          let(:space) { Space.make }
           let(:domain) do
-            d = Models::Domain.make(
+            d = Domain.make(
               :wildcard => true,
               :owning_organization => space.organization,
             )
@@ -78,21 +78,21 @@ module VCAP::CloudController
 
           it "should not allow a nil host" do
             expect {
-              Models::Route.make(:space => space,
+              Route.make(:space => space,
                                  :domain => domain,
                                  :host => nil)
             }.to raise_error(Sequel::ValidationFailed)
           end
 
           it "should allow an empty host" do
-            Models::Route.make(:space => space,
+            Route.make(:space => space,
                                :domain => domain,
                                :host => "")
           end
 
           it "should not allow a blank host" do
             expect {
-              Models::Route.make(:space => space,
+              Route.make(:space => space,
                                  :domain => domain,
                                  :host => " ")
             }.to raise_error(Sequel::ValidationFailed)
@@ -100,9 +100,9 @@ module VCAP::CloudController
         end
 
         context "with a non-wildcard domain" do
-          let(:space) { Models::Space.make }
+          let(:space) { Space.make }
           let(:domain) do
-            d = Models::Domain.make(
+            d = Domain.make(
               :wildcard => false,
               :owning_organization => space.organization,
             )
@@ -112,7 +112,7 @@ module VCAP::CloudController
 
           it "should not allow a nil host" do
             expect {
-              Models::Route.make(:space => space,
+              Route.make(:space => space,
                                  :domain => domain,
                                  :host => nil).should be_valid
             }.to raise_error(Sequel::ValidationFailed)
@@ -120,21 +120,21 @@ module VCAP::CloudController
 
           it "should not allow a valid host" do
             expect {
-              Models::Route.make(:space => space,
+              Route.make(:space => space,
                                  :domain => domain,
                                  :host => Sham.host)
             }.to raise_error(Sequel::ValidationFailed)
           end
 
           it "should allow an empty host" do
-            Models::Route.make(:space => space,
+            Route.make(:space => space,
                                :domain => domain,
                                :host => "").should be_valid
           end
 
           it "should not allow a blank host" do
             expect {
-              Models::Route.make(:space => space,
+              Route.make(:space => space,
                                  :domain => domain,
                                  :host => " ")
             }.to raise_error(Sequel::ValidationFailed)
@@ -144,10 +144,10 @@ module VCAP::CloudController
     end
 
     describe "instance methods" do
-      let(:space) { Models::Space.make }
+      let(:space) { Space.make }
 
       let(:domain) do
-        d = Models::Domain.make(
+        d = Domain.make(
           :wildcard => true,
           :owning_organization => space.organization
         )
@@ -158,7 +158,7 @@ module VCAP::CloudController
       describe "#fqdn" do
         context "for a non-nil host" do
           it "should return the fqdn for the route" do
-            r = Models::Route.make(
+            r = Route.make(
               :host => "www",
               :domain => domain,
               :space => space,
@@ -169,7 +169,7 @@ module VCAP::CloudController
 
         context "for a nil host" do
           it "should return the fqdn for the route" do
-            r = Models::Route.make(
+            r = Route.make(
               :host => "",
               :domain => domain,
               :space => space,
@@ -181,7 +181,7 @@ module VCAP::CloudController
 
       describe "#as_summary_json" do
         it "returns a hash containing the route id, host, and domain details" do
-          r = Models::Route.make(
+          r = Route.make(
             :host => "www",
             :domain => domain,
             :space => space,
@@ -199,21 +199,21 @@ module VCAP::CloudController
     end
 
     describe "relations" do
-      let(:org) { Models::Organization.make }
-      let(:space_a) { Models::Space.make(:organization => org) }
-      let(:domain_a) { Models::Domain.make(:owning_organization => org) }
+      let(:org) { Organization.make }
+      let(:space_a) { Space.make(:organization => org) }
+      let(:domain_a) { Domain.make(:owning_organization => org) }
 
-      let(:space_b) { Models::Space.make(:organization => org) }
-      let(:domain_b) { Models::Domain.make(:owning_organization => org) }
+      let(:space_b) { Space.make(:organization => org) }
+      let(:domain_b) { Domain.make(:owning_organization => org) }
 
-      before { Models::Domain.default_serving_domain_name = Sham.domain }
+      before { Domain.default_serving_domain_name = Sham.domain }
 
-      after { Models::Domain.default_serving_domain_name = nil }
+      after { Domain.default_serving_domain_name = nil }
 
       it "should not allow creation of a route on a domain not on the space" do
         space_a.add_domain(domain_a)
         expect {
-          Models::Route.make(:space => space_a, :domain => domain_b)
+          Route.make(:space => space_a, :domain => domain_b)
         }.to raise_error Sequel::ValidationFailed, /domain invalid_relation/
       end
 
@@ -221,27 +221,27 @@ module VCAP::CloudController
         space_a.add_domain(domain_a)
         space_b.add_domain(domain_a)
 
-        route = Models::Route.make(:space => space_b, :domain => domain_a)
-        app = Models::App.make(:space => space_a)
+        route = Route.make(:space => space_b, :domain => domain_a)
+        app = App.make(:space => space_a)
         expect {
           route.add_app(app)
-        }.to raise_error Models::Route::InvalidAppRelation
+        }.to raise_error Route::InvalidAppRelation
       end
 
       it "should not allow creation of a nil host on a system domain" do
         expect {
-          Models::Route.make(
+          Route.make(
             :host => nil, :space => space_a,
-            :domain => Models::Domain.default_serving_domain
+            :domain => Domain.default_serving_domain
           )
         }.to raise_error Sequel::ValidationFailed
       end
     end
 
     describe "#remove" do
-      let!(:route) { Models::Route.make }
+      let!(:route) { Route.make }
       let!(:app_1) do
-        Models::App.make({
+        App.make({
           :space => route.space,
           :route_guids => [route.guid],
         }.merge(app_attributes))
@@ -252,7 +252,7 @@ module VCAP::CloudController
 
         it "notifies DEAs of route change for running apps" do
           VCAP::CloudController::DeaClient.should_receive(:update_uris).with(app_1)
-          Models::Route[:guid => route.guid].destroy
+          Route[:guid => route.guid].destroy
         end
       end
 
@@ -260,7 +260,7 @@ module VCAP::CloudController
         let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "FAILED", :droplet_hash => nil} }
 
         it "does not notify DEAs of route change for apps that are not started" do
-          Models::App.make(
+          App.make(
               :space => route.space, :state => "STOPPED",
               :route_guids => [route.guid], :droplet_hash => nil, :package_state => "PENDING")
 
@@ -274,9 +274,9 @@ module VCAP::CloudController
         let(:app_attributes) { {:state => "STOPPED", :package_state => "STAGED"} }
 
         it "does not notify DEAs of route change for apps that are not staged" do
-          Models::App.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
+          App.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
           VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
-          Models::Route[:guid => route.guid].destroy
+          Route[:guid => route.guid].destroy
         end
       end
     end

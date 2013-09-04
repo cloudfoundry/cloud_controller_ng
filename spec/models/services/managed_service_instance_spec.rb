@@ -1,8 +1,8 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe Models::ManagedServiceInstance, type: :model do
-    let(:service_instance) { VCAP::CloudController::Models::ManagedServiceInstance.make }
+  describe ManagedServiceInstance, type: :model do
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
     let(:email) { Sham.email }
     let(:guid) { Sham.guid }
 
@@ -15,16 +15,16 @@ module VCAP::CloudController
       :required_attributes => [:name, :service_plan, :space],
       :db_required_attributes => [:name],
       :unique_attributes => [ [:space, :name] ],
-      :custom_attributes_for_uniqueness_tests => ->{ {service_plan: Models::ServicePlan.make} },
+      :custom_attributes_for_uniqueness_tests => ->{ {service_plan: ServicePlan.make} },
       :stripped_string_attributes => :name,
       :many_to_one => {
         :service_plan => {
           :delete_ok => true,
-          :create_for => lambda { |service_instance| Models::ServicePlan.make },
+          :create_for => lambda { |service_instance| ServicePlan.make },
         },
         :space => {
           :delete_ok => true,
-          :create_for => lambda { |service_instance| Models::Space.make },
+          :create_for => lambda { |service_instance| Space.make },
         }
       },
       :one_to_zero_or_more => {
@@ -39,18 +39,18 @@ module VCAP::CloudController
 
     describe "#create" do
       it "saves with is_gateway_service true" do
-        instance = described_class.create(name: 'awesome-service', space: Models::Space.make, service_plan: Models::ServicePlan.make)
+        instance = described_class.create(name: 'awesome-service', space: Space.make, service_plan: ServicePlan.make)
         instance.refresh.is_gateway_service.should == true
       end
     end
 
     it_behaves_like "a model with an encrypted attribute" do
       def new_model
-        Models::ManagedServiceInstance.new.tap do |instance|
+        ManagedServiceInstance.new.tap do |instance|
           instance.set(
             :name => Sham.name,
-            :space => Models::Space.make,
-            :service_plan => Models::ServicePlan.make
+            :space => Space.make,
+            :service_plan => ServicePlan.make
           )
           instance.stub(:service_gateway_client).and_return(
             double("Service Gateway Client",
@@ -85,7 +85,7 @@ module VCAP::CloudController
       context "service provisioning" do
         it "should deprovision a service on rollback after a create" do
           expect {
-            Models::ManagedServiceInstance.db.transaction do
+            ManagedServiceInstance.db.transaction do
               gw_client.should_receive(:unprovision)
               service_instance
               raise "something bad which causes the unprovision to happen"
@@ -95,7 +95,7 @@ module VCAP::CloudController
 
         it "should not deprovision a service on rollback after update" do
           expect {
-            Models::ManagedServiceInstance.db.transaction do
+            ManagedServiceInstance.db.transaction do
               service_instance.update(:name => "newname")
               raise "something bad"
             end
@@ -114,8 +114,8 @@ module VCAP::CloudController
     context "billing" do
       context "creating a service instance" do
         it "should call ServiceCreateEvent.create_from_service_instance" do
-          Models::ServiceCreateEvent.should_receive(:create_from_service_instance)
-          Models::ServiceDeleteEvent.should_not_receive(:create_from_service_instance)
+          ServiceCreateEvent.should_receive(:create_from_service_instance)
+          ServiceDeleteEvent.should_not_receive(:create_from_service_instance)
           service_instance
         end
       end
@@ -123,17 +123,17 @@ module VCAP::CloudController
       context "destroying a service instance" do
         it "should call ServiceDeleteEvent.create_from_service_instance" do
           service_instance
-          Models::ServiceCreateEvent.should_not_receive(:create_from_service_instance)
-          Models::ServiceDeleteEvent.should_receive(:create_from_service_instance).with(service_instance)
+          ServiceCreateEvent.should_not_receive(:create_from_service_instance)
+          ServiceDeleteEvent.should_receive(:create_from_service_instance).with(service_instance)
           service_instance.destroy
         end
       end
     end
 
     describe "#as_summary_json" do
-      let(:service) { Models::Service.make(label: "YourSQL", guid: "9876XZ", provider: "Bill Gates", version: "1.2.3") }
-      let(:service_plan) { Models::ServicePlan.make(name: "Gold Plan", guid: "12763abc", service: service) }
-      subject(:service_instance) { Models::ManagedServiceInstance.make(service_plan: service_plan) }
+      let(:service) { Service.make(label: "YourSQL", guid: "9876XZ", provider: "Bill Gates", version: "1.2.3") }
+      let(:service_plan) { ServicePlan.make(name: "Gold Plan", guid: "12763abc", service: service) }
+      subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
 
       it "returns detailed summary" do
         service_instance.dashboard_url = "http://dashboard.example.com"
@@ -169,7 +169,7 @@ module VCAP::CloudController
 
       let(:token) { double("token", token: "le_token") }
       let(:client) { double(:client) }
-      let(:instance) { VCAP::CloudController::Models::ManagedServiceInstance.new }
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.new }
 
       it "sets the service_gateway_client correctly" do
         VCAP::Services::Api::ServiceGatewayClient.should_receive(:new).
@@ -200,8 +200,8 @@ module VCAP::CloudController
 
         it "raises an error" do
           expect {
-            VCAP::CloudController::Models::ManagedServiceInstance.new.service_gateway_client(plan)
-          }.to raise_error(VCAP::CloudController::Models::ManagedServiceInstance::InvalidServiceBinding, /no service_auth_token/i)
+            VCAP::CloudController::ManagedServiceInstance.new.service_gateway_client(plan)
+          }.to raise_error(VCAP::CloudController::ManagedServiceInstance::InvalidServiceBinding, /no service_auth_token/i)
         end
       end
     end
@@ -267,15 +267,15 @@ module VCAP::CloudController
     end
 
     context "quota" do
-      let(:free_plan) { Models::ServicePlan.make(:free => true) }
-      let(:paid_plan) { Models::ServicePlan.make(:free => false) }
+      let(:free_plan) { ServicePlan.make(:free => true) }
+      let(:paid_plan) { ServicePlan.make(:free => false) }
 
       let(:free_quota) do
-        Models::QuotaDefinition.make(:total_services => 1,
+        QuotaDefinition.make(:total_services => 1,
                                      :non_basic_services_allowed => false)
       end
       let(:paid_quota) do
-        Models::QuotaDefinition.make(:total_services => 1,
+        QuotaDefinition.make(:total_services => 1,
                                      :non_basic_services_allowed => true)
       end
 
@@ -284,22 +284,22 @@ module VCAP::CloudController
           reset_database
         end
 
-        let(:trial_db_guid) { Models::ServicePlan.trial_db_guid }
-        let(:trial_db_plan) { Models::ServicePlan.make(:unique_id => trial_db_guid) }
-        let(:paid_db_plan) { Models::ServicePlan.make(:unique_id => "aws_rds_mysql_cfinternal") }
+        let(:trial_db_guid) { ServicePlan.trial_db_guid }
+        let(:trial_db_plan) { ServicePlan.make(:unique_id => trial_db_guid) }
+        let(:paid_db_plan) { ServicePlan.make(:unique_id => "aws_rds_mysql_cfinternal") }
 
         let(:trial_quota) do
-          Models::QuotaDefinition.make(:total_services => 0,
+          QuotaDefinition.make(:total_services => 0,
                                        :non_basic_services_allowed => false,
                                        :trial_db_allowed => true)
         end
 
-        let(:org) { Models::Organization.make(:quota_definition => trial_quota) }
-        let(:space) { Models::Space.make(:organization => org) }
+        let(:org) { Organization.make(:quota_definition => trial_quota) }
+        let(:space) { Space.make(:organization => org) }
 
         context "when the service instance is a trial db instance" do
           def allocate_trial_db
-            Models::ManagedServiceInstance.make(:space => space,
+            ManagedServiceInstance.make(:space => space,
                                                 :service_plan => trial_db_plan)
           end
 
@@ -319,7 +319,7 @@ module VCAP::CloudController
         context "when the service instance is not a trial db instance" do
           it "raises an error" do
             expect do
-              Models::ManagedServiceInstance.make(:space => space, :service_plan => paid_db_plan)
+              ManagedServiceInstance.make(:space => space, :service_plan => paid_db_plan)
             end.to raise_error(Sequel::ValidationFailed, /service_plan paid_services_not_allowed/)
           end
         end
@@ -327,36 +327,36 @@ module VCAP::CloudController
 
       context "exceed quota" do
         it "should raise paid quota error when paid quota is exceeded" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
-          space = Models::Space.make(:organization => org)
-          Models::ManagedServiceInstance.make(:space => space,
+          org = Organization.make(:quota_definition => paid_quota)
+          space = Space.make(:organization => org)
+          ManagedServiceInstance.make(:space => space,
                                               :service_plan => free_plan).
             save(:validate => false)
           space.refresh
           expect do
-            Models::ManagedServiceInstance.make(:space => space,
+            ManagedServiceInstance.make(:space => space,
                                                 :service_plan => free_plan)
           end.to raise_error(Sequel::ValidationFailed, /org paid_quota_exceeded/)
         end
 
         it "should raise free quota error when free quota is exceeded" do
-          org = Models::Organization.make(:quota_definition => free_quota)
-          space = Models::Space.make(:organization => org)
-          Models::ManagedServiceInstance.make(:space => space,
+          org = Organization.make(:quota_definition => free_quota)
+          space = Space.make(:organization => org)
+          ManagedServiceInstance.make(:space => space,
                                               :service_plan => free_plan).
             save(:validate => false)
           space.refresh
           expect do
-            Models::ManagedServiceInstance.make(:space => space,
+            ManagedServiceInstance.make(:space => space,
                                                 :service_plan => free_plan)
           end.to raise_error(Sequel::ValidationFailed, /org free_quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => paid_quota)
+          space = Space.make(:organization => org)
           expect do
-            Models::ManagedServiceInstance.make(:space => space,
+            ManagedServiceInstance.make(:space => space,
                                                 :service_plan => free_plan)
           end.to_not raise_error
         end
@@ -364,19 +364,19 @@ module VCAP::CloudController
 
       context "create free services" do
         it "should not raise error when created in free quota" do
-          org = Models::Organization.make(:quota_definition => free_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => free_quota)
+          space = Space.make(:organization => org)
           expect do
-            Models::ManagedServiceInstance.make(:space => space,
+            ManagedServiceInstance.make(:space => space,
                                                 :service_plan => free_plan)
           end.to_not raise_error
         end
 
         it "should not raise error when created in paid quota" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => paid_quota)
+          space = Space.make(:organization => org)
           expect do
-            Models::ManagedServiceInstance.make(:space => space,
+            ManagedServiceInstance.make(:space => space,
                                                 :service_plan => free_plan)
           end.to_not raise_error
         end
@@ -384,20 +384,20 @@ module VCAP::CloudController
 
       context "create paid services" do
         it "should raise error when created in free quota" do
-          org = Models::Organization.make(:quota_definition => free_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => free_quota)
+          space = Space.make(:organization => org)
           expect do
-            Models::ManagedServiceInstance.make(:space => space,
+            ManagedServiceInstance.make(:space => space,
                                                 :service_plan => paid_plan)
           end.to raise_error(Sequel::ValidationFailed,
                              /service_plan paid_services_not_allowed/)
         end
 
         it "should not raise error when created in paid quota" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => paid_quota)
+          space = Space.make(:organization => org)
           expect do
-            Models::ManagedServiceInstance.make(:space => space,
+            ManagedServiceInstance.make(:space => space,
                                                 :service_plan => paid_plan)
           end.to_not raise_error
         end
@@ -408,26 +408,26 @@ module VCAP::CloudController
       subject { service_instance.destroy }
 
       it "destroys the service bindings" do
-        service_binding = Models::ServiceBinding.make(
-          :app => Models::App.make(:space => service_instance.space),
+        service_binding = ServiceBinding.make(
+          :app => App.make(:space => service_instance.space),
           :service_instance => service_instance
         )
-        expect { subject }.to change { Models::ServiceBinding.where(:id => service_binding.id).count }.by(-1)
+        expect { subject }.to change { ServiceBinding.where(:id => service_binding.id).count }.by(-1)
       end
     end
 
     describe "validations" do
       it "should not bind an app and a service instance from different app spaces" do
-        Models::App.make(:space => service_instance.space)
-        service_binding = Models::ServiceBinding.make
+        App.make(:space => service_instance.space)
+        service_binding = ServiceBinding.make
         expect {
           service_instance.add_service_binding(service_binding)
-        }.to raise_error Models::ServiceInstance::InvalidServiceBinding
+        }.to raise_error ServiceInstance::InvalidServiceBinding
       end
     end
 
     describe "#create_binding" do
-      let(:app) { VCAP::CloudController::Models::App.make }
+      let(:app) { VCAP::CloudController::App.make }
       let(:instance) { described_class.make(space: app.space) }
       let(:binding_options) { Sham.binding_options }
 
@@ -439,7 +439,7 @@ module VCAP::CloudController
     end
 
     describe "#enum_snapshots" do
-      subject { Models::ManagedServiceInstance.make() }
+      subject { ManagedServiceInstance.make() }
       let(:enum_snapshots_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
       let(:service_auth_token) { "tokenvalue" }
       before do
@@ -453,7 +453,7 @@ module VCAP::CloudController
           subject.refresh
           expect do
             subject.enum_snapshots
-          end.to raise_error(Models::ManagedServiceInstance::MissingServiceAuthToken)
+          end.to raise_error(ManagedServiceInstance::MissingServiceAuthToken)
         end
       end
 
@@ -481,7 +481,7 @@ module VCAP::CloudController
 
     describe "#create_snapshot" do
       let(:name) { 'New snapshot' }
-      subject { Models::ManagedServiceInstance.make() }
+      subject { ManagedServiceInstance.make() }
       let(:create_snapshot_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
       before do
         subject.service_plan.service.update(:url => "http://gw.example.com:12345/")
@@ -494,7 +494,7 @@ module VCAP::CloudController
           subject.refresh
           expect do
             subject.create_snapshot(name)
-          end.to raise_error(Models::ManagedServiceInstance::MissingServiceAuthToken)
+          end.to raise_error(ManagedServiceInstance::MissingServiceAuthToken)
         end
       end
 
@@ -535,32 +535,32 @@ module VCAP::CloudController
       context "when the request fails" do
         it "should raise an error" do
           stub_request(:post, create_snapshot_url_matcher).to_return(:body => "Something went wrong", :status => 500)
-          expect { subject.create_snapshot(name) }.to raise_error(Models::ManagedServiceInstance::ServiceGatewayError, /upstream failure/)
+          expect { subject.create_snapshot(name) }.to raise_error(ManagedServiceInstance::ServiceGatewayError, /upstream failure/)
         end
       end
     end
 
     describe "#bindable?" do
-      let(:service_instance) { Models::ManagedServiceInstance.make(service_plan: service_plan) }
-      let(:service_plan) { Models::ServicePlan.make(service: service) }
+      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      let(:service_plan) { ServicePlan.make(service: service) }
 
       context "when the service is bindable" do
-        let(:service) { Models::Service.make(bindable: true) }
+        let(:service) { Service.make(bindable: true) }
 
         specify { service_instance.should be_bindable }
       end
 
       context "when the service is not bindable" do
-        let(:service) { Models::Service.make(bindable: false) }
+        let(:service) { Service.make(bindable: false) }
 
         specify { service_instance.should_not be_bindable }
       end
     end
 
     describe "#tags" do
-      let(:service_instance) { Models::ManagedServiceInstance.make(service_plan: service_plan) }
-      let(:service_plan) { Models::ServicePlan.make(service: service) }
-      let(:service) { Models::Service.make(tags: %w(relational mysql)) }
+      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service) { Service.make(tags: %w(relational mysql)) }
 
       it 'gets tags from the service' do
         expect(service_instance.tags).to eq %w(relational mysql)

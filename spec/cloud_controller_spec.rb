@@ -34,7 +34,7 @@ describe VCAP::CloudController::Controller do
           make_request
         }.to change { user_count }.by(1)
 
-        VCAP::CloudController::Models::User.order(:id).last.tap do |u|
+        VCAP::CloudController::User.order(:id).last.tap do |u|
           expect(u.guid).to eq(user_id)
           expect(u.admin).to be_true
           expect(u.active).to be_true
@@ -44,7 +44,7 @@ describe VCAP::CloudController::Controller do
       it "sets user to created admin user" do
         make_request
         expect(VCAP::CloudController::SecurityContext.current_user).to eq(
-          VCAP::CloudController::Models::User.order(:id).last
+          VCAP::CloudController::User.order(:id).last
         )
       end
     end
@@ -55,7 +55,7 @@ describe VCAP::CloudController::Controller do
           make_request
         }.to change { user_count }.by(1)
 
-        VCAP::CloudController::Models::User.order(:id).last.tap do |u|
+        VCAP::CloudController::User.order(:id).last.tap do |u|
           expect(u.guid).to eq(user_id)
           expect(u.admin).to be_false
           expect(u.active).to be_true
@@ -65,7 +65,7 @@ describe VCAP::CloudController::Controller do
       it "sets user to created non-admin user" do
         make_request
         expect(VCAP::CloudController::SecurityContext.current_user).to eq(
-          VCAP::CloudController::Models::User.order(:id).last
+          VCAP::CloudController::User.order(:id).last
         )
       end
     end
@@ -85,7 +85,7 @@ describe VCAP::CloudController::Controller do
 
     def self.it_sets_found_user
       context "when user can be found" do
-        before { VCAP::CloudController::Models::User.make(:guid => user_id) }
+        before { VCAP::CloudController::User.make(:guid => user_id) }
 
         it "sets user to found user" do
           make_request
@@ -115,7 +115,7 @@ describe VCAP::CloudController::Controller do
           end
 
           context "when there are >0 users" do
-            before { VCAP::CloudController::Models::User.make }
+            before { VCAP::CloudController::User.make }
             it_creates_and_sets_non_admin_user
             it_sets_token_info
           end
@@ -131,7 +131,7 @@ describe VCAP::CloudController::Controller do
           end
 
           context "when there are >0 users" do
-            before { VCAP::CloudController::Models::User.make }
+            before { VCAP::CloudController::User.make }
             it_creates_and_sets_non_admin_user
             it_sets_token_info
           end
@@ -207,7 +207,7 @@ describe VCAP::CloudController::Controller do
     end
 
     def user_count
-      VCAP::CloudController::Models::User.count
+      VCAP::CloudController::User.count
     end
   end
 end

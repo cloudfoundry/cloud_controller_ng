@@ -1,7 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::Models; end
-
 require "sequel_plugins/vcap_validations"
 require "sequel_plugins/vcap_serialization"
 require "sequel_plugins/vcap_normalization"
@@ -13,7 +11,7 @@ module Sequel::Plugins::VcapUserGroup
   module ClassMethods
     def define_user_group(name, opts = {})
       opts = opts.merge(
-        :class => "VCAP::CloudController::Models::User",
+        :class => "VCAP::CloudController::User",
         :join_table => "#{table_name}_#{name}",
         :right_key => :user_id
       )
@@ -59,7 +57,7 @@ module Sequel::Plugins::VcapUserVisibility
   end
 end
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class InvalidRelation < StandardError; end
 end
 
@@ -71,6 +69,7 @@ Sequel::Model.plugin :vcap_guid
 Sequel::Model.plugin :vcap_user_group
 Sequel::Model.plugin :vcap_user_visibility
 Sequel::Model.plugin :update_or_create
+Sequel::Model.plugin :association_dependencies
 
 Sequel::Model.plugin :typecast_on_load,
                      :name, :label, :provider, :description, :host
@@ -78,37 +77,39 @@ Sequel::Model.plugin :typecast_on_load,
 require "vcap/sequel_add_association_dependencies_monkeypatch"
 require "vcap/delayed_job_guid_monkeypatch"
 
-require "models/core/billing_event"
-require "models/core/organization_start_event"
-require "models/core/app_start_event"
-require "models/core/app_stop_event"
-require "models/core/app_event"
-require "models/core/app"
-require "models/core/domain"
-require "models/core/event"
-require "models/core/organization"
-require "models/core/quota_definition"
-require "models/core/route"
-require "models/core/task"
-require "models/core/space"
-require "models/core/stack"
-require "models/core/user"
+module VCAP::CloudController
+autoload :BillingEvent,                "models/core/billing_event"
+autoload :OrganizationStartEvent,      "models/core/organization_start_event"
+autoload :AppStartEvent,               "models/core/app_start_event"
+autoload :AppStopEvent,                "models/core/app_stop_event"
+autoload :AppEvent,                    "models/core/app_event"
+autoload :App,                         "models/core/app"
+autoload :Domain,                      "models/core/domain"
+autoload :Event,                       "models/core/event"
+autoload :Organization,                "models/core/organization"
+autoload :QuotaDefinition,             "models/core/quota_definition"
+autoload :Route,                       "models/core/route"
+autoload :Task,                        "models/core/task"
+autoload :Space,                       "models/core/space"
+autoload :Stack,                       "models/core/stack"
+autoload :User,                        "models/core/user"
 
-require "models/services/service"
-require "models/services/service_auth_token"
-require "models/services/service_binding"
-require "models/services/service_instance"
-require "models/services/managed_service_instance"
-require "models/services/user_provided_service_instance"
-require "models/services/service_broker"
-require "models/services/service_broker_registration"
-require "models/services/service_plan"
-require "models/services/service_plan_visibility"
-require "models/services/service_base_event"
-require "models/services/service_create_event"
-require "models/services/service_delete_event"
+autoload :Service,                     "models/services/service"
+autoload :ServiceAuthToken,            "models/services/service_auth_token"
+autoload :ServiceBinding,              "models/services/service_binding"
+autoload :ServiceInstance,             "models/services/service_instance"
+autoload :ManagedServiceInstance,      "models/services/managed_service_instance"
+autoload :UserProvidedServiceInstance, "models/services/user_provided_service_instance"
+autoload :ServiceBroker,               "models/services/service_broker"
+autoload :ServiceBrokerRegistration,   "models/services/service_broker_registration"
+autoload :ServicePlan,                 "models/services/service_plan"
+autoload :ServicePlanVisibility,       "models/services/service_plan_visibility"
+autoload :ServiceBaseEvent,            "models/services/service_base_event"
+autoload :ServiceCreateEvent,          "models/services/service_create_event"
+autoload :ServiceDeleteEvent,          "models/services/service_delete_event"
 
-require "models/job"
+autoload :Job, "models/job"
+end
 
 require File.expand_path("../../../app/access/base_access.rb", __FILE__)
 Dir[File.expand_path("../../../app/access/**/*.rb", __FILE__)].each do |file|

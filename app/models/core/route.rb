@@ -2,7 +2,7 @@
 
 require "cloud_controller/dea/dea_client"
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class Route < Sequel::Model
     class InvalidDomainRelation < InvalidRelation; end
     class InvalidAppRelation < InvalidRelation; end

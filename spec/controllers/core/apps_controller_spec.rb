@@ -4,51 +4,51 @@ module VCAP::CloudController
   describe VCAP::CloudController::AppsController, type: :controller do
     before { configure_stacks }
     include_examples "uaa authenticated api", path: "/v2/apps"
-    include_examples "querying objects", path: "/v2/apps", model: Models::App, queryable_attributes: %w(name)
-    include_examples "enumerating objects", path: "/v2/apps", model: Models::App
-    include_examples "reading a valid object", path: "/v2/apps", model: Models::App, basic_attributes: %w(name space_guid stack_guid)
+    include_examples "querying objects", path: "/v2/apps", model: App, queryable_attributes: %w(name)
+    include_examples "enumerating objects", path: "/v2/apps", model: App
+    include_examples "reading a valid object", path: "/v2/apps", model: App, basic_attributes: %w(name space_guid stack_guid)
     include_examples "operations on an invalid object", path: "/v2/apps"
-    include_examples "creating and updating", path: "/v2/apps", model: Models::App,
+    include_examples "creating and updating", path: "/v2/apps", model: App,
                      required_attributes: %w(name space_guid),
                      unique_attributes: %w(name space_guid)
-    include_examples "deleting a valid object", path: "/v2/apps", model: Models::App, one_to_many_collection_ids: {
+    include_examples "deleting a valid object", path: "/v2/apps", model: App, one_to_many_collection_ids: {
       :service_bindings => lambda { |app|
-        service_instance = Models::ManagedServiceInstance.make(
+        service_instance = ManagedServiceInstance.make(
           :space => app.space
         )
-        Models::ServiceBinding.make(
+        ServiceBinding.make(
           :app => app,
           :service_instance => service_instance
         )
       },
       :events => lambda { |app|
-        Models::AppEvent.make(:app => app)
+        AppEvent.make(:app => app)
       }
     },
       one_to_many_collection_ids_without_url: {}
 
-    include_examples "collection operations", path: "/v2/apps", model: Models::App,
+    include_examples "collection operations", path: "/v2/apps", model: App,
       one_to_many_collection_ids: {
         service_bindings: lambda { |app|
-          service_instance = Models::ManagedServiceInstance.make(space: app.space)
-          Models::ServiceBinding.make(app: app, service_instance: service_instance)
+          service_instance = ManagedServiceInstance.make(space: app.space)
+          ServiceBinding.make(app: app, service_instance: service_instance)
         }
       },
       many_to_one_collection_ids: {
-        space: lambda { |app| Models::Space.make },
-        stack: lambda { |app| Models::Stack.make },
+        space: lambda { |app| Space.make },
+        stack: lambda { |app| Stack.make },
       },
       many_to_many_collection_ids: {
         routes: lambda { |app|
-          domain = Models::Domain.make(owning_organization: app.space.organization)
+          domain = Domain.make(owning_organization: app.space.organization)
           app.space.organization.add_domain(domain)
           app.space.add_domain(domain)
-          Models::Route.make(domain: domain, space: app.space)
+          Route.make(domain: domain, space: app.space)
         }
       }
 
     describe "create app" do
-      let(:space_guid) { Models::Space.make.guid.to_s }
+      let(:space_guid) { Space.make.guid.to_s }
       let(:initial_hash) do
         { :name => "maria",
           :space_guid => space_guid
@@ -106,11 +106,11 @@ module VCAP::CloudController
         it "ignores the attribute" do
           expect {
             create_app
-          }.to change(Models::App, :count).by(1)
+          }.to change(App, :count).by(1)
 
           last_response.status.should == 201
 
-          app = Models::App.last
+          app = App.last
           expect(app.detected_buildpack).to be_nil
           expect(decoded_response['entity'].fetch('detected_buildpack')).to be_nil
         end
@@ -122,7 +122,7 @@ module VCAP::CloudController
         last_response.status.should == 201
 
         new_app_guid = decoded_response['metadata']['guid']
-        event = Models::Event.find(:type => "audit.app.create", :actee => new_app_guid)
+        event = Event.find(:type => "audit.app.create", :actee => new_app_guid)
 
         expect(event).to be
         expect(event.actor).to eq(admin_user.guid)
@@ -132,7 +132,7 @@ module VCAP::CloudController
     describe "update app" do
       let(:update_hash) { {} }
 
-      let(:app_obj) { Models::App.make(:detected_buildpack => 'buildpack-name') }
+      let(:app_obj) { App.make(:detected_buildpack => 'buildpack-name') }
 
       def update_app
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
@@ -150,11 +150,11 @@ module VCAP::CloudController
             app_obj.debug.should == "run"
             last_response.status.should == 201
           end
-                    
+
         end
-        
+
         context "change debug" do
-          let(:app_obj) { Models::App.make(:debug => "run") }
+          let(:app_obj) { App.make(:debug => "run") }
 
           let(:update_hash) do
             {"debug" => "suspend"}
@@ -169,7 +169,7 @@ module VCAP::CloudController
         end
 
         context "reset debug" do
-          let(:app_obj) { Models::App.make(:debug => "run") }
+          let(:app_obj) { App.make(:debug => "run") }
 
           let(:update_hash) do
             {"debug" => "none"}
@@ -184,7 +184,7 @@ module VCAP::CloudController
         end
 
         context "passing in nil" do
-          let(:app_obj) { Models::App.make(:debug => "run") }
+          let(:app_obj) { App.make(:debug => "run") }
 
           let(:update_hash) do
             {"debug" => nil}
@@ -198,7 +198,7 @@ module VCAP::CloudController
           end
         end
       end
-        
+
       context "when detected buildpack is not provided" do
         let(:update_hash) do
           {}
@@ -240,7 +240,7 @@ module VCAP::CloudController
         it "registers an app.start event" do
           update_app
 
-          event = Models::Event.find(:type => "audit.app.update", :actee => app_obj.guid)
+          event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
           expect(event).to be
           expect(event.actor).to eq(admin_user.guid)
         end
@@ -248,7 +248,7 @@ module VCAP::CloudController
     end
 
     describe "read an app" do
-      let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+      let(:app_obj) { App.make(:detected_buildpack => "buildpack-name") }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
       def get_app
@@ -262,7 +262,7 @@ module VCAP::CloudController
       end
 
       context "when the app is already deleted" do
-        let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+        let(:app_obj) { App.make(:detected_buildpack => "buildpack-name") }
 
         before do
           app_obj.soft_delete
@@ -276,7 +276,7 @@ module VCAP::CloudController
     end
 
     describe "delete an app" do
-      let(:app_obj) { Models::App.make }
+      let(:app_obj) { App.make }
 
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
@@ -285,7 +285,7 @@ module VCAP::CloudController
       end
 
       context "when the app is not deleted" do
-        let(:app_obj) { Models::App.make }
+        let(:app_obj) { App.make }
 
         it "should delete the app" do
           delete_app
@@ -294,7 +294,7 @@ module VCAP::CloudController
       end
 
       context "when the app is already deleted" do
-        let(:app_obj) { Models::App.make }
+        let(:app_obj) { App.make }
 
         before do
           app_obj.soft_delete
@@ -307,7 +307,7 @@ module VCAP::CloudController
       end
 
       context "when the app is running" do
-        let(:app_obj) { Models::App.make :state => "STARTED", :package_hash => "abc" }
+        let(:app_obj) { App.make :state => "STARTED", :package_hash => "abc" }
 
         it "tells the DEAs to stop it" do
           called = false
@@ -323,7 +323,7 @@ module VCAP::CloudController
 
         it "registers a billing stop event" do
           called = false
-          Models::AppStopEvent.should_receive(:create_from_app) do |app|
+          AppStopEvent.should_receive(:create_from_app) do |app|
             app.guid.should == app_obj.guid
             called = true
           end
@@ -335,8 +335,8 @@ module VCAP::CloudController
       end
 
       context "recursive deletion with dependencies" do
-        let!(:app_event) { Models::AppEvent.make(:app => app_obj) }
-        let!(:route) { Models::Route.make(:space => app_obj.space) }
+        let!(:app_event) { AppEvent.make(:app => app_obj) }
+        let!(:route) { Route.make(:space => app_obj.space) }
 
         before do
           app_obj.add_route(route)
@@ -351,29 +351,29 @@ module VCAP::CloudController
           delete_app_recursively
           last_response.status.should == 204
 
-          Models::App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
-          Models::App.deleted[:id => app_obj.id].not_deleted.should be_nil
-          Models::AppEvent.find(:id => app_event.id).should_not be_nil
+          App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
+          App.deleted[:id => app_obj.id].not_deleted.should be_nil
+          AppEvent.find(:id => app_event.id).should_not be_nil
         end
       end
 
       context "non recursive deletion with app events" do
-        let!(:app_event) { Models::AppEvent.make(:app => app_obj) }
+        let!(:app_event) { AppEvent.make(:app => app_obj) }
 
         context "with other empty associations" do
           it "should soft delete the app and NOT delete the app event" do
             delete_app
 
             last_response.status.should == 204
-            Models::App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
-            Models::App.deleted[:id => app_obj.id].not_deleted.should be_nil
-            Models::AppEvent.find(:id => app_event.id).should_not be_nil
+            App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
+            App.deleted[:id => app_obj.id].not_deleted.should be_nil
+            AppEvent.find(:id => app_event.id).should_not be_nil
           end
         end
 
         context "with NON-empty service_binding (one_to_many) association" do
-          let!(:svc_instance) { Models::ManagedServiceInstance.make(:space => app_obj.space) }
-          let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
+          let!(:svc_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
+          let!(:service_binding) { ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
 
           it "should raise an error" do
             delete_app
@@ -388,14 +388,14 @@ module VCAP::CloudController
       it "records an app.deleted event" do
         delete_app
         last_response.status.should == 204
-        event = Models::Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
+        event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
         expect(event).to be
         expect(event.actor).to eq(admin_user.guid)
       end
     end
 
     describe "validations" do
-      let(:app_obj)   { Models::App.make }
+      let(:app_obj)   { App.make }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
       describe "env" do
@@ -427,7 +427,7 @@ module VCAP::CloudController
     end
 
     describe "command" do
-      let(:app_obj)   { Models::App.make }
+      let(:app_obj)   { App.make }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
       it "should have no command entry in the metadata if not provided" do
@@ -448,7 +448,7 @@ module VCAP::CloudController
     describe "staging" do
       context "when app will be staged" do
         let(:app_obj) do
-          Models::App.make(:package_hash => "abc", :state => "STOPPED",
+          App.make(:package_hash => "abc", :state => "STOPPED",
                            :droplet_hash => nil, :package_state => "PENDING",
                            :instances => 1)
         end
@@ -476,7 +476,7 @@ module VCAP::CloudController
       end
 
       context "when app will not be staged" do
-        let(:app_obj) { Models::App.make(:state => "STOPPED") }
+        let(:app_obj) { App.make(:state => "STOPPED") }
 
         it "does not add X-App-Staging-Log" do
           put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode({}), json_headers(admin_headers)
@@ -487,7 +487,7 @@ module VCAP::CloudController
     end
 
     describe "on route change" do
-      let(:space) { Models::Space.make }
+      let(:space) { Space.make }
       let(:domain) do
         space.add_domain(
           :name => "jesse.cloud",
@@ -502,7 +502,7 @@ module VCAP::CloudController
         user = make_developer_for_space(space)
         # keeping the headers here so that it doesn't reset the global config...
         @headers_for_user = headers_for(user)
-        @app = Models::App.make(
+        @app = App.make(
           :space => space,
           :state => "STARTED",
           :package_hash => "abc",
@@ -518,7 +518,7 @@ module VCAP::CloudController
           :space => space,
         )
 
-        DeaClient.should_receive(:update_uris).with(an_instance_of(VCAP::CloudController::Models::App)) do |app|
+        DeaClient.should_receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
           expect(app.uris).to include("app.jesse.cloud")
         end
 
@@ -548,7 +548,7 @@ module VCAP::CloudController
           r["metadata"]["guid"]
         }.sort.should == [bar_route.guid, route.guid].sort
 
-        DeaClient.should_receive(:update_uris).with(an_instance_of(VCAP::CloudController::Models::App)) do |app|
+        DeaClient.should_receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
           expect(app.uris).to include("foo.jesse.cloud")
         end
 
@@ -567,8 +567,8 @@ module VCAP::CloudController
       include_context "permissions"
 
       before do
-        @obj_a = Models::App.make(:space => @space_a)
-        @obj_b = Models::App.make(:space => @space_b)
+        @obj_a = App.make(:space => @space_a)
+        @obj_b = App.make(:space => @space_b)
       end
 
       let(:creation_req_for_a) do
@@ -657,12 +657,12 @@ module VCAP::CloudController
     end
 
     describe "Quota enforcement" do
-      let(:quota) { Models::QuotaDefinition.make(:memory_limit => 0) }
+      let(:quota) { QuotaDefinition.make(:memory_limit => 0) }
 
       context "quota" do
         it "should enforce quota check on memory" do
-          org = Models::Organization.make(:quota_definition => quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => quota)
+          space = Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
                                      :memory => 128)

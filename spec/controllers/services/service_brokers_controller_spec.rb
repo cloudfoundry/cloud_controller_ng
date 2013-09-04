@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:headers) { json_headers(admin_headers) }
 
     let(:non_admin_headers) do
-      user = VCAP::CloudController::Models::User.make(admin: false)
+      user = VCAP::CloudController::User.make(admin: false)
       json_headers(headers_for(user))
     end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       let(:errors) { double(Sequel::Model::Errors, on: nil) }
       let(:broker) do
-        double(Models::ServiceBroker, {
+        double(ServiceBroker, {
           guid: '123',
           name: 'My Custom Service',
           broker_url: 'http://broker.example.com',
@@ -45,7 +45,7 @@ module VCAP::CloudController
         })
       end
       let(:registration) do
-        reg = double(Models::ServiceBrokerRegistration, {
+        reg = double(ServiceBrokerRegistration, {
           broker: broker,
           errors: errors
         })
@@ -57,8 +57,8 @@ module VCAP::CloudController
       }) }
 
       before do
-        Models::ServiceBroker.stub(:new).and_return(broker)
-        Models::ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
+        ServiceBroker.stub(:new).and_return(broker)
+        ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
         ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
       end
 
@@ -90,7 +90,7 @@ module VCAP::CloudController
       it 'does not set fields that are unmodifiable' do
         body_hash[:guid] = 'mycustomguid'
         post '/v2/service_brokers', body, headers
-        expect(Models::ServiceBroker).to_not have_received(:new).with(hash_including('guid' => 'mycustomguid'))
+        expect(ServiceBroker).to_not have_received(:new).with(hash_including('guid' => 'mycustomguid'))
       end
 
       context 'when there is an error in Broker Registration' do
@@ -195,7 +195,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_brokers' do
-      let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+      let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
       let(:single_broker_response) do
         {
           'total_results' => 1,
@@ -225,7 +225,7 @@ module VCAP::CloudController
       end
 
       context "with a second service broker" do
-        let!(:broker2) { Models::ServiceBroker.make(name: 'FreeWidgets2', broker_url: 'http://example.com/2', token: 'secret2') }
+        let!(:broker2) { ServiceBroker.make(name: 'FreeWidgets2', broker_url: 'http://example.com/2', token: 'secret2') }
 
         it "filters the things" do
           get "/v2/service_brokers?q=name%3A#{broker.name}", {}, headers
@@ -247,7 +247,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_brokers/:guid' do
-      let!(:broker) { Models::ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+      let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
 
       it "deletes the service broker" do
         delete "/v2/service_brokers/#{broker.guid}", {}, headers
@@ -299,7 +299,7 @@ module VCAP::CloudController
 
       let(:errors) { double(Sequel::Model::Errors, on: nil) }
       let(:broker) do
-        double(Models::ServiceBroker, {
+        double(ServiceBroker, {
           guid: '123',
           name: 'My Custom Service',
           broker_url: 'http://broker.example.com',
@@ -308,7 +308,7 @@ module VCAP::CloudController
         })
       end
       let(:registration) do
-        reg = double(Models::ServiceBrokerRegistration, {
+        reg = double(ServiceBrokerRegistration, {
           broker: broker,
           errors: errors
         })
@@ -320,9 +320,9 @@ module VCAP::CloudController
       }) }
 
       before do
-        Models::ServiceBroker.stub(:find)
-        Models::ServiceBroker.stub(:find).with(guid: broker.guid).and_return(broker)
-        Models::ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
+        ServiceBroker.stub(:find)
+        ServiceBroker.stub(:find).with(guid: broker.guid).and_return(broker)
+        ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
         ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
       end
 

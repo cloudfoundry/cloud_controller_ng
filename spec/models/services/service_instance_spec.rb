@@ -1,12 +1,12 @@
 require "spec_helper"
 
-describe VCAP::CloudController::Models::ServiceInstance, type: :model do
+describe VCAP::CloudController::ServiceInstance, type: :model do
   describe "#create" do
     let(:service_instance_attrs)  do
       {
         name: "my favorite service",
         credentials: {},
-        space: VCAP::CloudController::Models::Space.make
+        space: VCAP::CloudController::Space.make
       }
     end
 
@@ -24,7 +24,7 @@ describe VCAP::CloudController::Models::ServiceInstance, type: :model do
       it "returns a UserProvidedServiceInstance" do
         service_instance_attrs[:is_gateway_service] = false
         service_instance = described_class.create(service_instance_attrs)
-        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::Models::UserProvidedServiceInstance
+        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::UserProvidedServiceInstance
       end
     end
 
@@ -32,17 +32,17 @@ describe VCAP::CloudController::Models::ServiceInstance, type: :model do
       it "returns a ManagedServiceInstance" do
         service_instance_attrs[:is_gateway_service] = true
         service_instance = described_class.create(service_instance_attrs)
-        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::Models::ManagedServiceInstance
+        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::ManagedServiceInstance
       end
     end
   end
 
   describe "#type" do
     it "returns the model name for API consumption" do
-      managed_instance = VCAP::CloudController::Models::ManagedServiceInstance.new
+      managed_instance = VCAP::CloudController::ManagedServiceInstance.new
       expect(managed_instance.type).to eq "managed_service_instance"
 
-      user_provided_instance = VCAP::CloudController::Models::UserProvidedServiceInstance.new
+      user_provided_instance = VCAP::CloudController::UserProvidedServiceInstance.new
       expect(user_provided_instance.type).to eq "user_provided_service_instance"
     end
   end

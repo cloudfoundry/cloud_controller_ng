@@ -26,12 +26,12 @@ module VCAP::CloudController
 
     before(:each) { reset_database }
 
-    let(:org) { Models::Organization.make }
-    let(:space_a) { Models::Space.make :organization => org }
+    let(:org) { Organization.make }
+    let(:space_a) { Space.make :organization => org }
 
-    let(:space_a_app_obj) { Models::App.make :space => space_a }
+    let(:space_a_app_obj) { App.make :space => space_a }
 
-    let(:user) { Models::User.make(:admin => true).tap { |u| u.organizations << org } }
+    let(:user) { User.make(:admin => true).tap { |u| u.organizations << org } }
 
     let(:base_timestamp)      { Time.now }
     let(:timestamp_one)       { base_timestamp + 100 }
@@ -46,9 +46,9 @@ module VCAP::CloudController
     # = is %3D
     # > is %3E
     shared_examples("filtering by time") do |endpoint_pattern, obj_name|
-      let!(:app_event1) { Models::AppEvent.make :app => space_a_app_obj, :timestamp => timestamp_one, :exit_description => "Crashed 1" }
-      let!(:app_event2) { Models::AppEvent.make :app => space_a_app_obj, :timestamp => timestamp_two, :exit_description => "Crashed 2" }
-      let!(:app_event3) { Models::AppEvent.make :app => space_a_app_obj, :timestamp => timestamp_three, :exit_description => "Crashed 3" }
+      let!(:app_event1) { AppEvent.make :app => space_a_app_obj, :timestamp => timestamp_one, :exit_description => "Crashed 1" }
+      let!(:app_event2) { AppEvent.make :app => space_a_app_obj, :timestamp => timestamp_two, :exit_description => "Crashed 2" }
+      let!(:app_event3) { AppEvent.make :app => space_a_app_obj, :timestamp => timestamp_three, :exit_description => "Crashed 3" }
 
       let(:endpoint) { endpoint_pattern.sub(":guid", get_obj_guid(obj_name)) }
 
@@ -86,11 +86,11 @@ module VCAP::CloudController
     end
 
     shared_examples("pagination") do
-      let(:completely_unrelated_app) { Models::App.make }
+      let(:completely_unrelated_app) { App.make }
 
       before do
         100.times do |index|
-          Models::AppEvent.make :app => completely_unrelated_app, :exit_description => "Crashed #{index}"
+          AppEvent.make :app => completely_unrelated_app, :exit_description => "Crashed #{index}"
         end
       end
 
@@ -112,8 +112,8 @@ module VCAP::CloudController
       include_examples("pagination")
 
       before do
-        Models::AppEvent.make(
-          :app => Models::App.make,
+        AppEvent.make(
+          :app => App.make,
           :exit_description => "Wrong Space")
       end
 
@@ -129,8 +129,8 @@ module VCAP::CloudController
       include_examples("pagination")
 
       before do
-        Models::AppEvent.make(
-          :app => Models::App.make,
+        AppEvent.make(
+          :app => App.make,
           :exit_description => "Wrong Org")
       end
 

@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe OrganizationAccess, type: :access do
     subject(:access) { OrganizationAccess.new(double(:context, user: user, roles: roles)) }
-    let(:object) { VCAP::CloudController::Models::Organization.make }
-    let(:user) { VCAP::CloudController::Models::User.make }
+    let(:object) { VCAP::CloudController::Organization.make }
+    let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
 
     it_should_behave_like :admin_full_access

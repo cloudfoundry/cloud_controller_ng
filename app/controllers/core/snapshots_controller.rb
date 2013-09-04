@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     def create
       req = self.class::CreateMessage.decode(body)
-      instance = VCAP::CloudController::Models::ManagedServiceInstance.find(:guid => req.service_instance_guid)
+      instance = VCAP::CloudController::ManagedServiceInstance.find(:guid => req.service_instance_guid)
       validate_access(:update, instance, user, roles)
       snapshot = instance.create_snapshot(req.name)
       snap_guid = "%s_%s" % [instance.guid, snapshot.snapshot_id]
@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def index(service_guid)
-      instance = VCAP::CloudController::Models::ManagedServiceInstance.find(:guid => service_guid)
+      instance = VCAP::CloudController::ManagedServiceInstance.find(:guid => service_guid)
       validate_access(:read, instance, user, roles)
       snapshots = instance.enum_snapshots
       [

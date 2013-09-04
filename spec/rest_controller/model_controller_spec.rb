@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     describe "#update" do
       let(:controller_class) { AppsController }
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
       let(:guid) { app.guid }
 
       let(:request_body) do
@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       let(:controller_class) do
         klass_name = 'TestModel%02x' % rand(16)
-        stub_const("VCAP::CloudController::Models::#{klass_name}", model_class)
+        stub_const("VCAP::CloudController::#{klass_name}", model_class)
         Class.new(described_class) do
           model_class_name(klass_name)
         end

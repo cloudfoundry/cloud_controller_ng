@@ -2,43 +2,43 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::OrganizationsController, type: :controller do
-    let(:org) { Models::Organization.make }
+    let(:org) { Organization.make }
     include_examples "uaa authenticated api", path: "/v2/organizations"
-    include_examples "querying objects", path: "/v2/organizations", model: Models::Organization, queryable_attributes: %w(name status)
-    include_examples "enumerating objects", path: "/v2/organizations", model: Models::Organization
-    include_examples "reading a valid object", path: "/v2/organizations", model: Models::Organization, basic_attributes: %w(name)
+    include_examples "querying objects", path: "/v2/organizations", model: Organization, queryable_attributes: %w(name status)
+    include_examples "enumerating objects", path: "/v2/organizations", model: Organization
+    include_examples "reading a valid object", path: "/v2/organizations", model: Organization, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/organizations"
-    include_examples "creating and updating", path: "/v2/organizations", model: Models::Organization, required_attributes: %w(name), unique_attributes: %w(name)
-    include_examples "deleting a valid object", path: "/v2/organizations", model: Models::Organization,
-      one_to_many_collection_ids: {:spaces => lambda { |org| Models::Space.make(:organization => org) }},
+    include_examples "creating and updating", path: "/v2/organizations", model: Organization, required_attributes: %w(name), unique_attributes: %w(name)
+    include_examples "deleting a valid object", path: "/v2/organizations", model: Organization,
+      one_to_many_collection_ids: {:spaces => lambda { |org| Space.make(:organization => org) }},
       one_to_many_collection_ids_without_url: {
         :service_instances => lambda { |org|
-          space = Models::Space.make(:organization => org)
-          Models::ManagedServiceInstance.make(:space => space)
+          space = Space.make(:organization => org)
+          ManagedServiceInstance.make(:space => space)
         },
         :apps => lambda { |org|
-          space = Models::Space.make(:organization => org)
-          Models::App.make(:space => space)
+          space = Space.make(:organization => org)
+          App.make(:space => space)
         },
         :owned_domain => lambda { |org|
-          Models::Domain.make(:owning_organization => org)
+          Domain.make(:owning_organization => org)
         }
       }
-    include_examples "collection operations", path: "/v2/organizations", model: Models::Organization,
+    include_examples "collection operations", path: "/v2/organizations", model: Organization,
       one_to_many_collection_ids: {
-        spaces: lambda { |org| Models::Space.make(organization: org) }
+        spaces: lambda { |org| Space.make(organization: org) }
       },
       one_to_many_collection_ids_without_url: {
-        service_instances: lambda { |org| Models::ManagedServiceInstance.make(space: Models::Space.make(organization: org)) },
-        apps: lambda { |org| Models::App.make(space: Models::Space.make(organization: org)) },
-        owned_domain: lambda { |org| Models::Domain.make(owning_organization: org) }
+        service_instances: lambda { |org| ManagedServiceInstance.make(space: Space.make(organization: org)) },
+        apps: lambda { |org| App.make(space: Space.make(organization: org)) },
+        owned_domain: lambda { |org| Domain.make(owning_organization: org) }
       },
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {
-        users: lambda { |org| Models::User.make },
-        managers: lambda { |org| Models::User.make },
-        billing_managers: lambda { |org| Models::User.make },
-        domains: lambda { |org| Models::Domain.find_or_create_shared_domain(Sham.domain) }
+        users: lambda { |org| User.make },
+        managers: lambda { |org| User.make },
+        billing_managers: lambda { |org| User.make },
+        domains: lambda { |org| Domain.find_or_create_shared_domain(Sham.domain) }
       }
 
     describe "Permissions" do
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
     describe "billing" do
       let(:org_admin_headers) do
-        user = Models::User.make
+        user = User.make
         org.add_user(user)
         org.add_manager(user)
         headers_for(user)
@@ -152,14 +152,14 @@ module VCAP::CloudController
 
     describe "quota definition" do
       let(:org_admin_headers) do
-        user = Models::User.make
+        user = User.make
         org.add_user(user)
         org.add_manager(user)
         headers_for(user)
       end
 
       let(:quota_definition) do
-        Models::QuotaDefinition.make
+        QuotaDefinition.make
       end
 
       let(:update_request) do

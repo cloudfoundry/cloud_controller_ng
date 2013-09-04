@@ -1,8 +1,8 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe Models::Task, type: :model do
-    let(:app) { Models::App.make :name => "my app" }
+  describe Task, type: :model do
+    let(:app) { App.make :name => "my app" }
     let(:message_bus) { Config.message_bus }
     let(:secure_token) { "42" }
 
@@ -10,7 +10,7 @@ module VCAP::CloudController
       SecureRandom.stub(:urlsafe_base64).and_return(secure_token)
     end
 
-    subject { Models::Task.make :app => app }
+    subject { Task.make :app => app }
 
     it "belongs to an application" do
       expect(subject.app.name).to eq("my app")
@@ -37,9 +37,9 @@ module VCAP::CloudController
     end
 
     describe "secure token encryption" do
-      let!(:task) { Models::Task.make(:app => app) }
+      let!(:task) { Task.make(:app => app) }
 
-      let(:last_row) { VCAP::CloudController::Models::Task.dataset.naked.order_by(:id).last }
+      let(:last_row) { VCAP::CloudController::Task.dataset.naked.order_by(:id).last }
 
       it "is encrypted" do
         expect(last_row[:secure_token]).not_to eq(secure_token)
@@ -51,7 +51,7 @@ module VCAP::CloudController
       end
 
       it "salt is unique for each task" do
-        other_task = Models::Task.make(:app => app)
+        other_task = Task.make(:app => app)
         expect(task.salt).not_to eq other_task.salt
       end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
         maddeningly_long_secure_token = "supercalifredgilisticexpialidocious"*1000
         SecureRandom.stub(:urlsafe_base64).and_return(maddeningly_long_secure_token)
 
-        long_secure_token_task = Models::Task.make(:app => app)
+        long_secure_token_task = Task.make(:app => app)
         long_secure_token_task.reload
         expect(long_secure_token_task.secure_token).to eq(maddeningly_long_secure_token)
       end
@@ -82,7 +82,7 @@ module VCAP::CloudController
     describe "#update_from_json" do
       describe "updating app_guid" do
         context "with a valid app" do
-          let(:other_app) { Models::App.make }
+          let(:other_app) { App.make }
 
           it "updates the relationship" do
             expect {
@@ -111,7 +111,7 @@ module VCAP::CloudController
           "https://some-download-uri"
         end
 
-        task = Models::Task.make :app => app
+        task = Task.make :app => app
 
         task.stub(:secure_token => "42")
 
@@ -129,7 +129,7 @@ module VCAP::CloudController
           "https://some-download-uri"
         end
 
-        task = Models::Task.make :app => app
+        task = Task.make :app => app
 
         task.destroy
 

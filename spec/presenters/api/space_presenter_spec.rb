@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe SpacePresenter do
   describe "#to_hash" do
-    let(:space) { VCAP::CloudController::Models::Space.make }
+    let(:space) { VCAP::CloudController::Space.make }
     subject { SpacePresenter.new(space) }
 
     it "creates a valid JSON" do

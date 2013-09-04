@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe StackAccess, type: :access do
     subject(:access) { StackAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::Models::User.make }
+    let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:object) { VCAP::CloudController::Models::Stack.make }
+    let(:object) { VCAP::CloudController::Stack.make }
 
     it_should_behave_like :admin_full_access
 

@@ -1,6 +1,6 @@
 require "spec_helper"
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe ServicePlanVisibility, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes    => [:service_plan, :organization],

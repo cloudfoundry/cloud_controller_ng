@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::LegacyApiBase, type: :controller do
-    let(:user) { Models::User.make(:admin => true, :active => true) }
+    let(:user) { User.make(:admin => true, :active => true) }
     let(:logger) { Steno.logger("vcap_spec") }
     let(:fake_req) { "" }
 
@@ -14,8 +14,8 @@ module VCAP::CloudController
       end
 
       context "with app spaces" do
-        let(:org) { Models::Organization.make }
-        let(:as) { Models::Space.make(:organization => org) }
+        let(:org) { Organization.make }
+        let(:as) { Space.make(:organization => org) }
         let(:api) {
           SecurityContext.set(user)
           LegacyApiBase.new(config, logger, {}, {}, fake_req)
@@ -57,9 +57,9 @@ module VCAP::CloudController
       end
 
       context "with app spaces" do
-        let(:org) { Models::Organization.make }
-        let(:as1) { Models::Space.make(:organization => org) }
-        let(:as2) { Models::Space.make(:organization => org) }
+        let(:org) { Organization.make }
+        let(:as1) { Space.make(:organization => org) }
+        let(:as2) { Space.make(:organization => org) }
         let(:api) {
           SecurityContext.set(user)
           LegacyApiBase.new(config, logger, {}, {}, fake_req)

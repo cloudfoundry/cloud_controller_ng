@@ -3,8 +3,8 @@ require "spec_helper"
 module VCAP::CloudController
   describe UserSummariesController, type: :controller do
     describe "GET /users/:guid/summary" do
-      let(:org) { Models::Organization.make }
-      let(:space) { Models::Space.make(organization: org) }
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
       let(:user) { make_user_for_space(space) }
       let(:current_user_headers) { admin_headers }
 

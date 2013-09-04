@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
     let(:config_hash) { { :config => 'hash' } }
-    let(:app) { Models::App.make(:package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :state => "STARTED", :instances => 1) }
+    let(:app) { App.make(:package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :state => "STARTED", :instances => 1) }
     let(:stager_id) { "my_stager" }
 
     let(:options) { {} }
@@ -524,13 +524,13 @@ module VCAP::CloudController
 
     describe ".staging_request" do
       let(:staging_task) { AppStagerTask.new(nil, message_bus, app, stager_pool) }
-      let(:app) { Models::App.make :droplet_hash => nil, :package_state => "PENDING" }
+      let(:app) { App.make :droplet_hash => nil, :package_state => "PENDING" }
       let(:dea_start_message) { {:dea_client_message => "start app message"} }
 
       before do
         3.times do
-          instance = Models::ManagedServiceInstance.make(:space => app.space)
-          binding = Models::ServiceBinding.make(:app => app, :service_instance => instance)
+          instance = ManagedServiceInstance.make(:space => app.space)
+          binding = ServiceBinding.make(:app => app, :service_instance => instance)
           app.add_service_binding(binding)
         end
 

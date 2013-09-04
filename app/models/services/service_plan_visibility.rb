@@ -1,4 +1,4 @@
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class ServicePlanVisibility < Sequel::Model
     many_to_one :service_plan
     many_to_one :organization
@@ -13,7 +13,7 @@ module VCAP::CloudController::Models
     end
 
     def self.visible_private_plan_ids_for_user(user)
-      user.organizations.map {|org| 
+      user.organizations.map {|org|
         visible_private_plan_ids_for_organization(org)
       }.flatten.uniq
     end

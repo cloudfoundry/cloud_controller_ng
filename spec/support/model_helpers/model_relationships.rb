@@ -86,7 +86,7 @@ module ModelHelpers
         end
 
         if !delete_ok &&
-            (described_class != VCAP::CloudController::Models::User) &&
+            (described_class != VCAP::CloudController::User) &&
             (cardinality_other =~ /one/ && (cardinality_self == :many || cardinality_other =~ /or_more/))
           it "should fail to destroy #{singular_association} due to database integrity checks" do
             related = create_for.call(obj)

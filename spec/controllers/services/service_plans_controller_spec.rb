@@ -3,21 +3,21 @@ require "spec_helper"
 module VCAP::CloudController
   describe ServicePlansController, :services, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/service_plans"
-    include_examples "enumerating objects", path: "/v2/service_plans", model: Models::ServicePlan
-    include_examples "reading a valid object", path: "/v2/service_plans", model: Models::ServicePlan,
+    include_examples "enumerating objects", path: "/v2/service_plans", model: ServicePlan
+    include_examples "reading a valid object", path: "/v2/service_plans", model: ServicePlan,
                      basic_attributes: %w(name free description service_guid extra unique_id)
     include_examples "operations on an invalid object", path: "/v2/service_plans"
-    include_examples "creating and updating", path: "/v2/service_plans", model: Models::ServicePlan,
+    include_examples "creating and updating", path: "/v2/service_plans", model: ServicePlan,
                      required_attributes: %w(name free description service_guid),
                      unique_attributes: %w(name service_guid),
                      extra_attributes: {extra: ->{Sham.extra}}
-    include_examples "deleting a valid object", path: "/v2/service_plans", model: Models::ServicePlan,
-      one_to_many_collection_ids: {:service_instances => lambda { |service_plan| Models::ManagedServiceInstance.make(:service_plan => service_plan) }
+    include_examples "deleting a valid object", path: "/v2/service_plans", model: ServicePlan,
+      one_to_many_collection_ids: {:service_instances => lambda { |service_plan| ManagedServiceInstance.make(:service_plan => service_plan) }
       },
       one_to_many_collection_ids_without_url: {}
-    include_examples "collection operations", path: "/v2/service_plans", model: Models::ServicePlan,
+    include_examples "collection operations", path: "/v2/service_plans", model: ServicePlan,
       one_to_many_collection_ids: {
-        service_instances: lambda { |service_plan| Models::ManagedServiceInstance.make(service_plan: service_plan) }
+        service_instances: lambda { |service_plan| ManagedServiceInstance.make(service_plan: service_plan) }
       },
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {}
@@ -36,15 +36,15 @@ module VCAP::CloudController
       before(:all) do
         reset_database
         5.times do
-          Models::ServicePlan.make
+          ServicePlan.make
         end
-        @obj_a = Models::ServicePlan.make
-        @obj_b = Models::ServicePlan.make
+        @obj_a = ServicePlan.make
+        @obj_b = ServicePlan.make
       end
 
       let(:creation_req_for_a) do
         Yajl::Encoder.encode(
-          :service_guid => Models::Service.make.guid,
+          :service_guid => Service.make.guid,
           :name => Sham.name,
           :free => false,
           :description => Sham.description)
@@ -108,10 +108,10 @@ module VCAP::CloudController
       end
     end
 
-    let(:developer) { make_developer_for_space(Models::Space.make) }
+    let(:developer) { make_developer_for_space(Space.make) }
 
     describe "modifying service plans" do
-      let!(:plan) { Models::ServicePlan.make }
+      let!(:plan) { ServicePlan.make }
       let(:body) { Yajl::Encoder.encode("public" => false) }
 
       context "a cf admin" do
@@ -132,7 +132,7 @@ module VCAP::CloudController
     end
 
     describe "non public service plans" do
-      let!(:private_plan) { Models::ServicePlan.make(public: false) }
+      let!(:private_plan) { ServicePlan.make(public: false) }
 
       let(:plan_guids) do
         decoded_response.fetch('resources').collect do |r|
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
       it "is visible to users from organizations with access to the plan" do
         organization = developer.organizations.first
-        VCAP::CloudController::Models::ServicePlanVisibility.create(
+        VCAP::CloudController::ServicePlanVisibility.create(
           organization: organization,
           service_plan: private_plan,
         )
@@ -163,7 +163,7 @@ module VCAP::CloudController
   end
 
   describe "POST", "/v2/service_plans" do
-    let(:service) { Models::Service.make }
+    let(:service) { Service.make }
     it "accepts a request with unique_id" do
       payload = ServicePlansController::CreateMessage.new(
         :name => 'foo',
@@ -188,13 +188,13 @@ module VCAP::CloudController
       post '/v2/service_plans', payload_without_public, json_headers(admin_headers)
       last_response.status.should eq(201)
       plan_guid = decoded_response.fetch('metadata').fetch('guid')
-      Models::ServicePlan.first(:guid => plan_guid).public.should be_true
+      ServicePlan.first(:guid => plan_guid).public.should be_true
     end
   end
 
   describe "PUT", "/v2/service_plans/:guid" do
     it "ignores the unique_id attribute" do
-      service_plan = Models::ServicePlan.make
+      service_plan = ServicePlan.make
       old_unique_id = service_plan.unique_id
       new_unique_id = old_unique_id.reverse
       payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})

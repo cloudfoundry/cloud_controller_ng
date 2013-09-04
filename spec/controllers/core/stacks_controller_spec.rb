@@ -3,9 +3,9 @@ require "spec_helper"
 module VCAP::CloudController
   describe StacksController, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/stacks"
-    include_examples "querying objects", path: "/v2/stacks", model: Models::Stack, queryable_attributes: [:name]
-    include_examples "enumerating objects", path: "/v2/stacks", model: Models::Stack
-    include_examples "reading a valid object", path: "/v2/stacks", model: Models::Stack, basic_attributes: [:name, :description]
+    include_examples "querying objects", path: "/v2/stacks", model: Stack, queryable_attributes: [:name]
+    include_examples "enumerating objects", path: "/v2/stacks", model: Stack
+    include_examples "reading a valid object", path: "/v2/stacks", model: Stack, basic_attributes: [:name, :description]
 
     def self.it_responds_to(verb, path, expected_status, expected_error)
       before(:all) { send(verb, path, {}, json_headers(admin_headers)) }
@@ -43,7 +43,7 @@ module VCAP::CloudController
       end
 
       def obj
-        @obj ||= Models::Stack.make
+        @obj ||= Stack.make
       end
 
       describe "POST /v2/stacks/" do

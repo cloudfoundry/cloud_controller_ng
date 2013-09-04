@@ -6,17 +6,17 @@ module VCAP::CloudController
       @num_services = 2
       @free_mem_size = 128
 
-      @system_domain = Models::Domain.new(
+      @system_domain = Domain.new(
           :name => Sham.domain,
           :owning_organization => nil)
       @system_domain.save(:validate => false)
 
-      @space = Models::Space.make
-      @route1 = Models::Route.make(:space => @space)
-      @route2 = Models::Route.make(:space => @space)
+      @space = Space.make
+      @route1 = Route.make(:space => @space)
+      @route2 = Route.make(:space => @space)
       @services = []
 
-      @app = Models::App.make(
+      @app = App.make(
         :space => @space,
         :production => false,
         :instances => 1,
@@ -27,9 +27,9 @@ module VCAP::CloudController
       )
 
       @num_services.times do
-        instance = Models::ManagedServiceInstance.make(:space => @space)
+        instance = ManagedServiceInstance.make(:space => @space)
         @services << instance
-        Models::ServiceBinding.make(:app => @app, :service_instance => instance)
+        ServiceBinding.make(:app => @app, :service_instance => instance)
       end
 
       @app.add_route(@route1)

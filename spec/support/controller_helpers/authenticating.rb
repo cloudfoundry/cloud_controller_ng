@@ -4,7 +4,7 @@ module ControllerHelpers
   shared_examples "uaa authenticated api" do |opts|
     context "with invalid auth header" do
       before(:all) do
-        headers = headers_for(Models::User.make)
+        headers = headers_for(User.make)
         headers["HTTP_AUTHORIZATION"] += "EXTRA STUFF"
         get opts[:path], {}, headers
       end
@@ -23,14 +23,14 @@ module ControllerHelpers
     context "with valid auth header" do
       context "for an existing user" do
         it "should return 200" do
-          get opts[:path], {}, headers_for(Models::User.make)
+          get opts[:path], {}, headers_for(User.make)
           last_response.status.should == 200 # finds the user
         end
       end
 
       context "for a new user" do
         it "should return 200" do
-          get opts[:path], {}, headers_for(Machinist.with_save_nerfed { Models::User.make })
+          get opts[:path], {}, headers_for(Machinist.with_save_nerfed { User.make })
           last_response.status.should == 200 # creates the user
         end
       end
@@ -51,7 +51,7 @@ module ControllerHelpers
 
       context "for a deleted user" do
         it "should return 200" do
-          user = Models::User.make
+          user = User.make
           headers = headers_for(user)
           user.delete
           get opts[:path], {}, headers

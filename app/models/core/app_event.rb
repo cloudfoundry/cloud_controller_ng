@@ -1,4 +1,4 @@
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class AppEvent < Sequel::Model
     many_to_one :app
 

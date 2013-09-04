@@ -12,7 +12,7 @@ describe AppBitsPacker do
   end
 
   let(:compressed_path) { File.expand_path("../../../fixtures/good.zip", __FILE__) }
-  let(:app) { VCAP::CloudController::Models::App.make }
+  let(:app) { VCAP::CloudController::App.make }
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
   let(:global_app_bits_cache) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "global_app_bits_cache") }

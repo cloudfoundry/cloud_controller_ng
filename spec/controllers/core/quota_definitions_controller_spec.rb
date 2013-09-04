@@ -3,20 +3,20 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::QuotaDefinitionsController, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/quota_definitions"
-    include_examples "enumerating objects", path: "/v2/quota_definitions", model: Models::QuotaDefinition
-    include_examples "reading a valid object", path: "/v2/quota_definitions", model: Models::QuotaDefinition, basic_attributes: %w(name non_basic_services_allowed total_services memory_limit trial_db_allowed)
+    include_examples "enumerating objects", path: "/v2/quota_definitions", model: QuotaDefinition
+    include_examples "reading a valid object", path: "/v2/quota_definitions", model: QuotaDefinition, basic_attributes: %w(name non_basic_services_allowed total_services memory_limit trial_db_allowed)
     include_examples "operations on an invalid object", path: "/v2/quota_definitions"
-    include_examples "creating and updating", path: "/v2/quota_definitions", model: Models::QuotaDefinition, required_attributes: %w(name non_basic_services_allowed total_services memory_limit), unique_attributes: %w(name)
-    include_examples "deleting a valid object", path: "/v2/quota_definitions", model: Models::QuotaDefinition, one_to_many_collection_ids: {},
+    include_examples "creating and updating", path: "/v2/quota_definitions", model: QuotaDefinition, required_attributes: %w(name non_basic_services_allowed total_services memory_limit), unique_attributes: %w(name)
+    include_examples "deleting a valid object", path: "/v2/quota_definitions", model: QuotaDefinition, one_to_many_collection_ids: {},
       one_to_many_collection_ids_without_url: {
         :organizations => lambda { |quota_definition|
-          Models::Organization.make(:quota_definition => quota_definition)
+          Organization.make(:quota_definition => quota_definition)
         }
       }
-    include_examples "collection operations", path: "/v2/quota_definitions", model: Models::QuotaDefinition,
+    include_examples "collection operations", path: "/v2/quota_definitions", model: QuotaDefinition,
       one_to_many_collection_ids: {},
       one_to_many_collection_ids_without_url: {
-        organizations: lambda { |quota_definition| Models::Organization.make(quota_definition: quota_definition) }
+        organizations: lambda { |quota_definition| Organization.make(quota_definition: quota_definition) }
       },
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {}
@@ -33,7 +33,7 @@ module VCAP::CloudController
         :memory_limit => 1024
       }
     }
-    let(:existing_quota) { VCAP::CloudController::Models::QuotaDefinition.make }
+    let(:existing_quota) { VCAP::CloudController::QuotaDefinition.make }
 
     context "when the user is a cf admin" do
       let(:headers) { admin_headers }
@@ -61,7 +61,7 @@ module VCAP::CloudController
     end
 
     context "when the user is not a cf admin" do
-      let(:headers) { headers_for(VCAP::CloudController::Models::User.make(:admin => false)) }
+      let(:headers) { headers_for(VCAP::CloudController::User.make(:admin => false)) }
       let(:quota_name) { "quota 2" }
 
       it "does not allow creation of a quota def" do

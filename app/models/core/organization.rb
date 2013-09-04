@@ -1,14 +1,14 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class Organization < Sequel::Model
     class InvalidDomainRelation < InvalidRelation; end
 
     one_to_many       :spaces
-    one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::Models::ServiceInstance.filter(:space => spaces) }
+    one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::ServiceInstance.filter(:space => spaces) }
     one_to_many       :apps, :dataset => lambda { App.filter(:space => spaces) }
-    one_to_many       :app_events, :dataset => lambda { VCAP::CloudController::Models::AppEvent.filter(:app => apps) }
-    one_to_many       :owned_domain, :class => "VCAP::CloudController::Models::Domain", :key => :owning_organization_id
+    one_to_many       :app_events, :dataset => lambda { VCAP::CloudController::AppEvent.filter(:app => apps) }
+    one_to_many       :owned_domain, :class => "VCAP::CloudController::Domain", :key => :owning_organization_id
     one_to_many       :service_plan_visibilities
     many_to_many      :domains, :before_add => :validate_domain
     many_to_one       :quota_definition

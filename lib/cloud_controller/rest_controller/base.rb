@@ -103,8 +103,8 @@ module VCAP::CloudController::RestController
     rescue JsonMessage::Error => e
       logger.debug("Rescued JsonMessage::Error at #{__FILE__}:#{__LINE__}\n#{e.inspect}\n#{e.backtrace.join("\n")}")
       raise MessageParseError.new(e)
-    rescue Models::InvalidRelation => e
-      raise InvalidRelation.new(e)
+    rescue VCAP::CloudController::InvalidRelation => e
+      raise VCAP::Errors::InvalidRelation.new(e)
     rescue VCAP::Errors::Error => e
       raise
     rescue => e
@@ -114,7 +114,7 @@ module VCAP::CloudController::RestController
 
     # Fetch the current active user.  May be nil
     #
-    # @return [Models::User] User object for the currently active user
+    # @return [User] User object for the currently active user
     def user
       VCAP::CloudController::SecurityContext.current_user
     end

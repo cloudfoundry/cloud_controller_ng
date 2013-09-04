@@ -4,6 +4,6 @@ Sequel.migration do
   end
 
   down do
-    add_column :service_instances, :kind, String, null: false, default: 'VCAP::CloudController::Models::ManagedServiceInstance'
+    add_column :service_instances, :kind, String, null: false, default: 'VCAP::CloudController::ManagedServiceInstance'
   end
 end

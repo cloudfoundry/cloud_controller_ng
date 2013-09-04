@@ -1,4 +1,4 @@
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class TaskAccess < BaseAccess
     def create?(task)
       super || task.space.developers.include?(context.user)

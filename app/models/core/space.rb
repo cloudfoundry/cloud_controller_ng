@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class Space < Sequel::Model
     class InvalidDeveloperRelation < InvalidRelation; end
     class InvalidAuditorRelation   < InvalidRelation; end
@@ -24,7 +24,7 @@ module VCAP::CloudController::Models
     one_to_many       :managed_service_instances
     one_to_many       :routes
     one_to_many       :app_events, :dataset => lambda { AppEvent.filter(:app => apps) }
-    one_to_many       :default_users, :class => "VCAP::CloudController::Models::User", :key => :default_space_id
+    one_to_many       :default_users, :class => "VCAP::CloudController::User", :key => :default_space_id
     many_to_many      :domains, :before_add => :validate_domain
 
     add_association_dependencies :domains => :nullify, :default_users => :nullify,

@@ -1,11 +1,11 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe Models::Event, type: :model do
-    let(:space) { Models::Space.make :name => "myspace" }
+  describe Event, type: :model do
+    let(:space) { Space.make :name => "myspace" }
 
     subject(:event) do
-      Models::Event.make :type => "audit.movie.premiere",
+      Event.make :type => "audit.movie.premiere",
         :actor => "Nicolas Cage",
         :actor_type => "One True God",
         :actee => "John Travolta",
@@ -61,8 +61,8 @@ module VCAP::CloudController
     end
 
     describe ".record_app_update" do
-      let(:app) { Models::App.make(name: 'old', instances: 1, memory: 84, state: "STOPPED") }
-      let(:user) { Models::User.make }
+      let(:app) { App.make(name: 'old', instances: 1, memory: 84, state: "STOPPED") }
+      let(:user) { User.make }
 
       it "records the changes in metadata" do
         app.instances = 2
@@ -114,12 +114,12 @@ module VCAP::CloudController
 
     describe ".record_app_create" do
       let(:app) do
-        Models::App.make(
+        App.make(
           name: 'new', instances: 1, memory: 84,
           state: "STOPPED", environment_json: { "super" => "secret "})
       end
 
-      let(:user) { Models::User.make }
+      let(:user) { User.make }
 
       it "records the changes in metadata" do
         event = described_class.record_app_create(app, user)
@@ -137,9 +137,9 @@ module VCAP::CloudController
     end
 
     describe ".record_app_delete" do
-      let(:deleting_app) { Models::App.make }
+      let(:deleting_app) { App.make }
 
-      let(:user) { Models::User.make }
+      let(:user) { User.make }
 
       it "records an empty changes in metadata" do
         event = described_class.record_app_delete(deleting_app, user)

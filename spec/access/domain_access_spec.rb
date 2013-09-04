@@ -1,14 +1,14 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe DomainAccess, type: :access do
     subject(:access) { DomainAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::Models::User.make }
+    let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:org) { VCAP::CloudController::Models::Organization.make }
-    let(:space) { VCAP::CloudController::Models::Space.make(:organization => org) }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(:organization => org) }
     let(:object) do
-      domain = VCAP::CloudController::Models::Domain.make(:owning_organization => org)
+      domain = VCAP::CloudController::Domain.make(:owning_organization => org)
       space.add_domain(domain)
       domain
     end
@@ -64,7 +64,7 @@ module VCAP::CloudController::Models
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Models::Organization.make
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_user(user)
       end
 
@@ -73,7 +73,7 @@ module VCAP::CloudController::Models
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Models::Organization.make
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_manager(user)
       end
 

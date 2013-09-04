@@ -1,14 +1,14 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe AppEventAccess, type: :access do
     subject(:access) { AppEventAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::Models::User.make }
+    let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:org) { VCAP::CloudController::Models::Organization.make }
-    let(:space) { VCAP::CloudController::Models::Space.make(:organization => org) }
-    let(:app) { VCAP::CloudController::Models::App.make(:space => space) }
-    let(:object) { VCAP::CloudController::Models::AppEvent.make(:app => app) }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(:organization => org) }
+    let(:app) { VCAP::CloudController::App.make(:space => space) }
+    let(:object) { VCAP::CloudController::AppEvent.make(:app => app) }
 
     it_should_behave_like :admin_full_access
 
@@ -58,7 +58,7 @@ module VCAP::CloudController::Models
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Models::Organization.make
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_user(user)
       end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController::Models
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Models::Organization.make
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_manager(user)
       end
 

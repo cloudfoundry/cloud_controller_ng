@@ -1,96 +1,96 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe Models::App, type: :model do
-    let(:org) { Models::Organization.make }
-    let(:space) { Models::Space.make(:organization => org) }
+  describe App, type: :model do
+    let(:org) { Organization.make }
+    let(:space) { Space.make(:organization => org) }
 
     let(:domain) do
-      Models::Domain.make(:owning_organization => org).tap do |d|
+      Domain.make(:owning_organization => org).tap do |d|
         org.add_domain(d)
         space.add_domain(d)
       end
     end
 
-    let(:route) { Models::Route.make(:domain => domain, :space => space) }
+    let(:route) { Route.make(:domain => domain, :space => space) }
 
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :space],
       :unique_attributes => [ [:space, :name] ],
-      :custom_attributes_for_uniqueness_tests => ->{ {stack: Models::Stack.make} },
+      :custom_attributes_for_uniqueness_tests => ->{ {stack: Stack.make} },
       :stripped_string_attributes => :name,
       :many_to_one => {
         :space => {
           :delete_ok => true,
-          :create_for => lambda { |app| Models::Space.make },
+          :create_for => lambda { |app| Space.make },
         },
         :stack => {
           :delete_ok => true,
-          :create_for => lambda { |app| Models::Stack.make },
+          :create_for => lambda { |app| Stack.make },
         }
       },
       :one_to_zero_or_more => {
         :service_bindings => lambda { |app|
-          service_binding = Models::ServiceBinding.make
+          service_binding = ServiceBinding.make
           service_binding.service_instance.space = app.space
           service_binding
         },
         :routes => lambda { |app|
-          domain = Models::Domain.make(
+          domain = Domain.make(
             :owning_organization => app.space.organization
           )
           app.space.add_domain(domain)
-          Models::Route.make(
+          Route.make(
             :domain => domain,
             :space => app.space
           )
         },
         :events => lambda { |app|
-          Models::AppEvent.make(:app => app)
+          AppEvent.make(:app => app)
         }
       }
     }
 
     describe ".deleted" do
       it "includes deleted apps" do
-        app = Models::App.make
+        app = App.make
         app.soft_delete
-        Models::App.deleted[:id => app.id].should_not be_nil
+        App.deleted[:id => app.id].should_not be_nil
       end
 
       it "does not include non-deleted apps" do
-        app = Models::App.make
-        Models::App.deleted[:id => app.id].should be_nil
+        app = App.make
+        App.deleted[:id => app.id].should be_nil
       end
     end
 
     describe ".existing" do
       it "includes non-deleted apps" do
-        app = Models::App.make
-        Models::App.existing[:id => app.id].should_not be_nil
+        app = App.make
+        App.existing[:id => app.id].should_not be_nil
       end
 
       it "does not include deleted apps" do
-        deleted_app = Models::App.make
+        deleted_app = App.make
         deleted_app.soft_delete
-        Models::App.existing[:id => deleted_app.id].should be_nil
+        App.existing[:id => deleted_app.id].should be_nil
       end
     end
 
     describe ".with_deleted" do
       it "includes both deleted and non-deleted apps" do
-        app = Models::App.make
-        deleted_app = Models::App.make
+        app = App.make
+        deleted_app = App.make
         deleted_app.soft_delete
-        Models::App.with_deleted[:id => app.id].should_not be_nil
-        Models::App.with_deleted[:id => deleted_app.id].should_not be_nil
+        App.with_deleted[:id => app.id].should_not be_nil
+        App.with_deleted[:id => deleted_app.id].should_not be_nil
       end
     end
 
     describe "#stack" do
       def self.it_always_sets_stack
         context "when stack was already set" do
-          let(:stack) { Models::Stack.make }
+          let(:stack) { Stack.make }
           before { subject.stack = stack }
 
           it "keeps previously set stack" do
@@ -103,20 +103,20 @@ module VCAP::CloudController
         context "when stack was set to nil" do
           before do
             subject.stack = nil
-            Models::Stack.default.should_not be_nil
+            Stack.default.should_not be_nil
           end
 
           it "is populated with default stack" do
             subject.save
             subject.refresh
-            subject.stack.should == Models::Stack.default
+            subject.stack.should == Stack.default
           end
         end
       end
 
       context "when app is being created" do
         subject do
-          Models::App.new(
+          App.new(
             :name => Sham.name,
             :space => space,
           )
@@ -125,16 +125,16 @@ module VCAP::CloudController
       end
 
       context "when app is being updated" do
-        subject { Models::App.make }
+        subject { App.make }
         it_always_sets_stack
       end
     end
 
     describe "#stack=" do
-      let(:new_stack) { Models::Stack.make }
+      let(:new_stack) { Stack.make }
 
       context "app was not staged before" do
-        subject { Models::App.new }
+        subject { App.new }
 
         it "doesn't mark the app for staging" do
           subject.stack = new_stack
@@ -144,7 +144,7 @@ module VCAP::CloudController
       end
 
       context "app needs staging" do
-        subject { Models::App.make(
+        subject { App.make(
           :package_hash => "package-hash",
           :package_state => "PENDING",
           :instances => 1,
@@ -159,7 +159,7 @@ module VCAP::CloudController
       end
 
       context "app is already staged" do
-        subject { Models::App.make(:package_hash => "package-hash", :instances => 1, :state => "STARTED") }
+        subject { App.make(:package_hash => "package-hash", :instances => 1, :state => "STARTED") }
         before { subject.droplet_hash = "droplet-hash" }
 
         it "marks the app for re-staging" do
@@ -178,34 +178,34 @@ module VCAP::CloudController
 
     describe "bad relationships" do
       it "should not associate an app with a route on a different space" do
-        app = Models::App.make
+        app = App.make
 
-        domain = Models::Domain.make(
+        domain = Domain.make(
           :owning_organization => app.space.organization
         )
 
-        other_space = Models::Space.make(:organization => app.space.organization)
+        other_space = Space.make(:organization => app.space.organization)
         other_space.add_domain(domain)
 
-        route = Models::Route.make(
+        route = Route.make(
           :space => other_space,
           :domain => domain,
         )
 
         expect {
           app.add_route(route)
-        }.to raise_error(Models::App::InvalidRouteRelation, /URL was not available/)
+        }.to raise_error(App::InvalidRouteRelation, /URL was not available/)
       end
 
       it "should not associate an app with a route created on another space with a shared domain" do
-        shared_domain = Models::Domain.new(:name => Sham.name,
+        shared_domain = Domain.new(:name => Sham.name,
           :owning_organization => nil)
         shared_domain.save(:validate => false)
-        app = Models::App.make
+        app = App.make
         app.space.add_domain(shared_domain)
 
-        other_space = Models::Space.make(:organization => app.space.organization)
-        route = Models::Route.make(
+        other_space = Space.make(:organization => app.space.organization)
+        route = Route.make(
           :host => Sham.host,
           :space => other_space,
           :domain => shared_domain
@@ -213,19 +213,19 @@ module VCAP::CloudController
 
         expect {
           app.add_route(route)
-        }.to raise_error Models::App::InvalidRouteRelation
+        }.to raise_error App::InvalidRouteRelation
       end
     end
 
     describe "#environment_json" do
       it "deserializes the serialized value" do
-        app = Models::App.make(:environment_json => {"jesse" => "awesome"})
+        app = App.make(:environment_json => {"jesse" => "awesome"})
         app.environment_json.should eq("jesse" => "awesome")
       end
 
       def self.it_does_not_mark_for_re_staging
         it "does not mark an app for restage" do
-          app = Models::App.make(
+          app = App.make(
             :package_hash => "deadbeef",
             :package_state => "STAGED",
             :environment_json => old_env_json,
@@ -253,8 +253,8 @@ module VCAP::CloudController
       describe "env is encrypted" do
         let(:env) { {"jesse" => "awesome"} }
         let(:long_env) { {"many_os" => "o" * 10_000} }
-        let!(:app) { Models::App.make(:environment_json => env) }
-        let(:last_row) { VCAP::CloudController::Models::App.dataset.naked.order_by(:id).last }
+        let!(:app) { App.make(:environment_json => env) }
+        let(:last_row) { VCAP::CloudController::App.dataset.naked.order_by(:id).last }
 
         it "is encrypted" do
           expect(last_row[:encrypted_environment_json]).not_to eq Yajl::Encoder.encode(env).to_s
@@ -266,7 +266,7 @@ module VCAP::CloudController
         end
 
         it "salt is unique for each app" do
-          app_2 = Models::App.make(:environment_json => env)
+          app_2 = App.make(:environment_json => env)
           expect(app.salt).not_to eq app_2.salt
         end
 
@@ -275,12 +275,12 @@ module VCAP::CloudController
         end
 
         it "must deal with null env_json to remain null after encryption" do
-          null_json_app = Models::App.make()
+          null_json_app = App.make()
           expect(null_json_app.environment_json).to be_nil
         end
 
         it "works with long serialized environments" do
-          app = Models::App.make(:environment_json => long_env)
+          app = App.make(:environment_json => long_env)
           app.reload
           expect(app.environment_json).to eq(long_env)
         end
@@ -289,7 +289,7 @@ module VCAP::CloudController
 
     describe "metadata" do
       it "deserializes the serialized value" do
-        app = Models::App.make(
+        app = App.make(
           :metadata => {"jesse" => "super awesome"},
         )
         app.metadata.should eq("jesse" => "super awesome")
@@ -298,7 +298,7 @@ module VCAP::CloudController
 
     describe "command" do
       it "stores the command in the metadata" do
-        app = Models::App.make(:command => "foobar")
+        app = App.make(:command => "foobar")
         app.metadata.should eq("command" => "foobar")
         app.save
         app.metadata.should eq("command" => "foobar")
@@ -309,7 +309,7 @@ module VCAP::CloudController
 
     describe "console" do
       it "stores the command in the metadata" do
-        app = Models::App.make(:console => true)
+        app = App.make(:console => true)
         app.metadata.should eq("console" => true)
         app.save
         app.metadata.should eq("console" => true)
@@ -318,19 +318,19 @@ module VCAP::CloudController
       end
 
       it "returns false if console was explicitly set to false" do
-        app = Models::App.make(:console => false)
+        app = App.make(:console => false)
         app.console.should == false
       end
 
       it "returns false if console was not set" do
-        app = Models::App.make(:console => true)
+        app = App.make(:console => true)
         app.console.should == true
       end
     end
 
     describe "debug" do
       it "stores the command in the metadata" do
-        app = Models::App.make(:debug => "suspend")
+        app = App.make(:debug => "suspend")
         app.metadata.should eq("debug" => "suspend")
         app.save
         app.metadata.should eq("debug" => "suspend")
@@ -339,31 +339,31 @@ module VCAP::CloudController
       end
 
       it "returns nil if debug was explicitly set to nil" do
-        app = Models::App.make(:debug => nil)
+        app = App.make(:debug => nil)
         app.debug.should be_nil
       end
 
       it "returns nil if debug was not set" do
-        app = Models::App.make
+        app = App.make
         app.debug.should be_nil
       end
     end
 
     describe "validations" do
       describe "name" do
-        let(:space) { Models::Space.make }
+        let(:space) { Space.make }
 
         it "does not allow the same name in a different case", :skip_sqlite => true do
-          Models::App.make(:name => "lowercase", :space => space)
+          App.make(:name => "lowercase", :space => space)
 
           expect {
-            Models::App.make(:name => "lowerCase", :space => space)
+            App.make(:name => "lowerCase", :space => space)
           }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
         end
       end
 
       describe "env" do
-        let(:app) { Models::App.make }
+        let(:app) { App.make }
 
         it "should allow an empty environment" do
           app.environment_json = {}
@@ -389,7 +389,7 @@ module VCAP::CloudController
       end
 
       describe "metadata" do
-        let(:app) { Models::App.make }
+        let(:app) { App.make }
 
         it "should allow empty metadata" do
           app.metadata = {}
@@ -419,7 +419,7 @@ module VCAP::CloudController
     end
 
     describe "package_hash=" do
-      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED") }
+      let(:app) { App.make(:package_hash => "abc", :package_state => "STAGED") }
 
       it "should set the state to PENDING if the hash changes" do
         app.package_hash = "def"
@@ -435,7 +435,7 @@ module VCAP::CloudController
     end
 
     describe "staged?" do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
 
       it "should return true if package_state is STAGED" do
         app.package_state = "STAGED"
@@ -449,7 +449,7 @@ module VCAP::CloudController
     end
 
     describe "pending?" do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
 
       it "should return true if package_state is PENDING" do
         app.package_state = "PENDING"
@@ -463,7 +463,7 @@ module VCAP::CloudController
     end
 
     describe "failed?" do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
 
       it "should return true if package_state is FAILED" do
         app.package_state = "FAILED"
@@ -477,7 +477,7 @@ module VCAP::CloudController
     end
 
     describe "needs_staging?" do
-      subject(:app) { Models::App.make }
+      subject(:app) { App.make }
 
       context "when the app is started" do
         before do
@@ -528,7 +528,7 @@ module VCAP::CloudController
     end
 
     describe "started?" do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
 
       it "should return true if app is STARTED" do
         app.state = "STARTED"
@@ -542,7 +542,7 @@ module VCAP::CloudController
     end
 
     describe "stopped?" do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
 
       it "should return true if app is STOPPED" do
         app.state = "STOPPED"
@@ -556,7 +556,7 @@ module VCAP::CloudController
     end
 
     describe "kill_after_multiple_restarts?" do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
 
       it "defaults to false" do
         expect(app.kill_after_multiple_restarts?).to eq false
@@ -569,7 +569,7 @@ module VCAP::CloudController
     end
 
     describe "version" do
-      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED") }
+      let(:app) { App.make(:package_hash => "abc", :package_state => "STAGED") }
 
       it "should have a version on create" do
         app.version.should_not be_nil
@@ -615,7 +615,7 @@ module VCAP::CloudController
     end
 
     describe "droplet_hash=" do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
 
       it "should set the state to staged" do
         app.state = "STARTED"
@@ -630,7 +630,7 @@ module VCAP::CloudController
 
     describe "uris" do
       it "should return the uris on the app" do
-        app = Models::App.make(:space => space)
+        app = App.make(:space => space)
         app.add_route(route)
         app.uris.should == [route.fqdn]
       end
@@ -638,26 +638,26 @@ module VCAP::CloudController
 
     describe "adding routes to unsaved apps" do
       it "should set a route by guid on a new but unsaved app" do
-        app = Models::App.new(:name => Sham.name,
+        app = App.new(:name => Sham.name,
           :space => space,
-          :stack => Models::Stack.make)
+          :stack => Stack.make)
         app.add_route_by_guid(route.guid)
         app.save
         app.routes.should == [route]
       end
 
       it "should not allow a route on a domain from another org" do
-        app = Models::App.new(:name => Sham.name,
+        app = App.new(:name => Sham.name,
           :space => space,
-          :stack => Models::Stack.make)
-        app.add_route_by_guid(Models::Route.make.guid)
-        expect { app.save }.to raise_error(Models::App::InvalidRouteRelation)
+          :stack => Stack.make)
+        app.add_route_by_guid(Route.make.guid)
+        expect { app.save }.to raise_error(App::InvalidRouteRelation)
         app.routes.should be_empty
       end
     end
 
     describe "destroy" do
-      let(:app) { Models::App.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
+      let(:app) { App.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
 
       context "with a started app" do
         it "should stop the app on the dea" do
@@ -695,22 +695,22 @@ module VCAP::CloudController
       end
 
       it "should destroy all dependent service bindings" do
-        service_binding = Models::ServiceBinding.make(
+        service_binding = ServiceBinding.make(
           :app => app,
-          :service_instance => Models::ManagedServiceInstance.make(:space => app.space)
+          :service_instance => ManagedServiceInstance.make(:space => app.space)
         )
         expect {
           app.destroy
-        }.to change { Models::ServiceBinding.where(:id => service_binding.id).count }.from(1).to(0)
+        }.to change { ServiceBinding.where(:id => service_binding.id).count }.from(1).to(0)
       end
 
       it "should destroy all dependent crash events" do
-        app_event = Models::AppEvent.make(:app => app)
+        app_event = AppEvent.make(:app => app)
 
         expect {
           app.destroy
         }.to change {
-          Models::AppEvent.where(:id => app_event.id).count
+          AppEvent.where(:id => app_event.id).count
         }.from(1).to(0)
       end
     end
@@ -719,59 +719,59 @@ module VCAP::CloudController
       context "app state changes" do
         context "creating a stopped app" do
           it "does not generate a start event or stop event" do
-            Models::AppStartEvent.should_not_receive(:create_from_app)
-            Models::AppStopEvent.should_not_receive(:create_from_app)
-            Models::App.make(:state => "STOPPED")
+            AppStartEvent.should_not_receive(:create_from_app)
+            AppStopEvent.should_not_receive(:create_from_app)
+            App.make(:state => "STOPPED")
           end
         end
 
         context "creating a started app" do
           it "does not generate a stop event" do
-            Models::AppStartEvent.should_receive(:create_from_app)
-            Models::AppStopEvent.should_not_receive(:create_from_app)
-            Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            AppStartEvent.should_receive(:create_from_app)
+            AppStopEvent.should_not_receive(:create_from_app)
+            App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
           end
         end
 
         context "starting a stopped app" do
           it "generates a start event" do
-            app = Models::App.make(:state => "STOPPED")
-            Models::AppStartEvent.should_receive(:create_from_app).with(app)
-            Models::AppStopEvent.should_not_receive(:create_from_app)
+            app = App.make(:state => "STOPPED")
+            AppStartEvent.should_receive(:create_from_app).with(app)
+            AppStopEvent.should_not_receive(:create_from_app)
             app.update(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
           end
         end
 
         context "updating a stopped app" do
           it "does not generate a start event or stop event" do
-            app = Models::App.make(:state => "STOPPED")
-            Models::AppStartEvent.should_not_receive(:create_from_app)
-            Models::AppStopEvent.should_not_receive(:create_from_app)
+            app = App.make(:state => "STOPPED")
+            AppStartEvent.should_not_receive(:create_from_app)
+            AppStopEvent.should_not_receive(:create_from_app)
             app.update(:state => "STOPPED")
           end
         end
 
         context "stopping a started app" do
           it "does not generate a start event, but generates a stop event" do
-            app = Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
-            Models::AppStartEvent.should_not_receive(:create_from_app)
-            Models::AppStopEvent.should_receive(:create_from_app).with(app)
+            app = App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            AppStartEvent.should_not_receive(:create_from_app)
+            AppStopEvent.should_receive(:create_from_app).with(app)
             app.update(:state => "STOPPED")
           end
         end
 
         context "updating a started app" do
           it "does not generate a start or stop event" do
-            app = Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
-            Models::AppStartEvent.should_not_receive(:create_from_app)
-            Models::AppStopEvent.should_not_receive(:create_from_app)
+            app = App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            AppStartEvent.should_not_receive(:create_from_app)
+            AppStopEvent.should_not_receive(:create_from_app)
             app.update(:state => "STARTED")
           end
         end
 
         context "deleting a started app" do
           let(:app) do
-            app = Models::App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            app = App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
             app_org = app.space.organization
             app_org.billing_enabled = true
             app_org.save(:validate => false) # because we need to force enable billing
@@ -779,18 +779,18 @@ module VCAP::CloudController
           end
 
           before do
-            Models::AppStartEvent.create_from_app(app)
+            AppStartEvent.create_from_app(app)
             VCAP::CloudController::DeaClient.stub(:stop)
           end
 
           it "generates a stop event" do
-            Models::AppStopEvent.should_receive(:create_from_app).with(app)
+            AppStopEvent.should_receive(:create_from_app).with(app)
             app.destroy
           end
 
           context "when the stop event creation fails" do
             before do
-              Models::AppStopEvent.stub(:create_from_app).with(app).and_raise("boom")
+              AppStopEvent.stub(:create_from_app).with(app).and_raise("boom")
             end
 
             it "rolls back the deletion" do
@@ -800,8 +800,8 @@ module VCAP::CloudController
 
           context "when somehow there is already a stop event for the most recent start event" do
             it "succeeds and does not generate a duplicate stop event" do
-              Models::AppStopEvent.create_from_app(app)
-              Models::AppStopEvent.should_not_receive(:create_from_app).with(app)
+              AppStopEvent.create_from_app(app)
+              AppStopEvent.should_not_receive(:create_from_app).with(app)
               app.destroy
             end
           end
@@ -809,8 +809,8 @@ module VCAP::CloudController
 
         context "deleting a stopped app" do
           it "does not generate a stop event" do
-            app = Models::App.make(:state => "STOPPED")
-            Models::AppStopEvent.should_not_receive(:create_from_app)
+            app = App.make(:state => "STOPPED")
+            AppStopEvent.should_not_receive(:create_from_app)
             app.destroy
           end
         end
@@ -818,7 +818,7 @@ module VCAP::CloudController
 
       context "footprint changes" do
         let(:app) do
-          app = Models::App.make
+          app = App.make
           app_org = app.space.organization
           app_org.billing_enabled = true
           app_org.save(:validate => false) # because we need to force enable billing
@@ -827,16 +827,16 @@ module VCAP::CloudController
 
         context "new app" do
           it "does not generate a start event or stop event" do
-            Models::AppStartEvent.should_not_receive(:create_from_app)
-            Models::AppStopEvent.should_not_receive(:create_from_app)
+            AppStartEvent.should_not_receive(:create_from_app)
+            AppStopEvent.should_not_receive(:create_from_app)
             app
           end
         end
 
         context "no change in footprint" do
           it "does not generate a start event or stop event" do
-            Models::AppStartEvent.should_not_receive(:create_from_app)
-            Models::AppStopEvent.should_not_receive(:create_from_app)
+            AppStartEvent.should_not_receive(:create_from_app)
+            AppStopEvent.should_not_receive(:create_from_app)
             app.save
           end
         end
@@ -851,18 +851,18 @@ module VCAP::CloudController
 
           def self.it_emits_app_start_and_stop_events(&block)
             it "generates a stop event for the old run_id, and start events for the new run_id" do
-              original_start_event = Models::AppStartEvent.filter(:app_guid => app.guid).all[0]
+              original_start_event = AppStartEvent.filter(:app_guid => app.guid).all[0]
 
               yield(app)
 
               app.save
 
-              Models::AppStopEvent.filter(
+              AppStopEvent.filter(
                 :app_guid => app.guid,
                 :app_run_id => original_start_event.app_run_id
               ).count.should == 1
 
-              Models::AppStartEvent.filter(
+              AppStartEvent.filter(
                 :app_guid => app.guid
               ).all.last.app_run_id.should_not == original_start_event.app_run_id
             end
@@ -891,15 +891,15 @@ module VCAP::CloudController
 
     describe "quota" do
       let(:quota) do
-        Models::QuotaDefinition.make(:memory_limit => 128)
+        QuotaDefinition.make(:memory_limit => 128)
       end
 
       context "app creation" do
         it "should raise error when quota is exceeded" do
-          org = Models::Organization.make(:quota_definition => quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => quota)
+          space = Space.make(:organization => org)
           expect do
-            Models::App.make(:space => space,
+            App.make(:space => space,
               :memory => 65,
               :instances => 2)
           end.to raise_error(Sequel::ValidationFailed,
@@ -907,10 +907,10 @@ module VCAP::CloudController
         end
 
         it "should not raise error when quota is not exceeded" do
-          org = Models::Organization.make(:quota_definition => quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => quota)
+          space = Space.make(:organization => org)
           expect do
-            Models::App.make(:space => space,
+            App.make(:space => space,
               :memory => 64,
               :instances => 2)
           end.to_not raise_error
@@ -919,9 +919,9 @@ module VCAP::CloudController
 
       context "app update" do
         it "should raise error when quota is exceeded" do
-          org = Models::Organization.make(:quota_definition => quota)
-          space = Models::Space.make(:organization => org)
-          app = Models::App.make(:space => space,
+          org = Organization.make(:quota_definition => quota)
+          space = Space.make(:organization => org)
+          app = App.make(:space => space,
             :memory => 64,
             :instances => 2)
           app.memory = 65
@@ -930,9 +930,9 @@ module VCAP::CloudController
         end
 
         it "should not raise error when quota is not exceeded" do
-          org = Models::Organization.make(:quota_definition => quota)
-          space = Models::Space.make(:organization => org)
-          app = Models::App.make(:space => space,
+          org = Organization.make(:quota_definition => quota)
+          space = Space.make(:organization => org)
+          app = App.make(:space => space,
             :memory => 63,
             :instances => 2)
           app.memory = 64
@@ -940,9 +940,9 @@ module VCAP::CloudController
         end
 
         it "can delete an app that somehow has exceeded its memory quota" do
-          org = Models::Organization.make(:quota_definition => quota)
-          space = Models::Space.make(:organization => org)
-          app = Models::App.make(:space => space,
+          org = Organization.make(:quota_definition => quota)
+          space = Space.make(:organization => org)
+          app = App.make(:space => space,
             :memory => 64,
             :instances => 2)
 
@@ -957,12 +957,12 @@ module VCAP::CloudController
     end
 
     describe "file_descriptors" do
-      subject { Models::App.make }
+      subject { App.make }
       its(:file_descriptors) { should == 16_384 }
     end
 
     describe "changes to the app that trigger staging/dea notifications" do
-      subject { Models::App.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
+      subject { App.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
       let(:health_manager_client) { CloudController::DependencyLocator.instance.health_manager_client }
 
       # Mark app as staged when AppManager.stage_app is called
@@ -1018,25 +1018,25 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and already staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and already staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
+          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and not staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
+          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
           it_stages
           it_notifies_dea
         end
@@ -1065,25 +1065,25 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and already staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and already staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc") }
+          subject { App.make(:state => "STOPPED", :package_hash => "abc") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and not staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
+          subject { App.make(:state => "STARTED", :package_hash => "abc") }
           it_does_not_stage
           it_notifies_dea
         end
@@ -1115,32 +1115,32 @@ module VCAP::CloudController
         context "when app is stopped and already staged" do
           let(:instances_to_start) { 1 }
 
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
+          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is already started and already staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
+          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
+          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
           it_stages
           it_notifies_dea
         end
 
         # Original change to app that moved state into STARTED staged the app and notified dea
         context "when app is already started and not staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
+          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app has no bits" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => nil) }
+          subject { App.make(:state => "STARTED", :package_hash => nil) }
 
           it "raises an AppPackageInvalid exception" do
             expect {
@@ -1170,25 +1170,25 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and already staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and already staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { Models::App.make(:state => "STOPPED", :package_hash => "abc") }
+          subject { App.make(:state => "STOPPED", :package_hash => "abc") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and not staged" do
-          subject { Models::App.make(:state => "STARTED", :package_hash => "abc") }
+          subject { App.make(:state => "STARTED", :package_hash => "abc") }
           it_does_not_stage
           it_notifies_dea
         end
@@ -1196,21 +1196,21 @@ module VCAP::CloudController
     end
 
     describe "soft deletion" do
-      let(:app_obj) { Models::App.make(:detected_buildpack => "buildpack-name") }
+      let(:app_obj) { App.make(:detected_buildpack => "buildpack-name") }
 
       it "should not allow the same object to be deleted twice" do
         app_obj.soft_delete
-        expect { app_obj.soft_delete }.to raise_error(Models::App::AlreadyDeletedError)
+        expect { app_obj.soft_delete }.to raise_error(App::AlreadyDeletedError)
       end
 
       it "does not show up in normal queries" do
         expect {
           app_obj.soft_delete
-        }.to change { Models::App[:guid => app_obj.guid] }.to(nil)
+        }.to change { App[:guid => app_obj.guid] }.to(nil)
       end
 
       context "with app events" do
-        let!(:app_event) { Models::AppEvent.make(:app => app_obj) }
+        let!(:app_event) { AppEvent.make(:app => app_obj) }
 
         context "with other empty associations" do
           it "should soft delete the app" do
@@ -1220,20 +1220,20 @@ module VCAP::CloudController
 
         context "with NON-empty deletable associations" do
           context "with NON-empty service_binding associations" do
-            let!(:svc_instance) { Models::ManagedServiceInstance.make(:space => app_obj.space) }
-            let!(:service_binding) { Models::ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
+            let!(:svc_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
+            let!(:service_binding) { ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
 
             it "should delete the service bindings" do
               app_obj.soft_delete
 
-              Models::ServiceBinding.find(:id => service_binding.id).should be_nil
+              ServiceBinding.find(:id => service_binding.id).should be_nil
             end
           end
         end
 
         context "with NON-empty nullifyable associations" do
           context "with NON-empty routes associations" do
-            let!(:route) { Models::Route.make(:space => app_obj.space) }
+            let!(:route) { Route.make(:space => app_obj.space) }
 
             before do
               app_obj.add_route(route)
@@ -1243,7 +1243,7 @@ module VCAP::CloudController
             it "should nullify routes" do
               app_obj.soft_delete
 
-              deleted_app = Models::App.deleted[:id => app_obj.id]
+              deleted_app = App.deleted[:id => app_obj.id]
               deleted_app.routes.should be_empty
               route.apps.should be_empty
             end
@@ -1251,9 +1251,9 @@ module VCAP::CloudController
         end
 
         after do
-          Models::AppEvent.where(:id => app_event.id).should_not be_empty
-          Models::App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
-          Models::App.deleted[:id => app_obj.id].not_deleted.should be_false
+          AppEvent.where(:id => app_event.id).should_not be_empty
+          App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
+          App.deleted[:id => app_obj.id].not_deleted.should be_false
         end
       end
 
@@ -1265,18 +1265,18 @@ module VCAP::CloudController
 
           it "should allow recreation and soft deletion of a soft deleted app" do
             expect do
-              deleted_app = Models::App.make(:space => app_obj.space, :name => app_obj.name)
+              deleted_app = App.make(:space => app_obj.space, :name => app_obj.name)
               deleted_app.soft_delete
             end.to_not raise_error
           end
 
           it "should allow only 1 active recreation at a time" do
             expect do
-              Models::App.make(:space => app_obj.space, :name => app_obj.name)
+              App.make(:space => app_obj.space, :name => app_obj.name)
             end.to_not raise_error
 
             expect do
-              Models::App.make(:space => app_obj.space, :name => app_obj.name)
+              App.make(:space => app_obj.space, :name => app_obj.name)
             end.to raise_error
           end
         end

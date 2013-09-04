@@ -72,7 +72,7 @@ module ControllerHelpers
   end
 
   def admin_user
-    @admin_user ||= VCAP::CloudController::Models::User.make(:admin => true)
+    @admin_user ||= VCAP::CloudController::User.make(:admin => true)
   end
 
   def admin_headers
@@ -103,7 +103,7 @@ module ControllerHelpers
   end
 
   def resource_match_request(verb, path, matches, non_matches)
-    user = Models::User.make(:admin => true, :active => true)
+    user = User.make(:admin => true, :active => true)
     req = Yajl::Encoder.encode(matches + non_matches)
     send(verb, path, req, json_headers(headers_for(user)))
     last_response.status.should == 200

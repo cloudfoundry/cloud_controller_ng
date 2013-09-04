@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     describe '.delete_droplet' do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
       before do
         AppManager.unstub(:delete_droplet)
       end
@@ -126,7 +126,7 @@ module VCAP::CloudController
     end
 
     describe ".stop_droplet" do
-      let(:app) { Models::App.make }
+      let(:app) { App.make }
 
       context "when the app is started" do
         before do

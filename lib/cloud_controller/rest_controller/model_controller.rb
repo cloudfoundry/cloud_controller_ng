@@ -210,7 +210,7 @@ module VCAP::CloudController::RestController
     #
     # @param [Object] obj The object for which to validate access.
     #
-    # @param [Models::User] user The user for which to validate access.
+    # @param [User] user The user for which to validate access.
     #
     # @param [Roles] The roles for the current user or client.
     def validate_access(op, obj, user, roles)
@@ -279,7 +279,7 @@ module VCAP::CloudController::RestController
       # @return [Sequel::Model] The class of the model associated with
       # this rest endpoint.
       def model(name = nil)
-        @model ||= Models.const_get(model_class_name(name))
+        @model ||= VCAP::CloudController.const_get(model_class_name(name))
       end
 
       # Get and set the model class name associated with this rest/api endpoint.

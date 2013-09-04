@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'models/services/service_broker_registration'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe ServiceBrokerRegistration do
     before { reset_database }
 

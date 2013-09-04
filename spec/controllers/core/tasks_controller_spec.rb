@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     describe "POST /v2/tasks" do
       context "when an app is given" do
-        let!(:some_app) { Models::App.make :guid => "some-app-guid" }
+        let!(:some_app) { App.make :guid => "some-app-guid" }
 
         context "and the app exists" do
           it "returns 201 Created" do
@@ -26,10 +26,10 @@ module VCAP::CloudController
               response = Yajl::Parser.parse(last_response.body)
               guid = response["metadata"]["guid"]
 
-              task = Models::Task.find(:guid => guid)
+              task = Task.find(:guid => guid)
               expect(task.app_guid).to eq("some-app-guid")
             }.to change {
-              Models::Task.all.size
+              Task.all.size
             }.by(1)
           end
 
@@ -83,14 +83,14 @@ module VCAP::CloudController
 
     describe "GET /v2/tasks" do
       before do
-        @user_a = Models::User.make
-        @user_b = Models::User.make
+        @user_a = User.make
+        @user_b = User.make
 
-        @org_a = Models::Organization.make
-        @org_b = Models::Organization.make
+        @org_a = Organization.make
+        @org_b = Organization.make
 
-        @space_a = Models::Space.make :organization => @org_a
-        @space_b = Models::Space.make :organization => @org_b
+        @space_a = Space.make :organization => @org_a
+        @space_b = Space.make :organization => @org_b
 
         @org_a.add_user(@user_a)
         @org_b.add_user(@user_b)
@@ -98,11 +98,11 @@ module VCAP::CloudController
         @space_a.add_developer(@user_a)
         @space_b.add_developer(@user_b)
 
-        @app_a = Models::App.make :space => @space_a
-        @app_b = Models::App.make :space => @space_b
+        @app_a = App.make :space => @space_a
+        @app_b = App.make :space => @space_b
 
-        @task_a = Models::Task.make :app => @app_a
-        @task_b = Models::Task.make :app => @app_b
+        @task_a = Task.make :app => @app_a
+        @task_b = Task.make :app => @app_b
       end
 
       it "includes only tasks from apps visible to the user" do
@@ -160,14 +160,14 @@ module VCAP::CloudController
 
     describe "DELETE /v2/tasks/:guid" do
       before do
-        @org = Models::Organization.make
-        @space = Models::Space.make :organization => @org
+        @org = Organization.make
+        @space = Space.make :organization => @org
 
-        @admin = Models::User.make :admin => true
-        @org_manager = Models::User.make
-        @space_manager = Models::User.make
-        @space_developer = Models::User.make
-        @space_auditor = Models::User.make
+        @admin = User.make :admin => true
+        @org_manager = User.make
+        @space_manager = User.make
+        @space_developer = User.make
+        @space_auditor = User.make
 
         [ @org_manager, @space_manager, @space_developer,
           @space_auditor
@@ -180,8 +180,8 @@ module VCAP::CloudController
         @space.add_developer(@space_developer)
         @space.add_auditor(@space_auditor)
 
-        @app = Models::App.make :space => @space
-        @task = Models::Task.make :app => @app
+        @app = App.make :space => @space
+        @task = Task.make :app => @app
       end
 
       def self.it_returns_status_code(code)
@@ -197,7 +197,7 @@ module VCAP::CloudController
           expect {
             delete "/v2/tasks/#{@task.guid}", {}, headers
           }.to change {
-            Models::Task.find(:guid => @task.guid)
+            Task.find(:guid => @task.guid)
           }.to(nil)
         end
       end
@@ -207,7 +207,7 @@ module VCAP::CloudController
           expect {
             delete "/v2/tasks/#{@task.guid}", {}, headers
           }.to_not change {
-            Models::Task.count
+            Task.count
           }.by(-1)
         end
       end

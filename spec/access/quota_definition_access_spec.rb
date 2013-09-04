@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe QuotaDefinitionAccess, type: :access do
     subject(:access) { QuotaDefinitionAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::Models::User.make }
+    let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:object) { VCAP::CloudController::Models::QuotaDefinition.make }
+    let(:object) { VCAP::CloudController::QuotaDefinition.make }
 
     it_should_behave_like :admin_full_access
 

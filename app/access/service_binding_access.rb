@@ -1,4 +1,4 @@
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class ServiceBindingAccess < BaseAccess
     def create?(service_binding)
       super ||

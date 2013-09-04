@@ -29,7 +29,7 @@ Sham.define do
   status              { |_| ["active", "suspended", "cancelled"].sample(1).first }
 end
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   User.blueprint do
     guid              { Sham.uaa_id }
   end

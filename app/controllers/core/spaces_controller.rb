@@ -30,10 +30,10 @@ module VCAP::CloudController
       space = find_guid_and_validate_access(:read, guid)
 
       if params['return_user_provided_service_instances'] == 'true'
-        model_class = Models::ServiceInstance
+        model_class = ServiceInstance
         relation_name = :service_instances
       else
-        model_class = Models::ManagedServiceInstance
+        model_class = ManagedServiceInstance
         relation_name = :managed_service_instances
       end
 

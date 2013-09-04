@@ -1,24 +1,24 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe Models::Organization, type: :model do
+  describe Organization, type: :model do
     before(:all) { reset_database }
 
     it_behaves_like "a CloudController model", {
       :required_attributes          => :name,
       :unique_attributes            => :name,
-      :custom_attributes_for_uniqueness_tests => ->{ {quota_definition: Models::QuotaDefinition.make} },
+      :custom_attributes_for_uniqueness_tests => ->{ {quota_definition: QuotaDefinition.make} },
       :stripped_string_attributes   => :name,
       :many_to_zero_or_more => {
-        :users      => lambda { |org| Models::User.make },
-        :managers   => lambda { |org| Models::User.make },
-        :billing_managers => lambda { |org| Models::User.make },
-        :auditors   => lambda { |org| Models::User.make },
+        :users      => lambda { |org| User.make },
+        :managers   => lambda { |org| User.make },
+        :billing_managers => lambda { |org| User.make },
+        :auditors   => lambda { |org| User.make },
       },
       :one_to_zero_or_more => {
-        :spaces  => lambda { |org| Models::Space.make },
+        :spaces  => lambda { |org| Space.make },
         :domains => lambda { |org|
-          Models::Domain.make(:owning_organization => org)
+          Domain.make(:owning_organization => org)
         }
       }
     }
@@ -26,16 +26,16 @@ module VCAP::CloudController
     describe "default domains" do
       context "with the default serving domain name set" do
         before do
-          Models::Domain.default_serving_domain_name = "foo.com"
+          Domain.default_serving_domain_name = "foo.com"
         end
 
         after do
-          Models::Domain.default_serving_domain_name = nil
+          Domain.default_serving_domain_name = nil
         end
 
         it "should be associated with the default serving domain" do
-          org = Models::Organization.make
-          d = Models::Domain.default_serving_domain
+          org = Organization.make
+          d = Domain.default_serving_domain
           org.domains.map(&:guid) == [d.guid]
         end
       end
@@ -43,10 +43,10 @@ module VCAP::CloudController
 
     context "with multiple shared domains" do
       it "should be associated with the shared domains that exist at creation time" do
-        org = Models::Organization.make
-        shared_count = Models::Domain.shared_domains.count
+        org = Organization.make
+        shared_count = Domain.shared_domains.count
         org.domains.count.should == shared_count
-        d = Models::Domain.find_or_create_shared_domain(Sham.domain)
+        d = Domain.find_or_create_shared_domain(Sham.domain)
         d.should be_valid
         org.domains.count.should == shared_count
       end
@@ -54,28 +54,28 @@ module VCAP::CloudController
 
     describe "billing" do
       it "should not be enabled for billing when first created" do
-        Models::Organization.make.billing_enabled.should == false
+        Organization.make.billing_enabled.should == false
       end
 
       context "enabling billing" do
         let (:org) do
-          o = Models::Organization.make
+          o = Organization.make
           2.times do
-            space = Models::Space.make(
+            space = Space.make(
               :organization => o,
             )
             2.times do
-              app = Models::App.make(
+              app = App.make(
                 :space => space,
                 :state => "STARTED",
                 :package_hash => "abc",
                 :package_state => "STAGED",
               )
-              Models::App.make(
+              App.make(
                 :space => space,
                 :state => "STOPPED",
               )
-              service_instance = Models::ManagedServiceInstance.make(
+              service_instance = ManagedServiceInstance.make(
                 :space => space,
               )
             end
@@ -84,13 +84,13 @@ module VCAP::CloudController
         end
 
         it "should call OrganizationStartEvent.create_from_org" do
-          Models::OrganizationStartEvent.should_receive(:create_from_org)
+          OrganizationStartEvent.should_receive(:create_from_org)
           org.billing_enabled = true
           org.save(:validate => false)
         end
 
         it "should emit start events for running apps" do
-          ds = Models::AppStartEvent.filter(
+          ds = AppStartEvent.filter(
             :organization_guid => org.guid,
           )
           # FIXME: don't skip validation
@@ -100,7 +100,7 @@ module VCAP::CloudController
         end
 
         it "should emit create events for provisioned services" do
-          ds = Models::ServiceCreateEvent.filter(
+          ds = ServiceCreateEvent.filter(
             :organization_guid => org.guid,
           )
           # FIXME: don't skip validation
@@ -113,34 +113,34 @@ module VCAP::CloudController
 
     context "service instances quota" do
       let(:free_quota) do
-        Models::QuotaDefinition.make(:total_services => 1,
+        QuotaDefinition.make(:total_services => 1,
                                      :non_basic_services_allowed => false)
       end
 
       let(:paid_quota) do
-        Models::QuotaDefinition.make(:total_services => 1,
+        QuotaDefinition.make(:total_services => 1,
           :non_basic_services_allowed => true)
       end
 
       let(:unlimited_quota) do
-        Models::QuotaDefinition.make(:total_services => -1,
+        QuotaDefinition.make(:total_services => -1,
           :non_basic_services_allowed => true)
       end
 
-      let(:free_plan) { Models::ServicePlan.make(:free => true)}
+      let(:free_plan) { ServicePlan.make(:free => true)}
 
       describe "#service_instance_quota_remaining?" do
         it "should return true when quota is not reached" do
-          org = Models::Organization.make(:quota_definition => free_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => free_quota)
+          space = Space.make(:organization => org)
           org.service_instance_quota_remaining?.should be_true
         end
 
         it "should return false when quota is reached" do
-          org = Models::Organization.make(:quota_definition => free_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => free_quota)
+          space = Space.make(:organization => org)
           org.service_instance_quota_remaining?.should be_true
-          Models::ManagedServiceInstance.make(:space => space,
+          ManagedServiceInstance.make(:space => space,
                                        :service_plan => free_plan).
             save(:validate => false)
           org.refresh
@@ -148,20 +148,20 @@ module VCAP::CloudController
         end
 
         it "returns true when the limit is -1 (unlimited)" do
-          org = Models::Organization.make(:quota_definition => unlimited_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => unlimited_quota)
+          space = Space.make(:organization => org)
           org.service_instance_quota_remaining?.should be_true
         end
       end
 
       describe "#paid_services_allowed" do
         it "should return true when org has paid quota" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
+          org = Organization.make(:quota_definition => paid_quota)
           org.paid_services_allowed?.should be_true
         end
 
         it "should return false when org has free quota" do
-          org = Models::Organization.make(:quota_definition => free_quota)
+          org = Organization.make(:quota_definition => free_quota)
           org.paid_services_allowed?.should be_false
         end
       end
@@ -169,22 +169,22 @@ module VCAP::CloudController
 
     context "memory quota" do
       let(:quota) do
-        Models::QuotaDefinition.make(:memory_limit => 500)
+        QuotaDefinition.make(:memory_limit => 500)
       end
 
       it "should return the memory available when no apps are running" do
-        org = Models::Organization.make(:quota_definition => quota)
+        org = Organization.make(:quota_definition => quota)
 
         org.memory_remaining.should == 500
       end
 
       it "should return the memory remaining when apps are consuming memory" do
-        org = Models::Organization.make(:quota_definition => quota)
-        space = Models::Space.make(:organization => org)
-        Models::App.make(:space => space,
+        org = Organization.make(:quota_definition => quota)
+        space = Space.make(:organization => org)
+        App.make(:space => space,
                          :memory => 200,
                          :instances => 2)
-        Models::App.make(:space => space,
+        App.make(:space => space,
                          :memory => 50,
                          :instances => 1)
 
@@ -193,43 +193,43 @@ module VCAP::CloudController
     end
 
     describe "#destroy" do
-      let(:org) { Models::Organization.make }
-      let(:space) { Models::Space.make(:organization => org) }
+      let(:org) { Organization.make }
+      let(:space) { Space.make(:organization => org) }
 
       before { org.reload }
 
       it "destroys all apps" do
-        app = Models::App.make(:space => space)
-        expect { org.destroy }.to change { Models::App[:id => app.id] }.from(app).to(nil)
+        app = App.make(:space => space)
+        expect { org.destroy }.to change { App[:id => app.id] }.from(app).to(nil)
       end
 
       it "destroys all spaces" do
-        expect { org.destroy }.to change { Models::Space[:id => space.id] }.from(space).to(nil)
+        expect { org.destroy }.to change { Space[:id => space.id] }.from(space).to(nil)
       end
 
       it "destroys all service instances" do
-        service_instance = Models::ManagedServiceInstance.make(:space => space)
-        expect { org.destroy }.to change { Models::ManagedServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
+        service_instance = ManagedServiceInstance.make(:space => space)
+        expect { org.destroy }.to change { ManagedServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
       end
 
       it "destroys all service plan visibilities" do
-        service_plan_visibility = Models::ServicePlanVisibility.make(:organization => org)
+        service_plan_visibility = ServicePlanVisibility.make(:organization => org)
         expect {
           org.destroy
         }.to change {
-          Models::ServicePlanVisibility.where(:id => service_plan_visibility.id).any?
+          ServicePlanVisibility.where(:id => service_plan_visibility.id).any?
         }.to(false)
       end
 
 
       it "destroys the owned domain" do
-        domain = Models::Domain.make(:owning_organization => org)
-        expect { org.destroy }.to change { Models::Domain[:id => domain.id] }.from(domain).to(nil)
+        domain = Domain.make(:owning_organization => org)
+        expect { org.destroy }.to change { Domain[:id => domain.id] }.from(domain).to(nil)
       end
 
       it "nullify domains" do
         SecurityContext.set(nil, {'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE]})
-        domain = Models::Domain.make(:owning_organization => nil)
+        domain = Domain.make(:owning_organization => nil)
         domain.add_organization(org)
         domain.save
         expect { org.destroy }.to change { domain.reload.organizations.count }.by(-1)
@@ -237,9 +237,9 @@ module VCAP::CloudController
     end
 
     describe "#trial_db_allocated?" do
-      let(:org) { Models::Organization.make }
-      let(:space) { Models::Space.make :organization => org }
-      let(:trial_db_guid) { Models::ServicePlan.trial_db_guid }
+      let(:org) { Organization.make }
+      let(:space) { Space.make :organization => org }
+      let(:trial_db_guid) { ServicePlan.trial_db_guid }
       subject { org.trial_db_allocated? }
 
       context "when a trial db instance has not been allocated" do
@@ -249,9 +249,9 @@ module VCAP::CloudController
       end
 
       context "when a trial db instance has been allocated" do
-        let(:service_plan) { Models::ServicePlan.make :unique_id => trial_db_guid}
+        let(:service_plan) { ServicePlan.make :unique_id => trial_db_guid}
         it "returns true" do
-          Models::ManagedServiceInstance.make(:space => space, :service_plan => service_plan)
+          ManagedServiceInstance.make(:space => space, :service_plan => service_plan)
           expect(subject).to eq true
         end
       end
@@ -259,27 +259,27 @@ module VCAP::CloudController
 
     describe "#service_plan_quota_remaining?" do
       let(:org) do
-        Models::Organization.make :quota_definition => quota
+        Organization.make :quota_definition => quota
       end
 
-      let(:trial_db_guid) { Models::ServicePlan.trial_db_guid }
+      let(:trial_db_guid) { ServicePlan.trial_db_guid }
 
       let!(:space) do
-        Models::Space.make(:organization => org)
+        Space.make(:organization => org)
       end
 
       subject { org.check_quota?(service_plan) }
 
       context "when the service plan requested is the trial db" do
         let(:service_plan) do
-            Models::ServicePlan.find(:unique_id => trial_db_guid) ||
-              Models::ServicePlan.make(:unique_id => trial_db_guid)
+            ServicePlan.find(:unique_id => trial_db_guid) ||
+              ServicePlan.make(:unique_id => trial_db_guid)
         end
 
         context "and the org's quota definition is paid" do
           context "and the number of total instances does not exceed the quota restriction" do
             let(:quota) do
-              Models::QuotaDefinition.make(:total_services => 1)
+              QuotaDefinition.make(:total_services => 1)
             end
 
             it "return an empty hash" do
@@ -289,7 +289,7 @@ module VCAP::CloudController
 
           context "and the number of total instances exceeds than the quota restriction" do
             let(:quota) do
-              Models::QuotaDefinition.make(:total_services => 0)
+              QuotaDefinition.make(:total_services => 0)
             end
 
             it "returns a :paid_quota_exceeded error on the org" do
@@ -301,7 +301,7 @@ module VCAP::CloudController
 
         context "and the org's quota definition is unpaid" do
           let(:quota) do
-            Models::QuotaDefinition.make(:non_basic_services_allowed => false)
+            QuotaDefinition.make(:non_basic_services_allowed => false)
           end
 
           it "returns a :paid_services_not_allowed error on the service plan" do
@@ -311,7 +311,7 @@ module VCAP::CloudController
 
         context "and the org's quota definition is trial" do
           let(:quota) do
-            Models::QuotaDefinition.find(:non_basic_services_allowed => false, :trial_db_allowed => true)
+            QuotaDefinition.find(:non_basic_services_allowed => false, :trial_db_allowed => true)
           end
 
           it "returns no error if the org has not allocated a trial db" do
@@ -319,7 +319,7 @@ module VCAP::CloudController
           end
 
           it "returns a :trial_quota_exceeded error if the org has allocated a trial db" do
-            Models::Organization.any_instance.stub(:trial_db_allocated?).and_return(true)
+            Organization.any_instance.stub(:trial_db_allocated?).and_return(true)
             expect(subject).to eq({ :type => :org, :name => :trial_quota_exceeded })
           end
 
@@ -328,10 +328,10 @@ module VCAP::CloudController
 
       context "when the service plan requested is not trial db" do
         context "and the service plan is free" do
-          let(:service_plan) { Models::ServicePlan.make :free => true }
+          let(:service_plan) { ServicePlan.make :free => true }
 
           context "and the number of total instances is less than the quota restriction" do
-            let(:quota) { Models::QuotaDefinition.make :total_services => 1 }
+            let(:quota) { QuotaDefinition.make :total_services => 1 }
             it "returns no error" do
               expect(subject).to be_empty
             end
@@ -339,7 +339,7 @@ module VCAP::CloudController
 
           context "and the number of total instances is greater than the quota restriction" do
             let(:quota) do
-              Models::QuotaDefinition.make(:total_services => 0, :non_basic_services_allowed => false)
+              QuotaDefinition.make(:total_services => 0, :non_basic_services_allowed => false)
             end
 
             it "returns :free_quota_exceeded for the org" do
@@ -349,10 +349,10 @@ module VCAP::CloudController
         end
 
         context "and the quota is paid" do
-          let(:service_plan) { Models::ServicePlan.make }
+          let(:service_plan) { ServicePlan.make }
           context "and the number of total instances is less than the quota restriction" do
             let(:quota) do
-              Models::QuotaDefinition.make(:total_services => 1, :non_basic_services_allowed => true)
+              QuotaDefinition.make(:total_services => 1, :non_basic_services_allowed => true)
             end
 
             it "returns no error" do
@@ -362,7 +362,7 @@ module VCAP::CloudController
 
           context "and the number of total instances is greater than the quota restriction" do
             let(:quota) do
-              Models::QuotaDefinition.make(:total_services => 0, :non_basic_services_allowed => true)
+              QuotaDefinition.make(:total_services => 0, :non_basic_services_allowed => true)
             end
 
             it "returns :paid_quota_exceeded error for the org" do
@@ -373,9 +373,9 @@ module VCAP::CloudController
 
         context "and the quota is unpaid and the service plan is not free" do
           let(:quota) do
-            Models::QuotaDefinition.make(:total_services => 1, :non_basic_services_allowed => false)
+            QuotaDefinition.make(:total_services => 1, :non_basic_services_allowed => false)
           end
-          let(:service_plan) { Models::ServicePlan.make :free => false }
+          let(:service_plan) { ServicePlan.make :free => false }
           it "returns a :paid_services_not_allowed error for the service plan" do
             expect(subject).to eq({ :type => :service_plan, :name => :paid_services_not_allowed })
           end
@@ -384,15 +384,15 @@ module VCAP::CloudController
     end
 
     describe "filter deleted apps" do
-      let(:org) { Models::Organization.make }
-      let(:space) { Models::Space.make(:organization => org) }
+      let(:org) { Organization.make }
+      let(:space) { Space.make(:organization => org) }
 
       context "when deleted apps exist in the organization" do
         it "should not return the deleted apps" do
-          deleted_app = Models::App.make(:space => space)
+          deleted_app = App.make(:space => space)
           deleted_app.soft_delete
 
-          non_deleted_app = Models::App.make(:space => space)
+          non_deleted_app = App.make(:space => space)
 
           org.apps.should == [non_deleted_app]
         end

@@ -1,18 +1,18 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::ServiceBinding, :services, type: :model do
+  describe VCAP::CloudController::ServiceBinding, :services, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes => [:service_instance, :app],
       :db_required_attributes => [:service_instance_id, :app_id, :credentials],
       :unique_attributes => [ [:app, :service_instance] ],
       :create_attribute => lambda { |name|
-        @space ||= Models::Space.make
+        @space ||= Space.make
         case name.to_sym
           when :app
-            Models::App.make(:space => @space)
+            App.make(:space => @space)
           when :service_instance
-            Models::ManagedServiceInstance.make(:space => @space)
+            ManagedServiceInstance.make(:space => @space)
         end
       },
       :create_attribute_reset => lambda { @space = nil },
@@ -20,13 +20,13 @@ module VCAP::CloudController
         :app => {
           :delete_ok => true,
           :create_for => lambda { |service_binding|
-            Models::App.make(:space => service_binding.space)
+            App.make(:space => service_binding.space)
           }
         },
         :service_instance => {
           :delete_ok => true,
           :create_for => lambda { |service_binding|
-            Models::ManagedServiceInstance.make(:space => service_binding.space)
+            ManagedServiceInstance.make(:space => service_binding.space)
           }
         }
       }
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
     it_behaves_like "a model with an encrypted attribute" do
       let(:service_instance) do
-        service_instance = Models::ManagedServiceInstance.make.tap do |instance|
+        service_instance = ManagedServiceInstance.make.tap do |instance|
           instance.stub(:service_gateway_client).and_return(
             double("Service Gateway Client",
               :bind => VCAP::Services::Api::GatewayHandleResponse.new(
@@ -51,7 +51,7 @@ module VCAP::CloudController
       after { service_instance.destroy }
 
       def new_model
-        Models::ServiceBinding.make(:service_instance => service_instance)
+        ServiceBinding.make(:service_instance => service_instance)
       end
 
       let(:encrypted_attr) { :credentials }
@@ -60,38 +60,38 @@ module VCAP::CloudController
     describe "bad relationships" do
       before do
         # since we don't set them, these will have different app spaces
-        @service_instance = Models::ManagedServiceInstance.make
-        @app = Models::App.make
-        @service_binding = Models::ServiceBinding.make
+        @service_instance = ManagedServiceInstance.make
+        @app = App.make
+        @service_binding = ServiceBinding.make
       end
 
       it "should not associate an app with a service from a different app space" do
         expect {
-          service_binding = Models::ServiceBinding.make
+          service_binding = ServiceBinding.make
           service_binding.app = @app
           service_binding.save
-        }.to raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
+        }.to raise_error ServiceBinding::InvalidAppAndServiceRelation
       end
 
       it "should not associate a service with an app from a different app space" do
         expect {
-          service_binding = Models::ServiceBinding.make
+          service_binding = ServiceBinding.make
           service_binding.service_instance = @service_instance
           service_binding.save
-        }.to raise_error Models::ServiceBinding::InvalidAppAndServiceRelation
+        }.to raise_error ServiceBinding::InvalidAppAndServiceRelation
       end
     end
 
     describe "binding" do
       let(:gw_client) { double(:client).as_null_object }
 
-      let(:service) { Models::Service.make }
-      let(:service_plan) { Models::ServicePlan.make(:service => service) }
+      let(:service) { Service.make }
+      let(:service_plan) { ServicePlan.make(:service => service) }
       let(:service_instance) do
-        Models::ManagedServiceInstance.new(
+        ManagedServiceInstance.new(
           :service_plan => service_plan,
           :name => "my-postgresql",
-          :space => Models::Space.make,
+          :space => Space.make,
           :gateway_name => 'named stored in gateway',
         )
       end
@@ -113,7 +113,7 @@ module VCAP::CloudController
       end
 
       before do
-        Models::ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
+        ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
         gw_client.stub(:provision).and_return(provision_resp)
         gw_client.stub(:bind).and_return(bind_resp)
         service_instance.save
@@ -126,7 +126,7 @@ module VCAP::CloudController
             and_return("a@b.c")
           gw_client.should_receive(:bind).with(hash_including(:email => "a@b.c", service_id: service_instance.gateway_name))
 
-          binding = Models::ServiceBinding.make(:service_instance => service_instance)
+          binding = ServiceBinding.make(:service_instance => service_instance)
           binding.gateway_name.should == "gwname_binding"
           binding.gateway_data.should == "abc"
           binding.credentials.should == {"password" => "foo"}
@@ -134,10 +134,10 @@ module VCAP::CloudController
 
         it "should unbind a service on rollback after create" do
           expect {
-            Models::ManagedServiceInstance.db.transaction do
+            ManagedServiceInstance.db.transaction do
               gw_client.should_receive(:bind).and_return(bind_resp)
               gw_client.should_receive(:unbind)
-              binding = Models::ServiceBinding.make(:service_instance => service_instance)
+              binding = ServiceBinding.make(:service_instance => service_instance)
               raise "something bad"
             end
           }.to raise_error
@@ -145,10 +145,10 @@ module VCAP::CloudController
 
         it "should not unbind a service on rollback after update" do
           gw_client.should_receive(:bind).and_return(bind_resp)
-          binding = Models::ServiceBinding.make(:service_instance => service_instance)
+          binding = ServiceBinding.make(:service_instance => service_instance)
 
           expect {
-            Models::ManagedServiceInstance.db.transaction do
+            ManagedServiceInstance.db.transaction do
               binding.update(:name => "newname")
               raise "something bad"
             end
@@ -158,12 +158,12 @@ module VCAP::CloudController
 
       context "when the service is unbindable" do
         let(:service) do
-          Models::Service.make(bindable: false)
+          Service.make(bindable: false)
         end
 
           it "raises an UnbindableService" do
           expect {
-            Models::ServiceBinding.make(:service_instance => service_instance)
+            ServiceBinding.make(:service_instance => service_instance)
           }.to raise_error(Errors::UnbindableService)
           end
 
@@ -171,7 +171,7 @@ module VCAP::CloudController
           gw_client.should_not_receive(:bind)
 
           begin
-            Models::ServiceBinding.make(:service_instance => service_instance)
+            ServiceBinding.make(:service_instance => service_instance)
           rescue Errors::UnbindableService
           end
         end
@@ -180,7 +180,7 @@ module VCAP::CloudController
       context "service unbinding" do
         it "should unbind a service on destroy" do
           gw_client.should_receive(:bind).and_return(bind_resp)
-          binding = Models::ServiceBinding.make(:service_instance => service_instance)
+          binding = ServiceBinding.make(:service_instance => service_instance)
 
           gw_client.should_receive(:unbind).with(:service_id => "gwname_instance",
             :handle_id => "gwname_binding",
@@ -192,23 +192,23 @@ module VCAP::CloudController
 
     describe "restaging" do
       let(:app) do
-        app = Models::App.make
+        app = App.make
         app.state = "STARTED"
         app.instances = 1
         fake_app_staging(app)
         app
       end
 
-      let(:service_instance) { Models::ManagedServiceInstance.make(:space => app.space) }
+      let(:service_instance) { ManagedServiceInstance.make(:space => app.space) }
 
       it "should trigger restaging when creating a binding" do
-        Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+        ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
         app.needs_staging?.should be_true
       end
 
       it "should trigger restaging when directly destroying a binding" do
-        binding = Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+        binding = ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
         fake_app_staging(app)
         app.needs_staging?.should be_false
@@ -219,7 +219,7 @@ module VCAP::CloudController
       end
 
       it "should trigger restaging when indirectly destroying a binding" do
-        binding = Models::ServiceBinding.make(:app => app, :service_instance => service_instance)
+        binding = ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
         fake_app_staging(app)
         app.needs_staging?.should be_false
@@ -241,7 +241,7 @@ module VCAP::CloudController
       end
 
       before do
-        Models::ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
+        ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
         gw_client.stub(:provision).and_return(response)
         gw_client.stub(:bind).and_return(response)
       end
@@ -253,14 +253,14 @@ module VCAP::CloudController
           gw_client.
             should_receive(:bind).
             with(hash_including(:binding_options => binding_options))
-          Models::ServiceBinding.make(:binding_options => binding_options)
+          ServiceBinding.make(:binding_options => binding_options)
         end
 
         it "send default binding_options to gateway" do
           gw_client.
             should_receive(:bind).
             with(hash_including(:binding_options => {}))
-          Models::ServiceBinding.make
+          ServiceBinding.make
         end
 
       end

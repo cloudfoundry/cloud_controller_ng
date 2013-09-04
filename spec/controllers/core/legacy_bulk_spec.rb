@@ -38,7 +38,7 @@ module VCAP::CloudController
           reset_database
 
           100.times do
-            Models::App.make
+            App.make
           end
         end
 
@@ -120,7 +120,7 @@ module VCAP::CloudController
 
           it "should eventually return entire collection, batch after batch" do
             apps = {}
-            total_size = Models::App.count
+            total_size = App.count
 
             token = "{}"
             while apps.size < total_size do
@@ -142,7 +142,7 @@ module VCAP::CloudController
           end
 
           it "does not include soft-deleted apps" do
-            Models::App.first.soft_delete
+            App.first.soft_delete
 
             get "/bulk/apps", {
               "batch_size" => 100,
@@ -161,11 +161,11 @@ module VCAP::CloudController
         end
 
         it "returns the number of users" do
-          4.times { Models::User.make }
+          4.times { User.make }
           authorize @bulk_user, @bulk_password
           get "/bulk/counts", {"model" => "user"}
           decoded_response["counts"].should include("user" => kind_of(Integer))
-          decoded_response["counts"]["user"].should == Models::User.count
+          decoded_response["counts"]["user"].should == User.count
         end
       end
     end

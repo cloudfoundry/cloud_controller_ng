@@ -7,10 +7,10 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_pool) { double(:dea_pool) }
     let(:app) do
-      app = Models::App.make
+      app = App.make
       NUM_SVC_INSTANCES.times do
-        instance = Models::ManagedServiceInstance.make(:space => app.space)
-        binding = Models::ServiceBinding.make(
+        instance = ManagedServiceInstance.make(:space => app.space)
+        binding = ServiceBinding.make(
           :app => app,
           :service_instance => instance
         )
@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
       app
     end
-    
+
     before do
       DeaClient.configure(config, message_bus, dea_pool)
     end

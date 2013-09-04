@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:message_bus) { double("message_bus") }
 
     let(:app) do
-      Models::App.make(
+      App.make(
         :instances => 2, :state => 'STARTED', :package_hash => "SOME_HASH", :package_state => "STAGED"
       ).save
     end
@@ -55,7 +55,7 @@ module VCAP::CloudController
             Timecop.freeze(time) do
               respondent.process_droplet_exited_message(payload)
 
-              app_event = Models::AppEvent.find(:app_id => app.id)
+              app_event = AppEvent.find(:app_id => app.id)
 
               expect(app_event).not_to be_nil
               expect(app_event.instance_guid).to eq(payload['instance'])
@@ -71,7 +71,7 @@ module VCAP::CloudController
             Timecop.freeze(time) do
               respondent.process_droplet_exited_message(payload)
 
-              app_event = Models::Event.find(:actee => app.guid)
+              app_event = Event.find(:actee => app.guid)
 
               expect(app_event).to be
               expect(app_event.space).to eq(app.space)
@@ -92,7 +92,7 @@ module VCAP::CloudController
           let(:droplet) { "non existent droplet" }
 
           it "does not add a record in the AppEvents table" do
-            Models::AppEvent.should_not_receive(:create)
+            AppEvent.should_not_receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
@@ -103,14 +103,14 @@ module VCAP::CloudController
 
         context "the app described in the event exists" do
           it "does not add a record in the AppEvents table" do
-            Models::AppEvent.should_not_receive(:create)
+            AppEvent.should_not_receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
 
         context "the app described in the event does not exist" do
           it "does not add a record in the AppEvents table" do
-            Models::AppEvent.should_not_receive(:create)
+            AppEvent.should_not_receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
@@ -120,7 +120,7 @@ module VCAP::CloudController
         let(:reason) { nil }
 
         it "does not add a record in the AppEvents table" do
-          Models::AppEvent.should_not_receive(:create)
+          AppEvent.should_not_receive(:create)
           respondent.process_droplet_exited_message(payload)
         end
       end

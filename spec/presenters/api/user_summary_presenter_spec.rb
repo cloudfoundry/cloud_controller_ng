@@ -2,13 +2,13 @@ require 'spec_helper'
 
 describe UserSummaryPresenter do
   describe "#to_hash" do
-    let(:org) { VCAP::CloudController::Models::Organization.make }
-    let(:managed_org) { VCAP::CloudController::Models::Organization.make }
-    let(:billing_managed_org) { VCAP::CloudController::Models::Organization.make }
-    let(:audited_org) { VCAP::CloudController::Models::Organization.make }
-    let(:space) { VCAP::CloudController::Models::Space.make(organization: org) }
-    let(:managed_space) { VCAP::CloudController::Models::Space.make(organization: managed_org) }
-    let(:audited_space) { VCAP::CloudController::Models::Space.make(organization: audited_org) }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:managed_org) { VCAP::CloudController::Organization.make }
+    let(:billing_managed_org) { VCAP::CloudController::Organization.make }
+    let(:audited_org) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:managed_space) { VCAP::CloudController::Space.make(organization: managed_org) }
+    let(:audited_space) { VCAP::CloudController::Space.make(organization: audited_org) }
     let(:user) do
       u = make_developer_for_space(space)
       u.add_organization(managed_org)

@@ -30,7 +30,7 @@ module VCAP::CloudController
 
       set_v2_security_context
       Sequel::Model.db.transaction do
-        service = Models::Service.update_or_create(
+        service = Service.update_or_create(
           :label => label, :provider => provider
         ) do |svc|
           if svc.new?
@@ -71,14 +71,14 @@ module VCAP::CloudController
 
       new_plan_attrs.each {|attrs| attrs["description"] ||= "dummy description" }
 
-      old_plan_names = Models::ServicePlan.dataset.
+      old_plan_names = ServicePlan.dataset.
         join(:services, :id => :service_id).
         filter(:label => label, :provider => DEFAULT_PROVIDER).
         select_map(Sequel.qualify(:service_plans, :name))
 
 
       new_plan_attrs.each do |attrs|
-        Models::ServicePlan.update_or_create(
+        ServicePlan.update_or_create(
           service_id: service.id,
           name: attrs['name']
         ) do |instance|
@@ -102,14 +102,14 @@ module VCAP::CloudController
     def list_handles(label_and_version, provider = DEFAULT_PROVIDER)
       (label, version) = label_and_version.split("-")
 
-      service = Models::Service[:label => label, :provider => provider]
+      service = Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
       validate_access(label, provider)
       logger.debug("Listing handles for service: #{service.inspect}")
 
       handles = []
       plans_ds = service.service_plans_dataset
-      instances_ds = Models::ManagedServiceInstance.filter(:service_plan => plans_ds)
+      instances_ds = ManagedServiceInstance.filter(:service_plan => plans_ds)
       handles += instances_ds.map do |si|
         {
           :service_id => si.gateway_name,
@@ -118,7 +118,7 @@ module VCAP::CloudController
         }
       end
 
-      service_bindings_ds = Models::ServiceBinding.filter(
+      service_bindings_ds = ServiceBinding.filter(
         :service_instance => instances_ds)
 
       handles += service_bindings_ds.map do |sb|
@@ -137,7 +137,7 @@ module VCAP::CloudController
       validate_access(label, provider)
 
       set_v2_security_context
-      svc_guid = Models::Service[:label => label, :provider => provider].guid
+      svc_guid = Service[:label => label, :provider => provider].guid
       svc_api = VCAP::CloudController::ServicesController.new(config, logger, env, params, body)
       svc_api.dispatch(:delete, svc_guid)
 
@@ -147,7 +147,7 @@ module VCAP::CloudController
     def validate_access(label, provider = DEFAULT_PROVIDER)
       raise NotAuthorized unless auth_token = env[SERVICE_TOKEN_KEY]
 
-      svc_auth_token = Models::ServiceAuthToken[
+      svc_auth_token = ServiceAuthToken[
         :label => label, :provider => provider,
       ]
 
@@ -162,7 +162,7 @@ module VCAP::CloudController
 
       validate_access(label, provider)
 
-      service = Models::Service[:label => label, :provider => provider]
+      service = Service[:label => label, :provider => provider]
       offering = {
         :label => label,
         :provider => provider,
@@ -205,13 +205,13 @@ module VCAP::CloudController
 
       req = VCAP::Services::Api::HandleUpdateRequest.decode(body)
 
-      service = Models::Service[:label => label, :provider => provider]
+      service = Service[:label => label, :provider => provider]
       raise ServiceNotFound, "label=#{label} provider=#{provider}" unless service
 
 
       plans_ds = service.service_plans_dataset
-      instances_ds = Models::ManagedServiceInstance.filter(:service_plan => plans_ds)
-      bindings_ds = Models::ServiceBinding.filter(:service_instance => instances_ds)
+      instances_ds = ManagedServiceInstance.filter(:service_plan => plans_ds)
+      bindings_ds = ServiceBinding.filter(:service_instance => instances_ds)
 
       if instance = instances_ds[:gateway_name => id]
         instance.set(
@@ -238,9 +238,9 @@ module VCAP::CloudController
     end
 
     def legacy_api_user
-      user = Models::User.find(:guid => LEGACY_API_USER_GUID)
+      user = User.find(:guid => LEGACY_API_USER_GUID)
       if user.nil?
-        user = Models::User.create(
+        user = User.create(
           :guid => LEGACY_API_USER_GUID,
           :admin => true,
           :active => true,

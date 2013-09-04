@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Models::AppStopEvent, type: :model do
+  describe VCAP::CloudController::AppStopEvent, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes => [
         :timestamp,
@@ -27,16 +27,16 @@ module VCAP::CloudController
     describe "create_from_app" do
       context "on an org without billing enabled" do
         it "should do nothing" do
-          Models::AppStopEvent.should_not_receive(:create)
-          app = Models::App.make
+          AppStopEvent.should_not_receive(:create)
+          app = App.make
           app.space.organization.billing_enabled = false
           app.space.organization.save(:validate => false)
-          Models::AppStopEvent.create_from_app(app)
+          AppStopEvent.create_from_app(app)
         end
       end
 
       context "on an org with billing enabled" do
-        let(:app) { Models::App.make }
+        let(:app) { App.make }
 
         before do
           app.space.organization.billing_enabled = true
@@ -45,13 +45,13 @@ module VCAP::CloudController
 
         it "should create an app stop event using the run id from the most recently created start event" do
           Timecop.freeze do
-            newest_by_time = Models::AppStartEvent.create_from_app(app)
+            newest_by_time = AppStartEvent.create_from_app(app)
 
-            newest_by_sequence = Models::AppStartEvent.create_from_app(app)
+            newest_by_sequence = AppStartEvent.create_from_app(app)
             newest_by_sequence.timestamp = Time.now - 3600
             newest_by_sequence.save
 
-            stop_event = Models::AppStopEvent.create_from_app(app)
+            stop_event = AppStopEvent.create_from_app(app)
             stop_event.app_run_id.should == newest_by_sequence.app_run_id
           end
         end
@@ -59,14 +59,14 @@ module VCAP::CloudController
         context "when a corresponding AppStartEvent is not found" do
           it "does NOT raise an exception" do
             expect {
-              Models::AppStopEvent.create_from_app(app)
+              AppStopEvent.create_from_app(app)
             }.to_not raise_error
           end
 
           it "does not create a StopEvent" do
             expect {
-              Models::AppStopEvent.create_from_app(app)
-            }.to_not change { Models::AppStopEvent.count }
+              AppStopEvent.create_from_app(app)
+            }.to_not change { AppStopEvent.count }
           end
         end
       end

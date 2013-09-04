@@ -28,15 +28,15 @@ module VCAP::CloudController
         )
         mock_client.stub(:unprovision)
         mock_client.stub(:unbind)
-        Models::ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(mock_client)
-        Models::ManagedServiceInstance.any_instance.stub(:client).and_return(mock_client)
+        ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(mock_client)
+        ManagedServiceInstance.any_instance.stub(:client).and_return(mock_client)
       end
 
       describe "POST services/v1/offerings" do
         let(:path) { "services/v1/offerings" }
 
         let(:auth_header) do
-          Models::ServiceAuthToken.create(
+          ServiceAuthToken.create(
             :label    => "foobar",
             :provider => "core",
             :token    => "foobar",
@@ -87,7 +87,7 @@ module VCAP::CloudController
         it "should create service offerings for label/provider services" do
           post path, build_offering.encode, json_headers(auth_header)
           last_response.status.should == 200
-          svc = Models::Service.find(:label => "foobar", :provider => "core")
+          svc = Service.find(:label => "foobar", :provider => "core")
           svc.should_not be_nil
           svc.version.should == "2.0"
         end
@@ -99,7 +99,7 @@ module VCAP::CloudController
           post path, o.encode, json_headers(auth_header)
 
           last_response.status.should == 200
-          service = Models::Service[:label => "foobar", :provider => "core"]
+          service = Service[:label => "foobar", :provider => "core"]
           service.extra.should == extra_data
         end
 
@@ -107,7 +107,7 @@ module VCAP::CloudController
           post path, build_offering.encode, json_headers(auth_header)
 
           last_response.status.should == 200
-          service = Models::Service[:label => "foobar", :provider => "core"]
+          service = Service[:label => "foobar", :provider => "core"]
           service.bindable.should == true
         end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
           it "should create service plans" do
             post path, both_plans.encode, json_headers(auth_header)
 
-            service = Models::Service[:label => "foobar", :provider => "core"]
+            service = Service[:label => "foobar", :provider => "core"]
             service.service_plans.map(&:name).should include("free", "nonfree")
           end
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
             post path, just_free_plan.encode, json_headers(auth_header)
             post path, both_plans.encode, json_headers(auth_header)
 
-            service = Models::Service[:label => "foobar", :provider => "core"]
+            service = Service[:label => "foobar", :provider => "core"]
             service.service_plans.map(&:name).should include("free", "nonfree")
           end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
             post path, both_plans.encode, json_headers(auth_header)
             post path, just_free_plan.encode, json_headers(auth_header)
 
-            service = Models::Service[:label => "foobar", :provider => "core"]
+            service = Service[:label => "foobar", :provider => "core"]
             service.service_plans.map(&:name).should == ["free"]
           end
         end
@@ -170,7 +170,7 @@ module VCAP::CloudController
             post path, offer.encode, json_headers(auth_header)
             last_response.status.should == 200
 
-            service = Models::Service[:label => "foobar", :provider => "core"]
+            service = Service[:label => "foobar", :provider => "core"]
             service.service_plans.should have(1).entries
             service.service_plans.first.description.should == "free plan"
             service.service_plans.first.name.should == "freeplan"
@@ -186,7 +186,7 @@ module VCAP::CloudController
             post path, offer2.encode, json_headers(auth_header)
             last_response.status.should == 200
 
-            service = Models::Service[:label => "foobar", :provider => "core"]
+            service = Service[:label => "foobar", :provider => "core"]
             service.should have(1).service_plans
             service.service_plans.first.description.should == "tetris"
             service.service_plans.first.free.should == false
@@ -199,7 +199,7 @@ module VCAP::CloudController
             post path, offer.encode, json_headers(auth_header)
             last_response.status.should == 200
 
-            service = Models::Service[:label => "foobar", :provider => "core"]
+            service = Service[:label => "foobar", :provider => "core"]
             service.should have(1).service_plans
             service.service_plans.first.guid.should_not == "myguid"
           end
@@ -232,7 +232,7 @@ module VCAP::CloudController
           offer.url = "http://newurl.com"
           post path, offer.encode, json_headers(auth_header)
           last_response.status.should == 200
-          svc = Models::Service.find(:label => "foobar", :provider => "core")
+          svc = Service.find(:label => "foobar", :provider => "core")
           svc.should_not be_nil
           svc.url.should == "http://newurl.com"
         end
@@ -240,29 +240,29 @@ module VCAP::CloudController
 
       describe "GET services/v1/offerings/:label_and_version(/:provider)" do
         before :each do
-          @svc1 = Models::Service.make(
+          @svc1 = Service.make(
             :label => "foobar",
             :url => "http://www.google.com",
             :provider => "core",
           )
-          Models::ServicePlan.make(
+          ServicePlan.make(
             :name => "free",
             :service => @svc1,
           )
-          Models::ServicePlan.make(
+          ServicePlan.make(
             :name => "nonfree",
             :service => @svc1,
           )
-          @svc2 = Models::Service.make(
+          @svc2 = Service.make(
             :label => "foobar",
             :url => "http://www.google.com",
             :provider => "test",
           )
-          Models::ServicePlan.make(
+          ServicePlan.make(
             :name => "free",
             :service => @svc2,
           )
-          Models::ServicePlan.make(
+          ServicePlan.make(
             :name => "nonfree",
             :service => @svc2,
           )
@@ -313,14 +313,14 @@ module VCAP::CloudController
       end
 
       describe "GET services/v1/offerings/:label_and_version(/:provider)/handles" do
-        let!(:svc1) { Models::Service.make(:label => "foobar", :version => "1.0", :provider => "core") }
-        let!(:svc2) { Models::Service.make(:label => "foobar", :version => "1.0", :provider => "test") }
+        let!(:svc1) { Service.make(:label => "foobar", :version => "1.0", :provider => "core") }
+        let!(:svc2) { Service.make(:label => "foobar", :version => "1.0", :provider => "test") }
 
         before do
-          plan1 = Models::ServicePlan.make(:service => svc1)
-          plan2 = Models::ServicePlan.make(:service => svc2)
+          plan1 = ServicePlan.make(:service => svc1)
+          plan2 = ServicePlan.make(:service => svc2)
 
-          cfg1 = Models::ManagedServiceInstance.make(
+          cfg1 = ManagedServiceInstance.make(
             :name => "bar1",
             :service_plan => plan1
           )
@@ -328,7 +328,7 @@ module VCAP::CloudController
           cfg1.gateway_data = { :config => "foo1" }
           cfg1.save
 
-          cfg2 = Models::ManagedServiceInstance.make(
+          cfg2 = ManagedServiceInstance.make(
             :name => "bar2",
             :service_plan => plan2
           )
@@ -343,7 +343,7 @@ module VCAP::CloudController
               :credentials => {}
             )
           )
-          Models::ServiceBinding.make(:service_instance  => cfg1)
+          ServiceBinding.make(:service_instance  => cfg1)
 
           mock_client.stub(:bind).and_return(
             VCAP::Services::Api::GatewayHandleResponse.new(
@@ -352,7 +352,7 @@ module VCAP::CloudController
               :credentials => {}
             )
           )
-          Models::ServiceBinding.make(:gateway_name  => "bind2", :service_instance  => cfg2,)
+          ServiceBinding.make(:gateway_name  => "bind2", :service_instance  => cfg2,)
         end
 
         it "should return not found for unknown services" do
@@ -396,15 +396,15 @@ module VCAP::CloudController
       end
 
       describe "POST services/v1/offerings/:label_and_version(/:provider)/handles/:id" do
-        let!(:svc) { svc = Models::Service.make(:label => "foobar", :provider => "core") }
+        let!(:svc) { svc = Service.make(:label => "foobar", :provider => "core") }
 
         before { @auth_header = {"HTTP_X_VCAP_SERVICE_TOKEN" => svc.service_auth_token.token} }
 
         describe "with default provider" do
           before :each do
 
-            plan = Models::ServicePlan.make(:service => svc)
-            cfg = Models::ManagedServiceInstance.make(:name => "bar1", :service_plan => plan)
+            plan = ServicePlan.make(:service => svc)
+            cfg = ManagedServiceInstance.make(:name => "bar1", :service_plan => plan)
             cfg.gateway_name = "foo1"
             cfg.save
 
@@ -415,7 +415,7 @@ module VCAP::CloudController
                 :credentials => {}
               )
             )
-            Models::ServiceBinding.make(:service_instance  => cfg)
+            ServiceBinding.make(:service_instance  => cfg)
           end
 
           it "should return not found for unknown handles" do
@@ -450,14 +450,14 @@ module VCAP::CloudController
         end
 
         describe "with specific provider" do
-          let!(:svc) { svc = Models::Service.make(:label => "foobar", :provider => "test") }
+          let!(:svc) { svc = Service.make(:label => "foobar", :provider => "test") }
 
           before :each do
-            plan = Models::ServicePlan.make(
+            plan = ServicePlan.make(
               :service => svc
             )
 
-            cfg = Models::ManagedServiceInstance.make(
+            cfg = ManagedServiceInstance.make(
               :name         => "bar2",
               :service_plan => plan,
             )
@@ -471,7 +471,7 @@ module VCAP::CloudController
                 :credentials => {}
               )
             )
-            Models::ServiceBinding.make(
+            ServiceBinding.make(
               :service_instance  => cfg
             )
           end
@@ -499,8 +499,8 @@ module VCAP::CloudController
       end
 
       describe "DELETE /services/v1/offerings/:label_and_version/(:provider)" do
-        let!(:service_plan_core) { Models::ServicePlan.make(:service => Models::Service.make(:label => "foobar", :provider => "core")) }
-        let!(:service_plan_test) { Models::ServicePlan.make(:service => Models::Service.make(:label => "foobar", :provider => "test")) }
+        let!(:service_plan_core) { ServicePlan.make(:service => Service.make(:label => "foobar", :provider => "core")) }
+        let!(:service_plan_test) { ServicePlan.make(:service => Service.make(:label => "foobar", :provider => "test")) }
         let(:auth_header) { {"HTTP_X_VCAP_SERVICE_TOKEN" => service_plan_core.service.service_auth_token.token} }
 
         it "should return not found for unknown label services" do
@@ -526,7 +526,7 @@ module VCAP::CloudController
           delete "/services/v1/offerings/foobar-version", {}, auth_header
           last_response.status.should == 200
 
-          svc = Models::Service[:label => "foobar", :provider => "core"]
+          svc = Service[:label => "foobar", :provider => "core"]
           svc.should be_nil
         end
 
@@ -534,7 +534,7 @@ module VCAP::CloudController
           delete "/services/v1/offerings/foobar-version/test", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => service_plan_test.service.service_auth_token.token}
           last_response.status.should == 200
 
-          svc = Models::Service[:label => "foobar", :provider => "test"]
+          svc = Service[:label => "foobar", :provider => "test"]
           svc.should be_nil
         end
       end

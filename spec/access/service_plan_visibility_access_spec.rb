@@ -1,15 +1,15 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   describe ServicePlanVisibilityAccess, type: :access do
     subject(:access) { ServicePlanVisibilityAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::Models::User.make }
+    let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:service) { VCAP::CloudController::Models::Service.make }
-    let(:org) { VCAP::CloudController::Models::Organization.make }
-    let(:service_plan) { VCAP::CloudController::Models::ServicePlan.make(:service => service) }
+    let(:service) { VCAP::CloudController::Service.make }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(:service => service) }
 
-    let(:object) { VCAP::CloudController::Models::ServicePlanVisibility.make(:organization => org, :service_plan => service_plan) }
+    let(:object) { VCAP::CloudController::ServicePlanVisibility.make(:organization => org, :service_plan => service_plan) }
 
     it_should_behave_like :admin_full_access
 

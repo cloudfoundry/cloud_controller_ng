@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 require "loggregator"
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class MissingAppStartEvent < StandardError; end
 
   class AppStopEvent < BillingEvent

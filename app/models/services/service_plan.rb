@@ -1,6 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class ServicePlan < Sequel::Model
     many_to_one       :service
     one_to_many       :service_instances

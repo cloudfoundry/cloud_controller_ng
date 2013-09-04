@@ -3,13 +3,13 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::SpaceSummariesController, type: :controller do
     let(:mem_size) { 128 }
-    let(:space) { Models::Space.make }
-    let(:routes) { 2.times.map { Models::Route.make(:space => space) } }
-    let(:services) { 2.times.map { Models::ManagedServiceInstance.make(:space => space) } }
+    let(:space) { Space.make }
+    let(:routes) { 2.times.map { Route.make(:space => space) } }
+    let(:services) { 2.times.map { ManagedServiceInstance.make(:space => space) } }
 
     let!(:apps) do
       started_apps = 2.times.map do |i|
-        Models::App.make(
+        App.make(
           :space => space,
           :instances => i,
           :memory => mem_size,
@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       stopped_apps = 2.times.map do |i|
-        Models::App.make(
+        App.make(
           :space => space,
           :instances => i,
           :memory => mem_size,
@@ -30,7 +30,7 @@ module VCAP::CloudController
 
       (started_apps + stopped_apps).map do |app|
         routes.each { |route| app.add_route(route) }
-        services.each { |service| Models::ServiceBinding.make(:app => app, :service_instance => service) }
+        services.each { |service| ServiceBinding.make(:app => app, :service_instance => service) }
         app
       end
     end

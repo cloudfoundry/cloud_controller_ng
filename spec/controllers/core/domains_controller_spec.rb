@@ -3,46 +3,46 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::DomainsController, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/domains"
-    include_examples "enumerating objects", path: "/v2/domains", model: Models::Domain
-    include_examples "reading a valid object", path: "/v2/domains", model: Models::Domain, basic_attributes: %w(name owning_organization_guid)
+    include_examples "enumerating objects", path: "/v2/domains", model: Domain
+    include_examples "reading a valid object", path: "/v2/domains", model: Domain, basic_attributes: %w(name owning_organization_guid)
     include_examples "operations on an invalid object", path: "/v2/domains"
-    include_examples "creating and updating", path: "/v2/domains", model: Models::Domain, required_attributes: %w(name owning_organization_guid wildcard), unique_attributes: %w(name)
-    include_examples "deleting a valid object", path: "/v2/domains", model: Models::Domain,
+    include_examples "creating and updating", path: "/v2/domains", model: Domain, required_attributes: %w(name owning_organization_guid wildcard), unique_attributes: %w(name)
+    include_examples "deleting a valid object", path: "/v2/domains", model: Domain,
       one_to_many_collection_ids: {
         :spaces => lambda { |domain|
-          org = domain.organizations.first || Models::Organization.make
-          Models::Space.make(:organization => org)
+          org = domain.organizations.first || Organization.make
+          Space.make(:organization => org)
         },
       },
       one_to_many_collection_ids_without_url: {
         :routes => lambda { |domain|
           domain.update(:wildcard => true)
-          space = Models::Space.make(:organization => domain.owning_organization)
+          space = Space.make(:organization => domain.owning_organization)
           space.add_domain(domain)
-          Models::Route.make(
+          Route.make(
             :host => Sham.host,
             :domain => domain,
             :space => space,
           )
         }
       }
-    include_examples "collection operations", path: "/v2/domains", model: Models::Domain,
+    include_examples "collection operations", path: "/v2/domains", model: Domain,
       one_to_many_collection_ids: {
         spaces: lambda { |domain|
-          org = domain.organizations.first || Models::Organization.make
-          Models::Space.make(organization: org)
+          org = domain.organizations.first || Organization.make
+          Space.make(organization: org)
         },
       },
       one_to_many_collection_ids_without_url: {
         :routes => lambda { |domain|
           domain.update(wildcard: true)
-          space = Models::Space.make(organization: domain.owning_organization)
+          space = Space.make(organization: domain.owning_organization)
           space.add_domain(domain)
-          Models::Route.make(host: Sham.host, domain: domain, space: space)
+          Route.make(host: Sham.host, domain: domain, space: space)
         }
       },
       many_to_one_collection_ids: {
-        owning_organization: lambda { |user| user.organizations.first || Models::Organization.make }
+        owning_organization: lambda { |user| user.organizations.first || Organization.make }
       },
       many_to_many_collection_ids: {}
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
       include_context "permissions"
 
       before(:all) do
-        @system_domain = Models::Domain.new(:name => Sham.domain,
+        @system_domain = Domain.new(:name => Sham.domain,
                                             :owning_organization => nil)
         @system_domain.save(:validate => false)
       end
@@ -60,10 +60,10 @@ module VCAP::CloudController
       end
 
       before do
-        @obj_a = Models::Domain.make(:owning_organization => @org_a)
+        @obj_a = Domain.make(:owning_organization => @org_a)
         @space_a.add_domain(@obj_a)
 
-        @obj_b = Models::Domain.make(:owning_organization => @org_b)
+        @obj_b = Domain.make(:owning_organization => @org_b)
         @space_b.add_domain(@obj_b)
       end
 
@@ -129,7 +129,7 @@ module VCAP::CloudController
 
       describe "Updating space bindings" do
         before do
-          @bare_domain = Models::Domain.make(:owning_organization => @org_a)
+          @bare_domain = Domain.make(:owning_organization => @org_a)
         end
 
         describe "PUT /v2/domains/:domain adding to spaces" do
@@ -213,9 +213,9 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/domains/:id" do
-      let(:user) { Models::User.make }
-      let(:organization) { Models::Organization.make }
-      let(:domain) { Models::Domain.make }
+      let(:user) { User.make }
+      let(:organization) { Organization.make }
+      let(:domain) { Domain.make }
 
       before do
         organization.add_user(user)

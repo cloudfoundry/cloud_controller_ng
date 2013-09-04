@@ -66,7 +66,7 @@ describe VCAP::CloudController::RestController::Base do
       end
 
       it "should log an error for a Model error" do
-        subject.stub(:to_s).and_raise(VCAP::CloudController::Models::InvalidRelation)
+        subject.stub(:to_s).and_raise(VCAP::CloudController::InvalidRelation)
         expect {
           subject.dispatch(:to_s)
         }.to raise_error VCAP::Errors::InvalidRelation

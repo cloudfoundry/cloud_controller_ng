@@ -149,18 +149,18 @@ module VCAP::CloudController
         context "with 2 started apps with 2 instances, 5 stopped apps, and 3 service" do
           before do
             2.times do
-              Models::App.make(:space => current_user.default_space,
+              App.make(:space => current_user.default_space,
                                :state => "STARTED", :instances => 2, :memory => 128,
                                :package_hash => "abc", :package_state => "STAGED")
             end
 
             5.times do
-              Models::App.make(:space => current_user.default_space,
+              App.make(:space => current_user.default_space,
                                :state => "STOPPED", :instances => 2, :memory => 128)
             end
 
             3.times do
-              Models::ManagedServiceInstance.make(:space => current_user.default_space)
+              ManagedServiceInstance.make(:space => current_user.default_space)
             end
           end
 
@@ -182,54 +182,54 @@ module VCAP::CloudController
 
     describe "service info" do
       before(:all) do
-        @mysql_svc = Models::Service.make(
+        @mysql_svc = Service.make(
           :label => "mysql",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @mysql_svc, :name => "100")
+        ServicePlan.make(:service => @mysql_svc, :name => "100")
 
-        @pg_svc = Models::Service.make(
+        @pg_svc = Service.make(
           :label => "postgresql",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @pg_svc, :name => "100")
+        ServicePlan.make(:service => @pg_svc, :name => "100")
 
-        @redis_svc = Models::Service.make(
+        @redis_svc = Service.make(
           :label => "redis",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @redis_svc, :name => "100")
+        ServicePlan.make(:service => @redis_svc, :name => "100")
 
-        @mongo_svc = Models::Service.make(
+        @mongo_svc = Service.make(
           :label => "mongodb",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @mongo_svc, :name => "100")
+        ServicePlan.make(:service => @mongo_svc, :name => "100")
 
-        @random_svc = Models::Service.make(
+        @random_svc = Service.make(
           :label => "random",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(:service => @random_svc, :name => "100")
+        ServicePlan.make(:service => @random_svc, :name => "100")
 
-        @random_other_svc = Models::Service.make(
+        @random_other_svc = Service.make(
           :label => "random_other",
           :provider => "core",
         )
 
-        Models::ServicePlan.make(
+        ServicePlan.make(
           :service => @random_other_svc,
           :name => "other"
         )
 
-        non_core = Models::Service.make
+        non_core = Service.make
 
-        get "/info/services", {}, headers_for(Models::User.make)
+        get "/info/services", {}, headers_for(User.make)
       end
 
       it "should return success" do
@@ -358,52 +358,52 @@ module VCAP::CloudController
     describe "GET", "/info/services", "unauthenticated" do
       before(:each) do
         # poor man's reset_db
-        Models::Service.filter(:provider => "core").each do |svc|
+        Service.filter(:provider => "core").each do |svc|
           svc.service_plans_dataset.filter(:name => "100").destroy
           svc.destroy
         end
-        @mysql_svc = Models::Service.make(
+        @mysql_svc = Service.make(
           :label => "mysql_#{Sham.name}",
           :provider => "core",
         )
-        Models::ServicePlan.make(
+        ServicePlan.make(
           :service => @mysql_svc,
           :name => "100",
         )
-        @pg_svc = Models::Service.make(
+        @pg_svc = Service.make(
           :label => "postgresql_#{Sham.name}",
           :provider => "core",
         )
-        Models::ServicePlan.make(
+        ServicePlan.make(
           :service => @pg_svc,
           :name => "100",
         )
-        @redis_svc = Models::Service.make(
+        @redis_svc = Service.make(
           :label => "redis_#{Sham.name}",
           :provider => "core",
         )
-        Models::ServicePlan.make(
+        ServicePlan.make(
           :service => @redis_svc,
           :name => "100",
         )
-        @mongo_svc = Models::Service.make(
+        @mongo_svc = Service.make(
           :label => "mongodb_#{Sham.name}",
           :provider => "core",
         )
-        Models::ServicePlan.make(
+        ServicePlan.make(
           :service => @mongo_svc,
           :name => "100",
         )
-        @random_svc = Models::Service.make(
+        @random_svc = Service.make(
           :label => "random_#{Sham.name}",
           :provider => "core",
         )
-        Models::ServicePlan.make(
+        ServicePlan.make(
           :service => @random_svc,
           :name => "100",
         )
-        non_core = Models::Service.make
-        Models::ServicePlan.make(
+        non_core = Service.make
+        ServicePlan.make(
           :service => non_core,
           :name => "100",
         )

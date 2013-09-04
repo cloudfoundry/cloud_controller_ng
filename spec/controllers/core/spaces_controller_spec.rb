@@ -3,20 +3,20 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::SpacesController, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/spaces"
-    include_examples "querying objects", path: "/v2/spaces", model: Models::Space, queryable_attributes: %w(name)
-    include_examples "enumerating objects", path: "/v2/spaces", model: Models::Space
-    include_examples "reading a valid object", path: "/v2/spaces", model: Models::Space, basic_attributes: %w(name organization_guid)
+    include_examples "querying objects", path: "/v2/spaces", model: Space, queryable_attributes: %w(name)
+    include_examples "enumerating objects", path: "/v2/spaces", model: Space
+    include_examples "reading a valid object", path: "/v2/spaces", model: Space, basic_attributes: %w(name organization_guid)
     include_examples "operations on an invalid object", path: "/v2/spaces"
-    include_examples "creating and updating", path: "/v2/spaces", model: Models::Space, required_attributes: %w(name organization_guid), unique_attributes: %w(name organization_guid)
-    include_examples "deleting a valid object", path: "/v2/spaces", model: Models::Space,
+    include_examples "creating and updating", path: "/v2/spaces", model: Space, required_attributes: %w(name organization_guid), unique_attributes: %w(name organization_guid)
+    include_examples "deleting a valid object", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
-        :apps => lambda { |space| Models::App.make(:space => space) },
-        :service_instances => lambda { |space| Models::ManagedServiceInstance.make(:space => space) }
+        :apps => lambda { |space| App.make(:space => space) },
+        :service_instances => lambda { |space| ManagedServiceInstance.make(:space => space) }
       },
       one_to_many_collection_ids_without_url: {
-        :routes => lambda { |space| Models::Route.make(:space => space) },
+        :routes => lambda { |space| Route.make(:space => space) },
         :default_users => lambda { |space|
-          user = VCAP::CloudController::Models::User.make
+          user = VCAP::CloudController::User.make
           space.organization.add_user(user)
           space.add_developer(user)
           space.save
@@ -25,15 +25,15 @@ module VCAP::CloudController
           user
         }
       }
-    include_examples "collection operations", path: "/v2/spaces", model: Models::Space,
+    include_examples "collection operations", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
-        apps: lambda { |space| Models::App.make(space: space) },
-        service_instances: lambda { |space| Models::ManagedServiceInstance.make(space: space) }
+        apps: lambda { |space| App.make(space: space) },
+        service_instances: lambda { |space| ManagedServiceInstance.make(space: space) }
       },
       one_to_many_collection_ids_without_url: {
-        routes: lambda { |space| Models::Route.make(space: space) },
+        routes: lambda { |space| Route.make(space: space) },
         default_users: lambda { |space|
-          user = VCAP::CloudController::Models::User.make
+          user = VCAP::CloudController::User.make
           space.organization.add_user(user)
           space.add_developer(user)
           space.save
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
 
     describe "data integrity" do
-      let(:space) { Models::Space.make }
+      let(:space) { Space.make }
 
       it "should not make strings into integers" do
         space.name = "1234"
@@ -154,15 +154,15 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/spaces/:guid/service_instances' do
-      let(:space) { Models::Space.make }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when filtering results' do
         it 'returns only matching results' do
-          user_provided_service_instance_1 = Models::UserProvidedServiceInstance.make(space: space, name: 'provided service 1')
-          user_provided_service_instance_2 = Models::UserProvidedServiceInstance.make(space: space, name: 'provided service 2')
-          managed_service_instance_1 = Models::ManagedServiceInstance.make(space: space, name: 'managed service 1')
-          managed_service_instance_2 = Models::ManagedServiceInstance.make(space: space, name: 'managed service 2')
+          user_provided_service_instance_1 = UserProvidedServiceInstance.make(space: space, name: 'provided service 1')
+          user_provided_service_instance_2 = UserProvidedServiceInstance.make(space: space, name: 'provided service 2')
+          managed_service_instance_1 = ManagedServiceInstance.make(space: space, name: 'managed service 1')
+          managed_service_instance_2 = ManagedServiceInstance.make(space: space, name: 'managed service 2')
 
           get "v2/spaces/#{space.guid}/service_instances", {'q' => 'name:provided service 1;', 'return_user_provided_service_instances' => true}, headers_for(developer)
           guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
@@ -175,8 +175,8 @@ module VCAP::CloudController
       end
 
       context 'when there are provided service instances' do
-        let!(:user_provided_service_instance) { Models::UserProvidedServiceInstance.make(space: space) }
-        let!(:managed_service_instance) { Models::ManagedServiceInstance.make(space: space) }
+        let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
+        let!(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
 
         describe 'when return_user_provided_service_instances is true' do
           it 'returns ManagedServiceInstances and UserProvidedServiceInstances' do
@@ -234,7 +234,7 @@ module VCAP::CloudController
           expected = opts.fetch(:expected)
           let(:path) { "/v2/spaces/#{@space_a.guid}/service_instances" }
           let!(:managed_service_instance) do
-            Models::ManagedServiceInstance.make(
+            ManagedServiceInstance.make(
               space: @space_a,
             )
           end

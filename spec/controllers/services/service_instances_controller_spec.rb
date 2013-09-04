@@ -3,18 +3,18 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceInstancesController, :services, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/service_instances"
-    include_examples "enumerating objects", path: "/v2/service_instances", model: Models::ManagedServiceInstance
-    include_examples "reading a valid object", path: "/v2/service_instances", model: Models::ManagedServiceInstance, basic_attributes: %w(name)
+    include_examples "enumerating objects", path: "/v2/service_instances", model: ManagedServiceInstance
+    include_examples "reading a valid object", path: "/v2/service_instances", model: ManagedServiceInstance, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/service_instances"
-    include_examples "creating and updating", path: "/v2/service_instances", model: Models::ManagedServiceInstance, required_attributes: %w(name space_guid service_plan_guid), unique_attributes: %w(space_guid name)
-    include_examples "deleting a valid object", path: "/v2/service_instances", model: Models::ManagedServiceInstance,
+    include_examples "creating and updating", path: "/v2/service_instances", model: ManagedServiceInstance, required_attributes: %w(name space_guid service_plan_guid), unique_attributes: %w(space_guid name)
+    include_examples "deleting a valid object", path: "/v2/service_instances", model: ManagedServiceInstance,
                      one_to_many_collection_ids: {
                        :service_bindings => lambda { |service_instance|
                          make_service_binding_for_service_instance(service_instance)
                        }
                      },
                      one_to_many_collection_ids_without_url: {}
-    include_examples "collection operations", path: "/v2/service_instances", model: Models::ManagedServiceInstance,
+    include_examples "collection operations", path: "/v2/service_instances", model: ManagedServiceInstance,
                      one_to_many_collection_ids: {
                        service_bindings: lambda { |service_instance| make_service_binding_for_service_instance(service_instance) }
                      },
@@ -25,15 +25,15 @@ module VCAP::CloudController
       include_context "permissions"
 
       before do
-        @obj_a = Models::ManagedServiceInstance.make(:space => @space_a)
-        @obj_b = Models::ManagedServiceInstance.make(:space => @space_b)
+        @obj_a = ManagedServiceInstance.make(:space => @space_a)
+        @obj_b = ManagedServiceInstance.make(:space => @space_b)
       end
 
       let(:creation_req_for_a) do
         Yajl::Encoder.encode(
           :name => Sham.name,
           :space_guid => @space_a.guid,
-          :service_plan_guid => Models::ServicePlan.make.guid
+          :service_plan_guid => ServicePlan.make.guid
         )
       end
 
@@ -74,9 +74,9 @@ module VCAP::CloudController
         end
 
         describe "private plans" do
-          let!(:unprivileged_organization) { Models::Organization.make }
-          let!(:private_plan) { Models::ServicePlan.make(public: false) }
-          let!(:unprivileged_space) { Models::Space.make(organization: unprivileged_organization) }
+          let!(:unprivileged_organization) { Organization.make }
+          let!(:private_plan) { ServicePlan.make(public: false) }
+          let!(:unprivileged_space) { Space.make(organization: unprivileged_organization) }
           let!(:developer) { make_developer_for_space(unprivileged_space) }
 
           describe "a user who does not belong to a privileged organization" do
@@ -96,14 +96,14 @@ module VCAP::CloudController
 
           describe "a user who belongs to a privileged organization" do
             let!(:privileged_organization) do
-              Models::Organization.make.tap do |org|
-                Models::ServicePlanVisibility.create(
+              Organization.make.tap do |org|
+                ServicePlanVisibility.create(
                   organization: org,
                   service_plan: private_plan
                 )
               end
             end
-            let!(:privileged_space) { Models::Space.make(organization: privileged_organization) }
+            let!(:privileged_space) { Space.make(organization: privileged_organization) }
 
             before do
               developer.add_organization(privileged_organization)
@@ -150,8 +150,8 @@ module VCAP::CloudController
 
     describe 'POST', '/v2/service_instance' do
       context 'creating a service instance with a name over 50 characters' do
-        let(:space) { Models::Space.make }
-        let(:plan) { Models::ServicePlan.make }
+        let(:space) { Space.make }
+        let(:plan) { ServicePlan.make }
         let(:developer) { make_developer_for_space(space) }
         let(:very_long_name) { 's' * 51 }
 
@@ -168,9 +168,9 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_instances' do
-      let(:space) { Models::Space.make }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:service_instance) {Models::ManagedServiceInstance.make}
+      let(:service_instance) {ManagedServiceInstance.make}
 
       it "shows the dashboard_url if there is" do
         service_instance.update(dashboard_url: 'http://dashboard.io')
@@ -209,7 +209,7 @@ module VCAP::CloudController
 
     describe 'GET', '/v2/service_instances/:service_instance_guid' do
       context 'with a managed service instance' do
-        let(:service_instance) { Models::ManagedServiceInstance.make }
+        let(:service_instance) { ManagedServiceInstance.make }
 
         it "returns the service instance with the given guid" do
           get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
@@ -219,7 +219,7 @@ module VCAP::CloudController
       end
 
       context 'with a user provided service instance' do
-        let(:service_instance) { Models::UserProvidedServiceInstance.make }
+        let(:service_instance) { UserProvidedServiceInstance.make }
 
         it "returns the service instance with the given guid" do
           get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
@@ -231,47 +231,47 @@ module VCAP::CloudController
 
     describe 'DELETE', '/v2/service_instances/:service_instance_guid' do
       context 'with a managed service instance' do
-        let!(:service_instance) { Models::ManagedServiceInstance.make }
+        let!(:service_instance) { ManagedServiceInstance.make }
 
         it "deletes the service instance with the given guid" do
           expect {
             delete "v2/service_instances/#{service_instance.guid}", {}, admin_headers
-          }.to change(Models::ServiceInstance, :count).by(-1)
+          }.to change(ServiceInstance, :count).by(-1)
           last_response.status.should == 204
-          Models::ServiceInstance.find(:guid => service_instance.guid).should be_nil
+          ServiceInstance.find(:guid => service_instance.guid).should be_nil
         end
       end
 
       context 'with a user provided service instance' do
-        let!(:service_instance) { Models::UserProvidedServiceInstance.make }
+        let!(:service_instance) { UserProvidedServiceInstance.make }
 
         it "deletes the service instance with the given guid" do
           expect {
             delete "v2/service_instances/#{service_instance.guid}", {}, admin_headers
-          }.to change(Models::ServiceInstance, :count).by(-1)
+          }.to change(ServiceInstance, :count).by(-1)
           last_response.status.should == 204
-          Models::ServiceInstance.find(:guid => service_instance.guid).should be_nil
+          ServiceInstance.find(:guid => service_instance.guid).should be_nil
         end
       end
     end
 
     describe "Quota enforcement" do
-      let(:paid_quota) { Models::QuotaDefinition.make(:total_services => 0) }
+      let(:paid_quota) { QuotaDefinition.make(:total_services => 0) }
       let(:free_quota_with_no_services) do
-        Models::QuotaDefinition.make(:total_services => 0,
+        QuotaDefinition.make(:total_services => 0,
                                      :non_basic_services_allowed => false)
       end
       let(:free_quota_with_one_service) do
-        Models::QuotaDefinition.make(:total_services => 1,
+        QuotaDefinition.make(:total_services => 1,
                                      :non_basic_services_allowed => false)
       end
-      let(:paid_plan) { Models::ServicePlan.make }
-      let(:free_plan) { Models::ServicePlan.make(:free => true) }
+      let(:paid_plan) { ServicePlan.make }
+      let(:free_plan) { ServicePlan.make(:free => true) }
 
       context "paid quota" do
         it "should enforce quota check on number of service instances during creation" do
-          org = Models::Organization.make(:quota_definition => paid_quota)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => paid_quota)
+          space = Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
                                      :service_plan_guid => paid_plan.guid)
@@ -284,8 +284,8 @@ module VCAP::CloudController
 
       context "free quota" do
         it "should enforce quota check on number of service instances during creation" do
-          org = Models::Organization.make(:quota_definition => free_quota_with_no_services)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => free_quota_with_no_services)
+          space = Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
                                      :service_plan_guid => free_plan.guid)
@@ -296,8 +296,8 @@ module VCAP::CloudController
         end
 
         it "should enforce quota check on service plan type during creation" do
-          org = Models::Organization.make(:quota_definition => free_quota_with_one_service)
-          space = Models::Space.make(:organization => org)
+          org = Organization.make(:quota_definition => free_quota_with_one_service)
+          space = Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
                                      :service_plan_guid => paid_plan.guid)
@@ -310,10 +310,10 @@ module VCAP::CloudController
 
       context 'invalid space guid' do
         it "returns a user friendly error" do
-          org = Models::Organization.make()
-          space = Models::Space.make(:organization => org)
-          service = Models::Service.make
-          plan = Models::ServicePlan.make(free: true)
+          org = Organization.make()
+          space = Space.make(:organization => org)
+          service = Service.make
+          plan = ServicePlan.make(free: true)
 
           body = {
             "space_guid" => "invalid_space_guid",

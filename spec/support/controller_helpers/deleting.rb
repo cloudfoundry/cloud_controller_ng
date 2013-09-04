@@ -10,7 +10,7 @@ module ControllerHelpers
 
         context "when there are no child associations" do
           before do
-            if obj.is_a? Models::Service
+            if obj.is_a? Service
               # Blueprint makes a ServiceAuthToken. No other model has child associated models created by Blueprint.
               obj.service_auth_token.delete
             end

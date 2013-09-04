@@ -84,25 +84,25 @@ module VCAP::CloudController
       end
 
       it "sets up the quota definition" do
-        VCAP::CloudController::Models::QuotaDefinition.should_receive(:configure).with(@test_config)
+        VCAP::CloudController::QuotaDefinition.should_receive(:configure).with(@test_config)
         Config.configure(@test_config)
       end
 
       it "sets up the stack" do
         config = @test_config.merge(stacks_file: "path/to/stacks/file")
-        VCAP::CloudController::Models::Stack.should_receive(:configure).with("path/to/stacks/file")
+        VCAP::CloudController::Stack.should_receive(:configure).with("path/to/stacks/file")
         Config.configure(config)
       end
 
       it "sets up the service plan" do
         config = @test_config.merge(trial_db: "no quota")
-        VCAP::CloudController::Models::ServicePlan.should_receive(:configure).with("no quota")
+        VCAP::CloudController::ServicePlan.should_receive(:configure).with("no quota")
         Config.configure(config)
       end
 
       it "sets up the service plan" do
         config = @test_config.merge(trial_db: "no quota")
-        VCAP::CloudController::Models::ServicePlan.should_receive(:configure).with("no quota")
+        VCAP::CloudController::ServicePlan.should_receive(:configure).with("no quota")
         Config.configure(config)
       end
     end
