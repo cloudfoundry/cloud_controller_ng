@@ -18,6 +18,10 @@ module VCAP::CloudController
         stager_pool.register_subscriptions
       end
 
+      def delete_buildpack_cache(app)
+        StagingsController.delete_buildpack_cache(app)
+      end
+
       def delete_droplet(app)
         StagingsController.delete_droplet(app)
       end

@@ -181,6 +181,7 @@ module VCAP::CloudController
       def after_destroy_commit
         AppManager.stop_droplet(self)
         AppManager.delete_droplet(self)
+        AppManager.delete_buildpack_cache(self)
         AppPackage.delete_package(self.guid)
       end
 
@@ -409,7 +410,7 @@ module VCAP::CloudController
           after_destroy
         end
 
-        AppManager.stop_droplet(self)
+        after_destroy_commit
       end
 
       def uris
