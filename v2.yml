@@ -458,6 +458,11 @@
   http_code: 500
   message: "Authentication failed for the service broker API. Double-check that the token is correct: %s"
 
+270008:
+  name: ServiceBrokerConflict
+  http_code: 409
+  message: "This resource already exists: %s"
+
 280001:
   name: TaskNotFound
   http_code: 404
