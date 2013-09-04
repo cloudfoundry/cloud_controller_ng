@@ -129,7 +129,7 @@ module VCAP::CloudController
         end
 
         before do
-          config_override(:index => 99)
+          config_override(:index => 99, :name => "api_z1")
         end
 
         it "creates a delayed job" do
@@ -141,7 +141,7 @@ module VCAP::CloudController
 
           job = Delayed::Job.last
           expect(job.handler).to include(app_obj.guid)
-          expect(job.queue).to eq("cc99")
+          expect(job.queue).to eq("cc-api_z1-99")
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 201
           expect(last_response.body).to eq({
