@@ -449,9 +449,9 @@
   message: "The Service Broker API timed out: %s"
 
 270006:
-  name: ServiceBrokerCatalogMalformed
+  name: ServiceBrokerResponseMalformed
   http_code: 500
-  message: "The Service Broker's catalog endpoint did not return valid json"
+  message: "The Service Broker did not return valid json"
 
 270007:
   name: ServiceBrokerApiAuthenticationFailed
