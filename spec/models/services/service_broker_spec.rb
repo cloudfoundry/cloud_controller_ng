@@ -300,6 +300,14 @@ module VCAP::CloudController
       end
     end
 
+    describe '#client' do
+      it 'returns a client created with the correct arguments' do
+        client = double('client')
+        ServiceBrokerClient.should_receive(:new).with(broker_url, token).and_return(client)
+        expect(broker.client).to be(client)
+      end
+    end
+
     describe "#destroy" do
       let(:service_broker) { ServiceBroker.make }
 

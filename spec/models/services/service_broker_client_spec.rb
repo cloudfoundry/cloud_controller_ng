@@ -12,7 +12,44 @@ module VCAP::CloudController
       VCAP::Request.stub(:current_id).and_return(request_id)
     end
 
-    describe "#catalog"
+    describe "#catalog" do
+
+      let(:expected_response) do
+        {
+          'services' => [
+            {
+              'id' => service_id,
+              'name' => service_name,
+              'description' => service_description,
+              'plans' => [
+                {
+                  'id' => plan_id,
+                  'name' => plan_name,
+                  'description' => plan_description
+                }
+              ]
+            }
+          ]
+        }
+      end
+      let(:service_id) { Sham.guid }
+      let(:service_name) { Sham.name }
+      let(:service_description) { Sham.description }
+
+      let(:plan_id) { Sham.guid }
+      let(:plan_name) { Sham.name }
+      let(:plan_description) { Sham.description }
+
+      it 'fetches the broker catalog' do
+        stub_request(:get, "http://cc:sometoken@example.com/v2/catalog").
+          with(headers: { 'X-VCAP-Request-ID' => request_id }).
+          to_return(body: expected_response.to_json)
+
+        catalog = client.catalog
+
+        expect(catalog).to eq(expected_response)
+      end
+    end
 
     describe "#provision" do
       let(:reference_id) { 'ref_id' }

@@ -40,6 +40,10 @@ module VCAP::CloudController
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt
     end
 
+    def client
+      ServiceBrokerClient.new(broker_url, token)
+    end
+
     class Catalog
       def initialize(broker)
         raise unless broker.broker_url.present? && broker.token.present?
@@ -48,7 +52,7 @@ module VCAP::CloudController
       end
 
       def sync_services_and_plans
-        catalog_services = raw_catalog.fetch('services', [])
+        catalog_services = @broker.client.catalog.fetch('services', [])
         catalog_services.each do |catalog_service|
           service_id = catalog_service.fetch('id')
 
@@ -79,45 +83,6 @@ module VCAP::CloudController
             end
           end
         end
-      end
-
-      private
-
-      def raw_catalog
-        @raw_catalog ||= fetch_raw_catalog
-      end
-
-      def fetch_raw_catalog
-        catalog_url = @broker.broker_url + '/v2/catalog'
-        catalog_uri = URI(catalog_url)
-
-        http = HTTPClient.new
-        http.set_auth(catalog_url, 'cc', @broker.token)
-
-        begin
-          response = http.get(catalog_uri)
-        rescue SocketError, HTTPClient::ConnectTimeoutError, Errno::ECONNREFUSED
-          raise VCAP::Errors::ServiceBrokerApiUnreachable.new(@broker.broker_url)
-        rescue HTTPClient::KeepAliveDisconnected, HTTPClient::ReceiveTimeoutError
-          raise VCAP::Errors::ServiceBrokerApiTimeout.new(@broker.broker_url)
-        end
-
-        if response.code.to_i == HTTP::Status::UNAUTHORIZED
-          raise VCAP::Errors::ServiceBrokerApiAuthenticationFailed.new(@broker.broker_url)
-        elsif response.code.to_i != HTTP::Status::OK
-          raise VCAP::Errors::ServiceBrokerResponseMalformed.new(@broker.broker_url)
-        else
-          begin
-            raw_catalog = Yajl::Parser.parse(response.body)
-          rescue Yajl::ParseError
-          end
-
-          unless raw_catalog.is_a?(Hash)
-            raise VCAP::Errors::ServiceBrokerResponseMalformed.new(@broker.broker_url)
-          end
-        end
-
-        raw_catalog
       end
     end
   end

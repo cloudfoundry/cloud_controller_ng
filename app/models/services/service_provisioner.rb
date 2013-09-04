@@ -88,8 +88,7 @@ module VCAP::CloudController
     def initialize(service_instance, opts={})
       @service_instance = service_instance
       @broker_client = opts.fetch(:broker_client) do
-        broker = service_instance.service_plan.service.service_broker
-        ServiceBrokerClient.new(broker.broker_url, broker.token)
+        service_instance.service_plan.service.service_broker.client
       end
     end
 

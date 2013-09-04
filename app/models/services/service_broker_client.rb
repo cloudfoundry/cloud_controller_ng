@@ -14,11 +14,15 @@ module VCAP::CloudController
     # guarantee uniqueness of the reference_id.
     # TODO: what does it do when it's not unique?
     def provision(service_id, plan_id, reference_id)
-      execute(:post, "#{endpoint_base}/v2/service_instances", {
+      execute(:post, '/v2/service_instances', {
         service_id: service_id,
         plan_id: plan_id,
         reference_id: reference_id
       })
+    end
+
+    def catalog
+      execute(:get, '/v2/catalog')
     end
 
     private
@@ -26,16 +30,18 @@ module VCAP::CloudController
     attr_reader :endpoint_base, :token
 
     # hits the endpoint, json decodes the response
-    def execute(method, endpoint, message)
+    def execute(method, path, message=nil)
+      endpoint = endpoint_base + path
+
       headers  = {
         'Content-Type' => 'application/json',
         VCAP::Request::HEADER_NAME => VCAP::Request.current_id
       }
 
-      body = message.to_json
+      body = message ? message.to_json : nil
 
       http = HTTPClient.new
-      http.set_auth(endpoint_base, 'cc', token)
+      http.set_auth(endpoint, 'cc', token)
 
       begin
         response = http.send(method, endpoint, header: headers, body: body)
