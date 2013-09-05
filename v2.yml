@@ -463,6 +463,11 @@
   http_code: 409
   message: "This resource already exists: %s"
 
+270009:
+  name: ServiceBrokerBadResponse
+  http_code: 500
+  message: "The service broker API returned an error from %s"
+
 280001:
   name: TaskNotFound
   http_code: 404
