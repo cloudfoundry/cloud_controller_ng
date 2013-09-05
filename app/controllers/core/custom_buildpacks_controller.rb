@@ -4,6 +4,7 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name, String
+      attribute :key,  String, :exclude_in => [:create, :update]
       attribute :priority, Integer, :default => 0
     end
 
@@ -16,50 +17,6 @@ module VCAP::CloudController
       else
         Errors::BuildpackNameTaken.new(e.errors.full_messages)
       end
-    end
-
-    def create
-      # multipart request so the body does not contain JSON
-      @request_attrs = {
-        name: params['name'],
-        key: "#{params['name']}#{compute_file_extension}",
-        priority: params.fetch('priority', self.class.attributes[:priority].default)
-      }
-
-      logger.debug "cc.create", :model => self.class.model_class_name,
-        :attributes => request_attrs
-
-      raise InvalidRequest unless request_attrs
-
-      before_create
-
-      obj = nil
-      model.db.transaction do
-        obj = model.create_from_hash(request_attrs)
-        validate_access(:create, obj, user, roles)
-      end
-
-      after_create(obj)
-
-      [ HTTP::CREATED,
-        { "Location" => "#{self.class.path}/#{obj.guid}" },
-        serialization.render_json(self.class, obj, @opts)
-      ]
-    end
-
-    def after_create(obj)
-      file_struct = upload_handler.uploaded_file(params, "custom_buildpacks")
-      File.open(file_struct.path) do |file|
-        buildpack_blobstore.files.create(
-            :key => request_attrs[:key],
-            :body => file,
-            :public => buildpack_blobstore.local?
-        )
-      end
-
-      logger.debug "uploaded file: #{file_struct}"
-      logger.debug "blobstore file: #{buildpack_blobstore.files.head(request_attrs[:key])}"
-      logger.debug "db record: #{model.find(key: params["custom_buildpacks_name"])}"
     end
 
     def after_destroy(obj)
@@ -76,15 +33,42 @@ module VCAP::CloudController
       @upload_handler = dependencies[:upload_handler]
     end
 
-    def get_buildpack_bits(guid)
-      buildpack = find_guid_and_validate_access(:read_bits, guid)
+    def upload_bits(guid)
+      obj = find_guid_and_validate_access(:read_bits, guid)
+      file_struct = upload_handler.uploaded_file(params, "buildpack")
+      uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
+      buildpack_key = "#{obj.name}#{compute_file_extension(uploaded_filename)}"
+
+      model.db.transaction do
+        obj.lock!
+        obj.update_from_hash(key: buildpack_key)
+      end
+
+      File.open(file_struct.path) do |file|
+        buildpack_blobstore.files.create(
+        :key => buildpack_key,
+        :body => file,
+        :public => buildpack_blobstore.local?
+        )
+      end
+
+      logger.debug "uploaded file: #{file_struct}"
+      logger.debug "blobstore file: #{buildpack_blobstore.files.head(buildpack_key)}"
+      logger.debug "db record: #{obj}"
+
+      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
+    end
+
+
+    def download_bits(guid)
+      obj = find_guid_and_validate_access(:read_bits, guid)
       if @buildpack_blobstore.local?
-        f = buildpack_blobstore.files.head(buildpack.key)
+        f = buildpack_blobstore.files.head(obj.key)
         raise self.class.not_found_exception.new(guid) unless f
         # hack to get the local path to the file
         return send_file f.send(:path)
       else
-        bits_uri = "#{bits_uri(buildpack.key)}"
+        bits_uri = "#{bits_uri(obj.key)}"
         return [HTTP::FOUND, {"Location" => bits_uri}, nil]
       end
     end
@@ -104,14 +88,15 @@ module VCAP::CloudController
       end
     end
 
-    def compute_file_extension
-      params["custom_buildpacks_name"].end_with?('.tar.gz') ? '.tar.gz' : File.extname(params["custom_buildpacks_name"])
+    def compute_file_extension(filename)
+      filename.end_with?('.tar.gz') ? '.tar.gz' : File.extname(filename)
     end
 
     def self.not_found_exception_name
       "NotFound"
     end
 
-    get "#{path}/:guid/bits", :get_buildpack_bits
+    post "#{path}/:guid/bits", :upload_bits
+    get "#{path}/:guid/download", :download_bits
   end
 end
