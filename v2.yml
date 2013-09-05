@@ -468,6 +468,11 @@
   http_code: 500
   message: "The service broker API returned an error from %s"
 
+270010:
+  name: ServiceBrokerNotRemovable
+  http_code: 400
+  message: "Can not remove brokers that have associated service instances"
+
 280001:
   name: TaskNotFound
   http_code: 404
