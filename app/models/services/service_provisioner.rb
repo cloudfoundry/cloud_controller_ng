@@ -50,9 +50,6 @@ module VCAP::CloudController
         gateway_response.dashboard_url
       )
 
-    rescue VCAP::Services::Api::ServiceGatewayClient::UnexpectedResponse=>e
-      raise unless e.message =~ /Error Code: 33106,/
-      raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
     rescue VCAP::Services::Api::ServiceGatewayClient::ErrorResponse => e
       if e.error.code == 33106
         raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
