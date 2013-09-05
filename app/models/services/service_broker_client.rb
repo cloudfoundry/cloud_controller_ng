@@ -10,9 +10,9 @@ module VCAP::CloudController
     end
 
 
-    # Provision a service with the reference_id. The broker is expected to
-    # guarantee uniqueness of the reference_id.
-    # TODO: what does it do when it's not unique?
+    # The broker is expected to guarantee uniqueness of the reference_id.
+    # raises ServiceBrokerConflict if the reference id is already in use
+    #
     def provision(service_id, plan_id, reference_id)
       execute(:post, '/v2/service_instances', {
         service_id: service_id,
@@ -70,7 +70,7 @@ module VCAP::CloudController
       when 409
         raise VCAP::Errors::ServiceBrokerConflict.new(endpoint)
       else
-        raise VCAP::Errors::ServiceBrokerResponseMalformed.new("#{endpoint} returned #{code}")
+        raise VCAP::Errors::ServiceBrokerBadResponse.new("#{endpoint}: #{code} #{response.reason}")
       end
     end
   end

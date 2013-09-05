@@ -160,13 +160,18 @@ module VCAP::CloudController
       context 'when the API returns an invalid response' do
         context 'because of an unexpected status code' do
           before do
-            stub_request(:get, broker_catalog_url).to_return(status: 400, body: catalog_response.to_json)
+            stub_request(:get, broker_catalog_url).to_return(
+              status: [404, 'Not Found'], body: catalog_response.to_json
+            )
           end
 
           it 'should raise an invalid response error' do
             expect {
               client.catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerResponseMalformed)
+            }.to raise_error(
+              VCAP::CloudController::Errors::ServiceBrokerBadResponse,
+              'The service broker API returned an error from http://example.com/v2/catalog: 404 Not Found'
+            )
           end
         end
 
