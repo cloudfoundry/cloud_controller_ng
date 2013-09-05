@@ -6,8 +6,7 @@ module VCAP::CloudController
     one_to_many       :service_instances
     one_to_many       :service_plan_visibilities
 
-    add_association_dependencies :service_instances => :destroy,
-                                 :service_plan_visibilities => :destroy
+    add_association_dependencies :service_plan_visibilities => :destroy
 
     default_order_by  :name
 

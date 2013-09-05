@@ -263,6 +263,24 @@ module VCAP::CloudController
         expect(last_response.status).to eq(404)
       end
 
+      context "when a service instance exists" do
+
+        it "returns a 400 and an appropriate error message" do
+          service = Service.make(:service_broker => broker)
+          service_plan = ServicePlan.make(:service => service)
+          ManagedServiceInstance.make(:service_plan => service_plan)
+
+          delete "/v2/service_brokers/#{broker.guid}", {}, headers
+
+          expect(last_response.status).to eq(400)
+          decoded_response.fetch('code').should == 270010
+          decoded_response.fetch('description').should =~ /Can not remove brokers that have associated service instances/
+
+          get '/v2/service_brokers', {}, headers
+          expect(decoded_response).to include('total_results' => 1)
+        end
+      end
+
       describe 'authentication' do
         it 'returns a forbidden status for non-admin users' do
           delete "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers

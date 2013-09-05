@@ -205,6 +205,22 @@ module VCAP::CloudController
           Service.where(:id => service.id).any?
         }.to(false)
       end
+
+      context 'when a service instance exists' do
+        it 'does not allow the broker to be destroyed' do
+          service = Service.make(:service_broker => service_broker)
+          service_plan = ServicePlan.make(:service => service)
+          ManagedServiceInstance.make(:service_plan => service_plan)
+          expect {
+            begin
+              service_broker.destroy
+            rescue Sequel::ForeignKeyConstraintViolation
+            end
+          }.to_not change {
+            Service.where(:id => service.id).count
+          }.by(-1)
+        end
+      end
     end
   end
 end

@@ -72,6 +72,8 @@ module VCAP::CloudController
       return HTTP::NOT_FOUND unless broker
       broker.destroy
       HTTP::NO_CONTENT
+    rescue Sequel::ForeignKeyConstraintViolation
+      raise VCAP::Errors::ServiceBrokerNotRemovable.new
     end
 
     def self.translate_validation_exception(e, _)

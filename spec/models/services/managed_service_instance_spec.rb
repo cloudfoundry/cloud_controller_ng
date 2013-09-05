@@ -19,7 +19,6 @@ module VCAP::CloudController
       :stripped_string_attributes => :name,
       :many_to_one => {
         :service_plan => {
-          :delete_ok => true,
           :create_for => lambda { |service_instance| ServicePlan.make },
         },
         :space => {
