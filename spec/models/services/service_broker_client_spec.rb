@@ -81,8 +81,11 @@ module VCAP::CloudController
       end
 
       context 'the reference_id is already in use' do
-        it 'does something meaningful' do
+        it 'raises ServiceBrokerConflict' do
+          stub_request(:post, "http://cc:sometoken@example.com/v2/service_instances").
+            to_return(status: 409)  # 409 is CONFLICT
 
+          expect { client.provision(service_id, plan_id, reference_id) }.to raise_error(VCAP::Errors::ServiceBrokerConflict)
         end
       end
     end

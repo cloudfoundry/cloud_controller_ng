@@ -53,6 +53,8 @@ module VCAP::CloudController
 
       if response.code.to_i == HTTP::Status::UNAUTHORIZED
         raise VCAP::Errors::ServiceBrokerApiAuthenticationFailed.new(endpoint)
+      elsif response.code.to_i == 409
+        raise VCAP::Errors::ServiceBrokerConflict.new(endpoint)
       elsif response.code.to_i != HTTP::Status::OK
         # TODO: this is really not an appropriate response
         raise VCAP::Errors::ServiceBrokerResponseMalformed.new(endpoint)
