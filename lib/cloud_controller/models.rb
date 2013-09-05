@@ -78,6 +78,7 @@ Sequel::Model.plugin :typecast_on_load,
 
 require "vcap/sequel_add_association_dependencies_monkeypatch"
 require "vcap/delayed_job_guid_monkeypatch"
+require "vcap/delayed_job_postgres_monkeypatch"
 
 module VCAP::CloudController
 autoload :BillingEvent,                "models/core/billing_event"
