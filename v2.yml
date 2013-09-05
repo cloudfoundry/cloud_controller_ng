@@ -451,7 +451,7 @@
 270006:
   name: ServiceBrokerResponseMalformed
   http_code: 500
-  message: "The service broker did not return valid json"
+  message: "The service broker response was not understood"
 
 270007:
   name: ServiceBrokerApiAuthenticationFailed
