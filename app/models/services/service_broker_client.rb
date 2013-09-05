@@ -51,14 +51,9 @@ module VCAP::CloudController
         raise VCAP::Errors::ServiceBrokerApiTimeout.new(endpoint)
       end
 
-      if response.code.to_i == HTTP::Status::UNAUTHORIZED
-        raise VCAP::Errors::ServiceBrokerApiAuthenticationFailed.new(endpoint)
-      elsif response.code.to_i == 409
-        raise VCAP::Errors::ServiceBrokerConflict.new(endpoint)
-      elsif response.code.to_i != HTTP::Status::OK
-        # TODO: this is really not an appropriate response
-        raise VCAP::Errors::ServiceBrokerResponseMalformed.new(endpoint)
-      else
+      code = response.code.to_i
+      case code
+      when 200..299
         begin
           response_hash = Yajl::Parser.parse(response.body)
         rescue Yajl::ParseError
@@ -68,7 +63,14 @@ module VCAP::CloudController
           raise VCAP::Errors::ServiceBrokerResponseMalformed.new(endpoint)
         end
 
-        response_hash
+        return response_hash
+
+      when HTTP::Status::UNAUTHORIZED
+        raise VCAP::Errors::ServiceBrokerApiAuthenticationFailed.new(endpoint)
+      when 409
+        raise VCAP::Errors::ServiceBrokerConflict.new(endpoint)
+      else
+        raise VCAP::Errors::ServiceBrokerResponseMalformed.new("#{endpoint} returned #{code}")
       end
     end
   end

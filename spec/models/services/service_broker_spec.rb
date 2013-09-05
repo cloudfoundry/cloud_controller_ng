@@ -252,7 +252,7 @@ module VCAP::CloudController
       context 'when the API returns an invalid response' do
         context 'because of an unexpected status code' do
           before do
-            stub_request(:get, broker_catalog_url).to_return(status: 201, body: body)
+            stub_request(:get, broker_catalog_url).to_return(status: 400, body: body)
           end
 
           it 'should raise an invalid response error' do

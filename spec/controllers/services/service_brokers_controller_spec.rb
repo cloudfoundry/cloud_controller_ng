@@ -104,7 +104,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270007
-            decoded_response.fetch('description').should =~ /The Service Broker API authentication failed/
+            decoded_response.fetch('description').should =~ /Authentication failed for the service broker API. Double-check that the token is correct:/
           end
         end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270004
-            decoded_response.fetch('description').should =~ /The Service Broker API could not be reached/
+            decoded_response.fetch('description').should =~ /The service broker API could not be reached/
           end
         end
 
@@ -128,7 +128,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270005
-            decoded_response.fetch('description').should =~ /The Service Broker API timed out/
+            decoded_response.fetch('description').should =~ /The service broker API timed out/
           end
         end
 
@@ -140,7 +140,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The Service Broker did not return valid json/
+            decoded_response.fetch('description').should =~ /The service broker response was not understood/
           end
         end
 
@@ -176,7 +176,7 @@ module VCAP::CloudController
 
             last_response.status.should == 400
             decoded_response.fetch('code').should == 270001
-            decoded_response.fetch('description').should == 'Service Broker is invalid: A bunch of stuff was wrong'
+            decoded_response.fetch('description').should == 'Service broker is invalid: A bunch of stuff was wrong'
           end
         end
       end
@@ -366,7 +366,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270007
-            decoded_response.fetch('description').should =~ /The Service Broker API authentication failed/
+            decoded_response.fetch('description').should =~ /Authentication failed for the service broker API. Double-check that the token is correct:/
           end
         end
 
@@ -378,7 +378,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270004
-            decoded_response.fetch('description').should =~ /The Service Broker API could not be reached/
+            decoded_response.fetch('description').should =~ /The service broker API could not be reached/
           end
         end
 
@@ -390,7 +390,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270005
-            decoded_response.fetch('description').should =~ /The Service Broker API timed out/
+            decoded_response.fetch('description').should =~ /The service broker API timed out/
           end
         end
 
@@ -402,7 +402,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The Service Broker did not return valid json/
+            decoded_response.fetch('description').should =~ /The service broker response was not understood/
           end
         end
 
@@ -438,7 +438,7 @@ module VCAP::CloudController
 
             last_response.status.should == 400
             decoded_response.fetch('code').should == 270001
-            decoded_response.fetch('description').should == 'Service Broker is invalid: A bunch of stuff was wrong'
+            decoded_response.fetch('description').should == 'Service broker is invalid: A bunch of stuff was wrong'
           end
         end
       end
