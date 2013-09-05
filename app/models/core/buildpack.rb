@@ -1,4 +1,4 @@
-module VCAP::CloudController::Models
+module VCAP::CloudController
   class Buildpack < Sequel::Model
 
     export_attributes :name, :key, :priority

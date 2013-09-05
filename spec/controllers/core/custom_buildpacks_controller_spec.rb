@@ -69,7 +69,7 @@ module VCAP::CloudController
                                                                  })
 
           post "/v2/custom_buildpacks", req_body, admin_headers
-          expect(Models::Buildpack.find(name: "dynamic_test_buildpack").key).to eq("dynamic_test_buildpack.zip")
+          expect(Buildpack.find(name: "dynamic_test_buildpack").key).to eq("dynamic_test_buildpack.zip")
         end
 
         it "gets the uploaded file from the upload handler" do
@@ -103,7 +103,7 @@ module VCAP::CloudController
       end
 
       context "GET" do
-        before(:all) { @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})}
+        before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})}
         after(:all) { @test_buildpack.destroy }
 
         describe "/v2/custom_buildpacks/:name" do
@@ -154,7 +154,7 @@ module VCAP::CloudController
       end
 
       context 'UPDATE' do
-        before(:all) { @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})}
+        before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})}
         after(:all) { @test_buildpack.destroy }
 
         it "returns NOT AUTHORIZED (403) for non admins" do
@@ -185,9 +185,9 @@ module VCAP::CloudController
 
         context 'create a default buildpack' do
           around(:each) do |test|
-            @test_buildpack = VCAP::CloudController::Models::Buildpack[name: "test_buildpack"]
+            @test_buildpack = VCAP::CloudController::Buildpack[name: "test_buildpack"]
             @test_buildpack.destroy if @test_buildpack
-            @test_buildpack = VCAP::CloudController::Models::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})
+            @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})
 
             test.run
 
@@ -211,7 +211,7 @@ module VCAP::CloudController
             @file.should_receive(:destroy)
 
             delete "/v2/custom_buildpacks/#{@test_buildpack[:guid]}", req_body, admin_headers
-            expect(Models::Buildpack.find(name: "dynamic_test_buildpack")).to be_nil
+            expect(Buildpack.find(name: "dynamic_test_buildpack")).to be_nil
           end
         end
       end
