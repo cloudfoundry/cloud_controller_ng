@@ -61,27 +61,6 @@ module VCAP::CloudController
     end
 
     describe "lifecycle" do
-      context "service provisioning" do
-        it "should deprovision a service on rollback after a create" do
-          expect {
-            ManagedServiceInstance.db.transaction do
-              gw_client.should_receive(:unprovision)
-              service_instance
-              raise "something bad which causes the unprovision to happen"
-            end
-          }.to raise_error
-        end
-
-        it "should not deprovision a service on rollback after update" do
-          expect {
-            ManagedServiceInstance.db.transaction do
-              service_instance.update(:name => "newname")
-              raise "something bad"
-            end
-          }.to raise_error
-        end
-      end
-
       context "service deprovisioning" do
         it "should deprovision a service on destroy" do
           service_instance.service_gateway_client.should_receive(:unprovision).with(any_args)
