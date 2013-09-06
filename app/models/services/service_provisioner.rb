@@ -24,7 +24,7 @@ module VCAP::CloudController
       logger.debug "provisioning service for instance #{service_instance.guid}"
 
       service_plan = service_instance.service_plan
-      service = service_plan.service
+      service = service_instance.service
       space = service_instance.space
 
       gateway_response = service_gateway_client(service_plan).provision(
@@ -85,12 +85,16 @@ module VCAP::CloudController
     def initialize(service_instance, opts={})
       @service_instance = service_instance
       @broker_client = opts.fetch(:broker_client) do
-        service_instance.service_plan.service.service_broker.client
+        service_instance.service_broker.client
       end
     end
 
     def provision
-      provision_response = broker_client.provision(service_instance.service_plan.service.broker_id, service_instance.service_plan.broker_id, service_instance.guid)
+      provision_response = broker_client.provision(
+        service_instance.service.broker_provided_id,
+        service_instance.service_plan.broker_provided_id,
+        service_instance.guid
+      )
       ServiceProvisioner::ProvisionResponse.new(
         provision_response[:id],
         nil,

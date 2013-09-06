@@ -123,51 +123,53 @@ module ControllerHelpers
         #
         # If there are multiple unique attributes, vary them one a time
         #
-        if opts[:unique_attributes] and opts[:unique_attributes].length > 1
-          opts[:unique_attributes].each do |new_attr|
-            new_attr = new_attr.to_s
-            context "with duplicate attributes other than #{new_attr}" do
-              # FIXME: this is a cut/paste from the model spec, refactor
-              let(:dup_opts) do
-                if opts[:model].associations.include?(new_attr)
-                  new_attr = "#{new_attr}_id"
-                end
+        opts[:unique_attributes].each do |new_attr|
+          new_attr = new_attr.to_s
+          context "with duplicate attributes other than #{new_attr}" do
+            # FIXME: this is a cut/paste from the model spec, refactor
+            let(:orig_obj) do
+              # FIXME: this name isn't right now that it is shared with PUT
+              orig_obj = opts[:model].create do |instance|
+                instance.set_all(creation_opts)
+              end
+              orig_obj.should be_valid
+              orig_obj
+            end
 
-                # FIXME: this name isn't right now that it is shared with PUT
-                new_creation_opts = creation_opts.dup
-                orig_obj = opts[:model].create do |instance|
-                  instance.set_all(new_creation_opts)
-                end
-                orig_obj.should be_valid
+            let(:dup_opts) do
+              new_creation_opts = creation_opts.dup
 
-                create_attribute = opts[:create_attribute]
-
-                # create the attribute using the caller supplied lambda,
-                # otherwise, create a second template object and fetch
-                # the value from that
-                val = nil
-                if create_attribute
-                  # FIXME: do we use this?  do we use it in the model specs
-                  val = create_attribute.call(new_attr)
-                end
-
-                if val.nil?
-                  another_obj = ModelHelpers::TemplateObj.new(opts[:model], opts[:required_attributes])
-                  another_obj.refresh
-                  val = another_obj.attributes[new_attr]
-                end
-
-                new_creation_opts[new_attr] = val
-                new_creation_opts
+              if opts[:model].associations.include?(new_attr)
+                new_attr = "#{new_attr}_id"
               end
 
-              it "should succeed" do
-                post opts[:path], Yajl::Encoder.encode(dup_opts), json_headers(admin_headers)
-                last_response.status.should == 201
+              create_attribute = opts[:create_attribute]
+
+              # create the attribute using the caller supplied lambda,
+              # otherwise, create a second template object and fetch
+              # the value from that
+              val = nil
+              if create_attribute
+                # FIXME: do we use this?  do we use it in the model specs
+                val = create_attribute.call(new_attr)
               end
+
+              if val.nil?
+                another_obj = ModelHelpers::TemplateObj.new(opts[:model], opts[:required_attributes])
+                another_obj.refresh
+                val = another_obj.attributes[new_attr]
+              end
+
+              new_creation_opts[new_attr] = val
+              new_creation_opts
+            end
+
+            it "should succeed" do
+              put "#{opts[:path]}/#{orig_obj.guid}", Yajl::Encoder.encode(dup_opts), json_headers(admin_headers)
+              last_response.status.should == 201
             end
           end
-        end
+        end if opts[:unique_attributes] and opts[:unique_attributes].length > 1
 
         #
         # make sure we get failures if all of the unique attributes are the

@@ -72,35 +72,32 @@ module VCAP::CloudController
       end
 
       context 'for a v2 service' do
+        subject(:service_provisioner) do
+          ServiceProvisioner.new(service_instance, broker_client: fake_broker_client)
+        end
+
+        let(:service_instance) do
+          double(ServiceInstance,
+            guid: SecureRandom.uuid,
+            service: service,
+            service_plan: service_plan
+          )
+        end
+        let(:service) { double(Service, broker_provided_id: SecureRandom.uuid, v2?: true)}
+        let(:service_plan) { double(ServicePlan, broker_provided_id: SecureRandom.uuid) }
+        let(:broker_instance_id) { SecureRandom.uuid }
+        let(:fake_broker_client) { double('broker client', provision: double.as_null_object) }
+
         it 'provisions the service on the gateway' do
-          email = Sham.email
-          VCAP::CloudController::SecurityContext.stub(:current_user_email) { email }
+          service_provisioner.provision
 
-          service_plan = ServicePlan.make(
-            service: Service.make(
-              service_broker: ServiceBroker.make
-            ),
-          )
-          space = Space.make
-          name = Sham.name
-          service_instance = ManagedServiceInstance.new(
-            service_plan: service_plan,
-            space: space,
-            name: name
-          )
+          expect(fake_broker_client).to have_received(:provision).
+            with(service.broker_provided_id, service_plan.broker_provided_id, service_instance.guid)
+        end
 
-          broker_instance_id = SecureRandom.uuid
-
-          fake_broker_client = double('broker client')
-          fake_broker_client.
-            should_receive(:provision).
-            with(service_plan.service.broker_id, service_plan.broker_id, service_instance.guid).
-            and_return({ id: broker_instance_id })
-
-          provision_response = ServiceProvisioner.new(
-            service_instance,
-            broker_client: fake_broker_client
-          ).provision
+        it 'returns the result of the provision' do
+          fake_broker_client.stub(:provision).and_return(id: broker_instance_id)
+          provision_response = service_provisioner.provision
 
           expect(provision_response.gateway_name).to eq(broker_instance_id)
           expect(provision_response.credentials).to eq({})

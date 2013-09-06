@@ -55,8 +55,8 @@ module VCAP::CloudController
       service.bindable?
     end
 
-    # The "unique_id" should really be called broker_id because it's the id assigned by the broker
-    def broker_id
+    # The "unique_id" should really be called broker_provided_id because it's the id assigned by the broker
+    def broker_provided_id
       unique_id
     end
 
