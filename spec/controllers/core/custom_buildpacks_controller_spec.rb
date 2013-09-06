@@ -191,6 +191,13 @@ module VCAP::CloudController
             expect(entity['name']).to eq('upload_binary_buildpack')
             expect(entity['key']).to eq("upload_binary_buildpack/#{sha_valid_zip}.zip")
           end
+
+          it 'reports a conflict if the same buildpack is uploaded again' do
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
+
+            expect(last_response.status).to eq(409)
+          end
         end
 
         context "/v2/custom_buildpacks/:guid/download" do
