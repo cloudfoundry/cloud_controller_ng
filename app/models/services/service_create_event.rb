@@ -27,8 +27,6 @@ module VCAP::CloudController
       validates_presence :service_instance_name
       validates_presence :service_guid
       validates_presence :service_label
-      validates_presence :service_provider
-      validates_presence :service_version
       validates_presence :service_plan_guid
       validates_presence :service_plan_name
     end

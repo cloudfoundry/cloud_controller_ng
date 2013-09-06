@@ -33,7 +33,7 @@ describe "Service Instance Management", :type => :integration do
   let(:org) do
     make_post_request(
       "/v2/organizations",
-      { "name" => "foo_org-#{SecureRandom.uuid}" }.to_json,
+      { "name" => "foo_org-#{SecureRandom.uuid}", "billing_enabled" => true }.to_json,
       authed_headers
     )
   end

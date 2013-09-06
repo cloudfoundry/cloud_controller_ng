@@ -13,8 +13,6 @@ module VCAP::CloudController
         :service_instance_name,
         :service_guid,
         :service_label,
-        :service_provider,
-        :service_version,
         :service_plan_guid,
         :service_plan_name,
       ],
