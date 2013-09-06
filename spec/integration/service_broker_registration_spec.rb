@@ -73,6 +73,7 @@ describe "Service Broker Management", :type => :integration do
 
     service_entity = service.fetch('entity')
     expect(service_entity.fetch('label')).to eq('custom-service')
+    expect(service_entity.fetch('bindable')).to eq(true)
 
     plans = service_entity.fetch('service_plans')
     plan = plans.first
@@ -174,8 +175,6 @@ describe "Service Broker Management", :type => :integration do
         plan_entity = plan.fetch('entity')
         expect(plan_entity.fetch('name')).to eq('free')
       end
-
     end
-
   end
 end

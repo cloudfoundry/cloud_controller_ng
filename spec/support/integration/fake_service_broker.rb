@@ -14,6 +14,7 @@ get '/v2/catalog' do
         'id' => 'custom-service-1',
         'name' => 'custom-service',
         'description' => 'A description of My Custom Service',
+        'bindable' => true,
         'plans' => [
           {
             'id' => 'custom-plan-1',

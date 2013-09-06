@@ -63,7 +63,7 @@ module VCAP::CloudController
             service.set(
               label: catalog_service.fetch('name'),
               description: catalog_service.fetch('description'),
-              bindable: false
+              bindable: catalog_service.fetch('bindable')
             )
           end
 

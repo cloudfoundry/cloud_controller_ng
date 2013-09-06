@@ -71,6 +71,7 @@ module VCAP::CloudController
               'id' => service_id,
               'name' => service_name,
               'description' => service_description,
+              'bindable' => true,
               'plans' => [
                 {
                   'id' => plan_id,
@@ -103,9 +104,7 @@ module VCAP::CloudController
         expect(service.service_broker).to eq(broker)
         expect(service.label).to eq(service_name)
         expect(service.description).to eq(service_description)
-
-        # This is a temporary default until the binding of V2 services is needed.
-        expect(service.bindable).to be_false
+        expect(service.bindable).to be_true
       end
 
       it 'creates plans from the catalog' do
