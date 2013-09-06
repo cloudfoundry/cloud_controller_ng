@@ -15,12 +15,16 @@ module VCAP::CloudController
         Rack::Test::UploadedFile.new(zip_file)
       end
 
+      let(:sha_valid_zip) { sha1 = Digest::SHA1.file(valid_zip.path).hexdigest }
+
       let(:valid_tar_gz) do
         tar_gz_name = File.join(tmpdir, "file.tar.gz")
         create_zip(tar_gz_name, 1)
         tar_gz_name = File.new(tar_gz_name)
         Rack::Test::UploadedFile.new(tar_gz_name)
       end
+
+      let(:sha_valid_tar_gz) { sha1 = Digest::SHA1.file(valid_tar_gz.path).hexdigest }
 
       let(:req_body) { Yajl::Encoder.encode({:name => "dynamic_test_buildpack"}) }
 
@@ -125,8 +129,8 @@ module VCAP::CloudController
 
       context 'Buildpack binaries' do
         context '/v2/custom_buildpacks/:guid/bits' do
-          before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "upload_binary_buildpack", key: 'xyz', priority: 0}) }
-          after(:all) { @test_buildpack.destroy }
+          before(:each) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "upload_binary_buildpack", priority: 0}) }
+          after(:each) { @test_buildpack.destroy }
           let(:upload_body) { {:buildpack => valid_zip} }
 
           it "returns NOT AUTHORIZED (403) for non admins" do
@@ -143,13 +147,13 @@ module VCAP::CloudController
             CloudController::DependencyLocator.instance.upload_handler.stub(:uploaded_file).and_return(valid_zip)
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             buildpack_blobstore.files.should_receive(:create).with({
-              :key => "upload_binary_buildpack.zip",
+              :key => "upload_binary_buildpack/#{sha_valid_zip}.zip",
               :body => anything,
               :public => true
               })
 
               post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
-              expect(Buildpack.find(name: 'upload_binary_buildpack').key).to eq('upload_binary_buildpack.zip')
+              expect(Buildpack.find(name: 'upload_binary_buildpack').key).to eq("upload_binary_buildpack/#{sha_valid_zip}.zip")
           end
 
           it "gets the uploaded file from the upload handler" do
@@ -162,16 +166,30 @@ module VCAP::CloudController
           it "uses the correct file extension on the key" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             buildpack_blobstore.files.should_receive(:create).with({
-              :key => "upload_binary_buildpack.tar.gz",
+              :key => "upload_binary_buildpack/#{sha_valid_tar_gz}.tar.gz",
               :body => anything,
               :public => true
               })
 
-              post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
-              response = Yajl::Parser.parse(last_response.body)
-              entity = response['entity']
-              expect(entity['name']).to eq('upload_binary_buildpack')
-              expect(entity['key']).to eq('upload_binary_buildpack.tar.gz')
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
+            response = Yajl::Parser.parse(last_response.body)
+            entity = response['entity']
+            expect(entity['name']).to eq('upload_binary_buildpack')
+            expect(entity['key']).to eq("upload_binary_buildpack/#{sha_valid_tar_gz}.tar.gz")
+          end
+
+          it "removes the old buildpack binary when a new one is uploaded" do
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
+
+            buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
+            buildpack_blobstore.files.should_receive(:head).with("upload_binary_buildpack/#{sha_valid_tar_gz}.tar.gz").and_return(@file)
+            @file.should_receive(:destroy)
+
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
+            response = Yajl::Parser.parse(last_response.body)
+            entity = response['entity']
+            expect(entity['name']).to eq('upload_binary_buildpack')
+            expect(entity['key']).to eq("upload_binary_buildpack/#{sha_valid_zip}.zip")
           end
         end
 
