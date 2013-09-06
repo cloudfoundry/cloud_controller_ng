@@ -166,6 +166,7 @@ module VCAP::CloudController
         end
 
         before do
+          config_override(staging_config)
           file = double(:file, {
               :public_url => "https://some-bucket.example.com/ab/cd/abcdefg",
               :key => "123-456",

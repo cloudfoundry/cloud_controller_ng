@@ -16,31 +16,33 @@ module CloudController
       @task_client ||= TaskClient.new(message_bus)
     end
 
-    def package_blob_store
-      packages = config.fetch(:packages)
-      cdn_uri = packages.fetch(:cdn, nil) && packages.fetch(:cdn).fetch(:uri, nil)
-      package_cdn = Cdn.make(cdn_uri)
+    def droplet_blob_store
+      blob_store :droplets, :droplet_directory_key, "cc-droplets"
+    end
 
-      BlobStore.new(
-        packages.fetch(:fog_connection),
-        packages.fetch(:app_package_directory_key),
-        package_cdn
-      )
+    def package_blob_store
+      blob_store :packages, :app_package_directory_key
     end
 
     def global_app_bits_cache
-      resource_pool = config.fetch(:resource_pool)
-      cdn_uri = resource_pool.fetch(:cdn, nil) && resource_pool.fetch(:cdn).fetch(:uri, nil)
-      app_bit_cdn = Cdn.make(cdn_uri)
-
-      BlobStore.new(
-        resource_pool.fetch(:fog_connection),
-        resource_pool.fetch(:resource_directory_key),
-        app_bit_cdn
-      )
+      blob_store :resource_pool, :resource_directory_key
     end
 
     private
+
+    def blob_store(config_key, directory_key, default_directory=nil)
+      c = config.fetch(config_key)
+      BlobStore.new(
+        c.fetch(:fog_connection),
+        c.fetch(directory_key, default_directory),
+        make_cdn(c)
+      )
+    end
+
+    def make_cdn(config)
+      uri = config.fetch(:cdn, nil) && config.fetch(:cdn).fetch(:uri, nil)
+      Cdn.make(uri)
+    end
 
     attr_reader :config, :message_bus
   end

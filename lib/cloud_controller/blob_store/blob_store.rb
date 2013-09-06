@@ -13,6 +13,12 @@ class BlobStore
     @connection_config[:provider].downcase == "local"
   end
 
+  def delete(file)
+    logging_and_ignoring_not_found_errors do
+      file.destroy if file
+    end
+  end
+
   def files
     dir.files
   end
@@ -67,4 +73,26 @@ class BlobStore
     sha1 = sha1.to_s.downcase
     File.join(sha1[0..1], sha1[2..3], sha1)
   end
+
+  def logger
+    @logger ||= Steno.logger("cc.blob_store")
+  end
+
+  def logging_and_ignoring_not_found_errors(&block)
+    block.call
+  rescue Errno::ENOTEMPTY => e
+    logger.warn("Failed to delete buildpack cache:  #{e}\n#{e.backtrace}")
+    true
+  rescue StandardError => e
+    # NotFound errors do not share a common superclass so we have to determine it by name
+    # A github issue for fog will be created.
+    if e.class.name.split('::').last.eql?("NotFound")
+      logger.warn("Failed to delete buildpack cache: #{e}\n#{e.backtrace}")
+      true
+    else
+      # None-NotFound errors will be raised again
+      raise e
+    end
+  end
+
 end

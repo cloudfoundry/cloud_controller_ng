@@ -42,7 +42,7 @@ module VCAP::CloudController
         @config = config
 
         options = config[:droplets]
-        @blob_store = BlobStore.new(options[:fog_connection], options[:droplet_directory_key] || "cc-droplets")
+        @blob_store = CloudController::DependencyLocator.instance.droplet_blob_store
         @cdn = options[:cdn]
       end
 
@@ -245,26 +245,7 @@ module VCAP::CloudController
       end
 
       def delete_file(file)
-        logging_and_ignoring_not_found_errors do
-          file.destroy if file
-        end
-      end
-
-      def logging_and_ignoring_not_found_errors(&block)
-        block.call
-      rescue Errno::ENOTEMPTY => e
-        logger.warn("Failed to delete buildpack cache:  #{e}\n#{e.backtrace}")
-        true
-      rescue StandardError => e
-        # NotFound errors do not share a common superclass so we have to determine it by name
-        # A github issue for fog will be created.
-        if e.class.name.split('::').last.eql?("NotFound")
-          logger.warn("Failed to delete buildpack cache: #{e}\n#{e.backtrace}")
-          true
-        else
-          # None-NotFound errors will be raised again
-          raise e
-        end
+        blob_store.delete(file)
       end
     end
 

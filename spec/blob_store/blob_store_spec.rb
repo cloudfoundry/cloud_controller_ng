@@ -29,6 +29,14 @@ describe BlobStore do
     end
   end
 
+  describe "#delete" do
+    it "deletes a file" do
+      file = double(:file)
+      file.should_receive(:destroy)
+      blob_store.delete file
+    end
+  end
+
   describe "#files" do
     it "returns the files matching the directory key" do
       blob_store.files.create(key: "file-key-1", body: "file content", public: true)

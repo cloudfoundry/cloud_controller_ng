@@ -6,7 +6,10 @@ module VCAP::CloudController
     let(:stager_pool) { double(:stager_pool) }
     let(:config_hash) { {:config => 'hash'} }
 
-    before { AppManager.configure(config_hash, message_bus, stager_pool) }
+    before {
+      AppManager.configure(config_hash, message_bus, stager_pool)
+      StagingsController.configure(config)
+    }
 
     describe ".run" do
       it "registers subscriptions for dea_pool" do
