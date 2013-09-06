@@ -40,6 +40,8 @@ module VCAP::CloudController
       sha1 = Digest::SHA1.file(file_struct.path).hexdigest
       new_buildpack_key = File.join(obj.name, "#{sha1}#{compute_file_extension(uploaded_filename)}")
 
+      return [HTTP::CONFLICT, nil] if new_buildpack_key == obj.key
+
       File.open(file_struct.path) do |file|
         buildpack_blobstore.files.create(
         :key => new_buildpack_key,
