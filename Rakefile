@@ -37,7 +37,7 @@ RSpec::Core::RakeTask.new do |t|
   # Keep --backtrace for CI backtraces to be useful
   t.rspec_opts = %w(
     --backtrace
-    --format documentation
+    --format progress
     --colour
     --profile
   )
