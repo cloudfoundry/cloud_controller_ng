@@ -140,7 +140,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The service broker response was not understood/
+            decoded_response.fetch('description').should =~ /The service broker did not return valid json/
           end
         end
 
@@ -420,7 +420,7 @@ module VCAP::CloudController
 
             last_response.status.should == 500
             decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The service broker response was not understood/
+            decoded_response.fetch('description').should =~ /The service broker did not return valid json/
           end
         end
 
