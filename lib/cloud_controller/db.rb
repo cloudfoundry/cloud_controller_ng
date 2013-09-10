@@ -1,4 +1,3 @@
-require "vcap/sequel_varz"
 require "delayed_job_active_record"
 
 module VCAP::CloudController
@@ -45,7 +44,6 @@ module VCAP::CloudController
       end
 
       validate_sqlite_version(db) if using_sqlite
-      VCAP::SequelVarz.start(db)
       db
     end
 
