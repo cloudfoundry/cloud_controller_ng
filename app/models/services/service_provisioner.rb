@@ -85,7 +85,7 @@ module VCAP::CloudController
     def initialize(service_instance, opts={})
       @service_instance = service_instance
       @broker_client = opts.fetch(:broker_client) do
-        service_instance.service_broker.client
+        service_instance.service_plan.service.service_broker.client
       end
     end
 
