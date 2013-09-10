@@ -16,6 +16,7 @@ module VCAP::Services::Api
         :service_id => SecureRandom.uuid,
         :configuration => "CONFIGURATION",
         :credentials => {"password" => "PASSWORD"},
+        :syslog_drain_url => "syslog://example.com:1234",
       }.to_json)
     end
   end

@@ -228,6 +228,7 @@ module VCAP::CloudController
       service_binding.gateway_name = gw_attrs.service_id
       service_binding.gateway_data = gw_attrs.configuration
       service_binding.credentials  = gw_attrs.credentials
+      service_binding.syslog_drain_url  = gw_attrs.syslog_drain_url
     end
 
     def bindable?

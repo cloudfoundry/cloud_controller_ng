@@ -203,5 +203,23 @@ module VCAP::CloudController
         ServiceBinding.last.binding_options.should == binding_options
       end
     end
+
+    describe "creating a binding for a service that does syslog drains" do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+
+      it "stores the syslog_drain_url" do
+        instance = ManagedServiceInstance.make(:space => space)
+        app = App.make(:space => space)
+
+        post("/v2/service_bindings",
+             {"app_guid" => app.guid,
+             "service_instance_guid" => instance.guid}.to_json,
+             headers_for(developer))
+
+        last_response.status.should == 201
+        ServiceBinding.last.syslog_drain_url.should == "syslog://example.com:1234"
+      end
+    end
   end
 end
