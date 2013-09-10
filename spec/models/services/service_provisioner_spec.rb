@@ -102,6 +102,28 @@ module VCAP::CloudController
           expect(provision_response.gateway_name).to eq(broker_instance_id)
           expect(provision_response.credentials).to eq({})
         end
+
+        context 'when the broker client is not passed in' do
+
+          subject(:service_provisioner) do
+            ServiceProvisioner.new(service_instance)
+          end
+
+          let(:service) { double(Service,
+                                 broker_provided_id: SecureRandom.uuid,
+                                 v2?: true,
+                                 service_broker: service_broker)}
+          let(:service_plan) { double(ServicePlan, broker_provided_id: SecureRandom.uuid, service: service) }
+          let(:service_broker) { double(ServiceBroker, client: fake_broker_client)}
+
+          it 'gets the client from the service instance through plan, service, then broker' do
+            service_provisioner.provision
+
+            expect(fake_broker_client).to have_received(:provision).
+              with(service.broker_provided_id, service_plan.broker_provided_id, service_instance.guid)
+          end
+        end
+
       end
     end
   end
