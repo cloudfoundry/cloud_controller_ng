@@ -117,12 +117,17 @@ module VCAP::CloudController
 
       before(:each) do
         reset_database
-        @active = 3.times.map { Service.make(:active => true).tap{|svc| ServicePlan.make(:service => svc) } }
+        @active = 3.times.map { Service.make(:active => true, :long_description => Sham.long_description).
+          tap{|svc| ServicePlan.make(:service => svc) } }
         @inactive = 2.times.map { Service.make(:active => false).tap{|svc| ServicePlan.make(:service => svc) } }
       end
 
       def decoded_guids
         decoded_response["resources"].map { |r| r["metadata"]["guid"] }
+      end
+
+      def decoded_long_descriptions
+        decoded_response["resources"].map { |r| r["entity"]["long_description"] }
       end
 
       it "should get all services" do
@@ -134,6 +139,11 @@ module VCAP::CloudController
       it "has a documentation URL field" do
         get "/v2/services", {}, headers
         decoded_response["resources"].first["entity"].keys.should include "documentation_url"
+      end
+
+      it "has a long description field" do
+        get "/v2/services", {}, headers
+        decoded_long_descriptions.should =~ (@active + @inactive).map(&:long_description)
       end
 
       context "with an offering that has private plans" do

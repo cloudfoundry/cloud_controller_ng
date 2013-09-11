@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     default_order_by  :label
 
-    export_attributes :label, :provider, :url, :description,
+    export_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
                       :unique_id, :extra, :tags, :documentation_url
 
