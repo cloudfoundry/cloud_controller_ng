@@ -24,6 +24,21 @@ module VCAP::CloudController
         @event_b = Event.make :space => @space_b
       end
 
+
+      describe "default order" do
+        it "sorts by timestamp" do
+          type = SecureRandom.uuid
+          Event.make(:timestamp => Time.new(1990, 1, 1), :type => type, :actor => "earlier")
+          Event.make(:timestamp => Time.new(2000, 1, 1), :type => type, :actor => "later")
+          Event.make(:timestamp => Time.new(1995, 1, 1), :type => type, :actor => "middle")
+
+          get "/v2/events", {}, admin_headers
+          parsed_body = Yajl::Parser.parse(last_response.body)
+          events = parsed_body["resources"].select {|r| r["entity"]["type"] == type }.map { |r| r["entity"]["actor"] }
+          expect(events).to eq(%w(earlier middle later))
+        end
+      end
+
       context "as an admin" do
         it "includes all events" do
           get "/v2/events", {}, admin_headers
