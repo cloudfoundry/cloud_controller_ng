@@ -38,6 +38,9 @@ module VCAP::CloudController
       buildpack = find_guid_and_validate_access(:read_bits, guid)
       file_struct = upload_handler.uploaded_file(params, "buildpack")
       uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
+
+      raise Errors::BuildpackBitsUploadInvalid, "only zip files allowed" unless File.extname(uploaded_filename) == ".zip"
+
       sha1 = Digest::SHA1.file(file_struct.path).hexdigest
       new_buildpack_key = File.join(buildpack.name, "#{sha1}#{compute_file_extension(uploaded_filename)}")
 

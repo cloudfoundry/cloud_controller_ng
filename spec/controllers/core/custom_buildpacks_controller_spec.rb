@@ -17,6 +17,15 @@ module VCAP::CloudController
 
       let(:sha_valid_zip) { sha1 = Digest::SHA1.file(valid_zip.path).hexdigest }
 
+      let(:valid_zip2) do
+        zip_name = File.join(tmpdir, "file.zip")
+        create_zip(zip_name, 3)
+        zip_file = File.new(zip_name)
+        Rack::Test::UploadedFile.new(zip_file)
+      end
+
+      let(:sha_valid_zip2) { sha1 = Digest::SHA1.file(valid_zip2.path).hexdigest }
+
       let(:valid_tar_gz) do
         tar_gz_name = File.join(tmpdir, "file.tar.gz")
         create_zip(tar_gz_name, 1)
@@ -138,7 +147,7 @@ module VCAP::CloudController
             expect(last_response.status).to eq(403)
           end
 
-          it "returns a CREATED (201) if an admin uploads a build pack" do
+          it "returns a CREATED (201) if an admin uploads a zipped build pack" do
             post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
             expect(last_response.status).to eq(201)
           end
@@ -163,26 +172,22 @@ module VCAP::CloudController
             post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
           end
 
-          it "uses the correct file extension on the key" do
+          it "does not allow non-zip files" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.files.should_receive(:create).with({
-              :key => "upload_binary_buildpack/#{sha_valid_tar_gz}.tar.gz",
-              :body => anything,
-              :public => true
-              })
+            buildpack_blobstore.files.should_not_receive(:create)
 
             post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
-            response = Yajl::Parser.parse(last_response.body)
-            entity = response['entity']
-            expect(entity['name']).to eq('upload_binary_buildpack')
-            expect(entity['key']).to eq("upload_binary_buildpack/#{sha_valid_tar_gz}.tar.gz")
+            expect(last_response.status).to eql 400
+            json = Yajl::Parser.parse(last_response.body)
+            expect(json['code']).to eq(290002)
+            expect(json['description']).to match(/only zip files allowed/)
           end
 
           it "removes the old buildpack binary when a new one is uploaded" do
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip2}, admin_headers
 
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.files.should_receive(:head).with("upload_binary_buildpack/#{sha_valid_tar_gz}.tar.gz").and_return(@file)
+            buildpack_blobstore.files.should_receive(:head).with("upload_binary_buildpack/#{sha_valid_zip2}.zip").and_return(@file)
             @file.should_receive(:destroy)
 
             post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
@@ -193,8 +198,8 @@ module VCAP::CloudController
           end
 
           it 'reports a conflict if the same buildpack is uploaded again' do
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
 
             expect(last_response.status).to eq(409)
           end
