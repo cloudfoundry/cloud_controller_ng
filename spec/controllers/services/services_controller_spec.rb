@@ -178,16 +178,19 @@ module VCAP::CloudController
     end
 
     describe 'POST', '/v2/services' do
+
       it 'creates a service' do
         unique_id = Sham.unique_id
         url = Sham.url
         documentation_url = Sham.url
+        long_description = Sham.long_description
 
         payload = ServicesController::CreateMessage.new(
           :unique_id => unique_id,
           :url => url,
           :documentation_url => documentation_url,
           :description => 'delightful service',
+          :long_description => long_description,
           :provider => 'widgets-inc',
           :label => 'foo-db',
           :version => 'v1.2.3'
@@ -206,6 +209,7 @@ module VCAP::CloudController
         expect(service.url).to eq(url)
         expect(service.documentation_url).to eq(documentation_url)
         expect(service.description).to eq('delightful service')
+        expect(service.long_description).to eq(long_description)
         expect(service.provider).to eq('widgets-inc')
         expect(service.label).to eq('foo-db')
         expect(service.version).to eq('v1.2.3')

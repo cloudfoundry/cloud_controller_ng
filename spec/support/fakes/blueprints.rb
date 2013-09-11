@@ -12,6 +12,7 @@ Sham.define do
   url                 { |index| "https://foo.com/url-#{index}" }
   type                { |index| "type-#{index}" }
   description         { |index| "desc-#{index}" }
+  long_description    { |index| "long description-#{index} over 255 characters #{"-"*255}"}
   version             { |index| "version-#{index}" }
   service_credentials { |index|
     { "creds-key-#{index}" => "creds-val-#{index}" }

@@ -110,6 +110,16 @@ module VCAP::CloudController
       end
     end
 
+    describe "#long_description" do
+      context 'with a long description in the database' do
+        it 'return the appropriate long description' do
+          sham_long_description = Sham.long_description
+          service = Service.make(long_description: sham_long_description)
+          expect(service.long_description).to eq sham_long_description
+        end
+      end
+    end
+
     describe "#v2?" do
       it "returns true when the service is associated with a broker" do
         service = Service.make(service_broker: ServiceBroker.make)
