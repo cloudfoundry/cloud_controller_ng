@@ -19,8 +19,9 @@ module VCAP::CloudController
       end
     end
 
-    def after_destroy(obj)
-      file = buildpack_blobstore.files.head(obj.key)
+    def after_destroy(buildpack)
+      return unless buildpack.key
+      file = buildpack_blobstore.files.head(buildpack.key)
       file.destroy if file
     end
 
@@ -34,13 +35,13 @@ module VCAP::CloudController
     end
 
     def upload_bits(guid)
-      obj = find_guid_and_validate_access(:read_bits, guid)
+      buildpack = find_guid_and_validate_access(:read_bits, guid)
       file_struct = upload_handler.uploaded_file(params, "buildpack")
       uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
       sha1 = Digest::SHA1.file(file_struct.path).hexdigest
-      new_buildpack_key = File.join(obj.name, "#{sha1}#{compute_file_extension(uploaded_filename)}")
+      new_buildpack_key = File.join(buildpack.name, "#{sha1}#{compute_file_extension(uploaded_filename)}")
 
-      return [HTTP::CONFLICT, nil] if new_buildpack_key == obj.key
+      return [HTTP::CONFLICT, nil] if new_buildpack_key == buildpack.key
 
       File.open(file_struct.path) do |file|
         buildpack_blobstore.files.create(
@@ -50,10 +51,10 @@ module VCAP::CloudController
         )
       end
 
-      old_buildpack_key = obj.key
+      old_buildpack_key = buildpack.key
       model.db.transaction do
-        obj.lock!
-        obj.update_from_hash(key: new_buildpack_key)
+        buildpack.lock!
+        buildpack.update_from_hash(key: new_buildpack_key)
       end
 
       if old_buildpack_key
@@ -61,7 +62,7 @@ module VCAP::CloudController
         f.destroy if f
       end
 
-      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
+      [HTTP::CREATED, serialization.render_json(self.class, buildpack, @opts)]
     end
 
 

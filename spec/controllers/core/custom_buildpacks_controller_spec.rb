@@ -227,22 +227,16 @@ module VCAP::CloudController
         end
 
         context 'create a default buildpack' do
-          around(:each) do |test|
-            @test_buildpack = VCAP::CloudController::Buildpack[name: "test_buildpack"]
-            @test_buildpack.destroy if @test_buildpack
-            @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "test_buildpack", key: "xyz", priority: 0})
-
-            test.run
-
-            @test_buildpack.destroy if @test_buildpack.exists?
-          end
+          after { @test_buildpack.destroy if @test_buildpack.exists? }
 
           it "returns NOT AUTHORIZED (403) for non admins" do
+            @test_buildpack = VCAP::CloudController::Buildpack.make
             delete "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, headers_for(user)
             expect(last_response.status).to eq(403)
           end
 
           it "returns a NO CONTENT (204) if an admin deletes a build pack" do
+            @test_buildpack = VCAP::CloudController::Buildpack.make
             @file.should_receive(:destroy)
             delete "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, admin_headers
             expect(last_response.status).to eq(204)
@@ -252,9 +246,17 @@ module VCAP::CloudController
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             buildpack_blobstore.stub(:files).and_return(double(:files, :head => @file, create: {}))
             @file.should_receive(:destroy)
+            @test_buildpack = VCAP::CloudController::Buildpack.make
 
             delete "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, admin_headers
-            expect(Buildpack.find(name: "dynamic_test_buildpack")).to be_nil
+            expect(Buildpack.find(name: @test_buildpack.name)).to be_nil
+          end
+
+          it "does not fail if no buildpack bits were ever uploaded" do
+            @test_buildpack = VCAP::CloudController::Buildpack.make(key: nil)
+            delete "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, admin_headers
+            expect(last_response.status).to eql(204)
+            expect(Buildpack.find(name: @test_buildpack.name)).to be_nil
           end
         end
       end
