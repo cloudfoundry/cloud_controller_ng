@@ -92,7 +92,7 @@ module VCAP::CloudController
         event = described_class.record_app_update(app, user)
         changes = event.metadata.fetch("changes")
         expect(changes).to eq(
-          "environment_json" => ['PRIVATE DATA HIDDEN'] * 2
+          "encrypted_environment_json" => ['PRIVATE DATA HIDDEN'] * 2
         )
       end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
           "instances" => 1,
           "memory" => 84,
           "state" => "STOPPED",
-          "environment_json" => "PRIVATE DATA HIDDEN",
+          "encrypted_environment_json" => "PRIVATE DATA HIDDEN",
         )
       end
     end

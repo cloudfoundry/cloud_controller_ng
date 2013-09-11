@@ -64,8 +64,8 @@ module VCAP::CloudController
     APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
     PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
 
-    AUDITABLE_FIELDS = [:environment_json, :instances, :memory, :state, :name]
-    CENSORED_FIELDS = [:environment_json]
+    AUDITABLE_FIELDS = [:encrypted_environment_json, :instances, :memory, :state, :name]
+    CENSORED_FIELDS = [:encrypted_environment_json]
 
     CENSORED_MESSAGE = "PRIVATE DATA HIDDEN".freeze
 
@@ -220,18 +220,16 @@ module VCAP::CloudController
     def environment_json=(env)
       json = Yajl::Encoder.encode(env)
       generate_salt
-      self.encrypted_environment_json = VCAP::CloudController::Encryptor.encrypt(json, salt)
-      super(json)
+      self.encrypted_environment_json =
+        VCAP::CloudController::Encryptor.encrypt(json, salt)
     end
 
     def environment_json
-      if encrypted_environment_json
-        json = VCAP::CloudController::Encryptor.decrypt(encrypted_environment_json, salt)
-      else
-        json = super
-      end
+      return unless encrypted_environment_json
 
-      json.nil? ? nil : Yajl::Parser.parse(json)
+      Yajl::Parser.parse(
+        VCAP::CloudController::Encryptor.decrypt(
+          encrypted_environment_json, salt))
     end
 
     def validate_environment
