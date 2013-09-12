@@ -137,7 +137,7 @@ module VCAP::CloudController
       end
 
       context 'Buildpack binaries' do
-        context '/v2/custom_buildpacks/:guid/bits' do
+        context "/v2/custom_buildpacks/:guid/bits" do
           before(:each) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "upload_binary_buildpack", priority: 0}) }
           after(:each) { @test_buildpack.destroy }
           let(:upload_body) { {:buildpack => valid_zip} }
@@ -155,14 +155,10 @@ module VCAP::CloudController
           it "takes a buildpack file and adds it to the custom buildpacks blobstore with the correct key" do
             CloudController::DependencyLocator.instance.upload_handler.stub(:uploaded_file).and_return(valid_zip)
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.files.should_receive(:create).with({
-              :key => "upload_binary_buildpack/#{sha_valid_zip}.zip",
-              :body => anything,
-              :public => true
-              })
+            buildpack_blobstore.should_receive(:cp_from_local).with(valid_zip.path, sha_valid_zip)
 
-              post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
-              expect(Buildpack.find(name: 'upload_binary_buildpack').key).to eq("upload_binary_buildpack/#{sha_valid_zip}.zip")
+            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
+            expect(Buildpack.find(name: 'upload_binary_buildpack').key).to eq(sha_valid_zip)
           end
 
           it "gets the uploaded file from the upload handler" do
@@ -187,14 +183,13 @@ module VCAP::CloudController
             post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip2}, admin_headers
 
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.files.should_receive(:head).with("upload_binary_buildpack/#{sha_valid_zip2}.zip").and_return(@file)
-            @file.should_receive(:destroy)
+            buildpack_blobstore.should_receive(:delete).with(sha_valid_zip2)
 
             post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
             response = Yajl::Parser.parse(last_response.body)
             entity = response['entity']
             expect(entity['name']).to eq('upload_binary_buildpack')
-            expect(entity['key']).to eq("upload_binary_buildpack/#{sha_valid_zip}.zip")
+            expect(entity['key']).to eq(sha_valid_zip)
           end
 
           it 'reports a conflict if the same buildpack is uploaded again' do

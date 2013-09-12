@@ -18,7 +18,7 @@ class BlobStore
   end
 
   def exists?(sha1)
-    files.head(key_from_sha1(sha1))
+    !file(sha1).nil?
   end
 
   def cp_to_local(source_sha, destination_path)
@@ -51,20 +51,29 @@ class BlobStore
     end
   end
 
+  def delete(sha1)
+    blob_file = file(sha1)
+    blob_file.destroy if blob_file
+  end
+
+  def key_from_sha1(sha1)
+    sha1 = sha1.to_s.downcase
+    File.join(sha1[0..1], sha1[2..3], sha1)
+  end
+
   private
 
   def dir
     @dir ||= connection.directories.create(:key => @directory_key, :public => false)
   end
 
+  def file(sha1)
+    files.head(key_from_sha1(sha1))
+  end
+
   def connection
     options = @connection_config
     options = options.merge(:endpoint => "") if local?
     Fog::Storage.new(options)
-  end
-
-  def key_from_sha1(sha1)
-    sha1 = sha1.to_s.downcase
-    File.join(sha1[0..1], sha1[2..3], sha1)
   end
 end
