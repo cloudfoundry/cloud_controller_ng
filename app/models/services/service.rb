@@ -35,6 +35,13 @@ module VCAP::CloudController
 
     alias_method :bindable?, :bindable
 
+    def self.organization_visible(organization)
+      service_ids = ServicePlan.
+          organization_visible(organization).
+          inject([]) { |service_ids,service_plan| service_ids << service_plan.service_id }
+      dataset.filter(id: service_ids)
+    end
+
     def self.user_visibility_filter(current_user)
       plans_I_can_see = ServicePlan.user_visible(current_user)
       {id: plans_I_can_see.map(&:service_id).uniq}

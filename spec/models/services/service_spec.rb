@@ -131,5 +131,24 @@ module VCAP::CloudController
         service.should_not be_v2
       end
     end
+
+    describe '.organization_visible' do
+      it 'returns plans that are visible to the organization' do
+        hidden_private_plan = ServicePlan.make(public: false)
+        hidden_private_service = hidden_private_plan.service
+        visible_public_plan = ServicePlan.make(public: true)
+        visible_public_service = visible_public_plan.service
+        visible_private_plan = ServicePlan.make(public: false)
+        visible_private_service = visible_private_plan.service
+
+        organization = Organization.make
+        ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
+
+        visible = Service.organization_visible(organization).all
+        visible.should include(visible_public_service)
+        visible.should include(visible_private_service)
+        visible.should_not include(hidden_private_service)
+      end
+    end
   end
 end
