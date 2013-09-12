@@ -236,7 +236,7 @@
 100004:
   name: AppNotFound
   http_code: 404
-  message: "The app name could not be found: %s"
+  message: "Could not find app: %s"
 
 100005:
   name: AppMemoryQuotaExceeded
