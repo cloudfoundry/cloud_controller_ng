@@ -106,6 +106,7 @@ module VCAP::CloudController
         Seeds.write_seed_data(config) if @insert_seed_data
         app = create_app(config, message_bus)
         start_thin_server(app, config)
+        registrar.register_with_router
       end
     end
 
@@ -154,7 +155,6 @@ module VCAP::CloudController
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
       register_component(message_bus)
-      registrar.register_with_router
 
       Rack::Builder.new do
         use Rack::CommonLogger
