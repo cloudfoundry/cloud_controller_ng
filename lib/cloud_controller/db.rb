@@ -47,6 +47,43 @@ module VCAP::CloudController
       db
     end
 
+    def self.load_models
+      require "models/core/billing_event"
+      require "models/core/organization_start_event"
+      require "models/core/app_start_event"
+      require "models/core/app_stop_event"
+      require "models/core/app_event"
+      require "models/core/app"
+      require "models/core/buildpack"
+      require "models/core/domain"
+      require "models/core/event"
+      require "models/core/organization"
+      require "models/core/quota_definition"
+      require "models/core/route"
+      require "models/core/task"
+      require "models/core/space"
+      require "models/core/stack"
+      require "models/core/user"
+
+      require "models/services/service"
+      require "models/services/service_auth_token"
+      require "models/services/service_binding"
+      require "models/services/service_instance"
+      require "models/services/managed_service_instance"
+      require "models/services/user_provided_service_instance"
+      require "models/services/service_broker"
+      require "models/services/service_broker_registration"
+      require "models/services/service_plan"
+      require "models/services/service_plan_visibility"
+      require "models/services/service_base_event"
+      require "models/services/service_create_event"
+      require "models/services/service_delete_event"
+      require "models/services/service_provisioner"
+      require "models/services/service_broker_client"
+
+      require "models/job"
+    end
+
     def self.apply_migrations(db, opts = {})
       Sequel.extension :migration
       require "vcap/sequel_case_insensitive_string_monkeypatch"

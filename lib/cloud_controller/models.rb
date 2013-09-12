@@ -80,43 +80,6 @@ require "vcap/sequel_add_association_dependencies_monkeypatch"
 require "vcap/delayed_job_guid_monkeypatch"
 require "vcap/delayed_job_postgres_monkeypatch"
 
-module VCAP::CloudController
-autoload :BillingEvent,                "models/core/billing_event"
-autoload :OrganizationStartEvent,      "models/core/organization_start_event"
-autoload :AppStartEvent,               "models/core/app_start_event"
-autoload :AppStopEvent,                "models/core/app_stop_event"
-autoload :AppEvent,                    "models/core/app_event"
-autoload :App,                         "models/core/app"
-autoload :Buildpack,                   "models/core/buildpack"
-autoload :Domain,                      "models/core/domain"
-autoload :Event,                       "models/core/event"
-autoload :Organization,                "models/core/organization"
-autoload :QuotaDefinition,             "models/core/quota_definition"
-autoload :Route,                       "models/core/route"
-autoload :Task,                        "models/core/task"
-autoload :Space,                       "models/core/space"
-autoload :Stack,                       "models/core/stack"
-autoload :User,                        "models/core/user"
-
-autoload :Service,                     "models/services/service"
-autoload :ServiceAuthToken,            "models/services/service_auth_token"
-autoload :ServiceBinding,              "models/services/service_binding"
-autoload :ServiceInstance,             "models/services/service_instance"
-autoload :ManagedServiceInstance,      "models/services/managed_service_instance"
-autoload :UserProvidedServiceInstance, "models/services/user_provided_service_instance"
-autoload :ServiceBroker,               "models/services/service_broker"
-autoload :ServiceBrokerRegistration,   "models/services/service_broker_registration"
-autoload :ServicePlan,                 "models/services/service_plan"
-autoload :ServicePlanVisibility,       "models/services/service_plan_visibility"
-autoload :ServiceBaseEvent,            "models/services/service_base_event"
-autoload :ServiceCreateEvent,          "models/services/service_create_event"
-autoload :ServiceDeleteEvent,          "models/services/service_delete_event"
-autoload :ServiceProvisioner,          "models/services/service_provisioner"
-autoload :ServiceBrokerClient,         "models/services/service_broker_client"
-
-autoload :Job,                         "models/job"
-end
-
 require File.expand_path("../../../app/access/base_access.rb", __FILE__)
 Dir[File.expand_path("../../../app/access/**/*.rb", __FILE__)].each do |file|
   require file

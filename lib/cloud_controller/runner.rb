@@ -85,6 +85,7 @@ module VCAP::CloudController
       logger.info "db config #{@config[:db]}"
       db_logger = Steno.logger("cc.db")
       DB.connect(db_logger, @config[:db], @config[:active_record_db])
+      VCAP::CloudController::DB.load_models
     end
 
     def setup_loggregator_emitter

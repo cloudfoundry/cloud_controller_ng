@@ -159,6 +159,7 @@ end
 def setup_environment
   run_initializers
   connect_to_database
+  VCAP::CloudController::DB.load_models
   VCAP::CloudController::Config.configure(config)
 end
 
