@@ -184,9 +184,9 @@ module VCAP::CloudController
 
     describe '#client' do
       it 'returns a client created with the correct arguments' do
-        client = double('client')
-        ServiceBrokerClient.should_receive(:new).with(broker_url, token).and_return(client)
-        expect(broker.client).to be(client)
+        v2_client = double('client')
+        ServiceBroker::V2::Client.should_receive(:new).with(url: broker_url, auth_token: token).and_return(v2_client)
+        expect(broker.client).to be(v2_client)
       end
     end
 

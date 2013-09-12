@@ -1,8 +1,20 @@
 require "spec_helper"
 
 module VCAP::CloudController
+  describe ServiceBindingsController, :services, type: :controller do
+    # The create_attribute block can't "see" lets and instance variables
+    CREDENTIALS = {'foo' => 'bar'}
 
-  describe VCAP::CloudController::ServiceBindingsController, :services, type: :controller do
+    let(:broker_client) { double('broker client') }
+
+    before do
+      broker_client.stub(:bind) do |binding|
+        binding.broker_provided_id = Sham.guid
+        binding.credentials = CREDENTIALS
+      end
+      broker_client.stub(:unbind)
+      Service.any_instance.stub(:client).and_return(broker_client)
+    end
 
     include_examples "uaa authenticated api",
       path: "/v2/service_bindings"
@@ -30,6 +42,7 @@ module VCAP::CloudController
       model: ServiceBinding,
       required_attributes: %w(app_guid service_instance_guid),
       unique_attributes: %w(app_guid service_instance_guid),
+      db_required_attributes: %w(credentials),
       extra_attributes: {binding_options: ->{Sham.binding_options}},
       create_attribute: lambda { |name|
         @space ||= Space.make
@@ -40,6 +53,8 @@ module VCAP::CloudController
           when :service_instance_guid
             service_instance = ManagedServiceInstance.make(space: @space)
             service_instance.guid
+          when :credentials
+            CREDENTIALS
         end
       },
       create_attribute_reset: lambda { @space = nil }
@@ -52,7 +67,6 @@ module VCAP::CloudController
         fake_app_staging(app)
         app
       end
-
       let(:service_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
 
       it "should flag app for restaging when creating a binding" do
@@ -204,21 +218,38 @@ module VCAP::CloudController
       end
     end
 
-    describe "creating a binding for a service that does syslog drains" do
-      let(:space) { Space.make }
+    describe 'POST', '/v2/service_bindings' do
+      let(:instance) { ManagedServiceInstance.make }
+      let(:space) { instance.space }
+      let(:plan) { instance.service_plan }
+      let(:service) { plan.service }
       let(:developer) { make_developer_for_space(space) }
+      let(:app_obj) { App.make(space: space) }
 
-      it "stores the syslog_drain_url" do
-        instance = ManagedServiceInstance.make(:space => space)
-        app = App.make(:space => space)
+      it 'binds a service instance to an app' do
+        req = {
+          :app_guid => app_obj.guid,
+          :service_instance_guid => instance.guid
+        }.to_json
 
-        post("/v2/service_bindings",
-             {"app_guid" => app.guid,
-             "service_instance_guid" => instance.guid}.to_json,
-             headers_for(developer))
+        post "/v2/service_bindings", req, json_headers(headers_for(developer))
+        expect(last_response.status).to eq(201)
 
-        last_response.status.should == 201
-        ServiceBinding.last.syslog_drain_url.should == "syslog://example.com:1234"
+        binding = ServiceBinding.last
+
+        expect(broker_client).to have_received(:bind).with(binding)
+      end
+
+      it 'unbinds the service instance when an exception is raised' do
+        req = Yajl::Encoder.encode(
+          :app_guid => app_obj.guid,
+          :service_instance_guid => instance.guid
+        )
+
+        ServiceBinding.any_instance.stub(:save).and_raise
+        post "/v2/service_bindings", req, json_headers(headers_for(developer))
+        expect(broker_client).to have_received(:unbind).with(an_instance_of(ServiceBinding))
+        expect(last_response.status).to eq(500)
       end
     end
   end

@@ -150,5 +150,39 @@ module VCAP::CloudController
         visible.should_not include(hidden_private_service)
       end
     end
+
+    describe '#client' do
+      context 'for a v1 service' do
+        let(:service) { Service.make(service_broker: nil) }
+
+        it 'returns a v1 broker client' do
+          v1_client = double(ServiceBroker::V1::Client)
+          ServiceBroker::V1::Client.stub(:new).and_return(v1_client)
+
+          client = service.client
+          client.should == v1_client
+
+          expect(ServiceBroker::V1::Client).to have_received(:new).with(
+            hash_including(
+              url: service.url,
+              auth_token: service.service_auth_token.token,
+              timeout: service.timeout
+            )
+          )
+        end
+      end
+
+      context 'for a v2 service' do
+        let(:service) { Service.make(service_broker: ServiceBroker.make) }
+
+        it 'returns a v2 broker client' do
+          v2_client = double(ServiceBroker::V2::Client)
+          service.service_broker.stub(:client).and_return(v2_client)
+
+          client = service.client
+          client.should == v2_client
+        end
+      end
+    end
   end
 end

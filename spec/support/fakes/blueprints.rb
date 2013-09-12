@@ -102,6 +102,7 @@ module VCAP::CloudController
     credentials       { Sham.service_credentials }
     space             { Space.make }
     service_plan      { ServicePlan.make }
+    gateway_name      { Sham.guid }
   end
 
   UserProvidedServiceInstance.blueprint do

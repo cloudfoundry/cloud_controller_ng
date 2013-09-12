@@ -32,5 +32,9 @@ module VCAP::CloudController
     def tags
       []
     end
+
+    def client
+      ServiceBroker::UserProvided::Client.new
+    end
   end
 end

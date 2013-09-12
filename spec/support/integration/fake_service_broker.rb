@@ -31,18 +31,23 @@ end
 
 post '/v2/service_instances' do
   json = JSON.parse(request.body.read)
-  raise "unexpected service_id" unless json['service_id'] == 'custom-service-1'
-  raise "unexpected plan_id" unless json['plan_id'] == 'custom-plan-1'
+  raise 'unexpected service_id' unless json['service_id'] == 'custom-service-1'
+  raise 'unexpected plan_id' unless json['plan_id'] == 'custom-plan-1'
 
-  if json['reference_id'] == 'already-exists'
-    #TODO
-  else
-    body = {
-      'id' => 'actual-id-1'
-    }.to_json
+  body = {
+    'id' => 'instance-id-1'
+  }.to_json
 
-    [200, {}, body]
-  end
+  [200, {}, body]
 end
 
-#DELETE /v2/service_instances/:id
+post '/v2/service_bindings' do
+  json = JSON.parse(request.body.read)
+  raise 'unexpected service_instance_id' unless json['service_instance_id'] == 'instance-id-1'
+
+  body = {
+    'id' => 'binding-id-1'
+  }.to_json
+
+  [200, {}, body]
+end

@@ -37,6 +37,11 @@ module VCAP::CloudController
     }
 
     describe "#create" do
+      it 'has a guid when constructed' do
+        instance = described_class.new
+        expect(instance.guid).to be
+      end
+
       it "saves with is_gateway_service true" do
         instance = described_class.make
         instance.refresh.is_gateway_service.should == true
@@ -63,7 +68,7 @@ module VCAP::CloudController
     describe "lifecycle" do
       context "service deprovisioning" do
         it "should deprovision a service on destroy" do
-          service_instance.service_gateway_client.should_receive(:unprovision).with(any_args)
+          service_instance.client.should_receive(:deprovision).with(service_instance)
           service_instance.destroy
         end
       end

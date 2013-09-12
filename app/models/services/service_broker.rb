@@ -41,7 +41,7 @@ module VCAP::CloudController
     end
 
     def client
-      ServiceBrokerClient.new(broker_url, token)
+      @client ||= ServiceBroker::V2::Client.new(url: broker_url, auth_token: token)
     end
 
     class Catalog

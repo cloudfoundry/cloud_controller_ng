@@ -55,6 +55,18 @@ module VCAP::CloudController
       !service_broker.nil?
     end
 
+    def client
+      if v2?
+        service_broker.client
+      else
+        @v1_client ||= ServiceBroker::V1::Client.new(
+          url: url,
+          auth_token: service_auth_token.token,
+          timeout: timeout
+        )
+      end
+    end
+
     # The "unique_id" should really be called broker_provided_id because it's the id assigned by the broker
     def broker_provided_id
       unique_id

@@ -10,6 +10,37 @@ module VCAP::CloudController
 
     query_parameters :app_guid, :service_instance_guid
 
+    post '/v2/service_bindings', :create
+
+    def create
+      json_msg = self.class::CreateMessage.decode(body)
+
+      @request_attrs = json_msg.extract(:stringify_keys => true)
+
+      logger.debug "cc.create", :model => self.class.model_class_name,
+        :attributes => request_attrs
+
+      raise InvalidRequest unless request_attrs
+
+      binding = ServiceBinding.new(@request_attrs)
+      validate_access(:create, binding, user, roles)
+
+      client = binding.client
+      client.bind(binding)
+
+      begin
+        binding.save
+      rescue
+        client.unbind(binding)
+        raise
+      end
+
+      [ HTTP::CREATED,
+        { "Location" => "#{self.class.path}/#{binding.guid}" },
+        serialization.render_json(self.class, binding, @opts)
+      ]
+    end
+
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)

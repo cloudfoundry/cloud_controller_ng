@@ -44,7 +44,7 @@ module ControllerHelpers
       path_desc = opts[:path]
       describe "POST #{path_desc}" do
         context "with all required attributes" do
-          before(:all) do
+          before do
             json_body = Yajl::Encoder.encode(creation_opts)
 
             post opts[:path], json_body, json_headers(admin_headers)
@@ -109,7 +109,7 @@ module ControllerHelpers
 
             @expected_status = nil
 
-            before(:all) do
+            before do
               post opts[:path], Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
             end
 
@@ -138,7 +138,7 @@ module ControllerHelpers
           desc = dup_attrs.map { |v| ":#{v}" }.join(", ")
           desc = "[#{desc}]" if opts[:unique_attributes].length > 1
           context "with duplicate #{desc}" do
-            before(:all) do
+            before do
               obj = opts[:model].make creation_opts
               obj.should be_valid
 

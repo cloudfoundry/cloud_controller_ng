@@ -74,16 +74,13 @@ module VCAP::CloudController
       service_instance = ManagedServiceInstance.new(request_attrs)
       validate_access(:create, service_instance, user, roles)
 
-      provision_response = ServiceProvisioner.new(service_instance).provision
-      service_instance.gateway_name = provision_response.gateway_name
-      service_instance.gateway_data = provision_response.gateway_data
-      service_instance.credentials = provision_response.credentials
-      service_instance.dashboard_url = provision_response.dashboard_url
+      client = service_instance.client
+      client.provision(service_instance)
 
       begin
         service_instance.save
       rescue
-        service_instance.deprovision_on_gateway
+        client.deprovision(service_instance)
         raise
       end
 

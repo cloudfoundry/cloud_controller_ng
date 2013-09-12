@@ -179,67 +179,68 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:plan) { ServicePlan.make }
       let(:developer) { make_developer_for_space(space) }
+      let(:client) { double('client') }
+
+      before do
+        client.stub(:provision) do |instance|
+          instance.gateway_name = 'the gateway name'
+          instance.gateway_data = 'the gateway data'
+          instance.credentials = 'the credentials'
+          instance.dashboard_url = 'the dashboard_url'
+        end
+        client.stub(:deprovision)
+        Service.any_instance.stub(:client).and_return(client)
+      end
+
+      it 'provisions a service instance' do
+        req = Yajl::Encoder.encode(
+          :name => 'foo',
+          :space_guid => space.guid,
+          :service_plan_guid => plan.guid
+        )
+        headers = json_headers(headers_for(developer))
+
+        post "/v2/service_instances", req, headers
+
+        expect(last_response.status).to eq(201)
+
+        instance = ServiceInstance.last
+        expect(instance.gateway_name).to eq('the gateway name')
+        expect(instance.gateway_data).to eq('the gateway data')
+        expect(instance.credentials).to eq('the credentials')
+        expect(instance.dashboard_url).to eq('the dashboard_url')
+      end
+
+      it 'deprovisions the service instance when an exception is raised' do
+        req = Yajl::Encoder.encode(
+          :name => 'foo',
+          :space_guid => space.guid,
+          :service_plan_guid => plan.guid
+        )
+        headers = json_headers(headers_for(developer))
+        ManagedServiceInstance.any_instance.stub(:save).and_raise
+
+        post "/v2/service_instances", req, headers
+
+        expect(last_response.status).to eq(500)
+        expect(client).to have_received(:deprovision).with(an_instance_of(ManagedServiceInstance))
+      end
 
       context 'creating a service instance with a name over 50 characters' do
         let(:very_long_name) { 's' * 51 }
 
         it "returns an error if the service instance name is over 50 characters" do
-          req = Yajl::Encoder.encode(:name => very_long_name,
-                                     :space_guid => space.guid,
-                                     :service_plan_guid => plan.guid)
+          req = Yajl::Encoder.encode(
+            name: very_long_name,
+            space_guid: space.guid,
+            service_plan_guid: plan.guid
+          )
+          headers = json_headers(headers_for(developer))
 
-          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
+          post "/v2/service_instances", req, headers
+
           last_response.status.should == 400
           decoded_response["description"].should =~ /service instance name.*limited to 50 characters/
-        end
-      end
-
-      context 'with a provisioner' do
-        let(:provisioner) { double('provisioner') }
-        let(:provision_response) do
-          double(
-            gateway_name: 'the gateway name',
-            gateway_data: 'the gateway data',
-            credentials: 'the credentials',
-            dashboard_url: 'the dashboard_url',
-          )
-        end
-
-        before do
-          ServiceProvisioner.stub(:new).and_return(provisioner)
-          provisioner.stub(:provision).and_return(provision_response)
-        end
-
-        it 'provisions a service instance' do
-          req = Yajl::Encoder.encode(
-            :name => 'foo',
-            :space_guid => space.guid,
-            :service_plan_guid => plan.guid
-          )
-
-          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
-          expect(last_response.status).to eq(201)
-
-          instance = ServiceInstance.last
-
-          expect(instance.gateway_name).to eq(provision_response.gateway_name)
-          expect(instance.gateway_data).to eq(provision_response.gateway_data)
-          expect(instance.credentials).to eq(provision_response.credentials)
-          expect(instance.dashboard_url).to eq(provision_response.dashboard_url)
-        end
-
-        it 'deprovisions the service instance when an exception is raised' do
-          req = Yajl::Encoder.encode(
-            :name => 'foo',
-            :space_guid => space.guid,
-            :service_plan_guid => plan.guid
-          )
-
-          ManagedServiceInstance.any_instance.stub(:save).and_raise
-          ManagedServiceInstance.any_instance.should_receive(:deprovision_on_gateway)
-
-          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
-          expect(last_response.status).to eq(500)
         end
       end
     end

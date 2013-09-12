@@ -16,6 +16,8 @@ module VCAP::CloudController
 
     strip_attributes  :name
 
+    delegate :client, to: :service
+
     def self.configure(trial_db_config)
       @trial_db_guid = trial_db_config ? trial_db_config[:guid] : nil
     end

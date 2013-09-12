@@ -33,25 +33,15 @@ module VCAP::CloudController
     }
 
     it_behaves_like "a model with an encrypted attribute" do
-      let(:service_instance) do
-        service_instance = ManagedServiceInstance.make.tap do |instance|
-          instance.stub(:service_gateway_client).and_return(
-            double("Service Gateway Client",
-              :bind => VCAP::Services::Api::GatewayHandleResponse.new(
-                :service_id => "gwname_binding",
-                :configuration => "abc",
-                :credentials => value_to_encrypt
-              ),
-              :unprovision => nil
-            )
-          )
-        end
-      end
+      let(:service_instance) { ManagedServiceInstance.make }
 
       after { service_instance.destroy }
 
       def new_model
-        ServiceBinding.make(:service_instance => service_instance)
+        ServiceBinding.make(
+          service_instance: service_instance,
+          credentials: value_to_encrypt
+        )
       end
 
       let(:encrypted_attr) { :credentials }
@@ -83,12 +73,10 @@ module VCAP::CloudController
     end
 
     describe "binding" do
-      let(:gw_client) { double(:client).as_null_object }
-
       let(:service) { Service.make }
       let(:service_plan) { ServicePlan.make(:service => service) }
       let(:service_instance) do
-        ManagedServiceInstance.new(
+        ManagedServiceInstance.make(
           :service_plan => service_plan,
           :name => "my-postgresql",
           :space => Space.make,
@@ -105,79 +93,13 @@ module VCAP::CloudController
         )
       end
 
-      before do
-        ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
-        gw_client.stub(:bind).and_return(bind_resp)
-        service_instance.save
-      end
-
-      context "service binding" do
-        it "should bind a service on the gw during create" do
-          VCAP::CloudController::SecurityContext.
-            should_receive(:current_user_email).
-            and_return("a@b.c")
-          gw_client.should_receive(:bind).with(hash_including(:email => "a@b.c", service_id: service_instance.gateway_name))
-
-          binding = ServiceBinding.make(:service_instance => service_instance)
-          binding.gateway_name.should == "gwname_binding"
-          binding.gateway_data.should == "abc"
-          binding.credentials.should == {"password" => "foo"}
-        end
-
-        it "should unbind a service on rollback after create" do
-          expect {
-            ManagedServiceInstance.db.transaction do
-              gw_client.should_receive(:bind).and_return(bind_resp)
-              gw_client.should_receive(:unbind)
-              binding = ServiceBinding.make(:service_instance => service_instance)
-              raise "something bad"
-            end
-          }.to raise_error
-        end
-
-        it "should not unbind a service on rollback after update" do
-          gw_client.should_receive(:bind).and_return(bind_resp)
-          binding = ServiceBinding.make(:service_instance => service_instance)
-
-          expect {
-            ManagedServiceInstance.db.transaction do
-              binding.update(:name => "newname")
-              raise "something bad"
-            end
-          }.to raise_error
-        end
-      end
-
       context "when the service is unbindable" do
-        let(:service) do
-          Service.make(bindable: false)
-        end
+        let(:service) { Service.make(bindable: false) }
 
-          it "raises an UnbindableService" do
+        it "raises an UnbindableService" do
           expect {
             ServiceBinding.make(:service_instance => service_instance)
           }.to raise_error(Errors::UnbindableService)
-          end
-
-        it "should not bind a service on the gw during create" do
-          gw_client.should_not_receive(:bind)
-
-          begin
-            ServiceBinding.make(:service_instance => service_instance)
-          rescue Errors::UnbindableService
-          end
-        end
-      end
-
-      context "service unbinding" do
-        it "should unbind a service on destroy" do
-          gw_client.should_receive(:bind).and_return(bind_resp)
-          binding = ServiceBinding.make(:service_instance => service_instance)
-
-          gw_client.should_receive(:unbind).with(:service_id => "gwname_instance",
-            :handle_id => "gwname_binding",
-            :binding_options => {})
-          binding.destroy
         end
       end
     end
@@ -220,43 +142,5 @@ module VCAP::CloudController
         app.needs_staging?.should be_true
       end
     end
-
-    describe "binding options" do
-
-      let(:gw_client) { double(:client) }
-      let(:response) do
-        VCAP::Services::Api::GatewayHandleResponse.new(
-          :service_id => "gwname_instance",
-          :configuration => "abc",
-          :credentials => {:password => "foo"}
-        )
-      end
-
-      before do
-        ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(gw_client)
-        gw_client.stub(:provision).and_return(response)
-        gw_client.stub(:bind).and_return(response)
-      end
-
-      context "service gateway" do
-
-        it "send binding_options to gateway" do
-          binding_options = Sham.binding_options
-          gw_client.
-            should_receive(:bind).
-            with(hash_including(:binding_options => binding_options))
-          ServiceBinding.make(:binding_options => binding_options)
-        end
-
-        it "send default binding_options to gateway" do
-          gw_client.
-            should_receive(:bind).
-            with(hash_including(:binding_options => {}))
-          ServiceBinding.make
-        end
-
-      end
-    end
-
   end
 end

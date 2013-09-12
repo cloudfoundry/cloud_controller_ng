@@ -3,8 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::LegacyServiceGateway, :services, type: :controller do
     describe "Gateway facing apis" do
-      let(:mock_client) { double(:gw_client) }
-
       def build_offering(attrs={})
         defaults = {
           :label => "foobar-1.0",
@@ -18,18 +16,6 @@ module VCAP::CloudController
 
       before do
         reset_database
-
-        mock_client.stub(:provision).and_return(
-          VCAP::Services::Api::GatewayHandleResponse.new(
-            :service_id => "gw_id",
-            :configuration => "abc",
-            :credentials => { :password => "foo" }
-          )
-        )
-        mock_client.stub(:unprovision)
-        mock_client.stub(:unbind)
-        ManagedServiceInstance.any_instance.stub(:service_gateway_client).and_return(mock_client)
-        ManagedServiceInstance.any_instance.stub(:client).and_return(mock_client)
       end
 
       describe "POST services/v1/offerings" do
@@ -336,23 +322,18 @@ module VCAP::CloudController
           cfg2.gateway_data = { :config => "foo2" }
           cfg2.save
 
-          mock_client.stub(:bind).and_return(
-            VCAP::Services::Api::GatewayHandleResponse.new(
-              :service_id => "bind1",
-              :configuration => { :config => "bind1" },
-              :credentials => {}
-            )
+          ServiceBinding.make(
+            :gateway_name => "bind1",
+            :service_instance  => cfg1,
+            :gateway_data => { :config => "bind1" },
+            :credentials => {}
           )
-          ServiceBinding.make(:service_instance  => cfg1)
-
-          mock_client.stub(:bind).and_return(
-            VCAP::Services::Api::GatewayHandleResponse.new(
-              :service_id => "bind2",
-              :configuration => { :config => "bind2" },
-              :credentials => {}
-            )
+          ServiceBinding.make(
+            :gateway_name  => "bind2",
+            :service_instance  => cfg2,
+            :gateway_data => { :config => "bind2" },
+            :credentials => {}
           )
-          ServiceBinding.make(:gateway_name  => "bind2", :service_instance  => cfg2,)
         end
 
         it "should return not found for unknown services" do
@@ -408,14 +389,12 @@ module VCAP::CloudController
             cfg.gateway_name = "foo1"
             cfg.save
 
-            mock_client.stub(:bind).and_return(
-              VCAP::Services::Api::GatewayHandleResponse.new(
-                :service_id => "bind1",
-                :configuration => {},
-                :credentials => {}
-              )
+            ServiceBinding.make(
+              :service_instance  => cfg,
+              :gateway_name => 'bind1',
+              :gateway_data => {},
+              :credentials => {}
             )
-            ServiceBinding.make(:service_instance  => cfg)
           end
 
           it "should return not found for unknown handles" do
@@ -464,15 +443,11 @@ module VCAP::CloudController
             cfg.gateway_name = "foo2"
             cfg.save
 
-            mock_client.stub(:bind).and_return(
-              VCAP::Services::Api::GatewayHandleResponse.new(
-                :service_id => "bind2",
-                :configuration => {},
-                :credentials => {}
-              )
-            )
             ServiceBinding.make(
-              :service_instance  => cfg
+              :service_instance  => cfg,
+              :gateway_name => 'bind2',
+              :gateway_data => {},
+              :credentials => {},
             )
           end
 

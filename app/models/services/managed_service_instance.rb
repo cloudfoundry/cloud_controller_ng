@@ -71,6 +71,12 @@ module VCAP::CloudController
 
     strip_attributes  :name
 
+    plugin :after_initialize
+
+    alias_attribute :broker_provided_id, :gateway_name
+
+    delegate :client, to: :service_plan
+
     def validate
       super
       validates_presence :service_plan
@@ -84,8 +90,20 @@ module VCAP::CloudController
 
     def after_destroy
       super
-      deprovision_on_gateway
+
+      # TODO: transactionally move this into a queue, remove the rescue
+      begin
+        client.deprovision(self)
+      rescue => e
+        logger.error "deprovision failed #{e}"
+      end
+
       ServiceDeleteEvent.create_from_service_instance(self)
+    end
+
+    def after_initialize
+      super
+      self.guid ||= SecureRandom.uuid
     end
 
     def as_summary_json
@@ -153,12 +171,6 @@ module VCAP::CloudController
       service_plan.service
     end
 
-    def deprovision_on_gateway
-      service_gateway_client.unprovision(:service_id => gateway_name)
-    rescue => e
-      logger.error "deprovision failed #{e}"
-    end
-
     def create_snapshot(name)
       NGServiceGatewayClient.new(service, gateway_name).create_snapshot(name)
     end
@@ -197,38 +209,6 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger("cc.models.service_instance")
-    end
-
-    def unbind_on_gateway(service_binding)
-      return unless service_gateway_client
-      service_gateway_client.unbind(
-        :service_id      => self.gateway_name,
-        :handle_id       => service_binding.gateway_name,
-        :binding_options => service_binding.binding_options,
-      )
-    rescue => e
-      logger.error "unbind failed #{e}"
-    end
-
-    def bind_on_gateway(service_binding)
-      logger.debug "binding service on gateway for #{service_binding.guid}"
-
-      service = service_plan.service
-
-      gw_attrs = service_gateway_client.bind(
-        :service_id => gateway_name,
-        # TODO: we shouldn't still be using this compound label
-        :label      => "#{service.label}-#{service.version}",
-        :email      => VCAP::CloudController::SecurityContext.current_user_email,
-        :binding_options => service_binding.binding_options,
-      )
-
-      logger.debug "binding response for #{service_binding.guid} #{gw_attrs.inspect}"
-
-      service_binding.gateway_name = gw_attrs.service_id
-      service_binding.gateway_data = gw_attrs.configuration
-      service_binding.credentials  = gw_attrs.credentials
-      service_binding.syslog_drain_url  = gw_attrs.syslog_drain_url
     end
 
     def bindable?
