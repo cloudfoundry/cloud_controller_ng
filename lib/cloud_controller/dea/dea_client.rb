@@ -281,6 +281,7 @@ module VCAP::CloudController
           :env => (app.environment_json || {}).map {|k,v| "#{k}=#{v}"},
           :console => app.console,
           :debug => app.debug,
+          :start_command => app.command,
         }
       end
 

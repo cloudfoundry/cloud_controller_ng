@@ -43,6 +43,7 @@ module VCAP::CloudController
         res[:limits].should be_kind_of(Hash)
         res[:env].should be_kind_of(Array)
         res[:console].should == false
+        res[:start_command].should be_nil
       end
 
       context "with an app enabled for console support" do
@@ -58,6 +59,14 @@ module VCAP::CloudController
           app.update(:debug => "run")
           res = DeaClient.start_app_message(app)
           res[:debug].should == "run"
+        end
+      end
+
+      context "with an app with custom start command" do
+        it "should pass command in the start message" do
+          app.update(:command => "custom start command")
+          res = DeaClient.start_app_message(app)
+          res[:start_command].should == "custom start command"
         end
       end
     end
