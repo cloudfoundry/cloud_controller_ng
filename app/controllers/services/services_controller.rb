@@ -13,6 +13,7 @@ module VCAP::CloudController
       attribute :extra,             String, :default => nil
       attribute :unique_id,         String, :default => nil, :exclude_in => [:update]
       attribute :tags,              [String], :default => []
+      attribute :requires,          [String], :default => []
 
       # NOTE: DEPRECATED
       #

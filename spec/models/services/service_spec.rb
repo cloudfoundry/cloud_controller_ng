@@ -100,6 +100,15 @@ module VCAP::CloudController
       end
     end
 
+    describe "#requires" do
+      context 'null requires in the database' do
+        it 'returns an empty array' do
+          service = Service.make(requires: nil)
+          expect(service.requires).to eq []
+        end
+      end
+    end
+
     describe "#documentation_url" do
       context 'with a URL in the database' do
         it 'returns the appropriate URL' do

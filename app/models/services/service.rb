@@ -14,11 +14,11 @@ module VCAP::CloudController
 
     export_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
-                      :unique_id, :extra, :tags, :documentation_url
+                      :unique_id, :extra, :tags, :requires, :documentation_url
 
     import_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
-                      :unique_id, :extra, :tags, :documentation_url
+                      :unique_id, :extra, :tags, :requires, :documentation_url
 
     strip_attributes  :label, :provider
 
@@ -31,7 +31,7 @@ module VCAP::CloudController
       validates_unique   [:label, :provider]
     end
 
-    serialize_attributes :json, :tags
+    serialize_attributes :json, :tags, :requires
 
     alias_method :bindable?, :bindable
 
@@ -48,6 +48,10 @@ module VCAP::CloudController
     end
 
     def tags
+      super || []
+    end
+
+    def requires
       super || []
     end
 
