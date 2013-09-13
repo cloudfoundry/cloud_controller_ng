@@ -7,7 +7,7 @@ Overview
 The Cloud Foundry V2 family of APIs follow RESTful principles.
 The primary goal of the V2 API is to support the new entities in
 the Team Edition release, and to address the shortcomings of the V1 in terms
-features and consistency.  
+features and consistency.
 
 The specific high-level goals are as follows:
 
@@ -184,6 +184,10 @@ Query values may also contain `>`, `<`, `>=`, or `<=, e.g. `GET /v2/foo_bars?q=i
 
 Finally, to pick out records from an array of possible values use `GET /v2/foo_bars?q=color IN blue,red`
 Note the spaces (" IN ").  Also, the column in question *must* be a string/text type.
+
+To specify multiple query parameters, use `;` as a separator:
+
+  GET /v2/foo_bars?q=instances>2;color IN blue,red;mood:happy
 
 The API endpoint may return an error if the resulting query performs an
 unindexed search.
