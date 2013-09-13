@@ -39,6 +39,14 @@ module VCAP::CloudController
       end
     end
 
+    describe "#destroy" do
+      let(:binding) { ServiceBinding.make }
+      it "unbinds at the broker" do
+        binding.client.should_receive(:unbind)
+        binding.destroy
+      end
+    end
+
     it_behaves_like "a model with an encrypted attribute" do
       let(:service_instance) { ManagedServiceInstance.make }
 

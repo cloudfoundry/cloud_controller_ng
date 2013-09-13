@@ -52,3 +52,7 @@ put '/v2/service_bindings/:service_binding_id' do
 
   [200, {}, body]
 end
+
+delete '/v2/service_bindings/:service_binding_id' do
+  [204, {}, '']
+end

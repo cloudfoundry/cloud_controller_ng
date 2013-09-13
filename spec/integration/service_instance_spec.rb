@@ -56,6 +56,12 @@ describe "Service Instance Management", :type => :integration do
     create_service_instance
     create_application
     bind_service_instance
+    unbind_service_instance
+  end
+
+  def unbind_service_instance
+    unbind_response = make_delete_request("/v2/service_bindings/#{@binding_guid}", authed_headers)
+    expect(unbind_response.code.to_i).to eq(204), "Unbind request failed with #{unbind_response.code}, #{unbind_response.body.inspect}"
   end
 
   def bind_service_instance
@@ -65,8 +71,8 @@ describe "Service Instance Management", :type => :integration do
     )
 
     bind_response = make_post_request('/v2/service_bindings', body, authed_headers)
-    expect(bind_response.code.to_i).to eq(201), "Bind request failed with this #{bind_response.code}, #{bind_response.body.inspect}"
-    bind_response.json_body.fetch('metadata').fetch('guid')
+    expect(bind_response.code.to_i).to eq(201), "Bind request failed with #{bind_response.code}, #{bind_response.body.inspect}"
+    @binding_guid = bind_response.json_body.fetch('metadata').fetch('guid')
   end
 
   def register_service_broker

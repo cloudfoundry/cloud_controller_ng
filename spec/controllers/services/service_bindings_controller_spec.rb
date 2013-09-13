@@ -252,5 +252,20 @@ module VCAP::CloudController
         expect(last_response.status).to eq(500)
       end
     end
+
+    describe 'DELETE', '/v2/service_bindings/:service_binding_guid' do
+      let(:binding) { ServiceBinding.make }
+      let(:developer) { make_developer_for_space(binding.service_instance.space) }
+
+      it 'unbinds a service instance from an app' do
+        delete "/v2/service_bindings/#{binding.guid}", '', json_headers(headers_for(developer))
+        expect(last_response.status).to eq(204)
+
+        expect(ServiceBinding.find(guid: binding.guid)).to be_nil
+
+        expect(broker_client).to have_received(:unbind).with(binding)
+      end
+    end
+
   end
 end
