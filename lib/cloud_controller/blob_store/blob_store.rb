@@ -3,7 +3,8 @@ require "find"
 require "fog"
 
 class BlobStore
-  def initialize(connection_config, directory_key, cdn=nil)
+  def initialize(connection_config, directory_key, cdn=nil, root_dir=nil)
+    @root_dir = root_dir
     @connection_config = connection_config
     @directory_key = directory_key
     @cdn = cdn
@@ -41,12 +42,12 @@ class BlobStore
     end
   end
 
-  def cp_from_local(source_path, destination_sha)
+  def cp_from_local(source_path, destination_sha, make_public=false)
     File.open(source_path) do |file|
       files.create(
         :key => key_from_sha1(destination_sha),
         :body => file,
-        :public => false,
+        :public => make_public,
       )
     end
   end
@@ -58,24 +59,27 @@ class BlobStore
 
   def key_from_sha1(sha1)
     sha1 = sha1.to_s.downcase
-    File.join(sha1[0..1], sha1[2..3], sha1)
+    key = File.join(sha1[0..1], sha1[2..3], sha1)
+    if @root_dir
+      key = File.join(@root_dir, key)
+    end
+    key
   end
 
   def download_uri(sha1)
-    return nil unless exists?(sha1)
-
     file = file(sha1)
+    return nil unless file
     file.url(Time.now + 3600)
+  end
+
+  def file(sha1)
+    files.head(key_from_sha1(sha1))
   end
 
   private
 
   def dir
     @dir ||= connection.directories.create(:key => @directory_key, :public => false)
-  end
-
-  def file(sha1)
-    files.head(key_from_sha1(sha1))
   end
 
   def connection

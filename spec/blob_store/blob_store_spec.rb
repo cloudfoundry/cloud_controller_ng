@@ -65,7 +65,7 @@ describe BlobStore do
       end
     end
 
-    describe "#exists?" do
+    describe "a file existence" do
       it "does not exist if not present" do
         different_content = "foobar"
         sha_of_different_content = Digest::SHA1.hexdigest(different_content)
@@ -74,6 +74,7 @@ describe BlobStore do
         tmpfile = make_tmpfile(different_content)
         blob_store.cp_from_local(tmpfile.path, sha_of_different_content)
         expect(blob_store.exists?(sha_of_different_content)).to be_true
+        expect(blob_store.file(sha_of_different_content)).to be
       end
     end
   end
@@ -105,7 +106,6 @@ describe BlobStore do
 
       it "does not reupload it" do
         expect(blob_store.exists?(sha_of_content)).to be_false
-        #blob_store.files.should_receive(:create).once.and_call_original
         blob_store.cp_r_from_local(local_dir)
         blob_store.cp_r_from_local(local_dir)
       end
@@ -196,6 +196,24 @@ describe BlobStore do
       blob_store.cp_from_local(path, "abcdef123456")
       expect(blob_store.exists?("abcdef123456")).to be_true
     end
+
+    it "defaults to private files" do
+      path = File.join(local_dir, "empty_file")
+      FileUtils.touch(path)
+      key = "abcdef12345"
+
+      blob_store.cp_from_local(path, key)
+      expect(blob_store.file(key).public_url).to be_nil
+    end
+
+    it "can copy a public file" do
+      path = File.join(local_dir, "empty_file")
+      FileUtils.touch(path)
+      key = "abcdef12345"
+
+      blob_store.cp_from_local(path, key, true)
+      expect(blob_store.file(key).public_url).to be
+    end
   end
 
   describe "#delete" do
@@ -216,4 +234,23 @@ describe BlobStore do
       }.to_not raise_error
     end
   end
+
+  context "with root directory specified" do
+    subject(:blob_store) do
+      BlobStore.new({
+                      provider: "AWS",
+                      aws_access_key_id: 'fake_access_key_id',
+                      aws_secret_access_key: 'fake_secret_access_key',
+                    }, directory_key, nil, "my-root")
+
+    end
+
+    it "" do
+      tmpfile = make_tmpfile(content)
+      blob_store.cp_from_local(tmpfile.path, "abcdef123456")
+      expect(blob_store.exists?("abcdef123456")).to be_true
+      expect(blob_store.file("abcdef123456")).to be
+      expect(blob_store.download_uri("abcdef123456")).to match(%r{my-root/ab/cd/abcdef})
+    end
   end
+end

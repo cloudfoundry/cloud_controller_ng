@@ -36,13 +36,19 @@ module VCAP::CloudController
     attr_reader :config
 
     class << self
-      attr_reader :blob_store
+      attr_reader :blob_store, :buildpack_blob_store
 
       def configure(config)
         @config = config
 
         options = config[:droplets]
         @blob_store = BlobStore.new(options[:fog_connection], options[:droplet_directory_key] || "cc-droplets")
+        @buildpack_blob_store = BlobStore.new(
+          options[:fog_connection],
+          options[:droplet_directory_key] || "cc-droplets",
+          nil,
+          "buildpack_cache"
+        )
         @cdn = options[:cdn]
       end
 
@@ -90,11 +96,19 @@ module VCAP::CloudController
       end
 
       def store_droplet(app, path)
-        store_package(app, path, :droplet)
+        blob_store.cp_from_local(
+          path,
+          app.guid,
+          blob_store.local?
+        )
       end
 
       def store_buildpack_cache(app, path)
-        store_package(app, path, :buildpack_cache)
+        buildpack_blob_store.cp_from_local(
+          path,
+          app.guid,
+          buildpack_blob_store.local?
+        )
       end
 
       def delete_droplet(app)
@@ -155,16 +169,6 @@ module VCAP::CloudController
 
       private
 
-      def store_package(app, path, type)
-        File.open(path) do |file|
-          blob_store.files.create(
-            :key => key_from_app(app, type),
-            :body => file,
-            :public => blob_store.local?
-          )
-        end
-      end
-
       def upload_uri(app, type)
         prefix = type == :buildpack_cache ? BUILDPACK_CACHE_PATH : DROPLET_PATH
         staging_uri("#{prefix}/#{app.guid}/upload")
@@ -197,10 +201,10 @@ module VCAP::CloudController
 
       def staging_uri(path)
         URI::HTTP.build(
-          :host     => @config[:bind_address],
-          :port     => @config[:port],
+          :host => @config[:bind_address],
+          :port => @config[:port],
           :userinfo => [@config[:staging][:auth][:user], @config[:staging][:auth][:password]],
-          :path     => path
+          :path => path
         ).to_s
       end
 
@@ -220,32 +224,15 @@ module VCAP::CloudController
       def app_droplet(app)
         return unless app.staged?
 
-        key = key_from_app(app, :droplet)
-        old_key = key_from_guid(app.guid, :droplet)
+
+        key = File.join(blob_store.key_from_sha1(app.guid), app.droplet_hash)
+
+        old_key = blob_store.key_from_sha1(app.guid)
         blob_store.files.head(key) || blob_store.files.head(old_key)
       end
 
       def app_buildpack_cache(app)
-        key = key_from_guid(app.guid, :buildpack_cache)
-        blob_store.files.head(key)
-      end
-
-      def key_from_app(app, type)
-        if type == :droplet
-          File.join(key_from_guid(app.guid, type), app.droplet_hash)
-        else
-          key_from_guid(app.guid, type)
-        end
-      end
-
-      def key_from_guid(guid, type)
-        guid = guid.to_s.downcase
-
-        if type == :buildpack_cache
-          File.join("buildpack_cache", guid[0..1], guid[2..3], guid)
-        else
-          File.join(guid[0..1], guid[2..3], guid)
-        end
+        @buildpack_blob_store.file(app.guid)
       end
     end
 
@@ -381,19 +368,19 @@ module VCAP::CloudController
     # TODO: put this back to all of staging once we change the auth scheme
     # (and add a test for /staging/droplets with bad auth)
     controller.before "#{APP_PATH}/*" do
-      auth =  Rack::Auth::Basic::Request.new(env)
+      auth = Rack::Auth::Basic::Request.new(env)
       unless auth.provided? && auth.basic? &&
-              auth.credentials == [@config[:staging][:auth][:user],
-                                   @config[:staging][:auth][:password]]
+        auth.credentials == [@config[:staging][:auth][:user],
+                             @config[:staging][:auth][:password]]
         raise NotAuthorized
       end
     end
 
-    get  "/staging/apps/:guid", :download_app
+    get "/staging/apps/:guid", :download_app
 
     # Make sure that nginx upload path rules do not apply to download paths!
     post "#{DROPLET_PATH}/:guid/upload", :upload_droplet
-    get  "#{DROPLET_PATH}/:guid/download", :download_droplet
+    get "#{DROPLET_PATH}/:guid/download", :download_droplet
 
     post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
     get "#{BUILDPACK_CACHE_PATH}/:guid/download", :download_buildpack_cache

@@ -520,13 +520,8 @@ module VCAP::CloudController
 
         context "under the old path format" do
           before do
-            File.open(droplet.path) do |file|
-              StagingsController.blob_store.files.create(
-                :key => StagingsController.send(:key_from_guid, app_obj.guid, :droplet),
-                :body => file,
-                :public => true
-              )
-            end
+            blob_store = StagingsController.blob_store
+            blob_store.cp_from_local(droplet.path, app_obj.guid)
           end
 
           it "deletes the old droplet" do
