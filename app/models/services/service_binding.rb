@@ -17,6 +17,8 @@ module VCAP::CloudController
 
     delegate :client, to: :service_instance
 
+    plugin :after_initialize
+
     def validate
       validates_presence :app
       validates_presence :service_instance
@@ -50,6 +52,11 @@ module VCAP::CloudController
 
     def after_update
       mark_app_for_restaging
+    end
+
+    def after_initialize
+      super
+      self.guid ||= SecureRandom.uuid
     end
 
     def before_destroy

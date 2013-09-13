@@ -9,18 +9,17 @@ module VCAP::CloudController
     end
 
     def provision(instance)
-      response = @http_client.provision(instance.service_plan.service.broker_provided_id, instance.service_plan.broker_provided_id, instance.guid)
+      response = @http_client.provision(instance.guid, instance.service_plan.broker_provided_id)
 
-      instance.broker_provided_id = response['id']
+      instance.dashboard_url = response['dashboard_url']
 
-      # DEPRECATED
+      # DEPRECATED, but needed because of not null constraint
       instance.credentials = {}
     end
 
     def bind(binding)
-      response = @http_client.bind(binding.service_instance.broker_provided_id, binding.guid)
+      response = @http_client.bind(binding.guid, binding.service_instance.guid)
 
-      binding.broker_provided_id = response['id']
       binding.credentials = response['credentials']
     end
   end

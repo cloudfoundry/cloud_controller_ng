@@ -32,6 +32,13 @@ module VCAP::CloudController
       }
     }
 
+    describe "#create" do
+      it 'has a guid when constructed' do
+        binding = described_class.new
+        expect(binding.guid).to be
+      end
+    end
+
     it_behaves_like "a model with an encrypted attribute" do
       let(:service_instance) { ManagedServiceInstance.make }
 

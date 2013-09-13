@@ -73,6 +73,7 @@ module VCAP::CloudController
 
     plugin :after_initialize
 
+    # This only applies to V1 services
     alias_attribute :broker_provided_id, :gateway_name
 
     delegate :client, to: :service_plan

@@ -29,24 +29,25 @@ get '/v2/catalog' do
   [200, {}, body]
 end
 
-post '/v2/service_instances' do
+put '/v2/service_instances/:service_instance_id' do
   json = JSON.parse(request.body.read)
-  raise 'unexpected service_id' unless json['service_id'] == 'custom-service-1'
   raise 'unexpected plan_id' unless json['plan_id'] == 'custom-plan-1'
 
   body = {
-    'id' => 'instance-id-1'
+    'dashboard_url' => 'http://dashboard'
   }.to_json
-
-  [200, {}, body]
+  [201, {}, body]
 end
 
-post '/v2/service_bindings' do
+put '/v2/service_bindings/:service_binding_id' do
   json = JSON.parse(request.body.read)
-  raise 'unexpected service_instance_id' unless json['service_instance_id'] == 'instance-id-1'
+  raise 'missing service_instance_id' unless json['service_instance_id']
 
   body = {
-    'id' => 'binding-id-1'
+    'credentials' => {
+      'username' => 'admin',
+      'password' => 'secret'
+    }
   }.to_json
 
   [200, {}, body]

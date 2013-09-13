@@ -9,20 +9,17 @@ module VCAP::CloudController
       execute(:get, '/v2/catalog')
     end
 
-    # The broker is expected to guarantee uniqueness of the reference_id.
-    # raises ServiceBrokerConflict if the reference id is already in use
-    def provision(service_id, plan_id, reference_id)
-      execute(:post, '/v2/service_instances', {
-        service_id: service_id,
-        plan_id: plan_id,
-        reference_id: reference_id
+    # The broker is expected to guarantee uniqueness of the service_instance_id.
+    # raises ServiceBrokerConflict if the id is already in use
+    def provision(service_instance_id, plan_id)
+      execute(:put, "/v2/service_instances/#{service_instance_id}", {
+        plan_id: plan_id
       })
     end
 
-    def bind(service_instance_id, reference_id)
-      execute(:post, "/v2/service_bindings", {
-        service_instance_id: service_instance_id,
-        reference_id: reference_id
+    def bind(binding_id, service_instance_id)
+      execute(:put, "/v2/service_bindings/#{binding_id}", {
+        service_instance_id: service_instance_id
       })
     end
 

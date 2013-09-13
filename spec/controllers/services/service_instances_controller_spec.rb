@@ -183,9 +183,7 @@ module VCAP::CloudController
 
       before do
         client.stub(:provision) do |instance|
-          instance.gateway_name = 'the gateway name'
-          instance.gateway_data = 'the gateway data'
-          instance.credentials = 'the credentials'
+          instance.credentials = '{}'
           instance.dashboard_url = 'the dashboard_url'
         end
         client.stub(:deprovision)
@@ -205,9 +203,7 @@ module VCAP::CloudController
         expect(last_response.status).to eq(201)
 
         instance = ServiceInstance.last
-        expect(instance.gateway_name).to eq('the gateway name')
-        expect(instance.gateway_data).to eq('the gateway data')
-        expect(instance.credentials).to eq('the credentials')
+        expect(instance.credentials).to eq('{}')
         expect(instance.dashboard_url).to eq('the dashboard_url')
       end
 

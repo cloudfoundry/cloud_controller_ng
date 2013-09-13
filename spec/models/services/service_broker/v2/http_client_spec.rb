@@ -54,40 +54,37 @@ module VCAP::CloudController
     end
 
     describe '#provision' do
-      let(:service_id) { Sham.guid }
+      let(:instance_id) { Sham.guid }
       let(:plan_id) { Sham.guid }
-      let(:reference_id) { 'ref_id' }
-      let(:broker_service_instance_id) { 'broker_created_id' }
 
       let(:expected_request_body) do
         {
-          service_id: service_id,
           plan_id: plan_id,
-          reference_id: reference_id,
         }.to_json
       end
+
       let(:expected_response_body) do
         {
-          id: broker_service_instance_id
+          dashboard_url: 'dashboard url'
         }.to_json
       end
 
       it 'calls the provision endpoint' do
-        stub_request(:post, "http://cc:#{auth_token}@broker.example.com/v2/service_instances").
+        stub_request(:put, "http://cc:#{auth_token}@broker.example.com/v2/service_instances/#{instance_id}").
           with(body: expected_request_body, headers: { 'X-VCAP-Request-ID' => request_id }).
-          to_return(body: expected_response_body)
+          to_return(status: 201, body: expected_response_body)
 
-        result = client.provision(service_id, plan_id, reference_id)
+        response = client.provision(instance_id, plan_id)
 
-        expect(result['id']).to eq(broker_service_instance_id)
+        expect(response.fetch('dashboard_url')).to eq('dashboard url')
       end
 
       context 'the reference_id is already in use' do
         it 'raises ServiceBrokerConflict' do
-          stub_request(:post, "http://cc:#{auth_token}@broker.example.com/v2/service_instances").
+          stub_request(:put, "http://cc:#{auth_token}@broker.example.com/v2/service_instances/#{instance_id}").
             to_return(status: 409)  # 409 is CONFLICT
 
-          expect { client.provision(service_id, plan_id, reference_id) }.to raise_error(VCAP::Errors::ServiceBrokerConflict)
+          expect { client.provision(instance_id, plan_id) }.to raise_error(VCAP::Errors::ServiceBrokerConflict)
         end
       end
     end
@@ -96,31 +93,27 @@ module VCAP::CloudController
       let(:service_binding) { ServiceBinding.make }
       let(:service_instance) { service_binding.service_instance }
 
-      let(:broker_binding_id) { SecureRandom.uuid }
-
-      let(:bind_url) { "http://cc:#{auth_token}@broker.example.com/v2/service_bindings" }
+      let(:bind_url) { "http://cc:#{auth_token}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
 
       before do
-        @request = stub_request(:post, bind_url).to_return(
+        @request = stub_request(:put, bind_url).to_return(
           body: {
-            id: broker_binding_id,
             credentials: {user: 'admin', pass: 'secret'}
           }.to_json
         )
       end
 
-      it 'sends a POST request to the correct endpoint with the auth token' do
-        client.bind(service_instance.broker_provided_id, service_binding.guid)
+      it 'sends a PUT request to the correct endpoint with the auth token' do
+        client.bind(service_binding.guid, service_instance.guid)
 
         expect(@request.with { |request|
           request_body = Yajl::Parser.parse(request.body)
-          expect(request_body.fetch('service_instance_id')).to eq(service_binding.service_instance.broker_provided_id)
-          expect(request_body.fetch('reference_id')).to eq(service_binding.guid)
+          expect(request_body.fetch('service_instance_id')).to eq(service_binding.service_instance.guid)
         }).to have_been_made
       end
 
       it 'includes the request_id in the request header' do
-        client.bind(service_instance.broker_provided_id, service_binding.guid)
+        client.bind(service_binding.guid, service_instance.guid)
 
         expect(@request.with { |request|
           expect(request.headers.fetch('X-Vcap-Request-Id')).to eq(request_id)
@@ -128,7 +121,7 @@ module VCAP::CloudController
       end
 
       it 'sets the content type to JSON' do
-        client.bind(service_instance.broker_provided_id, service_binding.guid)
+        client.bind(service_binding.guid, service_instance.guid)
 
         expect(@request.with { |request|
           expect(request.headers.fetch('Content-Type')).to eq('application/json')
@@ -136,10 +129,9 @@ module VCAP::CloudController
       end
 
       it 'responds with the correct fields' do
-        response = client.bind(service_instance.broker_provided_id, service_binding.guid)
+        response = client.bind(service_binding.guid, service_instance.guid)
 
-        expect(response.fetch('id')).to be == broker_binding_id
-        expect(response.fetch('credentials')).to be == {'user' => 'admin', 'pass' => 'secret'}
+        expect(response.fetch('credentials')).to eq({'user' => 'admin', 'pass' => 'secret'})
       end
     end
 

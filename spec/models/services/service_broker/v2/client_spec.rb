@@ -33,7 +33,6 @@ module VCAP::CloudController
 
     describe '#provision' do
       let(:plan) { ServicePlan.make }
-      let(:service) { plan.service }
       let(:instance) do
         ManagedServiceInstance.new(
           service_plan: plan
@@ -42,25 +41,23 @@ module VCAP::CloudController
 
       let(:response) do
         {
-          'id' => 'foo'
+          'dashboard_url' => 'foo'
         }
       end
 
       before do
-        http_client.stub(:provision).with(service.broker_provided_id, plan.broker_provided_id, instance.guid).and_return(response)
+        http_client.stub(:provision).with(instance.guid, plan.broker_provided_id).and_return(response)
       end
 
       it 'sets relevant attributes of the instance' do
         client.provision(instance)
 
-        expect(instance.broker_provided_id).to eq('foo')
+        expect(instance.dashboard_url).to eq('foo')
       end
     end
 
     describe '#bind' do
       let(:instance) { ManagedServiceInstance.make }
-      let(:plan) { instance.service_plan }
-      let(:service) { plan.service }
       let(:binding) do
         ServiceBinding.new(
           service_instance: instance
@@ -69,7 +66,6 @@ module VCAP::CloudController
 
       let(:response) do
         {
-          'id' => 'foo',
           'credentials' => {
             'username' => 'admin',
             'password' => 'secret'
@@ -78,13 +74,12 @@ module VCAP::CloudController
       end
 
       before do
-        http_client.stub(:bind).with(instance.broker_provided_id, binding.guid).and_return(response)
+        http_client.stub(:bind).with(binding.guid, instance.guid).and_return(response)
       end
 
       it 'sets relevant attributes of the instance' do
         client.bind(binding)
 
-        expect(binding.broker_provided_id).to eq('foo')
         expect(binding.credentials).to eq({
           'username' => 'admin',
           'password' => 'secret'
