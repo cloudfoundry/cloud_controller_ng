@@ -590,17 +590,27 @@ module VCAP::CloudController
 
       it "includes app index 0" do
         request = staging_task.staging_request
-        request[:start_message].should include ({:index => 0})
+        request[:start_message].should include ({ :index => 0 })
       end
 
       it "overwrites droplet sha" do
         request = staging_task.staging_request
-        request[:start_message].should include ({:sha1 => nil})
+        request[:start_message].should include ({ :sha1 => nil })
       end
 
       it "overwrites droplet download uri" do
         request = staging_task.staging_request
-        request[:start_message].should include ({:executableUri => nil})
+        request[:start_message].should include ({ :executableUri => nil })
+      end
+
+      it "includes a list of admin buildpacks" do
+        expected_buildpack_url = "http://example.com/buildpacks/1"
+        VCAP::CloudController::Buildpack.stub(:list_admin_buildpacks).
+          and_return([{
+                        url: expected_buildpack_url,
+                      }])
+        request = staging_task.staging_request
+        expect(request[:admin_buildpacks]).to include({ :url => expected_buildpack_url })
       end
     end
   end

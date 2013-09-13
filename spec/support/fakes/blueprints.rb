@@ -235,7 +235,7 @@ module VCAP::CloudController
 
   Buildpack.blueprint do
     name { Sham.name }
-    key { 'key' }
+    key { Sham.guid }
     priority { 0 }
   end
 end

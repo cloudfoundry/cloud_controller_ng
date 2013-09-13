@@ -6,6 +6,8 @@ describe BlobStore do
   let(:sha_of_content) { Digest::SHA1.hexdigest(content) }
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:local_dir) { Dir.mktmpdir }
+  let(:directory_key) { "a-directory-key" }
+
 
   def make_tmpfile(contents)
     tmpfile = Tempfile.new("")
@@ -18,20 +20,22 @@ describe BlobStore do
     Fog::Mock.reset
   end
 
-  subject(:blob_store) { BlobStore.new({
-                                         provider: "AWS",
-                                         aws_access_key_id: 'fake_access_key_id',
-                                         aws_secret_access_key: 'fake_secret_access_key',
-                                       }, "a-directory-key") }
+  subject(:blob_store) do
+    BlobStore.new({
+                    provider: "AWS",
+                    aws_access_key_id: 'fake_access_key_id',
+                    aws_secret_access_key: 'fake_secret_access_key',
+                  }, directory_key)
+  end
 
   describe "#local?" do
     it "is true if the provider is local" do
-      blob_store = BlobStore.new({ provider: "Local" }, "a-directory-key")
+      blob_store = BlobStore.new({ provider: "Local" }, directory_key)
       expect(blob_store).to be_local
     end
 
     it "is false if the provider is not local" do
-      blob_store = BlobStore.new({ provider: "AWS" }, "a-directory-key")
+      blob_store = BlobStore.new({ provider: "AWS" }, directory_key)
       expect(blob_store).to_not be_local
     end
   end
@@ -57,7 +61,7 @@ describe BlobStore do
 
       it "uses the correct director keys when storing files" do
         actual_directory_key = blob_store.files.first.directory.key
-        expect(actual_directory_key).to eq("a-directory-key")
+        expect(actual_directory_key).to eq(directory_key)
       end
     end
 
@@ -114,11 +118,36 @@ describe BlobStore do
     end
   end
 
+  describe "returns a download uri" do
+    before do
+      tmpfile = make_tmpfile(content)
+      blob_store.cp_from_local(tmpfile, "abcdefg")
+
+      @uri = URI.parse(blob_store.download_uri("abcdefg"))
+    end
+
+    it "returns the correct uri to fetch a blob directly from amazon" do
+      expect(@uri.scheme).to eql "https"
+      expect(@uri.host).to eql "#{directory_key}.s3.amazonaws.com"
+      expect(@uri.path).to eql "/ab/cd/abcdefg"
+    end
+
+    it "is valid for an hour" do
+      match_data = (/Expires=(\d+)/).match @uri.query
+      expect(match_data[1].to_i).to be_within(100).of((Time.now + 3600).to_i)
+    end
+
+    it "returns nil for a non-existent key" do
+      expect(blob_store.download_uri("not-a-key")).to be_nil
+    end
+
+  end
+
   describe "#cp_to_local" do
     context "when from a cdn" do
       let(:cdn) { double(:cdn) }
 
-      subject(:blob_store) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "a-directory-key", cdn) }
+      subject(:blob_store) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, directory_key, cdn) }
 
       it "downloads through the CDN" do
         cdn.should_receive(:get).

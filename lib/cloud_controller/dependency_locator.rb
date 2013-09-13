@@ -43,7 +43,7 @@ module CloudController
     def buildpack_blobstore
       @buildpack_blobstore ||=
           BlobStore.new(config[:buildpacks][:fog_connection],
-                                               config[:buildpacks][:buildpack_directory_key] || "cc-buildpacks")
+                        config[:buildpacks][:buildpack_directory_key] || "cc-buildpacks")
     end
 
     def upload_handler

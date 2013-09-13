@@ -5,6 +5,16 @@ module VCAP::CloudController
 
     import_attributes :name, :key, :priority
 
+    def self.list_admin_buildpacks
+      blob_store = CloudController::DependencyLocator.instance.buildpack_blobstore
+      self.all.map do |buildpack|
+        {
+          name: buildpack.name,
+          url: blob_store.download_uri(buildpack.key)
+        }
+      end
+    end
+
     def validate
       validates_unique   :name
     end

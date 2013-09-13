@@ -61,6 +61,13 @@ class BlobStore
     File.join(sha1[0..1], sha1[2..3], sha1)
   end
 
+  def download_uri(sha1)
+    return nil unless exists?(sha1)
+
+    file = file(sha1)
+    file.url(Time.now + 3600)
+  end
+
   private
 
   def dir
