@@ -16,6 +16,7 @@ module VCAP::CloudController
       let(:blob_store) {  CloudController::DependencyLocator.instance.buildpack_blobstore }
 
       before do
+        Buildpack.dataset.delete
         @buildpack = Buildpack.make()
         @another_buildpack = Buildpack.make()
       end

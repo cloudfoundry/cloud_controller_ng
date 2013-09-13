@@ -53,6 +53,8 @@ module VCAP::CloudController
       StagingsController.stub(:store_droplet)
       StagingsController.stub(:store_buildpack_cache)
       StagingsController.stub(:destroy_handle)
+      # Some other tests inter
+      Buildpack.stub(:list_admin_buildpacks).and_return([])
     end
 
     context 'when no stager can be found' do
