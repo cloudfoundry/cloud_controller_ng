@@ -297,7 +297,7 @@ module VCAP::CloudController
               end
 
               it "marks app started in dea pool" do
-                DeaClient.dea_pool.should_receive(:mark_app_started).with( {:dea_id => stager_id, :app_id => app.guid } )
+                DeaClient.dea_pool.should_receive(:mark_app_started).with({ :dea_id => stager_id, :app_id => app.guid })
                 stage
               end
 
@@ -358,7 +358,7 @@ module VCAP::CloudController
               end
 
               it "does not mark the app as staged" do
-                DeaClient.dea_pool.should_not_receive(:mark_app_started).with( {:dea_id => stager_id, :app_id => app.guid } )
+                DeaClient.dea_pool.should_not_receive(:mark_app_started).with({ :dea_id => stager_id, :app_id => app.guid })
                 stage
               end
 
@@ -387,8 +387,8 @@ module VCAP::CloudController
               expect {
                 stage
               }.to raise_error(
-                       Errors::StagingError,
-                       /another staging request was initiated/
+                     Errors::StagingError,
+                     /another staging request was initiated/
                    )
             end
 
@@ -525,7 +525,7 @@ module VCAP::CloudController
     describe ".staging_request" do
       let(:staging_task) { AppStagerTask.new(nil, message_bus, app, stager_pool) }
       let(:app) { App.make :droplet_hash => nil, :package_state => "PENDING" }
-      let(:dea_start_message) { {:dea_client_message => "start app message"} }
+      let(:dea_start_message) { { :dea_client_message => "start app message" } }
 
       before do
         3.times do

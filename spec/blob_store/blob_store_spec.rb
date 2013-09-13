@@ -156,7 +156,7 @@ describe BlobStore do
 
         destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
 
-        expect { blob_store.cp_to_local(sha_of_content, destination)}.to change {
+        expect { blob_store.cp_to_local(sha_of_content, destination) }.to change {
           File.exists?(destination)
         }.from(false).to(true)
 
@@ -173,7 +173,7 @@ describe BlobStore do
         expect(blob_store.exists?(sha_of_content)).to be_true
         destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
 
-        expect { blob_store.cp_to_local(sha_of_content, destination)}.to change {
+        expect { blob_store.cp_to_local(sha_of_content, destination) }.to change {
           File.exists?(destination)
         }.from(false).to(true)
 
@@ -216,4 +216,4 @@ describe BlobStore do
       }.to_not raise_error
     end
   end
-end
+  end
