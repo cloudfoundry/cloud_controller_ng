@@ -192,6 +192,8 @@ To specify multiple query parameters, use `;` as a separator:
 The API endpoint may return an error if the resulting query performs an
 unindexed search.
 
+Of course, everything in the URL must be encoded (e.g. `;` is actually `%3B`).
+
 ### Deleting Resources
 
 `DELETE /v2/foo_bars/:guid` deletes a specific FooBar.
