@@ -104,10 +104,7 @@ module VCAP::CloudController
         before { initial_hash[:detected_buildpack] = 'buildpack-name' }
 
         it "ignores the attribute" do
-          expect {
-            create_app
-          }.to change(App, :count).by(1)
-
+          expect { create_app }.to change(App, :count).by(1)
           last_response.status.should == 201
 
           app = App.last
