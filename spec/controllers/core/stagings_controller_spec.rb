@@ -167,7 +167,7 @@ module VCAP::CloudController
 
         before do
           file = double(:file, {
-              :public_url => "https://some-bucket.example.com/ab/cd/abcdefg",
+              :url => "https://some-bucket.example.com/ab/cd/abcdefg",
               :key => "123-456",
           })
           StagingsController.blob_store.stub(:files).and_return(double(:files, :head => file))

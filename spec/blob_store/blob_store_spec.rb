@@ -7,7 +7,14 @@ describe BlobStore do
   let(:blob_store_dir) { Dir.mktmpdir }
   let(:local_dir) { Dir.mktmpdir }
   let(:directory_key) { "a-directory-key" }
-
+  let(:cdn) { double(:cdn) }
+  let(:cdn_blob_store) do
+    BlobStore.new({
+      provider: "AWS",
+      aws_access_key_id: 'fake_access_key_id',
+      aws_secret_access_key: 'fake_secret_access_key',
+    }, directory_key, cdn)
+  end
 
   def make_tmpfile(contents)
     tmpfile = Tempfile.new("")
@@ -39,7 +46,6 @@ describe BlobStore do
       expect(blob_store).to_not be_local
     end
   end
-
 
   context 'with existing files' do
 
@@ -119,44 +125,75 @@ describe BlobStore do
   end
 
   describe "returns a download uri" do
-    before do
+    def upload_tmpfile(blob_store)
       tmpfile = make_tmpfile(content)
-      blob_store.cp_from_local(tmpfile, "abcdefg")
-
-      @uri = URI.parse(blob_store.download_uri("abcdefg"))
+      blob_store.cp_from_local(tmpfile.path, "abcdef")
     end
 
-    it "returns the correct uri to fetch a blob directly from amazon" do
-      expect(@uri.scheme).to eql "https"
-      expect(@uri.host).to eql "#{directory_key}.s3.amazonaws.com"
-      expect(@uri.path).to eql "/ab/cd/abcdefg"
+    context "when the blob store is a local" do
+      around do |instance|
+        Fog.unmock!
+        instance.run
+        Fog.mock!
+      end
+
+      subject(:local_blob_store) do
+        BlobStore.new({ provider: "Local", local_root: "/tmp" }, directory_key)
+      end
+
+      it "does have a public url" do
+        upload_tmpfile(local_blob_store)
+        expect(local_blob_store.download_uri("abcdef")).to match(%r{/ab/cd/abcdef})
+      end
     end
 
-    it "is valid for an hour" do
-      match_data = (/Expires=(\d+)/).match @uri.query
-      expect(match_data[1].to_i).to be_within(100).of((Time.now + 3600).to_i)
-    end
+    context "when not local" do
+      before do
+        upload_tmpfile(blob_store)
+        @uri = URI.parse(blob_store.download_uri("abcdef"))
+      end
 
-    it "returns nil for a non-existent key" do
-      expect(blob_store.download_uri("not-a-key")).to be_nil
-    end
+      it "returns the correct uri to fetch a blob directly from amazon" do
+        expect(@uri.scheme).to eql "https"
+        expect(@uri.host).to eql "#{directory_key}.s3.amazonaws.com"
+        expect(@uri.path).to eql "/ab/cd/abcdef"
+      end
 
+      it "is valid for an hour" do
+        match_data = (/Expires=(\d+)/).match @uri.query
+        expect(match_data[1].to_i).to be_within(100).of((Time.now + 3600).to_i)
+      end
+
+      it "returns nil for a non-existent key" do
+        expect(blob_store.download_uri("not-a-key")).to be_nil
+      end
+
+      context "with a CDN" do
+        let(:url_from_cdn) do
+          "http://some_distribution.cloudfront.net/ab/cd/abcdef"
+        end
+        before do
+          upload_tmpfile(cdn_blob_store)
+          cdn.stub(:download_uri).and_return(url_from_cdn)
+        end
+
+        it "returns a url to the cdn" do
+          expect(cdn_blob_store.download_uri("abcdef")).to eql(url_from_cdn)
+        end
+      end
+    end
   end
 
   describe "#cp_to_local" do
     context "when from a cdn" do
-      let(:cdn) { double(:cdn) }
-
-      subject(:blob_store) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, directory_key, cdn) }
-
       it "downloads through the CDN" do
         cdn.should_receive(:get).
-          with(blob_store.key_from_sha1(sha_of_content)).
+          with(cdn_blob_store.key_from_sha1(sha_of_content)).
           and_yield("foobar").and_yield(" barbaz")
 
         destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
 
-        expect { blob_store.cp_to_local(sha_of_content, destination) }.to change {
+        expect { cdn_blob_store.cp_to_local(sha_of_content, destination) }.to change {
           File.exists?(destination)
         }.from(false).to(true)
 

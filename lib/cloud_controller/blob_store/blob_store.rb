@@ -69,7 +69,17 @@ class BlobStore
   def download_uri(sha1)
     file = file(sha1)
     return nil unless file
-    file.url(Time.now + 3600)
+    return download_uri_for_file(file)
+  end
+
+  def download_uri_for_file(file)
+    if @cdn
+      return @cdn.download_uri(file.key)
+    end
+    if file.respond_to?(:url)
+      return file.url(Time.now + 3600)
+    end
+    return file.public_url
   end
 
   def file(sha1)

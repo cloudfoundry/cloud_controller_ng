@@ -36,20 +36,25 @@ module VCAP::CloudController
     attr_reader :config
 
     class << self
-      attr_reader :blob_store, :buildpack_blob_store
+      attr_reader :blob_store, :buildpack_cache_blob_store
 
       def configure(config)
         @config = config
 
         options = config[:droplets]
-        @blob_store = BlobStore.new(options[:fog_connection], options[:droplet_directory_key] || "cc-droplets")
-        @buildpack_blob_store = BlobStore.new(
+        cdn = options[:cdn] ? Cdn.make(options[:cdn][:uri]) : nil
+
+        @blob_store = BlobStore.new(
           options[:fog_connection],
           options[:droplet_directory_key] || "cc-droplets",
-          nil,
+          cdn)
+
+        @buildpack_cache_blob_store = BlobStore.new(
+          options[:fog_connection],
+          options[:droplet_directory_key] || "cc-droplets",
+          cdn,
           "buildpack_cache"
         )
-        @cdn = options[:cdn]
       end
 
       def app_uri(app)
@@ -96,18 +101,20 @@ module VCAP::CloudController
       end
 
       def store_droplet(app, path)
+        key = File.join(blob_store.key_from_sha1(app.guid), app.droplet_hash)
+        
         blob_store.cp_from_local(
           path,
-          app.guid,
+          key,
           blob_store.local?
         )
       end
 
       def store_buildpack_cache(app, path)
-        buildpack_blob_store.cp_from_local(
+        buildpack_cache_blob_store.cp_from_local(
           path,
           app.guid,
-          buildpack_blob_store.local?
+          buildpack_cache_blob_store.local?
         )
       end
 
@@ -141,7 +148,7 @@ module VCAP::CloudController
         if AppPackage.blob_store.local?
           staging_uri("#{BUILDPACK_CACHE_PATH}/#{app.guid}/download")
         else
-          package_uri(app, :buildpack_cache)
+          buildpack_cache_blob_store.download_uri(app.guid)
         end
       end
 
@@ -160,11 +167,14 @@ module VCAP::CloudController
       # The url is valid for 1 hour when using aws.
       # TODO: The expiration should be configurable.
       def droplet_uri(app)
-        package_uri(app, :droplet)
+        f = app_droplet(app)
+        return nil unless f
+
+        return blob_store.download_uri_for_file(f)
       end
 
       def buildpack_cache_uri(app)
-        package_uri(app, :buildpack_cache)
+        buildpack_cache_blob_store.download_uri(app.guid)
       end
 
       private
@@ -172,31 +182,6 @@ module VCAP::CloudController
       def upload_uri(app, type)
         prefix = type == :buildpack_cache ? BUILDPACK_CACHE_PATH : DROPLET_PATH
         staging_uri("#{prefix}/#{app.guid}/upload")
-      end
-
-      def package_uri(app, type)
-        if type == :buildpack_cache
-          f = app_buildpack_cache(app)
-        elsif type == :droplet
-          f = app_droplet(app)
-        else
-          raise "unknown type #{type}"
-        end
-
-        return nil unless f
-
-        # unfortunately fog doesn't have a unified interface for non-public
-        # urls
-        if blob_store.local?
-          f.public_url
-        elsif @cdn && @cdn[:uri]
-          uri = "#{@cdn[:uri]}/#{f.key}"
-          AWS::CF::Signer.is_configured? ? AWS::CF::Signer.sign_url(uri) : uri
-        elsif f.respond_to?(:url)
-          f.url(Time.now + 3600)
-        else
-          f.public_url
-        end
       end
 
       def staging_uri(path)
@@ -223,16 +208,13 @@ module VCAP::CloudController
 
       def app_droplet(app)
         return unless app.staged?
-
-
         key = File.join(blob_store.key_from_sha1(app.guid), app.droplet_hash)
-
-        old_key = blob_store.key_from_sha1(app.guid)
-        blob_store.files.head(key) || blob_store.files.head(old_key)
+        old_key = app.guid
+        blob_store.file(key) || blob_store.file(old_key)
       end
 
       def app_buildpack_cache(app)
-        @buildpack_blob_store.file(app.guid)
+        @buildpack_cache_blob_store.file(app.guid)
       end
     end
 
