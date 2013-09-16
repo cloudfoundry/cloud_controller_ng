@@ -26,5 +26,9 @@ module VCAP::CloudController
     def unbind(binding)
       @http_client.unbind(binding.guid)
     end
+
+    def deprovision(instance)
+      @http_client.deprovision(instance.guid)
+    end
   end
 end

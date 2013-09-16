@@ -57,6 +57,7 @@ describe "Service Instance Management", :type => :integration do
     create_application
     bind_service_instance
     unbind_service_instance
+    delete_service_instance
   end
 
 

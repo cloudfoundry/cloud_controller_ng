@@ -148,6 +148,19 @@ module VCAP::CloudController
       end
     end
 
+    describe '#deprovision' do
+      let(:instance) { ManagedServiceInstance.make }
+      let(:instance_url) { "http://cc:#{auth_token}@broker.example.com/v2/service_instances/#{instance.guid}" }
+      before do
+        @request = stub_request(:delete, instance_url).to_return(status: 204)
+      end
+
+      it 'sends a DELETE to the broker' do
+        client.deprovision(instance.guid)
+        @request.should have_been_requested
+      end
+    end
+
     describe 'error conditions' do
       let(:broker_catalog_url) { "http://cc:#{auth_token}@broker.example.com/v2/catalog" }
 

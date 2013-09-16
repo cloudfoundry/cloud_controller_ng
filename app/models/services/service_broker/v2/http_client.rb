@@ -27,6 +27,10 @@ module VCAP::CloudController
       execute(:delete, "/v2/service_bindings/#{binding_id}")
     end
 
+    def deprovision(instance_id)
+      execute(:delete, "/v2/service_instances/#{instance_id}")
+    end
+
     private
 
     attr_reader :url, :auth_token

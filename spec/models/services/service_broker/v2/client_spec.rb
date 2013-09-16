@@ -101,6 +101,15 @@ module VCAP::CloudController
       end
     end
 
+    describe '#deprovision' do
+      let(:instance) { ManagedServiceInstance.make }
+
+      it 'deprovisions the service' do
+        http_client.should_receive(:deprovision).with(instance.guid)
+
+        client.deprovision(instance)
+      end
+    end
   end
 
 end
