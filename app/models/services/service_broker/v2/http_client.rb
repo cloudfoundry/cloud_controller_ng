@@ -23,6 +23,10 @@ module VCAP::CloudController
       })
     end
 
+    def unbind(binding_id)
+      execute(:delete, "/v2/service_bindings/#{binding_id}")
+    end
+
     private
 
     attr_reader :url, :auth_token
@@ -51,6 +55,8 @@ module VCAP::CloudController
 
       code = response.code.to_i
       case code
+      when 204
+        nil # no body
       when 200..299
         begin
           response_hash = Yajl::Parser.parse(response.body)

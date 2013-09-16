@@ -135,6 +135,19 @@ module VCAP::CloudController
       end
     end
 
+    describe '#unbind' do
+      let(:service_binding) { ServiceBinding.make }
+      let(:bind_url) { "http://cc:#{auth_token}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
+      before do
+        @request = stub_request(:delete, bind_url).to_return(status: 204)
+      end
+
+      it 'sends a DELETE to the broker' do
+        client.unbind(service_binding.guid)
+        @request.should have_been_requested
+      end
+    end
+
     describe 'error conditions' do
       let(:broker_catalog_url) { "http://cc:#{auth_token}@broker.example.com/v2/catalog" }
 

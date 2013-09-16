@@ -59,9 +59,27 @@ describe "Service Instance Management", :type => :integration do
     unbind_service_instance
   end
 
+
+  def counts_from_fake_service_broker
+    http = Net::HTTP.new('localhost', 54329)
+    request = Net::HTTP::Get.new('/counts')
+    request.basic_auth('admin', 'supersecretshh')
+    response = http.request(request)
+    JSON.parse(response.body)
+  end
+
+  def delete_service_instance
+    delete_response = make_delete_request("/v2/service_instances/#{@service_instance_guid}", authed_headers)
+    expect(delete_response.code.to_i).to eq(204), "Delete request failed with #{delete_response.code}, #{delete_response.body.inspect}"
+
+    expect(counts_from_fake_service_broker.fetch('instances')).to eq(0)
+  end
+
   def unbind_service_instance
     unbind_response = make_delete_request("/v2/service_bindings/#{@binding_guid}", authed_headers)
     expect(unbind_response.code.to_i).to eq(204), "Unbind request failed with #{unbind_response.code}, #{unbind_response.body.inspect}"
+
+    expect(counts_from_fake_service_broker.fetch('bindings')).to eq(0)
   end
 
   def bind_service_instance
@@ -73,6 +91,8 @@ describe "Service Instance Management", :type => :integration do
     bind_response = make_post_request('/v2/service_bindings', body, authed_headers)
     expect(bind_response.code.to_i).to eq(201), "Bind request failed with #{bind_response.code}, #{bind_response.body.inspect}"
     @binding_guid = bind_response.json_body.fetch('metadata').fetch('guid')
+
+    expect(counts_from_fake_service_broker.fetch('bindings')).to eq(1)
   end
 
   def register_service_broker
@@ -95,6 +115,8 @@ describe "Service Instance Management", :type => :integration do
     create_response = make_post_request('/v2/service_instances', body, authed_headers)
     expect(create_response.code.to_i).to eq(201)
     @service_instance_guid = create_response.json_body.fetch('metadata').fetch('guid')
+
+    expect(counts_from_fake_service_broker.fetch('instances')).to eq(1)
   end
 
   def service_guid

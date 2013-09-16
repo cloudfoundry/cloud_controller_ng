@@ -86,5 +86,21 @@ module VCAP::CloudController
         })
       end
     end
+
+    describe '#unbind' do
+      let(:binding) do
+        ServiceBinding.make(
+            binding_options: {'this' => 'that'}
+        )
+      end
+
+      it 'unbinds the service' do
+        http_client.should_receive(:unbind).with(binding.guid)
+
+        client.unbind(binding)
+      end
+    end
+
   end
+
 end

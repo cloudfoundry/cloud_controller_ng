@@ -22,5 +22,9 @@ module VCAP::CloudController
 
       binding.credentials = response['credentials']
     end
+
+    def unbind(binding)
+      @http_client.unbind(binding.guid)
+    end
   end
 end
