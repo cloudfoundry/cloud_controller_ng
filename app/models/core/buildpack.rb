@@ -9,7 +9,7 @@ module VCAP::CloudController
       blob_store = CloudController::DependencyLocator.instance.buildpack_blobstore
       self.all.map do |buildpack|
         {
-          name: buildpack.name,
+          key: buildpack.key,
           url: blob_store.download_uri(buildpack.key)
         }
       end

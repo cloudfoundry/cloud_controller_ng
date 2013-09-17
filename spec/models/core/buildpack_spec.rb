@@ -28,7 +28,7 @@ module VCAP::CloudController
 
         list = Buildpack.list_admin_buildpacks
         expect(list).to have(2).items
-        expect(list).to include(url: download_url, name: @buildpack.name)
+        expect(list).to include(url: download_url, key: @buildpack.key)
       end
     end
   end
