@@ -33,9 +33,11 @@ module VCAP::CloudController
 
     describe '#provision' do
       let(:plan) { ServicePlan.make }
+      let(:space) { Space.make }
       let(:instance) do
         ManagedServiceInstance.new(
-          service_plan: plan
+          service_plan: plan,
+          space: space
         )
       end
 
@@ -46,7 +48,7 @@ module VCAP::CloudController
       end
 
       before do
-        http_client.stub(:provision).with(instance.guid, plan.broker_provided_id).and_return(response)
+        http_client.stub(:provision).with(instance.guid, plan.broker_provided_id, space.organization.guid, space.guid).and_return(response)
       end
 
       it 'sets relevant attributes of the instance' do

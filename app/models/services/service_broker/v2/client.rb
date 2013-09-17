@@ -9,7 +9,12 @@ module VCAP::CloudController
     end
 
     def provision(instance)
-      response = @http_client.provision(instance.guid, instance.service_plan.broker_provided_id)
+      response = @http_client.provision(
+        instance.guid,
+        instance.service_plan.broker_provided_id,
+        instance.space.organization.guid,
+        instance.space.guid
+      )
 
       instance.dashboard_url = response['dashboard_url']
 

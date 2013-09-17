@@ -60,6 +60,8 @@ module VCAP::CloudController
       let(:expected_request_body) do
         {
           plan_id: plan_id,
+          organization_guid: "org-guid",
+          space_guid: "space-guid"
         }.to_json
       end
 
@@ -74,7 +76,7 @@ module VCAP::CloudController
           with(body: expected_request_body, headers: { 'X-VCAP-Request-ID' => request_id }).
           to_return(status: 201, body: expected_response_body)
 
-        response = client.provision(instance_id, plan_id)
+        response = client.provision(instance_id, plan_id, "org-guid", "space-guid")
 
         expect(response.fetch('dashboard_url')).to eq('dashboard url')
       end
@@ -84,7 +86,7 @@ module VCAP::CloudController
           stub_request(:put, "http://cc:#{auth_token}@broker.example.com/v2/service_instances/#{instance_id}").
             to_return(status: 409)  # 409 is CONFLICT
 
-          expect { client.provision(instance_id, plan_id) }.to raise_error(VCAP::Errors::ServiceBrokerConflict)
+          expect { client.provision(instance_id, plan_id, "org-guid", "space-guid") }.to raise_error(VCAP::Errors::ServiceBrokerConflict)
         end
       end
     end

@@ -11,9 +11,11 @@ module VCAP::CloudController
 
     # The broker is expected to guarantee uniqueness of the service_instance_id.
     # raises ServiceBrokerConflict if the id is already in use
-    def provision(service_instance_id, plan_id)
+    def provision(service_instance_id, plan_id, org_guid, space_guid)
       execute(:put, "/v2/service_instances/#{service_instance_id}", {
-        plan_id: plan_id
+        plan_id: plan_id,
+        organization_guid: org_guid,
+        space_guid: space_guid
       })
     end
 
