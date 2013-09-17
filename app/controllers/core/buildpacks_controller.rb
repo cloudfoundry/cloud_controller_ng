@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :CustomBuildpacks do
+  rest_controller :Buildpacks do
     model_class_name :Buildpack
 
     define_attributes do

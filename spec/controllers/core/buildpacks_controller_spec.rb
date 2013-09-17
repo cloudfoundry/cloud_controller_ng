@@ -1,8 +1,8 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::CustomBuildpacksController, type: :controller do
-    describe "/v2/custom_buildpacks" do
+  describe VCAP::CloudController::BuildpacksController, type: :controller do
+    describe "/v2/buildpacks" do
       let(:tmpdir) { Dir.mktmpdir }
       let(:user) { make_user }
 
@@ -50,30 +50,30 @@ module VCAP::CloudController
         after { reset_database }
 
         it "returns NOT AUTHORIZED (403) for non admins" do
-          post "/v2/custom_buildpacks", req_body, headers_for(user)
+          post "/v2/buildpacks", req_body, headers_for(user)
           expect(last_response.status).to eq(403)
         end
 
         it "returns a CREATED (201) if an admin uploads a build pack" do
-          post "/v2/custom_buildpacks", req_body, admin_headers
+          post "/v2/buildpacks", req_body, admin_headers
           expect(last_response.status).to eq(201)
           entity = decoded_response(symbolize_keys: true)[:entity]
           expect(entity[:name]).to eq('dynamic_test_buildpack')
         end
 
         it 'creates a buildpack with a default priority' do
-          post "/v2/custom_buildpacks", req_body, admin_headers
+          post "/v2/buildpacks", req_body, admin_headers
           expect(decoded_response['entity']['priority']).to eq(0)
         end
 
         it 'sets the priority if provided' do
-          post "/v2/custom_buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", priority: 10}), admin_headers
+          post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", priority: 10}), admin_headers
           expect(decoded_response['entity']['priority']).to eq(10)
         end
 
         it 'fails when duplicate name is used' do
-          post "/v2/custom_buildpacks", req_body, admin_headers
-          post "/v2/custom_buildpacks", req_body, admin_headers
+          post "/v2/buildpacks", req_body, admin_headers
+          post "/v2/buildpacks", req_body, admin_headers
           expect(last_response.status).to eq(400)
         end
       end
@@ -82,9 +82,9 @@ module VCAP::CloudController
         before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "get_buildpack", key: "xyz", priority: 0}) }
         after(:all) { @test_buildpack.destroy }
 
-        describe "/v2/custom_buildpacks/:guid" do
+        describe "/v2/buildpacks/:guid" do
           it "lets you retrieve info for a specific buildpack" do
-            get "/v2/custom_buildpacks/#{@test_buildpack[:guid]}", {}, headers_for(user)
+            get "/v2/buildpacks/#{@test_buildpack[:guid]}", {}, headers_for(user)
             expect(last_response.status).to eq(200)
             entity = decoded_response['entity']
             metadata = decoded_response['metadata']
@@ -94,9 +94,9 @@ module VCAP::CloudController
           end
         end
 
-        describe "/v2/custom_buildpacks?name" do
+        describe "/v2/buildpacks?name" do
           it "lets you retrieve info for a specific buildpack" do
-            get "/v2/custom_buildpacks?name=#{@test_buildpack[:name]}", {}, headers_for(user)
+            get "/v2/buildpacks?name=#{@test_buildpack[:name]}", {}, headers_for(user)
             expect(last_response.status).to eq(200)
             expect(decoded_response['total_results']).to eq(1)
             resource = decoded_response['resources'][0]
@@ -108,9 +108,9 @@ module VCAP::CloudController
           end
         end
 
-        describe "/v2/custom_buildpacks" do
+        describe "/v2/buildpacks" do
           it "lets you retrieve a list of available buildpacks" do
-            get "/v2/custom_buildpacks", {}, headers_for(user)
+            get "/v2/buildpacks", {}, headers_for(user)
             expect(last_response.status).to eq(200)
             expect(decoded_response['total_results']).to eq(1)
             expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack', 'key' => 'xyz', 'priority' => 0})
@@ -123,13 +123,13 @@ module VCAP::CloudController
         after(:all) { @test_buildpack.destroy }
 
         it "returns NOT AUTHORIZED (403) for non admins" do
-          put "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, headers_for(user)
+          put "/v2/buildpacks/#{@test_buildpack.guid}", {}, headers_for(user)
           expect(last_response.status).to eq(403)
         end
 
-        describe '/v2/custom_buildpacks/:guid' do
+        describe '/v2/buildpacks/:guid' do
           it 'updates the priority' do
-            put "/v2/custom_buildpacks/#{@test_buildpack.guid}", '{"priority": 10}', admin_headers
+            put "/v2/buildpacks/#{@test_buildpack.guid}", '{"priority": 10}', admin_headers
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['priority']).to eq(10)
           end
@@ -137,18 +137,18 @@ module VCAP::CloudController
       end
 
       context 'Buildpack binaries' do
-        context "/v2/custom_buildpacks/:guid/bits" do
+        context "/v2/buildpacks/:guid/bits" do
           before(:each) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "upload_binary_buildpack", priority: 0}) }
           after(:each) { @test_buildpack.destroy }
           let(:upload_body) { {:buildpack => valid_zip} }
 
           it "returns NOT AUTHORIZED (403) for non admins" do
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, headers_for(user)
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, headers_for(user)
             expect(last_response.status).to eq(403)
           end
 
           it "returns a CREATED (201) if an admin uploads a zipped build pack" do
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
             expect(last_response.status).to eq(201)
           end
 
@@ -157,7 +157,7 @@ module VCAP::CloudController
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             buildpack_blobstore.should_receive(:cp_from_local).with(valid_zip.path, sha_valid_zip)
 
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
             expect(Buildpack.find(name: 'upload_binary_buildpack').key).to eq(sha_valid_zip)
           end
 
@@ -165,14 +165,14 @@ module VCAP::CloudController
             upload_handler = CloudController::DependencyLocator.instance.upload_handler
             upload_handler.should_receive(:uploaded_file)
             .with(hash_including('buildpack_name'=> 'file.zip'), "buildpack")
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
           end
 
           it "does not allow non-zip files" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             buildpack_blobstore.files.should_not_receive(:create)
 
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
             expect(last_response.status).to eql 400
             json = Yajl::Parser.parse(last_response.body)
             expect(json['code']).to eq(290002)
@@ -180,12 +180,12 @@ module VCAP::CloudController
           end
 
           it "removes the old buildpack binary when a new one is uploaded" do
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip2}, admin_headers
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip2}, admin_headers
 
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             buildpack_blobstore.should_receive(:delete).with(sha_valid_zip2)
 
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
             response = Yajl::Parser.parse(last_response.body)
             entity = response['entity']
             expect(entity['name']).to eq('upload_binary_buildpack')
@@ -193,19 +193,19 @@ module VCAP::CloudController
           end
 
           it 'reports a conflict if the same buildpack is uploaded again' do
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
-            post "/v2/custom_buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
 
             expect(last_response.status).to eq(409)
           end
         end
 
-        context "/v2/custom_buildpacks/:guid/download" do
+        context "/v2/buildpacks/:guid/download" do
           before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "get_binary_buildpack", key: 'xyz', priority: 0}) }
           after(:all) { @test_buildpack.destroy }
 
           it "returns NOT AUTHORIZED (403) for non admins" do
-            get "/v2/custom_buildpacks/#{@test_buildpack.guid}/download", {}, headers_for(user)
+            get "/v2/buildpacks/#{@test_buildpack.guid}/download", {}, headers_for(user)
           end
 
           it "lets you retrieve the bits for a specific buildpack" do
@@ -213,7 +213,7 @@ module VCAP::CloudController
             buildpack_blobstore.files.should_receive(:head).with('xyz').and_return(@file)
             @file.should_receive(:path).and_return(__FILE__)
 
-            get "/v2/custom_buildpacks/#{@test_buildpack.guid}/download", {}, admin_headers
+            get "/v2/buildpacks/#{@test_buildpack.guid}/download", {}, admin_headers
             expect(last_response.status).to eq(200)
             expect(last_response.header['Content-Length']).to eq(File.size(__FILE__).to_s)
           end
@@ -222,7 +222,7 @@ module VCAP::CloudController
 
       context 'DELETE' do
         it 'returns NOT FOUND (404) if the buildpack does not exist' do
-          delete "/v2/custom_buildpacks/abcd", {}, admin_headers
+          delete "/v2/buildpacks/abcd", {}, admin_headers
           expect(last_response.status).to eq(404)
         end
 
@@ -231,14 +231,14 @@ module VCAP::CloudController
 
           it "returns NOT AUTHORIZED (403) for non admins" do
             @test_buildpack = VCAP::CloudController::Buildpack.make
-            delete "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, headers_for(user)
+            delete "/v2/buildpacks/#{@test_buildpack.guid}", {}, headers_for(user)
             expect(last_response.status).to eq(403)
           end
 
           it "returns a NO CONTENT (204) if an admin deletes a build pack" do
             @test_buildpack = VCAP::CloudController::Buildpack.make
             @file.should_receive(:destroy)
-            delete "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, admin_headers
+            delete "/v2/buildpacks/#{@test_buildpack.guid}", {}, admin_headers
             expect(last_response.status).to eq(204)
           end
 
@@ -248,13 +248,13 @@ module VCAP::CloudController
             @file.should_receive(:destroy)
             @test_buildpack = VCAP::CloudController::Buildpack.make
 
-            delete "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, admin_headers
+            delete "/v2/buildpacks/#{@test_buildpack.guid}", {}, admin_headers
             expect(Buildpack.find(name: @test_buildpack.name)).to be_nil
           end
 
           it "does not fail if no buildpack bits were ever uploaded" do
             @test_buildpack = VCAP::CloudController::Buildpack.make(key: nil)
-            delete "/v2/custom_buildpacks/#{@test_buildpack.guid}", {}, admin_headers
+            delete "/v2/buildpacks/#{@test_buildpack.guid}", {}, admin_headers
             expect(last_response.status).to eql(204)
             expect(Buildpack.find(name: @test_buildpack.name)).to be_nil
           end
