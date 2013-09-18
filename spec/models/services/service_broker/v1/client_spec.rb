@@ -147,6 +147,26 @@ module VCAP::CloudController
 
         expect(http_client).to have_received(:unbind)
       end
+
+      context 'when unbind returns 404' do
+        it 'does not raise' do
+          ex = VCAP::Services::Api::ServiceGatewayClient::NotFoundResponse.new(double(:extract => "Not found!"))
+          http_client.stub(:unbind).and_raise(ex)
+          expect {
+            client.unbind(binding)
+          }.to_not raise_error
+        end
+      end
+
+      context 'when unbind returns a non-404 error' do
+        it 'raises an error' do
+          ex = VCAP::Services::Api::ServiceGatewayClient::ErrorResponse.new(500, double(:extract => "Not found!"))
+          http_client.stub(:unbind).and_raise(ex)
+          expect {
+            client.unbind(binding)
+          }.to raise_error(ex)
+        end
+      end
     end
 
     describe '#deprovision' do
@@ -162,6 +182,26 @@ module VCAP::CloudController
         client.deprovision(instance)
 
         expect(http_client).to have_received(:unprovision)
+      end
+
+      context 'when deprovision returns 404' do
+        it 'does not raise' do
+          ex = VCAP::Services::Api::ServiceGatewayClient::NotFoundResponse.new(double(:extract => "Not found!"))
+          http_client.stub(:unprovision).and_raise(ex)
+          expect {
+            client.deprovision(instance)
+          }.to_not raise_error
+        end
+      end
+
+      context 'when deprovision returns a non-404 error' do
+        it 'raises an error' do
+          ex = VCAP::Services::Api::ServiceGatewayClient::ErrorResponse.new(500, double(:extract => "Not found!"))
+          http_client.stub(:unprovision).and_raise(ex)
+          expect {
+            client.deprovision(instance)
+          }.to raise_error(ex)
+        end
       end
     end
   end

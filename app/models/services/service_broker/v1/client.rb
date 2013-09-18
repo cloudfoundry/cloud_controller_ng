@@ -55,8 +55,8 @@ module VCAP::CloudController
 
       binding.broker_provided_id = response.service_id
       binding.gateway_data = response.configuration
-      binding.credentials  = response.credentials
-      binding.syslog_drain_url  = response.syslog_drain_url
+      binding.credentials = response.credentials
+      binding.syslog_drain_url = response.syslog_drain_url
     end
 
     def unbind(binding)
@@ -67,12 +67,21 @@ module VCAP::CloudController
         handle_id: binding.broker_provided_id,
         binding_options: binding.binding_options
       )
+    rescue VCAP::Services::Api::ServiceGatewayClient::NotFoundResponse
+      logger.info "Ignored 404 from broker during unbind of binding #{binding.guid} (broker_provided_id: #{binding.broker_provided_id})"
     end
 
     def deprovision(instance)
       @http_client.unprovision(
         service_id: instance.broker_provided_id
       )
+    rescue VCAP::Services::Api::ServiceGatewayClient::NotFoundResponse
+      logger.info "Ignored 404 from broker during deprovision of instance #{instance.guid} (broker_provided_id: #{instance.broker_provided_id})"
+    end
+
+    private
+    def logger
+      @logger ||= Steno.logger("cc.services.v1_client")
     end
   end
 end

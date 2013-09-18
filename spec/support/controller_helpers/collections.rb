@@ -112,7 +112,10 @@ module ControllerHelpers
         end
 
         after(:all) do
-          obj.send(get_method).map(&:destroy)
+          begin
+            obj.send(get_method).map(&:destroy)
+          rescue WebMock::NetConnectNotAllowedError
+          end
         end
 
         it "should return 200" do
@@ -151,7 +154,10 @@ module ControllerHelpers
         end
 
         after(:all) do
-          obj.send(get_method).map(&:destroy)
+          begin
+            obj.send(get_method).map(&:destroy)
+          rescue WebMock::NetConnectNotAllowedError
+          end
         end
 
         it "should return 200" do
@@ -348,7 +354,10 @@ module ControllerHelpers
                 end
 
                 after(:all) do
-                  obj.send(get_method).map(&:destroy)
+                  begin
+                    obj.send(get_method).map(&:destroy)
+                  rescue WebMock::NetConnectNotAllowedError
+                  end
                 end
 
                 # we want to make sure to only limit the assocation that
