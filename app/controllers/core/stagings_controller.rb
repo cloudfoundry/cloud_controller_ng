@@ -20,9 +20,12 @@ module VCAP::CloudController
     # Endpoint does its own (non-standard) auth
     allow_unauthenticated_access
 
-    APP_PATH = "/staging/apps"
-    DROPLET_PATH = "/staging/droplets"
-    BUILDPACK_CACHE_PATH = "/staging/buildpack_cache"
+
+    STAGING_PATH = "/staging"
+
+    APP_PATH = "#{STAGING_PATH}/apps"
+    DROPLET_PATH = "#{STAGING_PATH}/droplets"
+    BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/buildpack_cache"
 
     class DropletUploadHandle
       attr_accessor :guid, :upload_path, :buildpack_cache_upload_path
@@ -262,6 +265,7 @@ module VCAP::CloudController
 
       droplet_path = StagingsController.droplet_local_path(app)
       droplet_url = StagingsController.droplet_uri(app)
+
       download(app, droplet_path, droplet_url)
     end
 
@@ -347,9 +351,7 @@ module VCAP::CloudController
       (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
     end
 
-    # TODO: put this back to all of staging once we change the auth scheme
-    # (and add a test for /staging/droplets with bad auth)
-    controller.before "#{APP_PATH}/*" do
+    controller.before "#{STAGING_PATH}/*" do
       auth = Rack::Auth::Basic::Request.new(env)
       unless auth.provided? && auth.basic? &&
         auth.credentials == [@config[:staging][:auth][:user],

@@ -229,10 +229,10 @@ module VCAP::CloudController
       end
     end
 
-    shared_examples "staging bad auth" do |verb|
+    shared_examples "staging bad auth" do |verb, path|
       it "should return 403 for bad credentials" do
         authorize "hacker", "sw0rdf1sh"
-        send(verb, "/staging/apps/#{app_obj.guid}")
+        send(verb, "/staging/#{path}/#{app_obj.guid}")
         last_response.status.should == 403
       end
     end
@@ -272,7 +272,7 @@ module VCAP::CloudController
         end
 
         it_downloads_staged_app
-        include_examples "staging bad auth", :get
+        include_examples "staging bad auth", :get, "apps"
       end
 
       context "when not using with nginx" do
@@ -282,7 +282,7 @@ module VCAP::CloudController
         end
 
         it_downloads_staged_app
-        include_examples "staging bad auth", :get
+        include_examples "staging bad auth", :get, "apps"
       end
     end
 
@@ -333,7 +333,7 @@ module VCAP::CloudController
         end
       end
 
-      include_examples "staging bad auth", :post
+      include_examples "staging bad auth", :post, "droplets"
     end
 
     describe "GET /staging/droplets/:guid/download" do
@@ -343,26 +343,34 @@ module VCAP::CloudController
       end
 
       context "with a valid droplet" do
-        xit "should return the droplet" do
-          droplet = Tempfile.new(app_obj.guid)
-          droplet.write("droplet contents")
-          droplet.close
-          StagingsController.store_droplet(app_obj, droplet.path)
+        context "with nginx" do
+          before { config[:nginx][:use_nginx] = true }
 
-          get "/staging/droplets/#{app_obj.guid}"
-          last_response.status.should == 200
-          last_response.body.should == "droplet contents"
+          it "redirects nginx to serve staged droplet" do
+            droplet = Tempfile.new(app_obj.guid)
+            droplet.write("droplet contents")
+            droplet.close
+            StagingsController.store_droplet(app_obj, droplet.path)
+
+            get "/staging/droplets/#{app_obj.guid}/download"
+            last_response.status.should == 200
+            last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
+          end
         end
 
-        it "redirects nginx to serve staged droplet" do
-          droplet = Tempfile.new(app_obj.guid)
-          droplet.write("droplet contents")
-          droplet.close
-          StagingsController.store_droplet(app_obj, droplet.path)
+        context "without nginx" do
+          before { config[:nginx][:use_nginx] = false }
 
-          get "/staging/droplets/#{app_obj.guid}/download"
-          last_response.status.should == 200
-          last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
+          it "should return the droplet" do
+            droplet = Tempfile.new(app_obj.guid)
+            droplet.write("droplet contents")
+            droplet.close
+            StagingsController.store_droplet(app_obj, droplet.path)
+
+            get "/staging/droplets/#{app_obj.guid}/download"
+            last_response.status.should == 200
+            last_response.body.should == "droplet contents"
+          end
         end
       end
 
