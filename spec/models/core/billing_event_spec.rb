@@ -43,11 +43,10 @@ module VCAP::CloudController
             old_format_event = klass.make
             old_format_event.kind = old_kind_column_value
             old_format_event.save
-            new_format_event = klass.make kind: klass.to_s
+            klass.make kind: klass.to_s
 
-            all_events = BillingEvent.all
-            all_events.should include(old_format_event)
-            all_events.should include(new_format_event)
+            billing_event_classes = BillingEvent.all.map(&:class)
+            billing_event_classes.should == [klass, klass]
           end
         end
       end
