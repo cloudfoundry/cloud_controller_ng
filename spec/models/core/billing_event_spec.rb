@@ -32,5 +32,28 @@ module VCAP::CloudController
         ]
       end
     end
+
+    describe "old and new data coexisting if the class name is changed" do
+      shared_examples_for "an event which works with both single table inheritance keys" do |klass, old_kind_column_value|
+        describe klass.to_s do
+          it "can handle the old format of the single table inheritance kind column" do
+            old_format_event = klass.make
+            old_format_event.kind = old_kind_column_value
+            old_format_event.save
+            new_format_event = klass.make kind: klass.to_s
+
+            all_events = BillingEvent.all
+            all_events.should include(old_format_event)
+            all_events.should include(new_format_event)
+          end
+        end
+      end
+
+      it_behaves_like "an event which works with both single table inheritance keys", OrganizationStartEvent, "VCAP::CloudController::Models::OrganizationStartEvent"
+      it_behaves_like "an event which works with both single table inheritance keys", AppStartEvent, "VCAP::CloudController::Models::AppStartEvent"
+      it_behaves_like "an event which works with both single table inheritance keys", AppStopEvent, "VCAP::CloudController::Models::AppStopEvent"
+      it_behaves_like "an event which works with both single table inheritance keys", ServiceCreateEvent, "VCAP::CloudController::Models::ServiceCreateEvent"
+      it_behaves_like "an event which works with both single table inheritance keys", ServiceDeleteEvent, "VCAP::CloudController::Models::ServiceDeleteEvent"
+    end
   end
 end
