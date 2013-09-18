@@ -2,16 +2,19 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::BillingEvent, type: :model do
-    before(:all) do
-      BillingEvent.dataset.destroy
-      @org_event = OrganizationStartEvent.make
-      @app_start_event = AppStartEvent.make
-      @app_stop_event = AppStopEvent.make
-      @service_create_event = ServiceCreateEvent.make
-      @service_delete_event = ServiceDeleteEvent.make
+    before do
+      BillingEvent.dataset.delete
     end
 
     describe "all" do
+      before do
+        @org_event = OrganizationStartEvent.make
+        @app_start_event = AppStartEvent.make
+        @app_stop_event = AppStopEvent.make
+        @service_create_event = ServiceCreateEvent.make
+        @service_delete_event = ServiceDeleteEvent.make
+      end
+
       it "should return an array of all events" do
         BillingEvent.all.should == [
           @org_event,
