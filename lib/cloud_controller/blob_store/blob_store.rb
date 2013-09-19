@@ -25,7 +25,7 @@ class BlobStore
   def cp_to_local(source_sha, destination_path)
     FileUtils.mkdir_p(File.dirname(destination_path))
     File.open(destination_path, "w") do |file|
-      (@cdn || files).get(key_from_sha1(source_sha)) do |*chunk|
+      (@cdn || files).get(partitioned_key(source_sha)) do |*chunk|
         file.write(chunk[0])
       end
     end
@@ -45,29 +45,29 @@ class BlobStore
   def cp_from_local(source_path, destination_sha, make_public=false)
     File.open(source_path) do |file|
       files.create(
-        :key => key_from_sha1(destination_sha),
+        :key => partitioned_key(destination_sha),
         :body => file,
         :public => make_public,
       )
     end
   end
 
-  def delete(sha1)
-    blob_file = file(sha1)
+  def delete(key)
+    blob_file = file(key)
     blob_file.destroy if blob_file
   end
 
-  def key_from_sha1(sha1)
-    sha1 = sha1.to_s.downcase
-    key = File.join(sha1[0..1], sha1[2..3], sha1)
+  def partitioned_key(key)
+    key = key.to_s.downcase
+    key = File.join(key[0..1], key[2..3], key)
     if @root_dir
       key = File.join(@root_dir, key)
     end
     key
   end
 
-  def download_uri(sha1)
-    file = file(sha1)
+  def download_uri(key)
+    file = file(key)
     return nil unless file
     return download_uri_for_file(file)
   end
@@ -83,7 +83,7 @@ class BlobStore
   end
 
   def file(sha1)
-    files.head(key_from_sha1(sha1))
+    files.head(partitioned_key(sha1))
   end
 
   private

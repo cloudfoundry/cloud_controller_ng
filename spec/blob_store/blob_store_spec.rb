@@ -120,7 +120,7 @@ describe BlobStore do
 
   describe "partitioning" do
     it "partitions by two pairs of consectutive characters from the sha" do
-      expect(blob_store.key_from_sha1("abcdef")).to eql "ab/cd/abcdef"
+      expect(blob_store.partitioned_key("abcdef")).to eql "ab/cd/abcdef"
     end
   end
 
@@ -188,7 +188,7 @@ describe BlobStore do
     context "when from a cdn" do
       it "downloads through the CDN" do
         cdn.should_receive(:get).
-          with(cdn_blob_store.key_from_sha1(sha_of_content)).
+          with(cdn_blob_store.partitioned_key(sha_of_content)).
           and_yield("foobar").and_yield(" barbaz")
 
         destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
