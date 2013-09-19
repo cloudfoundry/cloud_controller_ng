@@ -48,6 +48,7 @@ module VCAP::CloudController
     end
 
     def self.load_models
+      require "models/core/deleted_space"
       require "models/runtime/billing_event"
       require "models/runtime/organization_start_event"
       require "models/runtime/app_start_event"
@@ -223,14 +224,14 @@ module VCAP
       fk_name = "#{join_table_short}_#{name_short}_fk".to_sym
       fk_user = "#{join_table_short}_user_fk".to_sym
       table = name.pluralize.to_sym
-    
+
       migration.create_table(join_table) do
         Integer id_attr, :null => false
         foreign_key [id_attr], table, :name => fk_name
-    
+
         Integer :user_id, :null => false
         foreign_key [:user_id], :users, :name => fk_user
-    
+
         index [id_attr, :user_id], :unique => true, :name => idx_name
       end
     end

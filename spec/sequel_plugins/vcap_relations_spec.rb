@@ -38,6 +38,7 @@ describe "Sequel::Plugins::VcapRelations" do
 
     db.create_table :middles do
       primary_key :id
+      String :guid, :null => false, :index => true
       foreign_key :top_id, :tops
     end
 
@@ -430,6 +431,51 @@ describe "Sequel::Plugins::VcapRelations" do
         all = top.relationship_dataset(:bottoms).all
         all.size.should == 10
         all.should == bottom_klass.all
+      end
+    end
+  end
+
+  describe ".many_to_one" do
+    before { initialize_relations }
+
+    let!(:middle) { middle_klass.create(:guid => "middle-guid") }
+    let!(:other_middle) { middle_klass.create(:guid => "other_middle_guid") }
+
+    let!(:bottoms) do
+      10.times.collect do
+        bottom_klass.create(:middle => middle)
+      end
+    end
+
+    context "the default behaviour" do
+      def initialize_relations
+        bottom_klass.many_to_one :middle
+      end
+
+      it "adds a middle_guid accessor to bottom" do
+        bottom = bottoms.first
+        bottom.middle_guid.should == "middle-guid"
+        bottom.middle_guid = "other_middle_guid"
+        bottom.save
+        bottom.middle_guid.should == "other_middle_guid"
+      end
+    end
+
+    context "with the :without_guid_generation flag" do
+      def initialize_relations
+        bottom_klass.many_to_one :middle, :without_guid_generation => true
+      end
+
+      it "does not add a middle_guid accessor to bottom" do
+        bottom = bottoms.first
+
+        expect {
+          bottom.middle_guid
+        }.to raise_error(NoMethodError)
+
+        expect {
+          bottom.middle_guid = "hello"
+        }.to raise_error(NoMethodError)
       end
     end
   end

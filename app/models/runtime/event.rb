@@ -2,7 +2,7 @@ module VCAP::CloudController
   class Event < Sequel::Model
     plugin :serialization
 
-    many_to_one :space
+    many_to_one :space, :without_guid_generation => true
 
     def validate
       validates_presence :type
@@ -16,7 +16,22 @@ module VCAP::CloudController
     serialize_attributes :json, :metadata
 
     export_attributes :type, :actor, :actor_type, :actee,
-      :actee_type, :timestamp, :metadata, :space_guid
+      :actee_type, :timestamp, :metadata, :space_guid,
+      :organization_guid
+
+    def space
+      super || DeletedSpace.new
+    end
+
+    def before_save
+      denormalize_space_and_org_guids
+      super
+    end
+
+    def denormalize_space_and_org_guids
+      self.space_guid = space.guid
+      self.organization_guid = space.organization.guid
+    end
 
     def self.user_visibility_filter(user)
       Sequel.or([

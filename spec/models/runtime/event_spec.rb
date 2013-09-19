@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Event, type: :model do
-    let(:space) { Space.make :name => "myspace" }
+    let(:space) { Space.make }
 
     subject(:event) do
       Event.make :type => "audit.movie.premiere",
@@ -39,12 +39,70 @@ module VCAP::CloudController
       expect(event.metadata).to eq({"popcorn_price" => "$(arm + leg)"})
     end
 
-    it "belongs to a space" do
-      expect(event.space).to eq(space)
+    it "has a space" do
+      expect(event.space.guid).to eq(space.guid)
+    end
+
+    it "has a space guid" do
+      expect(event.space_guid).to eq(space.guid)
+    end
+
+    it "has an organization guid" do
+      expect(event.organization_guid).to eq(space.organization.guid)
+    end
+
+    describe "supports deleted spaces (for auditing purposes)" do
+      context "when the space is deleted" do
+
+        let(:space_guid) { "space-guid-1234" }
+
+        let(:new_org) { Organization.make }
+        let(:new_space) { Space.make(:guid => space_guid, :organization => new_org) }
+        let!(:new_event) { Event.make(:space => new_space) }
+
+        before :each do
+          new_space.destroy
+        end
+
+        it "the event continues to exist" do
+          expect(Space.find(:id => new_space.id)).to be_nil
+          expect(Event.find(:id => new_event.id)).to_not be_nil
+        end
+
+        it "returns a NullObject for the associated space" do
+          expect(new_event.space).to_not be_nil
+        end
+
+        it "has a denormalized space guid" do
+          expect(new_event.space_guid).to eq(space_guid)
+        end
+
+        it "has an denormalized organization guid" do
+          expect(new_event.organization_guid).to eq(new_org.guid)
+        end
+
+        describe "#to_json" do
+          it "serializes with type, actor, actee, timestamp, metadata, space_guid, organization_guid" do
+            json = Yajl::Parser.parse(new_event.to_json)
+
+            expect(json).to eq(
+              "type" => new_event.type,
+              "actor" => new_event.actor,
+              "actor_type" => new_event.actor_type,
+              "actee" => new_event.actee,
+              "actee_type" => new_event.actee_type,
+              "space_guid" => space_guid,
+              "organization_guid" => new_org.guid,
+              "timestamp" => new_event.timestamp.iso8601,
+              "metadata" => {},
+            )
+          end
+        end
+      end
     end
 
     describe "#to_json" do
-      it "serializes with type, actor, actee, timestamp, metadata" do
+      it "serializes with type, actor, actee, timestamp, metadata, space_guid, organization_guid" do
         json = Yajl::Parser.parse(event.to_json)
 
         expect(json).to eq(
@@ -53,9 +111,10 @@ module VCAP::CloudController
           "actor_type" => "One True God",
           "actee" => "John Travolta",
           "actee_type" => "Scientologist",
+          "space_guid" => space.guid,
+          "organization_guid" => space.organization.guid,
           "timestamp" => Time.new(1997, 6, 27).iso8601,
           "metadata" => {"popcorn_price" => "$(arm + leg)"},
-          "space_guid" => space.guid
         )
       end
     end
@@ -116,7 +175,7 @@ module VCAP::CloudController
       let(:app) do
         App.make(
           name: 'new', instances: 1, memory: 84,
-          state: "STOPPED", environment_json: { "super" => "secret "})
+          state: "STOPPED", environment_json: {"super" => "secret "})
       end
 
       let(:user) { User.make }
@@ -148,6 +207,35 @@ module VCAP::CloudController
         expect(event.actee).to eq(deleting_app.guid)
         expect(event.actee_type).to eq("app")
         expect(event.metadata["changes"]).to eq(nil)
+      end
+    end
+
+    describe ".create_app_exit_event" do
+      let(:exiting_app) { App.make }
+      let(:droplet_exited_payload) {
+        {
+          "instance" => "abc",
+          "index" => "2",
+          "exit_status" => "1",
+          "exit_description" => "shut down",
+          "reason" => "evacuation",
+          "unknown_key" => "something"
+        }
+      }
+
+      it "creates a new app exit event" do
+        event = described_class.create_app_exit_event(exiting_app, droplet_exited_payload)
+        expect(event.type).to eq("app.crash")
+        expect(event.actor).to eq(exiting_app.guid)
+        expect(event.actor_type).to eq("app")
+        expect(event.actee).to eq(exiting_app.guid)
+        expect(event.actee_type).to eq("app")
+        expect(event.metadata["unknown_key"]).to eq(nil)
+        expect(event.metadata["instance"]).to eq("abc")
+        expect(event.metadata["index"]).to eq("2")
+        expect(event.metadata["exit_status"]).to eq("1")
+        expect(event.metadata["exit_description"]).to eq("shut down")
+        expect(event.metadata["reason"]).to eq("evacuation")
       end
     end
   end

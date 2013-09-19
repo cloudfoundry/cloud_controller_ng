@@ -28,7 +28,7 @@ module VCAP::CloudController
     many_to_many      :domains, :before_add => :validate_domain
 
     add_association_dependencies :domains => :nullify, :default_users => :nullify,
-      :all_apps => :destroy, :service_instances => :destroy, :routes => :destroy, :events => :destroy
+      :all_apps => :destroy, :service_instances => :destroy, :routes => :destroy, :events => :nullify
 
     default_order_by  :name
 

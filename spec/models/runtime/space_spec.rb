@@ -150,9 +150,11 @@ module VCAP::CloudController
 
         expect {
           subject.destroy
-        }.to change {
+        }.to_not change {
           Event.where(:id => [event.id]).count
-        }.from(1).to(0)
+        }
+
+        Event.find(:id => event.id).space.should be_a(DeletedSpace)
       end
     end
 
