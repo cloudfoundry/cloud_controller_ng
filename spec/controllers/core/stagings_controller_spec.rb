@@ -351,6 +351,7 @@ module VCAP::CloudController
             droplet.write("droplet contents")
             droplet.close
             StagingsController.store_droplet(app_obj, droplet.path)
+            StagingsController.blob_store.exists?([app_obj.guid, app_obj.droplet_hash].join("/")).should be_true
 
             get "/staging/droplets/#{app_obj.guid}/download"
             last_response.status.should == 200
@@ -362,14 +363,15 @@ module VCAP::CloudController
           before { config[:nginx][:use_nginx] = false }
 
           it "should return the droplet" do
-            droplet = Tempfile.new(app_obj.guid)
-            droplet.write("droplet contents")
-            droplet.close
-            StagingsController.store_droplet(app_obj, droplet.path)
+            Tempfile.new(app_obj.guid) do |f|
+              f.write("droplet contents")
+              f.close
+              StagingsController.store_droplet(app_obj, f.path)
 
-            get "/staging/droplets/#{app_obj.guid}/download"
-            last_response.status.should == 200
-            last_response.body.should == "droplet contents"
+              get "/staging/droplets/#{app_obj.guid}/download"
+              last_response.status.should == 200
+              last_response.body.should == "droplet contents"
+            end
           end
         end
       end

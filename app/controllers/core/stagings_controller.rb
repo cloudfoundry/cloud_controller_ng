@@ -104,7 +104,7 @@ module VCAP::CloudController
       end
 
       def store_droplet(app, path)
-        key = File.join(blob_store.key_from_sha1(app.guid), app.droplet_hash)
+        key = File.join(app.guid, app.droplet_hash)
         
         blob_store.cp_from_local(
           path,
@@ -211,7 +211,7 @@ module VCAP::CloudController
 
       def app_droplet(app)
         return unless app.staged?
-        key = File.join(blob_store.key_from_sha1(app.guid), app.droplet_hash)
+        key = File.join(app.guid, app.droplet_hash)
         old_key = app.guid
         blob_store.file(key) || blob_store.file(old_key)
       end
