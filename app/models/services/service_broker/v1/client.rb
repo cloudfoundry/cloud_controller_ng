@@ -57,6 +57,10 @@ module VCAP::CloudController
       binding.gateway_data = response.configuration
       binding.credentials = response.credentials
       binding.syslog_drain_url = response.syslog_drain_url
+
+      unless valid_logging_service(response.syslog_drain_url, service.requires)
+        raise VCAP::Errors::BindingUnadvertisedLoggingServiceNotAllowed
+      end
     end
 
     def unbind(binding)
@@ -82,6 +86,10 @@ module VCAP::CloudController
     private
     def logger
       @logger ||= Steno.logger("cc.services.v1_client")
+    end
+
+    def valid_logging_service(syslog_drain_url, service_requires)
+      (syslog_drain_url == "") || service_requires.include?("syslog_drain")
     end
   end
 end
