@@ -21,7 +21,7 @@ module VCAP::CloudController
 
     def after_destroy(buildpack)
       return unless buildpack.key
-      file = buildpack_blobstore.files.head(buildpack.key)
+      file = buildpack_blobstore.file(buildpack.key)
       file.destroy if file
     end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
     def download_bits(guid)
       obj = find_guid_and_validate_access(:read_bits, guid)
       if @buildpack_blobstore.local?
-        f = buildpack_blobstore.files.head(obj.key)
+        f = buildpack_blobstore.file(obj.key)
         raise self.class.not_found_exception.new(guid) unless f
         # hack to get the local path to the file
         return send_file f.send(:path)
@@ -75,7 +75,7 @@ module VCAP::CloudController
     private
 
     def bits_uri(key)
-      f = buildpack_blobstore.files.head(key)
+      f = buildpack_blobstore.file(key)
       return nil unless f
 
       # unfortunately fog doesn't have a unified interface for non-public

@@ -14,10 +14,6 @@ class BlobStore
     @connection_config[:provider].downcase == "local"
   end
 
-  def files
-    dir.files
-  end
-
   def exists?(sha1)
     !file(sha1).nil?
   end
@@ -52,8 +48,8 @@ class BlobStore
     end
   end
 
-  def delete(key)
-    blob_file = file(key)
+  def delete(sha1)
+    blob_file = file(sha1)
     blob_file.destroy if blob_file
   end
 
@@ -86,8 +82,12 @@ class BlobStore
     files.head(partitioned_key(sha1))
   end
 
-  private
+  # Deprecated should not allow to access underlying files
+  def files
+    dir.files
+  end
 
+  private
   def dir
     @dir ||= connection.directories.create(:key => @directory_key, :public => false)
   end

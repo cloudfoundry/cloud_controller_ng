@@ -170,7 +170,7 @@ module VCAP::CloudController
 
           it "does not allow non-zip files" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.files.should_not_receive(:create)
+            buildpack_blobstore.should_not_receive(:cp_from_local)
 
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
             expect(last_response.status).to eql 400
@@ -210,7 +210,7 @@ module VCAP::CloudController
 
           it "lets you retrieve the bits for a specific buildpack" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.files.should_receive(:head).with('xyz').and_return(@file)
+            buildpack_blobstore.should_receive(:file).with('xyz').and_return(@file)
             @file.should_receive(:path).and_return(__FILE__)
 
             get "/v2/buildpacks/#{@test_buildpack.guid}/download", {}, admin_headers
