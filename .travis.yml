@@ -30,7 +30,7 @@ env:
     # Oracle DB URL
 #    - secure: "P5OhdFmceSPln40trVus+haLWq+3prl4+26zXtHPOMrPTmUAssYpzNxCn/fh\nnxzez9Y4D+NV98+BpM2PwBlGpcmVZd2MmcdcRgIPZCN0y+t7QQ9qjTYjMEKM\nsoUUa5W/kKD0JCTINtdqWMzPu3gcEuwmF3hIpCj0m0W7TsZCyS4="
   matrix:
-    - DB=sqlite
+    #- DB=sqlite
       # http://about.travis-ci.org/docs/user/database-setup/#MySQL
     - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306/ccng" AR_DB_CONNECTION="mysql2://root@localhost:3306/ccng"
       # http://about.travis-ci.org/docs/user/database-setup/#PostgreSQL
