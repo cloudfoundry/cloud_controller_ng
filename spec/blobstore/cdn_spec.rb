@@ -1,5 +1,5 @@
 require "spec_helper"
-require "cloud_controller/blob_store/cdn"
+require "cloud_controller/blobstore/cdn"
 
 describe Cdn do
   let(:cdn_host) { "https://some_distribution.cloudfront.net"}

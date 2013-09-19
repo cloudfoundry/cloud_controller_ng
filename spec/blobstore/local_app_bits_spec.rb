@@ -1,5 +1,5 @@
 require "spec_helper"
-require "cloud_controller/blob_store/local_app_bits"
+require "cloud_controller/blobstore/local_app_bits"
 
 describe LocalAppBits do
   let(:compressed_zip_path) { "/tmp/zipped.compressed_zip_path" }

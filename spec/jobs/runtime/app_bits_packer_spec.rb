@@ -13,12 +13,11 @@ describe AppBitsPacker do
 
   let(:compressed_path) { File.expand_path("../../../fixtures/good.zip", __FILE__) }
   let(:app) { VCAP::CloudController::App.make }
-  let(:blob_store_dir) { Dir.mktmpdir }
+  let(:blobstore_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
-  let(:global_app_bits_cache) { BlobStore.new({ provider: "Local", local_root: blob_store_dir }, "global_app_bits_cache") }
-  let(:package_blob_store) { BlobStore.new({provider: "Local", local_root: blob_store_dir}, "package") }
-  let(:packer) { AppBitsPacker.new(package_blob_store, global_app_bits_cache, max_droplet_size, local_tmp_dir) }
-  let(:blob_store_dir) { Dir.mktmpdir }
+  let(:global_app_bits_cache) { Blobstore.new({ provider: "Local", local_root: blobstore_dir }, "global_app_bits_cache") }
+  let(:package_blobstore) { Blobstore.new({provider: "Local", local_root: blobstore_dir}, "package") }
+  let(:packer) { AppBitsPacker.new(package_blobstore, global_app_bits_cache, max_droplet_size, local_tmp_dir) }
   let(:max_droplet_size) { 1_073_741_824 }
 
   around do |example|
@@ -28,7 +27,7 @@ describe AppBitsPacker do
     ensure
       Fog.mock!
       FileUtils.remove_entry_secure local_tmp_dir
-      FileUtils.remove_entry_secure blob_store_dir
+      FileUtils.remove_entry_secure blobstore_dir
     end
   end
 
@@ -43,19 +42,19 @@ describe AppBitsPacker do
 
     it "uploads the new app bits to the package blob store" do
       perform
-      package_blob_store.cp_to_local(app.guid, File.join(local_tmp_dir, "package.zip"))
+      package_blobstore.cp_to_local(app.guid, File.join(local_tmp_dir, "package.zip"))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include("bye")
     end
 
     it "uploads the old app bits already in the app bits cache to the package blob store" do
       perform
-      package_blob_store.cp_to_local(app.guid, File.join(local_tmp_dir, "package.zip"))
+      package_blobstore.cp_to_local(app.guid, File.join(local_tmp_dir, "package.zip"))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include("path/to/content.txt")
     end
 
     it "uploads the package zip to the package blob store" do
       perform
-      expect(package_blob_store.exists?(app.guid)).to be_true
+      expect(package_blobstore.exists?(app.guid)).to be_true
     end
 
     it "sets the package sha to the app" do

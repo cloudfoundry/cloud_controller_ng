@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     describe "listing admin buildpacks" do
-      let(:blob_store) {  CloudController::DependencyLocator.instance.buildpack_blobstore }
+      let(:blobstore) {  CloudController::DependencyLocator.instance.buildpack_blobstore }
 
       before do
         Buildpack.dataset.delete
@@ -23,8 +23,8 @@ module VCAP::CloudController
 
       it "returns a list of names and urls" do
         download_url = "http://example.com/buildpacks/1"
-        blob_store.should_receive(:download_uri).with(@buildpack.key).and_return(download_url)
-        blob_store.should_receive(:download_uri).with(@another_buildpack.key).and_return(download_url)
+        blobstore.should_receive(:download_uri).with(@buildpack.key).and_return(download_url)
+        blobstore.should_receive(:download_uri).with(@another_buildpack.key).and_return(download_url)
 
         list = Buildpack.list_admin_buildpacks
         expect(list).to have(2).items

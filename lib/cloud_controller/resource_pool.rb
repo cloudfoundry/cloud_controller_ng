@@ -12,7 +12,7 @@ require "steno"
 
 class VCAP::CloudController::ResourcePool
   attr_accessor :minimum_size, :maximum_size
-  attr_reader :blob_store
+  attr_reader :blobstore
 
   class << self
     attr_accessor :instance
@@ -21,7 +21,8 @@ class VCAP::CloudController::ResourcePool
   def initialize(config = {})
     options = config[:resource_pool] || {}
     @cdn = options[:cdn]
-    @blob_store = BlobStore.new(
+
+    @blobstore = Blobstore.new(
         options[:fog_connection],
         options[:resource_directory_key] || "cc-resources"
     )
@@ -53,10 +54,10 @@ class VCAP::CloudController::ResourcePool
   def add_path(path)
     sha1 = Digest::SHA1.file(path).hexdigest
     key = key_from_sha1(sha1)
-    return if blob_store.files.head(sha1)
+    return if blobstore.files.head(sha1)
 
     File.open(path) do |file|
-      blob_store.files.create(
+      blobstore.files.create(
         :key    => key,
         :body   => file,
         :public => false,
@@ -68,7 +69,7 @@ class VCAP::CloudController::ResourcePool
     sizes = []
     resources.each do |descriptor|
       key = key_from_sha1(descriptor["sha1"])
-      if (head = blob_store.files.head(key))
+      if (head = blobstore.files.head(key))
         entry = descriptor.dup
         entry["size"] = head.content_length
         sizes << entry
@@ -101,7 +102,7 @@ class VCAP::CloudController::ResourcePool
     size = descriptor["size"]
     if size_allowed?(size)
       key = key_from_sha1(descriptor["sha1"])
-      blob_store.files.head(key)
+      blobstore.files.head(key)
     end
   end
 
@@ -138,7 +139,7 @@ class VCAP::CloudController::ResourcePool
       end
     else
       File.open(destination, "w") do |file|
-        blob_store.files.get(s3_key) do |chunk, _, _|
+        blobstore.files.get(s3_key) do |chunk, _, _|
           file.write(chunk)
         end
       end
