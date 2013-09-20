@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 
-gem "activesupport", "~> 3.0"
+gem "builder", "~> 3.0.0"
+gem "activesupport", "~> 3.2"
 gem "rake"
 gem "bcrypt-ruby"
 gem "eventmachine", "~> 1.0.0"
