@@ -87,6 +87,41 @@ module VCAP::CloudController
       end
     end
 
+    describe "logging service bindings" do
+      let(:service) { Service.make(:requires => []) }
+      let(:service_plan) { ServicePlan.make(:service => service) }
+      let(:service_instance) do
+        ManagedServiceInstance.make(
+          :service_plan => service_plan,
+          :name => "not a syslog drain instance"
+        )
+      end
+
+      it "should not allow a non syslog_drain with a syslog drain url" do
+        expect {
+          service_binding = ServiceBinding.make(:service_instance => service_instance)
+          service_binding.syslog_drain_url = "http://this.is.a.mean.url.com"
+          service_binding.save
+        }.to raise_error(ServiceBinding::InvalidLoggingServiceBinding, "Service is not advertised as a logging service. Please contact the service provider.")
+      end
+
+      it "should allow a non syslog_drain with a nil syslog drain url" do
+        expect {
+          service_binding = ServiceBinding.make(:service_instance => service_instance)
+          service_binding.syslog_drain_url = nil
+          service_binding.save
+        }.not_to raise_error
+      end
+
+      it "should allow a non syslog_drain with an empty syslog drain url" do
+        expect {
+          service_binding = ServiceBinding.make(:service_instance => service_instance)
+          service_binding.syslog_drain_url = ""
+          service_binding.save
+        }.not_to raise_error
+      end
+    end
+
     describe "binding" do
       let(:service) { Service.make }
       let(:service_plan) { ServicePlan.make(:service => service) }

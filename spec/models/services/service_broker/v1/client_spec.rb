@@ -124,6 +124,22 @@ module VCAP::CloudController
         expect(binding.gateway_data).to eq('config')
         expect(binding.syslog_drain_url).to eq('drain url')
       end
+
+      context 'when the service has syslog_drain in requires' do
+        before do
+          service.requires = ['syslog_drain']
+        end
+
+        it 'does not fail if you have a syslog_drain_url' do
+          response.syslog_drain_url = 'drain_url'
+          expect{client.bind(binding)}.to_not raise_error
+        end
+
+        it 'does not fail if you do not have a syslog_drain_url' do
+          response.syslog_drain_url = ""
+          expect{client.bind(binding)}.to_not raise_error
+        end
+      end
     end
 
     describe '#unbind' do
