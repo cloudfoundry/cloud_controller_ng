@@ -114,6 +114,8 @@ module VCAP::CloudController
           email: current_user_email,
           binding_options: {'this' => 'that'}
         ).and_return(response)
+
+        service.requires = ['syslog_drain']
       end
 
       it 'sets relevant attributes of the binding' do
@@ -123,6 +125,38 @@ module VCAP::CloudController
         expect(binding.credentials).to eq({ 'foo' => 'bar' })
         expect(binding.gateway_data).to eq('config')
         expect(binding.syslog_drain_url).to eq('drain url')
+      end
+
+      context 'when service does not have syslog_drain in requires' do
+        before do
+          service.requires = []
+        end
+
+        it 'fails if you have a syslog_drain_url' do
+          response.syslog_drain_url = 'drain_url'
+          expect{client.bind(binding)}.to raise_error(VCAP::Errors::BindingUnadvertisedLoggingServiceNotAllowed)
+        end
+
+        it 'does not fail if the syslog_drain_url is not set' do
+          response.syslog_drain_url = ""
+          expect{client.bind(binding)}.to_not raise_error
+        end
+      end
+
+      context 'when the service has syslog_drain in requires' do
+        before do
+          service.requires = ['syslog_drain']
+        end
+
+        it 'does not fail if you have a syslog_drain_url' do
+          response.syslog_drain_url = 'drain_url'
+          expect{client.bind(binding)}.to_not raise_error
+        end
+
+        it 'does not fail if you do not have a syslog_drain_url' do
+          response.syslog_drain_url = ""
+          expect{client.bind(binding)}.to_not raise_error
+        end
       end
     end
 
