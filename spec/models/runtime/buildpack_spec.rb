@@ -15,24 +15,26 @@ module VCAP::CloudController
     describe "listing admin buildpacks" do
       let(:blobstore) { double :buildpack_blobstore }
 
-      before do
-        # TODO: this is fishy
-        CloudController::DependencyLocator.instance.stub(buildpack_blobstore: blobstore)
+      let(:buildpack_file_1) { Tempfile.new("admin buildpack 1") }
+      let(:buildpack_file_2) { Tempfile.new("admin buildpack 2") }
 
+      let(:buildpack_blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
+
+      before do
         Buildpack.dataset.delete
-        @buildpack = Buildpack.make
-        @another_buildpack = Buildpack.make
+
+        buildpack_blobstore.cp_from_local(buildpack_file_1.path, "a key")
+        @buildpack = Buildpack.make(key: "a key")
+
+        buildpack_blobstore.cp_from_local(buildpack_file_2.path, "b key")
+        @another_buildpack = Buildpack.make(key: "b key")
       end
 
       it "returns a list of names and urls" do
-        download_url = "http://example.com/buildpacks/1"
-
-        blobstore.should_receive(:download_uri).with(@buildpack.key).and_return(download_url)
-        blobstore.should_receive(:download_uri).with(@another_buildpack.key).and_return(download_url)
-
         list = Buildpack.list_admin_buildpacks
         expect(list).to have(2).items
-        expect(list).to include(url: download_url, key: @buildpack.key)
+        expect(list).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
+        expect(list).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
       end
     end
   end
