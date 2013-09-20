@@ -1,5 +1,3 @@
-require "delayed_job_active_record"
-
 module VCAP::CloudController
   class DB
     # Setup a Sequel connection pool
@@ -17,7 +15,7 @@ module VCAP::CloudController
     # acquire a connection before raising a PoolTimeoutError (default 5)
     #
     # @return [Sequel::Database]
-    def self.connect(logger, opts, active_record_db_opts)
+    def self.connect(logger, opts)
       connection_options = { :sql_mode => [:strict_trans_tables, :strict_all_tables, :no_zero_in_date] }
       [:max_connections, :pool_timeout].each do |key|
         connection_options[key] = opts[key] if opts[key]
@@ -32,9 +30,8 @@ module VCAP::CloudController
         require "vcap/sequel_sqlite_monkeypatch"
       end
 
-      active_record_connect(logger, active_record_db_opts[:database])
-
       db = Sequel.connect(opts[:database], connection_options)
+      require "vcap/delayed_job_guid_monkeypatch" # this fails if it is required before Sequel.connect. Sorry!
       db.logger = logger
       db.sql_log_level = opts[:log_level] || :debug2
 
@@ -96,11 +93,6 @@ module VCAP::CloudController
       migrations_dir = File.expand_path("../../../db", __FILE__)
       sequel_migrations = File.join(migrations_dir, "migrations")
       Sequel::Migrator.run(db, sequel_migrations, opts)
-
-      active_record_migrations = File.join(migrations_dir, "ar_migrations")
-
-      ActiveRecord::Migration.verbose = false
-      ActiveRecord::Migrator.migrate(active_record_migrations, nil)
     end
 
     private
@@ -125,31 +117,6 @@ such as:
 EOF
         exit 1
       end
-    end
-
-    def self.active_record_connect(logger, database_uri)
-      return ActiveRecord::Base.connection if ActiveRecord::Base.connected?
-
-      if database_uri =~ /^sqlite/
-        options = {
-          adapter: "sqlite3",
-          database: database_uri.gsub(%r{^sqlite://}, '')
-        }
-      else
-        uri = URI.parse(database_uri)
-        options = {
-          username: uri.user,
-          password: uri.password,
-          host: uri.host,
-          port: uri.port,
-          adapter: (database_uri =~ /^postgres/) ? "postgresql" : uri.scheme,
-          database: uri.path[1..-1]
-        }
-      end
-
-      ActiveRecord::Base.establish_connection(options)
-      ActiveRecord::Base.logger = logger
-      ActiveRecord::Base.connection
     end
 
     def self.validate_version_string(min_version, version)

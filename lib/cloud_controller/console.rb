@@ -16,7 +16,7 @@ logger = Logger.new(STDOUT)
 
 db_config = @config.fetch(:db).merge(log_level: :debug)
 
-VCAP::CloudController::DB.connect(logger, db_config, db_config)
+VCAP::CloudController::DB.connect(logger, db_config)
 
 module VCAP::CloudController
   binding.pry :quiet => true

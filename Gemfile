@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem "activesupport", "~> 3.0"
+gem "activesupport", "~> 3.0" # It looks like this is required for DelayedJob, even with the DJ-Sequel extension
 gem "rake"
 gem "bcrypt-ruby"
 gem "eventmachine", "~> 1.0.0"
@@ -20,9 +20,9 @@ gem "stager-client", "~> 0.0.02", :git => "https://github.com/cloudfoundry/stage
 gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.git"
 gem "vcap_common", :git => "https://github.com/cloudfoundry/vcap-common.git"
 gem "allowy"
-gem "delayed_job_active_record", "~> 4.0"
 gem "loggregator_emitter", "~> 0.0.12.pre"
 gem "loggregator_messages", "~> 0.0.4.pre"
+gem "talentbox-delayed_job_sequel", "~> 4.0.0.beta1.1"
 
 # These are outside the test group in order to run rake tasks
 gem "rspec"

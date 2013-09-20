@@ -153,7 +153,7 @@ def connect_to_database
   Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
   db_logger = Steno.logger("cc.db.migrations")
 
-  VCAP::CloudController::DB.connect(db_logger, config[:db], config[:active_record_db])
+  VCAP::CloudController::DB.connect(db_logger, config[:db])
 end
 
 def setup_environment

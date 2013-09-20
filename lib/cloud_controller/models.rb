@@ -77,7 +77,6 @@ Sequel::Model.plugin :typecast_on_load,
                      :name, :label, :provider, :description, :host
 
 require "vcap/sequel_add_association_dependencies_monkeypatch"
-require "vcap/delayed_job_guid_monkeypatch"
 require "vcap/delayed_job_postgres_monkeypatch"
 
 require File.expand_path("../../../app/access/base_access.rb", __FILE__)

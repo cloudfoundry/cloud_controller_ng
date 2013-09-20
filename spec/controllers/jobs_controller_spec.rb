@@ -16,10 +16,6 @@ module VCAP::CloudController
           expect(decoded_response(symbolize_keys: true)).to eq(
             ::JobPresenter.new(job).to_hash
           )
-        end
-
-        it "sets the job guid" do
-          subject
           expect(decoded_response(symbolize_keys: true)[:metadata][:guid]).not_to be_nil
         end
       end
