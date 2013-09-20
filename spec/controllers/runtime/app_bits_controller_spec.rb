@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::AppBitsController, type: :controller do
+  describe AppBitsController, type: :controller do
     describe "PUT /v2/app/:id/bits" do
       let(:app_obj) { App.make :droplet_hash => nil, :package_state => "PENDING" }
 
@@ -72,8 +72,7 @@ module VCAP::CloudController
         end
 
         context "with at least one resource and no application" do
-          include_context "with valid resource in resource pool"
-          let(:req_body) { {:resources => JSON.dump([valid_resource])} }
+          let(:req_body) { {:resources => JSON.dump([{"fn" => "lol", "sha1" => "abc", "size" => 2048}])} }
           it_succeeds_to_upload
         end
 

@@ -155,10 +155,10 @@ module VCAP::CloudController
           it "takes a buildpack file and adds it to the custom buildpacks blobstore with the correct key" do
             CloudController::DependencyLocator.instance.upload_handler.stub(:uploaded_file).and_return(valid_zip)
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.should_receive(:cp_from_local).with(valid_zip.path, sha_valid_zip)
 
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
             expect(Buildpack.find(name: 'upload_binary_buildpack').key).to eq(sha_valid_zip)
+            expect(buildpack_blobstore.exists?(sha_valid_zip)).to be_true
           end
 
           it "gets the uploaded file from the upload handler" do
@@ -183,13 +183,14 @@ module VCAP::CloudController
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip2}, admin_headers
 
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.should_receive(:delete).with(sha_valid_zip2)
+            expect(buildpack_blobstore.exists?(sha_valid_zip2)).to be_true
 
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
             response = Yajl::Parser.parse(last_response.body)
             entity = response['entity']
             expect(entity['name']).to eq('upload_binary_buildpack')
             expect(entity['key']).to eq(sha_valid_zip)
+            expect(buildpack_blobstore.exists?(sha_valid_zip2)).to be_false
           end
 
           it 'reports a conflict if the same buildpack is uploaded again' do
@@ -209,13 +210,10 @@ module VCAP::CloudController
           end
 
           it "lets you retrieve the bits for a specific buildpack" do
-            buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.should_receive(:file).with('xyz').and_return(@file)
-            @file.should_receive(:path).and_return(__FILE__)
-
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
             get "/v2/buildpacks/#{@test_buildpack.guid}/download", {}, admin_headers
-            expect(last_response.status).to eq(200)
-            expect(last_response.header['Content-Length']).to eq(File.size(__FILE__).to_s)
+            expect(last_response.status).to eq(302)
+            expect(last_response.header['Location']).to match(/cc-buildpacks/)
           end
         end
       end
@@ -237,19 +235,17 @@ module VCAP::CloudController
 
           it "returns a NO CONTENT (204) if an admin deletes a build pack" do
             @test_buildpack = VCAP::CloudController::Buildpack.make
-            @file.should_receive(:destroy)
             delete "/v2/buildpacks/#{@test_buildpack.guid}", {}, admin_headers
             expect(last_response.status).to eq(204)
           end
 
           it "destroys the buildpack key in the blobstore" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.stub(:files).and_return(double(:files, :head => @file, create: {}))
-            @file.should_receive(:destroy)
             @test_buildpack = VCAP::CloudController::Buildpack.make
 
             delete "/v2/buildpacks/#{@test_buildpack.guid}", {}, admin_headers
             expect(Buildpack.find(name: @test_buildpack.name)).to be_nil
+            expect(buildpack_blobstore.files).to have(0).items
           end
 
           it "does not fail if no buildpack bits were ever uploaded" do

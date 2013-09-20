@@ -3,6 +3,9 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::AppPackage do
     include_context "resource pool"
+    before do
+      pending "This class is going away. Soon"
+    end
 
     let(:tmpdir) { Dir.mktmpdir }
     let(:config_tmpdir) { File.join(tmpdir, "configured_tmp_dir") }
@@ -159,6 +162,8 @@ module VCAP::CloudController
     end
 
     describe ".to_zip" do
+      before { pending "not used for real code" }
+
       let(:guid) { Sham.guid }
 
       def self.it_packages(expected_file_paths)

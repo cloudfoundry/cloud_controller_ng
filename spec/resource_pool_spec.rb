@@ -27,6 +27,8 @@ module VCAP::CloudController
 
     describe "#resource_sizes" do
       it "should return resources with sizes" do
+        @resource_pool.add_directory(@tmpdir)
+
         without_sizes = @descriptors.map do |d|
           { "sha1" => d["sha1"] }
         end

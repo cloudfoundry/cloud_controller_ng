@@ -503,6 +503,7 @@ module VCAP::CloudController::SpecHelper
 
   shared_context "with valid resource in resource pool" do
     let(:valid_resource) do
+      pending("Deprecated")
       file = Tempfile.new("mytemp")
       file.write("A" * 1024)
       file.close
@@ -557,6 +558,7 @@ RSpec.configure do |rspec_config|
     # We need to stub out this because it's in an after_destroy_commit hook
     # Is event emitter our salvation?
     #VCAP::CloudController::AppObserver.stub(:delete_droplet)
+    Fog::Mock.reset
     VCAP::CloudController::AppPackage.stub(:delete_package)
   end
 end
