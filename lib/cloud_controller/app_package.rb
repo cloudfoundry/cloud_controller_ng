@@ -8,12 +8,12 @@ require "posix/spawn"
 module VCAP::CloudController
   module AppPackage
     class << self
-      attr_reader :blob_store
+      attr_reader :blobstore
 
       # Configure the AppPackage
       def configure(config = {})
         options = config[:packages]
-        @blob_store = BlobStore.new(options[:fog_connection], options[:app_package_directory_key] || "cc-app-packages")
+        @blobstore = Blobstore.new(options[:fog_connection], options[:app_package_directory_key] || "cc-app-packages")
 
         @tmp_dir = config[:directories] ? config[:directories][:tmpdir] : nil
         @max_droplet_size = options[:max_droplet_size] || 512 * 1024 * 1024
@@ -44,22 +44,22 @@ module VCAP::CloudController
 
       def upload_to_blobstore(app_guid, zip_path_with_all_files)
         File.open(zip_path_with_all_files) do |file|
-          blob_store.files.create(
+          blobstore.files.create(
             :key => key_from_guid(app_guid),
             :body => file,
-            :public => blob_store.local?
+            :public => blobstore.local?
           )
         end
       end
 
       def delete_package(guid)
         key = key_from_guid(guid)
-        blob_store.files.destroy(key)
+        blobstore.files.destroy(key)
       end
 
       def package_exists?(guid)
         key = key_from_guid(guid)
-        !blob_store.files.head(key).nil?
+        !blobstore.files.head(key).nil?
       end
 
       # Return app uri for path for a given app's guid.
@@ -68,7 +68,7 @@ module VCAP::CloudController
       # TODO: The expiration should be configurable.
       def package_uri(guid)
         key = key_from_guid(guid)
-        f = blob_store.files.head(key)
+        f = blobstore.files.head(key)
         return nil unless f
 
         # unfortunately fog doesn't have a unified interface for non-public
@@ -81,9 +81,9 @@ module VCAP::CloudController
       end
 
       def package_local_path(guid)
-        raise ArgumentError unless blob_store.local?
+        raise ArgumentError unless blobstore.local?
         key = key_from_guid(guid)
-        f = blob_store.files.head(key)
+        f = blobstore.files.head(key)
         return nil unless f
         # Yes, this is bad.  But, we really need a handle to the actual path in
         # order to serve the file using send_file since send_file only takes a

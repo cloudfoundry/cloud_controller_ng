@@ -78,7 +78,7 @@ module VCAP::CloudController
 
       before do
         @resource_pool.stub(:resource_known?).and_return(true)
-        @resource_pool.blob_store.stub(:files).and_return(files)
+        @resource_pool.blobstore.stub(:files).and_return(files)
         files.stub(:get)
         File.stub(:open).and_yield(fake_io)
       end

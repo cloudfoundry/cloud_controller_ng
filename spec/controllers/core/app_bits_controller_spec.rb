@@ -178,7 +178,7 @@ module VCAP::CloudController
 
       context "when app is local" do
         before do
-          AppPackage.blob_store.stub(:local?) { true }
+          AppPackage.blobstore.stub(:local?) { true }
           AppPackage.stub(:package_uri) { |guid| "droplets/#{guid}" }
         end
 

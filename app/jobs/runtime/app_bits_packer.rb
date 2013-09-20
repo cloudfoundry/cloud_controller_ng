@@ -1,11 +1,11 @@
-require "cloud_controller/blob_store/local_app_bits"
-require "cloud_controller/blob_store/fingerprints_collection"
+require "cloud_controller/blobstore/local_app_bits"
+require "cloud_controller/blobstore/fingerprints_collection"
 
 class AppBitsPacker
-  attr_reader :package_blob_store, :global_app_bits_cache, :max_droplet_size, :tmp_dir
+  attr_reader :package_blobstore, :global_app_bits_cache, :max_droplet_size, :tmp_dir
 
-  def initialize(package_blob_store, global_app_bits_cache, max_droplet_size, tmp_dir)
-    @package_blob_store = package_blob_store
+  def initialize(package_blobstore, global_app_bits_cache, max_droplet_size, tmp_dir)
+    @package_blobstore = package_blobstore
     @global_app_bits_cache = global_app_bits_cache
     @max_droplet_size = max_droplet_size
     @tmp_dir = tmp_dir
@@ -22,7 +22,7 @@ class AppBitsPacker
       end
 
       package = local_app_bits.create_package
-      package_blob_store.cp_from_local(package.path, app.guid)
+      package_blobstore.cp_from_local(package.path, app.guid)
       app.package_hash = package.hexdigest
       app.save
     end

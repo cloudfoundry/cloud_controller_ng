@@ -4,7 +4,7 @@ require "cloud_controller/dependency_locator"
 describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.send(:new, config) }
 
-  describe "#package_blob_store" do
+  describe "#package_blobstore" do
     let(:config) do
       {
         packages: {
@@ -19,8 +19,8 @@ describe CloudController::DependencyLocator do
       let(:cdn_settings) { nil }
 
       it "creates blob stores without the CDN" do
-        BlobStore.should_receive(:new).with('fog_connection', 'key', nil)
-        locator.package_blob_store
+        Blobstore.should_receive(:new).with('fog_connection', 'key', nil)
+        locator.package_blobstore
       end
     end
 
@@ -31,8 +31,8 @@ describe CloudController::DependencyLocator do
 
       it "creates the blob stores with CDNs if configured" do
         Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
-        BlobStore.should_receive(:new).with('fog_connection', 'key', cdn)
-        locator.package_blob_store
+        Blobstore.should_receive(:new).with('fog_connection', 'key', cdn)
+        locator.package_blobstore
       end
     end
   end
@@ -52,7 +52,7 @@ describe CloudController::DependencyLocator do
       let(:cdn_settings) { nil }
 
       it "creates blob stores without the CDN" do
-        BlobStore.should_receive(:new).with('fog_connection', 'key', nil)
+        Blobstore.should_receive(:new).with('fog_connection', 'key', nil)
         locator.global_app_bits_cache
       end
     end
@@ -64,7 +64,7 @@ describe CloudController::DependencyLocator do
 
       it "creates the blob stores with CDNs if configured" do
         Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
-        BlobStore.should_receive(:new).with('fog_connection', 'key', cdn)
+        Blobstore.should_receive(:new).with('fog_connection', 'key', cdn)
         locator.global_app_bits_cache
       end
     end

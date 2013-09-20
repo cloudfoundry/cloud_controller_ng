@@ -1,5 +1,5 @@
 require "spec_helper"
-require "cloud_controller/blob_store/fingerprints_collection"
+require "cloud_controller/blobstore/fingerprints_collection"
 
 describe FingerprintsCollection do
 

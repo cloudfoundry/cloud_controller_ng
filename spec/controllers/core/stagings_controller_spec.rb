@@ -170,7 +170,7 @@ module VCAP::CloudController
               :url => "https://some-bucket.example.com/ab/cd/abcdefg",
               :key => "123-456",
           })
-          StagingsController.blob_store.stub(:files).and_return(double(:files, :head => file))
+          StagingsController.blobstore.stub(:files).and_return(double(:files, :head => file))
         end
 
         it "returns an AWS url" do
@@ -226,6 +226,17 @@ module VCAP::CloudController
       it "returns internal cc uri" do
         uri = StagingsController.buildpack_cache_download_uri(app_obj)
         uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_obj.guid}/download"
+      end
+    end
+
+    describe ".store_droplet" do
+      let(:droplet_upload_path) { Tempfile.new("temp_file") }
+
+      it "copies the application droplet to the blob store" do
+        StagingsController.store_droplet(app_obj, droplet_upload_path.path)
+
+        key = File.join(app_obj.guid, app_obj.droplet_hash)
+        expect(StagingsController.blobstore.exists?(key)).to be_true
       end
     end
 
@@ -351,7 +362,7 @@ module VCAP::CloudController
             droplet.write("droplet contents")
             droplet.close
             StagingsController.store_droplet(app_obj, droplet.path)
-            StagingsController.blob_store.exists?([app_obj.guid, app_obj.droplet_hash].join("/")).should be_true
+            StagingsController.blobstore.exists?([app_obj.guid, app_obj.droplet_hash].join("/")).should be_true
 
             get "/staging/droplets/#{app_obj.guid}/download"
             last_response.status.should == 200
@@ -530,8 +541,8 @@ module VCAP::CloudController
 
         context "under the old path format" do
           before do
-            blob_store = StagingsController.blob_store
-            blob_store.cp_from_local(droplet.path, app_obj.guid)
+            blobstore = StagingsController.blobstore
+            blobstore.cp_from_local(droplet.path, app_obj.guid)
           end
 
           it "deletes the old droplet" do

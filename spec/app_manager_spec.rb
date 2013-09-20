@@ -83,7 +83,7 @@ module VCAP::CloudController
 
         context "Non NotFound error" do
           before do
-            StagingsController.blob_store.stub(:files).and_raise(StandardError.new("This is an intended error."))
+            StagingsController.blobstore.stub(:files).and_raise(StandardError.new("This is an intended error."))
           end
 
           it "should not rescue non-NotFound errors" do

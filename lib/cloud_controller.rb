@@ -118,7 +118,7 @@ require "cloud_controller/stager_pool"
 require "cloud_controller/controllers"
 require "cloud_controller/roles"
 require "cloud_controller/encryptor"
-require "cloud_controller/blob_store/blob_store"
+require "cloud_controller/blobstore/blobstore"
 require "cloud_controller/dependency_locator"
 require "cloud_controller/controller_factory"
 

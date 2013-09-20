@@ -11,7 +11,7 @@
 # the storage layer than FileUtils.mv, this should get refactored.
 
 require "cloudfront-signer"
-require "cloud_controller/blob_store/blob_store"
+require "cloud_controller/blobstore/blobstore"
 
 module VCAP::CloudController
   class StagingsController < RestController::Base
@@ -39,7 +39,7 @@ module VCAP::CloudController
     attr_reader :config
 
     class << self
-      attr_reader :blob_store, :buildpack_cache_blob_store
+      attr_reader :blobstore, :buildpack_cache_blobstore
 
       def configure(config)
         @config = config
@@ -47,12 +47,12 @@ module VCAP::CloudController
         options = config[:droplets]
         cdn = options[:cdn] ? Cdn.make(options[:cdn][:uri]) : nil
 
-        @blob_store = BlobStore.new(
+        @blobstore = Blobstore.new(
           options[:fog_connection],
           options[:droplet_directory_key] || "cc-droplets",
           cdn)
 
-        @buildpack_cache_blob_store = BlobStore.new(
+        @buildpack_cache_blobstore = Blobstore.new(
           options[:fog_connection],
           options[:droplet_directory_key] || "cc-droplets",
           cdn,
@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
 
       def app_uri(app)
-        if AppPackage.blob_store.local?
+        if AppPackage.blobstore.local?
           staging_uri("#{APP_PATH}/#{app.guid}")
         else
           AppPackage.package_uri(app.guid)
@@ -73,7 +73,7 @@ module VCAP::CloudController
       end
 
       def droplet_download_uri(app)
-        if blob_store.local?
+        if blobstore.local?
           staging_uri("#{DROPLET_PATH}/#{app.guid}/download")
         else
           droplet_uri(app)
@@ -104,20 +104,18 @@ module VCAP::CloudController
       end
 
       def store_droplet(app, path)
-        key = File.join(app.guid, app.droplet_hash)
-        
-        blob_store.cp_from_local(
+        blobstore.cp_from_local(
           path,
-          key,
-          blob_store.local?
+          File.join(app.guid, app.droplet_hash),
+          blobstore.local?
         )
       end
 
       def store_buildpack_cache(app, path)
-        buildpack_cache_blob_store.cp_from_local(
+        buildpack_cache_blobstore.cp_from_local(
           path,
           app.guid,
-          buildpack_cache_blob_store.local?
+          buildpack_cache_blobstore.local?
         )
       end
 
@@ -148,10 +146,10 @@ module VCAP::CloudController
       end
 
       def buildpack_cache_download_uri(app)
-        if AppPackage.blob_store.local?
+        if AppPackage.blobstore.local?
           staging_uri("#{BUILDPACK_CACHE_PATH}/#{app.guid}/download")
         else
-          buildpack_cache_blob_store.download_uri(app.guid)
+          buildpack_cache_blobstore.download_uri(app.guid)
         end
       end
 
@@ -173,11 +171,11 @@ module VCAP::CloudController
         f = app_droplet(app)
         return nil unless f
 
-        return blob_store.download_uri_for_file(f)
+        return blobstore.download_uri_for_file(f)
       end
 
       def buildpack_cache_uri(app)
-        buildpack_cache_blob_store.download_uri(app.guid)
+        buildpack_cache_blobstore.download_uri(app.guid)
       end
 
       private
@@ -213,16 +211,16 @@ module VCAP::CloudController
         return unless app.staged?
         key = File.join(app.guid, app.droplet_hash)
         old_key = app.guid
-        blob_store.file(key) || blob_store.file(old_key)
+        blobstore.file(key) || blobstore.file(old_key)
       end
 
       def app_buildpack_cache(app)
-        @buildpack_cache_blob_store.file(app.guid)
+        @buildpack_cache_blobstore.file(app.guid)
       end
     end
 
     def download_app(guid)
-      raise InvalidRequest unless AppPackage.blob_store.local?
+      raise InvalidRequest unless AppPackage.blobstore.local?
 
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
@@ -281,7 +279,7 @@ module VCAP::CloudController
     private
 
     def download(app, droplet_path, url)
-      raise InvalidRequest unless self.class.blob_store.local?
+      raise InvalidRequest unless self.class.blobstore.local?
 
       logger.debug "guid: #{app.guid} droplet_path #{droplet_path}"
 
