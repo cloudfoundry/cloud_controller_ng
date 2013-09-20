@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe AppManager do
+  describe AppObserver do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
     let(:dea_pool) { double(:dea_pool) }
@@ -9,13 +9,13 @@ module VCAP::CloudController
 
     before do
       DeaClient.configure(config_hash, message_bus, dea_pool)
-      AppManager.configure(config_hash, message_bus, stager_pool)
+      AppObserver.configure(config_hash, message_bus, stager_pool)
     end
 
     describe ".run" do
       it "registers subscriptions for dea_pool" do
         stager_pool.should_receive(:register_subscriptions)
-        VCAP::CloudController::AppManager.run
+        AppObserver.run
       end
     end
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
       let(:app) { App.make droplet_hash: nil, package_hash: nil }
 
       it "stops the application" do
-        AppManager.deleted(app)
+        AppObserver.deleted(app)
         expect(message_bus).to have_published_with_message("dea.stop", droplet: app.guid)
       end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
           droplets = CloudController::DependencyLocator.instance.droplet_blobstore
           droplets.cp_from_local(droplet.path, blobstore_key)
 
-          expect { AppManager.deleted(app) }.to change {
+          expect { AppObserver.deleted(app) }.to change {
             droplets.exists?(blobstore_key)
           }.from(true).to(false)
         end
@@ -49,7 +49,7 @@ module VCAP::CloudController
           droplets = CloudController::DependencyLocator.instance.droplet_blobstore
           droplets.cp_from_local(droplet.path, blobstore_key)
 
-          expect { AppManager.deleted(app) }.to change {
+          expect { AppObserver.deleted(app) }.to change {
             droplets.exists?(blobstore_key)
           }.from(true).to(false)
         end
@@ -61,7 +61,7 @@ module VCAP::CloudController
           buildpack_caches = CloudController::DependencyLocator.instance.buildpack_cache_blobstore
           buildpack_caches.cp_from_local(droplet.path, blobstore_key)
 
-          expect { AppManager.deleted(app) }.to change {
+          expect { AppObserver.deleted(app) }.to change {
             buildpack_caches.exists?(blobstore_key)
           }.from(true).to(false)
         end
@@ -77,7 +77,7 @@ module VCAP::CloudController
           packages = CloudController::DependencyLocator.instance.package_blobstore
           packages.cp_from_local(droplet.path, blobstore_key)
 
-          expect { AppManager.deleted(app) }.to change {
+          expect { AppObserver.deleted(app) }.to change {
             packages.exists?(blobstore_key)
           }.from(true).to(false)
         end
@@ -122,7 +122,7 @@ module VCAP::CloudController
       end
 
       before do
-        VCAP::CloudController::AppStagerTask.stub(:new).
+        AppStagerTask.stub(:new).
           with(config_hash,
                message_bus,
                app,
@@ -197,7 +197,7 @@ module VCAP::CloudController
         app.stub(previous_changes: changes)
       end
 
-      subject { AppManager.updated(app) }
+      subject { AppObserver.updated(app) }
 
       before do
         DeaClient.stub(:start)

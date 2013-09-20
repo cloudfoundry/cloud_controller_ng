@@ -2,7 +2,7 @@ require "vcap/stager/client"
 require "cloud_controller/multi_response_message_bus_request"
 
 module VCAP::CloudController
-  module AppManager
+  module AppObserver
     class << self
       extend Forwardable
 

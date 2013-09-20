@@ -50,7 +50,7 @@ module VCAP::CloudController
       end
 
       it "sets up the app manager" do
-        expect(AppManager).to receive(:configure).with(
+        expect(AppObserver).to receive(:configure).with(
           @test_config,
           message_bus,
           instance_of(StagerPool))

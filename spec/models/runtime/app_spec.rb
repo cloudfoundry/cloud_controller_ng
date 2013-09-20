@@ -664,7 +664,7 @@ module VCAP::CloudController
       let(:app) { App.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
 
       it "notifies the app observer" do
-        AppManager.should_receive(:deleted).with(app)
+        AppObserver.should_receive(:deleted).with(app)
         app.destroy
       end
 
@@ -948,9 +948,9 @@ module VCAP::CloudController
       subject { App.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
       let(:health_manager_client) { CloudController::DependencyLocator.instance.health_manager_client }
 
-      # Mark app as staged when AppManager.stage_app is called
+      # Mark app as staged when AppObserver.stage_app is called
       before do
-        AppManager.stub(:stage_app) do |app, &success_callback|
+        AppObserver.stub(:stage_app) do |app, &success_callback|
           app.droplet_hash = "droplet-hash"
           success_callback.call(:started_instances => 1)
           AppStagerTask::Response.new({})
@@ -959,7 +959,7 @@ module VCAP::CloudController
 
       def self.it_does_not_stage
         it "does not stage app" do
-          AppManager.should_not_receive(:stage_app)
+          AppObserver.should_not_receive(:stage_app)
           expect {
             update
           }.to_not change { subject.last_stager_response }.from(nil)
@@ -968,7 +968,7 @@ module VCAP::CloudController
 
       def self.it_stages
         it "stages" do
-          AppManager.should_receive(:stage_app).with(subject)
+          AppObserver.should_receive(:stage_app).with(subject)
           expect {
             update
           }.to change { subject.last_stager_response }.from(nil)
@@ -1193,7 +1193,7 @@ module VCAP::CloudController
       end
 
       it "notifies the app observer" do
-        AppManager.should_receive(:deleted).with(app)
+        AppObserver.should_receive(:deleted).with(app)
         app.soft_delete
       end
 

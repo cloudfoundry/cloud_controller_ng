@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       def self.it_runs_app_stager
         it "starts running app stager (one time set up to start tracking stagers)" do
-          AppManager.should_receive(:run)
+          AppObserver.should_receive(:run)
           subject.run!
         end
       end

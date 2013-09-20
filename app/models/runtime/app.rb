@@ -1,4 +1,4 @@
-require "cloud_controller/app_manager"
+require "cloud_controller/app_observer"
 
 module VCAP::CloudController
   class App < Sequel::Model
@@ -179,7 +179,8 @@ module VCAP::CloudController
     end
 
     def after_destroy_commit
-      AppManager.deleted(self)
+      super
+      AppObserver.deleted(self)
     end
 
     def command=(cmd)
@@ -404,7 +405,8 @@ module VCAP::CloudController
 
         after_destroy
       end
-      AppManager.deleted(self)
+
+      AppObserver.deleted(self)
     end
 
     def uris
@@ -456,7 +458,7 @@ module VCAP::CloudController
 
     def after_commit
       super
-      AppManager.updated(self)
+      AppObserver.updated(self)
     end
 
     private
