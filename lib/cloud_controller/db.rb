@@ -48,7 +48,7 @@ module VCAP::CloudController
     end
 
     def self.load_models
-      require "models/core/deleted_space"
+      require "models/runtime/deleted_space"
       require "models/runtime/billing_event"
       require "models/runtime/organization_start_event"
       require "models/runtime/app_start_event"
