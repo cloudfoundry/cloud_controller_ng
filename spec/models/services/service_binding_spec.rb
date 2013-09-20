@@ -2,12 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceBinding, :services, type: :model do
-    before do
-      # TODO: Remove this double after broker api calls are made asynchronous
-      client = double('broker client', unbind: nil, deprovision: nil)
-      Service.any_instance.stub(:client).and_return(client)
-    end
-
     it_behaves_like "a CloudController model", {
       :required_attributes => [:service_instance, :app],
       :db_required_attributes => [:service_instance_id, :app_id, :credentials],
@@ -50,18 +44,6 @@ module VCAP::CloudController
       it "unbinds at the broker" do
         binding.client.should_receive(:unbind)
         binding.destroy
-      end
-
-      context 'when unbind fails' do
-        before { binding.client.stub(:unbind).and_raise }
-
-        it 'raises an error and rolls back' do
-          expect {
-            binding.destroy
-          }.to raise_error
-
-          expect(binding).to be_exists
-        end
       end
     end
 
