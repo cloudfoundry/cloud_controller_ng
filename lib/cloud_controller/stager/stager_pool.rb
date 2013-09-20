@@ -33,7 +33,7 @@ module VCAP::CloudController
         validate_stack_availability(stack)
 
         prune_stale_advertisements
-        eligible_ads = @stager_advertisements.select { |ad| ad.meets_needs?(memory, stack) }.sort { |ad_a, ad_b| ad_a.memory <=> ad_b.memory  }.last(5)
+        eligible_ads = @stager_advertisements.select { |ad| ad.meets_needs?(memory, stack) }.sort { |ad_a, ad_b| ad_a.available_memory <=> ad_b.available_memory  }.last(5)
         best_ad = eligible_ads.sample
         best_ad && best_ad.stager_id
       end
