@@ -53,10 +53,6 @@ module VCAP::CloudController
       end
     end
 
-    def notify_app_updated(guid)
-      message_bus.publish("droplet.updated", :droplet => guid)
-    end
-
     private
 
     attr_reader :config, :message_bus

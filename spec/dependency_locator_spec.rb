@@ -4,6 +4,72 @@ require "cloud_controller/dependency_locator"
 describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.send(:new, config) }
 
+  describe "#droplet_blobstore" do
+    let(:config) do
+      {
+        droplets: {
+          fog_connection: 'fog_connection',
+          droplet_directory_key: 'key',
+          cdn: cdn_settings
+        }
+      }
+    end
+
+    context "when cdn is not configured" do
+      let(:cdn_settings) { nil }
+
+      it "creates blob stores without the CDN" do
+        Blobstore.should_receive(:new).with('fog_connection', 'key', nil)
+        locator.droplet_blobstore
+      end
+    end
+
+    context "when cdn is configured for package blog store" do
+      let(:cdn_host) { 'http://crazy_cdn.com' }
+      let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
+      let(:cdn) { double(:cdn) }
+
+      it "creates the blob stores with CDNs if configured" do
+        Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
+        Blobstore.should_receive(:new).with('fog_connection', 'key', cdn)
+        locator.droplet_blobstore
+      end
+    end
+  end
+
+  describe "#buildpack_cache_blobstore" do
+    let(:config) do
+      {
+        droplets: {
+          fog_connection: 'fog_connection',
+          droplet_directory_key: 'key',
+          cdn: cdn_settings
+        }
+      }
+    end
+
+    context "when cdn is not configured" do
+      let(:cdn_settings) { nil }
+
+      it "creates blob stores without the CDN" do
+        Blobstore.should_receive(:new).with('fog_connection', 'key', nil, "buildpack_cache")
+        locator.buildpack_cache_blobstore
+      end
+    end
+
+    context "when cdn is configured for package blog store" do
+      let(:cdn_host) { 'http://crazy_cdn.com' }
+      let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
+      let(:cdn) { double(:cdn) }
+
+      it "creates the blob stores with CDNs if configured" do
+        Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
+        Blobstore.should_receive(:new).with('fog_connection', 'key', cdn, "buildpack_cache")
+        locator.buildpack_cache_blobstore
+      end
+    end
+  end
+
   describe "#package_blobstore" do
     let(:config) do
       {

@@ -119,24 +119,6 @@ module VCAP::CloudController
         )
       end
 
-      def delete_droplet(app)
-        file = app_droplet(app)
-        file.destroy if file
-      rescue Errno::ENOTEMPTY => e
-        logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
-        true
-      rescue StandardError => e
-        # NotFound errors do not share a common superclass so we have to determine it by name
-        # A github issue for fog will be created.
-        if e.class.name.split('::').last.eql?("NotFound")
-          logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
-          true
-        else
-          # None-NotFound errors will be raised again
-          raise e
-        end
-      end
-
       def droplet_exists?(app)
         !!app_droplet(app)
       end

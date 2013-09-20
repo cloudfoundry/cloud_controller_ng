@@ -179,9 +179,7 @@ module VCAP::CloudController
     end
 
     def after_destroy_commit
-      AppManager.stop_droplet(self)
-      AppManager.delete_droplet(self)
-      AppPackage.delete_package(self.guid)
+      AppManager.deleted(self)
     end
 
     def command=(cmd)
@@ -406,12 +404,11 @@ module VCAP::CloudController
 
         after_destroy
       end
-
-      AppManager.stop_droplet(self)
+      AppManager.deleted(self)
     end
 
     def uris
-      routes.map { |r| r.fqdn }
+      routes.map(&:fqdn)
     end
 
     def after_remove_binding(binding)
@@ -459,7 +456,7 @@ module VCAP::CloudController
 
     def after_commit
       super
-      AppManager.app_changed(self, previous_changes || {})
+      AppManager.updated(self)
     end
 
     private

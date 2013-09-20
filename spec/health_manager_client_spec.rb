@@ -79,12 +79,5 @@ module VCAP::CloudController
         health_manager_client.find_crashes(app).should == resp["instances"]
       end
     end
-
-    describe "notify_app_updated" do
-      it "should publish droplet.updated" do
-        health_manager_client.notify_app_updated(app.guid)
-        expect(message_bus).to have_published_with_message("droplet.updated", droplet: app.guid)
-      end
-    end
   end
 end

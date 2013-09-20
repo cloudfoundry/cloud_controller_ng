@@ -4,7 +4,7 @@ require "cloud_controller/multi_response_message_bus_request"
 module VCAP::CloudController
   module AppManager
     class << self
-      attr_reader :config, :message_bus, :stager_pool
+      extend Forwardable
 
       def configure(config, message_bus, stager_pool)
         @config = config
@@ -12,19 +12,23 @@ module VCAP::CloudController
         @stager_pool = stager_pool
       end
 
-      def run
-        stager_pool.register_subscriptions
+      def deleted(app)
+        DeaClient.stop(app)
+
+        if app.package_hash
+          delete_package(app)
+        end
+
+        if app.staged?
+          delete_droplet(app)
+          delete_buildpack_cache(app)
+        end
       end
 
-      def delete_droplet(app)
-        StagingsController.delete_droplet(app)
-      end
+      def updated(app)
+        changes = app.previous_changes
+        return unless changes
 
-      def stop_droplet(app)
-        DeaClient.stop(app) if app.started?
-      end
-
-      def app_changed(app, changes)
         if changes.has_key?(:state)
           react_to_state_change(app)
         elsif changes.has_key?(:instances)
@@ -33,14 +37,59 @@ module VCAP::CloudController
         end
       end
 
+      def run
+        @stager_pool.register_subscriptions
+      end
+
       private
+
+      def delete_droplet(app)
+        droplet_blobstore.delete(droplet_key(app))
+        droplet_blobstore.delete(old_droplet_key(app))
+      #rescue Errno::ENOTEMPTY => e
+      #  logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
+      #  true
+      #rescue StandardError => e
+      #  # NotFound errors do not share a common superclass so we have to determine it by name
+      #  # A github issue for fog will be created.
+      #  if e.class.name.split('::').last.eql?("NotFound")
+      #    logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
+      #    true
+      #  else
+      #    # None-NotFound errors will be raised again
+      #    raise e
+      #  end
+      end
+
+      def delete_buildpack_cache(app)
+        buildpack_cache_blobstore.delete(app.guid)
+      end
+
+      def delete_package(app)
+        package_blobstore.delete(app.guid)
+      end
+
+      def_delegators :dependency_locator, :buildpack_cache_blobstore,
+                     :package_blobstore, :droplet_blobstore
+
+      def dependency_locator
+        CloudController::DependencyLocator.instance
+      end
+
+      def droplet_key(app)
+        File.join(app.guid, app.droplet_hash)
+      end
+
+      def old_droplet_key(app)
+        app.guid
+      end
 
       def stage_app(app, &completion_callback)
         if app.package_hash.nil? || app.package_hash.empty?
           raise Errors::AppPackageInvalid, "The app package hash is empty"
         end
 
-        task = AppStagerTask.new(config, message_bus, app, stager_pool)
+        task = AppStagerTask.new(@config, @message_bus, app, @stager_pool)
         task.stage(&completion_callback)
       end
 
@@ -57,11 +106,11 @@ module VCAP::CloudController
           stage_if_needed(app) do |staging_result|
             started_instances = staging_result[:started_instances] || 0
             DeaClient.start(app, :instances_to_start => app.instances - started_instances)
-            send_droplet_updated_message(app)
+            broadcast_app_updated(app)
           end
         else
           DeaClient.stop(app)
-          send_droplet_updated_message(app)
+          broadcast_app_updated(app)
         end
       end
 
@@ -69,19 +118,13 @@ module VCAP::CloudController
         if app.started?
           stage_if_needed(app) do |staging_result|
             DeaClient.change_running_instances(app, delta)
-            send_droplet_updated_message(app)
+            broadcast_app_updated(app)
           end
         end
       end
 
-      def send_droplet_updated_message(app)
-        health_manager_client.notify_app_updated(app.guid)
-      end
-
-      private
-
-      def health_manager_client
-        @health_manager_client ||= CloudController::DependencyLocator.instance.health_manager_client
+      def broadcast_app_updated(app)
+        @message_bus.publish("droplet.updated", droplet: app.guid)
       end
     end
   end

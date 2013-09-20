@@ -4,9 +4,13 @@ module VCAP::CloudController
   describe AppManager do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
+    let(:dea_pool) { double(:dea_pool) }
     let(:config_hash) { {:config => 'hash'} }
 
-    before { AppManager.configure(config_hash, message_bus, stager_pool) }
+    before do
+      DeaClient.configure(config_hash, message_bus, dea_pool)
+      AppManager.configure(config_hash, message_bus, stager_pool)
+    end
 
     describe ".run" do
       it "registers subscriptions for dea_pool" do
@@ -15,143 +19,72 @@ module VCAP::CloudController
       end
     end
 
-    describe '.delete_droplet' do
-      let(:app) { App.make }
-      before do
-        AppManager.unstub(:delete_droplet)
+    describe ".deleted" do
+      let(:app) { App.make droplet_hash: nil, package_hash: nil }
+
+      it "stops the application" do
+        AppManager.deleted(app)
+        expect(message_bus).to have_published_with_message("dea.stop", droplet: app.guid)
       end
 
-      it 'should delete the droplet from staging' do
-        StagingsController.should_receive(:delete_droplet).with(app)
-        AppManager.delete_droplet(app)
-      end
+      context "when the app has a droplet" do
+        before { app.droplet_hash = "abcdef" }
 
-      context "when droplet does not exist" do
-        context "local fog provider" do
-          it "does nothing" do
-            StagingsController.droplet_exists?(app).should == false
-            AppManager.delete_droplet(app)
-            StagingsController.droplet_exists?(app).should == false
-          end
-        end
+        it "deletes the droplet" do
+          droplet = Tempfile.new("droplet")
+          blobstore_key = File.join(app.guid, app.droplet_hash)
 
-        context "AWS fog provider" do
-          before do
-            Fog.unmock!
+          droplets = CloudController::DependencyLocator.instance.droplet_blobstore
+          droplets.cp_from_local(droplet.path, blobstore_key)
 
-            fog_credentials = {
-              :provider => "AWS",
-              :aws_access_key_id => "fake_aws_key_id",
-              :aws_secret_access_key => "fake_secret_access_key",
-            }
-
-            config_override(config_override(stager_config(fog_credentials)))
-            config
-          end
-
-          it "does nothing" do
-            StagingsController.droplet_exists?(app).should == false
-            AppManager.delete_droplet(app)
-            StagingsController.droplet_exists?(app).should == false
-          end
-        end
-
-        context "HP fog provider" do
-          before do
-            Fog.unmock!
-
-            fog_credentials = {
-              :provider => "HP",
-              :hp_access_key => "fake_credentials",
-              :hp_secret_key => "fake_credentials",
-              :hp_tenant_id => "fake_credentials",
-              :hp_auth_uri => 'https://auth.example.com:5000/v2.0/',
-              :hp_use_upass_auth_style => true,
-              :hp_avl_zone => 'nova'
-            }
-
-            config_override(stager_config(fog_credentials))
-            config
-          end
-
-          it "does nothing" do
-            StagingsController.droplet_exists?(app).should == false
-            AppManager.delete_droplet(app)
-            StagingsController.droplet_exists?(app).should == false
-          end
-        end
-
-        context "Non NotFound error" do
-          before do
-            StagingsController.blobstore.stub(:files).and_raise(StandardError.new("This is an intended error."))
-          end
-
-          it "should not rescue non-NotFound errors" do
-            expect { AppManager.delete_droplet(app) }.to raise_error(StandardError)
-          end
-        end
-      end
-
-      context "when droplet exists" do
-        before { StagingsController.store_droplet(app, droplet.path) }
-
-        let(:droplet) do
-          Tempfile.new(app.guid).tap do |f|
-            f.write("droplet-contents")
-            f.close
-          end
-        end
-
-        it "deletes the droplet if it exists" do
-          expect {
-            AppManager.delete_droplet(app)
-          }.to change {
-            StagingsController.droplet_exists?(app)
+          expect { AppManager.deleted(app) }.to change {
+            droplets.exists?(blobstore_key)
           }.from(true).to(false)
         end
 
-        # Fog (local) tries to delete parent directories that might be empty
-        # when deleting a file. Sometimes it will fail due to a race
-        # since those directories might have been populated in between
-        # emptiness check and actual deletion.
-        it "does not raise error when it fails to delete directory structure" do
-          Fog::Storage::HP::File
-          .any_instance
-          .should_receive(:destroy)
-          .and_raise(Errno::ENOTEMPTY)
+        it "deletes the old-format droplet" do
+          droplet = Tempfile.new("droplet")
+          blobstore_key = app.guid
 
-          AppManager.delete_droplet(app)
+          droplets = CloudController::DependencyLocator.instance.droplet_blobstore
+          droplets.cp_from_local(droplet.path, blobstore_key)
+
+          expect { AppManager.deleted(app) }.to change {
+            droplets.exists?(blobstore_key)
+          }.from(true).to(false)
+        end
+
+        it "deletes the buildpack cache" do
+          droplet = Tempfile.new("buildpack_cache")
+          blobstore_key = app.guid
+
+          buildpack_caches = CloudController::DependencyLocator.instance.buildpack_cache_blobstore
+          buildpack_caches.cp_from_local(droplet.path, blobstore_key)
+
+          expect { AppManager.deleted(app) }.to change {
+            buildpack_caches.exists?(blobstore_key)
+          }.from(true).to(false)
+        end
+      end
+
+      context "when the app has a package uploaded" do
+        before { app.package_hash = "abcdef" }
+
+        it "deletes the app package" do
+          droplet = Tempfile.new("app_package")
+          blobstore_key = app.guid
+
+          packages = CloudController::DependencyLocator.instance.package_blobstore
+          packages.cp_from_local(droplet.path, blobstore_key)
+
+          expect { AppManager.deleted(app) }.to change {
+            packages.exists?(blobstore_key)
+          }.from(true).to(false)
         end
       end
     end
 
-    describe ".stop_droplet" do
-      let(:app) { App.make }
-
-      context "when the app is started" do
-        before do
-          app.state = "STARTED"
-        end
-
-        it 'should tell the dea client to stop the app' do
-          DeaClient.should_receive(:stop).with(app)
-          AppManager.stop_droplet(app)
-        end
-      end
-
-      context "when the app is stopped" do
-        before do
-          app.state = "STOPPED"
-        end
-
-        it 'should tell the dea client to stop the app' do
-          DeaClient.should_not_receive(:stop)
-          AppManager.stop_droplet(app)
-        end
-      end
-    end
-
-    describe ".app_changed" do
+    describe ".updated" do
       let(:package_hash) { "bar" }
       let(:needs_staging) { false }
       let(:started_instances) { 1 }
@@ -167,8 +100,33 @@ module VCAP::CloudController
         )
       end
 
+      context "when the state of the app changes" do
+        context "from STOPPED to STARTED" do
+          context "and the app needs to be restaged" do
+            it "sends message to stage app"
+          end
+        end
+        context "from STARTED to STOPPED" do
+          it "sends out message to stop the app"
+        end
+      end
+
+      context "when the desired instance count changes" do
+        context "by increasing" do
+          it "sends out messages to start more instances"
+        end
+
+        context "by decreasing" do
+          it "sends out messages to stop instances"
+        end
+      end
+
       before do
-        AppStagerTask.stub(:new).with(config_hash, message_bus, app, stager_pool).and_return(stager_task)
+        VCAP::CloudController::AppStagerTask.stub(:new).
+          with(config_hash,
+               message_bus,
+               app,
+               stager_pool).and_return(stager_task)
 
         stager_task.stub(:stage) do |&callback|
           callback.call(:started_instances => started_instances)
@@ -228,13 +186,18 @@ module VCAP::CloudController
 
       shared_examples_for(:sends_droplet_updated) do
         it "should send droplet updated message" do
-          health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
-          health_manager_client.should_receive(:notify_app_updated).with("foo")
+          #health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
+          #health_manager_client.should_receive(:notify_app_updated).with("foo")
+
           subject
         end
       end
 
-      subject { AppManager.app_changed(app, changes) }
+      before do
+        app.stub(previous_changes: changes)
+      end
+
+      subject { AppManager.updated(app) }
 
       before do
         DeaClient.stub(:start)

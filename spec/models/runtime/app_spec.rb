@@ -663,31 +663,8 @@ module VCAP::CloudController
     describe "destroy" do
       let(:app) { App.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
 
-      context "with a started app" do
-        it "should stop the app on the dea" do
-          app.state = "STARTED"
-          app.save
-          DeaClient.should_receive(:stop).with(app)
-          app.destroy
-        end
-      end
-
-      context "with a stopped app" do
-        it "should not stop the app on the dea" do
-          app.state = "STOPPED"
-          app.save
-          DeaClient.should_not_receive(:stop)
-          app.destroy
-        end
-      end
-
-      it "should remove the droplet" do
-        AppManager.should_receive(:delete_droplet).with(app)
-        app.destroy
-      end
-
-      it "should remove the package" do
-        AppPackage.should_receive(:delete_package).with(app.guid)
+      it "notifies the app observer" do
+        AppManager.should_receive(:deleted).with(app)
         app.destroy
       end
 
@@ -966,6 +943,8 @@ module VCAP::CloudController
     end
 
     describe "changes to the app that trigger staging/dea notifications" do
+      before { pending "move to app observer/manager" }
+
       subject { App.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
       let(:health_manager_client) { CloudController::DependencyLocator.instance.health_manager_client }
 
@@ -1200,35 +1179,40 @@ module VCAP::CloudController
     end
 
     describe "soft deletion" do
-      let(:app_obj) { App.make(:detected_buildpack => "buildpack-name") }
+      let(:app) { App.make(:detected_buildpack => "buildpack-name") }
 
       it "should not allow the same object to be deleted twice" do
-        app_obj.soft_delete
-        expect { app_obj.soft_delete }.to raise_error(App::AlreadyDeletedError)
+        app.soft_delete
+        expect { app.soft_delete }.to raise_error(App::AlreadyDeletedError)
       end
 
       it "does not show up in normal queries" do
         expect {
-          app_obj.soft_delete
-        }.to change { App[:guid => app_obj.guid] }.to(nil)
+          app.soft_delete
+        }.to change { App[:guid => app.guid] }.to(nil)
+      end
+
+      it "notifies the app observer" do
+        AppManager.should_receive(:deleted).with(app)
+        app.soft_delete
       end
 
       context "with app events" do
-        let!(:app_event) { AppEvent.make(:app => app_obj) }
+        let!(:app_event) { AppEvent.make(:app => app) }
 
         context "with other empty associations" do
           it "should soft delete the app" do
-            app_obj.soft_delete
+            app.soft_delete
           end
         end
 
         context "with NON-empty deletable associations" do
           context "with NON-empty service_binding associations" do
-            let!(:svc_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
-            let!(:service_binding) { ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
+            let!(:svc_instance) { ManagedServiceInstance.make(:space => app.space) }
+            let!(:service_binding) { ServiceBinding.make(:app => app, :service_instance => svc_instance) }
 
             it "should delete the service bindings" do
-              app_obj.soft_delete
+              app.soft_delete
 
               ServiceBinding.find(:id => service_binding.id).should be_nil
             end
@@ -1237,17 +1221,17 @@ module VCAP::CloudController
 
         context "with NON-empty nullifyable associations" do
           context "with NON-empty routes associations" do
-            let!(:route) { Route.make(:space => app_obj.space) }
+            let!(:route) { Route.make(:space => app.space) }
 
             before do
-              app_obj.add_route(route)
-              app_obj.save
+              app.add_route(route)
+              app.save
             end
 
             it "should nullify routes" do
-              app_obj.soft_delete
+              app.soft_delete
 
-              deleted_app = App.deleted[:id => app_obj.id]
+              deleted_app = App.deleted[:id => app.id]
               deleted_app.routes.should be_empty
               route.apps.should be_empty
             end
@@ -1256,31 +1240,31 @@ module VCAP::CloudController
 
         after do
           AppEvent.where(:id => app_event.id).should_not be_empty
-          App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
-          App.deleted[:id => app_obj.id].not_deleted.should be_false
+          App.deleted[:id => app.id].deleted_at.should_not be_nil
+          App.deleted[:id => app.id].not_deleted.should be_false
         end
       end
 
       context "recreation" do
         describe "create an already soft deleted app" do
           before do
-            app_obj.soft_delete
+            app.soft_delete
           end
 
           it "should allow recreation and soft deletion of a soft deleted app" do
             expect do
-              deleted_app = App.make(:space => app_obj.space, :name => app_obj.name)
+              deleted_app = App.make(:space => app.space, :name => app.name)
               deleted_app.soft_delete
             end.to_not raise_error
           end
 
           it "should allow only 1 active recreation at a time" do
             expect do
-              App.make(:space => app_obj.space, :name => app_obj.name)
+              App.make(:space => app.space, :name => app.name)
             end.to_not raise_error
 
             expect do
-              App.make(:space => app_obj.space, :name => app_obj.name)
+              App.make(:space => app.space, :name => app.name)
             end.to raise_error
           end
         end

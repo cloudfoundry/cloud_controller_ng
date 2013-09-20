@@ -505,55 +505,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    describe ".delete_droplet" do
-      context "when droplet does not exist" do
-        it "does nothing" do
-          StagingsController.droplet_exists?(app_obj).should == false
-          StagingsController.delete_droplet(app_obj)
-          StagingsController.droplet_exists?(app_obj).should == false
-        end
-      end
-
-      context "when droplet exists" do
-        let(:droplet) { Tempfile.new(app_obj.guid) }
-
-        context "under the new path format" do
-          before { StagingsController.store_droplet(app_obj, droplet.path) }
-
-          it "deletes the droplet if it exists" do
-            expect {
-              StagingsController.delete_droplet(app_obj)
-            }.to change {
-              StagingsController.droplet_exists?(app_obj)
-            }.from(true).to(false)
-          end
-
-          # Fog (local) tries to delete parent directories that might be empty
-          # when deleting a file. Sometimes it will fail due to a race
-          # since those directories might have been populated in between
-          # emptiness check and actual deletion.
-          it "does not raise error when it fails to delete directory structure" do
-            Fog::Storage::Local::File.any_instance.should_receive(:destroy).and_raise(Errno::ENOTEMPTY)
-            StagingsController.delete_droplet(app_obj)
-          end
-        end
-
-        context "under the old path format" do
-          before do
-            blobstore = StagingsController.blobstore
-            blobstore.cp_from_local(droplet.path, app_obj.guid)
-          end
-
-          it "deletes the old droplet" do
-            expect {
-              StagingsController.delete_droplet(app_obj)
-            }.to change {
-              StagingsController.droplet_exists?(app_obj)
-            }.from(true).to(false)
-          end
-        end
-      end
-    end
   end
 end
