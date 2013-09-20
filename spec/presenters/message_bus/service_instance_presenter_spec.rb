@@ -36,6 +36,15 @@ describe ServiceInstancePresenter do
         subject.fetch(:name).should == service_instance.name
         subject.fetch(:tags).should == ["relational", "mysql"]
       end
+
+
+      context 'when the service does not have a version' do
+        let(:service) { VCAP::CloudController::Service.make(version: nil) }
+
+        specify { subject.should_not have_key(:version) }
+
+        its([:label]) { should == service.label }
+      end
     end
 
     context "for a provided service instance" do

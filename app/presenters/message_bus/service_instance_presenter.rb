@@ -32,14 +32,20 @@ class ServiceInstancePresenter
 
     def to_hash
       {
-        label: [@service_instance.service.label, @service_instance.service.version].join('-'),
+        label: [
+          @service_instance.service.label,
+          @service_instance.service.version
+        ].compact.join('-'),
         provider: @service_instance.service.provider,
-        version: @service_instance.service.version,
         vendor: @service_instance.service.label,
         plan: @service_instance.service_plan.name,
         name: @service_instance.name,
         tags: @service_instance.tags
-      }
+      }.tap do |hash|
+        if @service_instance.service.version
+          hash[:version] = @service_instance.service.version
+        end
+      end
     end
   end
 end
