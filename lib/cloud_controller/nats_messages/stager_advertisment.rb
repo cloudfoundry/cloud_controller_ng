@@ -20,8 +20,12 @@ class StagerAdvertisement
     has_memory?(mem) && has_stack?(stack)
   end
 
+  def memory
+    stats["available_memory"]
+  end
+
   def has_memory?(mem)
-    stats["available_memory"] >= mem
+    memory >= mem
   end
 
   def has_stack?(stack)

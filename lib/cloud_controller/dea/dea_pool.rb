@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/stager/client"
-require "cloud_controller/dea/dea_advertisment"
+require "cloud_controller/nats_messages/dea_advertisment"
 require "cloud_controller/dea/eligible_dea_advertisement_filter"
 
 module VCAP::CloudController

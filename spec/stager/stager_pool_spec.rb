@@ -55,6 +55,22 @@ module VCAP::CloudController
           subject.find_stager("stack-name", 1025).should be_nil
           subject.find_stager("stack-name", 1024).should == "staging-id"
         end
+
+        it "samples out of the top 5 stagers with enough memory" do
+          (0..9).to_a.shuffle.each do |i|
+            subject.process_advertise_message(
+              "id" => "staging-id-#{i}",
+              "stacks" => ["stack-name"],
+              "available_memory" => 1024 * i,
+            )
+          end
+
+          correct_stagers = (5..9).map { |i| "staging-id-#{i}" }
+
+          10.times do
+            expect(correct_stagers).to include(subject.find_stager("stack-name", 1024))
+          end
+        end
       end
 
       describe "stack availability" do

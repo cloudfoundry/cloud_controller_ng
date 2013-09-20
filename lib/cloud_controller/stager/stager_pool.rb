@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
 require "vcap/stager/client"
-require "cloud_controller/stager/stager_advertisment"
+require "cloud_controller/nats_messages/stager_advertisment"
 
 module VCAP::CloudController
   class StagerPool
@@ -33,8 +33,8 @@ module VCAP::CloudController
         validate_stack_availability(stack)
 
         prune_stale_advertisements
-        eligible_ads = @stager_advertisements.select { |ad| ad.meets_needs?(memory, stack) }
-        best_ad = eligible_ads.sample # preserving old behavior of picking a random stager
+        eligible_ads = @stager_advertisements.select { |ad| ad.meets_needs?(memory, stack) }.sort { |ad_a, ad_b| ad_a.memory <=> ad_b.memory  }.last(5)
+        best_ad = eligible_ads.sample
         best_ad && best_ad.stager_id
       end
     end
