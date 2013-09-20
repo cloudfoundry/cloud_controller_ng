@@ -14,13 +14,13 @@ describe Loggregator do
   end
   describe "when the emitter is set" do
     it "emits errors to the loggregator" do
-      emitter = LoggregatorEmitter::Emitter.new("127.0.0.1:1234", LogMessage::SourceType::CLOUD_CONTROLLER)
+      emitter = LoggregatorEmitter::Emitter.new("127.0.0.1:1234", LogMessage::SourceType::CLOUD_CONTROLLER, 1)
       emitter.should_receive(:emit_error).with("app_id", "error message")
       Loggregator.emitter = emitter
       Loggregator.emit_error("app_id", "error message")
     end
     it "emits to the loggregator" do
-      emitter = LoggregatorEmitter::Emitter.new("127.0.0.1:1234", LogMessage::SourceType::CLOUD_CONTROLLER)
+      emitter = LoggregatorEmitter::Emitter.new("127.0.0.1:1234", LogMessage::SourceType::CLOUD_CONTROLLER, 1)
       emitter.should_receive(:emit).with("app_id", "log message")
       Loggregator.emitter = emitter
       Loggregator.emit("app_id", "log message")
