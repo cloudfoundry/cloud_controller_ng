@@ -104,11 +104,7 @@ module VCAP::CloudController
       end
 
       def store_droplet(app, path)
-        blobstore.cp_from_local(
-          path,
-          File.join(app.guid, app.droplet_hash),
-          blobstore.local?
-        )
+        CloudController::Droplet.new(app, blobstore).save(path)
       end
 
       def store_buildpack_cache(app, path)
@@ -228,15 +224,25 @@ module VCAP::CloudController
     def upload_droplet(guid)
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
+      raise StagingError.new("malformed droplet upload request for #{app.guid}") unless upload_path
 
-      upload(app, :droplet)
+      # TODO: put in background job
+      app.droplet_hash = Digest::SHA1.file(upload_path).hexdigest
+      self.class.store_droplet(app, upload_path)
+      app.save
+
+      HTTP::OK
     end
 
     def upload_buildpack_cache(guid)
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
+      raise StagingError.new("malformed buildpack cache upload request for #{app.guid}") unless upload_path
 
-      upload(app, :buildpack_cache)
+      # TODO: put in background job
+      self.class.store_buildpack_cache(app, upload_path)
+
+      HTTP::OK
     end
 
     def download_droplet(guid)
@@ -282,25 +288,6 @@ module VCAP::CloudController
 
     def upload(app, type)
       tag = (type == :buildpack_cache) ? "buildpack_cache" : "staged_droplet"
-
-      handle = self.class.lookup_handle(app.guid)
-      raise StagingError.new("staging not in progress for #{app.guid}") unless handle
-      raise StagingError.new("malformed droplet upload request for #{app.guid}") unless upload_path
-
-      final_path = save_path(app.guid, tag)
-      logger.debug "renaming #{tag} from '#{upload_path}' to '#{final_path}'"
-
-      begin
-        File.rename(upload_path, final_path)
-      rescue => e
-        raise StagingError.new("failed renaming #{tag} droplet from #{upload_path} to #{final_path}: #{e.inspect}\n#{e.backtrace.join("\n")}")
-      end
-
-      if type == :buildpack_cache
-        handle.buildpack_cache_upload_path = final_path
-      else
-        handle.upload_path = final_path
-      end
 
       logger.debug "uploaded #{tag} for #{app.guid} to #{final_path}"
 

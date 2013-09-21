@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:cc_port) { 5678 }
     let(:staging_user) { "user" }
     let(:staging_password) { "password" }
-    let(:app_obj) { App.make :droplet_hash => "some-droplet-hash" }
+
     let(:workspace) { Dir.mktmpdir }
     let(:original_staging_config) do
       {
@@ -45,6 +45,8 @@ module VCAP::CloudController
       }
     end
     let(:staging_config) { original_staging_config }
+
+    let(:app_obj) { App.make :droplet_hash => nil } # explicitly unstaged app
 
     before do
       Fog.unmock!
@@ -159,54 +161,31 @@ module VCAP::CloudController
       context "when Fog is configured for AWS" do
         let(:staging_config) do
           original_staging_config.tap do |config|
-            config[:droplets] = {:fog_connection => {
-                :provider => "AWS",
+            config[:droplets] = {
+              :fog_connection => {
+                provider: "AWS",
+                aws_access_key_id: "secret",
+                aws_secret_access_key: "key"
             }}
           end
         end
 
         before do
-          file = double(:file, {
-              :url => "https://some-bucket.example.com/ab/cd/abcdefg",
-              :key => "123-456",
-          })
-          StagingsController.blobstore.stub(:files).and_return(double(:files, :head => file))
+          Fog.mock!
         end
 
         it "returns an AWS url" do
-          uri = StagingsController.droplet_download_uri(app_obj)
-          uri.should == "https://some-bucket.example.com/ab/cd/abcdefg"
-        end
+          app_obj.droplet_hash = "abcdefg"
 
-        context "with a CDN" do
-          let(:staging_config) do
-            original_staging_config.tap do |config|
-              config[:droplets] = {
-                :fog_connection => {
-                    :provider => "AWS",
-                },
-                :cdn => {
-                    :uri => "https://cdn.example.com/some-bucket/ab/cd/abcdefg"
-                },
-              }
-            end
-          end
+          droplet_file = Tempfile.new(app_obj.guid)
+          droplet_file.write("droplet contents")
+          droplet_file.close
 
-          it "returns a URL with the CDN and the file's key" do
-            uri = StagingsController.droplet_download_uri(app_obj)
-            uri.should == "https://cdn.example.com/some-bucket/ab/cd/abcdefg/123-456"
-          end
+          droplet = CloudController::Droplet.new(app_obj, StagingsController.blobstore)
+          droplet.save(droplet_file.path)
 
-          context "when CloudFront Signer is configured" do
-            before do
-              ::AWS::CF::Signer.stub(:is_configured?).and_return(true)
-            end
-
-            it "returns a signed URI using the CDN" do
-              ::AWS::CF::Signer.should_receive(:sign_url).with("https://cdn.example.com/some-bucket/ab/cd/abcdefg/123-456").and_return("signed_url")
-              StagingsController.droplet_uri(app_obj).should == "signed_url"
-            end
-          end
+          uri = URI.parse(StagingsController.droplet_download_uri(app_obj))
+          expect(uri.host).to eq "cc-droplets.s3.amazonaws.com"
         end
       end
     end
@@ -226,17 +205,6 @@ module VCAP::CloudController
       it "returns internal cc uri" do
         uri = StagingsController.buildpack_cache_download_uri(app_obj)
         uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_obj.guid}/download"
-      end
-    end
-
-    describe ".store_droplet" do
-      let(:droplet_upload_path) { Tempfile.new("temp_file") }
-
-      it "copies the application droplet to the blob store" do
-        StagingsController.store_droplet(app_obj, droplet_upload_path.path)
-
-        key = File.join(app_obj.guid, app_obj.droplet_hash)
-        expect(StagingsController.blobstore.exists?(key)).to be_true
       end
     end
 
@@ -299,6 +267,7 @@ module VCAP::CloudController
 
     describe "POST /staging/droplets/:guid/upload" do
       let(:tmpfile) { Tempfile.new("droplet.tgz") }
+
       let(:upload_req) do
         { :upload => { :droplet => Rack::Test::UploadedFile.new(tmpfile) } }
       end
@@ -308,39 +277,40 @@ module VCAP::CloudController
         authorize staging_user, staging_password
       end
 
-      def make_request(droplet_guid=app_obj.guid)
-        post "/staging/droplets/#{droplet_guid}/upload", upload_req
-      end
-
-      context "with a valid upload handle" do
-        let!(:handle) { StagingsController.create_handle(app_obj.guid) }
-
-        after { StagingsController.destroy_handle(handle) }
-
-        context "with valid app" do
-          it "returns 200" do
-            make_request
-            last_response.status.should == 200
-          end
-
-          it "stores file path in handle.upload_path" do
-            make_request
-            File.exists?(handle.upload_path).should be_true
-          end
+      context "with a valid app" do
+        it "returns 200" do
+          post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+          last_response.status.should == 200
         end
 
-        context "with an invalid app" do
-          it "returns 404" do
-            make_request("bad")
-            last_response.status.should == 404
-          end
+        it "updates the app's droplet hash" do
+          expect {
+            post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+          }.to change { app_obj.refresh.droplet_hash }
+        end
+
+        it "marks the app as staged" do
+          expect {
+            post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+          }.to change {
+            app_obj.refresh.staged?
+          }.from(false).to(true)
+        end
+
+        it "stores the droplet in the blobstore" do
+          expect {
+            post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+          }.to change {
+            droplet = CloudController::Droplet.new(app_obj.refresh, StagingsController.blobstore)
+            droplet.exists?
+          }.from(false).to(true)
         end
       end
 
-      context "with an invalid upload handle" do
-        it "return 400" do
-          make_request
-          last_response.status.should == 400
+      context "with an invalid app" do
+        it "returns 404" do
+          post "/staging/droplets/bad-app/upload", upload_req
+          last_response.status.should == 404
         end
       end
 
@@ -354,14 +324,22 @@ module VCAP::CloudController
       end
 
       context "with a valid droplet" do
+        before do
+          app_obj.droplet_hash = "abcdef"
+          app_obj.save
+        end
+
         context "with nginx" do
           before { config[:nginx][:use_nginx] = true }
 
           it "redirects nginx to serve staged droplet" do
-            droplet = Tempfile.new(app_obj.guid)
-            droplet.write("droplet contents")
-            droplet.close
-            StagingsController.store_droplet(app_obj, droplet.path)
+            droplet_file = Tempfile.new(app_obj.guid)
+            droplet_file.write("droplet contents")
+            droplet_file.close
+
+            droplet = CloudController::Droplet.new(app_obj, StagingsController.blobstore)
+            droplet.save(droplet_file.path)
+
             StagingsController.blobstore.exists?([app_obj.guid, app_obj.droplet_hash].join("/")).should be_true
 
             get "/staging/droplets/#{app_obj.guid}/download"
@@ -404,6 +382,7 @@ module VCAP::CloudController
 
     describe "POST /staging/buildpack_cache/:guid/upload" do
       let(:tmpfile) { Tempfile.new("droplet.tgz") }
+
       let(:upload_req) do
         { :upload => { :droplet => Rack::Test::UploadedFile.new(tmpfile) } }
       end
@@ -413,38 +392,27 @@ module VCAP::CloudController
         authorize staging_user, staging_password
       end
 
-      def make_request(droplet_guid=app_obj.guid)
-        post "/staging/buildpack_cache/#{droplet_guid}/upload", upload_req
-      end
-
-      context "with a valid buildpack cache upload handle" do
-        let!(:handle) { StagingsController.create_handle(app_obj.guid) }
-        after { StagingsController.destroy_handle(handle) }
-
-        context "with a valid app" do
-          it "returns 200" do
-            make_request
-            last_response.status.should == 200
-          end
-
-          it "stores file path in handle.buildpack_cache_upload_path" do
-            make_request
-            File.exists?(handle.buildpack_cache_upload_path).should be_true
-          end
+      context "with a valid app" do
+        it "returns 200" do
+          post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
+          last_response.status.should == 200
         end
 
-        context "with an invalid app" do
-          it "returns 404" do
-            make_request("bad")
-            last_response.status.should == 404
-          end
+        it "stores file path in handle.buildpack_cache_upload_path" do
+          expect {
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
+          }.to change {
+            StagingsController.buildpack_cache_blobstore.exists?(
+              app_obj.guid
+            )
+          }.from(false).to(true)
         end
       end
 
-      context "with an invalid upload handle" do
-        it "return 400" do
-          make_request
-          last_response.status.should == 400
+      context "with an invalid app" do
+        it "returns 404" do
+          post "/staging/buildpack_cache/bad-app/upload", upload_req
+          last_response.status.should == 404
         end
       end
     end

@@ -84,6 +84,7 @@ module VCAP::CloudController
       { :app_id => @app.guid,
         :task_id => task_id,
         :properties => staging_task_properties(@app),
+        # All url generation should go to Potato
         :download_uri => StagingsController.app_uri(@app),
         :upload_uri => StagingsController.droplet_upload_uri(@app),
         :buildpack_cache_download_uri => StagingsController.buildpack_cache_download_uri(@app),
@@ -175,24 +176,13 @@ module VCAP::CloudController
     def staging_completion(stager_response)
       instance_was_started_by_dea = !!stager_response.droplet_hash
 
-      @app.droplet_hash = instance_was_started_by_dea ? stager_response.droplet_hash : Digest::SHA1.file(@upload_handle.upload_path).hexdigest
       @app.detected_buildpack = stager_response.detected_buildpack
-
-      StagingsController.store_droplet(@app, @upload_handle.upload_path)
-
-      if (buildpack_cache = @upload_handle.buildpack_cache_upload_path)
-        StagingsController.store_buildpack_cache(@app, buildpack_cache)
-      end
-
       @app.save
 
       DeaClient.dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
 
       @completion_callback.call(:started_instances => instance_was_started_by_dea ? 1 : 0) if @completion_callback
-    ensure
-      destroy_upload_handle
     end
-
 
     def destroy_upload_handle
       StagingsController.destroy_handle(@upload_handle)

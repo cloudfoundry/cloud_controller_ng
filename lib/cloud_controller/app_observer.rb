@@ -1,5 +1,6 @@
 require "vcap/stager/client"
 require "cloud_controller/multi_response_message_bus_request"
+require "models/runtime/droplet"
 
 module VCAP::CloudController
   module AppObserver
@@ -20,7 +21,7 @@ module VCAP::CloudController
         end
 
         if app.staged?
-          delete_droplet(app)
+          CloudController::Droplet.new(app, droplet_blobstore).delete
           delete_buildpack_cache(app)
         end
       end
@@ -43,24 +44,6 @@ module VCAP::CloudController
 
       private
 
-      def delete_droplet(app)
-        droplet_blobstore.delete(droplet_key(app))
-        droplet_blobstore.delete(old_droplet_key(app))
-      #rescue Errno::ENOTEMPTY => e
-      #  logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
-      #  true
-      #rescue StandardError => e
-      #  # NotFound errors do not share a common superclass so we have to determine it by name
-      #  # A github issue for fog will be created.
-      #  if e.class.name.split('::').last.eql?("NotFound")
-      #    logger.warn("Failed to delete droplet: #{e}\n#{e.backtrace}")
-      #    true
-      #  else
-      #    # None-NotFound errors will be raised again
-      #    raise e
-      #  end
-      end
-
       def delete_buildpack_cache(app)
         buildpack_cache_blobstore.delete(app.guid)
       end
@@ -74,14 +57,6 @@ module VCAP::CloudController
 
       def dependency_locator
         CloudController::DependencyLocator.instance
-      end
-
-      def droplet_key(app)
-        File.join(app.guid, app.droplet_hash)
-      end
-
-      def old_droplet_key(app)
-        app.guid
       end
 
       def stage_app(app, &completion_callback)

@@ -273,27 +273,6 @@ module VCAP::CloudController
                 DeaClient.dea_pool.stub(:mark_app_started)
               end
 
-              it "stages the app" do
-                expect {
-                  stage
-                }.to change {
-                  [app.staged?, app.needs_staging?]
-                }.from([false, true]).to([true, false])
-              end
-
-              it "stores droplet" do
-                StagingsController.should_receive(:store_droplet).with(app, '/upload/path')
-                stage
-              end
-
-              it "updates droplet hash on the app" do
-                expect { stage }.to change { app.droplet_hash }.from(nil).to("droplet-sha1")
-              end
-
-              it "marks the app as having staged successfully" do
-                expect { stage }.to change { app.staged? }.to(true)
-              end
-
               it "saves the detected buildpack" do
                 expect { stage }.to change { app.detected_buildpack }.from(nil)
               end
@@ -303,76 +282,10 @@ module VCAP::CloudController
                 stage
               end
 
-              it "removes upload handle" do
-                StagingsController.should_receive(:destroy_handle).with(upload_handle)
-                stage
-              end
-
               it "calls provided callback" do
                 callback_options = nil
                 stage { |options| callback_options = options }
                 callback_options[:started_instances].should equal(1)
-              end
-            end
-
-            context "and the app was staged by the DEA" do
-              #This is only here for backward compatibility while we perform a rolling deploy.  It should be deleted after the deploy.
-              let(:reply_json) do
-                {
-                  "task_id" => "task-id",
-                  "task_log" => "task-log",
-                  "task_streaming_log_url" => task_streaming_log_url,
-                  "detected_buildpack" => detected_buildpack,
-                  "error" => reply_json_error
-                  # no droplet sha from (old) DEAs "droplet_sha1" => "droplet-sha1"
-                }
-              end
-
-              let(:upload_handle) { double(:upload_handle, upload_path: __FILE__, buildpack_cache_upload_path: '/buildpack/upload/path') }
-
-              before do
-                DeaClient.dea_pool.stub(:mark_app_started)
-              end
-
-              it "stages the app" do
-                expect {
-                  stage
-                }.to change {
-                  [app.staged?, app.needs_staging?]
-                }.from([false, true]).to([true, false])
-              end
-
-              it "stores droplet" do
-                StagingsController.should_receive(:store_droplet).with(app, __FILE__)
-                stage
-              end
-
-              it "updates droplet hash on the app" do
-                expect { stage }.to change { app.droplet_hash }.from(nil).to(Digest::SHA1.file(__FILE__).hexdigest)
-              end
-
-              it "marks the app as having staged successfully" do
-                expect { stage }.to change { app.staged? }.to(true)
-              end
-
-              it "saves the detected buildpack" do
-                expect { stage }.to change { app.detected_buildpack }.from(nil)
-              end
-
-              it "does not mark the app as staged" do
-                DeaClient.dea_pool.should_not_receive(:mark_app_started).with({ :dea_id => stager_id, :app_id => app.guid })
-                stage
-              end
-
-              it "removes upload handle" do
-                StagingsController.should_receive(:destroy_handle).with(upload_handle)
-                stage
-              end
-
-              it "calls provided callback" do
-                callback_options = nil
-                stage { |options| callback_options = options }
-                callback_options[:started_instances].should equal(0)
               end
             end
           end
