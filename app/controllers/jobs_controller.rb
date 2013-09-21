@@ -8,9 +8,6 @@ module VCAP::CloudController
     def read(guid)
       job = Delayed::Job[:guid => guid]
       JobPresenter.new(job).to_json
-    rescue => e
-      p e
-      raise
     end
 
     get "#{path_guid}", :read

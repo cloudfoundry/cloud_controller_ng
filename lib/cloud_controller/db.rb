@@ -31,7 +31,6 @@ module VCAP::CloudController
       end
 
       db = Sequel.connect(opts[:database], connection_options)
-      require "vcap/delayed_job_guid_monkeypatch" # this fails if it is required before Sequel.connect. Sorry!
       db.logger = logger
       db.sql_log_level = opts[:log_level] || :debug2
 
@@ -85,6 +84,8 @@ module VCAP::CloudController
       require "models/services/service_delete_event"
 
       require "models/job"
+
+      require "delayed_job_sequel"
     end
 
     def self.apply_migrations(db, opts = {})
