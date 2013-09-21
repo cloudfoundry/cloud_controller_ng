@@ -179,6 +179,15 @@ describe "Service Broker Management", :type => :integration do
   end
 
   describe 'getting an error' do
+    around do |example|
+      begin
+        test_mode = ENV.delete('CC_TEST')
+        example.run
+      ensure
+        ENV['CC_TEST'] = test_mode
+      end
+    end
+
     it 'returns a complete error structure' do
       body = JSON.dump(
           broker_url: "http://localhost:54329/blowsup", # this special url causes 500 errors from the fake broker

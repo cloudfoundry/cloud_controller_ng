@@ -72,14 +72,6 @@ describe VCAP::CloudController::RestController::Base do
         }.to raise_error VCAP::Errors::InvalidRelation
       end
 
-      it "should log and raise the exception as-is" do
-        subject.stub(:to_s).and_raise(RuntimeError.new("message"))
-        expect {
-          logger.should_receive(:error).with(/message/)
-          subject.dispatch(:to_s)
-        }.to raise_exception RuntimeError
-      end
-
       describe '#redirect' do
         let(:sinatra) { double('sinatra') }
         let(:app) do

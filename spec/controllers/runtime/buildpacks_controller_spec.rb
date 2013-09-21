@@ -163,8 +163,9 @@ module VCAP::CloudController
 
           it "gets the uploaded file from the upload handler" do
             upload_handler = CloudController::DependencyLocator.instance.upload_handler
-            upload_handler.should_receive(:uploaded_file)
-            .with(hash_including('buildpack_name'=> 'file.zip'), "buildpack")
+            upload_handler.should_receive(:uploaded_file).
+              with(hash_including('buildpack_name'=> 'file.zip'), "buildpack").
+              and_return(valid_zip)
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
           end
 

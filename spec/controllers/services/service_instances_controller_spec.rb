@@ -213,10 +213,11 @@ module VCAP::CloudController
           :space_guid => space.guid,
           :service_plan_guid => plan.guid
         )
-        headers = json_headers(headers_for(developer))
-        ManagedServiceInstance.any_instance.stub(:save).and_raise
 
-        post "/v2/service_instances", req, headers
+        ManagedServiceInstance.any_instance.stub(:save).and_raise
+        Controller.any_instance.stub(:in_test_mode?).and_return(false)
+
+        post "/v2/service_instances", req, json_headers(headers_for(developer))
 
         expect(last_response.status).to eq(500)
         expect(client).to have_received(:deprovision).with(an_instance_of(ManagedServiceInstance))

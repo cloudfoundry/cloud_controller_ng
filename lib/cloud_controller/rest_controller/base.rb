@@ -105,11 +105,6 @@ module VCAP::CloudController::RestController
       raise MessageParseError.new(e)
     rescue VCAP::CloudController::InvalidRelation => e
       raise VCAP::Errors::InvalidRelation.new(e)
-    rescue VCAP::Errors::Error => e
-      raise
-    rescue => e
-      logger.error(["An unhandled exception has occurred #{e.class} - #{e.message}:"].concat(e.backtrace).join("\\n"))
-      raise
     end
 
     # Fetch the current active user.  May be nil

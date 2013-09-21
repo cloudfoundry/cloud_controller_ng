@@ -70,15 +70,14 @@ module Sinatra
           request.env["vcap_exception_body_set"] = true
           body_from_vcap_exception(exception)
         else
-          msg = ["#{exception.class} - #{exception.message}"]
-          msg[0] = msg[0] + ":"
+          raise exception if in_test_mode?
+
+          msg = ["An unhandled exception has occurred #{exception.class} - #{exception.message}:"]
           msg.concat(exception.backtrace)
           logger.error(msg.join("\n"))
           ::VCAP::Component.varz.synchronize do
             varz[:recent_errors] << msg
           end
-
-          status(500)
 
           if exception.respond_to?(:to_h)
             # Make sure there is a code and description because clients expect them, but

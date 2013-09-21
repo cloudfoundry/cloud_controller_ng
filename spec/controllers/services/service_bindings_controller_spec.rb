@@ -246,7 +246,9 @@ module VCAP::CloudController
           :service_instance_guid => instance.guid
         )
 
+        Controller.any_instance.stub(:in_test_mode?).and_return(false)
         ServiceBinding.any_instance.stub(:save).and_raise
+
         post "/v2/service_bindings", req, json_headers(headers_for(developer))
         expect(broker_client).to have_received(:unbind).with(an_instance_of(ServiceBinding))
         expect(last_response.status).to eq(500)
