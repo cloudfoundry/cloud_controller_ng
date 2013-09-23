@@ -90,7 +90,7 @@ module VCAP::CloudController
 
     def setup_loggregator_emitter
       if @config[:loggregator] && @config[:loggregator][:router]
-        Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], LogMessage::SourceType::CLOUD_CONTROLLER)
+        Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], LogMessage::SourceType::CLOUD_CONTROLLER, @config[:index])
       end
     end
 
