@@ -18,10 +18,9 @@ module CloudController
     end
 
     def save(source_path)
-      blobstore.cp_from_local(
+      blobstore.cp_to_blobstore(
         source_path,
-        blobstore_key,
-        blobstore.local?
+        blobstore_key
       )
     end
 

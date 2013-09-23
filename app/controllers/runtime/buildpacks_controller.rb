@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       return [HTTP::CONFLICT, nil] if sha1 == buildpack.key
 
-      buildpack_blobstore.cp_from_local(file_struct.path, sha1)
+      buildpack_blobstore.cp_to_blobstore(file_struct.path, sha1)
 
       old_buildpack_key = buildpack.key
       model.db.transaction do

@@ -76,10 +76,9 @@ module VCAP::CloudController
       end
 
       def store_buildpack_cache(app, path)
-        buildpack_cache_blobstore.cp_from_local(
+        buildpack_cache_blobstore.cp_to_blobstore(
           path,
-          app.guid,
-          buildpack_cache_blobstore.local?
+          app.guid
         )
       end
 

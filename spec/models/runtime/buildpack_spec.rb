@@ -23,10 +23,10 @@ module VCAP::CloudController
       before do
         Buildpack.dataset.delete
 
-        buildpack_blobstore.cp_from_local(buildpack_file_1.path, "a key")
+        buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, "a key")
         @buildpack = Buildpack.make(key: "a key")
 
-        buildpack_blobstore.cp_from_local(buildpack_file_2.path, "b key")
+        buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, "b key")
         @another_buildpack = Buildpack.make(key: "b key")
       end
 

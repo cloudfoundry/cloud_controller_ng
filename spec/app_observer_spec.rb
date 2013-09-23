@@ -35,7 +35,7 @@ module VCAP::CloudController
           blobstore_key = File.join(app.guid, app.droplet_hash)
 
           droplets = CloudController::DependencyLocator.instance.droplet_blobstore
-          droplets.cp_from_local(droplet.path, blobstore_key)
+          droplets.cp_to_blobstore(droplet.path, blobstore_key)
 
           expect { AppObserver.deleted(app) }.to change {
             droplets.exists?(blobstore_key)
@@ -47,7 +47,7 @@ module VCAP::CloudController
           blobstore_key = app.guid
 
           droplets = CloudController::DependencyLocator.instance.droplet_blobstore
-          droplets.cp_from_local(droplet.path, blobstore_key)
+          droplets.cp_to_blobstore(droplet.path, blobstore_key)
 
           expect { AppObserver.deleted(app) }.to change {
             droplets.exists?(blobstore_key)
@@ -59,7 +59,7 @@ module VCAP::CloudController
           blobstore_key = app.guid
 
           buildpack_caches = CloudController::DependencyLocator.instance.buildpack_cache_blobstore
-          buildpack_caches.cp_from_local(droplet.path, blobstore_key)
+          buildpack_caches.cp_to_blobstore(droplet.path, blobstore_key)
 
           expect { AppObserver.deleted(app) }.to change {
             buildpack_caches.exists?(blobstore_key)
@@ -75,7 +75,7 @@ module VCAP::CloudController
           blobstore_key = app.guid
 
           packages = CloudController::DependencyLocator.instance.package_blobstore
-          packages.cp_from_local(droplet.path, blobstore_key)
+          packages.cp_to_blobstore(droplet.path, blobstore_key)
 
           expect { AppObserver.deleted(app) }.to change {
             packages.exists?(blobstore_key)

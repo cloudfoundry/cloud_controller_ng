@@ -171,7 +171,7 @@ module VCAP::CloudController
 
           it "does not allow non-zip files" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.should_not_receive(:cp_from_local)
+            buildpack_blobstore.should_not_receive(:cp_to_blobstore)
 
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_tar_gz}, admin_headers
             expect(last_response.status).to eql 400

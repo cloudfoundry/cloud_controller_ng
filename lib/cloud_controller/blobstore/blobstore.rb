@@ -18,7 +18,7 @@ class Blobstore
     !file(key).nil?
   end
 
-  def cp_to_local(source_key, destination_path)
+  def download_from_blobstore(source_key, destination_path)
     FileUtils.mkdir_p(File.dirname(destination_path))
     File.open(destination_path, "w") do |file|
       (@cdn || files).get(partitioned_key(source_key)) do |*chunk|
@@ -27,23 +27,23 @@ class Blobstore
     end
   end
 
-  def cp_r_from_local(source_dir)
+  def cp_r_to_blobstore(source_dir)
     Find.find(source_dir).each do |path|
       next unless File.file?(path)
 
       sha1 = Digest::SHA1.file(path).hexdigest
       next if exists?(sha1)
 
-      cp_from_local(path, sha1)
+      cp_to_blobstore(path, sha1)
     end
   end
 
-  def cp_from_local(source_path, destination_key, make_public=false)
+  def cp_to_blobstore(source_path, destination_key)
     File.open(source_path) do |file|
       files.create(
         :key => partitioned_key(destination_key),
         :body => file,
-        :public => make_public,
+        :public => local?,
       )
     end
   end

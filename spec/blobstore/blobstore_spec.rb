@@ -10,7 +10,7 @@ describe Blobstore do
     Tempfile.open("") do |tmpfile|
       tmpfile.write(content)
       tmpfile.close
-      blobstore.cp_from_local(tmpfile.path, key)
+      blobstore.cp_to_blobstore(tmpfile.path, key)
     end
   end
 
@@ -55,7 +55,7 @@ describe Blobstore do
 
       destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
 
-      expect { cdn_blobstore.cp_to_local(key, destination) }.to change {
+      expect { cdn_blobstore.download_from_blobstore(key, destination) }.to change {
         File.exists?(destination)
       }.from(false).to(true)
 
@@ -111,7 +111,7 @@ describe Blobstore do
       end
     end
 
-    describe "#cp_r_from_local" do
+    describe "#cp_r_to_blobstore" do
       let(:sha_of_nothing) { Digest::SHA1.hexdigest("") }
 
       it "ensure that the sha of nothing and sha of content are different for subsequent tests" do
@@ -120,7 +120,7 @@ describe Blobstore do
 
       it "copies the top-level local files into the blobstore" do
         FileUtils.touch(File.join(local_dir, "empty_file"))
-        blobstore.cp_r_from_local(local_dir)
+        blobstore.cp_r_to_blobstore(local_dir)
         expect(blobstore.exists?(sha_of_nothing)).to be_true
       end
 
@@ -129,7 +129,7 @@ describe Blobstore do
         FileUtils.mkdir_p(subdir)
         File.open(File.join(subdir, "file_with_content"), "w") { |file| file.write(content) }
 
-        blobstore.cp_r_from_local(local_dir)
+        blobstore.cp_r_to_blobstore(local_dir)
         expect(blobstore.exists?(sha_of_content)).to be_true
       end
 
@@ -140,8 +140,8 @@ describe Blobstore do
 
         it "does not re-upload it" do
           expect(blobstore.exists?(sha_of_content)).to be_false
-          blobstore.cp_r_from_local(local_dir)
-          blobstore.cp_r_from_local(local_dir)
+          blobstore.cp_r_to_blobstore(local_dir)
+          blobstore.cp_r_to_blobstore(local_dir)
         end
       end
     end
@@ -187,7 +187,7 @@ describe Blobstore do
       end
     end
 
-    describe "#cp_to_local" do
+    describe "#download_from_blobstore" do
       context "when directly from the underlying storage" do
         before do
           upload_tmpfile(blobstore, sha_of_content)
@@ -197,7 +197,7 @@ describe Blobstore do
           expect(blobstore.exists?(sha_of_content)).to be_true
           destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
 
-          expect { blobstore.cp_to_local(sha_of_content, destination) }.to change {
+          expect { blobstore.download_from_blobstore(sha_of_content, destination) }.to change {
             File.exists?(destination)
           }.from(false).to(true)
 
@@ -210,14 +210,14 @@ describe Blobstore do
       it "calls the fog with public false" do
         FileUtils.touch(File.join(local_dir, "empty_file"))
         blobstore.files.should_receive(:create).with(hash_including(public: false))
-        blobstore.cp_r_from_local(local_dir)
+        blobstore.cp_r_to_blobstore(local_dir)
       end
 
       it "uploads the files with the specified key" do
         path = File.join(local_dir, "empty_file")
         FileUtils.touch(path)
 
-        blobstore.cp_from_local(path, "abcdef123456")
+        blobstore.cp_to_blobstore(path, "abcdef123456")
         expect(blobstore.exists?("abcdef123456")).to be_true
         expect(blobstore.files).to have(1).item
       end
@@ -227,16 +227,17 @@ describe Blobstore do
         FileUtils.touch(path)
         key = "abcdef12345"
 
-        blobstore.cp_from_local(path, key)
+        blobstore.cp_to_blobstore(path, key)
         expect(blobstore.file(key).public_url).to be_nil
       end
 
       it "can copy as a public file" do
+        blobstore.stub(:local?) { true }
         path = File.join(local_dir, "empty_file")
         FileUtils.touch(path)
         key = "abcdef12345"
 
-        blobstore.cp_from_local(path, key, true)
+        blobstore.cp_to_blobstore(path, key)
         expect(blobstore.file(key).public_url).to be
       end
     end
@@ -246,7 +247,7 @@ describe Blobstore do
         path = File.join(local_dir, "empty_file")
         FileUtils.touch(path)
 
-        blobstore.cp_from_local(path, "abcdef123456")
+        blobstore.cp_to_blobstore(path, "abcdef123456")
         expect(blobstore.exists?("abcdef123456")).to be_true
         blobstore.delete("abcdef123456")
         expect(blobstore.exists?("abcdef123456")).to be_false

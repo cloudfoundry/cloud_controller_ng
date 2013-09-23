@@ -31,8 +31,8 @@ describe CloudController::Droplet do
 
   describe "#delete" do
     before do
-      blobstore.cp_from_local(tmp_file.path, "#{app.guid}/droplet_hash")
-      blobstore.cp_from_local(tmp_file.path, "#{app.guid}")
+      blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}/droplet_hash")
+      blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}")
     end
 
     it "removes the new and old format keys (guid/sha, guid)" do
@@ -53,7 +53,7 @@ describe CloudController::Droplet do
 
     context "when the new format key exists" do
       before do
-        blobstore.cp_from_local(tmp_file.path, "#{app.guid}/droplet_hash")
+        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}/droplet_hash")
       end
 
       it { should exist }
@@ -61,7 +61,7 @@ describe CloudController::Droplet do
 
     context "when the old format key exists" do
       before do
-        blobstore.cp_from_local(tmp_file.path, app.guid)
+        blobstore.cp_to_blobstore(tmp_file.path, app.guid)
       end
 
       it { should exist }

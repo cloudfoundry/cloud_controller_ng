@@ -6,7 +6,7 @@ describe AppBitsPacker do
     path = File.join(local_tmp_dir, "content")
     sha = "some_fake_sha"
     File.open(path, "w" ) { |f| f.write "content"  }
-    global_app_bits_cache.cp_from_local(path, sha)
+    global_app_bits_cache.cp_to_blobstore(path, sha)
 
     FingerprintsCollection.new([{"fn" => "path/to/content.txt", "size" => 123, "sha1" => sha}])
   end
@@ -42,13 +42,13 @@ describe AppBitsPacker do
 
     it "uploads the new app bits to the package blob store" do
       perform
-      package_blobstore.cp_to_local(app.guid, File.join(local_tmp_dir, "package.zip"))
+      package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, "package.zip"))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include("bye")
     end
 
     it "uploads the old app bits already in the app bits cache to the package blob store" do
       perform
-      package_blobstore.cp_to_local(app.guid, File.join(local_tmp_dir, "package.zip"))
+      package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, "package.zip"))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include("path/to/content.txt")
     end
 
