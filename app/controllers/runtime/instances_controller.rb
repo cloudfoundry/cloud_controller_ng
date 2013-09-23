@@ -1,6 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Instances do
-    disable_default_routes
+  class InstancesController < RestController::ModelController
     path_base "apps"
     model_class_name :App
 
