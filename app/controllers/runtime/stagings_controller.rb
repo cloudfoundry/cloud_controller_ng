@@ -27,15 +27,6 @@ module VCAP::CloudController
     DROPLET_PATH = "#{STAGING_PATH}/droplets"
     BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/buildpack_cache"
 
-    class DropletUploadHandle
-      attr_accessor :guid, :upload_path, :buildpack_cache_upload_path
-
-      def initialize(guid)
-        @guid = guid
-        @upload_path = nil
-      end
-    end
-
     attr_reader :config
 
     class << self
@@ -77,29 +68,6 @@ module VCAP::CloudController
           staging_uri("#{DROPLET_PATH}/#{app.guid}/download")
         else
           droplet_uri(app)
-        end
-      end
-
-      def create_handle(guid)
-        handle = DropletUploadHandle.new(guid)
-        mutex.synchronize { upload_handles[handle.guid] = handle }
-        handle
-      end
-
-      def destroy_handle(handle)
-        return unless handle
-        mutex.synchronize do
-          files_to_delete = [handle.upload_path, handle.buildpack_cache_upload_path]
-          files_to_delete.each do |file|
-            File.delete(file) if file && File.exists?(file)
-          end
-          upload_handles.delete(handle.guid)
-        end
-      end
-
-      def lookup_handle(guid)
-        mutex.synchronize do
-          return upload_handles[guid]
         end
       end
 
@@ -172,10 +140,6 @@ module VCAP::CloudController
         ).to_s
       end
 
-      def upload_handles
-        @upload_handles ||= {}
-      end
-
       MUTEX = Mutex.new
       def mutex
         MUTEX
@@ -228,8 +192,18 @@ module VCAP::CloudController
 
       # TODO: put in background job
       app.droplet_hash = Digest::SHA1.file(upload_path).hexdigest
+
+      logger.debug "droplet.uploaded", :sha => app.droplet_hash
+
+      start = Time.now
+
       self.class.store_droplet(app, upload_path)
+
+      logger.debug "droplet.saved", took: Time.now - start
+
       app.save
+
+      logger.debug "app.saved"
 
       HTTP::OK
     end

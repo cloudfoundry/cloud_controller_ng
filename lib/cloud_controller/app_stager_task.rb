@@ -57,7 +57,6 @@ module VCAP::CloudController
 
       @message_bus.publish("staging.stop", :app_id => @app.guid)
 
-      @upload_handle = StagingsController.create_handle(@app.guid)
       @completion_callback = completion_callback
 
       staging_result = EM.schedule_sync do |promise|
@@ -111,10 +110,8 @@ module VCAP::CloudController
     rescue => e
       Loggregator.emit_error(@app.guid, "exception handling first response #{e.message}")
       logger.error("exception handling first response #{e.inspect}, backtrace: #{e.backtrace.join("\n")}")
-      destroy_upload_handle if staging_is_current?
       promise.fail(e)
     end
-
 
     def handle_second_response(response, error)
       @multi_message_bus_request.ignore_subsequent_responses
@@ -122,7 +119,6 @@ module VCAP::CloudController
       ensure_staging_is_current!
       process_response(response)
     rescue => e
-      destroy_upload_handle if staging_is_current?
       Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
       logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
     end
@@ -182,10 +178,6 @@ module VCAP::CloudController
       DeaClient.dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
 
       @completion_callback.call(:started_instances => instance_was_started_by_dea ? 1 : 0) if @completion_callback
-    end
-
-    def destroy_upload_handle
-      StagingsController.destroy_handle(@upload_handle)
     end
 
     def staging_task_properties(app)

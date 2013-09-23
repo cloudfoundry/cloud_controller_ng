@@ -9,8 +9,6 @@ module VCAP::CloudController
     let(:stager_id) { "my_stager" }
 
     let(:options) { {} }
-    let(:upload_handle) { double(:upload_handle, upload_path: '/upload/path', buildpack_cache_upload_path: '/buildpack/upload/path') }
-
     subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, stager_pool) }
 
     let(:reply_json_error) { nil }
@@ -49,10 +47,8 @@ module VCAP::CloudController
       EM.stub(:defer).and_yield
       EM.stub(:schedule_sync)
 
-      StagingsController.stub(:create_handle).and_return(upload_handle)
       StagingsController.stub(:store_droplet)
       StagingsController.stub(:store_buildpack_cache)
-      StagingsController.stub(:destroy_handle)
       # Some other tests inter
       Buildpack.stub(:list_admin_buildpacks).and_return([])
     end
@@ -104,11 +100,6 @@ module VCAP::CloudController
             expect(app).to be_pending
           end
 
-          it "creates upload handle for stager to upload droplet" do
-            StagingsController.should_receive(:create_handle).and_return(upload_handle)
-            stage
-          end
-
           context "when there are available stagers" do
             it "stops other staging tasks and starts a new one" do
               message_bus.should_receive(:publish).with("staging.stop", anything)
@@ -158,10 +149,6 @@ module VCAP::CloudController
             }.to raise_error(Errors::StagingError, /failed to stage/)
           end
 
-          it "removes upload handle" do
-            StagingsController.should_receive(:destroy_handle).with(upload_handle)
-            ignore_error(Errors::StagingError) { stage }
-          end
           it "keeps the app as not staged" do
             expect {
               ignore_error(Errors::StagingError) { stage }
@@ -201,10 +188,6 @@ module VCAP::CloudController
             expect { stage }.to raise_error(Errors::StagingError, /failed to stage/)
           end
 
-          it "removes upload handle" do
-            StagingsController.should_receive(:destroy_handle).with(upload_handle)
-            ignore_error(Errors::StagingError) { stage }
-          end
           it "keeps the app as not staged" do
             expect {
               ignore_error(Errors::StagingError) { stage }
@@ -350,10 +333,6 @@ module VCAP::CloudController
             stage
           end
 
-          it "removes upload handle" do
-            StagingsController.should_receive(:destroy_handle).with(upload_handle)
-            stage
-          end
           it "keeps the app as not staged" do
             expect {
               ignore_error(Errors::StagingError) { stage }
@@ -399,10 +378,6 @@ module VCAP::CloudController
             stage
           end
 
-          it "removes upload handle" do
-            StagingsController.should_receive(:destroy_handle).with(upload_handle)
-            stage
-          end
           it "keeps the app as not staged" do
             expect {
               ignore_error(Errors::StagingError) { stage }
