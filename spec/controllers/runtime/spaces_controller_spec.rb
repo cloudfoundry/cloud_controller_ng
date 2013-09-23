@@ -418,7 +418,8 @@ module VCAP::CloudController
 
       context 'with an offering that has private plans' do
         before(:each) do
-          @service = Service.make(:active => true).tap { |svc| ServicePlan.make(:service => svc, public: false) }
+          @service = Service.make(:active => true)
+          @service_plan = ServicePlan.make(:service => @service, public: false)
           ServicePlanVisibility.make(service_plan: @service.service_plans.first, organization: organization_one)
         end
 
@@ -432,6 +433,28 @@ module VCAP::CloudController
           get "/v2/spaces/#{space_one.guid}/services", {}, headers
           last_response.should be_ok
           decoded_guids.should include(@service.guid)
+        end
+
+        it 'should include plans that are visible to the org' do
+          get "/v2/spaces/#{space_one.guid}/services?inline-relations-depth=1", {}, headers
+
+          last_response.should be_ok
+          service = decoded_response.fetch('resources').fetch(0)
+          service_plans = service.fetch('entity').fetch('service_plans')
+          service_plans.length.should == 1
+          service_plans.first.fetch('metadata').fetch('guid').should == @service_plan.guid
+        end
+
+        it 'should exclude plans that are not visible to the org' do
+          public_service_plan = ServicePlan.make(service: @service, public: true)
+
+          get "/v2/spaces/#{space_two.guid}/services?inline-relations-depth=1", {}, headers
+
+          last_response.should be_ok
+          service = decoded_response.fetch('resources').fetch(0)
+          service_plans = service.fetch('entity').fetch('service_plans')
+          service_plans.length.should == 1
+          service_plans.first.fetch('metadata').fetch('guid').should == public_service_plan.guid
         end
       end
 

@@ -37,10 +37,10 @@ module VCAP::CloudController
       )
 
       RestController::Paginator.render_json(
-          ServicesController,
-          services,
-          "/v2/spaces/#{guid}/services",
-          @opts
+        ServicesController,
+        services,
+        "/v2/spaces/#{guid}/services",
+        @opts.merge(serialization: ServiceSerialization, organization: space.organization)
       )
     end
 
@@ -71,5 +71,23 @@ module VCAP::CloudController
       )
     end
 
+    module ServiceSerialization
+      def self.to_hash(controller, service, opts)
+        entity_hash = service.to_hash.merge({
+          "service_plans" => service.service_plans_dataset.organization_visible(opts[:organization]).map do |service_plan|
+            RestController::ObjectSerialization.to_hash(controller, service_plan, opts)
+          end
+        })
+
+        metadata_hash = {
+          "guid" => service.guid,
+          "url" => controller.url_for_guid(service.guid),
+          "created_at" => service.created_at,
+          "updated_at" => service.updated_at
+        }
+
+        {"metadata" => metadata_hash, "entity" => entity_hash}
+      end
+    end
   end
 end
