@@ -11,7 +11,7 @@ describe CloudController::DependencyLocator do
           fog_connection: 'fog_connection',
           droplet_directory_key: 'key',
           cdn: cdn_settings
-        }
+        },
       }
     end
 
@@ -92,7 +92,7 @@ describe CloudController::DependencyLocator do
 
     context "when cdn is configured for package blog store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
-      let(:cdn_settings) { {uri: cdn_host, key_pair_id: 'key_pair'} }
+      let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
       let(:cdn) { double(:cdn) }
 
       it "creates the blob stores with CDNs if configured" do
@@ -125,7 +125,7 @@ describe CloudController::DependencyLocator do
 
     context "when cdn is configured for package blog store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
-      let(:cdn_settings) { {uri: cdn_host, key_pair_id: 'key_pair'} }
+      let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
       let(:cdn) { double(:cdn) }
 
       it "creates the blob stores with CDNs if configured" do
@@ -133,6 +133,36 @@ describe CloudController::DependencyLocator do
         Blobstore.should_receive(:new).with('fog_connection', 'key', cdn)
         locator.global_app_bits_cache
       end
+    end
+  end
+
+  describe "blobstore_url_generator" do
+    let(:my_config) do
+      {
+        bind_address: "bind.address",
+        port: 8282,
+        staging: {
+          auth: {
+            user: "username",
+            password: "password",
+          }
+        }
+      }
+    end
+
+    before do
+      config_override(my_config)
+    end
+
+    it "creates blobstore_url_generator with the host, port, and blobstores" do
+      connection_options = {
+        blobstore_host: "bind.address",
+        blobstore_port: 8282,
+        user: "username",
+        password: "password"
+      }
+      CloudController::BlobstoreUrlGenerator.should_receive(:new).with(hash_including(connection_options), anything, anything, anything)
+      locator.blobstore_url_generator
     end
   end
 end

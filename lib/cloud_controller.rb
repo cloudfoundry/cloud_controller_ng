@@ -118,6 +118,7 @@ require "cloud_controller/controllers"
 require "cloud_controller/roles"
 require "cloud_controller/encryptor"
 require "cloud_controller/blobstore/blobstore"
+require "cloud_controller/blobstore/blobstore_url_generator"
 require "cloud_controller/dependency_locator"
 require "cloud_controller/controller_factory"
 

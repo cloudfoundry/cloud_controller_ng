@@ -7,9 +7,10 @@ module VCAP::CloudController
     let(:config_hash) { { :config => 'hash' } }
     let(:app) { App.make(:package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :state => "STARTED", :instances => 1) }
     let(:stager_id) { "my_stager" }
+    let(:blobstore_url_generator) { double.as_null_object }
 
     let(:options) { {} }
-    subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, stager_pool) }
+    subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, stager_pool, blobstore_url_generator) }
 
     let(:reply_json_error) { nil }
     let(:task_streaming_log_url) { "task-streaming-log-url" }
@@ -413,7 +414,6 @@ module VCAP::CloudController
     end
 
     describe ".staging_request" do
-      let(:staging_task) { AppStagerTask.new(nil, message_bus, app, stager_pool) }
       let(:app) { App.make :droplet_hash => nil, :package_state => "PENDING" }
       let(:dea_start_message) { { :dea_client_message => "start app message" } }
 
@@ -428,11 +428,10 @@ module VCAP::CloudController
       end
 
       it "includes app guid, task id and download/upload uris" do
-        StagingsController.stub(:app_uri).with(app).and_return("http://www.app.uri")
-        StagingsController.stub(:droplet_upload_uri).with(app).and_return("http://www.droplet.upload.uri")
-        StagingsController.stub(:buildpack_cache_download_uri).with(app).and_return("http://www.buildpack.cache.download.uri")
-        StagingsController.stub(:buildpack_cache_upload_uri).with(app).and_return("http://www.buildpack.cache.upload.uri")
-
+        blobstore_url_generator.stub(:app_package_download_url).with(app).and_return("http://www.app.uri")
+        blobstore_url_generator.stub(:droplet_upload_url).with(app).and_return("http://www.droplet.upload.uri")
+        blobstore_url_generator.stub(:buildpack_cache_download_url).with(app).and_return("http://www.buildpack.cache.download.uri")
+        blobstore_url_generator.stub(:buildpack_cache_upload_url).with(app).and_return("http://www.buildpack.cache.upload.uri")
         request = staging_task.staging_request
 
         request[:app_id].should == app.guid

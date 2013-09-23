@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       it "returns a list of names and urls" do
-        list = Buildpack.list_admin_buildpacks
+        list = Buildpack.list_admin_buildpacks(CloudController::DependencyLocator.instance.blobstore_url_generator)
         expect(list).to have(2).items
         expect(list).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
         expect(list).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")

@@ -51,18 +51,6 @@ module VCAP::CloudController
         )
       end
 
-      def app_uri(app)
-        if AppPackage.blobstore.local?
-          staging_uri("#{APP_PATH}/#{app.guid}")
-        else
-          AppPackage.package_uri(app.guid)
-        end
-      end
-
-      def droplet_upload_uri(app)
-        upload_uri(app, :droplet)
-      end
-
       def droplet_download_uri(app)
         if blobstore.local?
           staging_uri("#{DROPLET_PATH}/#{app.guid}/download")
@@ -86,25 +74,13 @@ module VCAP::CloudController
         !!app_droplet(app)
       end
 
-      def buildpack_cache_upload_uri(app)
-        upload_uri(app, :buildpack_cache)
-      end
-
-      def buildpack_cache_download_uri(app)
-        if AppPackage.blobstore.local?
-          staging_uri("#{BUILDPACK_CACHE_PATH}/#{app.guid}/download")
-        else
-          buildpack_cache_blobstore.download_uri(app.guid)
-        end
-      end
-
       def droplet_local_path(app)
         file = app_droplet(app)
         file.send(:path) if file
       end
 
       def buildpack_cache_local_path(app)
-        file = app_buildpack_cache(app)
+        file = @buildpack_cache_blobstore.file(app.guid)
         file.send(:path) if file
       end
 
@@ -119,17 +95,7 @@ module VCAP::CloudController
         return blobstore.download_uri_for_file(f)
       end
 
-      def buildpack_cache_uri(app)
-        buildpack_cache_blobstore.download_uri(app.guid)
-      end
-
       private
-
-      def upload_uri(app, type)
-        prefix = type == :buildpack_cache ? BUILDPACK_CACHE_PATH : DROPLET_PATH
-        staging_uri("#{prefix}/#{app.guid}/upload")
-      end
-
       def staging_uri(path)
         URI::HTTP.build(
           :host => @config[:bind_address],
@@ -153,10 +119,6 @@ module VCAP::CloudController
         key = File.join(app.guid, app.droplet_hash)
         old_key = app.guid
         blobstore.file(key) || blobstore.file(old_key)
-      end
-
-      def app_buildpack_cache(app)
-        @buildpack_cache_blobstore.file(app.guid)
       end
     end
 
@@ -233,7 +195,7 @@ module VCAP::CloudController
       raise AppNotFound.new(guid) if app.nil?
 
       buildpack_cache_path = StagingsController.buildpack_cache_local_path(app)
-      buildpack_cache_url = StagingsController.buildpack_cache_uri(app)
+      buildpack_cache_url =  StagingsController.buildpack_cache_blobstore.download_uri(app.guid)
       download(app, buildpack_cache_path, buildpack_cache_url)
     end
 

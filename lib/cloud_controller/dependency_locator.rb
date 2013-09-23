@@ -3,7 +3,7 @@ module CloudController
     include Singleton
     include VCAP::CloudController
 
-    def initialize(config = Config.config, message_bus = Config.message_bus)
+    def initialize(config = VCAP::CloudController::Config.config, message_bus = VCAP::CloudController::Config.message_bus)
       @config = config
       @message_bus = message_bus
     end
@@ -74,6 +74,16 @@ module CloudController
 
     def upload_handler
       @upload_handler ||= UploadHandler.new(config)
+    end
+
+    def blobstore_url_generator
+      connection_options = {
+        blobstore_host: config[:bind_address],
+        blobstore_port: config[:port],
+        user: config[:staging][:auth][:user],
+        password: config[:staging][:auth][:password]
+      }
+      BlobstoreUrlGenerator.new(connection_options, package_blobstore, buildpack_cache_blobstore, buildpack_blobstore)
     end
 
     private

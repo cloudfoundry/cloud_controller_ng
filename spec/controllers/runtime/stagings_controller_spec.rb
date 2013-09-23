@@ -20,6 +20,7 @@ module VCAP::CloudController
             :password => staging_password
           }
         },
+        :nginx => {:use_nginx => true},
         :resource_pool => {
           :fog_connection => {
             :provider => "Local",
@@ -30,7 +31,8 @@ module VCAP::CloudController
           :fog_connection => {
             :provider => "Local",
             :local_root => Dir.mktmpdir("packages", workspace)
-          }
+          },
+          :app_package_directory_key => "cc-packages",
         },
         :droplets => {
           :droplet_directory_key => "cc-droplets",
@@ -54,20 +56,6 @@ module VCAP::CloudController
     end
 
     after { FileUtils.rm_rf(workspace) }
-
-    describe "app_uri" do
-      it "should return a uri to our cc" do
-        uri = StagingsController.app_uri(app_obj)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/apps/#{app_obj.guid}"
-      end
-    end
-
-    describe "droplet_upload_uri" do
-      it "should return a uri to our cc" do
-        uri = StagingsController.droplet_upload_uri(app_obj)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_obj.guid}/upload"
-      end
-    end
 
     describe "droplet_download_uri" do
       it "returns internal cc uri" do
@@ -104,24 +92,6 @@ module VCAP::CloudController
           uri = URI.parse(StagingsController.droplet_download_uri(app_obj))
           expect(uri.host).to eq "cc-droplets.s3.amazonaws.com"
         end
-      end
-    end
-
-    describe "buildpack_cache_upload_uri" do
-      it "should return a uri to our cc" do
-        uri = StagingsController.buildpack_cache_upload_uri(app_obj)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_obj.guid}/upload"
-      end
-    end
-
-    describe "buildpack_cache_download_uri" do
-      let(:buildpack_cache) { Tempfile.new(app_obj.guid) }
-      before { StagingsController.store_buildpack_cache(app_obj, buildpack_cache.path) }
-      after { FileUtils.rm(buildpack_cache.path) }
-
-      it "returns internal cc uri" do
-        uri = StagingsController.buildpack_cache_download_uri(app_obj)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/buildpack_cache/#{app_obj.guid}/download"
       end
     end
 

@@ -27,11 +27,12 @@ module VCAP::CloudController
     attr_reader :config
     attr_reader :message_bus
 
-    def initialize(config, message_bus, app, stager_pool)
+    def initialize(config, message_bus, app, stager_pool, blobstore_url_generator)
       @config = config
       @message_bus = message_bus
       @app = app
       @stager_pool = stager_pool
+      @blobstore_url_generator = blobstore_url_generator
     end
 
     def task_id
@@ -83,13 +84,13 @@ module VCAP::CloudController
       { :app_id => @app.guid,
         :task_id => task_id,
         :properties => staging_task_properties(@app),
-        # All url generation should go to Potato
-        :download_uri => StagingsController.app_uri(@app),
-        :upload_uri => StagingsController.droplet_upload_uri(@app),
-        :buildpack_cache_download_uri => StagingsController.buildpack_cache_download_uri(@app),
-        :buildpack_cache_upload_uri => StagingsController.buildpack_cache_upload_uri(@app),
+        # All url generation should go to blobstore_url_generator
+        :download_uri => @blobstore_url_generator.app_package_download_url(@app),
+        :upload_uri => @blobstore_url_generator.droplet_upload_url(@app),
+        :buildpack_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(@app),
+        :buildpack_cache_upload_uri => @blobstore_url_generator.buildpack_cache_upload_url(@app),
         :start_message => start_app_message,
-        :admin_buildpacks => Buildpack.list_admin_buildpacks
+        :admin_buildpacks => Buildpack.list_admin_buildpacks(@blobstore_url_generator)
       }
     end
 

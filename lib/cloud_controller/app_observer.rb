@@ -64,7 +64,7 @@ module VCAP::CloudController
           raise Errors::AppPackageInvalid, "The app package hash is empty"
         end
 
-        task = AppStagerTask.new(@config, @message_bus, app, @stager_pool)
+        task = AppStagerTask.new(@config, @message_bus, app, @stager_pool, dependency_locator.blobstore_url_generator)
         task.stage(&completion_callback)
       end
 

@@ -5,12 +5,11 @@ module VCAP::CloudController
 
     import_attributes :name, :key, :priority
 
-    def self.list_admin_buildpacks
-      blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
+    def self.list_admin_buildpacks(url_generator)
       self.all.map do |buildpack|
         {
           key: buildpack.key,
-          url: blobstore.download_uri(buildpack.key)
+          url: url_generator.admin_buildpack_download_url(buildpack)
         }
       end
     end
