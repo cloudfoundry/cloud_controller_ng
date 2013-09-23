@@ -25,14 +25,14 @@ module VCAP::CloudController
       validates_presence :service_instance
       validates_unique [:app_id, :service_instance_id]
 
-      validate_logging_service_binding(syslog_drain_url, service_instance.service_plan.service.requires) if service_instance.respond_to?(:service_plan)
+      validate_logging_service_binding if service_instance.respond_to?(:service_plan)
 
       # TODO: make this a standard validation
       validate_app_and_service_instance(app, service_instance)
     end
 
-    def validate_logging_service_binding(syslog_drain_url, service_requires)
-      unless syslog_drain_url.nil? || syslog_drain_url.empty? || service_requires.include?("syslog_drain")
+    def validate_logging_service_binding
+      unless syslog_drain_url.nil? || syslog_drain_url.empty? || service_instance.service_plan.service.requires.include?("syslog_drain")
         raise InvalidLoggingServiceBinding.new("Service is not advertised as a logging service. Please contact the service provider.")
       end
     end
