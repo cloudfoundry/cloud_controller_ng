@@ -177,4 +177,35 @@ describe "Service Broker Management", :type => :integration do
       end
     end
   end
+
+  describe 'getting an error' do
+    it 'returns a complete error structure' do
+      body = JSON.dump(
+          broker_url: "http://localhost:54329/blowsup", # this special url causes 500 errors from the fake broker
+          token: "supersecretshh",
+          name: "BrokerDrug",
+      )
+
+      # This is equivalent to cf add-service-broker
+      create_response = make_post_request('/v2/service_brokers', body, authed_headers)
+
+      expect(create_response.code.to_i).to eq(500)
+      expect(JSON.parse(create_response.body)).to include({
+          'code' => 10001,
+          'description' => 'The service broker API returned an error from http://localhost:54329/blowsup/v2/catalog: 500 Internal Server Error',
+          'status' => 500,
+          'types' => ["VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse", "HttpError", "StructuredError", "StandardError"],
+          'source' => {
+              'description' => "I've fallen and I can't get up",
+              'types' => ['BarError', 'FooError'],
+              'backtrace' => ['app.rb', 'broker.rb', 'client.rb', 'v1.rb'],
+              'source' => {
+                  'description' => 'My shoelaces are tied together',
+                  'types' => ['BlahError', 'AsdfError'],
+                  'backtrace' => ['someline', 'someotherline', 'somereallyfarline']
+              }
+          }
+      })
+    end
+  end
 end

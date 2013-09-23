@@ -1,6 +1,41 @@
 require 'spec_helper'
 
 module VCAP::CloudController
+  describe ServiceBroker::V2::ServiceBrokerBadResponse do
+    let(:endpoint) { 'http://www.example.com/' }
+    let(:response_body) do
+      { 'foo' => 'bar' }.to_json
+    end
+    let(:response) { double(code: 500, reason: 'Internal Server Error', body: response_body) }
+
+    it 'generates the correct hash' do
+      exception = described_class.new(endpoint, response)
+
+      begin
+        # must raise to populate backtrace
+        raise exception
+      rescue => e
+        expect(e.to_h).to include({
+          'description' => "The service broker API returned an error from http://www.example.com/: 500 Internal Server Error",
+          'types' => ["VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse", "HttpError", "StructuredError", "StandardError"],
+          'source' => {
+            'foo' => 'bar'
+          }
+        })
+      end
+    end
+
+    context 'with a simple string response body' do
+      let(:response_body) { 'foo' }
+
+      it 'generates the correct hash' do
+        exception = described_class.new(endpoint, response)
+        expect(exception.to_h['source']).to eq('foo')
+      end
+    end
+
+  end
+
   describe ServiceBroker::V2::HttpClient do
     let(:auth_token) { 'abc123' }
     let(:request_id) { Sham.guid }
@@ -233,6 +268,31 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the API returns an error code' do
+        let(:error_response) { { 'foo' => 'bar' } }
+
+        before do
+          stub_request(:get, broker_catalog_url).to_return(
+            status: [500, 'Internal Server Error'], body: error_response.to_json
+          )
+        end
+
+        it 'should raise a ServiceBrokerBadResponse' do
+          expect {
+            client.catalog
+          }.to raise_error { |e|
+            expect(e).to be_a(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse)
+            expect(e.to_h).to include({
+              'description' => 'The service broker API returned an error from http://broker.example.com/v2/catalog: 500 Internal Server Error',
+              'types' => ['VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse', 'HttpError', 'StructuredError', 'StandardError'],
+              'source' => {
+                'foo' => 'bar'
+              }
+            })
+          }
+        end
+      end
+
       context 'when the API returns an invalid response' do
         context 'because of an unexpected status code' do
           let(:catalog_response) { {'services' => []} }
@@ -247,7 +307,7 @@ module VCAP::CloudController
             expect {
               client.catalog
             }.to raise_error(
-              VCAP::CloudController::Errors::ServiceBrokerBadResponse,
+              VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse,
               'The service broker API returned an error from http://broker.example.com/v2/catalog: 404 Not Found'
             )
           end

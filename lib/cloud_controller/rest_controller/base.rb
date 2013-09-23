@@ -109,7 +109,7 @@ module VCAP::CloudController::RestController
       raise
     rescue => e
       logger.error(["An unhandled exception has occurred #{e.class} - #{e.message}:"].concat(e.backtrace).join("\\n"))
-      raise Errors::ServerError
+      raise
     end
 
     # Fetch the current active user.  May be nil

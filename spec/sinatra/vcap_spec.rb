@@ -17,6 +17,10 @@ describe "Sinatra::VCAP" do
     get "/request_id" do
       VCAP::Request.current_id
     end
+
+    get "/structured_error" do
+      raise StructuredError.new('some message', {'foo' => 'bar'})
+    end
   end
 
   def app
@@ -122,8 +126,30 @@ describe "Sinatra::VCAP" do
     include_examples "vcap sinatra varz stats", 500
     include_examples "vcap request id"
     include_examples "http header content type"
-    it_behaves_like "a vcap rest error response", /Server error/
+    it_behaves_like "a vcap rest error response", /ZeroDivisionError: divided by 0/
   end
+
+  describe "accessing a route that throws a StructuredError" do
+    before do
+      TestApp.any_instance.stub(:in_test_mode?).and_return(false)
+      Steno.logger("vcap_spec").should_receive(:error).once
+      get "/structured_error"
+    end
+
+    it "should return 500" do
+      last_response.status.should == 500
+    end
+
+    it "should return structure" do
+      decoded_response = Yajl::Parser.parse(last_response.body)
+      expect(decoded_response['code']).to eq(10001)
+      expect(decoded_response['description']).to eq('some message')
+      expect(decoded_response['types']).to eq(%w(StructuredError StandardError))
+      expect(decoded_response['backtrace']).to be
+      expect(decoded_response['source']).to eq({ 'foo' => 'bar' })
+    end
+  end
+
 
   describe "accessing vcap request id from inside the app" do
     before do

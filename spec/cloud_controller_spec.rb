@@ -190,13 +190,6 @@ describe VCAP::CloudController::Controller do
           make_request
         end
       end
-
-      context "when an unknown exception is raised" do
-        let(:exception_class) { RuntimeError }
-        it 'should no rescue' do
-          expect { make_request }.to raise_error(RuntimeError)
-        end
-      end
     end
 
     describe "#after" do

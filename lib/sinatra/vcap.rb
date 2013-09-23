@@ -70,8 +70,6 @@ module Sinatra
           request.env["vcap_exception_body_set"] = true
           body_from_vcap_exception(exception)
         else
-          raise exception if in_test_mode?
-
           msg = ["#{exception.class} - #{exception.message}"]
           msg[0] = msg[0] + ":"
           msg.concat(exception.backtrace)
@@ -79,8 +77,22 @@ module Sinatra
           ::VCAP::Component.varz.synchronize do
             varz[:recent_errors] << msg
           end
-          body_from_vcap_exception(::VCAP::Errors::ServerError.new)
+
           status(500)
+
+          if exception.respond_to?(:to_h)
+            # Make sure there is a code and description because clients expect them, but
+            # allow exceptions to override the generic values.
+            body({
+              code: ::VCAP::Errors::ServerError.new.error_code,  # silly way to get 10001
+              description: exception.message,
+            }.merge(exception.to_h)).to_json
+          else
+            error_payload                = {}
+            error_payload["code"]        = ::VCAP::Errors::ServerError.new.error_code
+            error_payload["description"] = "#{exception.class}: #{exception.message}"
+            body Yajl::Encoder.encode(error_payload).concat("\n")
+          end
         end
       end
     end

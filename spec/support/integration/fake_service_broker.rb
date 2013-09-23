@@ -11,6 +11,22 @@ end
 @@binding_count = 0
 
 
+# special endpoint that returns a structured error to clients
+get '/blowsup/v2/catalog' do
+  body = {
+      'description' => "I've fallen and I can't get up",
+      'types' => ['BarError', 'FooError'],
+      'backtrace' => ['app.rb', 'broker.rb', 'client.rb', 'v1.rb'],
+      'source' => {
+          'description' => 'My shoelaces are tied together',
+          'types' => ['BlahError', 'AsdfError'],
+          'backtrace' => ['someline', 'someotherline', 'somereallyfarline']
+      }
+  }.to_json
+
+  [500, {}, body]
+end
+
 get '/v2/catalog' do
   body = {
     'services' => [
