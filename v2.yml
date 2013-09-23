@@ -223,6 +223,11 @@
   http_code: 400
   message: "The service doesn't support binding."
 
+90006:
+  name: InvalidLoggingServiceBinding
+  http_code: 400
+  message: "Service is not advertised as a logging service. Please contact the service provider."
+
 100001:
   name: AppInvalid
   http_code: 400
