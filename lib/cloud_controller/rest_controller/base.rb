@@ -94,7 +94,7 @@ module VCAP::CloudController::RestController
     # body string], or just a body string.
     def dispatch(op, *args)
       logger.debug "dispatch: #{op}"
-      check_authentication
+      check_authentication(op)
       send(op, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, request_attrs)
@@ -130,10 +130,10 @@ module VCAP::CloudController::RestController
       @sinatra.headers[name] = value
     end
 
-    def check_authentication
+    def check_authentication(op)
       # The logic here is a bit oddly ordered, but it supports the
       # legacy calls setting a user, but not providing a token.
-      return if self.class.allow_unauthenticated_access?
+      return if self.class.allow_unauthenticated_access?(op)
       return if VCAP::CloudController::SecurityContext.current_user
       return if VCAP::CloudController::SecurityContext.admin?
 
@@ -225,12 +225,29 @@ module VCAP::CloudController::RestController
         @disable_default_routes = true
       end
 
-      def allow_unauthenticated_access
-        @allow_unauthenticated_access = true
+      def allow_unauthenticated_access(options={})
+        if options[:only]
+          @allow_unauthenticated_access_ops = Array(options[:only])
+        else
+          @allow_unauthenticated_access_to_all_ops = true
+        end
       end
 
-      def allow_unauthenticated_access?
-        @allow_unauthenticated_access
+      def authenticate_basic_auth(path, &block)
+        controller.before path do
+          auth = Rack::Auth::Basic::Request.new(env)
+          unless auth.provided? && auth.basic? &&
+            auth.credentials == block.call
+            raise Errors::NotAuthorized
+          end
+        end
+      end
+
+      def allow_unauthenticated_access?(op)
+        if @allow_unauthenticated_access_ops
+          return @allow_unauthenticated_access_ops.include?(op)
+        end
+        return @allow_unauthenticated_access_to_all_ops
       end
 
       # Returns true if the cc framework should generate default routes for an

@@ -1,6 +1,6 @@
-require 'spec_helper'
+require "spec_helper"
 
-describe VCAP::CloudController::RestController::Base do
+describe VCAP::CloudController::RestController::Base, type: :controller do
   before do
     VCAP::CloudController::SecurityContext.stub(:current_user) { true }
   end
@@ -30,6 +30,71 @@ describe VCAP::CloudController::RestController::Base do
           logger.should_not_receive(:error)
           subject.dispatch(:to_s) rescue nil
         end
+      end
+    end
+
+    context "when operation is allowed to skip authentication" do
+      before do
+        VCAP::CloudController::SecurityContext.stub(:current_user) { false }
+        subject.stub(:download)
+      end
+
+      context "skipping an operation" do
+        before do
+          subject.class.allow_unauthenticated_access(:only => :download)
+        end
+
+        it "does not raise error" do
+          expect { subject.dispatch(:download) }.to_not raise_error
+        end
+
+        it "raise error when dispatching a operation not allowed" do
+          expect { subject.dispatch(:not_allowed_download) }.to raise_error
+        end
+      end
+
+      context "when configured to skip all operations" do
+        before do
+          subject.class.allow_unauthenticated_access
+        end
+
+        it "does not raise error" do
+          expect { subject.dispatch(:download) }.to_not raise_error
+        end
+      end
+    end
+
+    describe "authenticate_basic_auth" do
+      it "returns NotAuthorized without if username and password was not provided" do
+        subject.class.authenticate_basic_auth("/my_path") do
+          ["username", "password"]
+        end
+
+        get "/my_path"
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to match /You are not authorized/
+      end
+
+      it "returns NotAuthorized without if username and password was wrong" do
+        authorize "username", "letmein"
+        subject.class.authenticate_basic_auth("/my_path") do
+          ["username", "password"]
+        end
+
+        get "/my_path"
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to match /You are not authorized/
+      end
+
+      it "does not raise NotAuthorized if username and password is correct" do
+        authorize "username", "password"
+
+        subject.class.authenticate_basic_auth("/my_path") do
+          ["username", "password"]
+        end
+
+        get "/my_path"
+        expect(last_response.status).to_not eq 403
       end
     end
 

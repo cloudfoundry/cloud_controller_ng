@@ -203,16 +203,32 @@ module VCAP::CloudController
         end
 
         context "/v2/buildpacks/:guid/download" do
+          let(:staging_user) { "user" }
+          let(:staging_password) { "password" }
+          before do
+            config_override(
+              {
+                :staging => {
+                  :auth => {
+                    :user => staging_user,
+                    :password => staging_password
+                  }
+                },
+              })
+          end
+
           before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "get_binary_buildpack", key: 'xyz', priority: 0}) }
           after(:all) { @test_buildpack.destroy }
 
-          it "returns NOT AUTHORIZED (403) for non admins" do
-            get "/v2/buildpacks/#{@test_buildpack.guid}/download", {}, headers_for(user)
+          it "returns NOT AUTHORIZED (403) users without correct basic auth" do
+            get "/v2/buildpacks/#{@test_buildpack.guid}/download", {}
+            expect(last_response.status).to eq(403)
           end
 
-          it "lets you retrieve the bits for a specific buildpack" do
+          it "lets users with correct basic auth retrieve the bits for a specific buildpack" do
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
-            get "/v2/buildpacks/#{@test_buildpack.guid}/download", {}, admin_headers
+            authorize(staging_user, staging_password)
+            get "/v2/buildpacks/#{@test_buildpack.guid}/download"
             expect(last_response.status).to eq(302)
             expect(last_response.header['Location']).to match(/cc-buildpacks/)
           end

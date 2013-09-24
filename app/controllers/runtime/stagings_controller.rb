@@ -17,15 +17,18 @@ module VCAP::CloudController
   class StagingsController < RestController::Base
     include VCAP::Errors
 
-    # Endpoint does its own (non-standard) auth
-    allow_unauthenticated_access
-
-
     STAGING_PATH = "/staging"
 
     APP_PATH = "#{STAGING_PATH}/apps"
     DROPLET_PATH = "#{STAGING_PATH}/droplets"
     BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/buildpack_cache"
+
+    # Endpoint does its own (non-standard) auth
+    allow_unauthenticated_access
+
+    authenticate_basic_auth("#{STAGING_PATH}/*") do
+      [@config[:staging][:auth][:user], @config[:staging][:auth][:password]]
+    end
 
     attr_reader :config
 
@@ -251,15 +254,6 @@ module VCAP::CloudController
 
     def tmpdir
       (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
-    end
-
-    controller.before "#{STAGING_PATH}/*" do
-      auth = Rack::Auth::Basic::Request.new(env)
-      unless auth.provided? && auth.basic? &&
-        auth.credentials == [@config[:staging][:auth][:user],
-                             @config[:staging][:auth][:password]]
-        raise NotAuthorized
-      end
     end
 
     get "/staging/apps/:guid", :download_app

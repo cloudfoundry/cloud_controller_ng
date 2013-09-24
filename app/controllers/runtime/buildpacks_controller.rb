@@ -60,7 +60,7 @@ module VCAP::CloudController
 
 
     def download_bits(guid)
-      obj = find_guid_and_validate_access(:read_bits, guid)
+      obj = Buildpack.find(guid: guid)
       if @buildpack_blobstore.local?
         f = buildpack_blobstore.file(obj.key)
         raise self.class.not_found_exception.new(guid) unless f
@@ -93,6 +93,13 @@ module VCAP::CloudController
 
     def self.not_found_exception_name
       "NotFound"
+    end
+
+    allow_unauthenticated_access :only => :download_bits
+
+    authenticate_basic_auth("#{path}/*/download") do
+      [VCAP::CloudController::Config.config[:staging][:auth][:user],
+       VCAP::CloudController::Config.config[:staging][:auth][:password]]
     end
 
     post "#{path}/:guid/bits", :upload_bits
