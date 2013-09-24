@@ -3,10 +3,11 @@ require "spec_helper"
 module CloudController
   describe TaskClient do
     include RSpec::Mocks::ExampleMethods # for double
+    let(:blobstore_url_generator) { double("bug", :droplet_download_url => "https://some-download-uri") }
 
     before do
       @message_bus = VCAP::CloudController::Config.message_bus
-      @task_client = TaskClient.new(@message_bus)
+      @task_client = TaskClient.new(@message_bus, blobstore_url_generator)
 
       @app = double(:app).as_null_object
       @task = VCAP::CloudController::Task.new(guid: "some guid", app: @app, secure_token: "42")
@@ -14,10 +15,6 @@ module CloudController
 
     describe "#start_task" do
       it "sends task.start with the public key and the app's droplet URI" do
-        VCAP::CloudController::StagingsController.stub(:droplet_download_uri).with(@app) do
-          "https://some-download-uri"
-        end
-
         @task_client.start_task(@task)
 
         expect(@message_bus).to have_published_with_message("task.start", {

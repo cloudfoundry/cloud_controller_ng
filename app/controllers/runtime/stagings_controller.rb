@@ -19,7 +19,6 @@ module VCAP::CloudController
 
     STAGING_PATH = "/staging"
 
-    APP_PATH = "#{STAGING_PATH}/apps"
     DROPLET_PATH = "#{STAGING_PATH}/droplets"
     BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/buildpack_cache"
 
@@ -54,14 +53,6 @@ module VCAP::CloudController
         )
       end
 
-      def droplet_download_uri(app)
-        if blobstore.local?
-          staging_uri("#{DROPLET_PATH}/#{app.guid}/download")
-        else
-          droplet_uri(app)
-        end
-      end
-
       def store_droplet(app, path)
         CloudController::Droplet.new(app, blobstore).save(path)
       end
@@ -73,41 +64,7 @@ module VCAP::CloudController
         )
       end
 
-      def droplet_exists?(app)
-        !!app_droplet(app)
-      end
-
-      def droplet_local_path(app)
-        file = app_droplet(app)
-        file.send(:path) if file
-      end
-
-      def buildpack_cache_local_path(app)
-        file = @buildpack_cache_blobstore.file(app.guid)
-        file.send(:path) if file
-      end
-
-      # Return droplet uri for path for a given app's guid.
-      #
-      # The url is valid for 1 hour when using aws.
-      # TODO: The expiration should be configurable.
-      def droplet_uri(app)
-        f = app_droplet(app)
-        return nil unless f
-
-        return blobstore.download_uri_for_file(f)
-      end
-
       private
-      def staging_uri(path)
-        URI::HTTP.build(
-          :host => @config[:bind_address],
-          :port => @config[:port],
-          :userinfo => [@config[:staging][:auth][:user], @config[:staging][:auth][:password]],
-          :path => path
-        ).to_s
-      end
-
       MUTEX = Mutex.new
       def mutex
         MUTEX
@@ -115,13 +72,6 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger("cc.legacy_staging")
-      end
-
-      def app_droplet(app)
-        return unless app.staged?
-        key = File.join(app.guid, app.droplet_hash)
-        old_key = app.guid
-        blobstore.file(key) || blobstore.file(old_key)
       end
     end
 
@@ -187,8 +137,9 @@ module VCAP::CloudController
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
-      droplet_path = StagingsController.droplet_local_path(app)
-      droplet_url = StagingsController.droplet_uri(app)
+      droplet = CloudController::Droplet.new(app, StagingsController.blobstore)
+      droplet_path = droplet.local_path
+      droplet_url = droplet.download_url
 
       download(app, droplet_path, droplet_url)
     end
@@ -197,7 +148,8 @@ module VCAP::CloudController
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
-      buildpack_cache_path = StagingsController.buildpack_cache_local_path(app)
+      file = StagingsController.buildpack_cache_blobstore.file(app.guid)
+      buildpack_cache_path = file.send(:path) if file
       buildpack_cache_url =  StagingsController.buildpack_cache_blobstore.download_uri(app.guid)
       download(app, buildpack_cache_path, buildpack_cache_url)
     end

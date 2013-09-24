@@ -13,7 +13,7 @@ module CloudController
     end
 
     def task_client
-      @task_client ||= TaskClient.new(message_bus)
+      @task_client ||= TaskClient.new(message_bus, blobstore_url_generator)
     end
 
     def droplet_blobstore
@@ -83,7 +83,13 @@ module CloudController
         user: config[:staging][:auth][:user],
         password: config[:staging][:auth][:password]
       }
-      BlobstoreUrlGenerator.new(connection_options, package_blobstore, buildpack_cache_blobstore, buildpack_blobstore)
+      BlobstoreUrlGenerator.new(
+        connection_options,
+        package_blobstore,
+        buildpack_cache_blobstore,
+        buildpack_blobstore,
+        droplet_blobstore
+      )
     end
 
     private

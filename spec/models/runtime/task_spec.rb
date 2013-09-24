@@ -107,35 +107,19 @@ module VCAP::CloudController
 
     describe "#after_commit" do
       it "sends task.start with the URI for the app's droplet" do
-        StagingsController.stub(:droplet_download_uri).with(app) do
-          "https://some-download-uri"
-        end
-
+        CloudController::DependencyLocator.instance.task_client.should_receive(:start_task).with(instance_of(Task))
         task = Task.make :app => app
-
         task.stub(:secure_token => "42")
-
-        message_bus.should have_published_with_message(
-          "task.start",
-          :task => task.guid,
-          :secure_token => task.secure_token,
-          :package => "https://some-download-uri")
       end
     end
 
     describe "#after_destroy_commit" do
-      it "sends task.start with the public key, the URI for the app's droplet" do
-        StagingsController.stub(:droplet_download_uri).with(app) do
-          "https://some-download-uri"
-        end
-
+      it "sends task.stop with the public key, the URI for the app's droplet" do
         task = Task.make :app => app
 
-        task.destroy
+        CloudController::DependencyLocator.instance.task_client.should_receive(:stop_task).with(task)
 
-        message_bus.should have_published_with_message(
-          "task.stop",
-          :task => task.guid)
+        task.destroy
       end
     end
   end

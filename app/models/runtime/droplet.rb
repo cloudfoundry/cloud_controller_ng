@@ -1,8 +1,24 @@
 module CloudController
   class Droplet
-    def initialize(app, droplet_blobstore)
+    def initialize(app, blobstore)
       @app = app
-      @blobstore = droplet_blobstore
+      @blobstore = blobstore
+    end
+
+    def file
+      return unless @app.staged?
+      blobstore.file(blobstore_key) || blobstore.file(old_blobstore_key)
+    end
+
+    def local_path
+      f = file
+      f.send(:path) if f
+    end
+
+    def download_url
+      f = file
+      return nil unless f
+      return blobstore.download_uri_for_file(f)
     end
 
     def delete

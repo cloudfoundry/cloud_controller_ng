@@ -1,10 +1,11 @@
 module CloudController
   class BlobstoreUrlGenerator
-    def initialize(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore)
+    def initialize(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore, droplet_blobstore)
       @blobstore_options = blobstore_options
       @package_blobstore = package_blobstore
       @buildpack_cache_blobstore = buildpack_cache_blobstore
       @admin_buildpack_blobstore = admin_buildpack_blobstore
+      @droplet_blobstore = droplet_blobstore
     end
 
     # Downloads
@@ -21,6 +22,14 @@ module CloudController
         staging_uri("/buildpacks/#{buildpack.guid}/download")
       else
         @admin_buildpack_blobstore.download_uri(buildpack.key)
+      end
+    end
+
+    def droplet_download_url(app)
+      if @droplet_blobstore.local?
+        staging_uri("/staging/droplets/#{app.guid}/download")
+      else
+        CloudController::Droplet.new(app, @droplet_blobstore).download_url
       end
     end
 

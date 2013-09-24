@@ -22,9 +22,14 @@ module CloudController
     let(:package_blobstore) { double(local?: true) }
     let(:buildpack_cache_blobstore) { double(local?: true) }
     let(:admin_buildpack_blobstore) { double(local?: true) }
+    let(:droplet_blobstore) { double(local?: true) }
 
     subject(:blobstore_url_generator) do
-      BlobstoreUrlGenerator.new(connection_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore)
+      BlobstoreUrlGenerator.new(connection_options,
+                                package_blobstore,
+                                buildpack_cache_blobstore,
+                                admin_buildpack_blobstore,
+                                droplet_blobstore)
     end
 
     let(:app) { VCAP::CloudController::App.make }
@@ -105,8 +110,30 @@ module CloudController
         end
       end
 
-      it "gives out url for droplets" do
+      context "droplets" do
+        let(:app) { VCAP::CloudController::App.make }
 
+        context "when the droplets are stored on local blobstore" do
+          it "gives a local URI to the blobstore host/port" do
+            uri = URI.parse(subject.droplet_download_url(app))
+            expect(uri.host).to eql blobstore_host
+            expect(uri.port).to eql blobstore_port
+            expect(uri.user).to eql "username"
+            expect(uri.password).to eql "password"
+            expect(uri.path).to eql "/staging/droplets/#{app.guid}/download"
+          end
+        end
+
+        context "when the buildpack are stored remotely" do
+          let(:droplet_file) { double("file") }
+          let(:droplet_blobstore) { double(local?: false, file: droplet_file) }
+
+          it "gives out signed url to remote blobstore for appbits" do
+            remote_uri = "http://s3.example.com/signed"
+            droplet_blobstore.should_receive(:download_uri_for_file).with(droplet_file).and_return(remote_uri)
+            expect(subject.droplet_download_url(app)).to eql(remote_uri)
+          end
+        end
       end
     end
 

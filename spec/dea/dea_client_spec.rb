@@ -19,8 +19,12 @@ module VCAP::CloudController
       app
     end
 
+    let(:blobstore_url_generator) do
+      double("blobstore_url_generator", :droplet_download_url => "app_uri")
+    end
+
     before do
-      DeaClient.configure(config, message_bus, dea_pool)
+      DeaClient.configure(config, message_bus, dea_pool, blobstore_url_generator)
     end
 
     describe ".run" do
@@ -35,6 +39,7 @@ module VCAP::CloudController
 
       it "should return a serialized dea message" do
         res = DeaClient.start_app_message(app)
+        expect(res[:executableUri]).to eq("app_uri")
         res.should be_kind_of(Hash)
         res[:droplet].should == app.guid
         res[:services].should be_kind_of(Array)
@@ -134,7 +139,7 @@ module VCAP::CloudController
 
       it "sends a dea start message that includes cc_partition" do
         config_override(:cc_partition => "ngFTW")
-        DeaClient.configure(config, message_bus, dea_pool)
+        DeaClient.configure(config, message_bus, dea_pool, blobstore_url_generator)
 
         app.instances = 1
         dea_pool.should_receive(:find_dea).and_return("abc")

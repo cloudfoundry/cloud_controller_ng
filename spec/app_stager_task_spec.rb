@@ -15,6 +15,9 @@ module VCAP::CloudController
     let(:reply_json_error) { nil }
     let(:task_streaming_log_url) { "task-streaming-log-url" }
     let(:detected_buildpack) { nil }
+    let(:droplet) do
+      CloudController::Droplet.new(app, StagingsController.blobstore)
+    end
 
     let(:first_reply_json) do
       {
@@ -123,7 +126,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
+            }.to_not change { droplet.exists? }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -159,7 +162,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
+            }.to_not change { droplet.exists? }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -198,7 +201,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
+            }.to_not change { droplet.exists? }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -294,7 +297,7 @@ module VCAP::CloudController
             it "does not store droplet" do
               expect {
                 ignore_error(Errors::StagingError) { stage }
-              }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
+              }.to_not change { droplet.exists? }.from(false)
             end
 
             it "does not update droplet hash on the app" do
@@ -343,7 +346,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
+            }.to_not change { droplet.exists? }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -388,7 +391,7 @@ module VCAP::CloudController
           it "does not store droplet" do
             expect {
               ignore_error(Errors::StagingError) { stage }
-            }.to_not change { StagingsController.droplet_exists?(app) }.from(false)
+            }.to_not change { droplet.exists? }.from(false)
           end
 
           it "does not save the detected buildpack" do

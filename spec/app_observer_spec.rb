@@ -6,9 +6,10 @@ module VCAP::CloudController
     let(:stager_pool) { double(:stager_pool) }
     let(:dea_pool) { double(:dea_pool) }
     let(:config_hash) { {:config => 'hash'} }
+    let(:blobstore_url_generator) { double }
 
     before do
-      DeaClient.configure(config_hash, message_bus, dea_pool)
+      DeaClient.configure(config_hash, message_bus, dea_pool, blobstore_url_generator)
       AppObserver.configure(config_hash, message_bus, stager_pool)
     end
 

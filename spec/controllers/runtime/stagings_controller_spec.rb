@@ -57,44 +57,6 @@ module VCAP::CloudController
 
     after { FileUtils.rm_rf(workspace) }
 
-    describe "droplet_download_uri" do
-      it "returns internal cc uri" do
-        uri = StagingsController.droplet_download_uri(app_obj)
-        uri.should == "http://#{staging_user}:#{staging_password}@#{cc_addr}:#{cc_port}/staging/droplets/#{app_obj.guid}/download"
-      end
-
-      context "when Fog is configured for AWS" do
-        let(:staging_config) do
-          original_staging_config.tap do |config|
-            config[:droplets] = {
-              :fog_connection => {
-                provider: "AWS",
-                aws_access_key_id: "secret",
-                aws_secret_access_key: "key"
-            }}
-          end
-        end
-
-        before do
-          Fog.mock!
-        end
-
-        it "returns an AWS url" do
-          app_obj.droplet_hash = "abcdefg"
-
-          droplet_file = Tempfile.new(app_obj.guid)
-          droplet_file.write("droplet contents")
-          droplet_file.close
-
-          droplet = CloudController::Droplet.new(app_obj, StagingsController.blobstore)
-          droplet.save(droplet_file.path)
-
-          uri = URI.parse(StagingsController.droplet_download_uri(app_obj))
-          expect(uri.host).to eq "cc-droplets.s3.amazonaws.com"
-        end
-      end
-    end
-
     shared_examples "staging bad auth" do |verb, path|
       it "should return 403 for bad credentials" do
         authorize "hacker", "sw0rdf1sh"

@@ -170,8 +170,8 @@ module VCAP::CloudController
         AppObserver.configure(@config, message_bus, stager_pool)
 
         dea_pool = DeaPool.new(message_bus)
-
-        DeaClient.configure(@config, message_bus, dea_pool)
+        blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
+        DeaClient.configure(@config, message_bus, dea_pool, blobstore_url_generator)
 
         LegacyBulk.configure(@config, message_bus)
       end

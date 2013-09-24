@@ -62,11 +62,23 @@ resource_pool:
     provider: Local
 
 packages:
+  app_package_directory_key: "cc-packages"
   fog_connection:
     provider: Local
 
 droplets:
+  droplet_directory_key: cc-droplets
+  fog_connection:
+    provider: Local
+
+buildpacks:
+  buildpack_directory_key: cc-buildpacks
   fog_connection:
     provider: Local
 
 db_encryption_key: some-key
+
+staging:
+  auth:
+    user: zxsfhgjg
+    password: ZNVfdase9
