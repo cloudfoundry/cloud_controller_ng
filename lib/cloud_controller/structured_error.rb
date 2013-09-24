@@ -1,10 +1,10 @@
 
 class StructuredError < StandardError
-  attr_reader :source
+  attr_reader :error
 
-  def initialize(msg, source=nil)
+  def initialize(msg, error=nil)
     super(msg)
-    @source = source
+    @error = error
   end
 
   def to_h
@@ -14,7 +14,7 @@ class StructuredError < StandardError
       'backtrace' => backtrace,
     }
 
-    hash['source'] = source if source
+    hash['error'] = error if error
 
     hash
   end

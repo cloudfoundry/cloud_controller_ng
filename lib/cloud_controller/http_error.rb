@@ -6,12 +6,12 @@ class HttpError < StructuredError
     @status = response.code.to_i
 
     begin
-      source = Yajl::Parser.parse(response.body)
+      error = Yajl::Parser.parse(response.body)
     rescue Yajl::ParseError
-      source = response.body
+      error = response.body
     end
 
-    super(msg, source)
+    super(msg, error)
   end
 
   def to_h

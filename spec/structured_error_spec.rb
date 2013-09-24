@@ -13,7 +13,7 @@ describe StructuredError do
          'description' => "some msg",
          'types' => ["StructuredError", "StandardError"],
          'backtrace' => e.backtrace,
-         'source' => {
+         'error' => {
              'foo' => 'bar'
          }
       })

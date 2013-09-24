@@ -146,7 +146,7 @@ describe "Sinatra::VCAP" do
       expect(decoded_response['description']).to eq('some message')
       expect(decoded_response['types']).to eq(%w(StructuredError StandardError))
       expect(decoded_response['backtrace']).to be
-      expect(decoded_response['source']).to eq({ 'foo' => 'bar' })
+      expect(decoded_response['error']).to eq({ 'foo' => 'bar' })
     end
   end
 

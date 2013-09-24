@@ -18,7 +18,7 @@ module VCAP::CloudController
         expect(e.to_h).to include({
           'description' => "The service broker API returned an error from http://www.example.com/: 500 Internal Server Error",
           'types' => ["VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse", "HttpError", "StructuredError", "StandardError"],
-          'source' => {
+          'error' => {
             'foo' => 'bar'
           }
         })
@@ -30,7 +30,7 @@ module VCAP::CloudController
 
       it 'generates the correct hash' do
         exception = described_class.new(endpoint, response)
-        expect(exception.to_h['source']).to eq('foo')
+        expect(exception.to_h['error']).to eq('foo')
       end
     end
 
@@ -285,7 +285,7 @@ module VCAP::CloudController
             expect(e.to_h).to include({
               'description' => 'The service broker API returned an error from http://broker.example.com/v2/catalog: 500 Internal Server Error',
               'types' => ['VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse', 'HttpError', 'StructuredError', 'StandardError'],
-              'source' => {
+              'error' => {
                 'foo' => 'bar'
               },
               'status' => 500
