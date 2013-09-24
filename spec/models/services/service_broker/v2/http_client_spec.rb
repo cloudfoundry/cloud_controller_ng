@@ -287,7 +287,8 @@ module VCAP::CloudController
               'types' => ['VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse', 'HttpError', 'StructuredError', 'StandardError'],
               'source' => {
                 'foo' => 'bar'
-              }
+              },
+              'status' => 500
             })
           }
         end
