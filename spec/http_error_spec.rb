@@ -7,13 +7,21 @@ describe HttpError do
   end
   let(:response) { double(code: 500, reason: 'Internal Server Error', body: response_body) }
 
-  it 'generates the correct hash' do
-    exception = described_class.new('some msg', endpoint, response)
+  it 'parses the response as JSON' do
+    exception = described_class.new('some msg', response)
 
-    expect(exception.to_h).to include({
-      'status' => 500,
-      'endpoint' => endpoint,
+    expect(exception.error).to eq({
+      'foo' => 'bar'
     })
   end
 
+  context 'when the response body is plain text' do
+    let(:response_body) { 'not JSON' }
+
+    it 'parses the response as plain text' do
+      exception = described_class.new('some msg', response)
+
+      expect(exception.error).to eq('not JSON')
+    end
+  end
 end

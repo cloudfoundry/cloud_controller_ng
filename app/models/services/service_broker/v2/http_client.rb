@@ -3,7 +3,7 @@ module VCAP::CloudController
     class ServiceBrokerBadResponse < HttpError
       def initialize(endpoint, response)
         msg = "The service broker API returned an error from #{endpoint}: #{response.code} #{response.reason}"
-        super(msg, endpoint, response)
+        super(msg, response)
       end
     end
 

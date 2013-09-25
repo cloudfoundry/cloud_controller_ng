@@ -1,10 +1,7 @@
 
 class HttpError < StructuredError
 
-  def initialize(msg, endpoint, response)
-    @endpoint = endpoint
-    @status = response.code.to_i
-
+  def initialize(msg, response)
     begin
       error = Yajl::Parser.parse(response.body)
     rescue Yajl::ParseError
@@ -12,12 +9,5 @@ class HttpError < StructuredError
     end
 
     super(msg, error)
-  end
-
-  def to_h
-    hash = super
-    hash['endpoint'] = @endpoint
-    hash['status'] = @status
-    hash
   end
 end

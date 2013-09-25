@@ -10,11 +10,13 @@ class StructuredError < StandardError
   def to_h
     hash = {
       'description' => message,
-      'types' => self.class.ancestors.map(&:name) - Exception.ancestors.map(&:name),
-      'backtrace' => backtrace,
+      'error' => {
+        'types' => self.class.ancestors.map(&:name) - Exception.ancestors.map(&:name),
+        'backtrace' => backtrace
+      }
     }
 
-    hash['error'] = error if error
+    hash['error']['error'] = error if error
 
     hash
   end

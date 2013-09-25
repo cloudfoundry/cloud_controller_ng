@@ -4,20 +4,16 @@ describe StructuredError do
 
   it 'generates the correct hash' do
     exception = described_class.new('some msg', { 'foo' => 'bar' })
+    exception.set_backtrace(['/foo:1', '/bar:2'])
 
-    begin
-      # must raise to populate backtrace
-      raise exception
-    rescue => e
-      expect(e.to_h).to eq({
-         'description' => "some msg",
+    expect(exception.to_h).to eq({
+       'description' => "some msg",
+       'error' => {
          'types' => ["StructuredError", "StandardError"],
-         'backtrace' => e.backtrace,
-         'error' => {
-             'foo' => 'bar'
-         }
-      })
-    end
+         'backtrace' => ['/foo:1', '/bar:2'],
+         'error' => { 'foo' => 'bar' }
+       }
+    })
   end
 
 end

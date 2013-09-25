@@ -10,30 +10,17 @@ module VCAP::CloudController
 
     it 'generates the correct hash' do
       exception = described_class.new(endpoint, response)
+      exception.set_backtrace(['/foo:1', '/bar:2'])
 
-      begin
-        # must raise to populate backtrace
-        raise exception
-      rescue => e
-        expect(e.to_h).to include({
-          'description' => "The service broker API returned an error from http://www.example.com/: 500 Internal Server Error",
+      expect(exception.to_h).to eq({
+        'description' => "The service broker API returned an error from http://www.example.com/: 500 Internal Server Error",
+        'error' => {
           'types' => ["VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse", "HttpError", "StructuredError", "StandardError"],
-          'error' => {
-            'foo' => 'bar'
-          }
-        })
-      end
+          'backtrace' => ['/foo:1', '/bar:2'],
+          'error' => { 'foo' => 'bar' }
+        }
+      })
     end
-
-    context 'with a simple string response body' do
-      let(:response_body) { 'foo' }
-
-      it 'generates the correct hash' do
-        exception = described_class.new(endpoint, response)
-        expect(exception.to_h['error']).to eq('foo')
-      end
-    end
-
   end
 
   describe ServiceBroker::V2::HttpClient do
@@ -282,13 +269,11 @@ module VCAP::CloudController
             client.catalog
           }.to raise_error { |e|
             expect(e).to be_a(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse)
-            expect(e.to_h).to include({
-              'description' => 'The service broker API returned an error from http://broker.example.com/v2/catalog: 500 Internal Server Error',
+            error_hash = e.to_h
+            error_hash.fetch('description').should eq('The service broker API returned an error from http://broker.example.com/v2/catalog: 500 Internal Server Error')
+            error_hash.fetch('error').should include({
               'types' => ['VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse', 'HttpError', 'StructuredError', 'StandardError'],
-              'error' => {
-                'foo' => 'bar'
-              },
-              'status' => 500
+              'error' => { 'foo' => 'bar' }
             })
           }
         end
