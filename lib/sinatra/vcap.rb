@@ -87,9 +87,12 @@ module Sinatra
               description: exception.message,
             }.merge(exception.to_h)).to_json
           else
-            error_payload                = {}
-            error_payload["code"]        = ::VCAP::Errors::ServerError.new.error_code
-            error_payload["description"] = "#{exception.class}: #{exception.message}"
+            error_payload                       = {}
+            error_payload["code"]               = ::VCAP::Errors::ServerError.new.error_code
+            error_payload["description"]        = "#{exception.class}: #{exception.message}"
+            error_payload["error"]              = {}
+            error_payload["error"]["types"]     = exception.class.ancestors.map(&:name) - Exception.ancestors.map(&:name)
+            error_payload["error"]["backtrace"] = exception.backtrace
             body Yajl::Encoder.encode(error_payload).concat("\n")
           end
         end

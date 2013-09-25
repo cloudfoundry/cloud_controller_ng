@@ -127,6 +127,20 @@ describe "Sinatra::VCAP" do
     include_examples "vcap request id"
     include_examples "http header content type"
     it_behaves_like "a vcap rest error response", /ZeroDivisionError: divided by 0/
+
+    it 'returns an error type' do
+      decoded_response = Yajl::Parser.parse(last_response.body)
+      decoded_response.should have_key('error')
+      decoded_response['error'].should have_key('types')
+      decoded_response['error']['types'].should_not be_empty
+    end
+
+    it 'returns an error backtrace' do
+      decoded_response = Yajl::Parser.parse(last_response.body)
+      decoded_response.should have_key('error')
+      decoded_response['error'].should have_key('backtrace')
+      decoded_response['error']['backtrace'].should_not be_empty
+    end
   end
 
   describe "accessing a route that throws a StructuredError" do
