@@ -23,7 +23,14 @@ module CloudController
 
     def delete
       blobstore.delete(blobstore_key)
-      blobstore.delete(old_blobstore_key)
+      begin
+        blobstore.delete(old_blobstore_key)
+      rescue Errno::EISDIR
+        # The new droplets are with a path which is under the old droplet path
+        # This means that sometimes, if there are multiple versions of a droplet,
+        # the directory will still exist after we delete the droplet.
+        # We don't care for now, but we don't want the errors.
+      end
     end
 
     def exists?

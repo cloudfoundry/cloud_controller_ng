@@ -30,18 +30,47 @@ describe CloudController::Droplet do
   end
 
   describe "#delete" do
-    before do
-      blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}/droplet_hash")
-      blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}")
+    context "with only one droplet associated with the app" do
+      before do
+        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}/droplet_hash")
+        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}")
+      end
+
+      # working around a problem with local blob stores where the old format
+      # key is also the parent directory, and trying to delete it when there are
+      # multiple versions of the app results in an "is a directory" error
+      it "it hides EISDIR if raised by the blob store on deleting the old format of the droplet key" do
+        blobstore.should_receive(:delete).with("#{app.guid}/droplet_hash")
+        blobstore.should_receive(:delete).with("#{app.guid}").and_raise Errno::EISDIR
+        expect { subject.delete }.to_not raise_error
+      end
+
+      it "it doesnt hide EISDIR if raised for the new droplet key format" do
+        blobstore.should_receive(:delete).with("#{app.guid}/droplet_hash").and_raise Errno::EISDIR
+        expect { subject.delete }.to raise_error
+      end
+
+      it "removes the new and old format keys (guid/sha, guid)" do
+        expect { subject.delete }.to change {
+          [ blobstore.exists?("#{app.guid}/droplet_hash"),
+            blobstore.exists?("#{app.guid}"),
+        ]
+        }.from([true, true]).to([false, false])
+      end
     end
 
-    it "removes the new and old format keys (guid/sha, guid)" do
-      expect { subject.delete }.to change {
-        [ blobstore.exists?("#{app.guid}/droplet_hash"),
-          blobstore.exists?("#{app.guid}"),
-        ]
-      }.from([true, true]).to([false, false])
+    context "with multiple droplets associated with the app" do
+      before do
+        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}/another_droplet_hash")
+        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}/droplet_hash")
+        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}")
+      end
+
+      it "doesn't raise an error" do
+        expect { subject.delete }.to_not raise_error
+      end
     end
+
   end
 
   describe "#exists?" do
