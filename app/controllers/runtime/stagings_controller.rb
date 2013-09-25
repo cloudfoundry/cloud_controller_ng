@@ -22,7 +22,7 @@ module VCAP::CloudController
     DROPLET_PATH = "#{STAGING_PATH}/droplets"
     BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/buildpack_cache"
 
-    # Endpoint does its own (non-standard) auth
+    # Endpoint does its own basic auth
     allow_unauthenticated_access
 
     authenticate_basic_auth("#{STAGING_PATH}/*") do
@@ -65,11 +65,6 @@ module VCAP::CloudController
       end
 
       private
-      MUTEX = Mutex.new
-      def mutex
-        MUTEX
-      end
-
       def logger
         @logger ||= Steno.logger("cc.legacy_staging")
       end
