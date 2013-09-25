@@ -29,7 +29,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: fc5f044356295c7ac57e52549bed583f9d33a40e
+  revision: c9e364fef76290190eef7bc26f3766745fcef4a1
   specs:
     vcap_common (2.2.2)
       addressable (~> 2.2)
@@ -68,7 +68,7 @@ GEM
     backports (3.3.4)
     bcrypt-ruby (3.1.1)
     beefcake (0.3.7)
-    builder (3.0.4)
+    builder (3.2.2)
     ci_reporter (1.9.0)
       builder (>= 2.1.2)
     cloudfront-signer (2.1.0)
