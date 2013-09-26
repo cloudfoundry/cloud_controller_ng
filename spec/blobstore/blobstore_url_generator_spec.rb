@@ -95,7 +95,7 @@ module CloudController
             expect(uri.port).to eql blobstore_port
             expect(uri.user).to eql "username"
             expect(uri.password).to eql "password"
-            expect(uri.path).to eql "/buildpacks/#{buildpack.guid}/download"
+            expect(uri.path).to eql "/v2/buildpacks/#{buildpack.guid}/download"
           end
         end
 

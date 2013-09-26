@@ -19,7 +19,7 @@ module CloudController
 
     def admin_buildpack_download_url(buildpack)
       if @admin_buildpack_blobstore.local?
-        staging_uri("/buildpacks/#{buildpack.guid}/download")
+        staging_uri("/v2/buildpacks/#{buildpack.guid}/download")
       else
         @admin_buildpack_blobstore.download_uri(buildpack.key)
       end
