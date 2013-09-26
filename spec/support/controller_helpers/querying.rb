@@ -37,7 +37,7 @@ module ControllerHelpers
             end
 
             it "should return total_results => 0" do
-              decoded_response["total_results"].should == 0
+              decoded_response["total_results"].should => 0
             end
           end
         end
