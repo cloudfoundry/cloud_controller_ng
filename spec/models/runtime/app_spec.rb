@@ -14,6 +14,12 @@ module VCAP::CloudController
 
     let(:route) { Route.make(:domain => domain, :space => space) }
 
+    before do
+      # TODO: Remove this double after broker api calls are made asynchronous
+      client = double('broker client', unbind: nil, deprovision: nil)
+      Service.any_instance.stub(:client).and_return(client)
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :space],
       :unique_attributes => [ [:space, :name] ],

@@ -7,8 +7,13 @@ module VCAP::CloudController
     let(:guid) { Sham.guid }
 
     after { VCAP::Request.current_id = nil }
+
     before do
       VCAP::CloudController::SecurityContext.stub(:current_user_email) { email }
+
+      # TODO: Remove this double after broker api calls are made asynchronous
+      client = double('broker client', unbind: nil, deprovision: nil)
+      Service.any_instance.stub(:client).and_return(client)
     end
 
     it_behaves_like "a CloudController model", {
