@@ -38,6 +38,9 @@ module VCAP::CloudController
       buildpack = find_guid_and_validate_access(:read_bits, guid)
       file_struct = upload_handler.uploaded_file(params, "buildpack")
       uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
+      logger.info file_struct
+      logger.info uploaded_filename
+      logger.info buildpack
 
       raise Errors::BuildpackBitsUploadInvalid, "only zip files allowed" unless File.extname(uploaded_filename) == ".zip"
 
@@ -85,10 +88,6 @@ module VCAP::CloudController
       else
         f.public_url
       end
-    end
-
-    def compute_file_extension(filename)
-      filename.end_with?('.tar.gz') ? '.tar.gz' : File.extname(filename)
     end
 
     def self.not_found_exception_name
