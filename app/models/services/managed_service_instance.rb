@@ -92,12 +92,8 @@ module VCAP::CloudController
     def after_destroy
       super
 
-      # TODO: transactionally move this into a queue, remove the rescue
-      begin
-        client.deprovision(self)
-      rescue => e
-        logger.error "deprovision failed #{e}"
-      end
+      # TODO: transactionally move this into a queue
+      client.deprovision(self)
 
       ServiceDeleteEvent.create_from_service_instance(self)
     end
