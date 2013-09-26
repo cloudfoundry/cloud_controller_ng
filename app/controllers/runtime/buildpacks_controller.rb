@@ -85,6 +85,9 @@ module VCAP::CloudController
       # urls
       if f.respond_to?(:url)
         f.url(Time.now + 3600)
+      elsif f.respond_to?(:temp_signed_url)
+        # HP (to be used with OpenStack)
+        f.temp_signed_url(3600, "GET")
       else
         f.public_url
       end

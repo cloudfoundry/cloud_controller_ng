@@ -74,7 +74,11 @@ module VCAP::CloudController
         # unfortunately fog doesn't have a unified interface for non-public
         # urls
         if f.respond_to?(:url)
+          # AWS
           f.url(Time.now + 3600)
+        elsif f.respond_to?(:temp_signed_url)
+          # HP (to be used with OpenStack)
+          f.temp_signed_url(3600, "GET")
         else
           f.public_url
         end
