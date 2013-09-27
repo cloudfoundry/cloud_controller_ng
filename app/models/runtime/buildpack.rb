@@ -5,12 +5,20 @@ module VCAP::CloudController
 
     import_attributes :name, :key, :priority
 
-    def self.list_admin_buildpacks(url_generator)
-      self.all.map do |buildpack|
+    def self.list_admin_buildpacks(url_generator, admin_buildpack=nil)
+
+      generator = lambda do |bp|
         {
-          key: buildpack.key,
-          url: url_generator.admin_buildpack_download_url(buildpack)
+          key: bp.key,
+          url: url_generator.admin_buildpack_download_url(bp)
         }
+      end
+
+      if admin_buildpack
+        return [generator.call(admin_buildpack)]
+      end
+      self.all.map do |buildpack|
+        generator.call(buildpack)
       end
     end
 

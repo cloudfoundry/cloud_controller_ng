@@ -495,9 +495,13 @@ module VCAP::CloudController
         request[:start_message].should include ({ :executableUri => nil })
       end
 
-      it "includes a list of admin buildpacks" do
+      it "includes a list of admin buildpacks filtered by app's admin buildpack" do
         expected_buildpack_url = "http://example.com/buildpacks/1"
-        VCAP::CloudController::Buildpack.stub(:list_admin_buildpacks).
+        app.admin_buildpack = Buildpack.make
+        app.save
+
+        VCAP::CloudController::Buildpack.should_receive(:list_admin_buildpacks).
+          with(blobstore_url_generator, app.admin_buildpack).
           and_return([{
                         url: expected_buildpack_url,
                       }])

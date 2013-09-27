@@ -90,7 +90,7 @@ module VCAP::CloudController
         :buildpack_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(@app),
         :buildpack_cache_upload_uri => @blobstore_url_generator.buildpack_cache_upload_url(@app),
         :start_message => start_app_message,
-        :admin_buildpacks => Buildpack.list_admin_buildpacks(@blobstore_url_generator)
+        :admin_buildpacks => Buildpack.list_admin_buildpacks(@blobstore_url_generator, @app.admin_buildpack)
       }
     end
 
