@@ -29,14 +29,14 @@ module CloudController
     end
 
     def buildpack_cache_blobstore
-      droplets = config.fetch(:droplets)
-      cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)
-      droplet_cdn = Cdn.make(cdn_uri)
+      buildpacks = config.fetch(:buildpacks)
+      cdn_uri = buildpacks.fetch(:cdn, nil) && buildpacks.fetch(:cdn).fetch(:uri, nil)
+      buildpack_cdn = Cdn.make(cdn_uri)
 
       Blobstore.new(
-        droplets.fetch(:fog_connection),
-        droplets.fetch(:droplet_directory_key),
-        droplet_cdn,
+        buildpacks.fetch(:fog_connection),
+        buildpacks.fetch(:buildpack_directory_key),
+        buildpack_cdn,
         "buildpack_cache"
       )
     end

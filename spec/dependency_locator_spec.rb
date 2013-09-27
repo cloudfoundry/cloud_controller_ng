@@ -24,7 +24,7 @@ describe CloudController::DependencyLocator do
       end
     end
 
-    context "when cdn is configured for package blog store" do
+    context "when cdn is configured for droplet blob store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
       let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
       let(:cdn) { double(:cdn) }
@@ -40,9 +40,9 @@ describe CloudController::DependencyLocator do
   describe "#buildpack_cache_blobstore" do
     let(:config) do
       {
-        droplets: {
+        buildpacks: {
           fog_connection: 'fog_connection',
-          droplet_directory_key: 'key',
+          buildpack_directory_key: 'key',
           cdn: cdn_settings
         }
       }
@@ -57,7 +57,7 @@ describe CloudController::DependencyLocator do
       end
     end
 
-    context "when cdn is configured for package blog store" do
+    context "when cdn is configured for buildpack blob store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
       let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
       let(:cdn) { double(:cdn) }
@@ -90,7 +90,7 @@ describe CloudController::DependencyLocator do
       end
     end
 
-    context "when cdn is configured for package blog store" do
+    context "when cdn is configured for package blob store" do
       let(:cdn_host) { 'http://crazy_cdn.com' }
       let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
       let(:cdn) { double(:cdn) }

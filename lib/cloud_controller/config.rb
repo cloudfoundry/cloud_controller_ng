@@ -125,6 +125,16 @@ module VCAP::CloudController
           }
         },
 
+        :buildpacks => {
+          optional(:buildpack_directory_key) => String,
+          :fog_connection => {
+            :provider => String,
+            optional(:aws_access_key_id) => String,
+            optional(:aws_secret_access_key) => String,
+            optional(:local_root) => String
+          }
+        },
+
         :db_encryption_key => String,
 
         optional(:trial_db) => {
