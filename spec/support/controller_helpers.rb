@@ -63,8 +63,8 @@ module ControllerHelpers
     parse(last_response.body, options)
   end
 
-  def parse(json)
-    Yajl::Parser.parse(json)
+  def parse(json, options={})
+    Yajl::Parser.parse(json, options)
   end
 
   def metadata
