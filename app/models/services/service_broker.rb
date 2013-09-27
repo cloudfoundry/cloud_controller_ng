@@ -13,6 +13,7 @@ module VCAP::CloudController
       validates_presence :token
       validates_unique :name
       validates_unique :broker_url
+      validates_url :broker_url
     end
 
     def load_catalog

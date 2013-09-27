@@ -128,6 +128,8 @@ module VCAP::CloudController
         Errors::ServiceBrokerApiUnreachable.new(broker.broker_url)
       elsif errors.on(:broker_api) && errors.on(:broker_api).include?(:timeout)
         Errors::ServiceBrokerApiTimeout.new(broker.broker_url)
+      elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:url)
+        Errors::ServiceBrokerUrlInvalid.new(broker.broker_url)
       elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:unique)
         Errors::ServiceBrokerUrlTaken.new(broker.broker_url)
       elsif errors.on(:name) && errors.on(:name).include?(:unique)

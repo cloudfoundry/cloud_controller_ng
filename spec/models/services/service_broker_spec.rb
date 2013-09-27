@@ -51,6 +51,22 @@ module VCAP::CloudController
         expect(broker).to_not be_valid
         expect(broker.errors.on(:broker_url)).to include(:unique)
       end
+
+      it 'validates the url is a valid http/https url' do
+        expect(broker).to be_valid
+
+        broker.broker_url = '127.0.0.1/api'
+        expect(broker).to_not be_valid
+
+        broker.broker_url = 'ftp://127.0.0.1/api'
+        expect(broker).to_not be_valid
+
+        broker.broker_url = 'http://127.0.0.1/api'
+        expect(broker).to be_valid
+
+        broker.broker_url = 'https://127.0.0.1/api'
+        expect(broker).to be_valid
+      end
     end
 
     describe '#load_catalog' do

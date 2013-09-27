@@ -424,6 +424,18 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the broker url is not a valid http/https url' do
+          before { errors.stub(:on).with(:broker_url).and_return([:url]) }
+
+          it 'returns an error' do
+            put "/v2/service_brokers/#{broker.guid}", body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270011
+            decoded_response.fetch('description').should =~ /is not a valid URL/
+          end
+        end
+
         context 'when the broker url is taken' do
           before { errors.stub(:on).with(:broker_url).and_return([:unique]) }
 
