@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{resource_name}} API</title>
+    <meta charset="utf-8">
+    <style>
+      td.required .name:after {
+        float: right;
+        content: "required";
+        font-weight: normal;
+        color: #F08080;
+      }
+
+      p {
+        padding: 15px;
+        font-size: 130%;
+      }
+
+      pre {
+        white-space: pre-wrap;
+      }
+
+      body {
+        margin-left: auto;
+        margin-right: auto;
+        width: 900px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>{{resource_name}} API</h1>
+
+      <div class="article">
+        <h2>{{ description }}</h2>
+        <h3>{{ http_method }} {{ route }}</h3>
+        {{# explanation }}
+          <p class="explanation">
+            {{ explanation }}
+          </p>
+        {{/ explanation }}
+
+          <h3>Parameters</h3>
+          <table class="parameters table table-striped table-bordered table-condensed">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{# request_parameters }}
+              <tr>
+                <td{{# required }} class="required"{{/ required }}>
+                  <span class="name">{{ name }}</span>
+                </td>
+                <td>
+                  <span class="description">{{ description }}</span>
+                </td>
+              </tr>
+              {{/ request_parameters }}
+            </tbody>
+          </table>
+
+          <h3>Fields</h3>
+          <table class="fields table table-striped table-bordered table-condensed">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{# fields }}
+              <tr>
+                <td{{# required }} class="required"{{/ required }}>
+                  <span class="name">{{ name }}</span>
+                </td>
+                <td>
+                  <span class="description">{{ description }}</span>
+                </td>
+              </tr>
+              {{/ fields }}
+            </tbody>
+          </table>
+
+
+        {{# requests }}
+          <h3>Request</h3>
+
+          <h4>Headers</h4>
+          <pre class="request headers">{{ request_headers_text }}</pre>
+
+          <h4>Route</h4>
+          <pre class="request route highlight">{{ request_method }} {{ request_path }}</pre>
+
+          {{# request_query_parameters_text }}
+            <h4>Query Parameters</h4>
+            <pre class="request query_parameters highlight">{{ request_query_parameters_text }}</pre>
+          {{/ request_query_parameters_text }}
+
+          {{# request_body }}
+            <h4>Body</h4>
+            <pre class="request body">{{{ request_body }}}</pre>
+          {{/ request_body }}
+
+          {{# curl }}
+            <h4>cURL</h4>
+            <pre class="request">{{ curl }}</pre>
+          {{/ curl }}
+
+          {{# response_status }}
+            <h3>Response</h3>
+            <h4>Headers</h4>
+            <pre class="response headers">{{ response_headers_text }}</pre>
+            <h4>Status</h4>
+            <pre class="response status">{{ response_status }} {{ response_status_text}}</pre>
+            {{# response_body }}
+              <h4>Body</h4>
+              <pre class="response body">{{{ response_body }}}</pre>
+            {{/ response_body }}
+          {{/ response_status }}
+
+        {{/ requests }}
+      </div>
+    </div>
+  </body>
+</html>

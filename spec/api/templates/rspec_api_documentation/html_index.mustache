@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ api_name }}</title>
+  <meta charset="utf-8">
+
+  <style>
+    body {
+      margin-left: auto;
+      margin-right: auto;
+      width: 900px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>{{ api_name }}</h1>
+
+  {{# sections }}
+  <div class="article">
+    <h2>{{ resource_name }}</h2>
+
+    <ul>
+      {{# examples }}
+      <li>
+        <a href="{{ dirname }}/{{ filename }}">{{ description }}</a>
+      </li>
+      {{/ examples }}
+    </ul>
+  </div>
+  {{/ sections }}
+</div>
+</body>
+</html>

@@ -8,6 +8,7 @@ require "yaml"
 require "sequel"
 require "steno"
 require "cloud_controller"
+require "rspec_api_documentation"
 
 ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
 

@@ -21,6 +21,8 @@ require "allowy/rspec"
 require "pry"
 require "posix/spawn"
 
+require "rspec_api_documentation"
+
 module VCAP::CloudController
   class SpecEnvironment
     def initialize
@@ -548,9 +550,31 @@ RSpec.configure do |rspec_config|
     :file_path => rspec_config.escaped_path(%w[spec controllers])
   }
 
-  rspec_config.before(:all) do
+  rspec_config.include ControllerHelpers, type: :api, :example_group => {
+    :file_path => rspec_config.escaped_path(%w[spec api])
+  }
+
+  rspec_config.include ApiDsl, type: :api, :example_group => {
+    :file_path => rspec_config.escaped_path(%w[spec api])
+  }
+
+  rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
     configure
+  end
+
+  rspec_config.before :all do
+    RspecApiDocumentation.configure do |c|
+    ##  token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
+     ### c.app = VCAP::CloudController::Controller.new(config, token_decoder)
+      c.format = [:html, :json]
+      c.api_name = "Cloud Foundry API"
+      c.template_path = "spec/api/templates"
+      c.app = Struct.new(:config) do
+        # generate app() method for rack::test to use
+        include ::ControllerHelpers
+      end.new(config).app
+    end
   end
 
   rspec_config.before :each do

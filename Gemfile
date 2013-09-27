@@ -26,6 +26,7 @@ gem "talentbox-delayed_job_sequel", "~> 4.0.0.beta1.1"
 
 # These are outside the test group in order to run rake tasks
 gem "rspec"
+gem "rspec_api_documentation"
 gem "ci_reporter"
 
 group :db do
