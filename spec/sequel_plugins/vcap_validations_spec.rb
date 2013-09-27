@@ -93,41 +93,4 @@ describe "Sequel::Plugins::VcapValidations" do
       @m.should_not be_valid
     end
   end
-
-  describe "validates_git_url" do
-
-    before do
-      @c.set_validations { validates_git_url(:val) }
-    end
-
-    it "allows a nil git url" do
-      @m.val=nil
-      @m.should be_valid
-    end
-
-    it "allows a public git url" do
-      @m.val = "git://example.com/foo.git"
-      @m.should be_valid
-    end
-
-    it "allows a public http url" do
-      @m.val = "http://example.com/foo"
-      @m.should be_valid
-    end
-
-    it "does not allow a private git url" do
-      @m.val = "git@example.com:foo.git"
-      @m.should_not be_valid
-    end
-
-    it "does not allow a private git url with ssh schema" do
-      @m.val = "ssh://git@example.com:foo.git"
-      @m.should_not be_valid
-    end
-
-    it "does not allow a non-url string" do
-      @m.val =  "Hello, world!"
-      @m.should_not be_valid
-    end
-  end
 end

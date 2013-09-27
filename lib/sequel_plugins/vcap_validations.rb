@@ -16,10 +16,6 @@ module Sequel::Plugins::VcapValidations
     def validates_email(attr)
       validates_format(RFC822::EMAIL_REGEXP_WHOLE, attr, :message => :email) if send(attr)
     end
-
-    def validates_git_url(attr)
-      validates_format(URI::regexp(%w(http https git)), attr, :message => :git_url) if send(attr)
-    end
   end
 end
 

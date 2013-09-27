@@ -360,6 +360,54 @@ module VCAP::CloudController
     end
 
     describe "validations" do
+      describe "buildpack" do
+        it "does allow nil value" do
+            expect {
+              App.make(buildpack: nil)
+            }.to_not raise_error
+        end
+
+        it "does allow a public git url" do
+          expect {
+            App.make(buildpack: "git://user@github.com:repo")
+          }.to_not raise_error
+        end
+
+        it "allows a public http url" do
+          expect {
+            App.make(buildpack: "http://example.com/foo")
+          }.to_not raise_error
+        end
+
+        it "does allow a buildpack name" do
+          admin_buildpack = VCAP::CloudController::Buildpack.make
+          app = nil
+          expect {
+            app = App.make(buildpack: admin_buildpack.name)
+          }.to_not raise_error
+
+          expect(app.admin_buildpack).to eql(admin_buildpack)
+        end
+
+        it "does not allow a private git url" do
+          expect {
+            app = App.make(buildpack: "git@example.com:foo.git")
+          }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
+        end
+
+        it "does not allow a private git url with ssh schema" do
+          expect {
+            app = App.make(buildpack: "ssh://git@example.com:foo.git")
+          }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
+        end
+
+        it "does not allow a non-url string" do
+          expect {
+            app = App.make(buildpack: "Hello, world!")
+          }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
+        end
+      end
+
       describe "name" do
         let(:space) { Space.make }
 

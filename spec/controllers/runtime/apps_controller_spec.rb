@@ -124,6 +124,28 @@ module VCAP::CloudController
         expect(event).to be
         expect(event.actor).to eq(admin_user.guid)
       end
+
+      context "buildpacks" do
+        it "accepts the buildpack in git formats" do
+          initial_hash[:buildpack] = "git://user@public.example.com"
+          create_app
+          expect(last_response.status).to eql 201
+        end
+
+        it "accepts a buildpack name uploaded by an admin before" do
+          admin_buildpack = VCAP::CloudController::Buildpack.make
+          initial_hash[:buildpack] = admin_buildpack.name
+          create_app
+          expect(last_response.status).to eql 201
+        end
+
+        it "reject invalid buildpack url " do
+          initial_hash[:buildpack] = "not-a-git-repo"
+          create_app
+          expect(last_response.status).to eql 400
+          expect(decoded_response["description"]).to match /is not valid public git url or a known buildpack name/
+        end
+      end
     end
 
     describe "update app" do

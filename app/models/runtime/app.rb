@@ -1,4 +1,5 @@
 require "cloud_controller/app_observer"
+require_relative "buildpack"
 
 module VCAP::CloudController
   class App < Sequel::Model
@@ -34,6 +35,7 @@ module VCAP::CloudController
 
     one_to_many :service_bindings, :after_remove => :after_remove_binding
     one_to_many :events, :class => VCAP::CloudController::AppEvent
+    many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
 
     many_to_one :space
     many_to_one :stack
@@ -94,12 +96,21 @@ module VCAP::CloudController
 
     alias :kill_after_multiple_restarts? :kill_after_multiple_restarts
 
+    def validate_buidpack_name_or_git_url(attr)
+      attr_val = public_send(attr)
+      return unless attr_val
+      return if Buildpack.find(:name => attr_val)
+
+      validates_format(URI::regexp(%w(http https git)), attr,
+                       :message => "#{attr_val} is not valid public git url or a known buildpack name")
+    end
+
     def validate
       validates_presence :name
       validates_presence :space
       validates_unique [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
 
-      validates_git_url :buildpack
+      validate_buidpack_name_or_git_url :buildpack
 
       validates_includes PACKAGE_STATES, :package_state, :allow_missing => true
       validates_includes APP_STATES, :state, :allow_missing => true
@@ -425,6 +436,15 @@ module VCAP::CloudController
     def mark_for_restaging(opts={})
       self.package_state = "PENDING"
       save if opts[:save]
+    end
+
+    def buildpack=(buildpack)
+      admin_buildpack = Buildpack.find(name: buildpack)
+      if admin_buildpack
+        self.admin_buildpack = admin_buildpack
+        return
+      end
+      super(buildpack)
     end
 
     def package_hash=(hash)
