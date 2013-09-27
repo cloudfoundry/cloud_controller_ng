@@ -478,6 +478,11 @@
   http_code: 400
   message: "Can not remove brokers that have associated service instances"
 
+270011:
+  name: ServiceBrokerUrlInvalid
+  http_code: 400
+  message: "%s is not a valid URL"
+
 280001:
   name: TaskNotFound
   http_code: 404
