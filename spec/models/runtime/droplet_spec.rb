@@ -31,11 +31,6 @@ describe CloudController::Droplet do
 
   describe "#delete" do
     context "with only one droplet associated with the app" do
-      before do
-        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}/droplet_hash")
-        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}")
-      end
-
       # working around a problem with local blob stores where the old format
       # key is also the parent directory, and trying to delete it when there are
       # multiple versions of the app results in an "is a directory" error
@@ -51,6 +46,8 @@ describe CloudController::Droplet do
       end
 
       it "removes the new and old format keys (guid/sha, guid)" do
+        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}/droplet_hash")
+        blobstore.cp_to_blobstore(tmp_file.path, "#{app.guid}")
         expect { subject.delete }.to change {
           [ blobstore.exists?("#{app.guid}/droplet_hash"),
             blobstore.exists?("#{app.guid}"),
