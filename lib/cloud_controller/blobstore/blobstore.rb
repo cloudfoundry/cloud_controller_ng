@@ -65,6 +65,8 @@ class Blobstore
     end
     if file.respond_to?(:url)
       return file.url(Time.now + 3600)
+    elsif file.respond_to?(:temp_signed_url)
+      return file.temp_signed_url(3600, "GET")
     end
     return file.public_url
   end
