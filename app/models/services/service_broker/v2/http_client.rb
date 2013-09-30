@@ -1,24 +1,47 @@
 module VCAP::CloudController
   module ServiceBroker::V2
+
     class ServiceBrokerBadResponse < HttpError
-      def initialize(endpoint, response)
+      CODE=270009
+      def initialize(endpoint, response, method)
         msg = "The service broker API returned an error from #{endpoint}: #{response.code} #{response.reason}"
-        super(msg, response)
+        super(msg, endpoint, method, response, CODE)
       end
     end
 
-    class ServiceBrokerApiUnreachable < StructuredError
+    class ServiceBrokerApiUnreachable < NonResponsiveHttpError
       attr_reader :nested_exception
+      CODE=270004
 
-      def initialize(endpoint, nested_exception)
+      def initialize(endpoint, method, nested_exception)
         msg = "The service broker API could not be reached: #{endpoint}"
         @nested_exception = nested_exception
-        super(msg, nested_exception)
+        super(msg, nested_exception, endpoint, method, CODE)
       end
 
       def error
         types = nested_exception.class.ancestors.map(&:name) - Exception.ancestors.map(&:name)
         {
+          'types' => types,
+          'backtrace' => nested_exception.backtrace
+        }
+      end
+    end
+
+    class ServiceBrokerApiTimeout < NonResponsiveHttpError
+      attr_reader :nested_exception
+      CODE=270005
+
+      def initialize(endpoint, method, nested_exception)
+        msg = "The service broker API timed out: #{endpoint}"
+        @nested_exception = nested_exception
+        super(msg, nested_exception, endpoint, method, CODE)
+      end
+
+      def error
+        types = nested_exception.class.ancestors.map(&:name) - Exception.ancestors.map(&:name)
+        {
+          'description' => nested_exception.message,
           'types' => types,
           'backtrace' => nested_exception.backtrace
         }
@@ -81,9 +104,9 @@ module VCAP::CloudController
         begin
           response = http.send(method, endpoint, header: headers, body: body)
         rescue SocketError, HTTPClient::ConnectTimeoutError, Errno::ECONNREFUSED => error
-          raise ServiceBrokerApiUnreachable.new(endpoint, error)
-        rescue HTTPClient::KeepAliveDisconnected, HTTPClient::ReceiveTimeoutError
-          raise VCAP::Errors::ServiceBrokerApiTimeout.new(endpoint)
+          raise ServiceBrokerApiUnreachable.new(endpoint, method, error)
+        rescue HTTPClient::KeepAliveDisconnected, HTTPClient::ReceiveTimeoutError => error
+          raise ServiceBrokerApiTimeout.new(endpoint, method, error)
         end
 
         code = response.code.to_i
@@ -107,7 +130,7 @@ module VCAP::CloudController
         when 409
           raise VCAP::Errors::ServiceBrokerConflict.new(endpoint)
         else
-          raise ServiceBrokerBadResponse.new(endpoint, response)
+          raise ServiceBrokerBadResponse.new(endpoint, response, method)
         end
       end
     end

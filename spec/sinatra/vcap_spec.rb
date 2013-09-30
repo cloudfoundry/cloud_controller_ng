@@ -19,7 +19,7 @@ describe "Sinatra::VCAP" do
     end
 
     get "/structured_error" do
-      e = StructuredError.new('some message', {'foo' => 'bar'})
+      e = StructuredError.new('some message', :error => {'foo' => 'bar'})
       e.set_backtrace(['/foo:1', '/bar:2'])
       raise e
     end
@@ -160,11 +160,10 @@ describe "Sinatra::VCAP" do
       decoded_response = Yajl::Parser.parse(last_response.body)
       expect(decoded_response['code']).to eq(10001)
       expect(decoded_response['description']).to eq('some message')
-      expect(decoded_response['error']).to eq({
-        'types' => %w(StructuredError StandardError),
-        'backtrace' => ['/foo:1', '/bar:2'],
-        'error' => { 'foo' => 'bar' }
-      })
+
+      expect(decoded_response['backtrace']).to eq(['/foo:1', '/bar:2'])
+      expect(decoded_response['types']).to eq(%w(StructuredError StandardError))
+      expect(decoded_response['source']).to eq({ 'foo' => 'bar' })
     end
   end
 

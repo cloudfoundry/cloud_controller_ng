@@ -7,18 +7,23 @@ module VCAP::CloudController
       { 'foo' => 'bar' }.to_json
     end
     let(:response) { double(code: 500, reason: 'Internal Server Error', body: response_body) }
+    let(:method) { 'PUT' }
 
     it 'generates the correct hash' do
-      exception = described_class.new(endpoint, response)
+      exception = described_class.new(endpoint, response, method)
       exception.set_backtrace(['/foo:1', '/bar:2'])
 
       expect(exception.to_h).to eq({
+        'code' => 270009,
         'description' => "The service broker API returned an error from http://www.example.com/: 500 Internal Server Error",
-        'error' => {
-          'types' => ["VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse", "HttpError", "StructuredError", "StandardError"],
-          'backtrace' => ['/foo:1', '/bar:2'],
-          'error' => { 'foo' => 'bar' }
-        }
+        'types' => ["VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse", "HttpError", "StructuredError", "StandardError"],
+        'backtrace' => ['/foo:1', '/bar:2'],
+        "http" => {
+          "status" => 500,
+          "uri" => endpoint,
+          "method" => "PUT"
+        },
+        'source' => {'foo' => 'bar'}
       })
     end
   end
@@ -33,23 +38,68 @@ module VCAP::CloudController
 
 
     it 'generates a structured error' do
-      exception = ServiceBroker::V2::ServiceBrokerApiUnreachable.new(endpoint, error)
+      exception = ServiceBroker::V2::ServiceBrokerApiUnreachable.new(endpoint, 'PUT', error)
       exception.set_backtrace(['/generatedexception:3', '/backtrace:4'])
 
       expect(exception.to_h).to eq({
-        'description' => "The service broker API could not be reached: http://www.example.com/",
-        'error' => {
-          'types' => ["VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable", "StructuredError", "StandardError"],
-          'backtrace' => ['/generatedexception:3', '/backtrace:4'],
-          'error' => {
-            'types' => ["SocketError", "StandardError"],
-            'backtrace' => ['/socketerror:1', '/backtrace:2']
+        'code' => 270004,
+        'description' => 'The service broker API could not be reached: http://www.example.com/',
+        'types' => [
+          'VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable',
+          'NonResponsiveHttpError',
+          'StructuredError',
+          'StandardError',
+        ],
+        'backtrace' => ['/generatedexception:3', '/backtrace:4'],
+        'http' => {
+          'uri' => endpoint,
+          'method' => 'PUT'
+        },
+        'source' => {
+          'types' => ['SocketError', 'StandardError'],
+          'backtrace' => ['/socketerror:1', '/backtrace:2']
           }
-        }
       })
     end
 
   end
+
+  describe ServiceBroker::V2::ServiceBrokerApiTimeout do
+    let(:endpoint) { 'http://www.example.com/v2/service_instances/abc123' }
+    let(:error) { HTTPClient::KeepAliveDisconnected.new }
+
+    before do
+      error.set_backtrace(['/socketerror:1', '/backtrace:2'])
+    end
+
+
+    it 'generates a structured error' do
+      exception = ServiceBroker::V2::ServiceBrokerApiTimeout.new(endpoint, 'GET', error)
+      exception.set_backtrace(['here.rb:123', 'there.rb:5676'])
+
+      expect(exception.to_h).to eq({
+        'code' => 270005,
+        'description' => 'The service broker API timed out: http://www.example.com/v2/service_instances/abc123',
+        'types' => ['VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiTimeout',
+          'NonResponsiveHttpError',
+          'StructuredError',
+          'StandardError'
+        ],
+        'backtrace' => ['here.rb:123', 'there.rb:5676'],
+        'http' => {
+          'uri' => endpoint,
+          'method' => 'GET'
+        },
+        'source' => {
+          'description' => 'HTTPClient::KeepAliveDisconnected',
+          'types' => ['HTTPClient::KeepAliveDisconnected', 'StandardError'],
+          'backtrace' => ['/socketerror:1', '/backtrace:2']
+        }
+      })
+
+    end
+  end
+
 
   describe ServiceBroker::V2::HttpClient do
     let(:auth_token) { 'abc123' }
@@ -266,7 +316,7 @@ module VCAP::CloudController
           it 'should raise a timeout error' do
             expect {
               client.catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiTimeout)
+            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiTimeout)
           end
         end
 
@@ -278,7 +328,7 @@ module VCAP::CloudController
           it 'should raise a timeout error' do
             expect {
               client.catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiTimeout)
+            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiTimeout)
           end
         end
       end
@@ -299,10 +349,8 @@ module VCAP::CloudController
             expect(e).to be_a(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse)
             error_hash = e.to_h
             error_hash.fetch('description').should eq('The service broker API returned an error from http://broker.example.com/v2/catalog: 500 Internal Server Error')
-            error_hash.fetch('error').should include({
-              'types' => ['VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse', 'HttpError', 'StructuredError', 'StandardError'],
-              'error' => { 'foo' => 'bar' }
-            })
+            error_hash.fetch('types').should include('VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse', 'HttpError', 'StructuredError', 'StandardError')
+            error_hash.fetch('source').should include({ 'foo' => 'bar' })
           }
         end
       end
