@@ -96,6 +96,17 @@ class Blobstore
 
   def connection
     options = @connection_config
+
+    # Special case for hp provider:
+    # Deployment manifest symbol values are converted to strings when transfering deployment information.
+    # We have to convert the hp_auth_version value to a symbol if present.    
+    if options[:provider].downcase == "hp"
+      begin
+        options[:hp_auth_version] = options[:hp_auth_version].to_sym 
+      rescue
+      end
+    end
+    
     options = options.merge(:endpoint => "") if local?
     Fog::Storage.new(options)
   end
