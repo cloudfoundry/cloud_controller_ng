@@ -7,6 +7,24 @@ module VCAP::CloudController
       end
     end
 
+    class ServiceBrokerApiUnreachable < StructuredError
+      attr_reader :nested_exception
+
+      def initialize(endpoint, nested_exception)
+        msg = "The service broker API could not be reached: #{endpoint}"
+        @nested_exception = nested_exception
+        super(msg, nested_exception)
+      end
+
+      def error
+        types = nested_exception.class.ancestors.map(&:name) - Exception.ancestors.map(&:name)
+        {
+          'types' => types,
+          'backtrace' => nested_exception.backtrace
+        }
+      end
+    end
+
     class HttpClient
 
       def initialize(attrs)
@@ -62,8 +80,8 @@ module VCAP::CloudController
 
         begin
           response = http.send(method, endpoint, header: headers, body: body)
-        rescue SocketError, HTTPClient::ConnectTimeoutError, Errno::ECONNREFUSED
-          raise VCAP::Errors::ServiceBrokerApiUnreachable.new(endpoint)
+        rescue SocketError, HTTPClient::ConnectTimeoutError, Errno::ECONNREFUSED => error
+          raise ServiceBrokerApiUnreachable.new(endpoint, error)
         rescue HTTPClient::KeepAliveDisconnected, HTTPClient::ReceiveTimeoutError
           raise VCAP::Errors::ServiceBrokerApiTimeout.new(endpoint)
         end

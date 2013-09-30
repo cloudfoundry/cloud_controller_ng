@@ -23,6 +23,34 @@ module VCAP::CloudController
     end
   end
 
+  describe ServiceBroker::V2::ServiceBrokerApiUnreachable do
+    let(:endpoint) { 'http://www.example.com/' }
+    let(:error) { SocketError.new }
+
+    before do
+      error.set_backtrace(['/socketerror:1', '/backtrace:2'])
+    end
+
+
+    it 'generates a structured error' do
+      exception = ServiceBroker::V2::ServiceBrokerApiUnreachable.new(endpoint, error)
+      exception.set_backtrace(['/generatedexception:3', '/backtrace:4'])
+
+      expect(exception.to_h).to eq({
+        'description' => "The service broker API could not be reached: http://www.example.com/",
+        'error' => {
+          'types' => ["VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable", "StructuredError", "StandardError"],
+          'backtrace' => ['/generatedexception:3', '/backtrace:4'],
+          'error' => {
+            'types' => ["SocketError", "StandardError"],
+            'backtrace' => ['/socketerror:1', '/backtrace:2']
+          }
+        }
+      })
+    end
+
+  end
+
   describe ServiceBroker::V2::HttpClient do
     let(:auth_token) { 'abc123' }
     let(:request_id) { Sham.guid }
@@ -197,7 +225,7 @@ module VCAP::CloudController
           it 'should raise an unreachable error' do
             expect {
               client.catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiUnreachable)
+            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable)
           end
         end
 
@@ -209,7 +237,7 @@ module VCAP::CloudController
           it 'should raise an unreachable error' do
             expect {
               client.catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiUnreachable)
+            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable)
           end
         end
 
@@ -221,7 +249,7 @@ module VCAP::CloudController
           it 'should raise an unreachable error' do
             expect {
               client.catalog
-            }.to raise_error(VCAP::CloudController::Errors::ServiceBrokerApiUnreachable)
+            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable)
           end
         end
       end
