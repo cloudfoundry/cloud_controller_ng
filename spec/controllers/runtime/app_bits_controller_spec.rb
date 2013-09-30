@@ -176,20 +176,47 @@ module VCAP::CloudController
       end
 
       context "when app is local" do
+        let(:workspace) { Dir.mktmpdir }
+        let(:blobstore_config) do
+          {
+            :packages => {
+              :fog_connection => {
+                :provider => "Local",
+                :local_root => Dir.mktmpdir("packages", workspace)
+              },
+              :app_package_directory_key => "cc-packages",
+            },
+            :resource_pool => {
+              :resource_directory_key => "cc-resources",
+              :fog_connection => {
+                :provider => "Local",
+                :local_root => Dir.mktmpdir("resourse_pool", workspace)
+              }
+            },
+          }
+        end
+
         before do
-          AppPackage.blobstore.stub(:local?) { true }
-          AppPackage.stub(:package_uri) { |guid| "droplets/#{guid}" }
+          Fog.unmock!
+          @old_config = config
+          config_override(blobstore_config)
+          guid = app_obj.guid
+          tmpdir = Dir.mktmpdir
+          zipname = File.join(tmpdir, "test.zip")
+          create_zip(zipname, 10, 1024)
+          AppBitsPackerJob.new(guid, zipname, []).perform
+        end
+
+        after do
+          config_override(@old_config)
         end
 
         context "when using nginx" do
           it "redirects to correct nginx URL" do
             get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
             last_response.status.should == 200
-            last_response.headers.should include(
-              {
-                "X-Accel-Redirect" => "droplets/#{app_obj.guid}"
-              }
-            )
+            app_bit_path = last_response.headers.fetch("X-Accel-Redirect")
+            File.exists?(File.join(workspace, app_bit_path))
           end
         end
       end
@@ -199,10 +226,12 @@ module VCAP::CloudController
           get "/v2/apps/#{app_obj_without_pkg.guid}/download", {}, headers_for(developer2)
           last_response.status.should == 404
         end
+
         it "should return 302 for valid packages" do
           get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
           last_response.status.should == 302
         end
+
         it "should return 404 for non-existent apps" do
           get "/v2/apps/abcd/download", {}, headers_for(developer)
           last_response.status.should == 404

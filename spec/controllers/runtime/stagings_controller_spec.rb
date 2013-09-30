@@ -22,6 +22,7 @@ module VCAP::CloudController
         },
         :nginx => {:use_nginx => true},
         :resource_pool => {
+          :resource_directory_key => "cc-resources",
           :fog_connection => {
             :provider => "Local",
             :local_root => Dir.mktmpdir("resourse_pool", workspace)
@@ -67,7 +68,6 @@ module VCAP::CloudController
 
     describe "GET /staging/apps/:guid" do
       let(:app_obj_without_pkg) { App.make }
-      let(:app_package_path) { AppPackage.package_path(app_obj.guid) }
 
       def self.it_downloads_staged_app
         it "succeeds for valid packages" do
@@ -75,7 +75,7 @@ module VCAP::CloudController
           tmpdir = Dir.mktmpdir
           zipname = File.join(tmpdir, "test.zip")
           create_zip(zipname, 10, 1024)
-          AppPackage.to_zip(guid, [], File.new(zipname))
+          AppBitsPackerJob.new(guid, zipname, []).perform
           FileUtils.rm_rf(tmpdir)
 
           get "/staging/apps/#{app_obj.guid}"

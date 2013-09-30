@@ -71,12 +71,14 @@ module VCAP::CloudController
     end
 
     def download_app(guid)
-      raise InvalidRequest unless AppPackage.blobstore.local?
+      package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
+      raise InvalidRequest unless package_blobstore.local?
 
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
-      package_path = AppPackage.package_local_path(guid)
+      file = package_blobstore.file(guid)
+      package_path = file.send(:path) if file
       logger.debug "guid: #{guid} package_path: #{package_path}"
 
       unless package_path
@@ -85,7 +87,7 @@ module VCAP::CloudController
       end
 
       if config[:nginx][:use_nginx]
-        url = AppPackage.package_uri(guid)
+        url = package_blobstore.download_uri(guid)
         logger.debug "nginx redirect #{url}"
         [200, { "X-Accel-Redirect" => url }, ""]
       else

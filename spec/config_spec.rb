@@ -44,11 +44,6 @@ module VCAP::CloudController
         expect(ResourcePool.instance.minimum_size).to eq(9001)
       end
 
-      it "sets up the app package" do
-        AppPackage.should_receive(:configure).with(@test_config)
-        Config.configure(@test_config)
-      end
-
       it "sets up the app manager" do
         expect(AppObserver).to receive(:configure).with(
           @test_config,

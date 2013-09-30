@@ -582,7 +582,6 @@ RSpec.configure do |rspec_config|
     # Is event emitter our salvation?
     #VCAP::CloudController::AppObserver.stub(:delete_droplet)
     Fog::Mock.reset
-    VCAP::CloudController::AppPackage.stub(:delete_package)
   end
 end
 

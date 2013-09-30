@@ -151,7 +151,6 @@ module VCAP::CloudController
         AccountCapacity.configure(config)
         ResourcePool.instance =
           ResourcePool.new(config)
-        AppPackage.configure(config)
 
         StagingsController.configure(config)
 
