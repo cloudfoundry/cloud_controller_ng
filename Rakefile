@@ -64,38 +64,26 @@ namespace :db do
     name = ENV["NAME"]
     type = ENV.fetch("TYPE", "sequel")
 
-    abort("no NAME specified. use `rake db:create_migration NAME=add_users TYPE=[active_record|sequel]`") if !name
+    abort("no NAME specified. use `rake db:create_migration NAME=add_users`") if !name
 
-    migrations_dir = type == "sequel" ? File.join("db", "migrations") : File.join("db", "ar_migrations")
+    migrations_dir = File.join("db", "migrations")
 
     version = ENV["VERSION"] || Time.now.utc.strftime("%Y%m%d%H%M%S")
     filename = "#{version}_#{name}.rb"
     FileUtils.mkdir_p(migrations_dir)
 
     open(File.join(migrations_dir, filename), "w") do |f|
-      f.write migration_stub(type, name)
+      f.write migration_stub
     end
   end
 
-  def migration_stub(type, name)
-    if type == "sequel"
+  def migration_stub
 <<-Ruby
 Sequel.migration do
   change do
   end
 end
 Ruby
-    elsif type == "active_record"
-      class_name = name.split("_").map(&:capitalize).join
-<<-Ruby
-class #{class_name} < ActiveRecord::Migration
-  def up
-  end
-  def down
-  end
-end
-Ruby
-    end
   end
 
   def db
