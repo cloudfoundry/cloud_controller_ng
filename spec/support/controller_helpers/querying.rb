@@ -36,8 +36,8 @@ module ControllerHelpers
               last_response.status.should == 200
             end
 
-            it "should return total_results => 0" do
-              decoded_response["total_results"].should == 0
+            it "should return total_results >= 0" do
+              decoded_response["total_results"].should >= 0
             end
           end
         end

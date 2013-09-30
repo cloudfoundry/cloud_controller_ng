@@ -268,7 +268,7 @@ module VCAP::CloudController
 
     describe "package_uri" do
       
-      context "fog AWS" do      
+      context "fog AWS provider" do      
         before do
           @guid = Sham.guid
 
@@ -304,7 +304,7 @@ module VCAP::CloudController
         end        
       end
       
-      context "fog non-AWS" do      
+      context "fog HP provider" do      
         before do
           @guid = Sham.guid
 
@@ -329,7 +329,7 @@ module VCAP::CloudController
         end
         
         it "should call a file's public_url method if there's no url method" do
-          Fog::Storage::HP::File.any_instance.should_receive(:public_url)
+          Fog::Storage::HP::File.any_instance.should_receive(:temp_signed_url)
           uri = AppPackage.package_uri(@guid)
         end
 
@@ -338,6 +338,38 @@ module VCAP::CloudController
           uri.should be_nil
         end
       end
+      
+      context "fog Local provider" do      
+        before do
+          @guid = Sham.guid
+
+          AppPackage.configure(
+            :packages => {
+              :fog_connection => {
+                :provider   => 'Local',
+                  :local_root => '/tmp',
+                  :endpoint   => 'http://example.com'
+              }
+            }
+          )
+          Fog.mock!
+
+          create_app_package(@guid)
+          
+          FileUtils.rm_rf(tmpdir)
+        end
+        
+        it "should call a file's public_url method if there's no url method" do
+          Fog::Storage::Local::File.any_instance.should_receive(:public_url)
+          uri = AppPackage.package_uri(@guid)
+        end
+
+        it "should return nil for an invalid guid" do
+          uri = AppPackage.package_uri(Sham.guid)
+          uri.should be_nil
+        end
+      end
+
     end    
   end
   

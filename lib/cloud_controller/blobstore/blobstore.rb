@@ -65,6 +65,8 @@ class Blobstore
     end
     if file.respond_to?(:url)
       return file.url(Time.now + 3600)
+    elsif file.respond_to?(:temp_signed_url)
+      return file.temp_signed_url(3600, "GET")
     end
     return file.public_url
   end
@@ -94,6 +96,17 @@ class Blobstore
 
   def connection
     options = @connection_config
+
+    # Special case for hp provider:
+    # Deployment manifest symbol values are converted to strings when transfering deployment information.
+    # We have to convert the hp_auth_version value to a symbol if present.    
+    if options[:provider].downcase == "hp"
+      begin
+        options[:hp_auth_version] = options[:hp_auth_version].to_sym 
+      rescue
+      end
+    end
+    
     options = options.merge(:endpoint => "") if local?
     Fog::Storage.new(options)
   end
