@@ -36,12 +36,6 @@ module VCAP::CloudController
         expect(list).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
         expect(list).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
       end
-
-      it "returns only one admin buildpack when given an app with an admin_buildpack" do
-        list = Buildpack.list_admin_buildpacks(CloudController::DependencyLocator.instance.blobstore_url_generator, @buildpack)
-        expect(list).to have(1).item
-        expect(list).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
-      end
     end
   end
 end

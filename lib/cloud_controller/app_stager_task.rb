@@ -90,7 +90,7 @@ module VCAP::CloudController
         :buildpack_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(@app),
         :buildpack_cache_upload_uri => @blobstore_url_generator.buildpack_cache_upload_url(@app),
         :start_message => start_app_message,
-        :admin_buildpacks => Buildpack.list_admin_buildpacks(@blobstore_url_generator, @app.admin_buildpack)
+        :admin_buildpacks => Buildpack.list_admin_buildpacks(@blobstore_url_generator)
       }
     end
 
@@ -182,10 +182,17 @@ module VCAP::CloudController
     end
 
     def staging_task_properties(app)
+      buildpack = nil
+
+      if app.buildpack
+        buildpack = app.buildpack
+      elsif app.admin_buildpack
+        buildpack =  @blobstore_url_generator.admin_buildpack_download_url(app)
+      end
+
       {
         :services    => app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
-
-        :buildpack => app.buildpack,
+        :buildpack => buildpack,
 
         :resources   => {
           :memory => app.memory,
