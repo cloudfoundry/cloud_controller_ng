@@ -197,10 +197,6 @@ module VCAP::CloudController
       end
     end
 
-    def save_path(guid, tag)
-      File.join(tmpdir, "#{tag}_upload_#{guid}.tgz")
-    end
-
     def tmpdir
       (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
     end
