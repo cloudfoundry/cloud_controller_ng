@@ -154,6 +154,11 @@ module VCAP::CloudController
             droplet.exists?
           }.from(false).to(true)
         end
+
+        it "deletes the uploaded file" do
+          FileUtils.should_receive(:rm_f).with(/ngx\.uploads/)
+          post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+        end
       end
 
       context "with an invalid app" do
@@ -255,6 +260,11 @@ module VCAP::CloudController
               app_obj.guid
             )
           }.from(false).to(true)
+        end
+
+        it "deletes the temp uploaded files" do
+          FileUtils.should_receive(:rm_f).with(/ngx\.uploads/)
+          post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
         end
       end
 
