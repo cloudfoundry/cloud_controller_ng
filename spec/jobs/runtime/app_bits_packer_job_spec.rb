@@ -41,5 +41,10 @@ describe AppBitsPackerJob do
       packer.should_receive(:perform).with(app, uploaded_path, fingerprints)
       job.perform
     end
+
+    it "deletes the file after it is done" do
+      FileUtils.should_receive(:rm_f).with(uploaded_path)
+      job.perform
+    end
   end
 end
