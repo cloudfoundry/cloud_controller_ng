@@ -56,6 +56,7 @@ module VCAP::CloudController
           'method' => 'PUT'
         },
         'source' => {
+          'description' => error.message,
           'types' => ['SocketError', 'StandardError'],
           'backtrace' => ['/socketerror:1', '/backtrace:2']
           }

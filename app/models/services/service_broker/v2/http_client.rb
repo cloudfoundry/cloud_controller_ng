@@ -3,48 +3,22 @@ module VCAP::CloudController
 
     class ServiceBrokerBadResponse < HttpError
       CODE=270009
-      def initialize(endpoint, response, method)
-        msg = "The service broker API returned an error from #{endpoint}: #{response.code} #{response.reason}"
-        super(msg, endpoint, method, response, CODE)
+      def msg
+        "The service broker API returned an error from #{endpoint}: #{response.code} #{response.reason}"
       end
     end
 
     class ServiceBrokerApiUnreachable < NonResponsiveHttpError
-      attr_reader :nested_exception
       CODE=270004
-
-      def initialize(endpoint, method, nested_exception)
-        msg = "The service broker API could not be reached: #{endpoint}"
-        @nested_exception = nested_exception
-        super(msg, nested_exception, endpoint, method, CODE)
-      end
-
-      def error
-        types = nested_exception.class.ancestors.map(&:name) - Exception.ancestors.map(&:name)
-        {
-          'types' => types,
-          'backtrace' => nested_exception.backtrace
-        }
+      def msg
+        "The service broker API could not be reached: #{endpoint}"
       end
     end
 
     class ServiceBrokerApiTimeout < NonResponsiveHttpError
-      attr_reader :nested_exception
       CODE=270005
-
-      def initialize(endpoint, method, nested_exception)
-        msg = "The service broker API timed out: #{endpoint}"
-        @nested_exception = nested_exception
-        super(msg, nested_exception, endpoint, method, CODE)
-      end
-
-      def error
-        types = nested_exception.class.ancestors.map(&:name) - Exception.ancestors.map(&:name)
-        {
-          'description' => nested_exception.message,
-          'types' => types,
-          'backtrace' => nested_exception.backtrace
-        }
+      def msg
+        "The service broker API timed out: #{endpoint}"
       end
     end
 
