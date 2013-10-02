@@ -443,36 +443,6 @@
   http_code: 400
   message: "The service broker url is taken: %s"
 
-270004:
-  name: ServiceBrokerApiUnreachable
-  http_code: 500
-  message: "The service broker API could not be reached: %s"
-
-270005:
-  name: ServiceBrokerApiTimeout
-  http_code: 500
-  message: "The service broker API timed out: %s"
-
-270006:
-  name: ServiceBrokerResponseMalformed
-  http_code: 500
-  message: "The service broker response was not understood"
-
-270007:
-  name: ServiceBrokerApiAuthenticationFailed
-  http_code: 500
-  message: "Authentication failed for the service broker API. Double-check that the token is correct: %s"
-
-270008:
-  name: ServiceBrokerConflict
-  http_code: 409
-  message: "This resource already exists: %s"
-
-270009:
-  name: ServiceBrokerBadResponse
-  http_code: 500
-  message: "The service broker API returned an error from %s"
-
 270010:
   name: ServiceBrokerNotRemovable
   http_code: 400
