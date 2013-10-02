@@ -31,6 +31,10 @@ describe AppBitsPacker do
     end
   end
 
+  before do
+    FileUtils.stub(:rm_f).with(compressed_path)
+  end
+
   describe "#perform" do
     subject(:perform) { packer.perform(app, compressed_path, fingerprints_in_app_cache) }
 
@@ -65,6 +69,20 @@ describe AppBitsPacker do
       }.from(nil).to(/.+/)
     end
 
+    it "removes the compressed path afterwards" do
+      FileUtils.should_receive(:rm_f).with(compressed_path)
+      perform
+    end
+
+    context "when there is no package uploaded" do
+      let(:compressed_path) { nil }
+
+      it "doesn't try to remove the file" do
+        FileUtils.should_not_receive(:rm_f)
+        perform
+      end
+    end
+
     context "when the app bits are too large" do
       let(:max_droplet_size) { 10 }
 
@@ -72,6 +90,11 @@ describe AppBitsPacker do
         expect {
           perform
         }.to raise_exception VCAP::Errors::AppPackageInvalid, /package.+larger/i
+      end
+
+      it "removes the compressed path afterwards" do
+        FileUtils.should_receive(:rm_f).with(compressed_path)
+        expect { perform }.to raise_exception
       end
     end
 
