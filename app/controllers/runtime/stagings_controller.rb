@@ -112,11 +112,12 @@ module VCAP::CloudController
 
       logger.debug "droplet.saved", took: Time.now - start
       app.save
-      FileUtils.rm_f(upload_path)
 
       logger.debug "app.saved"
 
       HTTP::OK
+    ensure
+      FileUtils.rm_f(upload_path) if upload_path
     end
 
     def upload_buildpack_cache(guid)
@@ -126,9 +127,10 @@ module VCAP::CloudController
 
       # TODO: put in background job
       self.class.store_buildpack_cache(app, upload_path)
-      FileUtils.rm_f(upload_path)
 
       HTTP::OK
+    ensure
+      FileUtils.rm_f(upload_path) if upload_path
     end
 
     def download_droplet(guid)

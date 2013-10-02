@@ -59,8 +59,9 @@ module VCAP::CloudController
       buildpack_blobstore.delete(old_buildpack_key) if old_buildpack_key
 
       [HTTP::CREATED, serialization.render_json(self.class, buildpack, @opts)]
+    ensure
+      FileUtils.rm_f(uploaded_filename) if uploaded_filename
     end
-
 
     def download_bits(guid)
       obj = Buildpack.find(guid: guid)

@@ -5,11 +5,12 @@ module VCAP::CloudController
     describe "/v2/buildpacks" do
       let(:tmpdir) { Dir.mktmpdir }
       let(:user) { make_user }
+      let(:filename) { "file.zip" }
 
       after { FileUtils.rm_rf(tmpdir) }
 
       let(:valid_zip) do
-        zip_name = File.join(tmpdir, "file.zip")
+        zip_name = File.join(tmpdir, filename)
         create_zip(zip_name, 1)
         zip_file = File.new(zip_name)
         Rack::Test::UploadedFile.new(zip_file)
@@ -18,7 +19,7 @@ module VCAP::CloudController
       let(:sha_valid_zip) { sha1 = Digest::SHA1.file(valid_zip.path).hexdigest }
 
       let(:valid_zip2) do
-        zip_name = File.join(tmpdir, "file.zip")
+        zip_name = File.join(tmpdir, filename)
         create_zip(zip_name, 3)
         zip_file = File.new(zip_name)
         Rack::Test::UploadedFile.new(zip_file)
@@ -164,7 +165,7 @@ module VCAP::CloudController
           it "gets the uploaded file from the upload handler" do
             upload_handler = CloudController::DependencyLocator.instance.upload_handler
             upload_handler.should_receive(:uploaded_file).
-              with(hash_including('buildpack_name'=> 'file.zip'), "buildpack").
+              with(hash_including('buildpack_name'=> filename), "buildpack").
               and_return(valid_zip)
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
           end
@@ -199,6 +200,20 @@ module VCAP::CloudController
             post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
 
             expect(last_response.status).to eq(409)
+          end
+
+          it "removes the uploaded buildpack file" do
+            FileUtils.should_receive(:rm_f).with(filename)
+            post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {:buildpack => valid_zip}, admin_headers
+          end
+
+          context "when the upload file is nil" do
+            it "should be okay" do
+              FileUtils.should_not_receive(:rm_f)
+              expect {
+                post "/v2/buildpacks/#{@test_buildpack.guid}/bits", {buildpack: nil}, admin_headers
+              }.to raise_error
+            end
           end
         end
 

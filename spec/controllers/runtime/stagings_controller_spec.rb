@@ -166,6 +166,17 @@ module VCAP::CloudController
           post "/staging/droplets/bad-app/upload", upload_req
           last_response.status.should == 404
         end
+
+        context "when the upload path is nil" do
+          let(:upload_req) do
+            {upload: {droplet: nil}}
+          end
+
+          it "deletes the uploaded file" do
+            FileUtils.should_not_receive(:rm_f)
+            post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+          end
+        end
       end
 
       include_examples "staging bad auth", :post, "droplets"
@@ -272,6 +283,17 @@ module VCAP::CloudController
         it "returns 404" do
           post "/staging/buildpack_cache/bad-app/upload", upload_req
           last_response.status.should == 404
+        end
+
+        context "when the upload path is nil" do
+          let(:upload_req) do
+            {upload: {droplet: nil}}
+          end
+
+          it "deletes the uploaded file" do
+            FileUtils.should_not_receive(:rm_f)
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
+          end
         end
       end
     end
