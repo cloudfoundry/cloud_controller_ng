@@ -99,7 +99,11 @@ module VCAP::CloudController
             :provider => String,
             optional(:aws_access_key_id) => String,
             optional(:aws_secret_access_key) => String,
-            optional(:local_root) => String
+            optional(:local_root) => String,
+            optional(:openstack_auth_url) => String,
+            optional(:openstack_username) => String,
+            optional(:openstack_api_key) => String,
+            optional(:openstack_temp_url_key) => String
           }
         },
 
@@ -110,7 +114,11 @@ module VCAP::CloudController
             :provider => String,
             optional(:aws_access_key_id) => String,
             optional(:aws_secret_access_key) => String,
-            optional(:local_root) => String
+            optional(:local_root) => String,
+            optional(:openstack_auth_url) => String,
+            optional(:openstack_username) => String,
+            optional(:openstack_api_key) => String,
+            optional(:openstack_temp_url_key) => String
           }
         },
 
@@ -121,7 +129,11 @@ module VCAP::CloudController
             :provider => String,
             optional(:aws_access_key_id) => String,
             optional(:aws_secret_access_key) => String,
-            optional(:local_root) => String
+            optional(:local_root) => String,
+            optional(:openstack_auth_url) => String,
+            optional(:openstack_username) => String,
+            optional(:openstack_api_key) => String,
+            optional(:openstack_temp_url_key) => String
           }
         },
 
