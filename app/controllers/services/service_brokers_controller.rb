@@ -122,20 +122,12 @@ module VCAP::CloudController
       errors = registration.errors
       broker = registration.broker
 
-      if errors.on(:broker_api) && errors.on(:broker_api).include?(:authentication_failed)
-        Errors::ServiceBrokerApiAuthenticationFailed.new(broker.broker_url)
-      elsif errors.on(:broker_api) && errors.on(:broker_api).include?(:unreachable)
-        Errors::ServiceBrokerApiUnreachable.new(broker.broker_url)
-      elsif errors.on(:broker_api) && errors.on(:broker_api).include?(:timeout)
-        Errors::ServiceBrokerApiTimeout.new(broker.broker_url)
-      elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:url)
+      if errors.on(:broker_url) && errors.on(:broker_url).include?(:url)
         Errors::ServiceBrokerUrlInvalid.new(broker.broker_url)
       elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:unique)
         Errors::ServiceBrokerUrlTaken.new(broker.broker_url)
       elsif errors.on(:name) && errors.on(:name).include?(:unique)
         Errors::ServiceBrokerNameTaken.new(broker.name)
-      elsif errors.on(:catalog) && errors.on(:catalog).include?(:malformed)
-        Errors::ServiceBrokerResponseMalformed.new
       else
         Errors::ServiceBrokerInvalid.new(errors.full_messages)
       end

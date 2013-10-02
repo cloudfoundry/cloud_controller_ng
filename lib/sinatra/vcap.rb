@@ -11,33 +11,31 @@ require "steno"
 module Sinatra
   module VCAP
     module Helpers
-      # Generate an http body from a vcap rest api style exception
-      #
-      # @param [VCAP::RestAPI::Error] The exception used to generate
-      # an http body.
-      def body_from_vcap_exception(exception)
-        error_payload                = {}
-        error_payload["code"]        = exception.error_code
-        error_payload["description"] = exception.message
-        body Yajl::Encoder.encode(error_payload).concat("\n")
-      end
-
-      # Test if an exception matches the vcap api style exception.
-      #
-      # @param [Exception] The exception to check.
-      #
-      # @return [Bool] True if the provided exception can be formatted
-      # like a vcap rest api style exception.
-      def is_vcap_error?(exception)
-        exception.respond_to?(:error_code) && exception.respond_to?(:message)
-      end
-
       def varz
         ::VCAP::Component.varz[:vcap_sinatra]
       end
 
       def in_test_mode?
         ENV["CC_TEST"]
+      end
+
+      def error_payload(exception)
+        payload = {
+          code: 10001,
+          description: exception.message
+        }
+
+        if exception.respond_to?(:error_code)
+          payload['code'] = exception.error_code
+        end
+
+        if exception.respond_to?(:to_h)
+          payload.merge!(exception.to_h)
+        else
+          payload.merge!(Hashify.exception(exception))
+        end
+
+        Yajl::Encoder.encode(payload)
       end
     end
 
@@ -56,46 +54,33 @@ module Sinatra
         # We don't really have a class to attach a member variable to, so we have to
         # use the env to flag this.
         unless request.env["vcap_exception_body_set"]
-          body_from_vcap_exception(::VCAP::Errors::NotFound.new)
+          body error_payload(::VCAP::Errors::NotFound.new)
         end
       end
 
       app.error do
         exception = request.env["sinatra.error"]
-        if is_vcap_error?(exception)
-          logger.debug("Request failed with response code: " +
-                       "#{exception.response_code} error code: " +
-                       "#{exception.error_code} error: #{exception.message}")
-          status(exception.response_code)
-          request.env["vcap_exception_body_set"] = true
-          body_from_vcap_exception(exception)
+
+        raise exception if in_test_mode? && !exception.respond_to?(:error_code)
+
+        payload = error_payload(exception)
+
+        response_code = exception.respond_to?(:response_code) ? exception.response_code : 500
+        status(response_code)
+
+        if response_code >= 400 && response_code <= 499
+          logger.info("Request failed: #{response_code}: #{payload}")
         else
-          raise exception if in_test_mode?
-
-          msg = ["An unhandled exception has occurred #{exception.class} - #{exception.message}:"]
-          msg.concat(exception.backtrace)
-          logger.error(msg.join("\n"))
-          ::VCAP::Component.varz.synchronize do
-            varz[:recent_errors] << msg
-          end
-
-          if exception.respond_to?(:to_h)
-            # Make sure there is a code and description because clients expect them, but
-            # allow exceptions to override the generic values.
-            body({
-              code: ::VCAP::Errors::ServerError.new.error_code,  # silly way to get 10001
-              description: exception.message,
-            }.merge(exception.to_h)).to_json
-          else
-            error_payload                       = {}
-            error_payload["code"]               = ::VCAP::Errors::ServerError.new.error_code
-            error_payload["description"]        = "#{exception.class}: #{exception.message}"
-            error_payload["error"]              = {}
-            error_payload["error"]["types"]     = exception.class.ancestors.map(&:name) - Exception.ancestors.map(&:name)
-            error_payload["error"]["backtrace"] = exception.backtrace
-            body Yajl::Encoder.encode(error_payload).concat("\n")
-          end
+          logger.error("Request failed: #{response_code}: #{payload}")
         end
+
+        ::VCAP::Component.varz.synchronize do
+          varz[:recent_errors] << payload
+        end
+
+        request.env["vcap_exception_body_set"] = true
+
+        body payload.concat("\n")
       end
     end
 

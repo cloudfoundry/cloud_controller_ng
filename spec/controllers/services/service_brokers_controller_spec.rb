@@ -96,54 +96,6 @@ module VCAP::CloudController
       context 'when there is an error in Broker Registration' do
         before { registration.stub(:save).and_return(nil) }
 
-        context 'when there is an error in API authentication' do
-          before { errors.stub(:on).with(:broker_api).and_return([:authentication_failed]) }
-
-          it 'returns an error' do
-            post '/v2/service_brokers', body, headers
-
-            last_response.status.should == 500
-            decoded_response.fetch('code').should == 270007
-            decoded_response.fetch('description').should =~ /Authentication failed for the service broker API. Double-check that the token is correct:/
-          end
-        end
-
-        context 'when the broker API is unreachable' do
-          before { errors.stub(:on).with(:broker_api).and_return([:unreachable]) }
-
-          it 'returns an error' do
-            post '/v2/service_brokers', body, headers
-
-            last_response.status.should == 500
-            decoded_response.fetch('code').should == 270004
-            decoded_response.fetch('description').should =~ /The service broker API could not be reached/
-          end
-        end
-
-        context 'when the broker API times out' do
-          before { errors.stub(:on).with(:broker_api).and_return([:timeout]) }
-
-          it 'returns an error' do
-            post '/v2/service_brokers', body, headers
-
-            last_response.status.should == 500
-            decoded_response.fetch('code').should == 270005
-            decoded_response.fetch('description').should =~ /The service broker API timed out/
-          end
-        end
-
-        context "when the broker's catalog is malformed" do
-          before { errors.stub(:on).with(:catalog).and_return([:malformed]) }
-
-          it 'returns an error' do
-            post '/v2/service_brokers', body, headers
-
-            last_response.status.should == 500
-            decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The service broker response was not understood/
-          end
-        end
-
         context 'when the broker url is taken' do
           before { errors.stub(:on).with(:broker_url).and_return([:unique]) }
 
@@ -375,54 +327,6 @@ module VCAP::CloudController
 
       context 'when there is an error in Broker Registration' do
         before { registration.stub(:save).and_return(nil) }
-
-        context 'when there is an error in API authentication' do
-          before { errors.stub(:on).with(:broker_api).and_return([:authentication_failed]) }
-
-          it 'returns an error' do
-            put "/v2/service_brokers/#{broker.guid}", body, headers
-
-            last_response.status.should == 500
-            decoded_response.fetch('code').should == 270007
-            decoded_response.fetch('description').should =~ /Authentication failed for the service broker API. Double-check that the token is correct:/
-          end
-        end
-
-        context 'when the broker API is unreachable' do
-          before { errors.stub(:on).with(:broker_api).and_return([:unreachable]) }
-
-          it 'returns an error' do
-            put "/v2/service_brokers/#{broker.guid}", body, headers
-
-            last_response.status.should == 500
-            decoded_response.fetch('code').should == 270004
-            decoded_response.fetch('description').should =~ /The service broker API could not be reached/
-          end
-        end
-
-        context 'when the broker API times out' do
-          before { errors.stub(:on).with(:broker_api).and_return([:timeout]) }
-
-          it 'returns an error' do
-            put "/v2/service_brokers/#{broker.guid}", body, headers
-
-            last_response.status.should == 500
-            decoded_response.fetch('code').should == 270005
-            decoded_response.fetch('description').should =~ /The service broker API timed out/
-          end
-        end
-
-        context "when the broker's catalog is malformed" do
-          before { errors.stub(:on).with(:catalog).and_return([:malformed]) }
-
-          it 'returns an error' do
-            put "/v2/service_brokers/#{broker.guid}", body, headers
-
-            last_response.status.should == 500
-            decoded_response.fetch('code').should == 270006
-            decoded_response.fetch('description').should =~ /The service broker response was not understood/
-          end
-        end
 
         context 'when the broker url is not a valid http/https url' do
           before { errors.stub(:on).with(:broker_url).and_return([:url]) }

@@ -1,27 +1,31 @@
 class StructuredError < StandardError
-  attr_reader :error, :code, :hash_to_merge
+  attr_reader :source
 
-  def initialize(msg, options={})
+  def initialize(msg, source)
     super(msg)
-    @error = options[:error]
-    @code = options[:code] || 10001
-
-    @hash_to_merge = options[:hash_to_merge]
+    @source = source
   end
 
   def to_h
-    hash = {
-      'code' => code,
+    {
       'description' => message,
-      'types' => self.class.ancestors.map(&:name) - Exception.ancestors.map(&:name),
-      'backtrace' => backtrace
+      'types' => Hashify.types(self),
+      'backtrace' => backtrace,
+      'source' => hashify(source),
     }
+  end
 
-    hash['source'] = error if error
-    if hash_to_merge
-      hash.merge!(hash_to_merge)
+  private
+
+  def hashify(source)
+    if source.respond_to?(:to_h)
+      source.to_h
+    elsif source.respond_to?(:to_hash)
+      source.to_hash
+    elsif source.is_a?(Exception)
+      Hashify.exception(source)
+    else
+      source.to_s
     end
-
-    hash
   end
 end

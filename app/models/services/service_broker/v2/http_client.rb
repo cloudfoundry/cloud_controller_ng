@@ -1,24 +1,73 @@
 module VCAP::CloudController
   module ServiceBroker::V2
 
-    class ServiceBrokerBadResponse < HttpError
-      CODE=270009
-      def msg
-        "The service broker API returned an error from #{endpoint}: #{response.code} #{response.reason}"
+    class ServiceBrokerBadResponse < HttpResponseError
+      def initialize(uri, method, response)
+        super(
+          "The service broker API returned an error from #{uri}: #{response.code} #{response.reason}",
+          uri,
+          method,
+          response
+        )
       end
     end
 
-    class ServiceBrokerApiUnreachable < NonResponsiveHttpError
-      CODE=270004
-      def msg
-        "The service broker API could not be reached: #{endpoint}"
+    class ServiceBrokerApiUnreachable < HttpRequestError
+      def initialize(uri, method, source)
+        super(
+          "The service broker API could not be reached: #{uri}",
+          uri,
+          method,
+          source
+        )
       end
     end
 
-    class ServiceBrokerApiTimeout < NonResponsiveHttpError
-      CODE=270005
-      def msg
-        "The service broker API timed out: #{endpoint}"
+    class ServiceBrokerApiTimeout < HttpRequestError
+      def initialize(uri, method, source)
+        super(
+          "The service broker API timed out: #{uri}",
+          uri,
+          method,
+          source
+        )
+      end
+    end
+
+    class ServiceBrokerResponseMalformed < HttpResponseError
+      def initialize(uri, method, response)
+        super(
+          "The service broker response was not understood",
+          uri,
+          method,
+          response
+        )
+      end
+    end
+
+    class ServiceBrokerApiAuthenticationFailed < HttpResponseError
+      def initialize(uri, method, response)
+        super(
+          "Authentication failed for the service broker API. Double-check that the token is correct: #{uri}",
+          uri,
+          method,
+          response
+        )
+      end
+    end
+
+    class ServiceBrokerConflict < HttpResponseError
+      def initialize(uri, method, response)
+        super(
+          "Resource already exists: #{uri}",
+          uri,
+          method,
+          response
+        )
+      end
+
+      def response_code
+        409
       end
     end
 
@@ -94,17 +143,17 @@ module VCAP::CloudController
           end
 
           unless response_hash.is_a?(Hash)
-            raise VCAP::Errors::ServiceBrokerResponseMalformed.new(endpoint)
+            raise ServiceBrokerResponseMalformed.new(endpoint, method, response)
           end
 
           return response_hash
 
         when HTTP::Status::UNAUTHORIZED
-          raise VCAP::Errors::ServiceBrokerApiAuthenticationFailed.new(endpoint)
+          raise ServiceBrokerApiAuthenticationFailed.new(endpoint, method, response)
         when 409
-          raise VCAP::Errors::ServiceBrokerConflict.new(endpoint)
+          raise ServiceBrokerConflict.new(endpoint, method, response)
         else
-          raise ServiceBrokerBadResponse.new(endpoint, response, method)
+          raise ServiceBrokerBadResponse.new(endpoint, method, response)
         end
       end
     end
