@@ -16,7 +16,7 @@ module VCAP::CloudController
     let(:task_streaming_log_url) { "task-streaming-log-url" }
     let(:detected_buildpack) { nil }
     let(:droplet) do
-      CloudController::Droplet.new(app, StagingsController.blobstore)
+      CloudController::BlobstoreDroplet.new(app, StagingsController.blobstore)
     end
 
     let(:first_reply_json) do

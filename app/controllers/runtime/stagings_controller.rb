@@ -54,7 +54,7 @@ module VCAP::CloudController
       end
 
       def store_droplet(app, path)
-        CloudController::Droplet.new(app, blobstore).save(path)
+        CloudController::BlobstoreDroplet.new(app, blobstore).save(path)
       end
 
       def store_buildpack_cache(app, path)
@@ -137,7 +137,7 @@ module VCAP::CloudController
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
-      droplet = CloudController::Droplet.new(app, StagingsController.blobstore)
+      droplet = CloudController::BlobstoreDroplet.new(app, StagingsController.blobstore)
       droplet_path = droplet.local_path
       droplet_url = droplet.download_url
 

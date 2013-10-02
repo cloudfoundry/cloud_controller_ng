@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe CloudController::Droplet do
+describe CloudController::BlobstoreDroplet do
   let(:app) do
     VCAP::CloudController::App.make(
       droplet_hash: "droplet_hash")

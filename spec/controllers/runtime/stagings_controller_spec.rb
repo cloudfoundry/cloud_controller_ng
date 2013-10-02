@@ -150,7 +150,7 @@ module VCAP::CloudController
           expect {
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
           }.to change {
-            droplet = CloudController::Droplet.new(app_obj.refresh, StagingsController.blobstore)
+            droplet = CloudController::BlobstoreDroplet.new(app_obj.refresh, StagingsController.blobstore)
             droplet.exists?
           }.from(false).to(true)
         end
@@ -202,7 +202,7 @@ module VCAP::CloudController
             droplet_file.write("droplet contents")
             droplet_file.close
 
-            droplet = CloudController::Droplet.new(app_obj, StagingsController.blobstore)
+            droplet = CloudController::BlobstoreDroplet.new(app_obj, StagingsController.blobstore)
             droplet.save(droplet_file.path)
 
             StagingsController.blobstore.exists?([app_obj.guid, app_obj.droplet_hash].join("/")).should be_true

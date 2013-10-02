@@ -22,7 +22,7 @@ module CloudController
     end
 
     def droplet_download_url(app)
-      droplet = CloudController::Droplet.new(app, @droplet_blobstore)
+      droplet = CloudController::BlobstoreDroplet.new(app, @droplet_blobstore)
 
       if @droplet_blobstore.local?
         if droplet.exists?
