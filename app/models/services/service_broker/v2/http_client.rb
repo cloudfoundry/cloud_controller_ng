@@ -134,8 +134,10 @@ module VCAP::CloudController
 
         code = response.code.to_i
         case code
+
         when 204
-          nil # no body
+          return nil # no body
+
         when 200..299
           begin
             response_hash = Yajl::Parser.parse(response.body)
@@ -150,11 +152,22 @@ module VCAP::CloudController
 
         when HTTP::Status::UNAUTHORIZED
           raise ServiceBrokerApiAuthenticationFailed.new(endpoint, method, response)
+
         when 409
           raise ServiceBrokerConflict.new(endpoint, method, response)
-        else
-          raise ServiceBrokerBadResponse.new(endpoint, method, response)
+
+        when 410
+          if method == :delete
+            logger.warn("Already deleted: #{path}")
+            return nil
+          end
         end
+
+        raise ServiceBrokerBadResponse.new(endpoint, method, response)
+      end
+
+      def logger
+        @logger ||= Steno.logger("cc.service_broker.v2.http_client")
       end
     end
   end

@@ -30,9 +30,15 @@ module VCAP::CloudController
 
       begin
         binding.save
-      rescue
-        client.unbind(binding)
-        raise
+      rescue => e
+        begin
+          # this needs to go into a retry queue
+          client.unbind(binding)
+        rescue => unbind_e
+          logger.error "Unable to unbind #{binding}: #{unbind_e}"
+        end
+
+        raise e
       end
 
       [ HTTP::CREATED,

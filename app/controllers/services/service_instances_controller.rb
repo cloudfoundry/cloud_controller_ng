@@ -79,9 +79,15 @@ module VCAP::CloudController
 
       begin
         service_instance.save
-      rescue
-        client.deprovision(service_instance)
-        raise
+      rescue => e
+        begin
+          # this needs to go into a retry queue
+          client.deprovision(service_instance)
+        rescue => deprovision_e
+          logger.error "Unable to deprovision #{service_instance}: #{deprovision_e}"
+        end
+
+        raise e
       end
 
       [ HTTP::CREATED,

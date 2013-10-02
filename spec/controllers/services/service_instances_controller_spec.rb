@@ -223,6 +223,24 @@ module VCAP::CloudController
         expect(client).to have_received(:deprovision).with(an_instance_of(ManagedServiceInstance))
       end
 
+      context 'when the model save and the subsequent deprovision both raise errors' do
+        it 'raises the original error' do
+          req = Yajl::Encoder.encode(
+            :name => 'foo',
+            :space_guid => space.guid,
+            :service_plan_guid => plan.guid
+          )
+
+          client.stub(:deprovision).and_raise(StandardError, 'deprovision')
+          ManagedServiceInstance.any_instance.stub(:save).and_raise(StandardError, 'save')
+          Controller.any_instance.stub(:in_test_mode?).and_return(true)
+
+          expect {
+            post "/v2/service_instances", req, json_headers(headers_for(developer))
+          }.to raise_error(StandardError, "save")
+        end
+      end
+
       context 'creating a service instance with a name over 50 characters' do
         let(:very_long_name) { 's' * 51 }
 

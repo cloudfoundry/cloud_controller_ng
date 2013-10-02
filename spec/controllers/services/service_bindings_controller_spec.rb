@@ -253,6 +253,23 @@ module VCAP::CloudController
         expect(broker_client).to have_received(:unbind).with(an_instance_of(ServiceBinding))
         expect(last_response.status).to eq(500)
       end
+
+      context 'when the model save and the subsequent unbind both raise errors' do
+        it 'raises the original error' do
+          req = Yajl::Encoder.encode(
+            :app_guid => app_obj.guid,
+            :service_instance_guid => instance.guid
+          )
+
+          broker_client.stub(:unbind).and_raise(StandardError, 'unbind')
+          ServiceBinding.any_instance.stub(:save).and_raise(StandardError, 'save')
+          Controller.any_instance.stub(:in_test_mode?).and_return(true)
+
+          expect {
+            post "/v2/service_bindings", req, json_headers(headers_for(developer))
+          }.to raise_error(StandardError, "save")
+        end
+      end
     end
 
     describe 'DELETE', '/v2/service_bindings/:service_binding_guid' do

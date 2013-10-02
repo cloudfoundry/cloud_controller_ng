@@ -436,6 +436,19 @@ module VCAP::CloudController::ServiceBroker::V2
           }
         end
       end
+
+      context 'when the API returns 410 to a DELETE request' do
+        before do
+          @stub = stub_request(:delete, "http://cc:#{auth_token}@broker.example.com/v2/service_instances/asdf").to_return(
+            status: [410, 'Gone']
+          )
+        end
+
+        it 'should swallow the error' do
+          expect(client.deprovision('asdf')).to be_nil
+          @stub.should have_been_requested
+        end
+      end
     end
   end
 end
