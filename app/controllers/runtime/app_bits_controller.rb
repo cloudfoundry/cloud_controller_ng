@@ -13,6 +13,9 @@ module VCAP::CloudController
       raise Errors::AppBitsUploadInvalid, "missing :resources" unless params["resources"]
 
       uploaded_zip_of_files_not_in_blobstore = UploadHandler.new(config).uploaded_file(params, "application")
+
+      # there may not be an archive uploaded if all of the app's bits have matching resources
+      # hence the .try
       app_bits_packer_job = AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore.try(:path), json_param("resources"))
 
       if params["async"] == "true"

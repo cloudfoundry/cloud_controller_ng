@@ -46,5 +46,14 @@ describe AppBitsPackerJob do
       FileUtils.should_receive(:rm_f).with(uploaded_path)
       job.perform
     end
+
+    context "when there is no package uploaded" do
+      let(:uploaded_path) { nil }
+
+      it "doesn't try to remove the file" do
+        FileUtils.should_not_receive(:rm_f)
+        job.perform
+      end
+    end
   end
 end
