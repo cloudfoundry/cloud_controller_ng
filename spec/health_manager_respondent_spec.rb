@@ -26,7 +26,7 @@ module VCAP::CloudController
     before do
       dea_client.stub(:stop_instances)
       dea_client.stub(:stop)
-      dea_client.stub(:start_instances_with_message)
+      dea_client.stub(:start_instances)
     end
 
     describe "#handle_requests" do
@@ -59,7 +59,7 @@ module VCAP::CloudController
         let(:version) { "some-version" }
 
         it "ignores the request" do
-          dea_client.should_not_receive(:start_instances_with_message)
+          dea_client.should_not_receive(:start_instances)
 
           subject.process_start(payload)
         end
@@ -75,7 +75,7 @@ module VCAP::CloudController
         context "when app staging has failed" do
           let(:package_state) { "FAILED" }
           it "starts the instance" do
-            dea_client.should_receive(:start_instances_with_message).with(app, [2])
+            dea_client.should_receive(:start_instances).with(app, [2])
 
             subject.process_start(payload)
           end
@@ -84,7 +84,7 @@ module VCAP::CloudController
         context "when app was staged" do
           it "ignores the request" do
             expect(app.droplet_hash).to be_nil
-            dea_client.should_not_receive(:start_instances_with_message)
+            dea_client.should_not_receive(:start_instances)
 
             subject.process_start(payload)
           end
@@ -98,7 +98,7 @@ module VCAP::CloudController
         end
 
         it "ignores the request" do
-          dea_client.should_not_receive(:start_instances_with_message)
+          dea_client.should_not_receive(:start_instances)
 
           subject.process_start(payload)
         end
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
         context "and the version requested to start is current" do
           it "starts the instance" do
-            dea_client.should_receive(:start_instances_with_message).with(app, [2])
+            dea_client.should_receive(:start_instances).with(app, [2])
 
             subject.process_start(payload)
           end
@@ -123,7 +123,7 @@ module VCAP::CloudController
         context "and the version requested to start is NOT current" do
           let(:version) { "some-bogus-version" }
           it "ignores the request" do
-            dea_client.should_not_receive(:start_instances_with_message)
+            dea_client.should_not_receive(:start_instances)
 
             subject.process_start(payload)
           end
@@ -139,7 +139,7 @@ module VCAP::CloudController
         let(:running) { { "some-version" => 2 } }
 
         it "ignores the request" do
-          dea_client.should_not_receive(:start_instances_with_message)
+          dea_client.should_not_receive(:start_instances)
 
           subject.process_start(payload)
         end

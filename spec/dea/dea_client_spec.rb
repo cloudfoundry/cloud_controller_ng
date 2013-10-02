@@ -96,21 +96,44 @@ module VCAP::CloudController
       end
     end
 
-    describe "start_instances_with_message" do
+    describe "start_instances" do
       it "should send a start messages to deas with message override" do
-        app.instances = 2
+        app.instances = 3
 
-        dea_pool.should_receive(:find_dea).and_return("dea_123")
-        dea_pool.should_receive(:mark_app_started).with(dea_id: "dea_123", app_id: app.guid)
+        dea_pool.should_receive(:find_dea).twice.and_return("dea_123")
+        dea_pool.should_receive(:mark_app_started).twice.with(dea_id: "dea_123", app_id: app.guid)
         message_bus.should_receive(:publish).with(
           "dea.dea_123.start",
           hash_including(
-            :foo   => "bar",
+            :index => 1,
+          )
+        ).ordered
+
+        message_bus.should_receive(:publish).with(
+          "dea.dea_123.start",
+          hash_including(
+            :index => 2,
+          )
+        ).ordered
+
+        DeaClient.start_instances(app, [1, 2])
+      end
+    end
+
+    describe "start_instance_at_index" do
+      it "should send a start messages to deas with message override" do
+        app.instances = 2
+
+        dea_pool.should_receive(:find_dea).once.and_return("dea_123")
+        dea_pool.should_receive(:mark_app_started).once.with(dea_id: "dea_123", app_id: app.guid)
+        message_bus.should_receive(:publish).with(
+          "dea.dea_123.start",
+          hash_including(
             :index => 1,
           )
         )
 
-        DeaClient.start_instances_with_message(app, [1], :foo => "bar")
+        DeaClient.start_instance_at_index(app, 1)
       end
     end
 
@@ -179,6 +202,22 @@ module VCAP::CloudController
         end
 
         DeaClient.stop_instances(app, ["a", "b"])
+      end
+    end
+
+    describe "stop_instance" do
+      it "should send stop messages to deas" do
+        message_bus.should_receive(:publish).with(
+          "dea.stop",
+          hash_including(
+            :droplet   => "abc",
+            :instances   => ["a"]
+          )
+        ) do |_, payload|
+          payload.should_not include(:version)
+        end
+
+        DeaClient.stop_instance("abc", "a")
       end
     end
 

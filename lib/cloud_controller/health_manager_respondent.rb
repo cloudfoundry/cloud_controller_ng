@@ -57,7 +57,7 @@ module VCAP::CloudController
       current_running = running[app.version] || 0
       return unless current_running < app.instances
 
-      dea_client.start_instances_with_message(app, indices)
+      dea_client.start_instances(app, indices)
     end
 
     def process_stop(payload)

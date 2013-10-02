@@ -140,19 +140,23 @@ module VCAP::CloudController
       end
 
       # @param [Enumerable, #each] indices an Enumerable of indices / indexes
-      def start_instances_with_message(app, indices, message_override = {})
-        msg = start_app_message(app)
-
+      def start_instances(app, indices)
         indices.each do |idx|
-          msg[:index] = idx
-          dea_id = dea_pool.find_dea(app.memory, app.stack.name, app.guid)
-          if dea_id
-            dea_publish_start(dea_id, msg.merge(message_override))
-            dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
-          else
-            Loggregator.emit_error(app.guid, "no resources available #{msg}")
-            logger.error "no resources available #{msg}"
-          end
+          start_instance_at_index(app, idx)
+        end
+      end
+
+      def start_instance_at_index(app, index)
+        message = start_app_message(app)
+        message[:index] = index
+
+        dea_id = dea_pool.find_dea(app.memory, app.stack.name, app.guid)
+        if dea_id
+          dea_publish_start(dea_id, message)
+          dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
+        else
+          Loggregator.emit_error(app.guid, "no resources available #{message}")
+          logger.error "no resources available #{message}"
         end
       end
 
@@ -169,6 +173,13 @@ module VCAP::CloudController
         dea_publish_stop(
             :droplet => app.guid,
             :instances => instances
+        )
+      end
+
+      def stop_instance(app_guid, instance)
+        dea_publish_stop(
+          :droplet => app_guid,
+          :instances => [instance]
         )
       end
 
@@ -294,7 +305,7 @@ module VCAP::CloudController
 
       # @param [Enumerable, #each] indices the range / sequence of instances to start
       def start_instances_in_range(app, indices)
-        start_instances_with_message(app, indices)
+        start_instances(app, indices)
       end
 
       # @param [Enumerable, #to_a] indices the range / sequence of instances to stop
