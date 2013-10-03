@@ -26,5 +26,17 @@ describe Hashify do
       expect(Hashify.types(Foo::Bar::BadError.new)).to eq(['BadError', 'SocketError'])
     end
   end
+
+  describe '#demodulize' do
+    it 'strips off modules from class names' do
+      expect(Hashify.demodulize(Foo::Bar::BadError)).to eq('BadError')
+    end
+
+    context 'classes without modules' do
+      it 'leaves the class name alone' do
+        expect(Hashify.demodulize(SocketError)).to eq('SocketError')
+      end
+    end
+  end
 end
 
