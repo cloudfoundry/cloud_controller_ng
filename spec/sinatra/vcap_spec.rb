@@ -204,7 +204,9 @@ describe "Sinatra::VCAP" do
 
       expect(decoded_response['backtrace']).to eq(['/foo:1', '/bar:2'])
       expect(decoded_response['types']).to eq(['StructuredErrorWithResponseCode'])
-      expect(decoded_response['source']).to eq('the source')
+
+      # temporarily removed pending security review
+      #expect(decoded_response['source']).to eq('the source')
     end
   end
 

@@ -35,6 +35,9 @@ module Sinatra
           payload.merge!(Hashify.exception(exception))
         end
 
+        # Temporarily remove this key pending security review
+        payload.delete('source')
+
         Yajl::Encoder.encode(payload)
       end
     end
