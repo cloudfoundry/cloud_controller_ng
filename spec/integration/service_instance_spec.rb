@@ -99,7 +99,8 @@ describe "Service Instance Management", :type => :integration do
   def register_service_broker
     body = JSON.dump(
       broker_url: "http://localhost:54329",
-      token: "supersecretshh",
+      auth_username: "cc",
+      auth_password: "supersecretshh",
       name: "BrokerDrug",
     )
 

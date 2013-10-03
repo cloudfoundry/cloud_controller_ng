@@ -121,13 +121,15 @@ module VCAP::CloudController::ServiceBroker::V2
   end
 
   describe HttpClient do
-    let(:auth_token) { 'abc123' }
+    let(:auth_username) { 'me' }
+    let(:auth_password) { 'abc123' }
     let(:request_id) { Sham.guid }
 
     subject(:client) do
       HttpClient.new(
         url: 'http://broker.example.com',
-        auth_token: auth_token
+        auth_username: auth_username,
+        auth_password: auth_password
       )
     end
 
@@ -162,7 +164,7 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       it 'fetches the broker catalog' do
-        stub_request(:get, "http://cc:#{auth_token}@broker.example.com/v2/catalog").
+        stub_request(:get, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog").
           with(headers: { 'X-VCAP-Request-ID' => request_id }).
           to_return(body: catalog_response.to_json)
 
@@ -191,7 +193,7 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       it 'calls the provision endpoint' do
-        stub_request(:put, "http://cc:#{auth_token}@broker.example.com/v2/service_instances/#{instance_id}").
+        stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
           with(body: expected_request_body, headers: { 'X-VCAP-Request-ID' => request_id }).
           to_return(status: 201, body: expected_response_body)
 
@@ -202,7 +204,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
       context 'the reference_id is already in use' do
         it 'raises ServiceBrokerConflict' do
-          stub_request(:put, "http://cc:#{auth_token}@broker.example.com/v2/service_instances/#{instance_id}").
+          stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
             to_return(status: 409)  # 409 is CONFLICT
 
           expect { client.provision(instance_id, plan_id, "org-guid", "space-guid") }.
@@ -215,7 +217,7 @@ module VCAP::CloudController::ServiceBroker::V2
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
       let(:service_instance) { service_binding.service_instance }
 
-      let(:bind_url) { "http://cc:#{auth_token}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
+      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
 
       before do
         @request = stub_request(:put, bind_url).to_return(
@@ -259,7 +261,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
     describe '#unbind' do
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-      let(:bind_url) { "http://cc:#{auth_token}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
+      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
       before do
         @request = stub_request(:delete, bind_url).to_return(status: 204)
       end
@@ -272,7 +274,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
     describe '#deprovision' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:instance_url) { "http://cc:#{auth_token}@broker.example.com/v2/service_instances/#{instance.guid}" }
+      let(:instance_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance.guid}" }
       before do
         @request = stub_request(:delete, instance_url).to_return(status: 204)
       end
@@ -284,7 +286,7 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe 'error conditions' do
-      let(:broker_catalog_url) { "http://cc:#{auth_token}@broker.example.com/v2/catalog" }
+      let(:broker_catalog_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog" }
 
       context 'when the API is not reachable' do
         context 'because the host could not be resolved' do
@@ -439,7 +441,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
       context 'when the API returns 410 to a DELETE request' do
         before do
-          @stub = stub_request(:delete, "http://cc:#{auth_token}@broker.example.com/v2/service_instances/asdf").to_return(
+          @stub = stub_request(:delete, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/asdf").to_return(
             status: [410, 'Gone']
           )
         end

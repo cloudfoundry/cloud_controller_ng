@@ -21,13 +21,15 @@ module VCAP::CloudController
     describe 'POST /v2/service_brokers' do
       let(:name) { Sham.name }
       let(:broker_url) { 'http://cf-service-broker.example.com' }
-      let(:token) { 'abc123' }
+      let(:auth_username) { 'me' }
+      let(:auth_password) { 'abc123' }
 
       let(:body_hash) do
         {
           name: name,
           broker_url: broker_url,
-          token: token
+          auth_username: auth_username,
+          auth_password: auth_password,
         }
       end
 
@@ -41,7 +43,8 @@ module VCAP::CloudController
           guid: '123',
           name: 'My Custom Service',
           broker_url: 'http://broker.example.com',
-          token: 'abc123'
+          auth_username: 'me',
+          auth_password: 'abc123',
         })
       end
       let(:registration) do
@@ -147,7 +150,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_brokers' do
-      let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+      let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/') }
       let(:single_broker_response) do
         {
           'total_results' => 1,
@@ -165,6 +168,7 @@ module VCAP::CloudController
               'entity' => {
                 'name' => broker.name,
                 'broker_url' => broker.broker_url,
+                'auth_username' => broker.auth_username,
               }
             }
           ],
@@ -177,7 +181,7 @@ module VCAP::CloudController
       end
 
       context "with a second service broker" do
-        let!(:broker2) { ServiceBroker.make(name: 'FreeWidgets2', broker_url: 'http://example.com/2', token: 'secret2') }
+        let!(:broker2) { ServiceBroker.make(name: 'FreeWidgets2', broker_url: 'http://example.com/2') }
 
         it "filters the things" do
           get "/v2/service_brokers?q=name%3A#{broker.name}", {}, headers
@@ -199,7 +203,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_brokers/:guid' do
-      let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', token: 'secret') }
+      let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', auth_password: 'secret') }
 
       it "deletes the service broker" do
         delete "/v2/service_brokers/#{broker.guid}", {}, headers
@@ -259,7 +263,8 @@ module VCAP::CloudController
         {
           name: 'My Updated Service',
           broker_url: 'http://new-broker.example.com',
-          token: 'new-token'
+          auth_username: 'new-username',
+          auth_password: 'new-password',
         }
       end
 
@@ -273,7 +278,8 @@ module VCAP::CloudController
           guid: '123',
           name: 'My Custom Service',
           broker_url: 'http://broker.example.com',
-          token: 'abc123',
+          auth_username: 'me',
+          auth_password: 'abc123',
           set: nil
         })
       end

@@ -10,7 +10,8 @@ module VCAP::CloudController
         ServiceBroker.new(
           name: 'Cool Broker',
           broker_url: 'http://broker.example.com',
-          token: 'auth1234'
+          auth_username: 'cc',
+          auth_password: 'auth1234',
         )
       end
 
@@ -33,7 +34,8 @@ module VCAP::CloudController
 
         expect(broker.name).to eq('Cool Broker')
         expect(broker.broker_url).to eq('http://broker.example.com')
-        expect(broker.token).to eq('auth1234')
+        expect(broker.auth_username).to eq('cc')
+        expect(broker.auth_password).to eq('auth1234')
         expect(broker).to be_exists
       end
 

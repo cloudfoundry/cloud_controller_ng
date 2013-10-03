@@ -33,7 +33,8 @@ describe "Service Broker Management", :type => :integration do
   specify "User registers and re-registers a service broker" do
     body = JSON.dump(
       broker_url: "http://localhost:54329",
-      token: "supersecretshh",
+      auth_username: "me",
+      auth_password: "supersecretshh",
       name: "BrokerDrug",
     )
 
@@ -48,7 +49,8 @@ describe "Service Broker Management", :type => :integration do
     broker_entity = create_response.json_body.fetch('entity')
     expect(broker_entity.fetch('name')).to eq('BrokerDrug')
     expect(broker_entity.fetch('broker_url')).to eq('http://localhost:54329')
-    expect(broker_entity).to_not have_key('token')
+    expect(broker_entity.fetch('auth_username')).to eq('me')
+    expect(broker_entity).to_not have_key('auth_password')
 
     new_body = JSON.dump(
       name: 'Updated Name'
@@ -63,7 +65,8 @@ describe "Service Broker Management", :type => :integration do
 
     broker_entity = update_response.json_body.fetch('entity')
     expect(broker_entity.fetch('name')).to eq('Updated Name')
-    expect(broker_entity).to_not have_key('token')
+    expect(broker_entity.fetch('auth_username')).to eq('me')
+    expect(broker_entity).to_not have_key('auth_password')
 
     catalog_response = make_get_request('/v2/services?inline-relations-depth=1', authed_headers)
     expect(catalog_response.code.to_i).to eq(200)
@@ -85,7 +88,8 @@ describe "Service Broker Management", :type => :integration do
     specify "Admin adds and removes a service broker" do
       body = JSON.dump(
         broker_url: "http://localhost:54329",
-        token: "supersecretshh",
+        auth_username: "me",
+        auth_password: "supersecretshh",
         name: "BrokerDrug",
       )
 
@@ -135,7 +139,8 @@ describe "Service Broker Management", :type => :integration do
       it 'does not allow service broker to be removed' do
         body = JSON.dump(
           broker_url: "http://localhost:54329",
-          token: "supersecretshh",
+          auth_username: "me",
+          auth_password: "supersecretshh",
           name: "BrokerDrug",
         )
 

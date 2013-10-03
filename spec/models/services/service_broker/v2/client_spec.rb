@@ -7,7 +7,8 @@ module VCAP::CloudController
     subject(:client) do
       ServiceBroker::V2::Client.new(
         url: service_broker.broker_url,
-        auth_token: service_broker.token
+        auth_username: service_broker.auth_username,
+        auth_password: service_broker.auth_password,
       )
     end
 
@@ -15,7 +16,7 @@ module VCAP::CloudController
 
     before do
       ServiceBroker::V2::HttpClient.stub(:new).
-        with(url: service_broker.broker_url, auth_token: service_broker.token).
+        with(url: service_broker.broker_url, auth_username: service_broker.auth_username, auth_password: service_broker.auth_password).
         and_return(http_client)
     end
 

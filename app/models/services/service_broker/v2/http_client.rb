@@ -75,7 +75,8 @@ module VCAP::CloudController
 
       def initialize(attrs)
         @url = attrs.fetch(:url)
-        @auth_token = attrs.fetch(:auth_token)
+        @auth_username = attrs.fetch(:auth_username)
+        @auth_password = attrs.fetch(:auth_password)
       end
 
       def catalog
@@ -108,7 +109,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :url, :auth_token
+      attr_reader :url, :auth_username, :auth_password
 
       # hits the endpoint, json decodes the response
       def execute(method, path, message=nil)
@@ -122,7 +123,7 @@ module VCAP::CloudController
         body = message ? message.to_json : nil
 
         http = HTTPClient.new
-        http.set_auth(endpoint, 'cc', auth_token)
+        http.set_auth(endpoint, auth_username, auth_password)
 
         begin
           response = http.send(method, endpoint, header: headers, body: body)

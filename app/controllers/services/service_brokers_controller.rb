@@ -9,7 +9,8 @@ module VCAP::CloudController
     class ServiceBrokerMessage < VCAP::RestAPI::Message
       optional :name,       String
       optional :broker_url, String
-      optional :token,      String
+      optional :auth_username,   String
+      optional :auth_password,   String
 
       def self.extract(json)
         decode(json).extract

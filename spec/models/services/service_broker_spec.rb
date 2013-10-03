@@ -4,16 +4,17 @@ module VCAP::CloudController
   describe ServiceBroker, :services, type: :model do
     let(:name) { Sham.name }
     let(:broker_url) { 'http://cf-service-broker.example.com' }
-    let(:token) { 'abc123' }
+    let(:auth_username) { 'me' }
+    let(:auth_password) { 'abc123' }
 
-    subject(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, token: token) }
+    subject(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, auth_username: auth_username, auth_password: auth_password) }
 
     before do
       reset_database
     end
 
     it_behaves_like 'a model with an encrypted attribute' do
-      let(:encrypted_attr) { :token }
+      let(:encrypted_attr) { :auth_password }
     end
 
     describe '#valid?' do
@@ -31,11 +32,18 @@ module VCAP::CloudController
         expect(broker.errors.on(:broker_url)).to include(:presence)
       end
 
-      it 'validates the token is present' do
+      it 'validates the auth_username is present' do
         expect(broker).to be_valid
-        broker.token = ''
+        broker.auth_username = ''
         expect(broker).to_not be_valid
-        expect(broker.errors.on(:token)).to include(:presence)
+        expect(broker.errors.on(:auth_username)).to include(:presence)
+      end
+
+      it 'validates the auth_password is present' do
+        expect(broker).to be_valid
+        broker.auth_password = ''
+        expect(broker).to_not be_valid
+        expect(broker.errors.on(:auth_password)).to include(:presence)
       end
 
       it 'validates the name is unique' do
@@ -70,7 +78,7 @@ module VCAP::CloudController
     end
 
     describe '#load_catalog' do
-      let(:broker_catalog_url) { "http://cc:#{token}@cf-service-broker.example.com/v2/catalog" }
+      let(:broker_catalog_url) { "http://#{auth_username}:#{auth_password}@cf-service-broker.example.com/v2/catalog" }
 
       let(:service_id) { Sham.guid }
       let(:service_name) { Sham.name }
@@ -201,7 +209,7 @@ module VCAP::CloudController
     describe '#client' do
       it 'returns a client created with the correct arguments' do
         v2_client = double('client')
-        ServiceBroker::V2::Client.should_receive(:new).with(url: broker_url, auth_token: token).and_return(v2_client)
+        ServiceBroker::V2::Client.should_receive(:new).with(url: broker_url, auth_username: auth_username, auth_password: auth_password).and_return(v2_client)
         expect(broker.client).to be(v2_client)
       end
     end

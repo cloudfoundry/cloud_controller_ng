@@ -23,10 +23,6 @@ module VCAP::CloudController
       describe '[:entity]' do
         subject(:entity) { presenter.to_hash.fetch(:entity) }
 
-        it 'does not include the token' do
-          expect(entity).to_not have_key(:token)
-        end
-
         it 'includes the name' do
           expect(entity.fetch(:name)).to eq(broker.name)
         end
@@ -34,6 +30,15 @@ module VCAP::CloudController
         it 'includes the endpoint url' do
           expect(entity.fetch(:broker_url)).to eq(broker.broker_url)
         end
+
+        it 'includes the auth_username' do
+          expect(entity.fetch(:auth_username)).to eq(broker.auth_username)
+        end
+
+        it 'does not include the auth_password' do
+          expect(entity).to_not have_key(:auth_password)
+        end
+
       end
     end
   end

@@ -4,7 +4,8 @@ class ServiceBrokerPresenter < ApiPresenter
   def entity_hash
     {
       name: @object.name,
-      broker_url: @object.broker_url
+      broker_url: @object.broker_url,
+      auth_username: @object.auth_username,
     }
   end
 

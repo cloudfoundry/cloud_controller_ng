@@ -2,12 +2,11 @@
 
 Sham.define do
   email               { |index| "email-#{index}@somedomain.com" }
-  password            { |index| "password-#{index}" }
-  crypted_password    { |index| "crypted_password-#{index}" }
   name                { |index| "name-#{index}" }
   label               { |index| "label-#{index}" }
-  password            { |index| "token-#{index}" }
   token               { |index| "token-#{index}" }
+  auth_username       { |index| "auth_username-#{index}" }
+  auth_password       { |index| "auth_password-#{index}" }
   provider            { |index| "provider-#{index}" }
   url                 { |index| "https://foo.com/url-#{index}" }
   type                { |index| "type-#{index}" }
@@ -133,7 +132,8 @@ module VCAP::CloudController
   ServiceBroker.blueprint do
     name              { Sham.name }
     broker_url        { Sham.url }
-    token             { Sham.token }
+    auth_username     { Sham.auth_username }
+    auth_password     { Sham.auth_password }
   end
 
   ServicePlan.blueprint do

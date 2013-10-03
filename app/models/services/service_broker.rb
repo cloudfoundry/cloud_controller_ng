@@ -2,15 +2,16 @@ module VCAP::CloudController
   class ServiceBroker < Sequel::Model
     one_to_many :services
 
-    import_attributes :name, :broker_url, :token
-    export_attributes :name, :broker_url
+    import_attributes :name, :broker_url, :auth_username, :auth_password
+    export_attributes :name, :broker_url, :auth_username
 
     add_association_dependencies :services => :destroy
 
     def validate
       validates_presence :name
       validates_presence :broker_url
-      validates_presence :token
+      validates_presence :auth_username
+      validates_presence :auth_password
       validates_unique :name
       validates_unique :broker_url
       validates_url :broker_url
@@ -21,12 +22,12 @@ module VCAP::CloudController
       catalog.sync_services_and_plans
     end
 
-    def token
+    def auth_password
       return unless super
       VCAP::CloudController::Encryptor.decrypt(super, salt)
     end
 
-    def token=(value)
+    def auth_password=(value)
       generate_salt
 
       # Encryptor cannot encrypt an empty string
@@ -42,12 +43,14 @@ module VCAP::CloudController
     end
 
     def client
-      @client ||= ServiceBroker::V2::Client.new(url: broker_url, auth_token: token)
+      @client ||= ServiceBroker::V2::Client.new(url: broker_url, auth_username: auth_username, auth_password: auth_password)
     end
+
+    private
 
     class Catalog
       def initialize(broker)
-        raise unless broker.broker_url.present? && broker.token.present?
+        raise unless broker.valid?
 
         @broker = broker
       end
