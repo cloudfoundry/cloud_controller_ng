@@ -40,7 +40,8 @@ describe "NATS", :type => :integration do
       it "creates org, space and app in database" do
         data = %Q({"name":"nats-spec-org"})
         response = make_post_request("/v2/organizations", data, authorized_token)
-        response.code.should == "201"
+        response.code.should eql("201"), "Status is [#{response.code}], Body is [#{response.body}]"
+
         @org_guid = response.json_body["metadata"]["guid"]
 
         data = %Q({"organization_guid":"#{@org_guid}","name":"nats-spec-space"})
