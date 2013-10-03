@@ -77,6 +77,20 @@ module VCAP::CloudController
           post "/v2/buildpacks", req_body, admin_headers
           expect(last_response.status).to eq(400)
         end
+
+        it 'fails when the name has non alphanumeric characters' do
+          ["git://github.com", "$abc", "foobar!"].each do |name|
+            post "/v2/buildpacks", Yajl::Encoder.encode({name: name}), admin_headers
+            expect(last_response.status).to eq(400)
+          end
+        end
+
+        it "allows aphanumerics, dashes and underscores in the buildpack name" do
+          ["abc", "a-b", "a_b", "ab123"].each do |name|
+            post "/v2/buildpacks", Yajl::Encoder.encode({name: name}), admin_headers
+            expect(last_response.status).to eq(201)
+          end
+        end
       end
 
       context "GET" do

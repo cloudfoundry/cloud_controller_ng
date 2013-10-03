@@ -472,6 +472,13 @@ module VCAP::CloudController
           app.buildpack = "git://example.com/foo.git"
           request = staging_task.staging_request
           request[:properties][:buildpack].should == "git://example.com/foo.git"
+          request[:properties][:buildpack_git_url].should == "git://example.com/foo.git"
+        end
+
+        it "doesn't return a buildpack key" do
+          app.buildpack = "git://example.com/foo.git"
+          request = staging_task.staging_request
+          expect(request[:properties]).to_not have_key(:buildpack_key)
         end
       end
 
@@ -495,24 +502,53 @@ module VCAP::CloudController
         request[:start_message].should include ({ :executableUri => nil })
       end
 
-      it "includes a list of admin buildpacks" do
-        VCAP::CloudController::Buildpack.should_receive(:list_admin_buildpacks).
-          with(blobstore_url_generator).and_return("list of admins")
+      describe "the list of admin buildpacks" do
+        before do
+          VCAP::CloudController::Buildpack.should_receive(:list_admin_buildpacks).
+            with(blobstore_url_generator).and_return("list of admins")
+        end
 
-        request = staging_task.staging_request
-        expect(request[:admin_buildpacks]).to eql "list of admins"
+        def self.it_includes_a_list_of_admin_buildpacks
+          it "includes a list of admin buildpacks" do
+            request = staging_task.staging_request
+            expect(request[:admin_buildpacks]).to eql "list of admins"
+          end
+        end
+
+        context "when a specific buildpack is not requested" do
+          it_includes_a_list_of_admin_buildpacks
+        end
+
+        context "when a specific buildpack is requested" do
+          before do
+            buildpack = Buildpack.make()
+            app.buildpack = buildpack.name
+            app.save()
+          end
+
+          it_includes_a_list_of_admin_buildpacks
+        end
       end
 
-      it "includes the url of an admin buildpack when specified" do
+      it "includes the key of an admin buildpack when the app has a buildpack specified" do
         buildpack = Buildpack.make()
         app.buildpack = buildpack.name
         app.save()
 
-        blobstore_url_generator.stub(:admin_buildpack_download_url).and_return("buildpack_url")
+        request = staging_task.staging_request
+        expect(request[:properties][:buildpack_key]).to eql buildpack.key
+      end
+
+      it "doesn't include the custom buildpack url keys when the app has a buildpack specified" do
+        buildpack = Buildpack.make()
+        app.buildpack = buildpack.name
+        app.save()
 
         request = staging_task.staging_request
-        expect(request[:properties][:buildpack]).to eql "buildpack_url"
+        expect(request[:properties]).to_not have_key(:buildpack)
+        expect(request[:properties]).to_not have_key(:buildpack_git_url)
       end
+
     end
   end
 end
