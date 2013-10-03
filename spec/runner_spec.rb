@@ -57,7 +57,9 @@ module VCAP::CloudController
 
       def self.it_handles_hm9000_requests
         it "starts handling hm9000 requests" do
-          HM9000Respondent.any_instance.should_receive(:handle_requests)
+          hm9000respondent = double(:hm9000respondent)
+          HM9000Respondent.should_receive(:new).with(DeaClient, message_bus, true).and_return(hm9000respondent)
+          hm9000respondent.should_receive(:handle_requests)
           subject.run!
         end
       end

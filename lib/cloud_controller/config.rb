@@ -131,7 +131,9 @@ module VCAP::CloudController
           :guid => String,
         },
 
-        optional(:tasks_disabled) => bool
+        optional(:tasks_disabled) => bool,
+
+        optional(:hm9000_noop) => bool
       }
     end
 

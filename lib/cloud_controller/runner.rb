@@ -170,7 +170,7 @@ module VCAP::CloudController
             message_bus)
         VCAP::CloudController.health_manager_respondent.handle_requests
 
-        HM9000Respondent.new(DeaClient, message_bus).handle_requests
+        HM9000Respondent.new(DeaClient, message_bus, config[:hm9000_noop]).handle_requests
 
         VCAP::CloudController.dea_respondent = DeaRespondent.new(message_bus)
 
