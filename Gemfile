@@ -24,10 +24,6 @@ gem "loggregator_emitter", "~> 0.0.12.pre"
 gem "loggregator_messages", "~> 0.0.4.pre"
 gem "talentbox-delayed_job_sequel", "~> 4.0.0.beta1.1"
 
-# These are outside the test group in order to run rake tasks
-gem "rspec"
-gem "rspec_api_documentation"
-gem "ci_reporter"
 
 group :db do
   gem "mysql2"
@@ -41,6 +37,8 @@ group :development do
 end
 
 group :test do
+  gem "rspec"
+  gem "rspec_api_documentation"
   gem "simplecov"
   gem "simplecov-rcov"
   gem "machinist", "~> 1.0.6"

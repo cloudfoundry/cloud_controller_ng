@@ -2,61 +2,13 @@
 $:.unshift(File.expand_path("../lib", __FILE__))
 $:.unshift(File.expand_path("../app", __FILE__))
 
-require "rspec/core/rake_task"
-require "ci/reporter/rake/rspec"
 require "yaml"
 require "sequel"
 require "steno"
 require "cloud_controller"
-require "rspec_api_documentation"
+
 
 ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
-
-task default: :spec
-
-namespace :spec do
-  desc "Run specs producing results for CI"
-  task :ci => ["ci:setup:rspec"] do
-    require "simplecov-rcov"
-    require "simplecov"
-    # RCov Formatter's output path is hard coded to be "rcov" under
-    # SimpleCov.coverage_path
-    SimpleCov.coverage_dir(File.join("spec", "artifacts"))
-    SimpleCov.formatter = SimpleCov::Formatter::RcovFormatter
-    SimpleCov.start do
-      add_filter "/spec/"
-      add_filter "/migrations/"
-      add_filter '/vendor\/bundle/'
-      RSpec::Core::Runner.disable_autorun!
-    end
-    exit RSpec::Core::Runner.run(['--fail-fast', '--backtrace', 'spec']).to_i
-  end
-end
-
-desc "Run specs"
-RSpec::Core::RakeTask.new do |t|
-  # Keep --backtrace for CI backtraces to be useful
-  t.rspec_opts = %w(
-    --backtrace
-    --format progress
-    --colour
-    --profile
-  )
-end
-
-
-desc "Run specs with code coverage"
-task :coverage do
-  require "simplecov"
-
-  SimpleCov.coverage_dir(File.join("spec", "artifacts", "coverage"))
-  SimpleCov.start do
-    add_filter "/spec/"
-    add_filter "/migrations/"
-    RSpec::Core::Runner.disable_autorun!
-    RSpec::Core::Runner.run(['.'])
-  end
-end
 
 namespace :db do
   desc "Create a Sequel migration in ./db/migrate"
