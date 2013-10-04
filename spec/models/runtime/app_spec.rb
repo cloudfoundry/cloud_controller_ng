@@ -359,6 +359,40 @@ module VCAP::CloudController
       end
     end
 
+    describe "buildpack=" do
+      let(:valid_git_url) do
+        "git://user@github.com:repo"
+      end
+      it "can be set to a git url" do
+        app = App.new
+        app.buildpack = valid_git_url
+        expect(app.buildpack).to eql GitBasedBuildpack.new(valid_git_url)
+      end
+
+      it "can be set to a buildpack name" do
+        buildpack = Buildpack.make
+        app = App.new
+        app.buildpack = buildpack.name
+        expect(app.buildpack).to eql(buildpack)
+      end
+
+      context "switching between buildpacks" do
+        it "allows changing from admin buildpacks to a git url" do
+          buildpack = Buildpack.make
+          app = App.new(buildpack: buildpack.name)
+          app.buildpack = valid_git_url
+          expect(app.buildpack).to eql(GitBasedBuildpack.new(valid_git_url))
+        end
+
+        it "allows changing from git url to admin buildpack" do
+          buildpack = Buildpack.make
+          app = App.new(buildpack: valid_git_url)
+          app.buildpack = buildpack.name
+          expect(app.buildpack).to eql(buildpack)
+        end
+      end
+    end
+
     describe "validations" do
       describe "buildpack" do
         it "does allow nil value" do

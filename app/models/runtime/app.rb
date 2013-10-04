@@ -96,13 +96,13 @@ module VCAP::CloudController
 
     alias :kill_after_multiple_restarts? :kill_after_multiple_restarts
 
-    def validate_buidpack_name_or_git_url(attr)
-      attr_val = public_send(attr)
-      return unless attr_val
-      return if Buildpack.find(:name => attr_val)
-
-      validates_format(URI::regexp(%w(http https git)), attr,
-                       :message => "#{attr_val} is not valid public git url or a known buildpack name")
+    def validate_buidpack_name_or_git_url
+      bp = buildpack
+      unless bp.valid?
+        bp.errors.each do |err|
+          errors.add(:buildpack, err)
+        end
+      end
     end
 
     def validate
@@ -110,7 +110,7 @@ module VCAP::CloudController
       validates_presence :space
       validates_unique [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
 
-      validate_buidpack_name_or_git_url :buildpack
+      validate_buidpack_name_or_git_url
 
       validates_includes PACKAGE_STATES, :package_state, :allow_missing => true
       validates_includes APP_STATES, :state, :allow_missing => true
@@ -438,13 +438,26 @@ module VCAP::CloudController
       save if opts[:save]
     end
 
+    def buildpack
+      if admin_buildpack
+        return admin_buildpack
+      elsif super
+        return GitBasedBuildpack.new(super)
+      end
+
+      AutoDetectionBuildpack.new
+    end
+
     def buildpack=(buildpack)
-      admin_buildpack = Buildpack.find(name: buildpack)
+      admin_buildpack = Buildpack.find(name: buildpack.to_s)
       if admin_buildpack
         self.admin_buildpack = admin_buildpack
+        super(nil)
         return
+      else
+        self.admin_buildpack = nil
+        super(buildpack)
       end
-      super(buildpack)
     end
 
     def package_hash=(hash)

@@ -44,6 +44,7 @@ module VCAP::CloudController
     end
 
     def self.load_models
+      require "models/runtime/auto_detection_buildpack"
       require "models/runtime/deleted_space"
       require "models/runtime/billing_event"
       require "models/runtime/organization_start_event"
@@ -54,6 +55,7 @@ module VCAP::CloudController
       require "models/runtime/buildpack"
       require "models/runtime/domain"
       require "models/runtime/event"
+      require "models/runtime/git_based_buildpack"
       require "models/runtime/organization"
       require "models/runtime/quota_definition"
       require "models/runtime/route"

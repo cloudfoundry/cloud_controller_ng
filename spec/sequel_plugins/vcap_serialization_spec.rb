@@ -83,6 +83,15 @@ describe "Sequel::Plugins::VcapSerialization" do
       expected_json = Yajl::Encoder.encode :val2 => 10
       r.to_json.should == expected_json
     end
+
+    it "should serialize Nil Objects to nil" do
+      @c.export_attributes :val1, :val2
+      r = @c.create :val1 => 1, :val2 => 123
+      a_nil_object = double("A nil object", nil_object?: true)
+      r.stub(:val2).and_return(a_nil_object)
+      expected_json = Yajl::Encoder.encode :val1 => 1, :val2 => nil
+      r.to_json.should == expected_json
+    end
   end
 
   describe "#update_from_json" do

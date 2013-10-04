@@ -182,22 +182,7 @@ module VCAP::CloudController
     end
 
     def staging_task_properties(app)
-      staging_task_base_properties(app).merge(staging_task_buildpack_properties(app))
-    end
-
-    def staging_task_buildpack_properties(app)
-      if app.buildpack
-        {
-          :buildpack => app.buildpack,
-          :buildpack_git_url => app.buildpack
-        }
-      elsif app.admin_buildpack
-        {
-          :buildpack_key => app.admin_buildpack.key
-        }
-      else
-        {}
-      end
+      staging_task_base_properties(app).merge(app.buildpack.staging_message)
     end
 
     def staging_task_base_properties(app)

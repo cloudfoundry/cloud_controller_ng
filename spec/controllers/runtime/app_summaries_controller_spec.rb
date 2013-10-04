@@ -82,7 +82,7 @@ module VCAP::CloudController
 
       it "should contain the basic app attributes" do
         @app.to_hash.each do |k, v|
-          decoded_response[k.to_s].should == v
+          v.should eql(decoded_response[k.to_s]), "value of field #{k} expected to eql #{v}"
         end
       end
 

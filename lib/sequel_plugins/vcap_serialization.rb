@@ -20,7 +20,14 @@ module Sequel::Plugins::VcapSerialization
       hash = {}
       attrs = self.class.export_attrs || []
       attrs.each do |k|
-        hash[k.to_s] = send(k) if opts[:only].nil? || opts[:only].include?(k)
+        if opts[:only].nil? || opts[:only].include?(k)
+          value = send(k)
+          if value.respond_to?(:nil_object?) && value.nil_object?
+            hash[k.to_s] = nil
+          else
+            hash[k.to_s] = value
+          end
+        end
       end
       hash
     end

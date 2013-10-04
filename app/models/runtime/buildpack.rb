@@ -14,6 +14,10 @@ module VCAP::CloudController
       end
     end
 
+    def staging_message
+      { buildpack_key: self.key }
+    end
+
     def validate
       validates_unique :name
       validates_format(/^(\w|\-)+$/, :name, :message => "name can only contain alphanumeric characters")
@@ -21,6 +25,10 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       full_dataset_filter
+    end
+
+    def to_json
+      %Q("#{name}")
     end
   end
 end

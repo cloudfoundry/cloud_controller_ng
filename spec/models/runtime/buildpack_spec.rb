@@ -37,5 +37,12 @@ module VCAP::CloudController
         expect(list).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
       end
     end
+
+    describe "staging_message" do
+      it "contains the buildpack key" do
+        buildpack = Buildpack.make
+        expect(buildpack.staging_message).to eql(buildpack_key: buildpack.key)
+      end
+    end
   end
 end
