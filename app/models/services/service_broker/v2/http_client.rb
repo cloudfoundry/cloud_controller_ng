@@ -126,6 +126,7 @@ module VCAP::CloudController
           req.body = body
           req.content_type = 'application/json'
           req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
+          req['Accept'] = 'application/json'
 
           response = Net::HTTP.start(uri.hostname, uri.port) do |http|
             # TODO: make this configurable?

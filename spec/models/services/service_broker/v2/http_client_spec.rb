@@ -165,7 +165,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
       it 'fetches the broker catalog' do
         stub_request(:get, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog").
-          with(headers: { 'X-VCAP-Request-ID' => request_id }).
+          with(headers: { 'X-VCAP-Request-ID' => request_id, 'Accept' => 'application/json' }).
           to_return(body: catalog_response.to_json)
 
         catalog = client.catalog
@@ -194,7 +194,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
       it 'calls the provision endpoint' do
         stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-          with(body: expected_request_body, headers: { 'X-VCAP-Request-ID' => request_id }).
+          with(body: expected_request_body, headers: { 'X-VCAP-Request-ID' => request_id, 'Accept' => 'application/json' }).
           to_return(status: 201, body: expected_response_body)
 
         response = client.provision(instance_id, plan_id, "org-guid", "space-guid")
@@ -241,6 +241,14 @@ module VCAP::CloudController::ServiceBroker::V2
 
         expect(@request.with { |request|
           expect(request.headers.fetch('X-Vcap-Request-Id')).to eq(request_id)
+        }).to have_been_made
+      end
+
+      it 'includes an application/json accept header' do
+        client.bind(service_binding.guid, service_instance.guid)
+
+        expect(@request.with { |request|
+          expect(request.headers.fetch('Accept')).to eq('application/json')
         }).to have_been_made
       end
 
