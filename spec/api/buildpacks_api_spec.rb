@@ -16,4 +16,14 @@ resource "Buildpacks", :type => :api do
   standard_parameters
   response_fields_from_table :buildpack
   standard_model_object :buildpack
+
+  post "/v2/buildpacks" do
+    let(:name) { "A-buildpack-name" }
+
+    example "Creates an admin buildpack" do
+      client.post "/v2/buildpacks", Yajl::Encoder.encode(params), headers
+      status.should == 201
+      standard_entity_response parsed_response, :buildpack, :name => name
+    end
+  end
 end

@@ -105,7 +105,6 @@ module VCAP::CloudController
             metadata = decoded_response['metadata']
             expect(metadata['guid']).to eq(@test_buildpack[:guid])
             expect(entity['name']).to eq(@test_buildpack[:name])
-            expect(entity['key']).to eq(@test_buildpack[:key])
           end
         end
 
@@ -119,7 +118,6 @@ module VCAP::CloudController
             metadata = resource['metadata']
             expect(metadata['guid']).to eq(@test_buildpack[:guid])
             expect(entity['name']).to eq(@test_buildpack[:name])
-            expect(entity['key']).to eq('xyz')
           end
         end
 
@@ -127,8 +125,8 @@ module VCAP::CloudController
           it "lets you retrieve a list of available buildpacks" do
             get "/v2/buildpacks", {}, headers_for(user)
             expect(last_response.status).to eq(200)
-            expect(decoded_response['total_results']).to eq(1)
-            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack', 'key' => 'xyz', 'priority' => 0})
+            expect(decoded_response["total_results"]).to eq(1)
+            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack', 'priority' => 0})
           end
         end
       end
@@ -205,7 +203,6 @@ module VCAP::CloudController
             response = Yajl::Parser.parse(last_response.body)
             entity = response['entity']
             expect(entity['name']).to eq('upload_binary_buildpack')
-            expect(entity['key']).to eq(sha_valid_zip)
             expect(buildpack_blobstore.exists?(sha_valid_zip2)).to be_false
           end
 

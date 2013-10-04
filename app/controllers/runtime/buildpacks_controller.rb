@@ -4,7 +4,6 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name, String
-      attribute :key,  String, :exclude_in => [:create, :update]
       attribute :priority, Integer, :default => 0
     end
 
