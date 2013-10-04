@@ -49,16 +49,26 @@ module ApiDsl
 
   module ClassMethods
 
+    def api_version
+      "/v2"
+    end
+
     def standard_model_object model
-      get "/v2/#{model.to_s.pluralize}" do
+      get "#{api_version}/#{model.to_s.pluralize}" do
         example_request "List all #{model.to_s.pluralize.capitalize}" do
           standard_list_response parsed_response, model
         end
       end
 
-      get "/v2/#{model.to_s.pluralize}/:guid" do
+      get "#{api_version}/#{model.to_s.pluralize}/:guid" do
         example_request "Retrieve a Particular #{model.to_s.capitalize}" do
           standard_entity_response parsed_response, model
+        end
+      end
+
+      delete "#{api_version}/#{model.to_s.pluralize}/:guid" do
+        example_request "Delete a Particular #{model.to_s.capitalize}" do
+          status.should == 204
         end
       end
     end
