@@ -22,6 +22,10 @@ resource "Apps", :type => :api do
   put "/v2/apps/:guid" do
     let(:buildpack) { "http://github.com/a-buildpack" }
 
+    explanation <<EOD
+PUT with the buildpack attribute set to the URL of a git repository to set a custom buildpack.
+EOD
+
     example "Set a custom buildpack URL for an Application" do
       client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(params), headers
       status.should == 201
@@ -36,7 +40,7 @@ resource "Apps", :type => :api do
 
       explanation <<EOD
 When the buildpack name matches the name of an admin buildpack, an admin buildpack is used rather than a
-custom buildpack. The 'buildpack' column returns the name of the configured admin buildpack"
+custom buildpack. The 'buildpack' column returns the name of the configured admin buildpack
 EOD
 
       client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(params), headers
