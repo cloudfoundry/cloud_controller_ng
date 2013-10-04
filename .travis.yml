@@ -41,4 +41,3 @@ before_script:
 after_success: # and this only on success
   - "travis-artifacts upload --path doc/api --target-path api_docs/$TRAVIS_BUILD_ID"
   - "echo https://s3-us-west-1.amazonaws.com/cc-travis-api-doc/api_docs/$TRAVIS_BUILD_ID/index.html"
-script: bundle exec rspec spec
