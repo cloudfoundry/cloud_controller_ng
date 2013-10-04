@@ -22,11 +22,12 @@ resource "Apps", :type => :api do
   put "/v2/apps/:guid" do
     let(:buildpack) { "http://github.com/a-buildpack" }
 
-    explanation <<EOD
+    example "Set a custom buildpack URL for an Application" do
+
+      explanation <<EOD
 PUT with the buildpack attribute set to the URL of a git repository to set a custom buildpack.
 EOD
 
-    example "Set a custom buildpack URL for an Application" do
       client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(params), headers
       status.should == 201
       standard_entity_response parsed_response, :app, :buildpack => buildpack
