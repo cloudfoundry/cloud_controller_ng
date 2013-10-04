@@ -1,10 +1,12 @@
+require 'net/http'
+
 module VCAP::CloudController
   module ServiceBroker::V2
 
     class ServiceBrokerBadResponse < HttpResponseError
       def initialize(uri, method, response)
         super(
-          "The service broker API returned an error from #{uri}: #{response.code} #{response.reason}",
+          "The service broker API returned an error from #{uri}: #{response.code} #{response.message}",
           uri,
           method,
           response
@@ -114,23 +116,30 @@ module VCAP::CloudController
       # hits the endpoint, json decodes the response
       def execute(method, path, message=nil)
         endpoint = url + path
-
-        headers  = {
-          'Content-Type' => 'application/json',
-          VCAP::Request::HEADER_NAME => VCAP::Request.current_id
-        }
-
         body = message ? message.to_json : nil
 
-        http = HTTPClient.new
-        http.set_auth(endpoint, auth_username, auth_password)
-
         begin
-          response = http.send(method, endpoint, header: headers, body: body)
-        rescue SocketError, HTTPClient::ConnectTimeoutError, Errno::ECONNREFUSED => error
+          uri = URI(endpoint)
+          req_class = method.to_s.capitalize
+          req = Net::HTTP.const_get(req_class).new(uri.request_uri)
+          req.basic_auth(auth_username, auth_password)
+          req.body = body
+          req.content_type = 'application/json'
+          req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
+
+          response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+            # TODO: make this configurable?
+            http.open_timeout = 60
+            http.read_timeout = 60
+
+            http.request(req)
+          end
+        rescue SocketError, Errno::ECONNREFUSED => error
           raise ServiceBrokerApiUnreachable.new(endpoint, method, error)
-        rescue HTTPClient::KeepAliveDisconnected, HTTPClient::ReceiveTimeoutError => error
+        rescue Timeout::Error => error
           raise ServiceBrokerApiTimeout.new(endpoint, method, error)
+        rescue => error
+          raise HttpRequestError.new(error.message, endpoint, method, error)
         end
 
         code = response.code.to_i

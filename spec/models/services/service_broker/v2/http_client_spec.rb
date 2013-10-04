@@ -7,7 +7,7 @@ module VCAP::CloudController::ServiceBroker::V2
     let(:response_body) do
       { 'foo' => 'bar' }.to_json
     end
-    let(:response) { double(code: 500, reason: 'Internal Server Error', body: response_body) }
+    let(:response) { double(code: 500, message: 'Internal Server Error', body: response_body) }
     let(:method) { 'PUT' }
 
     it 'generates the correct hash' do
@@ -301,18 +301,6 @@ module VCAP::CloudController::ServiceBroker::V2
           end
         end
 
-        context 'because the server connection attempt timed out' do
-          before do
-            stub_request(:get, broker_catalog_url).to_raise(HTTPClient::ConnectTimeoutError)
-          end
-
-          it 'should raise an unreachable error' do
-            expect {
-              client.catalog
-            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable)
-          end
-        end
-
         context 'because the server refused our connection' do
           before do
             stub_request(:get, broker_catalog_url).to_raise(Errno::ECONNREFUSED)
@@ -327,24 +315,9 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       context 'when the API times out' do
-        context 'because the server gave up' do
-          before do
-            # We have to instantiate the error object to keep WebMock from initializing
-            # it with a String message. KeepAliveDisconnected actually takes an optional
-            # Session object, which later HTTPClient code attempts to use.
-            stub_request(:get, broker_catalog_url).to_raise(HTTPClient::KeepAliveDisconnected.new)
-          end
-
-          it 'should raise a timeout error' do
-            expect {
-              client.catalog
-            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiTimeout)
-          end
-        end
-
         context 'because the client gave up' do
           before do
-            stub_request(:get, broker_catalog_url).to_raise(HTTPClient::ReceiveTimeoutError)
+            stub_request(:get, broker_catalog_url).to_raise(Timeout::Error)
           end
 
           it 'should raise a timeout error' do
