@@ -41,8 +41,6 @@ module VCAP::CloudController
         return
       end
 
-      logger.info "cloudcontroller.hm9000.processing-stop", :payload => message
-
       should_stop, reason = instance_needs_to_stop?(app_id, version, instance_index, is_duplicate)
       if should_stop
         dea_client.stop_instance(app_id, instance_guid) unless @noop
@@ -64,8 +62,6 @@ module VCAP::CloudController
                      :payload => message
         return
       end
-
-      logger.info "cloudcontroller.hm9000.processing-start", :payload => message
 
       app = App[:guid => app_id]
       should_start, reason = instance_needs_to_start?(app, version, instance_index)

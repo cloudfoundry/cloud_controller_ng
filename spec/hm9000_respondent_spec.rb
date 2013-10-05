@@ -102,11 +102,8 @@ module VCAP::CloudController
 
                 it "logs the reason" do
                   subject.logger.should_receive(:info) do |message|
-                    expect(message).to match(/cloudcontroller.hm9000.processing-start/)
-                  end.ordered
-                  subject.logger.should_receive(:info) do |message|
                     expect(message).to match(/cloudcontroller.hm9000.will-start/)
-                  end.ordered
+                  end
                   subject.process_hm9000_start(hm9000_start_message)
                 end
               end
@@ -207,11 +204,8 @@ module VCAP::CloudController
 
           it "logs the reason" do
             subject.logger.should_receive(:info) do |message|
-              expect(message).to match(/cloudcontroller.hm9000.processing-stop/)
-            end.ordered
-            subject.logger.should_receive(:info) do |message|
               expect(message).to match(/cloudcontroller.hm9000.will-stop/)
-            end.ordered
+            end
             subject.process_hm9000_stop(hm9000_stop_message)
           end
         end
