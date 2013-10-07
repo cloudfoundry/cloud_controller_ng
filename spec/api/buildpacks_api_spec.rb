@@ -41,7 +41,6 @@ resource "Buildpacks", :type => :api do
       zip_name = File.join(tmpdir, filename)
       create_zip(zip_name, 1)
       zip_file = File.new(zip_name)
-      p zip_name
       Rack::Test::UploadedFile.new(zip_file)
     end
 
