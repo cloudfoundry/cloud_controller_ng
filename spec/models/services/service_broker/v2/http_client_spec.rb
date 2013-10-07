@@ -124,6 +124,13 @@ module VCAP::CloudController::ServiceBroker::V2
     let(:auth_username) { 'me' }
     let(:auth_password) { 'abc123' }
     let(:request_id) { Sham.guid }
+    let(:expected_request_headers) do
+      {
+        'X-VCAP-Request-ID' => request_id,
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json'
+      }
+    end
 
     subject(:client) do
       HttpClient.new(
@@ -163,9 +170,9 @@ module VCAP::CloudController::ServiceBroker::V2
         }
       end
 
-      it 'fetches the broker catalog' do
+      it 'sends a GET to /v2/catalog' do
         stub_request(:get, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog").
-          with(headers: { 'X-VCAP-Request-ID' => request_id, 'Accept' => 'application/json' }).
+          with(headers: expected_request_headers).
           to_return(body: catalog_response.to_json)
 
         catalog = client.catalog
@@ -192,9 +199,9 @@ module VCAP::CloudController::ServiceBroker::V2
         }.to_json
       end
 
-      it 'calls the provision endpoint' do
+      it 'sends a PUT to /v2/service_instances/:id' do
         stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-          with(body: expected_request_body, headers: { 'X-VCAP-Request-ID' => request_id, 'Accept' => 'application/json' }).
+          with(body: expected_request_body, headers: expected_request_headers).
           to_return(status: 201, body: expected_response_body)
 
         response = client.provision(instance_id, plan_id, "org-guid", "space-guid")
@@ -220,14 +227,14 @@ module VCAP::CloudController::ServiceBroker::V2
       let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
 
       before do
-        @request = stub_request(:put, bind_url).to_return(
+        @request = stub_request(:put, bind_url).with(headers: expected_request_headers).to_return(
           body: {
             credentials: {user: 'admin', pass: 'secret'}
           }.to_json
         )
       end
 
-      it 'sends a PUT request to the correct endpoint with the auth token' do
+      it 'sends a PUT to /v2/service_bindings/:id' do
         client.bind(service_binding.guid, service_instance.guid)
 
         expect(@request.with { |request|
@@ -236,34 +243,10 @@ module VCAP::CloudController::ServiceBroker::V2
         }).to have_been_made
       end
 
-      it 'includes the request_id in the request header' do
-        client.bind(service_binding.guid, service_instance.guid)
-
-        expect(@request.with { |request|
-          expect(request.headers.fetch('X-Vcap-Request-Id')).to eq(request_id)
-        }).to have_been_made
-      end
-
-      it 'includes an application/json accept header' do
-        client.bind(service_binding.guid, service_instance.guid)
-
-        expect(@request.with { |request|
-          expect(request.headers.fetch('Accept')).to eq('application/json')
-        }).to have_been_made
-      end
-
-      it 'sets the content type to JSON' do
-        client.bind(service_binding.guid, service_instance.guid)
-
-        expect(@request.with { |request|
-          expect(request.headers.fetch('Content-Type')).to eq('application/json')
-        }).to have_been_made
-      end
-
-      it 'responds with the correct fields' do
+      it 'returns the response body' do
         response = client.bind(service_binding.guid, service_instance.guid)
 
-        expect(response.fetch('credentials')).to eq({'user' => 'admin', 'pass' => 'secret'})
+        expect(response).to eq('credentials' => {'user' => 'admin', 'pass' => 'secret'})
       end
     end
 
@@ -271,10 +254,10 @@ module VCAP::CloudController::ServiceBroker::V2
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
       let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
       before do
-        @request = stub_request(:delete, bind_url).to_return(status: 204)
+        @request = stub_request(:delete, bind_url).with(headers: expected_request_headers).to_return(status: 204)
       end
 
-      it 'sends a DELETE to the broker' do
+      it 'sends a DELETE to /v2/service_bindings/:id' do
         client.unbind(service_binding.guid)
         @request.should have_been_requested
       end
@@ -284,10 +267,10 @@ module VCAP::CloudController::ServiceBroker::V2
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:instance_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance.guid}" }
       before do
-        @request = stub_request(:delete, instance_url).to_return(status: 204)
+        @request = stub_request(:delete, instance_url).with(headers: expected_request_headers).to_return(status: 204)
       end
 
-      it 'sends a DELETE to the broker' do
+      it 'sends a DELETE to /v2/service_instances/:id' do
         client.deprovision(instance.guid)
         @request.should have_been_requested
       end
