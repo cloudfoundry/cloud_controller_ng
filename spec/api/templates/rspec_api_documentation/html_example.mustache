@@ -6,7 +6,7 @@
     <style>
       td.required .name:after {
         float: right;
-        content: "required";
+        content: " required";
         font-weight: normal;
         color: #F08080;
       }
@@ -21,9 +21,35 @@
       }
 
       body {
-        margin-left: auto;
-        margin-right: auto;
-        width: 900px;
+        margin: 20px;
+      }
+
+      td {
+        padding: 2px;
+      }
+
+      tr:nth-child(odd) {
+        background-color: #eee;
+      }
+
+      tr.deprecated .name:before {
+        content: "deprecated: ";
+        font-weight: bold;
+      }
+
+      tr.deprecated {
+        text-decoration: line-through;
+        color: grey;
+      }
+
+      tr.readonly .name:after {
+        float: right;
+        content: " read-only";
+        font-weight: normal;
+      }
+
+      tr.readonly {
+        color: grey;
       }
     </style>
   </head>
@@ -40,50 +66,61 @@
           </p>
         {{/ explanation }}
 
-          <h3>Parameters</h3>
-          <table class="parameters table table-striped table-bordered table-condensed">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{# request_parameters }}
-              <tr>
-                <td{{# required }} class="required"{{/ required }}>
-                  <span class="name">{{ name }}</span>
-                </td>
-                <td>
-                  <span class="description">{{ description }}</span>
-                </td>
-              </tr>
-              {{/ request_parameters }}
-            </tbody>
-          </table>
+        <h3>Fields</h3>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Default</th>
+              <th>Valid Values</th>
+              <th>Example Values</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{# fields }}
+            <tr class="{{# deprecated }}deprecated{{/ deprecated }} {{# readonly }}readonly{{/ readonly }}">
+              <td{{# required }} class="required"{{/ required }}>
+                <span class="name">{{ name }}</span>
+              </td>
+              <td>
+                <span class="description">{{ description }}</span>
+              </td>
+              <td>
+                <span class="default">{{ default }}</span>
+              </td>
+              <td>
+                <span class="valid_values">{{ valid_values }}</span>
+              </td>
+              <td>
+                <span class="example_values">{{ example_values }}</span>
+              </td>
+            </tr>
+            {{/ fields }}
+          </tbody>
+        </table>
 
-          <h3>Fields</h3>
-          <table class="fields table table-striped table-bordered table-condensed">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{# fields }}
-              <tr>
-                <td{{# required }} class="required"{{/ required }}>
-                  <span class="name">{{ name }}</span>
-                </td>
-                <td>
-                  <span class="description">{{ description }}</span>
-                </td>
-              </tr>
-              {{/ fields }}
-            </tbody>
-          </table>
-
+        <h3>Parameters</h3>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{# request_parameters }}
+            <tr>
+              <td{{# required }} class="required"{{/ required }}>
+                <span class="name">{{ name }}</span>
+              </td>
+              <td>
+                <span class="description">{{ description }}</span>
+              </td>
+            </tr>
+            {{/ request_parameters }}
+          </tbody>
+        </table>
 
         {{# requests }}
           <h3>Request</h3>

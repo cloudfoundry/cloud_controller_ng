@@ -14,6 +14,9 @@ resource "Events", :type => :api do
   let(:guid) { VCAP::CloudController::Event.first.guid }
 
   standard_parameters
-  response_fields_from_table :event
+
+  field :space_guid, "The guid of the associated space.", required: true, readonly: true
+  field :space_url, "The url of the associated space.", required: false, readonly: true
+
   standard_model_object :event # adds get /v2/users/ and get /v2/users/:guid
 end

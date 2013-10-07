@@ -86,7 +86,7 @@ module ApiDsl
       metadata[:request_parameters].push(options.merge(:name => name.to_s, :description => description))
     end
 
-    def field(name, description, options = {})
+    def field(name, description = "", options = {})
       parameter name, description, options
       metadata[:fields] ||= []
       metadata[:fields].push(options.merge(:name => name.to_s, :description => description))
@@ -96,11 +96,9 @@ module ApiDsl
       header "AUTHORIZATION", :admin_auth_header
     end
 
-    def response_fields_from_table model
-      message_table(model).fields.each do |name, field|
-        field name, name, :document => false
-      end
-    end
+    #def header(key, value, replacement="")
+    #  metadata[:display_headers]
+    #end
 
     # refactor this, duplicated with the instance methods above, sorry!
     def message_table model

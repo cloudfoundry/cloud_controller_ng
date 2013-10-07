@@ -16,8 +16,31 @@ resource "Apps", :type => :api do
   let(:guid) { VCAP::CloudController::App.first.guid }
 
   standard_parameters
-  response_fields_from_table :app
-  standard_model_object :app # adds get /v2/users/ and get /v2/users/:guid
+
+  field :name, "The name of the app.", required: true
+  field :memory, "The amount of memory each instance should have. In bytes.", required: true
+  field :instances, "The number of instances of the app to run. To ensure optimal availability, ensure there are at least 2 instances.", required: true
+  field :disk_quota, "The maximum amount of disk available to an instance of an app. In megabytes.", required: true
+  field :space_guid, "The guid of the associated space.", required: true
+  field :stack_guid, "The guid of the associated stack.", required: true
+
+  field :state, "The current desired state of the app. One of STOPPED or STARTED.", required: false, default: "STOPPED", valid_values: %w[STOPPED STARTED] # nice to validate this eventually..
+  field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT').", required: false
+  field :buildpack, "Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.", required: false, default: "", example_values: ["", "https://github.com/virtualstaticvoid/heroku-buildpack-r.git", "an_example_installed_buildpack"]
+  field :environment_json, "Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.", required: false
+
+  field :detected_buildpack, "The autodetected buildpack that was run.", required: false, readonly: true
+  field :space_url, "The url of the associated space.", required: false, readonly: true
+  field :stack_url, "The url of the associated stack.", required: false, readonly: true
+  field :service_bindings_url, "The url of all the associated service bindings.", required: false, readonly: true
+  field :routes_url, "The url of all the associated routes.", required: false, readonly: true
+  field :events_url, "The url of all the associated events.", required: false, readonly: true
+
+  field :production, "Deprecated.", required: false, deprecated: true, default: true, valid_values: [true, false]
+  field :console, "Open the console port for the app (at $CONSOLE_PORT).", required: false, deprecated: true, default: false, valid_values: [true, false]
+  field :debug, "Open the debug port for the app (at $DEBUG_PORT).", required: false, deprecated: true, default: false, valid_values: [true, false]
+
+  standard_model_object :app
 
   put "/v2/apps/:guid" do
     let(:buildpack) { "http://github.com/a-buildpack" }
