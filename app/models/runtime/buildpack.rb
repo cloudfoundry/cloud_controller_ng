@@ -6,7 +6,8 @@ module VCAP::CloudController
     import_attributes :name, :key, :priority
 
     def self.list_admin_buildpacks(url_generator)
-      all.map do |bp|
+      # A buildpack's key is generated after the buildpack is created, so exclude "non-ready" buildpacks.
+      self.exclude(:key => nil).exclude(:key => "").map do |bp|
         {
           key: bp.key,
           url: url_generator.admin_buildpack_download_url(bp)
