@@ -5,12 +5,18 @@ module VCAP::CloudController
 
     class ServiceBrokerBadResponse < HttpResponseError
       def initialize(uri, method, response)
-        super(
-          "The service broker API returned an error from #{uri}: #{response.code} #{response.message}",
-          uri,
-          method,
-          response
-        )
+        begin
+          hash = Yajl::Parser.parse(response.body)
+        rescue Yajl::ParseError
+        end
+
+        if hash.is_a?(Hash) && hash.has_key?('description')
+          message = "Service broker error: #{hash['description']}"
+        else
+          message = "The service broker API returned an error from #{uri}: #{response.code} #{response.message}"
+        end
+
+        super(message, uri, method, response)
       end
     end
 

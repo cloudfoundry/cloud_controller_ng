@@ -164,7 +164,7 @@ module VCAP::CloudController
         let(:request_method) { :post }
         let(:request_url) { 'http://broker.example.com/gateway/v1/configurations' }
 
-        context 'when the broker returns a structure error' do
+        context 'when the broker returns a structured error' do
           let(:error_status) { 500 }
           let(:error_body) do
             {
@@ -193,7 +193,41 @@ module VCAP::CloudController
               }
 
               error_hash = error.to_h
-              expect(error_hash.fetch('description')).to eq('500 error from broker')
+              expect(error_hash.fetch('description')).to eq('Service broker error: This is what really happened.')
+              expect(error_hash.fetch('source')).to eq(expected_source)
+              expect(error_hash.fetch('http')).to eq(expected_http)
+            }
+          end
+        end
+
+        context 'when the broker returns a structured error without a description' do
+          let(:error_status) { 500 }
+          let(:error_body) do
+            {
+              'foo' => 'bar'
+            }.to_json
+          end
+
+          before do
+            stub_request(request_method, request_url).
+              to_return(status: [error_status, 'Internal Server Error'], body: error_body)
+          end
+
+          it 'raises an HttpResponseError with the source and http information' do
+            expect {
+              client.provision('someid', 'somename')
+            }.to raise_error(HttpResponseError) { |error|
+              expected_source = {
+                'foo' => 'bar'
+              }
+              expected_http = {
+                'status' => error_status,
+                'uri' => request_url,
+                'method' => 'POST',
+              }
+
+              error_hash = error.to_h
+              expect(error_hash.fetch('description')).to eq("The service broker API returned an error from #{request_url}: 500 Internal Server Error")
               expect(error_hash.fetch('source')).to eq(expected_source)
               expect(error_hash.fetch('http')).to eq(expected_http)
             }

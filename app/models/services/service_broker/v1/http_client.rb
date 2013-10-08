@@ -69,7 +69,18 @@ module VCAP::CloudController
             return Yajl::Parser.parse(response.body)
           end
         else
-          raise HttpResponseError.new("#{response.code} error from broker", endpoint, method, response)
+          begin
+            hash = Yajl::Parser.parse(response.body)
+          rescue Yajl::ParseError
+          end
+
+          if hash.is_a?(Hash) && hash.has_key?('description')
+            message = "Service broker error: #{hash['description']}"
+          else
+            message = "The service broker API returned an error from #{endpoint}: #{response.code} #{response.message}"
+          end
+
+          raise HttpResponseError.new(message, endpoint, method, response)
         end
       end
     end
