@@ -77,6 +77,7 @@ describe "Service Broker Management", :type => :integration do
     service_entity = service.fetch('entity')
     expect(service_entity.fetch('label')).to eq('custom-service')
     expect(service_entity.fetch('bindable')).to eq(true)
+    expect(service_entity.fetch('tags')).to match_array(['mysql', 'relational'])
 
     plans = service_entity.fetch('service_plans')
     plan = plans.first

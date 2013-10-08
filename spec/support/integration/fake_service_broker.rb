@@ -18,6 +18,7 @@ get '/v2/catalog' do
         'name' => 'custom-service',
         'description' => 'A description of My Custom Service',
         'bindable' => true,
+        'tags' => ['mysql', 'relational'],
         'plans' => [
           {
             'id' => 'custom-plan-1',

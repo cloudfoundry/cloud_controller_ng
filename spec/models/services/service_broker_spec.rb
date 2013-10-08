@@ -96,6 +96,7 @@ module VCAP::CloudController
               'name' => service_name,
               'description' => service_description,
               'bindable' => true,
+              'tags' => ['mysql', 'relational'],
               'plans' => [
                 {
                   'id' => plan_id,
@@ -129,6 +130,7 @@ module VCAP::CloudController
         expect(service.label).to eq(service_name)
         expect(service.description).to eq(service_description)
         expect(service.bindable).to be_true
+        expect(service.tags).to match_array(['mysql', 'relational'])
       end
 
       it 'creates plans from the catalog' do
