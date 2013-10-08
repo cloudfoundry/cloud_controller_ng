@@ -6,7 +6,6 @@ require "vcap/uaa_util"
 require "cf_message_bus/message_bus"
 require "cf/registrar"
 require "loggregator_emitter"
-require "loggregator_messages"
 require "loggregator"
 
 require_relative "seeds"

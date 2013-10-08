@@ -20,8 +20,7 @@ gem "stager-client", "~> 0.0.02", :git => "https://github.com/cloudfoundry/stage
 gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.git"
 gem "vcap_common", :git => "https://github.com/cloudfoundry/vcap-common.git"
 gem "allowy"
-gem "loggregator_emitter", "~> 0.0.12.pre"
-gem "loggregator_messages", "~> 0.0.4.pre"
+gem "loggregator_emitter", "~> 0.0.13.pre"
 gem "talentbox-delayed_job_sequel", "~> 4.0.0.beta1.1"
 
 

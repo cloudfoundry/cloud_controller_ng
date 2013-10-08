@@ -141,9 +141,7 @@ GEM
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
       rb-kqueue (>= 0.2)
-    loggregator_emitter (0.0.12.pre)
-      loggregator_messages (~> 0.0.1.pre)
-    loggregator_messages (0.0.5.pre)
+    loggregator_emitter (0.0.13.pre)
       beefcake (~> 0.3.7)
     lumberjack (1.0.4)
     machinist (1.0.6)
@@ -273,8 +271,7 @@ DEPENDENCIES
   fog
   guard-rspec
   httpclient
-  loggregator_emitter (~> 0.0.12.pre)
-  loggregator_messages (~> 0.0.4.pre)
+  loggregator_emitter (~> 0.0.13.pre)
   machinist (~> 1.0.6)
   membrane (~> 0.0.2)
   mysql2
