@@ -3,14 +3,8 @@
   <head>
     <title>{{resource_name}} API</title>
     <meta charset="utf-8">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"></link>
     <style>
-      td.required .name:after {
-        float: right;
-        content: " required";
-        font-weight: normal;
-        color: #F08080;
-      }
-
       p {
         padding: 15px;
         font-size: 130%;
@@ -20,16 +14,11 @@
         white-space: pre-wrap;
       }
 
-      body {
-        margin: 20px;
-      }
-
-      td {
-        padding: 2px;
-      }
-
-      tr:nth-child(odd) {
-        background-color: #eee;
+      td.required .name:after {
+        float: right;
+        content: " required";
+        font-weight: normal;
+        color: #F08080;
       }
 
       tr.deprecated .name:before {

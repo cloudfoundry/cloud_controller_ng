@@ -15,7 +15,7 @@ resource "Events", :type => :api do
 
   standard_parameters
 
-  field :space_guid, "The guid of the associated space.", required: true, readonly: true
+  field :space_guid, "The guid of the associated space.", required: false, readonly: true
   field :space_url, "The url of the associated space.", required: false, readonly: true
 
   standard_model_object :event # adds get /v2/users/ and get /v2/users/:guid
