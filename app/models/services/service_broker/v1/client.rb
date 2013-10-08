@@ -29,7 +29,7 @@ module VCAP::CloudController
       instance.broker_provided_id = response.fetch('service_id')
       instance.gateway_data = response.fetch('configuration')
       instance.credentials = response.fetch('credentials')
-      instance.dashboard_url = response.fetch('dashboard_url')
+      instance.dashboard_url = response.fetch('dashboard_url', nil)
     rescue HttpResponseError => e
       if e.source.is_a?(Hash) && e.source['code'] == 33106
         raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
