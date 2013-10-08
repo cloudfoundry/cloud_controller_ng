@@ -20,10 +20,13 @@ module VCAP::CloudController
     add_association_dependencies :service_bindings => :destroy
 
     def self.user_visibility_filter(user)
+      managed_org_space_ids = user.managed_organizations.collect(&:spaces).flatten.collect(&:id)
       Sequel.or([
-        [:space, user.spaces_dataset],
-        [:space, user.audited_spaces_dataset]
-      ])
+                    [:space, user.spaces_dataset],
+                    [:space, user.managed_spaces_dataset],
+                    [:space, user.audited_spaces_dataset],
+                    [:space, Space.where(id: managed_org_space_ids) ]
+                ])
     end
 
     def type

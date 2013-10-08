@@ -124,6 +124,7 @@ module VCAP::CloudController
             :aws_secret_access_key => "fake_secret_access_key",
           },
         },
+        :db_encryption_key => "encryption-key"
       )
 
       config_hash.merge!(config_override || {})

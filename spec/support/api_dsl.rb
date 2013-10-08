@@ -40,7 +40,7 @@ module ApiDsl
 
   def message_table model
     return model if model.respond_to? :fields
-    "VCAP::CloudController::#{model.to_s.capitalize.pluralize}Controller::ResponseMessage".constantize
+    "VCAP::CloudController::#{model.to_s.camelize.pluralize}Controller::ResponseMessage".constantize
   end
 
   def parsed_response
@@ -55,19 +55,19 @@ module ApiDsl
 
     def standard_model_object model
       get "#{api_version}/#{model.to_s.pluralize}" do
-        example_request "List all #{model.to_s.pluralize.capitalize}" do
+        example_request "List all #{model.to_s.pluralize.camelize}" do
           standard_list_response parsed_response, model
         end
       end
 
       get "#{api_version}/#{model.to_s.pluralize}/:guid" do
-        example_request "Retrieve a Particular #{model.to_s.capitalize}" do
+        example_request "Retrieve a Particular #{model.to_s.camelize}" do
           standard_entity_response parsed_response, model
         end
       end
 
       delete "#{api_version}/#{model.to_s.pluralize}/:guid" do
-        example_request "Delete a Particular #{model.to_s.capitalize}" do
+        example_request "Delete a Particular #{model.to_s.camelize}" do
           status.should == 204
         end
       end

@@ -283,7 +283,7 @@ module VCAP::CloudController
           describe "OrgManager" do
             it_behaves_like(
               "enumerating service instances", "OrgManager",
-              expected: 0,
+              expected: 1,
             ) do
               let(:member_a) { @org_a_manager }
               let(:member_b) { @org_b_manager }
@@ -344,7 +344,7 @@ module VCAP::CloudController
           describe "SpaceManager" do
             it_behaves_like(
               "enumerating service instances", "SpaceManager",
-              expected: 0,
+              expected: 1,
             ) do
               let(:member_a) { @space_a_manager }
               let(:member_b) { @space_b_manager }

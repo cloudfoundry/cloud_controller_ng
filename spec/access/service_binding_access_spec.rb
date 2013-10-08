@@ -25,9 +25,13 @@ module VCAP::CloudController
       it_behaves_like :no_access
     end
 
-    context 'organization manager (defensive)' do
+    context 'organization manager' do
       before { org.add_manager(user) }
-      it_behaves_like :no_access
+
+      it { should be_able_to :create, object }
+      it { should be_able_to :read, object }
+      it { should_not be_able_to :update, object }
+      it { should be_able_to :delete, object }
     end
 
     context 'organization billing manager (defensive)' do
@@ -54,13 +58,16 @@ module VCAP::CloudController
       it_behaves_like :read_only
     end
 
-    context 'space manager (defensive)' do
+    context 'space manager' do
       before do
         org.add_user(user)
         space.add_manager(user)
       end
 
-      it_behaves_like :no_access
+      it { should be_able_to :create, object }
+      it { should be_able_to :read, object }
+      it { should_not be_able_to :update, object }
+      it { should be_able_to :delete, object }
     end
 
     context 'space developer' do

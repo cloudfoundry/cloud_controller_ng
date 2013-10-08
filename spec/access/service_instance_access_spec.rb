@@ -31,9 +31,9 @@ module VCAP::CloudController
       it_behaves_like :read_only
     end
 
-    context 'organization manager (defensive)' do
+    context 'organization manager' do
       before { org.add_manager(user) }
-      it_behaves_like :no_access
+      it { should be_able_to :read, object }
     end
 
     context 'organization billing manager (defensive)' do
@@ -46,13 +46,13 @@ module VCAP::CloudController
       it_behaves_like :no_access
     end
 
-    context 'space manager (defensive)' do
+    context 'space manager' do
       before do
         org.add_user(user)
         space.add_manager(user)
       end
 
-      it_behaves_like :no_access
+      it { should be_able_to :read, object }
     end
 
     context 'organization user (defensive)' do
