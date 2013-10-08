@@ -17,49 +17,60 @@ module VCAP::CloudController
 
       let(:buildpack_file_1) { Tempfile.new("admin buildpack 1") }
       let(:buildpack_file_2) { Tempfile.new("admin buildpack 2") }
+      let(:buildpack_file_3) { Tempfile.new("admin buildpack 3") }
 
       let(:buildpack_blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
+      let(:url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
 
       before do
+        Timecop.freeze # The expiration time of the blobstore uri
         Buildpack.dataset.delete
 
         buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, "a key")
-        @buildpack = Buildpack.make(key: "a key")
+        Buildpack.make(key: "a key", priority: 2)
 
         buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, "b key")
-        @another_buildpack = Buildpack.make(key: "b key")
+        Buildpack.make(key: "b key", priority: 1)
+
+        buildpack_blobstore.cp_to_blobstore(buildpack_file_3.path, "c key")
+        @another_buildpack = Buildpack.make(key: "c key", priority: 3)
       end
 
-      it "returns a list of names and urls" do
-        list = Buildpack.list_admin_buildpacks(CloudController::DependencyLocator.instance.blobstore_url_generator)
-        expect(list).to have(2).items
-        expect(list).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
-        expect(list).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
+      subject(:all_buildpacks) { Buildpack.list_admin_buildpacks(url_generator) }
+
+      it { should have(3).items }
+      it { should include(url: buildpack_blobstore.download_uri("a key"), key: "a key") }
+      it { should include(url: buildpack_blobstore.download_uri("b key"), key: "b key") }
+      it { should include(url: buildpack_blobstore.download_uri("c key"), key: "c key") }
+
+      it "returns the list in priority order" do
+        expect(all_buildpacks.map { |b| b[:key] }).to eq ["b key", "a key", "c key"]
+      end
+
+      it "randomly orders any buildpacks with the same priority (for now we did not want to make clever logic of moving stuff around: up to the user to get it all correct)" do
+        @another_buildpack.priority = 1
+        @another_buildpack.save
+
+        expect(all_buildpacks[2][:key]).to eq("a key")
       end
 
       context "when there are buildpacks with null keys" do
-        before do
-          Buildpack.create(:name => "nil_key_custom_buildpack", :priority => 0)
-        end
+        let!(:null_buildpack) { Buildpack.create(:name => "nil_key_custom_buildpack", :priority => 0) }
 
         it "only returns buildpacks with non-null keys" do
-          list = Buildpack.list_admin_buildpacks(CloudController::DependencyLocator.instance.blobstore_url_generator)
-          expect(list).to have(2).items
-          expect(list).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
-          expect(list).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
+          expect(Buildpack.all).to include(null_buildpack)
+          expect(all_buildpacks).to_not include(null_buildpack)
+          expect(all_buildpacks).to have(3).items
         end
       end
 
       context "when there are buildpacks with empty keys" do
-        before do
-          Buildpack.create(:name => "nil_key_custom_buildpack", :key => "", :priority => 0)
-        end
+        let!(:empty_buildpack) { Buildpack.create(:name => "nil_key_custom_buildpack", :key => "", :priority => 0) }
 
         it "only returns buildpacks with non-null keys" do
-          list = Buildpack.list_admin_buildpacks(CloudController::DependencyLocator.instance.blobstore_url_generator)
-          expect(list).to have(2).items
-          expect(list).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
-          expect(list).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
+          expect(Buildpack.all).to include(empty_buildpack)
+          expect(all_buildpacks).to_not include(empty_buildpack)
+          expect(all_buildpacks).to have(3).items
         end
       end
     end
