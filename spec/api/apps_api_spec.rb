@@ -6,6 +6,7 @@ resource "Apps", :type => :api do
   authenticated_request
 
   before do
+    reset_database
     3.times do
       VCAP::CloudController::App.make
     end
