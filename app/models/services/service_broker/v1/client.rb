@@ -1,12 +1,7 @@
 module VCAP::CloudController
   class ServiceBroker::V1::Client
     def initialize(attrs)
-      @http_client = ManagedServiceInstance.gateway_client_class.new(
-        attrs.fetch(:url),
-        attrs.fetch(:auth_token),
-        attrs.fetch(:timeout),
-        VCAP::Request.current_id
-      )
+      @http_client = ServiceBroker::V1::HttpClient.new(attrs)
     end
 
     def provision(instance)
@@ -14,28 +9,29 @@ module VCAP::CloudController
       plan = instance.service_plan
       service = plan.service
 
-      response = @http_client.provision(
-        label: "#{service.label}-#{service.version}",
-        name: instance.name,
-        email: VCAP::CloudController::SecurityContext.current_user_email,
-        plan: plan.name,
-        version: service.version,
-        provider: service.provider,
-        space_guid: space.guid,
-        organization_guid: space.organization_guid,
-        unique_id: plan.unique_id,
+      broker_plan_id = plan.unique_id
+      name = instance.name
 
-        # DEPRECATED
-        plan_option: {}
+      response = @http_client.provision(
+        broker_plan_id,
+        name,
+        {
+          label: "#{service.label}-#{service.version}",
+          email: VCAP::CloudController::SecurityContext.current_user_email,
+          plan: plan.name,
+          version: service.version,
+          provider: service.provider,
+          space_guid: space.guid,
+          organization_guid: space.organization_guid
+        }
       )
 
-      instance.broker_provided_id = response.service_id
-      instance.gateway_data = response.configuration
-      instance.credentials = response.credentials
-      instance.dashboard_url = response.dashboard_url
-    rescue VCAP::Services::Api::ServiceGatewayClient::ErrorResponse => e
-      case e.error.code
-      when 33106
+      instance.broker_provided_id = response.fetch('service_id')
+      instance.gateway_data = response.fetch('configuration')
+      instance.credentials = response.fetch('credentials')
+      instance.dashboard_url = response.fetch('dashboard_url')
+    rescue HttpResponseError => e
+      if e.source.is_a?(Hash) && e.source['code'] == 33106
         raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
       else
         raise
@@ -46,37 +42,33 @@ module VCAP::CloudController
       instance = binding.service_instance
       service = instance.service_plan.service
 
-      response = @http_client.bind(
-        service_id: instance.broker_provided_id,
-        label: "#{service.label}-#{service.version}",
-        email: VCAP::CloudController::SecurityContext.current_user_email,
-        binding_options: binding.binding_options,
-      )
+      broker_instance_id = instance.broker_provided_id
+      label = "#{service.label}-#{service.version}"
+      email = VCAP::CloudController::SecurityContext.current_user_email
+      binding_options = binding.binding_options
 
-      binding.broker_provided_id = response.service_id
-      binding.gateway_data = response.configuration
-      binding.credentials = response.credentials
-      binding.syslog_drain_url = response.syslog_drain_url
+      response = @http_client.bind(broker_instance_id, label, email, binding_options)
+
+      binding.broker_provided_id = response.fetch('service_id')
+      binding.gateway_data = response.fetch('configuration')
+      binding.credentials = response.fetch('credentials')
+      binding.syslog_drain_url = response.fetch('syslog_drain_url')
     end
 
     def unbind(binding)
       instance = binding.service_instance
 
-      @http_client.unbind(
-        service_id: instance.broker_provided_id,
-        handle_id: binding.broker_provided_id,
-        binding_options: binding.binding_options
-      )
-    rescue VCAP::Services::Api::ServiceGatewayClient::NotFoundResponse
-      logger.info "Ignored 404 from broker during unbind of binding #{binding.guid} (broker_provided_id: #{binding.broker_provided_id})"
+      broker_instance_id = instance.broker_provided_id
+      broker_binding_id = binding.broker_provided_id
+      binding_options = binding.binding_options
+
+      @http_client.unbind(broker_instance_id, broker_binding_id, binding_options)
     end
 
     def deprovision(instance)
-      @http_client.unprovision(
-        service_id: instance.broker_provided_id
-      )
-    rescue VCAP::Services::Api::ServiceGatewayClient::NotFoundResponse
-      logger.info "Ignored 404 from broker during deprovision of instance #{instance.guid} (broker_provided_id: #{instance.broker_provided_id})"
+      broker_instance_id = instance.broker_provided_id
+
+      @http_client.deprovision(broker_instance_id)
     end
 
     private

@@ -205,9 +205,6 @@ module VCAP::CloudController::SpecHelper
     # DO NOT override the message bus, use the same mock that's set the first time
     message_bus = VCAP::CloudController::Config.message_bus || CfMessageBus::MockMessageBus.new
 
-    # FIXME: this is better suited for a before-each stub so that we can unstub it in examples
-    VCAP::CloudController::ManagedServiceInstance.gateway_client_class = VCAP::Services::Api::ServiceGatewayClientFake
-
     VCAP::CloudController::Config.configure(config)
     VCAP::CloudController::Config.configure_message_bus(message_bus)
     # reset the dependency locator

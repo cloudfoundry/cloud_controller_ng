@@ -135,55 +135,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "#service_gateway_client" do
-      let(:service) do
-        double(:service,
-               :url                => "https://fake.example.com/fake",
-               :service_auth_token => token,
-               :timeout            => 999999,
-        )
-      end
-      let(:plan) { double(:plan, :service => service) }
-
-      let(:token) { double("token", token: "le_token") }
-      let(:client) { double(:client) }
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.new }
-
-      it "sets the service_gateway_client correctly" do
-        VCAP::Services::Api::ServiceGatewayClient.should_receive(:new).
-          with("https://fake.example.com/fake", "le_token", 999999, anything).
-          and_return(client)
-
-        instance.service_gateway_client(plan).should == client
-      end
-
-      it "passes the current request id to the client" do
-        request_id = double(:request_id)
-        VCAP::Request.stub(:current_id).and_return(request_id)
-
-        VCAP::Services::Api::ServiceGatewayClient.should_receive(:new).
-          with(anything, anything, anything, request_id)
-
-        instance.service_gateway_client(plan)
-      end
-
-      it "caches the client for future requests" do
-        VCAP::Services::Api::ServiceGatewayClient.should_receive(:new).once.and_return(client)
-        instance.service_gateway_client(plan).should == client
-        instance.service_gateway_client.should == client
-      end
-
-      context "with missing service_auth_token" do
-        let(:token) { nil }
-
-        it "raises an error" do
-          expect {
-            VCAP::CloudController::ManagedServiceInstance.new.service_gateway_client(plan)
-          }.to raise_error(VCAP::CloudController::ManagedServiceInstance::InvalidServiceBinding, /no service_auth_token/i)
-        end
-      end
-    end
-
     context "quota" do
       let(:free_plan) { ServicePlan.make(:free => true) }
       let(:paid_plan) { ServicePlan.make(:free => false) }

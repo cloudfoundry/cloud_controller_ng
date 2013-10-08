@@ -48,17 +48,6 @@ module VCAP::CloudController
       end
     end
 
-    class << self
-      def gateway_client_class
-        @gateway_client_class || VCAP::Services::Api::ServiceGatewayClient
-      end
-
-      def gateway_client_class=(klass)
-        raise ArgumentError, "gateway_client_class must not be nil" unless klass
-        @gateway_client_class = klass
-      end
-    end
-
     many_to_one :service_plan
 
     default_order_by  :id
@@ -151,19 +140,6 @@ module VCAP::CloudController
       VCAP::Services::Api::SynchronousHttpRequest
     end
 
-    def service_gateway_client(plan = service_plan)
-      @client ||= begin
-        raise InvalidServiceBinding.new("no service_auth_token") unless plan.service.service_auth_token
-
-        self.class.gateway_client_class.new(
-          plan.service.url,
-          plan.service.service_auth_token.token,
-          plan.service.timeout,
-          VCAP::Request.current_id,
-        )
-      end
-    end
-
     def service
       service_plan.service
     end
@@ -174,34 +150,6 @@ module VCAP::CloudController
 
     def enum_snapshots
       NGServiceGatewayClient.new(service, gateway_name).enum_snapshots
-    end
-
-    def snapshot_details(sid)
-      service_gateway_client.snapshot_details(:service_id => gateway_name, :snapshot_id => sid)
-    end
-
-    def rollback_snapshot(sid)
-      service_gateway_client.rollback_snapshot(:service_id => gateway_name, :snapshot_id => sid)
-    end
-
-    def delete_snapshot(sid)
-      service_gateway_client.delete_snapshot(:service_id => gateway_name, :snapshot_id => sid)
-    end
-
-    def serialized_url(sid)
-      service_gateway_client.serialized_url(:service_id => gateway_name, :snapshot_id => sid)
-    end
-
-    def create_serialized_url(sid)
-      service_gateway_client.create_serialized_url(:service_id => gateway_name, :snapshot_id => sid)
-    end
-
-    def import_from_url(req)
-      service_gateway_client.import_from_url(:service_id => gateway_name, :msg => req)
-    end
-
-    def job_info(job_id)
-      service_gateway_client.job_info(:service_id => gateway_name, :job_id => job_id)
     end
 
     def logger

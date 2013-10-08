@@ -1,11 +1,10 @@
-
 class HttpResponseError < StructuredError
   attr_reader :uri, :method, :status
 
   def initialize(message, uri, method, response)
     @uri = uri
-    @method = method
-    @status = response.code
+    @method = method.to_s.upcase
+    @status = response.code.to_i
 
     begin
       source = Yajl::Parser.parse(response.body)

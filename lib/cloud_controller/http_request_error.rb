@@ -1,4 +1,3 @@
-
 class HttpRequestError < StructuredError
   attr_reader :uri, :method
 
@@ -6,7 +5,7 @@ class HttpRequestError < StructuredError
     super(msg, nested_exception)
 
     @uri = uri
-    @method = method
+    @method = method.to_s.upcase
   end
 
   def to_h

@@ -69,8 +69,8 @@ module VCAP::CloudController::ServiceBroker::V2
       it "initializes the base class correctly" do
         exception = ServiceBrokerApiTimeout.new(uri, method, error)
         expect(exception.message).to eq("The service broker API timed out: #{uri}")
-        expect(exception.uri).to be(uri)
-        expect(exception.method).to be(method)
+        expect(exception.uri).to eq(uri)
+        expect(exception.method).to eq(method)
         expect(exception.source).to be(error)
       end
     end
@@ -82,8 +82,8 @@ module VCAP::CloudController::ServiceBroker::V2
       it "initializes the base class correctly" do
         exception = ServiceBrokerResponseMalformed.new(uri, method, response)
         expect(exception.message).to eq("The service broker response was not understood")
-        expect(exception.uri).to be(uri)
-        expect(exception.method).to be(method)
+        expect(exception.uri).to eq(uri)
+        expect(exception.method).to eq(method)
         expect(exception.source).to be(response.body)
       end
     end
@@ -95,8 +95,8 @@ module VCAP::CloudController::ServiceBroker::V2
       it "initializes the base class correctly" do
         exception = ServiceBrokerApiAuthenticationFailed.new(uri, method, response)
         expect(exception.message).to eq("Authentication failed for the service broker API. Double-check that the token is correct: #{uri}")
-        expect(exception.uri).to be(uri)
-        expect(exception.method).to be(method)
+        expect(exception.uri).to eq(uri)
+        expect(exception.method).to eq(method)
         expect(exception.source).to be(response.body)
       end
     end
@@ -108,8 +108,8 @@ module VCAP::CloudController::ServiceBroker::V2
       it "initializes the base class correctly" do
         exception = ServiceBrokerConflict.new(uri, method, response)
         expect(exception.message).to eq("Resource already exists: #{uri}")
-        expect(exception.uri).to be(uri)
-        expect(exception.method).to be(method)
+        expect(exception.uri).to eq(uri)
+        expect(exception.method).to eq(method)
         expect(exception.source).to be(response.body)
       end
 

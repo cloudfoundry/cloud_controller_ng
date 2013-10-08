@@ -73,6 +73,7 @@ module VCAP::CloudController
       require "models/services/service_broker"
       require "models/services/service_broker/v1"
       require "models/services/service_broker/v1/client"
+      require "models/services/service_broker/v1/http_client"
       require "models/services/service_broker/v2"
       require "models/services/service_broker/v2/client"
       require "models/services/service_broker/v2/http_client"
