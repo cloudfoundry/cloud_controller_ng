@@ -54,19 +54,20 @@ module ApiDsl
     end
 
     def standard_model_object model
-      get "#{api_version}/#{model.to_s.pluralize}" do
+      root = "#{api_version}/#{model.to_s.pluralize}"
+      get root do
         example_request "List all #{model.to_s.pluralize.capitalize}" do
           standard_list_response parsed_response, model
         end
       end
 
-      get "#{api_version}/#{model.to_s.pluralize}/:guid" do
+      get "#{root}/:guid" do
         example_request "Retrieve a Particular #{model.to_s.capitalize}" do
           standard_entity_response parsed_response, model
         end
       end
 
-      delete "#{api_version}/#{model.to_s.pluralize}/:guid" do
+      delete "#{root}/:guid" do
         example_request "Delete a Particular #{model.to_s.capitalize}" do
           status.should == 204
         end
