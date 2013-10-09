@@ -23,8 +23,8 @@ resource "Apps", :type => :api do
   field :instances, "The number of instances of the app to run. To ensure optimal availability, ensure there are at least 2 instances.", required: true
   field :disk_quota, "The maximum amount of disk available to an instance of an app. In megabytes.", required: true
   field :space_guid, "The guid of the associated space.", required: true
-  field :stack_guid, "The guid of the associated stack.", required: true
 
+  field :stack_guid, "The guid of the associated stack.", required: false, default: "Uses the default system stack."
   field :state, "The current desired state of the app. One of STOPPED or STARTED.", required: false, default: "STOPPED", valid_values: %w[STOPPED STARTED] # nice to validate this eventually..
   field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT').", required: false
   field :buildpack, "Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.", required: false, default: "", example_values: ["", "https://github.com/virtualstaticvoid/heroku-buildpack-r.git", "an_example_installed_buildpack"]
