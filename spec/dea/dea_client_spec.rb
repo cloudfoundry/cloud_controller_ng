@@ -90,6 +90,7 @@ module VCAP::CloudController
           hash_including(
             # XXX: change this to actual URLs from user once we do it
             :uris => kind_of(Array),
+            :version => app.version
           )
         )
         DeaClient.update_uris(app)

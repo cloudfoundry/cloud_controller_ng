@@ -40,8 +40,8 @@ module VCAP::CloudController
     end
 
     let(:app) do
-      App.make :version => "current-version", :instances => 2,
-               :state => app_state, :droplet_hash => droplet_hash, :package_hash => "abcd", :package_state => package_state
+      App.make :instances => 2, :state => app_state, :droplet_hash => droplet_hash,
+        :package_hash => "abcd", :package_state => package_state
     end
 
     let(:app_state) { "STARTED" }
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
       context "if the app does not exist" do
         let(:start_droplet) {"a-non-existent-app"}
-        let(:start_version) {"current-version"}
+        let(:start_version) { app.version }
         let(:start_instance_index) {1}
 
         it "should not do anything" do
@@ -78,7 +78,7 @@ module VCAP::CloudController
       context "if the app does exit" do
         let(:start_droplet) { app.guid }
         context "if the version matches" do
-          let(:start_version) {"current-version"}
+          let(:start_version) { app.version }
           context "if the desired index is within the desired number of instances" do
             let(:start_instance_index) {1}
             context "if app is in STARTED state" do
@@ -215,7 +215,7 @@ module VCAP::CloudController
         let(:stop_droplet) { app.guid }
 
         context "and the currently-running version of the app matches the version in the stop message" do
-          let(:stop_version) { "current-version" }
+          let(:stop_version) { app.version }
 
           context "when the index to stop is outside the range of desired indices" do
             let(:stop_instance_index) { 2 }

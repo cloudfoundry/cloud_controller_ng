@@ -672,13 +672,6 @@ module VCAP::CloudController
         expect { app.save }.to change(app, :version)
       end
 
-      it "should not update the version if the caller set it" do
-        app.version = "my-version"
-        app.state = "STARTED"
-        app.save
-        app.version.should == "my-version"
-      end
-
       it "should update the version on update of :state" do
         expect { app.update(:state => "STARTED") }.to change(app, :version)
       end
@@ -702,6 +695,23 @@ module VCAP::CloudController
 
         it "should not update the version on update of :instances" do
           expect { app.update(:instances => 8) }.to_not change(app, :version)
+        end
+
+        context "when adding and removing routes" do
+          let(:domain) do
+            domain = Domain.make :owning_organization => app.space.organization
+
+            app.space.add_domain(domain)
+
+            domain
+          end
+
+          let(:route) { Route.make :domain => domain, :space => app.space }
+
+          it "updates the app's version" do
+            expect { app.add_route(route) }.to change(app, :version)
+            expect { app.remove_route(route) }.to change(app, :version)
+          end
         end
       end
     end

@@ -68,7 +68,7 @@ module VCAP::CloudController
       context "when the app exists but the droplet hash is not yet known" do
         let(:package_state) { "PENDING" }
         let(:app) do
-          App.make :version => "some-version", :instances => 1, :state => "STARTED",
+          App.make :instances => 1, :state => "STARTED",
             :package_hash => "dont_care", :droplet_hash => nil, :package_state => package_state
         end
 
@@ -93,8 +93,7 @@ module VCAP::CloudController
 
       context "when the app is NOT started" do
         let(:app) do
-          App.make :version => "some-version", :instances => 2,
-                           :state => "STOPPED"
+          App.make :instances => 2, :state => "STOPPED"
         end
 
         it "ignores the request" do
@@ -106,11 +105,10 @@ module VCAP::CloudController
 
       context "when running instances of current version is < desired instances" do
         let(:app) do
-          App.make :version => "some-version", :instances => 2,
-                           :state => "STARTED", :package_hash => "abcd"
+          App.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
         end
 
-        let(:running) { { "some-version" => 1 } }
+        let(:running) { { app.version => 1 } }
 
         context "and the version requested to start is current" do
           it "starts the instance" do
@@ -122,6 +120,7 @@ module VCAP::CloudController
 
         context "and the version requested to start is NOT current" do
           let(:version) { "some-bogus-version" }
+
           it "ignores the request" do
             dea_client.should_not_receive(:start_instances)
 
@@ -132,11 +131,10 @@ module VCAP::CloudController
 
       context "when running instances of current version is >= desired instances" do
         let(:app) do
-          App.make :version => "some-version", :instances => 2,
-                           :state => "STARTED", :package_hash => "abcd"
+          App.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
         end
 
-        let(:running) { { "some-version" => 2 } }
+        let(:running) { { app.version => 2 } }
 
         it "ignores the request" do
           dea_client.should_not_receive(:start_instances)
@@ -148,8 +146,7 @@ module VCAP::CloudController
 
     describe "#process_stop" do
       let(:app) do
-        App.make :version => "some-version", :instances => 2,
-                         :state => "STARTED", :package_hash => "abcd"
+        App.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
       end
 
       context "when the app does not exist" do
@@ -165,8 +162,8 @@ module VCAP::CloudController
       end
 
       context "when stopping this instance leaves us with at least the desired number of instances" do
-        let(:instances) { { "some-instance" => "some-version" } }
-        let(:running) { { "some-version" => 3 } }
+        let(:instances) { { "some-instance" => app.version } }
+        let(:running) { { app.version => 3 } }
 
         it "stops the instance" do
           dea_client.should_receive(:stop_instances).with(app, ["some-instance"])
@@ -175,8 +172,8 @@ module VCAP::CloudController
       end
 
       context "when stopping this instance would leave us with below the desired number of instances" do
-        let(:instances) { { "some-instance" => "some-version", "some-other-instance" => "some-version" } }
-        let(:running) { { "some-version" => 2 } }
+        let(:instances) { { "some-instance" => app.version, "some-other-instance" => app.version } }
+        let(:running) { { app.version => 2 } }
 
         it "ignores the request" do
           dea_client.should_not_receive(:stop_instances)
@@ -186,8 +183,8 @@ module VCAP::CloudController
       end
 
       context "when stopping all of the requested instances would leave us with below the desired number of instances" do
-        let(:instances) { { "some-instance" => "some-version", "some-other-instance" => "some-version" } }
-        let(:running) { { "some-version" => 3 } }
+        let(:instances) { { "some-instance" => app.version, "some-other-instance" => app.version } }
+        let(:running) { { app.version => 3 } }
 
         it "ignores the request" do
           dea_client.should_not_receive(:stop_instances)
@@ -200,7 +197,7 @@ module VCAP::CloudController
         let(:instances) { { "some-instance" => "some-bogus-version" } }
 
         context "and there are running instances the current version" do
-          let(:running) { { "some-version" => 2 } }
+          let(:running) { { app.version => 2 } }
 
           it "stops the requested (non-current) instance" do
             dea_client.should_receive(:stop_instances).with(app, ["some-instance"])
@@ -209,7 +206,7 @@ module VCAP::CloudController
         end
 
         context "and there are NO running instances of the current version" do
-          let(:running) { { "some-version" => 0 } }
+          let(:running) { { app.version => 0 } }
 
           it "ignores the request" do
             dea_client.should_not_receive(:stop_instances)

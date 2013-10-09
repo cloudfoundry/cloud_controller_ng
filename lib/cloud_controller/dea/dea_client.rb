@@ -347,6 +347,7 @@ module VCAP::CloudController
         {
           :droplet  => app.guid,
           :uris     => app.uris,
+          :version  => app.version,
         }
       end
 
