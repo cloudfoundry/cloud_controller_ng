@@ -18,18 +18,18 @@ module CloudController
     end
 
     def admin_buildpack_download_url(buildpack)
-      if @admin_buildpack_blobstore.local?
-        staging_uri("/v2/buildpacks/#{buildpack.guid}/download")
-      else
-        @admin_buildpack_blobstore.download_uri(buildpack.key)
-      end
+      generate_download_url(@admin_buildpack_blobstore, "/v2/buildpacks/#{buildpack.guid}/download", buildpack.key)
     end
 
     def droplet_download_url(app)
+      droplet = CloudController::Droplet.new(app, @droplet_blobstore)
+
       if @droplet_blobstore.local?
-        staging_uri("/staging/droplets/#{app.guid}/download")
+        if droplet.exists?
+          staging_uri("/staging/droplets/#{app.guid}/download")
+        end
       else
-        CloudController::Droplet.new(app, @droplet_blobstore).download_url
+        droplet.download_url
       end
     end
 
@@ -45,7 +45,9 @@ module CloudController
     private
     def generate_download_url(store, path, blobstore_key)
       if store.local?
-        staging_uri(path)
+        if store.file(blobstore_key)
+          staging_uri(path)
+        end
       else
         store.download_uri(blobstore_key)
       end

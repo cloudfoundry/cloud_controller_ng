@@ -37,13 +37,25 @@ module CloudController
     context "downloads" do
       describe "app package" do
         context "when the packages are stored on local blobstore" do
-          it "gives a local URI to the blobstore host/port" do
-            uri = URI.parse(subject.app_package_download_url(app))
-            expect(uri.host).to eql blobstore_host
-            expect(uri.port).to eql blobstore_port
-            expect(uri.user).to eql "username"
-            expect(uri.password).to eql "password"
-            expect(uri.path).to eql "/staging/apps/#{app.guid}"
+          context "and the package exists" do
+            before { package_blobstore.stub(file: true) }
+
+            it "gives a local URI to the blobstore host/port" do
+              uri = URI.parse(subject.app_package_download_url(app))
+              expect(uri.host).to eql blobstore_host
+              expect(uri.port).to eql blobstore_port
+              expect(uri.user).to eql "username"
+              expect(uri.password).to eql "password"
+              expect(uri.path).to eql "/staging/apps/#{app.guid}"
+            end
+          end
+
+          context "and the package does not exist" do
+            before { package_blobstore.stub(file: false) }
+
+            it "returns nil" do
+              expect(subject.app_package_download_url(app)).to be_nil
+            end
           end
         end
 
@@ -62,13 +74,25 @@ module CloudController
 
       describe "buildpack cache" do
         context "when the caches are stored on local blobstore" do
-          it "gives a local URI to the blobstore host/port" do
-            uri = URI.parse(subject.buildpack_cache_download_url(app))
-            expect(uri.host).to eql blobstore_host
-            expect(uri.port).to eql blobstore_port
-            expect(uri.user).to eql "username"
-            expect(uri.password).to eql "password"
-            expect(uri.path).to eql "/staging/buildpack_cache/#{app.guid}/download"
+          context "and the package exists" do
+            before { buildpack_cache_blobstore.stub(file: true) }
+
+            it "gives a local URI to the blobstore host/port" do
+              uri = URI.parse(subject.buildpack_cache_download_url(app))
+              expect(uri.host).to eql blobstore_host
+              expect(uri.port).to eql blobstore_port
+              expect(uri.user).to eql "username"
+              expect(uri.password).to eql "password"
+              expect(uri.path).to eql "/staging/buildpack_cache/#{app.guid}/download"
+            end
+          end
+
+          context "and the package does not exist" do
+            before { buildpack_cache_blobstore.stub(file: false) }
+
+            it "returns nil" do
+              expect(subject.buildpack_cache_download_url(app)).to be_nil
+            end
           end
         end
 
@@ -89,13 +113,25 @@ module CloudController
         let(:buildpack) { VCAP::CloudController::Buildpack.make }
 
         context "when the admin buildpacks are stored on local blobstore" do
-          it "gives a local URI to the blobstore host/port" do
-            uri = URI.parse(subject.admin_buildpack_download_url(buildpack))
-            expect(uri.host).to eql blobstore_host
-            expect(uri.port).to eql blobstore_port
-            expect(uri.user).to eql "username"
-            expect(uri.password).to eql "password"
-            expect(uri.path).to eql "/v2/buildpacks/#{buildpack.guid}/download"
+          context "and the package exists" do
+            before { admin_buildpack_blobstore.stub(file: true) }
+
+            it "gives a local URI to the blobstore host/port" do
+              uri = URI.parse(subject.admin_buildpack_download_url(buildpack))
+              expect(uri.host).to eql blobstore_host
+              expect(uri.port).to eql blobstore_port
+              expect(uri.user).to eql "username"
+              expect(uri.password).to eql "password"
+              expect(uri.path).to eql "/v2/buildpacks/#{buildpack.guid}/download"
+            end
+          end
+
+          context "and the package does not exist" do
+            before { admin_buildpack_blobstore.stub(file: false) }
+
+            it "returns nil" do
+              expect(subject.admin_buildpack_download_url(buildpack)).to be_nil
+            end
           end
         end
 
@@ -114,13 +150,25 @@ module CloudController
         let(:app) { VCAP::CloudController::App.make }
 
         context "when the droplets are stored on local blobstore" do
-          it "gives a local URI to the blobstore host/port" do
-            uri = URI.parse(subject.droplet_download_url(app))
-            expect(uri.host).to eql blobstore_host
-            expect(uri.port).to eql blobstore_port
-            expect(uri.user).to eql "username"
-            expect(uri.password).to eql "password"
-            expect(uri.path).to eql "/staging/droplets/#{app.guid}/download"
+          context "and the package exists" do
+            before { droplet_blobstore.stub(exists?: true) }
+
+            it "gives a local URI to the blobstore host/port" do
+              uri = URI.parse(subject.droplet_download_url(app))
+              expect(uri.host).to eql blobstore_host
+              expect(uri.port).to eql blobstore_port
+              expect(uri.user).to eql "username"
+              expect(uri.password).to eql "password"
+              expect(uri.path).to eql "/staging/droplets/#{app.guid}/download"
+            end
+          end
+
+          context "and the package does not exist" do
+            before { droplet_blobstore.stub(exists?: false) }
+
+            it "returns nil" do
+              expect(subject.droplet_download_url(app)).to be_nil
+            end
           end
         end
 
@@ -146,7 +194,6 @@ module CloudController
         expect(uri.password).to eql "password"
         expect(uri.path).to eql "/staging/droplets/#{app.guid}/upload"
       end
-
 
       it "gives out url for buidpack cache" do
         uri = URI.parse(subject.buildpack_cache_upload_url(app))
