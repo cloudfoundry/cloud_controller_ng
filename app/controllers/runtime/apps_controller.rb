@@ -39,7 +39,6 @@ module VCAP::CloudController
           Errors::AppMemoryQuotaExceeded.new
         elsif memory_quota_errors.include?(:zero_or_less)
           Errors::AppMemoryInvalid.new
-
         end
       else
         Errors::AppInvalid.new(e.errors.full_messages)

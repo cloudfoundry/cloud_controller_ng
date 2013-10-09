@@ -24,18 +24,14 @@ class UploadHandler
   end
 
   def nginx_uploaded_file(params, resource_name)
-    file_path = params["#{resource_name}_path"]
-
-    UploadedFile.new(file_path) if file_path
+    params["#{resource_name}_path"]
   end
 
   def rack_temporary_file(params, resource_name)
     resource_params = params[resource_name]
-    params_are_valid = resource_params.kind_of?(Hash) && resource_params[:tempfile]
+    return unless resource_params.respond_to?(:[])
 
-    resource_params[:tempfile] if params_are_valid
-  end
-
-  class UploadedFile < Struct.new(:path)
+    tempfile = resource_params[:tempfile] || resource_params["tempfile"]
+    tempfile.respond_to?(:path) ? tempfile.path : tempfile
   end
 end

@@ -54,14 +54,17 @@ quota_definitions:
 default_quota_definition: free
 
 resource_pool:
+  resource_directory_key: cc-resources
   fog_connection:
     provider: Local
 
 packages:
+  packages_directory_key: cc-packages
   fog_connection:
     provider: Local
 
 droplets:
+  droplets_directory_key: cc-droplets
   fog_connection:
     provider: Local
 

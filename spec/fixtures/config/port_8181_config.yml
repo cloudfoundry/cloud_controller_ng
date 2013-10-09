@@ -59,23 +59,28 @@ quota_definitions:
 default_quota_definition: free
 
 resource_pool:
+  resource_directory_key: "cc-resources"
   fog_connection:
     provider: Local
+    local_root: /tmp
 
 packages:
   app_package_directory_key: "cc-packages"
   fog_connection:
     provider: Local
+    local_root: /tmp
 
 droplets:
-  droplet_directory_key: cc-droplets
+  droplet_directory_key: "cc-droplets"
   fog_connection:
     provider: Local
+    local_root: /tmp
 
 buildpacks:
-  buildpack_directory_key: cc-buildpacks
+  buildpack_directory_key: "cc-buildpacks"
   fog_connection:
     provider: Local
+    local_root: /tmp
 
 db_encryption_key: some-key
 

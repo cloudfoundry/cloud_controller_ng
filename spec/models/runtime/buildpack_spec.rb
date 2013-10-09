@@ -47,6 +47,14 @@ module VCAP::CloudController
         expect(all_buildpacks.map { |b| b[:key] }).to eq ["b key", "a key", "c key"]
       end
 
+      it "doesn't list any buildpacks with null keys" do
+        @another_buildpack.key = nil
+        @another_buildpack.save
+
+        expect(all_buildpacks).to_not include(@another_buildpack)
+        expect(all_buildpacks).to have(2).items
+      end
+
       it "randomly orders any buildpacks with the same priority (for now we did not want to make clever logic of moving stuff around: up to the user to get it all correct)" do
         @another_buildpack.priority = 1
         @another_buildpack.save

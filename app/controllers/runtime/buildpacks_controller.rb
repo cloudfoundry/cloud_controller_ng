@@ -43,11 +43,11 @@ module VCAP::CloudController
 
       raise Errors::BuildpackBitsUploadInvalid, "only zip files allowed" unless File.extname(uploaded_filename) == ".zip"
 
-      sha1 = Digest::SHA1.file(file_struct.path).hexdigest
+      sha1 = File.new(file_struct).hexdigest
 
       return [HTTP::CONFLICT, nil] if sha1 == buildpack.key
 
-      buildpack_blobstore.cp_to_blobstore(file_struct.path, sha1)
+      buildpack_blobstore.cp_to_blobstore(file_struct, sha1)
 
       old_buildpack_key = buildpack.key
       model.db.transaction do

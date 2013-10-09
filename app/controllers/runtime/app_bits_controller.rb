@@ -12,11 +12,8 @@ module VCAP::CloudController
 
       raise Errors::AppBitsUploadInvalid, "missing :resources" unless params["resources"]
 
-      uploaded_zip_of_files_not_in_blobstore = UploadHandler.new(config).uploaded_file(params, "application")
-
-      # there may not be an archive uploaded if all of the app's bits have matching resources
-      # hence the .try
-      app_bits_packer_job = AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore.try(:path), json_param("resources"))
+      uploaded_zip_of_files_not_in_blobstore_path = CloudController::DependencyLocator.instance.upload_handler.uploaded_file(params, "application")
+      app_bits_packer_job = AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore_path, json_param("resources"))
 
       if params["async"] == "true"
         job = Delayed::Job.enqueue(app_bits_packer_job, queue: "cc-#{config[:name]}-#{config[:index]}")
@@ -54,14 +51,16 @@ module VCAP::CloudController
       end
     end
 
+    put "#{path_guid}/bits", :upload
+    get "#{path_guid}/download", :download
+
+    private
+
     def json_param(name)
       raw = params[name]
       Yajl::Parser.parse(raw)
     rescue Yajl::ParseError
       raise Errors::AppBitsUploadInvalid.new("invalid :#{name}")
     end
-
-    put "#{path_guid}/bits", :upload
-    get "#{path_guid}/download", :download
   end
 end
