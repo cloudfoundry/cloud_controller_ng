@@ -141,7 +141,7 @@ module VCAP::CloudController
       droplet_path = droplet.local_path
       droplet_url = droplet.download_url
 
-      download(app, droplet_path, droplet_url)
+      download(app, droplet_path, droplet_url, "droplet")
     end
 
     def download_buildpack_cache(guid)
@@ -151,28 +151,28 @@ module VCAP::CloudController
       file = StagingsController.buildpack_cache_blobstore.file(app.guid)
       buildpack_cache_path = file.send(:path) if file
       buildpack_cache_url =  StagingsController.buildpack_cache_blobstore.download_uri(app.guid)
-      download(app, buildpack_cache_path, buildpack_cache_url)
+      download(app, buildpack_cache_path, buildpack_cache_url, "buildpack cache")
     end
 
     private
 
-    def download(app, droplet_path, url)
+    def download(app, blob_path, url, name)
       raise InvalidRequest unless self.class.blobstore.local?
 
-      logger.debug "guid: #{app.guid} droplet_path #{droplet_path}"
+      logger.debug "guid: #{app.guid} #{name} #{blob_path} #{url}"
 
-      unless droplet_path
-        Loggregator.emit_error(app.guid, "Did not find droplet for app with guid: #{app.guid}")
-        logger.error "could not find droplet for #{app.guid}"
-        raise StagingError.new("droplet not found for #{app.guid}")
+      unless blob_path
+        Loggregator.emit_error(app.guid, "Did not find #{name} for app with guid: #{app.guid}")
+        logger.error "could not find #{name} for #{app.guid}"
+        raise StagingError.new("#{name} not found for #{app.guid}")
       end
 
       if config[:nginx][:use_nginx]
         logger.debug "nginx redirect #{url}"
         [200, { "X-Accel-Redirect" => url }, ""]
       else
-        logger.debug "send_file #{droplet_path}"
-        send_file droplet_path
+        logger.debug "send_file #{blob_path}"
+        send_file blob_path
       end
     end
 
