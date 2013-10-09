@@ -30,7 +30,7 @@ resource "Buildpacks", :type => :api do
     end
   end
 
-  post "/v2/buildpacks/:guid/bits" do
+  put "/v2/buildpacks/:guid/bits" do
     let(:tmpdir) { Dir.mktmpdir }
     let(:user) { make_user }
     let(:filename) { "file.zip" }
@@ -46,10 +46,10 @@ resource "Buildpacks", :type => :api do
 
     example "Upload the bits for an admin buildpack" do
 
-      explanation "POST not shown because it involves posting a large zip file. Right now only zipped admin buildpacks are accepted"
+      explanation "PUT not shown because it involves putting a large zip file. Right now only zipped admin buildpacks are accepted"
 
       no_doc do
-        client.post "/v2/buildpacks/#{guid}/bits", {:buildpack => valid_zip}, headers
+        client.put "/v2/buildpacks/#{guid}/bits", {:buildpack => valid_zip}, headers
       end
 
       status.should == 201

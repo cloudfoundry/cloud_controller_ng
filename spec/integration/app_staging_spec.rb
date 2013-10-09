@@ -131,13 +131,13 @@ describe "Staging an app", :type => :integration do
 
     context "and the admin has uploaded the buildpacks" do
       before :all do
-        @buildpack_bits_response_1 = make_post_request(
+        @buildpack_bits_response_1 = make_put_request(
           "/v2/buildpacks/#{@buildpack_response_1.json_body["metadata"]["guid"]}/bits?buildpack[tempfile]=#{valid_zip.path}&buildpack_name=foo.zip",
           "{}",
           authed_headers
         )
 
-        @buildpack_bits_response_2 = make_post_request(
+        @buildpack_bits_response_2 = make_put_request(
           "/v2/buildpacks/#{@buildpack_response_2.json_body["metadata"]["guid"]}/bits?buildpack[tempfile]=#{valid_zip(4).path}&buildpack_name=bar.zip",
           "{}",
           authed_headers

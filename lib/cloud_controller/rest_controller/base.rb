@@ -236,8 +236,7 @@ module VCAP::CloudController::RestController
       def authenticate_basic_auth(path, &block)
         controller.before path do
           auth = Rack::Auth::Basic::Request.new(env)
-          unless auth.provided? && auth.basic? &&
-            auth.credentials == block.call
+          unless auth.provided? && auth.basic? && auth.credentials == block.call
             raise Errors::NotAuthorized
           end
         end
@@ -245,9 +244,10 @@ module VCAP::CloudController::RestController
 
       def allow_unauthenticated_access?(op)
         if @allow_unauthenticated_access_ops
-          return @allow_unauthenticated_access_ops.include?(op)
+           @allow_unauthenticated_access_ops.include?(op)
+        else
+          @allow_unauthenticated_access_to_all_ops
         end
-        return @allow_unauthenticated_access_to_all_ops
       end
 
       # Returns true if the cc framework should generate default routes for an
