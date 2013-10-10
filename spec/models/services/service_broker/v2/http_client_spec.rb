@@ -126,7 +126,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
       it "initializes the base class correctly" do
         exception = ServiceBrokerApiAuthenticationFailed.new(uri, method, response)
-        expect(exception.message).to eq("Authentication failed for the service broker API. Double-check that the token is correct: #{uri}")
+        expect(exception.message).to eq("Authentication failed for the service broker API. Double-check that the username and password are correct: #{uri}")
         expect(exception.uri).to eq(uri)
         expect(exception.method).to eq(method)
         expect(exception.source).to be(response.body)
@@ -430,7 +430,7 @@ module VCAP::CloudController::ServiceBroker::V2
             expect(e).to be_a(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiAuthenticationFailed)
             error_hash = e.to_h
             error_hash.fetch('description').
-              should eq("Authentication failed for the service broker API. Double-check that the token is correct: http://broker.example.com/v2/catalog")
+              should eq("Authentication failed for the service broker API. Double-check that the username and password are correct: http://broker.example.com/v2/catalog")
           }
         end
       end
