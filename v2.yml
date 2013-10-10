@@ -116,7 +116,7 @@
 60001:
   name: ServiceInstanceNameInvalid
   http_code: 400
-  message: "The service instance name is taken: %s"
+  message: "The service instance name is invalid: %s"
 
 60002:
   name: ServiceInstanceNameTaken
