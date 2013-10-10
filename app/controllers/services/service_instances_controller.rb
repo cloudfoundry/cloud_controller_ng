@@ -38,8 +38,12 @@ module VCAP::CloudController
         end
       elsif service_plan_errors
         Errors::ServiceInstanceServicePlanNotAllowed.new
-      elsif service_instance_name_errors && service_instance_name_errors.include?(:max_length)
-        Errors::ServiceInstanceNameTooLong.new
+      elsif service_instance_name_errors
+        if service_instance_name_errors.include?(:max_length)
+          Errors::ServiceInstanceNameTooLong.new
+        else
+          Errors::ServiceInstanceNameInvalid.new(attributes['name'])
+        end
       else
         Errors::ServiceInstanceInvalid.new(e.errors.full_messages)
       end
@@ -73,6 +77,10 @@ module VCAP::CloudController
 
       service_instance = ManagedServiceInstance.new(request_attrs)
       validate_access(:create, service_instance, user, roles)
+
+      unless service_instance.valid?
+        raise Sequel::ValidationFailed.new(service_instance)
+      end
 
       client = service_instance.client
       client.provision(service_instance)

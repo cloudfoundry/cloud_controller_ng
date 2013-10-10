@@ -207,6 +207,37 @@ module VCAP::CloudController
         expect(instance.dashboard_url).to eq('the dashboard_url')
       end
 
+      context 'when name is blank' do
+        let(:body) do
+          Yajl::Encoder.encode(
+            :name => '',
+            :space_guid => space.guid,
+            :service_plan_guid => plan.guid
+          )
+        end
+        let(:headers) { json_headers(headers_for(developer)) }
+
+        it 'returns a name validation error' do
+          post '/v2/service_instances', body, headers
+
+          expect(last_response.status).to eq(400)
+          expect(decoded_response['description']).to match /name is invalid/
+        end
+
+        it 'does not provision or deprovision an instance' do
+          post '/v2/service_instances', body, headers
+
+          expect(client).to_not have_received(:provision)
+          expect(client).to_not have_received(:deprovision)
+        end
+
+        it 'does not create a service instance' do
+          expect {
+            post '/v2/service_instances', body, headers
+          }.to_not change(ServiceInstance, :count)
+        end
+      end
+
       it 'deprovisions the service instance when an exception is raised' do
         req = Yajl::Encoder.encode(
           :name => 'foo',
