@@ -46,12 +46,18 @@ module ControllerHelpers
             last_response.status.should == 400
           end
 
-          it "should return the expected response body" do
+           it "should return the expected response body" do
             subject
-            Yajl::Parser.parse(last_response.body).should == {
-                "code" => 10006,
-                "description" => "Please delete the #{one_to_one_or_many.join(", ")} associations for your #{obj.class.table_name}.",
-            }
+        message = obj.class.associations.select do |association|
+        obj.has_one_to_many?(association) || obj.has_one_to_one?(association)
+        end
+        if obj.class.table_name.to_s.singularize == "app"
+        message = obj.deletable_association_names
+        end
+        Yajl::Parser.parse(last_response.body).should == {
+                  "code" => 10006,
+                  "description" => "#{obj.class.table_name.to_s.singularize.capitalize} is not empty. To delete, please remove the following associations: #{message.join(", ")}.",
+                }
           end
 
           context "and the recursive param is passed in" do
@@ -86,14 +92,21 @@ module ControllerHelpers
                 last_response.status.should == 400
               end
 
-              it "should return the expected response body" do
-                subject
-                Yajl::Parser.parse(last_response.body).should == {
+            it "should return the expected response body" do
+            subject
+        message = obj.class.associations.select do |association|
+        obj.has_one_to_many?(association) || obj.has_one_to_one?(association)
+        end
+        if obj.class.table_name.to_s.singularize == "app"
+        message = obj.deletable_association_names
+        end
+        Yajl::Parser.parse(last_response.body).should == {
                   "code" => 10006,
-                  "description" => "Please delete the #{one_to_one_or_many.join(", ")} associations for your #{obj.class.table_name}.",
+                  "description" => "#{obj.class.table_name.to_s.singularize.capitalize} is not empty. To delete, please remove the following associations: #{message.join(", ")}.",
                 }
-              end
-            end
+          end
+ 
+           end
           end
         end
       end
