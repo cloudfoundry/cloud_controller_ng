@@ -39,6 +39,7 @@ module VCAP::CloudController
           Errors::AppMemoryQuotaExceeded.new
         elsif memory_quota_errors.include?(:zero_or_less)
           Errors::AppMemoryInvalid.new
+
         end
       else
         Errors::AppInvalid.new(e.errors.full_messages)
@@ -58,7 +59,7 @@ module VCAP::CloudController
       if v2_api? && !recursive
         if app.has_deletable_associations?
           message = app.deletable_association_names.join(", ")
-          raise VCAP::Errors::AssociationNotEmpty.new(message, app.class.table_name)
+          raise VCAP::Errors::AssociationNotEmpty.new(app.class.table_name.to_s.singularize.capitalize,message)
         end
       end
 
