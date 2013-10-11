@@ -104,7 +104,7 @@ module VCAP::CloudController
       # TODO: put in background job
       app.droplet_hash = Digest::SHA1.file(upload_path).hexdigest
 
-      logger.debug "droplet.uploaded", :sha => app.droplet_hash
+      logger.debug "droplet.uploaded", :sha => app.droplet_hash, :app_guid => app.guid
 
       start = Time.now
 
