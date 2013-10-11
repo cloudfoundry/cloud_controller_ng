@@ -556,10 +556,7 @@ RSpec.configure do |rspec_config|
 
   rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
-    configure
-  end
-
-  rspec_config.before :all do
+    @old_before_all_config = configure
     RspecApiDocumentation.configure do |c|
     ##  token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
      ### c.app = VCAP::CloudController::Controller.new(config, token_decoder)
@@ -572,6 +569,10 @@ RSpec.configure do |rspec_config|
         include ::ControllerHelpers
       end.new(config).app
     end
+  end
+
+  rspec_config.after :all do
+    config_override(@old_before_all_config)
   end
 
   rspec_config.before :each do
