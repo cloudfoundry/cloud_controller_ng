@@ -384,12 +384,12 @@ module ControllerHelpers
                     decoded_response["total_results"].should == 51
                   end
 
-                  it "should return prev_url => nil" do
+                  it "should return prev_url => nil" do #THIS ONE
                     decoded_response.should have_key("prev_url")
                     decoded_response["prev_url"].should be_nil
                   end
 
-                  it "should return next_url" do
+                  it "should return next_url" do #THIS ONE
                     decoded_response.should have_key("next_url")
                     next_url = decoded_response["next_url"]
                     next_url.should match /#{@uri}\?page=2&results-per-page=50/
