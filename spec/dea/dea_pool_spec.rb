@@ -63,10 +63,10 @@ module VCAP::CloudController
           Timecop.freeze do
             subject.process_advertise_message(dea_advertise_msg)
 
-            Timecop.travel(10)
+            Timecop.travel(9)
             subject.find_dea(1024, "stack", "app-id").should == "dea-id"
 
-            Timecop.travel(1)
+            Timecop.travel(2)
             subject.find_dea(1024, "stack", "app-id").should be_nil
           end
         end
