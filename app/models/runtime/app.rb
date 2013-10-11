@@ -17,6 +17,9 @@ module VCAP::CloudController
     class AlreadyDeletedError < StandardError;
     end
 
+    class ApplicationMissing < RuntimeError
+    end
+
     dataset_module do
       def existing
         filter(not_deleted: true)
@@ -280,6 +283,10 @@ module VCAP::CloudController
       return total_requested_memory if new?
 
       app_from_db = self.class.find(:guid => guid)
+      if app_from_db.nil?
+        logger.fatal("app.find.missing", :guid => guid)
+        raise ApplicationMissing, "Attempting to check memory quota. Should have been able to find app with guid #{guid}"
+      end
       total_existing_memory = app_from_db[:memory] * app_from_db[:instances]
       additional_memory = total_requested_memory - total_existing_memory
       return additional_memory if additional_memory > 0
