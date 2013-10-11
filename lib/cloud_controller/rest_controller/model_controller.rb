@@ -246,8 +246,9 @@ module VCAP::CloudController::RestController
         obj.has_one_to_many?(association) || obj.has_one_to_one?(association)
       end
 
-      if associations.any?
-        raise VCAP::Errors::AssociationNotEmpty.new(associations.join(", "), obj.class.table_name)
+if associations.any?
+        raise VCAP::Errors::AssociationNotEmpty.new(obj.class.table_name.to_s.singularize.capitalize,associations.join(", "))
+
       end
     end
 
