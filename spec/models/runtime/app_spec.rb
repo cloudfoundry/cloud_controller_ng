@@ -770,7 +770,7 @@ module VCAP::CloudController
         app.add_route(route)
         expect {
           app.destroy
-        }.to change { route.apps }.from([app]).to([])
+        }.to change { route.apps.collect(&:guid) }.from([app.guid]).to([])
       end
 
       it "should destroy all dependent service bindings" do
