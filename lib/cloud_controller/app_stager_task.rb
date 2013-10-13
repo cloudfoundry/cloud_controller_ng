@@ -53,8 +53,7 @@ module VCAP::CloudController
       # this cloud controller completes the staging.
       @current_droplet_hash = @app.droplet_hash
 
-      @app.staging_task_id = task_id
-      @app.save
+      @app.update(staging_task_id: task_id)
 
       @message_bus.publish("staging.stop", :app_id => @app.guid)
 
@@ -173,8 +172,7 @@ module VCAP::CloudController
     def staging_completion(stager_response)
       instance_was_started_by_dea = !!stager_response.droplet_hash
 
-      @app.detected_buildpack = stager_response.detected_buildpack
-      @app.save
+      @app.update(detected_buildpack: stager_response.detected_buildpack)
 
       DeaClient.dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
 
