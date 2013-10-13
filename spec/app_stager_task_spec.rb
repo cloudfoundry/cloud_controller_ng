@@ -261,7 +261,20 @@ module VCAP::CloudController
               end
 
               it "saves the detected buildpack" do
-                expect { stage }.to change { app.detected_buildpack }.from(nil)
+                expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
+              end
+
+              it "does not clobber other attributes that changed between staging" do
+                # fake out the app refresh as the race happens after it
+                app.stub(:refresh)
+
+                other_app_ref = App.find(guid: app.guid)
+                other_app_ref.command = "some other command"
+                other_app_ref.save
+
+                expect { stage }.to_not change {
+                  other_app_ref.refresh.command
+                }
               end
 
               it "marks app started in dea pool" do
