@@ -5,19 +5,19 @@ module VCAP::CloudController
 
     def upload(guid)
       buildpack = find_guid_and_validate_access(:read_bits, guid)
-      file_struct = upload_handler.uploaded_file(params, "buildpack")
+      uploaded_file = upload_handler.uploaded_file(params, "buildpack")
       uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
-      logger.info file_struct
+      logger.info uploaded_file
       logger.info uploaded_filename
       logger.info buildpack
 
       raise Errors::BuildpackBitsUploadInvalid, "only zip files allowed" unless File.extname(uploaded_filename) == ".zip"
 
-      sha1 = File.new(file_struct).hexdigest
+      sha1 = File.new(uploaded_file).hexdigest
 
       return [HTTP::CONFLICT, nil] if sha1 == buildpack.key
 
-      buildpack_blobstore.cp_to_blobstore(file_struct, sha1)
+      buildpack_blobstore.cp_to_blobstore(uploaded_file, sha1)
 
       old_buildpack_key = buildpack.key
       model.db.transaction do
@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       [HTTP::CREATED, serialization.render_json(self.class, buildpack, @opts)]
     ensure
-      FileUtils.rm_f(file_struct) if file_struct
+      FileUtils.rm_f(uploaded_file) if uploaded_file
     end
 
     def download(guid)
