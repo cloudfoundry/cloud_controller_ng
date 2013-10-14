@@ -6,7 +6,7 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/domains", model: Domain
     include_examples "reading a valid object", path: "/v2/domains", model: Domain, basic_attributes: %w(name owning_organization_guid)
     include_examples "operations on an invalid object", path: "/v2/domains"
-    include_examples "creating and updating", path: "/v2/domains", model: Domain, required_attributes: %w(name owning_organization_guid wildcard), unique_attributes: %w(name)
+    include_examples "creating and updating", path: "/v2/domains", model: Domain, required_attributes: %w(name wildcard), unique_attributes: %w(name)
     include_examples "deleting a valid object", path: "/v2/domains", model: Domain,
       one_to_many_collection_ids: {
         :spaces => lambda { |domain|
@@ -26,6 +26,7 @@ module VCAP::CloudController
           )
         }
       }
+
     include_examples "collection operations", path: "/v2/domains", model: Domain,
       one_to_many_collection_ids: {
         spaces: lambda { |domain|

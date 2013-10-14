@@ -3,7 +3,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :wildcard, Message::Boolean
-      to_one    :owning_organization
+      to_one    :owning_organization, :optional_in => :create
       to_many   :spaces
     end
 
