@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       [HTTP::CREATED, serialization.render_json(self.class, buildpack, @opts)]
     ensure
-      FileUtils.rm_f(uploaded_filename) if uploaded_filename
+      FileUtils.rm_f(file_struct) if file_struct
     end
 
     def download(guid)

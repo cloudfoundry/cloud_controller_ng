@@ -5,7 +5,9 @@ module VCAP::CloudController
     let(:user) { make_user }
     let(:tmpdir) { Dir.mktmpdir }
     let(:filename) { "file.zip" }
-    let(:sha_valid_zip) { File.new(valid_zip.path).hexdigest }
+    let(:sha_valid_zip) do
+      File.new(valid_zip.path).hexdigest
+    end
     let(:sha_valid_zip2) { File.new(valid_zip2.path).hexdigest }
     let(:sha_valid_tar_gz) { File.new(valid_tar_gz.path).hexdigest }
 
@@ -60,10 +62,11 @@ module VCAP::CloudController
         it "takes a buildpack file and adds it to the custom buildpacks blobstore with the correct key" do
           CloudController::DependencyLocator.instance.upload_handler.stub(:uploaded_file).and_return(valid_zip)
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
+          expected_key = sha_valid_zip
 
           put "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
-          expect(Buildpack.find(name: 'upload_binary_buildpack').key).to eq(sha_valid_zip)
-          expect(buildpack_blobstore.exists?(sha_valid_zip)).to be_true
+          expect(Buildpack.find(name: 'upload_binary_buildpack').key).to eq(expected_key)
+          expect(buildpack_blobstore.exists?(expected_key)).to be_true
         end
 
         it "gets the uploaded file from the upload handler" do
@@ -106,7 +109,7 @@ module VCAP::CloudController
         end
 
         it "removes the uploaded buildpack file" do
-          FileUtils.should_receive(:rm_f).with(filename)
+          FileUtils.should_receive(:rm_f).with(/.*ngx.upload.*/)
           put "/v2/buildpacks/#{@test_buildpack.guid}/bits", { :buildpack => valid_zip }, admin_headers
         end
 
