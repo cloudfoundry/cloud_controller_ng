@@ -31,11 +31,11 @@ group :db do
 end
 
 group :development do
-  gem "debugger"
   gem "pry"
 end
 
 group :test do
+  gem "debugger"
   gem "rspec"
   gem "rspec_api_documentation"
   gem "simplecov"
