@@ -95,6 +95,12 @@ module VCAP::CloudController
     bindable          { true }
   end
 
+  ServiceInstance.blueprint do
+    name        { Sham.name }
+    credentials { Sham.service_credentials }
+    space       { Space.make }
+  end
+
   ManagedServiceInstance.blueprint do
     is_gateway_service { true }
     name              { Sham.name }

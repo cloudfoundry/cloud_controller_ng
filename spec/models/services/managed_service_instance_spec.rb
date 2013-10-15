@@ -113,22 +113,22 @@ module VCAP::CloudController
       let(:service_plan) { ServicePlan.make(name: "Gold Plan", guid: "12763abc", service: service) }
       subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
 
-      it "returns detailed summary" do
-        service_instance.dashboard_url = "http://dashboard.example.com"
+      it 'returns detailed summary' do
+        service_instance.dashboard_url = 'http://dashboard.example.com'
 
         service_instance.as_summary_json.should == {
-          :guid => subject.guid,
-          :name => subject.name,
-          :bound_app_count => 0,
-          :dashboard_url => "http://dashboard.example.com",
-          :service_plan => {
-            :guid => "12763abc",
-            :name => "Gold Plan",
-            :service => {
-              :guid => "9876XZ",
-              :label => "YourSQL",
-              :provider => "Bill Gates",
-              :version => "1.2.3",
+          'guid' => subject.guid,
+          'name' => subject.name,
+          'bound_app_count' => 0,
+          'dashboard_url' => 'http://dashboard.example.com',
+          'service_plan' => {
+            'guid' => '12763abc',
+            'name' => 'Gold Plan',
+            'service' => {
+              'guid' => '9876XZ',
+              'label' => 'YourSQL',
+              'provider' => 'Bill Gates',
+              'version' => '1.2.3',
             }
           }
         }

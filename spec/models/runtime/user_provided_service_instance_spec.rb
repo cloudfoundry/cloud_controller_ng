@@ -48,16 +48,6 @@ describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
     end
   end
 
-  describe "#as_summary_json" do
-    it "contains name and guid" do
-      instance = described_class.new(guid: "ABCDEFG12", name: "Random-Number-Service")
-      instance.as_summary_json.should == {
-        "guid" => "ABCDEFG12",
-        "name" => "Random-Number-Service",
-      }
-    end
-  end
-
   describe "validations" do
     it "should not bind an app and a service instance from different app spaces" do
       service_instance = described_class.make
@@ -67,11 +57,6 @@ describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
         service_instance.add_service_binding(service_binding)
       }.to raise_error VCAP::CloudController::ServiceInstance::InvalidServiceBinding
     end
-  end
-
-  describe "#bindable?" do
-    let(:service_instance) { described_class.make }
-    specify { service_instance.should be_bindable }
   end
 
   describe "#tags" do

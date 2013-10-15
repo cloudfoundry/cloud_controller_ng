@@ -59,6 +59,18 @@ module VCAP::CloudController
       ServiceInstance
     end
 
+    def bindable?
+      true
+    end
+
+    def as_summary_json
+      {
+        'guid' => guid,
+        'name' => name,
+        'bound_app_count' => service_bindings_dataset.count
+      }
+    end
+
     private
     def validate_service_binding(service_binding)
       if service_binding && service_binding.app.space != space

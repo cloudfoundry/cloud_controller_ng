@@ -46,4 +46,21 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
       expect(user_provided_instance.type).to eq "user_provided_service_instance"
     end
   end
+
+  describe '#bindable?' do
+    it { should be_bindable }
+  end
+
+  describe '#as_summary_json' do
+    it 'contains name, guid, and binding count' do
+      instance = VCAP::CloudController::ServiceInstance.make(guid: 'ABCDEFG12', name: 'Random-Number-Service')
+      VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+
+      instance.as_summary_json.should == {
+        'guid' => 'ABCDEFG12',
+        'name' => 'Random-Number-Service',
+        'bound_app_count' => 1
+      }
+    end
+  end
 end

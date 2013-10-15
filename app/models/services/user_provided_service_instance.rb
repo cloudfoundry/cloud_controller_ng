@@ -11,22 +11,11 @@ module VCAP::CloudController
       validates_presence :credentials
     end
 
-    def as_summary_json
-      {
-        "guid" => guid,
-        "name" => name
-      }
-    end
-
     def unbind_on_gateway(_)
     end
 
     def bind_on_gateway(new_service_binding)
       new_service_binding.credentials = self.credentials
-    end
-
-    def bindable?
-      true
     end
 
     def tags

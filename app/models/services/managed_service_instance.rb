@@ -93,22 +93,19 @@ module VCAP::CloudController
     end
 
     def as_summary_json
-      {
-        :guid => guid,
-        :name => name,
-        :bound_app_count => service_bindings_dataset.count,
-        :dashboard_url => dashboard_url,
-        :service_plan => {
-          :guid => service_plan.guid,
-          :name => service_plan.name,
-          :service => {
-            :guid => service.guid,
-            :label => service.label,
-            :provider => service.provider,
-            :version => service.version,
+      super.merge(
+        'dashboard_url' => dashboard_url,
+        'service_plan' => {
+          'guid' => service_plan.guid,
+          'name' => service_plan.name,
+          'service' => {
+            'guid' => service.guid,
+            'label' => service.label,
+            'provider' => service.provider,
+            'version' => service.version,
           }
         }
-      }
+      )
     end
 
     def check_quota
