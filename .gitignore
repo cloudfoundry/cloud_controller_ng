@@ -15,3 +15,4 @@ doc
 vendor
 !vendor/errors
 .DS_Store
+tmp
