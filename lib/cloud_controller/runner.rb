@@ -7,6 +7,7 @@ require "cf_message_bus/message_bus"
 require "cf/registrar"
 require "loggregator_emitter"
 require "loggregator"
+require "cloud_controller/varz"
 
 require_relative "seeds"
 require_relative "message_bus_configurer"
@@ -106,6 +107,11 @@ module VCAP::CloudController
         app = create_app(config, message_bus)
         start_thin_server(app, config)
         registrar.register_with_router
+
+        VCAP::CloudController::Varz.bump_user_count
+        EM.add_periodic_timer(@config[:varz_update_user_count_period_in_seconds] || 30) do
+          VCAP::CloudController::Varz.bump_user_count
+        end
       end
     end
 
@@ -152,7 +158,6 @@ module VCAP::CloudController
 
     def create_app(config, message_bus)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
-
       register_component(message_bus)
 
       Rack::Builder.new do
@@ -220,10 +225,14 @@ module VCAP::CloudController
       VCAP::Component.register(
           :type => 'CloudController',
           :host => @config[:bind_address],
+          :port => @config[:varz_port],
+          :user => @config[:varz_user],
+          :password => @config[:varz_password],
           :index => @config[:index],
           :config => @config,
           :nats => message_bus,
           :logger => logger,
+
           :log_counter => @log_counter
       )
     end

@@ -13,6 +13,7 @@ module VCAP::CloudController
       MessageBusConfigurer::Configurer.any_instance.stub(:go).and_return(message_bus)
       VCAP::Component.stub(:register)
       EM.stub(:run).and_yield
+      EM.stub(:add_periodic_timer).and_yield
 
       registrar.stub(:message_bus => message_bus)
       registrar.stub(:register_with_router)

@@ -1,0 +1,119 @@
+---
+local_route: 127.0.0.1
+port: 8181
+pid_filename: /tmp/cloud_controller.pid
+message_bus_uri: nats://127.0.0.1:4222
+
+external_domain: api2.vcap.me
+
+bootstrap_admin_email: sre@vmware.com
+
+system_domain_organization: the-system_domain-org-name
+system_domain: vcap.me
+app_domains:
+  - customer-app-domain1.com
+  - customer-app-domain2.com
+
+info:
+  name: "vcap"
+  build: "2222"
+  version: 2
+  support_address: "http://support.cloudfoundry.com"
+  description: "Cloud Foundry sponsored by Pivotal"
+  api_version: "2.0.0"
+# TODO: put back once json schema is sorted out
+# allow_debug: false
+
+nginx:
+  use_nginx: false
+  instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
+
+logging:
+  file: /tmp/cloud_controller.log
+  level: debug2
+
+loggregator:
+  router: "127.0.0.1:3456"
+
+db:
+  database: "sqlite:///tmp/cloud_controller.db"
+  max_connections: 32
+  pool_timeout: 10
+
+uaa:
+  url: "http://localhost:8080/uaa"
+  resource_id: "cloud_controller"
+  symmetric_secret: "tokensecret"
+
+cc_partition: ng
+
+bulk_api:
+  auth_user: bulk_user
+  auth_password: bulk_password
+
+# App staging parameters
+staging:
+  # Max duration for staging process
+  max_staging_runtime: 120 # secs
+  auth:
+    user: zxsfhgjg
+    password: ZNVfdase9
+
+quota_definitions:
+  free:
+    non_basic_services_allowed: false
+    total_services: 2
+    memory_limit: 512 # 0.5 GB
+  paid:
+    non_basic_services_allowed: true
+    total_services: 500
+    memory_limit: 204800 # 200 GB
+  trial:
+    non_basic_services_allowed: false
+    total_services: 2
+    memory_limit: 512 # 0.5 GB
+    trial_db_allowed: true
+
+default_quota_definition: free
+
+resource_pool:
+  resource_directory_key: "spec-cc-resources"
+  fog_connection:
+    provider: "AWS"
+    aws_access_key_id: "fake_aws_key_id"
+    aws_secret_access_key: "fake_secret_access_key"
+
+packages:
+  app_package_directory_key: "cc-packages"
+  fog_connection:
+    provider: "AWS"
+    aws_access_key_id: "fake_aws_key_id"
+    aws_secret_access_key: "fake_secret_access_key"
+
+droplets:
+  droplet_directory_key: cc-droplets
+  fog_connection:
+    provider: "AWS"
+    aws_access_key_id: "fake_aws_key_id"
+    aws_secret_access_key: "fake_secret_access_key"
+
+buildpacks:
+  buildpack_directory_key: cc-buildpacks
+  fog_connection:
+    provider: "AWS"
+    aws_access_key_id: "fake_aws_key_id"
+    aws_secret_access_key: "fake_secret_access_key"
+
+db_encryption_key: "asdfasdfasdf"
+
+trial_db:
+  guid: "78ad16cf-3c22-4427-a982-b9d35d746914"
+
+tasks_disabled: false
+
+hm9000_noop: true
+
+varz_port: 7800
+varz_user: varz
+varz_password: password
+varz_update_user_count_period_in_seconds: 0.5

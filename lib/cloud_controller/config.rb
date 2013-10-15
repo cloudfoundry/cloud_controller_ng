@@ -133,7 +133,12 @@ module VCAP::CloudController
 
         optional(:tasks_disabled) => bool,
 
-        optional(:hm9000_noop) => bool
+        optional(:hm9000_noop) => bool,
+
+        optional(:varz_port) => Integer,
+        optional(:varz_user) => String,
+        optional(:varz_password) => String,
+        optional(:varz_update_user_count_period_in_seconds) => Float
       }
     end
 
