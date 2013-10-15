@@ -14,8 +14,6 @@ namespace :db do
   desc "Create a Sequel migration in ./db/migrate"
   task :create_migration do
     name = ENV["NAME"]
-    type = ENV.fetch("TYPE", "sequel")
-
     abort("no NAME specified. use `rake db:create_migration NAME=add_users`") if !name
 
     migrations_dir = File.join("db", "migrations")
