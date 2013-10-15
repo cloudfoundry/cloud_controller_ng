@@ -28,13 +28,6 @@ module VCAP::CloudController
     def initialize
       ENV["CC_TEST"] = "true"
       FileUtils.mkdir_p(artifacts_dir)
-
-      # ignore the race when we run specs in parallel
-      begin
-        File.unlink(log_filename)
-      rescue Errno::ENOENT
-      end
-
       Steno.init(Steno::Config.new(
         :default_log_level => "debug",
         :sinks => [Steno::Sink::IO.for_file(log_filename)]
