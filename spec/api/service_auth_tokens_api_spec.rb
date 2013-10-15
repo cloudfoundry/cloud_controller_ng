@@ -34,7 +34,7 @@ resource "ServiceAuthTokens", :type => :api do
         VCAP::CloudController::ServiceAuthToken.make :label => "Nic-Token"
       end
 
-      example "filters the result set to the given label" do
+      example "Filtering the result set by label" do
         client.get "/v2/service_auth_tokens", params, headers
 
         status.should == 200
@@ -57,7 +57,7 @@ resource "ServiceAuthTokens", :type => :api do
         VCAP::CloudController::ServiceAuthToken.make :provider => "Face-Offer"
       end
 
-      example "filters the result set to the given label" do
+      example "Filtering the result set by provider" do
         client.get "/v2/service_auth_tokens", params, headers
 
         status.should == 200

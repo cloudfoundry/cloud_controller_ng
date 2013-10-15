@@ -30,7 +30,7 @@ resource "Domains", :type => :api do
     let(:name) { "exmaple.com" }
     let(:wildcard) { true }
 
-    context "without a owning organization" do
+    context "Creating a shared domain" do
       let(:owning_organization_guid) { nil }
 
       example "creates a shared domain" do
@@ -42,7 +42,7 @@ resource "Domains", :type => :api do
       end
     end
 
-    context "with an owning organization" do
+    context "Creating a domain owned by an organization" do
       let(:owning_organization) { VCAP::CloudController::Organization.make }
       let(:owning_organization_guid) { owning_organization.guid }
 
