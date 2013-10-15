@@ -48,7 +48,7 @@ module VCAP::CloudController
       :after_remove => :mark_routes_changed
 
     add_association_dependencies :routes => :nullify,
-      :service_bindings => :destroy, :events => :destroy
+      :service_bindings => :destroy, :events => :destroy, :droplets => :destroy
 
     default_order_by :name
 
@@ -362,58 +362,12 @@ module VCAP::CloudController
       !self.not_deleted
     end
 
-    def nullifyable_association_names
-      @nullifyable_association_names ||= model.association_dependencies_hash.select do |association, action|
-        action == :nullify
-      end.keys
-    end
-
-    def has_deletable_associations?
-      deletable_association_names.each do |association|
-        data = send(association)
-        return true unless data.nil? || data.empty?
-      end
-
-      false
-    end
-
-    # We do NOT delete app events for audit reasons.
-    def deletable_association?(association)
-      association != :events
-    end
-
-    def deletable_association_names
-      @deletable_association_names ||= model.association_dependencies_hash.select do |association, action|
-        action == :destroy && deletable_association?(association)
-      end.keys
-    end
-
-    def cleanup_deletable_associations
-      deletable_association_names.each do |association|
-        data = send(association)
-        data = [data] unless data.kind_of?(Array)
-        data.each do |associated_obj|
-          associated_obj.destroy
-        end
-      end
-    end
-
-    def cleanup_nullifyable_associations
-      nullifyable_association_names.each do |association|
-        data = send(association)
-        if data.kind_of?(Array)
-          data.each do |associated_obj|
-            associated_obj.remove_app(self) if associated_obj.respond_to?(:remove_app)
-          end
-        else
-          data.app = nil
-        end
-      end
-    end
-
     def cleanup_associations
-      cleanup_deletable_associations
-      cleanup_nullifyable_associations
+      service_bindings_dataset.destroy
+      droplets_dataset.destroy
+      routes.each do |route|
+        route.remove_app(self)
+      end
     end
 
     def soft_delete

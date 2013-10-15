@@ -400,6 +400,12 @@ module VCAP::CloudController
             last_response.status.should == 400
             decoded_response["description"].should =~ /service_bindings/i
           end
+
+          it "should succeed on a recursive delete" do
+            delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
+
+            last_response.status.should == 204
+          end
         end
 
       end

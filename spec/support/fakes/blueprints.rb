@@ -245,9 +245,4 @@ module VCAP::CloudController
     key { Sham.guid }
     priority { 0 }
   end
-
-  Droplet.blueprint do
-    droplet_hash { Sham.guid }
-    app { AppFactory.make(:droplet_hash => droplet_hash) }
-  end
 end
