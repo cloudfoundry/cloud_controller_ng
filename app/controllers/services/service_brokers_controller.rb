@@ -22,12 +22,6 @@ module VCAP::CloudController
     put '/v2/service_brokers/:guid', :update
     delete '/v2/service_brokers/:guid', :delete
 
-    # poor man's before filter
-    def dispatch(op, *args)
-      require_admin
-      super
-    end
-
     def enumerate
       headers = {}
       brokers = ServiceBroker.filter(build_filter)
@@ -89,8 +83,8 @@ module VCAP::CloudController
 
     private
 
-    def require_admin
-      raise NotAuthenticated unless user
+    def check_authentication(op)
+      super
       raise NotAuthorized unless roles.admin?
     end
 

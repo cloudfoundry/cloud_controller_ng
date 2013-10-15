@@ -198,6 +198,9 @@ module VCAP::CloudController
         it 'returns 401 for logged-out users' do
           get '/v2/service_brokers'
           expect(last_response.status).to eq(401)
+          expect(decoded_response).to include({
+            'error_code' => 'CF-InvalidAuthToken'
+          })
         end
       end
     end
