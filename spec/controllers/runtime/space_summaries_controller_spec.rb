@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     let!(:apps) do
       started_apps = 2.times.map do |i|
-        App.make(
+        AppFactory.make(
           :space => space,
           :instances => i,
           :memory => mem_size,
@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       stopped_apps = 2.times.map do |i|
-        App.make(
+        AppFactory.make(
           :space => space,
           :instances => i,
           :memory => mem_size,

@@ -28,7 +28,7 @@ module VCAP::CloudController
       context "on an org without billing enabled" do
         it "should do nothing" do
           AppStopEvent.should_not_receive(:create)
-          app = App.make
+          app = AppFactory.make
           app.space.organization.billing_enabled = false
           app.space.organization.save(:validate => false)
           AppStopEvent.create_from_app(app)
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       context "on an org with billing enabled" do
-        let(:app) { App.make }
+        let(:app) { AppFactory.make }
 
         before do
           app.space.organization.billing_enabled = true

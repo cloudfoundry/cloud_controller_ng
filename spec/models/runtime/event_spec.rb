@@ -120,7 +120,7 @@ module VCAP::CloudController
     end
 
     describe ".record_app_update" do
-      let(:app) { App.make(name: 'old', instances: 1, memory: 84, state: "STOPPED") }
+      let(:app) { AppFactory.make(name: 'old', instances: 1, memory: 84, state: "STOPPED") }
       let(:user) { User.make }
 
       it "records the changes in metadata" do
@@ -173,7 +173,7 @@ module VCAP::CloudController
 
     describe ".record_app_create" do
       let(:app) do
-        App.make(
+        AppFactory.make(
           name: 'new', instances: 1, memory: 84,
           state: "STOPPED", environment_json: {"super" => "secret "})
       end
@@ -196,7 +196,7 @@ module VCAP::CloudController
     end
 
     describe ".record_app_delete" do
-      let(:deleting_app) { App.make }
+      let(:deleting_app) { AppFactory.make }
 
       let(:user) { User.make }
 
@@ -211,7 +211,7 @@ module VCAP::CloudController
     end
 
     describe ".create_app_exit_event" do
-      let(:exiting_app) { App.make }
+      let(:exiting_app) { AppFactory.make }
       let(:droplet_exited_payload) {
         {
           "instance" => "abc",

@@ -10,7 +10,7 @@ module VCAP::CloudController
     include_examples "creating and updating", path: "/v2/spaces", model: Space, required_attributes: %w(name organization_guid), unique_attributes: %w(name organization_guid)
     include_examples "deleting a valid object", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
-        :apps => lambda { |space| App.make(:space => space) },
+        :apps => lambda { |space| AppFactory.make(:space => space) },
         :service_instances => lambda { |space| ManagedServiceInstance.make(:space => space) }
       },
       one_to_many_collection_ids_without_url: {
@@ -27,7 +27,7 @@ module VCAP::CloudController
       }
     include_examples "collection operations", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
-        apps: lambda { |space| App.make(space: space) },
+        apps: lambda { |space| AppFactory.make(space: space) },
         service_instances: lambda { |space| ManagedServiceInstance.make(space: space) }
       },
       one_to_many_collection_ids_without_url: {

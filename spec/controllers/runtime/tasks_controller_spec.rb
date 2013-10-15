@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     describe "POST /v2/tasks" do
       context "when an app is given" do
-        let!(:some_app) { App.make :guid => "some-app-guid" }
+        let!(:some_app) { AppFactory.make :guid => "some-app-guid" }
 
         context "and the app exists" do
           it "returns 201 Created" do
@@ -98,8 +98,8 @@ module VCAP::CloudController
         @space_a.add_developer(@user_a)
         @space_b.add_developer(@user_b)
 
-        @app_a = App.make :space => @space_a
-        @app_b = App.make :space => @space_b
+        @app_a = AppFactory.make :space => @space_a
+        @app_b = AppFactory.make :space => @space_b
 
         @task_a = Task.make :app => @app_a
         @task_b = Task.make :app => @app_b
@@ -180,7 +180,7 @@ module VCAP::CloudController
         @space.add_developer(@space_developer)
         @space.add_auditor(@space_auditor)
 
-        @app = App.make :space => @space
+        @app = AppFactory.make :space => @space
         @task = Task.make :app => @app
       end
 

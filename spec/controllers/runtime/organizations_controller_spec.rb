@@ -18,7 +18,7 @@ module VCAP::CloudController
         },
         :apps => lambda { |org|
           space = Space.make(:organization => org)
-          App.make(:space => space)
+          AppFactory.make(:space => space)
         },
         :owned_domain => lambda { |org|
           Domain.make(:owning_organization => org)
@@ -30,7 +30,7 @@ module VCAP::CloudController
       },
       one_to_many_collection_ids_without_url: {
         service_instances: lambda { |org| ManagedServiceInstance.make(space: Space.make(organization: org)) },
-        apps: lambda { |org| App.make(space: Space.make(organization: org)) },
+        apps: lambda { |org| AppFactory.make(space: Space.make(organization: org)) },
         owned_domain: lambda { |org| Domain.make(owning_organization: org) }
       },
       many_to_one_collection_ids: {},

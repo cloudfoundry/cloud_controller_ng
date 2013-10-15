@@ -40,7 +40,7 @@ module VCAP::CloudController
     end
 
     let(:app) do
-      App.make :instances => 2, :state => app_state, :droplet_hash => droplet_hash,
+      AppFactory.make :instances => 2, :state => app_state, :droplet_hash => droplet_hash,
         :package_hash => "abcd", :package_state => package_state
     end
 
@@ -119,7 +119,10 @@ module VCAP::CloudController
             end
 
             context "if the app failed to stage" do
-              let(:package_state) { "FAILED" }
+              before do
+                app.package_state = "FAILED"
+                app.save
+              end
 
               it "should not do anything" do
                 dea_client.should_not_receive(:start_instance_at_index)

@@ -22,7 +22,7 @@ module VCAP::CloudController
       end
 
       num_free_apps.times do
-        App.make(
+        AppFactory.make(
           :space => @spaces.first,
           :production => false,
           :instances => 1,
@@ -34,7 +34,7 @@ module VCAP::CloudController
       end
 
       num_prod_apps.times do
-        App.make(
+        AppFactory.make(
           :space => @spaces.first,
           :production => true,
           :instances => 1,

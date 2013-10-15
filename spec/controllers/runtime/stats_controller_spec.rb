@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::StatsController, type: :controller do
     describe "GET /v2/apps/:id/stats" do
       before :each do
-        @app = App.make(:package_hash => "abc", :package_state => "STAGED")
+        @app = AppFactory.make(:package_hash => "abc", :package_state => "STAGED")
         @user =  make_user_for_space(@app.space)
         @developer = make_developer_for_space(@app.space)
         @auditor = make_auditor_for_space(@app.space)

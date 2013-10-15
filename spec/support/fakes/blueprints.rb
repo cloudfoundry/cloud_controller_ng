@@ -122,17 +122,18 @@ module VCAP::CloudController
     description       { Sham.description }
   end
 
+  # if you want to create an app with droplet, use AppFactory.make
+  # This is because the lack of factory hooks in Machinist.
   App.blueprint do
     name              { Sham.name }
     space             { Space.make }
     stack             { Stack.make }
-    droplet_hash      { Sham.guid }
   end
 
   ServiceBinding.blueprint do
     credentials       { Sham.service_credentials }
     service_instance  { ManagedServiceInstance.make }
-    app               { App.make(:space => service_instance.space) }
+    app               { AppFactory.make(:space => service_instance.space) }
   end
 
   ServiceBroker.blueprint do
@@ -197,7 +198,7 @@ module VCAP::CloudController
   end
 
   AppEvent.blueprint do
-    app               { App.make }
+    app               { AppFactory.make }
     instance_guid     { Sham.guid }
     instance_index    { Sham.instance_index }
     exit_status       { Random.rand(256) }
@@ -206,7 +207,7 @@ module VCAP::CloudController
   end
 
   Task.blueprint do
-    app         { App.make }
+    app         { AppFactory.make }
   end
 
   ServiceCreateEvent.blueprint do
@@ -243,5 +244,10 @@ module VCAP::CloudController
     name { Sham.name }
     key { Sham.guid }
     priority { 0 }
+  end
+
+  Droplet.blueprint do
+    droplet_hash { Sham.guid }
+    app { AppFactory.make(:droplet_hash => droplet_hash) }
   end
 end

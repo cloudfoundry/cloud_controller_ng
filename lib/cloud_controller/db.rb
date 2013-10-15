@@ -52,6 +52,7 @@ module VCAP::CloudController
       require "models/runtime/app_stop_event"
       require "models/runtime/app_event"
       require "models/runtime/app"
+      require "models/runtime/droplet"
       require "models/runtime/buildpack"
       require "models/runtime/domain"
       require "models/runtime/event"

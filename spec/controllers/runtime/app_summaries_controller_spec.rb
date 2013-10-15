@@ -16,7 +16,7 @@ module VCAP::CloudController
       @route2 = Route.make(:space => @space)
       @services = []
 
-      @app = App.make(
+      @app = AppFactory.make(
         :space => @space,
         :production => false,
         :instances => 1,

@@ -38,7 +38,7 @@ module VCAP::CloudController
           reset_database
 
           100.times do
-            App.make
+            AppFactory.make
           end
         end
 

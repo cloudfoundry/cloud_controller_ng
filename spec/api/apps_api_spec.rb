@@ -8,7 +8,7 @@ resource "Apps", :type => :api do
   before do
     reset_database
     3.times do
-      VCAP::CloudController::App.make
+      VCAP::CloudController::AppFactory.make
     end
   end
 

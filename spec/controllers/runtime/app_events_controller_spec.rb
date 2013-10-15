@@ -29,7 +29,7 @@ module VCAP::CloudController
     let(:org) { Organization.make }
     let(:space_a) { Space.make :organization => org }
 
-    let(:space_a_app_obj) { App.make :space => space_a }
+    let(:space_a_app_obj) { AppFactory.make :space => space_a }
 
     let(:user) { User.make(:admin => true).tap { |u| u.organizations << org } }
 
@@ -86,7 +86,7 @@ module VCAP::CloudController
     end
 
     shared_examples("pagination") do
-      let(:completely_unrelated_app) { App.make }
+      let(:completely_unrelated_app) { AppFactory.make }
 
       before do
         100.times do |index|
@@ -113,7 +113,7 @@ module VCAP::CloudController
 
       before do
         AppEvent.make(
-          :app => App.make,
+          :app => AppFactory.make,
           :exit_description => "Wrong Space")
       end
 
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
       before do
         AppEvent.make(
-          :app => App.make,
+          :app => AppFactory.make,
           :exit_description => "Wrong Org")
       end
 

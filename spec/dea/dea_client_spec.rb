@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_pool) { double(:dea_pool) }
     let(:app) do
-      app = App.make
+      app = AppFactory.make
       NUM_SVC_INSTANCES.times do
         instance = ManagedServiceInstance.make(:space => app.space)
         binding = ServiceBinding.make(

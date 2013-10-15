@@ -9,7 +9,7 @@ module VCAP::CloudController
       :one_to_zero_or_more => {
         :apps              => {
           :delete_ok => true,
-          :create_for => lambda { |stack| App.make(:stack => stack) }
+          :create_for => lambda { |stack| AppFactory.make(:stack => stack) }
         },
       },
     }
@@ -118,7 +118,7 @@ module VCAP::CloudController
       let(:stack) { Stack.make }
 
       it "destroys the apps" do
-        app = App.make(:stack => stack)
+        app = AppFactory.make(:stack => stack)
         expect { stack.destroy }.to change { App.where(:id => app.id).count }.by(-1)
       end
     end
@@ -128,10 +128,10 @@ module VCAP::CloudController
 
       context "when deleted apps exist in the space" do
         it "should not return the deleted app" do
-          deleted_app = App.make(:stack => stack)
+          deleted_app = AppFactory.make(:stack => stack)
           deleted_app.soft_delete
 
-          non_deleted_app = App.make(:stack => stack)
+          non_deleted_app = AppFactory.make(:stack => stack)
 
           stack.apps.should == [non_deleted_app]
         end

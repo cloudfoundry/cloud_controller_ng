@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:message_bus) { double("message_bus") }
 
     let(:app) do
-      App.make(
+      AppFactory.make(
         :instances => 2, :state => 'STARTED', :package_hash => "SOME_HASH", :package_state => "STAGED"
       ).save
     end

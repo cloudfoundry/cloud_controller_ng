@@ -2,8 +2,8 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::HealthManagerClient do
-    let(:app) { App.make }
-    let(:apps) { [App.make, App.make, App.make] }
+    let(:app) { AppFactory.make }
+    let(:apps) { [AppFactory.make, AppFactory.make, AppFactory.make] }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
     subject(:health_manager_client) { VCAP::CloudController::HealthManagerClient.new(message_bus) }

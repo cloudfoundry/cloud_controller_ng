@@ -35,7 +35,7 @@ module VCAP::CloudController
     end
 
     set_dataset(existing)
-
+    one_to_many :droplets
     one_to_many :service_bindings, :after_remove => :after_remove_binding
     one_to_many :events, :class => VCAP::CloudController::AppEvent
     many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
@@ -483,7 +483,10 @@ module VCAP::CloudController
     end
 
     def droplet_hash=(hash)
-      self.package_state = "STAGED" if hash
+      if hash
+        self.package_state = "STAGED"
+        self.add_droplet(app: self, droplet_hash: hash)
+      end
       super(hash)
     end
 

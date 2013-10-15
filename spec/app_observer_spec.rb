@@ -21,7 +21,7 @@ module VCAP::CloudController
     end
 
     describe ".deleted" do
-      let(:app) { App.make droplet_hash: nil, package_hash: nil }
+      let(:app) { AppFactory.make droplet_hash: nil, package_hash: nil }
 
       it "stops the application" do
         AppObserver.deleted(app)

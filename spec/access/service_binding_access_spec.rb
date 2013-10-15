@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:service) { VCAP::CloudController::Service.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(:organization => org) }
-    let(:app) { VCAP::CloudController::App.make(:space => space) }
+    let(:app) { VCAP::CloudController::AppFactory.make(:space => space) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:space => space) }
 
     let(:object) { VCAP::CloudController::ServiceBinding.make(:app => app, :service_instance => service_instance) }

@@ -151,7 +151,7 @@ module VCAP::CloudController
     describe "update app" do
       let(:update_hash) { {} }
 
-      let(:app_obj) { App.make(:detected_buildpack => 'buildpack-name') }
+      let(:app_obj) { AppFactory.make(:detected_buildpack => 'buildpack-name') }
 
       def update_app
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
@@ -173,7 +173,7 @@ module VCAP::CloudController
         end
 
         context "change debug" do
-          let(:app_obj) { App.make(:debug => "run") }
+          let(:app_obj) { AppFactory.make(:debug => "run") }
 
           let(:update_hash) do
             {"debug" => "suspend"}
@@ -188,7 +188,7 @@ module VCAP::CloudController
         end
 
         context "reset debug" do
-          let(:app_obj) { App.make(:debug => "run") }
+          let(:app_obj) { AppFactory.make(:debug => "run") }
 
           let(:update_hash) do
             {"debug" => "none"}
@@ -203,7 +203,7 @@ module VCAP::CloudController
         end
 
         context "passing in nil" do
-          let(:app_obj) { App.make(:debug => "run") }
+          let(:app_obj) { AppFactory.make(:debug => "run") }
 
           let(:update_hash) do
             {"debug" => nil}
@@ -267,7 +267,7 @@ module VCAP::CloudController
     end
 
     describe "read an app" do
-      let(:app_obj) { App.make(:detected_buildpack => "buildpack-name") }
+      let(:app_obj) { AppFactory.make(:detected_buildpack => "buildpack-name") }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
       def get_app
@@ -281,7 +281,7 @@ module VCAP::CloudController
       end
 
       context "when the app is already deleted" do
-        let(:app_obj) { App.make(:detected_buildpack => "buildpack-name") }
+        let(:app_obj) { AppFactory.make(:detected_buildpack => "buildpack-name") }
 
         before do
           app_obj.soft_delete
@@ -295,7 +295,7 @@ module VCAP::CloudController
     end
 
     describe "delete an app" do
-      let(:app_obj) { App.make }
+      let(:app_obj) { AppFactory.make }
 
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
@@ -304,7 +304,7 @@ module VCAP::CloudController
       end
 
       context "when the app is not deleted" do
-        let(:app_obj) { App.make }
+        let(:app_obj) { AppFactory.make }
 
         it "should delete the app" do
           delete_app
@@ -313,7 +313,7 @@ module VCAP::CloudController
       end
 
       context "when the app is already deleted" do
-        let(:app_obj) { App.make }
+        let(:app_obj) { AppFactory.make }
 
         before do
           app_obj.soft_delete
@@ -326,7 +326,7 @@ module VCAP::CloudController
       end
 
       context "when the app is running" do
-        let(:app_obj) { App.make :state => "STARTED", :package_hash => "abc" }
+        let(:app_obj) { AppFactory.make :state => "STARTED", :package_hash => "abc" }
 
         it "tells the DEAs to stop it" do
           called = false
@@ -414,7 +414,7 @@ module VCAP::CloudController
     end
 
     describe "validations" do
-      let(:app_obj)   { App.make }
+      let(:app_obj)   { AppFactory.make }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
       describe "env" do
@@ -446,7 +446,7 @@ module VCAP::CloudController
     end
 
     describe "command" do
-      let(:app_obj)   { App.make }
+      let(:app_obj)   { AppFactory.make }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
       it "should have no command entry in the metadata if not provided" do
@@ -467,7 +467,7 @@ module VCAP::CloudController
     describe "staging" do
       context "when app will be staged" do
         let(:app_obj) do
-          App.make(:package_hash => "abc", :state => "STOPPED",
+          AppFactory.make(:package_hash => "abc", :state => "STOPPED",
                            :droplet_hash => nil, :package_state => "PENDING",
                            :instances => 1)
         end
@@ -497,7 +497,7 @@ module VCAP::CloudController
       end
 
       context "when app will not be staged" do
-        let(:app_obj) { App.make(:state => "STOPPED") }
+        let(:app_obj) { AppFactory.make(:state => "STOPPED") }
 
         it "does not add X-App-Staging-Log" do
           put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode({}), json_headers(admin_headers)
@@ -523,7 +523,7 @@ module VCAP::CloudController
         user = make_developer_for_space(space)
         # keeping the headers here so that it doesn't reset the global config...
         @headers_for_user = headers_for(user)
-        @app = App.make(
+        @app = AppFactory.make(
           :space => space,
           :state => "STARTED",
           :package_hash => "abc",
@@ -588,8 +588,8 @@ module VCAP::CloudController
       include_context "permissions"
 
       before do
-        @obj_a = App.make(:space => @space_a)
-        @obj_b = App.make(:space => @space_b)
+        @obj_a = AppFactory.make(:space => @space_a)
+        @obj_b = AppFactory.make(:space => @space_b)
       end
 
       let(:creation_req_for_a) do

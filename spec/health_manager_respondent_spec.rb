@@ -68,7 +68,7 @@ module VCAP::CloudController
       context "when the app exists but the droplet hash is not yet known" do
         let(:package_state) { "PENDING" }
         let(:app) do
-          App.make :instances => 1, :state => "STARTED",
+          AppFactory.make :instances => 1, :state => "STARTED",
             :package_hash => "dont_care", :droplet_hash => nil, :package_state => package_state
         end
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
       context "when the app is NOT started" do
         let(:app) do
-          App.make :instances => 2, :state => "STOPPED"
+          AppFactory.make :instances => 2, :state => "STOPPED"
         end
 
         it "ignores the request" do
@@ -105,7 +105,7 @@ module VCAP::CloudController
 
       context "when running instances of current version is < desired instances" do
         let(:app) do
-          App.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
+          AppFactory.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
         end
 
         let(:running) { { app.version => 1 } }
@@ -131,7 +131,7 @@ module VCAP::CloudController
 
       context "when running instances of current version is >= desired instances" do
         let(:app) do
-          App.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
+          AppFactory.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
         end
 
         let(:running) { { app.version => 2 } }
@@ -146,7 +146,7 @@ module VCAP::CloudController
 
     describe "#process_stop" do
       let(:app) do
-        App.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
+        AppFactory.make :instances => 2, :state => "STARTED", :package_hash => "abcd"
       end
 
       context "when the app does not exist" do

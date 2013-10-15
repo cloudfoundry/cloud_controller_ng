@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Task, type: :model do
-    let(:app) { App.make :name => "my app" }
+    let(:app) { AppFactory.make :name => "my app" }
     let(:message_bus) { Config.message_bus }
     let(:secure_token) { "42" }
 
@@ -82,7 +82,7 @@ module VCAP::CloudController
     describe "#update_from_json" do
       describe "updating app_guid" do
         context "with a valid app" do
-          let(:other_app) { App.make }
+          let(:other_app) { AppFactory.make }
 
           it "updates the relationship" do
             expect {

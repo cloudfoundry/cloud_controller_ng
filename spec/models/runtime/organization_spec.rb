@@ -65,13 +65,13 @@ module VCAP::CloudController
               :organization => o,
             )
             2.times do
-              app = App.make(
+              app = AppFactory.make(
                 :space => space,
                 :state => "STARTED",
                 :package_hash => "abc",
                 :package_state => "STAGED",
               )
-              App.make(
+              AppFactory.make(
                 :space => space,
                 :state => "STOPPED",
               )
@@ -181,10 +181,10 @@ module VCAP::CloudController
       it "should return the memory remaining when apps are consuming memory" do
         org = Organization.make(:quota_definition => quota)
         space = Space.make(:organization => org)
-        App.make(:space => space,
+        AppFactory.make(:space => space,
                          :memory => 200,
                          :instances => 2)
-        App.make(:space => space,
+        AppFactory.make(:space => space,
                          :memory => 50,
                          :instances => 1)
 
@@ -199,7 +199,7 @@ module VCAP::CloudController
       before { org.reload }
 
       it "destroys all apps" do
-        app = App.make(:space => space)
+        app = AppFactory.make(:space => space)
         expect { org.destroy }.to change { App[:id => app.id] }.from(app).to(nil)
       end
 
@@ -389,10 +389,10 @@ module VCAP::CloudController
 
       context "when deleted apps exist in the organization" do
         it "should not return the deleted apps" do
-          deleted_app = App.make(:space => space)
+          deleted_app = AppFactory.make(:space => space)
           deleted_app.soft_delete
 
-          non_deleted_app = App.make(:space => space)
+          non_deleted_app = AppFactory.make(:space => space)
 
           org.apps.should == [non_deleted_app]
         end

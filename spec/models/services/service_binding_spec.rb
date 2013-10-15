@@ -16,7 +16,7 @@ module VCAP::CloudController
         @space ||= Space.make
         case name.to_sym
           when :app
-            App.make(:space => @space)
+            AppFactory.make(:space => @space)
           when :service_instance
             ManagedServiceInstance.make(:space => @space)
         end
@@ -26,7 +26,7 @@ module VCAP::CloudController
         :app => {
           :delete_ok => true,
           :create_for => lambda { |service_binding|
-            App.make(:space => service_binding.space)
+            AppFactory.make(:space => service_binding.space)
           }
         },
         :service_instance => {
@@ -84,7 +84,7 @@ module VCAP::CloudController
       before do
         # since we don't set them, these will have different app spaces
         @service_instance = ManagedServiceInstance.make
-        @app = App.make
+        @app = AppFactory.make
         @service_binding = ServiceBinding.make
       end
 
@@ -190,7 +190,7 @@ module VCAP::CloudController
 
     describe "restaging" do
       let(:app) do
-        app = App.make
+        app = AppFactory.make
         app.state = "STARTED"
         app.instances = 1
         fake_app_staging(app)

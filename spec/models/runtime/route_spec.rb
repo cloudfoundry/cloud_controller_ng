@@ -46,7 +46,7 @@ module VCAP::CloudController
       },
       :many_to_zero_or_more => {
         :apps => lambda { |route|
-          App.make(:space => route.space)
+          AppFactory.make(:space => route.space)
         }
       }
     }
@@ -222,7 +222,7 @@ module VCAP::CloudController
         space_b.add_domain(domain_a)
 
         route = Route.make(:space => space_b, :domain => domain_a)
-        app = App.make(:space => space_a)
+        app = AppFactory.make(:space => space_a)
         expect {
           route.add_app(app)
         }.to raise_error Route::InvalidAppRelation
@@ -241,7 +241,7 @@ module VCAP::CloudController
     describe "#remove" do
       let!(:route) { Route.make }
       let!(:app_1) do
-        App.make({
+        AppFactory.make({
           :space => route.space,
           :route_guids => [route.guid],
         }.merge(app_attributes))
@@ -260,7 +260,7 @@ module VCAP::CloudController
         let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "FAILED", :droplet_hash => nil} }
 
         it "does not notify DEAs of route change for apps that are not started" do
-          App.make(
+          AppFactory.make(
               :space => route.space, :state => "STOPPED",
               :route_guids => [route.guid], :droplet_hash => nil, :package_state => "PENDING")
 
@@ -274,7 +274,7 @@ module VCAP::CloudController
         let(:app_attributes) { {:state => "STOPPED", :package_state => "STAGED"} }
 
         it "does not notify DEAs of route change for apps that are not staged" do
-          App.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
+          AppFactory.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
           VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
           Route[:guid => route.guid].destroy
         end

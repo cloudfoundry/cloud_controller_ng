@@ -196,7 +196,7 @@ module VCAP::CloudController
         :host => "foo",
         :space => space,
       )
-      @foo_app = App.make(
+      @foo_app = AppFactory.make(
         :name   => "foo",
         :space  => space,
         :state  => "STARTED",
@@ -205,7 +205,7 @@ module VCAP::CloudController
         :droplet_hash => "def",
         :package_state => "STAGED",
       )
-      @bar_app = App.make(
+      @bar_app = AppFactory.make(
         :name   => "bar",
         :space  => space,
         :state  => "STARTED",

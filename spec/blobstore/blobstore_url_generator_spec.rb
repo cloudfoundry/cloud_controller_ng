@@ -32,7 +32,7 @@ module CloudController
                                 droplet_blobstore)
     end
 
-    let(:app) { VCAP::CloudController::App.make }
+    let(:app) { VCAP::CloudController::AppFactory.make }
 
     context "downloads" do
       describe "app package" do
@@ -147,7 +147,7 @@ module CloudController
       end
 
       context "droplets" do
-        let(:app) { VCAP::CloudController::App.make }
+        let(:app) { VCAP::CloudController::AppFactory.make }
 
         context "when the droplets are stored on local blobstore" do
           context "and the package exists" do

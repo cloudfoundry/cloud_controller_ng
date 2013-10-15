@@ -278,7 +278,7 @@ module VCAP::CloudController
 
       it "destroys the service bindings" do
         service_binding = ServiceBinding.make(
-          :app => App.make(:space => service_instance.space),
+          :app => AppFactory.make(:space => service_instance.space),
           :service_instance => service_instance
         )
         expect { subject }.to change { ServiceBinding.where(:id => service_binding.id).count }.by(-1)
@@ -287,7 +287,7 @@ module VCAP::CloudController
 
     describe "validations" do
       it "should not bind an app and a service instance from different app spaces" do
-        App.make(:space => service_instance.space)
+        AppFactory.make(:space => service_instance.space)
         service_binding = ServiceBinding.make
         expect {
           service_instance.add_service_binding(service_binding)

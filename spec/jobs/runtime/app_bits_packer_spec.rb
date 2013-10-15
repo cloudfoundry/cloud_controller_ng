@@ -12,7 +12,7 @@ describe AppBitsPacker do
   end
 
   let(:compressed_path) { File.expand_path("../../../fixtures/good.zip", __FILE__) }
-  let(:app) { VCAP::CloudController::App.make }
+  let(:app) { VCAP::CloudController::AppFactory.make }
   let(:blobstore_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
   let(:global_app_bits_cache) { Blobstore.new({ provider: "Local", local_root: blobstore_dir }, "global_app_bits_cache") }
@@ -66,7 +66,7 @@ describe AppBitsPacker do
         perform
       }.to change {
         app.refresh.package_hash
-      }.from(nil).to(/.+/)
+      }
     end
 
     it "removes the compressed path afterwards" do

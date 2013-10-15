@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
     let(:org) { VCAP::CloudController::Organization.make(billing_enabled: true) }
     let(:space) { VCAP::CloudController::Space.make(:organization => org) }
-    let(:app) { VCAP::CloudController::App.make(:space => space) }
+    let(:app) { VCAP::CloudController::AppFactory.make(:space => space) }
     let(:object) { VCAP::CloudController::AppStartEvent.create_from_app(app) }
 
     it_should_behave_like :admin_full_access

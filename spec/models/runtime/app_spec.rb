@@ -59,25 +59,25 @@ module VCAP::CloudController
 
     describe ".deleted" do
       it "includes deleted apps" do
-        app = App.make
+        app = AppFactory.make
         app.soft_delete
         App.deleted[:id => app.id].should_not be_nil
       end
 
       it "does not include non-deleted apps" do
-        app = App.make
+        app = AppFactory.make
         App.deleted[:id => app.id].should be_nil
       end
     end
 
     describe ".existing" do
       it "includes non-deleted apps" do
-        app = App.make
+        app = AppFactory.make
         App.existing[:id => app.id].should_not be_nil
       end
 
       it "does not include deleted apps" do
-        deleted_app = App.make
+        deleted_app = AppFactory.make
         deleted_app.soft_delete
         App.existing[:id => deleted_app.id].should be_nil
       end
@@ -85,8 +85,8 @@ module VCAP::CloudController
 
     describe ".with_deleted" do
       it "includes both deleted and non-deleted apps" do
-        app = App.make
-        deleted_app = App.make
+        app = AppFactory.make
+        deleted_app = AppFactory.make
         deleted_app.soft_delete
         App.with_deleted[:id => app.id].should_not be_nil
         App.with_deleted[:id => deleted_app.id].should_not be_nil
@@ -131,7 +131,7 @@ module VCAP::CloudController
       end
 
       context "when app is being updated" do
-        subject { App.make }
+        subject { AppFactory.make }
         it_always_sets_stack
       end
     end
@@ -150,7 +150,7 @@ module VCAP::CloudController
       end
 
       context "app needs staging" do
-        subject { App.make(
+        subject { AppFactory.make(
           :package_hash => "package-hash",
           :package_state => "PENDING",
           :instances => 1,
@@ -165,7 +165,7 @@ module VCAP::CloudController
       end
 
       context "app is already staged" do
-        subject { App.make(:package_hash => "package-hash", :instances => 1, :state => "STARTED") }
+        subject { AppFactory.make(:package_hash => "package-hash", :instances => 1, :state => "STARTED") }
         before { subject.droplet_hash = "droplet-hash" }
 
         it "marks the app for re-staging" do
@@ -184,7 +184,7 @@ module VCAP::CloudController
 
     describe "bad relationships" do
       it "should not associate an app with a route on a different space" do
-        app = App.make
+        app = AppFactory.make
 
         domain = Domain.make(
           :owning_organization => app.space.organization
@@ -207,7 +207,7 @@ module VCAP::CloudController
         shared_domain = Domain.new(:name => Sham.name,
           :owning_organization => nil)
         shared_domain.save(:validate => false)
-        app = App.make
+        app = AppFactory.make
         app.space.add_domain(shared_domain)
 
         other_space = Space.make(:organization => app.space.organization)
@@ -225,13 +225,13 @@ module VCAP::CloudController
 
     describe "#environment_json" do
       it "deserializes the serialized value" do
-        app = App.make(:environment_json => {"jesse" => "awesome"})
+        app = AppFactory.make(:environment_json => {"jesse" => "awesome"})
         app.environment_json.should eq("jesse" => "awesome")
       end
 
       def self.it_does_not_mark_for_re_staging
         it "does not mark an app for restage" do
-          app = App.make(
+          app = AppFactory.make(
             :package_hash => "deadbeef",
             :package_state => "STAGED",
             :environment_json => old_env_json,
@@ -259,7 +259,7 @@ module VCAP::CloudController
       describe "env is encrypted" do
         let(:env) { {"jesse" => "awesome"} }
         let(:long_env) { {"many_os" => "o" * 10_000} }
-        let!(:app) { App.make(:environment_json => env) }
+        let!(:app) { AppFactory.make(:environment_json => env) }
         let(:last_row) { VCAP::CloudController::App.dataset.naked.order_by(:id).last }
 
         it "is encrypted" do
@@ -276,7 +276,7 @@ module VCAP::CloudController
         end
 
         it "salt is unique for each app" do
-          app_2 = App.make(:environment_json => env)
+          app_2 = AppFactory.make(:environment_json => env)
           expect(app.salt).not_to eq app_2.salt
         end
 
@@ -285,12 +285,12 @@ module VCAP::CloudController
         end
 
         it "must deal with null env_json to remain null after encryption" do
-          null_json_app = App.make()
+          null_json_app = AppFactory.make()
           expect(null_json_app.environment_json).to be_nil
         end
 
         it "works with long serialized environments" do
-          app = App.make(:environment_json => long_env)
+          app = AppFactory.make(:environment_json => long_env)
           app.reload
           expect(app.environment_json).to eq(long_env)
         end
@@ -299,7 +299,7 @@ module VCAP::CloudController
 
     describe "metadata" do
       it "deserializes the serialized value" do
-        app = App.make(
+        app = AppFactory.make(
           :metadata => {"jesse" => "super awesome"},
         )
         app.metadata.should eq("jesse" => "super awesome")
@@ -308,7 +308,7 @@ module VCAP::CloudController
 
     describe "command" do
       it "stores the command in the metadata" do
-        app = App.make(:command => "foobar")
+        app = AppFactory.make(:command => "foobar")
         app.metadata.should eq("command" => "foobar")
         app.save
         app.metadata.should eq("command" => "foobar")
@@ -319,7 +319,7 @@ module VCAP::CloudController
 
     describe "console" do
       it "stores the command in the metadata" do
-        app = App.make(:console => true)
+        app = AppFactory.make(:console => true)
         app.metadata.should eq("console" => true)
         app.save
         app.metadata.should eq("console" => true)
@@ -328,19 +328,19 @@ module VCAP::CloudController
       end
 
       it "returns false if console was explicitly set to false" do
-        app = App.make(:console => false)
+        app = AppFactory.make(:console => false)
         app.console.should == false
       end
 
       it "returns false if console was not set" do
-        app = App.make(:console => true)
+        app = AppFactory.make(:console => true)
         app.console.should == true
       end
     end
 
     describe "debug" do
       it "stores the command in the metadata" do
-        app = App.make(:debug => "suspend")
+        app = AppFactory.make(:debug => "suspend")
         app.metadata.should eq("debug" => "suspend")
         app.save
         app.metadata.should eq("debug" => "suspend")
@@ -349,12 +349,12 @@ module VCAP::CloudController
       end
 
       it "returns nil if debug was explicitly set to nil" do
-        app = App.make(:debug => nil)
+        app = AppFactory.make(:debug => nil)
         app.debug.should be_nil
       end
 
       it "returns nil if debug was not set" do
-        app = App.make
+        app = AppFactory.make
         app.debug.should be_nil
       end
     end
@@ -397,19 +397,19 @@ module VCAP::CloudController
       describe "buildpack" do
         it "does allow nil value" do
             expect {
-              App.make(buildpack: nil)
+              AppFactory.make(buildpack: nil)
             }.to_not raise_error
         end
 
         it "does allow a public git url" do
           expect {
-            App.make(buildpack: "git://user@github.com:repo")
+            AppFactory.make(buildpack: "git://user@github.com:repo")
           }.to_not raise_error
         end
 
         it "allows a public http url" do
           expect {
-            App.make(buildpack: "http://example.com/foo")
+            AppFactory.make(buildpack: "http://example.com/foo")
           }.to_not raise_error
         end
 
@@ -417,7 +417,7 @@ module VCAP::CloudController
           admin_buildpack = VCAP::CloudController::Buildpack.make
           app = nil
           expect {
-            app = App.make(buildpack: admin_buildpack.name)
+            app = AppFactory.make(buildpack: admin_buildpack.name)
           }.to_not raise_error
 
           expect(app.admin_buildpack).to eql(admin_buildpack)
@@ -425,19 +425,19 @@ module VCAP::CloudController
 
         it "does not allow a private git url" do
           expect {
-            app = App.make(buildpack: "git@example.com:foo.git")
+            app = AppFactory.make(buildpack: "git@example.com:foo.git")
           }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
         end
 
         it "does not allow a private git url with ssh schema" do
           expect {
-            app = App.make(buildpack: "ssh://git@example.com:foo.git")
+            app = AppFactory.make(buildpack: "ssh://git@example.com:foo.git")
           }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
         end
 
         it "does not allow a non-url string" do
           expect {
-            app = App.make(buildpack: "Hello, world!")
+            app = AppFactory.make(buildpack: "Hello, world!")
           }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
         end
       end
@@ -446,16 +446,16 @@ module VCAP::CloudController
         let(:space) { Space.make }
 
         it "does not allow the same name in a different case", :skip_sqlite => true do
-          App.make(:name => "lowercase", :space => space)
+          AppFactory.make(:name => "lowercase", :space => space)
 
           expect {
-            App.make(:name => "lowerCase", :space => space)
+            AppFactory.make(:name => "lowerCase", :space => space)
           }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
         end
       end
 
       describe "env" do
-        let(:app) { App.make }
+        let(:app) { AppFactory.make }
 
         it "should allow an empty environment" do
           app.environment_json = {}
@@ -481,7 +481,7 @@ module VCAP::CloudController
       end
 
       describe "metadata" do
-        let(:app) { App.make }
+        let(:app) { AppFactory.make }
 
         it "should allow empty metadata" do
           app.metadata = {}
@@ -511,7 +511,7 @@ module VCAP::CloudController
     end
 
     describe "package_hash=" do
-      let(:app) { App.make(:package_hash => "abc", :package_state => "STAGED") }
+      let(:app) { AppFactory.make(:package_hash => "abc", :package_state => "STAGED") }
 
       it "should set the state to PENDING if the hash changes" do
         app.package_hash = "def"
@@ -527,7 +527,7 @@ module VCAP::CloudController
     end
 
     describe "staged?" do
-      let(:app) { App.make }
+      let(:app) { AppFactory.make }
 
       it "should return true if package_state is STAGED" do
         app.package_state = "STAGED"
@@ -541,7 +541,7 @@ module VCAP::CloudController
     end
 
     describe "pending?" do
-      let(:app) { App.make }
+      let(:app) { AppFactory.make }
 
       it "should return true if package_state is PENDING" do
         app.package_state = "PENDING"
@@ -555,7 +555,7 @@ module VCAP::CloudController
     end
 
     describe "failed?" do
-      let(:app) { App.make }
+      let(:app) { AppFactory.make }
 
       it "should return true if package_state is FAILED" do
         app.package_state = "FAILED"
@@ -569,7 +569,7 @@ module VCAP::CloudController
     end
 
     describe "needs_staging?" do
-      subject(:app) { App.make }
+      subject(:app) { AppFactory.make }
 
       context "when the app is started" do
         before do
@@ -578,7 +578,7 @@ module VCAP::CloudController
         end
 
         it "should return false if the package_hash is nil" do
-          app.package_hash.should be_nil
+          app.package_hash = nil
           app.needs_staging?.should be_false
         end
 
@@ -620,7 +620,7 @@ module VCAP::CloudController
     end
 
     describe "started?" do
-      let(:app) { App.make }
+      let(:app) { AppFactory.make }
 
       it "should return true if app is STARTED" do
         app.state = "STARTED"
@@ -634,7 +634,7 @@ module VCAP::CloudController
     end
 
     describe "stopped?" do
-      let(:app) { App.make }
+      let(:app) { AppFactory.make }
 
       it "should return true if app is STOPPED" do
         app.state = "STOPPED"
@@ -648,7 +648,7 @@ module VCAP::CloudController
     end
 
     describe "kill_after_multiple_restarts?" do
-      let(:app) { App.make }
+      let(:app) { AppFactory.make }
 
       it "defaults to false" do
         expect(app.kill_after_multiple_restarts?).to eq false
@@ -661,7 +661,7 @@ module VCAP::CloudController
     end
 
     describe "version" do
-      let(:app) { App.make(:package_hash => "abc", :package_state => "STAGED") }
+      let(:app) { AppFactory.make(:package_hash => "abc", :package_state => "STAGED") }
 
       it "should have a version on create" do
         app.version.should_not be_nil
@@ -717,7 +717,7 @@ module VCAP::CloudController
     end
 
     describe "droplet_hash=" do
-      let(:app) { App.make }
+      let(:app) { AppFactory.make }
 
       it "should set the state to staged" do
         app.state = "STARTED"
@@ -732,7 +732,7 @@ module VCAP::CloudController
 
     describe "uris" do
       it "should return the uris on the app" do
-        app = App.make(:space => space)
+        app = AppFactory.make(:space => space)
         app.add_route(route)
         app.uris.should == [route.fqdn]
       end
@@ -759,7 +759,7 @@ module VCAP::CloudController
     end
 
     describe "destroy" do
-      let(:app) { App.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
+      let(:app) { AppFactory.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
 
       it "notifies the app observer" do
         AppObserver.should_receive(:deleted).with(app)
@@ -800,7 +800,7 @@ module VCAP::CloudController
           it "does not generate a start event or stop event" do
             AppStartEvent.should_not_receive(:create_from_app)
             AppStopEvent.should_not_receive(:create_from_app)
-            App.make(:state => "STOPPED")
+            AppFactory.make(:state => "STOPPED")
           end
         end
 
@@ -808,13 +808,13 @@ module VCAP::CloudController
           it "does not generate a stop event" do
             AppStartEvent.should_receive(:create_from_app)
             AppStopEvent.should_not_receive(:create_from_app)
-            App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            AppFactory.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
           end
         end
 
         context "starting a stopped app" do
           it "generates a start event" do
-            app = App.make(:state => "STOPPED")
+            app = AppFactory.make(:state => "STOPPED")
             AppStartEvent.should_receive(:create_from_app).with(app)
             AppStopEvent.should_not_receive(:create_from_app)
             app.update(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
@@ -823,7 +823,7 @@ module VCAP::CloudController
 
         context "updating a stopped app" do
           it "does not generate a start event or stop event" do
-            app = App.make(:state => "STOPPED")
+            app = AppFactory.make(:state => "STOPPED")
             AppStartEvent.should_not_receive(:create_from_app)
             AppStopEvent.should_not_receive(:create_from_app)
             app.update(:state => "STOPPED")
@@ -832,7 +832,7 @@ module VCAP::CloudController
 
         context "stopping a started app" do
           it "does not generate a start event, but generates a stop event" do
-            app = App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            app = AppFactory.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
             AppStartEvent.should_not_receive(:create_from_app)
             AppStopEvent.should_receive(:create_from_app).with(app)
             app.update(:state => "STOPPED")
@@ -841,7 +841,7 @@ module VCAP::CloudController
 
         context "updating a started app" do
           it "does not generate a start or stop event" do
-            app = App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            app = AppFactory.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
             AppStartEvent.should_not_receive(:create_from_app)
             AppStopEvent.should_not_receive(:create_from_app)
             app.update(:state => "STARTED")
@@ -850,7 +850,7 @@ module VCAP::CloudController
 
         context "deleting a started app" do
           let(:app) do
-            app = App.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            app = AppFactory.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
             app_org = app.space.organization
             app_org.billing_enabled = true
             app_org.save(:validate => false) # because we need to force enable billing
@@ -888,7 +888,7 @@ module VCAP::CloudController
 
         context "deleting a stopped app" do
           it "does not generate a stop event" do
-            app = App.make(:state => "STOPPED")
+            app = AppFactory.make(:state => "STOPPED")
             AppStopEvent.should_not_receive(:create_from_app)
             app.destroy
           end
@@ -897,7 +897,7 @@ module VCAP::CloudController
 
       context "footprint changes" do
         let(:app) do
-          app = App.make
+          app = AppFactory.make
           app_org = app.space.organization
           app_org.billing_enabled = true
           app_org.save(:validate => false) # because we need to force enable billing
@@ -978,7 +978,7 @@ module VCAP::CloudController
           org = Organization.make(:quota_definition => quota)
           space = Space.make(:organization => org)
           expect do
-            App.make(:space => space,
+            AppFactory.make(:space => space,
               :memory => 65,
               :instances => 2)
           end.to raise_error(Sequel::ValidationFailed,
@@ -989,7 +989,7 @@ module VCAP::CloudController
           org = Organization.make(:quota_definition => quota)
           space = Space.make(:organization => org)
           expect do
-            App.make(:space => space,
+            AppFactory.make(:space => space,
               :memory => 64,
               :instances => 2)
           end.to_not raise_error
@@ -1000,7 +1000,7 @@ module VCAP::CloudController
         it "should raise error when quota is exceeded" do
           org = Organization.make(:quota_definition => quota)
           space = Space.make(:organization => org)
-          app = App.make(:space => space,
+          app = AppFactory.make(:space => space,
             :memory => 64,
             :instances => 2)
           app.memory = 65
@@ -1011,7 +1011,7 @@ module VCAP::CloudController
         it "should not raise error when quota is not exceeded" do
           org = Organization.make(:quota_definition => quota)
           space = Space.make(:organization => org)
-          app = App.make(:space => space,
+          app = AppFactory.make(:space => space,
             :memory => 63,
             :instances => 2)
           app.memory = 64
@@ -1021,14 +1021,13 @@ module VCAP::CloudController
         it "can delete an app that somehow has exceeded its memory quota" do
           org = Organization.make(:quota_definition => quota)
           space = Space.make(:organization => org)
-          app = App.make(:space => space,
+          app = AppFactory.make(:space => space,
             :memory => 64,
             :instances => 2)
 
           quota.memory_limit = 32
           quota.save
-
-          app.state = "STOPPED"
+          app.memory = 100
           expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
           expect { app.delete }.not_to raise_error
         end
@@ -1036,14 +1035,14 @@ module VCAP::CloudController
     end
 
     describe "file_descriptors" do
-      subject { App.make }
+      subject { AppFactory.make }
       its(:file_descriptors) { should == 16_384 }
     end
 
     describe "changes to the app that trigger staging/dea notifications" do
       before { pending "move to app observer/manager" }
 
-      subject { App.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
+      subject { AppFactory.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
       let(:health_manager_client) { CloudController::DependencyLocator.instance.health_manager_client }
 
       # Mark app as staged when AppObserver.stage_app is called
@@ -1099,25 +1098,25 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and already staged" do
-          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and already staged" do
-          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
+          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and not staged" do
-          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
           it_stages
           it_notifies_dea
         end
@@ -1146,25 +1145,25 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and already staged" do
-          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and already staged" do
-          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { App.make(:state => "STOPPED", :package_hash => "abc") }
+          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and not staged" do
-          subject { App.make(:state => "STARTED", :package_hash => "abc") }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc") }
           it_does_not_stage
           it_notifies_dea
         end
@@ -1196,32 +1195,32 @@ module VCAP::CloudController
         context "when app is stopped and already staged" do
           let(:instances_to_start) { 1 }
 
-          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
+          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is already started and already staged" do
-          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
+          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
           it_stages
           it_notifies_dea
         end
 
         # Original change to app that moved state into STARTED staged the app and notified dea
         context "when app is already started and not staged" do
-          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app has no bits" do
-          subject { App.make(:state => "STARTED", :package_hash => nil) }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => nil) }
 
           it "raises an AppPackageInvalid exception" do
             expect {
@@ -1251,25 +1250,25 @@ module VCAP::CloudController
         end
 
         context "when app is stopped and already staged" do
-          subject { App.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and already staged" do
-          subject { App.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
           it_does_not_stage
           it_notifies_dea
         end
 
         context "when app is stopped and not staged" do
-          subject { App.make(:state => "STOPPED", :package_hash => "abc") }
+          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc") }
           it_does_not_stage
           it_does_not_notify_dea
         end
 
         context "when app is already started and not staged" do
-          subject { App.make(:state => "STARTED", :package_hash => "abc") }
+          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc") }
           it_does_not_stage
           it_notifies_dea
         end
@@ -1277,7 +1276,7 @@ module VCAP::CloudController
     end
 
     describe "soft deletion" do
-      let(:app) { App.make(:detected_buildpack => "buildpack-name") }
+      let(:app) { AppFactory.make(:detected_buildpack => "buildpack-name") }
 
       it "should not allow the same object to be deleted twice" do
         app.soft_delete
@@ -1351,18 +1350,18 @@ module VCAP::CloudController
 
           it "should allow recreation and soft deletion of a soft deleted app" do
             expect do
-              deleted_app = App.make(:space => app.space, :name => app.name)
+              deleted_app = AppFactory.make(:space => app.space, :name => app.name)
               deleted_app.soft_delete
             end.to_not raise_error
           end
 
           it "should allow only 1 active recreation at a time" do
             expect do
-              App.make(:space => app.space, :name => app.name)
+              AppFactory.make(:space => app.space, :name => app.name)
             end.to_not raise_error
 
             expect do
-              App.make(:space => app.space, :name => app.name)
+              AppFactory.make(:space => app.space, :name => app.name)
             end.to raise_error
           end
         end

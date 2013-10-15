@@ -32,7 +32,7 @@ module VCAP::CloudController
       context "on an org without billing enabled" do
         it "should do nothing" do
           AppStartEvent.should_not_receive(:create)
-          app = App.make
+          app = AppFactory.make
           app.space.organization.billing_enabled = false
           app.space.organization.save(:validate => false)
           AppStartEvent.create_from_app(app)
@@ -42,7 +42,7 @@ module VCAP::CloudController
       context "on an org with billing enabled" do
         it "should create an app start event" do
           AppStartEvent.should_receive(:create)
-          app = App.make
+          app = AppFactory.make
           app.space.organization.billing_enabled = true
           app.space.organization.save(:validate => false)
           AppStartEvent.create_from_app(app)

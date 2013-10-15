@@ -48,7 +48,7 @@ module VCAP::CloudController
         @space ||= Space.make
         case name.to_sym
           when :app_guid
-            app = App.make(space: @space)
+            app = AppFactory.make(space: @space)
             app.guid
           when :service_instance_guid
             service_instance = ManagedServiceInstance.make(space: @space)
@@ -61,7 +61,7 @@ module VCAP::CloudController
 
     describe "staging" do
       let(:app_obj) do
-        app = App.make
+        app = AppFactory.make
         app.state = "STARTED"
         app.instances = 1
         fake_app_staging(app)
@@ -96,12 +96,12 @@ module VCAP::CloudController
       include_context "permissions"
 
       before do
-        @app_a = App.make(:space => @space_a)
+        @app_a = AppFactory.make(:space => @space_a)
         @service_instance_a = ManagedServiceInstance.make(:space => @space_a)
         @obj_a = ServiceBinding.make(:app => @app_a,
                                              :service_instance => @service_instance_a)
 
-        @app_b = App.make(:space => @space_b)
+        @app_b = AppFactory.make(:space => @space_b)
         @service_instance_b = ManagedServiceInstance.make(:space => @space_b)
         @obj_b = ServiceBinding.make(:app => @app_b,
                                              :service_instance => @service_instance_b)
@@ -109,7 +109,7 @@ module VCAP::CloudController
 
       let(:creation_req_for_a) do
         Yajl::Encoder.encode(
-          :app_guid => App.make(:space => @space_a).guid,
+          :app_guid => AppFactory.make(:space => @space_a).guid,
           :service_instance_guid => ManagedServiceInstance.make(:space => @space_a).guid
         )
       end
@@ -196,7 +196,7 @@ module VCAP::CloudController
     describe 'for provided instances' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:application) { App.make(:space => space) }
+      let(:application) { AppFactory.make(:space => space) }
       let(:service_instance) { UserProvidedServiceInstance.make(:space => space) }
       let(:params) do
         {
@@ -224,7 +224,7 @@ module VCAP::CloudController
       let(:plan) { instance.service_plan }
       let(:service) { plan.service }
       let(:developer) { make_developer_for_space(space) }
-      let(:app_obj) { App.make(space: space) }
+      let(:app_obj) { AppFactory.make(space: space) }
 
       it 'binds a service instance to an app' do
         req = {

@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe AppBitsController, type: :controller do
     describe "PUT /v2/app/:id/bits" do
-      let(:app_obj) { App.make :droplet_hash => nil, :package_state => "PENDING" }
+      let(:app_obj) { AppFactory.make :droplet_hash => nil, :package_state => "PENDING" }
 
       let(:tmpdir) { Dir.mktmpdir }
       after { FileUtils.rm_rf(tmpdir) }
@@ -160,8 +160,8 @@ module VCAP::CloudController
 
     describe "GET /v2/app/:id/download" do
       let(:tmpdir) { Dir.mktmpdir }
-      let(:app_obj) { App.make }
-      let(:app_obj_without_pkg) { App.make }
+      let(:app_obj) { AppFactory.make }
+      let(:app_obj_without_pkg) { AppFactory.make }
       let(:user) { make_user_for_space(app_obj.space) }
       let(:developer) { make_developer_for_space(app_obj.space) }
       let(:developer2) { make_developer_for_space(app_obj_without_pkg.space) }
