@@ -43,7 +43,7 @@ module ApiDsl
 
   def message_table model
     return model if model.respond_to? :fields
-    "VCAP::CloudController::#{model.to_s.capitalize.pluralize}Controller::ResponseMessage".constantize
+    "VCAP::CloudController::#{model.to_s.classify.pluralize}Controller::ResponseMessage".constantize
   end
 
   def parsed_response
@@ -84,9 +84,10 @@ module ApiDsl
     end
 
     def standard_parameters
+      request_parameter :q, "Parameters used to filter the result set"
       request_parameter :limit, "Maximum number of results to return"
       request_parameter :offset, "Offset from which to start iteration"
-      request_parameter :'urls_only', "If 1, only return a list of urls; do not expand metadata or resource attributes"
+      request_parameter :urls_only, "If 1, only return a list of urls; do not expand metadata or resource attributes"
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N."
     end
 

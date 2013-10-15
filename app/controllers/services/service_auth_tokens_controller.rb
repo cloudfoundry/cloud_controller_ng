@@ -6,6 +6,8 @@ module VCAP::CloudController
       attribute :token,    String,  :exclude_in => :response
     end
 
+    query_parameters :label, :provider
+
     def self.translate_validation_exception(e, attributes)
       label_provider_errors = e.errors.on([:label, :provider])
       if label_provider_errors && label_provider_errors.include?(:unique)
