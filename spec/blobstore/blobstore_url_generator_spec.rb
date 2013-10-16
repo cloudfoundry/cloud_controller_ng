@@ -174,7 +174,11 @@ module CloudController
 
         context "when the buildpack are stored remotely" do
           let(:droplet_file) { double("file") }
-          let(:droplet_blobstore) { double(local?: false, file: droplet_file) }
+          let(:droplet_blobstore) do
+            double(local?: false,
+              file: droplet_file,
+              exists?: true)
+          end
 
           it "gives out signed url to remote blobstore for appbits" do
             remote_uri = "http://s3.example.com/signed"

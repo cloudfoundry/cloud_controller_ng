@@ -2,8 +2,7 @@ require "spec_helper"
 
 describe CloudController::BlobstoreDroplet do
   let(:app) do
-    VCAP::CloudController::AppFactory.make(
-      droplet_hash: "droplet_hash")
+    VCAP::CloudController::AppFactory.make(droplet_hash: "droplet_hash")
   end
 
   let(:blobstore) do
@@ -15,8 +14,11 @@ describe CloudController::BlobstoreDroplet do
       }, "directory_key")
   end
 
-  let(:tmp_file) do
-    Tempfile.new("a file")
+  def tmp_file(content=Sham.guid)
+    f = Tempfile.new("a_file")
+    f.write(content)
+    # we don't close the file because it might cause the GC to claim the tmpfile
+    f.flush
   end
 
   subject { described_class.new(app, blobstore) }
@@ -41,6 +43,40 @@ describe CloudController::BlobstoreDroplet do
       old_size = app.droplets.size
       expect { subject.save(tmp_file.path) }.to raise_error
       expect(app.droplets.size).to eql(old_size)
+    end
+
+    it "deletes old droplets" do
+      droplets_to_keep = 2
+      expect(app.droplets).to have(1).items
+      subject.save(tmp_file("droplet version 2").path)
+      expect(app.droplets).to have(droplets_to_keep).items
+
+      subject.save(tmp_file("droplet version 3").path)
+      expect(app.droplets).to have(droplets_to_keep).items
+
+      droplet_dest = Tempfile.new("downloaded_droplet")
+      subject.download_to(droplet_dest.path)
+      expect(droplet_dest.read).to eql("droplet version 3")
+    end
+
+    it "deletes the number of old droplets specified in droplets_to_keep" do
+      droplets_to_keep = 1
+      expect(app.droplets).to have(1).items
+      old_droplet = app.droplets.first
+
+      Timecop.travel(Date.today + 2) do
+        subject.save(tmp_file("droplet version 2").path, droplets_to_keep)
+        expect(app.droplets).to have(droplets_to_keep).items
+        expect(app.droplets).to_not include(old_droplet)
+      end
+
+      Timecop.travel(Date.today + 3) do
+        subject.save(tmp_file("droplet version 3").path, droplets_to_keep)
+        expect(app.droplets).to have(droplets_to_keep).items
+        droplet_dest = Tempfile.new("")
+        subject.download_to(droplet_dest.path)
+        expect(droplet_dest.read).to eql("droplet version 3")
+      end
     end
   end
 

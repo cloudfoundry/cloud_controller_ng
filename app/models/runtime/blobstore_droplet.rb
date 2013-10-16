@@ -6,8 +6,15 @@ module CloudController
     end
 
     def file
-      return unless @app.staged?
-      blobstore.file(blobstore_key) || blobstore.file(old_blobstore_key)
+      if @app.staged? && blobstore_key
+        blobstore.file(blobstore_key)
+      end
+    end
+
+    def download_to(destination_path)
+      if blobstore_key
+        blobstore.download_from_blobstore(blobstore_key, destination_path)
+      end
     end
 
     def local_path
@@ -22,7 +29,7 @@ module CloudController
     end
 
     def delete
-      blobstore.delete(blobstore_key)
+      blobstore.delete(new_blobstore_key)
       begin
         blobstore.delete(old_blobstore_key)
       rescue Errno::EISDIR
@@ -34,25 +41,40 @@ module CloudController
     end
 
     def exists?
-      return false unless app.droplet_hash
-
-      blobstore.exists?(blobstore_key) ||
-        blobstore.exists?(old_blobstore_key)
+      return !!app.droplet_hash && !!blobstore_key
     end
 
-    def save(source_path)
+    def save(source_path, droplets_to_keep=2)
       hash = Digest::SHA1.file(source_path).hexdigest
       blobstore.cp_to_blobstore(
         source_path,
         File.join(app.guid, hash)
       )
       app.droplet_hash = hash
+      current_droplet_size = app.droplets_dataset.count
+
+      if current_droplet_size > droplets_to_keep
+        app.droplets_dataset.
+          order_by(Sequel.asc(:created_at)).
+          limit(current_droplet_size - droplets_to_keep).destroy
+      end
+
+      app.save
+      app.reload
     end
 
     private
     attr_reader :blobstore, :app
 
     def blobstore_key
+      if blobstore.exists?(new_blobstore_key)
+        return new_blobstore_key
+      elsif blobstore.exists?(old_blobstore_key)
+        return old_blobstore_key
+      end
+    end
+
+    def new_blobstore_key
       File.join(app.guid, app.droplet_hash)
     end
 
