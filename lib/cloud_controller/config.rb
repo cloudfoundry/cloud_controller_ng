@@ -159,8 +159,6 @@ module VCAP::CloudController
         ResourcePool.instance =
           ResourcePool.new(config)
 
-        StagingsController.configure(config)
-
         QuotaDefinition.configure(config)
         Stack.configure(config[:stacks_file])
         ServicePlan.configure(config[:trial_db])
