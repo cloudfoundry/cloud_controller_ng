@@ -3,7 +3,13 @@
   <head>
     <title>{{resource_name}} API</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"></link>
+    <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"></link>
+    <script>
+      if( "file:" == document.location.protocol ) {
+        var csslink = document.getElementById("bootstrapcss");
+        csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+      }
+    </script>
     <style>
       p {
         padding: 15px;
