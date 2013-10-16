@@ -21,14 +21,14 @@ module VCAP::CloudController
           expect(entity[:name]).to eq('dynamic_test_buildpack')
         end
 
-        it "creates a buildpack with a default priority" do
+        it "creates a buildpack with a default position" do
           post "/v2/buildpacks", req_body, admin_headers
-          expect(decoded_response['entity']['priority']).to eq(0)
+          expect(decoded_response['entity']['position']).to eq(0)
         end
 
-        it "sets the priority if provided" do
-          post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", priority: 10}), admin_headers
-          expect(decoded_response['entity']['priority']).to eq(10)
+        it "sets the position if provided" do
+          post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", position: 10}), admin_headers
+          expect(decoded_response['entity']['position']).to eq(10)
         end
 
         it "fails when duplicate name is used" do
@@ -53,7 +53,7 @@ module VCAP::CloudController
       end
 
       context "GET" do
-        before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "get_buildpack", key: "xyz", priority: 0}) }
+        before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "get_buildpack", key: "xyz", position: 0}) }
         after(:all) { @test_buildpack.destroy }
 
         describe "/v2/buildpacks/:guid" do
@@ -85,14 +85,20 @@ module VCAP::CloudController
             get "/v2/buildpacks", {}, headers_for(user)
             expect(last_response.status).to eq(200)
             expect(decoded_response["total_results"]).to eq(1)
-            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack', 'priority' => 0})
+            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack', 'position' => 0})
           end
         end
       end
 
       context "UPDATE" do
-        before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "update_buildpack", key: "xyz", priority: 0}) }
-        after(:all) { @test_buildpack.destroy }
+        before(:each) do
+          @orig_buildpack = VCAP::CloudController::Buildpack.create_from_hash(name: "original_buildpack", key: "xyz", position: 1)
+          @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash(name: "update_buildpack", key: "xyz", position: 2)
+        end
+        after(:each) do
+          @orig_buildpack.destroy
+          @test_buildpack.destroy
+        end
 
         it "returns NOT AUTHORIZED (403) for non admins" do
           put "/v2/buildpacks/#{@test_buildpack.guid}", {}, headers_for(user)
@@ -100,10 +106,39 @@ module VCAP::CloudController
         end
 
         describe "/v2/buildpacks/:guid" do
-          it "updates the priority" do
-            put "/v2/buildpacks/#{@test_buildpack.guid}", '{"priority": 10}', admin_headers
-            expect(last_response.status).to eq(201)
-            expect(decoded_response['entity']['priority']).to eq(10)
+          it "updates the position" do
+            expect {
+              put "/v2/buildpacks/#{@test_buildpack.guid}", '{"position": 1}', admin_headers
+              expect(last_response.status).to eq(201)
+            }.to change {
+              Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
+            }.from(
+              [["original_buildpack", 1], ["update_buildpack", 2]]
+            ).to(
+              [["update_buildpack", 1], ["original_buildpack", 2]]
+            )
+          end
+
+          it "updates current end to beyond end of list" do
+            expect {
+              put "/v2/buildpacks/#{@test_buildpack.guid}", '{"position": 10}', admin_headers
+              expect(last_response.status).to eq(201)
+            }.to_not change {
+              Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
+            }
+          end
+
+          it "updates current end position 0" do
+            expect {
+              put "/v2/buildpacks/#{@test_buildpack.guid}", '{"position": 0}', admin_headers
+              expect(last_response.status).to eq(201)
+            }.to change {
+              Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
+            }.from(
+              [["original_buildpack", 1], ["update_buildpack", 2]]
+            ).to(
+              [["update_buildpack", 0], ["original_buildpack", 1]]
+            )
           end
         end
       end

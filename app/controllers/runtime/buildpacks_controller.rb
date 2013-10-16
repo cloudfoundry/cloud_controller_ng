@@ -4,7 +4,7 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name, String
-      attribute :priority, Integer, :default => 0
+      attribute :position, Integer, default: 0
     end
 
     query_parameters :name
@@ -22,6 +22,21 @@ module VCAP::CloudController
       return unless buildpack.key
       file = buildpack_blobstore.file(buildpack.key)
       file.destroy if file
+    end
+
+    # New guy for updating
+    def update(guid)
+      obj = find_for_update(guid)
+
+      attrs = @request_attrs.dup
+      target_position = attrs.delete('position')
+      model.db.transaction do
+        obj.lock!
+        obj.update_from_hash(attrs)
+        obj.shift_to_position(target_position)
+      end
+
+      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end
 
     private

@@ -49,6 +49,17 @@ module VCAP::CloudController::RestController
     #
     # @param [String] guid The GUID of the object to update.
     def update(guid)
+      obj = find_for_update(guid)
+
+      model.db.transaction do
+        obj.lock!
+        obj.update_from_hash(request_attrs)
+      end
+
+      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
+    end
+
+    def find_for_update(guid)
       obj = find_guid_and_validate_access(:update, guid)
 
       json_msg = self.class::UpdateMessage.decode(body)
@@ -58,13 +69,7 @@ module VCAP::CloudController::RestController
         :attributes => request_attrs
 
       raise InvalidRequest unless request_attrs
-
-      model.db.transaction do
-        obj.lock!
-        obj.update_from_hash(request_attrs)
-      end
-
-      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
+      obj
     end
 
     # Delete operation

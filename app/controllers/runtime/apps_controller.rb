@@ -67,16 +67,9 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      app = find_guid_and_validate_access(:update, guid)
-
-      json_msg = self.class::UpdateMessage.decode(body)
-      @request_attrs = json_msg.extract(:stringify_keys => true)
-
+      app = find_for_update(guid)
+      # TODO: MJS - Where's the test for the log emit call?
       Loggregator.emit(guid, "Updated app with guid #{guid}")
-      logger.debug "cc.update", :guid => guid,
-        :attributes => request_attrs
-
-      raise InvalidRequest unless request_attrs
 
       model.db.transaction do
         app.lock!

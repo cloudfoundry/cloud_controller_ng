@@ -2,12 +2,22 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Buildpack, type: :model do
+    around do |example|
+      Sequel::Model.db.transaction(rollback: :always) do
+        example.run
+      end
+    end
+
+    def get_bp_ordered
+      Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
+    end
+
     describe "validations" do
       it "enforces unique names" do
-       Buildpack.create(:name => "my_custom_buildpack", :key => "xyz", :priority => 0)
+        Buildpack.make(name: "my_custom_buildpack")
 
         expect {
-          Buildpack.create(:name => "my_custom_buildpack", :key => "xxxx", :priority =>0)
+          Buildpack.make(name: "my_custom_buildpack")
         }.to raise_error(Sequel::ValidationFailed, /name unique/)
       end
     end
@@ -25,61 +35,93 @@ module VCAP::CloudController
       before do
         Timecop.freeze # The expiration time of the blobstore uri
         Buildpack.dataset.delete
-
-        buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, "a key")
-        Buildpack.make(key: "a key", priority: 2)
-
-        buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, "b key")
-        Buildpack.make(key: "b key", priority: 1)
-
-        buildpack_blobstore.cp_to_blobstore(buildpack_file_3.path, "c key")
-        @another_buildpack = Buildpack.make(key: "c key", priority: 3)
       end
 
       subject(:all_buildpacks) { Buildpack.list_admin_buildpacks(url_generator) }
 
-      it { should have(3).items }
-      it { should include(url: buildpack_blobstore.download_uri("a key"), key: "a key") }
-      it { should include(url: buildpack_blobstore.download_uri("b key"), key: "b key") }
-      it { should include(url: buildpack_blobstore.download_uri("c key"), key: "c key") }
+      context "with prioritized buildpacks" do
+        before do
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, "a key")
+          Buildpack.make(key: "a key", position: 2)
 
-      it "returns the list in priority order" do
-        expect(all_buildpacks.map { |b| b[:key] }).to eq ["b key", "a key", "c key"]
-      end
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, "b key")
+          Buildpack.make(key: "b key", position: 1)
 
-      it "doesn't list any buildpacks with null keys" do
-        @another_buildpack.key = nil
-        @another_buildpack.save
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_3.path, "c key")
+          @another_buildpack = Buildpack.make(key: "c key", position: 3)
+        end
 
-        expect(all_buildpacks).to_not include(@another_buildpack)
-        expect(all_buildpacks).to have(2).items
-      end
+        it { should have(3).items }
+        it { should include(url: buildpack_blobstore.download_uri("a key"), key: "a key") }
+        it { should include(url: buildpack_blobstore.download_uri("b key"), key: "b key") }
+        it { should include(url: buildpack_blobstore.download_uri("c key"), key: "c key") }
 
-      it "randomly orders any buildpacks with the same priority (for now we did not want to make clever logic of moving stuff around: up to the user to get it all correct)" do
-        @another_buildpack.priority = 1
-        @another_buildpack.save
+        it "returns the list in position order" do
+          expect(all_buildpacks.map { |b| b[:key] }).to eq ["b key", "a key", "c key"]
+        end
 
-        expect(all_buildpacks[2][:key]).to eq("a key")
-      end
+        it "doesn't list any buildpacks with null keys" do
+          @another_buildpack.key = nil
+          @another_buildpack.save
 
-      context "when there are buildpacks with null keys" do
-        let!(:null_buildpack) { Buildpack.create(:name => "nil_key_custom_buildpack", :priority => 0) }
+          expect(all_buildpacks).to_not include(@another_buildpack)
+          expect(all_buildpacks).to have(2).items
+        end
 
-        it "only returns buildpacks with non-null keys" do
-          expect(Buildpack.all).to include(null_buildpack)
-          expect(all_buildpacks).to_not include(null_buildpack)
-          expect(all_buildpacks).to have(3).items
+        it "randomly orders any buildpacks with the same position (for now we did not want to make clever logic of shifting stuff around: up to the user to get it all correct)" do
+          @another_buildpack.position = 1
+          @another_buildpack.save
+
+          expect(all_buildpacks[2][:key]).to eq("a key")
+        end
+
+        context "and there are buildpacks with null keys" do
+          let!(:null_buildpack) { Buildpack.create(:name => "nil_key_custom_buildpack", :position => 0) }
+
+          it "only returns buildpacks with non-null keys" do
+            expect(Buildpack.all).to include(null_buildpack)
+            expect(all_buildpacks).to_not include(null_buildpack)
+            expect(all_buildpacks).to have(3).items
+          end
+        end
+
+        context "and there are buildpacks with empty keys" do
+          let!(:empty_buildpack) { Buildpack.create(:name => "nil_key_custom_buildpack", :key => "", :position => 0) }
+
+          it "only returns buildpacks with non-null keys" do
+            expect(Buildpack.all).to include(empty_buildpack)
+            expect(all_buildpacks).to_not include(empty_buildpack)
+            expect(all_buildpacks).to have(3).items
+          end
         end
       end
 
-      context "when there are buildpacks with empty keys" do
-        let!(:empty_buildpack) { Buildpack.create(:name => "nil_key_custom_buildpack", :key => "", :priority => 0) }
-
-        it "only returns buildpacks with non-null keys" do
-          expect(Buildpack.all).to include(empty_buildpack)
-          expect(all_buildpacks).to_not include(empty_buildpack)
-          expect(all_buildpacks).to have(3).items
+      context "when there unprioritized buildpacks (position=0)" do
+        let!(:unprioritized_buildpacks) do
+          Buildpack.make(:key => "Java", :position => 0)
+          Buildpack.make(:key => "Ruby", :position => 0)
         end
+
+        it "returns the list in position order with unprioritized at the end" do
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, "a key")
+          Buildpack.make(key: "a key", position: 1)
+
+          build_packs = all_buildpacks.map { |b| b[:key] }
+          expect(build_packs[0..-3]).to eq ["a key"]
+          expect(build_packs[-2..-1]).to match_array ["Java", "Ruby"]
+        end
+
+        it "copes if there all zeros" do
+          build_packs = all_buildpacks.map { |b| b[:key] }
+          expect(build_packs).to match_array ["Java", "Ruby"]
+        end
+      end
+
+      context "when there are no buildpacks" do
+        it "should cope with no buildpacks" do
+          expect(all_buildpacks).to be_empty
+        end
+
       end
     end
 
@@ -87,6 +129,301 @@ module VCAP::CloudController
       it "contains the buildpack key" do
         buildpack = Buildpack.make
         expect(buildpack.staging_message).to eql(buildpack_key: buildpack.key)
+      end
+    end
+
+    describe "positioning buildpacks" do
+      let!(:buildpacks) do
+        4.times.map { |i| Buildpack.make(name: "name_#{100 - i}", position: i + 1) }
+      end
+
+      describe ".at_last_position" do
+        it "gets the last position" do
+          expect(Buildpack.at_last_position).to eq buildpacks[3]
+        end
+
+        context "no buildpacks in the database" do
+          let(:buildpacks) { nil }
+
+          it "should return nul" do
+            expect(Buildpack.at_last_position).to be_nil
+          end
+        end
+      end
+
+      describe "#shift_to_position" do
+        it "must be transactional so that shifting positions remains consistent" do
+          expect(Buildpack.db).to receive(:transaction).exactly(2).times.and_yield
+          buildpacks[3].shift_to_position(2)
+        end
+
+        it "has to do a SELECT FOR UPDATE" do
+          expect(Buildpack).to receive(:for_update).exactly(1).and_call_original
+          buildpacks[3].shift_to_position(2)
+        end
+
+        it "locks the last row" do
+          last = double(:last, position: 4)
+          allow(Buildpack).to receive(:at_last_position) { last }
+          expect(last).to receive(:lock!)
+          buildpacks[3].shift_to_position(2)
+        end
+
+        context "when an empty table" do
+          let(:buildpacks) { nil }
+
+          it "should only allow setting position to 1" do
+            bp = Buildpack.new(name: "name_1")
+            bp.shift_to_position(5)
+            bp.save
+            expect(bp.reload.position).to eq 1
+          end
+        end
+
+        context "shifting up" do
+          it "shifting up when already the first to the first" do
+            expect {
+              buildpacks[0].shift_to_position(1)
+            }.to_not change {
+              get_bp_ordered
+            }
+          end
+
+          it "shifting up when already the last to the first" do
+            expect {
+              buildpacks[3].shift_to_position(1)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_97", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4]]
+            )
+          end
+
+          it "shifting up and not the first" do
+            expect {
+              buildpacks[3].shift_to_position(2)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_100", 1], ["name_97", 2], ["name_99", 3], ["name_98", 4]]
+            )
+          end
+
+          context "and shifting to 0" do
+            it "shifting from the middle" do
+              expect {
+                buildpacks[2].shift_to_position(0)
+              }.to change {
+                get_bp_ordered
+              }.from(
+                [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+              ).to(
+                [["name_98", 0], ["name_100", 1], ["name_99", 2], ["name_97", 3]]
+              )
+            end
+
+            it "shifting from the end" do
+              expect {
+                buildpacks[3].shift_to_position(0)
+              }.to change {
+                get_bp_ordered
+              }.from(
+                [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+              ).to(
+                [["name_97", 0], ["name_100", 1], ["name_99", 2], ["name_98", 3]]
+              )
+            end
+
+            it "shifting two buildpacks" do
+              expect {
+                buildpacks[3].shift_to_position(0)
+                buildpacks[0].shift_to_position(0)
+              }.to change {
+                get_bp_ordered
+              }.from(
+                [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+              )
+
+              result = get_bp_ordered
+              expect(result[2..-1]).to eq([["name_99", 1], ["name_98", 2]])
+              expect(result[0..1]).to match_array([["name_100", 0], ["name_97", 0]])
+            end
+          end
+
+          it "doesn't try resetting the position" do
+            expect(buildpacks[0]).to_not receive(:update)
+            buildpacks[0].shift_to_position(1)
+          end
+        end
+
+        context "shifting down" do
+          it "shifting down when already the last and beyond last" do
+            expect {
+              buildpacks[3].shift_to_position(5)
+            }.to_not change {
+              get_bp_ordered
+            }
+          end
+
+          it "shifting down to last" do
+            expect {
+              buildpacks[2].shift_to_position(4)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_100", 1], ["name_99", 2], ["name_97", 3], ["name_98", 4]]
+            )
+          end
+
+          it "shifting down beyond last" do
+            expect {
+              buildpacks[2].shift_to_position(5)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_100", 1], ["name_99", 2], ["name_97", 3], ["name_98", 4]]
+            )
+          end
+
+          it "doesn't try resetting the position" do
+            expect(buildpacks[3]).to_not receive(:update)
+            buildpacks[3].shift_to_position(5)
+          end
+        end
+      end
+
+      describe ".shift_positions_down_from" do
+        it "moves everything below and at the position to a lower position" do
+          expect {
+            Buildpack.send(:shift_positions_down_from, 2)
+          }.to change {
+            get_bp_ordered
+          }.from(
+            [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+          ).to(
+            [["name_100", 1], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
+          )
+        end
+      end
+
+      describe ".shift_positions_up_from" do
+        it "moves everything below and at the position to a higher position" do
+          expect {
+            Buildpack.send(:shift_positions_up_from, 2)
+          }.to change {
+            get_bp_ordered
+          }.from(
+            [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+          ).to(
+            [["name_100", 1], ["name_99", 1], ["name_98", 2], ["name_97", 3]]
+          )
+        end
+      end
+    end
+
+    describe ".create" do
+      it "also locks the last position so that the moves don't race condition it" do
+        last = double(:last, position: 4)
+        allow(Buildpack).to receive(:at_last_position) { last }
+        expect(last).to receive(:lock!)
+        Buildpack.create(name: "new_buildpack", key: "abcdef", position: 2)
+      end
+
+      context "when other buildpacks exist" do
+        let!(:buildpacks) do
+          4.times.map { |i| Buildpack.make(name: "name_#{100 - i}", position: i + 1) }
+        end
+
+        it "must be transactional so that shifting positions remains consistent" do
+          expect(Buildpack.db).to receive(:transaction).exactly(2).times.and_yield
+          Buildpack.create(name: "new_buildpack", key: "abcdef", position: 2)
+        end
+
+        context "with a specified position" do
+          it "creates a buildpack entry at the lowest position" do
+            expect {
+              Buildpack.create(name: "new_buildpack", key: "abcdef", position: 7)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["new_buildpack", 5]]
+            )
+          end
+
+          it "creates a buildpack entry and moves all other buildpacks" do
+            expect {
+              Buildpack.create(name: "new_buildpack", key: "abcdef", position: 2)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_100", 1], ["new_buildpack", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
+            )
+          end
+        end
+
+        context "without a specified position" do
+          it "creates a buildpack entry at the lowest position" do
+            expect {
+              Buildpack.create(name: "new_buildpack", key: "abcdef")
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["new_buildpack", 5]]
+            )
+          end
+        end
+
+        context "and called with a block" do
+          it "foo" do
+            expect {
+              Buildpack.create do |bp|
+                bp.set_all(name: "new_buildpack", key: "abcdef", position: 1)
+              end
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["new_buildpack", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
+            )
+          end
+        end
+      end
+
+      context "when a new table" do
+        context "with a specified position" do
+          it "creates a buildpack entry at the lowest position" do
+            expect {
+              Buildpack.create(name: "new_buildpack", key: "abcdef")
+            }.to change {
+              get_bp_ordered
+            }.from([]).to([["new_buildpack", 1]])
+          end
+        end
+
+        context "without a specified position" do
+          it "creates a buildpack entry at the lowest position" do
+            expect {
+              Buildpack.create(name: "new_buildpack", key: "abcdef", position: 7)
+            }.to change {
+              get_bp_ordered
+            }.from([]).to([["new_buildpack", 1]])
+          end
+        end
       end
     end
   end

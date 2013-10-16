@@ -36,13 +36,13 @@ describe "Staging an app", :type => :integration do
 
       @buildpack_response_1 = make_post_request(
         "/v2/buildpacks",
-        { "name" => "buildpack-1", "priority" => 2 }.to_json,
+        { "name" => "buildpack-1", "position" => 2 }.to_json,
         authed_headers
       )
 
       @buildpack_response_2 = make_post_request(
         "/v2/buildpacks",
-        { "name" => "buildpack-2", "priority" => 1 }.to_json,
+        { "name" => "buildpack-2", "position" => 1 }.to_json,
         authed_headers
       )
 
