@@ -101,19 +101,12 @@ module VCAP::CloudController
       raise AppNotFound.new(guid) if app.nil?
       raise StagingError.new("malformed droplet upload request for #{app.guid}") unless upload_path
 
-      # TODO: put in background job
-      app.droplet_hash = Digest::SHA1.file(upload_path).hexdigest
-
-      logger.debug "droplet.uploaded", :sha => app.droplet_hash, :app_guid => app.guid
-
+      #TODO: put in background job
       start = Time.now
-
-      self.class.store_droplet(app, upload_path)
-
-      logger.debug "droplet.saved", took: Time.now - start
+      CloudController::BlobstoreDroplet.new(app, self.class.blobstore).save(upload_path)
+      logger.debug "droplet.uploaded", took: Time.now - start
       app.save
-
-      logger.debug "app.saved"
+      logger.debug "droplet.saved", :sha => app.droplet_hash, :app_guid => app.guid
 
       HTTP::OK
     ensure

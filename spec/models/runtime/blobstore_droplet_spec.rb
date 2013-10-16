@@ -27,6 +27,21 @@ describe CloudController::BlobstoreDroplet do
         subject.exists?
       }.from(false).to(true)
     end
+
+    it "add a new app droplet" do
+      old_size = app.droplets.size
+      expect { subject.save(tmp_file.path) }.to change{
+        app.droplet_hash
+      }
+      expect(app.droplets.size).to eql(old_size + 1)
+    end
+
+    it "does not create a new droplet if the upload fails" do
+      blobstore.stub(:cp_to_blobstore).and_raise "Upload failed"
+      old_size = app.droplets.size
+      expect { subject.save(tmp_file.path) }.to raise_error
+      expect(app.droplets.size).to eql(old_size)
+    end
   end
 
   describe "#delete" do

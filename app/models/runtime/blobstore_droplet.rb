@@ -41,10 +41,12 @@ module CloudController
     end
 
     def save(source_path)
+      hash = Digest::SHA1.file(source_path).hexdigest
       blobstore.cp_to_blobstore(
         source_path,
-        blobstore_key
+        File.join(app.guid, hash)
       )
+      app.droplet_hash = hash
     end
 
     private

@@ -205,8 +205,6 @@ module VCAP::CloudController
             droplet = CloudController::BlobstoreDroplet.new(app_obj, StagingsController.blobstore)
             droplet.save(droplet_file.path)
 
-            StagingsController.blobstore.exists?([app_obj.guid, app_obj.droplet_hash].join("/")).should be_true
-
             get "/staging/droplets/#{app_obj.guid}/download"
             last_response.status.should == 200
             last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
