@@ -27,16 +27,8 @@ module CloudController
         when "CrashesController", "SpaceSummariesController"
           {health_manager_client: dependency_locator.health_manager_client}
         when "BuildpacksController", "BuildpackBitsController"
-          {
-            buildpack_blobstore: dependency_locator.buildpack_blobstore,
-            upload_handler: dependency_locator.upload_handler
-          }
-        when "StagingsController"
-          {
-            droplet_blobstore: dependency_locator.droplet_blobstore,
-            buildpack_cache_blobstore: dependency_locator.buildpack_cache_blobstore,
-            package_blobstore: dependency_locator.package_blobstore,
-          }
+          {buildpack_blobstore: dependency_locator.buildpack_blobstore,
+          upload_handler: dependency_locator.upload_handler}
         else
           {}
       end
