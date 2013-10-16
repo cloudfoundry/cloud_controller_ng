@@ -15,8 +15,11 @@ module VCAP::CloudController
     let(:reply_json_error) { nil }
     let(:task_streaming_log_url) { "task-streaming-log-url" }
     let(:detected_buildpack) { nil }
+    let(:droplet_blobstore) {
+      CloudController::DependencyLocator.instance.droplet_blobstore
+    }
     let(:droplet) do
-      CloudController::BlobstoreDroplet.new(app, StagingsController.blobstore)
+      CloudController::BlobstoreDroplet.new(app, droplet_blobstore)
     end
 
     let(:first_reply_json) do
@@ -51,8 +54,6 @@ module VCAP::CloudController
       EM.stub(:defer).and_yield
       EM.stub(:schedule_sync)
 
-      StagingsController.stub(:store_droplet)
-      StagingsController.stub(:store_buildpack_cache)
       # Some other tests inter
       Buildpack.stub(:list_admin_buildpacks).and_return([])
     end

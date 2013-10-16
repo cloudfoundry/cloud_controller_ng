@@ -54,11 +54,6 @@ module VCAP::CloudController
         Config.configure_message_bus(message_bus)
       end
 
-      it "sets the stagings controller" do
-        StagingsController.should_receive(:configure).with(@test_config)
-        Config.configure(@test_config)
-      end
-
       it "sets the dea client" do
         Config.configure(@test_config)
         Config.configure_message_bus(message_bus)
