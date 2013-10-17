@@ -14,12 +14,18 @@ describe CloudController::BlobstoreDroplet do
       }, "directory_key")
   end
 
-  def tmp_file(content=Sham.guid)
-    f = Tempfile.new("a_file")
-    f.write(content)
-    # we don't close the file because it might cause the GC to claim the tmpfile
-    f.flush
+  def tmp_file(content = Sham.guid)
+    file = Tempfile.new("a_file")
+    file.write(content)
+    file.flush
+
+    @files ||= []
+    @files << file
+
+    file
   end
+
+  after { @files.each { |file| file.unlink } if @files }
 
   subject { described_class.new(app, blobstore) }
 
@@ -71,7 +77,11 @@ describe CloudController::BlobstoreDroplet do
       end
 
       Timecop.travel(Date.today + 3) do
-        subject.save(tmp_file("droplet version 3").path, droplets_to_keep)
+        foo = tmp_file("droplet version 3")
+
+        #p a: File.read(foo.path)
+
+        subject.save(foo.path, droplets_to_keep)
         expect(app.droplets).to have(droplets_to_keep).items
         droplet_dest = Tempfile.new("")
         subject.download_to(droplet_dest.path)
@@ -118,7 +128,6 @@ describe CloudController::BlobstoreDroplet do
         expect { subject.delete }.to_not raise_error
       end
     end
-
   end
 
   describe "#exists?" do
