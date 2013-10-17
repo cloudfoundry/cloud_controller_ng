@@ -22,12 +22,11 @@ module CloudController
     end
 
     def droplet_download_url(app)
-      droplet = CloudController::BlobstoreDroplet.new(app, @droplet_blobstore)
+      droplet = app.current_droplet
+      return nil unless droplet
 
       if @droplet_blobstore.local?
-        if droplet.exists?
-          staging_uri("/staging/droplets/#{app.guid}/download")
-        end
+        staging_uri("/staging/droplets/#{app.guid}/download")
       else
         droplet.download_url
       end

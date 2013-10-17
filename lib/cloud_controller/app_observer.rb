@@ -1,6 +1,6 @@
 require "vcap/stager/client"
 require "cloud_controller/multi_response_message_bus_request"
-require "models/runtime/blobstore_droplet"
+require "models/runtime/droplet_uploader"
 
 module VCAP::CloudController
   module AppObserver
@@ -21,7 +21,6 @@ module VCAP::CloudController
         end
 
         if app.staged?
-          CloudController::BlobstoreDroplet.new(app, droplet_blobstore).delete
           delete_buildpack_cache(app)
         end
       end

@@ -70,6 +70,16 @@ module CloudController
             expect(subject.app_package_download_url(app)).to eql(remote_uri)
           end
         end
+
+        context "when the droplet doesn't exist (app created before droplet)" do
+          it "should return a nil url for stage/start first instance" do
+            app.droplets_dataset.destroy
+            app.droplet_hash = nil
+            app.save
+            app.reload
+            expect(subject.droplet_download_url(app)).to be_nil
+          end
+        end
       end
 
       describe "buildpack cache" do
@@ -162,25 +172,21 @@ module CloudController
               expect(uri.path).to eql "/staging/droplets/#{app.guid}/download"
             end
           end
-
-          context "and the package does not exist" do
-            before { droplet_blobstore.stub(exists?: false) }
-
-            it "returns nil" do
-              expect(subject.droplet_download_url(app)).to be_nil
-            end
-          end
         end
 
         context "when the buildpack are stored remotely" do
           let(:droplet_file) { double("file") }
+
           let(:droplet_blobstore) do
-            double(local?: false,
-              file: droplet_file,
-              exists?: true)
+            double(local?: false, file: droplet_file, exists?: true)
           end
 
-          it "gives out signed url to remote blobstore for appbits" do
+          before do
+            CloudController::DependencyLocator.instance.stub(:droplet_blobstore).
+              and_return(droplet_blobstore)
+          end
+
+          it "gives out signed url to remote blobstore for the droplet" do
             remote_uri = "http://s3.example.com/signed"
             droplet_blobstore.should_receive(:download_uri_for_file).with(droplet_file).and_return(remote_uri)
             expect(subject.droplet_download_url(app)).to eql(remote_uri)
