@@ -9,8 +9,7 @@ module CloudController
       digest = Digest::SHA1.file(source_path).hexdigest
       blobstore.cp_to_blobstore(
         source_path,
-        #TODO duplicate logic with BlobstoreDroplet
-        File.join(app.guid, digest)
+        Droplet.droplet_key(app.guid, digest)
       )
       app.add_new_droplet(digest)
       current_droplet_size = app.droplets_dataset.count

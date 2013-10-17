@@ -61,6 +61,10 @@ module VCAP::CloudController
       end
     end
 
+    def self.droplet_key(app_guid, digest)
+      File.join(app_guid, digest)
+    end
+
     private
     def blobstore
       CloudController::DependencyLocator.instance.droplet_blobstore
@@ -75,7 +79,7 @@ module VCAP::CloudController
     end
 
     def new_blobstore_key
-      File.join(@cached_app_guid_for_delete || app.guid, droplet_hash)
+      self.class.droplet_key(@cached_app_guid_for_delete || app.guid, droplet_hash)
     end
 
     def old_blobstore_key

@@ -127,5 +127,11 @@ module VCAP::CloudController
         }.by(-2)
       end
     end
+
+    describe "blobstore key" do
+      it "combines app guid and the given digests" do
+        expect(Droplet.droplet_key("abc", "xyz")).to eql("abc/xyz")
+      end
+    end
   end
 end
