@@ -18,7 +18,7 @@ describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
       instance = described_class.create(
         name: 'awesome-service',
         space: VCAP::CloudController::Space.make,
-        credentials: {"foo" => "bar"}
+        credentials: {"foo" => "bar"},
       )
       instance.refresh.is_gateway_service.should be_false
     end
@@ -26,7 +26,7 @@ describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
 
   it_behaves_like "a CloudController model", {
     :required_attributes => [:name, :space, :credentials],
-    :stripped_string_attributes => :name,
+    :stripped_string_attributes => [:name, :syslog_drain_url],
     many_to_one: {
       space: {
         delete_ok: true,
