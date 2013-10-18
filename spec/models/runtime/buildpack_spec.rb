@@ -2,6 +2,8 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Buildpack, type: :model do
+    before(:all) { reset_database }
+
     around do |example|
       Sequel::Model.db.transaction(rollback: :always) do
         example.run
