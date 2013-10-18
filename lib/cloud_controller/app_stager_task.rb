@@ -59,9 +59,11 @@ module VCAP::CloudController
 
       @completion_callback = completion_callback
 
+      logger.info("staging.begin", :app_guid => @app.guid)
       staging_result = EM.schedule_sync do |promise|
         # First response is blocking stage_app.
         @multi_message_bus_request.on_response(staging_timeout) do |response, error|
+          logger.info("staging.first-response", :app_guid => @app.guid, :response => response, :error => error)
           handle_first_response(response, error, promise)
         end
 
@@ -69,6 +71,7 @@ module VCAP::CloudController
         # droplet was uploaded to the CC.
         # Second response does NOT block stage_app
         @multi_message_bus_request.on_response(staging_timeout) do |response, error|
+          logger.info("staging.second-response", :app_guid => @app.guid, :response => response, :error => error)
           handle_second_response(response, error)
         end
 
