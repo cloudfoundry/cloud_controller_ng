@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ControllerHelpers
   shared_examples "uaa authenticated api" do |opts|
     context "with invalid auth header" do

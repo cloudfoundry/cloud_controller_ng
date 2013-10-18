@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module VCAP::CloudController::RestController
   # Serialize objects according in the format required by the vcap
   # rest api.

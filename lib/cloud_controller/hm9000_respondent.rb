@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require "steno"
 
 require File.expand_path("../dea/dea_client", __FILE__)

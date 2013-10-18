@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-require "rfc822"
 
 module Sequel::Plugins::VcapValidations
   module InstanceMethods

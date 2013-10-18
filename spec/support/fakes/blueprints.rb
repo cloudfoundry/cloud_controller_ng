@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 Sham.define do
   email               { |index| "email-#{index}@somedomain.com" }
   name                { |index| "name-#{index}" }

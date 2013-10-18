@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require "bcrypt"
 require "sinatra"
 require "sequel"

@@ -1,4 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
 $:.unshift(File.expand_path("../lib", __FILE__))
 $:.unshift(File.expand_path("../app", __FILE__))
 

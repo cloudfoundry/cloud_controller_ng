@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require "vcap/stager/client"
 require "cloud_controller/nats_messages/stager_advertisment"
 

@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ModelHelpers
   shared_examples "model enumeration" do |opts|
     it "should return all the instances" do

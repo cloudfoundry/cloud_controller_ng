@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-#
 # A "resource" is typically represented as a Hash with two attributes:
 # :size (bytes)
 # :sha1 (string)

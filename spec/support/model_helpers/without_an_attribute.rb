@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ModelHelpers
   shared_examples "creation without an attribute" do |opts|
     opts[:required_attributes].each do |without_attr|

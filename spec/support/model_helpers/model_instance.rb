@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ModelHelpers
   def creation_opts_from_obj(obj, opts)
     attribute_names = opts[:required_attributes] | opts.fetch(:db_required_attributes, [])

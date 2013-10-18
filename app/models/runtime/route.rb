@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require "cloud_controller/dea/dea_client"
 
 module VCAP::CloudController

@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ControllerHelpers
   shared_examples "operations on an invalid object" do |opts|
     describe "operations on an invalid object" do

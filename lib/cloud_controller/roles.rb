@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2013 VMware, Inc.
-
 require 'set'
 
 module VCAP::CloudController

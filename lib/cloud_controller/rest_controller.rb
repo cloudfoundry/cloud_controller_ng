@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require "cloud_controller/rest_controller/controller_dsl"
 require "cloud_controller/rest_controller/messages"
 require "cloud_controller/rest_controller/object_serialization"

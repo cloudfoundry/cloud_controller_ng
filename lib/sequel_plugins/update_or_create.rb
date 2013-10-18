@@ -1,5 +1,3 @@
-# Copyright (c) 2012 VMware, Inc.
-
 module Sequel::Plugins::UpdateOrCreate
   module ClassMethods
     # Like +find_or_create+ but also updates the object in the case when it is in the DB
