@@ -289,7 +289,7 @@ module VCAP::CloudController
 
       app_from_db = self.class.find(:guid => guid)
       if app_from_db.nil?
-        self.class.logger.fatal("app.find.missing", :guid => guid)
+        self.class.logger.fatal("app.find.missing", :guid => guid, :self => self.inspect)
         raise ApplicationMissing, "Attempting to check memory quota. Should have been able to find app with guid #{guid}"
       end
       total_existing_memory = app_from_db[:memory] * app_from_db[:instances]

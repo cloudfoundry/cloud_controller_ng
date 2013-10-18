@@ -50,13 +50,15 @@ module VCAP::CloudController
       raise AppNotFound.new(guid) if app.nil?
       raise StagingError.new("malformed droplet upload request for #{app.guid}") unless upload_path
 
+      logger.info "droplet.begin-upload", :app_guid => app.guid
+
       #TODO: put in background job
       start = Time.now
 
       CloudController::DropletUploader.new(app, blobstore).upload(upload_path)
-      logger.debug "droplet.uploaded", took: Time.now - start
+      logger.info "droplet.uploaded", took: Time.now - start, :app_guid => app.guid
       app.save
-      logger.debug "droplet.saved", :sha => app.droplet_hash, :app_guid => app.guid
+      logger.info "droplet.saved", :sha => app.droplet_hash, :app_guid => app.guid
 
       HTTP::OK
     ensure
@@ -68,10 +70,14 @@ module VCAP::CloudController
       raise AppNotFound.new(guid) if app.nil?
       raise StagingError.new("malformed buildpack cache upload request for #{app.guid}") unless upload_path
 
+      logger.info "buildpack.begin-upload", :app_guid => app.guid
+
       buildpack_cache_blobstore.cp_to_blobstore(
         upload_path,
         app.guid
       )
+
+      logger.info "buildpack.uploaded", :app_guid => app.guid
 
       HTTP::OK
     ensure
