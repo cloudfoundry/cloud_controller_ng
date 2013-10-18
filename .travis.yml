@@ -36,8 +36,8 @@ before_install:
 before_script:
   - sh -c "if [ '$DB' = 'postgres' ]; then psql  -c 'create database ccng;' -U postgres; fi"
   - sh -c "if [ '$DB' = 'mysql' ];    then mysql -e 'create database ccng;'; fi"
-  - "gem install travis-artifacts"
+  - sh -c "if [ 'FORMAT' = 'RspecApiDocumentation::ApiFormatter' ]; then gem install travis-artifacts; fi"
 
 after_success: # and this only on success
-  - "travis-artifacts upload --path doc/api --target-path api_docs/$TRAVIS_BUILD_ID"
+  - sh -c "if [ 'FORMAT' = 'RspecApiDocumentation::ApiFormatter' ]; then travis-artifacts upload --path doc/api --target-path api_docs/$TRAVIS_BUILD_ID; fi"
   - "echo https://s3-us-west-1.amazonaws.com/cc-travis-api-doc/api_docs/$TRAVIS_BUILD_ID/index.html"
