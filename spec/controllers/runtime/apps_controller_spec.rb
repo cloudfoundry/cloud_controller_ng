@@ -261,6 +261,20 @@ module VCAP::CloudController
         end
       end
 
+      context "when package_state is provided" do
+        before { update_hash[:package_state] = 'FAILED' }
+
+        it "ignores the attribute" do
+          update_app
+
+          last_response.status.should == 201
+
+          app_obj.reload
+          expect(app_obj.package_state).to_not be == 'FAILED'
+          expect(parse(last_response.body)["entity"]).not_to include("package_state" => "FAILED")
+        end
+      end
+
       context "when the app is already deleted" do
         before { app_obj.soft_delete }
 
@@ -344,6 +358,12 @@ module VCAP::CloudController
         get_app
         last_response.status.should == 200
         decoded_response["entity"]["detected_buildpack"].should eq("buildpack-name")
+      end
+
+      it "should return the package state" do
+        get_app
+        last_response.status.should == 200
+        expect(parse(last_response.body)["entity"]).to have_key("package_state")
       end
 
       context "when the app is already deleted" do

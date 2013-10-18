@@ -35,6 +35,7 @@ resource "Apps", :type => :api do
   field :production, "Deprecated.", required: false, deprecated: true, default: true, valid_values: [true, false]
   field :console, "Open the console port for the app (at $CONSOLE_PORT).", required: false, deprecated: true, default: false, valid_values: [true, false]
   field :debug, "Open the debug port for the app (at $DEBUG_PORT).", required: false, deprecated: true, default: false, valid_values: [true, false]
+  field :package_state, "The current desired state of the package. One of PENDING, STAGED or FAILED.", required: false, readonly: true, valid_values: %w[PENDING STAGED FAILED]
 
   standard_model_list :app
   standard_model_get :app
