@@ -16,6 +16,8 @@ module VCAP::CloudController
 
     delegate :client, to: :service
 
+    alias_method :active?, :active
+
     def self.configure(trial_db_config)
       @trial_db_guid = trial_db_config ? trial_db_config[:guid] : nil
     end
@@ -37,14 +39,13 @@ module VCAP::CloudController
       filter(Sequel.|(
         {public: true},
         {id: ServicePlanVisibility.visible_private_plan_ids_for_organization(organization)}
-      ))
+      ).&(active: true))
     end
 
     def self.user_visibility_filter(user)
-      Sequel.or(
-        public: true,
-        id: ServicePlanVisibility.visible_private_plan_ids_for_user(user)
-      )
+      Sequel.
+        or(public: true, id: ServicePlanVisibility.visible_private_plan_ids_for_user(user)).
+        &(active: true)
     end
 
     def trial_db?

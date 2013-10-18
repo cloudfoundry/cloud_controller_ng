@@ -32,6 +32,7 @@ module VCAP::CloudController
     serialize_attributes :json, :tags, :requires
 
     alias_method :bindable?, :bindable
+    alias_method :active?, :active
 
     def self.organization_visible(organization)
       service_ids = ServicePlan.

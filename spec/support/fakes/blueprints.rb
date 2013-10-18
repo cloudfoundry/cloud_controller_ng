@@ -91,6 +91,7 @@ module VCAP::CloudController
       Sham.description
     end
     bindable          { true }
+    active            { true }
   end
 
   ServiceInstance.blueprint do
@@ -147,6 +148,7 @@ module VCAP::CloudController
     description       { Sham.description }
     service           { Service.make }
     unique_id         { [service.provider, service.label, name].join("_") }
+    active            { true }
   end
 
   ServicePlanVisibility.blueprint do
