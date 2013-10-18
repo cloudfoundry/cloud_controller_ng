@@ -46,7 +46,7 @@ module VCAP::CloudController
 
       response["crash_counts"].each do |crash_count|
         if crash_count["crash_count"] >= @config[:flapping_crash_count_threshold]
-          flapping_indices << {"index" => crash_count["instance_index"], "since" => crash_count["first_crash_time"]}
+          flapping_indices << {"index" => crash_count["instance_index"], "since" => crash_count["created_at"]}
         end
       end
 

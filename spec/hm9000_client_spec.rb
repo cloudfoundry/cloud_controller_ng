@@ -35,7 +35,7 @@ def generate_hm_api_response(app, running_instances, crash_counts=[])
                                   version: app.version,
                                   instance_index: crash_count[:instance_index],
                                   crash_count: crash_count[:crash_count],
-                                  first_crash_time: 1234567
+                                  created_at: 1234567
                                })
   end
 
