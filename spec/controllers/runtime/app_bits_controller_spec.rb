@@ -28,6 +28,11 @@ module VCAP::CloudController
           last_response.status.should == 201
         end
 
+        it "returns valid JSON" do
+          make_request
+          expect{ JSON.parse(last_response.body) }.not_to raise_error
+        end
+
         it "updates package hash" do
           expect {
             make_request
@@ -39,6 +44,11 @@ module VCAP::CloudController
         it "returns 400" do
           make_request
           last_response.status.should == 400
+        end
+
+        it "returns valid JSON" do
+          make_request
+          expect{ JSON.parse(last_response.body) }.not_to raise_error
         end
 
         it "does not update package hash" do

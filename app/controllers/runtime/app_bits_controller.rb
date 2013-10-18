@@ -20,7 +20,7 @@ module VCAP::CloudController
         [HTTP::CREATED, JobPresenter.new(job).to_json]
       else
         app_bits_packer_job.perform
-        HTTP::CREATED
+        [HTTP::CREATED, "{}"]
       end
     rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid
       app.mark_as_failed_to_stage
