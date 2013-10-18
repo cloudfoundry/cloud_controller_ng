@@ -20,6 +20,7 @@ require "cloud_controller/security_context"
 require "active_support/core_ext/hash"
 require "active_support/json/encoding"
 require "cloud_controller/models"
+require "cloud_controller/jobs"
 
 module VCAP::CloudController
   include VCAP::RestAPI

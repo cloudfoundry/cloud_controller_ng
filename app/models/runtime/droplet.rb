@@ -7,14 +7,10 @@ module VCAP::CloudController
       validates_presence :droplet_hash
     end
 
-    def before_destroy
+    def after_destroy
       super
-      @cached_app_guid_for_delete = app.guid
-    end
-
-    def after_destroy_commit
-      super
-      delete_from_blobstore
+      droplet_deletion_job = DropletDeletionJob.new(new_blobstore_key, old_blobstore_key)
+      Delayed::Job.enqueue(droplet_deletion_job, queue: "cc-generic")
     end
 
     def download_url
@@ -49,20 +45,16 @@ module VCAP::CloudController
       )
     end
 
-    def delete_from_blobstore
-      blobstore.delete(new_blobstore_key)
-      begin
-        blobstore.delete(old_blobstore_key)
-      rescue Errno::EISDIR
-        # The new droplets are with a path which is under the old droplet path
-        # This means that sometimes, if there are multiple versions of a droplet,
-        # the directory will still exist after we delete the droplet.
-        # We don't care for now, but we don't want the errors.
-      end
-    end
-
     def self.droplet_key(app_guid, digest)
       File.join(app_guid, digest)
+    end
+
+    def new_blobstore_key
+      self.class.droplet_key(app.guid, droplet_hash)
+    end
+
+    def old_blobstore_key
+      app.guid
     end
 
     private
@@ -76,14 +68,6 @@ module VCAP::CloudController
       elsif blobstore.exists?(old_blobstore_key)
         return old_blobstore_key
       end
-    end
-
-    def new_blobstore_key
-      self.class.droplet_key(@cached_app_guid_for_delete || app.guid, droplet_hash)
-    end
-
-    def old_blobstore_key
-      @cached_app_guid_for_delete || app.guid
     end
   end
 end

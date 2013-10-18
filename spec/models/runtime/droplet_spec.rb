@@ -49,55 +49,14 @@ module VCAP::CloudController
       expect(app.droplets.first.created_at).to be
     end
 
-    describe "#delete_from_blobstore" do
-      subject(:droplet) do
-        Droplet.new(app: app, droplet_hash: "droplet_hash")
-      end
-
-      context "with only one droplet associated with the app" do
-        # working around a problem with local blob stores where the old format
-        # key is also the parent directory, and trying to delete it when there are
-        # multiple versions of the app results in an "is a directory" error
-        it "it hides EISDIR if raised by the blob store on deleting the old format of the droplet key" do
-          blobstore.should_receive(:delete).with("#{app.guid}/droplet_hash")
-          blobstore.should_receive(:delete).with("#{app.guid}").and_raise Errno::EISDIR
-          expect { subject.delete_from_blobstore }.to_not raise_error
-        end
-
-        it "it doesnt hide EISDIR if raised for the new droplet key format" do
-          blobstore.should_receive(:delete).with("#{app.guid}/droplet_hash").and_raise Errno::EISDIR
-          expect { subject.delete_from_blobstore }.to raise_error
-        end
-
-        it "removes the new and old format keys (guid/sha, guid)" do
-          blobstore.cp_to_blobstore(tmp_file_with_content.path, "#{app.guid}/droplet_hash")
-          blobstore.cp_to_blobstore(tmp_file_with_content.path, "#{app.guid}")
-          expect { subject.delete_from_blobstore }.to change {
-            [ blobstore.exists?("#{app.guid}/droplet_hash"),
-              blobstore.exists?("#{app.guid}"),
-            ]
-          }.from([true, true]).to([false, false])
-        end
-      end
-
-      context "with multiple droplets associated with the app" do
-        before do
-          blobstore.cp_to_blobstore(tmp_file_with_content.path, "#{app.guid}/another_droplet_hash")
-          blobstore.cp_to_blobstore(tmp_file_with_content.path, "#{app.guid}/droplet_hash")
-          blobstore.cp_to_blobstore(tmp_file_with_content.path, "#{app.guid}")
-        end
-
-        it "doesn't raise an error" do
-          expect { subject.delete_from_blobstore }.to_not raise_error
-        end
-      end
-    end
-
     context "when deleting droplets" do
       it "destroy drives delete_from_blobstore" do
         app = AppFactory.make
         droplet = app.current_droplet
-        droplet.should_receive(:delete_from_blobstore)
+        Delayed::Job.should_receive(:enqueue).with(
+          DropletDeletionJob.new(droplet.new_blobstore_key, droplet.old_blobstore_key),
+          queue: "cc-generic"
+        )
         droplet.destroy
       end
     end

@@ -9,7 +9,7 @@ module CloudController
       digest = Digest::SHA1.file(source_path).hexdigest
       blobstore.cp_to_blobstore(
         source_path,
-        Droplet.droplet_key(app.guid, digest)
+        VCAP::CloudController::Droplet.droplet_key(app.guid, digest)
       )
       app.add_new_droplet(digest)
       current_droplet_size = app.droplets_dataset.count
