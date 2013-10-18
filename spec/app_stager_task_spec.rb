@@ -5,7 +5,13 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
     let(:config_hash) { { :config => 'hash' } }
-    let(:app) { AppFactory.make(:package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :state => "STARTED", :instances => 1) }
+    let(:app) do
+      AppFactory.make(:package_hash => "abc",
+        :droplet_hash => nil,
+        :package_state => "PENDING",
+        :state => "STARTED",
+        :instances => 1)
+    end
     let(:stager_id) { "my_stager" }
     let(:blobstore_url_generator) { double.as_null_object }
 
@@ -15,12 +21,6 @@ module VCAP::CloudController
     let(:reply_json_error) { nil }
     let(:task_streaming_log_url) { "task-streaming-log-url" }
     let(:detected_buildpack) { nil }
-    let(:droplet_blobstore) {
-      CloudController::DependencyLocator.instance.droplet_blobstore
-    }
-    let(:droplet) do
-      CloudController::BlobstoreDroplet.new(app, droplet_blobstore)
-    end
 
     let(:first_reply_json) do
       {
@@ -124,12 +124,6 @@ module VCAP::CloudController
             }.to_not change { app.staged? }.from(false)
           end
 
-          it "does not store droplet" do
-            expect {
-              ignore_error(Errors::StagingError) { stage }
-            }.to_not change { droplet.exists? }.from(false)
-          end
-
           it "does not save the detected buildpack" do
             expect {
               ignore_error(Errors::StagingError) { stage }
@@ -158,12 +152,6 @@ module VCAP::CloudController
             expect {
               ignore_error(Errors::StagingError) { stage }
             }.to_not change { app.staged? }.from(false)
-          end
-
-          it "does not store droplet" do
-            expect {
-              ignore_error(Errors::StagingError) { stage }
-            }.to_not change { droplet.exists? }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -197,12 +185,6 @@ module VCAP::CloudController
             expect {
               ignore_error(Errors::StagingError) { stage }
             }.to_not change { app.staged? }.from(false)
-          end
-
-          it "does not store droplet" do
-            expect {
-              ignore_error(Errors::StagingError) { stage }
-            }.to_not change { droplet.exists? }.from(false)
           end
 
           it "does not save the detected buildpack" do
@@ -308,12 +290,6 @@ module VCAP::CloudController
                    )
             end
 
-            it "does not store droplet" do
-              expect {
-                ignore_error(Errors::StagingError) { stage }
-              }.to_not change { droplet.exists? }.from(false)
-            end
-
             it "does not update droplet hash on the app" do
               expect {
                 ignore_error(Errors::StagingError) { stage }
@@ -357,12 +333,6 @@ module VCAP::CloudController
             }.to_not change { app.staged? }.from(false)
           end
 
-          it "does not store droplet" do
-            expect {
-              ignore_error(Errors::StagingError) { stage }
-            }.to_not change { droplet.exists? }.from(false)
-          end
-
           it "does not save the detected buildpack" do
             expect {
               ignore_error(Errors::StagingError) { stage }
@@ -400,12 +370,6 @@ module VCAP::CloudController
             expect {
               ignore_error(Errors::StagingError) { stage }
             }.to_not change { app.staged? }.from(false)
-          end
-
-          it "does not store droplet" do
-            expect {
-              ignore_error(Errors::StagingError) { stage }
-            }.to_not change { droplet.exists? }.from(false)
           end
 
           it "does not save the detected buildpack" do

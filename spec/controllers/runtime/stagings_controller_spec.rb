@@ -122,7 +122,12 @@ module VCAP::CloudController
     end
 
     describe "POST /staging/droplets/:guid/upload" do
-      let(:tmpfile) { Tempfile.new("droplet.tgz") }
+      let(:file_content) { "droplet content" }
+      let(:tmpfile) do
+        f = Tempfile.new("droplet.tgz")
+        f.write(file_content)
+        f.flush
+      end
 
       let(:upload_req) do
         {:upload => {:droplet => Rack::Test::UploadedFile.new(tmpfile)}}
@@ -153,13 +158,24 @@ module VCAP::CloudController
           }.from(false).to(true)
         end
 
+        it "makes the app have a downloadable droplet" do
+          post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+          app_obj.reload
+
+          expect(app_obj.current_droplet).to be
+
+          downloaded_file = Tempfile.new("")
+          app_obj.current_droplet.download_to(downloaded_file.path)
+          expect(downloaded_file.read).to eql(file_content)
+        end
+
         it "stores the droplet in the blobstore" do
           expect {
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
           }.to change {
-            droplet = CloudController::BlobstoreDroplet.new(app_obj.refresh, blobstore)
-            droplet.exists?
-          }.from(false).to(true)
+            CloudController::DropletUploader.new(app_obj.refresh, blobstore)
+            app_obj.droplets.size
+          }.from(0).to(1)
         end
 
         it "deletes the uploaded file" do
@@ -209,8 +225,8 @@ module VCAP::CloudController
             droplet_file.write("droplet contents")
             droplet_file.close
 
-            droplet = CloudController::BlobstoreDroplet.new(app_obj, blobstore)
-            droplet.save(droplet_file.path)
+            droplet = CloudController::DropletUploader.new(app_obj, blobstore)
+            droplet.upload(droplet_file.path)
 
             get "/staging/droplets/#{app_obj.guid}/download"
             last_response.status.should == 200
@@ -225,7 +241,7 @@ module VCAP::CloudController
             Tempfile.new(app_obj.guid) do |f|
               f.write("droplet contents")
               f.close
-              CloudController::BlobstoreDroplet.new(app_obj, blobstore).save(f.path)
+              CloudController::DropletUploader.new(app_obj, blobstore).upload(f.path)
 
               get "/staging/droplets/#{app_obj.guid}/download"
               last_response.status.should == 200

@@ -439,9 +439,20 @@ module VCAP::CloudController
     def droplet_hash=(hash)
       if hash
         self.package_state = "STAGED"
-        self.add_droplet(app: self, droplet_hash: hash)
       end
       super(hash)
+    end
+
+    def add_new_droplet(hash)
+      self.droplet_hash = hash
+      add_droplet(droplet_hash: hash)
+      self.save
+    end
+
+    def current_droplet
+      return nil unless droplet_hash
+      self.droplets_dataset.filter(droplet_hash: droplet_hash).first ||
+        Droplet.new(app: self, droplet_hash: self.droplet_hash)
     end
 
     def running_instances

@@ -8,14 +8,31 @@ module VCAP::CloudController
 
     subject(:health_manager_client) { VCAP::CloudController::HealthManagerClient.new(message_bus) }
 
-    describe "find_status" do
+    describe "find_flapping_indices" do
       it "should use specified message options" do
-        app.should_receive(:guid).and_return(1)
-        app.should_receive(:instances).and_return(2)
+        resp = {
+          "indices" => [
+            { "index" => 1, "since" => 1 },
+            { "index" => 2, "since" => 1 },
+          ]
+        }
 
-        message_bus.respond_to_synchronous_request("healthmanager.status", ["status"])
-        expect(health_manager_client.find_status(app, {other_opt: "value"})).to eq "status"
-        expect(message_bus).to have_requested_synchronous_messages("healthmanager.status", { droplet: 1, other_opt: "value" }, {:result_count => 2, :timeout => 2})
+        message_bus.respond_to_synchronous_request("healthmanager.status", [resp])
+        health_manager_client.find_flapping_indices(app).should == resp["indices"]
+      end
+    end
+
+    describe "find_crashes" do
+      it "should return crashed instances" do
+        resp = {
+          "instances" => [
+                         { "instance" => "instance_1", "since" => 1 },
+                         { "instance" => "instance_2", "since" => 1 },
+                        ]
+        }
+
+        message_bus.respond_to_synchronous_request("healthmanager.status", [resp])
+        health_manager_client.find_crashes(app).should == resp["instances"]
       end
     end
 
@@ -25,10 +42,10 @@ module VCAP::CloudController
       context "single app" do
         let(:resp) do
           [{
-            "droplet" => app.guid,
-            "version" => app.version,
-            "healthy" => 3
-          }]
+             "droplet" => app.guid,
+             "version" => app.version,
+             "healthy" => 3
+           }]
         end
 
         it "requests the health correctly" do
@@ -63,20 +80,6 @@ module VCAP::CloudController
           end
           expect(health_manager_client.healthy_instances(apps)).to eq expected
         end
-      end
-    end
-
-    describe "find_crashes" do
-      it "should return crashed instances" do
-        resp = {
-          "instances" => [
-                         { "instance" => "instance_1", "since" => 1 },
-                         { "instance" => "instance_2", "since" => 1 },
-                        ]
-        }
-
-        message_bus.respond_to_synchronous_request("healthmanager.status", [resp])
-        health_manager_client.find_crashes(app).should == resp["instances"]
       end
     end
   end

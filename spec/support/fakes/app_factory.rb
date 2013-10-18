@@ -11,7 +11,7 @@ module VCAP
         app = VCAP::CloudController::App.make(opts)
         if droplet_hash
           app.package_hash = Sham.guid unless app.package_hash
-          app.droplet_hash = droplet_hash
+          app.add_new_droplet(droplet_hash)
           app.save
         end
         # Return a fresh object without previous changes

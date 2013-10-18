@@ -8,7 +8,7 @@
 language: ruby
 bundler_args: --deployment --without development
 rvm: 1.9.3-p448
-script: bundle exec rspec spec$SUB --format $FORMAT
+script: bundle exec parallel_rspec spec$SUB -s integration -n 4 -o "--format $FORMAT"
 
 env:
   global:
@@ -24,9 +24,9 @@ env:
     - secure: "E3wLDMLQxIIVxpXA4IPV/pPf/AiHUlcJTvOa1o4Nm5o/c6TDrO/6dR0i183ahhjBzRWAE6no2YGjSGDY6ALZnkVc8DL6UGyAPwy1AMYBSptReOVmZBwbKYWiQOm89Crn7qSUo6tsEvp7CPckTbV9qA1SxGF/gxvvRGoKdYtDBIA=" # ARTIFACTS_AWS_ACCESS_KEY_ID
     - secure: "C+wpbEL7q16vH/V2WmHnw6ZPmVMF74B5RLBYrz0F1WiXOPWh84PGlBjLaNB+/X8X1Aw3AUHaTOtUaf8Exb/FQjzL8bUxgwFRJUOztwfsg+aU1ddGc2MsL8oXamnjSkJZMvEONSHKUG3DpkGctI8sl2gitSwJe6vNQDEjf1xq5ro=" # ARTIFACTS_AWS_SECRET_ACCESS_KEY
   matrix:
-    - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306/ccng" FORMAT=progress
-    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432/ccng" FORMAT=progress
-    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432/ccng" SUB="/api" FORMAT=RspecApiDocumentation::ApiFormatter
+    - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306" FORMAT=progress
+    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" FORMAT=progress
+    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" SUB="/api" FORMAT=RspecApiDocumentation::ApiFormatter
 #   - DB=sqlite FORMATTER=progress
 #   - DB=oracle ORACLE_BASE=/opt/oracle ORACLE_HOME=$ORACLE_BASE/instantclient_11_2 LD_LIBRARY_PATH=${ORACLE_HOME}:${LD_LIBRARY_PATH} FORMATTER=progress
 
@@ -34,10 +34,10 @@ before_install:
   - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
 
 before_script:
-  - sh -c "if [ '$DB' = 'postgres' ]; then psql  -c 'create database ccng;' -U postgres; fi"
-  - sh -c "if [ '$DB' = 'mysql' ];    then mysql -e 'create database ccng;'; fi"
-  - "gem install travis-artifacts"
+  - sh -c "if [ '$DB' = 'postgres' ]; then psql  -c 'create database cc_test_;' -U postgres; psql  -c 'create database cc_test_2;' -U postgres; psql  -c 'create database cc_test_3;' -U postgres; psql  -c 'create database cc_test_4;' -U postgres; fi"
+  - sh -c "if [ '$DB' = 'mysql' ];    then mysql -e 'create database cc_test_; create database cc_test_2; create database cc_test_3; create database cc_test_4;'; fi"
+  - sh -c "if [ 'FORMAT' = 'RspecApiDocumentation::ApiFormatter' ]; then gem install travis-artifacts; fi"
 
 after_success: # and this only on success
-  - "travis-artifacts upload --path doc/api --target-path api_docs/$TRAVIS_BUILD_ID"
+  - sh -c "if [ 'FORMAT' = 'RspecApiDocumentation::ApiFormatter' ]; then travis-artifacts upload --path doc/api --target-path api_docs/$TRAVIS_BUILD_ID; fi"
   - "echo https://s3-us-west-1.amazonaws.com/cc-travis-api-doc/api_docs/$TRAVIS_BUILD_ID/index.html"

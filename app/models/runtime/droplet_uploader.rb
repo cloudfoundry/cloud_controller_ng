@@ -1,0 +1,30 @@
+module CloudController
+  class DropletUploader
+    def initialize(app, blobstore)
+      @app = app
+      @blobstore = blobstore
+    end
+
+    def upload(source_path, droplets_to_keep=2)
+      digest = Digest::SHA1.file(source_path).hexdigest
+      blobstore.cp_to_blobstore(
+        source_path,
+        VCAP::CloudController::Droplet.droplet_key(app.guid, digest)
+      )
+      app.add_new_droplet(digest)
+      current_droplet_size = app.droplets_dataset.count
+
+      if current_droplet_size > droplets_to_keep
+        app.droplets_dataset.
+          order_by(Sequel.asc(:created_at)).
+          limit(current_droplet_size - droplets_to_keep).destroy
+      end
+
+      app.save
+      app.reload
+    end
+
+    private
+    attr_reader :blobstore, :app
+  end
+end

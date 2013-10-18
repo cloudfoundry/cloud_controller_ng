@@ -68,7 +68,12 @@ module VCAP::CloudController
 
     def db
       Thread.current[:db] ||= begin
-        db_connection = ENV["DB_CONNECTION"] || "sqlite:///tmp/cc_test#{ENV["TEST_ENV_NUMBER"]}.db"
+        if ENV["DB_CONNECTION"]
+          db_connection =  ENV["DB_CONNECTION"]
+          db_connection += "/cc_test_#{ENV["TEST_ENV_NUMBER"]}"
+        else
+          db_connection = "sqlite:///tmp/cc_test#{ENV["TEST_ENV_NUMBER"]}.db"
+        end
 
         VCAP::CloudController::DB.connect(
           db_logger,

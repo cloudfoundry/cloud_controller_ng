@@ -31,30 +31,6 @@ module VCAP::CloudController
       context "when the app has a droplet" do
         before { app.droplet_hash = "abcdef" }
 
-        it "deletes the droplet" do
-          droplet = Tempfile.new("droplet")
-          blobstore_key = File.join(app.guid, app.droplet_hash)
-
-          droplets = CloudController::DependencyLocator.instance.droplet_blobstore
-          droplets.cp_to_blobstore(droplet.path, blobstore_key)
-
-          expect { AppObserver.deleted(app) }.to change {
-            droplets.exists?(blobstore_key)
-          }.from(true).to(false)
-        end
-
-        it "deletes the old-format droplet" do
-          droplet = Tempfile.new("droplet")
-          blobstore_key = app.guid
-
-          droplets = CloudController::DependencyLocator.instance.droplet_blobstore
-          droplets.cp_to_blobstore(droplet.path, blobstore_key)
-
-          expect { AppObserver.deleted(app) }.to change {
-            droplets.exists?(blobstore_key)
-          }.from(true).to(false)
-        end
-
         it "deletes the buildpack cache" do
           droplet = Tempfile.new("buildpack_cache")
           blobstore_key = app.guid

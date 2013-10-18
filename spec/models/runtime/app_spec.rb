@@ -165,8 +165,13 @@ module VCAP::CloudController
       end
 
       context "app is already staged" do
-        subject { AppFactory.make(:package_hash => "package-hash", :instances => 1, :state => "STARTED") }
-        before { subject.droplet_hash = "droplet-hash" }
+        subject do
+          AppFactory.make(
+            package_hash: "package-hash",
+            instances: 1,
+            droplet_hash: "droplet-hash",
+            state: "STARTED")
+        end
 
         it "marks the app for re-staging" do
           expect {
@@ -178,6 +183,46 @@ module VCAP::CloudController
           expect {
             subject.stack = new_stack
           }.to change { subject.staged? }.from(true).to(false)
+        end
+      end
+    end
+
+    describe "current_droplet" do
+      context "app is already staged" do
+        subject do
+          AppFactory.make(
+            package_hash: "package-hash",
+            instances: 1,
+            droplet_hash: "droplet-hash")
+        end
+
+        it "knows its current droplet" do
+          expect(subject.current_droplet).to be_instance_of(Droplet)
+          expect(subject.current_droplet.droplet_hash).to eq("droplet-hash")
+
+          new_droplet_hash = "new droplet hash"
+          subject.add_new_droplet(new_droplet_hash)
+          expect(subject.current_droplet.droplet_hash).to eq(new_droplet_hash)
+        end
+
+        context "When it does not have a row in droplets table but has droplet hash column", droplet_cleanup: true do
+          before do
+            subject.droplet_hash = "A-hash"
+            subject.save
+            subject.droplets_dataset.destroy
+          end
+
+          it "knows its current droplet" do
+            expect(subject.current_droplet).to be_instance_of(Droplet)
+            expect(subject.current_droplet.droplet_hash).to eq("A-hash")
+          end
+        end
+
+        context "When the droplet hash is nil" do
+          it "should return nul" do
+            app_without_droplet = AppFactory.make(droplet_hash: nil)
+            expect(app_without_droplet.current_droplet).to be_nil
+          end
         end
       end
     end
@@ -225,7 +270,7 @@ module VCAP::CloudController
 
     describe "#environment_json" do
       it "deserializes the serialized value" do
-        app = AppFactory.make(:environment_json => {"jesse" => "awesome"})
+        app = AppFactory.make(:environment_json => { "jesse" => "awesome" })
         app.environment_json.should eq("jesse" => "awesome")
       end
 
@@ -246,19 +291,19 @@ module VCAP::CloudController
 
       context "if env changes" do
         let(:old_env_json) { {} }
-        let(:new_env_json) { {"key" => "value"} }
+        let(:new_env_json) { { "key" => "value" } }
         it_does_not_mark_for_re_staging
       end
 
       context "if BUNDLE_WITHOUT in env changes" do
-        let(:old_env_json) { {"BUNDLE_WITHOUT" => "test"} }
-        let(:new_env_json) { {"BUNDLE_WITHOUT" => "development"} }
+        let(:old_env_json) { { "BUNDLE_WITHOUT" => "test" } }
+        let(:new_env_json) { { "BUNDLE_WITHOUT" => "development" } }
         it_does_not_mark_for_re_staging
       end
 
       describe "env is encrypted" do
-        let(:env) { {"jesse" => "awesome"} }
-        let(:long_env) { {"many_os" => "o" * 10_000} }
+        let(:env) { { "jesse" => "awesome" } }
+        let(:long_env) { { "many_os" => "o" * 10_000 } }
         let!(:app) { AppFactory.make(:environment_json => env) }
         let(:last_row) { VCAP::CloudController::App.dataset.naked.order_by(:id).last }
 
@@ -300,7 +345,7 @@ module VCAP::CloudController
     describe "metadata" do
       it "deserializes the serialized value" do
         app = AppFactory.make(
-          :metadata => {"jesse" => "super awesome"},
+          :metadata => { "jesse" => "super awesome" },
         )
         app.metadata.should eq("jesse" => "super awesome")
       end
@@ -396,9 +441,9 @@ module VCAP::CloudController
     describe "validations" do
       describe "buildpack" do
         it "does allow nil value" do
-            expect {
-              AppFactory.make(buildpack: nil)
-            }.to_not raise_error
+          expect {
+            AppFactory.make(buildpack: nil)
+          }.to_not raise_error
         end
 
         it "does allow a public git url" do
@@ -468,13 +513,13 @@ module VCAP::CloudController
         end
 
         it "should allow multiple variables" do
-          app.environment_json = {:abc => 123, :def => "hi"}
+          app.environment_json = { :abc => 123, :def => "hi" }
           app.should be_valid
         end
 
         ["VMC", "vmc", "VCAP", "vcap"].each do |k|
           it "should not allow entries to start with #{k}" do
-            app.environment_json = {:abc => 123, "#{k}_abc" => "hi"}
+            app.environment_json = { :abc => 123, "#{k}_abc" => "hi" }
             app.should_not be_valid
           end
         end
@@ -494,7 +539,7 @@ module VCAP::CloudController
         end
 
         it "should allow multiple variables" do
-          app.metadata = {:abc => 123, :def => "hi"}
+          app.metadata = { :abc => 123, :def => "hi" }
           app.should be_valid
         end
 
@@ -1171,6 +1216,7 @@ module VCAP::CloudController
 
       describe "updating state to STARTED" do
         let(:instances_to_start) { 0 }
+
         def update
           subject.state = "STARTED"
           subject.save

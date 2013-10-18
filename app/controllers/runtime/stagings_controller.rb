@@ -52,7 +52,8 @@ module VCAP::CloudController
 
       #TODO: put in background job
       start = Time.now
-      CloudController::BlobstoreDroplet.new(app, blobstore).save(upload_path)
+
+      CloudController::DropletUploader.new(app, blobstore).upload(upload_path)
       logger.debug "droplet.uploaded", took: Time.now - start
       app.save
       logger.debug "droplet.saved", :sha => app.droplet_hash, :app_guid => app.guid
@@ -81,11 +82,10 @@ module VCAP::CloudController
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
 
-      droplet = CloudController::BlobstoreDroplet.new(app, blobstore)
-      droplet_path = droplet.local_path
-      droplet_url = droplet.download_url
-
-      download(app, droplet_path, droplet_url, "droplet")
+      droplet = app.current_droplet
+      blob_name = "droplet"
+      log_and_raise_missing_blob(app.guid, blob_name) unless droplet
+      download(app, droplet.local_path, droplet.download_url, blob_name)
     end
 
     def download_buildpack_cache(guid)
@@ -94,8 +94,12 @@ module VCAP::CloudController
 
       file = buildpack_cache_blobstore.file(app.guid)
       buildpack_cache_path = file.send(:path) if file
+      blob_name = "buildpack cache"
+
+      log_and_raise_missing_blob(app.guid, blob_name) unless buildpack_cache_path
+
       buildpack_cache_url = buildpack_cache_blobstore.download_uri(app.guid)
-      download(app, buildpack_cache_path, buildpack_cache_url, "buildpack cache")
+      download(app, buildpack_cache_path, buildpack_cache_url, blob_name)
     end
 
     def inject_dependencies(dependencies)
@@ -103,18 +107,18 @@ module VCAP::CloudController
       @buildpack_cache_blobstore = dependencies.fetch(:buildpack_cache_blobstore)
       @package_blobstore = dependencies.fetch(:package_blobstore)
     end
+
     private
+    def log_and_raise_missing_blob(app_guid, name)
+      Loggregator.emit_error(app_guid, "Did not find #{name} for app with guid: #{app_guid}")
+      logger.error "could not find #{name} for #{app_guid}"
+      raise StagingError.new("#{name} not found for #{app_guid}")
+    end
 
     def download(app, blob_path, url, name)
       raise InvalidRequest unless blobstore.local?
 
       logger.debug "guid: #{app.guid} #{name} #{blob_path} #{url}"
-
-      unless blob_path
-        Loggregator.emit_error(app.guid, "Did not find #{name} for app with guid: #{app.guid}")
-        logger.error "could not find #{name} for #{app.guid}"
-        raise StagingError.new("#{name} not found for #{app.guid}")
-      end
 
       if config[:nginx][:use_nginx]
         logger.debug "nginx redirect #{url}"
