@@ -766,19 +766,12 @@ module VCAP::CloudController
         app.instances = 3
         app.should_receive(:stopped?).and_return(false)
 
-        search_options = {
-          :state => :FLAPPING,
-          :version => app.version,
-        }
-
-        flapping_instances = {
-          "indices" => [
+        flapping_instances = [
             { "index" => 0, "since" => 1 },
-          ],
-        }
+          ]
 
-        health_manager_client.should_receive(:find_status).
-          with(app, search_options).and_return(flapping_instances)
+        health_manager_client.should_receive(:find_flapping_indices).
+          with(app).and_return(flapping_instances)
 
         search_options = {
           :states => [:STARTING, :RUNNING],
@@ -838,13 +831,8 @@ module VCAP::CloudController
         app.instances = 2
         app.should_receive(:stopped?).and_return(false)
 
-        search_options = {
-          :state => :FLAPPING,
-          :version => app.version,
-        }
-
-        health_manager_client.should_receive(:find_status).
-          with(app, search_options)
+        health_manager_client.should_receive(:find_flapping_indices).
+          with(app).and_return([])
 
         search_options = {
           :states => [:STARTING, :RUNNING],
@@ -893,13 +881,8 @@ module VCAP::CloudController
         app.instances = 2
         app.should_receive(:stopped?).and_return(false)
 
-        search_options = {
-          :state => :FLAPPING,
-          :version => app.version,
-        }
-
-        health_manager_client.should_receive(:find_status).
-          with(app, search_options)
+        health_manager_client.should_receive(:find_flapping_indices).
+          with(app).and_return([])
 
         search_options = {
           :states => [:STARTING, :RUNNING],

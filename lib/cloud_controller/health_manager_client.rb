@@ -8,20 +8,16 @@ module VCAP::CloudController
 
     def find_crashes(app)
       message = { :droplet => app.guid, :state => :CRASHED }
-      crashed_instances = hm_request("status", message, :timeout => 2).first
+      request_options = { :timeout => 2 }
+      crashed_instances = hm_request("status", message, request_options).first
       crashed_instances ? crashed_instances["instances"] : []
     end
 
-    def find_status(app, message_options = {})
-      message = { :droplet => app.guid }
-      message.merge!(message_options)
-
-      request_options = {
-        :result_count => app.instances,
-        :timeout => 2,
-      }
-
-      hm_request("status", message, request_options).first
+    def find_flapping_indices(app)
+      message = { :droplet => app.guid, :version => app.version, :state => :FLAPPING }
+      request_options = { :result_count => app.instances, :timeout => 2}
+      response = hm_request("status", message, request_options).first
+      (response && response["indices"]) ? response["indices"] : []
     end
 
     def healthy_instances(apps)

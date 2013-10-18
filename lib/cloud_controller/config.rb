@@ -134,6 +134,10 @@ module VCAP::CloudController
         optional(:tasks_disabled) => bool,
 
         optional(:hm9000_noop) => bool,
+        optional(:hm9000_api_host) => String,
+        optional(:hm9000_api_port) => Integer,
+        optional(:hm9000_api_user) => String,
+        optional(:hm9000_api_password) => String,
 
         optional(:varz_port) => Integer,
         optional(:varz_user) => String,
