@@ -289,7 +289,7 @@ module VCAP::CloudController
 
       app_from_db = self.class.find(:guid => guid)
       if app_from_db.nil?
-        logger.fatal("app.find.missing", :guid => guid)
+        self.class.logger.fatal("app.find.missing", :guid => guid)
         raise ApplicationMissing, "Attempting to check memory quota. Should have been able to find app with guid #{guid}"
       end
       total_existing_memory = app_from_db[:memory] * app_from_db[:instances]
@@ -483,6 +483,12 @@ module VCAP::CloudController
 
     def generate_salt
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt.freeze
+    end
+
+    class << self
+      def logger
+        @logger ||= Steno.logger("cc.models.app")
+      end
     end
   end
 end
