@@ -8,7 +8,7 @@
 language: ruby
 bundler_args: --deployment --without development
 rvm: 1.9.3-p448
-script: bundle exec parallel_rspec spec$SUB -s integration -n 3 -o "--format $FORMAT"
+script: bundle exec parallel_rspec spec$SUB -s integration -n $THREADS -o "--format $FORMAT"
 
 env:
   global:
@@ -24,9 +24,9 @@ env:
     - secure: "E3wLDMLQxIIVxpXA4IPV/pPf/AiHUlcJTvOa1o4Nm5o/c6TDrO/6dR0i183ahhjBzRWAE6no2YGjSGDY6ALZnkVc8DL6UGyAPwy1AMYBSptReOVmZBwbKYWiQOm89Crn7qSUo6tsEvp7CPckTbV9qA1SxGF/gxvvRGoKdYtDBIA=" # ARTIFACTS_AWS_ACCESS_KEY_ID
     - secure: "C+wpbEL7q16vH/V2WmHnw6ZPmVMF74B5RLBYrz0F1WiXOPWh84PGlBjLaNB+/X8X1Aw3AUHaTOtUaf8Exb/FQjzL8bUxgwFRJUOztwfsg+aU1ddGc2MsL8oXamnjSkJZMvEONSHKUG3DpkGctI8sl2gitSwJe6vNQDEjf1xq5ro=" # ARTIFACTS_AWS_SECRET_ACCESS_KEY
   matrix:
-    - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306" FORMAT=progress
-    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" FORMAT=progress
-    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" SUB="/api" FORMAT=RspecApiDocumentation::ApiFormatter
+    - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306" FORMAT=progress THREADS=3
+    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" FORMAT=progress THREADS=3
+    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" SUB="/api" FORMAT=RspecApiDocumentation::ApiFormatter THREADS=1
 #   - DB=sqlite FORMATTER=progress
 #   - DB=oracle ORACLE_BASE=/opt/oracle ORACLE_HOME=$ORACLE_BASE/instantclient_11_2 LD_LIBRARY_PATH=${ORACLE_HOME}:${LD_LIBRARY_PATH} FORMATTER=progress
 
