@@ -8,7 +8,7 @@
 language: ruby
 bundler_args: --deployment --without development
 rvm: 1.9.3-p448
-script: bundle exec parallel_rspec spec$SUB -s integration -n 4 -o "--format $FORMAT"
+script: bundle exec parallel_rspec spec$SUB -s integration -n 2 -o "--format $FORMAT"
 
 env:
   global:
@@ -34,8 +34,8 @@ before_install:
   - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
 
 before_script:
-  - sh -c "if [ '$DB' = 'postgres' ]; then psql  -c 'create database cc_test_;' -U postgres; psql  -c 'create database cc_test_2;' -U postgres; psql  -c 'create database cc_test_3;' -U postgres; psql  -c 'create database cc_test_4;' -U postgres; fi"
-  - sh -c "if [ '$DB' = 'mysql' ];    then mysql -e 'create database cc_test_; create database cc_test_2; create database cc_test_3; create database cc_test_4;'; fi"
+  - sh -c "if [ '$DB' = 'postgres' ]; then psql  -c 'create database cc_test_;' -U postgres; psql  -c 'create database cc_test_2;' -U postgres; fi"
+  - sh -c "if [ '$DB' = 'mysql' ];    then mysql -e 'create database cc_test_; create database cc_test_2;'; fi"
   - sh -c "if [ 'FORMAT' = 'RspecApiDocumentation::ApiFormatter' ]; then gem install travis-artifacts; fi"
 
 after_success: # and this only on success
