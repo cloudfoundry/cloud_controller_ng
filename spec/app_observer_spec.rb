@@ -79,40 +79,27 @@ module VCAP::CloudController
         )
       end
 
-      context "when the state of the app changes" do
-        context "from STOPPED to STARTED" do
-          context "and the app needs to be restaged" do
-            it "sends message to stage app"
-          end
-        end
-        context "from STARTED to STOPPED" do
-          it "sends out message to stop the app"
-        end
-      end
-
-      context "when the desired instance count changes" do
-        context "by increasing" do
-          it "sends out messages to start more instances"
-        end
-
-        context "by decreasing" do
-          it "sends out messages to stop instances"
-        end
-      end
+      subject { AppObserver.updated(app) }
 
       before do
         AppStagerTask.stub(:new).
           with(config_hash,
-               message_bus,
-               app,
-               stager_pool,
-               instance_of(CloudController::BlobstoreUrlGenerator)
+          message_bus,
+          app,
+          stager_pool,
+          instance_of(CloudController::BlobstoreUrlGenerator)
 
         ).and_return(stager_task)
 
         stager_task.stub(:stage) do |&callback|
           callback.call(:started_instances => started_instances)
         end
+
+        app.stub(previous_changes: changes)
+
+        DeaClient.stub(:start)
+        DeaClient.stub(:stop)
+        DeaClient.stub(:change_running_instances)
       end
 
       shared_examples_for(:stages_if_needed) do
@@ -175,16 +162,25 @@ module VCAP::CloudController
         end
       end
 
-      before do
-        app.stub(previous_changes: changes)
+      context "when the state of the app changes" do
+        context "from STOPPED to STARTED" do
+          context "and the app needs to be restaged" do
+            it "sends message to stage app"
+          end
+        end
+        context "from STARTED to STOPPED" do
+          it "sends out message to stop the app"
+        end
       end
 
-      subject { AppObserver.updated(app) }
+      context "when the desired instance count changes" do
+        context "by increasing" do
+          it "sends out messages to start more instances"
+        end
 
-      before do
-        DeaClient.stub(:start)
-        DeaClient.stub(:stop)
-        DeaClient.stub(:change_running_instances)
+        context "by decreasing" do
+          it "sends out messages to stop instances"
+        end
       end
 
       context "when the state is changed" do
