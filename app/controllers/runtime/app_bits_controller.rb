@@ -16,7 +16,7 @@ module VCAP::CloudController
       app_bits_packer_job = AppBitsPackerJob.new(guid, uploaded_zip_of_files_not_in_blobstore_path, json_param("resources"))
 
       if params["async"] == "true"
-        job = Delayed::Job.enqueue(app_bits_packer_job, queue: "cc-#{config[:name]}-#{config[:index]}")
+        job = Delayed::Job.enqueue(app_bits_packer_job, queue: LocalQueue.new(config))
         [HTTP::CREATED, JobPresenter.new(job).to_json]
       else
         app_bits_packer_job.perform

@@ -70,18 +70,9 @@ module VCAP::CloudController
       raise AppNotFound.new(guid) if app.nil?
       raise StagingError.new("malformed buildpack cache upload request for #{app.guid}") unless upload_path
 
-      logger.info "buildpack.begin-upload", :app_guid => app.guid
-
-      buildpack_cache_blobstore.cp_to_blobstore(
-        upload_path,
-        app.guid
-      )
-
-      logger.info "buildpack.uploaded", :app_guid => app.guid
-
+      blobstore_upload = BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
+      Delayed::Job.enqueue(blobstore_upload, queue: LocalQueue.new(config))
       HTTP::OK
-    ensure
-      FileUtils.rm_f(upload_path) if upload_path
     end
 
     def download_droplet(guid)
@@ -112,6 +103,7 @@ module VCAP::CloudController
       @blobstore = dependencies.fetch(:droplet_blobstore)
       @buildpack_cache_blobstore = dependencies.fetch(:buildpack_cache_blobstore)
       @package_blobstore = dependencies.fetch(:package_blobstore)
+      @config = dependencies.fetch(:config)
     end
 
     private

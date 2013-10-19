@@ -51,7 +51,9 @@ module VCAP::CloudController
           },
           :directories => {
               :tmpdir => Dir.mktmpdir("tmpdir", workspace)
-          }
+          },
+          :index => 99,
+          :name => "api_z1"
       }
     end
     let(:staging_config) { original_staging_config }
@@ -285,16 +287,18 @@ module VCAP::CloudController
         end
 
         it "stores file path in handle.buildpack_cache_upload_path" do
-          expect {
+          expect{
             post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
-          }.to change {
-            buildpack_cache_blobstore.exists?(app_obj.guid)
-          }.from(false).to(true)
-        end
+          }.to change{
+            Delayed::Job.count
+          }.by(1)
 
-        it "deletes the temp uploaded files" do
-          FileUtils.should_receive(:rm_f).with(/ngx\.uploads/)
-          post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
+          job = Delayed::Job.last
+          expect(job.handler).to include(app_obj.guid)
+          expect(job.handler).to include("ngx.uploads")
+          expect(job.queue).to eq("cc-api_z1-99")
+          expect(job.guid).not_to be_nil
+          expect(last_response.status).to eq 200
         end
       end
 
