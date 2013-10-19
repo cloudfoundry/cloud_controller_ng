@@ -162,16 +162,6 @@ module VCAP::CloudController
         end
       end
 
-      context "when the desired instance count changes" do
-        context "by increasing" do
-          it "sends out messages to start more instances"
-        end
-
-        context "by decreasing" do
-          it "sends out messages to stop instances"
-        end
-      end
-
       context "when the state is changed" do
         let(:changes) { { :state => "anything" } }
 
@@ -205,24 +195,44 @@ module VCAP::CloudController
         end
       end
 
-      context "when the instances count is changed" do
-        let(:changes) { { :instances => [5, 2] } }
-
+      context "when the desired instance count changes" do
         context "when the app is started" do
-          before do
-            app.stub(:started?) { true }
+          context "by increasing" do
+            let(:changes) { { :instances => [5, 8] } }
+
+            before do
+              app.stub(:started?) { true }
+            end
+
+            it_behaves_like :stages_if_needed
+            it_behaves_like :sends_droplet_updated
+
+            it "should change the running instance count" do
+              DeaClient.should_receive(:change_running_instances).with(app, 3)
+              subject
+            end
           end
 
-          it_behaves_like :stages_if_needed
-          it_behaves_like :sends_droplet_updated
+          context "by decreasing" do
+            let(:changes) { { :instances => [5, 2] } }
 
-          it 'should change the running instance count' do
-            DeaClient.should_receive(:change_running_instances).with(app, -3)
-            subject
+            before do
+              app.stub(:started?) { true }
+            end
+
+            it_behaves_like :stages_if_needed
+            it_behaves_like :sends_droplet_updated
+
+            it "should change the running instance count" do
+              DeaClient.should_receive(:change_running_instances).with(app, -3)
+              subject
+            end
           end
         end
 
         context "when the app is not started" do
+          let(:changes) { { :instances => [1, 2] } }
+
           before do
             app.stub(:started?) { false }
           end
