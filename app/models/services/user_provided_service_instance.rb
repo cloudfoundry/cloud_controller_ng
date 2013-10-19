@@ -8,12 +8,6 @@ module VCAP::CloudController
 
     def validate
       super
-      p caller
-      p syslog_drain_url
-      p credentials
-      p name
-      p space_guid
-      validates_presence :credentials unless syslog_drain_url.present?
     end
 
     def unbind_on_gateway(_)

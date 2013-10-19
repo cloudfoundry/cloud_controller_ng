@@ -7,11 +7,7 @@ module VCAP::CloudController::RestController
 
     # Create operation
     def create
-      puts "body: #{body.readlines}"
-
       json_msg = self.class::CreateMessage.decode(body)
-
-      puts "json_msg: #{json_msg.inspect}"
 
       @request_attrs = json_msg.extract(:stringify_keys => true)
 
