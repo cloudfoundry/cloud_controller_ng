@@ -162,17 +162,6 @@ module VCAP::CloudController
         end
       end
 
-      context "when the state of the app changes" do
-        context "from STOPPED to STARTED" do
-          context "and the app needs to be restaged" do
-            it "sends message to stage app"
-          end
-        end
-        context "from STARTED to STOPPED" do
-          it "sends out message to stop the app"
-        end
-      end
-
       context "when the desired instance count changes" do
         context "by increasing" do
           it "sends out messages to start more instances"
