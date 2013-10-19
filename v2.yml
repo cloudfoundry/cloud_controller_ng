@@ -467,3 +467,8 @@
   name: BuildpackBitsUploadInvalid
   http_code: 400
   message: "The buildpack upload is invalid: %s"
+
+290003:
+  name: BuildpackInvalid
+  http_code: 400
+  message: "Buildpack is invalid: %s"
