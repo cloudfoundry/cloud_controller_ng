@@ -16,13 +16,8 @@ module VCAP::CloudController
       def deleted(app)
         DeaClient.stop(app)
 
-        if app.package_hash
-          delete_package(app)
-        end
-
-        if app.staged?
-          delete_buildpack_cache(app)
-        end
+        delete_package(app) if app.package_hash
+        delete_buildpack_cache(app) if app.staged?
       end
 
       def updated(app)
@@ -44,15 +39,14 @@ module VCAP::CloudController
       private
 
       def delete_buildpack_cache(app)
-        buildpack_cache_blobstore.delete(app.guid)
+        delete_job = BlobstoreDelete.new(app.guid, :buildpack_cache_blobstore)
+        Delayed::Job.enqueue(delete_job, queue: "cc-generic")
       end
 
       def delete_package(app)
-        package_blobstore.delete(app.guid)
+        delete_job = BlobstoreDelete.new(app.guid, :package_blobstore)
+        Delayed::Job.enqueue(delete_job, queue: "cc-generic")
       end
-
-      def_delegators :dependency_locator, :buildpack_cache_blobstore,
-                     :package_blobstore, :droplet_blobstore
 
       def dependency_locator
         CloudController::DependencyLocator.instance

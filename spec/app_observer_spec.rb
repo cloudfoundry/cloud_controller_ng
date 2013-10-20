@@ -31,32 +31,34 @@ module VCAP::CloudController
       context "when the app has a droplet" do
         before { app.droplet_hash = "abcdef" }
 
-        it "deletes the buildpack cache" do
-          droplet = Tempfile.new("buildpack_cache")
-          blobstore_key = app.guid
-
-          buildpack_caches = CloudController::DependencyLocator.instance.buildpack_cache_blobstore
-          buildpack_caches.cp_to_blobstore(droplet.path, blobstore_key)
-
+        it "enqueue a jobs to delete the buildpack cache" do
           expect { AppObserver.deleted(app) }.to change {
-            buildpack_caches.exists?(blobstore_key)
-          }.from(true).to(false)
+            Delayed::Job.count
+          }.by(1)
+
+          job = Delayed::Job.last
+          expect(job.handler).to include(app.guid)
+          expect(job.handler).to include("buildpack_cache_blobstore")
+          expect(job.queue).to eq("cc-generic")
+          expect(job.guid).not_to be_nil
         end
+
+
       end
 
       context "when the app has a package uploaded" do
         before { app.package_hash = "abcdef" }
 
         it "deletes the app package" do
-          droplet = Tempfile.new("app_package")
-          blobstore_key = app.guid
-
-          packages = CloudController::DependencyLocator.instance.package_blobstore
-          packages.cp_to_blobstore(droplet.path, blobstore_key)
-
           expect { AppObserver.deleted(app) }.to change {
-            packages.exists?(blobstore_key)
-          }.from(true).to(false)
+            Delayed::Job.count
+          }.by(1)
+
+          job = Delayed::Job.last
+          expect(job.handler).to include(app.guid)
+          expect(job.handler).to include("package_blobstore")
+          expect(job.queue).to eq("cc-generic")
+          expect(job.guid).not_to be_nil
         end
       end
     end
