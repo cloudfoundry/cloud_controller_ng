@@ -157,6 +157,20 @@ module VCAP::CloudController
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
       end
 
+      describe "log when" do
+        it "successful update" do
+          Loggregator.should_receive(:emit).with(app_obj.guid, /Updated.*#{app_obj.guid}/)
+          update_app
+        end
+
+        it "should not log update when failed" do
+          app_obj
+          App.any_instance.stub(:update_from_hash).and_raise "Error saving"
+          Loggregator.should_not_receive(:emit)
+          expect {update_app}.to raise_error
+        end
+      end
+
       describe "update app debug" do
         context "set debug" do
           let(:update_hash) do
