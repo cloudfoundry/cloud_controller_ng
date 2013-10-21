@@ -79,9 +79,9 @@ module VCAP::CloudController
         end
       end
 
-      context "when the run migrations flag is passed in" do
-        let(:argv) { ["-m"] }
-
+      shared_examples "insert seed flag" do |flag|
+        context "when the insert seed flag is passed in" do
+        let(:argv) { [flag] }
         before do
           reset_database
           QuotaDefinition.dataset.destroy
@@ -93,15 +93,6 @@ module VCAP::CloudController
         it_runs_app_stager
         it_handles_health_manager_requests
         it_handles_hm9000_requests
-
-        # This shouldn't be inside here but unless we run under this wrapper we
-        # end up with state pollution and other tests fail. Should be refactored.
-        it_registers_a_log_counter
-
-        it "registers with the router" do
-          registrar.should_receive(:register_with_router)
-          subject.run!
-        end
 
         describe "when the seed data has not yet been created" do
           before { subject.run! }
@@ -139,14 +130,12 @@ module VCAP::CloudController
           end
         end
 
-        context "when the seed data has already been created" do
-          it "Does not try to create the system domain" do
-            subject.run!
-            expect { subject.run! }.not_to change(Domain, :count)
-          end
+        it "does not try to create the system domain twice" do
+          subject.run!
+          expect { subject.run! }.not_to change(Domain, :count)
         end
 
-        context "when the 'paid' quote is mising from the config file" do
+        context "when the 'paid' quota is missing from the config file" do
           let(:config_file_path) do
             config = YAML.load_file(valid_config_file_path)
             config["quota_definitions"].delete("paid")
@@ -181,8 +170,12 @@ module VCAP::CloudController
           end
         end
       end
+      end
 
-      context "when the run migrations flag is not passed in" do
+      it_behaves_like "insert seed flag", "-m"
+      it_behaves_like "insert seed flag", "-s"
+
+      context "when the insert seed flag is not passed in" do
         let(:argv) { [] }
 
         it_configures_stacks
@@ -190,6 +183,15 @@ module VCAP::CloudController
         it_runs_app_stager
         it_handles_health_manager_requests
         it_handles_hm9000_requests
+
+        # This shouldn't be inside here but unless we run under this wrapper we
+        # end up with state pollution and other tests fail. Should be refactored.
+        it_registers_a_log_counter
+
+        it "registers with the router" do
+          registrar.should_receive(:register_with_router)
+          subject.run!
+        end
       end
     end
 
