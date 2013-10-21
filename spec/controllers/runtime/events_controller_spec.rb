@@ -182,7 +182,7 @@ module VCAP::CloudController
         get "/v2/events?q=timestamp%3E#{(base_timestamp + 50).utc.iso8601}", {}, admin_headers
         decoded_response["total_pages"].should == 2
         decoded_response["prev_url"].should be_nil
-        decoded_response["next_url"].should == "/v2/events?q=timestamp>#{(base_timestamp + 50).utc.iso8601}&page=2&results-per-page=50"
+        decoded_response["next_url"].should == "/v2/events?q=timestamp%3E#{(base_timestamp + 50).utc.iso8601}&page=2&results-per-page=50"
       end
     end
 
