@@ -4,9 +4,9 @@ module VCAP::CloudController
   describe AppObserver do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
-    let(:dea_pool) { double(:dea_pool) }
+    let(:dea_pool) { double(:dea_pool, :find_dea => "dea-id", :mark_app_started => nil ) }
     let(:config_hash) { {:config => 'hash'} }
-    let(:blobstore_url_generator) { double }
+    let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
 
     before do
       DeaClient.configure(config_hash, message_bus, dea_pool, blobstore_url_generator)
@@ -70,13 +70,15 @@ module VCAP::CloudController
       let(:stager_task) { double(:stager_task) }
 
       let(:app) do
-        double(:app,
-          :last_stager_response= => nil,
-          :needs_staging? => needs_staging,
-          :instances => 1,
-          :guid => "foo",
-          :package_hash => package_hash
+        app = VCAP::CloudController::App.make(
+          last_stager_response: nil,
+          instances: 1,
+          package_hash: package_hash,
+          droplet_hash: "initial-droplet-hash",
+          name: "app-name"
         )
+        app.stub(:needs_staging?) { needs_staging }
+        app
       end
 
       subject { AppObserver.updated(app) }
@@ -92,6 +94,7 @@ module VCAP::CloudController
         ).and_return(stager_task)
 
         stager_task.stub(:stage) do |&callback|
+          app.stub(:droplet_hash) { "staged-droplet-hash" }
           callback.call(:started_instances => started_instances)
         end
 
@@ -162,8 +165,8 @@ module VCAP::CloudController
         end
       end
 
-      context "when the state is changed" do
-        let(:changes) { { :state => "anything" } }
+      context "when the state changes" do
+        let(:changes) { {:state => "anything"} }
 
         context "when the app is started" do
           let(:needs_staging) { true }
@@ -195,32 +198,46 @@ module VCAP::CloudController
         end
       end
 
-      context "when the desired instance count changes" do
+      context "when the desired instance count change" do
         context "when the app is started" do
-          context "by increasing" do
-            let(:changes) { { :instances => [5, 8] } }
+          context "when the instance count change increases the number of instances" do
+            let(:changes) { {:instances => [5, 8]} }
 
             before do
+              DeaClient.unstub(:change_running_instances)
               app.stub(:started?) { true }
             end
 
-            it_behaves_like :stages_if_needed
             it_behaves_like :sends_droplet_updated
 
             it "should change the running instance count" do
               DeaClient.should_receive(:change_running_instances).with(app, 3)
               subject
             end
+
+            context "when the app bits were changed as well" do
+              let(:needs_staging) { true }
+              let(:package_hash) { "something new" }
+
+              it "should start more instances of the old version" do
+                message_bus.should_receive(:publish) do |subject, message|
+                  expect(message).to include({
+                    sha1: "initial-droplet-hash"
+                  })
+                end.exactly(3).times.ordered
+                message_bus.should_receive(:publish).with("droplet.updated", anything).ordered
+                subject
+              end
+            end
           end
 
-          context "by decreasing" do
-            let(:changes) { { :instances => [5, 2] } }
+          context "when the instance count change decreases the number of instances" do
+            let(:changes) { {:instances => [5, 2]} }
 
             before do
               app.stub(:started?) { true }
             end
 
-            it_behaves_like :stages_if_needed
             it_behaves_like :sends_droplet_updated
 
             it "should change the running instance count" do
@@ -231,7 +248,7 @@ module VCAP::CloudController
         end
 
         context "when the app is not started" do
-          let(:changes) { { :instances => [1, 2] } }
+          let(:changes) { {:instances => [1, 2]} }
 
           before do
             app.stub(:started?) { false }

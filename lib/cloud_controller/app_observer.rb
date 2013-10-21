@@ -84,10 +84,8 @@ module VCAP::CloudController
 
       def react_to_instances_change(app, delta)
         if app.started?
-          stage_if_needed(app) do |staging_result|
-            DeaClient.change_running_instances(app, delta)
-            broadcast_app_updated(app)
-          end
+          DeaClient.change_running_instances(app, delta)
+          broadcast_app_updated(app)
         end
       end
 
