@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module VCAP::CloudController; end
 
 require "sequel_plugins/vcap_validations"

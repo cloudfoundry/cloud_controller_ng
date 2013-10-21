@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ControllerHelpers
   def self.description_for_inline_depth(depth)
     if depth

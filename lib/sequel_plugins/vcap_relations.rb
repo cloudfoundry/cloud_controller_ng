@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module Sequel::Plugins::VcapRelations
   # Depend on the instance_hooks plugin.
   def self.apply(model)

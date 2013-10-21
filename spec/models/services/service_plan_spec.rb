@@ -75,6 +75,7 @@ module VCAP::CloudController
         hidden_private_plan = ServicePlan.make(public: false)
         visible_public_plan = ServicePlan.make(public: true)
         visible_private_plan = ServicePlan.make(public: false)
+        inactive_public_plan = ServicePlan.make(public: true, active: false)
 
         organization = Organization.make
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
@@ -83,6 +84,7 @@ module VCAP::CloudController
         visible.should include(visible_public_plan)
         visible.should include(visible_private_plan)
         visible.should_not include(hidden_private_plan)
+        visible.should_not include(inactive_public_plan)
       end
     end
 
@@ -121,5 +123,6 @@ module VCAP::CloudController
         specify { service_plan.should_not be_bindable }
       end
     end
+
   end
 end

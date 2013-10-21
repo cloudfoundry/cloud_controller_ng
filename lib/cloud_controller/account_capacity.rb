@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 # port of legacy acount capacity model
 module VCAP::CloudController
   class AccountCapacity

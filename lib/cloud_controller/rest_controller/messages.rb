@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module VCAP::CloudController::RestController
   # Auto generation of Message classes based on the attributes
   # exposed by a rest endpoint.

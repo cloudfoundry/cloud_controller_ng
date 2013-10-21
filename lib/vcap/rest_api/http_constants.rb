@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware Inc.
-
 module VCAP::RestAPI
   module HTTP
     CONTINUE                         = 100

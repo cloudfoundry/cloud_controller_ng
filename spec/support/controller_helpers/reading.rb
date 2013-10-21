@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ControllerHelpers
   shared_examples "reading a valid object" do |opts|
     describe "reading a valid object" do

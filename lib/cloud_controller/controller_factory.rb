@@ -36,6 +36,7 @@ module CloudController
             droplet_blobstore: dependency_locator.droplet_blobstore,
             buildpack_cache_blobstore: dependency_locator.buildpack_cache_blobstore,
             package_blobstore: dependency_locator.package_blobstore,
+            config: @config,
           }
         else
           {}

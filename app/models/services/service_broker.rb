@@ -57,6 +57,7 @@ module VCAP::CloudController
 
       def sync_services_and_plans
         catalog_services = @broker.client.catalog.fetch('services', [])
+
         catalog_services.each do |catalog_service|
           service_id = catalog_service.fetch('id')
 
@@ -68,26 +69,50 @@ module VCAP::CloudController
               label: catalog_service.fetch('name'),
               description: catalog_service.fetch('description'),
               bindable: catalog_service.fetch('bindable'),
-              tags: catalog_service.fetch('tags', [])
+              tags: catalog_service.fetch('tags', []),
+              active: is_active?(catalog_service)
             )
           end
+
+          plans_from_db = service.service_plans
+          plans_processed_from_catalog = Set.new
 
           catalog_plans = catalog_service.fetch('plans', [])
           catalog_plans.each do |catalog_plan|
             plan_id = catalog_plan.fetch('id')
 
-            ServicePlan.update_or_create(
+            plan = ServicePlan.update_or_create(
               service: service,
               unique_id: plan_id
             ) do |plan|
               plan.set(
                 name: catalog_plan.fetch('name'),
                 description: catalog_plan.fetch('description'),
-                free: true
+                free: true,
+                active: true
               )
             end
+
+            plans_processed_from_catalog << plan.id
           end
+
+          plans_in_db_not_in_catalog = plans_from_db.select { |existing_plan| !plans_processed_from_catalog.include?(existing_plan.id) }
+          plans_in_db_not_in_catalog.each do |plan_to_deactivate|
+            if plan_to_deactivate.service_instances.count > 0
+              plan_to_deactivate.active = false
+              plan_to_deactivate.save
+            else
+              plan_to_deactivate.destroy
+            end
+          end
+
         end
+      end
+
+      private
+
+      def is_active?(catalog_service)
+        !catalog_service.fetch('plans', []).empty?
       end
     end
   end

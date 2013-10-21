@@ -206,7 +206,7 @@ describe Blobstore do
       end
     end
 
-    describe "#cp_from_local" do
+    describe "#cp_r_to_blobstore" do
       it "calls the fog with public false" do
         FileUtils.touch(File.join(local_dir, "empty_file"))
         blobstore.files.should_receive(:create).with(hash_including(public: false))

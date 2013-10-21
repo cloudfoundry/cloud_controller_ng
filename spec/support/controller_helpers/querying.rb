@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 module ControllerHelpers
   shared_examples "querying objects" do |opts|
     describe "querying objects" do

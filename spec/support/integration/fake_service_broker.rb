@@ -10,6 +10,19 @@ end
 @@instance_count = 0
 @@binding_count = 0
 
+@@plans = [
+  {
+    'id' => 'custom-plan-1',
+    'name' => 'free',
+    'description' => 'A description of the Free plan'
+  },
+  {
+    'id' => 'custom-plan-2',
+    'name' => 'also free',
+    'description' => 'Two for twice the price!'
+  }
+]
+
 get '/v2/catalog' do
   body = {
     'services' => [
@@ -19,13 +32,7 @@ get '/v2/catalog' do
         'description' => 'A description of My Custom Service',
         'bindable' => true,
         'tags' => ['mysql', 'relational'],
-        'plans' => [
-          {
-            'id' => 'custom-plan-1',
-            'name' => 'free',
-            'description' => 'A description of the Free plan'
-          }
-        ]
+        'plans' => @@plans
       }
     ]
   }.to_json
@@ -80,4 +87,9 @@ get '/counts' do
   }.to_json
 
   [200, {}, body]
+end
+
+delete '/plan/last' do
+  @@plans.pop
+  [204, {}, nil]
 end
