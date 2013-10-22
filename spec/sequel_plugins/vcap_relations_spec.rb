@@ -1,7 +1,13 @@
 require "spec_helper"
 
-describe "Sequel::Plugins::VcapRelations" do
+describe "Sequel::Plugins::VcapRelations", non_transactional: true do
+  table_names = [:bottoms, :middles, :tops, :dogs_names, :names, :dogs, :owners]
+
   before do
+    table_names.each do |table_name|
+      db.drop_table? table_name
+    end
+
     db.create_table :owners do
       primary_key :id
       String :guid, :null => false, :index => true
@@ -63,6 +69,12 @@ describe "Sequel::Plugins::VcapRelations" do
     define_model :Top, db
     define_model :Middle, db
     define_model :Bottom, db
+  end
+
+  after do
+    table_names.each do |table_name|
+      db.drop_table? table_name
+    end
   end
 
   let(:owner_klass) { self.class.const_get(:Owner) }
