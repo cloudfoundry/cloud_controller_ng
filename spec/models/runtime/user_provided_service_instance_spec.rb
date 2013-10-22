@@ -33,7 +33,12 @@ describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
         create_for: proc { VCAP::CloudController::Space.make },
       },
     },
-  }
+  } do
+    before(:all) do
+      # encrypted attributes with changing keys, duh
+      described_class.dataset.destroy
+    end
+  end
 
   let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 

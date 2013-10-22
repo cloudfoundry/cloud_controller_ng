@@ -2,6 +2,10 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::Space, type: :model do
+    before(:all) do
+      reset_database
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :organization],
       :unique_attributes   => [ [:organization, :name] ],
@@ -102,7 +106,7 @@ module VCAP::CloudController
         soft_deleted_app.soft_delete
 
         expect {
-          subject.destroy(savepoint: true)
+          subject.destroy
         }.to change {
           App.with_deleted.where(:id => [app.id, soft_deleted_app.id]).count
         }.from(2).to(0)
@@ -112,7 +116,7 @@ module VCAP::CloudController
         service_instance = ManagedServiceInstance.make(:space => space)
 
         expect {
-          subject.destroy(savepoint: true)
+          subject.destroy
         }.to change {
           ManagedServiceInstance.where(:id => service_instance.id).count
         }.by(-1)
@@ -121,7 +125,7 @@ module VCAP::CloudController
       it "destroys all routes" do
         route = Route.make(:space => space)
         expect {
-          subject.destroy(savepoint: true)
+          subject.destroy
         }.to change {
           Route.where(:id => route.id).count
         }.by(-1)
@@ -131,21 +135,21 @@ module VCAP::CloudController
         domain = Domain.make(:owning_organization => space.organization)
         space.add_domain(domain)
         space.save
-        expect { subject.destroy(savepoint: true) }.to change { domain.reload.spaces.count }.by(-1)
+        expect { subject.destroy }.to change { domain.reload.spaces.count }.by(-1)
       end
 
       it "nullifies any default_users" do
         user = User.make
         space.add_default_user(user)
         space.save
-        expect { subject.destroy(savepoint: true) }.to change { user.reload.default_space }.from(space).to(nil)
+        expect { subject.destroy }.to change { user.reload.default_space }.from(space).to(nil)
       end
 
       it "destroys all events" do
         event = Event.make(:space => space)
 
         expect {
-          subject.destroy(savepoint: true)
+          subject.destroy
         }.to_not change {
           Event.where(:id => [event.id]).count
         }

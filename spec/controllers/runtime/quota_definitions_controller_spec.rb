@@ -23,6 +23,8 @@ module VCAP::CloudController
   end
 
   describe "permissions" do
+    after(:all) { reset_database }
+
     let(:quota_attributes) {
       {
         :name => quota_name,

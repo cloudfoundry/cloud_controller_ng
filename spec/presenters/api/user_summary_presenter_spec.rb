@@ -25,7 +25,10 @@ describe UserSummaryPresenter do
       u
     end
 
-    subject { UserSummaryPresenter.new(user) }
+    subject do
+      reset_database
+      UserSummaryPresenter.new(user)
+    end
 
     it "creates a valid JSON" do
       subject.to_hash.should eq({

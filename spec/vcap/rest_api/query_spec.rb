@@ -16,6 +16,8 @@ module VCAP::RestAPI
     end
 
     before do
+      reset_database
+
       db.create_table :authors do
         primary_key :id
 

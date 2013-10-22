@@ -32,16 +32,27 @@ module ModelHelpers
   end
 end
 
+def it_validates_the_uniqueness_of(*unique_keys)
+  it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
+  it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
+end
+
 def it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
   opts = unique_keys.last.is_a?(Hash) ? unique_keys.pop : {}
-  factory = opts[:factory]
+  factory = opts[:factory] || ->(attrs={}, opts={save: true}) do
+    if opts[:save]
+      described_class.make(attrs)
+    else
+      described_class.make_unsaved(attrs)
+    end
+  end
 
   context "creating a second instance with the same value for #{unique_keys.inspect}" do
     let!(:existing_instance) { factory.call }
     let(:duplicate_attrs_for_unique_fields) do
-      unique_keys.each.with_object({}) do |unique_key, dup_attrs|
+      unique_keys.each.with_object({}) { |unique_key, dup_attrs|
         dup_attrs[unique_key] = existing_instance.public_send(unique_key)
-      end
+      }
     end
 
     def ensure_sequel_error_for_all_columns!(column_list, error)
@@ -54,7 +65,7 @@ def it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
              " For example, you may think that [:name, :email] are unique as a pair, but instead" +
              " :name is globally unique and :email is globally unique"
       end
-      columns_in_error = error.message[/^(.*) unique/, 1].split(" and ")
+      columns_in_error = error.message[/^(.*) unique$/, 1].split(" and ")
       columns_in_error.should =~ column_list.map(&:to_s)
     end
 
@@ -70,7 +81,13 @@ end
 
 def it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
   opts = unique_keys.last.is_a?(Hash) ? unique_keys.pop : {}
-  factory = opts[:factory]
+  factory = opts[:factory] || ->(attrs={}, opts={save: true}) do
+    if opts[:save]
+      described_class.make(attrs)
+    else
+      described_class.make_unsaved(attrs)
+    end
+  end
 
   context "saving a second instance with the same values for #{unique_keys.inspect} to the database without validation" do
     let!(:existing_instance) { factory.call }
@@ -93,7 +110,7 @@ def it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
     it "fails due to database integrity checks" do
       expect {
         instance_with_duplicate_fields = factory.call(duplicate_attrs_for_unique_fields, save: false)
-        instance_with_duplicate_fields.save(validate: false)
+        instance_with_duplicate_fields.save(:validate => false)
       }.to raise_error Sequel::DatabaseError do |error|
         ensure_uniqueness_required_for_columns!(unique_keys, error)
       end

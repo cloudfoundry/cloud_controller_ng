@@ -16,7 +16,7 @@ module VCAP::CloudController
 
     describe "#destroy" do
       let!(:service) { Service.make }
-      subject { service.destroy(savepoint: true) }
+      subject { service.destroy }
 
       it "doesn't remove the associated ServiceAuthToken" do
         # XXX services don't always have a token, unlike what the fixture implies

@@ -1,6 +1,6 @@
 module ModelHelpers
   shared_examples "timestamps" do |opts|
-    before do
+    before(:all) do
       @obj = described_class.make
       @created_at = @obj.created_at
       @obj.updated_at.should be_nil

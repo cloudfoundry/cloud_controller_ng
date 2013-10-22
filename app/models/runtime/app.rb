@@ -373,7 +373,7 @@ module VCAP::CloudController
     def soft_delete
       raise AlreadyDeletedError, "App: #{self} was already soft deleted on: #{deleted_at}" if deleted_at
 
-      model.db.transaction(savepoint: true) do
+      model.db.transaction do
         lock!
         cleanup_associations
         self.deleted_at = Time.now

@@ -1,20 +1,17 @@
 module ControllerHelpers
   shared_examples "querying objects" do |opts|
     describe "querying objects" do
-      before do
-        5.times { opts[:model].make }
-        Sham.reset(:before_each)
-      end
+      before(:all) { 5.times { opts[:model].make } }
 
       opts[:queryable_attributes].each do |attr|
         describe "#{opts[:path]}?q=#{attr}:<val>" do
-          before do
+          before(:all) do
             @val = Sham.send(attr)
             opts[:model].make(attr => @val)
           end
 
           describe "with a matching value" do
-            before do
+            before(:all) do
               get "#{opts[:path]}?q=#{attr}:#{@val}", {}, json_headers(admin_headers)
             end
 
@@ -28,7 +25,7 @@ module ControllerHelpers
           end
 
           describe "with a non-existent value" do
-            before do
+            before(:all) do
               @non_existent_value = Sham.send(attr)
               get "#{opts[:path]}?q=#{attr}:#{@non_existent_value}", {}, json_headers(admin_headers)
             end

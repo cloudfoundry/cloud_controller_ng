@@ -30,7 +30,7 @@ module VCAP::CloudController
 
       attrs = @request_attrs.dup
       target_position = attrs.delete('position')
-      model.db.transaction(savepoint: true) do
+      model.db.transaction do
         obj.lock!
         obj.update_from_hash(attrs)
         obj.shift_to_position(target_position)

@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe AppSummariesController, type: :controller do
-    before do
+    before(:all) do
       @num_services = 2
       @free_mem_size = 128
 
@@ -34,6 +34,10 @@ module VCAP::CloudController
 
       @app.add_route(@route1)
       @app.add_route(@route2)
+    end
+
+    after(:all) do
+      @system_domain.destroy
     end
 
     describe "GET /v2/apps/:id/summary" do

@@ -83,6 +83,7 @@ module VCAP::CloudController
         context "when the insert seed flag is passed in" do
         let(:argv) { [flag] }
         before do
+          reset_database
           QuotaDefinition.dataset.destroy
           Stack.stub(:configure)
         end

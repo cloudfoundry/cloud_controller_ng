@@ -2,7 +2,7 @@ module ControllerHelpers
   shared_examples "reading a valid object" do |opts|
     describe "reading a valid object" do
       describe "GET #{opts[:path]}/:id" do
-        before do
+        before(:all) do
           @obj = opts[:model].make
           get "#{opts[:path]}/#{@obj.guid}", {}, json_headers(admin_headers)
         end

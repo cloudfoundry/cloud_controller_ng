@@ -8,7 +8,7 @@ module VCAP::CloudController
     include_examples "reading a valid object", path: "/v2/stacks", model: Stack, basic_attributes: [:name, :description]
 
     def self.it_responds_to(verb, path, expected_status, expected_error)
-      before { send(verb, path, {}, json_headers(admin_headers)) }
+      before(:all) { send(verb, path, {}, json_headers(admin_headers)) }
 
       it "returns #{expected_status}" do
         last_response.status.should == expected_status
@@ -47,17 +47,17 @@ module VCAP::CloudController
       end
 
       describe "POST /v2/stacks/" do
-        before { post("/v2/stacks", {}, json_headers(admin_headers)) }
+        before(:all) { post("/v2/stacks", {}, json_headers(admin_headers)) }
         it_responds_unknown_request
       end
 
       describe "PUT /v2/stacks/:id" do
-        before { put("/v2/stacks/#{obj.guid}", {}, json_headers(admin_headers)) }
+        before(:all) { put("/v2/stacks/#{obj.guid}", {}, json_headers(admin_headers)) }
         it_responds_unknown_request
       end
 
       describe "DELETE /v2/stacks/:id" do
-        before { delete("/v2/stacks/#{obj.guid}", {}, json_headers(admin_headers)) }
+        before(:all) { delete("/v2/stacks/#{obj.guid}", {}, json_headers(admin_headers)) }
         it_responds_unknown_request
       end
     end

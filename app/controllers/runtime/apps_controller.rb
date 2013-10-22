@@ -58,7 +58,7 @@ module VCAP::CloudController
         raise VCAP::Errors::AssociationNotEmpty.new("service_bindings", app.class.table_name)
       end
 
-      app.db.transaction(savepoint: true) do
+      app.db.transaction do
         app.soft_delete
         Event.record_app_delete(app, SecurityContext.current_user)
       end
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
     def update(guid)
       app = find_for_update(guid)
-      model.db.transaction(savepoint: true) do
+      model.db.transaction do
         app.lock!
         app.update_from_hash(request_attrs)
         Event.record_app_update(app, SecurityContext.current_user) if app.previous_changes
@@ -91,7 +91,7 @@ module VCAP::CloudController
       raise InvalidRequest unless request_attrs
 
       obj = nil
-      model.db.transaction(savepoint: true) do
+      model.db.transaction do
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user, roles)
         Event.record_app_create(obj, SecurityContext.current_user)

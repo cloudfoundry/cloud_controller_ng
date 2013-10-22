@@ -15,16 +15,17 @@ module VCAP::CloudController
         space.add_domain(domain)
         { space: space, domain: domain }
       end,
-      :create_attribute => lambda { |name, route|
+      :create_attribute => lambda { |name|
+        @space ||= Space.make
         case name.to_sym
         when :space
-          route.space
+          @space
         when :domain
           d = Domain.make(
-            :owning_organization => route.space.organization,
+            :owning_organization => @space.organization,
             :wildcard => true
           )
-          route.space.add_domain(d)
+          @space.add_domain(d)
           d
         when :host
           Sham.host
@@ -251,7 +252,7 @@ module VCAP::CloudController
 
         it "notifies DEAs of route change for running apps" do
           VCAP::CloudController::DeaClient.should_receive(:update_uris).with(app_1)
-          Route[:guid => route.guid].destroy(savepoint: true)
+          Route[:guid => route.guid].destroy
         end
       end
 
@@ -265,7 +266,7 @@ module VCAP::CloudController
 
           VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
 
-          route.destroy(savepoint: true)
+          route.destroy
         end
       end
 
@@ -275,7 +276,7 @@ module VCAP::CloudController
         it "does not notify DEAs of route change for apps that are not staged" do
           AppFactory.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
           VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
-          Route[:guid => route.guid].destroy(savepoint: true)
+          Route[:guid => route.guid].destroy
         end
       end
     end

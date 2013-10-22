@@ -20,7 +20,7 @@ module VCAP::CloudController
       buildpack_blobstore.cp_to_blobstore(uploaded_file, sha1)
 
       old_buildpack_key = buildpack.key
-      model.db.transaction(savepoint: true) do
+      model.db.transaction do
         buildpack.lock!
         buildpack.update_from_hash(key: sha1)
       end

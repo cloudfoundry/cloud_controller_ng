@@ -5,7 +5,13 @@ resource "Domains", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
 
-  before { 3.times { VCAP::CloudController::Domain.make } }
+  before do
+    reset_database
+
+    3.times do
+      VCAP::CloudController::Domain.make
+    end
+  end
 
   let(:guid) { VCAP::CloudController::Domain.first.guid }
 

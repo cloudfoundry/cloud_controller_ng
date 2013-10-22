@@ -89,6 +89,11 @@ module VCAP::CloudController
     context 'when the domain is not owned by any organization (global domain)' do
       before { object.update(:owning_organization => nil) }
 
+      after do
+        # Global domains cause test pollution.
+        object.destroy
+      end
+
       it_behaves_like :admin_full_access
       it_behaves_like :read_only
 

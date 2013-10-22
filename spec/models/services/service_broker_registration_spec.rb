@@ -3,6 +3,8 @@ require 'models/services/service_broker_registration'
 
 module VCAP::CloudController
   describe ServiceBrokerRegistration do
+    before { reset_database }
+
     describe '#save' do
       let(:broker) do
         ServiceBroker.new(
@@ -26,7 +28,7 @@ module VCAP::CloudController
       it 'creates a service broker' do
         expect {
           registration.save(raise_on_failure: false)
-        }.to change(ServiceBroker, :count).from(0).to(1)
+        }.to change(ServiceBroker, :count).by(1)
 
         expect(broker).to eq(ServiceBroker.last)
 
@@ -85,7 +87,7 @@ module VCAP::CloudController
           it 'raises an error, even though we\'d rather it not' do
             expect {
               registration.save(raise_on_failure: false)
-            }.to raise_error ServiceBroker::V2::ServiceBrokerBadResponse
+            }.to raise_error
           end
 
           it 'does not create a new service broker' do

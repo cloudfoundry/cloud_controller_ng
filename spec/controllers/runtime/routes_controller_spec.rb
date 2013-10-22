@@ -11,13 +11,14 @@ module VCAP::CloudController
                      required_attributes: %w(domain_guid space_guid),
                      unique_attributes: %w(host domain_guid),
                      extra_attributes: {host: -> { Sham.host }},
-                     create_attribute: lambda { |name, route|
+                     create_attribute: lambda { |name|
+                       @space ||= Space.make
                        case name.to_sym
                          when :space_guid
-                           route.space.guid
+                           @space.guid
                          when :domain_guid
-                           domain = Domain.make(wildcard: true, owning_organization: route.space.organization,)
-                           route.space.add_domain(domain)
+                           domain = Domain.make(wildcard: true, owning_organization: @space.organization,)
+                           @space.add_domain(domain)
                            domain.guid
                          when :host
                            Sham.host
@@ -181,7 +182,9 @@ module VCAP::CloudController
   end
 
   describe "on app change" do
-    before do
+    before :each do
+      reset_database
+
       space = Space.make
       user = make_developer_for_space(space)
       @headers_for_user = headers_for(user)

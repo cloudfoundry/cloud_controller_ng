@@ -64,7 +64,7 @@ module VCAP::CloudController
 
       it "destroys all service plan visibilities" do
         service_plan_visibility = ServicePlanVisibility.make(:service_plan => service_plan)
-        expect { service_plan.destroy(savepoint: true) }.to change {
+        expect { service_plan.destroy }.to change {
           ServicePlanVisibility.where(:id => service_plan_visibility.id).any?
         }.to(false)
       end

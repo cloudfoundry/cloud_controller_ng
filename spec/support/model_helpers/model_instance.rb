@@ -5,7 +5,7 @@ module ModelHelpers
 
     attrs = {}
     attribute_names.each do |attr_name|
-      v = create_attribute.call(attr_name, obj) if create_attribute
+      v = create_attribute.call(attr_name) if create_attribute
       v ||= obj.send(attr_name)
       attrs[attr_name] = v
     end
@@ -20,7 +20,7 @@ module ModelHelpers
     let(:creation_opts) do
       template_obj = described_class.make
       o = creation_opts_from_obj(template_obj, opts)
-      template_obj.destroy(savepoint: true)
+      template_obj.destroy
       o
     end
   end
@@ -71,7 +71,7 @@ module ModelHelpers
         let(:obj) { described_class.make }
 
         it "should succeed" do
-          obj.destroy(savepoint: true)
+          obj.destroy
         end
       end
     end

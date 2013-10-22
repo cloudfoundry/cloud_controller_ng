@@ -2,6 +2,14 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Buildpack, type: :model do
+    before(:all) { reset_database }
+
+    around do |example|
+      Sequel::Model.db.transaction(rollback: :always) do
+        example.run
+      end
+    end
+
     def get_bp_ordered
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end

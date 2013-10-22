@@ -27,7 +27,7 @@ module VCAP::CloudController
       validate_access(label, provider)
 
       set_v2_security_context
-      Sequel::Model.db.transaction(savepoint: true) do
+      Sequel::Model.db.transaction do
         service = Service.update_or_create(
           :label => label, :provider => provider
         ) do |svc|

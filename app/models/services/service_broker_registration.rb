@@ -10,7 +10,7 @@ module VCAP::CloudController
       ensure_no_raise_on_failure!(options)
 
       if broker.valid?
-        broker.db.transaction(savepoint: true) do
+        broker.db.transaction do
           broker.save
           broker.load_catalog
         end

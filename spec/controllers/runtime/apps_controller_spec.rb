@@ -485,15 +485,11 @@ module VCAP::CloudController
     end
 
     describe "staging" do
-      context "when app will be staged", non_transactional: true do
+      context "when app will be staged" do
         let(:app_obj) do
           AppFactory.make(:package_hash => "abc", :state => "STOPPED",
                            :droplet_hash => nil, :package_state => "PENDING",
                            :instances => 1)
-        end
-
-        after do
-          app_obj.delete
         end
 
         it "stages the app asynchronously" do
@@ -541,7 +537,9 @@ module VCAP::CloudController
         )
       end
 
-      before do
+      before :each do
+        reset_database
+
         user = make_developer_for_space(space)
         # keeping the headers here so that it doesn't reset the global config...
         @headers_for_user = headers_for(user)

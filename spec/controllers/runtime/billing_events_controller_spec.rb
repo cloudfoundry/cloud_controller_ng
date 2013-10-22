@@ -15,7 +15,7 @@ module VCAP::CloudController
           headers_for(user)
         end
 
-        before do
+        before(:all) do
           BillingEvent.plugin :scissors
           BillingEvent.delete
 

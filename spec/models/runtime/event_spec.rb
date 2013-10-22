@@ -5,14 +5,14 @@ module VCAP::CloudController
     let(:space) { Space.make }
 
     subject(:event) do
-      Event.make type: "audit.movie.premiere",
-        actor: "Nicolas Cage",
-        actor_type: "One True God",
-        actee: "John Travolta",
-        actee_type: "Scientologist",
-        timestamp: Time.new(1997, 6, 27),
-        metadata: {"popcorn_price" => "$(arm + leg)"},
-        space: space
+      Event.make :type => "audit.movie.premiere",
+        :actor => "Nicolas Cage",
+        :actor_type => "One True God",
+        :actee => "John Travolta",
+        :actee_type => "Scientologist",
+        :timestamp => Time.new(1997, 6, 27),
+        :metadata => {"popcorn_price" => "$(arm + leg)"},
+        :space => space
     end
 
     it "has an actor" do
@@ -57,10 +57,12 @@ module VCAP::CloudController
         let(:space_guid) { "space-guid-1234" }
 
         let(:new_org) { Organization.make }
-        let(:new_space) { Space.make(guid: space_guid, organization: new_org) }
-        let!(:new_event) { Event.make(space: new_space) }
+        let(:new_space) { Space.make(:guid => space_guid, :organization => new_org) }
+        let!(:new_event) { Event.make(:space => new_space) }
 
-        before { new_space.destroy(savepoint: true) }
+        before :each do
+          new_space.destroy
+        end
 
         it "the event continues to exist" do
           expect(Space.find(:id => new_space.id)).to be_nil

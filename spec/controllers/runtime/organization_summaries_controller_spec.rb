@@ -10,7 +10,7 @@ module VCAP::CloudController
     free_mem_size = 1024
     num_apps = num_prod_apps + num_free_apps
 
-    before do
+    before :all do
       @org = Organization.make
       @spaces = []
       num_spaces.times do
@@ -47,7 +47,7 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/organizations/:id/summary" do
-      before do
+      before :all do
         get "/v2/organizations/#{@org.guid}/summary", {}, admin_headers
       end
 

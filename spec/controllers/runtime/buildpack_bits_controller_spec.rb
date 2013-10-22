@@ -46,7 +46,7 @@ module VCAP::CloudController
     context "Buildpack binaries" do
       context "/v2/buildpacks/:guid/bits" do
         before { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "upload_binary_buildpack", position: 0 }) }
-
+        after { @test_buildpack.destroy }
         let(:upload_body) { { :buildpack => valid_zip } }
 
         it "returns NOT AUTHORIZED (403) for non admins" do
@@ -138,7 +138,8 @@ module VCAP::CloudController
             })
         end
 
-        before { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "get_binary_buildpack", key: 'xyz', position: 0 }) }
+        before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "get_binary_buildpack", key: 'xyz', position: 0 }) }
+        after(:all) { @test_buildpack.destroy }
 
         it "returns NOT AUTHORIZED (403) users without correct basic auth" do
           get "/v2/buildpacks/#{@test_buildpack.guid}/download", {}

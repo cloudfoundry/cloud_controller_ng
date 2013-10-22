@@ -1,8 +1,10 @@
 module ControllerHelpers
   shared_examples "operations on an invalid object" do |opts|
     describe "operations on an invalid object" do
+      after(:all) { reset_database }
+
       def self.it_responds_to(verb, path, expected_status, expected_error)
-        before { send(verb, path, {}, json_headers(admin_headers)) }
+        before(:all) { send(verb, path, {}, json_headers(admin_headers)) }
 
         it "returns #{expected_status}" do
           last_response.status.should == expected_status

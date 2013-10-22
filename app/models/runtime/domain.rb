@@ -136,7 +136,7 @@ module VCAP::CloudController
       logger = Steno.logger("cc.db.domain")
       d = nil
 
-      Domain.db.transaction(savepoint: true) do
+      Domain.db.transaction do
         d = Domain[:name => name]
         if d
           logger.info "reusing default serving domain: #{name}"

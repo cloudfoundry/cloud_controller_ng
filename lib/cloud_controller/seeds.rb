@@ -16,7 +16,7 @@ module VCAP::CloudController
         end
       end
 
-      def create_seed_stacks(_)
+      def create_seed_stacks(config)
         Stack.populate
       end
 

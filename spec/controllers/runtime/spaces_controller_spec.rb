@@ -405,7 +405,9 @@ module VCAP::CloudController
         headers_for(user)
       end
 
-      before do
+      before(:each) do
+        reset_database
+
         user.add_organization(organization_two)
         space_two.add_developer(user)
       end

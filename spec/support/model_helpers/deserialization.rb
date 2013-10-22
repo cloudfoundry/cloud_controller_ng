@@ -13,7 +13,7 @@ module ModelHelpers
           end
         end
 
-        obj.destroy(savepoint: true)
+        obj.destroy
 
         # used for things like password that we don't export
         opts[:extra_json_attributes].each do |attr|
@@ -36,7 +36,7 @@ module ModelHelpers
             instance.set_all(creation_opts)
           end
           hash = obj.to_hash
-          obj.destroy(savepoint: true)
+          obj.destroy
 
           # used for things like password that we don't export
           opts[:extra_json_attributes].each do |attr|

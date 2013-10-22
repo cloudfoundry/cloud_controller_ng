@@ -30,6 +30,7 @@ module VCAP::CloudController
 
     describe '#enumerate' do
       let!(:model_class) do
+        reset_database
         db.create_table :test do
           primary_key :id
           String :value

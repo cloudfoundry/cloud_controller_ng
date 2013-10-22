@@ -32,7 +32,7 @@ module IntegrationSetup
 
     run_cmd("bundle exec rake db:migrate", :wait => true)
     @cc_pids ||= []
-    @cc_pids << run_cmd("bin/cloud_controller -s -c #{config_file}", opts)
+    @cc_pids << run_cmd("bin/cloud_controller -m -c #{config_file}", opts)
 
     info_endpoint = "http://localhost:#{config["port"]}/info"
     wait_cycles.times do
@@ -117,8 +117,5 @@ RSpec.configure do |rspec_config|
 
   rspec_config.after(:all, :type => :integration) do
     WebMock.disable_net_connect!
-    #reset database
-    $spec_env.reset_database
-    VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
   end
 end

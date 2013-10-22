@@ -12,12 +12,13 @@ module VCAP::CloudController
       :required_attributes => [:service_instance, :app],
       :db_required_attributes => [:service_instance_id, :app_id, :credentials],
       :unique_attributes => [ [:app, :service_instance] ],
-      :create_attribute => lambda { |name, service_binding|
+      :create_attribute => lambda { |name|
+        @space ||= Space.make
         case name.to_sym
           when :app
-            AppFactory.make(:space => service_binding.space)
+            AppFactory.make(:space => @space)
           when :service_instance
-            ManagedServiceInstance.make(:space => service_binding.space)
+            ManagedServiceInstance.make(:space => @space)
         end
       },
       :create_attribute_reset => lambda { @space = nil },
@@ -48,7 +49,7 @@ module VCAP::CloudController
       let(:binding) { ServiceBinding.make }
       it "unbinds at the broker" do
         binding.client.should_receive(:unbind)
-        binding.destroy(savepoint: true)
+        binding.destroy
       end
 
       context 'when unbind fails' do
@@ -56,7 +57,7 @@ module VCAP::CloudController
 
         it 'raises an error and rolls back' do
           expect {
-            binding.destroy(savepoint: true)
+            binding.destroy
           }.to raise_error
 
           expect(binding).to be_exists
@@ -66,6 +67,8 @@ module VCAP::CloudController
 
     it_behaves_like "a model with an encrypted attribute" do
       let(:service_instance) { ManagedServiceInstance.make }
+
+      after { service_instance.destroy }
 
       def new_model
         ServiceBinding.make(
@@ -208,7 +211,7 @@ module VCAP::CloudController
         fake_app_staging(app)
         app.needs_staging?.should be_false
 
-        binding.destroy(savepoint: true)
+        binding.destroy
         app.refresh
         app.needs_staging?.should be_true
       end
