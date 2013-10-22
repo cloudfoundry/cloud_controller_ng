@@ -77,7 +77,7 @@ module VCAP::CloudController
       responses = @message_bus.synchronous_request("app.state", droplet: app.guid, version: app.version)
       return if responses.empty?
 
-      response = JSON.parse(responses.first)
+      response = responses.first
       return if response.empty?
 
       response

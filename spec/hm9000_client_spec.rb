@@ -39,7 +39,7 @@ def generate_hm_api_response(app, running_instances, crash_counts=[])
                                })
   end
 
-  result.to_json
+  JSON.parse(result.to_json)
 end
 
 module VCAP::CloudController
@@ -72,14 +72,14 @@ module VCAP::CloudController
           if !app0_request_should_fail
             [app_0_api_response]
           else
-            ["{}"]
+            [{}]
           end
         elsif data[:droplet] == app1.guid && data[:version] == app1.version
           [app_1_api_response]
         elsif data[:droplet] == app2.guid && data[:version] == app2.version
           [app_2_api_response]
         else
-          ["{}"]
+          [{}]
         end
       end
     end
