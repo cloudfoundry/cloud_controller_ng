@@ -2,7 +2,8 @@ require 'set'
 
 module VCAP::CloudController
   class HM9000Client
-    def initialize(config)
+    def initialize(message_bus, config)
+      @message_bus = message_bus
       @config = config
     end
 
@@ -55,19 +56,6 @@ module VCAP::CloudController
 
     private
 
-    def make_request(app)
-      client = HTTPClient.new
-      uri = "http://#{config[:hm9000_api_host]}:#{config[:hm9000_api_port]}/app"
-      client.set_basic_auth(uri, config[:hm9000_api_user], config[:hm9000_api_password])
-      response = client.get(uri, query:{"app-guid" => app.guid, "app-version" => app.version})
-
-      if !response.ok?
-        return nil
-      end
-
-      return JSON.parse(response.body)
-    end
-
     def healthy_instance(app)
       response = make_request(app)
 
@@ -85,7 +73,15 @@ module VCAP::CloudController
       return running_indices.length
     end
 
-    attr_reader :config
+    def make_request(app)
+      responses = @message_bus.synchronous_request("app.state", droplet: app.guid, version: app.version)
+      return if responses.empty?
+
+      response = JSON.parse(responses.first)
+      return if response.empty?
+
+      response
+    end
 
     def logger
       @logger ||= Steno.logger("cc.healthmanager.client")

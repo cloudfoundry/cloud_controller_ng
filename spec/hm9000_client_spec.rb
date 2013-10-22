@@ -48,36 +48,40 @@ module VCAP::CloudController
     let(:app0) { AppFactory.make(instances: app0instances) }
     let(:app1) { AppFactory.make(instances: 1) }
     let(:app2) { AppFactory.make(instances: 1) }
+    let(:app0_request_should_fail) { false }
 
     let(:hm9000_config) {
       {
-        hm9000_api_host: "magic-bunnies.com",
-        hm9000_api_port: 1812,
-        hm9000_api_user: "MarkHammill",
-        hm9000_api_password: "luke4ever",
         flapping_crash_count_threshold: 3,
       }
     }
 
     let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }]) }
-    let(:app_0_api_response_status) { 200 }
     let(:app_1_api_response) { generate_hm_api_response(app1, [{ index: 0, state: "CRASHED" }]) }
     let(:app_2_api_response) { generate_hm_api_response(app2, [{ index: 0, state: "RUNNING" }]) }
 
-    subject(:hm9000_client) { VCAP::CloudController::HM9000Client.new(hm9000_config) }
+    let(:message_bus) { double }
+
+    subject(:hm9000_client) { VCAP::CloudController::HM9000Client.new(message_bus, hm9000_config) }
 
     before do
-      stub_request(:get, "MarkHammill:luke4ever@magic-bunnies.com:1812/app")
-      .with(:query => { "app-guid" => app0.guid, "app-version" => app0.version })
-      .to_return(body: app_0_api_response, status: app_0_api_response_status)
+      message_bus.stub(:synchronous_request) do |subject, data|
+        next unless subject == "app.state"
 
-      stub_request(:get, "MarkHammill:luke4ever@magic-bunnies.com:1812/app")
-      .with(:query => { "app-guid" => app1.guid, "app-version" => app1.version })
-      .to_return(body: app_1_api_response)
-
-      stub_request(:get, "MarkHammill:luke4ever@magic-bunnies.com:1812/app")
-      .with(:query => { "app-guid" => app2.guid, "app-version" => app2.version })
-      .to_return(body: app_2_api_response)
+        if data[:droplet] == app0.guid && data[:version] == app0.version
+          if !app0_request_should_fail
+            [app_0_api_response]
+          else
+            ["{}"]
+          end
+        elsif data[:droplet] == app1.guid && data[:version] == app1.version
+          [app_1_api_response]
+        elsif data[:droplet] == app2.guid && data[:version] == app2.version
+          [app_2_api_response]
+        else
+          ["{}"]
+        end
+      end
     end
 
     describe "healthy_instances" do
@@ -89,7 +93,7 @@ module VCAP::CloudController
         end
 
         context "when the request fails" do
-          let(:app_0_api_response_status) { 404 }
+          let(:app0_request_should_fail) { true }
 
           it "should return 0" do
             expect(hm9000_client.healthy_instances(app0)).to eq(0)
@@ -147,7 +151,7 @@ module VCAP::CloudController
         end
 
         context "when one of the request fails" do
-          let(:app_0_api_response_status) { 404 }
+          let(:app0_request_should_fail) { true }
 
           it "should return 0 for that app, but be ok for the others" do
             expect(hm9000_client.healthy_instances([app0, app1, app2])).to eq({ app0.guid => 0, app1.guid => 0, app2.guid => 1 })
@@ -160,7 +164,7 @@ module VCAP::CloudController
       let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "CRASHED", instance_guid: "sham" }, { index: 1, state: "CRASHED", instance_guid: "wow" }, { index: 1, state: "RUNNING" }]) }
 
       context "when the request fails" do
-        let(:app_0_api_response_status) { 404 }
+        let(:app0_request_should_fail) { true }
 
         it "should return an empty array" do
           expect(hm9000_client.find_crashes(app0)).to eq([])
@@ -181,7 +185,7 @@ module VCAP::CloudController
       let(:app_0_api_response) { generate_hm_api_response(app0, [], [{instance_index:0, crash_count:3}, {instance_index:1, crash_count:1}, {instance_index:2, crash_count:10}]) }
 
       context "when the request fails" do
-        let(:app_0_api_response_status) { 404 }
+        let(:app0_request_should_fail) { true }
 
         it "should return an empty array" do
           expect(hm9000_client.find_flapping_indices(app0)).to eq([])
