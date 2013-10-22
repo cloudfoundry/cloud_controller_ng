@@ -71,12 +71,6 @@ describe "Sequel::Plugins::VcapRelations", non_transactional: true do
     define_model :Bottom, db
   end
 
-  after do
-    table_names.each do |table_name|
-      db.drop_table? table_name
-    end
-  end
-
   let(:owner_klass) { self.class.const_get(:Owner) }
   let(:dog_klass) { self.class.const_get(:Dog) }
   let(:name_klass) { self.class.const_get(:Name) }

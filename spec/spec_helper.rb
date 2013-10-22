@@ -579,7 +579,13 @@ RSpec.configure do |rspec_config|
 
   rspec_config.around :each do |example|
     if example.metadata.to_s.include? "non_transactional"
-      example.run
+      begin
+        example.run
+      ensure
+        #reset database
+        $spec_env.reset_database
+        VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+      end
     else
       Sequel::Model.db.transaction(rollback: :always, savepoint: true) do
         example.run

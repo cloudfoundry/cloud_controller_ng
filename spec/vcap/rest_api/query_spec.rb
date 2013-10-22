@@ -57,11 +57,6 @@ module VCAP::RestAPI
       @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published published_at))
     end
 
-    after do
-      db.drop_table? :books
-      db.drop_table? :authors
-    end
-
     describe "#filtered_dataset_from_query_params" do
       describe "no query" do
         it "should return the full dataset" do

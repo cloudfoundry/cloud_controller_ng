@@ -1,10 +1,9 @@
 require "spec_helper"
 require "securerandom"
 
-describe "Sequel::Plugins::VcapSerialization" do
+describe "Sequel::Plugins::VcapSerialization", non_transactional: true do
   before do
-    db_name = "test_#{SecureRandom.uuid[0..6]}".to_sym
-    db.create_table db_name do
+    db.create_table :test do
       primary_key :id
 
       Integer :val1
@@ -14,7 +13,7 @@ describe "Sequel::Plugins::VcapSerialization" do
 
     @c = Class.new(Sequel::Model)
     @c.plugin :vcap_serialization
-    @c.set_dataset(db[db_name])
+    @c.set_dataset(db[:test])
   end
 
   describe "#default_order_by" do

@@ -220,8 +220,7 @@ module VCAP::CloudController
         expect(last_response.status).to eq(404)
       end
 
-      context "when a service instance exists" do
-
+      context "when a service instance exists", non_transactional: true do
         it "returns a 400 and an appropriate error message" do
           service = Service.make(:service_broker => broker)
           service_plan = ServicePlan.make(:service => service)

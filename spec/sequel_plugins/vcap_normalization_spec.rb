@@ -18,10 +18,6 @@ describe "Sequel::Plugins::VcapNormalization", non_transactional: true do
     end
   end
 
-  after(:all) do
-    db.drop_table? :test
-  end
-
   let(:model_object) { model_class.new }
 
   describe ".strip_attributes" do
