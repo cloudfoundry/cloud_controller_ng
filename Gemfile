@@ -1,4 +1,5 @@
-source 'https://rubygems.org'
+# This used to be https, but that causes problems in the vagrant container used by warden-jenkins.
+source 'http://rubygems.org'
 
 gem "activesupport", "~> 3.0" # It looks like this is required for DelayedJob, even with the DJ-Sequel extension
 gem "rake"
