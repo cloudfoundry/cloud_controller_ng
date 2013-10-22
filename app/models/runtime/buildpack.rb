@@ -27,7 +27,7 @@ module VCAP::CloudController
       last = Buildpack.at_last_position
 
       if last
-        db.transaction do
+        db.transaction(savepoint: true) do
           last.lock!
           last_position = last.position
 
@@ -48,7 +48,7 @@ module VCAP::CloudController
     def shift_to_position(target_position)
       return if target_position == position
 
-      db.transaction do
+      db.transaction(savepoint: true) do
         last = Buildpack.at_last_position
         if last
           last.lock!

@@ -2,8 +2,6 @@ require "spec_helper"
 
 describe "Sequel::Plugins::VcapSerialization" do
   before do
-    reset_database
-
     db.create_table :test do
       primary_key :id
 

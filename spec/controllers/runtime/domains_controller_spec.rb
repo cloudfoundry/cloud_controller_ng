@@ -50,17 +50,11 @@ module VCAP::CloudController
     describe "Permissions" do
       include_context "permissions"
 
-      before(:all) do
+      before do
         @system_domain = Domain.new(:name => Sham.domain,
                                             :owning_organization => nil)
         @system_domain.save(:validate => false)
-      end
 
-      after(:all) do
-        @system_domain.destroy
-      end
-
-      before do
         @obj_a = Domain.make(:owning_organization => @org_a)
         @space_a.add_domain(@obj_a)
 

@@ -7,8 +7,6 @@ module VCAP::CloudController
       let(:req_body) { Yajl::Encoder.encode({:name => "dynamic_test_buildpack"}) }
 
       context "POST - create a custom buildpack" do
-        after { reset_database }
-
         it "returns NOT AUTHORIZED (403) for non admins" do
           post "/v2/buildpacks", req_body, headers_for(user)
           expect(last_response.status).to eq(403)
@@ -53,8 +51,7 @@ module VCAP::CloudController
       end
 
       context "GET" do
-        before(:all) { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({name: "get_buildpack", key: "xyz", position: 0}) }
-        after(:all) { @test_buildpack.destroy }
+        before { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash(name: "get_buildpack", key: "xyz", position: 0) }
 
         describe "/v2/buildpacks/:guid" do
           it "lets you retrieve info for a specific buildpack" do
@@ -94,10 +91,6 @@ module VCAP::CloudController
         before(:each) do
           @orig_buildpack = VCAP::CloudController::Buildpack.create_from_hash(name: "original_buildpack", key: "xyz", position: 1)
           @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash(name: "update_buildpack", key: "xyz", position: 2)
-        end
-        after(:each) do
-          @orig_buildpack.destroy
-          @test_buildpack.destroy
         end
 
         it "returns NOT AUTHORIZED (403) for non admins" do
@@ -150,8 +143,6 @@ module VCAP::CloudController
         end
 
         context "create a default buildpack" do
-          after { @test_buildpack.destroy if @test_buildpack.exists? }
-
           it "returns NOT AUTHORIZED (403) for non admins" do
             @test_buildpack = VCAP::CloudController::Buildpack.make
             delete "/v2/buildpacks/#{@test_buildpack.guid}", {}, headers_for(user)

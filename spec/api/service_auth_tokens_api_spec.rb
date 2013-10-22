@@ -5,13 +5,7 @@ resource "ServiceAuthTokens", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
 
-  before do
-    reset_database
-
-    3.times do
-      VCAP::CloudController::ServiceAuthToken.make
-    end
-  end
+  before { 3.times { VCAP::CloudController::ServiceAuthToken.make } }
 
   let(:guid) { VCAP::CloudController::ServiceAuthToken.first.guid }
 

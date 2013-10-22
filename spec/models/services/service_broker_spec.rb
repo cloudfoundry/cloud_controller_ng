@@ -9,10 +9,6 @@ module VCAP::CloudController
 
     subject(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, auth_username: auth_username, auth_password: auth_password) }
 
-    before do
-      reset_database
-    end
-
     it_behaves_like 'a model with an encrypted attribute' do
       let(:encrypted_attr) { :auth_password }
     end
@@ -273,7 +269,7 @@ module VCAP::CloudController
         service = Service.make(:service_broker => service_broker)
         expect {
           begin
-            service_broker.destroy
+            service_broker.destroy(savepoint: true)
           rescue Sequel::ForeignKeyConstraintViolation
           end
         }.to change {
@@ -288,7 +284,7 @@ module VCAP::CloudController
           ManagedServiceInstance.make(:service_plan => service_plan)
           expect {
             begin
-              service_broker.destroy
+              service_broker.destroy(savepoint: true)
             rescue Sequel::ForeignKeyConstraintViolation
             end
           }.to_not change {

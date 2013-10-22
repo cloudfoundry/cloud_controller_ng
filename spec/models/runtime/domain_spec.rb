@@ -5,18 +5,15 @@ module VCAP::CloudController
     let(:domain) { Domain.make }
 
     it_behaves_like "a CloudController model", {
-      :required_attributes          => [:name, :owning_organization, :wildcard],
-      :db_required_attributes       => [:name],
-      :unique_attributes            => :name,
-      :custom_attributes_for_uniqueness_tests =>  -> do
-        @owning_organization ||= Organization.make
-        { owning_organization: @owning_organization }
-      end,
-      :stripped_string_attributes   => :name,
-      :many_to_zero_or_one => {
-        :owning_organization => {
-          :delete_ok => true,
-          :create_for => lambda { |domain|
+      required_attributes: [:name, :owning_organization, :wildcard],
+      db_required_attributes: [:name],
+      unique_attributes: :name,
+      custom_attributes_for_uniqueness_tests: -> { {owning_organization: Organization.make} },
+      stripped_string_attributes: :name,
+      many_to_zero_or_one: {
+        owning_organization: {
+          delete_ok: true,
+          create_for: ->(domain) {
             org = Organization.make
             domain.owning_organization = org
             domain.save
@@ -24,24 +21,20 @@ module VCAP::CloudController
           }
         }
       },
-      :many_to_many => {
-        :organizations => lambda {
-          |domain| Organization.make
-        }
+      many_to_many: {
+        organizations: ->(domain) { Organization.make }
       },
-      :many_to_zero_or_more => {
-        :spaces => lambda { |domain|
-          Space.make(:organization => domain.owning_organization)
-        }
+      many_to_zero_or_more: {
+        spaces: ->(domain) { Space.make(organization: domain.owning_organization) }
       },
-      :one_to_zero_or_more => {
-        :routes => {
-          :delete_ok => true,
-          :create_for => lambda { |domain|
-            domain.update(:wildcard => true)
-            space = Space.make(:organization => domain.owning_organization)
+      one_to_zero_or_more: {
+        routes: {
+          delete_ok: true,
+          create_for: ->(domain) {
+            domain.update(wildcard: true)
+            space = Space.make(organization: domain.owning_organization)
             space.add_domain(domain)
-            Route.make(:domain => domain, :space => space)
+            Route.make(domain: domain, space: space)
           }
         }
       }
@@ -366,10 +359,6 @@ module VCAP::CloudController
     end
 
     context "shared_domains" do
-      before do
-        reset_database
-      end
-
       context "with no domains" do
         it "should be empty" do
           Domain.shared_domains.count.should == 0
@@ -386,7 +375,7 @@ module VCAP::CloudController
     end
 
     describe "#destroy" do
-      subject { domain.destroy }
+      subject { domain.destroy(savepoint: true) }
       let(:space) do
         Space.make(:organization => domain.owning_organization).tap do |space|
           space.add_domain(domain)

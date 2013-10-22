@@ -44,14 +44,13 @@ module VCAP::CloudController
       unique_attributes: %w(app_guid service_instance_guid),
       db_required_attributes: %w(credentials),
       extra_attributes: {binding_options: ->{Sham.binding_options}},
-      create_attribute: lambda { |name|
-        @space ||= Space.make
+      create_attribute: lambda { |name, service_binding|
         case name.to_sym
           when :app_guid
-            app = AppFactory.make(space: @space)
+            app = AppFactory.make(space: service_binding.space)
             app.guid
           when :service_instance_guid
-            service_instance = ManagedServiceInstance.make(space: @space)
+            service_instance = ManagedServiceInstance.make(space: service_binding.space)
             service_instance.guid
           when :credentials
             CREDENTIALS

@@ -2,8 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Organization, type: :model do
-    before(:all) { reset_database }
-
     it_behaves_like "a CloudController model", {
       :required_attributes          => :name,
       :unique_attributes            => :name,
@@ -200,22 +198,22 @@ module VCAP::CloudController
 
       it "destroys all apps" do
         app = AppFactory.make(:space => space)
-        expect { org.destroy }.to change { App[:id => app.id] }.from(app).to(nil)
+        expect { org.destroy(savepoint: true) }.to change { App[:id => app.id] }.from(app).to(nil)
       end
 
       it "destroys all spaces" do
-        expect { org.destroy }.to change { Space[:id => space.id] }.from(space).to(nil)
+        expect { org.destroy(savepoint: true) }.to change { Space[:id => space.id] }.from(space).to(nil)
       end
 
       it "destroys all service instances" do
         service_instance = ManagedServiceInstance.make(:space => space)
-        expect { org.destroy }.to change { ManagedServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
+        expect { org.destroy(savepoint: true) }.to change { ManagedServiceInstance[:id => service_instance.id] }.from(service_instance).to(nil)
       end
 
       it "destroys all service plan visibilities" do
         service_plan_visibility = ServicePlanVisibility.make(:organization => org)
         expect {
-          org.destroy
+          org.destroy(savepoint: true)
         }.to change {
           ServicePlanVisibility.where(:id => service_plan_visibility.id).any?
         }.to(false)
@@ -224,7 +222,7 @@ module VCAP::CloudController
 
       it "destroys the owned domain" do
         domain = Domain.make(:owning_organization => org)
-        expect { org.destroy }.to change { Domain[:id => domain.id] }.from(domain).to(nil)
+        expect { org.destroy(savepoint: true) }.to change { Domain[:id => domain.id] }.from(domain).to(nil)
       end
 
       it "nullify domains" do
@@ -232,7 +230,7 @@ module VCAP::CloudController
         domain = Domain.make(:owning_organization => nil)
         domain.add_organization(org)
         domain.save
-        expect { org.destroy }.to change { domain.reload.organizations.count }.by(-1)
+        expect { org.destroy(savepoint: true) }.to change { domain.reload.organizations.count }.by(-1)
       end
     end
 

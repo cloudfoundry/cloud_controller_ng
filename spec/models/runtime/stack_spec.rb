@@ -60,10 +60,7 @@ module VCAP::CloudController
       context "when config was set" do
         let(:file) { File.join(fixture_path, "config/stacks.yml") }
 
-        before do
-          reset_database
-          described_class.configure(file)
-        end
+        before { described_class.configure(file) }
 
         it "loads stacks" do
           described_class.populate
@@ -94,7 +91,7 @@ module VCAP::CloudController
       end
 
       context "when config was set" do
-        before { reset_database }
+        before { Stack.dataset.destroy }
 
         context "when stack is found with default name" do
           before { Stack.make(:name => "default-stack-name") }
@@ -119,7 +116,7 @@ module VCAP::CloudController
 
       it "destroys the apps" do
         app = AppFactory.make(:stack => stack)
-        expect { stack.destroy }.to change { App.where(:id => app.id).count }.by(-1)
+        expect { stack.destroy(savepoint: true) }.to change { App.where(:id => app.id).count }.by(-1)
       end
     end
 

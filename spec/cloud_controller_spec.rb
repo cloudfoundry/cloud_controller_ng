@@ -34,7 +34,7 @@ describe VCAP::CloudController::Controller do
           make_request
         }.to change { user_count }.by(1)
 
-        VCAP::CloudController::User.order(:id).last.tap do |u|
+        VCAP::CloudController::User.last.tap do |u|
           expect(u.guid).to eq(user_id)
           expect(u.admin).to be_true
           expect(u.active).to be_true
@@ -109,7 +109,6 @@ describe VCAP::CloudController::Controller do
           before { config[:bootstrap_admin_email] = email }
 
           context "when there are 0 users in the ccdb" do
-            before { reset_database }
             it_creates_and_sets_admin_user
             it_sets_token_info
           end
@@ -125,7 +124,6 @@ describe VCAP::CloudController::Controller do
           before { config[:bootstrap_admin_email] = "some-other-bootstrap-email" }
 
           context "when there are 0 users in the ccdb" do
-            before { reset_database }
             it_creates_and_sets_non_admin_user
             it_sets_token_info
           end
@@ -139,7 +137,10 @@ describe VCAP::CloudController::Controller do
       end
 
       context "when scope includes cc admin scope" do
-        before { token_info["scope"] = [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
+        before do
+          VCAP::CloudController::User.make
+          token_info["scope"] = [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE]
+        end
         it_creates_and_sets_admin_user
         it_sets_token_info
       end

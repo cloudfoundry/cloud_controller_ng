@@ -15,8 +15,6 @@ module VCAP::CloudController
     }
 
     describe ".default" do
-      before { reset_database }
-
       it "returns the default quota" do
         QuotaDefinition.default.name.should == "free"
       end
@@ -26,7 +24,7 @@ module VCAP::CloudController
       it "nullifies the organization quota definition" do
         org = Organization.make(:quota_definition => quota_definition)
         expect {
-          quota_definition.destroy
+          quota_definition.destroy(savepoint: true)
         }.to change {
           Organization.count(:id => org.id)
         }.by(-1)

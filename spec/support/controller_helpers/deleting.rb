@@ -6,8 +6,6 @@ module ControllerHelpers
 
         subject { delete "#{opts[:path]}/#{obj.guid}", {}, admin_headers }
 
-        before(:all) { reset_database }
-
         context "when there are no child associations" do
           before do
             if obj.is_a? Service

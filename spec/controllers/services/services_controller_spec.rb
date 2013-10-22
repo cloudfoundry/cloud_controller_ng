@@ -33,11 +33,8 @@ module VCAP::CloudController
     describe "Permissions" do
       include_context "permissions"
 
-      before(:all) do
-        reset_database
-        5.times do
-          ServicePlan.make
-        end
+      before do
+        5.times { ServicePlan.make }
         @obj_a = ServicePlan.make.service
         @obj_b = ServicePlan.make.service
       end
@@ -111,12 +108,9 @@ module VCAP::CloudController
 
     describe "get /v2/services" do
       let(:user) {VCAP::CloudController::User.make  }
-      let (:headers) do
-        headers_for(user)
-      end
+      let(:headers) { headers_for(user) }
 
-      before(:each) do
-        reset_database
+      before do
         @active = 3.times.map { Service.make(:active => true, :long_description => Sham.long_description).
           tap{|svc| ServicePlan.make(:service => svc) } }
         @inactive = 2.times.map { Service.make(:active => false).tap{|svc| ServicePlan.make(:service => svc) } }

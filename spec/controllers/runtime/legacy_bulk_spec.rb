@@ -34,13 +34,7 @@ module VCAP::CloudController
       end
 
       describe "GET", "/bulk/apps" do
-        before :all do
-          reset_database
-
-          100.times do
-            AppFactory.make
-          end
-        end
+        before { 5.times { AppFactory.make } }
 
         it "requires authentication" do
           get "/bulk/apps"
@@ -148,7 +142,7 @@ module VCAP::CloudController
               "batch_size" => 100,
               "bulk_token" => "{\"id\":0}",
             }
-            decoded_response["results"].size.should == 99
+            decoded_response["results"].size.should == 4
             last_response.status.should == 200
           end
         end

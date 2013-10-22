@@ -14,7 +14,7 @@ module ControllerHelpers
     path = "#{path}#{qp.join("&")}"
 
     describe "GET #{path}" do
-      before(:all) { get "#{path}", {}, json_headers(admin_headers) }
+      before { get path, {}, json_headers(admin_headers) }
 
       it "should return 200" do
         last_response.status.should == 200
@@ -78,8 +78,7 @@ module ControllerHelpers
   shared_examples "enumerating objects" do |opts|
     describe "enumerating objects" do
       describe "with 8 objects" do
-        before(:all) do
-          reset_database
+        before do
           # force creation of the admin user used in the headers
           admin_headers
           num_to_create = 8 - opts[:model].count
