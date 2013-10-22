@@ -52,7 +52,12 @@ module VCAP::CloudController
       binding.broker_provided_id = response.fetch('service_id')
       binding.gateway_data = response.fetch('configuration')
       binding.credentials = response.fetch('credentials')
-      binding.syslog_drain_url = response.fetch('syslog_drain_url', nil)
+      if response.fetch('syslog_drain_url').blank?
+        binding.syslog_drain_url =  instance.syslog_drain_url
+      else
+        binding.syslog_drain_url =  response.fetch('syslog_drain_url')
+      end
+
     end
 
     def unbind(binding)

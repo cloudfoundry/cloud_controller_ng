@@ -18,7 +18,7 @@ module VCAP::CloudController
 
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :service_plan, :space],
-      :db_required_attributes => [:name, :credentials],
+      :db_required_attributes => [:name],
       :unique_attributes => [ [:space, :name] ],
       :custom_attributes_for_uniqueness_tests => ->{ {service_plan: ServicePlan.make} },
       :stripped_string_attributes => :name,
@@ -51,10 +51,6 @@ module VCAP::CloudController
         instance = described_class.make
         instance.refresh.is_gateway_service.should == true
       end
-    end
-
-    it_behaves_like "a model with an encrypted attribute" do
-      let(:encrypted_attr) { :credentials }
     end
 
     describe "serialization" do
