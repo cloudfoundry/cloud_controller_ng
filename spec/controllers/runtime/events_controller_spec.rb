@@ -2,8 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe EventsController, type: :controller do
-    before { reset_database }
-
     let(:admin_user) { User.make :admin => true }
 
     describe "GET /v2/events" do

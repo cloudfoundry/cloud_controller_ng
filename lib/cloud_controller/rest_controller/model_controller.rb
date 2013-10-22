@@ -19,7 +19,7 @@ module VCAP::CloudController::RestController
       before_create
 
       obj = nil
-      model.db.transaction do
+      model.db.transaction(savepoint: true) do
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user, roles)
       end
@@ -49,7 +49,7 @@ module VCAP::CloudController::RestController
     def update(guid)
       obj = find_for_update(guid)
 
-      model.db.transaction do
+      model.db.transaction(savepoint: true) do
         obj.lock!
         obj.update_from_hash(request_attrs)
       end

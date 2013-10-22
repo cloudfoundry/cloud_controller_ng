@@ -38,6 +38,7 @@ module VCAP::CloudController
       reset_database
 
       VCAP::CloudController::DB.load_models
+      VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
     end
 
     def spec_dir
@@ -169,11 +170,6 @@ $spec_env = VCAP::CloudController::SpecEnvironment.new
 module VCAP::CloudController::SpecHelper
   def db
     $spec_env.db
-  end
-
-  def reset_database
-    $spec_env.reset_database
-    VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
   end
 
   # Note that this method is mixed into each example, and so the instance
@@ -579,6 +575,16 @@ RSpec.configure do |rspec_config|
     # Is event emitter our salvation?
     #VCAP::CloudController::AppObserver.stub(:delete_droplet)
     Fog::Mock.reset
+  end
+
+  rspec_config.around :each do |example|
+    if example.metadata.to_s.include? "non_transactional"
+      example.run
+    else
+      Sequel::Model.db.transaction(rollback: :always, savepoint: true) do
+        example.run
+      end
+    end
   end
 end
 

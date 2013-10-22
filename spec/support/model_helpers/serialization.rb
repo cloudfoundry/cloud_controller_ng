@@ -1,6 +1,6 @@
 module ModelHelpers
   shared_examples "serialization" do |opts|
-    before(:all) do
+    before do
       @obj = described_class.make
     end
 

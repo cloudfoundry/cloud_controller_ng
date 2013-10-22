@@ -806,9 +806,9 @@ module VCAP::CloudController
     describe "destroy" do
       let(:app) { AppFactory.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
 
-      it "notifies the app observer" do
+      it "notifies the app observer", non_transactional: true do
         AppObserver.should_receive(:deleted).with(app)
-        app.destroy
+        app.destroy(savepoint: true)
       end
 
       it "should nullify the routes" do
@@ -824,7 +824,7 @@ module VCAP::CloudController
           :service_instance => ManagedServiceInstance.make(:space => app.space)
         )
         expect {
-          app.destroy
+          app.destroy(savepoint: true)
         }.to change { ServiceBinding.where(:id => service_binding.id).count }.from(1).to(0)
       end
 
@@ -832,7 +832,7 @@ module VCAP::CloudController
         app_event = AppEvent.make(:app => app)
 
         expect {
-          app.destroy
+          app.destroy(savepoint: true)
         }.to change {
           AppEvent.where(:id => app_event.id).count
         }.from(1).to(0)
@@ -917,7 +917,7 @@ module VCAP::CloudController
 
           it "generates a stop event" do
             AppStopEvent.should_receive(:create_from_app).with(app)
-            app.destroy
+            app.destroy(savepoint: true)
           end
 
           context "when the stop event creation fails" do
@@ -926,7 +926,7 @@ module VCAP::CloudController
             end
 
             it "rolls back the deletion" do
-              expect { app.destroy rescue nil }.not_to change(app, :exists?).from(true)
+              expect { app.destroy(savepoint: true) rescue nil }.not_to change(app, :exists?).from(true)
             end
           end
 
@@ -934,7 +934,7 @@ module VCAP::CloudController
             it "succeeds and does not generate a duplicate stop event" do
               AppStopEvent.create_from_app(app)
               AppStopEvent.should_not_receive(:create_from_app).with(app)
-              app.destroy
+              app.destroy(savepoint: true)
             end
           end
         end
@@ -943,7 +943,7 @@ module VCAP::CloudController
           it "does not generate a stop event" do
             app = AppFactory.make(:state => "STOPPED")
             AppStopEvent.should_not_receive(:create_from_app)
-            app.destroy
+            app.destroy(savepoint: true)
           end
         end
       end

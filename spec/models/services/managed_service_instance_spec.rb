@@ -74,7 +74,7 @@ module VCAP::CloudController
       context "service deprovisioning" do
         it "should deprovision a service on destroy" do
           service_instance.client.should_receive(:deprovision).with(service_instance)
-          service_instance.destroy
+          service_instance.destroy(savepoint: true)
         end
       end
 
@@ -82,7 +82,7 @@ module VCAP::CloudController
         it "should raise and rollback" do
           service_instance.client.stub(:deprovision).and_raise
           expect {
-            service_instance.destroy
+            service_instance.destroy(savepoint: true)
           }.to raise_error
           VCAP::CloudController::ManagedServiceInstance.find(id: service_instance.id).should be
         end
@@ -103,7 +103,7 @@ module VCAP::CloudController
           service_instance
           ServiceCreateEvent.should_not_receive(:create_from_service_instance)
           ServiceDeleteEvent.should_receive(:create_from_service_instance).with(service_instance)
-          service_instance.destroy
+          service_instance.destroy(savepoint: true)
         end
       end
     end
@@ -149,10 +149,6 @@ module VCAP::CloudController
       end
 
       context "with a trial quota" do
-        before do
-          reset_database
-        end
-
         let(:trial_db_guid) { ServicePlan.trial_db_guid }
         let(:trial_db_plan) { ServicePlan.make(:unique_id => trial_db_guid) }
         let(:paid_db_plan) { ServicePlan.make(:unique_id => "aws_rds_mysql_cfinternal") }
@@ -274,7 +270,7 @@ module VCAP::CloudController
     end
 
     describe "#destroy" do
-      subject { service_instance.destroy }
+      subject { service_instance.destroy(savepoint: true) }
 
       it "destroys the service bindings" do
         service_binding = ServiceBinding.make(
@@ -306,7 +302,7 @@ module VCAP::CloudController
 
       context "when there isn't a service auth token" do
         it "fails" do
-          subject.service_plan.service.service_auth_token.destroy
+          subject.service_plan.service.service_auth_token.destroy(savepoint: true)
           subject.refresh
           expect do
             subject.enum_snapshots
@@ -347,7 +343,7 @@ module VCAP::CloudController
 
       context "when there isn't a service auth token" do
         it "fails" do
-          subject.service_plan.service.service_auth_token.destroy
+          subject.service_plan.service.service_auth_token.destroy(savepoint: true)
           subject.refresh
           expect do
             subject.create_snapshot(name)

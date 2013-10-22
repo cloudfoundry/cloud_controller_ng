@@ -14,10 +14,6 @@ module VCAP::CloudController
         VCAP::Services::Api::ServiceOfferingRequest.new(defaults.merge(attrs))
       end
 
-      before do
-        reset_database
-      end
-
       describe "POST services/v1/offerings" do
         let(:path) { "services/v1/offerings" }
 

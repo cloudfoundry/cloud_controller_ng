@@ -1,17 +1,17 @@
 module ControllerHelpers
-  def self.description_for_inline_depth(depth)
+  def self.description_for_inline_depth(depth, pagination = 50)
     if depth
-      "?inline-relations-depth=#{depth}"
+      "?inline-relations-depth=#{depth}&results-per-page=#{pagination}"
     else
       ""
     end
   end
 
-  def query_params_for_inline_depth(depth)
+  def query_params_for_inline_depth(depth, pagination = 50)
     if depth
-      { "inline-relations-depth" => depth }
+      { "inline-relations-depth" => depth, "results-per-page" => pagination }
     else
-      { }
+      { "results-per-page" => pagination }
     end
   end
 
@@ -59,7 +59,7 @@ module ControllerHelpers
       end
     end
 
-    before(:all) do
+    before do
       @opts = opts
       @attr = attr
     end
@@ -76,7 +76,7 @@ module ControllerHelpers
   end
 
   shared_context "inlined_relations_context" do |opts, attr, make, depth|
-    before(:all) do
+    before do
       query_parms = query_params_for_inline_depth(depth)
       get "#{opts[:path]}/#{obj.guid}", query_parms, headers
       @uri = entity["#{attr}_url"]
@@ -104,16 +104,9 @@ module ControllerHelpers
   shared_examples "get to_many attr url" do |opts, attr, make|
     describe "GET on the #{attr}_url" do
       describe "with no associated #{attr}" do
-        before(:all) do
+        before do
           obj.send("remove_all_#{attr}")
           get @uri, {}, headers
-        end
-
-        after(:all) do
-          begin
-            obj.send(get_method).map(&:destroy)
-          rescue WebMock::NetConnectNotAllowedError
-          end
         end
 
         it "should return 200" do
@@ -139,7 +132,7 @@ module ControllerHelpers
       end
 
       describe "with 2 associated #{attr}" do
-        before(:all) do
+        before do
           obj.send("remove_all_#{attr}")
           @child1 = make.call(obj)
           @child2 = make.call(obj)
@@ -149,13 +142,6 @@ module ControllerHelpers
           obj.save
 
           get @uri, {}, headers
-        end
-
-        after(:all) do
-          begin
-            obj.send(get_method).map(&:destroy)
-          rescue WebMock::NetConnectNotAllowedError
-          end
         end
 
         it "should return 200" do
@@ -219,14 +205,14 @@ module ControllerHelpers
             child_name  = attr.to_s.chomp("_guids")
             path = "#{opts[:path]}/:guid"
 
-            before(:all) do
+            before do
               @child1 = make.call(obj)
               @child2 = make.call(obj)
               @child3 = make.call(obj)
             end
 
             describe "POST #{path} with only #{attr} in the request body" do
-              before(:all) do
+              before do
                 do_write(:post, [@child1], 404, [])
               end
 
@@ -285,7 +271,7 @@ module ControllerHelpers
               describe "GET #{path}#{desc}" do
                 include_context "collections", opts, attr, make
 
-                before(:all) do
+                before do
                   obj.send("#{attr}=", make.call(obj)) unless obj.send(attr)
                   obj.save
                 end
@@ -301,7 +287,7 @@ module ControllerHelpers
                 # detailed read testing there
                 desc = ControllerHelpers::description_for_inline_depth(inline_relations_depth)
                 describe "GET on the #{attr}_url" do
-                  before(:all) do
+                  before do
                     get @uri, {}, headers
                   end
 
@@ -332,42 +318,40 @@ module ControllerHelpers
               end
             end
 
-            describe "with 51 associated #{attr}" do
+            describe "with 3 associated #{attr}" do
               depth = 1
-              desc = ControllerHelpers::description_for_inline_depth(depth)
+              pagination = 2
+              desc = ControllerHelpers::description_for_inline_depth(depth, pagination)
               describe "GET #{path}#{desc}" do
                 include_context "collections", opts, attr, make
 
-                before(:all) do
+                let(:query_params) {query_params_for_inline_depth(depth, pagination)}
+
+                before do
                   obj.send("remove_all_#{attr}")
-                  51.times do
+                  3.times do
                     child = make.call(obj)
                     obj.refresh
                     obj.send(add_method, child)
                   end
 
-                  query_parms = query_params_for_inline_depth(depth)
-                  get "#{opts[:path]}/#{obj.guid}", query_parms, headers
+                  get "#{opts[:path]}/#{obj.guid}", query_params, headers
                   @uri = entity["#{attr}_url"]
-                end
-
-                after(:all) do
-                  begin
-                    obj.send(get_method).map(&:destroy)
-                  rescue WebMock::NetConnectNotAllowedError
-                  end
                 end
 
                 # we want to make sure to only limit the assocation that
                 # has too many results yet still inline the others
-                include_examples "inlined_relations", attr
+                context "when inline depth = 0" do
+                  let(:query_params) { {} }
+                  include_examples "inlined_relations", attr
+                end
                 (to_many_attrs.keys - [attr]).each do |other_attr|
-                  include_examples "inlined_relations", other_attr, 1
+                  include_examples "inlined_relations", other_attr, depth
                 end
 
                 describe "GET on the #{attr}_url" do
-                  before(:all) do
-                    get @uri, {}, headers
+                  before do
+                    get @uri, query_params, headers
 
                     @raw_guids = obj.send(get_method).sort do |a, b|
                       a[:id] <=> b[:id]
@@ -378,28 +362,29 @@ module ControllerHelpers
                     last_response.status.should == 200
                   end
 
-                  it "should return total_results => 51" do
-                    decoded_response["total_results"].should == 51
+                  it "should return total_results => 3" do
+                    decoded_response["total_results"].should == 3
                   end
 
-                  it "should return prev_url => nil" do #THIS ONE
+                  it "should return prev_url => nil" do
                     decoded_response.should have_key("prev_url")
                     decoded_response["prev_url"].should be_nil
                   end
 
-                  it "should return next_url" do #THIS ONE
+                  it "should return next_url" do
                     decoded_response.should have_key("next_url")
                     next_url = decoded_response["next_url"]
-                    next_url.should match /#{@uri}\?page=2&results-per-page=50/
+                    next_url.should match /#{@uri}\?/
+                    next_url.should include("page=2&results-per-page=2")
                   end
 
-                  it "should return the first 50 resources" do
-                    decoded_response["resources"].count.should == 50
+                  it "should return the first page of resources" do
+                    decoded_response["resources"].count.should == 2
                     api_guids = decoded_response["resources"].map do |v|
                       v["metadata"]["guid"]
                     end
 
-                    api_guids.should == @raw_guids[0..49]
+                    api_guids.should == @raw_guids[0..1]
                   end
 
                   it "should return the next 1 resource when fetching next_url" do
@@ -408,7 +393,7 @@ module ControllerHelpers
                     last_response.status.should == 200
                     decoded_response["resources"].count.should == 1
                     guid = decoded_response["resources"][0]["metadata"]["guid"]
-                    guid.should == @raw_guids[50]
+                    guid.should == @raw_guids[2]
                   end
                 end
               end

@@ -226,7 +226,7 @@ describe "Sinatra::VCAP" do
   end
 
   describe "caller provided x-vcap-request-id" do
-    before(:all) do
+    before do
       get "/request_id", {}, { "X_VCAP_REQUEST_ID" => "abcdef" }
     end
 
@@ -242,7 +242,7 @@ describe "Sinatra::VCAP" do
   end
 
   describe "caller provided x-request-id" do
-    before(:all) do
+    before do
       get "/request_id", {}, { "X_REQUEST_ID" => "abcdef" }
     end
 
@@ -258,7 +258,7 @@ describe "Sinatra::VCAP" do
   end
 
   describe "caller provided x-request-id and x-vcap-request-id" do
-    before(:all) do
+    before do
       get "/request_id", {}, { "X_REQUEST_ID" => "abc", "X_VCAP_REQUEST_ID" => "def" }
     end
 

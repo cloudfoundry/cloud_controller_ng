@@ -80,7 +80,7 @@ module VCAP::CloudController
         app.save
         expect(app.droplets).to have(2).items
         expect {
-          app.destroy
+          app.destroy(savepoint: true)
         }.to change {
           Droplet.count
         }.by(-2)

@@ -5,12 +5,7 @@ resource "Apps", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
 
-  before do
-    reset_database
-    3.times do
-      VCAP::CloudController::AppFactory.make
-    end
-  end
+  before { 3.times { VCAP::CloudController::AppFactory.make } }
 
   let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
 

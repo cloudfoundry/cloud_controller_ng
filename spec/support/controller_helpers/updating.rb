@@ -1,10 +1,6 @@
 module ControllerHelpers
   shared_examples "updating" do |opts|
     opts[:extra_attributes] ||= {}
-    before(:all) do
-      reset_database
-      configure_stacks
-    end
 
     describe "updating" do
       define_method(:creation_opts) do
@@ -15,15 +11,6 @@ module ControllerHelpers
           initial_obj = opts[:model].make
           attrs = creation_opts_from_obj(initial_obj, opts)
           initial_obj.destroy
-
-          create_attribute = opts[:create_attribute]
-          if create_attribute
-            opts[:create_attribute_reset].call
-            attrs.keys.each do |k|
-              v = create_attribute.call k
-              attrs[k] = v if v
-            end
-          end
 
           opts[:extra_attributes].each do |attr, val|
             attrs[attr.to_s] = val.respond_to?(:call) ? val.call : val
@@ -151,7 +138,7 @@ module ControllerHelpers
               val = nil
               if create_attribute
                 # FIXME: do we use this?  do we use it in the model specs
-                val = create_attribute.call(new_attr)
+                val = create_attribute.call(new_attr, orig_obj)
               end
 
               if val.nil?

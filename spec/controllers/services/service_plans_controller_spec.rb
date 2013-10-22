@@ -33,11 +33,8 @@ module VCAP::CloudController
     describe "Permissions" do
       include_context "permissions"
 
-      before(:all) do
-        reset_database
-        5.times do
-          ServicePlan.make
-        end
+      before do
+        5.times { ServicePlan.make }
         @obj_a = ServicePlan.make
         @obj_b = ServicePlan.make
       end

@@ -2,3 +2,4 @@
 --format progress
 --colour
 --profile
+--order rand

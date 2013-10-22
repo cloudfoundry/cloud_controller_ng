@@ -24,8 +24,6 @@ module VCAP::CloudController
       end
     end
 
-    before(:each) { reset_database }
-
     let(:org) { Organization.make }
     let(:space_a) { Space.make :organization => org }
 

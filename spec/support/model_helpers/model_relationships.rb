@@ -92,7 +92,7 @@ module ModelHelpers
             obj.save
 
             expect {
-              related.destroy
+              related.destroy(savepoint: true)
             }.to raise_error Sequel::DatabaseError, /foreign key/
           end
         else
@@ -100,7 +100,7 @@ module ModelHelpers
             related = create_for.call(obj)
             obj.send(add_attribute, related)
             obj.save
-            related.destroy
+            related.destroy(savepoint: true)
           end
         end
       end

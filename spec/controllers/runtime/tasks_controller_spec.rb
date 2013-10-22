@@ -2,8 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe TasksController, type: :controller do
-    before { reset_database }
-
     describe "POST /v2/tasks" do
       context "when an app is given" do
         let!(:some_app) { AppFactory.make :guid => "some-app-guid" }
@@ -48,7 +46,7 @@ module VCAP::CloudController
         end
 
         context "and the app is not found" do
-          before { some_app.destroy }
+          before { some_app.destroy(savepoint: true) }
 
           it "returns HTTP status 400" do
             post "/v2/tasks",

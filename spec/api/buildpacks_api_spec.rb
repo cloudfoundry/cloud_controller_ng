@@ -5,16 +5,6 @@ resource "Buildpacks (experimental)", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
 
-  before(:all) do
-    reset_database
-  end
-
-  around do |example|
-    Sequel::Model.db.transaction(rollback: :always) do
-      example.run
-    end
-  end
-
   before do
     3.times do |i|
       i += 1
