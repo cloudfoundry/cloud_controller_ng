@@ -16,9 +16,6 @@ module VCAP::RestAPI
     end
 
     before do
-      db.drop_table? :books
-      db.drop_table? :authors
-
       db.create_table :authors do
         primary_key :id
 

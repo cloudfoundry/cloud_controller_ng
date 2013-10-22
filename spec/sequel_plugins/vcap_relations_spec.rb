@@ -1,13 +1,7 @@
 require "spec_helper"
 
 describe "Sequel::Plugins::VcapRelations", non_transactional: true do
-  table_names = [:bottoms, :middles, :tops, :dogs_names, :names, :dogs, :owners]
-
   before do
-    table_names.each do |table_name|
-      db.drop_table? table_name
-    end
-
     db.create_table :owners do
       primary_key :id
       String :guid, :null => false, :index => true

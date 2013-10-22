@@ -2,8 +2,6 @@ require "spec_helper"
 
 describe "Sequel::Plugins::VcapNormalization", non_transactional: true do
   let!(:model_class) do
-    db.drop_table? :test
-
     db.create_table :test do
       primary_key :id
 

@@ -28,7 +28,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#enumerate' do
+    describe '#enumerate', non_transactional: true do
       let!(:model_class) do
         db.create_table :test do
           primary_key :id
