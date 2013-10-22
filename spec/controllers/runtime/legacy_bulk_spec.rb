@@ -61,9 +61,16 @@ module VCAP::CloudController
             last_response.status.should == 400
           end
 
-          it "returns bulk_token with the intial request" do
-            pending "bulk_token is mandatory in ccng"
+          it "returns nil bulk_token for the initial request" do
             get "/bulk/apps"
+            decoded_response["bulk_token"].should be_nil
+          end
+
+          it "returns a populated bulk_token for the initial request (which has an empty bulk token)" do
+            get "/bulk/apps", {
+              "batch_size" => 20,
+              "bulk_token" => "{}",
+            }
             decoded_response["bulk_token"].should_not be_nil
           end
 
