@@ -1,7 +1,9 @@
 require "spec_helper"
 
-describe "Sequel::Plugins::VcapNormalization" do
+describe "Sequel::Plugins::VcapNormalization", non_transactional: true do
   let!(:model_class) do
+    db.drop_table? :test
+
     db.create_table :test do
       primary_key :id
 
@@ -14,6 +16,10 @@ describe "Sequel::Plugins::VcapNormalization" do
       plugin :vcap_normalization
       set_dataset(db[:test])
     end
+  end
+
+  after(:all) do
+    db.drop_table? :test
   end
 
   let(:model_object) { model_class.new }
