@@ -494,6 +494,9 @@ module VCAP::CloudController
 
         after do
           app_obj.delete
+          VCAP::CloudController::User.all.each do |user|
+            user.destroy
+          end
         end
 
         it "stages the app asynchronously" do
