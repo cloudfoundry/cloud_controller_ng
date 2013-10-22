@@ -840,7 +840,7 @@ module VCAP::CloudController
     end
 
     describe "saving" do
-      it "calls AppObserver.updated" do
+      it "calls AppObserver.updated", non_transactional: true do
         app = AppFactory.make
         AppObserver.should_receive(:updated).with(app)
         app.save(instances: app.instances + 1)
