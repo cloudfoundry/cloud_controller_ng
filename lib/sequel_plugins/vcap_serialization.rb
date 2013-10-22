@@ -101,8 +101,6 @@ module Sequel::Plugins::VcapSerialization
     #
     # @return [Sequel::Model] The created model.
     def create_from_json(json, opts = {})
-
-      puts "json: " + json
       hash = Yajl::Parser.new.parse(json)
       create_from_hash(hash, opts)
     end
@@ -117,9 +115,7 @@ module Sequel::Plugins::VcapSerialization
     #
     # @return [Sequel::Model] The created model.
     def create_from_hash(hash, opts = {})
-      p hash
       create_opts = update_or_create_options(hash, opts)
-      p create_opts
       create {|instance| instance.set_all(create_opts) }
     end
 

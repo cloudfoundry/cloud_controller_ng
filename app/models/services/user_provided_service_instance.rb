@@ -1,19 +1,14 @@
 module VCAP::CloudController
   class UserProvidedServiceInstance < ServiceInstance
-    export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url
-    import_attributes :name, :credentials, :space_guid, :syslog_drain_url
+    export_attributes :name, :credentials, :space_guid, :type
+    import_attributes :name, :credentials, :space_guid
 
     # sad: can we declare this in parent class one day
-    strip_attributes :name, :syslog_drain_url
+    strip_attributes :name
 
     def validate
       super
-      p caller
-      p syslog_drain_url
-      p credentials
-      p name
-      p space_guid
-      validates_presence :credentials unless syslog_drain_url.present?
+      validates_presence :credentials
     end
 
     def unbind_on_gateway(_)
