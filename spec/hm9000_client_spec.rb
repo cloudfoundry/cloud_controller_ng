@@ -65,8 +65,9 @@ module VCAP::CloudController
     subject(:hm9000_client) { VCAP::CloudController::HM9000Client.new(message_bus, hm9000_config) }
 
     before do
-      message_bus.stub(:synchronous_request) do |subject, data|
+      message_bus.stub(:synchronous_request) do |subject, data, options|
         next unless subject == "app.state"
+        expect(options).to include(timeout: 2)
 
         if data[:droplet] == app0.guid && data[:version] == app0.version
           if !app0_request_should_fail
