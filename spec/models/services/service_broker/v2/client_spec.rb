@@ -49,7 +49,20 @@ module VCAP::CloudController
       end
 
       before do
-        http_client.stub(:provision).with(instance.guid, plan.broker_provided_id, space.organization.guid, space.guid).and_return(response)
+        http_client.stub(:provision).and_return(response)
+      end
+
+      it 'sends the correct request to the http client' do
+        http_client.should_receive(:provision).
+          with(
+            instance_id: instance.guid,
+            plan_id: plan.broker_provided_id,
+            org_guid: space.organization.guid,
+            space_guid: space.guid,
+            service_id: plan.service.broker_provided_id,
+          ).and_return(double.as_null_object)
+
+        client.provision(instance)
       end
 
       it 'sets relevant attributes of the instance' do

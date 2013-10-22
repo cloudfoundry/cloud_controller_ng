@@ -421,13 +421,13 @@ module VCAP::CloudController
           ServicePlanVisibility.make(service_plan: @service.service_plans.first, organization: organization_one)
         end
 
-        it 'should remove the offering when the org does not have access to the plan' do
+        it "should remove the offering when the org does not have access to any of the service's plans" do
           get "/v2/spaces/#{space_two.guid}/services", {}, headers
           last_response.should be_ok
           decoded_guids.should_not include(@service.guid)
         end
 
-        it 'should return the offering when the org has access to the plan' do
+        it "should return the offering when the org has access to one of the service's plans" do
           get "/v2/spaces/#{space_one.guid}/services", {}, headers
           last_response.should be_ok
           decoded_guids.should include(@service.guid)

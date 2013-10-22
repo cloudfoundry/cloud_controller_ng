@@ -17,6 +17,8 @@ module VCAP::CloudController
     one_to_many :service_bindings, :before_add => :validate_service_binding
     many_to_one :space
 
+    delegate :organization, to: :space
+
     add_association_dependencies :service_bindings => :destroy
 
     def self.user_visibility_filter(user)
