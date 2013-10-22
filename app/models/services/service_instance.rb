@@ -45,7 +45,7 @@ module VCAP::CloudController
     end
 
     def credentials
-      return if super.blank?
+      return unless super
       json = VCAP::CloudController::Encryptor.decrypt(super, salt)
       Yajl::Parser.parse(json) if json
     end

@@ -25,7 +25,7 @@ describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
   end
 
   it_behaves_like "a CloudController model", {
-    :required_attributes => [:name, :space],
+    :required_attributes => [:name, :space, :credentials],
     :stripped_string_attributes => [:name, :syslog_drain_url],
     many_to_one: {
       space: {
