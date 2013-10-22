@@ -16,7 +16,8 @@ module VCAP::CloudController
 
     alias_attribute :broker_provided_id, :gateway_name
 
-    delegate :client, to: :service_instance
+    delegate :client, :service, :service_plan,
+      to: :service_instance
 
     plugin :after_initialize
 

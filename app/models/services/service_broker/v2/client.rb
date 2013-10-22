@@ -24,7 +24,12 @@ module VCAP::CloudController
     end
 
     def bind(binding)
-      response = @http_client.bind(binding.guid, binding.service_instance.guid)
+      response = @http_client.bind(
+        binding_id: binding.guid,
+        instance_id: binding.service_instance.guid,
+        service_id: binding.service.broker_provided_id,
+        plan_id: binding.service_plan.broker_provided_id
+      )
 
       binding.credentials = response['credentials']
     end

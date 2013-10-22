@@ -156,6 +156,9 @@ module VCAP::CloudController::ServiceBroker::V2
     let(:auth_username) { 'me' }
     let(:auth_password) { 'abc123' }
     let(:request_id) { Sham.guid }
+    let(:plan_id) { Sham.guid }
+    let(:service_id) { Sham.guid }
+    let(:instance_id) { Sham.guid }
     let(:expected_request_headers) do
       {
         'X-VCAP-Request-ID' => request_id,
@@ -214,9 +217,6 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe '#provision' do
-      let(:instance_id) { Sham.guid }
-      let(:plan_id) { Sham.guid }
-      let(:service_id) { Sham.guid }
 
       let(:expected_request_body) do
         {
@@ -268,10 +268,9 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe '#bind' do
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-      let(:service_instance) { service_binding.service_instance }
+      let(:binding_id) { Sham.guid }
 
-      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
+      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}" }
 
       before do
         @request = stub_request(:put, bind_url).with(headers: expected_request_headers).to_return(
@@ -281,17 +280,26 @@ module VCAP::CloudController::ServiceBroker::V2
         )
       end
 
-      it 'sends a PUT to /v2/service_bindings/:id' do
-        client.bind(service_binding.guid, service_instance.guid)
+      it 'sends a PUT to /v2/service_instances/:instance_id/service_bindings/:id' do
+        client.bind({
+          binding_id: binding_id,
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        })
 
-        expect(@request.with { |request|
-          request_body = Yajl::Parser.parse(request.body)
-          expect(request_body.fetch('service_instance_id')).to eq(service_binding.service_instance.guid)
-        }).to have_been_made
+        expect(
+          @request.with(body: { service_id: service_id, plan_id: plan_id })
+        ).to have_been_made
       end
 
       it 'returns the response body' do
-        response = client.bind(service_binding.guid, service_instance.guid)
+        response = client.bind({
+          binding_id: binding_id,
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        })
 
         expect(response).to eq('credentials' => {'user' => 'admin', 'pass' => 'secret'})
       end

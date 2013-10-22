@@ -99,6 +99,7 @@ module VCAP::CloudController
         service_id = params.fetch(:service_id)
         org_guid = params.fetch(:org_guid)
         space_guid = params.fetch(:space_guid)
+
         execute(:put, "/v2/service_instances/#{instance_id}", {
           service_id: service_id,
           plan_id: plan_id,
@@ -107,9 +108,15 @@ module VCAP::CloudController
         })
       end
 
-      def bind(binding_id, service_instance_id)
-        execute(:put, "/v2/service_bindings/#{binding_id}", {
-          service_instance_id: service_instance_id
+      def bind(params)
+        binding_id = params.fetch(:binding_id)
+        instance_id = params.fetch(:instance_id)
+        plan_id = params.fetch(:plan_id)
+        service_id = params.fetch(:service_id)
+
+        execute(:put, "/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
+          plan_id: plan_id,
+          service_id: service_id,
         })
       end
 
