@@ -158,10 +158,8 @@ module VCAP::CloudController
 
       shared_examples_for(:sends_droplet_updated) do
         it "should send droplet updated message" do
-          #health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
-          #health_manager_client.should_receive(:notify_app_updated).with("foo")
-
           subject
+          expect(message_bus).to have_published_with_message("droplet.updated", droplet: app.guid)
         end
       end
 
