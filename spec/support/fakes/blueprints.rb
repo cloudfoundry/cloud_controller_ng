@@ -11,12 +11,8 @@ Sham.define do
   description         { |index| "desc-#{index}" }
   long_description    { |index| "long description-#{index} over 255 characters #{"-"*255}"}
   version             { |index| "version-#{index}" }
-  service_credentials { |index|
-    { "creds-key-#{index}" => "creds-val-#{index}" }
-  }
-  binding_options     { |index|
-    {"binding-options-#{index}" => "value-#{index}"}
-  }
+  service_credentials { |index| { "creds-key-#{index}" => "creds-val-#{index}" } }
+  binding_options     { |index| { "binding-options-#{index}" => "value-#{index}" } }
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }
@@ -24,7 +20,7 @@ Sham.define do
   extra               { |index| "extra-#{index}"}
   instance_index      { |index| index }
   unique_id           { |index| "unique-id-#{index}" }
-  status              { |_| ["active", "suspended", "cancelled"].sample(1).first }
+  status              { |_| %w[active suspended cancelled].sample(1).first }
 end
 
 module VCAP::CloudController
