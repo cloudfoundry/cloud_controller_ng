@@ -68,10 +68,11 @@ module VCAP::CloudController
 
     def update(guid)
       app = find_for_update(guid)
+      Event.record_app_update(app, SecurityContext.current_user, request_attrs)
+
       model.db.transaction(savepoint: true) do
         app.lock!
         app.update_from_hash(request_attrs)
-        Event.record_app_update(app, SecurityContext.current_user) if app.previous_changes
         Loggregator.emit(guid, "Updated app with guid #{guid}")
       end
 

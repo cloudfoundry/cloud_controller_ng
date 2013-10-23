@@ -55,7 +55,7 @@ module VCAP::CloudController
       )
     end
 
-    def self.record_app_update(app, actor)
+    def self.record_app_update(app, actor, request_attrs)
       create(
         space: app.space,
         type: "audit.app.update",
@@ -65,11 +65,7 @@ module VCAP::CloudController
         actor_type: "user",
         timestamp: Time.now,
         metadata: {
-          changes: app.auditable_changes,
-          footprints: {
-            memory: app.memory,
-            instances: app.instances,
-          }
+          request: App.audit_hash(request_attrs)
         }
       )
     end

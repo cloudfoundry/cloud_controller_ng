@@ -278,6 +278,63 @@ module VCAP::CloudController
           expect(event.actor).to eq(admin_user.guid)
         end
       end
+
+      describe "audit logs" do
+        before { update_hash[:instances] = 2 }
+
+        it "creates an audit log including the request body" do
+          update_app
+
+          audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
+          expect(audit_event.metadata["request"]).to eq("instances" => 2)
+        end
+
+        context "when the request body has non-whitelisted attributes" do
+          before do
+            update_hash[:foo] = "foo"
+          end
+
+          it "only puts whitelisted attributes from the request body into the audit log" do
+            update_app
+
+            audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
+            expect(audit_event.metadata["request"]).to eq("instances" => 2)
+          end
+        end
+
+        describe "sensitive app properties" do
+          before do
+            update_hash[:environment_json] = {:password => "my_password"}
+            update_hash[:command] = "DB_PASSWORD=foo ./my-app"
+          end
+
+          it "hides them" do
+            update_app
+
+            audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
+            expect(audit_event.metadata["request"]).to eq("instances" => 2, "environment_json" => "PRIVATE DATA HIDDEN", "command" => "PRIVATE DATA HIDDEN")
+          end
+        end
+
+        it "creates an audit log even if the app fails to update" do
+          VCAP::CloudController::App.any_instance.stub(:update_from_hash).and_raise("No update for you")
+
+          expect { update_app }.to raise_error("No update for you")
+
+          audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
+          expect(audit_event.metadata["request"]).to eq("instances" => 2)
+        end
+
+        it "does not create an audit log when the app is not found" do
+          guid = app_obj.guid
+
+          app_obj.delete
+
+          update_app
+
+          expect(Event.find(:type => "audit.app.update", :actee => guid)).to be_nil
+        end
+      end
     end
 
     describe "read an app" do
