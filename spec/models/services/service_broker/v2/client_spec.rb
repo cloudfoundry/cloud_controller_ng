@@ -120,10 +120,19 @@ module VCAP::CloudController
         )
       end
 
-      it 'unbinds the service' do
-        http_client.should_receive(:unbind).with(binding.guid)
+      before do
+        http_client.stub(:unbind)
+      end
 
+      it 'unbinds the service' do
         client.unbind(binding)
+
+        expect(http_client).to have_received(:unbind).with(
+          binding_id: binding.guid,
+          instance_id: binding.service_instance.guid,
+          service_id: binding.service.broker_provided_id,
+          plan_id: binding.service_plan.broker_provided_id,
+        )
       end
     end
 

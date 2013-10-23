@@ -67,7 +67,7 @@ put '/v2/service_instances/:service_instance_id/service_bindings/:service_bindin
   [200, {}, body]
 end
 
-delete '/v2/service_bindings/:service_binding_id' do
+delete '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
   @@binding_count -= 1
 
   [204, {}, '']

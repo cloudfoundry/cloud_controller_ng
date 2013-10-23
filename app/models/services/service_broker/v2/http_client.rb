@@ -120,8 +120,16 @@ module VCAP::CloudController
         })
       end
 
-      def unbind(binding_id)
-        execute(:delete, "/v2/service_bindings/#{binding_id}")
+      def unbind(params)
+        binding_id = params.fetch(:binding_id)
+        instance_id = params.fetch(:instance_id)
+        plan_id = params.fetch(:plan_id)
+        service_id = params.fetch(:service_id)
+
+        execute(:delete, "/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
+          plan_id: plan_id,
+          service_id: service_id,
+        })
       end
 
       def deprovision(instance_id)
@@ -135,10 +143,23 @@ module VCAP::CloudController
       # hits the endpoint, json decodes the response
       def execute(method, path, message=nil)
         endpoint = url + path
-        body = message ? message.to_json : nil
+        uri = URI(endpoint)
 
+        case method
+          when :put
+            response = make_request(method, uri, message.to_json)
+          when :get, :delete
+            uri.query = message.to_query if message
+            response = make_request(method, uri, nil)
+          else
+            raise ArgumentError.new("Don't know how to handle method: #{method.inspect}")
+        end
+
+        parse_response(method, uri, response)
+      end
+
+      def make_request(method, uri, body)
         begin
-          uri = URI(endpoint)
           req_class = method.to_s.capitalize
           req = Net::HTTP.const_get(req_class).new(uri.request_uri)
           req.basic_auth(auth_username, auth_password)
@@ -155,45 +176,47 @@ module VCAP::CloudController
             http.request(req)
           end
         rescue SocketError, Errno::ECONNREFUSED => error
-          raise ServiceBrokerApiUnreachable.new(endpoint, method, error)
+          raise ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
         rescue Timeout::Error => error
-          raise ServiceBrokerApiTimeout.new(endpoint, method, error)
+          raise ServiceBrokerApiTimeout.new(uri.to_s, method, error)
         rescue => error
-          raise HttpRequestError.new(error.message, endpoint, method, error)
+          raise HttpRequestError.new(error.message, uri.to_s, method, error)
         end
+      end
 
+      def parse_response(method, uri, response)
         code = response.code.to_i
         case code
 
-        when 204
-          return nil # no body
+          when 204
+            return nil # no body
 
-        when 200..299
-          begin
-            response_hash = Yajl::Parser.parse(response.body)
-          rescue Yajl::ParseError
-          end
+          when 200..299
+            begin
+              response_hash = Yajl::Parser.parse(response.body)
+            rescue Yajl::ParseError
+            end
 
-          unless response_hash.is_a?(Hash)
-            raise ServiceBrokerResponseMalformed.new(endpoint, method, response)
-          end
+            unless response_hash.is_a?(Hash)
+              raise ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
+            end
 
-          return response_hash
+            return response_hash
 
-        when HTTP::Status::UNAUTHORIZED
-          raise ServiceBrokerApiAuthenticationFailed.new(endpoint, method, response)
+          when HTTP::Status::UNAUTHORIZED
+            raise ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
 
-        when 409
-          raise ServiceBrokerConflict.new(endpoint, method, response)
+          when 409
+            raise ServiceBrokerConflict.new(uri.to_s, method, response)
 
-        when 410
-          if method == :delete
-            logger.warn("Already deleted: #{path}")
-            return nil
-          end
+          when 410
+            if method == :delete
+              logger.warn("Already deleted: #{uri.to_s}")
+              return nil
+            end
         end
 
-        raise ServiceBrokerBadResponse.new(endpoint, method, response)
+        raise ServiceBrokerBadResponse.new(uri.to_s, method, response)
       end
 
       def logger

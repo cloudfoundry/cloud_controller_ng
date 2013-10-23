@@ -306,15 +306,29 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe '#unbind' do
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
+      let(:binding_id) { Sham.guid }
+
+      let(:bind_url) {
+        "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}"
+      }
+
       before do
-        @request = stub_request(:delete, bind_url).with(headers: expected_request_headers).to_return(status: 204)
+        @request = stub_request(:delete, bind_url).
+          with(headers: expected_request_headers, query: hash_including({})).
+          to_return(status: 204)
       end
 
-      it 'sends a DELETE to /v2/service_bindings/:id' do
-        client.unbind(service_binding.guid)
-        @request.should have_been_requested
+      it 'sends a DELETE to /v2/service_instances/:instance_id/service_bindings/:id' do
+        client.unbind({
+          binding_id: binding_id,
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        })
+
+        expect(
+          @request.with(query: { service_id: service_id, plan_id: plan_id })
+        ).to have_been_made
       end
     end
 
