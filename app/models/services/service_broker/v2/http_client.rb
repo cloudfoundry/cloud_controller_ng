@@ -132,8 +132,15 @@ module VCAP::CloudController
         })
       end
 
-      def deprovision(instance_id)
-        execute(:delete, "/v2/service_instances/#{instance_id}")
+      def deprovision(params)
+        instance_id = params.fetch(:instance_id)
+        plan_id = params.fetch(:plan_id)
+        service_id = params.fetch(:service_id)
+
+        execute(:delete, "/v2/service_instances/#{instance_id}", {
+          plan_id: plan_id,
+          service_id: service_id,
+        })
       end
 
       private

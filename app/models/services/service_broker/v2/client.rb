@@ -44,7 +44,11 @@ module VCAP::CloudController
     end
 
     def deprovision(instance)
-      @http_client.deprovision(instance.guid)
+      @http_client.deprovision(
+        instance_id: instance.guid,
+        service_id: instance.service.broker_provided_id,
+        plan_id: instance.service_plan.broker_provided_id,
+      )
     end
   end
 end

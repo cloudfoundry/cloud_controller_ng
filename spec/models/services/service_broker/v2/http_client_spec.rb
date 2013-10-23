@@ -333,15 +333,23 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe '#deprovision' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:instance_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance.guid}" }
+      let(:instance_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}" }
       before do
-        @request = stub_request(:delete, instance_url).with(headers: expected_request_headers).to_return(status: 204)
+        @request = stub_request(:delete, instance_url).
+          with(headers: expected_request_headers, query: hash_including({})).
+          to_return(status: 204)
       end
 
       it 'sends a DELETE to /v2/service_instances/:id' do
-        client.deprovision(instance.guid)
-        @request.should have_been_requested
+        client.deprovision(
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        )
+
+        expect(
+          @request.with(query: { service_id: service_id, plan_id: plan_id })
+        ).to have_been_made
       end
     end
 
@@ -474,13 +482,15 @@ module VCAP::CloudController::ServiceBroker::V2
 
       context 'when the API returns 410 to a DELETE request' do
         before do
-          @stub = stub_request(:delete, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/asdf").to_return(
-            status: [410, 'Gone']
-          )
+          @stub = stub_request(:delete, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
+            with(query: hash_including({})).
+            to_return(status: [410, 'Gone'])
         end
 
         it 'should swallow the error' do
-          expect(client.deprovision('asdf')).to be_nil
+          expect(
+            client.deprovision(instance_id: instance_id, plan_id: plan_id, service_id: service_id)
+          ).to be_nil
           @stub.should have_been_requested
         end
       end
