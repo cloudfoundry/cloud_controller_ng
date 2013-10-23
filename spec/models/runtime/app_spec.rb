@@ -1097,6 +1097,17 @@ module VCAP::CloudController
           expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
           expect { app.delete }.not_to raise_error
         end
+
+        it "should raise an error if instances is less than zero" do
+          org = Organization.make(:quota_definition => quota)
+          space = Space.make(:organization => org)
+          app = AppFactory.make(:space => space,
+                                :memory => 64,
+                                :instances => 1)
+
+          app.instances = -1
+          expect { app.save }.to raise_error(Sequel::ValidationFailed, /instances less_than_zero/)
+        end
       end
     end
 
