@@ -481,12 +481,36 @@ module VCAP::CloudController
 
       end
 
-      it "records an app.deleted event" do
-        delete_app
-        last_response.status.should == 204
-        event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
-        expect(event).to be
-        expect(event.actor).to eq(admin_user.guid)
+      describe "audit logs" do
+        it "records an app.deleted event" do
+          delete_app
+          last_response.status.should == 204
+          event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
+          expect(event).to be
+          expect(event.actor).to eq(admin_user.guid)
+        end
+
+        it "creates an audit log even if the app fails soft_delete" do
+          VCAP::CloudController::App.any_instance.stub(:soft_delete).and_raise("No delete for you")
+
+          expect { delete_app }.to raise_error("No delete for you")
+
+          audit_event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
+          expect(audit_event.metadata).to eq({})
+        end
+
+        context "app with service bindings" do
+          let!(:svc_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
+          let!(:service_binding) { ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
+
+          it "creates an audit log even if non-recursive delete fails with bindings" do
+            VCAP::CloudController::App.any_instance.stub(:soft_delete).and_raise("No delete for you")
+            delete_app
+
+            audit_event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
+            expect(audit_event.metadata).to eq({})
+          end
+        end
       end
     end
 
