@@ -113,16 +113,31 @@ module VCAP::CloudController
         end
       end
 
-      it "records a app.create event" do
-        create_app
+      describe "audit logs" do
+        it "records an app.create event" do
+          create_app
 
-        last_response.status.should == 201
+          last_response.status.should == 201
 
-        new_app_guid = decoded_response['metadata']['guid']
-        event = Event.find(:type => "audit.app.create", :actee => new_app_guid)
+          new_app_guid = decoded_response['metadata']['guid']
+          event = Event.find(:type => "audit.app.create", :actee => new_app_guid)
 
-        expect(event).to be
-        expect(event.actor).to eq(admin_user.guid)
+          expect(event).to be
+          expect(event.actor).to eq(admin_user.guid)
+          expect(event.metadata["request"]["name"]).to eq("maria")
+          expect(event.metadata["request"]["space_guid"]).to eq(space_guid)
+        end
+
+        it "records a create failed event when unauthorized" do
+          VCAP::CloudController::RestController::ModelController.any_instance.should_receive(:validate_access).and_raise(VCAP::CloudController::Errors::NotAuthorized)
+          create_app
+
+          last_response.status.should == 403
+          event = Event.find(:type => "audit.app.create", :actee => "0")
+
+          expect(event).to be
+          expect(event.metadata["request"]["name"]).to eq("maria")
+        end
       end
 
       context "buildpacks" do

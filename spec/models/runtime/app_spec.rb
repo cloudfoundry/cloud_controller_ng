@@ -58,6 +58,18 @@ module VCAP::CloudController
       }
     }
 
+    describe "#audit_hash" do
+      it "should return uncensored data unchanged" do
+        request_hash = { "key" => "value", "key2" => "value2" }
+        expect(App.audit_hash(request_hash)).to eq(request_hash)
+      end
+
+      it "should obfuscate censored data" do
+        request_hash = { "command" => "PASSWORD=foo ./start" }
+        expect(App.audit_hash(request_hash)).to eq({ "command" => "PRIVATE DATA HIDDEN" })
+      end
+    end
+
     describe ".deleted" do
       it "includes deleted apps" do
         app = AppFactory.make

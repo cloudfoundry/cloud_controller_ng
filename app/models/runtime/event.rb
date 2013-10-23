@@ -70,19 +70,21 @@ module VCAP::CloudController
       )
     end
 
-    def self.record_app_create(app, actor)
-      create(
-        space: app.space,
-        type: "audit.app.create",
-        actee: app.guid,
-        actee_type: "app",
-        actor: actor.guid,
-        actor_type: "user",
-        timestamp: Time.now,
-        metadata: {
-          changes: app.auditable_values,
-        }
-      )
+    def self.record_app_create(app, actor, request_attrs)
+      opts = {
+          type: "audit.app.create",
+          actee: app.nil? ? "0" : app.guid,
+          actee_type: "app",
+          actor: actor.guid,
+          actor_type: "user",
+          timestamp: Time.now,
+          metadata: {
+              request: App.audit_hash(request_attrs)
+          }
+      }
+      opts[:space] = app.space unless app.nil?
+
+      create(opts)
     end
 
     def self.record_app_delete(deleting_app, actor)

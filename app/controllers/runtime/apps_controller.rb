@@ -96,16 +96,18 @@ module VCAP::CloudController
       model.db.transaction(savepoint: true) do
         obj = model.create_from_hash(request_attrs)
         validate_access(:create, obj, user, roles)
-        Event.record_app_create(obj, SecurityContext.current_user)
       end
 
       after_create(obj)
+      created_app = obj
       Loggregator.emit(obj.guid, "Created app with guid #{obj.guid}")
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{obj.guid}" },
         serialization.render_json(self.class, obj, @opts)
       ]
+    ensure
+      Event.record_app_create(created_app, SecurityContext.current_user, request_attrs) if request_attrs
     end
 
     private
