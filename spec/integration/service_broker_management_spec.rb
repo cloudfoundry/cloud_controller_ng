@@ -99,6 +99,11 @@ describe "Service Broker Management", type: :integration do
     catalog_response = make_get_request('/v2/services?inline-relations-depth=1', admin_headers)
     expect(catalog_response.code.to_i).to eq(200)
 
+    ensure_service_is_correct(catalog_response)
+    ensure_plans_are_correct(catalog_response)
+  end
+
+  def ensure_service_is_correct(catalog_response)
     services = catalog_response.json_body.fetch('resources')
     service = services.first
 
@@ -112,6 +117,10 @@ describe "Service Broker Management", type: :integration do
         'blurb' => 'A very fine service',
       }
     )
+  end
+
+  def ensure_plans_are_correct(catalog_response)
+    service_entity = catalog_response.json_body.fetch('resources').first.fetch('entity')
 
     plans = service_entity.fetch('service_plans')
     expect(plans.length).to eq(2)
