@@ -18,6 +18,7 @@ module VCAP::CloudController
       # TODO: Remove this double after broker api calls are made asynchronous
       client = double('broker client', unbind: nil, deprovision: nil)
       Service.any_instance.stub(:client).and_return(client)
+      VCAP::CloudController::Seeds.create_seed_stacks(config)
     end
 
     it_behaves_like "a CloudController model", {
