@@ -83,6 +83,9 @@ module VCAP::CloudController
       let(:plan_id) { Sham.guid }
       let(:plan_name) { Sham.name }
       let(:plan_description) { Sham.description }
+      let(:metadata_hash) do
+        {'metadata' => {'foo' => 'bar'}}
+      end
 
       let(:catalog) do
         {
@@ -100,7 +103,7 @@ module VCAP::CloudController
                   'description' => plan_description
                 }
               ]
-            }
+            }.merge(metadata_hash)
           ]
         }
       end
@@ -127,7 +130,29 @@ module VCAP::CloudController
         expect(service.description).to eq(service_description)
         expect(service.bindable).to be_true
         expect(service.tags).to match_array(['mysql', 'relational'])
+        expect(JSON.parse(service.extra)).to eq( {'foo' => 'bar'} )
       end
+
+      context 'when catalog service metadata is nil' do
+        let(:metadata_hash) { {'metadata' => nil} }
+
+        it 'leaves the extra field as nil' do
+          broker.load_catalog
+          service = Service.last
+          expect(service.extra).to be_nil
+        end
+      end
+
+      context 'when the catalog service has no metadata key' do
+        let(:metadata_hash) { {} }
+
+        it 'leaves the extra field as nil' do
+          broker.load_catalog
+          service = Service.last
+          expect(service.extra).to be_nil
+        end
+      end
+
 
       it 'creates plans from the catalog' do
         expect {

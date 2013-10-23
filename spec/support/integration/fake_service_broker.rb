@@ -32,7 +32,13 @@ get '/v2/catalog' do
         'description' => 'A description of My Custom Service',
         'bindable' => true,
         'tags' => ['mysql', 'relational'],
-        'plans' => @@plans
+        'metadata' => {
+          'listing' => {
+            'imageUrl' => 'http://example.com/catsaresofunny.gif',
+            'blurb' => 'A very fine service',
+          },
+        },
+        'plans' => @@plans,
       }
     ]
   }.to_json

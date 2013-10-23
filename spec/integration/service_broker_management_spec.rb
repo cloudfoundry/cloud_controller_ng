@@ -106,6 +106,12 @@ describe "Service Broker Management", type: :integration do
     expect(service_entity.fetch('label')).to eq('custom-service')
     expect(service_entity.fetch('bindable')).to eq(true)
     expect(service_entity.fetch('tags')).to match_array(['mysql', 'relational'])
+    expect(JSON.parse(service_entity.fetch('extra'))).to eq(
+      'listing' => {
+        'imageUrl' => 'http://example.com/catsaresofunny.gif',
+        'blurb' => 'A very fine service',
+      }
+    )
 
     plans = service_entity.fetch('service_plans')
     expect(plans.length).to eq(2)

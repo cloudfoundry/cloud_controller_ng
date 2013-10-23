@@ -65,11 +65,13 @@ module VCAP::CloudController
             service_broker: @broker,
             unique_id: service_id
           ) do |service|
+            metadata = catalog_service['metadata']
             service.set(
               label: catalog_service.fetch('name'),
               description: catalog_service.fetch('description'),
               bindable: catalog_service.fetch('bindable'),
               tags: catalog_service.fetch('tags', []),
+              extra: metadata ? metadata.to_json : nil,
               active: is_active?(catalog_service)
             )
           end
