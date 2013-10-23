@@ -1,20 +1,33 @@
 require "spec_helper"
 require "securerandom"
 
-describe "Staging an app", :type => :integration do
-  before :all do
-    start_nats(:debug => false)
+describe "Staging an app", type: :integration do
+  before do
+    # FIXME: Must be a before :each since we are not going through the full staging lifecycle. Currently CC has a bug which
+    # makes it blocking when it does not receive the correct message back from the Stager. Furthermore the messages
+    # are bidirectional which is wrong. Good place to start writing a better API for the Stager.
+
+    start_nats(debug: false)
     start_cc(debug: false, config: "spec/fixtures/config/port_8181_config.yml")
     @tmpdir = Dir.mktmpdir
   end
 
-  after :all do
+  after do
     stop_cc
     stop_nats
   end
 
   context "when admin buildpacks are used" do
-    def authed_headers
+    let(:stager_id) { "abc123" }
+    let(:advertisment) do
+      {
+        "id" => stager_id,
+        "stacks" => ["lucid64"],
+        "available_memory" => 2048,
+      }.to_json
+    end
+
+    let(:authed_headers) do
       {
         "Authorization" => "bearer #{admin_token}",
         "Accept" => "application/json",
@@ -31,7 +44,8 @@ describe "Staging an app", :type => :integration do
       end
     end
 
-    before :all do
+    before do
+      @tmpdir = Dir.mktmpdir
       @expected_buildpack_shas = [valid_zip(4).hexdigest, valid_zip.hexdigest]
 
       @buildpack_response_1 = make_post_request(
@@ -79,16 +93,13 @@ describe "Staging an app", :type => :integration do
       )
     end
 
-    it { expect(@buildpack_response_1.code).to eq("201") }
-    it { expect(@buildpack_response_2.code).to eq("201") }
-
     context "and the admin has not uploaded yet the buildpacks" do
       context "and an app is staged" do
-        it { expect(@app_response.code).to eq("201") }
-        it { expect(@app_bits_response.code).to eq("201") }
-
         it "does not include any buildpacks in the request" do
-          stager_id = "abc123"
+          expect(@buildpack_response_1.code).to eq("201")
+          expect(@buildpack_response_2.code).to eq("201")
+          expect(@app_response.code).to eq("201")
+          expect(@app_bits_response.code).to eq("201")
 
           NATS.start do
             NATS.subscribe "staging.#{stager_id}.start", queue: "staging" do |msg|
@@ -104,12 +115,6 @@ describe "Staging an app", :type => :integration do
 
               NATS.stop
             end
-
-            advertisment = {
-              "id" => stager_id,
-              "stacks" => ["lucid64"],
-              "available_memory" => 2048,
-            }.to_json
 
             NATS.publish("dea.advertise", advertisment) do
               NATS.publish("staging.advertise", advertisment) do
@@ -130,7 +135,7 @@ describe "Staging an app", :type => :integration do
     end
 
     context "and the admin has uploaded the buildpacks" do
-      before :all do
+      before do
         @buildpack_bits_response_1 = make_put_request(
           "/v2/buildpacks/#{@buildpack_response_1.json_body["metadata"]["guid"]}/bits?buildpack[tempfile]=#{valid_zip.path}&buildpack_name=foo.zip",
           "{}",
@@ -144,12 +149,13 @@ describe "Staging an app", :type => :integration do
         )
       end
 
-      it { expect(@buildpack_bits_response_1.code).to eq("201") }
-      it { expect(@buildpack_bits_response_2.code).to eq("201") }
-
       context "and an app is staged" do
         it "includes the buildpacks in the correct order" do
           stager_id = "abc123"
+          expect(@buildpack_response_1.code).to eq("201")
+          expect(@buildpack_response_2.code).to eq("201")
+          expect(@buildpack_bits_response_1.code).to eq("201")
+          expect(@buildpack_bits_response_2.code).to eq("201")
 
           NATS.start do
             NATS.subscribe "staging.#{stager_id}.start", queue: "staging" do |msg|
@@ -158,12 +164,6 @@ describe "Staging an app", :type => :integration do
 
               NATS.stop
             end
-
-            advertisment = {
-              "id" => stager_id,
-              "stacks" => ["lucid64"],
-              "available_memory" => 2048,
-            }.to_json
 
             NATS.publish("dea.advertise", advertisment) do
               NATS.publish("staging.advertise", advertisment) do

@@ -1,3 +1,5 @@
+require "securerandom"
+
 Sham.define do
   email               { |index| "email-#{index}@somedomain.com" }
   name                { |index| "name-#{index}" }
@@ -16,7 +18,7 @@ Sham.define do
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.com" }
   host                { |index| "host-#{index}" }
-  guid                { |index| "guid-#{index}" }
+  guid                { |index| "guid-#{SecureRandom.uuid}" }
   extra               { |index| "extra-#{index}"}
   instance_index      { |index| index }
   unique_id           { |index| "unique-id-#{index}" }

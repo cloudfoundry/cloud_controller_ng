@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe "Service Instance Management", :type => :integration do
+describe "Service Instance Management", type: :integration do
   def start_fake_service_broker
     fake_service_broker_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'support', 'integration', 'fake_service_broker.rb'))
     @fake_service_broker_pid = run_cmd("ruby #{fake_service_broker_path}")

@@ -13,11 +13,8 @@ describe "Cloud controller Loggregator Integration", :type => :integration do
         "Content-Type" => "application/json"
     }
 
-    start_nats :debug => false
-    start_cc(
-        debug: false,
-        config: "spec/fixtures/config/port_8181_config.yml"
-    )
+    start_nats debug: false
+    start_cc(debug: false, config: "spec/fixtures/config/port_8181_config.yml")
 
     org = make_post_request(
         "/v2/organizations",

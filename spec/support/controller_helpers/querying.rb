@@ -29,7 +29,7 @@ module ControllerHelpers
 
           describe "with a non-existent value" do
             before do
-              @non_existent_value = Sham.send(attr)
+              @non_existent_value = Sham.guid
               get "#{opts[:path]}?q=#{attr}:#{@non_existent_value}", {}, json_headers(admin_headers)
             end
 
