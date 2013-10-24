@@ -144,6 +144,9 @@ module VCAP::CloudController
         it "accepts the buildpack in git formats" do
           initial_hash[:buildpack] = "git://user@public.example.com"
           create_app
+
+          #Debugging on Travis
+          p JSON.parse(last_response.body)
           expect(last_response.status).to eql 201
         end
 
