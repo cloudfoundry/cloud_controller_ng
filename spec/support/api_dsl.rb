@@ -56,31 +56,59 @@ module ApiDsl
     end
   end
 
+  def audited_event event
+    attributes = event.columns.map do |column|
+      if column == :metadata
+        {attribute_name: column.to_s, value: JSON.pretty_generate(JSON.parse(event[column])), is_json: true}
+      else
+        {attribute_name: column.to_s, value: event[column], is_json: false}
+      end
+    end
+
+    example.metadata[:audit_records] ||= []
+    example.metadata[:audit_records] << {type: event[:type], attributes: attributes}
+  end
+
   module ClassMethods
 
     def api_version
       "/v2"
     end
 
-    def standard_model_object model
-      root = "#{api_version}/#{model.to_s.pluralize}"
-      get root do
+    def root(model)
+      "#{api_version}/#{model.to_s.pluralize}"
+    end
+
+    def standard_model_list(model)
+      get root(model) do
         example_request "List all #{model.to_s.pluralize.capitalize}" do
           standard_list_response parsed_response, model
         end
       end
+    end
 
-      get "#{root}/:guid" do
+    def standard_model_get(model)
+      get "#{root(model)}/:guid" do
         example_request "Retrieve a Particular #{model.to_s.capitalize}" do
           standard_entity_response parsed_response, model
         end
       end
+    end
 
-      delete "#{root}/:guid" do
+    def standard_model_delete(model)
+      delete "#{root(model)}/:guid" do
         example_request "Delete a Particular #{model.to_s.capitalize}" do
           status.should == 204
+          after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
         end
       end
+    end
+
+    def standard_model_object model
+      warn "Avoid metaprogramming with standard_model_object; call explicit standard_model_xxx methods instead."
+      standard_model_list(model)
+      standard_model_get(model)
+      standard_model_delete(model)
     end
 
     def standard_parameters
