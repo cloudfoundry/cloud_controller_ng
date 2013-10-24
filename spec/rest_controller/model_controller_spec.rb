@@ -19,6 +19,7 @@ module VCAP::CloudController
 
       before do
         subject.stub(:find_guid_and_validate_access).with(:update, guid) { app }
+        SecurityContext.stub(:current_user).and_return(User.make)
       end
 
       it "prevents other processes from updating the same row until the transaction finishes" do

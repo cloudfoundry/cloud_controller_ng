@@ -118,77 +118,55 @@ module VCAP::CloudController
     end
 
     describe ".record_app_update" do
-      let(:app) { AppFactory.make(name: 'old', instances: 1, memory: 84, state: "STOPPED") }
+      let(:request_attrs) do
+        { "name" => "old", "instances" => 1, "memory" => 84, "state" => "STOPPED" }
+      end
+      let(:app) { AppFactory.make(request_attrs) }
       let(:user) { User.make }
 
-      it "records the changes in metadata" do
-        app.instances = 2
-        app.memory = 42
-        app.state = 'STARTED'
-        app.package_hash = 'abc'
-        app.package_state = 'STAGED'
-        app.name = 'new'
-        app.save
-
-        event = described_class.record_app_update(app, user)
-        expect(event.type).to eq("audit.app.update")
-        expect(event.actor_type).to eq("user")
-        changes = event.metadata.fetch("changes")
-        expect(changes).to eq(
-          "name" => %w(old new),
-          "instances" => [1, 2],
-          "memory" => [84, 42],
-          "state" => %w(STOPPED STARTED),
-        )
-      end
-
       it "does not expose the ENV variables" do
-        app.environment_json = {"foo" => 1}
-        app.save
+        new_request_attrs = request_attrs.merge("environment_json" => { "foo" => 1 })
 
-        event = described_class.record_app_update(app, user)
-        changes = event.metadata.fetch("changes")
-        expect(changes).to eq(
-          "encrypted_environment_json" => ['PRIVATE DATA HIDDEN'] * 2
-        )
-      end
-
-      it "records the current footprints of the app" do
-        app.instances = 2
-        app.memory = 42
-        app.package_hash = 'abc'
-        app.package_state = 'STAGED'
-        app.save
-
-        event = described_class.record_app_update(app, user)
-        footprints = event.metadata.fetch("footprints")
-        expect(footprints).to eq(
-          "instances" => 2,
-          "memory" => 42,
-        )
+        event = described_class.record_app_update(app, user, new_request_attrs)
+        request = event.metadata.fetch("request")
+        expect(request).to eq(
+            "name" => "old",
+            "instances" => 1,
+            "memory" => 84,
+            "state" => "STOPPED",
+            "environment_json" => "PRIVATE DATA HIDDEN",
+          )
       end
     end
 
     describe ".record_app_create" do
+      let(:request_attrs) do
+        {
+          "name" => "new",
+          "instances" => 1,
+          "memory" => 84,
+          "state" => "STOPPED",
+          "environment_json" => { "super" => "secret "}
+        }
+      end
+
       let(:app) do
-        AppFactory.make(
-          name: 'new', instances: 1, memory: 84,
-          state: "STOPPED", environment_json: {"super" => "secret "})
+        AppFactory.make(request_attrs)
       end
 
       let(:user) { User.make }
 
       it "records the changes in metadata" do
-        event = described_class.record_app_create(app, user)
+        event = described_class.record_app_create(app, user, request_attrs)
         expect(event.actor_type).to eq("user")
         expect(event.type).to eq("audit.app.create")
-        changes = event.metadata.fetch("changes")
-        expect(changes).to eq(
+        request = event.metadata.fetch("request")
+        expect(request).to eq(
           "name" => "new",
           "instances" => 1,
           "memory" => 84,
           "state" => "STOPPED",
-          "encrypted_environment_json" => "PRIVATE DATA HIDDEN",
+          "environment_json" => "PRIVATE DATA HIDDEN",
         )
       end
     end
@@ -199,12 +177,12 @@ module VCAP::CloudController
       let(:user) { User.make }
 
       it "records an empty changes in metadata" do
-        event = described_class.record_app_delete(deleting_app, user)
+        event = described_class.record_app_delete(deleting_app, user, false)
         expect(event.actor_type).to eq("user")
         expect(event.type).to eq("audit.app.delete")
         expect(event.actee).to eq(deleting_app.guid)
         expect(event.actee_type).to eq("app")
-        expect(event.metadata["changes"]).to eq(nil)
+        expect(event.metadata["recursive"]).to eq(false)
       end
     end
 
