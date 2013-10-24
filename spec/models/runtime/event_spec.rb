@@ -182,7 +182,7 @@ module VCAP::CloudController
         expect(event.type).to eq("audit.app.delete")
         expect(event.actee).to eq(deleting_app.guid)
         expect(event.actee_type).to eq("app")
-        expect(event.metadata["recursive"]).to eq(false)
+        expect(event.metadata["request"]["recursive"]).to eq(false)
       end
     end
 

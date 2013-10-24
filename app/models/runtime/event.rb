@@ -83,7 +83,7 @@ module VCAP::CloudController
           actor_type: "user",
           timestamp: Time.now,
           metadata: {
-              request: App.audit_hash(request_attrs)
+            request: App.audit_hash(request_attrs)
           }
       }
       opts[:space] = app.space unless app.nil?
@@ -101,7 +101,7 @@ module VCAP::CloudController
         actor_type: "user",
         timestamp: Time.now,
         metadata: {
-            recursive: recursive
+          request: { recursive: recursive }
         }
       )
     end
