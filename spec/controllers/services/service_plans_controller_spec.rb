@@ -157,6 +157,16 @@ module VCAP::CloudController
         plan_guids.should include(private_plan.guid)
       end
     end
+
+    describe "public service plans" do
+      let!(:public_plan) { ServicePlan.make(public: true) }
+
+      it "should return correct visibility" do
+        get "/v2/service_plans/#{public_plan.guid}", {}, headers_for(developer)
+        last_response.status.should eq(200)
+        expect(parse(last_response.body)["entity"]).to include("public" => true)
+      end
+    end
   end
 
   describe "POST", "/v2/service_plans" do
