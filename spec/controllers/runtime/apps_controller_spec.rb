@@ -511,7 +511,14 @@ module VCAP::CloudController
           expect { delete_app }.to raise_error("No delete for you")
 
           audit_event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
-          expect(audit_event.metadata).to eq({})
+          expect(audit_event.metadata).to eq({ "recursive" => false})
+        end
+
+        it "saves the recursive query parameter when recursive"  do
+          delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
+
+          audit_event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
+          expect(audit_event.metadata).to eq({ "recursive" => true })
         end
 
         context "app with service bindings" do
@@ -523,7 +530,7 @@ module VCAP::CloudController
             delete_app
 
             audit_event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
-            expect(audit_event.metadata).to eq({})
+            expect(audit_event.metadata).to eq({ "recursive" => false})
           end
         end
       end

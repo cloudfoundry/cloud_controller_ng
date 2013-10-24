@@ -87,7 +87,7 @@ module VCAP::CloudController
       create(opts)
     end
 
-    def self.record_app_delete(deleting_app, actor)
+    def self.record_app_delete(deleting_app, actor, recursive)
       create(
         space: deleting_app.space,
         type: "audit.app.delete",
@@ -97,6 +97,7 @@ module VCAP::CloudController
         actor_type: "user",
         timestamp: Time.now,
         metadata: {
+            recursive: recursive
         }
       )
     end
