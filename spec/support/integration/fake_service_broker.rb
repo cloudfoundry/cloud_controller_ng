@@ -14,7 +14,16 @@ end
   {
     'id' => 'custom-plan-1',
     'name' => 'free',
-    'description' => 'A description of the Free plan'
+    'description' => 'A description of the Free plan',
+    'metadata' => {
+      'cost' => 0.0,
+      'bullets' =>
+        [
+          {'content' => 'Shared MySQL server'},
+          {'content' => '100 MB storage'},
+          {'content' => '40 concurrent connections'},
+        ]
+    }
   },
   {
     'id' => 'custom-plan-2',

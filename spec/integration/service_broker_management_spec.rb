@@ -126,10 +126,23 @@ describe "Service Broker Management", type: :integration do
     expect(plans.length).to eq(2)
 
     free_plan = plans.detect {|p| p.fetch('entity').fetch('name') == 'free' }
-    expect(free_plan.fetch('entity').fetch('description')).to eq('A description of the Free plan')
+    free_plan_entity = free_plan.fetch('entity')
+    expect(free_plan_entity.fetch('description')).to eq('A description of the Free plan')
+    expect(JSON.parse(free_plan_entity.fetch('extra'))).to eq(
+      'cost' => 0.0,
+      'bullets' =>
+        [
+          {'content' => 'Shared MySQL server'},
+          {'content' => '100 MB storage'},
+          {'content' => '40 concurrent connections'},
+        ]
+    )
+
 
     also_free_plan = plans.detect {|p| p.fetch('entity').fetch('name') == 'also free' }
-    expect(also_free_plan.fetch('entity').fetch('description')).to eq('Two for twice the price!')
+    also_free_plan_entity = also_free_plan.fetch('entity')
+    expect(also_free_plan_entity.fetch('description')).to eq('Two for twice the price!')
+    expect(also_free_plan_entity.fetch('extra')).to be_nil
   end
 
   describe 'removing a service broker' do

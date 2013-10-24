@@ -82,6 +82,8 @@ module VCAP::CloudController
           catalog_plans = catalog_service.fetch('plans', [])
           catalog_plans.each do |catalog_plan|
             plan_id = catalog_plan.fetch('id')
+            metadata = catalog_plan['metadata']
+            extra = metadata ? metadata.to_json : nil
 
             plan = ServicePlan.update_or_create(
               service: service,
@@ -91,7 +93,8 @@ module VCAP::CloudController
                 name: catalog_plan.fetch('name'),
                 description: catalog_plan.fetch('description'),
                 free: true,
-                active: true
+                active: true,
+                extra: extra,
               )
             end
 

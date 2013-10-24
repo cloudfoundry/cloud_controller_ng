@@ -83,8 +83,11 @@ module VCAP::CloudController
       let(:plan_id) { Sham.guid }
       let(:plan_name) { Sham.name }
       let(:plan_description) { Sham.description }
-      let(:metadata_hash) do
+      let(:service_metadata_hash) do
         {'metadata' => {'foo' => 'bar'}}
+      end
+      let(:plan_metadata_hash) do
+        {'metadata' => { "cost" => "0.0" }}
       end
 
       let(:catalog) do
@@ -100,10 +103,10 @@ module VCAP::CloudController
                 {
                   'id' => plan_id,
                   'name' => plan_name,
-                  'description' => plan_description
-                }
+                  'description' => plan_description,
+                }.merge(plan_metadata_hash)
               ]
-            }.merge(metadata_hash)
+            }.merge(service_metadata_hash)
           ]
         }
       end
@@ -134,7 +137,7 @@ module VCAP::CloudController
       end
 
       context 'when catalog service metadata is nil' do
-        let(:metadata_hash) { {'metadata' => nil} }
+        let(:service_metadata_hash) { {'metadata' => nil} }
 
         it 'leaves the extra field as nil' do
           broker.load_catalog
@@ -144,7 +147,7 @@ module VCAP::CloudController
       end
 
       context 'when the catalog service has no metadata key' do
-        let(:metadata_hash) { {} }
+        let(:service_metadata_hash) { {} }
 
         it 'leaves the extra field as nil' do
           broker.load_catalog
@@ -163,10 +166,31 @@ module VCAP::CloudController
         expect(plan.service).to eq(Service.last)
         expect(plan.name).to eq(plan_name)
         expect(plan.description).to eq(plan_description)
+        expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
 
         # This is a temporary default until cost information is collected from V2
         # services.
         expect(plan.free).to be_true
+      end
+
+      context 'when the catalog service plan metadata is empty' do
+        let(:plan_metadata_hash) { {'metadata' => nil} }
+
+        it 'leaves the plan extra field as nil' do
+          broker.load_catalog
+          plan = ServicePlan.last
+          expect(plan.extra).to be_nil
+        end
+      end
+
+      context 'when the catalog service plan has no metadata key' do
+        let(:plan_metadata_hash) { {} }
+
+        it 'leaves the plan extra field as nil' do
+          broker.load_catalog
+          plan = ServicePlan.last
+          expect(plan.extra).to be_nil
+        end
       end
 
       context 'when a service already exists' do
