@@ -124,6 +124,12 @@ describe "Service Broker Management", type: :integration do
 
     plans = service_entity.fetch('service_plans')
     expect(plans.length).to eq(2)
+
+    free_plan = plans.detect {|p| p.fetch('entity').fetch('name') == 'free' }
+    expect(free_plan.fetch('entity').fetch('description')).to eq('A description of the Free plan')
+
+    also_free_plan = plans.detect {|p| p.fetch('entity').fetch('name') == 'also free' }
+    expect(also_free_plan.fetch('entity').fetch('description')).to eq('Two for twice the price!')
   end
 
   describe 'removing a service broker' do
