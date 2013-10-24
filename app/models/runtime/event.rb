@@ -19,6 +19,10 @@ module VCAP::CloudController
       :actee_type, :timestamp, :metadata, :space_guid,
       :organization_guid
 
+    def metadata
+      super || {}
+    end
+
     def space
       super || DeletedSpace.new
     end
