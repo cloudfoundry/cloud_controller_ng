@@ -185,6 +185,16 @@ module VCAP::CloudController
             model_from_db = model_class.find(:guid => model.guid)
             expect(model_from_db.updated_at).not_to be_nil
           end
+
+          it "calls the hooks in the right order" do
+            model_class.stub(:find).with(:guid => model.guid).and_return(model)
+
+            controller.should_receive(:before_update).with(model).ordered
+            model.should_receive(:update_from_hash).ordered.and_call_original
+            controller.should_receive(:after_update).with(model).ordered
+
+            controller.update(model.guid)
+          end
         end
         context "when the guid does not match a record" do
           it "raises a not found exception for the underlying model" do

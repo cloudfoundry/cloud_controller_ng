@@ -49,10 +49,14 @@ module VCAP::CloudController::RestController
     def update(guid)
       obj = find_for_update(guid)
 
+      before_update(obj)
+
       model.db.transaction(savepoint: true) do
         obj.lock!
         obj.update_from_hash(request_attrs)
       end
+
+      after_update(obj)
 
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end
