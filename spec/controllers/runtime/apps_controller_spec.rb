@@ -127,17 +127,6 @@ module VCAP::CloudController
           expect(event.metadata["request"]["name"]).to eq("maria")
           expect(event.metadata["request"]["space_guid"]).to eq(space_guid)
         end
-
-        it "records a create failed event when unauthorized" do
-          VCAP::CloudController::RestController::ModelController.any_instance.should_receive(:validate_access).and_raise(VCAP::CloudController::Errors::NotAuthorized)
-          create_app
-
-          last_response.status.should == 403
-          event = Event.find(:type => "audit.app.create", :actee => "0")
-
-          expect(event).to be
-          expect(event.metadata["request"]["name"]).to eq("maria")
-        end
       end
 
       context "buildpacks" do
@@ -331,15 +320,6 @@ module VCAP::CloudController
           end
         end
 
-        it "creates an audit log even if the app fails to update" do
-          VCAP::CloudController::App.any_instance.stub(:update_from_hash).and_raise("No update for you")
-
-          expect { update_app }.to raise_error("No update for you")
-
-          audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
-          expect(audit_event.metadata["request"]).to eq("instances" => 2)
-        end
-
         it "does not create an audit log when the app is not found" do
           guid = app_obj.guid
 
@@ -505,33 +485,11 @@ module VCAP::CloudController
           expect(event.actor).to eq(admin_user.guid)
         end
 
-        it "creates an audit log even if the app fails soft_delete" do
-          VCAP::CloudController::App.any_instance.stub(:soft_delete).and_raise("No delete for you")
-
-          expect { delete_app }.to raise_error("No delete for you")
-
-          audit_event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
-          expect(audit_event.metadata["request"]).to eq({ "recursive" => false})
-        end
-
         it "saves the recursive query parameter when recursive"  do
           delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
 
           audit_event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
           expect(audit_event.metadata["request"]).to eq({ "recursive" => true })
-        end
-
-        context "app with service bindings" do
-          let!(:svc_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
-          let!(:service_binding) { ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
-
-          it "creates an audit log even if non-recursive delete fails with bindings" do
-            VCAP::CloudController::App.any_instance.stub(:soft_delete).and_raise("No delete for you")
-            delete_app
-
-            audit_event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
-            expect(audit_event.metadata["request"]).to eq({ "recursive" => false})
-          end
         end
       end
     end

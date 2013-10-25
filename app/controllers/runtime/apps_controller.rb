@@ -54,10 +54,7 @@ module VCAP::CloudController
     def delete(guid)
       app = find_guid_and_validate_access(:delete, guid)
 
-      recursive = params["recursive"] == "true"
-      Event.record_app_delete(app, SecurityContext.current_user, recursive)
-
-      if !recursive && app.service_bindings.present?
+      if params["recursive"] != "true" && app.service_bindings.present?
         raise VCAP::Errors::AssociationNotEmpty.new("service_bindings", app.class.table_name)
       end
 
@@ -65,53 +62,21 @@ module VCAP::CloudController
         app.soft_delete
       end
 
+      after_destroy(app)
+
       [ HTTP::NO_CONTENT, nil ]
     end
 
-    def update(guid)
-      app = find_for_update(guid)
-      Event.record_app_update(app, SecurityContext.current_user, request_attrs)
-
-      model.db.transaction(savepoint: true) do
-        app.lock!
-        app.update_from_hash(request_attrs)
-        Loggregator.emit(guid, "Updated app with guid #{guid}")
-      end
-
-      after_update(app)
-
-      [HTTP::CREATED, serialization.render_json(self.class, app, @opts)]
-    end
-
-    def create
-      json_msg = self.class::CreateMessage.decode(body)
-
-      @request_attrs = json_msg.extract(:stringify_keys => true)
-
-      logger.debug "cc.create", :model => self.class.model_class_name,
-        :attributes => request_attrs
-
-      raise InvalidRequest unless request_attrs
-
-      obj = nil
-      model.db.transaction(savepoint: true) do
-        obj = model.create_from_hash(request_attrs)
-        validate_access(:create, obj, user, roles)
-      end
-
-      after_create(obj)
-      created_app = obj
-      Loggregator.emit(obj.guid, "Created app with guid #{obj.guid}")
-
-      [ HTTP::CREATED,
-        { "Location" => "#{self.class.path}/#{obj.guid}" },
-        serialization.render_json(self.class, obj, @opts)
-      ]
-    ensure
-      Event.record_app_create(created_app, SecurityContext.current_user, request_attrs) if request_attrs
-    end
-
     private
+
+    def after_create(app)
+      Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
+      Event.record_app_create(app, SecurityContext.current_user, request_attrs) if request_attrs
+    end
+
+    def after_destroy(app)
+      Event.record_app_delete(app, SecurityContext.current_user, params["recursive"] == "true")
+    end
 
     def after_update(app)
       stager_response = app.last_stager_response
@@ -122,6 +87,9 @@ module VCAP::CloudController
       if app.dea_update_pending?
         DeaClient.update_uris(app)
       end
+
+      Loggregator.emit(app.guid, "Updated app with guid #{app.guid}")
+      Event.record_app_update(app, SecurityContext.current_user, request_attrs)
     end
   end
 end
