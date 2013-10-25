@@ -59,6 +59,7 @@ module VCAP::CloudController::RestController
           end
         end
 
+        # grep-friendly location where CreateMessage, ResponseMessage, and UpdateMessage are declared
         self.const_set "#{type.to_s.camelize}Message", klass
       end
     end
