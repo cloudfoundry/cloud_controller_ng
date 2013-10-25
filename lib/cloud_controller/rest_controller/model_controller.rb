@@ -176,11 +176,7 @@ module VCAP::CloudController::RestController
 
       obj = find_guid_and_validate_access(:update, guid)
 
-      before_update(obj)
-
       obj.send("#{verb}_#{singular_name}_by_guid", other_guid)
-
-      after_update(obj)
 
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end

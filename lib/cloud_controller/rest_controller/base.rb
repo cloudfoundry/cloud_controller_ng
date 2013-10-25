@@ -154,11 +154,11 @@ module VCAP::CloudController::RestController
     def after_create(obj)
     end
 
-    # hook called before +update+, +add_related+ or +remove_related+
+    # hook called before +update+
     def before_update(obj)
     end
 
-    # hook called after +update+, +add_related+ or +remove_related+
+    # hook called after +update+
     def after_update(obj)
     end
 
