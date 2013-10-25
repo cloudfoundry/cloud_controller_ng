@@ -4,9 +4,10 @@ require "stringio"
 module VCAP::CloudController
   describe RestController::ModelController do
     let(:logger) { double('logger').as_null_object }
-    subject(:controller) { controller_class.new({}, logger, {}, {}, request_body) }
+    let(:params) { {} }
+    subject(:controller) { controller_class.new({}, logger, {}, params, request_body) }
 
-    describe "#create" do
+    context "with a valid controller and underlying model" do
       let!(:model_table_name) { "model_class_#{SecureRandom.hex(10)}".to_sym }
       let!(:model_class) do
         db.create_table model_table_name do
@@ -19,6 +20,9 @@ module VCAP::CloudController
         table_name = model_table_name
         Class.new(Sequel::Model) do
           set_dataset(db[table_name])
+          def self.name
+            "VCAP::CloudController::TestModel"
+          end
         end
       end
 
@@ -43,89 +47,246 @@ module VCAP::CloudController
 
       let(:request_body) { StringIO.new('{}') }
 
-      it "raises InvalidRequest when a CreateMessage cannot be extracted from the request body" do
-        controller_class::CreateMessage.any_instance.stub(:extract).and_return(nil)
-        expect { controller.create }.to raise_error(VCAP::Errors::InvalidRequest)
-      end
+      describe "#create" do
+        it "raises InvalidRequest when a CreateMessage cannot be extracted from the request body" do
+          controller_class::CreateMessage.any_instance.stub(:extract).and_return(nil)
+          expect { controller.create }.to raise_error(VCAP::Errors::InvalidRequest)
+        end
 
-      it "calls the hooks in the right order" do
-        controller_class::CreateMessage.any_instance.stub(:extract).and_return({extracted: "json"})
-
-        controller.should_receive(:before_create).with(no_args).ordered
-        model_class.should_receive(:create_from_hash).with({extracted: "json"}).ordered.and_call_original
-        controller.should_receive(:after_create).with(instance_of(model_class)).ordered
-
-        expect { controller.create }.to change { model_class.count }.by(1)
-      end
-
-      context "when validate access fails" do
-        before do
-          controller.stub(:validate_access).and_raise(VCAP::Errors::NotAuthorized)
+        it "calls the hooks in the right order" do
+          controller_class::CreateMessage.any_instance.stub(:extract).and_return({extracted: "json"})
 
           controller.should_receive(:before_create).with(no_args).ordered
-          model_class.should_receive(:create_from_hash).ordered.and_call_original
-          controller.should_not_receive(:after_create)
+          model_class.should_receive(:create_from_hash).with({extracted: "json"}).ordered.and_call_original
+          controller.should_receive(:after_create).with(instance_of(model_class)).ordered
+
+          expect { controller.create }.to change { model_class.count }.by(1)
         end
 
-        it "raises the validation failure" do
-          expect{controller.create}.to raise_error(VCAP::Errors::NotAuthorized)
-        end
+        context "when validate access fails" do
+          before do
+            controller.stub(:validate_access).and_raise(VCAP::Errors::NotAuthorized)
 
-        it "does not persist the model" do
-          before_count = model_class.count
-          begin
-            controller.create
-          rescue VCAP::Errors::NotAuthorized
+            controller.should_receive(:before_create).with(no_args).ordered
+            model_class.should_receive(:create_from_hash).ordered.and_call_original
+            controller.should_not_receive(:after_create)
           end
-          after_count = model_class.count
-          expect(after_count).to eq(before_count)
+
+          it "raises the validation failure" do
+            expect{controller.create}.to raise_error(VCAP::Errors::NotAuthorized)
+          end
+
+          it "does not persist the model" do
+            before_count = model_class.count
+            begin
+              controller.create
+            rescue VCAP::Errors::NotAuthorized
+            end
+            after_count = model_class.count
+            expect(after_count).to eq(before_count)
+          end
+        end
+
+        it "returns the right values on a successful create" do
+          result = controller.create
+          model_instance = model_class.first
+          expect(model_instance.guid).not_to be_nil
+
+          url = "/v2/test_model/#{model_instance.guid}"
+
+          expect(result[0]).to eq(201)
+          expect(result[1]).to eq({"Location" => url})
+
+          parsed_json = JSON.parse(result[2])
+          expect(parsed_json.keys).to match_array(%w(metadata entity))
+        end
+
+        it "should call the serialization instance asssociated with controller to generate response data" do
+          serializer = double
+          controller.should_receive(:serialization).and_return(serializer)
+          serializer.should_receive(:render_json).with(controller_class, instance_of(model_class), {}).and_return("serialized json")
+
+          result = controller.create
+          expect(result[2]).to eq("serialized json")
         end
       end
 
-      it "returns the right values on a successful create" do
-        result = controller.create
-        model_instance = model_class.first
-        expect(model_instance.guid).not_to be_nil
+      describe "#read" do
+        context "when the guid matches a record" do
+          let!(:model) do
+            instance = model_class.new
+            instance.save
+            instance
+          end
 
-        url = "/v2/test_model/#{model_instance.guid}"
+          it "raises if validate_access fails" do
+            controller.stub(:validate_access).and_raise(VCAP::Errors::NotAuthorized)
+            expect{controller.read(model.guid)}.to raise_error(VCAP::Errors::NotAuthorized)
+          end
 
-        expect(result[0]).to eq(201)
-        expect(result[1]).to eq({"Location" => url})
+          it "returns the serialized object if access is validated" do
+            serializer = double
+            controller.should_receive(:serialization).and_return(serializer)
+            serializer.should_receive(:render_json).with(controller_class, model, {}).and_return("serialized json")
 
-        parsed_json = JSON.parse(result[2])
-        expect(parsed_json.keys).to match_array(%w(metadata entity))
+            expect(controller.read(model.guid)).to eq("serialized json")
+          end
+        end
+
+        context "when the guid does not match a record" do
+          it "raises a not found exception for the underlying model" do
+            error_class = Class.new(RuntimeError)
+            stub_const("VCAP::CloudController::Errors::TestModelNotFound", error_class)
+            expect { controller.read(SecureRandom.uuid) }.to raise_error(error_class)
+          end
+        end
       end
 
-      it "should call the serialization instance asssociated with controller to generate response data" do
-        serializer = double
-        controller.should_receive(:serialization).and_return(serializer)
-        serializer.should_receive(:render_json).with(controller_class, instance_of(model_class), {}).and_return("serialized json")
+      describe "#update" do
+        context "when the guid matches a record" do
+          let!(:model) do
+            instance = model_class.new
+            instance.save
+            instance
+          end
 
-        result = controller.create
-        expect(result[2]).to eq("serialized json")
+          let(:request_body) do
+            StringIO.new({:state => "STOPPED"}.to_json)
+          end
+
+          it "raises if validate_access fails" do
+            controller.stub(:validate_access).and_raise(VCAP::Errors::NotAuthorized)
+            expect{controller.update(model.guid)}.to raise_error(VCAP::Errors::NotAuthorized)
+          end
+
+          it "prevents other processes from updating the same row until the transaction finishes" do
+            model_class.stub(:find).with(:guid => model.guid).and_return(model)
+            model.should_receive(:lock!).ordered
+            model.should_receive(:update_from_hash).ordered.and_call_original
+
+            controller.update(model.guid)
+          end
+
+          it "returns the serialized updated object if access is validated" do
+            serializer = double
+            controller.should_receive(:serialization).and_return(serializer)
+            serializer.should_receive(:render_json).with(controller_class, instance_of(model_class), {}).and_return("serialized json")
+
+            result = controller.update(model.guid)
+            expect(result[0]).to eq(201)
+            expect(result[1]).to eq("serialized json")
+          end
+
+          it "updates the data" do
+            expect(model.updated_at).to be_nil
+
+            controller.update(model.guid)
+
+            model_from_db = model_class.find(:guid => model.guid)
+            expect(model_from_db.updated_at).not_to be_nil
+          end
+        end
+        context "when the guid does not match a record" do
+          it "raises a not found exception for the underlying model" do
+            error_class = Class.new(RuntimeError)
+            stub_const("VCAP::CloudController::Errors::TestModelNotFound", error_class)
+            expect { controller.update(SecureRandom.uuid) }.to raise_error(error_class)
+          end
+        end
       end
-    end
 
-    describe "#update" do
-      let(:controller_class) { AppsController }
-      let(:app) { AppFactory.make }
-      let(:guid) { app.guid }
+      describe "#delete" do
+        let!(:model) do
+          instance = model_class.new
+          instance.save
+          instance
+        end
 
-      let(:request_body) do
-        StringIO.new({
-          :state => "STOPPED"
-        }.to_json)
-      end
+        context "when the guid matches a record" do
+          context "when validate_accesss fails" do
+            before do
+              controller.stub(:validate_access).and_raise(VCAP::Errors::NotAuthorized)
+            end
 
-      before do
-        subject.stub(:find_guid_and_validate_access).with(:update, guid) { app }
-        SecurityContext.stub(:current_user).and_return(User.make)
-      end
+            it "raises" do
+              expect{controller.delete(model.guid)}.to raise_error(VCAP::Errors::NotAuthorized)
+            end
 
-      it "prevents other processes from updating the same row until the transaction finishes" do
-        app.should_receive(:lock!).ordered
-        app.should_receive(:update_from_hash).ordered
-        controller.update(guid)
+            it "does not call the hooks" do
+              controller.should_not_receive(:before_destroy)
+              controller.should_not_receive(:after_destroy)
+
+              begin
+                controller.delete(model.guid)
+              rescue VCAP::Errors::NotAuthorized
+              end
+            end
+          end
+
+          it "deletes the object if access if validated" do
+            expect { controller.delete(model.guid) }.to change { model_class.count }.by(-1)
+          end
+
+          context "when the model has active associations" do
+            before do
+              model_class.instance_eval do
+                one_to_many :droplets
+              end
+
+              controller.stub(:v2_api?).and_return(true)
+              model_class.any_instance.stub(:has_one_to_many?).with(:droplets).and_return(true)
+            end
+
+            context "when deleting with recursive set to true" do
+              let(:params) { {"recursive" => "true"} }
+              it "successfully deletes" do
+                expect{controller.delete(model.guid)}.to change { model_class.count }.by(-1)
+              end
+            end
+
+            context "when deleting non-recursively" do
+              it "raises an association error" do
+                expect{controller.delete(model.guid)}.to raise_error(VCAP::Errors::AssociationNotEmpty)
+              end
+
+              it "does not call any hooks" do
+                controller.should_not_receive(:before_destroy)
+                controller.should_not_receive(:after_destroy)
+
+                begin
+                  controller.delete(model.guid)
+                rescue VCAP::Errors::AssociationNotEmpty
+                end
+              end
+            end
+          end
+
+          it "calls the hooks in the right order" do
+            model_class.stub(:find).with(:guid => model.guid).and_return(model)
+
+            controller.should_receive(:before_destroy).with(model).ordered
+            model.should_receive(:destroy).ordered.and_call_original
+            controller.should_receive(:after_destroy).with(model).ordered
+
+            controller.delete(model.guid)
+          end
+
+          it "returns a valid http response" do
+            result = controller.delete(model.guid)
+
+            expect(result[0]).to eq(204)
+            expect(result[1]).to be_nil
+          end
+        end
+
+        context "when the guid does not match a record" do
+          it "raises a not found exception for the underlying model" do
+            error_class = Class.new(RuntimeError)
+            stub_const("VCAP::CloudController::Errors::TestModelNotFound", error_class)
+            expect { controller.delete(SecureRandom.uuid) }.to raise_error(error_class)
+          end
+        end
+
       end
     end
 
