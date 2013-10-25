@@ -478,5 +478,47 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "audit events" do
+      let(:organization) { Organization.make }
+      describe "audit.space.create" do
+        it "is logged when creating a space" do
+          request_body = {organization_guid: organization.guid, name: "space_name"}.to_json
+          post "/v2/spaces", request_body, json_headers(admin_headers)
+
+          last_response.status.should == 201
+
+          new_space_guid = decoded_response['metadata']['guid']
+          event = Event.find(:type => "audit.space.create", :actee => new_space_guid)
+          expect(event).not_to be_nil
+          expect(event.metadata["request"]).to eq("organization_guid" => organization.guid, "name" => "space_name")
+        end
+      end
+
+      it "logs audit.space.update when updating a space" do
+        space = Space.make
+        request_body = {name: "new_space_name"}.to_json
+        put "/v2/spaces/#{space.guid}", request_body, json_headers(admin_headers)
+
+        last_response.status.should == 201
+
+        space_guid = decoded_response['metadata']['guid']
+        event = Event.find(:type => "audit.space.update", :actee => space_guid)
+        expect(event).not_to be_nil
+        expect(event.metadata["request"]).to eq("name" => "new_space_name")
+      end
+
+      it "logs audit.space.delete when deleting a space" do
+        space = Space.make
+        space_guid = space.guid
+        delete "/v2/spaces/#{space_guid}", "", json_headers(admin_headers)
+
+        last_response.status.should == 204
+
+        event = Event.find(:type => "audit.space.delete", :actee => space_guid)
+        expect(event).not_to be_nil
+        expect(event.metadata["request"]).to eq("recursive" => false)
+      end
+    end
   end
 end
