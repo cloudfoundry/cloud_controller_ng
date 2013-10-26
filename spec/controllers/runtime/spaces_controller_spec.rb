@@ -510,6 +510,7 @@ module VCAP::CloudController
 
       it "logs audit.space.delete when deleting a space" do
         space = Space.make
+        organization_guid = space.organization.guid
         space_guid = space.guid
         delete "/v2/spaces/#{space_guid}", "", json_headers(admin_headers)
 
@@ -518,6 +519,8 @@ module VCAP::CloudController
         event = Event.find(:type => "audit.space.delete", :actee => space_guid)
         expect(event).not_to be_nil
         expect(event.metadata["request"]).to eq("recursive" => false)
+        expect(event.space_guid).to eq(space_guid)
+        expect(event.organization_guid).to eq(organization_guid)
       end
     end
   end

@@ -33,6 +33,7 @@ module VCAP::CloudController
     end
 
     def denormalize_space_and_org_guids
+      return if space_guid && organization_guid
       self.space_guid = space.guid
       self.organization_guid = space.organization.guid
     end
@@ -144,6 +145,8 @@ module VCAP::CloudController
           actor: actor.guid,
           actor_type: "user",
           timestamp: Time.now,
+          space_guid: space.guid,
+          organization_guid: space.organization.guid,
           metadata: {
               request: { recursive: recursive }
           }
