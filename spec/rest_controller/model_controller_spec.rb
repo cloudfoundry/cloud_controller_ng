@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:params) { {} }
     subject(:controller) { controller_class.new({}, logger, {}, params, request_body) }
 
-    context "with a valid controller and underlying model" do
+    context "with a valid controller and underlying model", non_transactional: true do
       let!(:model_table_name) { "model_class_#{SecureRandom.hex(10)}".to_sym }
       let!(:model_class) do
         db.create_table model_table_name do
