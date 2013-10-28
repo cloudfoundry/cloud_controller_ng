@@ -41,7 +41,7 @@ resource "Apps", :type => :api do
   standard_model_delete :app
 
   def after_standard_model_delete(guid)
-    event = VCAP::CloudController::Event.find(:type => "audit.app.delete", :actee => guid)
+    event = VCAP::CloudController::Event.find(:type => "audit.app.delete-request", :actee => guid)
     audited_event event
   end
 

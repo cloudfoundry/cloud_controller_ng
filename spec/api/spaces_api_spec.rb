@@ -21,7 +21,7 @@ resource "Spaces", :type => :api do
   standard_model_delete :space
 
   def after_standard_model_delete(guid)
-    event = VCAP::CloudController::Event.find(:type => "audit.space.delete", :actee => guid)
+    event = VCAP::CloudController::Event.find(:type => "audit.space.delete-request", :actee => guid)
     audited_event event
   end
 
