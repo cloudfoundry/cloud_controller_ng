@@ -177,9 +177,9 @@ module VCAP::CloudController
       let(:user) { User.make }
 
       it "records an empty changes in metadata" do
-        event = described_class.record_app_delete(deleting_app, user, false)
+        event = described_class.record_app_delete_request(deleting_app, user, false)
         expect(event.actor_type).to eq("user")
-        expect(event.type).to eq("audit.app.delete")
+        expect(event.type).to eq("audit.app.delete-request")
         expect(event.actee).to eq(deleting_app.guid)
         expect(event.actee_type).to eq("app")
         expect(event.metadata["request"]["recursive"]).to eq(false)
