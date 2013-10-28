@@ -92,10 +92,10 @@ module VCAP::CloudController
       create(opts)
     end
 
-    def self.record_app_delete(deleting_app, actor, recursive)
+    def self.record_app_delete_request(deleting_app, actor, recursive)
       create(
         space: deleting_app.space,
-        type: "audit.app.delete",
+        type: "audit.app.delete-request",
         actee: deleting_app.guid,
         actee_type: "app",
         actor: actor.guid,
@@ -137,9 +137,9 @@ module VCAP::CloudController
       )
     end
 
-    def self.record_space_delete(space, actor, recursive)
+    def self.record_space_delete_request(space, actor, recursive)
       create(
-          type: "audit.space.delete",
+          type: "audit.space.delete-request",
           actee: space.guid,
           actee_type: "space",
           actor: actor.guid,

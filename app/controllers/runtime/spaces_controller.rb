@@ -79,8 +79,8 @@ module VCAP::CloudController
       Event.record_space_update(space, SecurityContext.current_user, request_attrs)
     end
 
-    def after_destroy(space)
-      Event.record_space_delete(space, SecurityContext.current_user, params["recursive"] == "true")
+    def before_destroy(space)
+      Event.record_space_delete_request(space, SecurityContext.current_user, params["recursive"] == "true")
     end
 
     module ServiceSerialization

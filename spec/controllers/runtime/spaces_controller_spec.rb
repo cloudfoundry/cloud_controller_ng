@@ -508,7 +508,7 @@ module VCAP::CloudController
         expect(event.metadata["request"]).to eq("name" => "new_space_name")
       end
 
-      it "logs audit.space.delete when deleting a space" do
+      it "logs audit.space.delete-request when deleting a space" do
         space = Space.make
         organization_guid = space.organization.guid
         space_guid = space.guid
@@ -516,7 +516,7 @@ module VCAP::CloudController
 
         last_response.status.should == 204
 
-        event = Event.find(:type => "audit.space.delete", :actee => space_guid)
+        event = Event.find(:type => "audit.space.delete-request", :actee => space_guid)
         expect(event).not_to be_nil
         expect(event.metadata["request"]).to eq("recursive" => false)
         expect(event.space_guid).to eq(space_guid)
