@@ -22,7 +22,8 @@ gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.gi
 gem "vcap_common", :git => "https://github.com/cloudfoundry/vcap-common.git"
 gem "allowy"
 gem "loggregator_emitter", "~> 1.0"
-gem "talentbox-delayed_job_sequel", "~> 4.0.0.beta1.1"
+# Point to our clone, pending a pull request merged to the original author
+gem "talentbox-delayed_job_sequel", git: "https://github.com/cf-frameworks/delayed_job_sequel"
 
 
 group :db do
