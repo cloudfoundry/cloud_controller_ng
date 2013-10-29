@@ -1,10 +1,11 @@
 GIT
-  remote: https://github.com/cf-frameworks/delayed_job_sequel
-  revision: e682ce3350872231f6efa626a8bdd00f5d2a9f5c
+  remote: https://github.com/TalentBox/delayed_job_sequel
+  revision: 8725e1ee4797175c0c596ef9822414007a572e21
+  ref: 8725e1ee
   specs:
-    talentbox-delayed_job_sequel (4.0.0.beta1.1)
-      delayed_job (~> 4.0.0.beta1)
-      sequel (~> 3.28)
+    talentbox-delayed_job_sequel (4.0.0.dev)
+      delayed_job (~> 4.0.0)
+      sequel (>= 3.38, < 5.0)
       tzinfo
 
 GIT
