@@ -301,49 +301,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'when a service is no longer there' do
-
-        let!(:service) do
-          Service.make(
-            service_broker: broker,
-            unique_id: Sham.guid
-          )
-        end
-        let!(:plan) do
-          ServicePlan.make(
-            service: service,
-            unique_id: Sham.guid
-          )
-        end
-
-        it 'makes the services inactive' do
-          expect(service.unique_id).to_not eq(service_id)
-          expect(service.description).to_not eq(service_description)
-          expect(service.active).to eq(true)
-
-          expect {
-            broker.load_catalog
-          }.to_not change(Service.where('active = ?', true), :count)
-
-          service.reload
-          expect(service.active).to eq(false)
-        end
-
-        xit 'makes the plans inactive' do
-          expect(plan.name).to_not eq(plan_name)
-          expect(plan.description).to_not eq(plan_description)
-          expect(plan.active).to eq(true)
-
-          expect {
-            broker.load_catalog
-          }.to_not change(ServicePlan.where('active = ?', true), :count)
-
-          plan.reload
-          expect(plan.active).to eq(false)
-        end
-
-      end
     end
 
     describe '#client' do

@@ -58,11 +58,6 @@ module VCAP::CloudController
       def sync_services_and_plans
         catalog_services = @broker.client.catalog.fetch('services', [])
 
-        services_in_db_not_in_catalog = Service.where('id NOT in ?', catalog_services.map{|member| member['id']})
-        services_in_db_not_in_catalog.each do |service|
-          service.update(active: false)
-        end
-
         catalog_services.each do |catalog_service|
           service_id = catalog_service.fetch('id')
 
