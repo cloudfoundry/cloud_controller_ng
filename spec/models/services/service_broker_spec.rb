@@ -291,14 +291,28 @@ module VCAP::CloudController
           context 'when an instance for the plan exists' do
             it 'marks the existing plan as inactive' do
               ManagedServiceInstance.make(service_plan: plan)
-              expect(plan.active?).to be_true
+              expect(plan).to be_active
 
               broker.load_catalog
               plan.reload
 
-              expect(plan.active?).to be_false
+              expect(plan).not_to be_active
             end
           end
+        end
+      end
+
+      context 'when a service no longer exists' do
+        let!(:service) do
+          Service.make(
+            service_broker: broker,
+            unique_id: 'nolongerexists'
+          )
+        end
+
+        it 'should delete the service' do
+          broker.load_catalog
+          expect(Service.find(:id => service.id)).to be_nil
         end
       end
     end
