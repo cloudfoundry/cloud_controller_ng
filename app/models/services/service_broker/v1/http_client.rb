@@ -56,12 +56,16 @@ module VCAP::CloudController
         request[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
         request['X-VCAP-Service-Token'] = @token
 
+        logger.debug "Sending #{req_class} to #{uri.request_uri}, BODY: #{request.body}, HEADERS: #{request.to_hash.inspect}"
+
         response = Net::HTTP.start(uri.hostname, uri.port) do |http|
           http.open_timeout = TIMEOUT
           http.read_timeout = TIMEOUT
 
           http.request(request)
         end
+
+        logger.debug "Response from request to #{uri.request_uri}: STATUS #{response.code.to_i}, BODY: #{response.body}, HEADERS: #{response.to_hash.inspect}"
 
         case response
         when Net::HTTPSuccess
@@ -82,6 +86,10 @@ module VCAP::CloudController
 
           raise HttpResponseError.new(message, endpoint, method, response)
         end
+      end
+
+      def logger
+        @logger ||= Steno.logger("cc.service_broker.v1.http_client")
       end
     end
   end
