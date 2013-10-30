@@ -1,7 +1,6 @@
 require "spec_helper"
-require "jobs/runtime/app_bits_packer"
 
-describe AppBitsPacker do
+describe AppBitsPackage do
   let(:fingerprints_in_app_cache) do
     path = File.join(local_tmp_dir, "content")
     sha = "some_fake_sha"
@@ -17,7 +16,7 @@ describe AppBitsPacker do
   let(:local_tmp_dir) { Dir.mktmpdir }
   let(:global_app_bits_cache) { Blobstore.new({ provider: "Local", local_root: blobstore_dir }, "global_app_bits_cache") }
   let(:package_blobstore) { Blobstore.new({provider: "Local", local_root: blobstore_dir}, "package") }
-  let(:packer) { AppBitsPacker.new(package_blobstore, global_app_bits_cache, max_droplet_size, local_tmp_dir) }
+  let(:packer) { AppBitsPackage.new(package_blobstore, global_app_bits_cache, max_droplet_size, local_tmp_dir) }
   let(:max_droplet_size) { 1_073_741_824 }
 
   around do |example|
@@ -35,35 +34,35 @@ describe AppBitsPacker do
     FileUtils.stub(:rm_f).with(compressed_path)
   end
 
-  describe "#perform" do
-    subject(:perform) { packer.perform(app, compressed_path, fingerprints_in_app_cache) }
+  describe "#create" do
+    subject(:create) { packer.create(app, compressed_path, fingerprints_in_app_cache) }
 
     it "uploads the new app bits to the app bit cache" do
-      perform
+      create
       sha_of_bye_file_in_good_zip = "ee9e51458f4642f48efe956962058245ee7127b1"
       expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
     end
 
     it "uploads the new app bits to the package blob store" do
-      perform
+      create
       package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, "package.zip"))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include("bye")
     end
 
     it "uploads the old app bits already in the app bits cache to the package blob store" do
-      perform
+      create
       package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, "package.zip"))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include("path/to/content.txt")
     end
 
     it "uploads the package zip to the package blob store" do
-      perform
+      create
       expect(package_blobstore.exists?(app.guid)).to be_true
     end
 
     it "sets the package sha to the app" do
       expect {
-        perform
+        create
       }.to change {
         app.refresh.package_hash
       }
@@ -71,7 +70,7 @@ describe AppBitsPacker do
 
     it "removes the compressed path afterwards" do
       FileUtils.should_receive(:rm_f).with(compressed_path)
-      perform
+      create
     end
 
     context "when there is no package uploaded" do
@@ -79,7 +78,7 @@ describe AppBitsPacker do
 
       it "doesn't try to remove the file" do
         FileUtils.should_not_receive(:rm_f)
-        perform
+        create
       end
     end
 
@@ -88,13 +87,13 @@ describe AppBitsPacker do
 
       it "raises an exception" do
         expect {
-          perform
+          create
         }.to raise_exception VCAP::Errors::AppPackageInvalid, /package.+larger/i
       end
 
       it "removes the compressed path afterwards" do
         FileUtils.should_receive(:rm_f).with(compressed_path)
-        expect { perform }.to raise_exception
+        expect { create }.to raise_exception
       end
     end
 
@@ -105,7 +104,7 @@ describe AppBitsPacker do
         fingerprints_in_app_cache = FingerprintsCollection.new(
           [{"fn" => "file.txt", "size" => (2048 * 1024 * 1024) + 1, "sha1" => 'a_sha'}]
         )
-        packer.perform(app, compressed_path, fingerprints_in_app_cache)
+        packer.create(app, compressed_path, fingerprints_in_app_cache)
       end
     end
   end

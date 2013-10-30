@@ -1,7 +1,7 @@
 require "cloud_controller/blobstore/local_app_bits"
 require "cloud_controller/blobstore/fingerprints_collection"
 
-class AppBitsPacker
+class AppBitsPackage
   attr_reader :package_blobstore, :global_app_bits_cache, :max_droplet_size, :tmp_dir
 
   def initialize(package_blobstore, global_app_bits_cache, max_droplet_size, tmp_dir)
@@ -11,7 +11,7 @@ class AppBitsPacker
     @tmp_dir = tmp_dir
   end
 
-  def perform(app, uploaded_tmp_compressed_path, fingerprints_in_app_cache)
+  def create(app, uploaded_tmp_compressed_path, fingerprints_in_app_cache)
     LocalAppBits.from_compressed_bits(uploaded_tmp_compressed_path, tmp_dir) do |local_app_bits|
       validate_size!(fingerprints_in_app_cache, local_app_bits)
 

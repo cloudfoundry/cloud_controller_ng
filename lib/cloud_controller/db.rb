@@ -44,6 +44,7 @@ module VCAP::CloudController
     end
 
     def self.load_models
+      require "models/runtime/app_bits_package"
       require "models/runtime/auto_detection_buildpack"
       require "models/runtime/deleted_space"
       require "models/runtime/billing_event"

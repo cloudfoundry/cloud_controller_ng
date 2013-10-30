@@ -1,5 +1,4 @@
 require "cloud_controller/upload_handler"
-require "jobs/runtime/app_bits_packer_job"
 require "presenters/api/job_presenter"
 
 module VCAP::CloudController

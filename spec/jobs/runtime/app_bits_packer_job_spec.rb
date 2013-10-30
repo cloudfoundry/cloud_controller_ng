@@ -15,7 +15,7 @@ describe AppBitsPackerJob do
 
       FingerprintsCollection.stub(:new) { fingerprints }
       VCAP::CloudController::App.stub(:find) { app }
-      AppBitsPacker.stub(:new) { double(:packer, perform: "done") }
+      AppBitsPackage.stub(:new) { double(:packer, create: "done") }
     end
 
     subject(:job) {
@@ -37,8 +37,8 @@ describe AppBitsPackerJob do
       CloudController::DependencyLocator.instance.should_receive(:global_app_bits_cache).and_return(global_app_bits_cache)
 
       packer = double
-      AppBitsPacker.should_receive(:new).with(package_blobstore, global_app_bits_cache, max_droplet_size, tmpdir).and_return(packer)
-      packer.should_receive(:perform).with(app, uploaded_path, fingerprints)
+      AppBitsPackage.should_receive(:new).with(package_blobstore, global_app_bits_cache, max_droplet_size, tmpdir).and_return(packer)
+      packer.should_receive(:create).with(app, uploaded_path, fingerprints)
       job.perform
     end
   end
