@@ -18,42 +18,42 @@ module VCAP::CloudController
     let(:workspace) { Dir.mktmpdir }
     let(:original_staging_config) do
       {
-          :max_staging_runtime => max_staging_runtime,
-          :bind_address => cc_addr,
-          :port => cc_port,
-          :staging => {
-              :auth => {
-                  :user => staging_user,
-                  :password => staging_password
+          max_staging_runtime: max_staging_runtime,
+          bind_address: cc_addr,
+          port: cc_port,
+          staging: {
+              auth: {
+                  user: staging_user,
+                  password: staging_password
               }
           },
-          :nginx => {:use_nginx => true},
-          :resource_pool => {
-              :resource_directory_key => "cc-resources",
-              :fog_connection => {
-                  :provider => "Local",
-                  :local_root => Dir.mktmpdir("resourse_pool", workspace)
+          nginx: {use_nginx: true},
+          resource_pool: {
+              resource_directory_key: "cc-resources",
+              fog_connection: {
+                  provider: "Local",
+                  local_root: Dir.mktmpdir("resourse_pool", workspace)
               }
           },
-          :packages => {
-              :fog_connection => {
-                  :provider => "Local",
-                  :local_root => Dir.mktmpdir("packages", workspace)
+          packages: {
+              fog_connection: {
+                  provider: "Local",
+                  local_root: Dir.mktmpdir("packages", workspace)
               },
-              :app_package_directory_key => "cc-packages",
+              app_package_directory_key: "cc-packages",
           },
-          :droplets => {
-              :droplet_directory_key => "cc-droplets",
-              :fog_connection => {
-                  :provider => "Local",
-                  :local_root => Dir.mktmpdir("droplets", workspace)
+          droplets: {
+              droplet_directory_key: "cc-droplets",
+              fog_connection: {
+                  provider: "Local",
+                  local_root: Dir.mktmpdir("droplets", workspace)
               }
           },
-          :directories => {
-              :tmpdir => Dir.mktmpdir("tmpdir", workspace)
+          directories: {
+              tmpdir: Dir.mktmpdir("tmpdir", workspace)
           },
-          :index => 99,
-          :name => "api_z1"
+          index: 99,
+          name: "api_z1"
       }
     end
     let(:staging_config) { original_staging_config }
