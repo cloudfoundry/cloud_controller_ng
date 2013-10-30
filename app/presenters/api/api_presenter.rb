@@ -11,7 +11,7 @@ class ApiPresenter
   end
 
   def to_json
-    Yajl::Encoder.encode(to_hash)
+    Yajl::Encoder.encode(to_hash, :pretty => true)
   end
 
   protected
