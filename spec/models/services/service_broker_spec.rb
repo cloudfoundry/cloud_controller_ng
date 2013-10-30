@@ -314,6 +314,28 @@ module VCAP::CloudController
           broker.load_catalog
           expect(Service.find(:id => service.id)).to be_nil
         end
+
+        context 'but it has an active plan' do
+          let!(:plan) do
+            ServicePlan.make(
+              service: service,
+              unique_id: 'also_no_longer_in_catalog'
+            )
+          end
+          let!(:service_instance) do
+            ManagedServiceInstance.make(service_plan: plan)
+          end
+
+          it 'marks the existing service as inactive' do
+            expect(service).to be_active
+
+            broker.load_catalog
+            service.reload
+
+            expect(service).not_to be_active
+          end
+        end
+
       end
     end
 
