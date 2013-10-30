@@ -242,59 +242,82 @@ describe "Service Broker Management", type: :integration do
     end
   end
 
-  specify "An existing service plan disappears from the catalog" do
-    # Add the broker
-    body = JSON.dump(
-      broker_url: "http://localhost:54329",
-      auth_username: "me",
-      auth_password: "supersecretshh",
-      name: "BrokerDrug",
-    )
+  describe 'updating a service broker' do
+    before  do
+      # Add the broker
+      body = JSON.dump(
+        broker_url: "http://localhost:54329",
+        auth_username: "me",
+        auth_password: "supersecretshh",
+        name: "BrokerDrug",
+      )
 
-    create_response = make_post_request('/v2/service_brokers', body, admin_headers)
-    expect(create_response.code.to_i).to eq(201)
-    broker_guid = create_response.json_body.fetch('metadata').fetch('guid')
+      create_response = make_post_request('/v2/service_brokers', body, admin_headers)
+      expect(create_response.code.to_i).to eq(201)
+      @broker_guid = create_response.json_body.fetch('metadata').fetch('guid')
+    end
 
-    # create a service instance of first plan
-    service_instance_guid = create_service_instance
+    context 'when a service plan disappears from the catalog' do
 
-    # verify that we have two plans
-    plans = get_plans
-    expect(plans.length).to eq(2)
+      context 'when it has an existing instance' do
+        let!(:service_instance_guid) { create_service_instance } # creates instance on last plan in catalog
 
-    # remove the second plan from fake
-    delete_last_plan_from_broker
+        specify 'the plan is no longer listed' do
+          # verify that we have two plans
+          plans = get_plans
+          expect(plans.length).to eq(2)
 
-    # update the service broker
-    update_service_broker(broker_guid)
+          # remove the second plan from fake
+          delete_last_plan_from_broker
 
-    # verify that second plan is inactive
-    plans = get_plans
-    expect(plans.length).to eq(1)
+          # update the service broker
+          update_service_broker(@broker_guid)
 
-    # remove the first plan from fake
-    delete_last_plan_from_broker
+          # verify that second plan is inactive
+          plans = get_plans
+          expect(plans.length).to eq(1)
+        end
+      end
 
-    # update the service broker
-    update_service_broker(broker_guid)
+      context 'when it has no existing instance' do
+        specify 'the plan is no longer listed' do
+          # verify that we have two plans
+          plans = get_plans
+          expect(plans.length).to eq(2)
 
-    # verify that no services are visible
-    services = get_services
-    expect(services).to be_empty
+          # remove the second plan from fake
+          delete_last_plan_from_broker
 
-    # verify that the plan still exists in the db but is inactive
-    plans = get_plans(admin_headers)
-    expect(plans.length).to eq(1)
+          # update the service broker
+          update_service_broker(@broker_guid)
 
-    # delete instance
-    delete_service_instance(service_instance_guid)
+          # verify that second plan is inactive
+          plans = get_plans
+          expect(plans.length).to eq(1)
+        end
+      end
 
-    # update the service broker
-    update_service_broker(broker_guid)
+      context 'when it leaves the service in the catalog with no plans' do
+        specify 'the update reports an error and the cloud controller service is not modified' do
+          # verify that we have two plans
+          plans = get_plans
+          expect(plans.length).to eq(2)
 
-    # verify that the plan has been removed from the db
-    plans = get_plans(admin_headers)
-    expect(plans.length).to eq(0)
+          # remove both plans from fake
+          delete_last_plan_from_broker
+          delete_last_plan_from_broker
+
+          # attempt to update the service broker, expect error
+          update_response = make_put_request("/v2/service_brokers/#{@broker_guid}", {}.to_json, admin_headers)
+          expect(update_response.code.to_i).to eq(400)
+
+          # verify plans are unchanged
+          plans = get_plans
+          expect(plans.length).to eq(2)
+        end
+      end
+
+    end
   end
 
   def service_guid
