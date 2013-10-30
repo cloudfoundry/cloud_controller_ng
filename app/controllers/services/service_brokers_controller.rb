@@ -123,6 +123,8 @@ module VCAP::CloudController
         Errors::ServiceBrokerUrlTaken.new(broker.broker_url)
       elsif errors.on(:name) && errors.on(:name).include?(:unique)
         Errors::ServiceBrokerNameTaken.new(broker.name)
+      elsif errors.on(:services)
+        Errors::ServiceBrokerInvalid.new(errors.on(:services))
       else
         Errors::ServiceBrokerInvalid.new(errors.full_messages)
       end

@@ -73,6 +73,10 @@ module VCAP::CloudController
             plan = V2::CatalogPlan.new(service, plan_attrs)
             @plans << plan
           end
+          if @plans.length < 1
+            @service_broker.errors.add(:services, 'each service must have at least one plan')
+            raise Errors::ServiceBrokerInvalid.new("each service must have at least one plan")
+          end
         end
       end
 

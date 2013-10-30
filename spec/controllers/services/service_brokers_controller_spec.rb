@@ -132,6 +132,21 @@ module VCAP::CloudController
             decoded_response.fetch('description').should == 'Service broker is invalid: A bunch of stuff was wrong'
           end
         end
+
+        context 'when the catalog has a service without any plans' do
+          before do
+            broker.stub(:load_catalog).and_raise(Errors::ServiceBrokerInvalid.new('each service must have at least one plan'))
+            errors.stub(:on).with(:services).and_return('each service must have at least one plan')
+          end
+
+          it 'returns an error' do
+            post '/v2/service_brokers', body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270001
+            decoded_response.fetch('description').should == 'Service broker is invalid: each service must have at least one plan'
+          end
+        end
       end
 
       describe 'authentication' do

@@ -156,6 +156,27 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the service has no plans' do
+        let(:catalog) do
+          {
+            'services' => [
+              {
+                'id' => service_id,
+                'name' => service_name,
+                'description' => service_description,
+                'bindable' => true,
+                'tags' => ['mysql', 'relational'],
+                'plans' => []
+              }
+            ]
+          }
+        end
+
+        it 'should throw an exception' do
+          expect { broker.load_catalog }.to raise_error(Errors::ServiceBrokerInvalid, /each service must have at least one plan/)
+          expect(broker.errors.on(:services)).to eq(['each service must have at least one plan'])
+        end
+      end
 
       it 'creates plans from the catalog' do
         expect {
@@ -227,30 +248,6 @@ module VCAP::CloudController
           # This is a temporary default until cost information is collected from V2
           # services.
           expect(plan.free).to be_true
-        end
-
-        context 'and the catalog has no plans' do
-          let(:catalog) do
-            {
-              'services' => [
-                {
-                  'id' => service_id,
-                  'name' => service_name,
-                  'description' => service_description,
-                  'bindable' => true,
-                  'tags' => ['mysql', 'relational'],
-                  'plans' => []
-                }
-              ]
-            }
-          end
-
-          it 'marks the service as inactive' do
-            expect(service.active?).to be_true
-            broker.load_catalog
-            service.reload
-            expect(service.active?).to be_false
-          end
         end
 
         context 'and a plan already exists' do
