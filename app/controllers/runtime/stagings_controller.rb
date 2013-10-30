@@ -57,22 +57,11 @@ module VCAP::CloudController
 
       CloudController::DropletUploader.new(app, blobstore).upload(upload_path)
       logger.info "droplet.uploaded", took: Time.now - start, :app_guid => app.guid
-      app.save
       logger.info "droplet.saved", :sha => app.droplet_hash, :app_guid => app.guid
 
       HTTP::OK
     ensure
       FileUtils.rm_f(upload_path) if upload_path
-    end
-
-    def upload_buildpack_cache(guid)
-      app = App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
-      raise StagingError.new("malformed buildpack cache upload request for #{app.guid}") unless upload_path
-
-      blobstore_upload = BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
-      Delayed::Job.enqueue(blobstore_upload, queue: LocalQueue.new(config))
-      HTTP::OK
     end
 
     def download_droplet(guid)
@@ -83,6 +72,16 @@ module VCAP::CloudController
       blob_name = "droplet"
       log_and_raise_missing_blob(app.guid, blob_name) unless droplet
       download(app, droplet.local_path, droplet.download_url, blob_name)
+    end
+
+    def upload_buildpack_cache(guid)
+      app = App.find(:guid => guid)
+      raise AppNotFound.new(guid) if app.nil?
+      raise StagingError.new("malformed buildpack cache upload request for #{app.guid}") unless upload_path
+
+      blobstore_upload = BlobstoreUploadJob.new(upload_path, app.guid, :buildpack_cache_blobstore)
+      Delayed::Job.enqueue(blobstore_upload, queue: LocalQueue.new(config))
+      HTTP::OK
     end
 
     def download_buildpack_cache(guid)
