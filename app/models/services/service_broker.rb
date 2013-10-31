@@ -66,7 +66,7 @@ module VCAP::CloudController
         @services = []
         @plans = []
         catalog_hash.fetch('services', []).each do |service_attrs|
-          service = V2::CatalogService.new(service_attrs)
+          service = V2::CatalogService.new(service_broker, service_attrs)
           @services << service
 
           service_attrs.fetch('plans', []).each do |plan_attrs|
@@ -120,16 +120,22 @@ module VCAP::CloudController
 
       def update_or_create_plans
         plans.each do |catalog_plan|
-          ServicePlan.update_or_create(
-            service: catalog_plan.catalog_service.cc_service,
-            unique_id: catalog_plan.broker_provided_id
-          ) do |plan|
-            plan.set(
-              name: catalog_plan.name,
-              description: catalog_plan.description,
-              free: true,
-              active: true,
-              extra: catalog_plan.metadata ? catalog_plan.metadata.to_json : nil,
+          attrs = {
+            name: catalog_plan.name,
+            description: catalog_plan.description,
+            free: true,
+            active: true,
+            extra: catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
+          }
+          if catalog_plan.cc_plan
+            catalog_plan.cc_plan.update(attrs)
+          else
+            ServicePlan.create(
+              attrs.merge(
+                service: catalog_plan.catalog_service.cc_service,
+                unique_id: catalog_plan.broker_provided_id,
+                public: false,
+              )
             )
           end
         end
