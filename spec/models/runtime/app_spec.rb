@@ -502,6 +502,7 @@ module VCAP::CloudController
 
       describe "name" do
         let(:space) { Space.make }
+        let(:app) { AppFactory.make }
 
         it "does not allow the same name in a different case", :skip_sqlite => true do
           AppFactory.make(:name => "lowercase", :space => space)
@@ -509,6 +510,33 @@ module VCAP::CloudController
           expect {
             AppFactory.make(:name => "lowerCase", :space => space)
           }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
+        end
+
+        it "does allow word characters, spaces, parentheses and !&?\'\"" do
+          app.name = "A -_- word 2!?()\'\"&"
+          expect{
+            app.save
+          }.to_not raise_error
+        end
+        it "should not allow backslash characters" do
+          app.name = "a \\ word"
+          expect{
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it "should not allow newline characters" do
+          app.name = "a \n word"
+          expect{
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it "should not allow escape characters" do
+          app.name = "a \e word"
+          expect{
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
         end
       end
 
