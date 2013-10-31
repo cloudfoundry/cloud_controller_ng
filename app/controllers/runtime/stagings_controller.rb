@@ -52,16 +52,15 @@ module VCAP::CloudController
 
       logger.info "droplet.begin-upload", :app_guid => app.guid
 
-      #TODO: put in background job
-      start = Time.now
+      droplet_upload_job = DropletUploadJob.new(upload_path, app.id)
 
-      CloudController::DropletUploader.new(app, blobstore).upload(upload_path)
-      logger.info "droplet.uploaded", took: Time.now - start, :app_guid => app.guid
-      logger.info "droplet.saved", :sha => app.droplet_hash, :app_guid => app.guid
-
-      HTTP::OK
-    ensure
-      FileUtils.rm_f(upload_path) if upload_path
+      if params["async"] == "true"
+        job = Delayed::Job.enqueue(droplet_upload_job, queue: LocalQueue.new(config))
+        [HTTP::OK, JobPresenter.new(job).to_json]
+      else
+        droplet_upload_job.perform
+        HTTP::OK
+      end
     end
 
     def download_droplet(guid)

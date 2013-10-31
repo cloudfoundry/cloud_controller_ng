@@ -140,66 +140,114 @@ module VCAP::CloudController
         authorize staging_user, staging_password
       end
 
-      context "with a valid app" do
-        it "returns 200" do
-          post "/staging/droplets/#{app_obj.guid}/upload", upload_req
-          last_response.status.should == 200
-        end
-
-        it "updates the app's droplet hash" do
-          expect {
+      context "when uploding sync" do
+        context "with a valid app" do
+          it "returns 200" do
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
-          }.to change { app_obj.refresh.droplet_hash }
-        end
+            last_response.status.should == 200
+          end
 
-        it "marks the app as staged" do
-          expect {
+          it "updates the app's droplet hash" do
+            expect {
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+            }.to change { app_obj.refresh.droplet_hash }
+          end
+
+          it "marks the app as staged" do
+            expect {
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+            }.to change {
+              app_obj.refresh.staged?
+            }.to(true)
+          end
+
+          it "makes the app have a downloadable droplet" do
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
-          }.to change {
-            app_obj.refresh.staged?
-          }.from(false).to(true)
-        end
+            app_obj.reload
 
-        it "makes the app have a downloadable droplet" do
-          post "/staging/droplets/#{app_obj.guid}/upload", upload_req
-          app_obj.reload
+            expect(app_obj.current_droplet).to be
 
-          expect(app_obj.current_droplet).to be
+            downloaded_file = Tempfile.new("")
+            app_obj.current_droplet.download_to(downloaded_file.path)
+            expect(downloaded_file.read).to eql(file_content)
+          end
 
-          downloaded_file = Tempfile.new("")
-          app_obj.current_droplet.download_to(downloaded_file.path)
-          expect(downloaded_file.read).to eql(file_content)
-        end
-
-        it "stores the droplet in the blobstore" do
-          expect {
-            post "/staging/droplets/#{app_obj.guid}/upload", upload_req
-          }.to change {
-            CloudController::DropletUploader.new(app_obj.refresh, blobstore)
-            app_obj.droplets.size
-          }.from(0).to(1)
-        end
-
-        it "deletes the uploaded file" do
-          FileUtils.should_receive(:rm_f).with(/ngx\.uploads/)
-          post "/staging/droplets/#{app_obj.guid}/upload", upload_req
-        end
-      end
-
-      context "with an invalid app" do
-        it "returns 404" do
-          post "/staging/droplets/bad-app/upload", upload_req
-          last_response.status.should == 404
-        end
-
-        context "when the upload path is nil" do
-          let(:upload_req) do
-            {upload: {droplet: nil}}
+          it "stores the droplet in the blobstore" do
+            expect {
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+            }.to change {
+              CloudController::DropletUploader.new(app_obj.refresh, blobstore)
+              app_obj.droplets.size
+            }.from(0).to(1)
           end
 
           it "deletes the uploaded file" do
-            FileUtils.should_not_receive(:rm_f)
+            FileUtils.should_receive(:rm_f).with(/ngx\.uploads/)
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+          end
+        end
+
+        context "with an invalid app" do
+          it "returns 404" do
+            post "/staging/droplets/bad-app/upload", upload_req
+            last_response.status.should == 404
+          end
+
+          context "when the upload path is nil" do
+            let(:upload_req) do
+              {upload: {droplet: nil}}
+            end
+
+            it "deletes the uploaded file" do
+              FileUtils.should_not_receive(:rm_f)
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req
+            end
+          end
+        end
+      end
+
+      context "when uploading async" do
+        it "adds a job that uploads and stages the app" do
+          expect {
+            post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
+          }.to change {
+            Delayed::Job.count
+          }.by(1)
+
+          job = Delayed::Job.last
+          expect(job.handler).to include(app_obj.id.to_s)
+          expect(job.handler).to include("ngx.uploads")
+          expect(job.queue).to eq("cc-api_z1-99")
+          expect(job.guid).not_to be_nil
+          expect(last_response.status).to eq 200
+        end
+
+        context "with an invalid app" do
+          it "returns 404" do
+            post "/staging/droplets/bad-app/upload", upload_req
+            last_response.status.should == 404
+          end
+
+          it "does not add a job" do
+            expect {
+              post "/staging/droplets/bad-app/upload", upload_req
+            }.not_to change {
+              Delayed::Job.count
+            }
+          end
+
+          context "when the upload path is nil" do
+            let(:upload_req) do
+              {upload: {droplet: nil}}
+            end
+
+            it "does not add a job" do
+              expect {
+                post "/staging/droplets/bad-app/upload", upload_req
+              }.not_to change {
+                Delayed::Job.count
+              }
+            end
           end
         end
       end
@@ -287,15 +335,16 @@ module VCAP::CloudController
         end
 
         it "stores file path in handle.buildpack_cache_upload_path" do
-          expect{
+          expect {
             post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
-          }.to change{
+          }.to change {
             Delayed::Job.count
           }.by(1)
 
           job = Delayed::Job.last
           expect(job.handler).to include(app_obj.guid)
           expect(job.handler).to include("ngx.uploads")
+          expect(job.handler).to include("buildpack_cache_blobstore")
           expect(job.queue).to eq("cc-api_z1-99")
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 200

@@ -36,9 +36,13 @@ describe CloudController::DropletUploader do
 
     it "does not create a new droplet if the upload fails" do
       blobstore.stub(:cp_to_blobstore).and_raise "Upload failed"
-      old_size = app.droplets.size
-      expect { subject.upload(tmp_file_with_content.path) }.to raise_error
-      expect(app.droplets.size).to eql(old_size)
+      expect {
+        expect {
+          subject.upload(tmp_file_with_content.path)
+        }.to raise_error
+      }.not_to change {
+        app.reload.droplets.size
+      }
     end
 
     it "deletes old droplets" do
@@ -48,7 +52,7 @@ describe CloudController::DropletUploader do
       Timecop.travel(Date.today + 2) do
         file = tmp_file_with_content("droplet version 2")
         subject.upload(file.path)
-        expect(app.droplets).to have(droplets_to_keep).items
+        expect(app.reload.droplets).to have(droplets_to_keep).items
       end
 
       droplet_dest = Tempfile.new("downloaded_droplet")
@@ -57,7 +61,7 @@ describe CloudController::DropletUploader do
 
       Timecop.travel(Date.today + 3) do
         subject.upload(tmp_file_with_content("droplet version 3").path)
-        expect(app.droplets).to have(droplets_to_keep).items
+        expect(app.reload.droplets).to have(droplets_to_keep).items
       end
 
       droplet_dest = Tempfile.new("downloaded_droplet")
@@ -72,13 +76,13 @@ describe CloudController::DropletUploader do
 
       Timecop.travel(Date.today + 2) do
         subject.upload(tmp_file_with_content("droplet version 2").path, droplets_to_keep)
-        expect(app.droplets).to have(droplets_to_keep).items
+        expect(app.reload.droplets).to have(droplets_to_keep).items
         expect(app.droplets).to_not include(old_droplet)
       end
 
       Timecop.travel(Date.today + 3) do
         subject.upload(tmp_file_with_content("droplet version 3").path, droplets_to_keep)
-        expect(app.droplets).to have(droplets_to_keep).items
+        expect(app.reload.droplets).to have(droplets_to_keep).items
         droplet_dest = Tempfile.new("")
         app.current_droplet.download_to(droplet_dest.path)
         expect(droplet_dest.read).to eql("droplet version 3")
