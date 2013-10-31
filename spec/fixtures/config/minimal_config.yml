@@ -68,6 +68,10 @@ droplets:
   fog_connection:
     provider: Local
 
+buildpacks:
+  fog_connection:
+    provider: Local
+
 db_encryption_key: some-key
 
 hm9000_noop: true

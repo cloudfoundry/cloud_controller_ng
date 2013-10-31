@@ -99,6 +99,7 @@ module VCAP::CloudController
             :provider => String,
             optional(:aws_access_key_id) => String,
             optional(:aws_secret_access_key) => String,
+            optional(:endpoint) => String,
             optional(:local_root) => String
           }
         },
@@ -110,6 +111,7 @@ module VCAP::CloudController
             :provider => String,
             optional(:aws_access_key_id) => String,
             optional(:aws_secret_access_key) => String,
+            optional(:endpoint) => String,
             optional(:local_root) => String
           }
         },
@@ -121,6 +123,18 @@ module VCAP::CloudController
             :provider => String,
             optional(:aws_access_key_id) => String,
             optional(:aws_secret_access_key) => String,
+            optional(:endpoint) => String,
+            optional(:local_root) => String
+          }
+        },
+
+        :buildpacks => {
+          optional(:buildpack_directory_key) => String,
+          :fog_connection => {
+            :provider => String,
+            optional(:aws_access_key_id) => String,
+            optional(:aws_secret_access_key) => String,
+            optional(:endpoint) => String,
             optional(:local_root) => String
           }
         },
