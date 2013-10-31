@@ -3,6 +3,11 @@ class EligibleDeaAdvertisementFilter
     @dea_advertisements = dea_advertisements.dup
   end
 
+  def only_with_disk(minimum_disk)
+    @dea_advertisements.select! { |ad| ad.has_sufficient_disk?(minimum_disk) }
+    self
+  end
+
   def only_meets_needs(mem, stack)
     @dea_advertisements.select! { |ad| ad.meets_needs?(mem, stack) }
     self
