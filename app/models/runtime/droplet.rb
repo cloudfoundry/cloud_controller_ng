@@ -37,14 +37,6 @@ module VCAP::CloudController
       end
     end
 
-    def upload(path)
-      hash = Digest::SHA1.file(source_path).hexdigest
-      blobstore.cp_to_blobstore(
-        path,
-        File.join(app.guid, hash)
-      )
-    end
-
     def self.droplet_key(app_guid, digest)
       File.join(app_guid, digest)
     end
