@@ -34,6 +34,8 @@ module Sinatra
           payload.merge!(Hashify.exception(exception))
         end
 
+        logger.error("Exception payload: #{payload}")
+
         # Temporarily remove this key pending security review
         payload.delete('source')
 
