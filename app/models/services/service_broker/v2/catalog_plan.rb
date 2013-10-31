@@ -11,5 +11,11 @@ module VCAP::CloudController::ServiceBroker::V2
       @name               = attrs.fetch('name')
       @description        = attrs.fetch('description')
     end
+
+    def cc_plan
+      cc_service.service_plans_dataset.where(unique_id: broker_provided_id).first
+    end
+
+    delegate :cc_service, :to => :catalog_service
   end
 end

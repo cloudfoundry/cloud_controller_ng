@@ -178,20 +178,28 @@ module VCAP::CloudController
         end
       end
 
-      it 'creates plans from the catalog' do
-        expect {
+      context 'when the plan does not exist in the database' do
+        it 'creates plans from the catalog' do
+          expect {
+            broker.load_catalog
+          }.to change(ServicePlan, :count).by(1)
+
+          plan = ServicePlan.last
+          expect(plan.service).to eq(Service.last)
+          expect(plan.name).to eq(plan_name)
+          expect(plan.description).to eq(plan_description)
+          expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
+
+          # This is a temporary default until cost information is collected from V2
+          # services.
+          expect(plan.free).to be_true
+        end
+
+        it 'marks the plan as private' do
           broker.load_catalog
-        }.to change(ServicePlan, :count).by(1)
-
-        plan = ServicePlan.last
-        expect(plan.service).to eq(Service.last)
-        expect(plan.name).to eq(plan_name)
-        expect(plan.description).to eq(plan_description)
-        expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
-
-        # This is a temporary default until cost information is collected from V2
-        # services.
-        expect(plan.free).to be_true
+          plan = ServicePlan.last
+          expect(plan.public).to be_false
+        end
       end
 
       context 'when the catalog service plan metadata is empty' do
@@ -269,6 +277,18 @@ module VCAP::CloudController
             plan.reload
             expect(plan.name).to eq(plan_name)
             expect(plan.description).to eq(plan_description)
+          end
+
+          context 'when the plan is public' do
+            before do
+              plan.update(public: true)
+            end
+
+            it 'does not make it public' do
+              broker.load_catalog
+              plan.reload
+              expect(plan.public).to be_true
+            end
           end
         end
 

@@ -58,6 +58,14 @@ describe "Service Broker Management", type: :integration do
 
   let(:space_guid) { space.json_body.fetch("metadata").fetch("guid") }
 
+  def make_all_plans_public
+    service_plan_guids = make_get_request("/v2/service_plans", admin_headers).json_body.fetch('resources').map {|plan| plan.fetch('metadata').fetch('guid')}
+    service_plan_guids.each do |service_plan_guid|
+      update_response = make_put_request("/v2/service_plans/#{service_plan_guid}", JSON.dump(public: true), admin_headers)
+      expect(update_response.code.to_i).to eq(201)
+    end
+  end
+
   specify "Admin registers and re-registers a service broker" do
     body = JSON.dump(
       broker_url: "http://localhost:54329",
@@ -211,12 +219,14 @@ describe "Service Broker Management", type: :integration do
         guid = broker_metadata.fetch('guid')
 
         service_plan_response = make_get_request('/v2/service_plans', admin_headers)
-        service_guid = service_plan_response.json_body.fetch('resources').first.fetch('metadata').fetch('guid')
+        service_plan_guid = service_plan_response.json_body.fetch('resources').first.fetch('metadata').fetch('guid')
+
+        make_all_plans_public
 
         # create a service instance
         body = JSON.dump(
           name: 'my-v2-service',
-          service_plan_guid: service_guid,
+          service_plan_guid: service_plan_guid,
           space_guid: space_guid
         )
         create_response = make_post_request('/v2/service_instances', body, admin_headers)
@@ -255,12 +265,13 @@ describe "Service Broker Management", type: :integration do
       create_response = make_post_request('/v2/service_brokers', body, admin_headers)
       expect(create_response.code.to_i).to eq(201)
       @broker_guid = create_response.json_body.fetch('metadata').fetch('guid')
+
+      make_all_plans_public
     end
 
     context 'when a service plan disappears from the catalog' do
 
       context 'when it has an existing instance' do
-        let!(:service_instance_guid) { create_service_instance } # creates instance on last plan in catalog
 
         specify 'the plan is no longer listed' do
           # verify that we have two plans
@@ -320,18 +331,18 @@ describe "Service Broker Management", type: :integration do
     end
   end
 
-  def service_guid
+  def service_plan_guid(index = 0)
     service_plan_response = make_get_request('/v2/service_plans', admin_headers)
     expect(service_plan_response.code.to_i).to eq(200)
 
     expect(service_plan_response.json_body.fetch('total_results')).to be > 0
-    service_plan_response.json_body.fetch('resources').first.fetch('metadata').fetch('guid')
+    service_plan_response.json_body.fetch('resources')[index].fetch('metadata').fetch('guid')
   end
 
   def create_service_instance
     body = JSON.dump(
       name: 'my-v2-service',
-      service_plan_guid: service_guid,
+      service_plan_guid: service_plan_guid,
       space_guid: space_guid
     )
     create_response = make_post_request('/v2/service_instances', body, admin_headers)

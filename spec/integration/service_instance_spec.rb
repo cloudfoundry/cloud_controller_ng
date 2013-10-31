@@ -106,12 +106,15 @@ describe "Service Instance Management", type: :integration do
 
     create_broker_response = make_post_request('/v2/service_brokers', body, authed_headers)
     expect(create_broker_response.code.to_i).to eq(201)
+
+    update_response = make_put_request("/v2/service_plans/#{service_plan_guid}", JSON.dump(public: true), authed_headers)
+    expect(update_response.code.to_i).to eq(201)
   end
 
   def create_service_instance
     body = JSON.dump(
       name: 'my-v2-service',
-      service_plan_guid: service_guid,
+      service_plan_guid: service_plan_guid,
       space_guid: space_guid
     )
     create_response = make_post_request('/v2/service_instances', body, authed_headers)
@@ -121,7 +124,7 @@ describe "Service Instance Management", type: :integration do
     expect(counts_from_fake_service_broker.fetch('instances')).to eq(1)
   end
 
-  def service_guid
+  def service_plan_guid
     service_plan_response = make_get_request('/v2/service_plans', authed_headers)
     expect(service_plan_response.code.to_i).to eq(200)
 
