@@ -76,7 +76,7 @@ resource "Service Brokers", :type => :api do
             :broker_url    => broker_url,
             :auth_username => auth_username,
             :auth_password => auth_password
-          }),
+          }, :pretty => true),
         headers)
 
       json = parsed_response
@@ -100,7 +100,7 @@ resource "Service Brokers", :type => :api do
 
   put "/v2/service_brokers/:guid" do
     before do
-      stub_request(:get, "http://#{user}:#{password}@updated-broker.example.com:443/v2/catalog").
+      stub_request(:get, "http://#{auth_username}:#{auth_password}@updated-broker.example.com:443/v2/catalog").
         with(:headers => {'Accept' => 'application/json', 'Content-Type' => 'application/json'}).
         to_return(:status => 200, :body => broker_catalog, :headers => {})
     end
@@ -108,13 +108,22 @@ resource "Service Brokers", :type => :api do
     let(:user) { service_broker.auth_username }
     let(:password) { service_broker.auth_password }
     let(:broker_url) { "https://updated-broker.example.com" }
+    let(:name) { "updated-broker-name" }
+    let(:auth_username) { "superadmin" }
+    let(:auth_password) { "MOREsecretpassw0rd" }
 
     request_parameter :guid, "The guid of the service broker being updated."
 
-    example "Update a service broker's URL" do
+    example "Update a service broker" do
       client.put(
         "/v2/service_brokers/#{guid}",
-        Yajl::Encoder.encode({ :broker_url => broker_url }),
+        Yajl::Encoder.encode(
+          {
+            :broker_url    => broker_url,
+            :name          => name,
+            :auth_username => auth_username,
+            :auth_password => auth_password
+          }, :pretty => true),
         headers)
 
       json = parsed_response
@@ -122,6 +131,8 @@ resource "Service Brokers", :type => :api do
       status.should == 200
       validate_response VCAP::RestAPI::MetadataMessage, json["metadata"]
       expect(json["entity"]["broker_url"]).to eq(broker_url)
+      expect(json["entity"]["name"]).to eq(name)
+      expect(json["entity"]["auth_username"]).to eq(auth_username)
     end
   end
 end
