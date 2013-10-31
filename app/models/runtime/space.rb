@@ -5,8 +5,6 @@ module VCAP::CloudController
     class InvalidManagerRelation   < InvalidRelation; end
     class InvalidDomainRelation    < InvalidRelation; end
 
-    SPACE_NAME_REGEX = /\A[\w()!&?'" -]+\Z/.freeze
-
     define_user_group :developers, :reciprocal => :spaces,
                       :before_add => :validate_developer
 
@@ -52,7 +50,6 @@ module VCAP::CloudController
       validates_presence :name
       validates_presence :organization
       validates_unique   [:organization_id, :name]
-      validates_format SPACE_NAME_REGEX, :name
     end
 
     def validate_developer(user)

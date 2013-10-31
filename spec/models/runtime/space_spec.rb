@@ -34,40 +34,6 @@ module VCAP::CloudController
       }
     }
 
-    describe "validations" do
-      context "name" do
-        let(:space) { Space.make }
-
-        it "does allow word characters, spaces, parentheses and !&?\'\"" do
-          space.name = "A -_- word 2!?()\'\"&"
-          expect{
-            space.save
-          }.to_not raise_error
-        end
-
-        it "should not allow backslash character" do
-          space.name = "a\\word"
-          expect{
-            space.save
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-
-        it "should not allow newline character" do
-          space.name = "a \n word"
-          expect{
-            space.save
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-
-        it "should not allow escape character" do
-          space.name = "a \e word"
-          expect{
-            space.save
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-      end
-    end
-
     context "bad relationships" do
       let(:space) { Space.make }
 

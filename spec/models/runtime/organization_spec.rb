@@ -21,40 +21,6 @@ module VCAP::CloudController
       }
     }
 
-    describe "validations" do
-      context "name" do
-        let(:org) { Organization.make }
-
-        it "shoud allow word characters, spaces, parentheses and !&?\'\"" do
-          org.name = "A -_- word 2!?()\'\"&"
-          expect{
-            org.save
-          }.to_not raise_error
-        end
-
-        it "should not allow backslash characters" do
-          org.name = "a\\word"
-          expect{
-            org.save
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-
-        it "should not allow newline characters" do
-          org.name = "one\ntwo"
-          expect{
-            org.save
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-
-        it "should not allow escape characters" do
-          org.name = "a\e word"
-          expect{
-            org.save
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-      end
-    end
-
     describe "default domains" do
       context "with the default serving domain name set" do
         before do

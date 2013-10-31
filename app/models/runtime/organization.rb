@@ -2,8 +2,6 @@ module VCAP::CloudController
   class Organization < Sequel::Model
     class InvalidDomainRelation < InvalidRelation; end
 
-    ORG_NAME_REGEX = /\A[\w()!&?'" -]+\Z/.freeze
-
     one_to_many       :spaces
     one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::ServiceInstance.filter(:space => spaces) }
     one_to_many       :apps, :dataset => lambda { App.filter(:space => spaces) }
@@ -51,7 +49,6 @@ module VCAP::CloudController
       validates_unique   :name
       validate_only_admin_can_update(:billing_enabled)
       validate_only_admin_can_update(:quota_definition_id)
-      validates_format ORG_NAME_REGEX, :name
     end
 
     def validate_only_admin_can_enable_on_new(field_name)
