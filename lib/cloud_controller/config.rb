@@ -95,34 +95,19 @@ module VCAP::CloudController
           optional(:maximum_size) => Integer,
           optional(:minimum_size) => Integer,
           optional(:resource_directory_key) => String,
-          :fog_connection => {
-            :provider => String,
-            optional(:aws_access_key_id) => String,
-            optional(:aws_secret_access_key) => String,
-            optional(:local_root) => String
-          }
+          :fog_connection => Hash
         },
 
         :packages => {
           optional(:max_droplet_size) => Integer,
           optional(:app_package_directory_key) => String,
-          :fog_connection => {
-            :provider => String,
-            optional(:aws_access_key_id) => String,
-            optional(:aws_secret_access_key) => String,
-            optional(:local_root) => String
-          }
+          :fog_connection => Hash
         },
 
         :droplets => {
           optional(:max_droplet_size) => Integer,
           optional(:droplet_directory_key) => String,
-          :fog_connection => {
-            :provider => String,
-            optional(:aws_access_key_id) => String,
-            optional(:aws_secret_access_key) => String,
-            optional(:local_root) => String
-          }
+          :fog_connection => Hash
         },
 
         :db_encryption_key => String,
