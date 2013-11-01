@@ -12,6 +12,10 @@ class Advertisement
     stats["available_memory"]
   end
 
+  def available_disk
+    stats["available_disk"]
+  end
+
   def expired?
     (Time.now.to_i - @updated_at.to_i) > ADVERTISEMENT_EXPIRATION
   end
@@ -26,5 +30,10 @@ class Advertisement
 
   def has_sufficient_memory?(mem)
     available_memory >= mem
+  end
+
+  def has_sufficient_disk?(disk)
+    return true unless available_disk
+    available_disk >= disk
   end
 end

@@ -172,6 +172,20 @@ module VCAP::CloudController
 
         DeaClient.start(app)
       end
+
+      it "includes memory in find_dea request" do
+        app.instances = 1
+        app.memory = 512
+        dea_pool.should_receive(:find_dea).with(include(mem: 512))
+        DeaClient.start(app)
+      end
+
+      it "includes disk in find_dea request" do
+        app.instances = 1
+        app.disk_quota = 13
+        dea_pool.should_receive(:find_dea).with(include(disk: 13))
+        DeaClient.start(app)
+      end
     end
 
     describe "stop_indices" do
