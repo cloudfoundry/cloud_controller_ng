@@ -62,7 +62,7 @@ describe DropletUploadJob do
   end
 
   context "when the app no longer exists" do
-    subject(:droplet_uploader) { DropletUploadJob.new(local_file.path, "non_existant_app_id").perform }
+    subject(:droplet_uploader) { DropletUploadJob.new(local_file.path, 99999999).perform }
 
     it "should not try to upload the droplet" do
       uploader = double(:uploader)
@@ -78,7 +78,7 @@ describe DropletUploadJob do
       DropletUploadJob.class_eval do
         def reschedule_at(_, _= nil)
           #induce the jobs to reschedule almost immediately instead of waiting around for the backoff algorithm
-          Time.now + 0.01.second
+          Time.now
         end
       end
       DropletUploadJob.new(local_file.path, app.id)
@@ -93,7 +93,7 @@ describe DropletUploadJob do
       Delayed::Job.enqueue(droplet_upload_job, queue: worker.name)
       3.times do
         worker.work_off
-        sleep 0.1
+        sleep 0.2
       end
     end
 
@@ -110,6 +110,7 @@ describe DropletUploadJob do
         expect(Delayed::Job.last.attempts).to eq 3
         expect(Delayed::Job.last.last_error).to match /Soemthing Terrible Happened/
       end
+
       it "marks staging as succesfull"
     end
   end
