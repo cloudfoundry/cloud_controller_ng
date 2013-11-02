@@ -75,8 +75,9 @@ Without it, you will see failures due to two tests trying to start NATS on the s
 
 ## API documentation
 
-You can generate the API documentation by running `bin/document_api`. You can then use the
-`cf curl` command to interact with the API.
+To genenerate the API documentation
+    bundle exec rspec spec/api/ --format RspecApiDocumentation::ApiFormatter
+    open doc/api/index.html
 
 ## Logs
 
