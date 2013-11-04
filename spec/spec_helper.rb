@@ -78,8 +78,9 @@ module VCAP::CloudController
 
         VCAP::CloudController::DB.connect(
           db_logger,
-          { log_level: "debug",
-            database: "#{db_connection}" }
+          log_level: "debug",
+          database: "#{db_connection}",
+          pool_timeout: 10,
         )
       end
     end
