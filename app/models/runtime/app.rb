@@ -5,6 +5,8 @@ module VCAP::CloudController
   class App < Sequel::Model
     plugin :serialization
 
+    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+
     class InvalidRouteRelation < InvalidRelation
       def to_s
         "The URL was not available [route ID #{super}]"
@@ -114,6 +116,7 @@ module VCAP::CloudController
       validates_presence :name
       validates_presence :space
       validates_unique [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
+      validates_format APP_NAME_REGEX, :name
 
       validate_buidpack_name_or_git_url
 

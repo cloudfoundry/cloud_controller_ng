@@ -1,3 +1,4 @@
+# encoding: utf-8
 require "spec_helper"
 
 module VCAP::CloudController
@@ -523,6 +524,7 @@ module VCAP::CloudController
 
       describe "name" do
         let(:space) { Space.make }
+        let(:app) { AppFactory.make }
 
         it "does not allow the same name in a different case", :skip_sqlite => true do
           AppFactory.make(:name => "lowercase", :space => space)
@@ -530,6 +532,41 @@ module VCAP::CloudController
           expect {
             AppFactory.make(:name => "lowerCase", :space => space)
           }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
+        end
+
+        it "should allow standard ascii characters" do
+          app.name = "A -_- word 2!?()\'\"&+."
+          expect{
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should allow backslash characters" do
+          app.name = "a \\ word"
+          expect{
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should allow unicode characters" do
+          app.name = "防御力¡"
+          expect{
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should not allow newline characters" do
+          app.name = "a \n word"
+          expect{
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it "should not allow escape characters" do
+          app.name = "a \e word"
+          expect{
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
         end
       end
 
