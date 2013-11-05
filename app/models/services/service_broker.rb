@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     add_association_dependencies :services => :destroy
 
-    many_to_many :service_plans, :join_table=>:services, :right_key=>:id, :right_primary_key=>:service_id
+    many_to_many :service_plans, :join_table => :services, :right_key => :id, :right_primary_key => :service_id
 
     def validate
       validates_presence :name
@@ -57,25 +57,27 @@ module VCAP::CloudController
 
     private
 
-
     class Catalog
       attr_reader :service_broker, :services, :plans
 
       def initialize(service_broker, catalog_hash)
         @service_broker = service_broker
-        @services = []
-        @plans = []
+        @services       = []
+        @plans          = []
+
         catalog_hash.fetch('services', []).each do |service_attrs|
           service = V2::CatalogService.new(service_broker, service_attrs)
           @services << service
 
-          service_attrs.fetch('plans', []).each do |plan_attrs|
-            plan = V2::CatalogPlan.new(service, plan_attrs)
-            @plans << plan
-          end
-          if @plans.length < 1
+          service_plans = service_attrs.fetch('plans', [])
+          if service_plans.empty?
             @service_broker.errors.add(:services, 'each service must have at least one plan')
             raise Errors::ServiceBrokerInvalid.new("each service must have at least one plan")
+          end
+
+          service_plans.each do |plan_attrs|
+            plan = V2::CatalogPlan.new(service, plan_attrs)
+            @plans << plan
           end
         end
       end
@@ -97,15 +99,15 @@ module VCAP::CloudController
 
           Service.update_or_create(
             service_broker: service_broker,
-            unique_id: service_id
+            unique_id:      service_id
           ) do |service|
             service.set(
-              label: catalog_service.name,
+              label:       catalog_service.name,
               description: catalog_service.description,
-              bindable: catalog_service.bindable,
-              tags: catalog_service.tags,
-              extra: catalog_service.metadata ? catalog_service.metadata.to_json : nil,
-              active: catalog_service.plans_present?
+              bindable:    catalog_service.bindable,
+              tags:        catalog_service.tags,
+              extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
+              active:      catalog_service.plans_present?
             )
           end
         end
@@ -121,20 +123,20 @@ module VCAP::CloudController
       def update_or_create_plans
         plans.each do |catalog_plan|
           attrs = {
-            name: catalog_plan.name,
+            name:        catalog_plan.name,
             description: catalog_plan.description,
-            free: true,
-            active: true,
-            extra: catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
+            free:        true,
+            active:      true,
+            extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
           }
           if catalog_plan.cc_plan
             catalog_plan.cc_plan.update(attrs)
           else
             ServicePlan.create(
               attrs.merge(
-                service: catalog_plan.catalog_service.cc_service,
+                service:   catalog_plan.catalog_service.cc_service,
                 unique_id: catalog_plan.broker_provided_id,
-                public: false,
+                public:    false,
               )
             )
           end

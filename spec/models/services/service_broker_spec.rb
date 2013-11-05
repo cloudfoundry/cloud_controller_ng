@@ -94,15 +94,15 @@ module VCAP::CloudController
         {
           'services' => [
             {
-              'id' => service_id,
-              'name' => service_name,
+              'id'          => service_id,
+              'name'        => service_name,
               'description' => service_description,
-              'bindable' => true,
-              'tags' => ['mysql', 'relational'],
-              'plans' => [
+              'bindable'    => true,
+              'tags'        => ['mysql', 'relational'],
+              'plans'       => [
                 {
-                  'id' => plan_id,
-                  'name' => plan_name,
+                  'id'          => plan_id,
+                  'name'        => plan_name,
                   'description' => plan_description,
                 }.merge(plan_metadata_hash)
               ]
@@ -156,17 +156,31 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the service has no plans' do
+      context 'when any service has no plans' do
         let(:catalog) do
           {
             'services' => [
               {
-                'id' => service_id,
-                'name' => service_name,
+                'id'          => service_id,
+                'name'        => service_name,
                 'description' => service_description,
-                'bindable' => true,
-                'tags' => ['mysql', 'relational'],
-                'plans' => []
+                'bindable'    => true,
+                'tags'        => ['mysql', 'relational'],
+                'plans'       => [
+                  {
+                    'id'          => plan_id,
+                    'name'        => plan_name,
+                    'description' => plan_description,
+                  }.merge(plan_metadata_hash)
+                ]
+              }.merge(service_metadata_hash),
+              {
+                'id'          => Sham.guid,
+                'name'        => Sham.name,
+                'description' => Sham.description,
+                'bindable'    => true,
+                'tags'        => ['mysql', 'relational'],
+                'plans'       => []
               }
             ]
           }
