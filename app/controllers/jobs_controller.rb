@@ -2,6 +2,7 @@ require 'presenters/api/job_presenter'
 
 module VCAP::CloudController
   rest_controller :Jobs do
+    allow_unauthenticated_access
     disable_default_routes
     path_base "jobs"
 
