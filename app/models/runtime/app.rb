@@ -293,16 +293,13 @@ module VCAP::CloudController
         raise ApplicationMissing, "Attempting to check memory quota. Should have been able to find app with guid #{guid}"
       end
       total_existing_memory = app_from_db[:memory] * app_from_db[:instances]
-      additional_memory = total_requested_memory - total_existing_memory
-      return additional_memory if additional_memory > 0
-      0
+      total_requested_memory - total_existing_memory
     end
 
     def check_memory_quota
       errors.add(:memory, :zero_or_less) unless requested_memory > 0
-
       if space && (space.organization.memory_remaining < additional_memory_requested)
-        errors.add(:memory, :quota_exceeded)
+        errors.add(:memory, :quota_exceeded) if (new? || !being_stopped?)
       end
     end
 

@@ -1063,40 +1063,55 @@ module VCAP::CloudController
       end
 
       context "app update" do
+        let(:org) { Organization.make(:quota_definition => quota) }
+        let(:space) { Space.make(:organization => org) }
+        let!(:app) { AppFactory.make(:space => space, :memory => 64, :instances => 2) }
+
         it "should raise error when quota is exceeded" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          app = AppFactory.make(:space => space,
-            :memory => 64,
-            :instances => 2)
           app.memory = 65
           expect { app.save }.to raise_error(Sequel::ValidationFailed,
             /memory quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          app = AppFactory.make(:space => space,
-            :memory => 63,
-            :instances => 2)
-          app.memory = 64
+          app.memory = 63
           expect { app.save }.to_not raise_error
         end
 
         it "can delete an app that somehow has exceeded its memory quota" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          app = AppFactory.make(:space => space,
-            :memory => 64,
-            :instances => 2)
-
           quota.memory_limit = 32
           quota.save
           app.memory = 100
           expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
           expect { app.delete }.not_to raise_error
         end
+
+        it "should not raise error when quota is lowered and app is scaled down" do
+          org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
+          act_as_cf_admin {org.save}
+
+          app.reload
+          app.instances = 1
+
+          expect { app.save }.to_not raise_error
+        end
+
+        it "should not raise error when quota is lowered and app is stopped" do
+          app.update(:state => "STARTED",
+            :package_hash => "abc",
+            :package_state => "STAGED",
+            :droplet_hash => "def")
+
+          org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
+          act_as_cf_admin {org.save}
+
+          app.reload
+          app.instances = 1
+          app.state = "STOPPED"
+
+          expect { app.save }.to_not raise_error
+        end
+
       end
     end
 
