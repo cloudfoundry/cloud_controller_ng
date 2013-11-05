@@ -32,10 +32,12 @@ resource "Users", :type => :api do
   put "/v2/users/:guid" do
       request_parameter :guid, "The guid for the user to alter"
 
-      let(:default_space_guid) { space.guid }
-
       example "Update a User's default space" do
-        client.put "/v2/users/#{guid}", Yajl::Encoder.encode(params), headers
+        client.put "/v2/users/#{guid}", Yajl::Encoder.encode(
+          {
+            default_space_guid: space.guid
+          }
+        ), headers
         status.should == 201
         space.guid.should_not be_nil
         standard_entity_response parsed_response, :user, :default_space_guid => space.guid

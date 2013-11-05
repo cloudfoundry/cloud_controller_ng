@@ -23,9 +23,14 @@ resource "Buildpacks (experimental)", :type => :api do
 
   post "/v2/buildpacks" do
     let(:name) { "A-buildpack-name" }
+    let(:request) do
+      {
+        name: name
+      }
+    end
 
     example "Creates an admin buildpack" do
-      client.post "/v2/buildpacks", Yajl::Encoder.encode(params), headers
+      client.post "/v2/buildpacks", Yajl::Encoder.encode(request), headers
       status.should == 201
       standard_entity_response parsed_response, :buildpack, :name => name
     end
@@ -33,6 +38,12 @@ resource "Buildpacks (experimental)", :type => :api do
 
   put "/v2/buildpacks" do
     let(:position) { 3 }
+    let(:request) do
+      {
+        guid: guid,
+        position: position
+      }
+    end
 
     example "Change the position of a buildpack" do
       first = <<-DOC
@@ -49,7 +60,7 @@ resource "Buildpacks (experimental)", :type => :api do
       explanation [{explanation: first}, {explanation: second}]
 
       expect {
-        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(params), headers
+        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(request), headers
         status.should == 201
         standard_entity_response parsed_response, :buildpack, position: position
       }.to change {
