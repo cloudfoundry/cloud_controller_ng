@@ -65,7 +65,7 @@ module VCAP::CloudController
           http.request(request)
         end
 
-        logger.debug "Response from request to #{uri.request_uri}: STATUS #{response.code.to_i}, BODY: #{response.body}, HEADERS: #{response.to_hash.inspect}"
+        logger.debug "Response from request to #{uri.request_uri}: STATUS #{response.code.to_i}, BODY: #{response.body.inspect}, HEADERS: #{response.to_hash.inspect}"
 
         case response
         when Net::HTTPSuccess

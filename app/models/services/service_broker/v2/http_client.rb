@@ -196,7 +196,7 @@ module VCAP::CloudController
       def parse_response(method, uri, response)
         code = response.code.to_i
 
-        logger.debug "Response from request to #{uri}: STATUS #{code}, BODY: #{response.body}, HEADERS: #{response.to_hash.inspect}"
+        logger.debug "Response from request to #{uri}: STATUS #{code}, BODY: #{response.body.inspect}, HEADERS: #{response.to_hash.inspect}"
 
         case code
 
