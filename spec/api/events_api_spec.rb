@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource "Events", :type => :api do
+resource "Events (experimental)", :type => :api do
   DOCUMENTED_EVENT_TYPES = [
     "app.crash",
     "audit.app.update",
