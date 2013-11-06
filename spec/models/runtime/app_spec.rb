@@ -1107,17 +1107,32 @@ module VCAP::CloudController
           expect { app.delete }.not_to raise_error
         end
 
-        it "should not raise error when quota is lowered and app is scaled down" do
+        it "allows scaling down instances of an app from above quota to below quota" do
           org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
           act_as_cf_admin {org.save}
 
           app.reload
           app.instances = 1
 
-          expect { app.save }.to_not raise_error
+          app.save
+
+          app.reload
+          expect(app.instances).to eq(1)
         end
 
-        it "should not raise error when quota is lowered and app is stopped" do
+        it "raises when scaling down number of instances but remaining above quota" do
+          org.quota_definition = QuotaDefinition.make(:memory_limit => 32)
+          act_as_cf_admin {org.save}
+
+          app.reload
+          app.instances = 1
+
+          expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+          app.reload
+          expect(app.instances).to eq(2)
+        end
+
+        it "allows stopping an app that is above quota" do
           app.update(:state => "STARTED",
             :package_hash => "abc",
             :package_state => "STAGED",
@@ -1127,12 +1142,25 @@ module VCAP::CloudController
           act_as_cf_admin {org.save}
 
           app.reload
-          app.instances = 1
           app.state = "STOPPED"
 
-          expect { app.save }.to_not raise_error
+          app.save
+
+          app.reload
+          expect(app).to be_stopped
         end
 
+        it "allows reducing memory from above quota to at/below quota" do
+          org.quota_definition = QuotaDefinition.make(:memory_limit => 64)
+          act_as_cf_admin {org.save}
+
+          app.memory = 40
+          expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+
+          app.memory = 32
+          app.save
+          expect(app.memory).to eq(32)
+        end
       end
     end
 
