@@ -9,7 +9,7 @@ resource "Domains", :type => :api do
 
   let(:guid) { VCAP::CloudController::Domain.first.guid }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::DomainsController
 
   field :name, "The name of the domain.",
         required: true, example_values: ["example.com", "foo.example.com"]

@@ -11,7 +11,7 @@ resource "Apps", :type => :api do
 
   let(:guid) { VCAP::CloudController::App.first.guid }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::AppsController
 
   field :name, "The name of the app.", required: true
   field :memory, "The amount of memory each instance should have. In bytes.", required: true

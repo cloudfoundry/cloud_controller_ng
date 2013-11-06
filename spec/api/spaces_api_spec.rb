@@ -4,7 +4,7 @@ require "rspec_api_documentation/dsl"
 resource "Spaces", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
-  standard_parameters
+  standard_parameters VCAP::CloudController::SpacesController
 
   before { 3.times { VCAP::CloudController::Space.make } }
   let(:guid) { VCAP::CloudController::Space.first.guid }

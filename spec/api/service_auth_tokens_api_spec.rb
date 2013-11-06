@@ -9,7 +9,7 @@ resource "ServiceAuthTokens", :type => :api do
 
   let(:guid) { VCAP::CloudController::ServiceAuthToken.first.guid }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::ServiceAuthTokensController
 
   field :label, "Human readable name for the auth token",
         required: true, example_values: ["Nic-Token"]

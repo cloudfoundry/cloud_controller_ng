@@ -13,7 +13,7 @@ resource "Users", :type => :api do
   let(:guid) { VCAP::CloudController::User.first.guid }
   let(:space) { VCAP::CloudController::Space.make }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::UsersController
 
   field :default_space_guid, "The guid of the default space for apps created by this user.", required: true
 

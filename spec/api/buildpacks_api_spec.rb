@@ -14,7 +14,7 @@ resource "Buildpacks (experimental)", :type => :api do
 
   let(:guid) { VCAP::CloudController::Buildpack.first.guid }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::BuildpacksController
 
   field :name, "The name of the buildpack. To be used by app buildpack field.", required: true
   field :position, "The order in which the buildpacks are checked during buildpack auto-detection.", required: false
