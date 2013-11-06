@@ -49,6 +49,7 @@ module VCAP::CloudController
         expect(res[:env]).to be_kind_of(Array)
         expect(res[:console]).to eq false
         expect(res[:start_command]).to be_nil
+        expect(res[:health_check_timeout]).to be_nil
       end
 
       context "with an app enabled for console support" do
@@ -72,6 +73,14 @@ module VCAP::CloudController
           app.update(:command => "custom start command")
           res = DeaClient.start_app_message(app)
           res[:start_command].should == "custom start command"
+        end
+      end
+      
+      context "with an app enabled for custom health check timeout value" do
+        it "should enable health check timeout in the start message" do
+          app.update(:health_check_timeout => 82)
+          res = DeaClient.start_app_message(app)
+          res[:health_check_timeout].should == 82
         end
       end
     end

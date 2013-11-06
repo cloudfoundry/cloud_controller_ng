@@ -64,13 +64,13 @@ module VCAP::CloudController
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :version, :command, :console, :debug,
-      :staging_task_id, :package_state
+      :staging_task_id, :package_state, :health_check_timeout
 
     import_attributes :name, :production,
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :command, :console, :debug,
-      :staging_task_id, :service_binding_guids, :route_guids
+      :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout
 
     strip_attributes :name
 

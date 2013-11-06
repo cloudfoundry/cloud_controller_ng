@@ -197,6 +197,32 @@ module VCAP::CloudController
         end
       end
 
+      describe "update app health_check_timeout" do
+        context "when health_check_timeout value is provided" do
+          let(:update_hash) do
+            {"health_check_timeout" => 80}
+          end
+ 
+          it "should set to provided value" do
+            update_app
+            app_obj.refresh
+            app_obj.health_check_timeout.should == 80
+            last_response.status.should == 201
+          end
+        end
+
+        context "when health_check_timeout value is not provided" do
+          let(:update_hash) do
+            {}
+          end
+
+          it "should not return error" do
+            update_app
+            last_response.status.should == 201
+          end
+        end
+      end
+
       describe "update app debug" do
         context "set debug" do
           let(:update_hash) do
@@ -576,6 +602,25 @@ module VCAP::CloudController
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:command => ""), json_headers(admin_headers)
         last_response.status.should == 201
         decoded_response["entity"]["command"].should be_nil
+        decoded_response["entity"]["metadata"].should be_nil
+      end
+    end
+
+    describe "health_check_timeout" do
+      let(:app_obj)   { AppFactory.make }
+      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+
+      it "should have no health_check_timeout entry in the metadata if not provided" do
+        get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
+        last_response.status.should == 200
+        decoded_response["entity"]["health_check_timeout"].should be_nil
+        decoded_response["entity"]["metadata"].should be_nil
+      end
+
+      it "should set the health_check_timeout on the app metadata if provided" do
+        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:health_check_timeout => 100), json_headers(admin_headers)
+        last_response.status.should == 201
+        decoded_response["entity"]["health_check_timeout"].should == 100
         decoded_response["entity"]["metadata"].should be_nil
       end
     end

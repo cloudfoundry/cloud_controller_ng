@@ -21,6 +21,7 @@ resource "Apps", :type => :api do
   field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT').", required: false
   field :buildpack, "Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.", required: false, default: "", example_values: ["", "https://github.com/virtualstaticvoid/heroku-buildpack-r.git", "an_example_installed_buildpack"]
   field :environment_json, "Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.", required: false
+  field :healthcheck_timeout, "Timeout for health checking of an staged app when starting up", required: false
 
   field :detected_buildpack, "The autodetected buildpack that was run.", required: false, readonly: true
   field :space_url, "The url of the associated space.", required: false, readonly: true
