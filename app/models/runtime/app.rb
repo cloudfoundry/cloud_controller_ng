@@ -204,7 +204,7 @@ module VCAP::CloudController
 
     def command=(cmd)
       self.metadata ||= {}
-      self.metadata["command"] = cmd
+      self.metadata["command"] = (cmd.nil? || cmd.empty?) ? nil : cmd
     end
 
     def command

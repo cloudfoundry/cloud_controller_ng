@@ -373,6 +373,27 @@ module VCAP::CloudController
         app.refresh
         app.metadata.should eq("command" => "foobar")
       end
+
+      it "saves the field as nil when initializing to empty string" do
+        app = AppFactory.make(:command => "")
+        app.metadata.should eq("command" => nil)
+      end
+
+      it "saves the field as nil when overriding to empty string" do
+        app = AppFactory.make(:command => "echo hi")
+        app.command = ""
+        app.save
+        app.refresh
+        expect(app.metadata).to eq("command" => nil)
+      end
+
+      it "saves the field as nil when set to nil" do
+        app = AppFactory.make(:command => "echo hi")
+        app.command = nil
+        app.save
+        app.refresh
+        expect(app.metadata).to eq("command" => nil)
+      end
     end
 
     describe "console" do

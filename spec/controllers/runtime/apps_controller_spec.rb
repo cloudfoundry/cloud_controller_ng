@@ -563,6 +563,15 @@ module VCAP::CloudController
         decoded_response["entity"]["command"].should == "foobar"
         decoded_response["entity"]["metadata"].should be_nil
       end
+
+      it "can be cleared if a request arrives asking command to be an empty string" do
+        app_obj.command = "echo hi"
+        app_obj.save
+        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:command => ""), json_headers(admin_headers)
+        last_response.status.should == 201
+        decoded_response["entity"]["command"].should be_nil
+        decoded_response["entity"]["metadata"].should be_nil
+      end
     end
 
     describe "staging" do
