@@ -56,13 +56,13 @@ module VCAP::CloudController
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :version, :command, :console, :debug,
-      :staging_task_id, :package_state
+      :staging_task_id, :package_state, :healthcheck_timeout
 
     import_attributes :name, :production,
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :command, :console, :debug,
-      :staging_task_id, :service_binding_guids, :route_guids
+      :staging_task_id, :service_binding_guids, :route_guids, :healthcheck_timeout
 
     strip_attributes :name
 
@@ -230,6 +230,15 @@ module VCAP::CloudController
 
     def debug
       self.metadata && self.metadata["debug"]
+    end
+
+    def healthcheck_timeout=(sec)
+      self.metadata ||= {}
+      self.metadata["healthcheck_timeout"] = sec
+    end
+
+    def healthcheck_timeout
+      self.metadata && self.metadata["healthcheck_timeout"]
     end
 
     # We sadly have to do this ourselves because the serialization plugin

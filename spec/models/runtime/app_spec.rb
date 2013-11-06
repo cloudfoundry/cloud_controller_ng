@@ -396,6 +396,22 @@ module VCAP::CloudController
       end
     end
 
+    describe "healthcheck_timeout" do
+      it "should be nil if healthcheck_timeout is not set" do
+        app = AppFactory.make
+        app.healthcheck_timeout.should be_nil
+      end
+
+      it "should store the value in the metadata" do
+        app = AppFactory.make(:healthcheck_timeout => 99)
+        app.metadata.should eq("healthcheck_timeout" => 99)
+        app.save
+        app.metadata.should eq("healthcheck_timeout" => 99)
+        app.refresh
+        app.metadata.should eq("healthcheck_timeout" => 99)
+      end
+    end
+
     describe "debug" do
       it "stores the command in the metadata" do
         app = AppFactory.make(:debug => "suspend")
