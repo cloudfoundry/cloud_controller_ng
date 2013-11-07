@@ -17,8 +17,7 @@ module VCAP::CloudController
                        :service_bindings => lambda { |service_instance|
                          make_service_binding_for_service_instance(service_instance)
                        }
-                     },
-                     one_to_many_collection_ids_without_url: {}
+                     }
     include_examples "collection operations", path: "/v2/service_instances", model: ManagedServiceInstance,
                      one_to_many_collection_ids: {
                        service_bindings: lambda { |service_instance| make_service_binding_for_service_instance(service_instance) }

@@ -24,8 +24,7 @@ module VCAP::CloudController
       :events => lambda { |app|
         AppEvent.make(:app => app)
       }
-    },
-      one_to_many_collection_ids_without_url: {}
+    }, :excluded => [ :events ]
 
     include_examples "collection operations", path: "/v2/apps", model: App,
       one_to_many_collection_ids: {

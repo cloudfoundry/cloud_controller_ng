@@ -250,7 +250,11 @@ module VCAP::CloudController::RestController
 
     def raise_if_has_associations!(obj)
       associations = obj.class.associations.select do |association|
-        obj.has_one_to_many?(association) || obj.has_one_to_one?(association)
+        if obj.class.association_dependencies_hash[association]
+          if obj.class.association_dependencies_hash[association] == :destroy
+            obj.has_one_to_many?(association) || obj.has_one_to_one?(association)
+          end
+        end
       end
 
       if associations.any?

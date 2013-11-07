@@ -8,7 +8,7 @@ module VCAP::CloudController
     subject(:controller) { controller_class.new({}, logger, {}, params, request_body) }
 
     context "with a valid controller and underlying model", non_transactional: true do
-      let!(:model_table_name) { "model_class_#{SecureRandom.hex(10)}".to_sym }
+      let!(:model_table_name) { :test_models }
       let!(:model_class) do
         db.create_table model_table_name do
           primary_key :id
@@ -17,13 +17,21 @@ module VCAP::CloudController
           Date :updated_at
         end
 
-        table_name = model_table_name
-        Class.new(Sequel::Model) do
-          set_dataset(db[table_name])
-          def self.name
-            "VCAP::CloudController::TestModel"
-          end
+        define_class("TestModel", model_table_name)
+      end
+
+      def define_class(class_name, table_name)
+        klass = Class.new(Sequel::Model)
+        klass.define_singleton_method(:name) do
+          "VCAP::CloudController::#{class_name}"
         end
+
+        klass.set_dataset(db[table_name])
+        unless VCAP::CloudController.const_defined?(class_name)
+          VCAP::CloudController.const_set(class_name, klass)
+        end
+
+        klass
       end
 
       after do
@@ -206,11 +214,7 @@ module VCAP::CloudController
       end
 
       describe "#delete" do
-        let!(:model) do
-          instance = model_class.new
-          instance.save
-          instance
-        end
+        let!(:model) { model_class.create }
 
         context "when the guid matches a record" do
           context "when validate_accesss fails" do
@@ -238,19 +242,61 @@ module VCAP::CloudController
           end
 
           context "when the model has active associations" do
-            before do
-              model_class.instance_eval do
-                one_to_many :droplets
+            let!(:test_model_destroy_table_name) { :test_model_destroy_deps }
+            let!(:test_model_destroy_dep_class) do
+              create_dependency_class(test_model_destroy_table_name, "TestModelDestroyDep")
+            end
+
+            let!(:test_model_nullify_table_name) { :test_model_nullify_deps }
+            let!(:test_model_nullify_dep_class) do
+              create_dependency_class(test_model_nullify_table_name, "TestModelNullifyDep")
+            end
+
+            let(:test_model_nullify_dep) { VCAP::CloudController::TestModelNullifyDep.create() }
+
+            def create_dependency_class(table_name, class_name)
+              db.create_table table_name do
+                primary_key :id
+                String :guid
+                foreign_key :test_model_id, :test_models
               end
 
+              define_class(class_name, table_name)
+            end
+
+            before do
+              model_class.one_to_many test_model_destroy_table_name
+              model_class.one_to_many test_model_nullify_table_name
+
+              model_class.add_association_dependencies test_model_destroy_table_name => :destroy,
+                                                       test_model_nullify_table_name => :nullify
+
+              model.add_test_model_destroy_dep VCAP::CloudController::TestModelDestroyDep.create()
+              model.add_test_model_nullify_dep test_model_nullify_dep
+
               controller.stub(:v2_api?).and_return(true)
-              model_class.any_instance.stub(:has_one_to_many?).with(:droplets).and_return(true)
+            end
+
+            after do
+              db.drop_table test_model_destroy_table_name
+              db.drop_table test_model_nullify_table_name
             end
 
             context "when deleting with recursive set to true" do
               let(:params) { {"recursive" => "true"} }
               it "successfully deletes" do
                 expect{controller.delete(model.guid)}.to change { model_class.count }.by(-1)
+              end
+
+              it "successfully deletes association marked for destroy" do
+                expect{controller.delete(model.guid)}.to change { test_model_destroy_dep_class.count }.by(-1)
+              end
+
+              it "successfully nullifies association marked for nullify" do
+                expect do
+                  controller.delete(model.guid)
+                  test_model_nullify_dep.reload
+                end.to change { test_model_nullify_dep.test_model_id }.from(model.id).to(nil)
               end
             end
 

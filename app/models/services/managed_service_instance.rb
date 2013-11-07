@@ -67,6 +67,8 @@ module VCAP::CloudController
 
     delegate :client, to: :service_plan
 
+    add_association_dependencies :service_bindings => :destroy
+
     def validate
       super
       validates_presence :service_plan
