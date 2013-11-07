@@ -113,3 +113,4 @@ trial_db:
 tasks_disabled: false
 
 hm9000_noop: true
+flapping_crash_count_threshold: 3
