@@ -173,6 +173,7 @@ module VCAP::CloudController
           req.body = body
           req.content_type = 'application/json'
           req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
+          req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.0'
           req['Accept'] = 'application/json'
 
           logger.debug "Sending #{req_class} to #{uri}, BODY: #{req.body}, HEADERS: #{req.to_hash.inspect}"

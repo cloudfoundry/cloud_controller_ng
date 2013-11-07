@@ -179,6 +179,24 @@ module VCAP::CloudController::ServiceBroker::V2
       VCAP::Request.stub(:current_id).and_return(request_id)
     end
 
+    describe 'request headers' do
+      it 'has X-Broker-Api-Version set correctly in header' do
+        stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
+          to_return(status: 201, body: {}.to_json)
+
+        client.provision(
+          instance_id: instance_id,
+          plan_id:     plan_id,
+          service_id:  service_id,
+          org_guid:    "org-guid",
+          space_guid:  "space-guid"
+        )
+
+        WebMock.should have_requested(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
+                         with(:headers => {'X-Broker-Api-Version' => '2.0'})
+      end
+    end
+
     describe '#catalog' do
       let(:service_id) { Sham.guid }
       let(:service_name) { Sham.name }
