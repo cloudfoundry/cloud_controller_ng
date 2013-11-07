@@ -319,6 +319,72 @@ module VCAP::CloudController
       end
     end
 
+    describe "#system_env_json" do
+      context "when there are no services" do
+        it "contains an empty vcap_services" do
+          app = App.make(:environment_json => {"jesse" => "awesome"})
+          expect(app.system_env_json["VCAP_SERVICES"]).to eq({})
+        end
+      end
+
+      context "when there are services" do
+        let(:space){Space.make}
+        let(:app ){App.make(:environment_json => {"jesse" => "awesome"}, :space => space)}
+        let(:service){Service.make(:label => "elephantsql-n/a")}
+        let(:service_alt){Service.make(:label => "giraffesql-n/a")}
+        let(:service_plan){ServicePlan.make(:service => service)}
+        let(:service_plan_alt){ServicePlan.make(:service => service_alt)}
+        let(:service_instance){ManagedServiceInstance.make(:space => space, :service_plan => service_plan, :name => "elephantsql-vip-uat")}
+        let(:service_instance_same_label){ManagedServiceInstance.make(:space => space, :service_plan => service_plan, :name => "elephantsql-2")}
+        let(:service_instance_diff_label){ManagedServiceInstance.make(:space => space, :service_plan => service_plan_alt, :name => "giraffesql-vip-uat")}
+
+        before do
+          ServiceBinding.make(:app => app, :service_instance => service_instance)
+        end
+
+        it "contains a popluated vcap_services" do
+          expect(app.system_env_json["VCAP_SERVICES"]).not_to eq({})
+          expect(app.system_env_json["VCAP_SERVICES"]).to have_key("#{service.label}-#{service.version}")
+        end
+
+        keys = %W(
+          name
+          label
+          tags
+          plan
+          credentials
+        )
+
+        keys.each do |key|
+          before do
+            service.tags = ["one", "two"]
+          end
+
+          it "includes #{key.inspect}" do
+            app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].first.should include(key)
+          end
+        end
+
+        it "doesn't include unknown keys" do
+          app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].should have(1).service
+          app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].first.keys.should_not include("invalid")
+        end
+
+        describe "grouping" do
+          before do
+            ServiceBinding.make(:app => app, :service_instance => service_instance_same_label)
+            ServiceBinding.make(:app => app, :service_instance => service_instance_diff_label)
+          end
+
+          it "should group services by label" do
+            app.system_env_json["VCAP_SERVICES"].should have(2).groups
+            app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].should have(2).services
+            app.system_env_json["VCAP_SERVICES"]["#{service_alt.label}-#{service_alt.version}"].should have(1).service
+          end
+        end
+      end
+    end
+
     describe "metadata" do
       it "deserializes the serialized value" do
         app = AppFactory.make(

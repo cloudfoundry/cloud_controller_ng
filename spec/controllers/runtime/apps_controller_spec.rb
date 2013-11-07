@@ -353,6 +353,12 @@ module VCAP::CloudController
         last_response.status.should == 200
         expect(parse(last_response.body)["entity"]).to have_key("package_state")
       end
+
+      it "should return system_env_json" do
+        get_app
+        last_response.status.should == 200
+        expect(parse(last_response.body)["entity"]).to have_key("system_env_json")
+      end
     end
 
     describe "delete an app" do
