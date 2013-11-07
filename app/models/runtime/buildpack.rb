@@ -1,9 +1,9 @@
 module VCAP::CloudController
   class Buildpack < Sequel::Model
 
-    export_attributes :name, :position
+    export_attributes :name, :position, :enabled
 
-    import_attributes :name, :key, :position
+    import_attributes :name, :key, :position, :enabled
 
     def self.list_admin_buildpacks(url_generator)
       results = exclude(:key => nil).exclude(:key => "").order(:position).all
