@@ -2,18 +2,18 @@ require_relative 'api_presenter'
 
 class JobPresenter < ApiPresenter
 
-  def initialize(object)
-    super
+  def initialize(object, url_host_name=nil)
+    super(object)
     @object ||= NullJob.new
+    @url_host_name = url_host_name
   end
 
   protected
-
   def metadata_hash
     {
       guid: @object.guid,
       created_at: @object.created_at.iso8601,
-      url: "/v2/jobs/#{@object.guid}"
+      url: [@url_host_name, "v2/jobs/#{@object.guid}"].join("/")
     }
   end
 

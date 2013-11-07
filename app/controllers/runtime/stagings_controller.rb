@@ -56,7 +56,8 @@ module VCAP::CloudController
 
       if params["async"] == "true"
         job = Delayed::Job.enqueue(droplet_upload_job, queue: LocalQueue.new(config))
-        [HTTP::OK, JobPresenter.new(job).to_json]
+        external_domain = Array(config[:external_domain]).first
+        [HTTP::OK, JobPresenter.new(job, "http://#{external_domain}").to_json]
       else
         droplet_upload_job.perform
         HTTP::OK

@@ -22,6 +22,11 @@ describe JobPresenter do
       )
     end
 
+    it "creates full url if required" do
+      url_host_name = "http://example.com"
+      expect(JobPresenter.new(job, url_host_name).to_hash.fetch(:metadata).fetch(:url)).to eq("#{url_host_name}/v2/jobs/#{job.guid}")
+    end
+
     context "when the job has started" do
       let(:job) do
         job = Delayed::Job.enqueue double(:obj, perform: nil)

@@ -140,7 +140,7 @@ module VCAP::CloudController
         authorize staging_user, staging_password
       end
 
-      context "when uploding sync" do
+      context "when uploading sync" do
         context "with a valid app" do
           it "returns 200" do
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
@@ -220,6 +220,22 @@ module VCAP::CloudController
           expect(job.queue).to eq("cc-api_z1-99")
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 200
+        end
+
+        it "returns a JSON body with full url to query for job's status" do
+          post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
+          job = Delayed::Job.last
+          config = VCAP::CloudController::Config.config
+          expect(decoded_response.fetch('metadata').fetch('url')).to eql("http://#{config.fetch(:external_domain)}/v2/jobs/#{job.guid}")
+        end
+
+        it "returns a JSON body with full url to query for job's status even Cloud Controller has multiple external domains" do
+          config[:external_domain] = ["www.example.com", config[:external_domain]]
+          config = VCAP::CloudController::Config.config
+          post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
+          job = Delayed::Job.last
+          config[:external_domain] = ["www.example.com", config[:external_domain]]
+          expect(decoded_response.fetch('metadata').fetch('url')).to eql("http://www.example.com/v2/jobs/#{job.guid}")
         end
 
         context "with an invalid app" do
