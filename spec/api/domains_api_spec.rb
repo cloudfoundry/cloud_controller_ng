@@ -18,7 +18,9 @@ resource "Domains", :type => :api do
   field :owning_organization_guid, "The organization that owns the domain. If not specified, the domain is shared.",
         required: false
 
-  standard_model_object :domain
+  standard_model_list(:domain)
+  standard_model_get(:domain)
+  standard_model_delete(:domain)
 
   post "/v2/domains" do
     let(:name) { "exmaple.com" }

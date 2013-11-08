@@ -27,7 +27,9 @@ resource "Users", :type => :api do
   field :managed_spaces_url, "The url of the spaces this user in a manager of.", required: false, readonly: true
   field :audited_spaces_url, "The url of the spaces this user in a auditor of.", required: false, readonly: true
 
-  standard_model_object :user # adds get /v2/users/ and get /v2/users/:guid
+  standard_model_list(:user)
+  standard_model_get(:user)
+  standard_model_delete(:user)
 
   put "/v2/users/:guid" do
       request_parameter :guid, "The guid for the user to alter"
