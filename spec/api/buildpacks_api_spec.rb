@@ -20,7 +20,9 @@ resource "Buildpacks (experimental)", :type => :api do
   field :position, "The order in which the buildpacks are checked during buildpack auto-detection.", required: false
   field :enabled, "Whether or not the buildpack will be used for staging", required: false, default: true
 
-  standard_model_object :buildpack
+  standard_model_list(:buildpack)
+  standard_model_get(:buildpack)
+  standard_model_delete(:buildpack)
 
   post "/v2/buildpacks" do
     let(:name) { "A-buildpack-name" }

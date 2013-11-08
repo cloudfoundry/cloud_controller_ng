@@ -84,7 +84,8 @@ module VCAP::CloudController
             get "/v2/buildpacks", {}, headers_for(user)
             expect(last_response.status).to eq(200)
             expect(decoded_response["total_results"]).to eq(1)
-            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack', 'position' => 0})
+            expect(decoded_response["resources"][0]["entity"]).to eq({
+              'name' => 'get_buildpack', 'position' => 0, 'enabled' => true})
           end
         end
       end
