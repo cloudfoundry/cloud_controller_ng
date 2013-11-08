@@ -209,4 +209,18 @@ module VCAP::CloudController
       expect(service_plan.unique_id).to be == old_unique_id
     end
   end
+
+  describe "DELETE", "/v2/service_plans/:guid" do
+
+    let(:service_plan) { ServicePlan.make }
+
+    it "should prevent recursive deletions if there are any instances" do
+      ManagedServiceInstance.make(:service_plan => service_plan)
+      delete "/v2/service_plans/#{service_plan.guid}?recursive=true", {}, admin_headers
+      expect(last_response.status).to eq(400)
+
+      decoded_response.fetch('code').should == 10006
+      decoded_response.fetch('description').should == 'Please delete the service_instances associations for your service_plans.'
+    end
+  end
 end
