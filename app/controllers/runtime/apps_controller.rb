@@ -31,6 +31,7 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       memory_quota_errors = e.errors.on(:memory)
+      instance_number_errors = e.errors.on(:instances)
 
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::AppNameTaken.new(attributes["name"])
@@ -40,6 +41,8 @@ module VCAP::CloudController
         elsif memory_quota_errors.include?(:zero_or_less)
           Errors::AppMemoryInvalid.new
         end
+      elsif instance_number_errors
+        Errors::AppInvalid.new("Number of instances less than 0")
       else
         Errors::AppInvalid.new(e.errors.full_messages)
       end

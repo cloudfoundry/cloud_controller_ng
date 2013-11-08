@@ -82,6 +82,18 @@ module VCAP::CloudController
         end
       end
 
+      context "when instances is less than 0" do
+        before do
+          initial_hash[:instances] = -1
+        end
+
+        it "responds invalid arguments" do
+          create_app
+          last_response.status.should == 400
+          last_response.body.should match /instances less than 0/
+        end
+      end
+
       context "when name is not provided" do
         let(:initial_hash) {{ :space_guid => space_guid }}
         it "responds with missing field name error" do

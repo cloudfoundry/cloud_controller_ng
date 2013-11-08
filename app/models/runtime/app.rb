@@ -123,6 +123,7 @@ module VCAP::CloudController
       validate_environment
       validate_metadata
       check_memory_quota
+      validate_instances
     end
 
     def before_create
@@ -280,10 +281,8 @@ module VCAP::CloudController
     end
 
     def additional_memory_requested
-      default_instances = db_schema[:instances][:default].to_i
 
-      num_instances = instances ? instances : default_instances
-      total_requested_memory = requested_memory * num_instances
+      total_requested_memory = requested_memory * requested_instances
 
       return total_requested_memory if new?
 
@@ -300,6 +299,17 @@ module VCAP::CloudController
       errors.add(:memory, :zero_or_less) unless requested_memory > 0
       if space && (space.organization.memory_remaining < additional_memory_requested)
         errors.add(:memory, :quota_exceeded) if (new? || !being_stopped?)
+      end
+    end
+
+    def requested_instances
+      default_instances = db_schema[:instances][:default].to_i
+      instances ? instances : default_instances
+    end
+
+    def validate_instances
+      if (requested_instances < 0)
+        errors.add(:instances, :less_than_zero)
       end
     end
 
