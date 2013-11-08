@@ -41,10 +41,11 @@ module VCAP::CloudController
       mutex.synchronize do
         prune_stale_deas
 
-        best_dea_ad = EligibleDeaAdvertisementFilter.new(@dea_advertisements).
+        best_dea_ad = EligibleDeaAdvertisementFilter.new(@dea_advertisements, criteria[:app_id]).
                        only_with_disk(criteria[:disk] || 0).
                        only_meets_needs(criteria[:mem], criteria[:stack]).
-                       only_fewest_instances_of_app(criteria[:app_id]).
+                       only_in_zone_with_fewest_instances.
+                       only_fewest_instances_of_app.
                        upper_half_by_memory.
                        sample
 

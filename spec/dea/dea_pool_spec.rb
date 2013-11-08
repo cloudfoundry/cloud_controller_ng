@@ -52,6 +52,82 @@ module VCAP::CloudController
         }
       end
 
+      let(:dea_in_default_zone_with_1_instance_and_128m_memory) do
+        {
+            "id" => "dea-id1",
+            "stacks" => ["stack"],
+            "available_memory" => 128,
+            "available_disk" => available_disk,
+            "app_id_to_count" => {
+                "app-id" => 1
+            }
+        }
+      end
+
+      let(:dea_in_default_zone_with_2_instances_and_512m_memory) do
+        {
+            "id" => "dea-id2",
+            "stacks" => ["stack"],
+            "available_memory" => 512,
+            "available_disk" => available_disk,
+            "app_id_to_count" => {
+                "app-id" => 2
+            }
+        }
+      end
+
+      let(:dea_in_user_defined_zone_with_3_instances_and_1024m_memory) do
+        {
+            "id" => "dea-id3",
+            "stacks" => ["stack"],
+            "available_memory" => 1024,
+            "available_disk" => available_disk,
+            "app_id_to_count" => {
+                "app-id" => 3
+            },
+            "placement_properties" => {"zone" =>"zone1"}
+        }
+      end
+
+      let(:dea_in_user_defined_zone_with_2_instances_and_1024m_memory) do
+        {
+            "id" => "dea-id4",
+            "stacks" => ["stack"],
+            "available_memory" => 1024,
+            "available_disk" => available_disk,
+            "app_id_to_count" => {
+                "app-id" => 2
+            },
+            "placement_properties" => {"zone" =>"zone1"}
+        }
+      end
+
+      let(:dea_in_user_defined_zone_with_1_instance_and_512m_memory) do
+        {
+            "id" => "dea-id5",
+            "stacks" => ["stack"],
+            "available_memory" => 512,
+            "available_disk" => available_disk,
+            "app_id_to_count" => {
+                "app-id" => 1
+            },
+            "placement_properties" => {"zone" =>"zone1"}
+        }
+      end
+
+      let(:dea_in_user_defined_zone_with_1_instance_and_256m_memory) do
+        {
+            "id" => "dea-id6",
+            "stacks" => ["stack"],
+            "available_memory" => 256,
+            "available_disk" => available_disk,
+            "app_id_to_count" => {
+                "app-id" => 1
+            },
+            "placement_properties" => {"zone" =>"zone1"}
+        }
+      end
+
       let(:available_disk) { 100 }
 
       describe "dea availability" do
@@ -59,6 +135,78 @@ module VCAP::CloudController
           expect {
             subject.process_advertise_message(dea_advertise_msg)
           }.to change { subject.find_dea(mem: 1, stack: "stack", app_id: "app-id") }.from(nil).to("dea-id")
+        end
+      end
+
+      describe "#only_in_zone_with_fewest_instances" do
+        context "when all the DEAs are in the same zone" do
+          it "finds the DEA within the default zone" do
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
+            subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should == "dea-id1"
+          end
+
+          it "finds the DEA with enough memory within the default zone" do
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
+            subject.find_dea(mem: 256, stack: "stack", app_id: "app-id").should == "dea-id2"
+          end
+
+          it "finds the DEA in user defined zones" do
+            subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
+            subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should == "dea-id4"
+          end
+        end
+
+        context "when the instance numbers of all zones are the same" do
+          it "finds the only one DEA with the smallest instance number" do
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
+            subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should == "dea-id1"
+          end
+
+          it "finds the only one DEA with enough memory" do
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
+            subject.find_dea(mem: 256, stack: "stack", app_id: "app-id").should == "dea-id2"
+          end
+
+          it "finds one of the DEAs with the smallest instance number" do
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_512m_memory)
+            ["dea-id1","dea-id5"].should include (subject.find_dea(mem: 1, stack: "stack", app_id: "app-id"))
+          end
+        end
+
+        context "when the instance numbers of all zones are different" do
+          it "picks the only one DEA in the zone with fewest instances" do
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
+            subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should == "dea-id1"
+          end
+
+          it "picks one of the DEAs in the zone with fewest instances" do
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_512m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_256m_memory)
+            ["dea-id5","dea-id6"].should include (subject.find_dea(mem: 1, stack: "stack", app_id: "app-id"))
+          end
+
+          it "picks the only DEA with enough resource even it has more instances" do
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
+            subject.find_dea(mem: 768, stack: "stack", app_id: "app-id").should == "dea-id3"
+          end
+
         end
       end
 

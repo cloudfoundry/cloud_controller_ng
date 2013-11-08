@@ -12,4 +12,8 @@ class DeaAdvertisement < Advertisement
   def num_instances_of(app_id)
     stats["app_id_to_count"].fetch(app_id, 0)
   end
+
+  def zone
+    stats.fetch("placement_properties", {}).fetch("zone", "default")
+  end
 end
