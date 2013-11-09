@@ -5,16 +5,17 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :position, Integer, default: 0
+      attribute :enabled, Message::Boolean, default: true
     end
 
     query_parameters :name
 
     def self.translate_validation_exception(e, attributes)
-      buildpack_errors = e.errors.on([:name])
+      buildpack_errors = e.errors.on(:name)
       if buildpack_errors && buildpack_errors.include?(:unique)
         Errors::BuildpackNameTaken.new("#{attributes["name"]}")
       else
-        Errors::BuildpackNameTaken.new(e.errors.full_messages)
+        Errors::BuildpackInvalid.new(e.errors.full_messages)
       end
     end
 
@@ -33,7 +34,7 @@ module VCAP::CloudController
       model.db.transaction(savepoint: true) do
         obj.lock!
         obj.update_from_hash(attrs)
-        obj.shift_to_position(target_position)
+        obj.shift_to_position(target_position) if target_position
       end
 
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]

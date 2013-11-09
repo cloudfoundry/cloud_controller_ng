@@ -8,7 +8,7 @@ module VCAP::CloudController
     include_examples "operations on an invalid object", path: "/v2/quota_definitions"
     include_examples "creating and updating", path: "/v2/quota_definitions", model: QuotaDefinition, required_attributes: %w(name non_basic_services_allowed total_services memory_limit), unique_attributes: %w(name)
     include_examples "deleting a valid object", path: "/v2/quota_definitions", model: QuotaDefinition, one_to_many_collection_ids: {},
-      one_to_many_collection_ids_without_url: {
+      one_to_many_collection_ids: {
         :organizations => lambda { |quota_definition|
           Organization.make(:quota_definition => quota_definition)
         }

@@ -34,8 +34,7 @@ module VCAP::CloudController
     include_examples "deleting a valid object",
       path: "/v2/service_bindings",
       model: ServiceBinding,
-      one_to_many_collection_ids: {},
-      one_to_many_collection_ids_without_url: {}
+      one_to_many_collection_ids: {}
 
     include_examples "creating and updating",
       path: "/v2/service_bindings",
@@ -251,6 +250,30 @@ module VCAP::CloudController
         post "/v2/service_bindings", req, json_headers(headers_for(developer))
         expect(broker_client).to have_received(:unbind).with(an_instance_of(ServiceBinding))
         expect(last_response.status).to eq(500)
+      end
+
+      context 'when attempting to bind to an unbindable service' do
+        before do
+          service.bindable = false
+          service.save
+
+          req = {
+            :app_guid => app_obj.guid,
+            :service_instance_guid => instance.guid
+          }.to_json
+
+          post "/v2/service_bindings", req, json_headers(headers_for(developer))
+        end
+
+        it 'raises UnbindableService error' do
+          hash_body = JSON.parse(last_response.body)
+          expect(hash_body['error_code']).to eq('CF-UnbindableService')
+          expect(last_response.status).to eq(400)
+        end
+
+        it 'does not send a bind request to broker' do
+          expect(broker_client).to_not have_received(:bind)
+        end
       end
 
       context 'when the model save and the subsequent unbind both raise errors' do

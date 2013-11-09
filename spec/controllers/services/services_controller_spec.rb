@@ -13,8 +13,9 @@ module VCAP::CloudController
                      unique_attributes: %w(label provider),
                      extra_attributes: {extra: ->{Sham.extra}, bindable: false, tags: ["relational"], requires: ["loggyness"]}
     include_examples "deleting a valid object", path: "/v2/services", model: Service,
-      one_to_many_collection_ids: {:service_plans => lambda { |service| ServicePlan.make(:service => service) }},
-      one_to_many_collection_ids_without_url: {}
+      one_to_many_collection_ids: {
+        :service_plans => lambda { |service| ServicePlan.make(:service => service) },
+      }
     include_examples "collection operations", path: "/v2/services", model: Service,
       one_to_many_collection_ids: {
         service_plans: lambda { |service| ServicePlan.make(service: service) }

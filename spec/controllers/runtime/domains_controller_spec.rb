@@ -13,8 +13,6 @@ module VCAP::CloudController
           org = domain.organizations.first || Organization.make
           Space.make(:organization => org)
         },
-      },
-      one_to_many_collection_ids_without_url: {
         :routes => lambda { |domain|
           domain.update(:wildcard => true)
           space = Space.make(:organization => domain.owning_organization)

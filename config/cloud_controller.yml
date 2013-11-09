@@ -34,6 +34,7 @@ logging:
 
 loggregator:
   router: "127.0.0.1:3456"
+  shared_secret: "loggregatorsecret"
 
 db:
   database: "sqlite:///tmp/cloud_controller.db"
@@ -112,3 +113,4 @@ trial_db:
 tasks_disabled: false
 
 hm9000_noop: true
+flapping_crash_count_threshold: 3

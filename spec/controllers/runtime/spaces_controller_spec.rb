@@ -11,9 +11,7 @@ module VCAP::CloudController
     include_examples "deleting a valid object", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
         :apps => lambda { |space| AppFactory.make(:space => space) },
-        :service_instances => lambda { |space| ManagedServiceInstance.make(:space => space) }
-      },
-      one_to_many_collection_ids_without_url: {
+        :service_instances => lambda { |space| ManagedServiceInstance.make(:space => space) },
         :routes => lambda { |space| Route.make(:space => space) },
         :default_users => lambda { |space|
           user = VCAP::CloudController::User.make
@@ -24,7 +22,7 @@ module VCAP::CloudController
           user.save
           user
         }
-      }
+      }, :excluded => [:default_users]
     include_examples "collection operations", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
         apps: lambda { |space| AppFactory.make(space: space) },
@@ -421,13 +419,13 @@ module VCAP::CloudController
           ServicePlanVisibility.make(service_plan: @service.service_plans.first, organization: organization_one)
         end
 
-        it 'should remove the offering when the org does not have access to the plan' do
+        it "should remove the offering when the org does not have access to any of the service's plans" do
           get "/v2/spaces/#{space_two.guid}/services", {}, headers
           last_response.should be_ok
           decoded_guids.should_not include(@service.guid)
         end
 
-        it 'should return the offering when the org has access to the plan' do
+        it "should return the offering when the org has access to one of the service's plans" do
           get "/v2/spaces/#{space_one.guid}/services", {}, headers
           last_response.should be_ok
           decoded_guids.should include(@service.guid)
@@ -476,6 +474,51 @@ module VCAP::CloudController
           last_response.should be_ok
           decoded_guids.should =~ @inactive.map(&:guid)
         end
+      end
+    end
+
+    describe "audit events" do
+      let(:organization) { Organization.make }
+      describe "audit.space.create" do
+        it "is logged when creating a space" do
+          request_body = {organization_guid: organization.guid, name: "space_name"}.to_json
+          post "/v2/spaces", request_body, json_headers(admin_headers)
+
+          last_response.status.should == 201
+
+          new_space_guid = decoded_response['metadata']['guid']
+          event = Event.find(:type => "audit.space.create", :actee => new_space_guid)
+          expect(event).not_to be_nil
+          expect(event.metadata["request"]).to eq("organization_guid" => organization.guid, "name" => "space_name")
+        end
+      end
+
+      it "logs audit.space.update when updating a space" do
+        space = Space.make
+        request_body = {name: "new_space_name"}.to_json
+        put "/v2/spaces/#{space.guid}", request_body, json_headers(admin_headers)
+
+        last_response.status.should == 201
+
+        space_guid = decoded_response['metadata']['guid']
+        event = Event.find(:type => "audit.space.update", :actee => space_guid)
+        expect(event).not_to be_nil
+        expect(event.metadata["request"]).to eq("name" => "new_space_name")
+      end
+
+      it "logs audit.space.delete-request when deleting a space" do
+        space = Space.make
+        organization_guid = space.organization.guid
+        space_guid = space.guid
+        delete "/v2/spaces/#{space_guid}", "", json_headers(admin_headers)
+
+        last_response.status.should == 204
+
+        event = Event.find(:type => "audit.space.delete-request", :actee => space_guid)
+        expect(event).not_to be_nil
+        expect(event.metadata["request"]).to eq("recursive" => false)
+        expect(event.space_guid).to eq(space_guid)
+        expect(event.organization_guid).to eq(organization_guid)
       end
     end
   end

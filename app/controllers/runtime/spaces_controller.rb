@@ -71,6 +71,18 @@ module VCAP::CloudController
       )
     end
 
+    def after_create(space)
+      Event.record_space_create(space, SecurityContext.current_user, request_attrs)
+    end
+
+    def after_update(space)
+      Event.record_space_update(space, SecurityContext.current_user, request_attrs)
+    end
+
+    def before_destroy(space)
+      Event.record_space_delete_request(space, SecurityContext.current_user, params["recursive"] == "true")
+    end
+
     module ServiceSerialization
       def self.to_hash(controller, service, opts)
         entity_hash = service.to_hash.merge({

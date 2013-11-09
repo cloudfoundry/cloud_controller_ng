@@ -9,7 +9,7 @@ resource "Domains", :type => :api do
 
   let(:guid) { VCAP::CloudController::Domain.first.guid }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::DomainsController
 
   field :name, "The name of the domain.",
         required: true, example_values: ["example.com", "foo.example.com"]
@@ -18,17 +18,24 @@ resource "Domains", :type => :api do
   field :owning_organization_guid, "The organization that owns the domain. If not specified, the domain is shared.",
         required: false
 
-  standard_model_object :domain
+  standard_model_list(:domain)
+  standard_model_get(:domain)
+  standard_model_delete(:domain)
 
   post "/v2/domains" do
     let(:name) { "exmaple.com" }
-    let(:wildcard) { true }
+    let(:owning_organization_guid) { nil }
+    let(:request) do
+      {
+        name: name,
+        wildcard: true,
+        owning_organization_guid: owning_organization_guid
+      }
+    end
 
     context "Creating a shared domain" do
-      let(:owning_organization_guid) { nil }
-
       example "creates a shared domain" do
-        client.post "/v2/domains", Yajl::Encoder.encode(params), headers
+        client.post "/v2/domains", Yajl::Encoder.encode(request), headers
         status.should == 201
         standard_entity_response parsed_response, :domain,
                                  :name => name,
@@ -41,7 +48,7 @@ resource "Domains", :type => :api do
       let(:owning_organization_guid) { owning_organization.guid }
 
       example "creates a domain owned by the given organization" do
-        client.post "/v2/domains", Yajl::Encoder.encode(params), headers
+        client.post "/v2/domains", Yajl::Encoder.encode(request), headers
         status.should == 201
         standard_entity_response parsed_response, :domain,
                                  :name => name,

@@ -92,11 +92,24 @@ module VCAP::CloudController
         :buildpack_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(@app),
         :buildpack_cache_upload_uri => @blobstore_url_generator.buildpack_cache_upload_url(@app),
         :start_message => start_app_message,
-        :admin_buildpacks => Buildpack.list_admin_buildpacks(@blobstore_url_generator)
+        :admin_buildpacks => admin_buildpacks
       }
     end
 
     private
+
+    def admin_buildpacks
+      Buildpack.list_admin_buildpacks.
+        select(&:enabled).
+        collect { |buildpack| admin_buildpack_entry(buildpack) }
+    end
+
+    def admin_buildpack_entry(buildpack)
+      {
+        key: buildpack.key,
+        url: @blobstore_url_generator.admin_buildpack_download_url(buildpack)
+      }
+    end
 
     def start_app_message
       msg = DeaClient.start_app_message(@app)

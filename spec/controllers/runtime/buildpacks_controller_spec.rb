@@ -33,12 +33,14 @@ module VCAP::CloudController
           post "/v2/buildpacks", req_body, admin_headers
           post "/v2/buildpacks", req_body, admin_headers
           expect(last_response.status).to eq(400)
+          expect(decoded_response['code']).to eq(290001)
         end
 
         it "fails when the name has non alphanumeric characters" do
           ["git://github.com", "$abc", "foobar!"].each do |name|
             post "/v2/buildpacks", Yajl::Encoder.encode({name: name}), admin_headers
             expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(290003)
           end
         end
 
@@ -82,7 +84,8 @@ module VCAP::CloudController
             get "/v2/buildpacks", {}, headers_for(user)
             expect(last_response.status).to eq(200)
             expect(decoded_response["total_results"]).to eq(1)
-            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack', 'position' => 0})
+            expect(decoded_response["resources"][0]["entity"]).to eq({
+              'name' => 'get_buildpack', 'position' => 0, 'enabled' => true})
           end
         end
       end

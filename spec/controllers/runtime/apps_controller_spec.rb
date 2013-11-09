@@ -24,8 +24,7 @@ module VCAP::CloudController
       :events => lambda { |app|
         AppEvent.make(:app => app)
       }
-    },
-      one_to_many_collection_ids_without_url: {}
+    }, :excluded => [ :events ]
 
     include_examples "collection operations", path: "/v2/apps", model: App,
       one_to_many_collection_ids: {
@@ -82,6 +81,18 @@ module VCAP::CloudController
         end
       end
 
+      context "when instances is less than 0" do
+        before do
+          initial_hash[:instances] = -1
+        end
+
+        it "responds invalid arguments" do
+          create_app
+          last_response.status.should == 400
+          last_response.body.should match /instances less than 0/
+        end
+      end
+
       context "when name is not provided" do
         let(:initial_hash) {{ :space_guid => space_guid }}
         it "responds with missing field name error" do
@@ -113,16 +124,20 @@ module VCAP::CloudController
         end
       end
 
-      it "records a app.create event" do
-        create_app
+      describe "audit logs" do
+        it "records an app.create event" do
+          create_app
 
-        last_response.status.should == 201
+          last_response.status.should == 201
 
-        new_app_guid = decoded_response['metadata']['guid']
-        event = Event.find(:type => "audit.app.create", :actee => new_app_guid)
+          new_app_guid = decoded_response['metadata']['guid']
+          event = Event.find(:type => "audit.app.create", :actee => new_app_guid)
 
-        expect(event).to be
-        expect(event.actor).to eq(admin_user.guid)
+          expect(event).to be
+          expect(event.actor).to eq(admin_user.guid)
+          expect(event.metadata["request"]["name"]).to eq("maria")
+          expect(event.metadata["request"]["space_guid"]).to eq(space_guid)
+        end
       end
 
       context "buildpacks" do
@@ -257,6 +272,20 @@ module VCAP::CloudController
         end
       end
 
+      context "when package_state is provided" do
+        before { update_hash[:package_state] = 'FAILED' }
+
+        it "ignores the attribute" do
+          update_app
+
+          last_response.status.should == 201
+
+          app_obj.reload
+          expect(app_obj.package_state).to_not be == 'FAILED'
+          expect(parse(last_response.body)["entity"]).not_to include("package_state" => "FAILED")
+        end
+      end
+
       context "when the app is already deleted" do
         before { app_obj.soft_delete }
 
@@ -278,6 +307,54 @@ module VCAP::CloudController
           expect(event.actor).to eq(admin_user.guid)
         end
       end
+
+      describe "audit logs" do
+        before { update_hash[:instances] = 2 }
+
+        it "creates an audit log including the request body" do
+          update_app
+
+          audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
+          expect(audit_event.metadata["request"]).to eq("instances" => 2)
+        end
+
+        context "when the request body has non-whitelisted attributes" do
+          before do
+            update_hash[:foo] = "foo"
+          end
+
+          it "only puts whitelisted attributes from the request body into the audit log" do
+            update_app
+
+            audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
+            expect(audit_event.metadata["request"]).to eq("instances" => 2)
+          end
+        end
+
+        describe "sensitive app properties" do
+          before do
+            update_hash[:environment_json] = {:password => "my_password"}
+            update_hash[:command] = "DB_PASSWORD=foo ./my-app"
+          end
+
+          it "hides them" do
+            update_app
+
+            audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
+            expect(audit_event.metadata["request"]).to eq("instances" => 2, "environment_json" => "PRIVATE DATA HIDDEN", "command" => "PRIVATE DATA HIDDEN")
+          end
+        end
+
+        it "does not create an audit log when the app is not found" do
+          guid = app_obj.guid
+
+          app_obj.delete
+
+          update_app
+
+          expect(Event.find(:type => "audit.app.update", :actee => guid)).to be_nil
+        end
+      end
     end
 
     describe "read an app" do
@@ -292,6 +369,12 @@ module VCAP::CloudController
         get_app
         last_response.status.should == 200
         decoded_response["entity"]["detected_buildpack"].should eq("buildpack-name")
+      end
+
+      it "should return the package state" do
+        get_app
+        last_response.status.should == 200
+        expect(parse(last_response.body)["entity"]).to have_key("package_state")
       end
 
       context "when the app is already deleted" do
@@ -424,12 +507,21 @@ module VCAP::CloudController
 
       end
 
-      it "records an app.deleted event" do
-        delete_app
-        last_response.status.should == 204
-        event = Event.find(:type => "audit.app.delete", :actee => app_obj.guid)
-        expect(event).to be
-        expect(event.actor).to eq(admin_user.guid)
+      describe "audit logs" do
+        it "records an app.delete-request event" do
+          delete_app
+          last_response.status.should == 204
+          event = Event.find(:type => "audit.app.delete-request", :actee => app_obj.guid)
+          expect(event).to be
+          expect(event.actor).to eq(admin_user.guid)
+        end
+
+        it "saves the recursive query parameter when recursive"  do
+          delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
+
+          audit_event = Event.find(:type => "audit.app.delete-request", :actee => app_obj.guid)
+          expect(audit_event.metadata["request"]).to eq({ "recursive" => true })
+        end
       end
     end
 
@@ -482,6 +574,15 @@ module VCAP::CloudController
         decoded_response["entity"]["command"].should == "foobar"
         decoded_response["entity"]["metadata"].should be_nil
       end
+
+      it "can be cleared if a request arrives asking command to be an empty string" do
+        app_obj.command = "echo hi"
+        app_obj.save
+        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:command => ""), json_headers(admin_headers)
+        last_response.status.should == 201
+        decoded_response["entity"]["command"].should be_nil
+        decoded_response["entity"]["metadata"].should be_nil
+      end
     end
 
     describe "staging" do
@@ -490,10 +591,6 @@ module VCAP::CloudController
           AppFactory.make(:package_hash => "abc", :state => "STOPPED",
                            :droplet_hash => nil, :package_state => "PENDING",
                            :instances => 1)
-        end
-
-        after do
-          app_obj.delete
         end
 
         it "stages the app asynchronously" do

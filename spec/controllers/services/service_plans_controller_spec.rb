@@ -11,10 +11,6 @@ module VCAP::CloudController
                      required_attributes: %w(name free description service_guid),
                      unique_attributes: %w(name service_guid),
                      extra_attributes: {extra: ->{Sham.extra}}
-    include_examples "deleting a valid object", path: "/v2/service_plans", model: ServicePlan,
-      one_to_many_collection_ids: {:service_instances => lambda { |service_plan| ManagedServiceInstance.make(:service_plan => service_plan) }
-      },
-      one_to_many_collection_ids_without_url: {}
     include_examples "collection operations", path: "/v2/service_plans", model: ServicePlan,
       one_to_many_collection_ids: {
         service_instances: lambda { |service_plan| ManagedServiceInstance.make(service_plan: service_plan) }
@@ -157,6 +153,16 @@ module VCAP::CloudController
         plan_guids.should include(private_plan.guid)
       end
     end
+
+    describe "public service plans" do
+      let!(:public_plan) { ServicePlan.make(public: true) }
+
+      it "should return correct visibility" do
+        get "/v2/service_plans/#{public_plan.guid}", {}, headers_for(developer)
+        last_response.status.should eq(200)
+        expect(parse(last_response.body)["entity"]).to include("public" => true)
+      end
+    end
   end
 
   describe "POST", "/v2/service_plans" do
@@ -201,6 +207,20 @@ module VCAP::CloudController
       service_plan.reload
       expect(last_response.status).to be == 201
       expect(service_plan.unique_id).to be == old_unique_id
+    end
+  end
+
+  describe "DELETE", "/v2/service_plans/:guid" do
+
+    let(:service_plan) { ServicePlan.make }
+
+    it "should prevent recursive deletions if there are any instances" do
+      ManagedServiceInstance.make(:service_plan => service_plan)
+      delete "/v2/service_plans/#{service_plan.guid}?recursive=true", {}, admin_headers
+      expect(last_response.status).to eq(400)
+
+      decoded_response.fetch('code').should == 10006
+      decoded_response.fetch('description').should == 'Please delete the service_instances associations for your service_plans.'
     end
   end
 end

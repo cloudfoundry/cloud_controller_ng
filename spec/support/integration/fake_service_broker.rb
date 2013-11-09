@@ -14,7 +14,16 @@ end
   {
     'id' => 'custom-plan-1',
     'name' => 'free',
-    'description' => 'A description of the Free plan'
+    'description' => 'A description of the Free plan',
+    'metadata' => {
+      'cost' => 0.0,
+      'bullets' =>
+        [
+          {'content' => 'Shared MySQL server'},
+          {'content' => '100 MB storage'},
+          {'content' => '40 concurrent connections'},
+        ]
+    }
   },
   {
     'id' => 'custom-plan-2',
@@ -32,7 +41,13 @@ get '/v2/catalog' do
         'description' => 'A description of My Custom Service',
         'bindable' => true,
         'tags' => ['mysql', 'relational'],
-        'plans' => @@plans
+        'metadata' => {
+          'listing' => {
+            'imageUrl' => 'http://example.com/catsaresofunny.gif',
+            'blurb' => 'A very fine service',
+          },
+        },
+        'plans' => @@plans,
       }
     ]
   }.to_json
@@ -52,9 +67,8 @@ put '/v2/service_instances/:service_instance_id' do
   [201, {}, body]
 end
 
-put '/v2/service_bindings/:service_binding_id' do
+put '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
   json = JSON.parse(request.body.read)
-  raise 'missing service_instance_id' unless json['service_instance_id']
 
   @@binding_count += 1
 
@@ -68,7 +82,7 @@ put '/v2/service_bindings/:service_binding_id' do
   [200, {}, body]
 end
 
-delete '/v2/service_bindings/:service_binding_id' do
+delete '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
   @@binding_count -= 1
 
   [204, {}, '']

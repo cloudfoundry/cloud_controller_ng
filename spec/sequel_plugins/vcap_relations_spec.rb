@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe "Sequel::Plugins::VcapRelations" do
+describe "Sequel::Plugins::VcapRelations", non_transactional: true do
   before do
     db.create_table :owners do
       primary_key :id

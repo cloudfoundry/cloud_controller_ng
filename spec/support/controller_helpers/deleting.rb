@@ -26,18 +26,30 @@ module ControllerHelpers
         end
 
         context "when the object has a child associations" do
-          let(:one_to_one_or_many) do
-            obj.class.associations.select do |association|
-              reflection = obj.class.association_reflection(association)
-              !reflection[:dataset] && \
-                [:one_to_many, :one_to_one].include?(reflection[:type])
+          around do |example|
+            @associations = {}
+            if opts[:one_to_many_collection_ids]
+              @associations = opts[:one_to_many_collection_ids].map { |key, child| [key, child.call(obj)] }
+              if opts[:excluded]
+                @associations.select! { |name, _| !opts[:excluded].include?(name) }
+              end
+            end
+            unless one_to_one_or_many.empty?
+              example.run
             end
           end
 
-          let!(:associations_without_url) { opts[:one_to_many_collection_ids_without_url].map { |key, child| [key, child.call(obj)] } }
-          let!(:associations_with_url) { opts[:one_to_many_collection_ids].map { |key, child| [key, child.call(obj)] } }
+          let(:one_to_one_or_many) do
+            obj.class.associations.select do |association|
+              next if opts[:excluded] && opts[:excluded].include?(association)
 
-          around { |example| example.call unless one_to_one_or_many.empty? }
+              if obj.class.association_dependencies_hash[association]
+                if obj.class.association_dependencies_hash[association] == :destroy
+                  obj.has_one_to_many?(association) || obj.has_one_to_one?(association)
+                end
+              end
+            end
+          end
 
           it "should return 400" do
             subject
@@ -46,10 +58,9 @@ module ControllerHelpers
 
           it "should return the expected response body" do
             subject
-            Yajl::Parser.parse(last_response.body).should == {
-                "code" => 10006,
-                "description" => "Please delete the #{one_to_one_or_many.join(", ")} associations for your #{obj.class.table_name}.",
-            }
+            parsed_json = Yajl::Parser.parse(last_response.body)
+            expect(parsed_json["code"]).to eq(10006)
+            expect(parsed_json["description"]).to eq("Please delete the #{one_to_one_or_many.join(", ")} associations for your #{obj.class.table_name}.")
           end
 
           context "and the recursive param is passed in" do
@@ -70,8 +81,8 @@ module ControllerHelpers
 
               it "should delete all the child associations" do
                 subject
-                (associations_without_url | associations_with_url).map do |name, association|
-                  association.class[:id => association.id].should be_nil unless obj.class.association_reflection(name)[:type] == :many_to_many || name == :default_users
+                @associations.each do |name, association|
+                  association.class[:id => association.id].should be_nil unless obj.class.association_reflection(name)[:type] == :many_to_many
                 end
               end
             end
@@ -86,10 +97,9 @@ module ControllerHelpers
 
               it "should return the expected response body" do
                 subject
-                Yajl::Parser.parse(last_response.body).should == {
-                  "code" => 10006,
-                  "description" => "Please delete the #{one_to_one_or_many.join(", ")} associations for your #{obj.class.table_name}.",
-                }
+                parsed_json = Yajl::Parser.parse(last_response.body)
+                expect(parsed_json["code"]).to eq(10006)
+                expect(parsed_json["description"]).to eq("Please delete the #{one_to_one_or_many.join(", ")} associations for your #{obj.class.table_name}.")
               end
             end
           end

@@ -60,7 +60,7 @@ module VCAP::CloudController
 
         it "returns the correct info for the apps" do
           request["apps"].each do |app_resp|
-            app = apps.find { |a| a.guid == app_resp["guid"] }
+            app = apps.find { |a| a.guid == app_resp["guid"] }.reload
             expected_running_instances = app.started? ? app.instances : 0
 
             expect(app_resp).to eq({

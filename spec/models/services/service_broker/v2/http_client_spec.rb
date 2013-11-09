@@ -37,7 +37,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
     context 'without a description in the body' do
       let(:response_body) do
-        { 'foo' => 'bar' }.to_json
+        {'foo' => 'bar'}.to_json
       end
       it 'generates the correct hash' do
         exception = described_class.new(uri, method, response)
@@ -87,7 +87,7 @@ module VCAP::CloudController::ServiceBroker::V2
           'description' => error.message,
           'types' => ['SocketError'],
           'backtrace' => ['/socketerror:1', '/backtrace:2']
-          }
+        }
       })
     end
   end
@@ -156,6 +156,9 @@ module VCAP::CloudController::ServiceBroker::V2
     let(:auth_username) { 'me' }
     let(:auth_password) { 'abc123' }
     let(:request_id) { Sham.guid }
+    let(:plan_id) { Sham.guid }
+    let(:service_id) { Sham.guid }
+    let(:instance_id) { Sham.guid }
     let(:expected_request_headers) do
       {
         'X-VCAP-Request-ID' => request_id,
@@ -174,6 +177,24 @@ module VCAP::CloudController::ServiceBroker::V2
 
     before do
       VCAP::Request.stub(:current_id).and_return(request_id)
+    end
+
+    describe 'request headers' do
+      it 'has X-Broker-Api-Version set correctly in header' do
+        stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
+          to_return(status: 201, body: {}.to_json)
+
+        client.provision(
+          instance_id: instance_id,
+          plan_id:     plan_id,
+          service_id:  service_id,
+          org_guid:    "org-guid",
+          space_guid:  "space-guid"
+        )
+
+        WebMock.should have_requested(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
+                         with(:headers => {'X-Broker-Api-Version' => '2.0'})
+      end
     end
 
     describe '#catalog' do
@@ -214,15 +235,14 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe '#provision' do
-      let(:instance_id) { Sham.guid }
-      let(:plan_id) { Sham.guid }
 
       let(:expected_request_body) do
         {
           plan_id: plan_id,
           organization_guid: "org-guid",
+          service_id: service_id,
           space_guid: "space-guid"
-        }.to_json
+        }
       end
 
       let(:expected_response_body) do
@@ -236,7 +256,13 @@ module VCAP::CloudController::ServiceBroker::V2
           with(body: expected_request_body, headers: expected_request_headers).
           to_return(status: 201, body: expected_response_body)
 
-        response = client.provision(instance_id, plan_id, "org-guid", "space-guid")
+        response = client.provision(
+          instance_id: instance_id,
+          plan_id: plan_id,
+          service_id: service_id,
+          org_guid: "org-guid",
+          space_guid: "space-guid"
+        )
 
         expect(response.fetch('dashboard_url')).to eq('dashboard url')
       end
@@ -244,19 +270,25 @@ module VCAP::CloudController::ServiceBroker::V2
       context 'the reference_id is already in use' do
         it 'raises ServiceBrokerConflict' do
           stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-            to_return(status: 409)  # 409 is CONFLICT
+            to_return(status: 409) # 409 is CONFLICT
 
-          expect { client.provision(instance_id, plan_id, "org-guid", "space-guid") }.
-            to raise_error(ServiceBrokerConflict)
+          expect {
+            client.provision(
+              instance_id: instance_id,
+              plan_id: plan_id,
+              service_id: service_id,
+              org_guid: "org-guid",
+              space_guid: "space-guid"
+            )
+          }.to raise_error(ServiceBrokerConflict)
         end
       end
     end
 
     describe '#bind' do
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-      let(:service_instance) { service_binding.service_instance }
+      let(:binding_id) { Sham.guid }
 
-      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
+      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}" }
 
       before do
         @request = stub_request(:put, bind_url).with(headers: expected_request_headers).to_return(
@@ -266,45 +298,76 @@ module VCAP::CloudController::ServiceBroker::V2
         )
       end
 
-      it 'sends a PUT to /v2/service_bindings/:id' do
-        client.bind(service_binding.guid, service_instance.guid)
+      it 'sends a PUT to /v2/service_instances/:instance_id/service_bindings/:id' do
+        client.bind({
+          binding_id: binding_id,
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        })
 
-        expect(@request.with { |request|
-          request_body = Yajl::Parser.parse(request.body)
-          expect(request_body.fetch('service_instance_id')).to eq(service_binding.service_instance.guid)
-        }).to have_been_made
+        expect(
+          @request.with(body: { service_id: service_id, plan_id: plan_id })
+        ).to have_been_made
       end
 
       it 'returns the response body' do
-        response = client.bind(service_binding.guid, service_instance.guid)
+        response = client.bind({
+          binding_id: binding_id,
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        })
 
         expect(response).to eq('credentials' => {'user' => 'admin', 'pass' => 'secret'})
       end
     end
 
     describe '#unbind' do
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_bindings/#{service_binding.guid}" }
+      let(:binding_id) { Sham.guid }
+
+      let(:bind_url) {
+        "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}"
+      }
+
       before do
-        @request = stub_request(:delete, bind_url).with(headers: expected_request_headers).to_return(status: 204)
+        @request = stub_request(:delete, bind_url).
+          with(headers: expected_request_headers, query: hash_including({})).
+          to_return(status: 204)
       end
 
-      it 'sends a DELETE to /v2/service_bindings/:id' do
-        client.unbind(service_binding.guid)
-        @request.should have_been_requested
+      it 'sends a DELETE to /v2/service_instances/:instance_id/service_bindings/:id' do
+        client.unbind({
+          binding_id: binding_id,
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        })
+
+        expect(
+          @request.with(query: { service_id: service_id, plan_id: plan_id })
+        ).to have_been_made
       end
     end
 
     describe '#deprovision' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:instance_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance.guid}" }
+      let(:instance_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}" }
       before do
-        @request = stub_request(:delete, instance_url).with(headers: expected_request_headers).to_return(status: 204)
+        @request = stub_request(:delete, instance_url).
+          with(headers: expected_request_headers, query: hash_including({})).
+          to_return(status: 204)
       end
 
       it 'sends a DELETE to /v2/service_instances/:id' do
-        client.deprovision(instance.guid)
-        @request.should have_been_requested
+        client.deprovision(
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        )
+
+        expect(
+          @request.with(query: { service_id: service_id, plan_id: plan_id })
+        ).to have_been_made
       end
     end
 
@@ -352,7 +415,7 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       context 'when the API returns an error code' do
-        let(:error_response) { { 'foo' => 'bar' } }
+        let(:error_response) { {'foo' => 'bar'} }
 
         before do
           stub_request(:get, broker_catalog_url).to_return(
@@ -368,7 +431,7 @@ module VCAP::CloudController::ServiceBroker::V2
             error_hash = e.to_h
             error_hash.fetch('description').should eq('The service broker API returned an error from http://broker.example.com/v2/catalog: 500 Internal Server Error')
             error_hash.fetch('types').should include('ServiceBrokerBadResponse', 'HttpResponseError')
-            error_hash.fetch('source').should include({ 'foo' => 'bar' })
+            error_hash.fetch('source').should include({'foo' => 'bar'})
           }
         end
       end
@@ -426,7 +489,7 @@ module VCAP::CloudController::ServiceBroker::V2
         it 'should raise an authentication error' do
           expect {
             client.catalog
-          }.to raise_error{ |e|
+          }.to raise_error { |e|
             expect(e).to be_a(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiAuthenticationFailed)
             error_hash = e.to_h
             error_hash.fetch('description').
@@ -437,13 +500,15 @@ module VCAP::CloudController::ServiceBroker::V2
 
       context 'when the API returns 410 to a DELETE request' do
         before do
-          @stub = stub_request(:delete, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/asdf").to_return(
-            status: [410, 'Gone']
-          )
+          @stub = stub_request(:delete, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
+            with(query: hash_including({})).
+            to_return(status: [410, 'Gone'])
         end
 
         it 'should swallow the error' do
-          expect(client.deprovision('asdf')).to be_nil
+          expect(
+            client.deprovision(instance_id: instance_id, plan_id: plan_id, service_id: service_id)
+          ).to be_nil
           @stub.should have_been_requested
         end
       end

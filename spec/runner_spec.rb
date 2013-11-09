@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe Runner do
     let(:valid_config_file_path) { File.join(fixture_path, "config/minimal_config.yml") }
-    let(:config_file_path) { valid_config_file_path }
+    let(:config_file) { File.new(valid_config_file_path) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:registrar) { Cf::Registrar.new({}) }
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
     end
 
     subject do
-      Runner.new(argv + ["-c", config_file_path]).tap do |r|
+      Runner.new(argv + ["-c", config_file.path]).tap do |r|
         r.stub(:start_thin_server)
         r.stub(:create_pidfile)
         r.stub(:registrar => registrar)
@@ -135,13 +135,13 @@ module VCAP::CloudController
         end
 
         context "when the 'paid' quota is missing from the config file" do
-          let(:config_file_path) do
+          let(:config_file) do
             config = YAML.load_file(valid_config_file_path)
             config["quota_definitions"].delete("paid")
             file = Tempfile.new("config")
             file.write(YAML.dump(config))
             file.rewind
-            file.path
+            file
           end
 
           it "raises an exception" do
@@ -152,13 +152,13 @@ module VCAP::CloudController
         end
 
         context "when the app domains include the system domain" do
-          let(:config_file_path) do
+          let(:config_file) do
             config = YAML.load_file(valid_config_file_path)
             config["app_domains"].push("the-system-domain.com")
             file = Tempfile.new("config")
             file.write(YAML.dump(config))
             file.rewind
-            file.path
+            file
           end
 
           it "creates the system domain as a shared domain" do

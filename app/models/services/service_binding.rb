@@ -16,7 +16,8 @@ module VCAP::CloudController
 
     alias_attribute :broker_provided_id, :gateway_name
 
-    delegate :client, to: :service_instance
+    delegate :client, :service, :service_plan,
+      to: :service_instance
 
     plugin :after_initialize
 
@@ -48,11 +49,6 @@ module VCAP::CloudController
 
     def space
       service_instance.space
-    end
-
-    def before_create
-      super
-      raise VCAP::Errors::UnbindableService unless service_instance.bindable?
     end
 
     def after_create

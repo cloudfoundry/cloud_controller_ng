@@ -13,7 +13,7 @@ module VCAP::CloudController
         :instances => 1)
     end
     let(:stager_id) { "my_stager" }
-    let(:blobstore_url_generator) { double.as_null_object }
+    let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
 
     let(:options) { {} }
     subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, stager_pool, blobstore_url_generator) }
@@ -53,9 +53,6 @@ module VCAP::CloudController
       EM.stub(:add_timer)
       EM.stub(:defer).and_yield
       EM.stub(:schedule_sync)
-
-      # Some other tests inter
-      Buildpack.stub(:list_admin_buildpacks).and_return([])
     end
 
     context 'when no stager can be found' do
@@ -481,30 +478,49 @@ module VCAP::CloudController
       end
 
       describe "the list of admin buildpacks" do
-        before do
-          VCAP::CloudController::Buildpack.should_receive(:list_admin_buildpacks).
-            with(blobstore_url_generator).and_return("list of admins")
-        end
+        let!(:buildpack_a) { Buildpack.make(key: "a key", position: 2) }
+        let!(:buildpack_b) { Buildpack.make(key: "b key", position: 1) }
+        let!(:buildpack_c) { Buildpack.make(key: "c key", position: 3) }
+        let!(:disabled_buildpack) { Buildpack.make(enabled: false) }
 
-        def self.it_includes_a_list_of_admin_buildpacks
-          it "includes a list of admin buildpacks" do
-            request = staging_task.staging_request
-            expect(request[:admin_buildpacks]).to eql "list of admins"
-          end
+        let(:buildpack_file_1) { Tempfile.new("admin buildpack 1") }
+        let(:buildpack_file_2) { Tempfile.new("admin buildpack 2") }
+        let(:buildpack_file_3) { Tempfile.new("admin buildpack 3") }
+
+        let(:buildpack_blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
+
+        before do
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, "a key")
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, "b key")
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_3.path, "c key")
         end
 
         context "when a specific buildpack is not requested" do
-          it_includes_a_list_of_admin_buildpacks
+          it "includes a list of admin buildpacks as hashes containing its blobstore URI and key" do
+            request = staging_task.staging_request
+
+            admin_buildpacks = request[:admin_buildpacks]
+
+            expect(admin_buildpacks).to have(3).items
+            expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
+            expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
+            expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("c key"), key: "c key")
+          end
         end
 
         context "when a specific buildpack is requested" do
           before do
-            buildpack = Buildpack.make()
-            app.buildpack = buildpack.name
+            app.buildpack = Buildpack.first.name
             app.save()
           end
 
-          it_includes_a_list_of_admin_buildpacks
+          it "includes a list of admin buildpacks so that the system doesn't think the buildpacks are gone" do
+            request = staging_task.staging_request
+
+            admin_buildpacks = request[:admin_buildpacks]
+
+            expect(admin_buildpacks).to have(3).items
+          end
         end
       end
 

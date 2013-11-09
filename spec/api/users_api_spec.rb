@@ -13,7 +13,7 @@ resource "Users", :type => :api do
   let(:guid) { VCAP::CloudController::User.first.guid }
   let(:space) { VCAP::CloudController::Space.make }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::UsersController
 
   field :default_space_guid, "The guid of the default space for apps created by this user.", required: true
 
@@ -27,15 +27,19 @@ resource "Users", :type => :api do
   field :managed_spaces_url, "The url of the spaces this user in a manager of.", required: false, readonly: true
   field :audited_spaces_url, "The url of the spaces this user in a auditor of.", required: false, readonly: true
 
-  standard_model_object :user # adds get /v2/users/ and get /v2/users/:guid
+  standard_model_list(:user)
+  standard_model_get(:user)
+  standard_model_delete(:user)
 
   put "/v2/users/:guid" do
       request_parameter :guid, "The guid for the user to alter"
 
-      let(:default_space_guid) { space.guid }
-
       example "Update a User's default space" do
-        client.put "/v2/users/#{guid}", Yajl::Encoder.encode(params), headers
+        client.put "/v2/users/#{guid}", Yajl::Encoder.encode(
+          {
+            default_space_guid: space.guid
+          }
+        ), headers
         status.should == 201
         space.guid.should_not be_nil
         standard_entity_response parsed_response, :user, :default_space_guid => space.guid

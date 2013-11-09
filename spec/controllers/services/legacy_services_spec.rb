@@ -7,25 +7,25 @@ module VCAP::CloudController
 
       describe "GET /services" do
         before do
-          core_service = Service.make(:provider => "core")
-          core_plan = ServicePlan.make(:service => core_service)
+          core_service = Service.make(provider: "core")
+          core_plan = ServicePlan.make(service: core_service)
           3.times.map do |i|
             ManagedServiceInstance.make(
-              :name => "core-#{i}",
-              :space => user.default_space,
-              :service_plan => core_plan,
+              name: "core-#{i}",
+              space: user.default_space,
+              service_plan: core_plan,
             )
           end
           2.times do |i|
             ManagedServiceInstance.make(
-              :name => "noncore-#{i}",
-              :space => user.default_space,
+              name: "noncore-#{i}",
+              space: user.default_space,
             )
           end
 
           3.times do
             space = make_space_for_user(user)
-            ManagedServiceInstance.make(:space => space)
+            ManagedServiceInstance.make(space: space)
           end
 
           get "/services", {}, headers_for(user)
@@ -44,14 +44,7 @@ module VCAP::CloudController
         end
 
         it "should return service names" do
-          names = decoded_response.map { |a| a["name"] }.sort
-          names.should == [
-            "core-0",
-            "core-1",
-            "core-2",
-            "noncore-0",
-            "noncore-1",
-          ]
+          expect(decoded_response.map { |a| a["name"] }.sort).to eq %w[core-0 core-1 core-2 noncore-0 noncore-1]
         end
       end
 

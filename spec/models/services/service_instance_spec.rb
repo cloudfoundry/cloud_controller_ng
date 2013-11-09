@@ -1,22 +1,21 @@
 require "spec_helper"
 
 describe VCAP::CloudController::ServiceInstance, type: :model do
+  let(:service_instance_attrs)  do
+    {
+      name: "my favorite service",
+      space: VCAP::CloudController::Space.make
+    }
+  end
+
+  let(:service_instance) { described_class.create(service_instance_attrs) }
+
   describe "#create" do
-    let(:service_instance_attrs)  do
-      {
-        name: "my favorite service",
-        credentials: {},
-        space: VCAP::CloudController::Space.make
-      }
-    end
-
-    let(:create_instance) { described_class.create(service_instance_attrs) }
-
     context "when the name is longer than 50 characters" do
       let(:very_long_name){ 's' * 51 }
       it "refuses to create this service instance" do
         service_instance_attrs[:name] = very_long_name
-        expect {create_instance}.to raise_error Sequel::ValidationFailed
+        expect {service_instance}.to raise_error Sequel::ValidationFailed
       end
     end
 
@@ -35,6 +34,24 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
         described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::ManagedServiceInstance
       end
     end
+  end
+
+  describe '#credentials' do
+    let(:content) { { 'foo' => 'bar' } }
+
+    it 'stores and returns a hash' do
+      service_instance.credentials = content
+      expect(service_instance.credentials).to eq(content)
+    end
+
+    it 'stores and returns a nil value' do
+      service_instance.credentials = nil
+      expect(service_instance.credentials).to eq(nil)
+    end
+  end
+
+  it_behaves_like "a model with an encrypted attribute" do
+    let(:encrypted_attr) { :credentials }
   end
 
   describe "#type" do

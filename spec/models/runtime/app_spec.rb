@@ -1,3 +1,4 @@
+# encoding: utf-8
 require "spec_helper"
 
 module VCAP::CloudController
@@ -18,6 +19,7 @@ module VCAP::CloudController
       # TODO: Remove this double after broker api calls are made asynchronous
       client = double('broker client', unbind: nil, deprovision: nil)
       Service.any_instance.stub(:client).and_return(client)
+      VCAP::CloudController::Seeds.create_seed_stacks(config)
     end
 
     it_behaves_like "a CloudController model", {
@@ -56,6 +58,18 @@ module VCAP::CloudController
         }
       }
     }
+
+    describe "#audit_hash" do
+      it "should return uncensored data unchanged" do
+        request_hash = { "key" => "value", "key2" => "value2" }
+        expect(App.audit_hash(request_hash)).to eq(request_hash)
+      end
+
+      it "should obfuscate censored data" do
+        request_hash = { "command" => "PASSWORD=foo ./start" }
+        expect(App.audit_hash(request_hash)).to eq({ "command" => "PRIVATE DATA HIDDEN" })
+      end
+    end
 
     describe ".deleted" do
       it "includes deleted apps" do
@@ -360,6 +374,27 @@ module VCAP::CloudController
         app.refresh
         app.metadata.should eq("command" => "foobar")
       end
+
+      it "saves the field as nil when initializing to empty string" do
+        app = AppFactory.make(:command => "")
+        app.metadata.should eq("command" => nil)
+      end
+
+      it "saves the field as nil when overriding to empty string" do
+        app = AppFactory.make(:command => "echo hi")
+        app.command = ""
+        app.save
+        app.refresh
+        expect(app.metadata).to eq("command" => nil)
+      end
+
+      it "saves the field as nil when set to nil" do
+        app = AppFactory.make(:command => "echo hi")
+        app.command = nil
+        app.save
+        app.refresh
+        expect(app.metadata).to eq("command" => nil)
+      end
     end
 
     describe "console" do
@@ -489,6 +524,7 @@ module VCAP::CloudController
 
       describe "name" do
         let(:space) { Space.make }
+        let(:app) { AppFactory.make }
 
         it "does not allow the same name in a different case", :skip_sqlite => true do
           AppFactory.make(:name => "lowercase", :space => space)
@@ -496,6 +532,41 @@ module VCAP::CloudController
           expect {
             AppFactory.make(:name => "lowerCase", :space => space)
           }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
+        end
+
+        it "should allow standard ascii characters" do
+          app.name = "A -_- word 2!?()\'\"&+."
+          expect{
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should allow backslash characters" do
+          app.name = "a \\ word"
+          expect{
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should allow unicode characters" do
+          app.name = "防御力¡"
+          expect{
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should not allow newline characters" do
+          app.name = "a \n word"
+          expect{
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it "should not allow escape characters" do
+          app.name = "a \e word"
+          expect{
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
         end
       end
 
@@ -839,6 +910,14 @@ module VCAP::CloudController
       end
     end
 
+    describe "saving" do
+      it "calls AppObserver.updated", non_transactional: true do
+        app = AppFactory.make
+        AppObserver.should_receive(:updated).with(app)
+        app.save(instances: app.instances + 1)
+      end
+    end
+
     describe "billing" do
       context "app state changes" do
         context "creating a stopped app" do
@@ -1042,39 +1121,93 @@ module VCAP::CloudController
       end
 
       context "app update" do
+        let(:org) { Organization.make(:quota_definition => quota) }
+        let(:space) { Space.make(:organization => org) }
+        let!(:app) { AppFactory.make(:space => space, :memory => 64, :instances => 2) }
+
         it "should raise error when quota is exceeded" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          app = AppFactory.make(:space => space,
-            :memory => 64,
-            :instances => 2)
           app.memory = 65
           expect { app.save }.to raise_error(Sequel::ValidationFailed,
             /memory quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          app = AppFactory.make(:space => space,
-            :memory => 63,
-            :instances => 2)
-          app.memory = 64
+          app.memory = 63
           expect { app.save }.to_not raise_error
         end
 
         it "can delete an app that somehow has exceeded its memory quota" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          app = AppFactory.make(:space => space,
-            :memory => 64,
-            :instances => 2)
-
           quota.memory_limit = 32
           quota.save
           app.memory = 100
           expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
           expect { app.delete }.not_to raise_error
+        end
+
+        it "allows scaling down instances of an app from above quota to below quota" do
+          org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
+          act_as_cf_admin {org.save}
+
+          app.reload
+          app.instances = 1
+
+          app.save
+
+          app.reload
+          expect(app.instances).to eq(1)
+        end
+
+        it "raises when scaling down number of instances but remaining above quota" do
+          org.quota_definition = QuotaDefinition.make(:memory_limit => 32)
+          act_as_cf_admin {org.save}
+
+          app.reload
+          app.instances = 1
+
+          expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+          app.reload
+          expect(app.instances).to eq(2)
+        end
+
+        it "allows stopping an app that is above quota" do
+          app.update(:state => "STARTED",
+            :package_hash => "abc",
+            :package_state => "STAGED",
+            :droplet_hash => "def")
+
+          org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
+          act_as_cf_admin {org.save}
+
+          app.reload
+          app.state = "STOPPED"
+
+          app.save
+
+          app.reload
+          expect(app).to be_stopped
+        end
+
+        it "allows reducing memory from above quota to at/below quota" do
+          org.quota_definition = QuotaDefinition.make(:memory_limit => 64)
+          act_as_cf_admin {org.save}
+
+          app.memory = 40
+          expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+
+          app.memory = 32
+          app.save
+          expect(app.memory).to eq(32)
+        end
+
+        it "should raise an error if instances is less than zero" do
+          org = Organization.make(:quota_definition => quota)
+          space = Space.make(:organization => org)
+          app = AppFactory.make(:space => space,
+                                :memory => 64,
+                                :instances => 1)
+
+          app.instances = -1
+          expect { app.save }.to raise_error(Sequel::ValidationFailed, /instances less_than_zero/)
         end
       end
     end
@@ -1082,243 +1215,6 @@ module VCAP::CloudController
     describe "file_descriptors" do
       subject { AppFactory.make }
       its(:file_descriptors) { should == 16_384 }
-    end
-
-    describe "changes to the app that trigger staging/dea notifications" do
-      before { pending "move to app observer/manager" }
-
-      subject { AppFactory.make :droplet_hash => nil, :package_state => "PENDING", :instances => 1, :state => "STARTED" }
-      let(:health_manager_client) { CloudController::DependencyLocator.instance.health_manager_client }
-
-      # Mark app as staged when AppObserver.stage_app is called
-      before do
-        AppObserver.stub(:stage_app) do |app, &success_callback|
-          app.droplet_hash = "droplet-hash"
-          success_callback.call(:started_instances => 1)
-          AppStagerTask::Response.new({})
-        end
-      end
-
-      def self.it_does_not_stage
-        it "does not stage app" do
-          AppObserver.should_not_receive(:stage_app)
-          expect {
-            update
-          }.to_not change { subject.last_stager_response }.from(nil)
-        end
-      end
-
-      def self.it_stages
-        it "stages" do
-          AppObserver.should_receive(:stage_app).with(subject)
-          expect {
-            update
-          }.to change { subject.last_stager_response }.from(nil)
-        end
-      end
-
-      describe "update instance count" do
-        let!(:before_update_instances) { subject.instances }
-        let!(:after_update_instances) { subject.instances+1 }
-
-        def update
-          subject.instances = after_update_instances
-          subject.save
-        end
-
-        def self.it_does_not_notify_dea
-          it "does not notify dea of app update" do
-            DeaClient.should_not_receive(:change_running_instances)
-            health_manager_client.should_not_receive(:notify_app_updated)
-            update
-          end
-        end
-
-        def self.it_notifies_dea
-          it "notifies dea of update" do
-            DeaClient.should_receive(:change_running_instances).with(subject, after_update_instances)
-            health_manager_client.should_receive(:notify_app_updated).with(subject.guid)
-            update
-          end
-        end
-
-        context "when app is stopped and already staged" do
-          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
-          it_does_not_stage
-          it_does_not_notify_dea
-        end
-
-        context "when app is already started and already staged" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
-          it_does_not_stage
-          it_notifies_dea
-        end
-
-        context "when app is stopped and not staged" do
-          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
-          it_does_not_stage
-          it_does_not_notify_dea
-        end
-
-        context "when app is already started and not staged" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING") }
-          it_stages
-          it_notifies_dea
-        end
-      end
-
-      describe "updating state to STOPPED" do
-        def update
-          subject.state = "STOPPED"
-          subject.save
-        end
-
-        def self.it_does_not_notify_dea
-          it "does not notify dea of stop or update" do
-            DeaClient.should_not_receive(:stop)
-            health_manager_client.should_not_receive(:notify_app_updated)
-            update
-          end
-        end
-
-        def self.it_notifies_dea
-          it "notifies dea of stop and update" do
-            DeaClient.should_receive(:stop).with(subject)
-            health_manager_client.should_receive(:notify_app_updated).with(subject.guid)
-            update
-          end
-        end
-
-        context "when app is stopped and already staged" do
-          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
-          it_does_not_stage
-          it_does_not_notify_dea
-        end
-
-        context "when app is already started and already staged" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
-          it_does_not_stage
-          it_notifies_dea
-        end
-
-        context "when app is stopped and not staged" do
-          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc") }
-          it_does_not_stage
-          it_does_not_notify_dea
-        end
-
-        context "when app is already started and not staged" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc") }
-          it_does_not_stage
-          it_notifies_dea
-        end
-      end
-
-      describe "updating state to STARTED" do
-        let(:instances_to_start) { 0 }
-
-        def update
-          subject.state = "STARTED"
-          subject.save
-        end
-
-        def self.it_does_not_notify_dea
-          it "does not notify dea of app update" do
-            DeaClient.should_not_receive(:start)
-            health_manager_client.should_not_receive(:notify_app_updated)
-            update
-          end
-        end
-
-        def self.it_notifies_dea
-          it "notifies dea of start and update" do
-            DeaClient.should_receive(:start).with(subject, :instances_to_start => instances_to_start)
-            health_manager_client.should_receive(:notify_app_updated).with(subject.guid)
-            update
-          end
-        end
-
-        context "when app is stopped and already staged" do
-          let(:instances_to_start) { 1 }
-
-          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
-          it_does_not_stage
-          it_notifies_dea
-        end
-
-        context "when app is already started and already staged" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def", :instances => 1) }
-          it_does_not_stage
-          it_does_not_notify_dea
-        end
-
-        context "when app is stopped and not staged" do
-          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
-          it_stages
-          it_notifies_dea
-        end
-
-        # Original change to app that moved state into STARTED staged the app and notified dea
-        context "when app is already started and not staged" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => nil, :package_state => "PENDING", :instances => 1) }
-          it_does_not_stage
-          it_does_not_notify_dea
-        end
-
-        context "when app has no bits" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => nil) }
-
-          it "raises an AppPackageInvalid exception" do
-            expect {
-              update
-            }.to raise_error(VCAP::Errors::AppPackageInvalid)
-          end
-        end
-      end
-
-      describe "app deletion" do
-        def update
-          subject.destroy(savepoint: true)
-        end
-
-        def self.it_does_not_notify_dea
-          it "does not notify dea of app update" do
-            DeaClient.should_not_receive(:stop)
-            update
-          end
-        end
-
-        def self.it_notifies_dea
-          it "notifies dea to stop" do
-            DeaClient.should_receive(:stop).with(subject)
-            update
-          end
-        end
-
-        context "when app is stopped and already staged" do
-          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc", :droplet_hash => "def") }
-          it_does_not_stage
-          it_does_not_notify_dea
-        end
-
-        context "when app is already started and already staged" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc", :droplet_hash => "def") }
-          it_does_not_stage
-          it_notifies_dea
-        end
-
-        context "when app is stopped and not staged" do
-          subject { AppFactory.make(:state => "STOPPED", :package_hash => "abc") }
-          it_does_not_stage
-          it_does_not_notify_dea
-        end
-
-        context "when app is already started and not staged" do
-          subject { AppFactory.make(:state => "STARTED", :package_hash => "abc") }
-          it_does_not_stage
-          it_notifies_dea
-        end
-      end
     end
 
     describe "soft deletion" do

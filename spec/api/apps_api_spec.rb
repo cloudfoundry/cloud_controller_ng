@@ -11,7 +11,7 @@ resource "Apps", :type => :api do
 
   let(:guid) { VCAP::CloudController::App.first.guid }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::AppsController
 
   field :name, "The name of the app.", required: true
   field :memory, "The amount of memory each instance should have. In bytes.", required: true
@@ -35,21 +35,38 @@ resource "Apps", :type => :api do
   field :production, "Deprecated.", required: false, deprecated: true, default: true, valid_values: [true, false]
   field :console, "Open the console port for the app (at $CONSOLE_PORT).", required: false, deprecated: true, default: false, valid_values: [true, false]
   field :debug, "Open the debug port for the app (at $DEBUG_PORT).", required: false, deprecated: true, default: false, valid_values: [true, false]
+  field :package_state, "The current desired state of the package. One of PENDING, STAGED or FAILED.", required: false, readonly: true, valid_values: %w[PENDING STAGED FAILED]
 
-  standard_model_object :app
+  standard_model_list :app
+  standard_model_get :app
+  standard_model_delete :app
+
+  def after_standard_model_delete(guid)
+    event = VCAP::CloudController::Event.find(:type => "audit.app.delete-request", :actee => guid)
+    audited_event event
+  end
+
+  let(:request) do
+    {
+      guid: guid,
+      buildpack: buildpack
+    }
+  end
 
   put "/v2/apps/:guid" do
     let(:buildpack) { "http://github.com/a-buildpack" }
 
     example "Set a custom buildpack URL for an Application" do
 
-      explanation <<EOD
-PUT with the buildpack attribute set to the URL of a git repository to set a custom buildpack.
-EOD
+      explanation <<-EOD
+        PUT with the buildpack attribute set to the URL of a git repository to set a custom buildpack.
+      EOD
 
-      client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(params), headers
+      client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(request), headers
       status.should == 201
       standard_entity_response parsed_response, :app, :buildpack => buildpack
+
+      audited_event VCAP::CloudController::Event.find(:type => "audit.app.update", :actee => guid)
     end
   end
 
@@ -58,14 +75,30 @@ EOD
 
     example "Set a admin buildpack for an Application (by sending the name of an existing buildpack)" do
 
-      explanation <<EOD
-When the buildpack name matches the name of an admin buildpack, an admin buildpack is used rather than a
-custom buildpack. The 'buildpack' column returns the name of the configured admin buildpack
-EOD
+      explanation <<-EOD
+        When the buildpack name matches the name of an admin buildpack, an admin buildpack is used rather
+        than a custom buildpack. The 'buildpack' column returns the name of the configured admin buildpack
+      EOD
 
-      client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(params), headers
+      client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(request), headers
       status.should == 201
       standard_entity_response parsed_response, :app, :buildpack => admin_buildpack.name
+
+      audited_event VCAP::CloudController::Event.find(:type => "audit.app.update", :actee => guid)
+    end
+  end
+
+  post "/v2/apps/" do
+    let(:space_guid) { VCAP::CloudController::Space.make.guid.to_s }
+
+    example "Creating an app" do
+      client.post "/v2/apps", Yajl::Encoder.encode(name: "my-app", space_guid: space_guid), headers
+      expect(status).to eq(201)
+
+      standard_entity_response parsed_response, :app
+
+      app_guid = parsed_response['metadata']['guid']
+      audited_event VCAP::CloudController::Event.find(:type => "audit.app.create", :actee => app_guid)
     end
   end
 end

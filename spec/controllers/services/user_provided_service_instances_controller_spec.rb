@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe UserProvidedServiceInstancesController, :services, type: :controller do
     include_examples "creating", path: "/v2/user_provided_service_instances",
                      model: UserProvidedServiceInstance,
-                     required_attributes: %w(name space_guid credentials),
+                     required_attributes: %w(name space_guid),
                      unique_attributes: %w(space_guid name)
     include_examples "collection operations", path: "/v2/user_provided_service_instances", model: UserProvidedServiceInstance,
       one_to_many_collection_ids: {
@@ -17,8 +17,7 @@ module VCAP::CloudController
         :service_bindings => lambda { |service_instance|
           make_service_binding_for_service_instance(service_instance)
         }
-      },
-      one_to_many_collection_ids_without_url: {}
+      }
 
     describe "Permissions" do
       include_context "permissions"
@@ -79,6 +78,21 @@ module VCAP::CloudController
                            :enumerate => 1
         end
       end
+    end
+
+    it "allows creation of empty credentials with a syslog drain" do
+      space = Space.make
+      json_body = Yajl::Encoder.encode({
+        name: "name",
+        space_guid: space.guid,
+        syslog_drain_url: "syslog://example.com",
+        credentials: {}
+      })
+
+      post "/v2/user_provided_service_instances", json_body.to_s, json_headers(admin_headers)
+      last_response.status.should == 201
+
+      UserProvidedServiceInstance.last.syslog_drain_url.should == "syslog://example.com"
     end
   end
 end

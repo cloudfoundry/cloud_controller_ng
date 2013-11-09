@@ -14,26 +14,32 @@ resource "Buildpacks (experimental)", :type => :api do
 
   let(:guid) { VCAP::CloudController::Buildpack.first.guid }
 
-  standard_parameters
+  standard_parameters VCAP::CloudController::BuildpacksController
 
   field :name, "The name of the buildpack. To be used by app buildpack field.", required: true
   field :position, "The order in which the buildpacks are checked during buildpack auto-detection.", required: false
+  field :enabled, "Whether or not the buildpack will be used for staging", required: false, default: true
 
-  standard_model_object :buildpack
+  standard_model_list(:buildpack)
+  standard_model_get(:buildpack)
+  standard_model_delete(:buildpack)
 
   post "/v2/buildpacks" do
     let(:name) { "A-buildpack-name" }
+    let(:request) do
+      {
+        name: name
+      }
+    end
 
     example "Creates an admin buildpack" do
-      client.post "/v2/buildpacks", Yajl::Encoder.encode(params), headers
+      client.post "/v2/buildpacks", Yajl::Encoder.encode(request), headers
       status.should == 201
       standard_entity_response parsed_response, :buildpack, :name => name
     end
   end
 
   put "/v2/buildpacks" do
-    let(:position) { 3 }
-
     example "Change the position of a buildpack" do
       first = <<-DOC
         Buildpacks are maintained in an ordered list.  If the target position is already occupied,
@@ -49,9 +55,9 @@ resource "Buildpacks (experimental)", :type => :api do
       explanation [{explanation: first}, {explanation: second}]
 
       expect {
-        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(params), headers
+        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(position: 3), headers
         status.should == 201
-        standard_entity_response parsed_response, :buildpack, position: position
+        standard_entity_response parsed_response, :buildpack, position: 3
       }.to change {
         VCAP::CloudController::Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
       }.from(
@@ -59,6 +65,24 @@ resource "Buildpacks (experimental)", :type => :api do
       ).to(
         [["name_2", 1], ["name_3", 2], ["name_1", 3]]
       )
+    end
+
+    example "Enable or disable a buildpack" do
+      expect {
+        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: false), headers
+        status.should == 201
+        standard_entity_response parsed_response, :buildpack, enabled: false
+      }.to change {
+        VCAP::CloudController::Buildpack.find(guid: guid).enabled
+      }.from(true).to(false)
+
+      expect {
+        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: true), headers
+        status.should == 201
+        standard_entity_response parsed_response, :buildpack, enabled: true
+      }.to change {
+        VCAP::CloudController::Buildpack.find(guid: guid).enabled
+      }.from(false).to(true)
     end
   end
 

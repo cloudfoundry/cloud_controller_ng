@@ -5,6 +5,8 @@ module VCAP::CloudController
   class App < Sequel::Model
     plugin :serialization
 
+    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+
     class InvalidRouteRelation < InvalidRelation
       def to_s
         "The URL was not available [route ID #{super}]"
@@ -56,7 +58,7 @@ module VCAP::CloudController
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :version, :command, :console, :debug,
-      :staging_task_id
+      :staging_task_id, :package_state
 
     import_attributes :name, :production,
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
@@ -72,14 +74,14 @@ module VCAP::CloudController
     PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
 
     AUDITABLE_FIELDS = [:encrypted_environment_json, :instances, :memory, :state, :name]
-    CENSORED_FIELDS = [:encrypted_environment_json]
+    CENSORED_FIELDS = [:encrypted_environment_json, :command, :environment_json]
 
     CENSORED_MESSAGE = "PRIVATE DATA HIDDEN".freeze
 
-    def auditable_changes
-      previous_changes.slice(*AUDITABLE_FIELDS).tap do |changes|
-        CENSORED_FIELDS.each do |censored|
-          changes[censored] = [CENSORED_MESSAGE] * 2 if changes.has_key?(censored)
+    def self.audit_hash(request_attrs)
+      request_attrs.dup.tap do |changes|
+        CENSORED_FIELDS.map(&:to_s).each do |censored|
+          changes[censored] = CENSORED_MESSAGE if changes.has_key?(censored)
         end
       end
     end
@@ -114,6 +116,7 @@ module VCAP::CloudController
       validates_presence :name
       validates_presence :space
       validates_unique [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
+      validates_format APP_NAME_REGEX, :name
 
       validate_buidpack_name_or_git_url
 
@@ -123,6 +126,7 @@ module VCAP::CloudController
       validate_environment
       validate_metadata
       check_memory_quota
+      validate_instances
     end
 
     def before_create
@@ -204,7 +208,7 @@ module VCAP::CloudController
 
     def command=(cmd)
       self.metadata ||= {}
-      self.metadata["command"] = cmd
+      self.metadata["command"] = (cmd.nil? || cmd.empty?) ? nil : cmd
     end
 
     def command
@@ -280,10 +284,8 @@ module VCAP::CloudController
     end
 
     def additional_memory_requested
-      default_instances = db_schema[:instances][:default].to_i
 
-      num_instances = instances ? instances : default_instances
-      total_requested_memory = requested_memory * num_instances
+      total_requested_memory = requested_memory * requested_instances
 
       return total_requested_memory if new?
 
@@ -293,16 +295,24 @@ module VCAP::CloudController
         raise ApplicationMissing, "Attempting to check memory quota. Should have been able to find app with guid #{guid}"
       end
       total_existing_memory = app_from_db[:memory] * app_from_db[:instances]
-      additional_memory = total_requested_memory - total_existing_memory
-      return additional_memory if additional_memory > 0
-      0
+      total_requested_memory - total_existing_memory
     end
 
     def check_memory_quota
       errors.add(:memory, :zero_or_less) unless requested_memory > 0
-
       if space && (space.organization.memory_remaining < additional_memory_requested)
-        errors.add(:memory, :quota_exceeded)
+        errors.add(:memory, :quota_exceeded) if (new? || !being_stopped?)
+      end
+    end
+
+    def requested_instances
+      default_instances = db_schema[:instances][:default].to_i
+      instances ? instances : default_instances
+    end
+
+    def validate_instances
+      if (requested_instances < 0)
+        errors.add(:instances, :less_than_zero)
       end
     end
 

@@ -21,6 +21,7 @@ module VCAP::CloudController
         :attributes => request_attrs
 
       raise InvalidRequest unless request_attrs
+      raise VCAP::Errors::UnbindableService unless service_bindable?
 
       binding = ServiceBinding.new(@request_attrs)
       validate_access(:create, binding, user, roles)
@@ -56,5 +57,11 @@ module VCAP::CloudController
         Errors::ServiceBindingInvalid.new(e.errors.full_messages)
       end
     end
+
+    def service_bindable?
+      service_instance = ServiceInstance.find(:guid => request_attrs['service_instance_guid'])
+      service_instance.bindable?
+    end
+
   end
 end

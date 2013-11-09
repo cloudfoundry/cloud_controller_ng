@@ -95,6 +95,7 @@ module VCAP::CloudController::RestController
       check_authentication(op)
       send(op, *args)
     rescue Sequel::ValidationFailed => e
+      logger.error "Validation failed: #{Hashify.exception(e)}"
       raise self.class.translate_validation_exception(e, request_attrs)
     rescue Sequel::DatabaseError => e
       raise self.class.translate_and_log_exception(logger, e)

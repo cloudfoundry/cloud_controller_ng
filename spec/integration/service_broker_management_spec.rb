@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe "Service Broker Management", :type => :integration do
+describe "Service Broker Management", type: :integration do
   def start_fake_service_broker
     fake_service_broker_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'support', 'integration', 'fake_service_broker.rb'))
     @fake_service_broker_pid = run_cmd("ruby #{fake_service_broker_path}")
@@ -58,6 +58,14 @@ describe "Service Broker Management", :type => :integration do
 
   let(:space_guid) { space.json_body.fetch("metadata").fetch("guid") }
 
+  def make_all_plans_public
+    service_plan_guids = make_get_request("/v2/service_plans", admin_headers).json_body.fetch('resources').map {|plan| plan.fetch('metadata').fetch('guid')}
+    service_plan_guids.each do |service_plan_guid|
+      update_response = make_put_request("/v2/service_plans/#{service_plan_guid}", JSON.dump(public: true), admin_headers)
+      expect(update_response.code.to_i).to eq(201)
+    end
+  end
+
   specify "Admin registers and re-registers a service broker" do
     body = JSON.dump(
       broker_url: "http://localhost:54329",
@@ -99,6 +107,11 @@ describe "Service Broker Management", :type => :integration do
     catalog_response = make_get_request('/v2/services?inline-relations-depth=1', admin_headers)
     expect(catalog_response.code.to_i).to eq(200)
 
+    ensure_service_is_correct(catalog_response)
+    ensure_plans_are_correct(catalog_response)
+  end
+
+  def ensure_service_is_correct(catalog_response)
     services = catalog_response.json_body.fetch('resources')
     service = services.first
 
@@ -106,9 +119,38 @@ describe "Service Broker Management", :type => :integration do
     expect(service_entity.fetch('label')).to eq('custom-service')
     expect(service_entity.fetch('bindable')).to eq(true)
     expect(service_entity.fetch('tags')).to match_array(['mysql', 'relational'])
+    expect(JSON.parse(service_entity.fetch('extra'))).to eq(
+      'listing' => {
+        'imageUrl' => 'http://example.com/catsaresofunny.gif',
+        'blurb' => 'A very fine service',
+      }
+    )
+  end
+
+  def ensure_plans_are_correct(catalog_response)
+    service_entity = catalog_response.json_body.fetch('resources').first.fetch('entity')
 
     plans = service_entity.fetch('service_plans')
     expect(plans.length).to eq(2)
+
+    free_plan = plans.detect {|p| p.fetch('entity').fetch('name') == 'free' }
+    free_plan_entity = free_plan.fetch('entity')
+    expect(free_plan_entity.fetch('description')).to eq('A description of the Free plan')
+    expect(JSON.parse(free_plan_entity.fetch('extra'))).to eq(
+      'cost' => 0.0,
+      'bullets' =>
+        [
+          {'content' => 'Shared MySQL server'},
+          {'content' => '100 MB storage'},
+          {'content' => '40 concurrent connections'},
+        ]
+    )
+
+
+    also_free_plan = plans.detect {|p| p.fetch('entity').fetch('name') == 'also free' }
+    also_free_plan_entity = also_free_plan.fetch('entity')
+    expect(also_free_plan_entity.fetch('description')).to eq('Two for twice the price!')
+    expect(also_free_plan_entity.fetch('extra')).to be_nil
   end
 
   describe 'removing a service broker' do
@@ -177,12 +219,14 @@ describe "Service Broker Management", :type => :integration do
         guid = broker_metadata.fetch('guid')
 
         service_plan_response = make_get_request('/v2/service_plans', admin_headers)
-        service_guid = service_plan_response.json_body.fetch('resources').first.fetch('metadata').fetch('guid')
+        service_plan_guid = service_plan_response.json_body.fetch('resources').first.fetch('metadata').fetch('guid')
+
+        make_all_plans_public
 
         # create a service instance
         body = JSON.dump(
           name: 'my-v2-service',
-          service_plan_guid: service_guid,
+          service_plan_guid: service_plan_guid,
           space_guid: space_guid
         )
         create_response = make_post_request('/v2/service_instances', body, admin_headers)
@@ -208,73 +252,97 @@ describe "Service Broker Management", :type => :integration do
     end
   end
 
-  specify "An existing service plan disappears from the catalog" do
-    # Add the broker
-    body = JSON.dump(
-      broker_url: "http://localhost:54329",
-      auth_username: "me",
-      auth_password: "supersecretshh",
-      name: "BrokerDrug",
-    )
+  describe 'updating a service broker' do
+    before  do
+      # Add the broker
+      body = JSON.dump(
+        broker_url: "http://localhost:54329",
+        auth_username: "me",
+        auth_password: "supersecretshh",
+        name: "BrokerDrug",
+      )
 
-    create_response = make_post_request('/v2/service_brokers', body, admin_headers)
-    expect(create_response.code.to_i).to eq(201)
-    broker_guid = create_response.json_body.fetch('metadata').fetch('guid')
+      create_response = make_post_request('/v2/service_brokers', body, admin_headers)
+      expect(create_response.code.to_i).to eq(201)
+      @broker_guid = create_response.json_body.fetch('metadata').fetch('guid')
 
-    # create a service instance of first plan
-    service_instance_guid = create_service_instance
+      make_all_plans_public
+    end
 
-    # verify that we have two plans
-    plans = get_plans
-    expect(plans.length).to eq(2)
+    context 'when a service plan disappears from the catalog' do
 
-    # remove the second plan from fake
-    delete_last_plan_from_broker
+      context 'when it has an existing instance' do
 
-    # update the service broker
-    update_service_broker(broker_guid)
+        specify 'the plan is no longer listed' do
+          # verify that we have two plans
+          plans = get_plans
+          expect(plans.length).to eq(2)
 
-    # verify that second plan is inactive
-    plans = get_plans
-    expect(plans.length).to eq(1)
+          # remove the second plan from fake
+          delete_last_plan_from_broker
 
-    # remove the first plan from fake
-    delete_last_plan_from_broker
+          # update the service broker
+          update_service_broker(@broker_guid)
 
-    # update the service broker
-    update_service_broker(broker_guid)
+          # verify that second plan is inactive
+          plans = get_plans
+          expect(plans.length).to eq(1)
+        end
+      end
 
-    # verify that no services are visible
-    services = get_services
-    expect(services).to be_empty
+      context 'when it has no existing instance' do
+        specify 'the plan is no longer listed' do
+          # verify that we have two plans
+          plans = get_plans
+          expect(plans.length).to eq(2)
 
-    # verify that the plan still exists in the db but is inactive
-    plans = get_plans(admin_headers)
-    expect(plans.length).to eq(1)
+          # remove the second plan from fake
+          delete_last_plan_from_broker
 
-    # delete instance
-    delete_service_instance(service_instance_guid)
+          # update the service broker
+          update_service_broker(@broker_guid)
 
-    # update the service broker
-    update_service_broker(broker_guid)
+          # verify that second plan is inactive
+          plans = get_plans
+          expect(plans.length).to eq(1)
+        end
+      end
 
-    # verify that the plan has been removed from the db
-    plans = get_plans(admin_headers)
-    expect(plans.length).to eq(0)
+      context 'when it leaves the service in the catalog with no plans' do
+        specify 'the update reports an error and the cloud controller service is not modified' do
+          # verify that we have two plans
+          plans = get_plans
+          expect(plans.length).to eq(2)
+
+          # remove both plans from fake
+          delete_last_plan_from_broker
+          delete_last_plan_from_broker
+
+          # attempt to update the service broker, expect error
+          update_response = make_put_request("/v2/service_brokers/#{@broker_guid}", {}.to_json, admin_headers)
+          expect(update_response.code.to_i).to eq(400)
+
+          # verify plans are unchanged
+          plans = get_plans
+          expect(plans.length).to eq(2)
+        end
+      end
+
+    end
   end
 
-  def service_guid
+  def service_plan_guid(index = 0)
     service_plan_response = make_get_request('/v2/service_plans', admin_headers)
     expect(service_plan_response.code.to_i).to eq(200)
 
     expect(service_plan_response.json_body.fetch('total_results')).to be > 0
-    service_plan_response.json_body.fetch('resources').first.fetch('metadata').fetch('guid')
+    service_plan_response.json_body.fetch('resources')[index].fetch('metadata').fetch('guid')
   end
 
   def create_service_instance
     body = JSON.dump(
       name: 'my-v2-service',
-      service_plan_guid: service_guid,
+      service_plan_guid: service_plan_guid,
       space_guid: space_guid
     )
     create_response = make_post_request('/v2/service_instances', body, admin_headers)

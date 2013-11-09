@@ -173,16 +173,6 @@ module VCAP::CloudController
           :credentials => {:password => "foo"}
         )
       end
-
-      context "when the service is unbindable" do
-        let(:service) { Service.make(bindable: false) }
-
-        it "raises an UnbindableService" do
-          expect {
-            ServiceBinding.make(:service_instance => service_instance)
-          }.to raise_error(Errors::UnbindableService)
-        end
-      end
     end
 
     describe "restaging" do

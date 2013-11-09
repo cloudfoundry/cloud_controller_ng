@@ -21,7 +21,6 @@ module CloudController
       end
 
       app.save
-      app.reload
     end
 
     private

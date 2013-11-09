@@ -49,7 +49,19 @@ module VCAP::CloudController
       end
 
       before do
-        http_client.stub(:provision).with(instance.guid, plan.broker_provided_id, space.organization.guid, space.guid).and_return(response)
+        http_client.stub(:provision).and_return(response)
+      end
+
+      it 'sends the correct request to the http client' do
+        client.provision(instance)
+
+        expect(http_client).to have_received(:provision).with(
+          instance_id: instance.guid,
+          plan_id: plan.broker_provided_id,
+          org_guid: space.organization.guid,
+          space_guid: space.guid,
+          service_id: plan.service.broker_provided_id,
+        )
       end
 
       it 'sets relevant attributes of the instance' do
@@ -77,7 +89,18 @@ module VCAP::CloudController
       end
 
       before do
-        http_client.stub(:bind).with(binding.guid, instance.guid).and_return(response)
+        http_client.stub(:bind).and_return(response)
+      end
+
+      it 'sends the correct request to the http client' do
+        client.bind(binding)
+
+        expect(http_client).to have_received(:bind).with(
+          binding_id: binding.guid,
+          instance_id: instance.guid,
+          service_id: instance.service.broker_provided_id,
+          plan_id: instance.service_plan.broker_provided_id,
+        )
       end
 
       it 'sets relevant attributes of the instance' do
@@ -93,24 +116,41 @@ module VCAP::CloudController
     describe '#unbind' do
       let(:binding) do
         ServiceBinding.make(
-            binding_options: {'this' => 'that'}
+          binding_options: { 'this' => 'that' }
         )
       end
 
-      it 'unbinds the service' do
-        http_client.should_receive(:unbind).with(binding.guid)
+      before do
+        http_client.stub(:unbind)
+      end
 
+      it 'unbinds the service' do
         client.unbind(binding)
+
+        expect(http_client).to have_received(:unbind).with(
+          binding_id: binding.guid,
+          instance_id: binding.service_instance.guid,
+          service_id: binding.service.broker_provided_id,
+          plan_id: binding.service_plan.broker_provided_id,
+        )
       end
     end
 
     describe '#deprovision' do
       let(:instance) { ManagedServiceInstance.make }
 
-      it 'deprovisions the service' do
-        http_client.should_receive(:deprovision).with(instance.guid)
+      before do
+        http_client.stub(:deprovision)
+      end
 
+      it 'deprovisions the service' do
         client.deprovision(instance)
+
+        expect(http_client).to have_received(:deprovision).with(
+          instance_id: instance.guid,
+          service_id: instance.service.broker_provided_id,
+          plan_id: instance.service_plan.broker_provided_id,
+        )
       end
     end
   end

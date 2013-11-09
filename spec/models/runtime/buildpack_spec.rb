@@ -24,14 +24,13 @@ module VCAP::CloudController
       let(:buildpack_file_3) { Tempfile.new("admin buildpack 3") }
 
       let(:buildpack_blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
-      let(:url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
 
       before do
         Timecop.freeze # The expiration time of the blobstore uri
         Buildpack.dataset.delete
       end
 
-      subject(:all_buildpacks) { Buildpack.list_admin_buildpacks(url_generator) }
+      subject(:all_buildpacks) { Buildpack.list_admin_buildpacks }
 
       context "with prioritized buildpacks" do
         before do
@@ -46,12 +45,9 @@ module VCAP::CloudController
         end
 
         it { should have(3).items }
-        it { should include(url: buildpack_blobstore.download_uri("a key"), key: "a key") }
-        it { should include(url: buildpack_blobstore.download_uri("b key"), key: "b key") }
-        it { should include(url: buildpack_blobstore.download_uri("c key"), key: "c key") }
 
         it "returns the list in position order" do
-          expect(all_buildpacks.map { |b| b[:key] }).to eq ["b key", "a key", "c key"]
+          expect(all_buildpacks.collect(&:key)).to eq(["b key", "a key", "c key"])
         end
 
         it "doesn't list any buildpacks with null keys" do
@@ -66,7 +62,7 @@ module VCAP::CloudController
           @another_buildpack.position = 1
           @another_buildpack.save
 
-          expect(all_buildpacks[2][:key]).to eq("a key")
+          expect(all_buildpacks[2].key).to eq("a key")
         end
 
         context "and there are buildpacks with null keys" do
@@ -100,13 +96,13 @@ module VCAP::CloudController
           buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, "a key")
           Buildpack.make(key: "a key", position: 1)
 
-          build_packs = all_buildpacks.map { |b| b[:key] }
+          build_packs = all_buildpacks.map(&:key)
           expect(build_packs[0..-3]).to eq ["a key"]
           expect(build_packs[-2..-1]).to match_array ["Java", "Ruby"]
         end
 
         it "copes if there all zeros" do
-          build_packs = all_buildpacks.map { |b| b[:key] }
+          build_packs = all_buildpacks.map(&:key)
           expect(build_packs).to match_array ["Java", "Ruby"]
         end
       end
@@ -115,7 +111,15 @@ module VCAP::CloudController
         it "should cope with no buildpacks" do
           expect(all_buildpacks).to be_empty
         end
+      end
 
+      context "when there are disabled buildpacks" do
+        let!(:enabled_buildpack) { Buildpack.make(:key => "enabled-buildpack", :enabled => true) }
+        let!(:disabled_buildpack) { Buildpack.make(:key => "disabled-buildpack", :enabled => false) }
+
+        it "includes them in the list" do
+          expect(all_buildpacks).to match_array([enabled_buildpack, disabled_buildpack])
+        end
       end
     end
 

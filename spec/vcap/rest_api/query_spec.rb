@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::RestAPI
-  describe VCAP::RestAPI::Query do
+  describe VCAP::RestAPI::Query, non_transactional: true do
     include VCAP::RestAPI
 
     let(:num_authors) { 10 }
