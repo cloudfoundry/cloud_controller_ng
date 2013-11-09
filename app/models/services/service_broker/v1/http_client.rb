@@ -56,7 +56,7 @@ module VCAP::CloudController
         request[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
         request['X-VCAP-Service-Token'] = @token
 
-        logger.debug "Sending #{req_class} to #{uri.request_uri}, BODY: #{request.body}, HEADERS: #{request.to_hash.inspect}"
+        logger.debug "Sending #{req_class} to #{uri.request_uri}, BODY: #{request.body.inspect}, HEADERS: #{request.to_hash.inspect}"
 
         response = Net::HTTP.start(uri.hostname, uri.port) do |http|
           http.open_timeout = TIMEOUT

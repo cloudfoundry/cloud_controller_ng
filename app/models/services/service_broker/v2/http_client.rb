@@ -176,7 +176,7 @@ module VCAP::CloudController
           req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.0'
           req['Accept'] = 'application/json'
 
-          logger.debug "Sending #{req_class} to #{uri}, BODY: #{req.body}, HEADERS: #{req.to_hash.inspect}"
+          logger.debug "Sending #{req_class} to #{uri}, BODY: #{req.body.inspect}, HEADERS: #{req.to_hash.inspect}"
 
           response = Net::HTTP.start(uri.hostname, uri.port) do |http|
             # TODO: make this configurable?
