@@ -472,3 +472,8 @@
   name: BuildpackInvalid
   http_code: 400
   message: "Buildpack is invalid: %s"
+
+290004:
+  name: CustomBuildpacksDisabled
+  http_code: 400
+  message: "Custom buildpacks are disabled"
