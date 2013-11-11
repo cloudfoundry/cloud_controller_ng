@@ -43,8 +43,6 @@ module VCAP::CloudController
 
         optional(:directories) => {
           optional(:tmpdir)    => String,
-          optional(:droplets)  => String,
-          optional(:staging_manifests) => String,
         },
 
         optional(:stacks_file) => String,
@@ -190,9 +188,7 @@ module VCAP::CloudController
 
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
-
         config[:directories] ||= {}
-        config[:directories][:staging_manifests] ||= File.join(config_dir, "frameworks")
         config
       end
     end
