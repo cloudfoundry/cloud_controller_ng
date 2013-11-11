@@ -78,6 +78,10 @@ module VCAP::CloudController
         return true, "App not found"
       end
 
+      if app.staging_failed?
+        return true, "App failed to stage"
+      end
+
       if is_duplicate
         return true, "Instance is duplicate"
       end

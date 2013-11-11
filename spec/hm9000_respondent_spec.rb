@@ -249,9 +249,39 @@ module VCAP::CloudController
 
             context "and the instance is not a duplicate (there is only 1 running on that index)" do
               context "and the app is in the STARTED state" do
-                it "should ignore the request" do
-                  dea_client.should_not_receive(:stop_instance)
-                  subject.process_hm9000_stop(hm9000_stop_message)
+                context "and the package has staged" do
+                  it "should ignore the request" do
+                    dea_client.should_not_receive(:stop_instance)
+                    subject.process_hm9000_stop(hm9000_stop_message)
+                  end
+                end
+
+                context "but the package is pending staging" do
+                  before do
+                    app.package_state = "PENDING"
+                    app.save
+                  end
+
+                  it "should ignore the request" do
+                    dea_client.should_not_receive(:stop_instance)
+                    subject.process_hm9000_stop(hm9000_stop_message)
+                  end
+                end
+
+                context "but the package has failed to stage" do
+                  before do
+                    app.package_state = "FAILED"
+                    app.save
+                  end
+
+                  it "should stop the index" do
+                    dea_client.should_receive(:stop_instance) do |app_guid_to_stop, guid|
+                      expect(app_guid_to_stop).to eq(app.guid)
+                      expect(guid).to eq("abc")
+                    end
+
+                    subject.process_hm9000_stop(hm9000_stop_message)
+                  end
                 end
               end
 
