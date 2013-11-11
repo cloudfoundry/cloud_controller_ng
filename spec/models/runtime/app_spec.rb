@@ -1376,7 +1376,13 @@ module VCAP::CloudController
     end
 
     describe ".configure" do
-      before { disable_custom_buildpacks }
+      # TODO: this is affecting global state and may pollute other tests.
+      #
+      # don't know a good way to test this otherwise.
+      before do
+        described_class.unstub(:custom_buildpacks_enabled?)
+        described_class.configure(false)
+      end
 
       it "sets whether custom buildpacks are enabled" do
         expect {
