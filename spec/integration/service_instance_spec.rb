@@ -53,6 +53,8 @@ describe "Service Instance Management", type: :integration do
 
   let(:syslog_drain_url) { 'syslog://example.com:514' }
 
+  let(:syslog_drain_url2) { 'syslog://example2.com:514' }
+
   specify "User creates an instance of a v2 service" do
     register_service_broker
     create_service_instance
@@ -66,6 +68,14 @@ describe "Service Instance Management", type: :integration do
     create_user_provided_service_instance
     create_application
     bind_user_provided_service_instance
+  end
+
+  specify "User updates an instance of a user-provided service" do
+    create_user_provided_service_instance
+    create_application
+    bind_user_provided_service_instance
+    update_user_provided_service_instance
+    verify_updated_service_binding
   end
 
   def counts_from_fake_service_broker
@@ -112,6 +122,11 @@ describe "Service Instance Management", type: :integration do
     expect(counts_from_fake_service_broker.fetch('bindings')).to eq(1)
   end
 
+  def verify_updated_service_binding
+    bind_response = make_get_request("/v2/user_provided_service_instances/#{@service_instance_guid}/service_bindings", authed_headers)
+    expect(bind_response.json_body.fetch('resources').first.fetch('entity').fetch('syslog_drain_url')).to eq (syslog_drain_url2)
+  end
+
   def register_service_broker
     body = JSON.dump(
       broker_url: "http://localhost:54329",
@@ -149,6 +164,16 @@ describe "Service Instance Management", type: :integration do
     create_response = make_post_request('/v2/user_provided_service_instances', body, authed_headers)
     expect(create_response.code.to_i).to eq(201)
     @service_instance_guid = create_response.json_body.fetch('metadata').fetch('guid')
+  end
+
+  def update_user_provided_service_instance
+    body = JSON.dump(
+      name: 'my-v2-user-provided-service',
+      space_guid: space_guid,
+      syslog_drain_url: syslog_drain_url2
+    )
+    create_response = make_put_request("/v2/user_provided_service_instances/#{@service_instance_guid}", body, authed_headers)
+    expect(create_response.code.to_i).to eq(201)
   end
 
   def service_plan_guid

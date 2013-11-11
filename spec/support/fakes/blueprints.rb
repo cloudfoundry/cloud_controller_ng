@@ -132,6 +132,7 @@ module VCAP::CloudController
     credentials       { Sham.service_credentials }
     service_instance  { ManagedServiceInstance.make }
     app               { AppFactory.make(:space => service_instance.space) }
+    syslog_drain_url  { nil }
   end
 
   ServiceBroker.blueprint do

@@ -12,19 +12,21 @@ module VCAP::CloudController
       super
     end
 
-    def unbind_on_gateway(_)
-    end
-
-    def bind_on_gateway(new_service_binding)
-      new_service_binding.credentials = self.credentials
-    end
-
     def tags
       []
     end
 
     def client
       ServiceBroker::UserProvided::Client.new
+    end
+
+    def after_update
+      service_bindings.each do |binding|
+        binding.update(
+          :credentials      => self.credentials,
+          :syslog_drain_url => self.syslog_drain_url
+        )
+      end
     end
   end
 end
