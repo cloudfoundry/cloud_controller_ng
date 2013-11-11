@@ -576,6 +576,14 @@ RSpec.configure do |rspec_config|
     # Is event emitter our salvation?
     #VCAP::CloudController::AppObserver.stub(:delete_droplet)
     Fog::Mock.reset
+
+    Sequel::Deprecation.output = StringIO.new
+    Sequel::Deprecation.backtrace_filter = 5
+  end
+
+  rspec_config.after :each do
+    expect(Sequel::Deprecation.output.string).to eq ''
+    Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
   end
 
   rspec_config.around :each do |example|
