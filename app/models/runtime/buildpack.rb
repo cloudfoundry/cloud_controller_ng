@@ -87,6 +87,10 @@ module VCAP::CloudController
       update(position: target_position)
     end
 
+    def custom?
+      false
+    end
+
     private
 
     def self.for_update_lower_than(target_position)

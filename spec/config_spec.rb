@@ -20,10 +20,10 @@ module VCAP::CloudController
     describe ".configure" do
       before do
         @test_config = {
-            packages: {},
-            droplets: {},
-            cc_partition: "ng",
-            bulk_api: {},
+          packages: {},
+          droplets: {},
+          cc_partition: "ng",
+          bulk_api: {},
         }
       end
 
@@ -94,6 +94,24 @@ module VCAP::CloudController
         config = @test_config.merge(trial_db: "no quota")
         ServicePlan.should_receive(:configure).with("no quota")
         Config.configure(config)
+      end
+
+      it "sets up app with whether custom buildpacks are enabled" do
+        config = @test_config.merge(disable_custom_buildpacks: true)
+
+        expect {
+          Config.configure(config)
+        }.to change {
+          App.custom_buildpacks_enabled?
+        }.to(false)
+
+        config = @test_config.merge(disable_custom_buildpacks: false)
+
+        expect {
+          Config.configure(config)
+        }.to change {
+          App.custom_buildpacks_enabled?
+        }.to(true)
       end
     end
   end
