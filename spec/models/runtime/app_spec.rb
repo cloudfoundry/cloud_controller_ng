@@ -16,11 +16,11 @@ module VCAP::CloudController
     let(:route) { Route.make(:domain => domain, :space => space) }
 
     def enable_custom_buildpacks
-      App.configure(true)
+      App.stub(:custom_buildpacks_enabled?) { true }
     end
 
     def disable_custom_buildpacks
-      App.configure(false)
+      App.stub(:custom_buildpacks_enabled?) { false }
     end
 
     before do
