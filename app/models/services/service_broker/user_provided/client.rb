@@ -5,6 +5,7 @@ module VCAP::CloudController
 
     def bind(binding)
       binding.credentials = binding.service_instance.credentials
+      binding.syslog_drain_url = binding.service_instance.syslog_drain_url
     end
 
     def unbind(_)

@@ -110,6 +110,7 @@ module VCAP::CloudController
   UserProvidedServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
+    syslog_drain_url  { Sham.url }
     space             { Space.make }
     is_gateway_service { false }
   end

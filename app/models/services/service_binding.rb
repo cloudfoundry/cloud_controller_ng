@@ -9,10 +9,10 @@ module VCAP::CloudController
     default_order_by  :id
 
     export_attributes :app_guid, :service_instance_guid, :credentials,
-                      :binding_options, :gateway_data, :gateway_name
+                      :binding_options, :gateway_data, :gateway_name, :syslog_drain_url
 
     import_attributes :app_guid, :service_instance_guid, :credentials,
-                      :binding_options, :gateway_data
+                      :binding_options, :gateway_data, :syslog_drain_url
 
     alias_attribute :broker_provided_id, :gateway_name
 

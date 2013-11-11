@@ -24,6 +24,7 @@ module VCAP::CloudController
         client.bind(binding)
 
         expect(binding.credentials).to eq(instance.credentials)
+        expect(binding.syslog_drain_url).to eq(instance.syslog_drain_url)
       end
     end
 
