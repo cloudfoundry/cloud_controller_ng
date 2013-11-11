@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class GitBasedBuildpack < Struct.new(:url)
-
     def to_s
       url
     end
@@ -26,6 +25,10 @@ module VCAP::CloudController
         buildpack: url,
         buildpack_git_url: url
       }
+    end
+
+    def custom?
+      true
     end
   end
 end

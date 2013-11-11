@@ -89,8 +89,7 @@ module VCAP::CloudController
           message_bus,
           app,
           stager_pool,
-          instance_of(CloudController::BlobstoreUrlGenerator)
-
+          instance_of(CloudController::BlobstoreUrlGenerator),
         ).and_return(stager_task)
 
         stager_task.stub(:stage) do |&callback|
@@ -106,6 +105,19 @@ module VCAP::CloudController
       end
 
       shared_examples_for(:stages_if_needed) do
+        def self.it_stages
+          it "initiates a staging task and waits for a response" do
+            stager_task.should_receive(:stage) do |&callback|
+              callback.call(started_instances: 1)
+              "stager response"
+            end
+
+            app.should_receive(:last_stager_response=).with("stager response")
+
+            subject
+          end
+        end
+
         context "when the app needs staging" do
           let(:needs_staging) { true }
 
@@ -131,17 +143,47 @@ module VCAP::CloudController
 
           context "when the app package is valid" do
             let(:package_hash) { 'abc' }
-            let(:started_instances) { 1 }
 
-            it "should make a task and stage it" do
-              stager_task.should_receive(:stage) do |&callback|
-                callback.call(:started_instances => started_instances)
-                "stager response"
+            it_stages
+          end
+
+          context "when custom buildpacks are disabled" do
+            context "and the app has a custom buildpack" do
+              before do
+                app.buildpack = "git://example.com/foo/bar.git"
+                app.save
+
+                App.stub(:custom_buildpacks_enabled?) { false }
               end
 
-              app.should_receive(:last_stager_response=).with("stager response")
+              it "raises" do
+                expect {
+                  subject
+                }.to raise_error(Errors::CustomBuildpacksDisabled)
+              end
+            end
 
-              subject
+            context "and the app has an admin buildpack" do
+              before do
+                buildpack = Buildpack.make name: "some-admin-buildpack"
+                app.buildpack = "some-admin-buildpack"
+                app.save
+
+                App.stub(:custom_buildpacks_enabled?) { false }
+              end
+
+              it_stages
+            end
+
+            context "and the app has no buildpack configured" do
+              before do
+                app.buildpack = nil
+                app.save
+
+                App.stub(:custom_buildpacks_enabled?) { false }
+              end
+
+              it_stages
             end
           end
         end

@@ -27,5 +27,9 @@ module VCAP::CloudController
     def nil_object?
       true
     end
+
+    def custom?
+      false
+    end
   end
 end

@@ -124,7 +124,9 @@ module VCAP::CloudController
         optional(:varz_port) => Integer,
         optional(:varz_user) => String,
         optional(:varz_password) => String,
-        optional(:varz_update_user_count_period_in_seconds) => Float
+        optional(:varz_update_user_count_period_in_seconds) => Float,
+
+        optional(:disable_custom_buildpacks) => bool,
       }
     end
 
@@ -148,6 +150,7 @@ module VCAP::CloudController
         QuotaDefinition.configure(config)
         Stack.configure(config[:stacks_file])
         ServicePlan.configure(config[:trial_db])
+        App.configure(!config[:disable_custom_buildpacks])
 
         run_initializers(config)
       end

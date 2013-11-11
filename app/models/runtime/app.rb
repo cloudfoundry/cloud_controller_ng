@@ -22,6 +22,16 @@ module VCAP::CloudController
     class ApplicationMissing < RuntimeError
     end
 
+    class << self
+      def configure(custom_buildpacks_enabled)
+        @custom_buildpacks_enabled = custom_buildpacks_enabled
+      end
+
+      def custom_buildpacks_enabled?
+        @custom_buildpacks_enabled
+      end
+    end
+
     dataset_module do
       def existing
         filter(not_deleted: true)
@@ -103,12 +113,21 @@ module VCAP::CloudController
 
     alias :kill_after_multiple_restarts? :kill_after_multiple_restarts
 
-    def validate_buidpack_name_or_git_url
+    def validate_buildpack_name_or_git_url
       bp = buildpack
+
       unless bp.valid?
         bp.errors.each do |err|
           errors.add(:buildpack, err)
         end
+      end
+    end
+
+    def validate_buildpack_is_not_custom
+      return unless column_changed?(:buildpack)
+
+      if buildpack.custom?
+        errors.add(:buildpack, "custom buildpacks are disabled")
       end
     end
 
@@ -118,7 +137,8 @@ module VCAP::CloudController
       validates_unique [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
       validates_format APP_NAME_REGEX, :name
 
-      validate_buidpack_name_or_git_url
+      validate_buildpack_name_or_git_url
+      validate_buildpack_is_not_custom unless self.class.custom_buildpacks_enabled?
 
       validates_includes PACKAGE_STATES, :package_state, :allow_missing => true
       validates_includes APP_STATES, :state, :allow_missing => true
