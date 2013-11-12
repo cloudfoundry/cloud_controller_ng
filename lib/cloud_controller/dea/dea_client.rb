@@ -285,7 +285,7 @@ module VCAP::CloudController
           :console => app.console,
           :debug => app.debug,
           :start_command => app.command,
-          :maximum_health_check_timeout => app.healthcheck_timeout,
+          :health_check_timeout => app.health_check_timeout,
         }
       end
 

@@ -49,7 +49,7 @@ module VCAP::CloudController
         res[:env].should be_kind_of(Array)
         res[:console].should == false
         res[:start_command].should be_nil
-        res[:maximum_health_check_timeout].should be_nil
+        res[:health_check_timeout].should be_nil
       end
 
       context "with an app enabled for console support" do
@@ -78,9 +78,9 @@ module VCAP::CloudController
       
       context "with an app enabled for custom health check timeout value" do
         it "should enable health check timeout in the start message" do
-          app.update(:healthcheck_timeout => 82)
+          app.update(:health_check_timeout => 82)
           res = DeaClient.start_app_message(app)
-          res[:maximum_health_check_timeout].should == 82
+          res[:health_check_timeout].should == 82
         end
       end
     end
