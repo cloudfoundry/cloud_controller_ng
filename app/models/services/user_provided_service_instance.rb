@@ -27,6 +27,7 @@ module VCAP::CloudController
           :syslog_drain_url => self.syslog_drain_url
         )
       end
+      super
     end
   end
 end
