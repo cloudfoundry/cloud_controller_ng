@@ -23,7 +23,7 @@ gem "allowy"
 gem "loggregator_emitter", "~> 2.0"
 # Point to our clone, pending a pull request merged to the original author
 gem "talentbox-delayed_job_sequel", git: "https://github.com/TalentBox/delayed_job_sequel", ref: "8725e1ee"
-
+gem "thin", "~> 1.5.1"
 
 group :db do
   gem "mysql2"
