@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
 
       def catalog
-        execute(:get, '/v2/catalog')
+        get('/v2/catalog')
       end
 
       # The broker is expected to guarantee uniqueness of instance_id.
@@ -101,7 +101,7 @@ module VCAP::CloudController
         org_guid = params.fetch(:org_guid)
         space_guid = params.fetch(:space_guid)
 
-        execute(:put, "/v2/service_instances/#{instance_id}", {
+        put("/v2/service_instances/#{instance_id}", {
           service_id: service_id,
           plan_id: plan_id,
           organization_guid: org_guid,
@@ -115,7 +115,7 @@ module VCAP::CloudController
         plan_id = params.fetch(:plan_id)
         service_id = params.fetch(:service_id)
 
-        execute(:put, "/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
+        put("/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
           plan_id: plan_id,
           service_id: service_id,
         })
@@ -127,7 +127,7 @@ module VCAP::CloudController
         plan_id = params.fetch(:plan_id)
         service_id = params.fetch(:service_id)
 
-        execute(:delete, "/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
+        delete("/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
           plan_id: plan_id,
           service_id: service_id,
         })
@@ -138,7 +138,7 @@ module VCAP::CloudController
         plan_id = params.fetch(:plan_id)
         service_id = params.fetch(:service_id)
 
-        execute(:delete, "/v2/service_instances/#{instance_id}", {
+        delete("/v2/service_instances/#{instance_id}", {
           plan_id: plan_id,
           service_id: service_id,
         })
@@ -148,22 +148,23 @@ module VCAP::CloudController
 
       attr_reader :url, :auth_username, :auth_password, :broker_client_timeout
 
-      # hits the endpoint, json decodes the response
-      def execute(method, path, message=nil)
-        endpoint = url + path
-        uri = URI(endpoint)
+      def get(path)
+        uri = URI( url + path )
+        response = make_request(:get, uri, nil)
+        parse_response(:get, uri, response)
+      end
 
-        case method
-          when :put
-            response = make_request(method, uri, message.to_json)
-          when :get, :delete
-            uri.query = message.to_query if message
-            response = make_request(method, uri, nil)
-          else
-            raise ArgumentError.new("Don't know how to handle method: #{method.inspect}")
-        end
+      def put(path, message)
+        uri = URI( url + path )
+        response = make_request(:put, uri, message.to_json)
+        parse_response(:put, uri, response)
+      end
 
-        parse_response(method, uri, response)
+      def delete(path, message)
+        uri = URI( url + path )
+        uri.query = message.to_query
+        response = make_request(:delete, uri, nil)
+        parse_response(:delete, uri, response)
       end
 
       def make_request(method, uri, body)
@@ -180,7 +181,6 @@ module VCAP::CloudController
           logger.debug "Sending #{req_class} to #{uri}, BODY: #{req.body.inspect}, HEADERS: #{req.to_hash.inspect}"
 
           response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-            # TODO: make this configurable?
             http.open_timeout = broker_client_timeout
             http.read_timeout = broker_client_timeout
 
