@@ -1,4 +1,3 @@
-require "vcap/stager/client"
 require "cloud_controller/multi_response_message_bus_request"
 require "models/runtime/droplet_uploader"
 

@@ -1,4 +1,3 @@
-require "vcap/stager/client"
 require "cloud_controller/nats_messages/stager_advertisment"
 
 module VCAP::CloudController

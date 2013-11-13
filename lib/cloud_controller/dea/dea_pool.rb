@@ -1,4 +1,3 @@
-require "vcap/stager/client"
 require "cloud_controller/nats_messages/dea_advertisment"
 require "cloud_controller/dea/eligible_dea_advertisement_filter"
 

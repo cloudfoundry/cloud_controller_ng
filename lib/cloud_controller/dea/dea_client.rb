@@ -1,4 +1,3 @@
-require "vcap/stager/client"
 require "vcap/errors"
 
 module VCAP::CloudController
