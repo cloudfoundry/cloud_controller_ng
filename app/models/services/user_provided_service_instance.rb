@@ -20,12 +20,14 @@ module VCAP::CloudController
       ServiceBroker::UserProvided::Client.new
     end
 
-    def after_update
-      service_bindings.each do |binding|
-        binding.update(
-          :credentials      => self.credentials,
-          :syslog_drain_url => self.syslog_drain_url
-        )
+    def before_update
+      if column_changed?(:credentials) or column_changed?(:syslog_drain_url)
+        service_bindings.each do |binding|
+          binding.update(
+            :credentials      => self.credentials,
+            :syslog_drain_url => self.syslog_drain_url
+          )
+        end
       end
       super
     end
