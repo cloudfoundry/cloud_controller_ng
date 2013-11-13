@@ -85,6 +85,7 @@ module VCAP::CloudController
         @url = attrs.fetch(:url)
         @auth_username = attrs.fetch(:auth_username)
         @auth_password = attrs.fetch(:auth_password)
+        @broker_client_timeout = VCAP::CloudController::Config.config[:broker_client_timeout_seconds] || 60
       end
 
       def catalog
@@ -145,7 +146,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :url, :auth_username, :auth_password
+      attr_reader :url, :auth_username, :auth_password, :broker_client_timeout
 
       # hits the endpoint, json decodes the response
       def execute(method, path, message=nil)
@@ -180,8 +181,8 @@ module VCAP::CloudController
 
           response = Net::HTTP.start(uri.hostname, uri.port) do |http|
             # TODO: make this configurable?
-            http.open_timeout = 60
-            http.read_timeout = 60
+            http.open_timeout = broker_client_timeout
+            http.read_timeout = broker_client_timeout
 
             http.request(req)
           end

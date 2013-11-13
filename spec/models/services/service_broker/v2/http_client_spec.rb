@@ -197,6 +197,58 @@ module VCAP::CloudController::ServiceBroker::V2
       end
     end
 
+    describe 'http client timeout' do
+      let(:http) { double('http', request: response) }
+      let(:response) { double(:response, code: 200, body: {}.to_json, to_hash: {}) }
+      let(:provision_request) do
+        {
+          instance_id: instance_id,
+          plan_id:     plan_id,
+          service_id:  service_id,
+          org_guid:    "org-guid",
+          space_guid:  "space-guid"
+        }
+      end
+
+      def expect_timeout_to_be(timeout)
+        expect(http).to receive(:open_timeout=).with(timeout)
+        expect(http).to receive(:read_timeout=).with(timeout)
+      end
+
+      before do
+        allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+        allow(Net::HTTP).to receive(:start).and_yield(http)
+      end
+
+      context 'when the broker client timeout is set' do
+        let(:config) { {broker_client_timeout_seconds: 100} }
+
+        it 'sets HTTP timeouts on catalog requests' do
+          expect_timeout_to_be 100
+          client.catalog
+        end
+
+        it 'sets HTTP timeouts on provisions' do
+          expect_timeout_to_be 100
+          client.provision(provision_request)
+        end
+      end
+
+      context 'when the broker timeout is not set' do
+        let(:config) { {missing_broker_client_timeout: nil} }
+
+        it 'defaults to 60 seconds on catalog requests' do
+          expect_timeout_to_be 60
+          client.catalog
+        end
+
+        it 'sets HTTP timeouts on provisions' do
+          expect_timeout_to_be 60
+          client.provision(provision_request)
+        end
+      end
+    end
+
     describe '#catalog' do
       let(:service_id) { Sham.guid }
       let(:service_name) { Sham.name }
