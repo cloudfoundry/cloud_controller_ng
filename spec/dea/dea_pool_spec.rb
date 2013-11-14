@@ -3,6 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::DeaPool do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
+    let(:available_instances) { 1 }
     subject { DeaPool.new(message_bus) }
 
     describe "#register_subscriptions" do
@@ -11,6 +12,7 @@ module VCAP::CloudController
           "id" => "dea-id",
           "stacks" => ["stack"],
           "available_memory" => 1024,
+          "available_instances" => available_instances,
           "app_id_to_count" => {}
         }
       end
@@ -24,10 +26,21 @@ module VCAP::CloudController
         }
       end
 
-      it "finds advertised dea" do
-        subject.register_subscriptions
-        message_bus.publish("dea.advertise", dea_advertise_msg)
-        subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should == "dea-id"
+      context "when there is no available instances" do
+        let(:available_instances) { 0 }
+        it "finds no advertised dea because of lack of available instance" do
+          subject.register_subscriptions
+          message_bus.publish("dea.advertise", dea_advertise_msg)
+          subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should be_nil
+        end
+      end
+
+      context "when there is available instances, sufficient memory and stack" do
+        it "finds advertised dea" do
+          subject.register_subscriptions
+          message_bus.publish("dea.advertise", dea_advertise_msg)
+          subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should == "dea-id"
+        end
       end
 
       it "clears advertisements of DEAs being shut down" do
@@ -46,6 +59,7 @@ module VCAP::CloudController
           "stacks" => ["stack"],
           "available_memory" => 1024,
           "available_disk" => available_disk,
+          "available_instances" => available_instances,
           "app_id_to_count" => {
             "other-app-id" => 1
           }
@@ -223,6 +237,24 @@ module VCAP::CloudController
 
         context "when the disk capacity is available" do
           let(:available_disk) { 50 }
+          it "finds the DEA" do
+            subject.process_advertise_message(dea_advertise_msg)
+            subject.find_dea(mem: 1024, disk: 10, stack: "stack", app_id: "app-id").should == "dea-id"
+          end
+        end
+      end
+
+      describe "instances capacity" do
+        context "when the instance capacity is not available" do
+          let(:available_instances) { 0 }
+          it "it doesn't find any deas" do
+            subject.process_advertise_message(dea_advertise_msg)
+            subject.find_dea(mem: 1024, disk: 10, stack: "stack", app_id: "app-id").should be_nil
+          end
+        end
+
+        context "when the instance capacity is available" do
+          let(:available_instances) { 1 }
           it "finds the DEA" do
             subject.process_advertise_message(dea_advertise_msg)
             subject.find_dea(mem: 1024, disk: 10, stack: "stack", app_id: "app-id").should == "dea-id"

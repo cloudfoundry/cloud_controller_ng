@@ -2,12 +2,14 @@ require "spec_helper"
 require "cloud_controller/nats_messages/dea_advertisment"
 
 describe DeaAdvertisement do
+  let(:available_instances) { 1 }
   let(:message) do
     {
       "id" => "staging-id",
       "stacks" => ["stack-name"],
       "available_memory" => 1024,
       "available_disk" => 756,
+      "available_instances" => available_instances,
       "app_id_to_count" => {
         "app_id" => 2,
         "app_id_2" => 1
@@ -31,6 +33,10 @@ describe DeaAdvertisement do
 
   describe "#available_disk" do
     its(:available_disk) { should eq 756 }
+  end
+
+  describe "#available_instances" do
+    its(:available_instances) { should eq 1 }
   end
 
   describe "#expired?" do
@@ -64,12 +70,28 @@ describe DeaAdvertisement do
 
       context "and it has the stack" do
         let(:stack) { "stack-name" }
-        it { expect(ad.meets_needs?(mem, stack)).to be_true }
+        context "and it has the available instances" do
+          it { expect(ad.meets_needs?(mem, stack)).to be_true }
+        end
+
+        context "but it does not have the necessary number of available instances" do
+          let(:available_instances) { 0 }
+          it "return false" do
+            expect(ad.meets_needs?(mem, stack)).to be_false
+          end
+        end
       end
 
       context "and it does not have the stack" do
         let(:stack) { "not-a-stack-name" }
-        it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        context "and it has the available instances" do
+          it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        end
+
+        context "and it does not have the necessary number of available instances" do
+          let(:available_instances) { 0 }
+          it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        end
       end
     end
 
@@ -78,12 +100,26 @@ describe DeaAdvertisement do
 
       context "and it has the stack" do
         let(:stack) { "stack-name" }
-        it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        context "and it has the available instances" do
+          it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        end
+
+        context "and it does not have the necessary number of available instances" do
+          let(:available_instances) { 0 }
+          it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        end
       end
 
       context "and it does not have the stack" do
         let(:stack) { "not-a-stack-name" }
-        it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        context "and it has the available instances" do
+          it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        end
+
+        context "and it does not have the necessary number of available instances" do
+          let(:available_instances) { 0 }
+          it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        end
       end
     end
   end
@@ -120,6 +156,29 @@ describe DeaAdvertisement do
 
       it "always returns true" do
         expect(ad.has_sufficient_disk?(4096 * 10)).to be_true
+      end
+    end
+  end
+
+  describe "#has_sufficient_instances?" do
+    context "when the dea does not have enough instances" do
+      let(:available_instances) { 0 }
+      it "returns false" do
+        expect(ad.has_sufficient_instances?).to be_false
+      end
+    end
+
+    context "when the dea does have enough instances" do
+      it "returns true" do
+        expect(ad.has_sufficient_instances?).to be_true
+      end
+    end
+
+    context "when the dea does not report available instance" do
+      before { message.delete "available_instances" }
+
+      it "always returns true" do
+        expect(ad.has_sufficient_instances?).to be_true
       end
     end
   end

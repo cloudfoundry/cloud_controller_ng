@@ -16,12 +16,20 @@ class Advertisement
     stats["available_disk"]
   end
 
+  def available_instances
+   stats["available_instances"]
+  end
+
+  def available_instances
+    stats["available_instances"]
+  end
+
   def expired?
     (Time.now.to_i - @updated_at.to_i) > ADVERTISEMENT_EXPIRATION
   end
 
   def meets_needs?(mem, stack)
-    has_sufficient_memory?(mem) && has_stack?(stack)
+    has_sufficient_memory?(mem) && has_stack?(stack) && has_sufficient_instances?
   end
 
   def has_stack?(stack)
@@ -35,5 +43,10 @@ class Advertisement
   def has_sufficient_disk?(disk)
     return true unless available_disk
     available_disk >= disk
+  end
+
+  def has_sufficient_instances?
+    return true unless available_instances
+    available_instances >= 1
   end
 end

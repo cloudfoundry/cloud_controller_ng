@@ -2,11 +2,13 @@ require "spec_helper"
 require "cloud_controller/nats_messages/stager_advertisment"
 
 describe StagerAdvertisement do
+  let(:available_instances) { 1 }
   let(:message) do
     {
       "id" => "staging-id",
       "stacks" => ["stack-name"],
       "available_memory" => 1024,
+      "available_instances" => available_instances,
     }
   end
 
@@ -89,6 +91,29 @@ describe StagerAdvertisement do
     context "when the stager has enough memory" do
       it "returns false" do
         expect(ad.has_sufficient_memory?(512)).to be_true
+      end
+    end
+  end
+
+  describe "#has_sufficient_instances?" do
+    context "when the dea does not have enough instances" do
+      let(:available_instances) { 0 }
+      it "returns false" do
+        expect(ad.has_sufficient_instances?).to be_false
+      end
+    end
+
+    context "when the dea does have enough instances" do
+      it "returns true" do
+        expect(ad.has_sufficient_instances?).to be_true
+      end
+    end
+
+    context "when the dea does not report available instance" do
+      before { message.delete "available_instances" }
+
+      it "always returns true" do
+        expect(ad.has_sufficient_instances?).to be_true
       end
     end
   end
