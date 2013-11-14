@@ -4,12 +4,12 @@ module VCAP::CloudController
   describe VCAP::CloudController::QuotaDefinitionsController, type: :controller do
     include_examples "uaa authenticated api", path: "/v2/quota_definitions"
     include_examples "enumerating objects", path: "/v2/quota_definitions", model: QuotaDefinition
-    include_examples "reading a valid object", path: "/v2/quota_definitions", model: QuotaDefinition, basic_attributes: %w(name non_basic_services_allowed total_services memory_limit trial_db_allowed)
+    include_examples "reading a valid object", path: "/v2/quota_definitions", model: QuotaDefinition, basic_attributes: %w(name non_basic_services_allowed total_routes total_services memory_limit trial_db_allowed)
     include_examples "operations on an invalid object", path: "/v2/quota_definitions"
-    include_examples "creating and updating", path: "/v2/quota_definitions", model: QuotaDefinition, required_attributes: %w(name non_basic_services_allowed total_services memory_limit), unique_attributes: %w(name)
+    include_examples "creating and updating", path: "/v2/quota_definitions", model: QuotaDefinition, required_attributes: %w(name non_basic_services_allowed total_routes total_services memory_limit), unique_attributes: %w(name)
     include_examples "deleting a valid object", path: "/v2/quota_definitions", model: QuotaDefinition, one_to_many_collection_ids: {},
       one_to_many_collection_ids: {
-        :organizations => lambda { |quota_definition|
+        organizations: lambda { |quota_definition|
           Organization.make(:quota_definition => quota_definition)
         }
       }
@@ -23,14 +23,15 @@ module VCAP::CloudController
   end
 
   describe "permissions" do
-    let(:quota_attributes) {
+    let(:quota_attributes) do
       {
-        :name => quota_name,
-        :non_basic_services_allowed => false,
-        :total_services => 1,
-        :memory_limit => 1024
+        name: quota_name,
+        non_basic_services_allowed: false,
+        total_services: 1,
+        total_routes: 10,
+        memory_limit: 1024
       }
-    }
+    end
     let(:existing_quota) { VCAP::CloudController::QuotaDefinition.make }
 
     context "when the user is a cf admin" do

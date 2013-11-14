@@ -132,6 +132,50 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe "total allowed routes" do
+        let(:space) { Space.make }
+        let(:quota_definition) { space.organization.quota_definition }
+
+        subject(:route) { Route.new(space: space) }
+
+        context "on create" do
+          context "when there is less than the total allowed routes" do
+            before do
+              quota_definition.total_routes = 10
+              quota_definition.save
+            end
+
+            it "has the error on base" do
+              subject.valid?
+              expect(subject.errors.on(:base)).to be_nil
+            end
+          end
+
+          context "when there is more than the total allowed routes" do
+            before do
+              quota_definition.total_routes = 0
+              quota_definition.save
+            end
+
+            it "has the error on base" do
+              subject.valid?
+              expect(subject.errors.on(:base)).to include :total_routes_exceeded
+            end
+          end
+        end
+
+        context "on update" do
+          it "should not validate the total routes limit if already existing" do
+            expect {
+              quota_definition.total_routes = 0
+              quota_definition.save
+            }.not_to change {
+              subject.valid?
+            }
+          end
+        end
+      end
     end
 
     describe "instance methods" do

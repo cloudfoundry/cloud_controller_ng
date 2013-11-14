@@ -9,26 +9,26 @@ module VCAP::CloudController
     many_to_one :space
 
     many_to_many :apps,
-                 :before_add => :validate_app,
-                 :after_add => :mark_app_routes_changed,
-                 :after_remove => :mark_app_routes_changed
+      before_add: :validate_app,
+      after_add: :mark_app_routes_changed,
+      after_remove: :mark_app_routes_changed
 
-    add_association_dependencies :apps => :nullify
+    add_association_dependencies apps: :nullify
 
     export_attributes :host, :domain_guid, :space_guid
     import_attributes :host, :domain_guid, :space_guid, :app_guids
 
     def fqdn
-      !host.empty? ? "#{host}.#{domain.name}" : domain.name
+      host.empty? ? domain.name : "#{host}.#{domain.name}"
     end
 
     def as_summary_json
       {
-        :guid => guid,
-        :host => host,
-        :domain => {
-          :guid => domain.guid,
-          :name => domain.name
+        guid: guid,
+        host: host,
+        domain: {
+          guid: domain.guid,
+          name: domain.name
         }
       }
     end
@@ -46,15 +46,8 @@ module VCAP::CloudController
       validates_format   /^([\w\-]+)$/, :host if (host && !host.empty?)
       validates_unique   [:host, :domain_id]
 
-      if domain
-        unless domain.wildcard
-          errors.add(:host, :host_not_empty) unless (host.nil? || host.empty?)
-        end
-
-        if space && space.domains_dataset.filter(:id => domain.id).count < 1
-          errors.add(:domain, :invalid_relation)
-        end
-      end
+      validate_domain
+      validate_total_routes
     end
 
     def validate_app(app)
@@ -70,17 +63,17 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      orgs = Organization.filter(Sequel.or({
-        :managers => [user],
-        :auditors => [user],
-      }))
+      orgs = Organization.filter(Sequel.or(
+        managers: [user],
+        auditors: [user],
+      ))
 
-      spaces = Space.filter(Sequel.or({
-        :developers => [user],
-        :auditors => [user],
-        :managers => [user],
-        :organization => orgs,
-      }))
+      spaces = Space.filter(Sequel.or(
+        developers: [user],
+        auditors: [user],
+        managers: [user],
+        organization: orgs,
+      ))
 
       {:space => spaces}
     end
@@ -100,6 +93,28 @@ module VCAP::CloudController
       app.routes_changed = true
       if app.dea_update_pending?
         VCAP::CloudController::DeaClient.update_uris(app)
+      end
+    end
+
+    def validate_domain
+      return unless domain
+
+      if !domain.wildcard && host && host.present?
+        errors.add(:host, :host_not_empty)
+      end
+
+      if space && space.domains_dataset.filter(id: domain.id).count < 1
+        errors.add(:domain, :invalid_relation)
+      end
+    end
+
+    def validate_total_routes
+      return unless new? && space
+      organization = space.organization
+      existing_total_routes = Route.dataset.join(:spaces, id: :space_id).where(spaces__organization_id: organization.id).count
+
+      if (existing_total_routes + 1) > organization.quota_definition.total_routes
+        errors.add(:base, :total_routes_exceeded)
       end
     end
   end

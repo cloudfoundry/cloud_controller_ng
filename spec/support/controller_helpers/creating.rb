@@ -87,67 +87,67 @@ module ControllerHelpers
             metadata["updated_at"].should be_nil
           end
         end
-        end
+      end
 
-        #
-        # Test each of the required attributes
-        #
-        req_attrs = opts[:required_attributes]
-        req_attrs.each do |without_attr|
-          context "without the :#{without_attr.to_s} attribute" do
-            define_method(:filtered_opts) do
-              @filtered_opts ||= begin
-                creation_opts.select do |k, _|
-                  k != without_attr.to_s and k != "#{without_attr}_id"
-                end
+      #
+      # Test each of the required attributes
+      #
+      req_attrs = opts[:required_attributes]
+      req_attrs.each do |without_attr|
+        context "without the :#{without_attr.to_s} attribute" do
+          define_method(:filtered_opts) do
+            @filtered_opts ||= begin
+              creation_opts.select do |k, _|
+                k != without_attr.to_s and k != "#{without_attr}_id"
               end
             end
-
-            @expected_status = nil
-
-            before do
-              post opts[:path], Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
-            end
-
-            it "should return a 400" do
-              last_response.status.should == 400
-            end
-
-            it "should not return a location header" do
-              last_response.location.should be_nil
-            end
-
-            it "should return the request guid in the header" do
-              last_response.headers["X-VCAP-Request-ID"].should_not be_nil
-            end
-
-            it_behaves_like "a vcap rest error response", /invalid/
           end
+
+          @expected_status = nil
+
+          before do
+            post opts[:path], Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
+          end
+
+          it "should return a 400" do
+            last_response.status.should == 400
+          end
+
+          it "should not return a location header" do
+            last_response.location.should be_nil
+          end
+
+          it "should return the request guid in the header" do
+            last_response.headers["X-VCAP-Request-ID"].should_not be_nil
+          end
+
+          it_behaves_like "a vcap rest error response", /invalid/
         end
+      end
 
-        #
-        # make sure we get failures if all of the unique attributes are the
-        # same
-        #
-        dup_attrs = opts[:unique_attributes].dup
-        unless dup_attrs.empty?
-          desc = dup_attrs.map { |v| ":#{v}" }.join(", ")
-          desc = "[#{desc}]" if opts[:unique_attributes].length > 1
-          context "with duplicate #{desc}" do
-            before do
-              obj = opts[:model].make creation_opts
-              obj.should be_valid
+      #
+      # make sure we get failures if all of the unique attributes are the
+      # same
+      #
+      dup_attrs = opts[:unique_attributes].dup
+      unless dup_attrs.empty?
+        desc = dup_attrs.map { |v| ":#{v}" }.join(", ")
+        desc = "[#{desc}]" if opts[:unique_attributes].length > 1
+        context "with duplicate #{desc}" do
+          before do
+            obj = opts[:model].make creation_opts
+            obj.should be_valid
 
-              post opts[:path], Yajl::Encoder.encode(creation_opts), json_headers(admin_headers)
-            end
-
-            it "should return 400" do
-              last_response.status.should == 400
-            end
-
-            it_behaves_like "a vcap rest error response", /taken/
+            post opts[:path], Yajl::Encoder.encode(creation_opts), json_headers(admin_headers)
           end
+
+          it "should return 400" do
+            last_response.status.should == 400
+          end
+
+          it_behaves_like "a vcap rest error response", /taken/
         end
       end
     end
   end
+end

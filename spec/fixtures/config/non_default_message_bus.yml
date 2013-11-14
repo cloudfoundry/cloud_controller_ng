@@ -49,10 +49,12 @@ quota_definitions:
   free:
     non_basic_services_allowed: false
     total_services: 2
+    total_routes: 1000
     memory_limit: 512 # 0.5 GB
   paid:
     non_basic_services_allowed: true
     total_services: 500
+    total_routes: 1000
     memory_limit: 204800 # 200 GB
 
 default_quota_definition: free
