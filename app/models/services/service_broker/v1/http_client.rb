@@ -1,11 +1,11 @@
 module VCAP::CloudController
   module ServiceBroker::V1
     class HttpClient
-      TIMEOUT = 60 # seconds
 
       def initialize(attrs)
         @url = attrs.fetch(:url)
         @token = attrs.fetch(:auth_token)
+        @broker_client_timeout = VCAP::CloudController::Config.config[:broker_client_timeout_seconds] || 60
       end
 
       def provision(plan_id, name, options = {})
@@ -44,6 +44,8 @@ module VCAP::CloudController
 
       private
 
+      attr_reader :broker_client_timeout
+
       def execute(method, path, body = nil)
         endpoint = @url + path
         uri = URI(endpoint)
@@ -59,8 +61,8 @@ module VCAP::CloudController
         logger.debug "Sending #{req_class} to #{uri.request_uri}, BODY: #{request.body.inspect}, HEADERS: #{request.to_hash.inspect}"
 
         response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-          http.open_timeout = TIMEOUT
-          http.read_timeout = TIMEOUT
+          http.open_timeout = broker_client_timeout
+          http.read_timeout = broker_client_timeout
 
           http.request(request)
         end

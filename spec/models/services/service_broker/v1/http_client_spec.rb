@@ -26,6 +26,51 @@ module VCAP::CloudController
         VCAP::Request.stub(:current_id).and_return(request_id)
       end
 
+
+      describe 'http client timeout' do
+        let(:http) { double('http', request: response) }
+        let(:response) { Net::HTTPOK.new('1.0', 200, nil) }
+        let(:unique_id) { Sham.guid }
+        let(:name)      { Sham.name }
+        let(:expected_response) do
+          {
+            'service_id' => '456',
+            'configuration' => {'setting' => true},
+            'credentials' => {'user' => 'admin', 'pass' => 'secret'}
+          }.to_json
+        end
+
+        def expect_timeout_to_be(timeout)
+          expect(http).to receive(:open_timeout=).with(timeout)
+          expect(http).to receive(:read_timeout=).with(timeout)
+        end
+
+        before do
+          allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+          allow(Net::HTTP).to receive(:start).and_yield(http)
+          allow(response).to receive(:body).and_return(expected_response)
+        end
+
+        context 'when the broker client timeout is set' do
+          let(:config) { {broker_client_timeout_seconds: 100} }
+
+          it 'sets HTTP timeouts on provisions' do
+            expect_timeout_to_be 100
+            client.provision(unique_id, name)
+          end
+        end
+
+        context 'when the broker timeout is not set' do
+          let(:config) { {missing_broker_client_timeout: nil} }
+
+
+          it 'sets HTTP timeouts on provisions' do
+            expect_timeout_to_be 60
+            client.provision(unique_id, name)
+          end
+        end
+      end
+
       describe '#provision' do
         let(:instance_id) { Sham.guid }
         let(:plan_id) { Sham.guid }
