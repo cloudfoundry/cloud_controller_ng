@@ -236,7 +236,8 @@ module VCAP::CloudController
     name { Sham.name }
     non_basic_services_allowed { true }
     total_services { 60 }
-    memory_limit { 20480 } # 20 GB
+    total_routes { 1_000 }
+    memory_limit { 20_480 } # 20 GB
     trial_db_allowed { false }
   end
 
