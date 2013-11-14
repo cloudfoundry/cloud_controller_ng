@@ -143,6 +143,7 @@ module VCAP::CloudController
       validate_metadata
       check_memory_quota
       validate_instances
+      validate_health_check_timeout
     end
 
     def before_create
@@ -357,6 +358,10 @@ module VCAP::CloudController
       if (requested_instances < 0)
         errors.add(:instances, :less_than_zero)
       end
+
+    def validate_health_check_timeout
+      return unless health_check_timeout
+      errors.add(:health_check_timeout, :less_than_zero) unless health_check_timeout >= 0
     end
 
     # We need to overide this ourselves because we are really doing a
