@@ -123,6 +123,7 @@ module VCAP::CloudController
       validate_environment
       validate_metadata
       check_memory_quota
+      validate_health_check_timeout
     end
 
     def before_create
@@ -301,6 +302,11 @@ module VCAP::CloudController
       if space && (space.organization.memory_remaining < additional_memory_requested)
         errors.add(:memory, :quota_exceeded) if (new? || !being_stopped?)
       end
+    end
+
+    def validate_health_check_timeout
+      return unless health_check_timeout
+      errors.add(:health_check_timeout, :less_than_zero) unless health_check_timeout >= 0
     end
 
     # We need to overide this ourselves because we are really doing a
