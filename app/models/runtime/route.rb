@@ -108,37 +108,10 @@ module VCAP::CloudController
       end
     end
 
-    class RoutesForOrganizationQuery
-      def initialize(organization)
-        @organization = organization
-      end
-
-      def count
-        dataset.count
-      end
-
-      private
-      def dataset
-        Route.dataset.join(:spaces, id: :space_id).
-            where(spaces__organization_id: @organization.id)
-      end
-    end
-
-    class MaximumRoutesPolicy
-      def initialize(organization)
-        @organization = organization
-      end
-
-      def can_add_route?(number_of_new_routes)
-        existing_total_routes = RoutesForOrganizationQuery.new(@organization).count
-        @organization.quota_definition.total_routes >= (existing_total_routes + number_of_new_routes)
-      end
-    end
-
     def validate_total_routes
       return unless new? && space
 
-      unless MaximumRoutesPolicy.new(space.organization).can_add_route?(1)
+      unless MaxRoutesPolicy.new(space.organization).allow_more_routes?(1)
         errors.add(:base, :total_routes_exceeded)
       end
     end
