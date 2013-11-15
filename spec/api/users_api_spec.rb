@@ -1,22 +1,17 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource "Users", :type => :api do
-
-  let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
-  authenticated_request
-
-  before do
-    3.times { VCAP::CloudController::User.make }
-  end
-
+resource "Users", type: :api do
+  let(:admin_auth_header) { headers_for(admin_user, admin_scope: true)["HTTP_AUTHORIZATION"] }
+  let!(:users) { 3.times { VCAP::CloudController::User.make } }
   let(:guid) { VCAP::CloudController::User.first.guid }
   let(:space) { VCAP::CloudController::Space.make }
 
+  authenticated_request
   standard_parameters VCAP::CloudController::UsersController
 
-  field :default_space_guid, "The guid of the default space for apps created by this user.", required: true
-
+  field :guid, "The guid of the user.", required: false
+  field :default_space_guid, "The guid of the default space for apps created by this user.", required: false
   field :admin, "Whether the user is an admin (Use UAA instead).", required: false, deprecated: true
   field :default_space_url, "The url of the default space for apps created by the user.", required: false, readonly: true
   field :spaces_url, "The url of the spaces this user is a member of.", required: false, readonly: true
@@ -35,13 +30,10 @@ resource "Users", :type => :api do
       request_parameter :guid, "The guid for the user to alter"
 
       example "Update a User's default space" do
-        client.put "/v2/users/#{guid}", Yajl::Encoder.encode(
-          {
-            default_space_guid: space.guid
-          }
-        ), headers
-        status.should == 201
-        space.guid.should_not be_nil
+        client.put "/v2/users/#{guid}", Yajl::Encoder.encode(default_space_guid: space.guid), headers
+
+        expect(status).to eq 201
+        expect(space.guid).to be
         standard_entity_response parsed_response, :user, :default_space_guid => space.guid
       end
   end

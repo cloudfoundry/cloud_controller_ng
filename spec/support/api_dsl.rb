@@ -71,7 +71,7 @@ module ApiDsl
       memo[field[:name]] = (field[:valid_values] || field[:example_values]).first if field[:required]
       memo
     end
-    Yajl::Encoder.encode(fields)
+    Yajl::Encoder.encode(fields, pretty: true)
   end
 
   module ClassMethods

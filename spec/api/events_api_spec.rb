@@ -2,15 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "Events (experimental)", :type => :api do
-  DOCUMENTED_EVENT_TYPES = [
-    "app.crash",
-    "audit.app.update",
-    "audit.app.create",
-    "audit.app.delete-request",
-    "audit.space.create",
-    "audit.space.update",
-    "audit.space.delete-request"
-  ]
+  DOCUMENTED_EVENT_TYPES = %w[app.crash audit.app.update audit.app.create audit.app.delete-request audit.space.create audit.space.update audit.space.delete-request]
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
 
@@ -24,13 +16,14 @@ resource "Events (experimental)", :type => :api do
 
   standard_parameters VCAP::CloudController::EventsController
 
+  field :guid, "The guid of the event.", required: false
   field :type, "The type of the event.", required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w[app.crash audit.app.update]
   field :actor, "The GUID of the actor.", required: false, readonly: true
   field :actor_type, "The actor type.", required: false, readonly: true, example_values: %w[user app]
   field :actee, "The GUID of the actee.", required: false, readonly: true
   field :actee_type, "The actee type.", required: false, readonly: true, example_values: %w[space app]
   field :timestamp, "The event creation time.", required: false, readonly: true
-  field :metadata, "The additional information about event.", required: true, readonly: true, default: {}
+  field :metadata, "The additional information about event.", required: false, readonly: true, default: {}
   field :space_guid, "The guid of the associated space.", required: false, readonly: true
   field :organization_guid, "The guid of the associated organization.", required: false, readonly: true
 

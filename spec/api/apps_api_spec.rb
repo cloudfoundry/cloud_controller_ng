@@ -3,21 +3,19 @@ require 'rspec_api_documentation/dsl'
 
 resource "Apps", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
-  authenticated_request
-
-  before { 3.times { VCAP::CloudController::AppFactory.make } }
-
   let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
-
   let(:guid) { VCAP::CloudController::App.first.guid }
+  let!(:apps) { 3.times { VCAP::CloudController::AppFactory.make } }
 
+  authenticated_request
   standard_parameters VCAP::CloudController::AppsController
 
-  field :name, "The name of the app.", required: true
-  field :memory, "The amount of memory each instance should have. In bytes.", required: true
-  field :instances, "The number of instances of the app to run. To ensure optimal availability, ensure there are at least 2 instances.", required: true
-  field :disk_quota, "The maximum amount of disk available to an instance of an app. In megabytes.", required: true
-  field :space_guid, "The guid of the associated space.", required: true
+  field :guid, "The guid of the app.", required: false
+  field :name, "The name of the app.", required: true, example_values: ["my_super_app"]
+  field :memory, "The amount of memory each instance should have. In megabytes.", required: true, example_values: [1_024, 512]
+  field :instances, "The number of instances of the app to run. To ensure optimal availability, ensure there are at least 2 instances.", required: true, example_values: [2, 6, 10]
+  field :disk_quota, "The maximum amount of disk available to an instance of an app. In megabytes.", required: true, example_values: [1_204, 2_048]
+  field :space_guid, "The guid of the associated space.", required: true, example_values: [VCAP::CloudController::Space.make.guid.to_s]
 
   field :stack_guid, "The guid of the associated stack.", required: false, default: "Uses the default system stack."
   field :state, "The current desired state of the app. One of STOPPED or STARTED.", required: false, default: "STOPPED", valid_values: %w[STOPPED STARTED] # nice to validate this eventually..
@@ -46,13 +44,6 @@ resource "Apps", :type => :api do
     audited_event event
   end
 
-  let(:request) do
-    {
-      guid: guid,
-      buildpack: buildpack
-    }
-  end
-
   put "/v2/apps/:guid" do
     let(:buildpack) { "http://github.com/a-buildpack" }
 
@@ -62,7 +53,7 @@ resource "Apps", :type => :api do
         PUT with the buildpack attribute set to the URL of a git repository to set a custom buildpack.
       EOD
 
-      client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(request), headers
+      client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(buildpack: buildpack), headers
       status.should == 201
       standard_entity_response parsed_response, :app, :buildpack => buildpack
 
@@ -80,7 +71,7 @@ resource "Apps", :type => :api do
         than a custom buildpack. The 'buildpack' column returns the name of the configured admin buildpack
       EOD
 
-      client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(request), headers
+      client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(buildpack: buildpack), headers
       status.should == 201
       standard_entity_response parsed_response, :app, :buildpack => admin_buildpack.name
 
@@ -89,10 +80,8 @@ resource "Apps", :type => :api do
   end
 
   post "/v2/apps/" do
-    let(:space_guid) { VCAP::CloudController::Space.make.guid.to_s }
-
     example "Creating an app" do
-      client.post "/v2/apps", Yajl::Encoder.encode(name: "my-app", space_guid: space_guid), headers
+      client.post "/v2/apps", fields_json, headers
       expect(status).to eq(201)
 
       standard_entity_response parsed_response, :app

@@ -3,20 +3,16 @@ require 'rspec_api_documentation/dsl'
 
 resource "ServiceAuthTokens", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
-  authenticated_request
-
-  before { 3.times { VCAP::CloudController::ServiceAuthToken.make } }
-
   let(:guid) { VCAP::CloudController::ServiceAuthToken.first.guid }
+  let!(:service_auth_tokens) { 3.times { VCAP::CloudController::ServiceAuthToken.make } }
 
+  authenticated_request
   standard_parameters VCAP::CloudController::ServiceAuthTokensController
 
-  field :label, "Human readable name for the auth token",
-        required: true, example_values: ["Nic-Token"]
-  field :provider, "Human readable name of service provider",
-        required: true, example_values: ["Face-Offer"]
-  field :token, "The secret auth token used for authenticating",
-        required: true
+  field :guid, "The guid of the service auth token.", required: false
+  field :label, "Human readable name for the auth token", required: false, readonly: true, example_values: ["Nic-Token"]
+  field :provider, "Human readable name of service provider", required: false, readonly: true, example_values: ["Face-Offer"]
+  field :token, "The secret auth token used for authenticating", required: false, readonly: true
 
   standard_model_list(:service_auth_token)
   standard_model_get(:service_auth_token)

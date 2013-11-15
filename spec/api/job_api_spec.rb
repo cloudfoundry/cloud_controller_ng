@@ -11,8 +11,7 @@ resource "Jobs", type: :api do
     Delayed::Job.enqueue(job.new)
   end
 
-
-  field :guid, "The guid of the job.", required: true
+  field :guid, "The guid of the job.", required: false
   field :status, "The status of the job.", required: false, readonly: true, valid_values: %w[failed finished queued running]
 
   get "/v2/apps/:guid" do
