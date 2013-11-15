@@ -66,6 +66,14 @@ module ApiDsl
     example.metadata[:audit_records] << {type: event[:type], attributes: attributes}
   end
 
+  def fields_json
+    fields = self.class.metadata[:fields].inject({}) do |memo, field|
+      memo[field[:name]] = (field[:valid_values] || field[:example_values]).first if field[:required]
+      memo
+    end
+    Yajl::Encoder.encode(fields)
+  end
+
   module ClassMethods
 
     def api_version

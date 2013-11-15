@@ -85,10 +85,18 @@
                 <span class="default">{{ default }}</span>
               </td>
               <td>
-                <span class="valid_values">{{ valid_values }}</span>
+                <ul class="valid_values">
+                {{# valid_values }}
+                    <li>{{ . }}</li>
+                {{/ valid_values }}
+                </ul>
               </td>
               <td>
-                <span class="example_values">{{ example_values }}</span>
+                <ul class="example_values">
+                {{# example_values }}
+                    <li>{{ . }}</li>
+                {{/ example_values }}
+                </ul>
               </td>
             </tr>
             {{/ fields }}
