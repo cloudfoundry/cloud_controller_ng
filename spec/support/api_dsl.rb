@@ -125,7 +125,7 @@ module ApiDsl
       request_parameter :limit, "Maximum number of results to return"
       request_parameter :offset, "Offset from which to start iteration"
       request_parameter :urls_only, "If 1, only return a list of urls; do not expand metadata or resource attributes"
-      request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N."
+      request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
     end
 
     def request_parameter(name, description, options = {})
