@@ -64,7 +64,7 @@ module VCAP::CloudController
 
     def validate
       validates_unique :name
-      validates_format(/^(\w|\-)+$/, :name, :message => "name can only contain alphanumeric characters")
+      validates_format(/^(\w|\-)+$/, :name, message: "name can only contain alphanumeric characters")
     end
 
     def self.user_visibility_filter(user)
