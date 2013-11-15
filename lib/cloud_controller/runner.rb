@@ -104,14 +104,23 @@ module VCAP::CloudController
     def run!
       EM.run do
         config = @config.dup
-        message_bus = MessageBusConfigurer::Configurer.new(:uri => config[:message_bus_uri], :logger => logger).go
+
+        message_bus = MessageBusConfigurer::Configurer.new(
+          :servers => config[:message_bus_servers],
+          :logger => logger).go
+
         start_cloud_controller(message_bus)
+
         Seeds.write_seed_data(config) if @insert_seed_data
+
         app = create_app(config, message_bus)
+
         start_thin_server(app, config)
+
         registrar.register_with_router
 
         VCAP::CloudController::Varz.bump_user_count
+
         EM.add_periodic_timer(@config[:varz_update_user_count_period_in_seconds] || 30) do
           VCAP::CloudController::Varz.bump_user_count
         end
@@ -215,7 +224,7 @@ module VCAP::CloudController
 
     def registrar
       @registrar ||= Cf::Registrar.new(
-          :mbus => @config[:message_bus_uri],
+          :message_bus_servers => @config[:message_bus_servers],
           :host => @config[:bind_address],
           :port => @config[:port],
           :uri => @config[:external_domain],

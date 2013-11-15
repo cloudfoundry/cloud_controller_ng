@@ -22,7 +22,8 @@ uaa:
 logging:
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
 
-message_bus_uri: nats://127.0.0.1:4222
+message_bus_servers:
+  - nats://127.0.0.1:4222
 pid_filename: /tmp/cloud_controller.pid
 
 db:

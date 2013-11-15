@@ -38,7 +38,7 @@ module VCAP::CloudController
           optional(:syslog)   => String,      # Name to associate with syslog messages (should start with 'vcap.')
         },
 
-        :message_bus_uri              => String,     # Currently a NATS uri of the form nats://<user>:<pass>@<host>:<port>
+        :message_bus_servers   => [String],   # A list of NATS uris of the form nats://<user>:<pass>@<host>:<port>
         :pid_filename          => String,     # Pid filename to use
 
         optional(:directories) => {

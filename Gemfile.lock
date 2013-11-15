@@ -10,11 +10,11 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/cf-message-bus.git
-  revision: 6325827a9a944ee68a4415bff5cec11af9977cd6
+  revision: 80df8eedc0587d833d1c10f4a64852bfd363168a
   specs:
     cf-message-bus (0.1.0)
       eventmachine (~> 1.0.0)
-      nats (= 0.4.26)
+      nats (>= 0.5.0.beta.12, < 0.6)
       vcap-concurrency
       vcap-concurrency
       yajl-ruby
@@ -29,7 +29,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: cc1d06f746cba7215497fc05c32ad175c819b726
+  revision: c95b30d61ea2647071d33738cd2658ff0a515139
   specs:
     vcap_common (2.2.2)
       addressable (~> 2.2)
@@ -39,7 +39,7 @@ GIT
       membrane (~> 0.0.2)
       mime-types
       multipart-post
-      nats (~> 0.4.24)
+      nats (>= 0.5.0.beta.12, < 0.6)
       posix-spawn (~> 0.3.6)
       squash_ruby
       steno
@@ -58,7 +58,7 @@ GIT
 GEM
   remote: http://rubygems.org/
   specs:
-    activesupport (3.2.14)
+    activesupport (3.2.15)
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.5)
@@ -66,12 +66,18 @@ GEM
       activesupport (>= 3.2)
       i18n
     atomic (1.1.14)
-    backports (3.3.4)
+    axiom-types (0.0.5)
+      descendants_tracker (~> 0.0.1)
+      ice_nine (~> 0.9)
+    backports (3.3.5)
     bcrypt-ruby (3.1.1)
     beefcake (0.3.7)
     builder (3.2.2)
     cloudfront-signer (2.1.0)
     coderay (1.0.9)
+    coercible (0.2.0)
+      backports (~> 3.0, >= 3.1.0)
+      descendants_tracker (~> 0.0.1)
     columnize (0.3.6)
     cookiejar (0.3.0)
     crack (0.4.1)
@@ -85,7 +91,7 @@ GEM
     debugger-ruby_core_source (1.2.3)
     delayed_job (4.0.0)
       activesupport (>= 3.0, < 4.1)
-    descendants_tracker (0.0.1)
+    descendants_tracker (0.0.3)
     diff-lcs (1.2.4)
     em-http-request (1.1.1)
       addressable (>= 2.3.4)
@@ -95,6 +101,7 @@ GEM
       http_parser.rb (>= 0.6.0.beta.2)
     em-socksify (0.3.0)
       eventmachine (>= 1.0.0.beta.4)
+    equalizer (0.0.7)
     eventmachine (1.0.3)
     excon (0.27.6)
     fakefs (0.4.2)
@@ -114,7 +121,7 @@ GEM
       ruby-hmac
       unicode (~> 0.4.4)
     formatador (0.2.4)
-    grape (0.6.0)
+    grape (0.6.1)
       activesupport
       builder
       hashie (>= 1.2.0)
@@ -123,7 +130,7 @@ GEM
       rack (>= 1.3.0)
       rack-accept
       rack-mount
-      virtus
+      virtus (>= 1.0.0)
     guard (1.8.2)
       formatador (>= 0.2.4)
       listen (>= 1.0.0)
@@ -137,7 +144,8 @@ GEM
     http_parser.rb (0.6.0.beta.2)
     httpclient (2.3.4.1)
     i18n (0.6.5)
-    json (1.8.0)
+    ice_nine (0.10.0)
+    json (1.8.1)
     json_pure (1.8.1)
     listen (1.3.0)
       rb-fsevent (>= 0.9.3)
@@ -149,19 +157,19 @@ GEM
     machinist (1.0.6)
     membrane (0.0.2)
     method_source (0.8.2)
-    mime-types (1.25)
+    mime-types (2.0)
     mini_portile (0.5.1)
-    msgpack (0.5.6)
+    msgpack (0.5.7)
     multi_json (1.8.2)
     multi_xml (0.5.5)
     multipart-post (1.2.0)
     mustache (0.99.4)
     mysql2 (0.3.13)
-    nats (0.4.26)
-      daemons (>= 1.1.5)
-      eventmachine (>= 0.12.10)
-      json_pure (>= 1.7.3)
-      thin (>= 1.4.1)
+    nats (0.5.0.beta.12)
+      daemons (>= 1.1.9)
+      eventmachine (>= 1.0.3)
+      json_pure (>= 1.8.0)
+      thin (>= 1.5.0)
     net-scp (1.1.2)
       net-ssh (>= 2.6.5)
     net-ssh (2.7.0)
@@ -248,9 +256,11 @@ GEM
       thread_safe (~> 0.1)
     unicode (0.4.4)
     uuidtools (2.1.4)
-    virtus (0.5.5)
-      backports (~> 3.3)
+    virtus (1.0.0)
+      axiom-types (~> 0.0.5)
+      coercible (~> 0.2)
       descendants_tracker (~> 0.0.1)
+      equalizer (~> 0.0.7)
     vmstat (2.0.0)
     webmock (1.14.0)
       addressable (>= 2.2.7)
