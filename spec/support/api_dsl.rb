@@ -67,11 +67,14 @@ module ApiDsl
   end
 
   def fields_json
-    fields = self.class.metadata[:fields].inject({}) do |memo, field|
+    Yajl::Encoder.encode(required_fields, pretty: true)
+  end
+
+  def required_fields
+    self.class.metadata[:fields].inject({}) do |memo, field|
       memo[field[:name]] = (field[:valid_values] || field[:example_values]).first if field[:required]
       memo
     end
-    Yajl::Encoder.encode(fields, pretty: true)
   end
 
   module ClassMethods

@@ -11,7 +11,7 @@ resource "Spaces", :type => :api do
 
   field :guid, "The guid of the space.", required: false
   field :name, "The name of the space", required: true, example_values: %w(development demo production)
-  field :organization_guid, "The guid of the associated organization", required: true, example_values: [VCAP::CloudController::Organization.make.guid]
+  field :organization_guid, "The guid of the associated organization", required: true, example_values: [Sham.guid]
   field :developer_guids, "The list of the associated developers", required: false
   field :manager_guids, "The list of the associated managers", required: false
   field :auditor_guids, "The list of the associated auditors", required: false
@@ -28,7 +28,8 @@ resource "Spaces", :type => :api do
 
   post "/v2/spaces/" do
     example "Creating a space" do
-      client.post "/v2/spaces", fields_json, headers
+      organization_guid = VCAP::CloudController::Organization.make.guid
+      client.post "/v2/spaces", Yajl::Encoder.encode(required_fields.merge(organization_guid: organization_guid)), headers
       expect(status).to eq(201)
 
       standard_entity_response parsed_response, :space
@@ -42,7 +43,7 @@ resource "Spaces", :type => :api do
     let(:new_name) { "New Space Name" }
 
     example "Update a space" do
-      client.put "/v2/spaces/#{guid}", Yajl::Encoder.encode({ "name" => new_name }), headers
+      client.put "/v2/spaces/#{guid}", Yajl::Encoder.encode(name: new_name), headers
       expect(status).to eq 201
       standard_entity_response parsed_response, :space, name: new_name
 

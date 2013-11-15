@@ -15,7 +15,7 @@ resource "Apps", :type => :api do
   field :memory, "The amount of memory each instance should have. In megabytes.", required: true, example_values: [1_024, 512]
   field :instances, "The number of instances of the app to run. To ensure optimal availability, ensure there are at least 2 instances.", required: true, example_values: [2, 6, 10]
   field :disk_quota, "The maximum amount of disk available to an instance of an app. In megabytes.", required: true, example_values: [1_204, 2_048]
-  field :space_guid, "The guid of the associated space.", required: true, example_values: [VCAP::CloudController::Space.make.guid.to_s]
+  field :space_guid, "The guid of the associated space.", required: true, example_values: [Sham.guid]
 
   field :stack_guid, "The guid of the associated stack.", required: false, default: "Uses the default system stack."
   field :state, "The current desired state of the app. One of STOPPED or STARTED.", required: false, default: "STOPPED", valid_values: %w[STOPPED STARTED] # nice to validate this eventually..
@@ -81,7 +81,8 @@ resource "Apps", :type => :api do
 
   post "/v2/apps/" do
     example "Creating an app" do
-      client.post "/v2/apps", fields_json, headers
+      space_guid = VCAP::CloudController::Space.make.guid
+      client.post "/v2/apps", Yajl::Encoder.encode(required_fields.merge(space_guid: space_guid)), headers
       expect(status).to eq(201)
 
       standard_entity_response parsed_response, :app
