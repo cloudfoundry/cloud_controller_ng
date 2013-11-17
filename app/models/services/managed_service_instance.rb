@@ -84,7 +84,11 @@ module VCAP::CloudController
       super
 
       # TODO: transactionally move this into a queue
-      client.deprovision(self)
+      begin
+        client.deprovision(self)
+      rescue => e
+        logger.error "Failed to deprovision #{as_summary_json}: #{e}"
+      end
 
       ServiceDeleteEvent.create_from_service_instance(self)
     end

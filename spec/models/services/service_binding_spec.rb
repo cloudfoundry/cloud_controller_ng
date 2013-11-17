@@ -54,12 +54,8 @@ module VCAP::CloudController
       context 'when unbind fails' do
         before { binding.client.stub(:unbind).and_raise }
 
-        it 'raises an error and rolls back' do
-          expect {
+        it 'ignores the error and continues' do
             binding.destroy(savepoint: true)
-          }.to raise_error
-
-          expect(binding).to be_exists
         end
       end
     end

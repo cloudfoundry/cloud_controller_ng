@@ -75,12 +75,9 @@ module VCAP::CloudController
       end
 
       context "when deprovision fails" do
-        it "should raise and rollback" do
+        it "should ignore and continue" do
           service_instance.client.stub(:deprovision).and_raise
-          expect {
-            service_instance.destroy(savepoint: true)
-          }.to raise_error
-          VCAP::CloudController::ManagedServiceInstance.find(id: service_instance.id).should be
+          service_instance.destroy(savepoint: true)
         end
       end
     end

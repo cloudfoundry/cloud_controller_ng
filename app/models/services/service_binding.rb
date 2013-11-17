@@ -66,7 +66,11 @@ module VCAP::CloudController
 
     def before_destroy
       # TODO: transactionally move this into a queue
-      client.unbind(self)
+      begin
+        client.unbind(self)
+      rescue => e
+        logger.error "Failed to unbind #{self.inspect}: #{e}"
+      end
 
       mark_app_for_restaging
     end
