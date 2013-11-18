@@ -119,23 +119,37 @@ module VCAP::CloudController
 
     describe ".record_app_update" do
       let(:request_attrs) do
-        { "name" => "old", "instances" => 1, "memory" => 84, "state" => "STOPPED" }
+        {"name" => "old", "instances" => 1, "memory" => 84, "state" => "STOPPED"}
       end
-      let(:app) { AppFactory.make(request_attrs) }
+      let(:app) { AppFactory.make(instances: 2, memory: 99) }
       let(:user) { User.make }
 
-      it "does not expose the ENV variables" do
-        new_request_attrs = request_attrs.merge("environment_json" => { "foo" => 1 })
+      subject(:event) do
+        new_request_attrs = request_attrs.merge("environment_json" => {"foo" => 1})
+        described_class.record_app_update(app, user, new_request_attrs)
+      end
 
-        event = described_class.record_app_update(app, user, new_request_attrs)
+      it "does not expose the ENV variables" do
         request = event.metadata.fetch("request")
-        expect(request).to eq(
-            "name" => "old",
-            "instances" => 1,
-            "memory" => 84,
-            "state" => "STOPPED",
-            "environment_json" => "PRIVATE DATA HIDDEN",
-          )
+        expect(request).to include("environment_json" => "PRIVATE DATA HIDDEN")
+      end
+
+      it "contains user request information" do
+        request = event.metadata.fetch("request")
+        expect(request).to include(
+          "name" => "old",
+          "instances" => 1,
+          "memory" => 84,
+          "state" => "STOPPED"
+        )
+      end
+
+      it "contains the desired footprints of the application" do
+        metadata = event.metadata
+        expect(metadata).to include(
+          "desired_instances" => 2,
+          "desired_memory" => 99,
+        )
       end
     end
 
@@ -146,7 +160,7 @@ module VCAP::CloudController
           "instances" => 1,
           "memory" => 84,
           "state" => "STOPPED",
-          "environment_json" => { "super" => "secret "}
+          "environment_json" => {"super" => "secret "}
         }
       end
 

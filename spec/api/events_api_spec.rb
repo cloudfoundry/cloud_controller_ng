@@ -14,6 +14,7 @@ resource "Events (experimental)", :type => :api do
 
   let(:guid) { VCAP::CloudController::Event.first.guid }
 
+  request_parameter :actee, "Query events for by actee"
   standard_parameters VCAP::CloudController::EventsController
 
   field :guid, "The guid of the event.", required: false
@@ -115,7 +116,11 @@ resource "Events (experimental)", :type => :api do
                                :actee_type => "app",
                                :actee => test_app.guid,
                                :space_guid => test_app.space.guid,
-                               :metadata => { "request" => expected_app_request }
+                               :metadata => {
+                                 "request" => expected_app_request,
+                                 "desired_instances" => test_app.instances,
+                                 "desired_memory" => test_app.memory,
+                               }
 
     end
 

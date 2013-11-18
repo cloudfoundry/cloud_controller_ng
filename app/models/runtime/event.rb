@@ -70,7 +70,9 @@ module VCAP::CloudController
         actor_type: "user",
         timestamp: Time.now,
         metadata: {
-          request: App.audit_hash(request_attrs)
+          request: App.audit_hash(request_attrs),
+          desired_instances: app.instances,
+          desired_memory: app.memory,
         }
       )
     end
