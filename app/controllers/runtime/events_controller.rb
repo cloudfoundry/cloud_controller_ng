@@ -4,7 +4,7 @@ module VCAP::CloudController
       to_one :space
     end
 
-    query_parameters :timestamp, :type
+    query_parameters :timestamp, :type, :actee
 
     def initialize(*args)
       super

@@ -308,5 +308,17 @@ module VCAP::CloudController
         decoded_response["resources"][1]["metadata"]["guid"].should == event2.guid
       end
     end
+
+    describe "GET /v2/events/ filtering by actee_id" do
+      let(:actee_guid) { Sham.guid }
+      let!(:event1) { Event.make actee: actee_guid }
+
+      it "returns events with the specified actee_id" do
+        get "/v2/events?q=actee:#{actee_guid}", {}, admin_headers
+        expect(last_response.status).to eq 200
+        expect(decoded_response["total_results"]).to eq(1)
+        expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(event1.guid)
+      end
+    end
   end
 end
