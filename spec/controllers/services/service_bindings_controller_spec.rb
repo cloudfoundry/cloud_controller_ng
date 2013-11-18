@@ -234,8 +234,7 @@ module VCAP::CloudController
         expect(last_response.status).to eq(201)
 
         binding = ServiceBinding.last
-
-        expect(broker_client).to have_received(:bind).with(binding)
+        expect(binding.credentials).to eq(CREDENTIALS)
       end
 
       it 'unbinds the service instance when an exception is raised' do

@@ -26,21 +26,7 @@ module VCAP::CloudController
       binding = ServiceBinding.new(@request_attrs)
       validate_access(:create, binding, user, roles)
 
-      client = binding.client
-      client.bind(binding)
-
-      begin
-        binding.save
-      rescue => e
-        begin
-          # this needs to go into a retry queue
-          client.unbind(binding)
-        rescue => unbind_e
-          logger.error "Unable to unbind #{binding}: #{unbind_e}"
-        end
-
-        raise e
-      end
+      binding.bind!
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{binding.guid}" },

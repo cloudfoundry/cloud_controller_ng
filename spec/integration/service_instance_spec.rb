@@ -75,6 +75,8 @@ describe "Service Instance Management", type: :integration do
     create_application
     bind_user_provided_service_instance
     update_user_provided_service_instance
+    unbind_service_instance
+    bind_user_provided_service_instance
     verify_updated_service_binding
   end
 
@@ -114,7 +116,7 @@ describe "Service Instance Management", type: :integration do
 
   def bind_user_provided_service_instance
     bind_response = bind_service_instance
-    expect(bind_response.json_body.fetch('entity').fetch('syslog_drain_url')).to eq syslog_drain_url
+    expect(bind_response.json_body.fetch('entity').fetch('syslog_drain_url')).to eq @syslog_drain_url
   end
 
   def bind_managed_service_instance
@@ -161,6 +163,7 @@ describe "Service Instance Management", type: :integration do
       space_guid: space_guid,
       syslog_drain_url: syslog_drain_url
     )
+    @syslog_drain_url = syslog_drain_url
     create_response = make_post_request('/v2/user_provided_service_instances', body, authed_headers)
     expect(create_response.code.to_i).to eq(201)
     @service_instance_guid = create_response.json_body.fetch('metadata').fetch('guid')
@@ -172,6 +175,7 @@ describe "Service Instance Management", type: :integration do
       space_guid: space_guid,
       syslog_drain_url: syslog_drain_url2
     )
+    @syslog_drain_url = syslog_drain_url2
     create_response = make_put_request("/v2/user_provided_service_instances/#{@service_instance_guid}", body, authed_headers)
     expect(create_response.code.to_i).to eq(201)
   end

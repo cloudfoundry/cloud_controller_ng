@@ -26,16 +26,6 @@ describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
     end
   end
 
-  describe "#update" do
-    it "updates associated bindings on an update" do
-      service_binding = VCAP::CloudController::ServiceBinding.make( :service_instance => service_instance )
-      new_drain_url = "http://newhotness.com:8080/logz"
-      service_instance.update(:syslog_drain_url => new_drain_url)
-      service_binding.reload
-      service_binding.syslog_drain_url.should eq(new_drain_url)
-    end
-  end
-
   it_behaves_like "a CloudController model", {
     :required_attributes => [:name, :space],
     :stripped_string_attributes => [:name, :syslog_drain_url],
