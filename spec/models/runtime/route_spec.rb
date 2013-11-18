@@ -146,9 +146,9 @@ module VCAP::CloudController
               quota_definition.save
             end
 
-            it "has the error on base" do
+            it "has the error on organization" do
               subject.valid?
-              expect(subject.errors.on(:base)).to be_nil
+              expect(subject.errors.on(:organization)).to be_nil
             end
           end
 
@@ -158,9 +158,9 @@ module VCAP::CloudController
               quota_definition.save
             end
 
-            it "has the error on base" do
+            it "has the error on organization" do
               subject.valid?
-              expect(subject.errors.on(:base)).to include :total_routes_exceeded
+              expect(subject.errors.on(:organization)).to include :total_routes_exceeded
             end
           end
         end

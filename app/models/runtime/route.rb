@@ -112,7 +112,7 @@ module VCAP::CloudController
       return unless new? && space
 
       unless MaxRoutesPolicy.new(space.organization).allow_more_routes?(1)
-        errors.add(:base, :total_routes_exceeded)
+        errors.add(:organization, :total_routes_exceeded)
       end
     end
   end
