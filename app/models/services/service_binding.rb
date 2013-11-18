@@ -68,7 +68,8 @@ module VCAP::CloudController
       # TODO: transactionally move this into a queue
       begin
         client.unbind(self)
-      rescue => e
+      rescue HttpResponseError => e
+        raise e if 404 != e.status
         logger.error "Failed to unbind #{self.inspect}: #{e}"
       end
 

@@ -86,7 +86,8 @@ module VCAP::CloudController
       # TODO: transactionally move this into a queue
       begin
         client.deprovision(self)
-      rescue => e
+      rescue HttpResponseError => e
+        raise e if 404 != e.status
         logger.error "Failed to deprovision #{as_summary_json}: #{e}"
       end
 
