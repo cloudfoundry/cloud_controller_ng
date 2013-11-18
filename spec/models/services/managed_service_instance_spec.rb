@@ -17,24 +17,24 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :required_attributes => [:name, :service_plan, :space],
-      :db_required_attributes => [:name],
-      :unique_attributes => [ [:space, :name] ],
-      :custom_attributes_for_uniqueness_tests => ->{ {service_plan: ServicePlan.make} },
-      :stripped_string_attributes => :name,
-      :many_to_one => {
-        :service_plan => {
-          :create_for => lambda { |service_instance| ServicePlan.make },
+      required_attributes: [:name, :service_plan, :space],
+      db_required_attributes: [:name],
+      unique_attributes: [[:space, :name]],
+      custom_attributes_for_uniqueness_tests: -> { {service_plan: ServicePlan.make} },
+      stripped_string_attributes: :name,
+      many_to_one: {
+        service_plan: {
+          create_for: lambda { |service_instance| ServicePlan.make },
         },
-        :space => {
-          :delete_ok => true,
-          :create_for => lambda { |service_instance| Space.make },
+        space: {
+          delete_ok: true,
+          create_for: lambda { |service_instance| Space.make },
         }
       },
-      :one_to_zero_or_more => {
-        :service_bindings => {
-          :delete_ok => true,
-          :create_for => lambda { |service_instance|
+      one_to_zero_or_more: {
+        service_bindings: {
+          delete_ok: true,
+          create_for: lambda { |service_instance|
             make_service_binding_for_service_instance(service_instance)
           }
         }
@@ -158,30 +158,11 @@ module VCAP::CloudController
         let(:org) { Organization.make(:quota_definition => trial_quota) }
         let(:space) { Space.make(:organization => org) }
 
-        context "when the service instance is a trial db instance" do
-          def allocate_trial_db
-            ManagedServiceInstance.make(:space => space,
-                                                :service_plan => trial_db_plan)
-          end
-
-          it "raises an error if an db instance has already been allocated" do
-            allocate_trial_db.save(:validate => false)
-            space.refresh
-            expect do
-              allocate_trial_db
-            end.to raise_error(Sequel::ValidationFailed, /org trial_quota_exceeded/)
-          end
-
-          it "does not raise an error if a db instance has not already been allocated" do
-            expect { allocate_trial_db }.not_to raise_error
-          end
-        end
-
         context "when the service instance is not a trial db instance" do
           it "raises an error" do
-            expect do
-              ManagedServiceInstance.make(:space => space, :service_plan => paid_db_plan)
-            end.to raise_error(Sequel::ValidationFailed, /service_plan paid_services_not_allowed/)
+            expect {
+              ManagedServiceInstance.make(space: space, service_plan: paid_db_plan)
+            }.to raise_error(Sequel::ValidationFailed, /service_plan paid_services_not_allowed/)
           end
         end
       end

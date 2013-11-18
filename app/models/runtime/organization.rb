@@ -115,57 +115,6 @@ module VCAP::CloudController
       end
     end
 
-    def service_instance_quota_remaining?
-      quota_definition.total_services == -1 || # unlimited
-        service_instances.count < quota_definition.total_services
-    end
-
-    def check_quota?(service_plan)
-      return check_quota_for_trial_db if service_plan.trial_db?
-      check_quota_without_trial_db(service_plan)
-    end
-
-    def check_quota_for_trial_db
-      if trial_db_allowed?
-        return {:type => :org, :name => :trial_quota_exceeded} if trial_db_allocated?
-      elsif paid_services_allowed?
-        return {:type => :org, :name => :paid_quota_exceeded} unless service_instance_quota_remaining?
-      else
-        return {:type => :service_plan, :name => :paid_services_not_allowed }
-      end
-
-      {}
-    end
-
-    def check_quota_without_trial_db(service_plan)
-      if paid_services_allowed?
-        return {:type => :org, :name => :paid_quota_exceeded } unless service_instance_quota_remaining?
-      elsif service_plan.free
-        return {:type => :org, :name => :free_quota_exceeded } unless service_instance_quota_remaining?
-      else
-        return {:type => :service_plan, :name => :paid_services_not_allowed }
-      end
-
-      {}
-    end
-
-    def paid_services_allowed?
-      quota_definition.non_basic_services_allowed
-    end
-
-    def trial_db_allowed?
-      quota_definition.trial_db_allowed
-    end
-
-    # Does any service instance in any space have a trial DB plan?
-    def trial_db_allocated?
-      service_instances.each do |svc_instance|
-        return true if svc_instance.service_plan.trial_db?
-      end
-
-      false
-    end
-
     def memory_remaining
       memory_used = apps_dataset.sum(Sequel.*(:memory, :instances)) || 0
       quota_definition.memory_limit - memory_used

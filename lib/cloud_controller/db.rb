@@ -62,6 +62,7 @@ module VCAP::CloudController
       require "models/runtime/organization_routes"
       require "models/runtime/quota_definition"
       require "models/runtime/quota_constraints/max_routes_policy"
+      require "models/runtime/quota_constraints/max_service_instances_policy"
       require "models/runtime/route"
       require "models/runtime/task"
       require "models/runtime/space"
