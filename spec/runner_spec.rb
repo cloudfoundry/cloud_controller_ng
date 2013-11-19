@@ -79,100 +79,97 @@ module VCAP::CloudController
         end
       end
 
-      shared_examples "insert seed flag" do |flag|
+      describe "insert seed flag" do
         context "when the insert seed flag is passed in" do
-        let(:argv) { [flag] }
-        before do
-          QuotaDefinition.dataset.destroy
-          Stack.stub(:configure)
-        end
-
-        it_configures_stacks
-        it_runs_dea_client
-        it_runs_app_stager
-        it_handles_health_manager_requests
-        it_handles_hm9000_requests
-
-        describe "when the seed data has not yet been created" do
-          before { subject.run! }
-
-          it "creates stacks from the config file" do
-            cider = Stack.find(:name => "cider")
-            cider.description.should == "cider-description"
-            cider.should be_valid
+          let(:argv) { ["-s"] }
+          before do
+            QuotaDefinition.dataset.destroy
+            Stack.stub(:configure)
           end
 
-          it "should load quota definitions" do
-            QuotaDefinition.count.should == 2
-            paid = QuotaDefinition[:name => "paid"]
-            paid.non_basic_services_allowed.should == true
-            paid.total_services.should == 500
-            paid.memory_limit.should == 204800
+          it_configures_stacks
+          it_runs_dea_client
+          it_runs_app_stager
+          it_handles_health_manager_requests
+          it_handles_hm9000_requests
+
+          describe "when the seed data has not yet been created" do
+            before { subject.run! }
+
+            it "creates stacks from the config file" do
+              cider = Stack.find(:name => "cider")
+              cider.description.should == "cider-description"
+              cider.should be_valid
+            end
+
+            it "should load quota definitions" do
+              QuotaDefinition.count.should == 2
+              paid = QuotaDefinition[:name => "paid"]
+              paid.non_basic_services_allowed.should == true
+              paid.total_services.should == 500
+              paid.memory_limit.should == 204800
+            end
+
+            it "creates the system domain organization" do
+              expect(Organization.last.name).to eq("the-system-domain-org-name")
+              expect(Organization.last.quota_definition.name).to eq("paid")
+            end
+
+            it "creates the system domain, owned by the system domain org" do
+              domain = Domain.find(:name => "the-system-domain.com")
+              expect(domain.owning_organization.name).to eq("the-system-domain-org-name")
+              expect(domain.wildcard).to be_true
+            end
+
+            it "creates the application serving domains" do
+              ["customer-app-domain1.com", "customer-app-domain2.com"].each do |domain|
+                expect(Domain.find(:name => domain)).not_to be_nil
+                expect(Domain.find(:name => domain).owning_organization).to be_nil
+              end
+            end
           end
 
-          it "creates the system domain organization" do
-            expect(Organization.last.name).to eq("the-system-domain-org-name")
-            expect(Organization.last.quota_definition.name).to eq("paid")
+          it "does not try to create the system domain twice" do
+            subject.run!
+            expect { subject.run! }.not_to change(Domain, :count)
           end
 
-          it "creates the system domain, owned by the system domain org" do
-            domain = Domain.find(:name => "the-system-domain.com")
-            expect(domain.owning_organization.name).to eq("the-system-domain-org-name")
-            expect(domain.wildcard).to be_true
+          context "when the 'paid' quota is missing from the config file" do
+            let(:config_file) do
+              config = YAML.load_file(valid_config_file_path)
+              config["quota_definitions"].delete("paid")
+              file = Tempfile.new("config")
+              file.write(YAML.dump(config))
+              file.rewind
+              file
+            end
+
+            it "raises an exception" do
+              expect {
+                subject.run!
+              }.to raise_error(ArgumentError, /Missing .*paid.* quota/)
+            end
           end
 
-          it "creates the application serving domains" do
-            ["customer-app-domain1.com", "customer-app-domain2.com"].each do |domain|
-              expect(Domain.find(:name => domain)).not_to be_nil
-              expect(Domain.find(:name => domain).owning_organization).to be_nil
+          context "when the app domains include the system domain" do
+            let(:config_file) do
+              config = YAML.load_file(valid_config_file_path)
+              config["app_domains"].push("the-system-domain.com")
+              file = Tempfile.new("config")
+              file.write(YAML.dump(config))
+              file.rewind
+              file
+            end
+
+            it "creates the system domain as a shared domain" do
+              subject.run!
+              domain = Domain.find(:name => "the-system-domain.com")
+              expect(domain.owning_organization).to be_nil
+              expect(domain.wildcard).to be_true
             end
           end
         end
-
-        it "does not try to create the system domain twice" do
-          subject.run!
-          expect { subject.run! }.not_to change(Domain, :count)
-        end
-
-        context "when the 'paid' quota is missing from the config file" do
-          let(:config_file) do
-            config = YAML.load_file(valid_config_file_path)
-            config["quota_definitions"].delete("paid")
-            file = Tempfile.new("config")
-            file.write(YAML.dump(config))
-            file.rewind
-            file
-          end
-
-          it "raises an exception" do
-            expect {
-              subject.run!
-            }.to raise_error(ArgumentError, /Missing .*paid.* quota/)
-          end
-        end
-
-        context "when the app domains include the system domain" do
-          let(:config_file) do
-            config = YAML.load_file(valid_config_file_path)
-            config["app_domains"].push("the-system-domain.com")
-            file = Tempfile.new("config")
-            file.write(YAML.dump(config))
-            file.rewind
-            file
-          end
-
-          it "creates the system domain as a shared domain" do
-            subject.run!
-            domain = Domain.find(:name => "the-system-domain.com")
-            expect(domain.owning_organization).to be_nil
-            expect(domain.wildcard).to be_true
-          end
-        end
       end
-      end
-
-      it_behaves_like "insert seed flag", "-m"
-      it_behaves_like "insert seed flag", "-s"
 
       context "when the insert seed flag is not passed in" do
         let(:argv) { [] }
@@ -230,6 +227,74 @@ module VCAP::CloudController
 
         subject.should_receive(:stop!).exactly(3).times
         callbacks.each(&:call)
+      end
+    end
+
+    describe "#initialize" do
+      let (:argv_options) { [] }
+
+      before do
+        Runner.any_instance.stub(:parse_config)
+        Runner.any_instance.stub(:deprecation_warning)
+      end
+
+      subject { Runner.new(argv_options) }
+
+      it "should set ENV['RACK_ENV'] to production" do
+        ENV.delete('RACK_ENV')
+        expect { subject }.to change { ENV['RACK_ENV'] }.from(nil).to('production')
+      end
+
+      it "should set the configuration file" do
+        expect(subject.config_file).to eq(File.expand_path('config/cloud_controller.yml'))
+      end
+
+      describe 'argument parsing' do
+        describe "Configuration File" do
+          ["-c", "--config"].each do |flag|
+            describe flag do
+              let (:argv_options) { [flag, "config/minimal_config.yml"] }
+
+              it "should set the configuration file" do
+                expect(subject.config_file).to eq("config/minimal_config.yml")
+              end
+            end
+          end
+        end
+
+        describe "Insert seed data" do
+          ["-s", "--insert-seed"].each do |flag|
+            let (:argv_options) { [flag] }
+
+            it "should set insert_seed_data to true" do
+              expect(subject.insert_seed_data).to be_true
+            end
+          end
+
+          ["-m", "--run-migrations"].each do |flag|
+            let (:argv_options) { [flag] }
+
+            it "should set insert_seed_data to true" do
+              Runner.any_instance.should_receive(:deprecation_warning).with("Deprecated: Use -s or --insert-seed flag")
+              expect(subject.insert_seed_data).to be_true
+            end
+          end
+        end
+
+        describe "Run in development mode" do
+          ["-d", "--development-mode"].each do |flag|
+            let (:argv_options) { [flag] }
+
+            it "should set development to true" do
+              expect(subject).to be_development
+            end
+
+            it "should set ENV['RACK_ENV'] to development" do
+              ENV.delete('RACK_ENV')
+              expect { subject }.to change { ENV['RACK_ENV'] }.from(nil).to('development')
+            end
+          end
+        end
       end
     end
   end

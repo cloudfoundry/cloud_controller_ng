@@ -148,7 +148,7 @@ module VCAP::CloudController
             Delayed::Job.count
           }.by(1)
 
-          response_body = JSON.parse(last_response.body, :symbolize_names => true)
+          response_body = JSON.parse(last_response.body, :symbolize_keys => true)
           job = Delayed::Job.last
           expect(job.handler).to include(app_obj.guid)
           expect(job.queue).to eq("cc-api_z1-99")

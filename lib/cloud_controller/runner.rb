@@ -12,6 +12,8 @@ require_relative "message_bus_configurer"
 
 module VCAP::CloudController
   class Runner
+    attr_reader :config_file, :insert_seed_data
+
     def initialize(argv)
       @argv = argv
 
@@ -35,7 +37,7 @@ module VCAP::CloudController
         end
 
         opts.on("-m", "--run-migrations", "Actually it means insert seed data") do
-          puts "Deprecated: Use -s or --insert-seed flag"
+          deprecation_warning "Deprecated: Use -s or --insert-seed flag"
           @insert_seed_data = true
         end
 
@@ -50,6 +52,10 @@ module VCAP::CloudController
           ENV["RACK_ENV"] = "development"
         end
       end
+    end
+
+    def deprecation_warning(message)
+      puts message
     end
 
     def parse_options!
