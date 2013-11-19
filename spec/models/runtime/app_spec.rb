@@ -951,6 +951,7 @@ module VCAP::CloudController
         app.add_route(route)
         expect {
           app.destroy
+          route.reload
         }.to change { route.apps.collect(&:guid) }.from([app.guid]).to([])
       end
 
@@ -964,15 +965,36 @@ module VCAP::CloudController
         }.to change { ServiceBinding.where(:id => service_binding.id).count }.from(1).to(0)
       end
 
-      it "should destroy all dependent crash events" do
+      it "should not destroy all dependent crash events" do
         app_event = AppEvent.make(:app => app)
 
         expect {
           app.destroy(savepoint: true)
-        }.to change {
+        }.not_to change {
           AppEvent.where(:id => app_event.id).count
-        }.from(1).to(0)
+        }.from(1)
       end
+
+      it "soft deletes app when destroy is called" do
+        app.destroy(savepoint: true)
+        App.deleted[:id => app.id].should_not be_nil
+      end
+
+      it "should not change anything for soft deleted apps when destroy is called" do
+        app.soft_delete
+  
+        expect {
+          app.destroy(savepoint: true)
+        }.not_to change {
+          App.deleted.where(:id => [app.id])
+        }
+      end
+
+      it "should not save an app with null space id" do
+        app.space_id = nil
+        expect { app.save }.to raise_error(Sequel::ValidationFailed, /space presence/)
+      end
+
     end
 
     describe "saving" do

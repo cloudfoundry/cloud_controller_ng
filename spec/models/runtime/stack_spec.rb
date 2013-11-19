@@ -114,9 +114,10 @@ module VCAP::CloudController
     describe "#destroy" do
       let(:stack) { Stack.make }
 
-      it "destroys the apps" do
+      it "soft deletes all apps" do
         app = AppFactory.make(:stack => stack)
-        expect { stack.destroy(savepoint: true) }.to change { App.where(:id => app.id).count }.by(-1)
+        stack.destroy(savepoint: true)
+        App.deleted[:id => app.id].should_not be_nil
       end
     end
 
