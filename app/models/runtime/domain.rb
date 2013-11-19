@@ -96,22 +96,22 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      orgs = Organization.filter(Sequel.or({
-        :managers => [user],
-        :auditors => [user]
-      }))
+      orgs = Organization.filter(Sequel.or(
+        managers: [user],
+        auditors: [user]
+      ))
 
-      spaces = Space.filter(Sequel.or({
-        :developers => [user],
-        :managers => [user],
-        :auditors => [user]
-      }))
+      spaces = Space.filter(Sequel.or(
+        developers: [user],
+        managers: [user],
+        auditors: [user]
+      ))
 
-      Sequel.or({
-        :owning_organization => orgs,
-        :owning_organization_id => nil,
-        :spaces => spaces
-      })
+      Sequel.or(
+        owning_organization: orgs,
+        owning_organization_id: nil,
+        spaces: spaces
+      )
     end
 
     def self.default_serving_domain
@@ -134,20 +134,20 @@ module VCAP::CloudController
 
     def self.find_or_create_shared_domain(name)
       logger = Steno.logger("cc.db.domain")
-      d = nil
+      domain = nil
 
       Domain.db.transaction(savepoint: true) do
-        d = Domain[:name => name]
-        if d
+        domain = Domain[:name => name]
+        if domain
           logger.info "reusing default serving domain: #{name}"
         else
           logger.info "creating shared serving domain: #{name}"
-          d = Domain.new(:name => name, :wildcard => true)
-          d.save(:validate => false)
+          domain = Domain.new(:name => name, :wildcard => true)
+          domain.save(:validate => false)
         end
       end
 
-      return d
+      domain
     end
 
     def self.populate_from_config(config, organization)
@@ -159,9 +159,9 @@ module VCAP::CloudController
         raise 'The organization that owns the system domain cannot be nil' unless organization
 
         find_or_create(
-          :name => config[:system_domain],
-          :wildcard => true,
-          :owning_organization => organization
+          name: config[:system_domain],
+          wildcard: true,
+          owning_organization: organization
         )
       end
     end

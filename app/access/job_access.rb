@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class JobAccess < BaseAccess
-    def read?(object)
+    def read?(_)
       logged_in?
     end
   end

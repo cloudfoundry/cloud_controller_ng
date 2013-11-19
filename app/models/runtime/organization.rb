@@ -5,26 +5,24 @@ module VCAP::CloudController
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
     one_to_many       :spaces
-    one_to_many       :service_instances, :dataset => lambda { VCAP::CloudController::ServiceInstance.filter(:space => spaces) }
-    one_to_many       :apps, :dataset => lambda { App.filter(:space => spaces) }
-    one_to_many       :app_events, :dataset => lambda { VCAP::CloudController::AppEvent.filter(:app => apps) }
-    one_to_many       :owned_domain, :class => "VCAP::CloudController::Domain", :key => :owning_organization_id
+    one_to_many       :service_instances, dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
+    one_to_many       :apps, dataset: -> { App.filter(space: spaces) }
+    one_to_many       :app_events, dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
+    one_to_many       :owned_domain, class: "VCAP::CloudController::Domain", key: :owning_organization_id
     one_to_many       :service_plan_visibilities
-    many_to_many      :domains, :before_add => :validate_domain
+    many_to_many      :domains, before_add: :validate_domain
     many_to_one       :quota_definition
 
-    add_association_dependencies :domains => :nullify,
-      :spaces => :destroy,
-      :service_instances => :destroy,
-      :owned_domain => :destroy,
-      :service_plan_visibilities => :destroy
+    add_association_dependencies domains: :nullify,
+      spaces: :destroy,
+      service_instances: :destroy,
+      owned_domain: :destroy,
+      service_plan_visibilities: :destroy
 
     define_user_group :users
-    define_user_group :managers, :reciprocal => :managed_organizations
-    define_user_group :billing_managers,
-                      :reciprocal => :billing_managed_organizations
-    define_user_group :auditors,
-                      :reciprocal => :audited_organizations
+    define_user_group :managers, reciprocal: :managed_organizations
+    define_user_group :billing_managers, reciprocal: :billing_managed_organizations
+    define_user_group :auditors, reciprocal: :audited_organizations
 
     strip_attributes  :name
 
@@ -96,9 +94,9 @@ module VCAP::CloudController
 
     def validate_domain(domain)
       return if domain && domain.owning_organization.nil?
-      unless (domain &&
-              domain.owning_organization_id &&
-              domain.owning_organization_id == id)
+      unless domain &&
+                    domain.owning_organization_id &&
+                    domain.owning_organization_id == id
         raise InvalidDomainRelation.new(domain.guid)
       end
     end
@@ -125,11 +123,11 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      Sequel.or({
-        :managers => [user],
-        :users => [user],
-        :billing_managers => [user],
-        :auditors => [user] })
+      Sequel.or(
+        managers: [user],
+        users: [user],
+        billing_managers: [user],
+        auditors: [user])
     end
   end
 end

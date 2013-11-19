@@ -38,13 +38,13 @@ module VCAP::CloudController
                       :join_table => "spaces_auditors",
                       :right_key => :space_id, :reciprocal => :auditors
 
-    add_association_dependencies :organizations => :nullify
-    add_association_dependencies :managed_organizations => :nullify
-    add_association_dependencies :audited_spaces => :nullify
-    add_association_dependencies :billing_managed_organizations => :nullify
-    add_association_dependencies :audited_organizations => :nullify
-    add_association_dependencies :spaces => :nullify
-    add_association_dependencies :managed_spaces => :nullify
+    add_association_dependencies organizations: :nullify
+    add_association_dependencies managed_organizations: :nullify
+    add_association_dependencies audited_spaces: :nullify
+    add_association_dependencies billing_managed_organizations: :nullify
+    add_association_dependencies audited_organizations: :nullify
+    add_association_dependencies spaces: :nullify
+    add_association_dependencies managed_spaces: :nullify
 
     default_order_by  :id
 
