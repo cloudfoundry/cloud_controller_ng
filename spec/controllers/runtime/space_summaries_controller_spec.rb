@@ -10,12 +10,12 @@ module VCAP::CloudController
     let!(:apps) do
       started_apps = 2.times.map do |i|
         AppFactory.make(
-          :space => space,
-          :instances => i,
-          :memory => mem_size,
-          :state => "STARTED",
-          :package_hash => "abc",
-          :package_state => "STAGED",
+          space: space,
+          instances: i,
+          memory: mem_size,
+          state: "STARTED",
+          package_hash: "abc",
+          package_state: "STAGED",
         )
       end
 

@@ -72,7 +72,7 @@ module VCAP::CloudController
     end
 
     def to_json
-      %Q("#{name}")
+      Yajl::Encoder.encode name
     end
 
     def shift_and_update_positions(last_position, target_position)

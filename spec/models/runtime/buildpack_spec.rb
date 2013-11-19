@@ -424,5 +424,11 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "to_json" do
+      it "does not string mung(e)?" do
+        expect(Buildpack.new(name: "my_custom_buildpack\r\n").to_json).to eq '"my_custom_buildpack\r\n"'
+      end
+    end
   end
 end
