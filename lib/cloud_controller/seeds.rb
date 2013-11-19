@@ -38,6 +38,7 @@ module VCAP::CloudController
 
       def create_seed_domains(config, system_org)
         Domain.populate_from_config(config, system_org)
+        Organization.all.each { |org| org.add_inheritable_domains }
       end
     end
   end
