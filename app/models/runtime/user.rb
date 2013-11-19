@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class User < Sequel::Model
+    class InvalidOrganizationRelation < InvalidRelation; end
+
     no_auto_guid
 
     many_to_many :organizations
@@ -10,18 +12,21 @@ module VCAP::CloudController
     many_to_many :managed_organizations,
       class: "VCAP::CloudController::Organization",
       join_table: "organizations_managers",
-      right_key: :organization_id, reciprocal: :managers
+      right_key: :organization_id, reciprocal: :managers,
+      before_add: :validate_organization
 
     many_to_many :billing_managed_organizations,
       class: "VCAP::CloudController::Organization",
       join_table: "organizations_billing_managers",
       right_key: :organization_id,
-      reciprocal: :billing_managers
+      reciprocal: :billing_managers,
+      before_add: :validate_organization
 
     many_to_many :audited_organizations,
       class: "VCAP::CloudController::Organization",
       join_table: "organizations_auditors",
-      right_key: :organization_id, reciprocal: :auditors
+      right_key: :organization_id, reciprocal: :auditors,
+      before_add: :validate_organization
 
     many_to_many :spaces,
       class: "VCAP::CloudController::Space",
@@ -63,6 +68,12 @@ module VCAP::CloudController
     def validate
       validates_presence :guid
       validates_unique   :guid
+    end
+
+    def validate_organization(org)
+      unless org && organizations.include?(org)
+        raise InvalidOrganizationRelation.new(org.guid)
+      end
     end
 
     def admin?

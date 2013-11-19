@@ -6,6 +6,7 @@ describe OrganizationPresenter do
     before do
       VCAP::CloudController::Space.make(organization: org)
       user = VCAP::CloudController::User.make
+      user.add_organization org
       user.add_managed_organization org
     end
     subject { OrganizationPresenter.new(org) }
