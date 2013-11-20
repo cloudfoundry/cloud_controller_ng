@@ -4,7 +4,8 @@ module VCAP::CloudController
 
     no_auto_guid
 
-    many_to_many :organizations
+    many_to_many :organizations,
+      before_remove: :validate_organization_roles
 
     many_to_one :default_space, key: :default_space_id,
       class: "VCAP::CloudController::Space"
@@ -72,6 +73,12 @@ module VCAP::CloudController
 
     def validate_organization(org)
       unless org && organizations.include?(org)
+        raise InvalidOrganizationRelation.new(org.guid)
+      end
+    end
+
+    def validate_organization_roles(org)
+      if org && (managed_organizations.include?(org) || billing_managed_organizations.include?(org) || audited_organizations.include?(org))
         raise InvalidOrganizationRelation.new(org.guid)
       end
     end

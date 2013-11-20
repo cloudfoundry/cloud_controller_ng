@@ -83,6 +83,57 @@ module VCAP::CloudController
           }.to raise_error User::InvalidOrganizationRelation
         end
       end
+
+      context "when a user is a manager" do
+        before do
+          user.add_organization(org)
+          user.add_managed_organization(org)
+        end
+
+        it "should fail to remove user from organization" do
+          expect {
+            user.remove_organization(org)
+          }.to raise_error User::InvalidOrganizationRelation
+        end
+      end
+
+      context "when a user is a billing manager" do
+        before do
+          user.add_organization(org)
+          user.add_billing_managed_organization(org)
+        end
+
+        it "should fail to remove user from organization" do
+          expect {
+            user.remove_organization(org)
+          }.to raise_error User::InvalidOrganizationRelation
+        end
+      end
+
+      context "when a user is an auditor" do
+        before do
+          user.add_organization(org)
+          user.add_audited_organization(org)
+        end
+
+        it "should fail to remove user from organization" do
+          expect {
+            user.remove_organization(org)
+          }.to raise_error User::InvalidOrganizationRelation
+        end
+      end
+
+      context "when a user is not a manager/billing manager/auditor" do
+        before do
+          user.add_organization(org)
+        end
+
+        it "should remove user from organization" do
+          expect {
+            user.remove_organization(org)
+          }.to change{user.organizations.size}.by(-1)
+        end
+      end
     end
   end
 end
