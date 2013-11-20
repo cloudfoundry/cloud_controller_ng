@@ -1,4 +1,6 @@
 module IntegrationSetup
+  CC_START_TIMEOUT = 20
+  SLEEP_INTERVAL = 0.5
   def start_nats(opts={})
     port = opts[:port] || 4222
     @nats_pid = run_cmd("nats-server -V -D -p #{port}", opts)
@@ -19,9 +21,10 @@ module IntegrationSetup
     end
   end
 
-  def start_cc(opts={}, wait_cycles = 20)
+  def start_cc(opts={})
     config_file = opts[:config] || "config/cloud_controller.yml"
     config = YAML.load_file(config_file)
+    extra_command_args = Array(opts.delete(:extra_command_args)).join(" ")
 
     FileUtils.rm(config['pid_filename']) if File.exists?(config['pid_filename'])
 
@@ -30,18 +33,19 @@ module IntegrationSetup
       run_cmd("rm -f #{database_file}", wait: true)
     end
 
-    run_cmd("bundle exec rake db:migrate", :wait => true)
+    run_cmd("bundle exec rake db:migrate", wait: true)
     @cc_pids ||= []
-    @cc_pids << run_cmd("bin/cloud_controller -s -c #{config_file}", opts)
+    @cc_pids << run_cmd("bin/cloud_controller -s -c #{config_file} #{extra_command_args}", opts)
 
     info_endpoint = "http://localhost:#{config["port"]}/info"
-    wait_cycles.times do
-      sleep 1
+
+    Integer(CC_START_TIMEOUT/SLEEP_INTERVAL).times do
+      sleep SLEEP_INTERVAL
       result = Net::HTTP.get_response(URI.parse(info_endpoint)) rescue nil
       return if result && result.code.to_i == 200
     end
 
-    raise "Cloud controller did not start up after #{wait_cycles}s"
+    raise "Cloud controller did not start up after #{CC_START_TIMEOUT}s"
   end
 
   def stop_cc

@@ -119,7 +119,7 @@ module VCAP::CloudController
 
         Seeds.write_seed_data(config) if @insert_seed_data
 
-        app = create_app(config, message_bus)
+        app = create_app(config, message_bus, development?)
 
         start_thin_server(app, config)
 
@@ -174,12 +174,17 @@ module VCAP::CloudController
       Config.configure_message_bus(message_bus)
     end
 
-    def create_app(config, message_bus)
+    def create_app(config, message_bus, development)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
       register_component(message_bus)
 
       Rack::Builder.new do
         use Rack::CommonLogger
+
+        if development
+          require 'new_relic/rack/developer_mode'
+          use NewRelic::Rack::DeveloperMode
+        end
 
         DeaClient.run
         AppObserver.run

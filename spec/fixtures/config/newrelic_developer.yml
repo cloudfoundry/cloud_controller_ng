@@ -1,0 +1,7 @@
+development:
+  app_name: 'Cloud Controller (development)'
+  developer_mode: true
+  monitor_mode: false
+  log_level: info
+  log_file_path: '/var/vcap/sys/log/cloud_controller_ng/newrelic'
+  log_file_name: development.log
