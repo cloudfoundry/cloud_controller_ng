@@ -29,7 +29,7 @@ describe "Cloud controller", type: :integration, monitoring: true do
       stop_nats
     end
 
-    it "reports the transaction information in /newrelic" do
+    xit "reports the transaction information in /newrelic" do
       info_response = make_get_request("/info", {}, port)
       expect(info_response.code).to eq("200")
       newrelic_response = make_get_request("/newrelic", {}, port)
