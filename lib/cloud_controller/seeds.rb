@@ -44,6 +44,7 @@ module VCAP::CloudController
           if org.modified?
             Steno.logger.warn("seeds.system-domain-organization.collision", existing_quota_name: org.refresh.quota_definition.name)
           end
+          org
         else
           Organization.create(:name => config[:system_domain_organization], quota_definition: quota_definition)
         end
