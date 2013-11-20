@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     def self.configure(file_path)
       @config_file = if file_path
-        ConfigFile.new(file_path).tap { |c| c.load }
+        ConfigFile.new(file_path)
       else
         nil
       end
@@ -54,18 +54,20 @@ module VCAP::CloudController
     private
 
     def self.populate_from_hash(hash)
-      update_or_create(:name => hash["name"]) do |r|
-        r.update(:description => hash["description"])
+      stack = find(name: hash["name"])
+      if stack
+        stack.set(hash)
+        if stack.modified?
+          Steno.logger.warn("stack.populate.collision", hash)
+        end
+      else
+        create(hash.slice("name", "description"))
       end
     end
 
     class ConfigFile
       def initialize(file_path)
-        @file_path = file_path
-      end
-
-      def load
-        @hash = YAML.load_file(@file_path).tap do |h|
+        @hash = YAML.load_file(file_path).tap do |h|
           Schema.validate(h)
         end
       end

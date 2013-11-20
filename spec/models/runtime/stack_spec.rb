@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
     end
 
-    describe ".populate_from_file" do
+    describe ".populate" do
       context "when config was not set" do
         before { described_class.configure(nil) }
 
@@ -62,16 +62,45 @@ module VCAP::CloudController
 
         before { described_class.configure(file) }
 
-        it "loads stacks" do
-          described_class.populate
-          cider = described_class.find(:name => "cider")
-          cider.should be_valid
-        end
+        context "when there are no stacks" do
+          before { Stack.dataset.delete }
 
-        it "populates descriptions about loaded stacks" do
-          described_class.populate
-          cider = described_class.find(:name => "cider")
-          cider.description.should == "cider-description"
+          it "creates them all" do
+            described_class.populate
+
+            cider = described_class.find(:name => "cider")
+            expect(cider.description).to eq("cider-description")
+
+            default_stack = described_class.find(:name => "default-stack-name")
+            expect(default_stack.description).to eq("default-stack-description")
+          end
+
+          context "when there are existing stacks" do
+            before do
+              Stack.dataset.delete
+              Stack.populate
+            end
+
+            it "should not create duplicates" do
+              expect { Stack.populate }.not_to change { Stack.count }
+            end
+
+            context "and the config file would change an existing stack" do
+              it "should warn" do
+                cider = Stack.find(name: "cider")
+                cider.description = "cider-description has changed"
+                cider.save
+
+
+                mock_logger = double
+                Steno.stub(:logger).and_return(mock_logger)
+
+                mock_logger.should_receive(:warn).with("stack.populate.collision", "name" => "cider", "description" => "cider-description")
+
+                Stack.populate
+              end
+            end
+          end
         end
       end
     end
