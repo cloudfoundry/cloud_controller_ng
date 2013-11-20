@@ -280,21 +280,6 @@ module VCAP::CloudController
             end
           end
         end
-
-        describe "Run in development mode" do
-          ["-d", "--development-mode"].each do |flag|
-            let (:argv_options) { [flag] }
-
-            it "should set development to true" do
-              expect(subject).to be_development
-            end
-
-            it "should set ENV['RACK_ENV'] to development" do
-              ENV.delete('RACK_ENV')
-              expect { subject }.to change { ENV['RACK_ENV'] }.from(nil).to('development')
-            end
-          end
-        end
       end
     end
   end

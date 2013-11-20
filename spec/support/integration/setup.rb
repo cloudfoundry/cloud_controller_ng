@@ -24,7 +24,6 @@ module IntegrationSetup
   def start_cc(opts={})
     config_file = opts[:config] || "config/cloud_controller.yml"
     config = YAML.load_file(config_file)
-    extra_command_args = Array(opts.delete(:extra_command_args)).join(" ")
 
     FileUtils.rm(config['pid_filename']) if File.exists?(config['pid_filename'])
 
@@ -35,7 +34,7 @@ module IntegrationSetup
 
     run_cmd("bundle exec rake db:migrate", wait: true)
     @cc_pids ||= []
-    @cc_pids << run_cmd("bin/cloud_controller -s -c #{config_file} #{extra_command_args}", opts)
+    @cc_pids << run_cmd("bin/cloud_controller -s -c #{config_file}", opts)
 
     info_endpoint = "http://localhost:#{config["port"]}/info"
 

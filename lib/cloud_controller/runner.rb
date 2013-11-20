@@ -19,6 +19,7 @@ module VCAP::CloudController
 
       # default to production. this may be overriden during opts parsing
       ENV["RACK_ENV"] ||= "production"
+
       @config_file = File.expand_path("../../../config/cloud_controller.yml", __FILE__)
       parse_options!
       parse_config
@@ -43,13 +44,6 @@ module VCAP::CloudController
 
         opts.on("-s", "--insert-seed", "Insert seed data") do
           @insert_seed_data = true
-        end
-
-        opts.on("-d", "--development-mode", "Run in development mode") do
-          # this must happen before requring any modules that use sinatra,
-          # otherwise it will not setup the environment correctly
-          @development = true
-          ENV["RACK_ENV"] = "development"
         end
       end
     end
@@ -103,8 +97,8 @@ module VCAP::CloudController
       end
     end
 
-    def development?
-      @development ||= false
+    def development_mode?
+      @config[:development_mode]
     end
 
     def run!
@@ -119,7 +113,7 @@ module VCAP::CloudController
 
         Seeds.write_seed_data(config) if @insert_seed_data
 
-        app = create_app(config, message_bus, development?)
+        app = create_app(config, message_bus, development_mode?)
 
         start_thin_server(app, config)
 
