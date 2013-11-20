@@ -50,7 +50,25 @@ module VCAP::CloudController
       end
 
       def create_seed_domains(config, system_org)
-        Domain.populate_from_config(config, system_org)
+        config[:app_domains].each do |domain|
+          Domain.find_or_create_shared_domain(domain)
+        end
+
+        unless config[:app_domains].include?(config[:system_domain])
+          raise 'The organization that owns the system domain cannot be nil' unless system_org
+
+          domain = Domain.find(:name => config[:system_domain])
+          desired_attrs = {wildcard: true, owning_organization: system_org}
+          if domain
+            domain.set(desired_attrs)
+            if domain.modified?
+              Steno.logger.warn("seeds.system-domain.collision", wildcard: domain.wildcard, owning_organization: domain.owning_organization)
+            end
+          else
+            Domain.create(desired_attrs.merge(:name => config[:system_domain]))
+          end
+        end
+
         Organization.all.each { |org| org.add_inheritable_domains }
       end
     end

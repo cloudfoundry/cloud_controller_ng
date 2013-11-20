@@ -149,21 +149,5 @@ module VCAP::CloudController
 
       domain
     end
-
-    def self.populate_from_config(config, organization)
-      config[:app_domains].each do |domain|
-        find_or_create_shared_domain(domain)
-      end
-
-      unless config[:app_domains].include?(config[:system_domain])
-        raise 'The organization that owns the system domain cannot be nil' unless organization
-
-        find_or_create(
-          name: config[:system_domain],
-          wildcard: true,
-          owning_organization: organization
-        )
-      end
-    end
   end
 end

@@ -128,6 +128,7 @@ module Sequel::Plugins::VcapRelations
         send(name).collect { |o| o.id }
       end
 
+      # greppable: add_domain_by_guid
       define_method("add_#{singular_name}_by_guid") do |guid|
         ar = self.class.association_reflection(name)
         other = ar.associated_class[:guid => guid]
