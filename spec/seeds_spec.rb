@@ -10,12 +10,85 @@ module VCAP::CloudController
     end
 
     describe ".create_seed_quota_definitions" do
-      it "creates quota definitions" do
-        QuotaDefinition.should_receive(:update_or_create).with(:name => "free")
-        QuotaDefinition.should_receive(:update_or_create).with(:name => "paid")
-        QuotaDefinition.should_receive(:update_or_create).with(:name => "trial")
+      let(:config) do
+        {
+          quota_definitions: {
+            "free" => {
+              non_basic_services_allowed: false,
+              total_routes: 10,
+              total_services: 10,
+              memory_limit: 1024,
+            },
 
-        Seeds.create_seed_quota_definitions(config)
+            "paid" => {
+              non_basic_services_allowed: true,
+              total_routes: 1000,
+              total_services: 20,
+              memory_limit: 1_024_000,
+            },
+          }}
+      end
+      context "when there are no quota definitions" do
+        before do
+          QuotaDefinition.dataset.delete
+        end
+
+        it "makes them all" do
+          expect {
+            Seeds.create_seed_quota_definitions(config)
+          }.to change{QuotaDefinition.count}.from(0).to(2)
+
+          free_quota = QuotaDefinition[name: "free"]
+          expect(free_quota.non_basic_services_allowed).to eq(false)
+          expect(free_quota.total_routes).to eq(10)
+          expect(free_quota.total_services).to eq(10)
+          expect(free_quota.memory_limit).to eq(1024)
+
+          paid_quota = QuotaDefinition[name: "paid"]
+          expect(paid_quota.non_basic_services_allowed).to eq(true)
+          expect(paid_quota.total_routes).to eq(1000)
+          expect(paid_quota.total_services).to eq(20)
+          expect(paid_quota.memory_limit).to eq(1_024_000)
+        end
+      end
+
+      context "when all the quota definitions exist already" do
+        before do
+          QuotaDefinition.dataset.delete
+          Seeds.create_seed_quota_definitions(config)
+        end
+
+        context "when the existing records exactly match the config" do
+          it "does not create duplicates" do
+            expect {
+              Seeds.create_seed_quota_definitions(config)
+            }.not_to change{QuotaDefinition.count}
+
+            free_quota = QuotaDefinition[name: "free"]
+            expect(free_quota.non_basic_services_allowed).to eq(false)
+            expect(free_quota.total_routes).to eq(10)
+            expect(free_quota.total_services).to eq(10)
+            expect(free_quota.memory_limit).to eq(1024)
+
+            paid_quota = QuotaDefinition[name: "paid"]
+            expect(paid_quota.non_basic_services_allowed).to eq(true)
+            expect(paid_quota.total_routes).to eq(1000)
+            expect(paid_quota.total_services).to eq(20)
+            expect(paid_quota.memory_limit).to eq(1_024_000)
+          end
+        end
+
+        context "when there are records with names that match but other fields that do not match" do
+          it "warns" do
+            mock_logger = double
+            Steno.stub(:logger).and_return(mock_logger)
+            config[:quota_definitions]["free"][:total_routes] = 2
+
+            mock_logger.should_receive(:warn).with("seeds.quota-collision", hash_including(name: "free"))
+
+            Seeds.create_seed_quota_definitions(config)
+          end
+        end
       end
     end
 

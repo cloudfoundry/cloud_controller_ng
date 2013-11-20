@@ -9,9 +9,16 @@ module VCAP::CloudController
       end
 
       def create_seed_quota_definitions(config)
-        config[:quota_definitions].each do |k, v|
-          QuotaDefinition.update_or_create(:name => k.to_s) do |r|
-            r.update_from_hash(v)
+        config[:quota_definitions].each do |name, values|
+          quota = QuotaDefinition.find(:name => name.to_s)
+
+          if quota
+            quota.set(values)
+            if quota.modified?
+              Steno.logger.warn("seeds.quota-collision", name: name, values: values)
+            end
+          else
+            QuotaDefinition.create(values.merge(:name => name.to_s))
           end
         end
       end
