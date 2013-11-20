@@ -38,8 +38,14 @@ module VCAP::CloudController
           raise ArgumentError, "Missing 'paid' quota definition in config file"
         end
 
-        Organization.find_or_create(:name => config[:system_domain_organization]) do |org|
-          org.quota_definition = quota_definition
+        org = Organization.find(:name => config[:system_domain_organization])
+        if org
+          org.set(quota_definition: quota_definition)
+          if org.modified?
+            Steno.logger.warn("seeds.system-domain-organization.collision", existing_quota_name: org.refresh.quota_definition.name)
+          end
+        else
+          Organization.create(:name => config[:system_domain_organization], quota_definition: quota_definition)
         end
       end
 

@@ -93,38 +93,58 @@ module VCAP::CloudController
     end
 
     describe ".create_seed_organizations" do
-      context "when 'paid' quota definition is missing" do
-        it "raises error" do
-          QuotaDefinition.should_receive(:find).with(:name => "paid")
+      context "when system domain organization is missing in the configuration" do
+        it "does not create an organization" do
+          config_without_org = config.clone
+          config_without_org.delete(:system_domain_organization)
 
-          expect do
-            Seeds.create_seed_organizations(config)
-          end.to raise_error(ArgumentError,
-            /missing 'paid' quota definition in config file/i)
+          expect {
+            Seeds.create_seed_organizations(config_without_org)
+          }.not_to change { Organization.count }
         end
       end
 
-      context "when 'paid' quota definition exists" do
-        before do
-          unless QuotaDefinition.find(:name => "paid")
-            QuotaDefinition.make(:name => "paid")
-          end
-        end
+      context "when system domain organization exists in the configuration" do
+        context "when 'paid' quota definition is missing" do
+          before { QuotaDefinition.dataset.delete }
 
-        context "when system domain organization is missing in the configuration" do
-          it "does not raise error" do
-            config_without_org = config.clone
-            config_without_org.delete(:system_domain_organization)
-
+          it "raises error" do
             expect do
-              Seeds.create_seed_organizations(config_without_org)
-            end.to_not raise_error
+              Seeds.create_seed_organizations(config)
+            end.to raise_error(ArgumentError, /missing 'paid' quota definition in config file/i)
           end
         end
 
-        context "when system domain organization exists in the configuration" do
-          it "creates the system organization" do
-            Seeds.create_seed_organizations(config).should_not be_nil
+        context "when 'paid' quota definition exists" do
+          before do
+            QuotaDefinition.dataset.delete
+            QuotaDefinition.make(:name => "paid")
+            Organization.dataset.delete
+          end
+
+          it "creates the system organization when the organization does not already exist" do
+            expect {
+              Seeds.create_seed_organizations(config)
+            }.to change { Organization.count }.from(0).to(1)
+
+            org = Organization.first
+            expect(org.quota_definition.name).to eq("paid")
+            expect(org.name).to eq("the-system_domain-org-name")
+          end
+
+          it "warns when the system organization exists and has a different quota" do
+            Seeds.create_seed_organizations(config)
+            org = Organization.find(name: "the-system_domain-org-name")
+            QuotaDefinition.make(name: "runaway")
+            org.quota_definition = QuotaDefinition.find(name: "runaway")
+            org.save(validate: false) # See tracker story #61090364
+
+            mock_logger = double
+            Steno.stub(:logger).and_return(mock_logger)
+
+            mock_logger.should_receive(:warn).with("seeds.system-domain-organization.collision", existing_quota_name: "runaway")
+
+            Seeds.create_seed_organizations(config)
           end
         end
       end
