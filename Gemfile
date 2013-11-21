@@ -31,7 +31,7 @@ group :db do
   gem "sqlite3"
 end
 
-group :development do
+group :operations do
   gem "pry"
 end
 
