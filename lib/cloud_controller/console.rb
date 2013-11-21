@@ -10,7 +10,11 @@ require "cloud_controller"
 require "irb/completion"
 require "pry"
 
-@config_file = File.expand_path("../../../config/cloud_controller.yml", __FILE__)
+@config_file = ARGV[0] || File.expand_path("../../../config/cloud_controller.yml", __FILE__)
+unless File.exists?(@config_file)
+  warn "#{@config_file} not found. Try running bin/console <PATH_TO_CONFIG_FILE>."
+  exit 1
+end
 @config = VCAP::CloudController::Config.from_file(@config_file)
 logger = Logger.new(STDOUT)
 
