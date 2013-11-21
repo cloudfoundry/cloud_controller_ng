@@ -8,10 +8,8 @@ def generate_hm_api_response(app, running_instances, crash_counts=[])
       id: app.guid,
       version: app.version,
       instances: app.instances,
-      memory: app.memory,
       state: app.state,
       package_state: app.package_state,
-      updated_at: app.updated_at
     },
     instance_heartbeats: [],
     crash_counts: []
@@ -19,7 +17,6 @@ def generate_hm_api_response(app, running_instances, crash_counts=[])
 
   running_instances.each do |running_instance|
     result[:instance_heartbeats].push({
-                                        cc_partition: "default",
                                         droplet: app.guid,
                                         version: app.version,
                                         instance: running_instance[:instance_guid] || Sham.guid,
