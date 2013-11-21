@@ -15,7 +15,7 @@ module VCAP::CloudController
           if quota
             quota.set(values)
             if quota.modified?
-              Steno.logger.warn("seeds.quota-collision", name: name, values: values)
+              Steno.logger("cc.seeds").warn("seeds.quota-collision", name: name, values: values)
             end
           else
             QuotaDefinition.create(values.merge(:name => name.to_s))
@@ -42,7 +42,7 @@ module VCAP::CloudController
         if org
           org.set(quota_definition: quota_definition)
           if org.modified?
-            Steno.logger.warn("seeds.system-domain-organization.collision", existing_quota_name: org.refresh.quota_definition.name)
+            Steno.logger("cc.seeds").warn("seeds.system-domain-organization.collision", existing_quota_name: org.refresh.quota_definition.name)
           end
           org
         else
@@ -63,7 +63,7 @@ module VCAP::CloudController
           if domain
             domain.set(desired_attrs)
             if domain.modified?
-              Steno.logger.warn("seeds.system-domain.collision", wildcard: domain.wildcard, owning_organization: domain.owning_organization)
+              Steno.logger("cc.seeds").warn("seeds.system-domain.collision", wildcard: domain.wildcard, owning_organization: domain.owning_organization)
             end
           else
             Domain.create(desired_attrs.merge(:name => config[:system_domain]))

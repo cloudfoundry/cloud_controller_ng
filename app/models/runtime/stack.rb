@@ -58,7 +58,7 @@ module VCAP::CloudController
       if stack
         stack.set(hash)
         if stack.modified?
-          Steno.logger.warn("stack.populate.collision", hash)
+          Steno.logger("cc.stack").warn("stack.populate.collision", hash)
         end
       else
         create(hash.slice("name", "description"))
