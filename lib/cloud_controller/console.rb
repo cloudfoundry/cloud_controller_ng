@@ -22,6 +22,7 @@ db_config = @config.fetch(:db).merge(log_level: :debug)
 
 VCAP::CloudController::DB.connect(logger, db_config)
 VCAP::CloudController::DB.load_models
+VCAP::CloudController::Config.configure(@config)
 
 if ENV["RACK_ENV"] == "development"
   $:.unshift(File.expand_path("../../../spec/support", __FILE__))
