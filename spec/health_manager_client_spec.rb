@@ -26,9 +26,9 @@ module VCAP::CloudController
       it "should return crashed instances" do
         resp = {
           "instances" => [
-                         { "instance" => "instance_1", "since" => 1 },
-                         { "instance" => "instance_2", "since" => 1 },
-                        ]
+            {"instance" => "instance_1", "since" => 1},
+            {"instance" => "instance_2", "since" => 1},
+          ]
         }
 
         message_bus.respond_to_synchronous_request("healthmanager.status", [resp])

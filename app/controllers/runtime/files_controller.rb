@@ -78,9 +78,9 @@ module VCAP::CloudController
       # send a +.
       if match = search_param.match(/^[+]?([0-9]+)$/)
         instance = match.captures[0].to_i
-        DeaClient.get_file_uri_for_instance(app, path, instance)
+        DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
       elsif search_param.match(/^[0-9a-zA-z]+$/)
-        DeaClient.get_file_uri_for_instance_id(app, path, search_param)
+        DeaClient.get_file_uri_by_instance_guid(app, path, search_param)
       else
         msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
         msg << " as the search_param: #{search_param} is invalid."

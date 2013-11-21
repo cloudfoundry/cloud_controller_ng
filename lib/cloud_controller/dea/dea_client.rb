@@ -16,6 +16,7 @@ module VCAP::CloudController
       end
     end
 
+    ACTIVE_APP_STATES = [:RUNNING, :STARTING].freeze
     class << self
       include VCAP::Errors
 
@@ -173,22 +174,23 @@ module VCAP::CloudController
         )
       end
 
-      def get_file_uri_for_instance(app, path, instance)
-        if instance < 0 || instance >= app.instances
-          msg = "Request failed for app: #{app.name}, instance: #{instance}"
+      def get_file_uri_for_active_instance_by_index(app, path, index)
+        if index < 0 || index >= app.instances
+          msg = "Request failed for app: #{app.name}, instance: #{index}"
           msg << " and path: #{path || '/'} as the instance is out of range."
 
           raise FileError.new(msg)
         end
 
-        search_opts = {
-          indices: [instance],
-          version: app.version
+        search_criteria = {
+          indices: [index],
+          version: app.version,
+          states: ACTIVE_APP_STATES
         }
 
-        result = get_file_uri(app, path, search_opts)
+        result = get_file_uri(app, path, search_criteria)
         unless result
-          msg = "Request failed for app: #{app.name}, instance: #{instance}"
+          msg = "Request failed for app: #{app.name}, instance: #{index}"
           msg << " and path: #{path || '/'} as the instance is not found."
 
           raise FileError.new(msg)
@@ -196,7 +198,7 @@ module VCAP::CloudController
         result
       end
 
-      def get_file_uri_for_instance_id(app, path, instance_id)
+      def get_file_uri_by_instance_guid(app, path, instance_id)
         result = get_file_uri(app, path, :instance_ids => [instance_id])
         unless result
           msg = "Request failed for app: #{app.name}, instance_id: #{instance_id}"

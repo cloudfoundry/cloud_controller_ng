@@ -54,7 +54,7 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri_for_instance).
+            DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
               with(@app, nil, 5).and_return(file_uri_result)
 
             client = double("http client")
@@ -85,7 +85,7 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/path",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri_for_instance).
+            DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
               with(@app, "path", 5).and_return(file_uri_result)
 
             client = double("http client")
@@ -118,7 +118,7 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri_for_instance).
+            DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
               with(@app, nil, 5).and_return(file_uri_result)
 
             client = double("http client")
@@ -152,7 +152,7 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri_for_instance).
+            DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
               with(@app, nil, 5).and_return(file_uri_result)
 
             client = double("http client")
@@ -188,7 +188,7 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri_for_instance).
+            DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
               with(@app, nil, 5).and_return(to_return)
 
             client = double("http client")
@@ -224,7 +224,7 @@ module VCAP::CloudController
               :credentials => ["username", "password"],
               :file_uri_v2 => "http://new.dea.cloud/private/?path=path",
             )
-            DeaClient.should_receive(:get_file_uri_for_instance).
+            DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
               with(@app, "path", 5).and_return(to_return)
 
             get("/v2/apps/#{@app.guid}/instances/#{instance}/files/path?tail",
@@ -250,7 +250,7 @@ module VCAP::CloudController
               :credentials => ["u", "p"],
               :file_uri_v2 => "http://new.dea.cloud/private/?path=path",
             )
-            DeaClient.should_receive(:get_file_uri_for_instance).
+            DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
               with(@app, "path", 5).and_return(to_return)
 
             get("/v2/apps/#{@app.guid}/instances/#{instance}/files/path?tail",
@@ -275,7 +275,7 @@ module VCAP::CloudController
               :file_uri_v1 => "file_uri/path",
               :credentials => ["username", "password"],
             )
-            DeaClient.should_receive(:get_file_uri_for_instance_id).
+            DeaClient.should_receive(:get_file_uri_by_instance_guid).
               with(@app, "path", instance_id).and_return(file_uri_result)
 
             client = double("http client")
@@ -313,7 +313,7 @@ module VCAP::CloudController
               :credentials => [],
               :file_uri_v2 => "file_uri/",
             )
-            DeaClient.should_receive(:get_file_uri_for_instance).
+            DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
               with(@app, nil, 5).and_return(to_return)
 
             get("/v2/apps/#{@app.guid}/instances/#{instance}/files",

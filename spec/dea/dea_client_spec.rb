@@ -2,21 +2,20 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DeaClient do
-    include RSpec::Mocks::ExampleMethods # for double
 
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_pool) { double(:dea_pool) }
     let(:app) do
-      app = AppFactory.make
-      NUM_SVC_INSTANCES.times do
-        instance = ManagedServiceInstance.make(:space => app.space)
-        binding = ServiceBinding.make(
-          :app => app,
-          :service_instance => instance
-        )
-        app.add_service_binding(binding)
+      app = AppFactory.make.tap do |app|
+        NUM_SVC_INSTANCES.times do
+          instance = ManagedServiceInstance.make(:space => app.space)
+          binding = ServiceBinding.make(
+            :app => app,
+            :service_instance => instance
+          )
+          app.add_service_binding(binding)
+        end
       end
-      app
     end
 
     let(:blobstore_url_generator) do
@@ -41,14 +40,15 @@ module VCAP::CloudController
         res = DeaClient.start_app_message(app)
         expect(res[:executableUri]).to eq("app_uri")
         res.should be_kind_of(Hash)
-        res[:droplet].should == app.guid
-        res[:services].should be_kind_of(Array)
-        res[:services].count.should == NUM_SVC_INSTANCES
-        res[:services].first.should be_kind_of(Hash)
-        res[:limits].should be_kind_of(Hash)
-        res[:env].should be_kind_of(Array)
-        res[:console].should == false
-        res[:start_command].should be_nil
+
+        expect(res[:droplet]).to eq(app.guid)
+        expect(res[:services]).to be_kind_of(Array)
+        expect(res[:services].count).to eq NUM_SVC_INSTANCES
+        expect(res[:services].first).to be_kind_of(Hash)
+        expect(res[:limits]).to be_kind_of(Hash)
+        expect(res[:env]).to be_kind_of(Array)
+        expect(res[:console]).to eq false
+        expect(res[:start_command]).to be_nil
       end
 
       context "with an app enabled for console support" do
@@ -320,7 +320,7 @@ module VCAP::CloudController
         path = "test"
 
         expect {
-          DeaClient.get_file_uri_for_instance(app, path, instance)
+          DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
         }.to raise_error Errors::FileError, "File error: Request failed for app: #{app.name} path: #{path} as the app is in stopped state."
       end
 
@@ -331,7 +331,7 @@ module VCAP::CloudController
         path = "test"
 
         expect {
-          DeaClient.get_file_uri_for_instance(app, path, instance)
+          DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
         }.to raise_error { |error|
           error.should be_an_instance_of Errors::FileError
 
@@ -352,7 +352,7 @@ module VCAP::CloudController
 
         search_options = {
           :indices => [instance],
-          :states => [:STARTING, :RUNNING, :CRASHED],
+          :states => DeaClient::ACTIVE_APP_STATES,
           :version => app.version,
           :path => "test",
           :droplet => app.guid
@@ -366,7 +366,7 @@ module VCAP::CloudController
 
         message_bus.respond_to_synchronous_request("dea.find.droplet", [instance_found])
 
-        result = DeaClient.get_file_uri_for_instance(app, path, instance)
+        result = DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
         result.file_uri_v1.should == "http://1.2.3.4/staged/test"
         result.file_uri_v2.should be_nil
         result.credentials.should == ["username", "password"]
@@ -383,7 +383,7 @@ module VCAP::CloudController
 
         search_options = {
           :indices => [instance],
-          :states => [:STARTING, :RUNNING, :CRASHED],
+          :states => DeaClient::ACTIVE_APP_STATES,
           :version => app.version,
           :path => "test",
           :droplet => app.guid
@@ -398,7 +398,7 @@ module VCAP::CloudController
 
         message_bus.respond_to_synchronous_request("dea.find.droplet", [instance_found])
 
-        info = DeaClient.get_file_uri_for_instance(app, path, instance)
+        info = DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
         info.file_uri_v2.should == "file_uri_v2"
         info.file_uri_v1.should == "http://1.2.3.4/staged/test"
         info.credentials.should == ["username", "password"]
@@ -418,7 +418,7 @@ module VCAP::CloudController
 
         search_options = {
           :indices => [instance],
-          :states => [:STARTING, :RUNNING, :CRASHED],
+          :states => DeaClient::ACTIVE_APP_STATES,
           :version => app.version,
           :path => "test",
           :droplet => app.guid
@@ -427,7 +427,7 @@ module VCAP::CloudController
         message_bus.respond_to_synchronous_request("dea.find.droplet", [])
 
         expect {
-          DeaClient.get_file_uri_for_instance(app, path, instance)
+          DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
         }.to raise_error Errors::FileError, msg
 
         expect(message_bus).to have_requested_synchronous_messages("dea.find.droplet", search_options, {timeout: 2})
@@ -446,7 +446,7 @@ module VCAP::CloudController
         msg << " path: #{path} as the app is in stopped state."
 
         expect {
-          DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+          DeaClient.get_file_uri_by_instance_guid(app, path, instance_id)
         }.to raise_error Errors::FileError, msg
       end
 
@@ -472,7 +472,7 @@ module VCAP::CloudController
 
         message_bus.respond_to_synchronous_request("dea.find.droplet", [instance_found])
 
-        result = DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+        result = DeaClient.get_file_uri_by_instance_guid(app, path, instance_id)
         result.file_uri_v1.should == "http://1.2.3.4/staged/test"
         result.file_uri_v2.should be_nil
         result.credentials.should == ["username", "password"]
@@ -503,7 +503,7 @@ module VCAP::CloudController
 
         message_bus.respond_to_synchronous_request("dea.find.droplet", [instance_found])
 
-        info = DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+        info = DeaClient.get_file_uri_by_instance_guid(app, path, instance_id)
         info.file_uri_v2.should == "file_uri_v2"
         info.file_uri_v1.should == "http://1.2.3.4/staged/test"
         info.credentials.should == ["username", "password"]
@@ -528,7 +528,7 @@ module VCAP::CloudController
           with(app, search_options).and_return(nil)
 
         expect {
-          DeaClient.get_file_uri_for_instance_id(app, path, instance_id)
+          DeaClient.get_file_uri_by_instance_guid(app, path, instance_id)
         }.to raise_error { |error|
           error.should be_an_instance_of Errors::FileError
 
