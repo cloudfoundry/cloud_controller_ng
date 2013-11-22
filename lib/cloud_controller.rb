@@ -3,6 +3,7 @@ require "sinatra"
 require "sequel"
 require "thin"
 require "yajl"
+require "delayed_job"
 require "newrelic_rpm"
 
 require "allowy"
