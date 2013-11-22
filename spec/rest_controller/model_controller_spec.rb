@@ -4,8 +4,10 @@ require "stringio"
 module VCAP::CloudController
   describe RestController::ModelController do
     let(:logger) { double('logger').as_null_object }
+    let(:env) { {} }
     let(:params) { {} }
-    subject(:controller) { controller_class.new({}, logger, {}, params, request_body) }
+
+    subject(:controller) { controller_class.new({}, logger, env, params, request_body) }
 
     context "with a valid controller and underlying model", non_transactional: true do
       let!(:model_table_name) { :test_models }
@@ -254,6 +256,8 @@ module VCAP::CloudController
 
             let(:test_model_nullify_dep) { VCAP::CloudController::TestModelNullifyDep.create() }
 
+            let(:env) { {"PATH_INFO" => VCAP::CloudController::RestController::Base::ROUTE_PREFIX} }
+
             def create_dependency_class(table_name, class_name)
               db.create_table table_name do
                 primary_key :id
@@ -273,8 +277,6 @@ module VCAP::CloudController
 
               model.add_test_model_destroy_dep VCAP::CloudController::TestModelDestroyDep.create()
               model.add_test_model_nullify_dep test_model_nullify_dep
-
-              controller.stub(:v2_api?).and_return(true)
             end
 
             after do
