@@ -245,6 +245,10 @@ module VCAP::CloudController::RestController
       params["recursive"] == "true"
     end
 
+    def async?
+      params["async"] == "true"
+    end
+
     def enumerate_dataset
       qp = self.class.query_parameters
       visible_objects = model.user_visible(VCAP::CloudController::SecurityContext.current_user, SecurityContext.admin?)
