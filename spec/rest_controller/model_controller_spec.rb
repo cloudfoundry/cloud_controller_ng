@@ -228,6 +228,7 @@ module VCAP::CloudController
 
             it "does not call the hooks" do
               controller.should_not_receive(:before_destroy)
+              controller.should_not_receive(:after_destroy)
 
               begin
                 controller.delete(model.guid)
@@ -306,6 +307,7 @@ module VCAP::CloudController
 
               it "does not call any hooks" do
                 controller.should_not_receive(:before_destroy)
+                controller.should_not_receive(:after_destroy)
 
                 begin
                   controller.delete(model.guid)
@@ -320,6 +322,7 @@ module VCAP::CloudController
 
             controller.should_receive(:before_destroy).with(model).ordered
             model.should_receive(:destroy).ordered.and_call_original
+            controller.should_receive(:after_destroy).with(model).ordered
 
             controller.delete(model.guid)
           end
