@@ -133,7 +133,7 @@ module VCAP::CloudController
         raise self.class.not_found_exception.new(guid)
       end
 
-      raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
+      raise_if_has_associations!(obj) if v2_api? && !recursive?
 
       obj.destroy
 

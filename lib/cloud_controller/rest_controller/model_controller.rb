@@ -80,7 +80,7 @@ module VCAP::CloudController::RestController
 
       obj = find_guid_and_validate_access(:delete, guid)
 
-      raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
+      raise_if_has_associations!(obj) if v2_api? && !recursive?
 
       before_destroy(obj)
 
@@ -240,6 +240,10 @@ module VCAP::CloudController::RestController
     end
 
     private
+
+    def recursive?
+      params["recursive"] == "true"
+    end
 
     def enumerate_dataset
       qp = self.class.query_parameters

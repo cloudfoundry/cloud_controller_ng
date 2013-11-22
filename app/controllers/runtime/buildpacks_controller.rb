@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       buildpack = find_guid_and_validate_access(:delete, guid)
 
-      raise_if_has_associations!(buildpack) if v2_api? && params["recursive"] != "true"
+      raise_if_has_associations!(buildpack) if v2_api? && !recursive?
 
       blobstore_key = buildpack.key
 

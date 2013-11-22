@@ -57,11 +57,11 @@ module VCAP::CloudController
     def delete(guid)
       app = find_guid_and_validate_access(:delete, guid)
 
-      if params["recursive"] != "true" && app.service_bindings.present?
+      if !recursive? && app.service_bindings.present?
         raise VCAP::Errors::AssociationNotEmpty.new("service_bindings", app.class.table_name)
       end
 
-      Event.record_app_delete_request(app, SecurityContext.current_user, params["recursive"] == "true")
+      Event.record_app_delete_request(app, SecurityContext.current_user, recursive?)
 
       app.db.transaction(savepoint: true) do
         app.soft_delete
