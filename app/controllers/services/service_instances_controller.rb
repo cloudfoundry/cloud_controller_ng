@@ -135,8 +135,6 @@ module VCAP::CloudController
 
       raise_if_has_associations!(obj) if v2_api? && params["recursive"] != "true"
 
-      before_destroy(obj)
-
       obj.destroy
 
       [ HTTP::NO_CONTENT, nil ]

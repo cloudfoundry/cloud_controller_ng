@@ -26,8 +26,6 @@ module VCAP::CloudController
         raise VCAP::Errors::AssociationNotEmpty.new("service_instances", plan.class.table_name)
       end
 
-      before_destroy(plan)
-
       plan.destroy
 
       [ HTTP::NO_CONTENT, nil ]

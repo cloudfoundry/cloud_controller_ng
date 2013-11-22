@@ -61,7 +61,7 @@ module VCAP::CloudController
         raise VCAP::Errors::AssociationNotEmpty.new("service_bindings", app.class.table_name)
       end
 
-      before_destroy(app)
+      Event.record_app_delete_request(app, SecurityContext.current_user, params["recursive"] == "true")
 
       app.db.transaction(savepoint: true) do
         app.soft_delete
@@ -75,10 +75,6 @@ module VCAP::CloudController
     def after_create(app)
       Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
       Event.record_app_create(app, SecurityContext.current_user, request_attrs) if request_attrs
-    end
-
-    def before_destroy(app)
-      Event.record_app_delete_request(app, SecurityContext.current_user, params["recursive"] == "true")
     end
 
     def after_update(app)

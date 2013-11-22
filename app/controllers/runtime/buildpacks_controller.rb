@@ -26,8 +26,6 @@ module VCAP::CloudController
 
       raise_if_has_associations!(buildpack) if v2_api? && params["recursive"] != "true"
 
-      before_destroy(buildpack)
-
       blobstore_key = buildpack.key
 
       buildpack.destroy
