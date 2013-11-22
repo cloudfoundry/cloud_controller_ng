@@ -88,8 +88,6 @@ module VCAP::CloudController::RestController
 
       obj.destroy
 
-      after_destroy(obj)
-
       [ HTTP::NO_CONTENT, nil ]
     end
 
