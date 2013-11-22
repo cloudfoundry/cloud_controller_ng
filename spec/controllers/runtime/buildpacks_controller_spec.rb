@@ -162,9 +162,15 @@ module VCAP::CloudController
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             @test_buildpack = VCAP::CloudController::Buildpack.make
 
+            fake_buildpack_zip = Tempfile.new(['FAKE_BUILDPACK', '.zip'])
+            @test_buildpack.update_from_hash(key: File.new(fake_buildpack_zip).hexdigest)
+            buildpack_blobstore.cp_to_blobstore(fake_buildpack_zip, @test_buildpack.key)
+            expect(buildpack_blobstore.exists?(@test_buildpack.key)).to be_true
+
             delete "/v2/buildpacks/#{@test_buildpack.guid}", {}, admin_headers
             expect(Buildpack.find(name: @test_buildpack.name)).to be_nil
-            expect(buildpack_blobstore.files).to have(0).items
+            expect(Delayed::Worker.new.work_off(1)).to eq([1,0])
+            expect(buildpack_blobstore.exists?(@test_buildpack.key)).to be_false
           end
 
           it "does not fail if no buildpack bits were ever uploaded" do

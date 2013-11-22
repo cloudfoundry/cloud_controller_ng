@@ -19,10 +19,25 @@ module VCAP::CloudController
       end
     end
 
-    def after_destroy(buildpack)
-      return unless buildpack.key
-      file = buildpack_blobstore.file(buildpack.key)
-      file.destroy if file
+    def delete(guid)
+      logger.debug "cc.delete", :guid => guid
+
+      buildpack = find_guid_and_validate_access(:delete, guid)
+
+      raise_if_has_associations!(buildpack) if v2_api? && params["recursive"] != "true"
+
+      before_destroy(buildpack)
+
+      blobstore_key = buildpack.key
+
+      buildpack.destroy
+
+      if blobstore_key
+        blobstore_delete = BlobstoreDelete.new(blobstore_key, :buildpack_blobstore)
+        Delayed::Job.enqueue(blobstore_delete, queue: "cc-generic")
+      end
+
+      [ HTTP::NO_CONTENT, nil ]
     end
 
     # New guy for updating
