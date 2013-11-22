@@ -52,9 +52,14 @@ module VCAP::CloudController
       end
 
       context 'when unbind fails' do
-        before { binding.client.stub(:unbind).and_raise }
+        it 'ignores the error and continues when 404' do
+          binding.client.stub(:unbind).and_raise(HttpResponseError.new('message', 'http://example.com/', :get, double(code: 404, reason: '', body: '')))
+          binding.destroy(savepoint: true)
+        end
 
-        it 'raises an error and rolls back' do
+        it 'raises an error and rolls back when not 404' do
+          binding.client.stub(:unbind).and_raise
+
           expect {
             binding.destroy(savepoint: true)
           }.to raise_error

@@ -75,11 +75,17 @@ module VCAP::CloudController
       end
 
       context "when deprovision fails" do
-        it "should raise and rollback" do
+        it "should ignore and continue when 404" do
+          service_instance.client.stub(:deprovision).and_raise(HttpResponseError.new('message', 'http://example.com/', :get, double(code: 404, reason: '', body: '')))
+          service_instance.destroy(savepoint: true)
+        end
+
+        it "should raise and rollback when not 404" do
           service_instance.client.stub(:deprovision).and_raise
           expect {
             service_instance.destroy(savepoint: true)
           }.to raise_error
+
           VCAP::CloudController::ManagedServiceInstance.find(id: service_instance.id).should be
         end
       end

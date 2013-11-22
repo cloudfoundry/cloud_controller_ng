@@ -84,7 +84,12 @@ module VCAP::CloudController
 
     def before_destroy
       # TODO: transactionally move this into a queue
-      client.unbind(self)
+      begin
+        client.unbind(self)
+      rescue HttpResponseError => e
+        raise e if 404 != e.status
+        logger.error "Failed to unbind #{self.inspect}: #{e}"
+      end
 
       mark_app_for_restaging
     end
