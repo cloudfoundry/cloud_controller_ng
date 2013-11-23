@@ -147,6 +147,14 @@ module VCAP::CloudController::RestController
       env["PATH_INFO"] =~ /#{ROUTE_PREFIX}/i
     end
 
+    def recursive?
+      params["recursive"] == "true"
+    end
+
+    def async?
+      params["async"] == "true"
+    end
+
     # hook called before +create+
     def before_create
     end
