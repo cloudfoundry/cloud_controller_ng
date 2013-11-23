@@ -23,17 +23,17 @@ module VCAP::CloudController
       end
 
       def define_class(class_name, table_name)
-        klass = Class.new(Sequel::Model)
-        klass.define_singleton_method(:name) do
-          "VCAP::CloudController::#{class_name}"
-        end
+        Class.new(Sequel::Model).tap do |model_class|
+          model_class.define_singleton_method(:name) do
+            "VCAP::CloudController::#{class_name}"
+          end
 
-        klass.set_dataset(db[table_name])
-        unless VCAP::CloudController.const_defined?(class_name)
-          VCAP::CloudController.const_set(class_name, klass)
-        end
+          model_class.set_dataset(db[table_name])
 
-        klass
+          unless VCAP::CloudController.const_defined?(class_name)
+            VCAP::CloudController.const_set(class_name, model_class)
+          end
+        end
       end
 
       after do
