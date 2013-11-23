@@ -11,7 +11,8 @@ module VCAP::CloudController
 
     context "with a valid controller and underlying model", non_transactional: true do
       let!(:model_table_name) { :test_models }
-      let!(:model_class) do
+      let!(:model_klass_name) { "TestModel" }
+      let!(:model_klass) do
         db.create_table model_table_name do
           primary_key :id
           String :guid
@@ -19,19 +20,19 @@ module VCAP::CloudController
           Date :updated_at
         end
 
-        define_class("TestModel", model_table_name)
+        define_model_class(model_klass_name, model_table_name)
       end
 
-      def define_class(class_name, table_name)
-        Class.new(Sequel::Model).tap do |model_class|
-          model_class.define_singleton_method(:name) do
+      def define_model_class(class_name, table_name)
+        Class.new(Sequel::Model).tap do |klass|
+          klass.define_singleton_method(:name) do
             "VCAP::CloudController::#{class_name}"
           end
 
-          model_class.set_dataset(db[table_name])
+          klass.set_dataset(db[table_name])
 
           unless VCAP::CloudController.const_defined?(class_name)
-            VCAP::CloudController.const_set(class_name, model_class)
+            VCAP::CloudController.const_set(class_name, klass)
           end
         end
       end
@@ -41,18 +42,19 @@ module VCAP::CloudController
       end
 
       let(:controller_class) do
-        klass_name = 'TestModel'
-        stub_const("VCAP::CloudController::#{klass_name}", model_class)
-        klass = Class.new(described_class) do
-          model_class_name(klass_name)
+        stub_const("VCAP::CloudController::#{model_klass_name}", model_klass)
+        model_class_name_for_controller_context = model_klass_name
+
+        Class.new(described_class) do
+          model_class_name(model_class_name_for_controller_context)
           define_messages
 
           def validate_access(*args)
             true
           end
+        end.tap do |controller_class|
+          stub_const("VCAP::CloudController::#{model_klass_name}Controller", controller_class)
         end
-        stub_const("VCAP::CloudController::#{klass_name}Controller", klass)
-        klass
       end
 
       let(:request_body) { StringIO.new('{}') }
@@ -67,10 +69,10 @@ module VCAP::CloudController
           controller_class::CreateMessage.any_instance.stub(:extract).and_return({extracted: "json"})
 
           controller.should_receive(:before_create).with(no_args).ordered
-          model_class.should_receive(:create_from_hash).with({extracted: "json"}).ordered.and_call_original
-          controller.should_receive(:after_create).with(instance_of(model_class)).ordered
+          model_klass.should_receive(:create_from_hash).with({extracted: "json"}).ordered.and_call_original
+          controller.should_receive(:after_create).with(instance_of(model_klass)).ordered
 
-          expect { controller.create }.to change { model_class.count }.by(1)
+          expect { controller.create }.to change { model_klass.count }.by(1)
         end
 
         context "when validate access fails" do
@@ -78,7 +80,7 @@ module VCAP::CloudController
             controller.stub(:validate_access).and_raise(VCAP::Errors::NotAuthorized)
 
             controller.should_receive(:before_create).with(no_args).ordered
-            model_class.should_receive(:create_from_hash).ordered.and_call_original
+            model_klass.should_receive(:create_from_hash).ordered.and_call_original
             controller.should_not_receive(:after_create)
           end
 
@@ -87,19 +89,19 @@ module VCAP::CloudController
           end
 
           it "does not persist the model" do
-            before_count = model_class.count
+            before_count = model_klass.count
             begin
               controller.create
             rescue VCAP::Errors::NotAuthorized
             end
-            after_count = model_class.count
+            after_count = model_klass.count
             expect(after_count).to eq(before_count)
           end
         end
 
         it "returns the right values on a successful create" do
           result = controller.create
-          model_instance = model_class.first
+          model_instance = model_klass.first
           expect(model_instance.guid).not_to be_nil
 
           url = "/v2/test_model/#{model_instance.guid}"
@@ -114,7 +116,7 @@ module VCAP::CloudController
         it "should call the serialization instance asssociated with controller to generate response data" do
           serializer = double
           controller.should_receive(:serialization).and_return(serializer)
-          serializer.should_receive(:render_json).with(controller_class, instance_of(model_class), {}).and_return("serialized json")
+          serializer.should_receive(:render_json).with(controller_class, instance_of(model_klass), {}).and_return("serialized json")
 
           result = controller.create
           expect(result[2]).to eq("serialized json")
@@ -124,7 +126,7 @@ module VCAP::CloudController
       describe "#read" do
         context "when the guid matches a record" do
           let!(:model) do
-            instance = model_class.new
+            instance = model_klass.new
             instance.save
             instance
           end
@@ -155,7 +157,7 @@ module VCAP::CloudController
       describe "#update" do
         context "when the guid matches a record" do
           let!(:model) do
-            instance = model_class.new
+            instance = model_klass.new
             instance.save
             instance
           end
@@ -170,7 +172,7 @@ module VCAP::CloudController
           end
 
           it "prevents other processes from updating the same row until the transaction finishes" do
-            model_class.stub(:find).with(:guid => model.guid).and_return(model)
+            model_klass.stub(:find).with(:guid => model.guid).and_return(model)
             model.should_receive(:lock!).ordered
             model.should_receive(:update_from_hash).ordered.and_call_original
 
@@ -180,7 +182,7 @@ module VCAP::CloudController
           it "returns the serialized updated object if access is validated" do
             serializer = double
             controller.should_receive(:serialization).and_return(serializer)
-            serializer.should_receive(:render_json).with(controller_class, instance_of(model_class), {}).and_return("serialized json")
+            serializer.should_receive(:render_json).with(controller_class, instance_of(model_klass), {}).and_return("serialized json")
 
             result = controller.update(model.guid)
             expect(result[0]).to eq(201)
@@ -192,12 +194,12 @@ module VCAP::CloudController
 
             controller.update(model.guid)
 
-            model_from_db = model_class.find(:guid => model.guid)
+            model_from_db = model_klass.find(:guid => model.guid)
             expect(model_from_db.updated_at).not_to be_nil
           end
 
           it "calls the hooks in the right order" do
-            model_class.stub(:find).with(:guid => model.guid).and_return(model)
+            model_klass.stub(:find).with(:guid => model.guid).and_return(model)
 
             controller.should_receive(:before_update).with(model).ordered
             model.should_receive(:update_from_hash).ordered.and_call_original
@@ -216,7 +218,7 @@ module VCAP::CloudController
       end
 
       describe "#delete" do
-        let!(:model) { model_class.create }
+        let!(:model) { model_klass.create }
 
         context "when the guid matches a record" do
           context "when validate_accesss fails" do
@@ -240,7 +242,7 @@ module VCAP::CloudController
           end
 
           it "deletes the object if access if validated" do
-            expect { controller.delete(model.guid) }.to change { model_class.count }.by(-1)
+            expect { controller.delete(model.guid) }.to change { model_klass.count }.by(-1)
           end
 
           context "when the model has active associations" do
@@ -265,15 +267,15 @@ module VCAP::CloudController
                 foreign_key :test_model_id, :test_models
               end
 
-              define_class(class_name, table_name)
+              define_model_class(class_name, table_name)
             end
 
             before do
-              model_class.one_to_many test_model_destroy_table_name
-              model_class.one_to_many test_model_nullify_table_name
+              model_klass.one_to_many test_model_destroy_table_name
+              model_klass.one_to_many test_model_nullify_table_name
 
-              model_class.add_association_dependencies test_model_destroy_table_name => :destroy,
-                                                       test_model_nullify_table_name => :nullify
+              model_klass.add_association_dependencies(test_model_destroy_table_name => :destroy,
+                                                       test_model_nullify_table_name => :nullify)
 
               model.add_test_model_destroy_dep VCAP::CloudController::TestModelDestroyDep.create()
               model.add_test_model_nullify_dep test_model_nullify_dep
@@ -286,8 +288,9 @@ module VCAP::CloudController
 
             context "when deleting with recursive set to true" do
               let(:params) { {"recursive" => "true"} }
+
               it "successfully deletes" do
-                expect{controller.delete(model.guid)}.to change { model_class.count }.by(-1)
+                expect{controller.delete(model.guid)}.to change { model_klass.count }.by(-1)
               end
 
               it "successfully deletes association marked for destroy" do
@@ -295,10 +298,10 @@ module VCAP::CloudController
               end
 
               it "successfully nullifies association marked for nullify" do
-                expect do
+                expect {
                   controller.delete(model.guid)
                   test_model_nullify_dep.reload
-                end.to change { test_model_nullify_dep.test_model_id }.from(model.id).to(nil)
+                }.to change { test_model_nullify_dep.test_model_id }.from(model.id).to(nil)
               end
             end
 
@@ -320,7 +323,7 @@ module VCAP::CloudController
           end
 
           it "calls the hooks in the right order" do
-            model_class.stub(:find).with(:guid => model.guid).and_return(model)
+            model_klass.stub(:find).with(:guid => model.guid).and_return(model)
 
             controller.should_receive(:before_destroy).with(model).ordered
             model.should_receive(:destroy).ordered.and_call_original
@@ -349,7 +352,7 @@ module VCAP::CloudController
     end
 
     describe '#enumerate', non_transactional: true do
-      let!(:model_class) do
+      let!(:model_klass) do
         db.create_table :test do
           primary_key :id
           String :value
@@ -362,23 +365,26 @@ module VCAP::CloudController
 
       let(:controller_class) do
         klass_name = 'TestModel%02x' % rand(16)
-        stub_const("VCAP::CloudController::#{klass_name}", model_class)
+        stub_const("VCAP::CloudController::#{klass_name}", model_klass)
         Class.new(described_class) do
           model_class_name(klass_name)
         end
       end
 
+      let(:request_body) { StringIO.new('') }
+
       before(:each) do
         VCAP::CloudController::SecurityContext.stub(current_user: double('current user', admin?: false))
       end
 
-      let(:request_body) { StringIO.new('') }
-
       it 'paginates the dataset with query params' do
-        fake_class_path = double('class path')
         filtered_dataset = double('dataset for enumeration', sql: 'SELECT *')
+        fake_class_path = double('class path')
+
         Query.stub(filtered_dataset_from_query_params: filtered_dataset)
+
         controller_class.stub(path: fake_class_path)
+
         RestController::Paginator.should_receive(:render_json).with(
           controller_class,
           filtered_dataset,
@@ -386,6 +392,7 @@ module VCAP::CloudController
           # FIXME: we actually care about params...
           anything,
         )
+
         controller.enumerate
       end
     end
