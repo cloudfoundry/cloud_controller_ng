@@ -24,13 +24,19 @@ require "posix/spawn"
 require "rspec_api_documentation"
 
 module VCAP::CloudController
+  MAX_LOG_FILE_SIZE_IN_BYTES = 100_000_000
   class SpecEnvironment
     def initialize
       ENV["CC_TEST"] = "true"
       FileUtils.mkdir_p(artifacts_dir)
+
+      if File.exist?(log_filename) && File.size(log_filename) > MAX_LOG_FILE_SIZE_IN_BYTES
+        FileUtils.rm_f(log_filename)
+      end
+
       Steno.init(Steno::Config.new(
-        :default_log_level => "debug",
-        :sinks => [Steno::Sink::IO.for_file(log_filename)]
+        default_log_level: "info",
+        sinks: [Steno::Sink::IO.for_file(log_filename)]
       ))
 
       VCAP::CloudController::Config.run_initializers(config)
