@@ -91,7 +91,7 @@ module VCAP::CloudController::RestController
     # @return [Object] Returns an array of [http response code, Header hash,
     # body string], or just a body string.
     def dispatch(op, *args)
-      logger.debug "dispatch: #{op}"
+      logger.debug "cc.dispatch", endpoint: op, args: args
       check_authentication(op)
       send(op, *args)
     rescue Sequel::ValidationFailed => e
@@ -169,14 +169,6 @@ module VCAP::CloudController::RestController
 
     # hook called after +update+, +add_related+ or +remove_related+
     def after_update(obj)
-    end
-
-    # hook called before +destroy+
-    def before_destroy(obj)
-    end
-
-    # hook called after +destroy+
-    def after_destroy(obj)
     end
 
     attr_reader :config, :logger, :env, :params, :body, :request_attrs

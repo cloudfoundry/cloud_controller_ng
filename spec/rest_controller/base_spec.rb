@@ -21,7 +21,7 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
       end
 
       it "should log a debug message" do
-        logger.should_receive(:debug).with(/dispatch.*to_s/i)
+        logger.should_receive(:debug).with("cc.dispatch", endpoint: :to_s, args: [])
         subject.dispatch(:to_s)
       end
 

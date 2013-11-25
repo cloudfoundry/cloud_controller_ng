@@ -79,8 +79,11 @@ module VCAP::CloudController
       Event.record_space_update(space, SecurityContext.current_user, request_attrs)
     end
 
-    def before_destroy(space)
+    def delete(guid)
+      space = find_guid_and_validate_access(:delete, guid)
       Event.record_space_delete_request(space, SecurityContext.current_user, recursive?)
+      do_delete(space)
+      [HTTP::NO_CONTENT, nil]
     end
 
     module ServiceSerialization

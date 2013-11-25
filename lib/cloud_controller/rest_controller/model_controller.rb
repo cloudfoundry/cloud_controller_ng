@@ -79,16 +79,20 @@ module VCAP::CloudController::RestController
       logger.debug "cc.delete", guid: guid
 
       obj = find_guid_and_validate_access(:delete, guid)
+      do_delete(obj)
+      [HTTP::NO_CONTENT, nil]
+    end
 
+    def do_delete(obj)
       raise_if_has_associations!(obj) if v2_api? && !recursive?
 
-      before_destroy(obj)
+      model_deletion_job = ModelDeletionJob.new(obj.class, obj.guid)
 
-      obj.destroy
-
-      after_destroy(obj)
-
-      [HTTP::NO_CONTENT, nil]
+      if async?
+        Delayed::Job.enqueue(model_deletion_job, queue: "cc-generic")
+      else
+        model_deletion_job.perform
+      end
     end
 
     # Enumerate operation
@@ -200,8 +204,8 @@ module VCAP::CloudController::RestController
     #
     # @return [Sequel::Model] The sequel model for the object, only if
     # the use has access.
-    def find_guid_and_validate_access(op, guid)
-      obj = model.find(guid: guid)
+    def find_guid_and_validate_access(op, guid, find_model = model)
+      obj = find_model.find(guid: guid)
       raise self.class.not_found_exception.new(guid) if obj.nil?
       validate_access(op, obj, user, roles)
       obj

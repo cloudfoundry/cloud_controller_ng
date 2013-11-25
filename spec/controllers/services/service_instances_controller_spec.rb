@@ -360,7 +360,7 @@ module VCAP::CloudController
 
         it "deletes the service instance with the given guid" do
           expect {
-            delete "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
           }.to change(ServiceInstance, :count).by(-1)
           last_response.status.should == 204
           ServiceInstance.find(:guid => service_instance.guid).should be_nil
@@ -372,7 +372,7 @@ module VCAP::CloudController
 
         it "deletes the service instance with the given guid" do
           expect {
-            delete "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
           }.to change(ServiceInstance, :count).by(-1)
           last_response.status.should == 204
           ServiceInstance.find(:guid => service_instance.guid).should be_nil

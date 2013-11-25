@@ -221,7 +221,7 @@ module VCAP::CloudController
         let!(:model) { model_klass.create }
 
         context "when the guid matches a record" do
-          context "when validate_accesss fails" do
+          context "when validate_access fails" do
             before do
               controller.stub(:validate_access).and_raise(VCAP::Errors::NotAuthorized)
             end
@@ -323,12 +323,8 @@ module VCAP::CloudController
           end
 
           it "calls the hooks in the right order" do
-            model_klass.stub(:find).with(:guid => model.guid).and_return(model)
-
-            controller.should_receive(:before_destroy).with(model).ordered
+            model_klass.stub(:find).with(guid: model.guid).and_return(model)
             model.should_receive(:destroy).ordered.and_call_original
-            controller.should_receive(:after_destroy).with(model).ordered
-
             controller.delete(model.guid)
           end
 
@@ -347,11 +343,10 @@ module VCAP::CloudController
             expect { controller.delete(SecureRandom.uuid) }.to raise_error(error_class)
           end
         end
-
       end
     end
 
-    describe '#enumerate', non_transactional: true do
+    describe "#enumerate", non_transactional: true do
       let!(:model_klass) do
         db.create_table :test do
           primary_key :id

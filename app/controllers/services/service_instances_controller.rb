@@ -107,38 +107,16 @@ module VCAP::CloudController
     get "/v2/service_instances/:guid", :read
 
     def read(guid)
-      logger.debug "cc.read", :model => :ServiceInstance, :guid => guid
+      logger.debug "cc.read", model: :ServiceInstance, guid: guid
 
-      obj = ServiceInstance.find(:guid => guid)
-
-      if obj
-        validate_access(:read, obj, user, roles)
-      else
-        raise self.class.not_found_exception.new(guid)
-      end
-
-      serialization.render_json(self.class, obj, @opts)
+      service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
+      serialization.render_json(self.class, service_instance, @opts)
     end
 
     delete "/v2/service_instances/:guid", :delete
 
     def delete(guid)
-      logger.debug "cc.delete", :guid => guid
-
-      obj = ServiceInstance.find(:guid => guid)
-
-      if obj
-        validate_access(:delete, obj, user, roles)
-      else
-        raise self.class.not_found_exception.new(guid)
-      end
-
-      raise_if_has_associations!(obj) if v2_api? && !recursive?
-
-      obj.destroy
-
-      after_destroy(obj)
-
+      do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
       [ HTTP::NO_CONTENT, nil ]
     end
   end
