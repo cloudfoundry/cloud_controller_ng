@@ -84,18 +84,13 @@ module VCAP::CloudController
         end
       end
 
-      shared_examples "info endpoint verification" do |endpoint_exists = true|
+      shared_examples "info endpoint verification" do
         it "should be correct" do
           get "/v2/info"
 
           hash = Yajl::Parser.parse(last_response.body)
-
-          if endpoint_exists
-            hash.should have_key(endpoint)
-            hash[endpoint].should eq(endpoint_value)
-          else
-            hash.should_not have_key(endpoint)
-          end
+          hash.should have_key(endpoint)
+          hash[endpoint].should eq(endpoint_value)
         end
       end
 
@@ -127,9 +122,13 @@ module VCAP::CloudController
           end
 
           context "without loggregator endpoint url in config" do
-            include_examples "info endpoint verification", false do
-              before { config[:loggregator].delete(:url) }
-              let(:endpoint) { "logging_endpoint" }
+            it "should not have the endpoint in the hash" do
+              config[:loggregator].delete(:url)
+
+              get "/v2/info"
+
+              hash = Yajl::Parser.parse(last_response.body)
+              hash.should_not have_key("logging_endpoint")
             end
           end
         end
