@@ -52,80 +52,53 @@ module VCAP::CloudController
         }
       end
 
-      let(:dea_in_default_zone_with_1_instance_and_128m_memory) do
-        {
-            "id" => "dea-id1",
-            "stacks" => ["stack"],
-            "available_memory" => 128,
-            "available_disk" => available_disk,
-            "app_id_to_count" => {
-                "app-id" => 1
-            }
+      def dea_advertisement(options)
+        dea_advertisement = {
+          "id" => options[:dea],
+          "stacks" => ["stack"],
+          "available_memory" => options[:memory],
+          "available_disk" => available_disk,
+          "app_id_to_count" => {
+            "app-id" => options[:instance_count]
+          }
         }
+        if options[:zone]
+          dea_advertisement["placement_properties"] = {"zone" => options[:zone]}
+        end
+
+        dea_advertisement
+      end
+
+      let(:dea_in_default_zone_with_1_instance_and_128m_memory) do
+        dea_advertisement :dea => "dea-id1", :memory => 128, :instance_count => 1
+      end
+
+      let(:dea_in_default_zone_with_2_instances_and_128m_memory) do
+        dea_advertisement :dea => "dea-id2", :memory => 128, :instance_count => 2
+      end
+
+      let(:dea_in_default_zone_with_1_instance_and_512m_memory) do
+        dea_advertisement :dea => "dea-id3", :memory => 512, :instance_count => 1
       end
 
       let(:dea_in_default_zone_with_2_instances_and_512m_memory) do
-        {
-            "id" => "dea-id2",
-            "stacks" => ["stack"],
-            "available_memory" => 512,
-            "available_disk" => available_disk,
-            "app_id_to_count" => {
-                "app-id" => 2
-            }
-        }
+        dea_advertisement :dea => "dea-id4", :memory => 512, :instance_count => 2
       end
 
       let(:dea_in_user_defined_zone_with_3_instances_and_1024m_memory) do
-        {
-            "id" => "dea-id3",
-            "stacks" => ["stack"],
-            "available_memory" => 1024,
-            "available_disk" => available_disk,
-            "app_id_to_count" => {
-                "app-id" => 3
-            },
-            "placement_properties" => {"zone" =>"zone1"}
-        }
+        dea_advertisement :dea => "dea-id5", :memory => 1024, :instance_count => 3, :zone => "zone1"
       end
 
       let(:dea_in_user_defined_zone_with_2_instances_and_1024m_memory) do
-        {
-            "id" => "dea-id4",
-            "stacks" => ["stack"],
-            "available_memory" => 1024,
-            "available_disk" => available_disk,
-            "app_id_to_count" => {
-                "app-id" => 2
-            },
-            "placement_properties" => {"zone" =>"zone1"}
-        }
+        dea_advertisement :dea => "dea-id6", :memory => 1024, :instance_count => 2, :zone => "zone1"
       end
 
       let(:dea_in_user_defined_zone_with_1_instance_and_512m_memory) do
-        {
-            "id" => "dea-id5",
-            "stacks" => ["stack"],
-            "available_memory" => 512,
-            "available_disk" => available_disk,
-            "app_id_to_count" => {
-                "app-id" => 1
-            },
-            "placement_properties" => {"zone" =>"zone1"}
-        }
+        dea_advertisement :dea => "dea-id7", :memory => 512, :instance_count => 2, :zone => "zone1"
       end
 
       let(:dea_in_user_defined_zone_with_1_instance_and_256m_memory) do
-        {
-            "id" => "dea-id6",
-            "stacks" => ["stack"],
-            "available_memory" => 256,
-            "available_disk" => available_disk,
-            "app_id_to_count" => {
-                "app-id" => 1
-            },
-            "placement_properties" => {"zone" =>"zone1"}
-        }
+        dea_advertisement :dea => "dea-id8", :memory => 256, :instance_count => 1, :zone => "zone1"
       end
 
       let(:available_disk) { 100 }
@@ -149,13 +122,13 @@ module VCAP::CloudController
           it "finds the DEA with enough memory within the default zone" do
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
-            subject.find_dea(mem: 256, stack: "stack", app_id: "app-id").should == "dea-id2"
+            subject.find_dea(mem: 256, stack: "stack", app_id: "app-id").should == "dea-id4"
           end
 
           it "finds the DEA in user defined zones" do
             subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
-            subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should == "dea-id4"
+            subject.find_dea(mem: 1, stack: "stack", app_id: "app-id").should == "dea-id6"
           end
         end
 
@@ -171,7 +144,7 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
-            subject.find_dea(mem: 256, stack: "stack", app_id: "app-id").should == "dea-id2"
+            subject.find_dea(mem: 256, stack: "stack", app_id: "app-id").should == "dea-id4"
           end
 
           it "finds one of the DEAs with the smallest instance number" do
@@ -179,7 +152,7 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_512m_memory)
-            ["dea-id1","dea-id5"].should include (subject.find_dea(mem: 1, stack: "stack", app_id: "app-id"))
+            ["dea-id1","dea-id7"].should include (subject.find_dea(mem: 1, stack: "stack", app_id: "app-id"))
           end
         end
 
@@ -197,16 +170,23 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_256m_memory)
-            ["dea-id5","dea-id6"].should include (subject.find_dea(mem: 1, stack: "stack", app_id: "app-id"))
+
+            ["dea-id7","dea-id8"].should include (subject.find_dea(mem: 1, stack: "stack", app_id: "app-id"))
           end
 
           it "picks the only DEA with enough resource even it has more instances" do
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
-            subject.find_dea(mem: 768, stack: "stack", app_id: "app-id").should == "dea-id3"
+            subject.find_dea(mem: 768, stack: "stack", app_id: "app-id").should == "dea-id5"
           end
 
+          it "picks DEA in zone with fewest instances even if other zones have more filtered DEAs" do
+            subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_128m_memory)
+            subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_512m_memory)
+            subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
+            subject.find_dea(mem: 256, stack: "stack", app_id: "app-id").should == "dea-id6"
+          end
         end
       end
 

@@ -3,8 +3,6 @@ require "cloud_controller/dea/eligible_dea_advertisement_filter"
 
 module VCAP::CloudController
   class DeaPool
-
-
     def initialize(message_bus)
       @message_bus = message_bus
       @dea_advertisements = []
