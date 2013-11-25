@@ -1,6 +1,8 @@
 class EligibleDeaAdvertisementFilter
-  def initialize(dea_advertisements)
+  def initialize(dea_advertisements, app_id)
+    @all_advertisements = dea_advertisements
     @dea_advertisements = dea_advertisements.dup
+    @app_id = app_id
   end
 
   def only_with_disk(minimum_disk)
@@ -13,9 +15,9 @@ class EligibleDeaAdvertisementFilter
     self
   end
 
-  def only_fewest_instances_of_app(app_id)
-    fewest_instances_of_app = @dea_advertisements.map { |ad| ad.num_instances_of(app_id) }.min
-    @dea_advertisements.select! { |ad| ad.num_instances_of(app_id) == fewest_instances_of_app }
+  def only_fewest_instances_of_app()
+    fewest_instances_of_app = @dea_advertisements.map { |ad| ad.num_instances_of(@app_id) }.min
+    @dea_advertisements.select! { |ad| ad.num_instances_of(@app_id) == fewest_instances_of_app }
     self
   end
 
@@ -31,5 +33,21 @@ class EligibleDeaAdvertisementFilter
 
   def sample
     @dea_advertisements.sample
+  end
+
+  def only_in_zone_with_fewest_instances()
+    min_in_zone = @dea_advertisements.map { |ad| number_in_zone(ad.zone) }.min
+    @dea_advertisements.select! { |ad| number_in_zone(ad.zone) == min_in_zone }
+    self
+  end
+
+  private
+
+  def number_in_zone(zone)
+    @_numinzone ||= {}
+    @_numinzone[zone] ||= @all_advertisements.inject(0) do |count, ad|
+      count += ad.num_instances_of(@app_id) if ad.zone == zone
+      count
+    end
   end
 end
