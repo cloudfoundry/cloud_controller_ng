@@ -144,7 +144,7 @@ module VCAP::CloudController::RestController
     end
 
     def v2_api?
-      env["PATH_INFO"] =~ /#{ROUTE_PREFIX}/i
+      env["PATH_INFO"] =~ /^#{ROUTE_PREFIX}/
     end
 
     def recursive?
