@@ -90,7 +90,7 @@ GEM
       debugger-linecache (~> 1.2.0)
       debugger-ruby_core_source (~> 1.2.3)
     debugger-linecache (1.2.0)
-    debugger-ruby_core_source (1.2.3)
+    debugger-ruby_core_source (1.2.4)
     delayed_job (4.0.0)
       activesupport (>= 3.0, < 4.1)
     descendants_tracker (0.0.3)
