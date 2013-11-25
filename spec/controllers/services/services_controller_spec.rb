@@ -299,7 +299,7 @@ module VCAP::CloudController
     end
 
     describe "PUT", "/v2/services/:guid" do
-      it "ignores the unique_id attribute" do
+      it "updates the unique_id attribute" do
         service = Service.make
         old_unique_id = service.unique_id
         new_unique_id = old_unique_id.reverse
@@ -309,7 +309,7 @@ module VCAP::CloudController
 
         service.reload
         expect(last_response.status).to be == 201
-        expect(service.unique_id).to be == old_unique_id
+        expect(service.unique_id).to be == new_unique_id
       end
     end
   end
