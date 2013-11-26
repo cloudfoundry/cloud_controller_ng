@@ -229,97 +229,10 @@ module VCAP::CloudController
             it "raises" do
               expect{controller.delete(model.guid)}.to raise_error(VCAP::Errors::NotAuthorized)
             end
-
-            it "does not call the hooks" do
-              controller.should_not_receive(:before_destroy)
-              controller.should_not_receive(:after_destroy)
-
-              begin
-                controller.delete(model.guid)
-              rescue VCAP::Errors::NotAuthorized
-              end
-            end
           end
 
           it "deletes the object if access if validated" do
             expect { controller.delete(model.guid) }.to change { model_klass.count }.by(-1)
-          end
-
-          context "when the model has active associations" do
-            let!(:test_model_destroy_table_name) { :test_model_destroy_deps }
-            let!(:test_model_destroy_dep_class) do
-              create_dependency_class(test_model_destroy_table_name, "TestModelDestroyDep")
-            end
-
-            let!(:test_model_nullify_table_name) { :test_model_nullify_deps }
-            let!(:test_model_nullify_dep_class) do
-              create_dependency_class(test_model_nullify_table_name, "TestModelNullifyDep")
-            end
-
-            let(:test_model_nullify_dep) { VCAP::CloudController::TestModelNullifyDep.create() }
-
-            let(:env) { {"PATH_INFO" => VCAP::CloudController::RestController::Base::ROUTE_PREFIX} }
-
-            def create_dependency_class(table_name, class_name)
-              db.create_table table_name do
-                primary_key :id
-                String :guid
-                foreign_key :test_model_id, :test_models
-              end
-
-              define_model_class(class_name, table_name)
-            end
-
-            before do
-              model_klass.one_to_many test_model_destroy_table_name
-              model_klass.one_to_many test_model_nullify_table_name
-
-              model_klass.add_association_dependencies(test_model_destroy_table_name => :destroy,
-                                                       test_model_nullify_table_name => :nullify)
-
-              model.add_test_model_destroy_dep VCAP::CloudController::TestModelDestroyDep.create()
-              model.add_test_model_nullify_dep test_model_nullify_dep
-            end
-
-            after do
-              db.drop_table test_model_destroy_table_name
-              db.drop_table test_model_nullify_table_name
-            end
-
-            context "when deleting with recursive set to true" do
-              let(:params) { {"recursive" => "true"} }
-
-              it "successfully deletes" do
-                expect{controller.delete(model.guid)}.to change { model_klass.count }.by(-1)
-              end
-
-              it "successfully deletes association marked for destroy" do
-                expect{controller.delete(model.guid)}.to change { test_model_destroy_dep_class.count }.by(-1)
-              end
-
-              it "successfully nullifies association marked for nullify" do
-                expect {
-                  controller.delete(model.guid)
-                  test_model_nullify_dep.reload
-                }.to change { test_model_nullify_dep.test_model_id }.from(model.id).to(nil)
-              end
-            end
-
-            context "when deleting non-recursively" do
-              it "raises an association error" do
-                expect{controller.delete(model.guid)}.to raise_error(VCAP::Errors::AssociationNotEmpty)
-              end
-
-              it "does not call any hooks" do
-                controller.should_not_receive(:before_destroy)
-                controller.should_not_receive(:after_destroy)
-
-                begin
-                  controller.delete(model.guid)
-                rescue VCAP::Errors::AssociationNotEmpty
-                end
-              end
-            end
           end
 
           it "calls the hooks in the right order" do
@@ -329,10 +242,10 @@ module VCAP::CloudController
           end
 
           it "returns a valid http response" do
-            result = controller.delete(model.guid)
+            http_code, body = controller.delete(model.guid)
 
-            expect(result[0]).to eq(204)
-            expect(result[1]).to be_nil
+            expect(http_code).to eq(204)
+            expect(body).to be_nil
           end
         end
 
@@ -341,6 +254,143 @@ module VCAP::CloudController
             error_class = Class.new(RuntimeError)
             stub_const("VCAP::CloudController::Errors::TestModelNotFound", error_class)
             expect { controller.delete(SecureRandom.uuid) }.to raise_error(error_class)
+          end
+        end
+      end
+
+      describe "#do_delete" do
+        let!(:model) { model_klass.create }
+
+        shared_examples "tests with associations" do
+          let!(:test_model_destroy_table_name) { :test_model_destroy_deps }
+          let!(:test_model_destroy_dep_class) do
+            create_dependency_class(test_model_destroy_table_name, "TestModelDestroyDep")
+          end
+
+          let!(:test_model_nullify_table_name) { :test_model_nullify_deps }
+          let!(:test_model_nullify_dep_class) do
+            create_dependency_class(test_model_nullify_table_name, "TestModelNullifyDep")
+          end
+
+          let(:test_model_nullify_dep) { VCAP::CloudController::TestModelNullifyDep.create() }
+
+          let(:env) { {"PATH_INFO" => VCAP::CloudController::RestController::Base::ROUTE_PREFIX} }
+
+          def create_dependency_class(table_name, class_name)
+            db.create_table table_name do
+              primary_key :id
+              String :guid
+              foreign_key :test_model_id, :test_models
+            end
+
+            define_model_class(class_name, table_name)
+          end
+
+          before do
+            model_klass.one_to_many test_model_destroy_table_name
+            model_klass.one_to_many test_model_nullify_table_name
+
+            model_klass.add_association_dependencies(test_model_destroy_table_name => :destroy,
+                                                     test_model_nullify_table_name => :nullify)
+
+            model.add_test_model_destroy_dep VCAP::CloudController::TestModelDestroyDep.create()
+            model.add_test_model_nullify_dep test_model_nullify_dep
+          end
+
+          after do
+            db.drop_table test_model_destroy_table_name
+            db.drop_table test_model_nullify_table_name
+          end
+
+          context "when deleting with recursive set to true" do
+            let(:run_delayed_job) { Delayed::Worker.new.work_off if Delayed::Job.last }
+
+            subject(:controller) { controller_class.new({}, logger, env, params.merge("recursive" => "true"), request_body) }
+
+            it "successfully deletes" do
+              expect {
+                controller.do_delete(model)
+                run_delayed_job
+              }.to change {
+                model_klass.count
+              }.by(-1)
+            end
+
+            it "successfully deletes association marked for destroy" do
+              expect {
+                controller.do_delete(model)
+                run_delayed_job
+              }.to change {
+                test_model_destroy_dep_class.count
+              }.by(-1)
+            end
+
+            it "successfully nullifies association marked for nullify" do
+              expect {
+                controller.do_delete(model)
+                run_delayed_job
+              }.to change {
+                test_model_nullify_dep.reload.test_model_id
+              }.from(model.id).to(nil)
+            end
+          end
+
+          context "when deleting non-recursively" do
+            it "raises an association error" do
+              expect {
+                controller.do_delete(model)
+              }.to raise_error(VCAP::Errors::AssociationNotEmpty)
+            end
+          end
+        end
+
+        context "when sync" do
+          it "deletes the object" do
+            expect {
+              controller.do_delete(model)
+            }.to change {
+              model_klass.count
+            }.by(-1)
+          end
+
+          it "returns a 204" do
+            http_code, body = controller.do_delete(model)
+
+            expect(http_code).to eq(204)
+            expect(body).to be_nil
+          end
+
+          context "when the model has active associations" do
+            include_examples "tests with associations"
+          end
+        end
+
+        context "when async" do
+          let(:params) { {"async" => "true"} }
+
+          it "enqueues a job to delete the object" do
+            expect {
+              expect { controller.do_delete(model) }.to_not change { model_klass.count }
+            }.to change {
+              Delayed::Job.count
+            }.by(1)
+
+            job = Delayed::Job.last
+            expect(job.queue).to eq "cc-generic"
+            expect(job.payload_object).to be_a ModelDeletionJob
+            expect(job.payload_object.model_class).to eq model_klass
+            expect(job.payload_object.guid).to eq model.guid
+          end
+
+          it "returns a 202 with the job information" do
+            http_code, body = controller.do_delete(model)
+
+            expect(http_code).to eq(202)
+            expect(body).to include('"status": "queued"')
+          end
+
+          context "when the model has active associations" do
+            include_examples "tests with associations"
           end
         end
       end

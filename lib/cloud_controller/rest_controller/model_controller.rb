@@ -80,7 +80,6 @@ module VCAP::CloudController::RestController
 
       obj = find_guid_and_validate_access(:delete, guid)
       do_delete(obj)
-      [HTTP::NO_CONTENT, nil]
     end
 
     def do_delete(obj)
@@ -89,9 +88,11 @@ module VCAP::CloudController::RestController
       model_deletion_job = ModelDeletionJob.new(obj.class, obj.guid)
 
       if async?
-        Delayed::Job.enqueue(model_deletion_job, queue: "cc-generic")
+        job = Delayed::Job.enqueue(model_deletion_job, queue: "cc-generic")
+        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
         model_deletion_job.perform
+        [HTTP::NO_CONTENT, nil]
       end
     end
 
