@@ -105,8 +105,10 @@ module ApiDsl
 
     def standard_model_delete(model)
       delete "#{root(model)}/:guid" do
+        request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'."
+
         example_request "Delete a Particular #{model.to_s.capitalize}" do
-          status.should == 204
+          expect(status).to eq 204
           after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
         end
       end
