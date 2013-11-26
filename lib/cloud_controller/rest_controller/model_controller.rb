@@ -72,16 +72,6 @@ module VCAP::CloudController::RestController
       obj
     end
 
-    # Delete operation
-    #
-    # @param [String] guid The GUID of the object to delete.
-    def delete(guid)
-      logger.debug "cc.delete", guid: guid
-
-      obj = find_guid_and_validate_access(:delete, guid)
-      do_delete(obj)
-    end
-
     def do_delete(obj)
       raise_if_has_associations!(obj) if v2_api? && !recursive?
 

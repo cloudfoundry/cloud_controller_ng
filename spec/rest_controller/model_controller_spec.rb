@@ -216,47 +216,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "#delete" do
-      let!(:model) { model_klass.create }
-
-      context "when the guid matches a record" do
-        context "when validate_access fails" do
-          before do
-            controller.stub(:validate_access).and_raise(VCAP::Errors::NotAuthorized)
-          end
-
-          it "raises" do
-            expect { controller.delete(model.guid) }.to raise_error(VCAP::Errors::NotAuthorized)
-          end
-        end
-
-        it "deletes the object if access if validated" do
-          expect { controller.delete(model.guid) }.to change { model_klass.count }.by(-1)
-        end
-
-        it "calls the hooks in the right order" do
-          model_klass.stub(:find).with(guid: model.guid).and_return(model)
-          model.should_receive(:destroy).ordered.and_call_original
-          controller.delete(model.guid)
-        end
-
-        it "returns a valid http response" do
-          http_code, body = controller.delete(model.guid)
-
-          expect(http_code).to eq(204)
-          expect(body).to be_nil
-        end
-      end
-
-      context "when the guid does not match a record" do
-        it "raises a not found exception for the underlying model" do
-          error_class = Class.new(RuntimeError)
-          stub_const("VCAP::CloudController::Errors::TestModelNotFound", error_class)
-          expect { controller.delete(SecureRandom.uuid) }.to raise_error(error_class)
-        end
-      end
-    end
-
     describe "#do_delete" do
       let!(:model) { model_klass.create }
 

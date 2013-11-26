@@ -41,5 +41,9 @@ module VCAP::CloudController
       raise Errors::NotAuthorized unless roles.admin?
       super
     end
+
+    def delete(guid)
+      do_delete(find_guid_and_validate_access(:delete, guid))
+    end
   end
 end

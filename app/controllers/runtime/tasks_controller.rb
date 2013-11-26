@@ -21,7 +21,7 @@ module VCAP::CloudController
 
     def delete(guid)
       return [HTTP::NOT_FOUND, nil] if config[:tasks_disabled]
-      super
+      do_delete(find_guid_and_validate_access(:delete, guid))
     end
   end
 end

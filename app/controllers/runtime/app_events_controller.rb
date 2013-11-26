@@ -9,5 +9,9 @@ module VCAP::CloudController
     end
 
     query_parameters :timestamp, :app_guid
+
+    def delete(guid)
+      do_delete(find_guid_and_validate_access(:delete, guid))
+    end
   end
 end

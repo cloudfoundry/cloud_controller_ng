@@ -11,7 +11,6 @@ module VCAP::CloudController
     query_parameters :app_guid, :service_instance_guid
 
     post '/v2/service_bindings', :create
-
     def create
       json_msg = self.class::CreateMessage.decode(body)
 
@@ -34,6 +33,12 @@ module VCAP::CloudController
       ]
     end
 
+    def delete(guid)
+      do_delete(find_guid_and_validate_access(:delete, guid))
+    end
+
+    private
+
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)
@@ -48,6 +53,5 @@ module VCAP::CloudController
       service_instance = ServiceInstance.find(:guid => request_attrs['service_instance_guid'])
       service_instance.bindable?
     end
-
   end
 end

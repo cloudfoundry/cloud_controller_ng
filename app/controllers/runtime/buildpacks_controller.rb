@@ -20,25 +20,12 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      logger.debug "cc.delete", :guid => guid
-
       buildpack = find_guid_and_validate_access(:delete, guid)
-
-      raise_if_has_associations!(buildpack) if v2_api? && !recursive?
-
-      blobstore_key = buildpack.key
-
-      buildpack.destroy
-
-      if blobstore_key
-        blobstore_delete = BlobstoreDelete.new(blobstore_key, :buildpack_blobstore)
-        Delayed::Job.enqueue(blobstore_delete, queue: "cc-generic")
-      end
-
-      [ HTTP::NO_CONTENT, nil ]
+      response = do_delete(buildpack)
+      delete_buildpack_in_blobstore(buildpack.key)
+      response
     end
 
-    # New guy for updating
     def update(guid)
       obj = find_for_update(guid)
 
@@ -56,6 +43,12 @@ module VCAP::CloudController
     private
 
     attr_reader :buildpack_blobstore
+
+    def delete_buildpack_in_blobstore(blobstore_key)
+      return unless blobstore_key
+      blobstore_delete = BlobstoreDelete.new(blobstore_key, :buildpack_blobstore)
+      Delayed::Job.enqueue(blobstore_delete, queue: "cc-generic")
+    end
 
     def inject_dependencies(dependencies)
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
