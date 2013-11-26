@@ -71,7 +71,7 @@ module VCAP::CloudController
         end
 
         Domain.shared_domains.each do |domain|
-          Organization.where(Sequel.~(id: d.organizations_dataset.select(:id))).each do |org|
+          Organization.where(Sequel.~(id: domain.organizations_dataset.select(:id))).each do |org|
             org.add_domain(domain)
           end
         end
