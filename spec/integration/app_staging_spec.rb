@@ -80,7 +80,7 @@ describe "Staging an app", type: :integration do
           "name" => "foobar",
           "memory" => 64,
           "instances" => 2,
-          "disk_quota" => 1024,
+          "disk_quota" => 100,
           "space_guid" => space.json_body["metadata"]["guid"],
         }.to_json,
         authed_headers
