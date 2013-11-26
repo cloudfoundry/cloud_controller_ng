@@ -6,11 +6,10 @@ module VCAP::CloudController
     disable_default_routes
     path_base "jobs"
 
+    get "#{path_guid}", :read
     def read(guid)
       job = Delayed::Job[:guid => guid]
       JobPresenter.new(job).to_json
     end
-
-    get "#{path_guid}", :read
   end
 end

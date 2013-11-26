@@ -54,7 +54,6 @@ module VCAP::CloudController
     end
 
     post "/v2/service_instances", :create
-
     def create
       json_msg = self.class::CreateMessage.decode(body)
 
@@ -105,7 +104,6 @@ module VCAP::CloudController
     end
 
     get "/v2/service_instances/:guid", :read
-
     def read(guid)
       logger.debug "cc.read", model: :ServiceInstance, guid: guid
 
@@ -114,7 +112,6 @@ module VCAP::CloudController
     end
 
     delete "/v2/service_instances/:guid", :delete
-
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
     end

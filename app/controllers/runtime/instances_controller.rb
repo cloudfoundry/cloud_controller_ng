@@ -3,6 +3,7 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
+    get  "#{path_guid}/instances", :instances
     def instances(guid)
       app = find_guid_and_validate_access(:read, guid)
 
@@ -15,7 +16,5 @@ module VCAP::CloudController
       instances = DeaClient.find_all_instances(app)
       Yajl::Encoder.encode(instances)
     end
-
-    get  "#{path_guid}/instances", :instances
   end
 end

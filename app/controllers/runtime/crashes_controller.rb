@@ -4,12 +4,11 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
+    get  "#{path_guid}/crashes", :crashes
     def crashes(guid)
       app = find_guid_and_validate_access(:read, guid)
       Yajl::Encoder.encode(health_manager_client.find_crashes(app))
     end
-
-    get  "#{path_guid}/crashes", :crashes
 
     protected
 

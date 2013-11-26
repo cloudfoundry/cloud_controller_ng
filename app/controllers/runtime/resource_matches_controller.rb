@@ -1,5 +1,6 @@
 module VCAP::CloudController
   class ResourceMatchesController < RestController::Base
+    put "/v2/resource_match", :match
     def match
       return NotAuthorized unless user
       # TODO: replace with json_message
@@ -7,7 +8,5 @@ module VCAP::CloudController
       fingerprints_existing_in_blobstore = ResourcePool.instance.match_resources(fingerprints_all_clientside_bits)
       Yajl::Encoder.encode(fingerprints_existing_in_blobstore)
     end
-
-    put "/v2/resource_match", :match
   end
 end

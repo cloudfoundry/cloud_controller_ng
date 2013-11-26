@@ -2,7 +2,13 @@ module VCAP::CloudController
   class BuildpackBitsController < RestController::ModelController
     path_base "buildpacks"
     model_class_name :Buildpack
+    allow_unauthenticated_access only: :download
+    authenticate_basic_auth("#{path}/*/download") do
+      [VCAP::CloudController::Config.config[:staging][:auth][:user],
+       VCAP::CloudController::Config.config[:staging][:auth][:password]]
+    end
 
+    put "#{path_guid}/bits", :upload
     def upload(guid)
       buildpack = find_guid_and_validate_access(:read_bits, guid)
       uploaded_file = upload_handler.uploaded_file(params, "buildpack")
@@ -32,6 +38,7 @@ module VCAP::CloudController
       FileUtils.rm_f(uploaded_file) if uploaded_file
     end
 
+    get "#{path_guid}/download", :download
     def download(guid)
       obj = Buildpack.find(guid: guid)
       if @buildpack_blobstore.local?
@@ -43,16 +50,6 @@ module VCAP::CloudController
         bits_uri = "#{bits_uri(obj.key)}"
         return [HTTP::FOUND, {"Location" => bits_uri}, nil]
       end
-    end
-
-    put "#{path_guid}/bits", :upload
-    get "#{path_guid}/download", :download
-
-    allow_unauthenticated_access only: :download
-
-    authenticate_basic_auth("#{path}/*/download") do
-      [VCAP::CloudController::Config.config[:staging][:auth][:user],
-       VCAP::CloudController::Config.config[:staging][:auth][:password]]
     end
 
     private

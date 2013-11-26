@@ -4,6 +4,7 @@ module VCAP::CloudController
     path_base "spaces"
     model_class_name :Space
 
+    get "#{path_guid}/summary", :summary
     def summary(guid)
       space = find_guid_and_validate_access(:read, guid)
 
@@ -30,14 +31,14 @@ module VCAP::CloudController
       end
 
       Yajl::Encoder.encode(
-        :guid => space.guid,
-        :name => space.name,
-        :apps => apps.values,
-        :services => services_summary,
+        guid: space.guid,
+        name: space.name,
+        apps: apps.values,
+        services: services_summary,
       )
     end
 
-    protected
+    private
 
     attr_reader :health_manager_client
 
@@ -45,19 +46,15 @@ module VCAP::CloudController
       @health_manager_client = dependencies[:health_manager_client]
     end
 
-    private
-
     def app_summary(app)
       {
-        :guid => app.guid,
-        :urls => app.routes.map(&:fqdn),
-        :routes => app.routes.map(&:as_summary_json),
-        :service_count => app.service_bindings_dataset.count,
-        :service_names => app.service_bindings_dataset.map(&:service_instance).map(&:name),
-        :running_instances => nil,
+        guid: app.guid,
+        urls: app.routes.map(&:fqdn),
+        routes: app.routes.map(&:as_summary_json),
+        service_count: app.service_bindings_dataset.count,
+        service_names: app.service_bindings_dataset.map(&:service_instance).map(&:name),
+        running_instances: nil,
       }.merge(app.to_hash)
     end
-
-    get "#{path_guid}/summary", :summary
   end
 end

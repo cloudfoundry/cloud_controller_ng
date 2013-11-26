@@ -6,6 +6,7 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
+    put "#{path_guid}/bits", :upload
     def upload(guid)
       app = find_guid_and_validate_access(:update, guid)
 
@@ -26,6 +27,7 @@ module VCAP::CloudController
       raise
     end
 
+    get "#{path_guid}/download", :download
     def download(guid)
       find_guid_and_validate_access(:read, guid)
       blobstore = CloudController::DependencyLocator.instance.package_blobstore
@@ -41,7 +43,7 @@ module VCAP::CloudController
 
       if blobstore.local?
         if config[:nginx][:use_nginx]
-          return [200, { "X-Accel-Redirect" => "#{package_uri}" }, ""]
+          return [HTTP::OK, { "X-Accel-Redirect" => "#{package_uri}" }, ""]
         else
           return send_file package_path, :filename => File.basename("#{path}.zip")
         end
@@ -49,9 +51,6 @@ module VCAP::CloudController
         return [HTTP::FOUND, {"Location" => package_uri}, nil]
       end
     end
-
-    put "#{path_guid}/bits", :upload
-    get "#{path_guid}/download", :download
 
     private
 

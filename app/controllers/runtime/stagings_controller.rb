@@ -20,6 +20,7 @@ module VCAP::CloudController
 
     attr_reader :config, :blobstore, :buildpack_cache_blobstore, :package_blobstore
 
+    get "/staging/apps/:guid", :download_app
     def download_app(guid)
       raise InvalidRequest unless package_blobstore.local?
 
@@ -45,6 +46,7 @@ module VCAP::CloudController
       end
     end
 
+    post "#{DROPLET_PATH}/:guid/upload", :upload_droplet
     def upload_droplet(guid)
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
@@ -64,6 +66,7 @@ module VCAP::CloudController
       end
     end
 
+    get "#{DROPLET_PATH}/:guid/download", :download_droplet
     def download_droplet(guid)
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
@@ -74,6 +77,7 @@ module VCAP::CloudController
       download(app, droplet.local_path, droplet.download_url, blob_name)
     end
 
+    post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
     def upload_buildpack_cache(guid)
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
@@ -84,6 +88,7 @@ module VCAP::CloudController
       HTTP::OK
     end
 
+    get "#{BUILDPACK_CACHE_PATH}/:guid/download", :download_buildpack_cache
     def download_buildpack_cache(guid)
       app = App.find(:guid => guid)
       raise AppNotFound.new(guid) if app.nil?
@@ -98,6 +103,8 @@ module VCAP::CloudController
       download(app, buildpack_cache_path, buildpack_cache_url, blob_name)
     end
 
+    private
+
     def inject_dependencies(dependencies)
       @blobstore = dependencies.fetch(:droplet_blobstore)
       @buildpack_cache_blobstore = dependencies.fetch(:buildpack_cache_blobstore)
@@ -105,7 +112,6 @@ module VCAP::CloudController
       @config = dependencies.fetch(:config)
     end
 
-    private
     def log_and_raise_missing_blob(app_guid, name)
       Loggregator.emit_error(app_guid, "Did not find #{name} for app with guid: #{app_guid}")
       logger.error "could not find #{name} for #{app_guid}"
@@ -145,14 +151,5 @@ module VCAP::CloudController
     def tmpdir
       (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
     end
-
-    get "/staging/apps/:guid", :download_app
-
-    # Make sure that nginx upload path rules do not apply to download paths!
-    post "#{DROPLET_PATH}/:guid/upload", :upload_droplet
-    get "#{DROPLET_PATH}/:guid/download", :download_droplet
-
-    post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
-    get "#{BUILDPACK_CACHE_PATH}/:guid/download", :download_buildpack_cache
   end
 end

@@ -7,6 +7,7 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
+    get "#{path_guid}/instances/:instance_id/files", :files
     def files(guid, search_param, path = nil, opts = {})
       opts = { :allow_redirect => true }.merge(opts)
       app = find_guid_and_validate_access(:read, guid)
@@ -51,6 +52,7 @@ module VCAP::CloudController
       [http_response.status, http_response.body]
     end
 
+    get "#{path_guid}/instances/:instance_id/files/*", :files
     def http_get(uri, headers, username, password)
       client = HTTPClient.new
       client.set_auth(nil, username, password) if username && password
@@ -88,8 +90,5 @@ module VCAP::CloudController
         raise Errors::FileError.new(msg)
       end
     end
-
-    get "#{path_guid}/instances/:instance_id/files", :files
-    get "#{path_guid}/instances/:instance_id/files/*", :files
   end
 end

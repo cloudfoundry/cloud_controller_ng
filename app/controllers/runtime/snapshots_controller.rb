@@ -10,6 +10,7 @@ module VCAP::CloudController
     end
     define_messages
 
+    post "/v2/snapshots", :create
     def create
       req = self.class::CreateMessage.decode(body)
       instance = VCAP::CloudController::ManagedServiceInstance.find(:guid => req.service_instance_guid)
@@ -19,17 +20,18 @@ module VCAP::CloudController
       [
         HTTP::CREATED,
         Yajl::Encoder.encode(
-          "metadata" => {
-            "url" => "/v2/snapshots/#{snap_guid}",
-            "guid" => snap_guid,
-            "created_at" => snapshot.created_time,
-            "updated_at" => nil
+          metadata: {
+            url: "/v2/snapshots/#{snap_guid}",
+            guid: snap_guid,
+            created_at: snapshot.created_time,
+            updated_at: nil
           },
-          "entity" => snapshot.extract
+          entity: snapshot.extract
         ),
       ]
     end
 
+    get  "/v2/service_instances/:service_guid/snapshots", :index
     def index(service_guid)
       instance = VCAP::CloudController::ManagedServiceInstance.find(:guid => service_guid)
       validate_access(:read, instance, user, roles)
@@ -37,26 +39,23 @@ module VCAP::CloudController
       [
         HTTP::OK,
         Yajl::Encoder.encode(
-          "total_results" => snapshots.length,
-          "total_pages" => 1,
-          "prev_url" => nil,
-          "next_url" => nil,
-          "resources" => snapshots.collect do |s|
+          total_results: snapshots.length,
+          total_pages: 1,
+          prev_url: nil,
+          next_url: nil,
+          resources: snapshots.collect do |s|
             {
-              "metadata" => {
-                "guid" => "#{service_guid}_#{s.snapshot_id}",
-                "url" => "/v2/snapshots/#{service_guid}_#{s.snapshot_id}",
-                "created_at" => s.created_time,
-                "updated_at" => nil,
+              metadata: {
+                guid: "#{service_guid}_#{s.snapshot_id}",
+                url: "/v2/snapshots/#{service_guid}_#{s.snapshot_id}",
+                created_at: s.created_time,
+                updated_at: nil,
               },
-              "entity" => s.extract
+              entity: s.extract
             }
           end
         ),
       ]
     end
-
-    post "/v2/snapshots", :create
-    get  "/v2/service_instances/:service_guid/snapshots", :index
   end
 end

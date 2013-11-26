@@ -18,10 +18,6 @@ module VCAP::CloudController
     end
 
     get '/v2/service_brokers', :enumerate
-    post '/v2/service_brokers', :create
-    put '/v2/service_brokers/:guid', :update
-    delete '/v2/service_brokers/:guid', :delete
-
     def enumerate
       headers = {}
       brokers = ServiceBroker.filter(build_filter)
@@ -30,6 +26,7 @@ module VCAP::CloudController
       [HTTP::OK, headers, body.to_json]
     end
 
+    post '/v2/service_brokers', :create
     def create
       params = ServiceBrokerMessage.extract(body)
       broker = ServiceBroker.new(params)
@@ -45,6 +42,7 @@ module VCAP::CloudController
       [HTTP::CREATED, headers, body]
     end
 
+    put '/v2/service_brokers/:guid', :update
     def update(guid)
       params = ServiceBrokerMessage.extract(body)
       broker = ServiceBroker.find(guid: guid)
@@ -62,6 +60,7 @@ module VCAP::CloudController
       [HTTP::OK, {}, body]
     end
 
+    delete '/v2/service_brokers/:guid', :delete
     def delete(guid)
       broker = ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker

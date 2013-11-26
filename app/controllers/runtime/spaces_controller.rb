@@ -25,7 +25,6 @@ module VCAP::CloudController
     end
 
     get "/v2/spaces/:guid/services", :enumerate_services
-
     def enumerate_services(guid)
       space = find_guid_and_validate_access(:read, guid)
 
@@ -45,7 +44,6 @@ module VCAP::CloudController
     end
 
     get "/v2/spaces/:guid/service_instances", :enumerate_service_instances
-
     def enumerate_service_instances(guid)
       space = find_guid_and_validate_access(:read, guid)
 
@@ -71,18 +69,20 @@ module VCAP::CloudController
       )
     end
 
+    def delete(guid)
+      space = find_guid_and_validate_access(:delete, guid)
+      Event.record_space_delete_request(space, SecurityContext.current_user, recursive?)
+      do_delete(space)
+    end
+
+    private
+
     def after_create(space)
       Event.record_space_create(space, SecurityContext.current_user, request_attrs)
     end
 
     def after_update(space)
       Event.record_space_update(space, SecurityContext.current_user, request_attrs)
-    end
-
-    def delete(guid)
-      space = find_guid_and_validate_access(:delete, guid)
-      Event.record_space_delete_request(space, SecurityContext.current_user, recursive?)
-      do_delete(space)
     end
 
     module ServiceSerialization

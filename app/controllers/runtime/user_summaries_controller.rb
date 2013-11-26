@@ -6,6 +6,7 @@ module VCAP::CloudController
     path_base "users"
     model_class_name :User
 
+    get "#{path_guid}/summary", :summary
     def summary(guid)
       # only admins should have unfettered access to all users
       # UserAccess allows all to read so org and space user lists show all users in those lists
@@ -13,7 +14,5 @@ module VCAP::CloudController
       user = find_guid_and_validate_access(:read, guid)
       Yajl::Encoder.encode UserSummaryPresenter.new(user).to_hash
     end
-
-    get "#{path_guid}/summary", :summary
   end
 end
