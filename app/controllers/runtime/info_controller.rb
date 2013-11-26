@@ -13,6 +13,10 @@ module VCAP::CloudController
         :api_version => @config[:info][:api_version]
       }
 
+      if @config[:loggregator] && @config[:loggregator][:url]
+        info[:logging_endpoint] = @config[:loggregator][:url]
+      end
+
       if user
         info[:user] = user.guid
       end

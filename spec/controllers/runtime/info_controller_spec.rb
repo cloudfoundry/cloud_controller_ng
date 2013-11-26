@@ -83,6 +83,56 @@ module VCAP::CloudController
           end
         end
       end
+
+      shared_examples "info endpoint verification" do
+        it "should be correct" do
+          get "/v2/info"
+
+          hash = Yajl::Parser.parse(last_response.body)
+          hash.should have_key(endpoint)
+          hash[endpoint].should eq(endpoint_value)
+        end
+      end
+
+      context "and verify endpoint" do
+        describe "authorization" do
+          context "with login url in config" do
+            include_examples "info endpoint verification" do
+              before { config_override(:login => {:url => "login_url"}) }
+              let(:endpoint) { "authorization_endpoint" }
+              let(:endpoint_value) { "login_url" }
+            end
+          end
+
+          context "without login url in config" do
+            include_examples "info endpoint verification" do
+              let(:endpoint) { "authorization_endpoint" }
+              let(:endpoint_value) { config[:uaa][:url] }
+            end
+          end
+        end
+
+        describe "logging" do
+          context "with loggregator endpoint_url in config" do
+            include_examples "info endpoint verification" do
+              before { config_override(:loggregator => {:url => "loggregator_url"}) }
+              let(:endpoint) { "logging_endpoint" }
+              let(:endpoint_value) { "loggregator_url" }
+            end
+          end
+
+          context "without loggregator endpoint url in config" do
+            it "should not have the endpoint in the hash" do
+              config[:loggregator].delete(:url)
+
+              get "/v2/info"
+
+              hash = Yajl::Parser.parse(last_response.body)
+              hash.should_not have_key("logging_endpoint")
+            end
+          end
+        end
+      end
     end
   end
 end
