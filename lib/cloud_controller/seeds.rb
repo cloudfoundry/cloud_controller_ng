@@ -70,7 +70,11 @@ module VCAP::CloudController
           end
         end
 
-        Organization.all.each { |org| org.add_inheritable_domains }
+        Domain.shared_domains.each do |domain|
+          Organization.except(domain.organizations_dataset).each do |org|
+            org.add_domain(domain)
+          end
+        end
       end
     end
   end
