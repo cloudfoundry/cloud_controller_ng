@@ -120,17 +120,11 @@ module VCAP::CloudController
     describe "#destroy" do
       subject(:space) { Space.make }
 
-      it "destroys all apps" do
-        app = AppFactory.make(:space => space)
-        soft_deleted_app = AppFactory.make(:space => space)
-        soft_deleted_app.soft_delete
-
-        expect {
-          subject.destroy(savepoint: true)
-        }.to change {
-          App.with_deleted.where(:id => [app.id, soft_deleted_app.id]).count
-        }.from(2).to(0)
-      end
+     it "soft deletes all apps" do
+       app = App.make(:space => space)
+       subject.destroy(savepoint: true)
+       App.deleted[:id => app.id].should_not be_nil
+     end
 
       it "destroys all service instances" do
         service_instance = ManagedServiceInstance.make(:space => space)

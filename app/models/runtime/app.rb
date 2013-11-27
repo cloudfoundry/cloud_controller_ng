@@ -148,6 +148,7 @@ module VCAP::CloudController
     def before_create
       super
       set_new_version
+      raise Sequel::DatabaseError, "space is required" if self.space_id.nil?
     end
 
     def before_save
@@ -212,7 +213,11 @@ module VCAP::CloudController
       (column_changed?(:production) || column_changed?(:memory) ||
         column_changed?(:instances))
     end
-
+    
+    def destroy(savepoint=:true)
+      self.soft_delete unless self.not_deleted.nil?
+    end
+   
     def after_destroy
       AppStopEvent.create_from_app(self) unless stopped? || has_stop_event_for_latest_run?
     end
