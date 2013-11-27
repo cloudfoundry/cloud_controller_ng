@@ -1,9 +1,8 @@
 require 'services/api'
 
 module VCAP::CloudController
-  rest_controller :ServiceInstances do
+  class ServiceInstancesController < RestController::ModelController
     model_class_name :ManagedServiceInstance # Must do this to be backwards compatible with actions other than enumerate
-
     define_attributes do
       attribute :name,  String
       to_one    :space
@@ -115,5 +114,8 @@ module VCAP::CloudController
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
     end
+
+    define_messages
+    define_routes
   end
 end

@@ -1,7 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Stacks do
-    disable_default_routes
-
+  class StacksController < RestController::ModelController
     define_attributes do
       attribute  :name,           String
       attribute  :description,    String

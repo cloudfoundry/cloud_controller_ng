@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Spaces do
+  class SpacesController < RestController::ModelController
     define_attributes do
       attribute  :name,            String
       to_one     :organization
@@ -103,5 +103,8 @@ module VCAP::CloudController
         {"metadata" => metadata_hash, "entity" => entity_hash}
       end
     end
+
+    define_messages
+    define_routes
   end
 end

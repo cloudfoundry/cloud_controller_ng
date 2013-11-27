@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Domains do
+  class DomainsController < RestController::ModelController
     define_attributes do
       attribute :name, String
       attribute :wildcard, Message::Boolean
@@ -21,5 +21,8 @@ module VCAP::CloudController
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
+
+    define_messages
+    define_routes
   end
 end

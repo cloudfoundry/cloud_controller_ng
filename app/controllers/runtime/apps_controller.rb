@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Apps do
+  class AppsController < RestController::ModelController
     define_attributes do
       attribute  :name,                String
       attribute  :production,          Message::Boolean,    :default => false
@@ -87,5 +87,8 @@ module VCAP::CloudController
       Loggregator.emit(app.guid, "Updated app with guid #{app.guid}")
       Event.record_app_update(app, SecurityContext.current_user, request_attrs)
     end
+
+    define_messages
+    define_routes
   end
 end

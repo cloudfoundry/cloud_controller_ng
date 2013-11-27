@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :ServiceAuthTokens do
+  class ServiceAuthTokensController < RestController::ModelController
     define_attributes do
       attribute :label,    String
       attribute :provider, String
@@ -20,5 +20,8 @@ module VCAP::CloudController
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
+
+    define_messages
+    define_routes
   end
 end

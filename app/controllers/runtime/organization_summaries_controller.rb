@@ -1,6 +1,5 @@
 module VCAP::CloudController
-  rest_controller :OrganizationSummaries do
-    disable_default_routes
+  class OrganizationSummariesController < RestController::ModelController
     path_base "organizations"
     model_class_name :Organization
 

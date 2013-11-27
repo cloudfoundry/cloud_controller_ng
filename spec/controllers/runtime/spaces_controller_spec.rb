@@ -10,10 +10,10 @@ module VCAP::CloudController
     include_examples "creating and updating", path: "/v2/spaces", model: Space, required_attributes: %w(name organization_guid), unique_attributes: %w(name organization_guid)
     include_examples "deleting a valid object", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
-        :apps => lambda { |space| AppFactory.make(:space => space) },
-        :service_instances => lambda { |space| ManagedServiceInstance.make(:space => space) },
-        :routes => lambda { |space| Route.make(:space => space) },
-        :default_users => lambda { |space|
+        apps: lambda { |space| AppFactory.make(:space => space) },
+        service_instances: lambda { |space| ManagedServiceInstance.make(:space => space) },
+        routes: lambda { |space| Route.make(:space => space) },
+        default_users: lambda { |space|
           user = VCAP::CloudController::User.make
           space.organization.add_user(user)
           space.add_developer(user)
@@ -22,7 +22,7 @@ module VCAP::CloudController
           user.save
           user
         }
-      }, :excluded => [:default_users]
+      }, excluded: [:default_users]
     include_examples "collection operations", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
         apps: lambda { |space| AppFactory.make(space: space) },
@@ -184,7 +184,7 @@ module VCAP::CloudController
             guids.should include(user_provided_service_instance.guid, managed_service_instance.guid)
           end
 
-          it 'includes service_plan_url for managed service instaces' do
+          it 'includes service_plan_url for managed service instances' do
             get "/v2/spaces/#{space.guid}/service_instances", {return_user_provided_service_instances: true}, headers_for(developer)
             service_instances_response = decoded_response.fetch('resources')
             managed_service_instance_response = service_instances_response.detect {|si|
@@ -203,7 +203,7 @@ module VCAP::CloudController
             guids.should =~ [managed_service_instance.guid]
           end
 
-          it 'includes service_plan_url for managed service instaces' do
+          it 'includes service_plan_url for managed service instances' do
             get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
             service_instances_response = decoded_response.fetch('resources')
             managed_service_instance_response = service_instances_response.detect {|si|

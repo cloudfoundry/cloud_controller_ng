@@ -1,7 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Buildpacks do
-    model_class_name :Buildpack
-
+  class BuildpacksController < RestController::ModelController
     define_attributes do
       attribute :name, String
       attribute :position, Integer, default: 0
@@ -57,5 +55,8 @@ module VCAP::CloudController
     def self.not_found_exception_name
       "NotFound"
     end
+
+    define_messages
+    define_routes
   end
 end

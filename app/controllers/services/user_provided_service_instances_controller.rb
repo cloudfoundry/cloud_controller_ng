@@ -1,7 +1,7 @@
 require 'cloud_controller/rest_controller'
 
 module VCAP::CloudController
-  rest_controller :UserProvidedServiceInstances do
+  class UserProvidedServiceInstancesController < RestController::ModelController
     define_attributes do
       attribute :name, String
       attribute :credentials, Hash, :default => {}
@@ -23,5 +23,8 @@ module VCAP::CloudController
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
+
+    define_messages
+    define_routes
   end
 end

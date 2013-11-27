@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Routes do
+  class RoutesController < RestController::ModelController
     define_attributes do
       attribute :host, String, :default => ""
       to_one    :domain
@@ -21,5 +21,8 @@ module VCAP::CloudController
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
+
+    define_messages
+    define_routes
   end
 end

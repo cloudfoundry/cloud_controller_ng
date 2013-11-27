@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :QuotaDefinitions do
+  class QuotaDefinitionsController < RestController::ModelController
     define_attributes do
       attribute  :name,                       String
       attribute  :non_basic_services_allowed, Message::Boolean
@@ -23,5 +23,8 @@ module VCAP::CloudController
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
+
+    define_messages
+    define_routes
   end
 end

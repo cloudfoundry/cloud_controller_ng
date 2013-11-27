@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :ServicePlans do
+  class ServicePlansController < RestController::ModelController
     define_attributes do
       attribute :name,              String
       attribute :free,              Message::Boolean
@@ -39,5 +39,8 @@ module VCAP::CloudController
         Errors::ServicePlanInvalid.new(e.errors.full_messages)
       end
     end
+
+    define_messages
+    define_routes
   end
 end

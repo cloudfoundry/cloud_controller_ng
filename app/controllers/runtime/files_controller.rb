@@ -2,8 +2,7 @@ require "httpclient"
 require "uri"
 
 module VCAP::CloudController
-  rest_controller :Files do
-    disable_default_routes
+  class FilesController < RestController::ModelController
     path_base "apps"
     model_class_name :App
 

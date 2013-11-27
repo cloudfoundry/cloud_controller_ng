@@ -1,6 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Snapshots do
-    disable_default_routes
+  class SnapshotsController < RestController::ModelController
     path_base "/v2"
     model_class_name :ManagedServiceInstance
 

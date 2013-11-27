@@ -1,6 +1,5 @@
 module VCAP::CloudController
-  rest_controller :SpaceSummaries do
-    disable_default_routes
+  class SpaceSummariesController < RestController::ModelController
     path_base "spaces"
     model_class_name :Space
 

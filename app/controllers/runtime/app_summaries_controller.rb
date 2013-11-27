@@ -1,6 +1,5 @@
 module VCAP::CloudController
-  rest_controller :AppSummaries do
-    disable_default_routes
+  class AppSummariesController < RestController::ModelController
     path_base "apps"
     model_class_name :App
 

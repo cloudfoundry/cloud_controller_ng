@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  rest_controller :Users do
+  class UsersController < RestController::ModelController
     define_attributes do
       attribute :guid, String
       to_many   :spaces
@@ -14,11 +14,11 @@ module VCAP::CloudController
     end
 
     query_parameters :space_guid, :organization_guid,
-                     :managed_organization_guid,
-                     :billing_managed_organization_guid,
-                     :audited_organization_guid,
-                     :managed_space_guid,
-                     :audited_space_guid
+      :managed_organization_guid,
+      :billing_managed_organization_guid,
+      :audited_organization_guid,
+      :managed_space_guid,
+      :audited_space_guid
 
     def self.translate_validation_exception(e, attributes)
       guid_errors = e.errors.on(:guid)
@@ -45,5 +45,8 @@ module VCAP::CloudController
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
+
+    define_messages
+    define_routes
   end
 end

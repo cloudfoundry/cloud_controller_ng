@@ -1,8 +1,7 @@
 require 'presenters/api/user_summary_presenter'
 
 module VCAP::CloudController
-  rest_controller :UserSummaries do
-    disable_default_routes
+  class UserSummariesController < RestController::ModelController
     path_base "users"
     model_class_name :User
 

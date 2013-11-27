@@ -37,7 +37,6 @@ module VCAP::CloudController::RestController
     # @param [String] guid The GUID of the object to read.
     def read(guid)
       logger.debug "cc.read", model: self.class.model_class_name, guid: guid
-
       obj = find_guid_and_validate_access(:read, guid)
       serialization.render_json(self.class, obj, @opts)
     end
