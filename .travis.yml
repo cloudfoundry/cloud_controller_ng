@@ -36,7 +36,7 @@ env:
 
 matrix:
   allow_failures:
-    - rvm: ruby-1.9.3-p484
+    - rvm: 1.9.3-p484
 
 before_install:
   - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
