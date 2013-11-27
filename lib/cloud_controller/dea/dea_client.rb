@@ -1,6 +1,27 @@
 require "vcap/errors"
 
 module VCAP::CloudController
+  class AppStopper
+    attr_reader :message_bus
+
+    def initialize(message_bus)
+      @message_bus = message_bus
+    end
+
+    def stop(app)
+      publish_stop(:droplet => app.guid)
+    end
+
+    def publish_stop(args)
+      logger.debug "sending 'dea.stop' with '#{args}'"
+      message_bus.publish("dea.stop", args)
+    end
+
+    def logger
+      @logger ||= Steno.logger("cc.appstopper")
+    end
+  end
+
   module DeaClient
     class FileUriResult < Struct.new(:file_uri_v1, :file_uri_v2, :credentials)
       def initialize(opts = {})
@@ -41,7 +62,7 @@ module VCAP::CloudController
       end
 
       def stop(app)
-        dea_publish_stop(:droplet => app.guid)
+        app_stopper.publish_stop(:droplet => app.guid)
       end
 
       def find_specific_instance(app, options = {})
@@ -127,7 +148,7 @@ module VCAP::CloudController
           start_instances_in_range(app, range)
         elsif delta < 0
           range = (app.instances...app.instances - delta)
-          stop_indices_in_range(app, range)
+          stop_indices(app, range.to_a)
         end
       end
 
@@ -153,7 +174,7 @@ module VCAP::CloudController
 
       # @param [Array] indices an Enumerable of integer indices
       def stop_indices(app, indices)
-        dea_publish_stop(droplet: app.guid,
+        app_stopper.publish_stop(droplet: app.guid,
           version: app.version,
           indices: indices
         )
@@ -161,17 +182,14 @@ module VCAP::CloudController
 
       # @param [Array] indices an Enumerable of guid instance ids
       def stop_instances(app, instances)
-        dea_publish_stop(
+        app_stopper.publish_stop(
           droplet: app.guid,
-          instances: instances
+          instances: Array(instances)
         )
       end
 
-      def stop_instance(app_guid, instance)
-        dea_publish_stop(
-          droplet: app_guid,
-          instances: [instance]
-        )
+      def app_stopper
+        AppStopper.new(@message_bus)
       end
 
       def get_file_uri_for_active_instance_by_index(app, path, index)
@@ -217,7 +235,7 @@ module VCAP::CloudController
       end
 
       def find_stats(app, opts = {})
-        opts = { :allow_stopped_state => false }.merge(opts)
+        opts = {:allow_stopped_state => false}.merge(opts)
 
         if app.stopped?
           unless opts[:allow_stopped_state]
@@ -300,11 +318,6 @@ module VCAP::CloudController
         start_instances(app, indices)
       end
 
-      # @param [Enumerable, #to_a] indices the range / sequence of instances to stop
-      def stop_indices_in_range(app, indices)
-        stop_indices(app, indices.to_a)
-      end
-
       # @return [FileUriResult]
       def get_file_uri(app, path, options)
         if app.stopped?
@@ -341,11 +354,6 @@ module VCAP::CloudController
           uris: app.uris,
           version: app.version,
         }
-      end
-
-      def dea_publish_stop(args)
-        logger.debug "sending 'dea.stop' with '#{args}'"
-        message_bus.publish("dea.stop", args)
       end
 
       def dea_publish_update(args)

@@ -13,7 +13,7 @@ module VCAP::CloudController
       end
 
       def deleted(app)
-        DeaClient.stop(app)
+        AppStopper.new(@message_bus).stop(app)
 
         delete_package(app) if app.package_hash
         delete_buildpack_cache(app) if app.staged?

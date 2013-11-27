@@ -10,7 +10,7 @@ module VCAP::CloudController
     subject { HM9000Respondent.new(dea_client, message_bus, noop) }
 
     before do
-      dea_client.stub(:stop_instance)
+      dea_client.stub(:stop_instances)
       dea_client.stub(:start_instance_at_index)
     end
 
@@ -177,7 +177,7 @@ module VCAP::CloudController
 
       context "when the message is missing fields" do
         it "should not do anything" do
-          dea_client.should_not_receive(:stop_instance)
+          dea_client.should_not_receive(:stop_instances)
           subject.process_hm9000_stop({"droplet" => app.guid, "instance_guid" => "abc"})
         end
       end
@@ -189,7 +189,7 @@ module VCAP::CloudController
 
         context "without the noop flag" do
           it "should stop the instance" do
-            dea_client.should_receive(:stop_instance) do |app_guid_to_stop, guid|
+            dea_client.should_receive(:stop_instances) do |app_guid_to_stop, guid|
               expect(app_guid_to_stop).to eq("a-non-existent-app")
               expect(guid).to eq("abc")
             end
@@ -201,7 +201,7 @@ module VCAP::CloudController
         context "with the noop flag" do
           let(:noop) { true }
           it "should not send the start message" do
-            dea_client.should_not_receive(:stop_instance)
+            dea_client.should_not_receive(:stop_instances)
             subject.process_hm9000_stop(hm9000_stop_message)
           end
 
@@ -222,8 +222,8 @@ module VCAP::CloudController
 
           context "when the index to stop is outside the range of desired indices" do
             let(:stop_instance_index) { 2 }
-            it" should stop the instance" do
-              dea_client.should_receive(:stop_instance) do |app_guid_to_stop, guid|
+            it "should stop the instance" do
+              dea_client.should_receive(:stop_instances) do |app_guid_to_stop, guid|
                 expect(app_guid_to_stop).to eq(app.guid)
                 expect(guid).to eq("abc")
               end
@@ -238,7 +238,7 @@ module VCAP::CloudController
             context "and the instance is a duplicate (there is > 1 running on that index)" do
               let(:is_duplicate) { true }
               it "should stop the index" do
-                dea_client.should_receive(:stop_instance) do |app_guid_to_stop, guid|
+                dea_client.should_receive(:stop_instances) do |app_guid_to_stop, guid|
                   expect(app_guid_to_stop).to eq(app.guid)
                   expect(guid).to eq("abc")
                 end
@@ -251,7 +251,7 @@ module VCAP::CloudController
               context "and the app is in the STARTED state" do
                 context "and the package has staged" do
                   it "should ignore the request" do
-                    dea_client.should_not_receive(:stop_instance)
+                    dea_client.should_not_receive(:stop_instances)
                     subject.process_hm9000_stop(hm9000_stop_message)
                   end
                 end
@@ -263,7 +263,7 @@ module VCAP::CloudController
                   end
 
                   it "should ignore the request" do
-                    dea_client.should_not_receive(:stop_instance)
+                    dea_client.should_not_receive(:stop_instances)
                     subject.process_hm9000_stop(hm9000_stop_message)
                   end
                 end
@@ -275,7 +275,7 @@ module VCAP::CloudController
                   end
 
                   it "should stop the index" do
-                    dea_client.should_receive(:stop_instance) do |app_guid_to_stop, guid|
+                    dea_client.should_receive(:stop_instances) do |app_guid_to_stop, guid|
                       expect(app_guid_to_stop).to eq(app.guid)
                       expect(guid).to eq("abc")
                     end
@@ -289,7 +289,7 @@ module VCAP::CloudController
                 let(:app_state) { "STOPPED" }
 
                 it "should stop the instance" do
-                  dea_client.should_receive(:stop_instance) do |app_guid_to_stop, guid|
+                  dea_client.should_receive(:stop_instances) do |app_guid_to_stop, guid|
                     expect(app_guid_to_stop).to eq(app.guid)
                     expect(guid).to eq("abc")
                   end
@@ -306,7 +306,7 @@ module VCAP::CloudController
           let(:stop_instance_index) { 1 }
 
           it "should stop the instance" do
-            dea_client.should_receive(:stop_instance) do |app_guid_to_stop, guid|
+            dea_client.should_receive(:stop_instances) do |app_guid_to_stop, guid|
               expect(app_guid_to_stop).to eq(app.guid)
               expect(guid).to eq("abc")
             end

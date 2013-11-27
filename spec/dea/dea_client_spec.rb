@@ -209,30 +209,25 @@ module VCAP::CloudController
         message_bus.should_receive(:publish).with(
           "dea.stop",
           hash_including(
-            :droplet   => app.guid,
-            :instances   => ["a", "b"]
+            droplet: app.guid,
+            instances: ["a", "b"]
           )
         ) do |_, payload|
-          payload.should_not include(:version)
+          expect(payload).to_not include(:version)
         end
 
         DeaClient.stop_instances(app, ["a", "b"])
       end
-    end
 
-    describe "stop_instance" do
-      it "should send stop messages to deas" do
+      it "should support single instance" do
         message_bus.should_receive(:publish).with(
           "dea.stop",
-          hash_including(
-            :droplet   => "abc",
-            :instances   => ["a"]
-          )
+          hash_including(droplet: app.guid, instances: ["a"])
         ) do |_, payload|
-          payload.should_not include(:version)
+          expect(payload).to_not include(:version)
         end
 
-        DeaClient.stop_instance("abc", "a")
+        DeaClient.stop_instances(app, "a")
       end
     end
 

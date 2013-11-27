@@ -424,19 +424,6 @@ module VCAP::CloudController
 
       context "when the app is running" do
         let(:app_obj) { AppFactory.make :state => "STARTED", :package_hash => "abc" }
-
-        it "tells the DEAs to stop it" do
-          called = false
-          DeaClient.should_receive(:stop) do |app|
-            app.guid.should == app_obj.guid
-            called = true
-          end
-
-          delete_app
-
-          called.should be_true
-        end
-
         it "registers a billing stop event" do
           called = false
           AppStopEvent.should_receive(:create_from_app) do |app|

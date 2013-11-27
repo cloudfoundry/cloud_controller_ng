@@ -41,7 +41,7 @@ module VCAP::CloudController
 
       should_stop, reason = instance_needs_to_stop?(app_id, version, instance_index, is_duplicate)
       if should_stop
-        dea_client.stop_instance(app_id, instance_guid) unless @noop
+        dea_client.stop_instances(app_id, instance_guid) unless @noop
         logger.info "cloudcontroller.hm9000.will-stop", :reason => reason, :payload => message, :noop => @noop
       else
         logger.info "cloudcontroller.hm9000.will-not-stop", :payload => message, :noop => @noop
