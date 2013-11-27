@@ -6,12 +6,7 @@ module VCAP::CloudController
     let(:org) { Organization.make }
     let(:space) { Space.make(:organization => org) }
 
-    let(:domain) do
-      Domain.make(:owning_organization => org).tap do |d|
-        org.add_domain(d)
-        space.add_domain(d)
-      end
-    end
+    let(:domain) { Domain.make(:owning_organization => org) }
 
     let(:route) { Route.make(:domain => domain, :space => space) }
 
@@ -56,7 +51,6 @@ module VCAP::CloudController
           domain = Domain.make(
             :owning_organization => app.space.organization
           )
-          app.space.add_domain(domain)
           Route.make(
             :domain => domain,
             :space => app.space
@@ -259,7 +253,6 @@ module VCAP::CloudController
         )
 
         other_space = Space.make(:organization => app.space.organization)
-        other_space.add_domain(domain)
 
         route = Route.make(
           :space => other_space,
@@ -276,7 +269,6 @@ module VCAP::CloudController
           :owning_organization => nil)
         shared_domain.save(:validate => false)
         app = AppFactory.make
-        app.space.add_domain(shared_domain)
 
         other_space = Space.make(:organization => app.space.organization)
         route = Route.make(
@@ -884,11 +876,7 @@ module VCAP::CloudController
 
         context "when adding and removing routes" do
           let(:domain) do
-            domain = Domain.make :owning_organization => app.space.organization
-
-            app.space.add_domain(domain)
-
-            domain
+            Domain.make :owning_organization => app.space.organization
           end
 
           let(:route) { Route.make :domain => domain, :space => app.space }

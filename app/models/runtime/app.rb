@@ -292,9 +292,9 @@ module VCAP::CloudController
     end
 
     def validate_route(route)
-      unless (route && space &&
-        route.domain_dataset.filter(:spaces => [space]).count == 1 &&
-        route.space_id == space.id)
+      unless route && space &&
+          space.organization.domains_dataset.filter(id: route.domain.id).count >= 1 &&
+          route.space_id == space.id
         raise InvalidRouteRelation.new(route.guid)
       end
     end

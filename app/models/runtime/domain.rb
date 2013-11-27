@@ -1,23 +1,19 @@
 module VCAP::CloudController
   class Domain < Sequel::Model
-    class InvalidSpaceRelation < InvalidRelation; end
     class InvalidOrganizationRelation < InvalidRelation; end
 
     DOMAIN_REGEX = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}$/ix.freeze
 
     many_to_one       :owning_organization, :class => "VCAP::CloudController::Organization"
     many_to_many      :organizations, :before_add => :validate_organization
-    many_to_many      :spaces, :before_add => :validate_space
     one_to_many       :routes
 
-    add_association_dependencies :organizations => :nullify, :spaces => :nullify,
-      :routes => :destroy
+    add_association_dependencies :organizations => :nullify, :routes => :destroy
 
     default_order_by  :name
 
     export_attributes :name, :owning_organization_guid, :wildcard
-    import_attributes :name, :owning_organization_guid, :wildcard,
-                      :space_guids
+    import_attributes :name, :owning_organization_guid, :wildcard
     strip_attributes  :name
 
     subset(:shared_domains) { {:owning_organization_id => nil} }
@@ -44,12 +40,6 @@ module VCAP::CloudController
 
       validates_format DOMAIN_REGEX, :name
       errors.add(:name, :overlapping_domain) if overlaps_domain_in_other_org?
-    end
-
-    def validate_space(space)
-      unless space && owning_organization && owning_organization.spaces.include?(space)
-        raise InvalidSpaceRelation.new(space.guid)
-      end
     end
 
     def validate_organization(org)
@@ -101,16 +91,9 @@ module VCAP::CloudController
         auditors: [user]
       ))
 
-      spaces = Space.filter(Sequel.or(
-        developers: [user],
-        managers: [user],
-        auditors: [user]
-      ))
-
       Sequel.or(
         owning_organization: orgs,
         owning_organization_id: nil,
-        spaces: spaces
       )
     end
 

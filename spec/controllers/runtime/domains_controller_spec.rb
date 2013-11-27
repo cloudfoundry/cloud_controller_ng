@@ -9,34 +9,23 @@ module VCAP::CloudController
     include_examples "creating and updating", path: "/v2/domains", model: Domain, required_attributes: %w(name wildcard), unique_attributes: %w(name)
     include_examples "deleting a valid object", path: "/v2/domains", model: Domain,
       one_to_many_collection_ids: {
-        :spaces => lambda { |domain|
-          org = domain.organizations.first || Organization.make
-          Space.make(:organization => org)
-        },
-        :routes => lambda { |domain|
-          domain.update(:wildcard => true)
-          space = Space.make(:organization => domain.owning_organization)
-          space.add_domain(domain)
+        routes: lambda { |domain|
+          domain.update(wildcard: true)
+          space = Space.make(organization: domain.owning_organization)
           Route.make(
-            :host => Sham.host,
-            :domain => domain,
-            :space => space,
+            host: Sham.host,
+            domain: domain,
+            space: space,
           )
         }
       }
 
     include_examples "collection operations", path: "/v2/domains", model: Domain,
-      one_to_many_collection_ids: {
-        spaces: lambda { |domain|
-          org = domain.organizations.first || Organization.make
-          Space.make(organization: org)
-        },
-      },
+      one_to_many_collection_ids: {},
       one_to_many_collection_ids_without_url: {
         :routes => lambda { |domain|
           domain.update(wildcard: true)
           space = Space.make(organization: domain.owning_organization)
-          space.add_domain(domain)
           Route.make(host: Sham.host, domain: domain, space: space)
         }
       },
@@ -54,10 +43,8 @@ module VCAP::CloudController
         @system_domain.save(:validate => false)
 
         @obj_a = Domain.make(:owning_organization => @org_a)
-        @space_a.add_domain(@obj_a)
 
         @obj_b = Domain.make(:owning_organization => @org_b)
-        @space_b.add_domain(@obj_b)
       end
 
       let(:creation_req_for_a) do
@@ -120,26 +107,6 @@ module VCAP::CloudController
         end
       end
 
-      describe "Updating space bindings" do
-        before do
-          @bare_domain = Domain.make(:owning_organization => @org_a)
-        end
-
-        describe "PUT /v2/domains/:domain adding to spaces" do
-          it "persists the change" do
-            @bare_domain.space_guids.should be_empty
-
-            put "/v2/domains/#{@bare_domain.guid}",
-                Yajl::Encoder.encode(:space_guids => [@space_a.guid]),
-                json_headers(headers_for(@org_a_manager))
-            last_response.status.should == 201
-
-            @bare_domain.reload
-            @bare_domain.space_guids.should == [@space_a.guid]
-          end
-        end
-      end
-
       describe "System Domain permissions" do
         describe "PUT /v2/domains/:system_domain" do
           it "should not allow modification of the shared domain by an org manager" do
@@ -163,44 +130,6 @@ module VCAP::CloudController
                    headers_for(@org_a_member)
             last_response.status.should == 403
           end
-        end
-      end
-
-      describe "App Space Level Permissions" do
-        describe "SpaceManager" do
-          let(:member_a) { @space_a_manager }
-          let(:member_b) { @space_b_manager }
-          let(:enumeration_expectation_a) { [@obj_a, @system_domain] }
-          let(:enumeration_expectation_b) { [@obj_b, @system_domain] }
-
-          include_examples "permission enumeration", "SpaceManager",
-            :name => 'domain',
-            :path => "/v2/domains",
-            :enumerate => 2
-        end
-
-        describe "Developer" do
-          let(:member_a) { @space_a_developer }
-          let(:member_b) { @space_b_developer }
-          let(:enumeration_expectation_a) { [@obj_a, @system_domain] }
-          let(:enumeration_expectation_b) { [@obj_b, @system_domain] }
-
-          include_examples "permission enumeration", "Developer",
-            :name => 'domain',
-            :path => "/v2/domains",
-            :enumerate => 2
-        end
-
-        describe "SpaceAuditor" do
-          let(:member_a) { @space_a_auditor }
-          let(:member_b) { @space_b_auditor }
-          let(:enumeration_expectation_a) { [@obj_a, @system_domain] }
-          let(:enumeration_expectation_b) { [@obj_b, @system_domain] }
-
-          include_examples "permission enumeration", "SpaceAuditor",
-            :name => 'domain',
-            :path => "/v2/domains",
-            :enumerate => 2
         end
       end
     end

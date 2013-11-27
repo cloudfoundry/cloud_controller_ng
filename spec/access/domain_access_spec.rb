@@ -7,11 +7,7 @@ module VCAP::CloudController
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(:organization => org) }
-    let(:object) do
-      domain = VCAP::CloudController::Domain.make(:owning_organization => org)
-      space.add_domain(domain)
-      domain
-    end
+    let(:object) { VCAP::CloudController::Domain.make(:owning_organization => org) }
 
     it_should_behave_like :admin_full_access
 
@@ -22,33 +18,6 @@ module VCAP::CloudController
 
     context 'organization auditor' do
       before { org.add_auditor(user) }
-      it_behaves_like :read_only
-    end
-
-    context 'space manager' do
-      before do
-        org.add_user(user)
-        space.add_manager(user)
-      end
-
-      it_behaves_like :read_only
-    end
-
-    context 'space developer' do
-      before do
-        org.add_user(user)
-        space.add_developer(user)
-      end
-
-      it_behaves_like :read_only
-    end
-
-    context 'space auditor' do
-      before do
-        org.add_user(user)
-        space.add_auditor(user)
-      end
-
       it_behaves_like :read_only
     end
 

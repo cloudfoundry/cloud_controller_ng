@@ -3,7 +3,6 @@ module VCAP::CloudController
     class InvalidDeveloperRelation < InvalidRelation; end
     class InvalidAuditorRelation   < InvalidRelation; end
     class InvalidManagerRelation   < InvalidRelation; end
-    class InvalidDomainRelation    < InvalidRelation; end
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
@@ -25,9 +24,8 @@ module VCAP::CloudController
     one_to_many       :routes
     one_to_many       :app_events, :dataset => lambda { AppEvent.filter(:app => apps) }
     one_to_many       :default_users, :class => "VCAP::CloudController::User", :key => :default_space_id
-    many_to_many      :domains, :before_add => :validate_domain
 
-    add_association_dependencies :domains => :nullify, :default_users => :nullify,
+    add_association_dependencies :default_users => :nullify,
       :all_apps => :destroy, :service_instances => :destroy, :routes => :destroy, :events => :nullify
 
     default_order_by  :name
@@ -35,17 +33,12 @@ module VCAP::CloudController
     export_attributes :name, :organization_guid
 
     import_attributes :name, :organization_guid, :developer_guids,
-                      :manager_guids, :auditor_guids, :domain_guids
+                      :manager_guids, :auditor_guids
 
     strip_attributes  :name
 
     def in_organization?(user)
       organization && organization.users.include?(user)
-    end
-
-    def before_create
-      add_inheritable_domains
-      super
     end
 
     def validate
@@ -65,22 +58,6 @@ module VCAP::CloudController
 
     def validate_auditor(user)
       raise InvalidAuditorRelation.new(user.guid) unless in_organization?(user)
-    end
-
-    def validate_domain(domain)
-      return if domain && domain.owning_organization.nil? || organization.nil?
-
-      unless domain.owning_organization_id == organization.id
-        raise InvalidDomainRelation.new(domain.guid)
-      end
-    end
-
-    def add_inheritable_domains
-      return unless organization
-
-      organization.domains.each do |d|
-        add_domain_by_guid(d.guid) unless d.owning_organization
-      end
     end
 
     def self.user_visibility_filter(user)

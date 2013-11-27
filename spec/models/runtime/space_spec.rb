@@ -31,7 +31,6 @@ module VCAP::CloudController
         :developers        => lambda { |space| make_user_for_space(space) },
         :managers          => lambda { |space| make_user_for_space(space) },
         :auditors          => lambda { |space| make_user_for_space(space) },
-        :domains           => lambda { |space| make_domain_for_space(space) },
       }
     }
 
@@ -96,13 +95,6 @@ module VCAP::CloudController
       %w[developer manager auditor].each do |perm|
         include_examples "bad app space permission", perm
       end
-
-      it "should not associate an domain with a service from a different org" do
-        expect {
-          domain = Domain.make
-          space.add_domain domain
-        }.to raise_error Space::InvalidDomainRelation
-      end
     end
 
     describe "data integrity" do
@@ -149,13 +141,6 @@ module VCAP::CloudController
         }.to change {
           Route.where(:id => route.id).count
         }.by(-1)
-      end
-
-      it "nullifies any domains" do
-        domain = Domain.make(:owning_organization => space.organization)
-        space.add_domain(domain)
-        space.save
-        expect { subject.destroy(savepoint: true) }.to change { domain.reload.spaces.count }.by(-1)
       end
 
       it "nullifies any default_users" do

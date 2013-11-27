@@ -24,16 +24,12 @@ module VCAP::CloudController
       many_to_many: {
         organizations: ->(domain) { Organization.make }
       },
-      many_to_zero_or_more: {
-        spaces: ->(domain) { Space.make(organization: domain.owning_organization) }
-      },
       one_to_zero_or_more: {
         routes: {
           delete_ok: true,
           create_for: ->(domain) {
             domain.update(wildcard: true)
             space = Space.make(organization: domain.owning_organization)
-            space.add_domain(domain)
             Route.make(domain: domain, space: space)
           }
         }
@@ -209,12 +205,6 @@ module VCAP::CloudController
 
         let(:space) { Space.make }
 
-        it "should not associate with an app space on a different org" do
-          expect {
-            domain.add_space(space)
-          }.to raise_error Domain::InvalidSpaceRelation
-        end
-
         it "should not associate with orgs other than the owning org" do
           expect {
             domain.add_organization(Organization.make)
@@ -317,8 +307,7 @@ module VCAP::CloudController
         it "should not remove the wildcard flag if routes are using it" do
           d = Domain.make(:wildcard => true)
           s = Space.make(:organization => d.owning_organization)
-          s.add_domain(d)
-          r = Route.make(:host => Sham.host, :domain => d, :space => s)
+          Route.make(:host => Sham.host, :domain => d, :space => s)
           expect {
             d.update(:wildcard => false)
           }.to raise_error(Sequel::ValidationFailed)
@@ -327,8 +316,7 @@ module VCAP::CloudController
         it "should remove the wildcard flag if no routes are using it" do
           d = Domain.make(:wildcard => true)
           s = Space.make(:organization => d.owning_organization)
-          s.add_domain(d)
-          r = Route.make(:host => "", :domain => d, :space => s)
+          Route.make(:host => "", :domain => d, :space => s)
           d.update(:wildcard => false)
         end
       end
@@ -352,12 +340,8 @@ module VCAP::CloudController
 
     describe "#destroy" do
       subject { domain.destroy(savepoint: true) }
-      let(:space) do
-        Space.make(:organization => domain.owning_organization).tap do |space|
-          space.add_domain(domain)
-          space.save
-        end
-      end
+
+      let(:space) { Space.make(:organization => domain.owning_organization) }
 
       it "should destroy the routes" do
         route = Route.make(:domain => domain, :space => space)
@@ -367,10 +351,6 @@ module VCAP::CloudController
       it "nullifies the organization" do
         organization = domain.owning_organization
         expect { subject }.to change { organization.reload.domains.count }.by(-1)
-      end
-
-      it "nullifies the space" do
-        expect { subject }.to change { space.reload.domains.count }.by(-1)
       end
     end
   end

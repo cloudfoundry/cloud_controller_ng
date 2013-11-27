@@ -46,12 +46,10 @@ module VCAP::CloudController
     space             { Space.make }
 
     domain do
-      d = Domain.make(
+      Domain.make(
         :owning_organization => space.organization,
         :wildcard => true
       )
-      space.add_domain(d)
-      d
     end
 
     host do

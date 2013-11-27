@@ -45,7 +45,6 @@ module VCAP::CloudController
         developers: lambda { |space| make_user_for_space(space) },
         managers: lambda { |space| make_user_for_space(space) },
         auditors: lambda { |space| make_user_for_space(space) },
-        domains: lambda { |space| make_domain_for_space(space) }
       }
 
 

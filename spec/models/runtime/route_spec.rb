@@ -9,7 +9,6 @@ module VCAP::CloudController
         custom_attributes_for_uniqueness_tests: -> do
           space = Space.make
           domain = Domain.make(owning_organization: space.organization, wildcard: true)
-          space.add_domain(domain)
           {space: space, domain: domain}
         end,
         create_attribute: ->(name, route) {
@@ -17,9 +16,7 @@ module VCAP::CloudController
             when :space
               route.space
             when :domain
-              d = Domain.make(owning_organization: route.space.organization, wildcard: true)
-              route.space.add_domain(d)
-              d
+              Domain.make(owning_organization: route.space.organization, wildcard: true)
             when :host
               Sham.host
           end
@@ -29,11 +26,10 @@ module VCAP::CloudController
             domain: {
                 delete_ok: true,
                 create_for: ->(route) {
-                  d = Domain.make(
+                  Domain.make(
                       owning_organization: route.domain.owning_organization,
                       wildcard: true
                   )
-                  route.space.add_domain(d)
                 }
             }
         },
@@ -58,20 +54,17 @@ module VCAP::CloudController
 
         context "with a wildcard domain" do
           let(:space) { Space.make }
+
           let(:domain) do
-            d = Domain.make(
-              :wildcard => true,
-              :owning_organization => space.organization,
+            Domain.make(
+              wildcard: true,
+              owning_organization: space.organization,
             )
-            space.add_domain(d)
-            d
           end
 
           it "should not allow a nil host" do
             expect {
-              Route.make(:space => space,
-                                 :domain => domain,
-                                 :host => nil)
+              Route.make(space: space, domain: domain, host: nil)
             }.to raise_error(Sequel::ValidationFailed)
           end
 
@@ -93,41 +86,39 @@ module VCAP::CloudController
         context "with a non-wildcard domain" do
           let(:space) { Space.make }
           let(:domain) do
-            d = Domain.make(
+            Domain.make(
               :wildcard => false,
               :owning_organization => space.organization,
             )
-            space.add_domain(d)
-            d
           end
 
           it "should not allow a nil host" do
             expect {
-              Route.make(:space => space,
-                                 :domain => domain,
-                                 :host => nil).should be_valid
+              Route.make(space: space,
+                         domain: domain,
+                         host: nil).should be_valid
             }.to raise_error(Sequel::ValidationFailed)
           end
 
           it "should not allow a valid host" do
             expect {
-              Route.make(:space => space,
-                                 :domain => domain,
-                                 :host => Sham.host)
+              Route.make(space: space,
+                         domain: domain,
+                         host: Sham.host)
             }.to raise_error(Sequel::ValidationFailed)
           end
 
           it "should allow an empty host" do
-            Route.make(:space => space,
-                               :domain => domain,
-                               :host => "").should be_valid
+            Route.make(space: space,
+                       domain: domain,
+                       host: "").should be_valid
           end
 
           it "should not allow a blank host" do
             expect {
-              Route.make(:space => space,
-                                 :domain => domain,
-                                 :host => " ")
+              Route.make(space: space,
+                         domain: domain,
+                         host: " ")
             }.to raise_error(Sequel::ValidationFailed)
           end
         end
@@ -182,12 +173,10 @@ module VCAP::CloudController
       let(:space) { Space.make }
 
       let(:domain) do
-        d = Domain.make(
+        Domain.make(
           :wildcard => true,
           :owning_organization => space.organization
         )
-        space.add_domain(d)
-        d
       end
 
       describe "#fqdn" do
@@ -243,19 +232,9 @@ module VCAP::CloudController
 
       let(:system_domain) { Domain.make(owning_organization: nil) }
 
-      it "should not allow creation of a route on a domain not on the space" do
-        space_a.add_domain(domain_a)
-        expect {
-          Route.make(:space => space_a, :domain => domain_b)
-        }.to raise_error Sequel::ValidationFailed, /domain invalid_relation/
-      end
-
       it "should not associate with apps from a different space" do
-        space_a.add_domain(domain_a)
-        space_b.add_domain(domain_a)
-
-        route = Route.make(:space => space_b, :domain => domain_a)
-        app = AppFactory.make(:space => space_a)
+        route = Route.make(space: space_b, domain: domain_a)
+        app = AppFactory.make(space: space_a)
         expect {
           route.add_app(app)
         }.to raise_error Route::InvalidAppRelation
