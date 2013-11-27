@@ -1,3 +1,5 @@
+require 'addressable/uri'
+
 module VCAP::CloudController::RestController
 
   # Paginates a dataset
@@ -97,12 +99,16 @@ module VCAP::CloudController::RestController
     end
 
     def url(page)
-      res = "#{@path}?"
-      if @opts[:inline_relations_depth]
-        res += "inline-relations-depth=#{@opts[:inline_relations_depth]}&"
-      end
-      res += "q=#{@opts[:q]}&" if @opts[:q]
-      res += "page=#{page}&results-per-page=#{@paginated.page_size}"
+      params = {
+        'page' => page,
+        'results-per-page' => @paginated.page_size
+      }
+      params['inline-relations-depth'] = @opts[:inline_relations_depth] if @opts[:inline_relations_depth]
+      params['q'] = @opts[:q] if @opts[:q]
+
+      uri = Addressable::URI.parse(@path)
+      uri.query_values = params
+      uri.normalize.request_uri
     end
   end
 end

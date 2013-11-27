@@ -278,6 +278,7 @@ PLATFORMS
 
 DEPENDENCIES
   activesupport (~> 3.0)
+  addressable
   allowy
   bcrypt-ruby
   cf-message-bus!
