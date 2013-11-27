@@ -137,46 +137,6 @@ module VCAP::CloudController
 
         include_examples "route permissions"
       end
-
-      context "with the default serving domain" do
-        include_context "permissions"
-
-        let(:creation_req_for_a) do
-          Yajl::Encoder.encode(
-            :host => Sham.host,
-            :domain_guid => Domain.default_serving_domain.guid,
-            :space_guid => @space_a.guid,
-          )
-        end
-
-        let(:update_req_for_a) do
-          Yajl::Encoder.encode(:host => Sham.host)
-        end
-
-        before do
-          Domain.default_serving_domain_name = "shared.com"
-          @space_a.add_domain(Domain.default_serving_domain)
-          @space_b.add_domain(Domain.default_serving_domain)
-
-          @obj_a = Route.make(
-            :host => Sham.host,
-            :domain => Domain.default_serving_domain,
-            :space => @space_a,
-          )
-
-          @obj_b = Route.make(
-            :host => Sham.host,
-            :domain => Domain.default_serving_domain,
-            :space => @space_b,
-          )
-        end
-
-        after do
-          Domain.default_serving_domain_name = nil
-        end
-
-        include_examples "route permissions"
-      end
     end
   end
 

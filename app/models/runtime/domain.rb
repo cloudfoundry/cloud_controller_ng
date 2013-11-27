@@ -114,24 +114,6 @@ module VCAP::CloudController
       )
     end
 
-    def self.default_serving_domain
-      @default_serving_domain
-    end
-
-    def self.default_serving_domain_name=(name)
-      @default_serving_domain_name = name
-      if name
-        @default_serving_domain = find_or_create_shared_domain(name)
-      else
-        @default_serving_domain = nil
-      end
-      name
-    end
-
-    def self.default_serving_domain_name
-      @default_serving_domain_name
-    end
-
     def self.find_or_create_shared_domain(name)
       logger = Steno.logger("cc.db.domain")
       domain = nil

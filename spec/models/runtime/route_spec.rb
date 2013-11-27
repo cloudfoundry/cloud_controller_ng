@@ -241,9 +241,7 @@ module VCAP::CloudController
       let(:space_b) { Space.make(:organization => org) }
       let(:domain_b) { Domain.make(:owning_organization => org) }
 
-      before { Domain.default_serving_domain_name = Sham.domain }
-
-      after { Domain.default_serving_domain_name = nil }
+      let(:system_domain) { Domain.make(owning_organization: nil) }
 
       it "should not allow creation of a route on a domain not on the space" do
         space_a.add_domain(domain_a)
@@ -263,11 +261,12 @@ module VCAP::CloudController
         }.to raise_error Route::InvalidAppRelation
       end
 
-      it "should not allow creation of a nil host on a system domain" do
+      it "should not allow creation of a empty host on a system domain" do
         expect {
           Route.make(
-            :host => nil, :space => space_a,
-            :domain => Domain.default_serving_domain
+            host: "",
+            space: space_a,
+            domain: system_domain
           )
         }.to raise_error Sequel::ValidationFailed
       end

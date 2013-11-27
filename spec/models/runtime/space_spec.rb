@@ -105,24 +105,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "default domains" do
-      context "with the default serving domain name set" do
-        before do
-          Domain.default_serving_domain_name = "foo.com"
-        end
-
-        after do
-          Domain.default_serving_domain_name = nil
-        end
-
-        it "should be associated with the default serving domain" do
-          space = Space.make
-          d = Domain.default_serving_domain
-          space.domains.map(&:guid) == [d.guid]
-        end
-      end
-    end
-
     describe "data integrity" do
       it "should not make strings into integers" do
         space = Space.make

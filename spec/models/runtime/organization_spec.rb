@@ -63,24 +63,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "default domains" do
-      context "with the default serving domain name set" do
-        before do
-          Domain.default_serving_domain_name = "foo.com"
-        end
-
-        after do
-          Domain.default_serving_domain_name = nil
-        end
-
-        it "should be associated with the default serving domain" do
-          org = Organization.make
-          d = Domain.default_serving_domain
-          org.domains.map(&:guid) == [d.guid]
-        end
-      end
-    end
-
     context "with multiple shared domains" do
       it "should be associated with the shared domains that exist at creation time" do
         org = Organization.make

@@ -334,30 +334,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "default_serving_domain" do
-      context "with the default serving domain name set" do
-        before do
-          Domain.default_serving_domain_name = "foo.com"
-        end
-
-        after do
-          Domain.default_serving_domain_name = nil
-        end
-
-        it "should return the default serving domain" do
-          d = Domain.default_serving_domain
-          d.name.should == "foo.com"
-        end
-      end
-
-      context "without the default seving domain name set" do
-        it "should return nil" do
-          d = Domain.default_serving_domain
-          d.should be_nil
-        end
-      end
-    end
-
     context "shared_domains" do
       context "with no domains" do
         it "should be empty" do
