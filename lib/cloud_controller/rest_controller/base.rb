@@ -219,11 +219,6 @@ module VCAP::CloudController::RestController
         end
       end
 
-      # Disable the generation of default routes
-      def disable_default_routes
-        @disable_default_routes = true
-      end
-
       def allow_unauthenticated_access(options={})
         if options[:only]
           @allow_unauthenticated_access_ops = Array(options[:only])
@@ -247,13 +242,6 @@ module VCAP::CloudController::RestController
         else
           @allow_unauthenticated_access_to_all_ops
         end
-      end
-
-      # Returns true if the cc framework should generate default routes for an
-      # api endpoint.  If this is false, the api is expected to generate
-      # its own routes.
-      def default_routes?
-        !@disable_default_routes
       end
 
       def translate_and_log_exception(logger, e)
