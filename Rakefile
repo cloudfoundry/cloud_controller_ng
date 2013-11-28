@@ -27,12 +27,12 @@ namespace :db do
   end
 
   def migration_stub
-<<-Ruby
+    <<-Ruby
 Sequel.migration do
   change do
   end
 end
-Ruby
+    Ruby
   end
 
   def db
@@ -51,7 +51,7 @@ Ruby
   task :rollback do
     number_to_rollback = 1
     recent_migrations = db[:schema_migrations].order(Sequel.desc(:filename)).limit(number_to_rollback + 1).all
-    recent_migrations = recent_migrations.collect {|hash| hash[:filename].split("_", 2).first.to_i }
+    recent_migrations = recent_migrations.collect { |hash| hash[:filename].split("_", 2).first.to_i }
     VCAP::CloudController::DB.apply_migrations(db, :current => recent_migrations.first, :target => recent_migrations.last)
   end
 
@@ -71,6 +71,15 @@ namespace :jobs do
   desc "Start a delayed_job worker."
   task :work => :environment_options do
     setup_environment
+
+    Thread.new do
+      EM.run do
+        message_bus = MessageBusConfigurer::Configurer.new(
+          :servers => config[:message_bus_servers],
+          :logger => Steno.logger("cc.message_bus")).go
+        VCAP::CloudController::AppObserver.configure(config, message_bus, nil)
+      end
+    end
     Delayed::Worker.destroy_failed_jobs = false
     Delayed::Worker.new(@worker_options).start
   end
