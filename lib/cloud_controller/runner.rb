@@ -8,7 +8,7 @@ require "loggregator"
 require "cloud_controller/varz"
 
 require_relative "seeds"
-require_relative "message_bus"
+require_relative "message_bus_configurer"
 
 module VCAP::CloudController
   class Runner
@@ -112,11 +112,11 @@ module VCAP::CloudController
 
         Seeds.write_seed_data(config) if @insert_seed_data
 
-        app = create_app(config, message_bus, development_mode?)
+        app = build_rack_app(config, message_bus, development_mode?)
 
         start_thin_server(app, config)
 
-        registrar.register_with_router
+        router_registrar.register_with_router
 
         VCAP::CloudController::Varz.bump_user_count
 
@@ -138,7 +138,7 @@ module VCAP::CloudController
     def stop!
       logger.info("Unregistering routes.")
 
-      registrar.shutdown do
+      router_registrar.shutdown do
         stop_thin_server
         EM.stop
       end
@@ -159,17 +159,16 @@ module VCAP::CloudController
 
       setup_logging
       setup_db
+      Config.configure_components(@config)
       setup_loggregator_emitter
 
       @config[:bind_address] = VCAP.local_ip(@config[:local_route])
-
-      Config.configure_components(@config)
       Config.configure_components_depending_on_message_bus(message_bus)
     end
 
-    def create_app(config, message_bus, development)
+    def build_rack_app(config, message_bus, development)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
-      register_component(message_bus)
+      register_with_collector(message_bus)
 
       Rack::Builder.new do
         use Rack::CommonLogger
@@ -223,18 +222,18 @@ module VCAP::CloudController
       @thin_server.stop if @thin_server
     end
 
-    def registrar
+    def router_registrar
       @registrar ||= Cf::Registrar.new(
-          :message_bus_servers => @config[:message_bus_servers],
-          :host => @config[:bind_address],
-          :port => @config[:port],
-          :uri => @config[:external_domain],
-          :tags => {:component => "CloudController"},
-          :index => @config[:index]
+          message_bus_servers: @config[:message_bus_servers],
+          host: @config[:bind_address],
+          port: @config[:port],
+          uri: @config[:external_domain],
+          tags: {:component => "CloudController"},
+          index: @config[:index],
       )
     end
 
-    def register_component(message_bus)
+    def register_with_collector(message_bus)
       VCAP::Component.register(
           :type => 'CloudController',
           :host => @config[:bind_address],
@@ -245,7 +244,6 @@ module VCAP::CloudController
           :config => @config,
           :nats => message_bus,
           :logger => logger,
-
           :log_counter => @log_counter
       )
     end

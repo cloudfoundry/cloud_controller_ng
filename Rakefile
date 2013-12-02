@@ -19,29 +19,25 @@ namespace :db do
     FileUtils.mkdir_p(migrations_dir)
 
     open(File.join(migrations_dir, filename), "w") do |f|
-      f.write migration_stub
-    end
-  end
-
-  def migration_stub
-    <<-Ruby
+      f.write <<-Ruby
 Sequel.migration do
   change do
   end
 end
-    Ruby
+      Ruby
+    end
   end
 
   desc "Perform Sequel migration to database"
   task :migrate do
-    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")
     DBMigrator.from_config(config, db_logger).apply_migrations
   end
 
   desc "Rollback a single migration to the database"
   task :rollback do
-    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")
     DBMigrator.from_config(config, db_logger).rollback(number_to_rollback=1)
   end
@@ -52,7 +48,6 @@ end
   end
 end
 
-
 namespace :jobs do
   desc "Clear the delayed_job queue."
   task :clear do
@@ -61,28 +56,16 @@ namespace :jobs do
   end
 
   desc "Start a delayed_job worker."
-  task :work => :environment_options do
-    BackgroundJobEnvironment.new(config).setup_environment
-
-    Thread.new do
-      EM.run do
-        message_bus = MessageBus::Configurer.new(
-          :servers => config[:message_bus_servers],
-          :logger => Steno.logger("cc.message_bus")).go
-        VCAP::CloudController::AppObserver.configure(config, message_bus, nil)
-      end
-    end
-    Delayed::Worker.destroy_failed_jobs = false
-    Delayed::Worker.new(@worker_options).start
-  end
-
-  task :environment_options do
-    @worker_options = {
-      :min_priority => ENV['MIN_PRIORITY'],
-      :max_priority => ENV['MAX_PRIORITY'],
-      :queues => (ENV['QUEUES'] || ENV['QUEUE'] || '').split(','),
-      :quiet => false
+  task :work do
+    queue_options = {
+      min_priority: ENV['MIN_PRIORITY'],
+      max_priority: ENV['MAX_PRIORITY'],
+      queues: (ENV['QUEUES'] || ENV['QUEUE'] || '').split(','),
+      quiet: false
     }
+    BackgroundJobEnvironment.new(config).setup_environment
+    Delayed::Worker.destroy_failed_jobs = false
+    Delayed::Worker.new(queue_options).start
   end
 end
 

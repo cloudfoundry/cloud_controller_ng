@@ -23,7 +23,7 @@ module VCAP::CloudController
       Runner.new(argv + ["-c", config_file.path]).tap do |r|
         r.stub(:start_thin_server)
         r.stub(:create_pidfile)
-        r.stub(:registrar => registrar)
+        r.stub(:router_registrar => registrar)
       end
     end
 

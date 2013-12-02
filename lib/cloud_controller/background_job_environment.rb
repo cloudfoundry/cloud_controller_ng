@@ -1,17 +1,21 @@
 class BackgroundJobEnvironment
   def initialize(config)
     @config = config
+    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
   end
 
   def setup_environment
-    connect_to_database
+    VCAP::CloudController::DB.load_models(@config.fetch(:db), Steno.logger("cc.background"))
     VCAP::CloudController::Config.configure_components(@config)
-  end
 
-  private
-  def connect_to_database(log_tag="cc.background")
-    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
-    db_logger = Steno.logger(log_tag)
-    VCAP::CloudController::DB.load_models(@config.fetch(:db), db_logger)
+    Thread.new do
+      EM.run do
+        message_bus = MessageBus::Configurer.new(
+          :servers => @config[:message_bus_servers],
+          :logger => Steno.logger("cc.message_bus")).go
+        no_op_staging_pool = Object.new
+        VCAP::CloudController::AppObserver.configure(@config, message_bus, no_op_staging_pool)
+      end
+    end
   end
 end

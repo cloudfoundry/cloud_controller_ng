@@ -569,11 +569,7 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.before :each do
-    # We need to stub out this because it's in an after_destroy_commit hook
-    # Is event emitter our salvation?
-    #VCAP::CloudController::AppObserver.stub(:delete_droplet)
     Fog::Mock.reset
-
     Sequel::Deprecation.output = StringIO.new
     Sequel::Deprecation.backtrace_filter = 5
   end
@@ -604,7 +600,6 @@ end
 # default. Breaks the tests (deliberately) unless we order by id
 # explicitly. In sqlite, the default ordering, although not guaranteed,
 # is de facto by id. In postgres the order is random unless specified.
-
 class VCAP::CloudController::App
   set_dataset dataset.order(:guid)
 end

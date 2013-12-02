@@ -86,7 +86,7 @@ describe DropletUploadJob do
 
     before do
       Delayed::Worker.destroy_failed_jobs = false
-      allow(CloudController::DropletUploader).to receive(:new).and_raise(RuntimeError, "Soemthing Terrible Happened")
+      allow(CloudController::DropletUploader).to receive(:new).and_raise(RuntimeError, "Something Terrible Happened")
     end
 
     subject(:run_job_all_3_times) do
@@ -108,10 +108,8 @@ describe DropletUploadJob do
         }.by(1)
 
         expect(Delayed::Job.last.attempts).to eq 3
-        expect(Delayed::Job.last.last_error).to match /Soemthing Terrible Happened/
+        expect(Delayed::Job.last.last_error).to match /Something Terrible Happened/
       end
-
-      it "marks staging as succesfull"
     end
   end
 end

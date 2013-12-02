@@ -20,10 +20,3 @@ class DropletUploadJob < Struct.new(:local_path, :app_id)
     3
   end
 end
-
-__END__
-    #logger.info "droplet.begin-upload", :app_guid => app.guid
-    #start = Time.now
-
-    #logger.info "droplet.uploaded", took: Time.now - start, :app_guid => app.guid
-    #logger.info "droplet.saved", :sha => app.droplet_hash, :app_guid => app.guid
