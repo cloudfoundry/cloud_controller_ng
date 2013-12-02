@@ -1,4 +1,4 @@
-module MessageBusConfigurer
+module MessageBus
   class Configurer
     def initialize(config = {})
       @config = config

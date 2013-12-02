@@ -10,7 +10,7 @@ module VCAP::CloudController
     let(:argv) { [] }
 
     before do
-      MessageBusConfigurer::Configurer.any_instance.stub(:go).and_return(message_bus)
+      MessageBus::Configurer.any_instance.stub(:go).and_return(message_bus)
       VCAP::Component.stub(:register)
       EM.stub(:run).and_yield
       EM.stub(:add_periodic_timer).and_yield

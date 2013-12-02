@@ -8,7 +8,7 @@ require "loggregator"
 require "cloud_controller/varz"
 
 require_relative "seeds"
-require_relative "message_bus_configurer"
+require_relative "message_bus"
 
 module VCAP::CloudController
   class Runner
@@ -104,7 +104,7 @@ module VCAP::CloudController
       EM.run do
         config = @config.dup
 
-        message_bus = MessageBusConfigurer::Configurer.new(
+        message_bus = MessageBus::Configurer.new(
           :servers => config[:message_bus_servers],
           :logger => logger).go
 
@@ -184,10 +184,7 @@ module VCAP::CloudController
 
         LegacyBulk.register_subscription
 
-        VCAP::CloudController.health_manager_respondent = \
-          HealthManagerRespondent.new(
-            DeaClient,
-            message_bus)
+        VCAP::CloudController.health_manager_respondent = HealthManagerRespondent.new(DeaClient, message_bus)
         VCAP::CloudController.health_manager_respondent.handle_requests
 
         HM9000Respondent.new(DeaClient, message_bus, config[:hm9000_noop]).handle_requests

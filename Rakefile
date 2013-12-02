@@ -66,7 +66,7 @@ namespace :jobs do
 
     Thread.new do
       EM.run do
-        message_bus = MessageBusConfigurer::Configurer.new(
+        message_bus = MessageBus::Configurer.new(
           :servers => config[:message_bus_servers],
           :logger => Steno.logger("cc.message_bus")).go
         VCAP::CloudController::AppObserver.configure(config, message_bus, nil)
