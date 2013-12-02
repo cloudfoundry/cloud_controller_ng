@@ -17,11 +17,9 @@ unless File.exists?(@config_file)
 end
 @config = VCAP::CloudController::Config.from_file(@config_file)
 logger = Logger.new(STDOUT)
-
 db_config = @config.fetch(:db).merge(log_level: :debug)
 
-VCAP::CloudController::DB.connect(logger, db_config)
-VCAP::CloudController::DB.load_models
+VCAP::CloudController::DB.load_models(db_config, logger)
 VCAP::CloudController::Config.configure(@config)
 
 if ENV["RACK_ENV"] == "development"

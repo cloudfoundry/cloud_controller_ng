@@ -15,7 +15,7 @@ module VCAP::CloudController
     # acquire a connection before raising a PoolTimeoutError (default 5)
     #
     # @return [Sequel::Database]
-    def self.connect(logger, opts)
+    def self.connect(opts, logger)
       connection_options = { :sql_mode => [:strict_trans_tables, :strict_all_tables, :no_zero_in_date] }
       [:max_connections, :pool_timeout].each do |key|
         connection_options[key] = opts[key] if opts[key]
@@ -43,7 +43,8 @@ module VCAP::CloudController
       db
     end
 
-    def self.load_models
+    def self.load_models(db_config, logger)
+      VCAP::CloudController::DB.connect(db_config, logger)
       require "models/runtime/app_bits_package"
       require "models/runtime/auto_detection_buildpack"
       require "models/runtime/deleted_space"
@@ -94,14 +95,6 @@ module VCAP::CloudController
       require "models/job"
 
       require "delayed_job_sequel"
-    end
-
-    def self.apply_migrations(db, opts = {})
-      Sequel.extension :migration
-      require "vcap/sequel_case_insensitive_string_monkeypatch"
-      migrations_dir = File.expand_path("../../../db", __FILE__)
-      sequel_migrations = File.join(migrations_dir, "migrations")
-      Sequel::Migrator.run(db, sequel_migrations, opts)
     end
 
     private

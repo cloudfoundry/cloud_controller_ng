@@ -42,8 +42,7 @@ module VCAP::CloudController
       VCAP::CloudController::Config.run_initializers(config)
 
       reset_database
-
-      VCAP::CloudController::DB.load_models
+      VCAP::CloudController::DB.load_models(config.fetch(:db), db_logger)
       VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
     end
 
@@ -70,25 +69,19 @@ module VCAP::CloudController
         drop_table_unsafely(table)
       end
 
-      VCAP::CloudController::DB.apply_migrations(db)
+      DBMigrator.new(db).apply_migrations
+    end
+
+    def db_connection_string
+      if ENV["DB_CONNECTION"]
+        "#{ENV["DB_CONNECTION"]}/cc_test_#{ENV["TEST_ENV_NUMBER"]}"
+      else
+        "sqlite:///tmp/cc_test#{ENV["TEST_ENV_NUMBER"]}.db"
+      end
     end
 
     def db
-      Thread.current[:db] ||= begin
-        if ENV["DB_CONNECTION"]
-          db_connection =  ENV["DB_CONNECTION"]
-          db_connection += "/cc_test_#{ENV["TEST_ENV_NUMBER"]}"
-        else
-          db_connection = "sqlite:///tmp/cc_test#{ENV["TEST_ENV_NUMBER"]}.db"
-        end
-
-        VCAP::CloudController::DB.connect(
-          db_logger,
-          log_level: "debug",
-          database: "#{db_connection}",
-          pool_timeout: 10,
-        )
-      end
+      Thread.current[:db] ||= VCAP::CloudController::DB.connect(config.fetch(:db), db_logger)
     end
 
     def db_logger
@@ -131,6 +124,12 @@ module VCAP::CloudController
             :aws_secret_access_key => "fake_secret_access_key",
           },
         },
+
+        :db => {
+          :log_level => "debug",
+          :database => db_connection_string,
+          :pool_timeout => 10
+        }
       )
 
       config_hash.merge!(config_override || {})

@@ -6,9 +6,6 @@ require "sequel"
 require "steno"
 require "cloud_controller"
 
-
-ENV['CI_REPORTS'] = File.join("spec", "artifacts", "reports")
-
 namespace :db do
   desc "Create a Sequel migration in ./db/migrate"
   task :create_migration do
@@ -35,24 +32,18 @@ end
     Ruby
   end
 
-  def db
-    @db ||= begin
-      run_initializers
-      connect_to_database
-    end
-  end
-
   desc "Perform Sequel migration to database"
   task :migrate do
-    VCAP::CloudController::DB.apply_migrations(db)
+    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
+    db_logger = Steno.logger("cc.db.migrations")
+    DBMigrator.from_config(config, db_logger).apply_migrations
   end
 
   desc "Rollback a single migration to the database"
   task :rollback do
-    number_to_rollback = 1
-    recent_migrations = db[:schema_migrations].order(Sequel.desc(:filename)).limit(number_to_rollback + 1).all
-    recent_migrations = recent_migrations.collect { |hash| hash[:filename].split("_", 2).first.to_i }
-    VCAP::CloudController::DB.apply_migrations(db, :current => recent_migrations.first, :target => recent_migrations.last)
+    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
+    db_logger = Steno.logger("cc.db.migrations")
+    DBMigrator.from_config(config, db_logger).rollback(number_to_rollback=1)
   end
 
   namespace :migrate do
@@ -61,16 +52,17 @@ end
   end
 end
 
+
 namespace :jobs do
   desc "Clear the delayed_job queue."
   task :clear do
-    setup_environment
+    BackgroundJobEnvironment.new(config).setup_environment
     Delayed::Job.delete_all
   end
 
   desc "Start a delayed_job worker."
   task :work => :environment_options do
-    setup_environment
+    BackgroundJobEnvironment.new(config).setup_environment
 
     Thread.new do
       EM.run do
@@ -92,26 +84,6 @@ namespace :jobs do
       :quiet => false
     }
   end
-end
-
-def connect_to_database
-  VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
-
-  Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
-  db_logger = Steno.logger("cc.db.migrations")
-
-  VCAP::CloudController::DB.connect(db_logger, config[:db])
-end
-
-def setup_environment
-  run_initializers
-  connect_to_database
-  VCAP::CloudController::DB.load_models
-  VCAP::CloudController::Config.configure(config)
-end
-
-def run_initializers
-  VCAP::CloudController::Config.run_initializers(config)
 end
 
 def config

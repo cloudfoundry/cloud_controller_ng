@@ -21,6 +21,8 @@ require "active_support/core_ext/object/to_query"
 require "active_support/json/encoding"
 require "cloud_controller/models"
 require "cloud_controller/jobs"
+require "cloud_controller/background_job_environment"
+require "cloud_controller/db_migrator"
 
 module VCAP::CloudController
   include VCAP::RestAPI
