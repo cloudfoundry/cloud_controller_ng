@@ -5,7 +5,7 @@ class BackgroundJobEnvironment
 
   def setup_environment
     connect_to_database
-    VCAP::CloudController::Config.configure(@config)
+    VCAP::CloudController::Config.configure_components(@config)
   end
 
   private

@@ -204,8 +204,8 @@ module VCAP::CloudController::SpecHelper
     # DO NOT override the message bus, use the same mock that's set the first time
     message_bus = VCAP::CloudController::Config.message_bus || CfMessageBus::MockMessageBus.new
 
-    VCAP::CloudController::Config.configure(config)
-    VCAP::CloudController::Config.configure_message_bus(message_bus)
+    VCAP::CloudController::Config.configure_components(config)
+    VCAP::CloudController::Config.configure_components_depending_on_message_bus(message_bus)
     # reset the dependency locator
     CloudController::DependencyLocator.instance.send(:initialize)
 
@@ -515,12 +515,6 @@ end
 class CF::UAA::Misc
   def self.validation_key(*args)
     raise CF::UAA::TargetError.new('error' => 'unauthorized')
-  end
-end
-
-class Redis
-  def self.new(*args)
-    MockRedis.new
   end
 end
 

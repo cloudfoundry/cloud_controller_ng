@@ -31,7 +31,8 @@ module VCAP::CloudController
 
       space = make_post_request(
         "/v2/spaces",
-        { "name" => "foo_space",
+        {
+          "name" => "foo_space",
           "organization_guid" => org_guid
         }.to_json,
         authed_headers
@@ -40,7 +41,8 @@ module VCAP::CloudController
 
       @app = make_post_request(
         "/v2/apps",
-        { "name" => "foo_app",
+        {
+          "name" => "foo_app",
           "space_guid" => space_guid
         }.to_json,
         authed_headers
@@ -53,12 +55,13 @@ module VCAP::CloudController
     end
 
     let(:payload) do
-      { :droplet => @app["metadata"]["guid"],
-        :reason => "CRASHED",
-        :instance => "foo",
-        :index => 0,
-        :exit_status => 42,
-        :exit_description => "because i said so"
+      {
+        droplet: @app["metadata"]["guid"],
+        reason: "CRASHED",
+        instance: "foo",
+        index: 0,
+        exit_status: 42,
+        exit_description: "because i said so"
       }
     end
 

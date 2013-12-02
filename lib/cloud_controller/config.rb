@@ -128,7 +128,6 @@ module VCAP::CloudController
       }
     end
 
-
     class << self
       def from_file(file_name)
         config = super(file_name)
@@ -137,13 +136,12 @@ module VCAP::CloudController
 
       attr_reader :config, :message_bus
 
-      def configure(config)
+      def configure_components(config)
         @config = config
 
         Encryptor.db_encryption_key = config[:db_encryption_key]
         AccountCapacity.configure(config)
-        ResourcePool.instance =
-          ResourcePool.new(config)
+        ResourcePool.instance = ResourcePool.new(config)
 
         QuotaDefinition.configure(config)
         Stack.configure(config[:stacks_file])
@@ -153,9 +151,8 @@ module VCAP::CloudController
         run_initializers(config)
       end
 
-      def configure_message_bus(message_bus)
+      def configure_components_depending_on_message_bus(message_bus)
         @message_bus = message_bus
-
         stager_pool = StagerPool.new(@config, message_bus)
 
         AppObserver.configure(@config, message_bus, stager_pool)
@@ -166,6 +163,11 @@ module VCAP::CloudController
 
         LegacyBulk.configure(@config, message_bus)
       end
+
+      def config_dir
+        @config_dir ||= File.expand_path("../../../config", __FILE__)
+      end
+
 
       def run_initializers(config)
         return if @initialized
@@ -178,12 +180,7 @@ module VCAP::CloudController
         @initialized = true
       end
 
-      def config_dir
-        @config_dir ||= File.expand_path("../../../config", __FILE__)
-      end
-
       private
-
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
         config[:directories] ||= {}
