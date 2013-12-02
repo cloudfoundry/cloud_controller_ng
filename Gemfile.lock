@@ -155,7 +155,7 @@ GEM
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
     lockfile (2.1.0)
-    loggregator_emitter (2.0.1)
+    loggregator_emitter (2.0.3)
       beefcake (~> 0.3.7)
     lumberjack (1.0.4)
     machinist (1.0.6)
