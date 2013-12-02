@@ -202,8 +202,8 @@ module VCAP::CloudController
       end
 
       before :each do
-        org.add_space( space_1 )
-        org.add_space( space_2 )
+        org.add_space(space_1)
+        org.add_space(space_2)
       end
 
       def validate_spaces  users
@@ -215,33 +215,33 @@ module VCAP::CloudController
 
       context "without recursive flag" do
         it "should remove a single user from an organization but not the spaces" do
-          update_org( "user_guids"=>[user_1.guid] )
+          update_org("user_guids" => [user_1.guid])
           org.refresh
           org.user_guids.should == [user_1.guid]
-          validate_spaces( [user_1.guid, user_2.guid] )
+          validate_spaces([user_1.guid, user_2.guid])
         end
 
         it "should remove multiple users form an organization but not the spaces" do
-          update_org( "user_guids"=>[] )
+          update_org("user_guids" => [])
           org.refresh
           org.user_guids.should == []
-          validate_spaces( [user_1.guid, user_2.guid] )
+          validate_spaces([user_1.guid, user_2.guid])
         end
       end
 
       context "with recursive flag" do
         it "should remove a single user from the organization and each spaces" do
-          update_org_recursively( "user_guids"=>[user_1.guid] )
+          update_org_recursively("user_guids" => [user_1.guid])
           org.refresh
           org.user_guids.should == [user_1.guid]
-          validate_spaces( [user_1.guid] )
+          validate_spaces([user_1.guid])
         end
 
         it "should remove multiple users from the organization and each spaces" do
-          update_org_recursively( "user_guids"=>[] )
+          update_org_recursively("user_guids" => [])
           org.refresh
           org.user_guids.should == []
-          validate_spaces( [] )
+          validate_spaces([])
         end
       end
     end
