@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       it "sets up the db encryption key" do
         Config.configure(@test_config.merge(db_encryption_key: "123-456"))
-        expect(Config.db_encryption_key).to eq("123-456")
+        expect(Encryptor.db_encryption_key).to eq("123-456")
       end
 
       it "sets up the account capacity" do

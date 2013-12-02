@@ -44,7 +44,7 @@ module VCAP::CloudController
     end
 
     def self.load_models(db_config, logger)
-      VCAP::CloudController::DB.connect(db_config, logger)
+      connect(db_config, logger)
       require "models/runtime/app_bits_package"
       require "models/runtime/auto_detection_buildpack"
       require "models/runtime/deleted_space"

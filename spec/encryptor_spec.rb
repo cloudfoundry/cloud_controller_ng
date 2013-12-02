@@ -29,12 +29,11 @@ module VCAP::CloudController
       end
 
       it "depends on the db_encryption_key from the CC config file" do
-        VCAP::CloudController::Config.stub(:db_encryption_key).and_return("a-totally-different-key")
+        VCAP::CloudController::Encryptor.stub(:db_encryption_key).and_return("a-totally-different-key")
         expect(Encryptor.encrypt(input, salt)).not_to eql(encrypted_string)
       end
 
       it "does not encrypt null values" do
-        VCAP::CloudController::Config.stub(:db_encryption_key).and_return("a-totally-different-key")
         expect(Encryptor.encrypt(nil, salt)).to be_nil
       end
 

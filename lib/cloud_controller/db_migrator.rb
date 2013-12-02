@@ -1,6 +1,6 @@
 class DBMigrator
   def self.from_config(config, db_logger)
-    VCAP::CloudController::Config.db_encryption_key = config[:db_encryption_key]
+    VCAP::CloudController::Encryptor.db_encryption_key = config[:db_encryption_key]
     db = VCAP::CloudController::DB.connect(config[:db], db_logger)
     new(db)
   end

@@ -4,7 +4,7 @@ module VCAP::CloudController
   module ModelSpecHelper
     shared_examples "a model with an encrypted attribute" do
       before do
-        Config.stub(:db_encryption_key).and_return("correct-key")
+        Encryptor.stub(:db_encryption_key).and_return("correct-key")
       end
 
       def new_model
@@ -40,7 +40,7 @@ module VCAP::CloudController
         saved_attribute = last_row[encrypted_attr]
 
         expect {
-          Config.stub(:db_encryption_key).and_return("a-totally-different-key")
+          Encryptor.stub(:db_encryption_key).and_return("a-totally-different-key")
           expect(saved_attribute).not_to be_nil
           decrypted = Encryptor.decrypt(saved_attribute, model.salt)
           expect(decrypted).not_to be_nil

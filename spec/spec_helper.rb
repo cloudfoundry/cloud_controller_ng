@@ -201,8 +201,6 @@ module VCAP::CloudController::SpecHelper
   end
 
   def configure_components(config)
-    VCAP::CloudController::Config.db_encryption_key = "some-key"
-
     # DO NOT override the message bus, use the same mock that's set the first time
     message_bus = VCAP::CloudController::Config.message_bus || CfMessageBus::MockMessageBus.new
 

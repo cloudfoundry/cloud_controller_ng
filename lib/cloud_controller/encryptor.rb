@@ -20,18 +20,15 @@ module VCAP::CloudController::Encryptor
       run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt)
     end
 
+    attr_accessor :db_encryption_key
+
     private
-
-    def base_key
-      VCAP::CloudController::Config.db_encryption_key
-    end
-
     def make_cipher
       OpenSSL::Cipher::Cipher.new(ALGORITHM)
     end
 
     def run_cipher(cipher, input, salt)
-      cipher.pkcs5_keyivgen(base_key, salt)
+      cipher.pkcs5_keyivgen(db_encryption_key, salt)
       cipher.update(input).tap { |result| result << cipher.final }
     end
   end

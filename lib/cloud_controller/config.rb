@@ -140,7 +140,7 @@ module VCAP::CloudController
       def configure(config)
         @config = config
 
-        Config.db_encryption_key = config[:db_encryption_key]
+        Encryptor.db_encryption_key = config[:db_encryption_key]
         AccountCapacity.configure(config)
         ResourcePool.instance =
           ResourcePool.new(config)
@@ -177,8 +177,6 @@ module VCAP::CloudController
         end
         @initialized = true
       end
-
-      attr_accessor :db_encryption_key
 
       def config_dir
         @config_dir ||= File.expand_path("../../../config", __FILE__)
