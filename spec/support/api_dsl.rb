@@ -87,8 +87,9 @@ module ApiDsl
       "#{api_version}/#{model.to_s.pluralize}"
     end
 
-    def standard_model_list(model)
+    def standard_model_list(model, controller)
       get root(model) do
+        standard_list_parameters controller
         example_request "List all #{model.to_s.pluralize.capitalize}" do
           standard_list_response parsed_response, model
         end
@@ -114,14 +115,7 @@ module ApiDsl
       end
     end
 
-    def standard_model_object model
-      warn "Avoid metaprogramming with standard_model_object; call explicit standard_model_xxx methods instead."
-      standard_model_list(model)
-      standard_model_get(model)
-      standard_model_delete(model)
-    end
-
-    def standard_parameters controller
+    def standard_list_parameters controller
       query_parameter_description = "Parameters used to filter the result set."
       if controller.query_parameters
         query_parameter_description += " Valid filters: #{controller.query_parameters.to_a.join(", ")}"

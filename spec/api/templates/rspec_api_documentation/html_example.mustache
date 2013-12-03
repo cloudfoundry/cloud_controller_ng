@@ -103,27 +103,30 @@
           </tbody>
         </table>
 
-        <h3>Parameters</h3>
-        <table class="parameters table table-striped table-bordered table-condensed">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{# request_parameters }}
-            <tr class="{{# deprecated }}deprecated{{/ deprecated }}">
-              <td{{# required }} class="required"{{/ required }}>
-                <span class="name">{{ name }}</span>
-              </td>
-              <td>
-                <span class="description">{{ description }}</span>
-              </td>
-            </tr>
-            {{/ request_parameters }}
-          </tbody>
-        </table>
+        {{# request_parameters.any? }}
+          <h3>Parameters</h3>
+          <table class="parameters table table-striped table-bordered table-condensed">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{# request_parameters }}
+              <tr class="{{# deprecated }}deprecated{{/ deprecated }}">
+                <td{{# required }} class="required"{{/ required }}>
+                  <span class="name">{{ name }}</span>
+                </td>
+                <td>
+                  <span class="description">{{ description }}</span>
+                </td>
+              </tr>
+              {{/ request_parameters }}
+            </tbody>
+          </table>
+        {{/ request_parameters.any? }}
+
 
         {{# requests }}
           <h3>Request</h3>

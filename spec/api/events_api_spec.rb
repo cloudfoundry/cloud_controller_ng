@@ -14,9 +14,6 @@ resource "Events (experimental)", :type => :api do
 
   let(:guid) { VCAP::CloudController::Event.first.guid }
 
-  request_parameter :actee, "Query events for by actee"
-  standard_parameters VCAP::CloudController::EventsController
-
   field :guid, "The guid of the event.", required: false
   field :type, "The type of the event.", required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w[app.crash audit.app.update]
   field :actor, "The GUID of the actor.", required: false, readonly: true
@@ -28,10 +25,12 @@ resource "Events (experimental)", :type => :api do
   field :space_guid, "The guid of the associated space.", required: false, readonly: true
   field :organization_guid, "The guid of the associated organization.", required: false, readonly: true
 
-  standard_model_list(:event)
+  standard_model_list(:event, VCAP::CloudController::EventsController)
   standard_model_get(:event)
 
   get "/v2/events" do
+    standard_list_parameters VCAP::CloudController::EventsController
+
     let(:test_app) { VCAP::CloudController::App.make }
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_space) { VCAP::CloudController::Space.make }

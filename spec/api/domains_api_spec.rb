@@ -7,14 +7,13 @@ resource "Domains", :type => :api do
   let!(:domains) { 3.times { VCAP::CloudController::Domain.make } }
 
   authenticated_request
-  standard_parameters VCAP::CloudController::DomainsController
 
   field :guid, "The guid of the domain.", required: false
   field :name, "The name of the domain.", required: true, example_values: ["example.com", "foo.example.com"]
   field :wildcard, "Whether the domain supports routes with empty hosts", required: true, valid_values: [true, false]
   field :owning_organization_guid, "The organization that owns the domain. If not specified, the domain is shared.", required: false
 
-  standard_model_list(:domain)
+  standard_model_list(:domain, VCAP::CloudController::DomainsController)
   standard_model_get(:domain)
   standard_model_delete(:domain)
 

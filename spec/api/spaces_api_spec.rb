@@ -7,7 +7,6 @@ resource "Spaces", :type => :api do
   let!(:spaces) { 3.times { VCAP::CloudController::Space.make } }
 
   authenticated_request
-  standard_parameters VCAP::CloudController::SpacesController
 
   field :guid, "The guid of the space.", required: false
   field :name, "The name of the space", required: true, example_values: %w(development demo production)
@@ -17,7 +16,7 @@ resource "Spaces", :type => :api do
   field :auditor_guids, "The list of the associated auditors", required: false
   field :domain_guids, "The list of the associated domains", required: false
 
-  standard_model_list :space
+  standard_model_list :space, VCAP::CloudController::SpacesController
   standard_model_get :space
   standard_model_delete :space
 

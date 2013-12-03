@@ -8,7 +8,6 @@ resource "Apps", :type => :api do
   let!(:apps) { 3.times { VCAP::CloudController::AppFactory.make } }
 
   authenticated_request
-  standard_parameters VCAP::CloudController::AppsController
 
   field :guid, "The guid of the app.", required: false
   field :name, "The name of the app.", required: true, example_values: ["my_super_app"]
@@ -35,7 +34,7 @@ resource "Apps", :type => :api do
   field :debug, "Open the debug port for the app (at $DEBUG_PORT).", required: false, deprecated: true, default: false, valid_values: [true, false]
   field :package_state, "The current desired state of the package. One of PENDING, STAGED or FAILED.", required: false, readonly: true, valid_values: %w[PENDING STAGED FAILED]
 
-  standard_model_list :app
+  standard_model_list :app, VCAP::CloudController::AppsController
   standard_model_get :app
   standard_model_delete :app
 

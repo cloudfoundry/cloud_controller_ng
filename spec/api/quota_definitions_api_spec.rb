@@ -5,8 +5,6 @@ resource "Quota Definitions", type: :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
 
-  standard_parameters VCAP::CloudController::QuotaDefinitionsController
-
   field :guid, "The guid of the quota definition.", required: false
   field :name, "The name for the quota definition.", required: true, example_values: ["gold_quota"]
   field :non_basic_services_allowed, "If an organization can have non basic services", required: true, valid_values: [true, false]
@@ -17,7 +15,7 @@ resource "Quota Definitions", type: :api do
 
   let(:guid) { VCAP::CloudController::QuotaDefinition.first.guid }
 
-  standard_model_list(:quota_definition)
+  standard_model_list(:quota_definition, VCAP::CloudController::QuotaDefinitionsController)
   standard_model_get(:quota_definition)
   standard_model_delete(:quota_definition)
 

@@ -7,18 +7,19 @@ resource "ServiceAuthTokens", :type => :api do
   let!(:service_auth_tokens) { 3.times { VCAP::CloudController::ServiceAuthToken.make } }
 
   authenticated_request
-  standard_parameters VCAP::CloudController::ServiceAuthTokensController
 
   field :guid, "The guid of the service auth token.", required: false
   field :label, "Human readable name for the auth token", required: false, readonly: true, example_values: ["Nic-Token"]
   field :provider, "Human readable name of service provider", required: false, readonly: true, example_values: ["Face-Offer"]
   field :token, "The secret auth token used for authenticating", required: false, readonly: true
 
-  standard_model_list(:service_auth_token)
+  standard_model_list(:service_auth_token, VCAP::CloudController::ServiceAuthTokensController)
   standard_model_get(:service_auth_token)
   standard_model_delete(:service_auth_token)
 
   get "/v2/service_auth_tokens" do
+    standard_list_parameters VCAP::CloudController::ServiceAuthTokensController
+
     describe "querying by label" do
       let(:q) { "label:Nic-Token"}
 

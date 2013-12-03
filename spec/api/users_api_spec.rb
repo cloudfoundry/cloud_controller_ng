@@ -8,7 +8,6 @@ resource "Users", type: :api do
   let(:space) { VCAP::CloudController::Space.make }
 
   authenticated_request
-  standard_parameters VCAP::CloudController::UsersController
 
   field :guid, "The guid of the user.", required: false
   field :default_space_guid, "The guid of the default space for apps created by this user.", required: false
@@ -22,7 +21,7 @@ resource "Users", type: :api do
   field :managed_spaces_url, "The url of the spaces this user in a manager of.", required: false, readonly: true
   field :audited_spaces_url, "The url of the spaces this user in a auditor of.", required: false, readonly: true
 
-  standard_model_list(:user)
+  standard_model_list(:user, VCAP::CloudController::UsersController)
   standard_model_get(:user)
   standard_model_delete(:user)
 

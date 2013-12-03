@@ -33,7 +33,6 @@ resource "Service Brokers", :type => :api do
   field :auth_username, "The username with which to authenticate against the service broker.", required: true, example_values: %w(admin)
   field :auth_password, "The password with which to authenticate against the service broker.", required: true, example_values: %w(secretpassw0rd)
 
-  #enumerate
   get "/v2/service_brokers" do
     request_parameter :q, "Parameters used to filter the result set. Valid filters: 'name'"
 
