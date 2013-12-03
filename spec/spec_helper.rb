@@ -551,8 +551,6 @@ RSpec.configure do |rspec_config|
     VCAP::CloudController::SecurityContext.clear
     @old_before_all_config = configure
     RspecApiDocumentation.configure do |c|
-    ##  token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
-     ### c.app = VCAP::CloudController::Controller.new(config, token_decoder)
       c.format = [:html, :json]
       c.api_name = "Cloud Foundry API"
       c.template_path = "spec/api/templates"
