@@ -7,7 +7,7 @@ module ModelCreation
   end
 
   def make_domain_for_org(org)
-    VCAP::CloudController::Domain.make(:owning_organization => org)
+    VCAP::CloudController::PrivateDomain.make(:owning_organization => org)
   end
 
   def make_user_for_space(space)

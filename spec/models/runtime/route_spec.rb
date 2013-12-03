@@ -8,7 +8,7 @@ module VCAP::CloudController
         unique_attributes: [[:host, :domain]],
         custom_attributes_for_uniqueness_tests: -> do
           space = Space.make
-          domain = Domain.make(owning_organization: space.organization, wildcard: true)
+          domain = PrivateDomain.make(owning_organization: space.organization, wildcard: true)
           {space: space, domain: domain}
         end,
         create_attribute: ->(name, route) {
@@ -16,7 +16,7 @@ module VCAP::CloudController
             when :space
               route.space
             when :domain
-              Domain.make(owning_organization: route.space.organization, wildcard: true)
+              PrivateDomain.make(owning_organization: route.space.organization, wildcard: true)
             when :host
               Sham.host
           end
@@ -26,7 +26,7 @@ module VCAP::CloudController
             domain: {
                 delete_ok: true,
                 create_for: ->(route) {
-                  Domain.make(
+                  PrivateDomain.make(
                       owning_organization: route.domain.owning_organization,
                       wildcard: true
                   )
@@ -56,7 +56,7 @@ module VCAP::CloudController
           let(:space) { Space.make }
 
           let(:domain) do
-            Domain.make(
+            PrivateDomain.make(
               wildcard: true,
               owning_organization: space.organization,
             )
@@ -86,7 +86,7 @@ module VCAP::CloudController
         context "with a non-wildcard domain" do
           let(:space) { Space.make }
           let(:domain) do
-            Domain.make(
+            PrivateDomain.make(
               :wildcard => false,
               :owning_organization => space.organization,
             )
@@ -173,7 +173,7 @@ module VCAP::CloudController
       let(:space) { Space.make }
 
       let(:domain) do
-        Domain.make(
+        PrivateDomain.make(
           :wildcard => true,
           :owning_organization => space.organization
         )
@@ -225,12 +225,10 @@ module VCAP::CloudController
     describe "relations" do
       let(:org) { Organization.make }
       let(:space_a) { Space.make(:organization => org) }
-      let(:domain_a) { Domain.make(:owning_organization => org) }
+      let(:domain_a) { PrivateDomain.make(:owning_organization => org) }
 
       let(:space_b) { Space.make(:organization => org) }
-      let(:domain_b) { Domain.make(:owning_organization => org) }
-
-      let(:system_domain) { Domain.make(owning_organization: nil) }
+      let(:domain_b) { PrivateDomain.make(:owning_organization => org) }
 
       it "should not associate with apps from a different space" do
         route = Route.make(space: space_b, domain: domain_a)
@@ -240,12 +238,14 @@ module VCAP::CloudController
         }.to raise_error Route::InvalidAppRelation
       end
 
-      it "should not allow creation of a empty host on a system domain" do
+      it "should not allow creation of a empty host on a shared domain" do
+        shared_domain = SharedDomain.make
+
         expect {
           Route.make(
             host: "",
             space: space_a,
-            domain: system_domain
+            domain: shared_domain
           )
         }.to raise_error Sequel::ValidationFailed
       end

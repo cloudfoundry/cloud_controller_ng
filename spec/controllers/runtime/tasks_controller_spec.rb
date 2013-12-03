@@ -258,9 +258,8 @@ module VCAP::CloudController
 
     describe "PUT /v2/tasks/:guid" do
       context "when tasks endpoint is disabled" do
-        before do
-          config_override(:tasks_disabled => true)
-        end
+        before { config_override(:tasks_disabled => true) }
+
         it "returns 404" do
           put "/v2/tasks/some-app-guid", '{"app_guid":"some-app-guid"}', json_headers(admin_headers)
 

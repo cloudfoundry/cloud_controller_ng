@@ -6,7 +6,7 @@ module VCAP::CloudController
     it_behaves_like "a CloudController model", {
       :required_attributes          => :name,
       :unique_attributes            => :name,
-      :custom_attributes_for_uniqueness_tests => ->{ {quota_definition: QuotaDefinition.make} },
+      :custom_attributes_for_uniqueness_tests => -> { { quota_definition: QuotaDefinition.make } },
       :stripped_string_attributes   => :name,
       :many_to_zero_or_more => {
         :users      => lambda { |org| User.make },
@@ -16,8 +16,8 @@ module VCAP::CloudController
       },
       :one_to_zero_or_more => {
         :spaces  => lambda { |org| Space.make },
-        :domains => lambda { |org|
-          Domain.make(:owning_organization => org)
+        :private_domains => lambda { |org|
+          PrivateDomain.make(:owning_organization => org)
         }
       }
     }
@@ -60,17 +60,6 @@ module VCAP::CloudController
             org.save
           }.to raise_error(Sequel::ValidationFailed)
         end
-      end
-    end
-
-    context "with multiple shared domains" do
-      it "should be associated with the shared domains that exist at creation time" do
-        org = Organization.make
-        shared_count = Domain.shared_domains.count
-        org.domains.count.should == shared_count
-        d = Domain.find_or_create_shared_domain(Sham.domain)
-        d.should be_valid
-        org.domains.count.should == shared_count
       end
     end
 
@@ -185,18 +174,14 @@ module VCAP::CloudController
         }.to(false)
       end
 
+      it "destroys private domains" do
+        domain = PrivateDomain.make(:owning_organization => org)
 
-      it "destroys the owned domain" do
-        domain = Domain.make(:owning_organization => org)
-        expect { org.destroy(savepoint: true) }.to change { Domain[:id => domain.id] }.from(domain).to(nil)
-      end
-
-      it "nullify domains" do
-        SecurityContext.set(nil, {'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE]})
-        domain = Domain.make(:owning_organization => nil)
-        domain.add_organization(org)
-        domain.save
-        expect { org.destroy(savepoint: true) }.to change { domain.reload.organizations.count }.by(-1)
+        expect {
+          org.destroy(savepoint: true)
+        }.to change {
+          Domain[:id => domain.id]
+        }.from(domain).to(nil)
       end
     end
 

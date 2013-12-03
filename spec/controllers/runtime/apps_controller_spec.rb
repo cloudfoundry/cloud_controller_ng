@@ -39,7 +39,7 @@ module VCAP::CloudController
       },
       many_to_many_collection_ids: {
         routes: lambda { |app|
-          domain = Domain.make(owning_organization: app.space.organization)
+          domain = PrivateDomain.make(owning_organization: app.space.organization)
           Route.make(domain: domain, space: app.space)
         }
       }
@@ -613,10 +613,9 @@ module VCAP::CloudController
 
     describe "on route change" do
       let(:space) { Space.make }
-      let(:domain) {
-        Domain.make(name: "jesse.cloud", wildcard: true,
-                    owning_organization: space.organization)
-      }
+      let(:domain) do
+        PrivateDomain.make(name: "jesse.cloud", owning_organization: space.organization, wildcard: true)
+      end
 
       before do
         user = make_developer_for_space(space)

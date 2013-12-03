@@ -56,6 +56,8 @@ module VCAP::CloudController
       require "models/runtime/droplet"
       require "models/runtime/buildpack"
       require "models/runtime/domain"
+      require "models/runtime/shared_domain"
+      require "models/runtime/private_domain"
       require "models/runtime/event"
       require "models/runtime/git_based_buildpack"
       require "models/runtime/organization"

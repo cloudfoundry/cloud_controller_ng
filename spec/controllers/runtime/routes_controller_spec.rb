@@ -16,7 +16,7 @@ module VCAP::CloudController
                          when :space_guid
                            route.space.guid
                          when :domain_guid
-                           domain = Domain.make(wildcard: true, owning_organization: route.space.organization,)
+                           domain = PrivateDomain.make(owning_organization: route.space.organization,)
                            domain.guid
                          when :host
                            Sham.host
@@ -26,7 +26,7 @@ module VCAP::CloudController
 
     context "with a wildcard domain" do
       it "should allow a nil host" do
-        domain = Domain.make(:wildcard => true)
+        domain = PrivateDomain.make(:wildcard => true)
         space = Space.make(:organization => domain.owning_organization)
         post "/v2/routes", Yajl::Encoder.encode(:host => nil, :domain_guid => domain.guid, :space_guid => space.guid), json_headers(admin_headers)
         last_response.status.should == 201
@@ -124,10 +124,10 @@ module VCAP::CloudController
         end
 
         before do
-          @domain_a = Domain.make(:wildcard => true, :owning_organization => @org_a)
+          @domain_a = PrivateDomain.make(:owning_organization => @org_a)
           @obj_a = Route.make(:domain => @domain_a, :space => @space_a)
 
-          @domain_b = Domain.make(:wildcard => true, :owning_organization => @org_b)
+          @domain_b = PrivateDomain.make(:owning_organization => @org_b)
           @obj_b = Route.make(:domain => @domain_b, :space => @space_b)
         end
 
@@ -141,7 +141,7 @@ module VCAP::CloudController
       space = Space.make
       user = make_developer_for_space(space)
       @headers_for_user = headers_for(user)
-      @route = Domain.make(
+      @route = PrivateDomain.make(
         :name => "jesse.cloud",
         :wildcard => true,
         :owning_organization => space.organization,

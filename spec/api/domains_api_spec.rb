@@ -2,6 +2,10 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "Domains", :type => :api do
+  before do
+    pending "Splitting domain into private and shared domains. This will remain for the deprecated endpoint."
+  end
+
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   let(:guid) { VCAP::CloudController::Domain.first.guid }
   let!(:domains) { 3.times { VCAP::CloudController::Domain.make } }
@@ -10,7 +14,7 @@ resource "Domains", :type => :api do
 
   field :guid, "The guid of the domain.", required: false
   field :name, "The name of the domain.", required: true, example_values: ["example.com", "foo.example.com"]
-  field :wildcard, "Whether the domain supports routes with empty hosts", required: true, valid_values: [true, false]
+  field :wildcard, "Allow routes with non-empty hosts", required: true, valid_values: [true, false]
   field :owning_organization_guid, "The organization that owns the domain. If not specified, the domain is shared.", required: false
 
   standard_model_list(:domain, VCAP::CloudController::DomainsController)

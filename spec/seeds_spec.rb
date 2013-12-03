@@ -178,15 +178,12 @@ module VCAP::CloudController
 
       context "when the app domains do not include the system domain" do
         it "makes shared domains for each of the config's app domains" do
-          shared_domains = Domain.shared_domains
-
           Seeds.create_seed_domains(config, Organization.find(name: "the-system-org"))
-
-          expect(shared_domains.map(&:name)).to eq(["app.example.com"])
+          expect(Domain.shared_domains.map(&:name)).to eq(["app.example.com"])
         end
 
         it "raises if the system org is not specified" do
-          expect {Seeds.create_seed_domains(config, nil)}.to raise_error
+          expect { Seeds.create_seed_domains(config, nil) }.to raise_error
         end
 
         it "creates the system domain if the system domain does not exist" do
@@ -204,23 +201,13 @@ module VCAP::CloudController
 
           mock_logger.should_receive(:warn).with("seeds.system-domain.collision", instance_of(Hash))
 
-          Domain.create(
+          PrivateDomain.create(
             name: config[:system_domain],
             wildcard: true,
             owning_organization: Organization.make
           )
           system_org = Organization.find(name: "the-system-org")
           Seeds.create_seed_domains(config, system_org)
-        end
-
-        it "adds inheritable domains to every existing organization" do
-          other_org = Organization.make
-
-          system_org = Organization.find(name: "the-system-org")
-          Seeds.create_seed_domains(config, system_org)
-
-          expect(system_org.reload.domains).to include(Domain.find(name: "app.example.com"))
-          expect(other_org.reload.domains).to include(Domain.find(name: "app.example.com"))
         end
       end
 
@@ -230,23 +217,8 @@ module VCAP::CloudController
         end
 
         it "makes shared domains for each of the config's app domains, including the system domain" do
-          shared_domains = Domain.shared_domains
-
           Seeds.create_seed_domains(config, Organization.find(name: "the-system-org"))
-
-          expect(shared_domains.map(&:name)).to eq(config[:app_domains])
-        end
-
-        it "adds inheritable domains to every existing organization" do
-          other_org = Organization.make
-
-          system_org = Organization.find(name: "the-system-org")
-          Seeds.create_seed_domains(config, system_org)
-
-          expect(system_org.reload.domains).to include(Domain.find(name: "app.example.com"))
-          expect(other_org.reload.domains).to include(Domain.find(name: "app.example.com"))
-          expect(system_org.reload.domains).to include(Domain.find(name: config[:system_domain]))
-          expect(other_org.reload.domains).to include(Domain.find(name: config[:system_domain]))
+          expect(Domain.shared_domains.map(&:name)).to eq(config[:app_domains])
         end
       end
     end

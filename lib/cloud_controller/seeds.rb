@@ -52,7 +52,11 @@ module VCAP::CloudController
 
       def create_seed_domains(config, system_org)
         config[:app_domains].each do |domain|
-          Domain.find_or_create_shared_domain(domain)
+          shared_domain = SharedDomain.find_or_create(domain)
+
+          if domain == config[:system_domain]
+            shared_domain.save
+          end
         end
 
         unless config[:app_domains].include?(config[:system_domain])
@@ -67,12 +71,6 @@ module VCAP::CloudController
             end
           else
             Domain.create(desired_attrs.merge(:name => config[:system_domain]))
-          end
-        end
-
-        Domain.shared_domains.each do |domain|
-          Organization.where(Sequel.~(id: domain.organizations_dataset.select(:id))).each do |org|
-            org.add_domain(domain)
           end
         end
       end

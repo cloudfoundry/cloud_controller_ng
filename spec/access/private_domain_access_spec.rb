@@ -1,14 +1,12 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RouteAccess, type: :access do
-    subject(:access) { RouteAccess.new(double(:context, user: user, roles: roles)) }
+  describe PrivateDomainAccess, type: :access do
+    subject(:access) { PrivateDomainAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
     let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(:organization => org) }
-    let(:domain) { VCAP::CloudController::PrivateDomain.make(:owning_organization => org) }
-    let(:object) { VCAP::CloudController::Route.make(:domain => domain, :space => space) }
+    let(:object) { VCAP::CloudController::PrivateDomain.make owning_organization: org }
 
     it_should_behave_like :admin_full_access
 
@@ -17,41 +15,14 @@ module VCAP::CloudController
       it_behaves_like :full_access
     end
 
-    context 'organization auditor' do
+    context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
       it_behaves_like :read_only
     end
 
-    context 'organization billing manager' do
+    context 'organization billing manager (defensive)' do
       before { org.add_billing_manager(user) }
       it_behaves_like :no_access
-    end
-
-    context 'space manager' do
-      before do
-        org.add_user(user)
-        space.add_manager(user)
-      end
-
-      it_behaves_like :full_access
-    end
-
-    context 'space developer' do
-      before do
-        org.add_user(user)
-        space.add_developer(user)
-      end
-
-      it_behaves_like :full_access
-    end
-
-    context 'space auditor' do
-      before do
-        org.add_user(user)
-        space.add_auditor(user)
-      end
-
-      it_behaves_like :read_only
     end
 
     context 'organization user (defensive)' do

@@ -57,7 +57,7 @@ module VCAP::CloudController
         raise InvalidAppRelation.new(app.guid)
       end
 
-      unless space.organization.domains.include?(domain)
+      unless domain.usable_by_organization?(space.organization)
         raise InvalidDomainRelation.new(domain.guid)
       end
     end
@@ -103,7 +103,8 @@ module VCAP::CloudController
         errors.add(:host, :host_not_empty)
       end
 
-      if space && space.organization.domains_dataset.filter(id: domain.id).count < 1
+      if (domain.shared? && !host.present?) ||
+            (space && !domain.usable_by_organization?(space.organization))
         errors.add(:domain, :invalid_relation)
       end
     end

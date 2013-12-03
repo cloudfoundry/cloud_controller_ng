@@ -1,0 +1,39 @@
+require "models/runtime/domain"
+
+module VCAP::CloudController
+  class SharedDomain < Domain
+    set_dataset(shared_domains)
+
+    default_order_by  :name
+
+    export_attributes :name, :wildcard
+    import_attributes :name, :wildcard
+    strip_attributes  :name
+
+    def as_summary_json
+      {
+        guid: guid,
+        name: name,
+      }
+    end
+
+    def self.find_or_create(name)
+      logger = Steno.logger("cc.db.domain")
+      domain = nil
+
+      Domain.db.transaction(savepoint: true) do
+        domain = SharedDomain[name: name]
+
+        if domain
+          logger.info "reusing default serving domain: #{name}"
+        else
+          logger.info "creating shared serving domain: #{name}"
+          domain = SharedDomain.new(name: name, wildcard: true)
+          domain.save
+        end
+      end
+
+      domain
+    end
+  end
+end

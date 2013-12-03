@@ -26,14 +26,14 @@ resource "Users", type: :api do
   standard_model_delete(:user)
 
   put "/v2/users/:guid" do
-      request_parameter :guid, "The guid for the user to alter"
+    request_parameter :guid, "The guid for the user to alter"
 
-      example "Update a User's default space" do
-        client.put "/v2/users/#{guid}", Yajl::Encoder.encode(default_space_guid: space.guid), headers
+    example "Update a User's default space" do
+      client.put "/v2/users/#{guid}", Yajl::Encoder.encode(default_space_guid: space.guid), headers
 
-        expect(status).to eq 201
-        expect(space.guid).to be
-        standard_entity_response parsed_response, :user, :default_space_guid => space.guid
-      end
+      expect(status).to eq 201
+      expect(space.guid).to be
+      standard_entity_response parsed_response, :user, :default_space_guid => space.guid
+    end
   end
 end

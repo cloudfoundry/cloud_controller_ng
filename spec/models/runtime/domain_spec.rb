@@ -2,6 +2,10 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Domain, type: :model do
+    before do
+      pending "Splitting domain into private and shared domains. This will remain for the deprecated endpoint."
+    end
+
     let(:domain) { Domain.make }
 
     it_behaves_like "a CloudController model", {

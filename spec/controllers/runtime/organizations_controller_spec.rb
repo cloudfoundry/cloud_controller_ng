@@ -20,8 +20,8 @@ module VCAP::CloudController
           space = Space.make(:organization => org)
           AppFactory.make(:space => space)
         },
-        :owned_domain => lambda { |org|
-          Domain.make(:owning_organization => org)
+        :private_domains => lambda { |org|
+          PrivateDomain.make(:owning_organization => org)
         }
       }
     include_examples "collection operations", path: "/v2/organizations", model: Organization,
@@ -31,14 +31,13 @@ module VCAP::CloudController
       one_to_many_collection_ids_without_url: {
         service_instances: lambda { |org| ManagedServiceInstance.make(space: Space.make(organization: org)) },
         apps: lambda { |org| AppFactory.make(space: Space.make(organization: org)) },
-        owned_domain: lambda { |org| Domain.make(owning_organization: org) }
+        private_domains: lambda { |org| PrivateDomain.make(owning_organization: org) }
       },
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {
         users: lambda { |org| User.make },
         managers: lambda { |org| User.make },
         billing_managers: lambda { |org| User.make },
-        domains: lambda { |org| Domain.find_or_create_shared_domain(Sham.domain) }
       }
 
     describe "Permissions" do

@@ -1,22 +1,18 @@
 module VCAP::CloudController
   class Organization < Sequel::Model
-    class InvalidDomainRelation < InvalidRelation; end
-
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
-    one_to_many       :spaces
-    one_to_many       :service_instances, dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
-    one_to_many       :apps, dataset: -> { App.filter(space: spaces) }
-    one_to_many       :app_events, dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
-    one_to_many       :owned_domain, class: "VCAP::CloudController::Domain", key: :owning_organization_id
-    one_to_many       :service_plan_visibilities
-    many_to_many      :domains, before_add: :validate_domain
-    many_to_one       :quota_definition
+    one_to_many :spaces
+    one_to_many :service_instances, dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
+    one_to_many :apps, dataset: -> { App.filter(space: spaces) }
+    one_to_many :app_events, dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
+    one_to_many :private_domains, key: :owning_organization_id
+    one_to_many :service_plan_visibilities
+    many_to_one :quota_definition
 
-    add_association_dependencies domains: :nullify,
-      spaces: :destroy,
+    add_association_dependencies spaces: :destroy,
       service_instances: :destroy,
-      owned_domain: :destroy,
+      private_domains: :destroy,
       service_plan_visibilities: :destroy
 
     define_user_group :users
@@ -31,7 +27,7 @@ module VCAP::CloudController
     export_attributes :name, :billing_enabled, :quota_definition_guid, :status
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
-                      :auditor_guids, :domain_guids, :quota_definition_guid,
+                      :auditor_guids, :private_domain_guids, :quota_definition_guid,
                       :status
 
     def billing_enabled?
@@ -39,7 +35,6 @@ module VCAP::CloudController
     end
 
     def before_create
-      add_inheritable_domains
       add_default_quota
       super
     end
@@ -73,7 +68,7 @@ module VCAP::CloudController
     def before_save
       super
       if column_changed?(:billing_enabled) && billing_enabled?
-         @is_billing_enabled = true
+        @is_billing_enabled = true
       end
     end
 
@@ -89,21 +84,6 @@ module VCAP::CloudController
         spaces.map(&:apps).flatten.each do |app|
           AppStartEvent.create_from_app(app) if app.started?
         end
-      end
-    end
-
-    def validate_domain(domain)
-      return if domain && domain.owning_organization.nil?
-      unless domain &&
-                    domain.owning_organization_id &&
-                    domain.owning_organization_id == id
-        raise InvalidDomainRelation.new(domain.guid)
-      end
-    end
-
-    def add_inheritable_domains
-      Domain.shared_domains.each do |d|
-        add_domain_by_guid(d.guid)
       end
     end
 

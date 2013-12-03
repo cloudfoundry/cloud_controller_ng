@@ -36,17 +36,22 @@ module VCAP::CloudController
     status            { "active" }
   end
 
-  Domain.blueprint do
+  PrivateDomain.blueprint do
     name                { Sham.domain }
-    wildcard            { false }
+    wildcard            { true }
     owning_organization { Organization.make }
+  end
+
+  SharedDomain.blueprint do
+    name                { Sham.domain }
+    wildcard            { true }
   end
 
   Route.blueprint do
     space             { Space.make }
 
     domain do
-      Domain.make(
+      PrivateDomain.make(
         :owning_organization => space.organization,
         :wildcard => true
       )

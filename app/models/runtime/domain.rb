@@ -1,27 +1,29 @@
 module VCAP::CloudController
   class Domain < Sequel::Model
-    class InvalidOrganizationRelation < InvalidRelation; end
-
     DOMAIN_REGEX = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}$/ix.freeze
 
-    many_to_one       :owning_organization, :class => "VCAP::CloudController::Organization"
-    many_to_many      :organizations, :before_add => :validate_organization
-    one_to_many       :routes
-
-    add_association_dependencies :organizations => :nullify, :routes => :destroy
-
-    default_order_by  :name
-
-    export_attributes :name, :owning_organization_guid, :wildcard
-    import_attributes :name, :owning_organization_guid, :wildcard
-    strip_attributes  :name
-
-    subset(:shared_domains) { {:owning_organization_id => nil} }
-
-    def after_create
-      add_organization owning_organization if owning_organization
-      super
+    dataset.row_proc = proc do |row|
+      if row[:owning_organization_id]
+        PrivateDomain.call(row)
+      else
+        SharedDomain.call(row)
+      end
     end
+
+    dataset_module do
+      def shared_domains
+        filter(owning_organization_id: nil)
+      end
+
+      def private_domains
+        filter(Sequel.~(owning_organization_id: nil))
+      end
+    end
+
+    many_to_one :owning_organization, class: "VCAP::CloudController::Organization"
+    one_to_many :routes
+
+    add_association_dependencies :routes => :destroy
 
     def validate
       validates_presence :name
@@ -32,21 +34,9 @@ module VCAP::CloudController
         errors.add(:wildcard, :wildcard_routes_in_use)
       end
 
-      if new? || column_changed?(:owning_organization)
-        unless VCAP::CloudController::SecurityContext.admin?
-          validates_presence :owning_organization
-        end
-      end
 
       validates_format DOMAIN_REGEX, :name
       errors.add(:name, :overlapping_domain) if overlaps_domain_in_other_org?
-    end
-
-    def validate_organization(org)
-      return unless owning_organization
-      unless org && owning_organization.id == org.id
-        raise InvalidOrganizationRelation.new(org.guid)
-      end
     end
 
     def overlaps_domain_in_other_org?
@@ -65,14 +55,6 @@ module VCAP::CloudController
       overlapping_domains.count != 0
     end
 
-    def as_summary_json
-      {
-        :guid => guid,
-        :name => name,
-        :owning_organization_guid => (owning_organization ? owning_organization.guid : nil)
-      }
-    end
-
     def intermediate_domains
       self.class.intermediate_domains(name)
     end
@@ -88,7 +70,7 @@ module VCAP::CloudController
     def self.user_visibility_filter(user)
       orgs = Organization.filter(Sequel.or(
         managers: [user],
-        auditors: [user]
+        auditors: [user],
       ))
 
       Sequel.or(
@@ -97,22 +79,16 @@ module VCAP::CloudController
       )
     end
 
-    def self.find_or_create_shared_domain(name)
-      logger = Steno.logger("cc.db.domain")
-      domain = nil
+    def usable_by_organization?(org)
+      shared? || owned_by?(org)
+    end
 
-      Domain.db.transaction(savepoint: true) do
-        domain = Domain[:name => name]
-        if domain
-          logger.info "reusing default serving domain: #{name}"
-        else
-          logger.info "creating shared serving domain: #{name}"
-          domain = Domain.new(:name => name, :wildcard => true)
-          domain.save(:validate => false)
-        end
-      end
+    def shared?
+      owning_organization.nil?
+    end
 
-      domain
+    def owned_by?(org)
+      owning_organization.id == org.id
     end
   end
 end

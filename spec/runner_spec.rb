@@ -161,7 +161,7 @@ module VCAP::CloudController
               file
             end
 
-            it "creates the system domain as a shared domain" do
+            it "creates the system domain as a private domain" do
               subject.run!
               domain = Domain.find(:name => "the-system-domain.com")
               expect(domain.owning_organization).to be_nil
