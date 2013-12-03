@@ -209,8 +209,8 @@ module VCAP::CloudController
         it "should return events for matching all the types" do
           get "/v2/events?q=type%20IN%20audit.app.update,app.crash", {}, admin_headers
           decoded_response["total_results"].should == 2
-          decoded_response["resources"][0]["metadata"]["guid"].should == update_event.guid
-          decoded_response["resources"][1]["metadata"]["guid"].should == crash_event.guid
+          filtered_event_guids = decoded_response["resources"].map{ |resource| resource["metadata"]["guid"] }
+          filtered_event_guids.should =~ [ update_event.guid, crash_event.guid ]
         end
       end
 
