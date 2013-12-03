@@ -9,7 +9,6 @@ language: ruby
 bundler_args: --deployment --without development
 
 rvm:
-  - 1.9.3
   - 1.9.3-p484
 
 script: bundle exec parallel_rspec spec$SUB -s integration -n $THREADS -o "--format $FORMAT --order rand:$RANDOM"
@@ -33,10 +32,6 @@ env:
     - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" SUB="/api" FORMAT=RspecApiDocumentation::ApiFormatter THREADS=1
 #   - DB=sqlite FORMATTER=progress
 #   - DB=oracle ORACLE_BASE=/opt/oracle ORACLE_HOME=$ORACLE_BASE/instantclient_11_2 LD_LIBRARY_PATH=${ORACLE_HOME}:${LD_LIBRARY_PATH} FORMATTER=progress
-
-matrix:
-  allow_failures:
-    - rvm: 1.9.3-p484
 
 before_install:
   - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"
