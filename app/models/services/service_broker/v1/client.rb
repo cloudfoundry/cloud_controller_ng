@@ -43,11 +43,12 @@ module VCAP::CloudController
       service = instance.service_plan.service
 
       broker_instance_id = instance.broker_provided_id
+      app_instance_id = binding.app.guid
       label = "#{service.label}-#{service.version}"
       email = VCAP::CloudController::SecurityContext.current_user_email
       binding_options = binding.binding_options
 
-      response = @http_client.bind(broker_instance_id, label, email, binding_options)
+      response = @http_client.bind(broker_instance_id, app_instance_id, label, email, binding_options)
 
       binding.broker_provided_id = response.fetch('service_id')
       binding.gateway_data = response.fetch('configuration')

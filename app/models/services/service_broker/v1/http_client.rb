@@ -17,9 +17,10 @@ module VCAP::CloudController
         execute(:post, '/gateway/v1/configurations', body)
       end
 
-      def bind(instance_id, label, email, binding_options)
+      def bind(instance_id, app_id, label, email, binding_options)
         body = {
           service_id: instance_id,
+          app_id: app_id,
           label: label,
           email: email,
           binding_options: binding_options

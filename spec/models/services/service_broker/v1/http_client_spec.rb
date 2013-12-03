@@ -127,6 +127,7 @@ module VCAP::CloudController
 
       describe '#bind' do
         let(:instance_id) { Sham.guid }
+        let(:app_id) { Sham.guid }
         let(:label) { Sham.label }
         let(:email) { Sham.email }
         let(:binding_options) { Sham.binding_options }
@@ -135,6 +136,7 @@ module VCAP::CloudController
         let(:expected_request_body) do
           {
             service_id: instance_id,
+            app_id: app_id,
             label: label,
             email: email,
             binding_options: binding_options,
@@ -156,7 +158,7 @@ module VCAP::CloudController
             with(body: expected_request_body, headers: expected_request_headers).
             to_return(status: 200, body: expected_response.to_json)
 
-          response = client.bind(instance_id, label, email, binding_options)
+          response = client.bind(instance_id, app_id, label, email, binding_options)
 
           expect(request).to have_been_made
           expect(response).to eq(expected_response)

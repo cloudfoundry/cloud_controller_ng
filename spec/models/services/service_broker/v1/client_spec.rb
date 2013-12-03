@@ -87,9 +87,11 @@ module VCAP::CloudController
       let(:instance) { ManagedServiceInstance.make }
       let(:plan) { instance.service_plan }
       let(:service) { plan.service }
+      let(:app) { AppFactory.make }
       let(:binding) do
         ServiceBinding.new(
           service_instance: instance,
+          app: app,
           binding_options: {'this' => 'that'}
         )
       end
@@ -107,6 +109,7 @@ module VCAP::CloudController
         VCAP::CloudController::SecurityContext.stub(:current_user_email).and_return(current_user_email)
         http_client.stub(:bind).with(
           instance.broker_provided_id,
+          app.guid,
           "#{service.label}-#{service.version}",
           current_user_email,
           {'this' => 'that'}
