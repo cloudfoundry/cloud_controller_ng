@@ -417,14 +417,19 @@ module VCAP::CloudController
         app.metadata.should eq("console" => true)
       end
 
-      it "returns false if console was explicitly set to false" do
+      it "returns true if console was set to true" do
+        app = AppFactory.make(:console => true)
+        app.console.should == true
+      end
+
+      it "returns false if console was set to false" do
         app = AppFactory.make(:console => false)
         app.console.should == false
       end
 
       it "returns false if console was not set" do
-        app = AppFactory.make(:console => true)
-        app.console.should == true
+        app = AppFactory.make
+        app.console.should == false
       end
     end
 
