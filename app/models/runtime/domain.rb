@@ -28,12 +28,6 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_unique   :name
-      validates_presence :wildcard
-
-      if !new? && column_changed?(:wildcard) && !wildcard && routes_dataset.filter(Sequel.~({:host => ""})).count > 0
-        errors.add(:wildcard, :wildcard_routes_in_use)
-      end
-
 
       validates_format DOMAIN_REGEX, :name
       errors.add(:name, :overlapping_domain) if overlaps_domain_in_other_org?

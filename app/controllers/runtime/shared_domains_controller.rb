@@ -2,7 +2,6 @@ module VCAP::CloudController
   class SharedDomainsController < RestController::ModelController
     define_attributes do
       attribute :name, String
-      attribute :wildcard, Message::Boolean
     end
 
     def delete(guid)

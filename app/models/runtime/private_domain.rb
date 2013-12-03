@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     default_order_by  :name
 
-    export_attributes :name, :owning_organization_guid, :wildcard
-    import_attributes :name, :owning_organization_guid, :wildcard
+    export_attributes :name, :owning_organization_guid
+    import_attributes :name, :owning_organization_guid
     strip_attributes  :name
 
     def as_summary_json

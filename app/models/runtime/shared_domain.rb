@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     default_order_by  :name
 
-    export_attributes :name, :wildcard
-    import_attributes :name, :wildcard
+    export_attributes :name
+    import_attributes :name
     strip_attributes  :name
 
     def as_summary_json
@@ -28,7 +28,7 @@ module VCAP::CloudController
           logger.info "reusing default serving domain: #{name}"
         else
           logger.info "creating shared serving domain: #{name}"
-          domain = SharedDomain.new(name: name, wildcard: true)
+          domain = SharedDomain.new(name: name)
           domain.save
         end
       end

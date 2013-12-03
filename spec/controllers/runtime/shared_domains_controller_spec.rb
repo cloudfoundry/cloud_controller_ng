@@ -3,10 +3,10 @@ require "spec_helper"
 module VCAP::CloudController
   describe SharedDomainsController, type: :controller do
     describe "POST /v2/shared_domains" do
-      context "when a name and wildcard is given" do
+      context "when a name is given" do
         it "returns 201 Created" do
           post "/v2/shared_domains",
-               '{"name":"example.com","wildcard":true}',
+               '{"name":"example.com"}',
                json_headers(admin_headers)
 
           last_response.status.should == 201
@@ -15,7 +15,7 @@ module VCAP::CloudController
         it "creates the shared domain" do
           expect {
             post "/v2/shared_domains",
-                 '{"name":"example.com","wildcard":true}',
+                 '{"name":"example.com"}',
                  json_headers(admin_headers)
 
             response = Yajl::Parser.parse(last_response.body)
@@ -29,27 +29,7 @@ module VCAP::CloudController
         end
       end
 
-      context "when a name is given but wildcard is missing" do
-        it "returns a 400-level error code" do
-          post "/v2/shared_domains",
-               '{"name":"example.com"}',
-               json_headers(admin_headers)
-
-          last_response.status.should == 400
-        end
-      end
-
-      context "when wildcard is given but the name is missing" do
-        it "returns a 400-level error code" do
-          post "/v2/shared_domains",
-               '{"wildcard":true}',
-               json_headers(admin_headers)
-
-          last_response.status.should == 400
-        end
-      end
-
-      context "when neither name nor wildcard is given" do
+      context "when a name is NOT given" do
         it "returns a 400-level error code" do
           post "/v2/shared_domains",
                '{}',

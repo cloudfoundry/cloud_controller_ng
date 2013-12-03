@@ -118,7 +118,6 @@ module VCAP::CloudController
             it "creates the system domain, owned by the system domain org" do
               domain = Domain.find(:name => "the-system-domain.com")
               expect(domain.owning_organization.name).to eq("the-system-domain-org-name")
-              expect(domain.wildcard).to be_true
             end
 
             it "creates the application serving domains" do
@@ -165,7 +164,6 @@ module VCAP::CloudController
               subject.run!
               domain = Domain.find(:name => "the-system-domain.com")
               expect(domain.owning_organization).to be_nil
-              expect(domain.wildcard).to be_true
             end
           end
         end

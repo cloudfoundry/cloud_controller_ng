@@ -24,15 +24,6 @@ module VCAP::CloudController
                      },
                      create_attribute_reset: lambda { @space = nil }
 
-    context "with a wildcard domain" do
-      it "should allow a nil host" do
-        domain = PrivateDomain.make(:wildcard => true)
-        space = Space.make(:organization => domain.owning_organization)
-        post "/v2/routes", Yajl::Encoder.encode(:host => nil, :domain_guid => domain.guid, :space_guid => space.guid), json_headers(admin_headers)
-        last_response.status.should == 201
-      end
-    end
-
     describe "Permissions" do
       shared_examples "route permissions" do
         describe "Org Level Permissions" do
@@ -143,7 +134,6 @@ module VCAP::CloudController
       @headers_for_user = headers_for(user)
       @route = PrivateDomain.make(
         :name => "jesse.cloud",
-        :wildcard => true,
         :owning_organization => space.organization,
       ).add_route(
         :host => "foo",

@@ -191,7 +191,6 @@ module VCAP::CloudController
           Seeds.create_seed_domains(config, system_org)
 
           system_domain = Domain.find(name: config[:system_domain])
-          expect(system_domain.wildcard).to be_true
           expect(system_domain.owning_organization).to eq(system_org)
         end
 
@@ -203,7 +202,6 @@ module VCAP::CloudController
 
           PrivateDomain.create(
             name: config[:system_domain],
-            wildcard: true,
             owning_organization: Organization.make
           )
           system_org = Organization.find(name: "the-system-org")

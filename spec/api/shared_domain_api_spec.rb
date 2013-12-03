@@ -10,7 +10,6 @@ resource "Shared Domains", :type => :api do
   standard_parameters VCAP::CloudController::SharedDomainsController
 
   field :guid, "The guid of the domain.", required: false
-  field :wildcard, "Allow routes with non-empty hosts", required: true, valid_values: [true, false]
   field :name, "The name of the domain.", required: true, example_values: ["example.com", "foo.example.com"]
 
   standard_model_list(:shared_domain)

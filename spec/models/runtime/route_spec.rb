@@ -8,7 +8,7 @@ module VCAP::CloudController
         unique_attributes: [[:host, :domain]],
         custom_attributes_for_uniqueness_tests: -> do
           space = Space.make
-          domain = PrivateDomain.make(owning_organization: space.organization, wildcard: true)
+          domain = PrivateDomain.make(owning_organization: space.organization)
           {space: space, domain: domain}
         end,
         create_attribute: ->(name, route) {
@@ -16,7 +16,7 @@ module VCAP::CloudController
             when :space
               route.space
             when :domain
-              PrivateDomain.make(owning_organization: route.space.organization, wildcard: true)
+              PrivateDomain.make(owning_organization: route.space.organization)
             when :host
               Sham.host
           end
@@ -28,7 +28,6 @@ module VCAP::CloudController
                 create_for: ->(route) {
                   PrivateDomain.make(
                       owning_organization: route.domain.owning_organization,
-                      wildcard: true
                   )
                 }
             }
@@ -42,6 +41,9 @@ module VCAP::CloudController
       let(:route) { Route.make }
 
       describe "host" do
+        let(:space) { Space.make }
+        let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
         it "should not allow . in the host name" do
           route.host = "a.b"
           route.should_not be_valid
@@ -52,75 +54,24 @@ module VCAP::CloudController
           route.should_not be_valid
         end
 
-        context "with a wildcard domain" do
-          let(:space) { Space.make }
-
-          let(:domain) do
-            PrivateDomain.make(
-              wildcard: true,
-              owning_organization: space.organization,
-            )
-          end
-
-          it "should not allow a nil host" do
-            expect {
-              Route.make(space: space, domain: domain, host: nil)
-            }.to raise_error(Sequel::ValidationFailed)
-          end
-
-          it "should allow an empty host" do
-            Route.make(:space => space,
-                               :domain => domain,
-                               :host => "")
-          end
-
-          it "should not allow a blank host" do
-            expect {
-              Route.make(:space => space,
-                                 :domain => domain,
-                                 :host => " ")
-            }.to raise_error(Sequel::ValidationFailed)
-          end
+        it "should not allow a nil host" do
+          expect {
+            Route.make(space: space, domain: domain, host: nil)
+          }.to raise_error(Sequel::ValidationFailed)
         end
 
-        context "with a non-wildcard domain" do
-          let(:space) { Space.make }
-          let(:domain) do
-            PrivateDomain.make(
-              :wildcard => false,
-              :owning_organization => space.organization,
-            )
-          end
+        it "should allow an empty host" do
+          Route.make(:space => space,
+                             :domain => domain,
+                             :host => "")
+        end
 
-          it "should not allow a nil host" do
-            expect {
-              Route.make(space: space,
-                         domain: domain,
-                         host: nil).should be_valid
-            }.to raise_error(Sequel::ValidationFailed)
-          end
-
-          it "should not allow a valid host" do
-            expect {
-              Route.make(space: space,
-                         domain: domain,
-                         host: Sham.host)
-            }.to raise_error(Sequel::ValidationFailed)
-          end
-
-          it "should allow an empty host" do
-            Route.make(space: space,
-                       domain: domain,
-                       host: "").should be_valid
-          end
-
-          it "should not allow a blank host" do
-            expect {
-              Route.make(space: space,
-                         domain: domain,
-                         host: " ")
-            }.to raise_error(Sequel::ValidationFailed)
-          end
+        it "should not allow a blank host" do
+          expect {
+            Route.make(:space => space,
+                               :domain => domain,
+                               :host => " ")
+          }.to raise_error(Sequel::ValidationFailed)
         end
       end
 
@@ -174,7 +125,6 @@ module VCAP::CloudController
 
       let(:domain) do
         PrivateDomain.make(
-          :wildcard => true,
           :owning_organization => space.organization
         )
       end

@@ -99,10 +99,6 @@ module VCAP::CloudController
     def validate_domain
       return unless domain
 
-      if !domain.wildcard && host && host.present?
-        errors.add(:host, :host_not_empty)
-      end
-
       if (domain.shared? && !host.present?) ||
             (space && !domain.usable_by_organization?(space.organization))
         errors.add(:domain, :invalid_relation)

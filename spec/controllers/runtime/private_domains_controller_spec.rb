@@ -3,11 +3,11 @@ require "spec_helper"
 module VCAP::CloudController
   describe PrivateDomainsController, type: :controller do
     describe "POST /v2/private_domains" do
-      context "when owning_organization and name and wildcard are all given" do
+      context "when owning_organization and name are both given" do
         it "returns 201 Created" do
           org = Organization.make
           post "/v2/private_domains",
-               {name: "example.com", owning_organization_guid: org.guid, wildcard: true}.to_json,
+               {name: "example.com", owning_organization_guid: org.guid}.to_json,
                json_headers(admin_headers)
 
           last_response.status.should == 201
@@ -17,7 +17,7 @@ module VCAP::CloudController
           expect {
             org = Organization.make
             post "/v2/private_domains",
-                 {name: "example.com", owning_organization_guid: org.guid, wildcard: true}.to_json,
+                 {name: "example.com", owning_organization_guid: org.guid}.to_json,
                  json_headers(admin_headers)
 
             response = Yajl::Parser.parse(last_response.body)
@@ -31,22 +31,11 @@ module VCAP::CloudController
         end
       end
 
-      context "when owning_organization and wildcard is given but name is not given" do
+      context "when owning_organization is given but name is not given" do
         it "returns a 400-level error code" do
           org = Organization.make
           post "/v2/private_domains",
-               {owning_organization_guid: org.guid, wildcard: true}.to_json,
-               json_headers(admin_headers)
-
-          last_response.status.should == 400
-        end
-      end
-
-      context "when owning_organization and name is given but wildcard is not given" do
-        it "returns a 400-level error code" do
-          org = Organization.make
-          post "/v2/private_domains",
-               {owning_organization_guid: org.guid, name: "example.com"}.to_json,
+               {owning_organization_guid: org.guid}.to_json,
                json_headers(admin_headers)
 
           last_response.status.should == 400
@@ -56,7 +45,7 @@ module VCAP::CloudController
       context "when name is given but owning_organization is not given" do
         it "returns a 400-level error code" do
           post "/v2/private_domains",
-               {name: "example.com", wildcard: true}.to_json,
+               {name: "example.com"}.to_json,
                json_headers(admin_headers)
 
           last_response.status.should == 400

@@ -2,7 +2,6 @@ module VCAP::CloudController
   class PrivateDomainsController < RestController::ModelController
     define_attributes do
       attribute :name, String
-      attribute :wildcard, Message::Boolean
       to_one :owning_organization
     end
 

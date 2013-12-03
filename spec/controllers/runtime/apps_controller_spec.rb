@@ -614,7 +614,7 @@ module VCAP::CloudController
     describe "on route change" do
       let(:space) { Space.make }
       let(:domain) do
-        PrivateDomain.make(name: "jesse.cloud", owning_organization: space.organization, wildcard: true)
+        PrivateDomain.make(name: "jesse.cloud", owning_organization: space.organization)
       end
 
       before do

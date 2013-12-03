@@ -11,7 +11,6 @@ resource "Private Domains", :type => :api do
 
   field :guid, "The guid of the domain.", required: false
   field :name, "The name of the domain.", required: true, example_values: ["example.com", "foo.example.com"]
-  field :wildcard, "Allow routes with non-empty hosts", required: true, valid_values: [true, false]
   field :owning_organization_guid, "The organization that owns the domain. If not specified, the domain is shared.", required: false
 
   standard_model_list(:private_domain)
@@ -23,7 +22,6 @@ resource "Private Domains", :type => :api do
       org_guid = VCAP::CloudController::Organization.make.guid
       payload = Yajl::Encoder.encode(
         name: "exmaple.com",
-        wildcard: true,
         owning_organization_guid: org_guid
       )
 
