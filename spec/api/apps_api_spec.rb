@@ -36,7 +36,7 @@ resource "Apps", :type => :api do
 
   standard_model_list :app, VCAP::CloudController::AppsController
   standard_model_get :app
-  standard_model_delete :app
+  standard_model_delete_without_async :app
 
   def after_standard_model_delete(guid)
     event = VCAP::CloudController::Event.find(:type => "audit.app.delete-request", :actee => guid)

@@ -115,6 +115,15 @@ module ApiDsl
       end
     end
 
+    def standard_model_delete_without_async(model)
+      delete "#{root(model)}/:guid" do
+        example_request "Delete a Particular #{model.to_s.capitalize}" do
+          expect(status).to eq 204
+          after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
+        end
+      end
+    end
+
     def standard_list_parameters controller
       query_parameter_description = "Parameters used to filter the result set."
       if controller.query_parameters
