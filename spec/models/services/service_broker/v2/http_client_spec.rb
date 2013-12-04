@@ -159,6 +159,7 @@ module VCAP::CloudController::ServiceBroker::V2
     let(:plan_id) { Sham.guid }
     let(:service_id) { Sham.guid }
     let(:instance_id) { Sham.guid }
+    let(:url) { 'http://broker.example.com' }
     let(:expected_request_headers) do
       {
         'X-VCAP-Request-ID' => request_id,
@@ -169,7 +170,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
     subject(:client) do
       HttpClient.new(
-        url: 'http://broker.example.com',
+        url: url,
         auth_username: auth_username,
         auth_password: auth_password
       )
@@ -194,6 +195,15 @@ module VCAP::CloudController::ServiceBroker::V2
 
         WebMock.should have_requested(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
                          with(:headers => {'X-Broker-Api-Version' => '2.0'})
+      end
+    end
+
+    context 'when an https URL is used' do
+      let(:url) { 'https://broker.example.com' }
+      it 'uses SSL' do
+        stub_request(:get, "https://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog").to_return(status: 200, body: {}.to_json)
+        client.catalog
+        WebMock.should have_requested(:get, "https://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog")
       end
     end
 
