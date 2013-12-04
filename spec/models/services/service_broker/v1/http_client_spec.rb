@@ -13,10 +13,11 @@ module VCAP::CloudController
           'Content-Type' => 'application/json'
         }
       end
+      let(:url) { 'http://broker.example.com' }
 
       subject(:client) do
         HttpClient.new(
-          url: 'http://broker.example.com',
+          url: url,
           auth_token: auth_token
         )
       end
@@ -68,6 +69,16 @@ module VCAP::CloudController
             expect_timeout_to_be 60
             client.provision(unique_id, name)
           end
+        end
+      end
+
+      context 'when an https URL is used' do
+        let(:url) { 'https://broker.example.com' }
+        it 'uses SSL' do
+          stub_request(:post, "https://broker.example.com/gateway/v1/configurations").
+              to_return(:status => 200, :body => "", :headers => {})
+          client.provision("unique_id", "name")
+          WebMock.should have_requested(:post, "https://broker.example.com/gateway/v1/configurations")
         end
       end
 
