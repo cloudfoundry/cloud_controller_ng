@@ -166,7 +166,7 @@ module VCAP::CloudController
         let(:running) { { app.version => 3 } }
 
         it "stops the instance" do
-          dea_client.should_receive(:stop_instances).with(app, ["some-instance"])
+          dea_client.should_receive(:stop_instances).with(app.guid, ["some-instance"])
           subject.process_stop(payload)
         end
       end
@@ -200,7 +200,7 @@ module VCAP::CloudController
           let(:running) { { app.version => 2 } }
 
           it "stops the requested (non-current) instance" do
-            dea_client.should_receive(:stop_instances).with(app, ["some-instance"])
+            dea_client.should_receive(:stop_instances).with(app.guid, ["some-instance"])
             subject.process_stop(payload)
           end
         end

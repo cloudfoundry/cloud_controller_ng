@@ -216,7 +216,7 @@ module VCAP::CloudController
           expect(payload).to_not include(:version)
         end
 
-        DeaClient.stop_instances(app, ["a", "b"])
+        DeaClient.stop_instances(app.guid, ["a", "b"])
       end
 
       it "should support single instance" do
@@ -227,7 +227,7 @@ module VCAP::CloudController
           expect(payload).to_not include(:version)
         end
 
-        DeaClient.stop_instances(app, "a")
+        DeaClient.stop_instances(app.guid, "a")
       end
     end
 

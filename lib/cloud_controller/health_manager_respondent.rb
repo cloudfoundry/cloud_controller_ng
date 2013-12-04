@@ -76,7 +76,7 @@ module VCAP::CloudController
       if !app
         stop_runaway_app(app_id)
       elsif stop_instances?(app, instances, running)
-        dea_client.stop_instances(app, instances.keys)
+        dea_client.stop_instances(app_id, instances.keys)
       end
     end
 

@@ -174,16 +174,17 @@ module VCAP::CloudController
 
       # @param [Array] indices an Enumerable of integer indices
       def stop_indices(app, indices)
-        app_stopper.publish_stop(droplet: app.guid,
+        app_stopper.publish_stop(
+          droplet: app.guid,
           version: app.version,
           indices: indices
         )
       end
 
       # @param [Array] indices an Enumerable of guid instance ids
-      def stop_instances(app, instances)
+      def stop_instances(app_guid, instances)
         app_stopper.publish_stop(
-          droplet: app.guid,
+          droplet: app_guid,
           instances: Array(instances)
         )
       end
