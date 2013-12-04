@@ -92,16 +92,6 @@ module VCAP::CloudController
             }.from(app).to(other_app)
           end
         end
-
-        context "with an invalid app" do
-          it "blows up" do
-            pending "doesn't currently blow up :("
-
-            expect {
-              subject.update_from_json(%Q|{"app_guid":"bad_app_guid"}|)
-            }.to raise_error
-          end
-        end
       end
     end
 
