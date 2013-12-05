@@ -26,7 +26,8 @@ module VCAP::CloudController
     include_examples "collection operations", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
         apps: lambda { |space| AppFactory.make(space: space) },
-        service_instances: lambda { |space| ManagedServiceInstance.make(space: space) }
+        service_instances: lambda { |space| ManagedServiceInstance.make(space: space) },
+        domains: lambda { |space| make_domain_for_space(space) }
       },
       one_to_many_collection_ids_without_url: {
         routes: lambda { |space| Route.make(space: space) },
@@ -44,7 +45,7 @@ module VCAP::CloudController
       many_to_many_collection_ids: {
         developers: lambda { |space| make_user_for_space(space) },
         managers: lambda { |space| make_user_for_space(space) },
-        auditors: lambda { |space| make_user_for_space(space) },
+        auditors: lambda { |space| make_user_for_space(space) }
       }
 
 

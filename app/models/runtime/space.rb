@@ -1,32 +1,28 @@
 module VCAP::CloudController
   class Space < Sequel::Model
     class InvalidDeveloperRelation < InvalidRelation; end
-    class InvalidAuditorRelation   < InvalidRelation; end
-    class InvalidManagerRelation   < InvalidRelation; end
+    class InvalidAuditorRelation < InvalidRelation; end
+    class InvalidManagerRelation < InvalidRelation; end
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
-    define_user_group :developers, :reciprocal => :spaces,
-                      :before_add => :validate_developer
+    define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
+    define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
+    define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor
 
-    define_user_group :managers, :reciprocal => :managed_spaces,
-                      :before_add => :validate_manager
+    many_to_one :organization
+    one_to_many :apps
+    one_to_many :events
+    one_to_many :all_apps, dataset: -> { App.with_deleted.filter(space: self) }
+    one_to_many :service_instances
+    one_to_many :managed_service_instances
+    one_to_many :routes
+    one_to_many :app_events, dataset: -> { AppEvent.filter(app: apps) }
+    one_to_many :default_users, class: "VCAP::CloudController::User", key: :default_space_id
+    one_to_many :domains, dataset: -> { organization.domains_dataset },
+                remover: ->(_) {}, clearer: -> {}, adder: ->(_) {} # noop for bc reasons
 
-    define_user_group :auditors, :reciprocal => :audited_spaces,
-                      :before_add => :validate_auditor
-
-    many_to_one       :organization
-    one_to_many       :apps
-    one_to_many       :events
-    one_to_many       :all_apps, :dataset => lambda { App.with_deleted.filter(:space => self) }
-    one_to_many       :service_instances
-    one_to_many       :managed_service_instances
-    one_to_many       :routes
-    one_to_many       :app_events, :dataset => lambda { AppEvent.filter(:app => apps) }
-    one_to_many       :default_users, :class => "VCAP::CloudController::User", :key => :default_space_id
-
-    add_association_dependencies :default_users => :nullify,
-      :all_apps => :destroy, :service_instances => :destroy, :routes => :destroy, :events => :nullify
+    add_association_dependencies default_users: :nullify, all_apps: :destroy, service_instances: :destroy, routes: :destroy, events: :nullify
 
     default_order_by  :name
 
@@ -61,12 +57,12 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      Sequel.or({
-        :organization => user.managed_organizations_dataset,
-        :developers => [user],
-        :managers => [user],
-        :auditors => [user]
-      })
+      Sequel.or(
+        organization: user.managed_organizations_dataset,
+        developers: [user],
+        managers: [user],
+        auditors: [user]
+      )
     end
   end
 end

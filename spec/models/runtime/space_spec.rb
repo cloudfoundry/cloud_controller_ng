@@ -113,14 +113,14 @@ module VCAP::CloudController
       subject(:space) { Space.make }
 
       it "destroys all apps" do
-        app = AppFactory.make(:space => space)
+        app = AppFactory.make(space: space)
         soft_deleted_app = AppFactory.make(:space => space)
         soft_deleted_app.soft_delete
 
         expect {
           subject.destroy(savepoint: true)
         }.to change {
-          App.with_deleted.where(:id => [app.id, soft_deleted_app.id]).count
+          App.with_deleted.where(id: [app.id, soft_deleted_app.id]).count
         }.from(2).to(0)
       end
 
@@ -130,17 +130,26 @@ module VCAP::CloudController
         expect {
           subject.destroy(savepoint: true)
         }.to change {
-          ManagedServiceInstance.where(:id => service_instance.id).count
+          ManagedServiceInstance.where(id: service_instance.id).count
         }.by(-1)
       end
 
       it "destroys all routes" do
-        route = Route.make(:space => space)
+        route = Route.make(space: space)
         expect {
           subject.destroy(savepoint: true)
         }.to change {
-          Route.where(:id => route.id).count
+          Route.where(id: route.id).count
         }.by(-1)
+      end
+
+      it "doesn't do anything to domains" do
+        PrivateDomain.make(owning_organization: space.organization)
+        expect {
+          subject.destroy(savepoint: true)
+        }.not_to change {
+          space.organization.domains
+        }
       end
 
       it "nullifies any default_users" do
@@ -151,15 +160,15 @@ module VCAP::CloudController
       end
 
       it "destroys all events" do
-        event = Event.make(:space => space)
+        event = Event.make(space: space)
 
         expect {
           subject.destroy(savepoint: true)
         }.to_not change {
-          Event.where(:id => [event.id]).count
+          Event.where(id: [event.id]).count
         }
 
-        Event.find(:id => event.id).space.should be_a(DeletedSpace)
+        Event.find(id: event.id).space.should be_a(DeletedSpace)
       end
     end
 
@@ -168,12 +177,74 @@ module VCAP::CloudController
 
       context "when deleted apps exist in the space" do
         it "should not return the deleted app" do
-          deleted_app = AppFactory.make(:space => space)
+          deleted_app = AppFactory.make(space: space)
           deleted_app.soft_delete
 
-          non_deleted_app = AppFactory.make(:space => space)
+          non_deleted_app = AppFactory.make(space: space)
 
           space.apps.should == [non_deleted_app]
+        end
+      end
+    end
+
+    describe "domains" do
+      let(:space) { Space.make() }
+
+      context "deleting a domain" do
+        let!(:domain){ PrivateDomain.make(owning_organization: space.organization) }
+
+        it "is a noop but doesn't return an error" do
+          # There used to be a relationship between spaces and domains
+          # This no longer exists; spaces just have permission for all org domains
+          # but we need the endpoint for bc reasons.
+          expect{
+            space.remove_domain(domain)
+          }.not_to change {
+            space.organization.private_domains
+          }
+        end
+      end
+
+      context "clearing domains" do
+        let!(:domain){ PrivateDomain.make(owning_organization: space.organization) }
+
+        it "is a noop but doesn't return an error" do
+          # There used to be a relationship between spaces and domains
+          # This no longer exists; spaces just have permission for all org domains
+          # but we need the endpoint for bc reasons.
+          expect{
+            space.remove_all_domains
+          }.not_to change {
+            space.organization.private_domains
+          }
+        end
+      end
+
+      context "listing domains" do
+        let!(:domains) do
+          [
+            PrivateDomain.make(owning_organization: space.organization),
+            SharedDomain.make
+          ]
+        end
+
+        it "should list the owning organization's domains and shared domains" do
+          expect(space.domains).to match_array(domains)
+        end
+      end
+
+      context "adding an existing domain" do
+        let(:domain_to_add) { SharedDomain.make }
+
+        it "should add a domain to the owning organization" do
+          # There used to be a relationship between spaces and domains
+          # This no longer exists; spaces just have permission for all org domains
+          # but we need the endpoint for bc reasons.
+          expect{
+            space.add_domain(domain_to_add)
+          }.not_to change {
+            space.organization.private_domains
+          }
         end
       end
     end
