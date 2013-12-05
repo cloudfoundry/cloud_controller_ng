@@ -7,14 +7,13 @@ resource "Shared Domains", :type => :api do
   let!(:domains) { 3.times { VCAP::CloudController::SharedDomain.make } }
 
   authenticated_request
-  standard_parameters VCAP::CloudController::SharedDomainsController
 
   field :guid, "The guid of the domain.", required: false
   field :name, "The name of the domain.", required: true, example_values: ["example.com", "foo.example.com"]
 
-  standard_model_list(:shared_domain)
-  standard_model_get(:shared_domain)
-  standard_model_delete(:shared_domain)
+  standard_model_list :shared_domain, VCAP::CloudController::SharedDomainsController
+  standard_model_get :shared_domain
+  standard_model_delete :shared_domain
 
   post "/v2/shared_domains" do
     example "Create a shared domain" do

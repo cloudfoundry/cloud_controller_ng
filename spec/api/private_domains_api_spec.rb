@@ -7,15 +7,14 @@ resource "Private Domains", :type => :api do
   let!(:domains) { 3.times { VCAP::CloudController::PrivateDomain.make } }
 
   authenticated_request
-  standard_parameters VCAP::CloudController::SharedDomainsController
 
   field :guid, "The guid of the domain.", required: false
   field :name, "The name of the domain.", required: true, example_values: ["example.com", "foo.example.com"]
   field :owning_organization_guid, "The organization that owns the domain. If not specified, the domain is shared.", required: false
 
-  standard_model_list(:private_domain)
-  standard_model_get(:private_domain)
-  standard_model_delete(:private_domain)
+  standard_model_list :private_domain, VCAP::CloudController::PrivateDomainsController
+  standard_model_get :private_domain
+  standard_model_delete :private_domain
 
   post "/v2/private_domains" do
     example "Create a domain owned by the given organization" do

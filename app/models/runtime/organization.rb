@@ -9,6 +9,11 @@ module VCAP::CloudController
     one_to_many :private_domains, key: :owning_organization_id
     one_to_many :service_plan_visibilities
     many_to_one :quota_definition
+    one_to_many :domains,
+                dataset: -> { VCAP::CloudController::Domain.filter(owning_organization_id: id).or(owning_organization_id: nil) },
+                remover: ->(legacy_domain) { legacy_domain.destroy if legacy_domain.owning_organization_id == id },
+                clearer: -> { remove_all_private_domains },
+                adder: ->(legacy_domain) { add_private_domain(legacy_domain) }
 
     add_association_dependencies spaces: :destroy,
       service_instances: :destroy,
@@ -28,7 +33,7 @@ module VCAP::CloudController
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
                       :auditor_guids, :private_domain_guids, :quota_definition_guid,
-                      :status
+                      :status, :domain_guids
 
     def billing_enabled?
       billing_enabled

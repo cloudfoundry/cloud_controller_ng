@@ -4,21 +4,20 @@ require "spec_helper"
 module VCAP::CloudController
   describe Organization, type: :model do
     it_behaves_like "a CloudController model", {
-      :required_attributes          => :name,
-      :unique_attributes            => :name,
-      :custom_attributes_for_uniqueness_tests => -> { { quota_definition: QuotaDefinition.make } },
-      :stripped_string_attributes   => :name,
-      :many_to_zero_or_more => {
-        :users      => lambda { |org| User.make },
-        :managers   => lambda { |org| User.make },
-        :billing_managers => lambda { |org| User.make },
-        :auditors   => lambda { |org| User.make },
+      required_attributes: :name,
+      unique_attributes: :name,
+      custom_attributes_for_uniqueness_tests: -> { {quota_definition: QuotaDefinition.make} },
+      stripped_string_attributes: :name,
+      many_to_zero_or_more: {
+        users: ->(_) { User.make },
+        managers: ->(_) { User.make },
+        billing_managers: ->(_) { User.make },
+        auditors: ->(_) { User.make },
       },
-      :one_to_zero_or_more => {
-        :spaces  => lambda { |org| Space.make },
-        :private_domains => lambda { |org|
-          PrivateDomain.make(:owning_organization => org)
-        }
+      one_to_zero_or_more: {
+        spaces: ->(_) { Space.make },
+        domains: ->(org) { PrivateDomain.make(owning_organization: org) },
+        private_domains: ->(org) { PrivateDomain.make(owning_organization: org) }
       }
     }
 

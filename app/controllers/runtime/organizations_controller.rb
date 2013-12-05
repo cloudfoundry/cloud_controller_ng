@@ -7,6 +7,7 @@ module VCAP::CloudController
       to_one    :quota_definition, :optional_in => :create
       to_many   :spaces, :exclude_in => :create
       to_many   :domains
+      to_many   :private_domains
       to_many   :users
       to_many   :managers
       to_many   :billing_managers
