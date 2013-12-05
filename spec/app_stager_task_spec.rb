@@ -497,14 +497,16 @@ module VCAP::CloudController
 
         context "when a specific buildpack is not requested" do
           it "includes a list of admin buildpacks as hashes containing its blobstore URI and key" do
-            request = staging_task.staging_request
+            Timecop.freeze do #download_uri have an expire_at
+              request = staging_task.staging_request
 
-            admin_buildpacks = request[:admin_buildpacks]
+              admin_buildpacks = request[:admin_buildpacks]
 
-            expect(admin_buildpacks).to have(3).items
-            expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
-            expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
-            expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("c key"), key: "c key")
+              expect(admin_buildpacks).to have(3).items
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("a key"), key: "a key")
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("c key"), key: "c key")
+            end
           end
         end
 
