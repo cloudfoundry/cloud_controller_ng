@@ -23,7 +23,11 @@ module VCAP::CloudController
     many_to_one :owning_organization, class: "VCAP::CloudController::Organization"
     one_to_many :routes
 
-    add_association_dependencies :routes => :destroy
+    add_association_dependencies routes: :destroy
+
+    export_attributes :name, :owning_organization_guid
+    import_attributes :name, :owning_organization_guid
+    strip_attributes  :name
 
     def validate
       validates_presence :name

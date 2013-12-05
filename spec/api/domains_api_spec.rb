@@ -2,13 +2,14 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "Domains", :type => :api do
-  before do
-    pending "Splitting domain into private and shared domains. This will remain for the deprecated endpoint."
-  end
-
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   let(:guid) { VCAP::CloudController::Domain.first.guid }
-  let!(:domains) { 3.times { VCAP::CloudController::Domain.make } }
+  let!(:domains) do
+    2.times do
+      VCAP::CloudController::PrivateDomain.make
+      VCAP::CloudController::SharedDomain.make
+    end
+  end
 
   authenticated_request
 

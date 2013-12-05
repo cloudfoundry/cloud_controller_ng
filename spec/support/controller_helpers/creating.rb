@@ -73,7 +73,7 @@ module ControllerHelpers
 
           it "should have created the object pointed to in the location header" do
             obj_id = last_response.location.split("/").last
-            obj = opts[:model].find(:guid => obj_id)
+            obj = opts[:model].find(guid: obj_id)
             non_synthetic_creation_opts.keys.each do |k|
               obj.send(k).should == creation_opts[k]
             end
