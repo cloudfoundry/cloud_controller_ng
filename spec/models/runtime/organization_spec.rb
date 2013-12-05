@@ -115,7 +115,6 @@ module VCAP::CloudController
           ds = AppStartEvent.filter(
             :organization_guid => org.guid,
           )
-          # FIXME: don't skip validation
           org.billing_enabled = true
           org.save(:validate => false)
           ds.count.should == 4
@@ -125,7 +124,6 @@ module VCAP::CloudController
           ds = ServiceCreateEvent.filter(
             :organization_guid => org.guid,
           )
-          # FIXME: don't skip validation
           org.billing_enabled = true
           org.save(:validate => false)
           ds.count.should == 4

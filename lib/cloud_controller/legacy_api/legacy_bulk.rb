@@ -9,7 +9,6 @@ module VCAP::CloudController
         {
           "id"              => String,
           "instances"       => Integer,
-          # FIXME: find the enum for this
           "state"           => String,
           "memory"          => Integer,
           "package_state"   => String,
@@ -70,7 +69,6 @@ module VCAP::CloudController
 
     def bulk_apps
       batch_size = Integer(params.fetch("batch_size"))
-      # TODO: use json message here with a default for id
       bulk_token = Yajl::Parser.parse(params.fetch("bulk_token"))
       last_id = Integer(bulk_token["id"] || 0)
       id_for_next_token = nil

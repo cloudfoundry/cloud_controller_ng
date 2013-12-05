@@ -27,9 +27,6 @@ module VCAP::CloudController
     end
 
     def service_info
-      # TODO: narrow down the subset to expose to unauthenticated users
-      # raise NotAuthenticated unless user
-
       legacy_resp = {}
       Service.filter(:provider => "core").each do |svc|
         next unless svc.service_plans.any? { |plan| plan.name == "100" }
@@ -53,7 +50,6 @@ module VCAP::CloudController
       end
     end
 
-    # TODO: what are the semantics of this?
     def account_usage
       return {} unless default_space
 

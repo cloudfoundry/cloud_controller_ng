@@ -61,7 +61,6 @@ module VCAP::CloudController
 
         :cc_partition => String,
 
-        # TODO: use new defaults to set these defaults
         optional(:default_account_capacity) => {
           :memory   => Fixnum,   #:default => 2048,
           :app_uris => Fixnum, #:default => 4,
@@ -69,7 +68,6 @@ module VCAP::CloudController
           :apps     => Fixnum, #:default => 20
         },
 
-        # TODO: use new defaults to set these defaults
         optional(:admin_account_capacity) => {
           :memory   => Fixnum,   #:default => 2048,
           :app_uris => Fixnum, #:default => 4,

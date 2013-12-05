@@ -113,9 +113,7 @@ module ControllerHelpers
         opts[:unique_attributes].each do |new_attr|
           new_attr = new_attr.to_s
           context "with duplicate attributes other than #{new_attr}" do
-            # FIXME: this is a cut/paste from the model spec, refactor
             let(:orig_obj) do
-              # FIXME: this name isn't right now that it is shared with PUT
               orig_obj = opts[:model].create do |instance|
                 instance.set_all(creation_opts)
               end
@@ -137,7 +135,6 @@ module ControllerHelpers
               # the value from that
               val = nil
               if create_attribute
-                # FIXME: do we use this?  do we use it in the model specs
                 val = create_attribute.call(new_attr, orig_obj)
               end
 

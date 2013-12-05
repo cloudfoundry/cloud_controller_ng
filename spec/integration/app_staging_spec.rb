@@ -3,10 +3,6 @@ require "securerandom"
 
 describe "Staging an app", type: :integration do
   before do
-    # FIXME: Must be a before :each since we are not going through the full staging lifecycle. Currently CC has a bug which
-    # makes it blocking when it does not receive the correct message back from the Stager. Furthermore the messages
-    # are bidirectional which is wrong. Good place to start writing a better API for the Stager.
-
     start_nats(debug: false)
     start_cc(debug: false, config: "spec/fixtures/config/port_8181_config.yml")
     @tmpdir = Dir.mktmpdir

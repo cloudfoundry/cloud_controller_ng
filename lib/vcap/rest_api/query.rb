@@ -9,8 +9,6 @@ module VCAP::RestAPI
   # about the model.  We also want to query against a potentially already
   # filtered dataset.  Since datasets aren't bound to a particular model,
   # we need to pass both pieces of infomration.
-  #
-  # TODO: * at the end of strings
   class Query
 
     # Create a new Query.

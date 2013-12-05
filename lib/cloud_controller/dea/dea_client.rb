@@ -282,7 +282,6 @@ module VCAP::CloudController
       end
 
       def start_app_message(app)
-        # TODO: add debug support
         {
           droplet: app.guid,
           name: app.name,

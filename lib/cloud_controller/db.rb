@@ -35,7 +35,6 @@ module VCAP::CloudController
       db.sql_log_level = opts[:log_level] || :debug2
 
       if db.database_type == :mysql
-        # TODO: should be utf8_unicode_ci till story https://www.pivotaltracker.com/story/show/51039807
         Sequel::MySQL.default_collate = "utf8_bin"
       end
 
@@ -158,7 +157,7 @@ end
 # I wanted to add an index to all the Timestamps so that
 # we can enumerate by :created_at.
 #
-# TODO: decide on a better way of mixing this in to whatever
+# decide on a better way of mixing this in to whatever
 # context Sequel.migration is running in so that we can call
 # the migration methods.
 module VCAP

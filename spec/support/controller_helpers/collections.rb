@@ -252,10 +252,6 @@ module ControllerHelpers
                 do_write(:put, [], 201, [])
                 obj.send(get_method).should_not include(@child1)
               end
-
-              # FIXME: add an error id in the middle of an array test
-
-              # FIXME: other bad json input tests
             end
           end
         end

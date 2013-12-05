@@ -583,8 +583,6 @@ module VCAP::CloudController
         it "stages the app asynchronously" do
           received_app = nil
 
-          # TODO: figure out a better way to test this;
-          # hide better from controller
           AppObserver.should_receive(:stage_app) do |app|
             received_app = app
             AppStagerTask::Response.new({})

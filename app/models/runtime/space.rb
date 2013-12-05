@@ -56,7 +56,6 @@ module VCAP::CloudController
     end
 
     def validate_developer(user)
-      # TODO: unlike most other validations, is *NOT* being enforced by DB
       raise InvalidDeveloperRelation.new(user.guid) unless in_organization?(user)
     end
 

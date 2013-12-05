@@ -48,9 +48,6 @@ module ControllerHelpers
       headers["HTTP_AUTHORIZATION"] = "bearer #{user_token}"
     end
 
-    # FIXME: what is the story here?
-    # headers["HTTP_PROXY_USER"]    = proxy_user.id if proxy_user
-
     headers["HTTP_X_FORWARDED_PROTO"] = "https" if opts[:https]
     headers
   end

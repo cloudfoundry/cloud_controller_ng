@@ -24,7 +24,6 @@ module VCAP::CloudController
     end
 
     before do
-      # TODO: Remove this double after broker api calls are made asynchronous
       client = double('broker client', unbind: nil, deprovision: nil)
       Service.any_instance.stub(:client).and_return(client)
       VCAP::CloudController::Seeds.create_seed_stacks(config)
@@ -1381,9 +1380,6 @@ module VCAP::CloudController
     end
 
     describe ".configure" do
-      # TODO: this is affecting global state and may pollute other tests.
-      #
-      # don't know a good way to test this otherwise.
       before do
         described_class.unstub(:custom_buildpacks_enabled?)
         described_class.configure(false)

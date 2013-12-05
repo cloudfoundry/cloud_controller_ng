@@ -85,7 +85,6 @@ module Sequel::Plugins::VcapSerialization
     # parameter.  The resulting data set is sorted by :id unless an order
     # is set via default_order_by.
     def to_json(opts = {})
-      # TODO: pagination
       order_attr = @default_order_by || :id
       elements = order_by(Sequel.asc(order_attr)).map { |e| e.to_hash(opts) }
       Yajl::Encoder.encode(elements)

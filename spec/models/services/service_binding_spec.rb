@@ -3,7 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceBinding, :services, type: :model do
     before do
-      # TODO: Remove this double after broker api calls are made asynchronous
       client = double('broker client', unbind: nil, deprovision: nil)
       Service.any_instance.stub(:client).and_return(client)
     end

@@ -22,8 +22,6 @@ describe VCAP::CloudController::Controller do
       described_class.new(config, token_decoder)
     end
 
-    # TODO: Remove /hello/sync route from cloud_controller.rb,
-    # and use something more appropriate here.
     def make_request
       get "/hello/sync", {}, {"HTTP_AUTHORIZATION" => "bearer token"}
     end

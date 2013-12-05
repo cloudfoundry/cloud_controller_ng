@@ -61,7 +61,6 @@ module Sequel::Plugins::VcapRelations
         # like it is for a one_to_many and nds up throwing a db exception,
         # so lets squash the add
         if other.kind_of?(Integer)
-          # FIXME: this is inefficient as it has to pull all ids
           super(other) unless send(ids_attr).include? other
         else
           super(other) unless send(name).include? other
@@ -106,7 +105,6 @@ module Sequel::Plugins::VcapRelations
       define_method("#{guid_attr}=") do |val|
         ar = self.class.association_reflection(name)
         other = ar.associated_class[:guid => val]
-        # FIXME: better error reporting
         return if (other.nil? && !val.nil?)
         send("#{name}=", other)
       end
@@ -132,7 +130,6 @@ module Sequel::Plugins::VcapRelations
       define_method("add_#{singular_name}_by_guid") do |guid|
         ar = self.class.association_reflection(name)
         other = ar.associated_class[:guid => guid]
-        # FIXME: better error reporting
         return if other.nil?
         if pk
           send("add_#{singular_name}", other)
@@ -163,14 +160,12 @@ module Sequel::Plugins::VcapRelations
       define_method("remove_#{singular_name}_by_guid") do |guid|
         ar = self.class.association_reflection(name)
         other = ar.associated_class[:guid => guid]
-        # FIXME: better error reporting
         return if other.nil?
         send("remove_#{singular_name}", other)
       end
 
       define_method("remove_#{singular_name}") do |other|
         if other.kind_of?(Integer)
-          # FIXME: this is inefficient as it has to pull all ids
           super(other) if send(ids_attr).include? other
         else
           super(other) if send(name).include? other

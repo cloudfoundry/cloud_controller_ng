@@ -22,8 +22,6 @@ info:
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
   api_version: "2.0.0"
-# TODO: put back once json schema is sorted out
-# allow_debug: false
 
 nginx:
   use_nginx: false

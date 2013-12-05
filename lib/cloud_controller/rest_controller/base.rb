@@ -55,7 +55,6 @@ module VCAP::CloudController::RestController
     # @return [Hash] the parsed parameter hash
     def parse_params(params)
       logger.debug "parse_params: #{params}"
-      # FIXME: replace with URI parse on the query string.
       # Sinatra squshes duplicate query parms into a single entry rather
       # than an array (which we might have for q)
       res = {}

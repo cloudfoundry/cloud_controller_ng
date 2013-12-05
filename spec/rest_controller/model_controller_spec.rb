@@ -372,7 +372,6 @@ module VCAP::CloudController
           controller_class,
           filtered_dataset,
           fake_class_path,
-          # FIXME: we actually care about params...
           anything,
         )
 

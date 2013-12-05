@@ -28,7 +28,6 @@ module VCAP::CloudController
 
       validate_logging_service_binding if service_instance.respond_to?(:service_plan)
 
-      # TODO: make this a standard validation
       validate_app_and_service_instance(app, service_instance)
     end
 
@@ -55,7 +54,6 @@ module VCAP::CloudController
         save
       rescue => e
         begin
-          # TODO: When we do async requests, this should go into a retry queue
           client.unbind(self)
         rescue => unbind_e
           logger.error "Unable to unbind #{self}: #{unbind_e}"
@@ -83,7 +81,6 @@ module VCAP::CloudController
     end
 
     def before_destroy
-      # TODO: transactionally move this into a queue
       client.unbind(self)
 
       mark_app_for_restaging

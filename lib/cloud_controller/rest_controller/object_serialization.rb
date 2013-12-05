@@ -1,12 +1,6 @@
 module VCAP::CloudController::RestController
   # Serialize objects according in the format required by the vcap
   # rest api.
-  #
-  # TODO: migrate this to be like messages and routes in that
-  # it is included and mixed in rather than having the controller
-  # passed into it?
-  #
-  # FIXME: add authz checks to attribures and inlined relations
 
   module ObjectSerialization
     PRETTY_DEFAULT = true

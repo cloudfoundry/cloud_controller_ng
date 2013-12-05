@@ -123,8 +123,6 @@ module VCAP::CloudController
         :info_url => svc.info_url,
         :plans => svc.service_plans.map(&:name),
         :supported_versions => [svc.version],
-        # TODO: this should really be optional in the API but VMC expects it
-        # now, therefore we're stubbing it here before fixing VMC
         :version_aliases => {},
         :active => true
       }

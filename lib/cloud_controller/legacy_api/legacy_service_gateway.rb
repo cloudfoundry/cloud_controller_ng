@@ -224,7 +224,6 @@ module VCAP::CloudController
         )
         binding.save_changes
       else
-        # TODO: shall we add a HandleNotFound?
         raise ServiceInstanceNotFound, "label=#{label} provider=#{provider} id=#{id}"
       end
     end
