@@ -192,5 +192,27 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "DELETE /v2/domains/:id" do
+      let(:shared_domain) { SharedDomain.make }
+      context "when there are routes using the domain" do
+        let!(:route) { Route.make(domain: shared_domain) }
+
+        it "should dot delete the route" do
+          expect {
+            delete "/v2/domains/#{shared_domain.guid}", {}, admin_headers
+          }.to_not change {
+            SharedDomain.find(guid: shared_domain.guid)
+          }
+        end
+
+        it "should return an error" do
+          delete "/v2/domains/#{shared_domain.guid}", {}, admin_headers
+          expect(last_response.status).to eq(400)
+          expect(decoded_response["code"]).to equal(10006)
+          expect(decoded_response["description"]).to match /delete the routes associations for your domains/i
+        end
+      end
+    end
   end
 end

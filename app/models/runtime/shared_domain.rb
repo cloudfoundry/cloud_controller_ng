@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     default_order_by  :name
 
+    add_association_dependencies routes: :destroy
+
     export_attributes :name
     import_attributes :name
     strip_attributes  :name
