@@ -197,8 +197,10 @@ module VCAP::CloudController
           # There used to be a relationship between spaces and domains
           # This no longer exists; spaces just have permission for all org domains
           # but we need the endpoint for bc reasons.
-          expect{
-            space.remove_domain(domain)
+          expect {
+            expect {
+              space.remove_domain(domain)
+            }.not_to raise_error
           }.not_to change {
             space.organization.private_domains
           }
@@ -212,7 +214,7 @@ module VCAP::CloudController
           # There used to be a relationship between spaces and domains
           # This no longer exists; spaces just have permission for all org domains
           # but we need the endpoint for bc reasons.
-          expect{
+          expect {
             space.remove_all_domains
           }.not_to change {
             space.organization.private_domains
@@ -240,7 +242,7 @@ module VCAP::CloudController
           # There used to be a relationship between spaces and domains
           # This no longer exists; spaces just have permission for all org domains
           # but we need the endpoint for bc reasons.
-          expect{
+          expect {
             space.add_domain(domain_to_add)
           }.not_to change {
             space.organization.private_domains

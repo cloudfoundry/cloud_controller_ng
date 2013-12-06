@@ -115,20 +115,6 @@ module VCAP::CloudController
             last_response.status.should == 403
           end
         end
-
-        describe "DELETE /v2/organizations/:id/domains/:system_domain" do
-          it "should be allowed for the org admin" do
-            delete "/v2/organizations/#{@org_a.guid}/domains/#{@shared_domain.guid}", {},
-                   headers_for(@org_a_manager)
-            last_response.status.should == 201
-          end
-
-          it "should not be allowed for an org member" do
-            delete "/v2/organizations/#{@org_a.guid}/domains/#{@shared_domain.guid}", {},
-                   headers_for(@org_a_member)
-            last_response.status.should == 403
-          end
-        end
       end
     end
 
