@@ -41,7 +41,7 @@ describe Blobstore do
     end
 
     it "is not local" do
-      expect(blobstore).to_not be_local
+      expect(cdn_blobstore).to_not be_local
     end
 
     it "returns a url to the cdn" do
