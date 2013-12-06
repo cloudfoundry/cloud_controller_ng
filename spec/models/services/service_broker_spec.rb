@@ -368,47 +368,6 @@ module VCAP::CloudController
         end
 
       end
-
-      context 'when the ids are integers and not strings' do
-        #let(:service_id_integer) { Sham.integer }
-        #let(:plan_id_integer) { Sham.integer }
-        let(:catalog) {
-          {"services" =>
-            [
-              {
-                "id" => 1,
-                "name" => service_name,
-                "description" => service_description,
-                "bindable" => true,
-                "plans"=>
-                [
-                  {
-                    "id"  => "1",
-                    "name" => plan_name,
-                    "description"=> plan_description
-                  }
-                ]
-              }
-            ]
-          }
-        }
-
-        it 'should work as normal' do
-          expect {
-            broker.load_catalog
-          }.to change(ServicePlan, :count).by(1)
-
-          plan = ServicePlan.last
-          #expect(plan.service).to eq(Service.last)
-          #expect(plan.name).to eq(plan_name)
-          #expect(plan.description).to eq(plan_description)
-          expect(plan.id).to eq(1)
-
-          service = Service.last
-          expect(service.id).to eq(1)
-        end
-
-      end
     end
 
     describe '#client' do
