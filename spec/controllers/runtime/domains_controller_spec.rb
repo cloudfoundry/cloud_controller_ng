@@ -138,6 +138,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq 200
           expect(decoded_response["entity"]["owning_organization_guid"]).to eq organization.guid
           expect(decoded_response["entity"]["owning_organization_url"]).to eq "/v2/organizations/#{organization.guid}"
+          expect(last_response).to be_a_dreprecated_response
         end
       end
 
@@ -153,6 +154,7 @@ module VCAP::CloudController
           json["entity"]["owning_organization_guid"].should be_nil
 
           json["entity"].should_not include("owning_organization_url")
+          expect(last_response).to be_a_dreprecated_response
         end
       end
     end
@@ -175,12 +177,14 @@ module VCAP::CloudController
           expect(last_response.status).to eq 201
           expect(decoded_response["entity"]["name"]).to eq name
           expect(decoded_response["entity"]["owning_organization_guid"]).to eq organization.guid
+          expect(last_response).to be_a_dreprecated_response
         end
       end
     end
 
     describe "DELETE /v2/domains/:id" do
       let(:shared_domain) { SharedDomain.make }
+
       context "when there are routes using the domain" do
         let!(:route) { Route.make(domain: shared_domain) }
 
@@ -197,6 +201,13 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
           expect(decoded_response["code"]).to equal(10006)
           expect(decoded_response["description"]).to match /delete the routes associations for your domains/i
+        end
+      end
+
+      context "deprecation" do
+        it "has the correct deprecation header" do
+          delete "/v2/domains/#{shared_domain.guid}", {}, admin_headers
+          expect(last_response).to be_a_dreprecated_response
         end
       end
     end

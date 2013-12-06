@@ -218,6 +218,12 @@ module VCAP::CloudController::RestController
         end
       end
 
+      def deprecated_endpoint(path)
+        controller.after "#{path}*" do
+          headers["X-Cf-Warning"] = "Endpoint deprecated"
+        end
+      end
+
       def allow_unauthenticated_access(options={})
         if options[:only]
           @allow_unauthenticated_access_ops = Array(options[:only])

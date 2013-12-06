@@ -22,6 +22,7 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
+    deprecated_endpoint(path)
     define_messages
     define_routes
   end
