@@ -176,6 +176,35 @@ module VCAP::CloudController
 
     describe 'POST', '/v2/service_instance' do
       let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:plan) { ServicePlan.make(:service => service) }
+
+      context 'when provisioning without a service-auth-token' do
+        let(:service) { Service.make(:description => "blah blah foobar") }
+
+        before do
+          service.stub(:v2?) { false }
+        end
+
+        it 'should throw a 500 and give you an error message saying "Missing service auth token"' do
+          req = Yajl::Encoder.encode(
+            :name => 'foo',
+            :space_guid => space.guid,
+            :service_plan_guid => plan.guid
+          )
+          headers = json_headers(headers_for(developer))
+
+          expect(plan.service.service_auth_token).to eq(nil)
+
+          post "/v2/service_instances", req, headers
+
+          expect(last_response.status).to eq(500)
+        end
+      end
+    end
+
+    describe 'POST', '/v2/service_instance' do
+      let(:space) { Space.make }
       let(:plan) { ServicePlan.make }
       let(:developer) { make_developer_for_space(space) }
       let(:client) { double('client') }
