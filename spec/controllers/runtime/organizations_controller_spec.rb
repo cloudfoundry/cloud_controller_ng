@@ -187,13 +187,20 @@ module VCAP::CloudController
     end
 
     describe "Deprecated endpoints" do
-      describe "DELETE /v2/organizations/:id/domains/:shared_domain" do
-       let!(:domain) { SharedDomain.make }
+      let!(:domain) { SharedDomain.make }
+      describe "DELETE /v2/organizations/:guid/domains/:shared_domain" do
         it "should pretends that it deleted a domain" do
           expect{delete "/v2/organizations/#{org.guid}/domains/#{domain.guid}", {},
                         headers_for(@org_a_manager)}.not_to change{SharedDomain.count}
           last_response.status.should == 301
           expect(last_response.headers).to include("X-Cf-Warning" => "Endpoint removed")
+        end
+      end
+
+      describe "GET /v2/organizations/:guid/domains/:guid" do
+        it "should be deprecated" do
+          get "/v2/organizations/#{org.guid}/domains/#{domain.guid}"
+          expect(last_response).to be_a_deprecated_response
         end
       end
     end

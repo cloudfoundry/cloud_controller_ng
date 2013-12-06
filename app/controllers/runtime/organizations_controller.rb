@@ -19,6 +19,8 @@ module VCAP::CloudController
                     :manager_guid, :billing_manager_guid,
                     :auditor_guid, :status
 
+    deprecated_endpoint "#{path_guid}/domains/*"
+
     def self.translate_validation_exception(e, attributes)
       quota_def_errors = e.errors.on(:quota_definition_id)
       name_errors = e.errors.on(:name)
@@ -35,7 +37,7 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
-    delete "/v2/organizations/:organization_guid/domains/:domain_guid" do |*args|
+    delete "#{path_guid}/domains/:domain_guid" do |_|
       headers = {"X-Cf-Warning" => "Endpoint removed", "Location" => "/v2/private_domains/:domain_guid"}
       [HTTP::MOVED_PERMANENTLY, headers, "Use DELETE /v2/private_domains/:domain_guid"]
     end

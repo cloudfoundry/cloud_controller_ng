@@ -220,7 +220,7 @@ module VCAP::CloudController::RestController
 
       def deprecated_endpoint(path)
         controller.after "#{path}*" do
-          headers["X-Cf-Warning"] = "Endpoint deprecated"
+          headers["X-Cf-Warning"] ||= "Endpoint deprecated"
         end
       end
 

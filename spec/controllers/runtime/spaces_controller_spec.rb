@@ -393,8 +393,10 @@ module VCAP::CloudController
       end
     end
 
+    let(:organization_one) { Organization.make }
+    let(:space_one) { Space.make(organization: organization_one) }
+
     describe 'GET', '/v2/spaces/:guid/services' do
-      let(:organization_one) { Organization.make }
       let(:organization_two) { Organization.make }
       let(:space_one) { Space.make(organization: organization_one) }
       let(:space_two) { Space.make(organization: organization_two)}
@@ -519,6 +521,23 @@ module VCAP::CloudController
         expect(event.metadata["request"]).to eq("recursive" => false)
         expect(event.space_guid).to eq(space_guid)
         expect(event.organization_guid).to eq(organization_guid)
+      end
+    end
+
+    describe "Deprecated endpoints" do
+      let!(:domain) { SharedDomain.make }
+      describe "DELETE /v2/spaces/:guid/domains/:shared_domain" do
+        it "should pretends that it deleted a domain" do
+          delete "/v2/spaces/#{space_one.guid}/domains/#{domain.guid}"
+          expect(last_response).to be_a_deprecated_response
+        end
+      end
+
+      describe "GET /v2/organizations/:guid/domains/:guid" do
+        it "should be deprecated" do
+          get "/v2/spaces/#{space_one.guid}/domains/#{domain.guid}"
+          expect(last_response).to be_a_deprecated_response
+        end
       end
     end
   end

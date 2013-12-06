@@ -15,6 +15,8 @@ module VCAP::CloudController
 
     query_parameters :name, :organization_guid, :developer_guid, :app_guid
 
+    deprecated_endpoint "#{path_guid}/domains/*"
+
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:organization_id, :name])
       if name_errors && name_errors.include?(:unique)
@@ -76,7 +78,6 @@ module VCAP::CloudController
     end
 
     private
-
     def after_create(space)
       Event.record_space_create(space, SecurityContext.current_user, request_attrs)
     end

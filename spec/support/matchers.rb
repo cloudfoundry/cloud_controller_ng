@@ -6,7 +6,7 @@ RSpec::Matchers.define :be_a_guid do
   end
 end
 
-RSpec::Matchers.define :be_a_dreprecated_response do |_|
+RSpec::Matchers.define :be_a_deprecated_response do |_|
   match do |actual|
     actual.headers["X-Cf-Warning"] == "Endpoint deprecated"
   end
