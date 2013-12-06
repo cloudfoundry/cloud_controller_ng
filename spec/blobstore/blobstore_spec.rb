@@ -70,14 +70,7 @@ describe Blobstore do
     end
   end
 
-  subject(:blobstore) do
-    Blobstore.new({
-                      provider: "AWS",
-                      aws_access_key_id: 'fake_access_key_id',
-                      aws_secret_access_key: 'fake_secret_access_key',
-                  }, directory_key)
-  end
-
+  shared_examples "a blobstore" do
   context "common behaviors" do
     context "with existing files" do
       before do
@@ -172,7 +165,6 @@ describe Blobstore do
 
         it "returns the correct uri to fetch a blob directly from amazon" do
           expect(@uri.scheme).to eql "https"
-          expect(@uri.host).to eql "#{directory_key}.s3.amazonaws.com"
           expect(@uri.path).to eql "/ab/cd/abcdef"
         end
 
@@ -260,7 +252,57 @@ describe Blobstore do
         }.to_not raise_error
       end
     end
+  end
+  end
 
+  context "an S3 blobstore" do
+    let(:s3_blobstore_config) do
+      {                        
+        provider: "AWS",
+        aws_access_key_id: 'fake_access_key_id',
+        aws_secret_access_key: 'fake_secret_access_key',
+      }
+    end
+    
+    context "default region" do
+      subject(:blobstore) { Blobstore.new(s3_blobstore_config, directory_key) }
+      it_behaves_like "a blobstore"
+
+      describe "returns a download uri" do
+        context "when not local" do
+          before do
+            upload_tmpfile(blobstore)
+            @uri = URI.parse(blobstore.download_uri("abcdef"))
+          end
+
+          it "returns the correct uri to fetch a blob directly from amazon" do
+            expect(@uri.host).to eql "#{directory_key}.s3.amazonaws.com"
+          end
+        end
+      end
+    end
+
+    context "non-default region" do
+      let(:region) {"eu-west-1"}
+      subject(:blobstore) do 
+        Blobstore.new(s3_blobstore_config.merge('region'=>region), directory_key) 
+      end
+
+      it_behaves_like "a blobstore"
+
+      describe "returns a download uri" do
+        context "when not local" do
+          before do
+            upload_tmpfile(blobstore)
+            @uri = URI.parse(blobstore.download_uri("abcdef"))
+          end
+
+          it "returns the correct uri to fetch a blob directly from amazon" do
+            expect(@uri.host).to eql "#{directory_key}.s3-#{region}.amazonaws.com"
+          end
+        end
+      end
+    end
   end
 
   context "with root directory specified" do
