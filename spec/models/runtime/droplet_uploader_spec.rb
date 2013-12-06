@@ -10,25 +10,12 @@ describe CloudController::DropletUploader do
     CloudController::DependencyLocator.instance.droplet_blobstore
   end
 
-  def tmp_file_with_content(content = Sham.guid)
-    file = Tempfile.new("a_file")
-    file.write(content)
-    file.flush
-
-    @files ||= []
-    @files << file
-
-    file
-  end
-
-  after { @files.each { |file| file.unlink } if @files }
-
   subject { described_class.new(app, blobstore) }
 
   describe "#execute" do
     it "add a new app droplet" do
       old_size = app.droplets.size
-      expect { subject.upload(tmp_file_with_content.path) }.to change {
+      expect { subject.upload(temp_file_with_content.path) }.to change {
         app.droplet_hash
       }
       expect(app.droplets.size).to eql(old_size + 1)
@@ -38,7 +25,7 @@ describe CloudController::DropletUploader do
       blobstore.stub(:cp_to_blobstore).and_raise "Upload failed"
       expect {
         expect {
-          subject.upload(tmp_file_with_content.path)
+          subject.upload(temp_file_with_content.path)
         }.to raise_error
       }.not_to change {
         app.reload.droplets.size
@@ -50,7 +37,7 @@ describe CloudController::DropletUploader do
       expect(app.droplets).to have(1).items
 
       Timecop.travel(Date.today + 2) do
-        file = tmp_file_with_content("droplet version 2")
+        file = temp_file_with_content("droplet version 2")
         subject.upload(file.path)
         expect(app.reload.droplets).to have(droplets_to_keep).items
       end
@@ -60,7 +47,7 @@ describe CloudController::DropletUploader do
       expect(droplet_dest.read).to eql("droplet version 2")
 
       Timecop.travel(Date.today + 3) do
-        subject.upload(tmp_file_with_content("droplet version 3").path)
+        subject.upload(temp_file_with_content("droplet version 3").path)
         expect(app.reload.droplets).to have(droplets_to_keep).items
       end
 
@@ -75,13 +62,13 @@ describe CloudController::DropletUploader do
       old_droplet = app.droplets.first
 
       Timecop.travel(Date.today + 2) do
-        subject.upload(tmp_file_with_content("droplet version 2").path, droplets_to_keep)
+        subject.upload(temp_file_with_content("droplet version 2").path, droplets_to_keep)
         expect(app.reload.droplets).to have(droplets_to_keep).items
         expect(app.droplets).to_not include(old_droplet)
       end
 
       Timecop.travel(Date.today + 3) do
-        subject.upload(tmp_file_with_content("droplet version 3").path, droplets_to_keep)
+        subject.upload(temp_file_with_content("droplet version 3").path, droplets_to_keep)
         expect(app.reload.droplets).to have(droplets_to_keep).items
         droplet_dest = Tempfile.new("")
         app.current_droplet.download_to(droplet_dest.path)

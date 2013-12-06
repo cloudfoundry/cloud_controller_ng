@@ -17,17 +17,6 @@ module VCAP::CloudController
         and_return(blobstore)
     end
 
-    def tmp_file_with_content(content = Sham.guid)
-      file = Tempfile.new("a_file")
-      file.write(content)
-      file.flush
-      @files ||= []
-      @files << file
-      file
-    end
-
-    after { @files.each { |file| file.unlink } if @files }
-
     it "creates successfully with an app and a droplet hash" do
       app = AppFactory.make
       expect(Droplet.new(app: app, droplet_hash: Sham.guid).save).to be

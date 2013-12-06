@@ -534,6 +534,11 @@ RSpec.configure do |rspec_config|
   rspec_config.extend ModelCreation
   rspec_config.include ServicesHelpers, services: true
   rspec_config.include ModelHelpers
+  rspec_config.include TempFileCreator
+
+  rspec_config.after do |example|
+    example.delete_created_temp_files
+  end
 
   rspec_config.include ControllerHelpers, type: :controller, :example_group => {
     :file_path => rspec_config.escaped_path(%w[spec controllers])

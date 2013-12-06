@@ -125,14 +125,9 @@ module VCAP::CloudController
 
     describe "POST /staging/droplets/:guid/upload" do
       let(:file_content) { "droplet content" }
-      let(:tmpfile) do
-        f = Tempfile.new("droplet.tgz")
-        f.write(file_content)
-        f.flush
-      end
 
       let(:upload_req) do
-        {:upload => {:droplet => Rack::Test::UploadedFile.new(tmpfile)}}
+        {:upload => {:droplet => Rack::Test::UploadedFile.new(temp_file_with_content(file_content))}}
       end
 
       before do
@@ -333,10 +328,8 @@ module VCAP::CloudController
     end
 
     describe "POST /staging/buildpack_cache/:guid/upload" do
-      let(:tmpfile) { Tempfile.new("droplet.tgz") }
-
       let(:upload_req) do
-        {:upload => {:droplet => Rack::Test::UploadedFile.new(tmpfile)}}
+        { :upload => { :droplet => Rack::Test::UploadedFile.new(temp_file_with_content) } }
       end
 
       before do
