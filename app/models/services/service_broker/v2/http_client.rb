@@ -114,10 +114,12 @@ module VCAP::CloudController
         instance_id = params.fetch(:instance_id)
         plan_id = params.fetch(:plan_id)
         service_id = params.fetch(:service_id)
+        app_guid = params.fetch(:app_guid)
 
         put("/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
           plan_id: plan_id,
           service_id: service_id,
+          app_guid: app_guid
         })
       end
 
@@ -175,7 +177,7 @@ module VCAP::CloudController
           req.body = body
           req.content_type = 'application/json'
           req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
-          req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.0'
+          req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.1'
           req['Accept'] = 'application/json'
 
           logger.debug "Sending #{req_class} to #{uri}, BODY: #{req.body.inspect}, HEADERS: #{req.to_hash.inspect}"

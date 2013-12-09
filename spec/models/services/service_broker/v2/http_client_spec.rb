@@ -194,7 +194,7 @@ module VCAP::CloudController::ServiceBroker::V2
         )
 
         WebMock.should have_requested(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-                         with(:headers => {'X-Broker-Api-Version' => '2.0'})
+                         with(:headers => {'X-Broker-Api-Version' => '2.1'})
       end
     end
 
@@ -349,6 +349,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
     describe '#bind' do
       let(:binding_id) { Sham.guid }
+      let(:app_guid) { Sham.guid }
 
       let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}" }
 
@@ -366,10 +367,11 @@ module VCAP::CloudController::ServiceBroker::V2
           instance_id: instance_id,
           service_id: service_id,
           plan_id: plan_id,
+          app_guid: app_guid
         })
 
         expect(
-          @request.with(body: { service_id: service_id, plan_id: plan_id })
+          @request.with(body: { service_id: service_id, plan_id: plan_id, app_guid: app_guid })
         ).to have_been_made
       end
 
@@ -379,6 +381,7 @@ module VCAP::CloudController::ServiceBroker::V2
           instance_id: instance_id,
           service_id: service_id,
           plan_id: plan_id,
+          app_guid: app_guid
         })
 
         expect(response).to eq('credentials' => {'user' => 'admin', 'pass' => 'secret'})

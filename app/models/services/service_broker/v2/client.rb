@@ -28,7 +28,8 @@ module VCAP::CloudController
         binding_id: binding.guid,
         instance_id: binding.service_instance.guid,
         service_id: binding.service.broker_provided_id,
-        plan_id: binding.service_plan.broker_provided_id
+        plan_id: binding.service_plan.broker_provided_id,
+        app_guid: binding.app_guid
       )
 
       binding.credentials = response['credentials']

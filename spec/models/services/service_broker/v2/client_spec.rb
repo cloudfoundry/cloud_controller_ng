@@ -73,9 +73,11 @@ module VCAP::CloudController
 
     describe '#bind' do
       let(:instance) { ManagedServiceInstance.make }
+      let(:app) { App.make }
       let(:binding) do
         ServiceBinding.new(
-          service_instance: instance
+          service_instance: instance,
+          app: app
         )
       end
 
@@ -100,6 +102,7 @@ module VCAP::CloudController
           instance_id: instance.guid,
           service_id: instance.service.broker_provided_id,
           plan_id: instance.service_plan.broker_provided_id,
+          app_guid: binding.app_guid
         )
       end
 
