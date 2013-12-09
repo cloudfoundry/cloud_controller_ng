@@ -34,6 +34,11 @@ end
   }
 ]
 
+before '/v2/*' do
+  api_version = request.env['HTTP_X_BROKER_API_VERSION']
+  raise "Wrong broker api version.  Expected 2.1, got #{api_version}." unless api_version == '2.1'
+end
+
 get '/v2/catalog' do
   body = {
     'services' => [
@@ -70,10 +75,7 @@ put '/v2/service_instances/:service_instance_id' do
 end
 
 put '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
-  api_version = request.env['HTTP_X_BROKER_API_VERSION']
   json = JSON.parse(request.body.read)
-
-  raise "Wrong broker api version.  Expected 2.1, got #{api_version}." unless api_version == '2.1'
   raise 'APP_GUID required in bind request' unless json['app_guid']
 
   @@binding_count += 1
