@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource "Domains", :type => :api do
+resource "Domains (deprecated)", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   let(:guid) { VCAP::CloudController::Domain.first.guid }
   let!(:domains) do
