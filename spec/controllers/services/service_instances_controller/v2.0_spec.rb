@@ -109,15 +109,10 @@ describe 'Service Broker API integration', type: :controller do
       end
     end
 
-    describe 'Provisioning'
-    describe 'Binding'
-    describe 'Unbinding'
-    describe 'Unprovisioning'
-    describe 'Broker Errors'
-    describe 'Orphans'
-
-    describe 'a provision request' do
+    describe 'Provisioning' do
       let!(:service_broker) { VCAP::CloudController::ServiceBroker.make(broker_url: the_broker_url) }
+      let!(:auth_username) { service_broker.auth_username }
+      let!(:auth_password) { service_broker.auth_password }
       let!(:service) { VCAP::CloudController::Service.make(service_broker: service_broker, url: nil) }
       let!(:plan) { VCAP::CloudController::ServicePlan.make(service: service) }
 
@@ -145,73 +140,72 @@ describe 'Service Broker API integration', type: :controller do
         }
       end
 
-      it 'sends all required fields' do
-        correct_request_to_the_broker = stub_request(:put, %r(#{the_broker_domain}/v2/service_instances/#{guid_pattern})).
-          with(body: hash_including(request_from_cc_to_broker)).
-          to_return(status: 201, body: '{}')
+      describe 'service provision request' do
+        let(:body) { '' }
 
-        post('/v2/service_instances ',
-          request_to_cc.to_json,
-          json_headers(admin_headers)
-        )
+        before do
+          stub_request(:put, %r(#{the_broker_domain}/v2/service_instances/#{guid_pattern})).
+            to_return(status: 201, body: '{"haha": "hahahah"}')
 
-        expect(last_response.status).to eq(201)
-        expect(correct_request_to_the_broker).to have_been_made
-      end
+          post('/v2/service_instances ',
+            request_to_cc.to_json,
+            json_headers(admin_headers))
+        end
 
+        it 'sends all required fields' do
+          a_request(:put, %r(the.broker.com/v2/service_instances/#{guid_pattern})).
+            with(body: hash_including(request_from_cc_to_broker)).
+            should have_been_made
+        end
 
-      context 'when the dashboard_url is given' do
-        it ' returns a 201 to the user ' do
-          dashboard_url = "http://something.com"
-          the_request   = stub_request(:put, %r(#{the_broker_domain}/v2/service_instances/#{guid_pattern})).with do |req|
-            req.headers[api_header].should match(api_accepted_version)
-          end.
-            to_return(status: 201, body: %Q({"dashboard_url": #{dashboard_url.inspect}))
+        it 'uses the correct version header' do
+          request_has_version_header(:put, %r(http://#{auth_username}:#{auth_password}@the.broker.com/v2/service_instances/#{guid_pattern}))
+        end
 
-          post('/v2/service_instances',
-            { name: 'test-service', space_guid: the_space_guid, service_plan_guid: the_plan_guid }.to_json,
-            json_headers(admin_headers)
-          )
+        context 'when the response from broker does not contain a dashboard_url' do
+          let(:body) { '' }
 
-          expect(the_request).to have_been_made
-          expect(last_response.status).to eq(201)
-          expect(decoded_response['entity']['dashboard_url']).to eq(dashboard_url)
+          it 'handles the broker response' do
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'when the response from broker contains a dashboard_url' do
+          let(:body) { '"dashboard_url": "http://mongomgmthost/databases/9189kdfsk0vfnku?access_token=3hjdsnqadw487232lp"' }
+
+          it 'handles the broker response' do
+            expect(last_response.status).to eq(201)
+          end
         end
       end
 
-      context 'when the dashboard_url is not given' do
-        it 'returns a 201 to the user' do
-          the_request = stub_request(:put, %r(#{the_broker_domain}/v2/service_instances/#{guid_pattern})).
-            to_return(status: 201, body: '{}')
+      describe 'resource conflict during provision' do
+        context 'when the broker returns a 409 "conflict"' do
+          it 'does not create a new service instance' do
+            the_request = stub_request(:put, %r(#{the_broker_domain}/v2/service_instances/#{guid_pattern})).
+              to_return(status: 409, body: '{}')
 
-          post('/v2/service_instances',
-            { name: 'test-service', space_guid: the_space_guid, service_plan_guid: the_plan_guid }.to_json,
-            json_headers(admin_headers)
-          )
+            instance_list = get('/v2/service_instances')
 
-          expect(the_request).to have_been_made
-          expect(last_response.status).to eq(201)
-          expect(decoded_response['entity']['dashboard_url']).to be_nil
-        end
-      end
+            post('/v2/service_instances',
+              { name: 'test-service', space_guid: the_space_guid, service_plan_guid: the_plan_guid }.to_json,
+              json_headers(admin_headers)
+            )
 
-      context 'when the broker returns a 409 "conflict"' do
-        it 'does not create a new service instance' do
-          the_request = stub_request(:put, %r(#{the_broker_domain}/v2/service_instances/#{guid_pattern})).
-            to_return(status: 409, body: '{}')
+            expect(the_request).to have_been_made
 
-          instance_list = get('/v2/service_instances')
-
-          post('/v2/service_instances',
-            { name: 'test-service', space_guid: the_space_guid, service_plan_guid: the_plan_guid }.to_json,
-            json_headers(admin_headers)
-          )
-
-          expect(the_request).to have_been_made
-
-          expect(last_response.status).to eq(409)
+            expect(last_response.status).to eq(409)
+          end
         end
       end
     end
+
+    describe 'Binding'
+    describe 'Unbinding'
+    describe 'Unprovisioning'
+    describe 'Broker Errors'
+    describe 'Orphans'
+
+
   end
 end
