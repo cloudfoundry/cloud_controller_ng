@@ -252,6 +252,49 @@ describe Blobstore do
           }.to_not raise_error
         end
       end
+
+      describe "#dir" do
+        before do
+          @storage = Fog::Storage.new(s3_blobstore_config)
+          @connection = Fog::Storage.new(s3_blobstore_config)
+          @directories = double('directories')
+          
+          allow(@directories).to receive(:get) { 
+            @storage.directories.get(directory_key) 
+          }
+          allow(@directories).to receive(:create) {
+            @storage.directories.create(:key => directory_key, :public => false) 
+          }
+          allow(@connection).to receive(:directories) { @directories }
+          allow(blobstore).to receive(:connection) {@connection}
+        end
+
+        context "single blobstore instance" do
+          it "should create directory once" do
+            expect(@directories).to receive(:get).once
+            expect(@directories).to receive(:create).once
+            3.times do
+              blobstore.files
+            end
+          end
+        end
+
+        context "multiple blobstore instances" do
+          let(:otherBlobstore) {
+            otherBlobstore = Blobstore.new(s3_blobstore_config, directory_key)
+            allow(otherBlobstore).to receive(:connection) {@connection}
+            otherBlobstore
+          }
+
+          it "should create directory once" do
+            expect(@directories).to receive(:get).twice
+            expect(@directories).to receive(:create).once
+
+            blobstore.files
+            otherBlobstore.files
+          end
+        end
+      end  
     end
   end
 
@@ -284,8 +327,16 @@ describe Blobstore do
 
     context "non-default region" do
       let(:region) {"eu-west-1"}
-      subject(:blobstore) do 
-        Blobstore.new(s3_blobstore_config.merge('region'=>region), directory_key) 
+      let(:s3_blobstore_config) do
+        { 
+          provider: "AWS",
+          aws_access_key_id: 'fake_access_key_id',
+          aws_secret_access_key: 'fake_secret_access_key',
+          region: region
+        } 
+      end
+      subject(:blobstore) do
+        Blobstore.new(s3_blobstore_config, directory_key) 
       end
 
       it_behaves_like "a blobstore"
