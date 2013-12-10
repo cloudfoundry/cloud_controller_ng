@@ -8,55 +8,25 @@ describe 'Service Broker API integration', type: :controller do
 
     let!(:org) { VCAP::CloudController::Organization.make }
     let!(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:the_space_guid) { space.guid }
-    let(:the_org_guid) { org.guid }
+    let(:space_guid) { space.guid }
+    let(:org_guid) { org.guid }
 
     let(:api_header) { 'X-Broker-Api-Version' }
     let(:api_accepted_version) { /^2\.\d+$/ }
 
-    def request_has_version_header(method, url)
-      a_request(method, url).
-        with { |request| request.headers[api_header].should match(api_accepted_version) }.
-        should have_been_made
-    end
+    let(:broker_url) { 'broker-url' }
+    let(:broker_name) { 'broker-name' }
+    let(:broker_auth_username) { 'username' }
+    let(:broker_auth_password) { 'password' }
 
     describe 'Catalog Management' do
       describe 'fetching the catalog' do
-        let(:broker_id_for_service) { 'the-service-id' }
-        let(:broker_url) { 'broker-url' }
-        let(:broker_name) { 'broker-name' }
-        let(:broker_auth_username) { 'username' }
-        let(:broker_auth_password) { 'password' }
-        let(:request_url) { "http://#{broker_auth_username}:#{broker_auth_password}@#{broker_url}" }
         let(:username_pattern) { '[[:alnum:]-]+' }
         let(:password_pattern) { '[[:alnum:]-]+' }
 
-        before do
-          stub_request(:get, request_url + '/v2/catalog').to_return(
-            body:
-              {
-                services: [{
-                  id:          "service-guid-here",
-                  name:        "MySQL",
-                  description: "A MySQL-compatible relational database",
-                  bindable:    true,
-                  plans:       [{
-                    id:          "plan1-guid-here",
-                    name:        "small",
-                    description: "A small shared database with 100mb storage quota and 10 connections"
-                  }, {
-                    id:          "plan2-guid-here",
-                    name:        "large",
-                    description: "A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections"
-                  }]
-                }]
-              }.to_json)
-        end
-
         shared_examples 'a catalog fetch request' do
           it 'makes request to correct endpoint' do
-            a_request(:get, 'http://username:password@broker-url/v2/catalog').
-              should have_been_made
+            a_request(:get, 'http://username:password@broker-url/v2/catalog').should have_been_made
           end
 
           it 'sends basic auth info' do
@@ -70,6 +40,8 @@ describe 'Service Broker API integration', type: :controller do
 
         context 'when create-service-broker' do
           before do
+            stub_catalog_fetch
+
             post('/v2/service_brokers',
               { name: broker_name, broker_url: 'http://' + broker_url, auth_username: broker_auth_username, auth_password: broker_auth_password }.to_json,
               json_headers(admin_headers))
@@ -83,19 +55,18 @@ describe 'Service Broker API integration', type: :controller do
         end
 
         context 'when update-service-broker' do
-          let(:broker) do
-            VCAP::CloudController::ServiceBroker.make({
-              broker_url:    'http://' + broker_url,
-              auth_username: broker_auth_username,
-              auth_password: broker_auth_password
-            })
+          before(:all) do
+            @broker_guid, _ = setup_broker
           end
-          let(:broker_guid) { broker.guid }
+
+          after(:all) do
+            delete_broker(@broker_guid)
+          end
 
           before do
-            allow(VCAP::CloudController::ServiceBroker).to receive(:find).and_return(broker)
+            stub_catalog_fetch
 
-            put("/v2/service_brokers/#{broker_guid}",
+            put("/v2/service_brokers/#{@broker_guid}",
               {}.to_json,
               json_headers(admin_headers))
           end
@@ -110,60 +81,56 @@ describe 'Service Broker API integration', type: :controller do
     end
 
     describe 'Provisioning' do
-      let!(:service_broker) { VCAP::CloudController::ServiceBroker.make(broker_url: the_broker_url) }
-      let!(:auth_username) { service_broker.auth_username }
-      let!(:auth_password) { service_broker.auth_password }
-      let!(:service) { VCAP::CloudController::Service.make(service_broker: service_broker, url: nil) }
-      let!(:plan) { VCAP::CloudController::ServicePlan.make(service: service) }
-
-      let(:the_broker_url) { "http://#{the_broker_domain}" }
-      let(:the_broker_domain) { 'the.broker.com' }
-      let(:the_service_id) { service.broker_provided_id }
-      let(:the_plan_guid) { plan.guid }
-      let(:the_plan_id) { plan.broker_provided_id }
       let(:guid_pattern) { '[[:alnum:]-]+' }
-
-      let(:request_to_cc) do
+      let(:request_from_cc_to_broker) do
         {
-          name:              'test-service',
-          space_guid:        the_space_guid,
-          service_plan_guid: the_plan_guid
+          service_id:        'service-guid-here',
+          plan_id:           'plan1-guid-here',
+          organization_guid: org_guid,
+          space_guid:        space_guid,
         }
       end
 
-      let(:request_from_cc_to_broker) do
-        {
-          service_id:        the_service_id,
-          plan_id:           the_plan_id,
-          organization_guid: the_org_guid,
-          space_guid:        the_space_guid,
-        }
+      before(:all) do
+        @broker_guid, @plan_guid = setup_broker
+      end
+
+      after(:all) do
+        delete_broker(@broker_guid)
       end
 
       describe 'service provision request' do
-        let(:body) { '' }
+        let(:body) { '{}' }
 
         before do
-          stub_request(:put, %r(#{the_broker_domain}/v2/service_instances/#{guid_pattern})).
-            to_return(status: 201, body: '{"haha": "hahahah"}')
+          stub_request(:put, %r(#{broker_url}/v2/service_instances/#{guid_pattern})).
+            to_return(status: 201, body: "#{body}")
 
-          post('/v2/service_instances ',
-            request_to_cc.to_json,
+          post('/v2/service_instances',
+            {
+              name:              'test-service',
+              space_guid:        space_guid,
+              service_plan_guid: @plan_guid
+            }.to_json,
             json_headers(admin_headers))
         end
 
         it 'sends all required fields' do
-          a_request(:put, %r(the.broker.com/v2/service_instances/#{guid_pattern})).
+          a_request(:put, %r(broker-url/v2/service_instances/#{guid_pattern})).
             with(body: hash_including(request_from_cc_to_broker)).
             should have_been_made
         end
 
         it 'uses the correct version header' do
-          request_has_version_header(:put, %r(http://#{auth_username}:#{auth_password}@the.broker.com/v2/service_instances/#{guid_pattern}))
+          request_has_version_header(:put, %r(broker-url/v2/service_instances/#{guid_pattern}))
+        end
+
+        it 'sends request with basic auth' do
+          a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern})).should have_been_made
         end
 
         context 'when the response from broker does not contain a dashboard_url' do
-          let(:body) { '' }
+          let(:body) { '{}' }
 
           it 'handles the broker response' do
             expect(last_response.status).to eq(201)
@@ -171,7 +138,7 @@ describe 'Service Broker API integration', type: :controller do
         end
 
         context 'when the response from broker contains a dashboard_url' do
-          let(:body) { '"dashboard_url": "http://mongomgmthost/databases/9189kdfsk0vfnku?access_token=3hjdsnqadw487232lp"' }
+          let(:body) { '{"dashboard_url": "http://mongomgmthost/databases/9189kdfsk0vfnku?access_token=3hjdsnqadw487232lp"}' }
 
           it 'handles the broker response' do
             expect(last_response.status).to eq(201)
@@ -181,19 +148,21 @@ describe 'Service Broker API integration', type: :controller do
 
       describe 'resource conflict during provision' do
         context 'when the broker returns a 409 "conflict"' do
-          it 'does not create a new service instance' do
-            the_request = stub_request(:put, %r(#{the_broker_domain}/v2/service_instances/#{guid_pattern})).
+          before do
+            stub_request(:put, %r(http://#{broker_auth_username}:#{broker_auth_password}@#{broker_url}/v2/service_instances/#{guid_pattern})).
               to_return(status: 409, body: '{}')
 
-            instance_list = get('/v2/service_instances')
-
             post('/v2/service_instances',
-              { name: 'test-service', space_guid: the_space_guid, service_plan_guid: the_plan_guid }.to_json,
+              { name: 'test-service', space_guid: space_guid, service_plan_guid: @plan_guid }.to_json,
               json_headers(admin_headers)
             )
+          end
 
-            expect(the_request).to have_been_made
+          it 'makes the request to the broker' do
+            a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern})).should have_been_made
+          end
 
+          it 'responds to user with 409' do
             expect(last_response.status).to eq(409)
           end
         end
@@ -206,6 +175,65 @@ describe 'Service Broker API integration', type: :controller do
     describe 'Broker Errors'
     describe 'Orphans'
 
+    def request_has_version_header(method, url)
+      a_request(method, url).
+        with { |request| request.headers[api_header].should match(api_accepted_version) }.
+        should have_been_made
+    end
 
+    def stub_catalog_fetch
+      stub_request(:get, 'http://username:password@broker-url/v2/catalog').to_return(
+        status: 200,
+        body:
+                {
+                  services: [{
+                    id:          "service-guid-here",
+                    name:        "MySQL",
+                    description: "A MySQL-compatible relational database",
+                    bindable:    true,
+                    plans:       [{
+                      id:          "plan1-guid-here",
+                      name:        "small",
+                      description: "A small shared database with 100mb storage quota and 10 connections"
+                    }, {
+                      id:          "plan2-guid-here",
+                      name:        "large",
+                      description: "A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections"
+                    }]
+                  }]
+                }.to_json)
+    end
+
+    def setup_broker
+      stub_catalog_fetch
+
+      post('/v2/service_brokers',
+        { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
+        json_headers(admin_headers))
+      response = JSON.parse(last_response.body)
+      broker_guid = response['metadata']['guid']
+
+      get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+      response = JSON.parse(last_response.body)
+      small_plan_guid = response['resources'].first['entity']['service_plans'].find {|plan| plan['entity']['name']=='small'}['metadata']['guid']
+
+      make_all_plans_public
+
+      WebMock.reset!
+
+      return [broker_guid, small_plan_guid]
+    end
+
+    def make_all_plans_public
+      response = get('/v2/service_plans', '{}', json_headers(admin_headers))
+      service_plan_guids = JSON.parse(response.body).fetch('resources').map {|plan| plan.fetch('metadata').fetch('guid')}
+      service_plan_guids.each do |service_plan_guid|
+        put("/v2/service_plans/#{service_plan_guid}", JSON.dump(public: true), json_headers(admin_headers))
+      end
+    end
+
+    def delete_broker(broker_guid)
+      delete("/v2/service_brokers/#{broker_guid}", '{}', json_headers(admin_headers))
+    end
   end
 end
