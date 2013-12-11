@@ -68,7 +68,7 @@ module VCAP::CloudController
       if v2?
         service_broker.client
       else
-        raise MissingServiceAuthToken, "Missing Service Auth Token for service: #{provider}" if(service_auth_token.nil?)
+        raise MissingServiceAuthToken, "Missing Service Auth Token for service: #{label}" if(service_auth_token.nil?)
 
         @v1_client ||= ServiceBroker::V1::Client.new(
           url: url,
