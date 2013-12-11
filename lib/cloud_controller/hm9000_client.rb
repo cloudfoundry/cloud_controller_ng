@@ -60,7 +60,7 @@ module VCAP::CloudController
       response = make_request(app)
 
       if !response
-        return 0
+        return []
       end
 
       running_indices = Set.new
