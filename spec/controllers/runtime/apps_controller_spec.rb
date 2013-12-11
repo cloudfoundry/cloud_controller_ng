@@ -79,6 +79,19 @@ module VCAP::CloudController
         end
       end
 
+      context "when default memory is configured" do
+        let (:default_memory) { 200 }
+
+        before do
+          config_override({ :default_app_memory => default_memory })
+        end
+
+        it "uses the configured default when no memory is specified" do
+          create_app
+          decoded_response["entity"]["memory"].should == default_memory
+        end
+      end
+
       context "when instances is less than 0" do
         before do
           initial_hash[:instances] = -1

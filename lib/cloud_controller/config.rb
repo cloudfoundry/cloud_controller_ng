@@ -19,6 +19,7 @@ module VCAP::CloudController
         :system_domain => String,
         :system_domain_organization => enum(String, NilClass),
         :app_domains => [ String ],
+        :default_app_memory => Fixnum,
 
         optional(:allow_debug) => bool,
 

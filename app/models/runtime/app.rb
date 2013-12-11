@@ -159,6 +159,7 @@ module VCAP::CloudController
       super
 
       self.stack ||= Stack.default
+      self.memory ||= Config.config[:default_app_memory]
 
       set_new_version if version_needs_to_be_updated?
 
@@ -509,7 +510,7 @@ module VCAP::CloudController
     end
 
     def requested_memory
-      default_memory = db_schema[:memory][:default].to_i
+      default_memory = VCAP::CloudController::Config.config[:default_app_memory]
       memory ? memory : default_memory
     end
 

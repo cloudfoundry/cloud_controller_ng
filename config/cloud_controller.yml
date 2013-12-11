@@ -18,6 +18,8 @@ app_domains:
   - customer-app-domain1.com
   - customer-app-domain2.com
 
+default_app_memory: 1024 #mb
+
 info:
   name: "vcap"
   build: "2222"

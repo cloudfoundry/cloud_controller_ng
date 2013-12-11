@@ -17,6 +17,8 @@ app_domains:
   - customer-app-domain1.com
   - customer-app-domain2.com
 
+default_app_memory: 1024 #mb
+
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
