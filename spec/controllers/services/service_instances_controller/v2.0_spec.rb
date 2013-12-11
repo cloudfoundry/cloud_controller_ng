@@ -265,15 +265,135 @@ describe 'Service Broker API integration', type: :controller do
         context 'when broker omits the - hash from its response' do
           let(:broker_response_body) { {}.to_json }
 
-          it 'responds to user with 509' do
+          it 'responds to user with 201' do
             expect(last_response.status).to eq(201)
           end
         end
       end
     end
 
-    describe 'Unbinding' 
-    describe 'Unprovisioning'
+    describe 'Unbinding' do
+      let(:binding_id_pattern) { '[[:alnum:]-]+' }
+      let(:broker_response_status) { 200 }
+      let(:broker_response_body) do
+       {}.to_json
+      end
+      let(:application) { VCAP::CloudController::AppFactory.make(space: space) }
+      let(:app_guid) { application.guid }
+
+      let(:broker_guid) { broker_info[0]}
+      let(:plan_guid) { broker_info[1]}
+      let(:broker_info) { setup_broker}
+
+      after(:all) do
+        delete_broker(broker_guid)
+      end
+
+      describe 'service unbinding request' do
+
+        before do
+          @service_instance_guid = provision_service(plan_guid, space_guid)
+          @binding_id = bind_service(@service_instance_guid)
+
+          stub_request(:delete, %r(/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id})).
+            to_return(status: broker_response_status, body: {}.to_json)
+
+          delete("v2/service_bindings/#{@binding_id}",
+            {}.to_json,
+            json_headers(admin_headers)
+          )
+        end
+
+        it 'sends all required fields' do
+          a_request(:delete, %r(broker-url/v2/service_instances/#{@service_instance_guid}/service_bindings/#{binding_id_pattern}\?plan_id=plan1-guid-here&service_id=service-guid-here)).
+            should have_been_made
+        end
+
+        context 'broker returns a 200 response' do
+          let(:broker_response_status) { 200 }
+
+          it 'returns a 204 response to user' do
+            expect(last_response.status).to eq(204)
+          end
+        end
+
+        context 'broker returns a 410 response' do
+          let(:broker_response_status) { 410 }
+
+          it 'returns a 204 response to user' do
+            expect(last_response.status).to eq(204)
+          end
+        end
+
+        context 'broker returns neither a 200 nor 410 response' do
+          let(:broker_response_status) { 411 }
+
+          # TODO: Should we check that CCDB still retains the instance?
+          it 'returns a 500 response to user' do
+            expect(last_response.status).to eq(500)
+          end
+        end
+      end
+    end
+
+    describe 'Unprovisioning' do
+      let(:broker_response_status) { 200 }
+      let(:broker_response_body) do
+        {}.to_json
+      end
+
+      let(:broker_guid) { broker_info[0] }
+      let(:plan_guid) { broker_info[1] }
+      let(:broker_info) { setup_broker }
+
+      after(:all) do
+        delete_broker(broker_guid)
+      end
+
+      describe 'service unprovision request' do
+        before do
+          @service_instance_guid = provision_service(plan_guid, space_guid)
+
+          stub_request(:delete, %r(/v2/service_instances/#{@service_instance_guid})).
+            to_return(status: broker_response_status, body: broker_response_body)
+
+          delete("v2/service_instances/#{@service_instance_guid}",
+            {}.to_json,
+            json_headers(admin_headers)
+          )
+        end
+
+        it 'sends all required fields' do
+          a_request(:delete, %r(broker-url/v2/service_instances/#{@service_instance_guid}\?plan_id=plan1-guid-here&service_id=service-guid-here)).
+            should have_been_made
+        end
+
+        context 'broker returns a 200 response' do
+          let(:broker_response_status) { 200 }
+
+          it 'returns a 204 response to user' do
+            expect(last_response.status).to eq(204)
+          end
+        end
+
+        context 'broker returns a 410 response' do
+          let(:broker_response_status) { 410 }
+
+          it 'returns a 204 response to user' do
+            expect(last_response.status).to eq(204)
+          end
+        end
+
+        context 'broker returns neither a 200 nor 410 response' do
+          let(:broker_response_status) { 411 }
+
+          it 'returns a 500 response to user' do
+            expect(last_response.status).to eq(500)
+          end
+        end
+      end
+    end
+
     describe 'Broker Errors'
     describe 'Orphans'
 
@@ -356,6 +476,20 @@ describe 'Service Broker API integration', type: :controller do
       response = JSON.parse(last_response.body)
       service_instance_guid = response['metadata']['guid']
       service_instance_guid
+    end
+
+    def bind_service(service_instance_guid)
+      broker_response_status = 201
+      binding_id_pattern = '[[:alnum:]-]+'
+
+      stub_request(:put, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding_id_pattern})).
+        to_return(status: broker_response_status, body: {}.to_json)
+
+      post('/v2/service_bindings',
+        { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
+        json_headers(admin_headers))
+
+      JSON.parse(last_response.body)["metadata"]["guid"]
     end
   end
 end
