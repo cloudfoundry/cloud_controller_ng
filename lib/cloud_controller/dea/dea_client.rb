@@ -167,6 +167,7 @@ module VCAP::CloudController
         if dea_id
           dea_publish_start(dea_id, message)
           dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
+          dea_pool.reserve_app_memory(dea_id, app.memory)
         else
           logger.error "dea-client.no-resources-available", message: message
         end

@@ -33,6 +33,7 @@ module VCAP::CloudController
       @app = app
       @stager_pool = stager_pool
       @blobstore_url_generator = blobstore_url_generator
+      @dea_pool = DeaClient.dea_pool
     end
 
     def task_id
@@ -58,6 +59,8 @@ module VCAP::CloudController
       @message_bus.publish("staging.stop", :app_id => @app.guid)
 
       @completion_callback = completion_callback
+
+      @dea_pool.reserve_app_memory(@stager_id, @app.memory)
 
       logger.info("staging.begin", :app_guid => @app.guid)
       staging_result = EM.schedule_sync do |promise|
@@ -190,7 +193,7 @@ module VCAP::CloudController
 
       @app.update(detected_buildpack: stager_response.detected_buildpack)
 
-      DeaClient.dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
+      @dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
 
       @completion_callback.call(:started_instances => instance_was_started_by_dea ? 1 : 0) if @completion_callback
     end

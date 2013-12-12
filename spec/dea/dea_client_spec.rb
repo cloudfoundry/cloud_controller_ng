@@ -103,6 +103,7 @@ module VCAP::CloudController
 
         dea_pool.should_receive(:find_dea).twice.and_return("dea_123")
         dea_pool.should_receive(:mark_app_started).twice.with(dea_id: "dea_123", app_id: app.guid)
+        dea_pool.should_receive(:reserve_app_memory).twice.with("dea_123", app.memory)
         message_bus.should_receive(:publish).with(
           "dea.dea_123.start",
           hash_including(
@@ -127,6 +128,7 @@ module VCAP::CloudController
 
         dea_pool.should_receive(:find_dea).once.and_return("dea_123")
         dea_pool.should_receive(:mark_app_started).once.with(dea_id: "dea_123", app_id: app.guid)
+        dea_pool.should_receive(:reserve_app_memory).once.with("dea_123", app.memory)
         message_bus.should_receive(:publish).with(
           "dea.dea_123.start",
           hash_including(
@@ -145,6 +147,8 @@ module VCAP::CloudController
         dea_pool.should_receive(:find_dea).and_return("def")
         dea_pool.should_receive(:mark_app_started).with(dea_id: "abc", app_id: app.guid)
         dea_pool.should_receive(:mark_app_started).with(dea_id: "def", app_id: app.guid)
+        dea_pool.should_receive(:reserve_app_memory).with("abc", app.memory)
+        dea_pool.should_receive(:reserve_app_memory).with("def", app.memory)
         message_bus.should_receive(:publish).with("dea.abc.start", kind_of(Hash))
         message_bus.should_receive(:publish).with("dea.def.start", kind_of(Hash))
 
@@ -157,6 +161,8 @@ module VCAP::CloudController
 
         dea_pool.should_receive(:mark_app_started).with(dea_id: "abc", app_id: app.guid)
         dea_pool.should_not_receive(:mark_app_started).with(dea_id: "def", app_id: app.guid)
+        dea_pool.should_receive(:reserve_app_memory).with("abc", app.memory)
+        dea_pool.should_not_receive(:reserve_app_memory).with("def", app.memory)
 
         DeaClient.start(app, :instances_to_start => 1)
       end
@@ -168,6 +174,7 @@ module VCAP::CloudController
         app.instances = 1
         dea_pool.should_receive(:find_dea).and_return("abc")
         dea_pool.should_receive(:mark_app_started).with(dea_id: "abc", app_id: app.guid)
+        dea_pool.should_receive(:reserve_app_memory).with("abc", app.memory)
         message_bus.should_receive(:publish).with("dea.abc.start", hash_including(:cc_partition => "ngFTW"))
 
         DeaClient.start(app)
@@ -927,6 +934,9 @@ module VCAP::CloudController
           dea_pool.should_receive(:mark_app_started).with(dea_id: "abc", app_id: app.guid)
           dea_pool.should_receive(:mark_app_started).with(dea_id: "def", app_id: app.guid)
           dea_pool.should_receive(:mark_app_started).with(dea_id: "efg", app_id: app.guid)
+          dea_pool.should_receive(:reserve_app_memory).with("abc", app.memory)
+          dea_pool.should_receive(:reserve_app_memory).with("def", app.memory)
+          dea_pool.should_receive(:reserve_app_memory).with("efg", app.memory)
           message_bus.should_receive(:publish).with("dea.abc.start", kind_of(Hash))
           message_bus.should_receive(:publish).with("dea.def.start", kind_of(Hash))
           message_bus.should_receive(:publish).with("dea.efg.start", kind_of(Hash))

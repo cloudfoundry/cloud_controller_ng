@@ -12,6 +12,10 @@ class Advertisement
     stats["available_memory"]
   end
 
+  def decrement_memory(mem)
+    stats["available_memory"] -= mem
+  end
+
   def available_disk
     stats["available_disk"]
   end

@@ -4,7 +4,8 @@ module VCAP::CloudController
   describe AppObserver do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
-    let(:dea_pool) { double(:dea_pool, :find_dea => "dea-id", :mark_app_started => nil ) }
+    let(:dea_pool) { double(:dea_pool, :find_dea => "dea-id", :mark_app_started => nil,
+                            :reserve_app_memory => nil) }
     let(:config_hash) { {:config => 'hash'} }
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
 
