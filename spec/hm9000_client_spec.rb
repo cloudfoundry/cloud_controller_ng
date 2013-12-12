@@ -141,6 +141,14 @@ module VCAP::CloudController
             end
           end
         end
+
+        context "when, mysteriously, a response is received that is not empty but is missing instance heartbeats" do
+          let(:app_0_api_response) { {droplet: app0.guid, version: app0.version } }
+
+          it "should return 0" do
+            expect(hm9000_client.healthy_instances(app0)).to eq(0)
+          end
+        end
       end
 
       context "multiple apps" do

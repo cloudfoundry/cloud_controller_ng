@@ -59,7 +59,7 @@ module VCAP::CloudController
     def healthy_instance(app)
       response = make_request(app)
 
-      if !response
+      if response.nil? || response["instance_heartbeats"].nil?
         return 0
       end
 
