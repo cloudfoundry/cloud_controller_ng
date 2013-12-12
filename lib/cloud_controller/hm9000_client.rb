@@ -74,7 +74,10 @@ module VCAP::CloudController
     end
 
     def make_request(app)
-      responses = @message_bus.synchronous_request("app.state", { droplet: app.guid, version: app.version }, { timeout: 2 })
+      message = { droplet: app.guid, version: app.version }
+      logger.info("requesting app.state", message)
+      responses = @message_bus.synchronous_request("app.state", message, { timeout: 2 })
+      logger.info("received app.state response", { message: message, responses: responses })
       return if responses.empty?
 
       response = responses.first
