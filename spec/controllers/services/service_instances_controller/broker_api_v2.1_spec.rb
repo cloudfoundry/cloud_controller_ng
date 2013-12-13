@@ -7,6 +7,7 @@ describe 'Service Broker API integration', type: :controller do
     end
 
     before(:all) { setup_cc }
+    after(:all) { $spec_env.reset_database }
     let(:space_guid) { @space_guid}
     let(:org_guid) { @org_guid }
 
