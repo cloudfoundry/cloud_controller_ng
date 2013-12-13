@@ -72,6 +72,11 @@ module VCAP::CloudController
       DBMigrator.new(db).apply_migrations
     end
 
+    def reset_database_with_seeds
+      reset_database
+      VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+    end
+
     def db_connection_string
       if ENV["DB_CONNECTION"]
         "#{ENV["DB_CONNECTION"]}/cc_test_#{ENV["TEST_ENV_NUMBER"]}"
@@ -689,9 +694,7 @@ RSpec.configure do |rspec_config|
       begin
         example.run
       ensure
-        #reset database
-        $spec_env.reset_database
-        VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+        $spec_env.reset_database_with_seeds
       end
     else
       Sequel::Model.db.transaction(rollback: :always, savepoint: true) do

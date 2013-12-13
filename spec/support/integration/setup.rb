@@ -120,8 +120,6 @@ RSpec.configure do |rspec_config|
 
   rspec_config.after(:all, :type => :integration) do
     WebMock.disable_net_connect!
-    #reset database
-    $spec_env.reset_database
-    VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+    $spec_env.reset_database_with_seeds
   end
 end
