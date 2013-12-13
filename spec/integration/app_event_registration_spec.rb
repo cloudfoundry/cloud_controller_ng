@@ -22,11 +22,7 @@ module VCAP::CloudController
         preserve_database: true
       )
 
-      org = make_post_request(
-        "/v2/organizations",
-        { "name" => "foo_org-#{SecureRandom.uuid}" }.to_json,
-        authed_headers
-      )
+      org = org_with_paid_quota(authed_headers)
       org_guid = org.json_body["metadata"]["guid"]
 
       space = make_post_request(

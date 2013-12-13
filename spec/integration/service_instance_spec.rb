@@ -31,11 +31,7 @@ describe "Service Instance Management", type: :integration do
   end
 
   let(:org) do
-    make_post_request(
-      "/v2/organizations",
-      { "name" => "foo_org-#{SecureRandom.uuid}", "billing_enabled" => true }.to_json,
-      authed_headers
-    )
+    org_with_paid_quota(authed_headers)
   end
 
   let(:org_guid) { org.json_body.fetch("metadata").fetch("guid") }

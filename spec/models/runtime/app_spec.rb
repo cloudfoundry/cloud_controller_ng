@@ -855,7 +855,7 @@ module VCAP::CloudController
         before { app.update(:state => "STARTED") }
 
         it "should update the version when changing :memory" do
-          app.memory = 1024
+          app.memory = 2048
           expect { app.save }.to change(app, :version)
         end
 
