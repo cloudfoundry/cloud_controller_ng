@@ -61,6 +61,7 @@ module VCAP::CloudController
       @completion_callback = completion_callback
 
       @dea_pool.reserve_app_memory(@stager_id, @app.memory)
+      @stager_pool.reserve_app_memory(@stager_id, @app.memory)
 
       logger.info("staging.begin", :app_guid => @app.guid)
       staging_result = EM.schedule_sync do |promise|

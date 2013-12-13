@@ -81,5 +81,42 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "#reserve_app_memory" do
+      let(:stager_advertise_msg) do
+        {
+            "id" => "staging-id",
+            "stacks" => ["stack-name"],
+            "available_memory" => 1024
+        }
+      end
+
+      let(:new_stager_advertise_msg) do
+        {
+            "id" => "staging-id",
+            "stacks" => ["stack-name"],
+            "available_memory" => 1024
+        }
+      end
+
+      it "decrement the available memory based on app's memory" do
+        subject.process_advertise_message(stager_advertise_msg)
+        expect {
+          subject.reserve_app_memory("staging-id", 1)
+        }.to change {
+          subject.find_stager("stack-name", 1024)
+        }.from("staging-id").to(nil)
+      end
+
+      it "update the available memory when next time the stager's ad arrives" do
+        subject.process_advertise_message(stager_advertise_msg)
+        subject.reserve_app_memory("staging-id", 1)
+        expect {
+          subject.process_advertise_message(new_stager_advertise_msg)
+        }.to change {
+          subject.find_stager("stack-name", 1024)
+        }.from(nil).to("staging-id")
+      end
+    end
   end
 end

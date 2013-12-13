@@ -41,6 +41,10 @@ module VCAP::CloudController
       end
     end
 
+    def reserve_app_memory(stager_id, app_memory)
+      @stager_advertisements.find { |ad| ad.stager_id == stager_id }.decrement_memory(app_memory)
+    end
+
     private
     def top_5_stagers_for(memory, stack)
       @stager_advertisements.select do |advertisement|
