@@ -26,8 +26,7 @@ module VCAP::CloudController
     include_examples "collection operations", path: "/v2/spaces", model: Space,
       one_to_many_collection_ids: {
         apps: lambda { |space| AppFactory.make(space: space) },
-        service_instances: lambda { |space| ManagedServiceInstance.make(space: space) },
-        domains: lambda { |space| make_domain_for_space(space) }
+        service_instances: lambda { |space| ManagedServiceInstance.make(space: space) }
       },
       one_to_many_collection_ids_without_url: {
         routes: lambda { |space| Route.make(space: space) },
@@ -148,6 +147,26 @@ module VCAP::CloudController
             :path => "/v2/spaces",
             :enumerate => 1
         end
+      end
+    end
+
+    describe 'GET /v2/spaces/:guid/domains' do
+      let(:space) { Space.make }
+      let(:manager) { make_manager_for_org(space.organization) }
+
+      before do
+        @private_domain = PrivateDomain.make(owning_organization: space.organization)
+        @shared_domain = SharedDomain.make
+      end
+
+      it "should return the domains associated with the owning organization for allowed users" do
+        get "/v2/spaces/#{space.guid}/domains", {}, headers_for(manager)
+        expect(last_response.status).to eq(200)
+        resources = decoded_response.fetch("resources")
+        expect(resources).to have(2).items
+
+        guids = resources.map { |x| x["metadata"]["guid"] }
+        expect(guids).to match_array([@shared_domain.guid, @private_domain.guid])
       end
     end
 

@@ -190,23 +190,6 @@ module VCAP::CloudController
     describe "domains" do
       let(:space) { Space.make() }
 
-      context "deleting a domain" do
-        let!(:domain){ PrivateDomain.make(owning_organization: space.organization) }
-
-        it "is a noop but doesn't return an error" do
-          # There used to be a relationship between spaces and domains
-          # This no longer exists; spaces just have permission for all org domains
-          # but we need the endpoint for bc reasons.
-          expect {
-            expect {
-              space.remove_domain(domain)
-            }.not_to raise_error
-          }.not_to change {
-            space.organization.private_domains
-          }
-        end
-      end
-
       context "listing domains" do
         let!(:domains) do
           [
@@ -217,21 +200,6 @@ module VCAP::CloudController
 
         it "should list the owning organization's domains and shared domains" do
           expect(space.domains).to match_array(domains)
-        end
-      end
-
-      context "adding an existing domain" do
-        let(:domain_to_add) { SharedDomain.make }
-
-        it "should add a domain to the owning organization" do
-          # There used to be a relationship between spaces and domains
-          # This no longer exists; spaces just have permission for all org domains
-          # but we need the endpoint for bc reasons.
-          expect {
-            space.add_domain(domain_to_add)
-          }.not_to change {
-            space.organization.private_domains
-          }
         end
       end
     end

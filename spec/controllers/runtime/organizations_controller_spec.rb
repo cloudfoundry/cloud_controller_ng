@@ -28,7 +28,6 @@ module VCAP::CloudController
       one_to_many_collection_ids: {
         spaces: lambda { |org| Space.make(organization: org) },
         private_domains: lambda { |org| PrivateDomain.make(owning_organization: org) },
-        domains: lambda { |org| PrivateDomain.make(owning_organization: org) }
       },
       one_to_many_collection_ids_without_url: {
         service_instances: lambda { |org| ManagedServiceInstance.make(space: Space.make(organization: org)) },
@@ -147,6 +146,25 @@ module VCAP::CloudController
           org.refresh
           org.billing_enabled.should == true
         end
+      end
+    end
+
+    describe 'GET /v2/organizations/:guid/domains' do
+      let(:organization) { Organization.make }
+      let(:manager) { make_manager_for_org(organization) }
+
+      before do
+        @private_domain = PrivateDomain.make(owning_organization: organization)
+        @shared_domain = SharedDomain.make
+      end
+
+      it "should return the private domains associated with the organization and all shared domains" do
+        get "/v2/organizations/#{organization.guid}/domains", {}, headers_for(manager)
+        expect(last_response.status).to eq(200)
+        resources = decoded_response.fetch("resources")
+        expect(resources).to have(2).items
+        guids = resources.map { |x| x["metadata"]["guid"] }
+        expect(guids).to match_array([@shared_domain.guid, @private_domain.guid])
       end
     end
 

@@ -32,7 +32,7 @@ module ModelCreation
     domain
   end
 
-  def make_manager_for_org(org, space)
+  def make_manager_for_org(org)
     user = make_user_for_org(org)
     org.add_manager(user)
     user
