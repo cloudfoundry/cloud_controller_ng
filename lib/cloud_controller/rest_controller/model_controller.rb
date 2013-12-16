@@ -109,7 +109,7 @@ module VCAP::CloudController::RestController
 
       obj = find_guid_and_validate_access(:read, guid)
 
-      associated_model = model.association_reflection(name).associated_class
+      associated_model = obj.class.association_reflection(name).associated_class
 
       associated_controller = VCAP::CloudController.controller_from_model_name(associated_model)
 

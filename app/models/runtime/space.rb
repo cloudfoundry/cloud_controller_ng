@@ -19,8 +19,7 @@ module VCAP::CloudController
     one_to_many :routes
     one_to_many :app_events, dataset: -> { AppEvent.filter(app: apps) }
     one_to_many :default_users, class: "VCAP::CloudController::User", key: :default_space_id
-    one_to_many :domains, dataset: -> { organization.domains_dataset },
-                remover: ->(_) {}, clearer: -> {}, adder: ->(_) {} # noop for bc reasons
+    one_to_many :domains, dataset: -> { organization.domains_dataset }
 
     add_association_dependencies default_users: :nullify, all_apps: :destroy, service_instances: :destroy, routes: :destroy, events: :nullify
 

@@ -12,6 +12,8 @@ module VCAP::CloudController
     import_attributes :name, :owning_organization_guid
     strip_attributes  :name
 
+    one_to_many :spaces, dataset: -> { owning_organization.spaces_dataset }
+
     def as_summary_json
       {
         guid: guid,

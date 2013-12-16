@@ -212,4 +212,17 @@ module VCAP::CloudController
       end
     end
   end
+
+  describe "GET /v2/domains/:id/spaces" do
+    let!(:private_domain) { PrivateDomain.make }
+    let!(:space) { Space.make(organization: private_domain.owning_organization) }
+
+    it "returns the spaces associated with the owning organization" do
+      get "/v2/domains/#{private_domain.guid}/spaces", {}, admin_headers
+      expect(last_response.status).to eq(200)
+      expect(decoded_response["resources"]).to have(1).item
+      expect(decoded_response["resources"][0]["entity"]["name"]).to eq(space.name)
+      expect(last_response).to be_a_deprecated_response
+    end
+  end
 end

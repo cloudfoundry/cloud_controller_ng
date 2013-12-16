@@ -71,14 +71,6 @@ module VCAP::CloudController
           subject.destroy
         end.to change { Route.where(:id => route.id).count }.by(-1)
       end
-
-      it "nullifies the organization" do
-        organization = subject.owning_organization
-
-        expect do
-          subject.destroy
-        end.to change { organization.reload.private_domains.count }.by(-1)
-      end
     end
   end
 end

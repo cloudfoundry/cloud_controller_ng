@@ -207,21 +207,6 @@ module VCAP::CloudController
         end
       end
 
-      context "clearing domains" do
-        let!(:domain){ PrivateDomain.make(owning_organization: space.organization) }
-
-        it "is a noop but doesn't return an error" do
-          # There used to be a relationship between spaces and domains
-          # This no longer exists; spaces just have permission for all org domains
-          # but we need the endpoint for bc reasons.
-          expect {
-            space.remove_all_domains
-          }.not_to change {
-            space.organization.private_domains
-          }
-        end
-      end
-
       context "listing domains" do
         let!(:domains) do
           [
