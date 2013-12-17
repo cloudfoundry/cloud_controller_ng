@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'Broker API Versions' do
 
-  it 'should do something' do
+  it 'verifies that there is a broker API test for each minor version' do
     stub_request(:get, 'http://username:password@broker-url/v2/catalog').to_return do |request|
       @version = request.headers['X-Broker-Api-Version']
       { status: 200, body: {}.to_json }
@@ -25,3 +25,4 @@ describe 'Broker API Versions' do
     end
   end
 end
+
