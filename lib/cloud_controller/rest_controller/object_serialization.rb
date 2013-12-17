@@ -59,8 +59,11 @@ module VCAP::CloudController::RestController
         "guid" => obj.guid,
         "url" => controller.url_for_guid(obj.guid),
         "created_at" => obj.created_at,
-        "updated_at" => obj.updated_at
       }
+
+      if obj.respond_to?(:updated_at)
+        metadata_hash["updated_at"] = obj.updated_at
+      end
 
       {"metadata" => metadata_hash, "entity" => entity_hash}
     end

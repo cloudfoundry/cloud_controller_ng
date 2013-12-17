@@ -7,4 +7,10 @@ module VCAP::CloudController
     alias :update? :create?
     alias :delete? :create?
   end
+
+  class ManagedServiceInstanceAccess < ServiceInstanceAccess
+  end
+
+  class UserProvidedServiceInstanceAccess < ServiceInstanceAccess
+  end
 end

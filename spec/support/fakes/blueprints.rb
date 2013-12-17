@@ -241,4 +241,15 @@ module VCAP::CloudController
     key { Sham.guid }
     position { 0 }
   end
+
+  AppUsageEvent.blueprint do
+    state { "STARTED" }
+    instance_count { 1 }
+    memory_in_mb_per_instance { 564 }
+    app_guid { Sham.guid }
+    app_name { Sham.name }
+    org_guid { Sham.guid }
+    space_guid { Sham.guid }
+    space_name { Sham.name }
+  end
 end

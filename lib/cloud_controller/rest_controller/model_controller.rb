@@ -88,6 +88,7 @@ module VCAP::CloudController::RestController
     # Enumerate operation
     def enumerate
       raise NotAuthenticated unless user || roles.admin?
+      validate_access(:index, model, user, roles)
 
       Paginator.render_json(
         self.class, enumerate_dataset, self.class.path,

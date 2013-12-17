@@ -18,6 +18,10 @@ module VCAP::CloudController
       context.roles.admin?
     end
 
+    def index?(object_class)
+      true
+    end
+
     def logged_in?
       !context.user.nil? || context.roles.present?
     end

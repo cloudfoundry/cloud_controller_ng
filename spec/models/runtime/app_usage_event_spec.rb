@@ -26,5 +26,20 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "serialization" do
+      it "has the relevant fields" do
+        event = AppUsageEvent.make
+        json_hash = Yajl::Parser.parse(event.to_json)
+        expect(json_hash.fetch('state')).to eq(event.state)
+        expect(json_hash.fetch('memory_in_mb_per_instance')).to eq(event.memory_in_mb_per_instance)
+        expect(json_hash.fetch('instance_count')).to eq(event.instance_count)
+        expect(json_hash.fetch('app_guid')).to eq(event.app_guid)
+        expect(json_hash.fetch('app_name')).to eq(event.app_name)
+        expect(json_hash.fetch('space_guid')).to eq(event.space_guid)
+        expect(json_hash.fetch('space_name')).to eq(event.space_name)
+        expect(json_hash.fetch('org_guid')).to eq(event.org_guid)
+      end
+    end
   end
 end
