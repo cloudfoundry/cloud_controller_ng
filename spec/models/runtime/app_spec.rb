@@ -929,8 +929,46 @@ module VCAP::CloudController
       end
     end
 
+    describe "creation" do
+      it "does not create an AppUsageEvent" do
+        expect {
+          App.create_from_hash(name: "awesome app" , space_guid: space.guid)
+        }.not_to change {AppUsageEvent.count}
+      end
+    end
+
+    describe "saving" do
+      it "calls AppObserver.updated", non_transactional: true do
+        app = AppFactory.make
+        AppObserver.should_receive(:updated).with(app)
+        app.update(instances: app.instances + 1)
+      end
+
+      context "when app state changes from STOPPED to STARTED" do
+        it "creates an AppUsageEvent" do
+          app = AppFactory.make
+          expect {
+            app.update(state: "STARTED")
+          }.to change {AppUsageEvent.count}.by(1)
+          event = AppUsageEvent.last
+          expect(event).to match_app(app)
+        end
+      end
+
+      context "when app state changes from STARTED to STOPPED" do
+        it "creates an AppUsageEvent" do
+          app = AppFactory.make(package_hash: "abc", state: "STARTED")
+          expect {
+            app.update(state: "STOPPED")
+          }.to change {AppUsageEvent.count}.by(1)
+          event = AppUsageEvent.last
+          expect(event).to match_app(app)
+        end
+      end
+    end
+
     describe "destroy" do
-      let(:app) { AppFactory.make(:package_hash => "abc", :package_state => "STAGED", :space => space) }
+      let(:app) { AppFactory.make(package_hash: "abc", package_state: "STAGED", space: space) }
 
       it "notifies the app observer", non_transactional: true do
         AppObserver.should_receive(:deleted).with(app)
@@ -965,29 +1003,13 @@ module VCAP::CloudController
       end
     end
 
-    describe "saving" do
-      it "calls AppObserver.updated", non_transactional: true do
-        app = AppFactory.make
-        AppObserver.should_receive(:updated).with(app)
-        app.save(instances: app.instances + 1)
-      end
-    end
-
-    describe "billing" do
+    describe "billing", deprecated_billing: true do
       context "app state changes" do
         context "creating a stopped app" do
           it "does not generate a start event or stop event" do
             AppStartEvent.should_not_receive(:create_from_app)
             AppStopEvent.should_not_receive(:create_from_app)
             AppFactory.make(:state => "STOPPED")
-          end
-        end
-
-        context "creating a started app" do
-          it "does not generate a stop event" do
-            AppStartEvent.should_receive(:create_from_app)
-            AppStopEvent.should_not_receive(:create_from_app)
-            AppFactory.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
           end
         end
 
@@ -1011,25 +1033,25 @@ module VCAP::CloudController
 
         context "stopping a started app" do
           it "does not generate a start event, but generates a stop event" do
-            app = AppFactory.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            app = AppFactory.make(state: "STARTED", :package_hash => "abc", :package_state => "STAGED")
             AppStartEvent.should_not_receive(:create_from_app)
             AppStopEvent.should_receive(:create_from_app).with(app)
-            app.update(:state => "STOPPED")
+            app.update(state: "STOPPED")
           end
         end
 
         context "updating a started app" do
           it "does not generate a start or stop event" do
-            app = AppFactory.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            app = AppFactory.make(state: "STARTED", package_hash: "abc", package_state: "STAGED")
             AppStartEvent.should_not_receive(:create_from_app)
             AppStopEvent.should_not_receive(:create_from_app)
-            app.update(:state => "STARTED")
+            app.update(state: "STARTED")
           end
         end
 
         context "deleting a started app" do
           let(:app) do
-            app = AppFactory.make(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
+            app = AppFactory.make(state: "STARTED", package_hash: "abc", package_state: "STAGED")
             app_org = app.space.organization
             app_org.billing_enabled = true
             app_org.save(:validate => false) # because we need to force enable billing

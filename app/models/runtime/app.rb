@@ -167,6 +167,24 @@ module VCAP::CloudController
       AppStartEvent.create_from_app(self) if generate_start_event?
     end
 
+    def after_save
+      create_app_usage_event
+      super
+    end
+
+    def create_app_usage_event
+      return unless app_usage_changed?
+      AppUsageEvent.create(state: state,
+                           instance_count: instances,
+                           memory_in_mb_per_instance: memory,
+                           app_guid: guid,
+                           app_name: name,
+                           org_guid: space.organization_guid,
+                           space_guid: space_guid,
+                           space_name: space.name,
+      )
+    end
+
     def version_needs_to_be_updated?
       # change version if:
       #
@@ -523,6 +541,11 @@ module VCAP::CloudController
 
     def generate_salt
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt.freeze
+    end
+
+    def app_usage_changed?
+      previously_started = initial_value(:state) == 'STARTED'
+      previously_started != started?
     end
 
     class << self
