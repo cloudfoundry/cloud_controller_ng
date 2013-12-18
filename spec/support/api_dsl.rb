@@ -78,7 +78,6 @@ module ApiDsl
   end
 
   module ClassMethods
-
     def api_version
       "/v2"
     end
@@ -90,7 +89,7 @@ module ApiDsl
     def standard_model_list(model, controller)
       get root(model) do
         standard_list_parameters controller
-        example_request "List all #{model.to_s.pluralize.capitalize}" do
+        example_request "List all #{model.to_s.pluralize.titleize}" do
           standard_list_response parsed_response, model
         end
       end
@@ -125,14 +124,13 @@ module ApiDsl
     end
 
     def standard_list_parameters controller
-      query_parameter_description = "Parameters used to filter the result set."
-      if controller.query_parameters
+      if controller.query_parameters.size > 0
+        query_parameter_description = "Parameters used to filter the result set."
         query_parameter_description += " Valid filters: #{controller.query_parameters.to_a.join(", ")}"
+        request_parameter :q, query_parameter_description
       end
-      request_parameter :q, query_parameter_description
-      request_parameter :limit, "Maximum number of results to return"
-      request_parameter :offset, "Offset from which to start iteration"
-      request_parameter :urls_only, "If 1, only return a list of urls; do not expand metadata or resource attributes"
+      request_parameter :page, "Page of results to fetch"
+      request_parameter :'results-per-page', "Number of results per page"
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
     end
 
