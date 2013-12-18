@@ -3,8 +3,10 @@ require "spec_helper"
 module VCAP::CloudController
   describe AppUsageEventsController, type: :controller do
     before do
-      AppFactory.make(state: "STARTED", package_hash: "abc", package_state: "STAGED")
+      app = AppFactory.make(package_hash: "abc", package_state: "STAGED")
+      app.update(state: "STARTED")
     end
+
     describe "GET /v2/app_usage_events" do
       it "returns a list of app usage events" do
         get "/v2/app_usage_events", {}, admin_headers
