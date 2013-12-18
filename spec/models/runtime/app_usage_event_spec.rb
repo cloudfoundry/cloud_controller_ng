@@ -22,7 +22,7 @@ module VCAP::CloudController
         required_attributes.each do |required_attribute|
           expect {
             AppUsageEvent.create(valid_attributes.except(required_attribute))
-          }.to raise_error(Sequel::NotNullConstraintViolation)
+          }.to raise_error(Sequel::DatabaseError)
         end
       end
     end
