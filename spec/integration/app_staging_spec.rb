@@ -176,6 +176,49 @@ describe "Staging an app", type: :integration do
             end
           end
         end
+        
+        context "excludes disabled buildpacks" do
+          before do
+            @enabled_buildpack_shas = @expected_buildpack_shas[1..-1]
+            @buildpack_response_2_disable = make_put_request(
+              "/v2/buildpacks/#{@buildpack_response_2.json_body["metadata"]["guid"]}",
+              { "enabled" => false }.to_json,
+              authed_headers
+            )
+          end
+
+          it "includes enabled buildpacks" do
+            stager_id = "abc123"
+            expect(@buildpack_response_1.code).to eq("201")
+            expect(@buildpack_response_2.code).to eq("201")
+            expect(@buildpack_bits_response_1.code).to eq("201")
+            expect(@buildpack_bits_response_2.code).to eq("201")
+            expect(@buildpack_response_2_disable.code).to eq("201")
+
+            NATS.start do
+              NATS.subscribe "staging.#{stager_id}.start", queue: "staging" do |msg|
+                json_message = JSON.parse(msg)
+                expect(json_message["admin_buildpacks"].map { |bp| bp["key"] }).to eq(@enabled_buildpack_shas)
+
+                NATS.stop
+              end
+
+              NATS.publish("dea.advertise", advertisment) do
+                NATS.publish("staging.advertise", advertisment) do
+                  Thread.new do
+                    app_start_response = make_put_request(
+                      "/v2/apps/#{@app_response.json_body["metadata"]["guid"]}",
+                      { state: "STARTED" }.to_json,
+                      authed_headers
+                    )
+
+                    expect(app_start_response.code).to eq("201")
+                  end
+                end
+              end
+            end
+          end
+        end
       end
     end
   end

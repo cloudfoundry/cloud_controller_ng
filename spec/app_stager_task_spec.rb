@@ -480,8 +480,7 @@ module VCAP::CloudController
       describe "the list of admin buildpacks" do
         let!(:buildpack_a) { Buildpack.make(key: "a key", position: 2) }
         let!(:buildpack_b) { Buildpack.make(key: "b key", position: 1) }
-        let!(:buildpack_c) { Buildpack.make(key: "c key", position: 3) }
-        let!(:disabled_buildpack) { Buildpack.make(enabled: false) }
+        let!(:buildpack_c) { Buildpack.make(key: "c key", position: 4) }
 
         let(:buildpack_file_1) { Tempfile.new("admin buildpack 1") }
         let(:buildpack_file_2) { Tempfile.new("admin buildpack 2") }
@@ -524,6 +523,28 @@ module VCAP::CloudController
             expect(admin_buildpacks).to have(3).items
           end
         end
+
+        context "when a buildpack is disabled" do
+          before do
+            buildpack_a.enabled = false
+            buildpack_a.save
+          end
+
+          context "when a specific buildpack is not requested" do
+            it "includes a list of enabled admin buildpacks as hashes containing its blobstore URI and key" do
+              Timecop.freeze do #download_uri have an expire_at
+                request = staging_task.staging_request
+
+                admin_buildpacks = request[:admin_buildpacks]
+
+                expect(admin_buildpacks).to have(2).items
+                expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("b key"), key: "b key")
+                expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri("c key"), key: "c key")
+              end
+            end
+          end
+        end
+
       end
 
       it "includes the key of an admin buildpack when the app has a buildpack specified" do
