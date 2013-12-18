@@ -101,7 +101,6 @@ class Blobstore
   end
 
   def dir
-    @dir ||= connection.directories.get(@directory_key)
     @dir ||= connection.directories.create(:key => @directory_key, :public => false)
   end
 
