@@ -467,21 +467,18 @@ module VCAP::CloudController
 
           App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
           App.deleted[:id => app_obj.id].not_deleted.should be_nil
-          AppEvent.find(:id => app_event.id).should_not be_nil
+          AppEvent.find(:id => app_event.id).should be_nil
         end
       end
 
-      context "non recursive deletion with app events" do
-        let!(:app_event) { AppEvent.make(:app => app_obj) }
-
+      context "non recursive deletion" do
         context "with other empty associations" do
-          it "should soft delete the app and NOT delete the app event" do
+          it "should soft delete the app" do
             delete_app
 
             last_response.status.should == 204
             App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
             App.deleted[:id => app_obj.id].not_deleted.should be_nil
-            AppEvent.find(:id => app_event.id).should_not be_nil
           end
         end
 

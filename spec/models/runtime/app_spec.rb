@@ -1008,7 +1008,7 @@ module VCAP::CloudController
 
       it "notifies the app observer", non_transactional: true do
         AppObserver.should_receive(:deleted).with(app)
-        app.destroy(savepoint: true)
+        app.destroy
       end
 
       it "should nullify the routes" do
@@ -1024,7 +1024,7 @@ module VCAP::CloudController
           :service_instance => ManagedServiceInstance.make(:space => app.space)
         )
         expect {
-          app.destroy(savepoint: true)
+          app.destroy
         }.to change { ServiceBinding.where(:id => service_binding.id).count }.from(1).to(0)
       end
 
@@ -1032,10 +1032,25 @@ module VCAP::CloudController
         app_event = AppEvent.make(:app => app)
 
         expect {
-          app.destroy(savepoint: true)
+          app.destroy
         }.to change {
           AppEvent.where(:id => app_event.id).count
         }.from(1).to(0)
+      end
+
+      it "creates an AppUsageEvent when the app state is STARTED" do
+        app = AppFactory.make(package_hash: "abc", package_state: "STAGED", space: space, state: "STARTED")
+        expect {
+          app.destroy
+        }.to change { AppUsageEvent.count }.by(1)
+        expect(AppUsageEvent.last).to match_app(app)
+      end
+
+      it "does not create an AppUsageEvent when the app state is STOPPED" do
+        app = AppFactory.make(package_hash: "abc", package_state: "STAGED", space: space, state: "STOPPED")
+        expect {
+          app.destroy
+        }.not_to change { AppUsageEvent.count }
       end
     end
 
@@ -1333,6 +1348,16 @@ module VCAP::CloudController
     describe "soft deletion" do
       let(:app) { AppFactory.make(:detected_buildpack => "buildpack-name") }
 
+      it "creates an AppUsageEvent when it is STARTED" do
+        app = AppFactory.make(state: "STARTED", package_hash: "abc", package_state: "STAGED")
+        expect { app.soft_delete }.to change {AppUsageEvent.count}.by(1)
+      end
+
+      it "does not create an AppUsageEvent when it is STOPPED" do
+        app = AppFactory.make(state: "STOPPED", package_hash: "abc", package_state: "STAGED")
+        expect { app.soft_delete }.not_to change {AppUsageEvent.count}
+      end
+
       it "should not allow the same object to be deleted twice" do
         app.soft_delete
         expect { app.soft_delete }.to raise_error(App::AlreadyDeletedError)
@@ -1349,7 +1374,7 @@ module VCAP::CloudController
         app.soft_delete
       end
 
-      context "with app events" do
+      context "with nested associations" do
         let!(:app_event) { AppEvent.make(:app => app) }
 
         context "with other empty associations" do
@@ -1391,7 +1416,7 @@ module VCAP::CloudController
         end
 
         after do
-          AppEvent.where(:id => app_event.id).should_not be_empty
+          AppEvent.where(:id => app_event.id).should be_empty
           App.deleted[:id => app.id].deleted_at.should_not be_nil
           App.deleted[:id => app.id].not_deleted.should be_false
         end

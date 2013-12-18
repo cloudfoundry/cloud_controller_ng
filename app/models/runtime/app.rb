@@ -56,7 +56,7 @@ module VCAP::CloudController
     many_to_one :stack
     many_to_many :routes, before_add: :validate_route, after_add: :mark_routes_changed, after_remove: :mark_routes_changed
 
-    add_association_dependencies routes: :nullify, service_bindings: :destroy, events: :destroy, droplets: :destroy
+    add_association_dependencies routes: :nullify, service_bindings: :destroy, events: :delete, droplets: :destroy
 
     default_order_by :name
 
@@ -232,8 +232,14 @@ module VCAP::CloudController
         column_changed?(:instances))
     end
 
+    def before_destroy
+      self.state = "STOPPED"
+      super
+    end
+
     def after_destroy
-      AppStopEvent.create_from_app(self) unless stopped? || has_stop_event_for_latest_run?
+      AppStopEvent.create_from_app(self) unless initial_value(:state) == "STOPPED" || has_stop_event_for_latest_run?
+      create_app_usage_event
     end
 
     def after_destroy_commit
@@ -409,20 +415,13 @@ module VCAP::CloudController
       !self.not_deleted
     end
 
-    def cleanup_associations
-      service_bindings_dataset.destroy
-      droplets_dataset.destroy
-      routes.each do |route|
-        route.remove_app(self)
-      end
-    end
-
     def soft_delete
       raise AlreadyDeletedError, "App: #{self} was already soft deleted on: #{deleted_at}" if deleted_at
 
       model.db.transaction(savepoint: true) do
         lock!
-        cleanup_associations
+
+        before_destroy
         self.deleted_at = Time.now
         self.not_deleted = nil
         save
