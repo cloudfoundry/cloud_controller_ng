@@ -545,7 +545,9 @@ module VCAP::CloudController
 
     def app_usage_changed?
       previously_started = initial_value(:state) == 'STARTED'
-      previously_started != started?
+      return true if previously_started != started?
+      return true if started? && footprint_changed?
+      false
     end
 
     class << self

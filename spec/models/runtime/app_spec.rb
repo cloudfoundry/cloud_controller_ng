@@ -965,6 +965,42 @@ module VCAP::CloudController
           expect(event).to match_app(app)
         end
       end
+
+      context "when app instances changes" do
+        it "creates an AppUsageEvent when the app is STARTED" do
+          app = AppFactory.make(package_hash: "abc", state: "STARTED")
+          expect {
+            app.update(instances: 2)
+          }.to change {AppUsageEvent.count}.by(1)
+          event = AppUsageEvent.last
+          expect(event).to match_app(app)
+        end
+
+        it "does not create an AppUsageEvent when the app is STOPPED" do
+          app = AppFactory.make(package_hash: "abc", state: "STOPPED")
+          expect {
+            app.update(instances: 2)
+          }.not_to change {AppUsageEvent.count}
+        end
+      end
+
+      context "when app memory changes" do
+        it "creates an AppUsageEvent when the app is STARTED" do
+          app = AppFactory.make(package_hash: "abc", state: "STARTED")
+          expect {
+            app.update(memory: 2)
+          }.to change {AppUsageEvent.count}.by(1)
+          event = AppUsageEvent.last
+          expect(event).to match_app(app)
+        end
+
+        it "does not create an AppUsageEvent when the app is STOPPED" do
+          app = AppFactory.make(package_hash: "abc", state: "STOPPED")
+          expect {
+            app.update(memory: 2)
+          }.not_to change {AppUsageEvent.count}
+        end
+      end
     end
 
     describe "destroy" do
