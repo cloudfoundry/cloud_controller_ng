@@ -80,7 +80,7 @@ module VCAP::CloudController
         it "should enable health check timeout in the start message" do
           app.update(:health_check_timeout => 82)
           res = DeaClient.start_app_message(app)
-          res[:health_check_timeout].should == 82
+          expect(res[:health_check_timeout]).to eq(82)
         end
       end
     end

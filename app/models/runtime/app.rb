@@ -358,10 +358,15 @@ module VCAP::CloudController
       if (requested_instances < 0)
         errors.add(:instances, :less_than_zero)
       end
+    end
 
     def validate_health_check_timeout
       return unless health_check_timeout
       errors.add(:health_check_timeout, :less_than_zero) unless health_check_timeout >= 0
+
+      if health_check_timeout > VCAP::CloudController::Config.config[:maximum_health_check_timeout]
+        errors.add(:health_check_timeout, :maximum_exceeded)
+      end
     end
 
     # We need to overide this ourselves because we are really doing a

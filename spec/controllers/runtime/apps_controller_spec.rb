@@ -199,9 +199,7 @@ module VCAP::CloudController
 
       describe "update app health_check_timeout" do
         context "when health_check_timeout value is provided" do
-          let(:update_hash) do
-            {"health_check_timeout" => 80}
-          end
+          let(:update_hash) { {"health_check_timeout" => 80} }
  
           it "should set to provided value" do
             update_app
@@ -212,9 +210,7 @@ module VCAP::CloudController
         end
 
         context "when health_check_timeout value is not provided" do
-          let(:update_hash) do
-            {}
-          end
+          let(:update_hash) { {} }
 
           it "should not return error" do
             update_app

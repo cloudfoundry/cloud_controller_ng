@@ -686,6 +686,38 @@ module VCAP::CloudController
     end
 
     describe "health_check_timeout" do
+      before do
+        config_override({ :maximum_health_check_timeout => 512 })
+      end
+
+      context "when the health_check_timeout was not specified" do
+        it "should use nil as health_check_timeout" do
+          app = AppFactory.make
+          expect(app.health_check_timeout).to eq(nil)
+        end
+
+        it "should not raise error if value is nil" do
+          expect {
+            AppFactory.make(health_check_timeout: nil)
+          }.to_not raise_error
+        end
+      end
+
+      context "when a valid health_check_timeout is specified" do
+        it "should use that value" do
+          app = AppFactory.make(health_check_timeout: 256)
+          expect(app.health_check_timeout).to eq(256)
+        end
+      end
+
+      context "when a health_check_timeout exceeds the maximum" do
+        it "should raise error" do
+          expect {
+            AppFactory.make(health_check_timeout: 1024)
+          }.to raise_error(Sequel::ValidationFailed, /health_check_timeout maximum_exceeded/)
+        end
+      end
+
       it "should raise error if value is less than zero" do
         expect {
           AppFactory.make(health_check_timeout: -10)
@@ -697,12 +729,6 @@ module VCAP::CloudController
           AppFactory.make(health_check_timeout: 10)
         }.to_not raise_error
       end
-
-      it "should not raise error if value is nil" do
-        expect {
-          AppFactory.make(health_check_timeout: nil)
-        }.to_not raise_error
-      end 
     end
 
     describe "package_hash=" do

@@ -76,3 +76,4 @@ droplets:
 db_encryption_key: some-key
 
 hm9000_noop: true
+maximum_health_check_timeout: 180

@@ -20,6 +20,7 @@ module VCAP::CloudController
         :system_domain_organization => enum(String, NilClass),
         :app_domains => [ String ],
         :default_app_memory => Fixnum,
+        :maximum_health_check_timeout => Fixnum,
 
         optional(:allow_debug) => bool,
 

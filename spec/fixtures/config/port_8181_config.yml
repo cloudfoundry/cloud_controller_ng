@@ -94,3 +94,5 @@ staging:
   auth:
     user: zxsfhgjg
     password: ZNVfdase9
+
+maximum_health_check_timeout: 180
