@@ -1061,7 +1061,7 @@ module VCAP::CloudController
         app.add_route(route)
         expect {
           app.destroy
-        }.to change { route.apps.collect(&:guid) }.from([app.guid]).to([])
+        }.to change { route.reload.apps.collect(&:guid) }.from([app.guid]).to([])
       end
 
       it "should destroy all dependent service bindings" do
@@ -1097,6 +1097,11 @@ module VCAP::CloudController
         expect {
           app.destroy
         }.not_to change { AppUsageEvent.count }
+      end
+
+      it "locks the record when destroying" do
+        app.should_receive(:lock!)
+        app.destroy
       end
     end
 

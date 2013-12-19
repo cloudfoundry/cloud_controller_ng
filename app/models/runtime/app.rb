@@ -234,6 +234,7 @@ module VCAP::CloudController
     end
 
     def before_destroy
+      lock! unless deleted?
       self.state = "STOPPED"
       super
     end
@@ -429,8 +430,6 @@ module VCAP::CloudController
       raise AlreadyDeletedError, "App: #{self} was already soft deleted on: #{deleted_at}" if deleted_at
 
       model.db.transaction(savepoint: true) do
-        lock!
-
         before_destroy
         self.deleted_at = Time.now
         self.not_deleted = nil
