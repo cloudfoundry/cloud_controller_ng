@@ -112,18 +112,6 @@ module VCAP::CloudController
     describe "#destroy" do
       subject(:space) { Space.make }
 
-      it "destroys all apps including the soft deleted one" do
-        app = AppFactory.make(space: space)
-        soft_deleted_app = AppFactory.make(:space => space)
-        soft_deleted_app.soft_delete
-
-        expect {
-          subject.destroy(savepoint: true)
-        }.to change {
-          App.with_deleted.where(id: [app.id, soft_deleted_app.id]).count
-        }.from(2).to(0)
-      end
-
       it "creates an AppUsageEvent for each app in the STARTED state" do
         app = AppFactory.make(space: space)
         app.update(state: "STARTED")
@@ -183,21 +171,6 @@ module VCAP::CloudController
         }
 
         Event.find(id: event.id).space.should be_a(DeletedSpace)
-      end
-    end
-
-    describe "filter deleted apps" do
-      let(:space) { Space.make }
-
-      context "when deleted apps exist in the space" do
-        it "should not return the deleted app" do
-          deleted_app = AppFactory.make(space: space)
-          deleted_app.soft_delete
-
-          non_deleted_app = AppFactory.make(space: space)
-
-          space.apps.should == [non_deleted_app]
-        end
       end
     end
 

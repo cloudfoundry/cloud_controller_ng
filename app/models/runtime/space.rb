@@ -13,7 +13,6 @@ module VCAP::CloudController
     many_to_one :organization
     one_to_many :apps
     one_to_many :events
-    one_to_many :all_apps, dataset: -> { App.with_deleted.filter(space: self) }
     one_to_many :service_instances
     one_to_many :managed_service_instances
     one_to_many :routes
@@ -21,7 +20,7 @@ module VCAP::CloudController
     one_to_many :default_users, class: "VCAP::CloudController::User", key: :default_space_id
     one_to_many :domains, dataset: -> { organization.domains_dataset }
 
-    add_association_dependencies default_users: :nullify, all_apps: :destroy, service_instances: :destroy, routes: :destroy, events: :nullify
+    add_association_dependencies default_users: :nullify, apps: :destroy, service_instances: :destroy, routes: :destroy, events: :nullify
 
     default_order_by  :name
 

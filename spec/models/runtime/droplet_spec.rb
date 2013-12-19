@@ -51,18 +51,6 @@ module VCAP::CloudController
     end
 
     describe "app deletion" do
-      it "deletes the droplet when the app is soft deleted" do
-        app.add_new_droplet("hash_1")
-        app.add_new_droplet("new_hash")
-        app.save
-        expect(app.droplets).to have(2).items
-        expect {
-          app.soft_delete
-        }.to change {
-          Droplet.count
-        }.by(-2)
-      end
-
       it "deletes the droplet when the app is destroyed" do
         app.add_new_droplet("hash_1")
         app.add_new_droplet("new_hash")

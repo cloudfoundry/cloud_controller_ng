@@ -49,9 +49,6 @@ module VCAP::CloudController
       end
     end
 
-    # Soft delete of app: Events of a forign key constraint on app
-    #
-    # @param [String] guid The GUID of the object to delete.
     def delete(guid)
       app = find_guid_and_validate_access(:delete, guid)
 
@@ -60,10 +57,7 @@ module VCAP::CloudController
       end
 
       Event.record_app_delete_request(app, SecurityContext.current_user, recursive?)
-
-      app.db.transaction(savepoint: true) do
-        app.soft_delete
-      end
+      app.destroy
 
       [ HTTP::NO_CONTENT, nil ]
     end

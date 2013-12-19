@@ -39,10 +39,10 @@ module VCAP::CloudController
         sinks: [Steno::Sink::IO.for_file(log_filename)]
       ))
 
-      VCAP::CloudController::Config.run_initializers(config)
-
       reset_database
       VCAP::CloudController::DB.load_models(config.fetch(:db), db_logger)
+      VCAP::CloudController::Config.run_initializers(config)
+
       VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
     end
 

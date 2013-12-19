@@ -141,17 +141,6 @@ module VCAP::CloudController
             }
             decoded_response["results"].size.should == 0
           end
-
-          it "does not include soft-deleted apps" do
-            App.first.soft_delete
-
-            get "/bulk/apps", {
-              "batch_size" => 100,
-              "bulk_token" => "{\"id\":0}",
-            }
-            decoded_response["results"].size.should == 4
-            last_response.status.should == 200
-          end
         end
       end
 

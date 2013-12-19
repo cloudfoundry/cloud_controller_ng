@@ -32,22 +32,6 @@ module VCAP::CloudController
       end
     end
 
-    dataset_module do
-      def existing
-        filter(not_deleted: true)
-      end
-
-      def deleted
-        unfiltered.filter(not_deleted: nil)
-      end
-
-      def with_deleted
-        unfiltered
-      end
-    end
-
-    set_dataset(existing)
-
     one_to_many :droplets
     one_to_many :service_bindings, :after_remove => :after_remove_binding
     one_to_many :events, :class => VCAP::CloudController::AppEvent
@@ -130,7 +114,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_presence :space
-      validates_unique [:space_id, :name], :where => proc { |ds, obj, cols| ds.filter(:not_deleted => true, :space_id => obj.space_id, :name => obj.name) }
+      validates_unique [:space_id, :name]
       validates_format APP_NAME_REGEX, :name
 
       validate_buildpack_name_or_git_url
@@ -234,7 +218,7 @@ module VCAP::CloudController
     end
 
     def before_destroy
-      lock! unless deleted?
+      lock!
       self.state = "STOPPED"
       super
     end
@@ -384,11 +368,6 @@ module VCAP::CloudController
       binding.destroy
     end
 
-    # When hard-deleting apps through spaces, we need to include soft-deleted apps
-    def _delete_dataset
-      self.class.with_deleted.filter(:id => id)
-    end
-
     def self.user_visibility_filter(user)
       Sequel.or([
         [:space, user.spaces_dataset],
@@ -420,25 +399,6 @@ module VCAP::CloudController
 
     def stopped?
       self.state == "STOPPED"
-    end
-
-    def deleted?
-      !self.not_deleted
-    end
-
-    def soft_delete
-      raise AlreadyDeletedError, "App: #{self} was already soft deleted on: #{deleted_at}" if deleted_at
-
-      model.db.transaction(savepoint: true) do
-        before_destroy
-        self.deleted_at = Time.now
-        self.not_deleted = nil
-        save
-
-        after_destroy
-      end
-
-      AppObserver.deleted(self)
     end
 
     def uris

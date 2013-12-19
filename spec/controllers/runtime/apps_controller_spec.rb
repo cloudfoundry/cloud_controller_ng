@@ -319,16 +319,6 @@ module VCAP::CloudController
         end
       end
 
-      context "when the app is already deleted" do
-        before { app_obj.soft_delete }
-
-        it "should raise error" do
-          update_app
-
-          last_response.status.should == 404
-        end
-      end
-
       describe "events" do
         before { update_hash[:instances] = 2 }
 
@@ -409,19 +399,6 @@ module VCAP::CloudController
         last_response.status.should == 200
         expect(parse(last_response.body)["entity"]).to have_key("package_state")
       end
-
-      context "when the app is already deleted" do
-        let(:app_obj) { AppFactory.make(:detected_buildpack => "buildpack-name") }
-
-        before do
-          app_obj.soft_delete
-        end
-
-        it "should raise error" do
-          get_app
-          last_response.status.should == 404
-        end
-      end
     end
 
     describe "delete an app" do
@@ -439,19 +416,6 @@ module VCAP::CloudController
         it "should delete the app" do
           delete_app
           last_response.status.should == 204
-        end
-      end
-
-      context "when the app is already deleted" do
-        let(:app_obj) { AppFactory.make }
-
-        before do
-          app_obj.soft_delete
-        end
-
-        it "should raise error" do
-          delete_app
-          last_response.status.should == 404
         end
       end
 
@@ -487,20 +451,18 @@ module VCAP::CloudController
           delete_app_recursively
           last_response.status.should == 204
 
-          App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
-          App.deleted[:id => app_obj.id].not_deleted.should be_nil
+          App.find(id: app_obj.id).should be_nil
           AppEvent.find(:id => app_event.id).should be_nil
         end
       end
 
       context "non recursive deletion" do
         context "with other empty associations" do
-          it "should soft delete the app" do
+          it "should destroy the app" do
             delete_app
 
             last_response.status.should == 204
-            App.deleted[:id => app_obj.id].deleted_at.should_not be_nil
-            App.deleted[:id => app_obj.id].not_deleted.should be_nil
+            App.find(id: app_obj.id).should be_nil
           end
         end
 
