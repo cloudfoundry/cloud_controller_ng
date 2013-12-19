@@ -192,6 +192,59 @@ module VCAP::CloudController
         end
       end
 
+      context 'when any service has plans with non unique ids' do
+        let(:plan2_name) { 'the plan with a man' }
+        let(:plan2_description) { 'it is infallible'}
+        let(:catalog) do
+          {
+            'services' => [
+              {
+                'id'          => service_id,
+                'name'        => service_name,
+                'description' => service_description,
+                'bindable'    => true,
+                'tags'        => ['mysql', 'relational'],
+                'plans'       => [
+                  {
+                    'id'          => service_id,
+                    'name'        => plan_name,
+                    'description' => plan_description,
+                  }.merge(plan_metadata_hash),
+                  {
+                    'id'          => service_id,
+                    'name'        => plan_name,
+                    'description' => plan2_description,
+                  }.merge(plan_metadata_hash),
+                ]
+              }.merge(service_metadata_hash),
+              {
+                'id'          => service_id,
+                'name'        => service_name,
+                'description' => service_description,
+                'bindable'    => true,
+                'tags'        => ['mysql', 'relational'],
+                'plans'       => [
+                  {
+                    'id'          => service_id,
+                    'name'        => plan_name,
+                    'description' => plan_description,
+                  }.merge(plan_metadata_hash),
+                  {
+                    'id'          => service_id,
+                    'name'        => plan_name,
+                    'description' => plan2_description,
+                  }.merge(plan_metadata_hash),
+                ]
+              }.merge(service_metadata_hash)
+            ]
+          }
+        end
+
+        it 'should throw an exception' do
+          expect { broker.load_catalog }.to raise_error(Errors::ServiceBrokerInvalid, /each plan ID must be unique/)
+        end
+      end
+
       context 'when the plan does not exist in the database' do
         it 'creates plans from the catalog' do
           expect {

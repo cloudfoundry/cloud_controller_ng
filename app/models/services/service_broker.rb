@@ -65,6 +65,7 @@ module VCAP::CloudController
         @services       = []
         @plans          = []
 
+        plan_ids = []
         catalog_hash.fetch('services', []).each do |service_attrs|
           service = V2::CatalogService.new(service_broker, service_attrs)
           @services << service
@@ -77,6 +78,10 @@ module VCAP::CloudController
 
           service_plans.each do |plan_attrs|
             plan = V2::CatalogPlan.new(service, plan_attrs)
+            if plan_ids.include?(plan.broker_provided_id)
+              raise Errors::ServiceBrokerInvalid.new("each plan ID must be unique")
+            end
+            plan_ids << plan.broker_provided_id
             @plans << plan
           end
         end
