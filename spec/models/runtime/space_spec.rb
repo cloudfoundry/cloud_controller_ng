@@ -112,7 +112,7 @@ module VCAP::CloudController
     describe "#destroy" do
       subject(:space) { Space.make }
 
-      it "destroys all apps" do
+      it "destroys all apps including the soft deleted one" do
         app = AppFactory.make(space: space)
         soft_deleted_app = AppFactory.make(:space => space)
         soft_deleted_app.soft_delete
@@ -122,6 +122,20 @@ module VCAP::CloudController
         }.to change {
           App.with_deleted.where(id: [app.id, soft_deleted_app.id]).count
         }.from(2).to(0)
+      end
+
+      it "creates an AppUsageEvent for each app in the STARTED state" do
+        app = AppFactory.make(space: space)
+        app.update(state: "STARTED")
+        expect {
+          subject.destroy
+        }.to change {
+          AppUsageEvent.count
+        }.by(1)
+        event = AppUsageEvent.last
+        expect(event.app_guid).to eql(app.guid)
+        expect(event.state).to eql("STOPPED")
+        expect(event.space_name).to eql(space.name)
       end
 
       it "destroys all service instances" do
