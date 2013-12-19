@@ -373,6 +373,7 @@ module VCAP::CloudController
           filtered_dataset,
           fake_class_path,
           anything,
+          params,
         )
 
         controller.enumerate

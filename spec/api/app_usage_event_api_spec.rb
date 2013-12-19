@@ -4,9 +4,9 @@ require 'rspec_api_documentation/dsl'
 resource "App Usage Events (experimental)", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
-  before do
-    VCAP::CloudController::AppUsageEvent.make
-  end
+  let!(:event1) { VCAP::CloudController::AppUsageEvent.make }
+  let!(:event2) { VCAP::CloudController::AppUsageEvent.make }
+  let!(:event3) { VCAP::CloudController::AppUsageEvent.make }
 
   field :guid, "The guid of the event.", required: false
   field :state, "The state of the app.", required: false, readonly: true, valid_values: ["STARTED", "STOPPED"]
@@ -19,5 +19,29 @@ resource "App Usage Events (experimental)", :type => :api do
   field :space_name, "The name of the space.", required: false, readonly: true
   field :created_at, "The timestamp when the event is recorded. It is possible that later events may have earlier created_at values.", required: false, readonly: true
 
-  standard_model_list(:app_usage_event, VCAP::CloudController::AppUsageEventsController)
+  get "/v2/app_usage_events" do
+    standard_list_parameters VCAP::CloudController::AppUsageEventsController
+    request_parameter :after_guid, "Restrict results to App Usage Events after the one with the given guid"
+
+    example "List app usage events" do
+      explanation <<-DOC
+        Events are sorted by internal database IDs. This order may differ from created_at.
+
+        Events close to the current time should not be processed because other events may still have open
+        transactions that will change their order in the results.
+      DOC
+
+      client.get "/v2/app_usage_events?results-per-page=1&after_guid=#{event1.guid}", {}, headers
+      status.should == 200
+      standard_entity_response parsed_response["resources"][0], :app_usage_event,
+                               state: event2.state,
+                               instance_count: event2.instance_count,
+                               memory_in_mb_per_instance: event2.memory_in_mb_per_instance,
+                               app_guid: event2.app_guid,
+                               app_name: event2.app_name,
+                               space_guid: event2.space_guid,
+                               space_name: event2.space_name,
+                               org_guid: event2.org_guid
+    end
+  end
 end

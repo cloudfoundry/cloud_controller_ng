@@ -123,7 +123,7 @@ module ApiDsl
       end
     end
 
-    def standard_list_parameters controller
+    def standard_list_parameters(controller)
       if controller.query_parameters.size > 0
         query_parameter_description = "Parameters used to filter the result set."
         query_parameter_description += " Valid filters: #{controller.query_parameters.to_a.join(", ")}"

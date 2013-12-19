@@ -210,12 +210,22 @@ module VCAP::CloudController::RestController
       # @return [Set] If called with no arguments, returns the list
       # of query parameters.
       def query_parameters(*args)
-        if args.empty?
-          @query_parameters ||= Set.new
-        else
-          @query_parameters ||= Set.new
-          @query_parameters |= Set.new(args.map { |a| a.to_s })
-        end
+        @query_parameters ||= Set.new
+        @query_parameters |= Set.new(args.map { |a| a.to_s }) unless args.empty?
+        @query_parameters
+      end
+
+      # Query params that will be preserved in next and prev urls while doing enum
+      #
+      # @param [Array] args One or more param keys that will be preserved in next
+      # and prev urls
+      #
+      # @return [Set] If called with no arguments, returns the list
+      # of preserve query parameters.
+      def preserve_query_parameters(*args)
+        @perserved_query_params ||= Set.new
+        @perserved_query_params |= args.map { |a| a.to_s } unless args.empty?
+        @perserved_query_params
       end
 
       def deprecated_endpoint(path)

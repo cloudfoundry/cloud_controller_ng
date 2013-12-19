@@ -92,7 +92,7 @@ module VCAP::CloudController::RestController
 
       Paginator.render_json(
         self.class, enumerate_dataset, self.class.path,
-        @opts.merge(serialization: serialization))
+        @opts.merge(serialization: serialization), params)
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)

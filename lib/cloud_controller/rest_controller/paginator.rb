@@ -28,8 +28,8 @@ module VCAP::CloudController::RestController
     # expand inline in a relationship.
     #
     # @return [String] Json encoding pagination of the dataset.
-    def self.render_json(controller, ds, path, opts)
-      self.new(controller, ds, path, opts).render_json
+    def self.render_json(controller, ds, path, opts, request_params = {})
+      self.new(controller, ds, path, opts, request_params).render_json
     end
 
     # Create a paginator.
@@ -54,7 +54,7 @@ module VCAP::CloudController::RestController
     #
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
-    def initialize(controller, ds, path, opts)
+    def initialize(controller, ds, path, opts, request_params = {})
       page       = opts[:page] || 1
       page_size  = opts[:results_per_page] || 50
       criteria = opts[:order_by] || :id
@@ -65,6 +65,7 @@ module VCAP::CloudController::RestController
       @controller = controller
       @path = path
       @opts = opts
+      @request_params = request_params
     end
 
     # Pagination
@@ -105,6 +106,9 @@ module VCAP::CloudController::RestController
       }
       params['inline-relations-depth'] = @opts[:inline_relations_depth] if @opts[:inline_relations_depth]
       params['q'] = @opts[:q] if @opts[:q]
+      @controller.preserve_query_parameters.each do |preseved_param|
+        params[preseved_param] = @request_params[preseved_param] if @request_params[preseved_param]
+      end
 
       uri = Addressable::URI.parse(@path)
       uri.query_values = params
