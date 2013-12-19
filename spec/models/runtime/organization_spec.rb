@@ -155,6 +155,20 @@ module VCAP::CloudController
         expect { org.destroy(savepoint: true) }.to change { App[:id => app.id] }.from(app).to(nil)
       end
 
+      it "creates an AppUsageEvent for each app in the STARTED state" do
+        app = AppFactory.make(space: space)
+        app.update(state: "STARTED")
+        expect {
+          org.destroy
+        }.to change {
+          AppUsageEvent.count
+        }.by(1)
+        event = AppUsageEvent.last
+        expect(event.app_guid).to eql(app.guid)
+        expect(event.state).to eql("STOPPED")
+        expect(event.org_guid).to eql(org.guid)
+      end
+
       it "destroys all spaces" do
         expect { org.destroy(savepoint: true) }.to change { Space[:id => space.id] }.from(space).to(nil)
       end
