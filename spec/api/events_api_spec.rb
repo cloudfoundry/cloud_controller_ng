@@ -117,8 +117,6 @@ resource "Events (experimental)", :type => :api do
                                :space_guid => test_app.space.guid,
                                :metadata => {
                                  "request" => expected_app_request,
-                                 "desired_instances" => test_app.instances,
-                                 "desired_memory" => test_app.memory,
                                }
 
     end
@@ -139,7 +137,6 @@ resource "Events (experimental)", :type => :api do
                                :actee => test_app.guid,
                                :space_guid => test_app.space.guid,
                                :metadata => { "request" => { "recursive" => false } }
-
     end
 
     example "List space create events" do
@@ -177,7 +174,6 @@ resource "Events (experimental)", :type => :api do
                                :actee => test_space.guid,
                                :space_guid => test_space.guid,
                                :metadata => { "request" => space_request }
-
     end
 
     example "List space delete events" do
@@ -196,7 +192,6 @@ resource "Events (experimental)", :type => :api do
                                :actee => test_space.guid,
                                :space_guid => test_space.guid,
                                :metadata => { "request" => { "recursive" => true } }
-
     end
   end
 end

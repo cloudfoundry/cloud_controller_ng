@@ -70,9 +70,7 @@ module VCAP::CloudController
         actor_type: "user",
         timestamp: Time.now,
         metadata: {
-          request: App.audit_hash(request_attrs),
-          desired_instances: app.instances,
-          desired_memory: app.memory,
+          request: App.audit_hash(request_attrs)
         }
       )
     end
@@ -119,7 +117,7 @@ module VCAP::CloudController
           actor_type: "user",
           timestamp: Time.now,
           metadata: {
-              request: request_attrs
+            request: request_attrs
           }
       )
     end
@@ -134,7 +132,7 @@ module VCAP::CloudController
           actor_type: "user",
           timestamp: Time.now,
           metadata: {
-              request: request_attrs
+            request: request_attrs
           }
       )
     end
@@ -150,7 +148,7 @@ module VCAP::CloudController
           space_guid: space.guid,
           organization_guid: space.organization.guid,
           metadata: {
-              request: { recursive: recursive }
+            request: { recursive: recursive }
           }
       )
     end

@@ -143,14 +143,6 @@ module VCAP::CloudController
           "state" => "STOPPED"
         )
       end
-
-      it "contains the desired footprints of the application" do
-        metadata = event.metadata
-        expect(metadata).to include(
-          "desired_instances" => 2,
-          "desired_memory" => 99,
-        )
-      end
     end
 
     describe ".record_app_create" do
