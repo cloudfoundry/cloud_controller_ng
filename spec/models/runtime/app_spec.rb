@@ -568,24 +568,24 @@ module VCAP::CloudController
       end
     end
 
-    describe "health_check_timeout" do
+    describe "health_check_timeout_seconds" do
       it "should raise error if value is less than zero" do
         expect {
-          AppFactory.make(health_check_timeout: -10)
-        }.to raise_error(Sequel::ValidationFailed, /health_check_timeout less_than_zero/)
+          AppFactory.make(health_check_timeout_seconds: -10)
+        }.to raise_error(Sequel::ValidationFailed, /health_check_timeout_seconds less_than_zero/)
       end
 
       it "should not raise error if value is greater than zero" do
         expect {
-          AppFactory.make(health_check_timeout: 10)
+          AppFactory.make(health_check_timeout_seconds: 10)
         }.to_not raise_error
       end
 
       it "should not raise error if value is nil" do
         expect {
-          AppFactory.make(health_check_timeout: nil)
+          AppFactory.make(health_check_timeout_seconds: nil)
         }.to_not raise_error
-      end 
+      end
     end
 
     describe "package_hash=" do

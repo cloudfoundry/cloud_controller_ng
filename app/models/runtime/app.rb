@@ -56,13 +56,13 @@ module VCAP::CloudController
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :version, :command, :console, :debug,
-      :staging_task_id, :package_state, :health_check_timeout
+      :staging_task_id, :package_state, :health_check_timeout_seconds
 
     import_attributes :name, :production,
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :command, :console, :debug,
-      :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout
+      :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout_seconds
 
     strip_attributes :name
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
       validate_environment
       validate_metadata
       check_memory_quota
-      validate_health_check_timeout
+      validate_health_check_timeout_seconds
     end
 
     def before_create
@@ -304,9 +304,9 @@ module VCAP::CloudController
       end
     end
 
-    def validate_health_check_timeout
-      return unless health_check_timeout
-      errors.add(:health_check_timeout, :less_than_zero) unless health_check_timeout >= 0
+    def validate_health_check_timeout_seconds
+      return unless health_check_timeout_seconds
+      errors.add(:health_check_timeout_seconds, :less_than_zero) unless health_check_timeout_seconds >= 0
     end
 
     # We need to overide this ourselves because we are really doing a

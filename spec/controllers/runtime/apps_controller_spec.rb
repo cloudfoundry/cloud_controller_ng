@@ -175,21 +175,21 @@ module VCAP::CloudController
         end
       end
 
-      describe "update app health_check_timeout" do
-        context "when health_check_timeout value is provided" do
+      describe "update app health_check_timeout_seconds" do
+        context "when health_check_timeout_seconds value is provided" do
           let(:update_hash) do
-            {"health_check_timeout" => 80}
+            {"health_check_timeout_seconds" => 80}
           end
  
           it "should set to provided value" do
             update_app
             app_obj.refresh
-            app_obj.health_check_timeout.should == 80
+            app_obj.health_check_timeout_seconds.should == 80
             last_response.status.should == 201
           end
         end
 
-        context "when health_check_timeout value is not provided" do
+        context "when health_check_timeout_seconds value is not provided" do
           let(:update_hash) do
             {}
           end
@@ -591,21 +591,21 @@ module VCAP::CloudController
       end
     end
 
-    describe "health_check_timeout" do
+    describe "health_check_timeout_seconds" do
       let(:app_obj)   { AppFactory.make }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
-      it "should have no health_check_timeout entry in the metadata if not provided" do
+      it "should have no health_check_timeout_seconds entry in the metadata if not provided" do
         get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
         last_response.status.should == 200
-        decoded_response["entity"]["health_check_timeout"].should be_nil
+        decoded_response["entity"]["health_check_timeout_seconds"].should be_nil
         decoded_response["entity"]["metadata"].should be_nil
       end
 
-      it "should set the health_check_timeout on the app metadata if provided" do
-        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:health_check_timeout => 100), json_headers(admin_headers)
+      it "should set the health_check_timeout_seconds on the app metadata if provided" do
+        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:health_check_timeout_seconds => 100), json_headers(admin_headers)
         last_response.status.should == 201
-        decoded_response["entity"]["health_check_timeout"].should == 100
+        decoded_response["entity"]["health_check_timeout_seconds"].should == 100
         decoded_response["entity"]["metadata"].should be_nil
       end
     end

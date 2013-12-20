@@ -16,7 +16,7 @@ module VCAP::CloudController
       attribute  :command,             String,     :default => nil
       attribute  :console,             Message::Boolean, :default => false
       attribute  :debug,               String,     :default => nil
-      attribute  :health_check_timeout, Integer,   :default => nil
+      attribute  :health_check_timeout_seconds, Integer,   :default => nil
 
       attribute  :buildpack,           String, :default => nil
       attribute  :detected_buildpack,  String, :exclude_in => [:create, :update]
