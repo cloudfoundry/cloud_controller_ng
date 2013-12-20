@@ -297,34 +297,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      describe ".shift_positions_down_from" do
-        it "moves everything below and at the position to a lower position" do
-          expect {
-            Buildpack.send(:shift_positions_down_from, 2)
-          }.to change {
-            get_bp_ordered
-          }.from(
-            [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-          ).to(
-            [["name_100", 1], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
-          )
-        end
-      end
-
-      describe ".shift_positions_up_from" do
-        it "moves everything below and at the position to a higher position" do
-          expect {
-            Buildpack.send(:shift_positions_up_from, 2)
-          }.to change {
-            get_bp_ordered
-          }.from(
-            [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-          ).to(
-            [["name_100", 1], ["name_99", 1], ["name_98", 2], ["name_97", 3]]
-          )
-        end
-      end
     end
 
     describe ".create" do
