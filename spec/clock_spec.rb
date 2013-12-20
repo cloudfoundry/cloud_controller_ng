@@ -9,11 +9,10 @@ module VCAP::CloudController
       end
 
       before do
-        Steno.stub(logger: logger)
-
         allow(logger).to receive(:info)
         allow(Clockwork).to receive(:every).and_yield("dummy.scheduled.job")
         allow(Clockwork).to receive(:run)
+        allow(Steno).to receive(:logger).and_return(logger)
 
         Clock.start
       end
