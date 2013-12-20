@@ -69,6 +69,16 @@ namespace :jobs do
   end
 end
 
+namespace :clock do
+  desc "Start a recurring tasks"
+  task :start do
+    require "cloud_controller/clock"
+
+    BackgroundJobEnvironment.new(config).setup_environment
+    VCAP::CloudController::Clock.start
+  end
+end
+
 def config
   @config ||= begin
     config_file = ENV["CLOUD_CONTROLLER_NG_CONFIG"] || File.expand_path("../config/cloud_controller.yml", __FILE__)

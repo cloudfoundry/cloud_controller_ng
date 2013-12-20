@@ -75,6 +75,8 @@ GEM
     builder (3.2.2)
     celluloid (0.15.2)
       timers (~> 1.1.0)
+    clockwork (0.4.1)
+      tzinfo
     cloudfront-signer (2.1.0)
     coderay (1.1.0)
     coercible (0.2.0)
@@ -284,6 +286,7 @@ DEPENDENCIES
   bcrypt-ruby
   cf-message-bus!
   cf-uaa-lib (~> 1.3.7)!
+  clockwork
   cloudfront-signer
   debugger
   eventmachine (~> 1.0.0)

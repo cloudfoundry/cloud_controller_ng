@@ -26,6 +26,7 @@ gem "loggregator_emitter", "~> 3.0"
 gem "talentbox-delayed_job_sequel", git: "https://github.com/TalentBox/delayed_job_sequel", ref: "8725e1ee"
 gem "thin", "~> 1.5.1"
 gem "newrelic_rpm"
+gem "clockwork", require: false
 
 group :db do
   gem "mysql2"
