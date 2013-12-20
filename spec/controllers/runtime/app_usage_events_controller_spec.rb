@@ -45,5 +45,30 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "POST /v2/app_usage_events/destructively_purge_all_and_reseed_started_apps" do
+      it "purge all existing events" do
+        expect(AppUsageEvent.count).not_to eq(0)
+        post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, admin_headers
+        expect(last_response).to be_successful
+        expect(AppUsageEvent.count).to eq(0)
+      end
+
+      it "creates events for existing STARTED apps" do
+        app = AppFactory.make(state: "STARTED", package_hash: Sham.guid)
+        post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, admin_headers
+        expect(last_response).to be_successful
+        expect(AppUsageEvent.count).to eq(1)
+        expect(AppUsageEvent.last).to match_app(app)
+        expect(AppUsageEvent.last.created_at).to be_within(5.seconds).of(Time.now)
+      end
+
+      it "returns 403 as a non-admin" do
+        user = User.make
+        post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, headers_for(user)
+        expect(last_response.status).to eq(403)
+        expect(AppUsageEvent.count).to eq(1)
+      end
+    end
   end
 end

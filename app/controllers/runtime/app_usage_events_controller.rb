@@ -4,6 +4,20 @@ module VCAP::CloudController
 
     get "/v2/app_usage_events", :enumerate
 
+    post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", :reset
+
+    def reset
+      validate_access(:reset, model, user, roles)
+
+      AppUsageEvent.db[:app_usage_events].truncate
+      usage_query = App.join(:spaces, id: :apps__space_id).
+        join(:organizations, id: :spaces__organization_id).
+        select(:apps__guid, :apps__guid, :apps__name, :apps__state, :apps__instances, :apps__memory, :spaces__guid, :spaces__name, :organizations__guid, Sequel.datetime_class.now).order(:apps__id)
+      AppUsageEvent.insert([:guid, :app_guid, :app_name, :state, :instance_count, :memory_in_mb_per_instance, :space_guid, :space_name, :org_guid, :created_at], usage_query)
+
+      [HTTP::OK,""]
+    end
+
     private
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       if after_guid = params["after_guid"]

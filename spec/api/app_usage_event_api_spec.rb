@@ -44,4 +44,20 @@ resource "App Usage Events (experimental)", :type => :api do
                                org_guid: event2.org_guid
     end
   end
+
+  post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps" do
+    example "Purge and reseed app usage events" do
+      explanation <<-DOC
+        Destroys all existing events. Populates new usage events, one for each started app.
+        All populated events will have a created_at value of current time.
+
+        There is the potential race condition if apps are currently being started, stopped, or scaled.
+
+        The seeded usage events will have the same guid as the app.
+      DOC
+
+      client.post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, headers
+      status.should == 200
+    end
+  end
 end

@@ -12,6 +12,7 @@ module VCAP::CloudController
     context 'a user that is not an admin (defensive)' do
       it_behaves_like :no_access
       it { should_not be_able_to :index, VCAP::CloudController::AppUsageEvent }
+      it { should_not be_able_to :reset, VCAP::CloudController::AppUsageEvent }
     end
 
     context 'a user that isnt logged in (defensive)' do
@@ -19,6 +20,7 @@ module VCAP::CloudController
       let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
       it { should_not be_able_to :index, VCAP::CloudController::AppUsageEvent }
+      it { should_not be_able_to :reset, VCAP::CloudController::AppUsageEvent }
     end
   end
 end
