@@ -15,7 +15,7 @@ module VCAP::CloudController
         select(:apps__guid, :apps__guid, :apps__name, :apps__state, :apps__instances, :apps__memory, :spaces__guid, :spaces__name, :organizations__guid, Sequel.datetime_class.now).order(:apps__id)
       AppUsageEvent.insert([:guid, :app_guid, :app_name, :state, :instance_count, :memory_in_mb_per_instance, :space_guid, :space_name, :org_guid, :created_at], usage_query)
 
-      [HTTP::OK,""]
+      [HTTP::NO_CONTENT, nil]
     end
 
     private

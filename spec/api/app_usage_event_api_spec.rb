@@ -57,7 +57,7 @@ resource "App Usage Events (experimental)", :type => :api do
       DOC
 
       client.post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, headers
-      status.should == 200
+      status.should == 204
     end
   end
 end

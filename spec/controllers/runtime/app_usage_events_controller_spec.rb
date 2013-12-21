@@ -50,7 +50,7 @@ module VCAP::CloudController
       it "purge all existing events" do
         expect(AppUsageEvent.count).not_to eq(0)
         post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, admin_headers
-        expect(last_response).to be_successful
+        expect(last_response.status).to eql(204)
         expect(AppUsageEvent.count).to eq(0)
       end
 
