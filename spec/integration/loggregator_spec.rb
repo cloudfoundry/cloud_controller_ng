@@ -16,7 +16,7 @@ describe "Cloud controller Loggregator Integration", :type => :integration do
     start_nats debug: false
     start_cc(debug: false, config: "spec/fixtures/config/port_8181_config.yml")
 
-    org = org_with_paid_quota(authed_headers)
+    org = org_with_default_quota(authed_headers)
     org_guid = org.json_body["metadata"]["guid"]
 
     space = make_post_request(

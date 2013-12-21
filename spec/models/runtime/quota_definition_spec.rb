@@ -17,7 +17,7 @@ module VCAP::CloudController
 
     describe ".default" do
       it "returns the default quota" do
-        QuotaDefinition.default.name.should == "free"
+        QuotaDefinition.default.name.should == "default"
       end
     end
 

@@ -31,7 +31,7 @@ describe "Service Instance Management", type: :integration do
   end
 
   let(:org) do
-    org_with_paid_quota(authed_headers)
+    org_with_default_quota(authed_headers)
   end
 
   let(:org_guid) { org.json_body.fetch("metadata").fetch("guid") }

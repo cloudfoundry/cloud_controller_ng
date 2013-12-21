@@ -13,20 +13,22 @@ module VCAP::CloudController
       let(:config) do
         {
           quota_definitions: {
-            "free" => {
+            "small" => {
               non_basic_services_allowed: false,
               total_routes: 10,
               total_services: 10,
               memory_limit: 1024,
             },
 
-            "paid" => {
+            "default" => {
               non_basic_services_allowed: true,
               total_routes: 1000,
               total_services: 20,
               memory_limit: 1_024_000,
             },
-          }}
+          },
+          :default_quota_definition => "default",
+        }
       end
       context "when there are no quota definitions" do
         before do
@@ -38,17 +40,17 @@ module VCAP::CloudController
             Seeds.create_seed_quota_definitions(config)
           }.to change{QuotaDefinition.count}.from(0).to(2)
 
-          free_quota = QuotaDefinition[name: "free"]
-          expect(free_quota.non_basic_services_allowed).to eq(false)
-          expect(free_quota.total_routes).to eq(10)
-          expect(free_quota.total_services).to eq(10)
-          expect(free_quota.memory_limit).to eq(1024)
+          small_quota = QuotaDefinition[name: "small"]
+          expect(small_quota.non_basic_services_allowed).to eq(false)
+          expect(small_quota.total_routes).to eq(10)
+          expect(small_quota.total_services).to eq(10)
+          expect(small_quota.memory_limit).to eq(1024)
 
-          paid_quota = QuotaDefinition[name: "paid"]
-          expect(paid_quota.non_basic_services_allowed).to eq(true)
-          expect(paid_quota.total_routes).to eq(1000)
-          expect(paid_quota.total_services).to eq(20)
-          expect(paid_quota.memory_limit).to eq(1_024_000)
+          default_quota = QuotaDefinition[name: "default"]
+          expect(default_quota.non_basic_services_allowed).to eq(true)
+          expect(default_quota.total_routes).to eq(1000)
+          expect(default_quota.total_services).to eq(20)
+          expect(default_quota.memory_limit).to eq(1_024_000)
         end
       end
 
@@ -64,17 +66,17 @@ module VCAP::CloudController
               Seeds.create_seed_quota_definitions(config)
             }.not_to change{QuotaDefinition.count}
 
-            free_quota = QuotaDefinition[name: "free"]
-            expect(free_quota.non_basic_services_allowed).to eq(false)
-            expect(free_quota.total_routes).to eq(10)
-            expect(free_quota.total_services).to eq(10)
-            expect(free_quota.memory_limit).to eq(1024)
+            small_quota = QuotaDefinition[name: "small"]
+            expect(small_quota.non_basic_services_allowed).to eq(false)
+            expect(small_quota.total_routes).to eq(10)
+            expect(small_quota.total_services).to eq(10)
+            expect(small_quota.memory_limit).to eq(1024)
 
-            paid_quota = QuotaDefinition[name: "paid"]
-            expect(paid_quota.non_basic_services_allowed).to eq(true)
-            expect(paid_quota.total_routes).to eq(1000)
-            expect(paid_quota.total_services).to eq(20)
-            expect(paid_quota.memory_limit).to eq(1_024_000)
+            default_quota = QuotaDefinition[name: "default"]
+            expect(default_quota.non_basic_services_allowed).to eq(true)
+            expect(default_quota.total_routes).to eq(1000)
+            expect(default_quota.total_services).to eq(20)
+            expect(default_quota.memory_limit).to eq(1_024_000)
           end
         end
 
@@ -82,9 +84,9 @@ module VCAP::CloudController
           it "warns" do
             mock_logger = double
             Steno.stub(:logger).and_return(mock_logger)
-            config[:quota_definitions]["free"][:total_routes] = 2
+            config[:quota_definitions]["small"][:total_routes] = 2
 
-            mock_logger.should_receive(:warn).with("seeds.quota-collision", hash_including(name: "free"))
+            mock_logger.should_receive(:warn).with("seeds.quota-collision", hash_including(name: "small"))
 
             Seeds.create_seed_quota_definitions(config)
           end
@@ -105,20 +107,20 @@ module VCAP::CloudController
       end
 
       context "when system domain organization exists in the configuration" do
-        context "when 'paid' quota definition is missing" do
+        context "when default quota definition is missing" do
           before { QuotaDefinition.dataset.delete }
 
           it "raises error" do
             expect do
               Seeds.create_seed_organizations(config)
-            end.to raise_error(ArgumentError, /missing 'paid' quota definition in config file/i)
+            end.to raise_error(ArgumentError, /missing default quota definition in config file/i)
           end
         end
 
-        context "when 'paid' quota definition exists" do
+        context "when default quota definition exists" do
           before do
             QuotaDefinition.dataset.delete
-            QuotaDefinition.make(:name => "paid")
+            QuotaDefinition.make(:name => "default")
             Organization.dataset.delete
           end
 
@@ -128,7 +130,7 @@ module VCAP::CloudController
             }.to change { Organization.count }.from(0).to(1)
 
             org = Organization.first
-            expect(org.quota_definition.name).to eq("paid")
+            expect(org.quota_definition.name).to eq("default")
             expect(org.name).to eq("the-system_domain-org-name")
           end
 
@@ -159,20 +161,21 @@ module VCAP::CloudController
           :system_domain => "system.example.com",
           :system_domain_organization => "the-system-org",
           :quota_definitions => {
-            "paid" => {
+            "default" => {
               non_basic_services_allowed: true,
               total_routes: 1000,
               total_services: 20,
               memory_limit: 1_024_000,
             },
-          }
+          },
+          :default_quota_definition => "default"
         }
       end
 
       before do
         Domain.dataset.delete
         QuotaDefinition.dataset.delete
-        QuotaDefinition.make(:name => "paid")
+        QuotaDefinition.make(:name => "default")
         Seeds.create_seed_organizations(config)
       end
 

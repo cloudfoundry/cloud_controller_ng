@@ -104,15 +104,15 @@ module VCAP::CloudController
 
             it "should load quota definitions" do
               QuotaDefinition.count.should == 2
-              paid = QuotaDefinition[:name => "paid"]
-              paid.non_basic_services_allowed.should == true
-              paid.total_services.should == 500
-              paid.memory_limit.should == 204800
+              default = QuotaDefinition[:name => "default"]
+              default.non_basic_services_allowed.should == true
+              default.total_services.should == 100
+              default.memory_limit.should == 10240
             end
 
             it "creates the system domain organization" do
               expect(Organization.last.name).to eq("the-system-domain-org-name")
-              expect(Organization.last.quota_definition.name).to eq("paid")
+              expect(Organization.last.quota_definition.name).to eq("default")
             end
 
             it "creates the system domain, owned by the system domain org" do
@@ -133,10 +133,10 @@ module VCAP::CloudController
             expect { subject.run! }.not_to change(Domain, :count)
           end
 
-          context "when the 'paid' quota is missing from the config file" do
+          context "when the 'default' quota is missing from the config file" do
             let(:config_file) do
               config = YAML.load_file(valid_config_file_path)
-              config["quota_definitions"].delete("paid")
+              config["quota_definitions"].delete("default")
               file = Tempfile.new("config")
               file.write(YAML.dump(config))
               file.rewind
@@ -146,7 +146,7 @@ module VCAP::CloudController
             it "raises an exception" do
               expect {
                 subject.run!
-              }.to raise_error(ArgumentError, /Missing .*paid.* quota/)
+              }.to raise_error(ArgumentError, /Missing .*default.* quota/)
             end
           end
 

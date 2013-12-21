@@ -32,10 +32,11 @@ module VCAP::CloudController
         # then the 'system domain' feature is unused.
         return unless config[:system_domain_organization]
 
-        quota_definition = QuotaDefinition.find(:name => "paid")
+        #force load the quota definition from the database
+        quota_definition = QuotaDefinition.find name: QuotaDefinition.default.name
 
         unless quota_definition
-          raise ArgumentError, "Missing 'paid' quota definition in config file"
+          raise ArgumentError, "Missing default quota definition in config file"
         end
 
         org = Organization.find(:name => config[:system_domain_organization])
