@@ -32,6 +32,8 @@ module VCAP::CloudController
 
           if !buildpack.position || buildpack.position >= last_position
             buildpack.position = last_position + 1
+          elsif buildpack.position < 1
+            buildpack.position = 1
           end
 
           buildpack.shift_and_update_positions(last_position, buildpack.position)

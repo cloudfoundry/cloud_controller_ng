@@ -300,6 +300,31 @@ module VCAP::CloudController
     end
 
     describe ".create" do
+      context "with a specified position" do
+        it "creates a buildpack entry at the lowest position" do
+          expect {
+            Buildpack.create(name: "new_buildpack", key: "abcdef")
+          }.to change {
+            get_bp_ordered
+          }.from([]).to([["new_buildpack", 1]])
+        end
+
+        it "has a position 0 specified" do
+          bp = Buildpack.create(name: "new_buildpack", key: "abcdef", position: 0)
+          expect(bp.position).to(eql(1))
+        end
+      end
+
+      context "without a specified position" do
+        it "creates a buildpack entry at the lowest position" do
+          expect {
+            Buildpack.create(name: "new_buildpack", key: "abcdef", position: 7)
+          }.to change {
+            get_bp_ordered
+          }.from([]).to([["new_buildpack", 1]])
+        end
+      end
+      
       it "also locks the last position so that the moves don't race condition it" do
         last = double(:last, position: 4)
         allow(Buildpack).to receive(:at_last_position) { last }
@@ -318,6 +343,18 @@ module VCAP::CloudController
         end
 
         context "with a specified position" do
+          it "creates a buildpack at position 1 when less than 1" do
+            expect {
+              Buildpack.create(name: "new_buildpack", key: "abcdef", position: 0)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["new_buildpack", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
+            )
+          end
+
           it "creates a buildpack entry at the lowest position" do
             expect {
               Buildpack.create(name: "new_buildpack", key: "abcdef", position: 7)
@@ -358,7 +395,7 @@ module VCAP::CloudController
         end
 
         context "and called with a block" do
-          it "foo" do
+          it "orders based on position" do
             expect {
               Buildpack.create do |bp|
                 bp.set_all(name: "new_buildpack", key: "abcdef", position: 1)
@@ -370,28 +407,6 @@ module VCAP::CloudController
             ).to(
               [["new_buildpack", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
             )
-          end
-        end
-      end
-
-      context "when a new table" do
-        context "with a specified position" do
-          it "creates a buildpack entry at the lowest position" do
-            expect {
-              Buildpack.create(name: "new_buildpack", key: "abcdef")
-            }.to change {
-              get_bp_ordered
-            }.from([]).to([["new_buildpack", 1]])
-          end
-        end
-
-        context "without a specified position" do
-          it "creates a buildpack entry at the lowest position" do
-            expect {
-              Buildpack.create(name: "new_buildpack", key: "abcdef", position: 7)
-            }.to change {
-              get_bp_ordered
-            }.from([]).to([["new_buildpack", 1]])
           end
         end
       end
