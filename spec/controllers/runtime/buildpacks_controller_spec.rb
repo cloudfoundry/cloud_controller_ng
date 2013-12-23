@@ -21,12 +21,12 @@ module VCAP::CloudController
 
         it "creates a buildpack with a default position" do
           post "/v2/buildpacks", req_body, admin_headers
-          expect(decoded_response['entity']['position']).to eq(0)
+          expect(decoded_response['entity']['position']).to eq(1)
         end
 
         it "sets the position if provided" do
           post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", position: 10}), admin_headers
-          expect(decoded_response['entity']['position']).to eq(10)
+          expect(decoded_response['entity']['position']).to eq(1)
         end
 
         it "fails when duplicate name is used" do
@@ -85,15 +85,15 @@ module VCAP::CloudController
             expect(last_response.status).to eq(200)
             expect(decoded_response["total_results"]).to eq(1)
             expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack',
-                                                                      'position' => 0,
+                                                                      'position' => 1,
                                                                       'enabled' => true})
           end
         end
       end
 
       context "UPDATE" do
-        let!(:buildpack1) { VCAP::CloudController::Buildpack.create_from_hash(name: "first_buildpack", key: "xyz", position: 1) }
-        let!(:buildpack2) { VCAP::CloudController::Buildpack.create_from_hash(name: "second_buildpack", key: "xyz", position: 2) }
+        let!(:buildpack1) { VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
+        let!(:buildpack2) { VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
 
         it "returns NOT AUTHORIZED (403) for non admins" do
           put "/v2/buildpacks/#{buildpack2.guid}", {}, headers_for(user)
@@ -116,14 +116,14 @@ module VCAP::CloudController
 
           it "updates current end to beyond end of list" do
             expect {
-              put "/v2/buildpacks/#{buildpack2.guid}", '{"position": 10}', admin_headers
+              put "/v2/buildpacks/#{buildpack2.guid}", '{"position": 15}', admin_headers
               expect(last_response.status).to eq(201)
             }.to_not change {
               Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
             }
           end
 
-          it "updates current end position 0" do
+          it "updates to position 1 when position < 1" do
             expect {
               put "/v2/buildpacks/#{buildpack2.guid}", '{"position": 0}', admin_headers
               expect(last_response.status).to eq(201)
@@ -132,14 +132,14 @@ module VCAP::CloudController
             }.from(
                    [["first_buildpack", 1], ["second_buildpack", 2]]
                  ).to(
-                   [["second_buildpack", 0], ["first_buildpack", 1]]
+                   [["second_buildpack", 1], ["first_buildpack", 2]]
                  )
           end
         end
       end
 
       context "DELETE" do
-        let(:buildpack) { VCAP::CloudController::Buildpack.make }
+        let!(:buildpack1) { VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
 
         it "returns NOT FOUND (404) if the buildpack does not exist" do
           delete "/v2/buildpacks/abcd", {}, admin_headers
@@ -148,34 +148,52 @@ module VCAP::CloudController
 
         context "create a default buildpack" do
           it "returns NOT AUTHORIZED (403) for non admins" do
-            delete "/v2/buildpacks/#{buildpack.guid}", {}, headers_for(user)
+            delete "/v2/buildpacks/#{buildpack1.guid}", {}, headers_for(user)
             expect(last_response.status).to eq(403)
           end
 
           it "returns a NO CONTENT (204) if an admin deletes a build pack" do
-            delete "/v2/buildpacks/#{buildpack.guid}", {}, admin_headers
+            delete "/v2/buildpacks/#{buildpack1.guid}", {}, admin_headers
             expect(last_response.status).to eq(204)
           end
 
           it "destroys the buildpack key in the blobstore" do
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-            buildpack_blobstore.cp_to_blobstore(Tempfile.new(['FAKE_BUILDPACK', '.zip']), buildpack.key)
+            buildpack_blobstore.cp_to_blobstore(Tempfile.new(['FAKE_BUILDPACK', '.zip']), buildpack1.key)
 
-            delete "/v2/buildpacks/#{buildpack.guid}", {}, admin_headers
+            delete "/v2/buildpacks/#{buildpack1.guid}", {}, admin_headers
 
-            expect(Buildpack.find(name: buildpack.name)).to be_nil
+            expect(Buildpack.find(name: buildpack1.name)).to be_nil
             expect { Delayed::Worker.new.work_off(1) }.to change {
-              buildpack_blobstore.exists?(buildpack.key)
+              buildpack_blobstore.exists?(buildpack1.key)
             }.from(true).to(false)
           end
 
           it "does not fail if no buildpack bits were ever uploaded" do
-            buildpack.update_from_hash(key: nil)
-            expect(buildpack.key).to be_nil
+            buildpack1.update_from_hash(key: nil)
+            expect(buildpack1.key).to be_nil
 
-            delete "/v2/buildpacks/#{buildpack.guid}", {}, admin_headers
+            delete "/v2/buildpacks/#{buildpack1.guid}", {}, admin_headers
             expect(last_response.status).to eql(204)
-            expect(Buildpack.find(name: buildpack.name)).to be_nil
+            expect(Buildpack.find(name: buildpack1.name)).to be_nil
+          end
+        end
+
+        context "positions are adjusted" do
+          let!(:buildpack2) { VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
+          let!(:buildpack3) { VCAP::CloudController::Buildpack.create({name: "third_buildpack", key: "xyz", position: 15}) }
+
+          it "shifts down" do
+            expect {
+            delete "/v2/buildpacks/#{buildpack1.guid}", {}, admin_headers
+              expect(last_response.status).to eq(204)
+            }.to change {
+              Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
+            }.from(
+                   [["first_buildpack", 1], ["second_buildpack", 2], ["third_buildpack", 3]]
+                 ).to(
+                   [["second_buildpack", 1], ["third_buildpack", 2]]
+                 )
           end
         end
       end
