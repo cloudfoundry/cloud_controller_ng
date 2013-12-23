@@ -74,7 +74,7 @@ module VCAP::CloudController::RestController
     def do_delete(obj)
       raise_if_has_associations!(obj) if v2_api? && !recursive?
 
-      model_deletion_job = ModelDeletionJob.new(obj.class, obj.guid)
+      model_deletion_job = Jobs::Runtime::ModelDeletion.new(obj.class, obj.guid)
 
       if async?
         job = Delayed::Job.enqueue(model_deletion_job, queue: "cc-generic")

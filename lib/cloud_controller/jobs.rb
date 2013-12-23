@@ -3,7 +3,7 @@ require "jobs/runtime/blobstore_delete"
 require "jobs/runtime/blobstore_upload"
 require "jobs/runtime/droplet_deletion"
 require "jobs/runtime/droplet_upload"
-require "jobs/runtime/model_deletion_job"
+require "jobs/runtime/model_deletion"
 require "jobs/runtime/legacy_jobs"
 
 class LocalQueue < Struct.new(:config)

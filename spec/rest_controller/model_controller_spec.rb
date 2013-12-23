@@ -335,7 +335,7 @@ module VCAP::CloudController
 
           job = Delayed::Job.last
           expect(job.queue).to eq "cc-generic"
-          expect(job.payload_object).to be_a ModelDeletionJob
+          expect(job.payload_object).to be_a Jobs::Runtime::ModelDeletion
           expect(job.payload_object.model_class).to eq model_klass
           expect(job.payload_object.guid).to eq model.guid
         end
