@@ -4,7 +4,7 @@
 
 require "jobs/runtime/app_bits_packer"
 require "jobs/runtime/blobstore_delete"
-require "jobs/runtime/blobstore_update"
+require "jobs/runtime/blobstore_upload"
 require "jobs/runtime/droplet_deletion"
 
 AppBitsPackerJob = VCAP::CloudController::Jobs::Runtime::AppBitsPacker

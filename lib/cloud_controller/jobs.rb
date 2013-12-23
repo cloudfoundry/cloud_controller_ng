@@ -1,6 +1,6 @@
 require "jobs/runtime/app_bits_packer"
 require "jobs/runtime/blobstore_delete"
-require "jobs/runtime/blobstore_update"
+require "jobs/runtime/blobstore_upload"
 require "jobs/runtime/droplet_deletion"
 require "jobs/runtime/droplet_upload_job"
 require "jobs/runtime/model_deletion_job"
