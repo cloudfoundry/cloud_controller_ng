@@ -84,7 +84,7 @@ module VCAP::CloudController
           tmpdir = Dir.mktmpdir
           zipname = File.join(tmpdir, "test.zip")
           create_zip(zipname, 10, 1024)
-          AppBitsPackerJob.new(guid, zipname, []).perform
+          Jobs::Runtime::AppBitsPacker.new(guid, zipname, []).perform
           FileUtils.rm_rf(tmpdir)
 
           get "/staging/apps/#{app_obj.guid}"

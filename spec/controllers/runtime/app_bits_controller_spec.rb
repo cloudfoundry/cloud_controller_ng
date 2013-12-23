@@ -182,7 +182,7 @@ module VCAP::CloudController
         tmpdir = Dir.mktmpdir
         zipname = File.join(tmpdir, "test.zip")
         create_zip(zipname, 10, 1024)
-        AppBitsPackerJob.new(app_obj.guid, zipname, []).perform
+        Jobs::Runtime::AppBitsPacker.new(app_obj.guid, zipname, []).perform
         FileUtils.rm_rf(tmpdir)
       end
 
@@ -215,7 +215,7 @@ module VCAP::CloudController
           tmpdir = Dir.mktmpdir
           zipname = File.join(tmpdir, "test.zip")
           create_zip(zipname, 10, 1024)
-          AppBitsPackerJob.new(guid, zipname, []).perform
+          Jobs::Runtime::AppBitsPacker.new(guid, zipname, []).perform
         end
 
         after do
