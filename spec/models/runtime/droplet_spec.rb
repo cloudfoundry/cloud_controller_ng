@@ -43,7 +43,7 @@ module VCAP::CloudController
         app = AppFactory.make
         droplet = app.current_droplet
         Delayed::Job.should_receive(:enqueue).with(
-          DropletDeletionJob.new(droplet.new_blobstore_key, droplet.old_blobstore_key),
+          Jobs::Runtime::DropletDeletion.new(droplet.new_blobstore_key, droplet.old_blobstore_key),
           queue: "cc-generic"
         )
         droplet.destroy
