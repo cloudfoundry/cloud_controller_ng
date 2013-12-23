@@ -44,6 +44,11 @@ module VCAP::CloudController
       end
     end
 
+    def after_destroy
+      Buildpack.shift_positions_up_from(position)
+      super
+    end
+
     def shift_to_position(target_position)
       return if target_position == position
 
