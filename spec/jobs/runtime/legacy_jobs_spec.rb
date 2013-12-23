@@ -16,4 +16,8 @@ describe "Legacy Jobs" do
   describe ::DropletDeletionJob do
     it { should be_a(VCAP::CloudController::Jobs::Runtime::DropletDeletion) }
   end
+
+  describe ::DropletUploadJob do
+    it { should be_a(VCAP::CloudController::Jobs::Runtime::DropletUpload) }
+  end
 end

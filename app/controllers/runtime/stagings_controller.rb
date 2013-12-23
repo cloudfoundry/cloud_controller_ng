@@ -54,7 +54,7 @@ module VCAP::CloudController
 
       logger.info "droplet.begin-upload", :app_guid => app.guid
 
-      droplet_upload_job = DropletUploadJob.new(upload_path, app.id)
+      droplet_upload_job = Jobs::Runtime::DropletUpload.new(upload_path, app.id)
 
       if async?
         job = Delayed::Job.enqueue(droplet_upload_job, queue: LocalQueue.new(config))
