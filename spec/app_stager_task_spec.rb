@@ -164,6 +164,7 @@ module VCAP::CloudController
             end
             callback_called.should be_false
           end
+
           it "marks the app as having failed to stage" do
             expect {
               ignore_error(Errors::StagingError) { stage }
@@ -197,6 +198,7 @@ module VCAP::CloudController
             end
             callback_called.should be_false
           end
+
           it "marks the app as having failed to stage" do
             expect {
               ignore_error(Errors::StagingError) { stage }
@@ -318,7 +320,7 @@ module VCAP::CloudController
 
           it "logs StagingError instead of raising to avoid stopping main runloop" do
             logger = double(:logger, :info => nil)
-            logger.should_receive(:error).with(/failed to stage/)
+            logger.should_receive(:error).with(/Encountered error on stager with id #{stager_id}/)
 
             Steno.stub(:logger => logger)
             stage
@@ -355,8 +357,9 @@ module VCAP::CloudController
 
           it "logs StagingError instead of raising to avoid stopping main runloop" do
             logger = double(:logger, :info => nil)
+
             logger.should_receive(:error) do |msg|
-              msg.should match(/failed to stage/)
+              msg.should match(/Encountered error on stager with id #{stager_id}/)
             end
 
             Steno.stub(:logger => logger)

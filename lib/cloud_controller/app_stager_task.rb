@@ -125,7 +125,7 @@ module VCAP::CloudController
       promise.deliver(Response.new(response))
     rescue => e
       Loggregator.emit_error(@app.guid, "exception handling first response #{e.message}")
-      logger.error("exception handling first response #{e.inspect}, backtrace: #{e.backtrace.join("\n")}")
+      logger.error("exception handling first response from stager with id #{@stager_id} response: #{e.inspect}, backtrace: #{e.backtrace.join("\n")}")
       promise.fail(e)
     end
 
@@ -136,7 +136,7 @@ module VCAP::CloudController
       process_response(response)
     rescue => e
       Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
-      logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
+      logger.error "Encountered error on stager with id #{@stager_id}: #{e}\n#{e.backtrace.join("\n")}"
     end
 
     def process_response(response)
@@ -147,7 +147,7 @@ module VCAP::CloudController
           staging_completion(Response.new(response))
         rescue => e
           Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
-          logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
+          logger.error "Encountered error on stager with id #{@stager_id}: #{e}\n#{e.backtrace.join("\n")}"
         end
       end
     end
