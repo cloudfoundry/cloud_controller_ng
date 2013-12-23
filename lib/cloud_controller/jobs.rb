@@ -1,6 +1,10 @@
-Dir[File.expand_path("../../../app/jobs/**/*.rb", __FILE__)].each do |file|
-  require file
-end
+require "jobs/runtime/app_bits_packer"
+require "jobs/runtime/blobstore_delete"
+require "jobs/runtime/blobstore_update"
+require "jobs/runtime/droplet_deletion"
+require "jobs/runtime/droplet_upload_job"
+require "jobs/runtime/model_deletion_job"
+require "jobs/runtime/legacy_jobs"
 
 class LocalQueue < Struct.new(:config)
   def to_s
