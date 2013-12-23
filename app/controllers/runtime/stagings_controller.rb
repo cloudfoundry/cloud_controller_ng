@@ -83,7 +83,7 @@ module VCAP::CloudController
       raise AppNotFound.new(guid) if app.nil?
       raise StagingError.new("malformed buildpack cache upload request for #{app.guid}") unless upload_path
 
-      blobstore_upload = BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
       Delayed::Job.enqueue(blobstore_upload, queue: LocalQueue.new(config))
       HTTP::OK
     end

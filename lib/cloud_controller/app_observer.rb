@@ -38,12 +38,12 @@ module VCAP::CloudController
       private
 
       def delete_buildpack_cache(app)
-        delete_job = BlobstoreDelete.new(app.guid, :buildpack_cache_blobstore)
+        delete_job = Jobs::Runtime::BlobstoreDelete.new(app.guid, :buildpack_cache_blobstore)
         Delayed::Job.enqueue(delete_job, queue: "cc-generic")
       end
 
       def delete_package(app)
-        delete_job = BlobstoreDelete.new(app.guid, :package_blobstore)
+        delete_job = Jobs::Runtime::BlobstoreDelete.new(app.guid, :package_blobstore)
         Delayed::Job.enqueue(delete_job, queue: "cc-generic")
       end
 

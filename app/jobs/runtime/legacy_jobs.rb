@@ -3,3 +3,5 @@
 # update CF.
 
 AppBitsPackerJob = VCAP::CloudController::Jobs::Runtime::AppBitsPacker
+BlobstoreDelete = VCAP::CloudController::Jobs::Runtime::BlobstoreDelete
+BlobstoreUpload = VCAP::CloudController::Jobs::Runtime::BlobstoreUpload
