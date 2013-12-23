@@ -9,10 +9,10 @@ end
 
 # logs by default are sent to /dev/null.  To debug, look for the caller of this fake broker.
 
-@@instance_count = 0
-@@binding_count = 0
+instance_count = 0
+binding_count = 0
 
-@@plans = [
+plans = [
   {
     'id' => 'custom-plan-1',
     'name' => 'free',
@@ -54,7 +54,7 @@ get '/v2/catalog' do
             'blurb' => 'A very fine service',
           },
         },
-        'plans' => @@plans,
+        'plans' => plans,
       }
     ]
   }.to_json
@@ -66,7 +66,7 @@ put '/v2/service_instances/:service_instance_id' do
   json = JSON.parse(request.body.read)
   raise 'unexpected plan_id' unless json['plan_id'] == 'custom-plan-1'
 
-  @@instance_count += 1
+  instance_count += 1
 
   body = {
     'dashboard_url' => 'http://dashboard'
@@ -78,7 +78,7 @@ put '/v2/service_instances/:service_instance_id/service_bindings/:service_bindin
   json = JSON.parse(request.body.read)
   raise 'APP_GUID required in bind request' unless json['app_guid']
 
-  @@binding_count += 1
+  binding_count += 1
 
   body = {
     'credentials' => {
@@ -91,27 +91,27 @@ put '/v2/service_instances/:service_instance_id/service_bindings/:service_bindin
 end
 
 delete '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
-  @@binding_count -= 1
+  binding_count -= 1
 
   [204, {}, '']
 end
 
 delete '/v2/service_instances/:service_instance_id' do
-  @@instance_count -= 1
+  instance_count -= 1
 
   [204, {}, '']
 end
 
 get '/counts' do
   body = {
-    instances: @@instance_count,
-    bindings: @@binding_count
+    instances: instance_count,
+    bindings: binding_count
   }.to_json
 
   [200, {}, body]
 end
 
 delete '/plan/last' do
-  @@plans.pop
+  plans.pop
   [204, {}, nil]
 end
