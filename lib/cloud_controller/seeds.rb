@@ -33,7 +33,7 @@ module VCAP::CloudController
         return unless config[:system_domain_organization]
 
         #force load the quota definition from the database
-        quota_definition = QuotaDefinition.find name: QuotaDefinition.default.name
+        quota_definition = QuotaDefinition.find name: QuotaDefinition.default.name if QuotaDefinition.default
 
         unless quota_definition
           raise ArgumentError, "Missing default quota definition in config file"

@@ -107,7 +107,7 @@ module VCAP::CloudController
       end
 
       context "when system domain organization exists in the configuration" do
-        context "when default quota definition is missing" do
+        context "when default quota definition is missing in configuraition" do
           before { QuotaDefinition.dataset.delete }
 
           it "raises error" do
