@@ -178,79 +178,78 @@ module ControllerHelpers
 
   shared_examples "collection operations" do |opts|
     describe "collections" do
-      # FIXME: this needs to be re-enabled.. *BUT* needs to be split
-      # into read/write portions that can be turned on independently.
-      # Not all models currently have both import and export on their
-      # on_to_many relations, which this currently assumes.
-      #
-      # describe "modifying one_to_many collections" do
-      #   opts[:one_to_many_collection_ids].each do |attr, make|
-      #     describe "#{attr}" do
-      #       include_context "collections", opts, attr, make
-      #       child_name  = attr.to_s
-
-      #       describe "PUT #{opts[:path]}/:guid with #{attr} in the request body" do
-      #         it "should return 200" do
-      #           do_write(:put, [@child1], 201, [@child1])
-      #         end
-      #       end
-      #     end
-      #   end
-      # end
-
-      describe "modifying many_to_many collections" do
-        opts[:many_to_many_collection_ids].each do |attr, make|
-          describe "#{attr}" do
-            include_context "collections", opts, attr, make
-            child_name  = attr.to_s.chomp("_guids")
-            path = "#{opts[:path]}/:guid"
-
-            before do
-              @child1 = make.call(obj)
-              @child2 = make.call(obj)
-              @child3 = make.call(obj)
-            end
-
-            describe "POST #{path} with only #{attr} in the request body" do
+      describe "modifying collections" do
+        describe "one_to_many" do
+          opts[:one_to_many_collection_ids].each do |attr, make|
+            describe "#{attr}" do
+              include_context "collections", opts, attr, make
               before do
-                do_write(:post, [@child1], 404, [])
+                @child1 = make.call(obj)
               end
 
-              it "should return 404" do
-                last_response.status.should == 404
+              describe "PUT #{opts[:path]}/:guid with #{attr} in the request body" do
+                it "should return 200" do
+                  do_write(:put, [@child1], 201, [@child1])
+                end
               end
-
-              it_behaves_like "a vcap rest error response"
             end
+          end
+        end
 
-            describe "PUT #{path} with only #{attr} in body" do
-              it "[:valid_id] should add a #{attr.to_s.singularize}" do
-                do_write(:put, [@child1], 201, [@child1])
+        describe "many_to_many" do
+          opts[:many_to_many_collection_ids].each do |attr, make|
+            describe "#{attr}" do
+              include_context "collections", opts, attr, make
+              child_name  = attr.to_s.chomp("_guids")
+              path = "#{opts[:path]}/:guid"
+
+              before do
+                @child1 = make.call(obj)
+                @child2 = make.call(obj)
+                @child3 = make.call(obj)
               end
 
-              it "[:valid_id1, :valid_id2] should add multiple #{attr}" do
-                do_write(:put, [@child1, @child2], 201, [@child1, @child2])
+              describe "POST #{path} with only #{attr} in the request body" do
+                before do
+                  do_write(:post, [@child1], 404, [])
+                end
+
+                it "should return 404" do
+                  last_response.status.should == 404
+                end
+
+                it_behaves_like "a vcap rest error response"
               end
 
-              it "[:valid_id1, :valid_id2] should replace existing #{attr}" do
-                obj.send(add_method, @child1)
-                obj.send(get_method).should include(@child1)
-                do_write(:put, [@child2, @child3], 201, [@child2, @child3])
-                obj.send(get_method).should_not include(@child1)
-              end
+              describe "PUT #{path} with only #{attr} in body" do
+                it "[:valid_id] should add a #{attr.to_s.singularize}" do
+                  do_write(:put, [@child1], 201, [@child1])
+                end
 
-              it "[] should remove all #{child_name}s" do
-                obj.send(add_method, @child1)
-                obj.send(get_method).should include(@child1)
-                do_write(:put, [], 201, [])
-                obj.send(get_method).should_not include(@child1)
-              end
+                it "[:valid_id1, :valid_id2] should add multiple #{attr}" do
+                  do_write(:put, [@child1, @child2], 201, [@child1, @child2])
+                end
 
-              it "[:invalid_id] should return 400" do
-                obj.send(add_method, @child1)
-                obj.send(get_method).should include(@child1)
-                do_write(:put, [], 201, [])
-                obj.send(get_method).should_not include(@child1)
+                it "[:valid_id1, :valid_id2] should replace existing #{attr}" do
+                  obj.send(add_method, @child1)
+                  obj.send(get_method).should include(@child1)
+                  do_write(:put, [@child2, @child3], 201, [@child2, @child3])
+                  obj.send(get_method).should_not include(@child1)
+                end
+
+                it "[] should remove all #{child_name}s" do
+                  obj.send(add_method, @child1)
+                  obj.send(get_method).should include(@child1)
+                  do_write(:put, [], 201, [])
+                  obj.send(get_method).should_not include(@child1)
+                end
+
+                it "[:invalid_id] should return 400" do
+                  obj.send(add_method, @child1)
+                  obj.send(get_method).should include(@child1)
+                  do_write(:put, [], 201, [])
+                  obj.send(get_method).should_not include(@child1)
+                end
               end
             end
           end
@@ -258,45 +257,7 @@ module ControllerHelpers
       end
 
       describe "reading collections" do
-        describe "many_to_one" do
-          opts[:many_to_one_collection_ids].each do |attr, make|
-            path = "#{opts[:path]}/:guid"
-
-            [nil, 0, 1].each do |inline_relations_depth|
-              desc = ControllerHelpers::description_for_inline_depth(inline_relations_depth)
-              describe "GET #{path}#{desc}" do
-                include_context "collections", opts, attr, make
-
-                before do
-                  obj.send("#{attr}=", make.call(obj)) unless obj.send(attr)
-                  obj.save
-                end
-
-                include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
-                include_examples "inlined_relations", attr, inline_relations_depth
-
-                it "should return a #{attr}_guid field" do
-                  entity.should have_key("#{attr}_guid")
-                end
-
-                # this is basically the read api, so we'll do most of the
-                # detailed read testing there
-                desc = ControllerHelpers::description_for_inline_depth(inline_relations_depth)
-                describe "GET on the #{attr}_url" do
-                  before do
-                    get @uri, {}, headers
-                  end
-
-                  it "should return 200" do
-                    last_response.status.should == 200
-                  end
-                end
-              end
-            end
-          end
-        end
-
-        describe "n_to_many" do
+        describe "many_to_many, one_to_many" do
           # this is basically the read api, so we'll do most of the
           # detailed read testing there
 
@@ -390,6 +351,44 @@ module ControllerHelpers
                     decoded_response["resources"].count.should == 1
                     guid = decoded_response["resources"][0]["metadata"]["guid"]
                     guid.should == @raw_guids[2]
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        describe "many_to_one" do
+          opts[:many_to_one_collection_ids].each do |attr, make|
+            path = "#{opts[:path]}/:guid"
+
+            [nil, 0, 1].each do |inline_relations_depth|
+              desc = ControllerHelpers::description_for_inline_depth(inline_relations_depth)
+              describe "GET #{path}#{desc}" do
+                include_context "collections", opts, attr, make
+
+                before do
+                  obj.send("#{attr}=", make.call(obj)) unless obj.send(attr)
+                  obj.save
+                end
+
+                include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
+                include_examples "inlined_relations", attr, inline_relations_depth
+
+                it "should return a #{attr}_guid field" do
+                  entity.should have_key("#{attr}_guid")
+                end
+
+                # this is basically the read api, so we'll do most of the
+                # detailed read testing there
+                desc = ControllerHelpers::description_for_inline_depth(inline_relations_depth)
+                describe "GET on the #{attr}_url" do
+                  before do
+                    get @uri, {}, headers
+                  end
+
+                  it "should return 200" do
+                    last_response.status.should == 200
                   end
                 end
               end
