@@ -8,6 +8,8 @@ module VCAP::CloudController
       let(:app_events_cleanup_job) { double(Jobs::Runtime::AppEventsCleanup) }
       let(:logger) { double(Steno::Logger) }
 
+      subject(:clock) { Clock.new }
+
       before do
         allow(logger).to receive(:info)
         allow(Clockwork).to receive(:every).and_yield("dummy.scheduled.job")
@@ -17,7 +19,7 @@ module VCAP::CloudController
         allow(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).and_return(app_usage_events_cleanup_job)
         allow(Jobs::Runtime::AppEventsCleanup).to receive(:new).and_return(app_events_cleanup_job)
 
-        Clock.start
+        clock.start
       end
 
       it "runs Clockwork" do

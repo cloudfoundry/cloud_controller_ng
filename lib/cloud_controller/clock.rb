@@ -1,8 +1,8 @@
 require "clockwork"
 
 module VCAP::CloudController
-  module Clock
-    def self.start
+  class Clock
+    def start
       logger = Steno.logger("cc.clock")
       Clockwork.every(10.minutes, "dummy.scheduled.job") do |job|
         logger.info("Would have run #{job}")
