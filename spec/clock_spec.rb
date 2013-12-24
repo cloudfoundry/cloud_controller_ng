@@ -18,7 +18,7 @@ module VCAP::CloudController
         allow(Clockwork).to receive(:run)
         allow(Steno).to receive(:logger).and_return(logger)
         allow(Delayed::Job).to receive(:enqueue)
-        allow(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).and_return(app_usage_events_cleanup_job)
+        allow(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(31).and_return(app_usage_events_cleanup_job)
 
         Clock.start
       end
