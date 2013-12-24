@@ -50,5 +50,5 @@ group :test do
   gem "timecop"
   gem "rack-test"
   gem "parallel_tests"
-  gem "fakefs", :require => "fakefs/safe"
+  gem "fakefs", require: "fakefs/safe"
 end
