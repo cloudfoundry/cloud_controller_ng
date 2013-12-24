@@ -14,7 +14,7 @@ module VCAP::CloudController
         allow(Clockwork).to receive(:run)
         allow(Steno).to receive(:logger).and_return(logger)
         allow(Delayed::Job).to receive(:enqueue)
-        allow(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(31).and_return(app_usage_events_cleanup_job)
+        allow(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).and_return(app_usage_events_cleanup_job)
         allow(Jobs::Runtime::AppEventsCleanup).to receive(:new).and_return(app_events_cleanup_job)
 
         Clock.start
@@ -27,6 +27,10 @@ module VCAP::CloudController
       it "schedules an AppUsageEventsCleanup job to run every day during business hours in SF" do
         expect(Clockwork).to have_received(:every).with(1.day, "app_usage_events.cleanup.job", at: "18:00")
         expect(Delayed::Job).to have_received(:enqueue).with(app_usage_events_cleanup_job, queue: "cc-generic")
+      end
+
+      it "sets the cutoff_time_in_days for AppUsageEventsCleanup to 31" do
+        expect(Jobs::Runtime::AppUsageEventsCleanup).to have_received(:new).with(31)
       end
 
       it "schedules an AppEventsCleanup job to run every day during business hours in SF" do

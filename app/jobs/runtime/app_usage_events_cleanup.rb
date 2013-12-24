@@ -1,15 +1,18 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class AppUsageEventsCleanup < Struct.new(:prune_threshold_in_days)
+      class AppUsageEventsCleanup < Struct.new(:cutoff_age_in_days)
         def perform
+          old_app_usage_events = AppUsageEvent.dataset.where("created_at < ?", cutoff_time)
           logger = Steno.logger("cc.background")
+          logger.info("Cleaning up  AppUsageEvent #{old_app_usage_events.count} rows")
+          old_app_usage_events.delete
+        end
 
-          events_to_prune = AppUsageEvent.dataset.where("created_at < ?", prune_threshold_in_days.days.ago)
-          pruned_event_count = events_to_prune.count
-          events_to_prune.delete
+        private
 
-          logger.info("Ran AppUsageEventsCleanup, deleted #{pruned_event_count} events")
+        def cutoff_time
+          Time.now - cutoff_age_in_days.days
         end
       end
     end

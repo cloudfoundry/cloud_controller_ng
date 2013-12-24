@@ -3,11 +3,11 @@ require "spec_helper"
 module VCAP::CloudController
   module Jobs::Runtime
     describe AppUsageEventsCleanup do
-      let(:prune_threshold_in_days) { 30 }
+      let(:cutoff_age_in_days) { 30 }
       let(:logger) { double(Steno::Logger, info: nil) }
 
       subject(:job) do
-        AppUsageEventsCleanup.new(prune_threshold_in_days)
+        AppUsageEventsCleanup.new(cutoff_age_in_days)
       end
 
       before do
@@ -19,15 +19,9 @@ module VCAP::CloudController
       end
 
       describe "#perform" do
-        it "logs the number of deletions" do
-          3.times { AppUsageEvent.make(created_at: (prune_threshold_in_days + 1).days.ago) }
-          expect(logger).to receive(:info).with("Ran AppUsageEventsCleanup, deleted 3 events")
-          job.perform
-        end
-
         it "deletes events created before the pruning threshold" do
           Timecop.freeze do
-            event_before_threshold = AppUsageEvent.make(created_at: (prune_threshold_in_days + 1).days.ago)
+            event_before_threshold = AppUsageEvent.make(created_at: (cutoff_age_in_days + 1).days.ago)
             expect {
               job.perform
             }.to change { event_before_threshold.exists? }.to(false)
@@ -36,7 +30,7 @@ module VCAP::CloudController
 
         it "keeps events created  at the pruning threshold" do
           Timecop.freeze do
-            event_at_threshold = AppUsageEvent.make(created_at: prune_threshold_in_days.days.ago)
+            event_at_threshold = AppUsageEvent.make(created_at: cutoff_age_in_days.days.ago)
             expect {
               job.perform
             }.not_to change { event_at_threshold.exists? }.from(true)
@@ -45,7 +39,7 @@ module VCAP::CloudController
 
         it "keeps events created after the pruning threshold" do
           Timecop.freeze do
-            event_after_threshold = AppUsageEvent.make(created_at: (prune_threshold_in_days - 1).days.ago)
+            event_after_threshold = AppUsageEvent.make(created_at: (cutoff_age_in_days - 1).days.ago)
             expect {
               job.perform
             }.not_to change { event_after_threshold.exists? }.from(true)
