@@ -8,6 +8,12 @@ module VCAP::CloudController
         logger.info("Would have run #{job}")
       end
 
+      Clockwork.every(1.day, "app_usage_events.cleanup.job", at: "18:00") do |_|
+        logger.info("Queueing AppUsageEventsCleanup at #{Time.now}")
+        job = Jobs::Runtime::AppUsageEventsCleanup.new
+        Delayed::Job.enqueue(job, queue: "cc-generic")
+      end
+
       Clockwork.run
     end
   end
