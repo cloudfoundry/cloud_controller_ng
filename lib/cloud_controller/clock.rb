@@ -2,32 +2,34 @@ require "clockwork"
 
 module VCAP::CloudController
   class Clock
-
     def initialize(config)
       @config = config
+      @logger = Steno.logger("cc.clock")
     end
 
     def start
-      logger = Steno.logger("cc.clock")
-      Clockwork.every(10.minutes, "dummy.scheduled.job") do |job|
-        logger.info("Would have run #{job}")
-      end
-
-      Clockwork.every(1.day, "app_usage_events.cleanup.job", at: "18:00") do |_|
-        logger.info("Queueing AppUsageEventsCleanup at #{Time.now}")
-        cutoff_age_in_days = @config.fetch(:app_usage_events).fetch(:cutoff_age_in_days)
-        job = Jobs::Runtime::AppUsageEventsCleanup.new(cutoff_age_in_days)
-        Delayed::Job.enqueue(job, queue: "cc-generic")
-      end
-
-      Clockwork.every(1.day, "app_events.cleanup.job", at: "19:00") do |_|
-        logger.info("Queueing AppEventsCleanup at #{Time.now}")
-        cutoff_age_in_days = @config.fetch(:app_events).fetch(:cutoff_age_in_days)
-        job = Jobs::Runtime::AppEventsCleanup.new(cutoff_age_in_days)
-        Delayed::Job.enqueue(job, queue: "cc-generic")
-      end
+      schedule_dummy_job
+      schedule_cleanup(:app_usage_events, Jobs::Runtime::AppUsageEventsCleanup, "18:00")
+      schedule_cleanup(:app_events, Jobs::Runtime::AppEventsCleanup, "19:00")
 
       Clockwork.run
+    end
+
+    private
+
+    def schedule_dummy_job
+      Clockwork.every(10.minutes, "dummy.scheduled.job") do |job|
+        @logger.info("Would have run #{job}")
+      end
+    end
+
+    def schedule_cleanup(name, klass, at)
+      Clockwork.every(1.day, "#{name}.cleanup.job", at: at) do |_|
+        @logger.info("Queueing #{klass} at #{Time.now}")
+        cutoff_age_in_days = @config.fetch(name.to_sym).fetch(:cutoff_age_in_days)
+        job = klass.new(cutoff_age_in_days)
+        Delayed::Job.enqueue(job, queue: "cc-generic")
+      end
     end
   end
 end
