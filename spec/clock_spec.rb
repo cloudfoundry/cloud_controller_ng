@@ -7,8 +7,14 @@ module VCAP::CloudController
       let(:app_usage_events_cleanup_job) { double(Jobs::Runtime::AppUsageEventsCleanup) }
       let(:app_events_cleanup_job) { double(Jobs::Runtime::AppEventsCleanup) }
       let(:logger) { double(Steno::Logger) }
+      let(:config) do
+        {
+          app_events: { cutoff_age_in_days: 22 },
+          app_usage_events: { cutoff_age_in_days: 33 },
+        }
+      end
 
-      subject(:clock) { Clock.new }
+      subject(:clock) { Clock.new(config) }
 
       before do
         allow(logger).to receive(:info)
@@ -38,8 +44,8 @@ module VCAP::CloudController
           expect(Delayed::Job).to have_received(:enqueue).with(app_usage_events_cleanup_job, queue: "cc-generic")
         end
 
-        it "sets the cutoff_time_in_days for AppUsageEventsCleanup to 31" do
-          expect(Jobs::Runtime::AppUsageEventsCleanup).to have_received(:new).with(31)
+        it "sets the cutoff_age_in_days for AppUsageEventsCleanup to the configured value" do
+          expect(Jobs::Runtime::AppUsageEventsCleanup).to have_received(:new).with(33)
         end
       end
 
@@ -49,8 +55,8 @@ module VCAP::CloudController
           expect(Delayed::Job).to have_received(:enqueue).with(app_events_cleanup_job, queue: "cc-generic")
         end
 
-        it "sets the cutoff_time_in_days for AppEventsCleanup to 31" do
-          expect(Jobs::Runtime::AppEventsCleanup).to have_received(:new).with(31)
+        it "sets the cutoff_age_in_days for AppEventsCleanup to the configured value" do
+          expect(Jobs::Runtime::AppEventsCleanup).to have_received(:new).with(22)
         end
       end
     end

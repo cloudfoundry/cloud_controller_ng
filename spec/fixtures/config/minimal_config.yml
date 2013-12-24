@@ -14,6 +14,12 @@ app_domains:
   - customer-app-domain1.com
   - customer-app-domain2.com
 
+app_events:
+  cutoff_age_in_days: 31
+
+app_usage_events:
+  cutoff_age_in_days: 31
+
 default_app_memory: 1024 #mb
 
 uaa:

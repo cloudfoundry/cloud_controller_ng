@@ -19,6 +19,12 @@ module VCAP::CloudController
         :system_domain => String,
         :system_domain_organization => enum(String, NilClass),
         :app_domains => [ String ],
+        :app_events => {
+          :cutoff_age_in_days => Fixnum
+        },
+        :app_usage_events => {
+          :cutoff_age_in_days => Fixnum
+        },
         :default_app_memory => Fixnum,
         :maximum_health_check_timeout => Fixnum,
 

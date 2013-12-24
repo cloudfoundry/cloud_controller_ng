@@ -4,7 +4,7 @@ namespace :clock do
     require "cloud_controller/clock"
 
     BackgroundJobEnvironment.new(config).setup_environment
-    clock = VCAP::CloudController::Clock.new
+    clock = VCAP::CloudController::Clock.new(config)
     clock.start
   end
 end
