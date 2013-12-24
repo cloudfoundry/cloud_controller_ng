@@ -178,7 +178,7 @@ GEM
       net-ssh (>= 2.6.5)
     net-ssh (2.7.0)
     newrelic_rpm (3.7.1.180)
-    nokogiri (1.6.0)
+    nokogiri (1.6.1)
       mini_portile (~> 0.5.0)
     parallel (0.9.1)
     parallel_tests (0.16.5)
