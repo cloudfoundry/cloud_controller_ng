@@ -20,35 +20,36 @@ module VCAP::CloudController
         Clock.start
       end
 
-      it "schedules a dummy job to run every 10 minutes" do
-        expect(Clockwork).to have_received(:every).with(10.minutes, "dummy.scheduled.job")
-      end
-
-      it "schedules an AppUsageEventsCleanup job to run every day during business hours in SF" do
-        expect(Clockwork).to have_received(:every).with(1.day, "app_usage_events.cleanup.job", at: "18:00")
-        expect(Delayed::Job).to have_received(:enqueue).with(app_usage_events_cleanup_job, queue: "cc-generic")
-      end
-
-      it "sets the cutoff_time_in_days for AppUsageEventsCleanup to 31" do
-        expect(Jobs::Runtime::AppUsageEventsCleanup).to have_received(:new).with(31)
-      end
-
-      it "schedules an AppEventsCleanup job to run every day during business hours in SF" do
-        expect(Clockwork).to have_received(:every).with(1.day, "app_events.cleanup.job", at: "19:00")
-        expect(Delayed::Job).to have_received(:enqueue).with(app_events_cleanup_job, queue: "cc-generic")
-      end
-
-      it "sets the cutoff_time_in_days for AppEventsCleanup to 31" do
-        expect(Jobs::Runtime::AppEventsCleanup).to have_received(:new).with(31)
-      end
-
-      it "logs a message every time the job runs" do
-        expect(Steno).to have_received(:logger).with("cc.clock")
-        expect(logger).to have_received(:info).with("Would have run dummy.scheduled.job")
-      end
-
       it "runs Clockwork" do
         expect(Clockwork).to have_received(:run)
+      end
+
+      describe "dummy.scheduled.job" do
+        it "schedules a dummy job to run every 10 minutes" do
+          expect(Clockwork).to have_received(:every).with(10.minutes, "dummy.scheduled.job")
+        end
+      end
+
+      describe "app_usage_events.cleanup.job" do
+        it "schedules an AppUsageEventsCleanup job to run every day during business hours in SF" do
+          expect(Clockwork).to have_received(:every).with(1.day, "app_usage_events.cleanup.job", at: "18:00")
+          expect(Delayed::Job).to have_received(:enqueue).with(app_usage_events_cleanup_job, queue: "cc-generic")
+        end
+
+        it "sets the cutoff_time_in_days for AppUsageEventsCleanup to 31" do
+          expect(Jobs::Runtime::AppUsageEventsCleanup).to have_received(:new).with(31)
+        end
+      end
+
+      describe "app_events.cleanup.job" do
+        it "schedules an AppEventsCleanup job to run every day during business hours in SF" do
+          expect(Clockwork).to have_received(:every).with(1.day, "app_events.cleanup.job", at: "19:00")
+          expect(Delayed::Job).to have_received(:enqueue).with(app_events_cleanup_job, queue: "cc-generic")
+        end
+
+        it "sets the cutoff_time_in_days for AppEventsCleanup to 31" do
+          expect(Jobs::Runtime::AppEventsCleanup).to have_received(:new).with(31)
+        end
       end
     end
   end
