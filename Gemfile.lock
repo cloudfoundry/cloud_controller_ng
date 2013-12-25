@@ -1,14 +1,4 @@
 GIT
-  remote: https://github.com/TalentBox/delayed_job_sequel
-  revision: 8725e1ee4797175c0c596ef9822414007a572e21
-  ref: 8725e1ee
-  specs:
-    talentbox-delayed_job_sequel (4.0.0.dev)
-      delayed_job (~> 4.0.0)
-      sequel (>= 3.38, < 5.0)
-      tzinfo
-
-GIT
   remote: https://github.com/cloudfoundry/cf-message-bus.git
   revision: cb951d204beeb028dd98e36f087d2464d5059762
   specs:
@@ -247,6 +237,10 @@ GEM
       fluent-logger
       grape
       yajl-ruby (~> 1.0)
+    talentbox-delayed_job_sequel (4.0.0)
+      delayed_job (~> 4.0.0)
+      sequel (>= 3.38, < 5.0)
+      tzinfo
     thin (1.5.1)
       daemons (>= 1.0.9)
       eventmachine (>= 0.12.6)
@@ -312,7 +306,7 @@ DEPENDENCIES
   sinatra-contrib
   sqlite3
   steno
-  talentbox-delayed_job_sequel!
+  talentbox-delayed_job_sequel
   thin (~> 1.5.1)
   timecop
   unf
