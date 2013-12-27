@@ -79,7 +79,7 @@ module VCAP::CloudController
         DeaClient.update_uris(app)
       end
 
-      Loggregator.emit(app.guid, "Updated app with guid #{app.guid}")
+      Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{App.audit_hash(request_attrs)})")
       Event.record_app_update(app, SecurityContext.current_user, request_attrs)
     end
 

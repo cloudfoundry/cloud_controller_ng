@@ -177,15 +177,17 @@ module VCAP::CloudController
     describe "update app" do
       let(:update_hash) { {} }
 
-      let(:app_obj) { AppFactory.make(:detected_buildpack => 'buildpack-name') }
+      let(:app_obj) { AppFactory.make(:detected_buildpack => "buildpack-name") }
 
       def update_app
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
       end
 
       describe "log when" do
+        let(:update_hash) { {"name" => "abc"} }
+
         it "successful update" do
-          Loggregator.should_receive(:emit).with(app_obj.guid, /Updated.*#{app_obj.guid}/)
+          Loggregator.should_receive(:emit).with(app_obj.guid, "Updated app with guid #{app_obj.guid} ({\"name\"=>\"abc\"})")
           update_app
         end
 
@@ -200,7 +202,7 @@ module VCAP::CloudController
       describe "update app health_check_timeout" do
         context "when health_check_timeout value is provided" do
           let(:update_hash) { {"health_check_timeout" => 80} }
- 
+
           it "should set to provided value" do
             update_app
             app_obj.refresh
