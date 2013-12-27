@@ -504,6 +504,14 @@ module VCAP::CloudController
           expect(audit_event.metadata["request"]).to eq({ "recursive" => true })
         end
       end
+
+      describe "log" do
+        it "logs that app was deleted" do
+          Loggregator.should_receive(:emit).with(app_obj.guid,
+            "Deleted app with guid #{app_obj.guid}")
+          delete_app
+        end
+      end
     end
 
     describe "validations" do
