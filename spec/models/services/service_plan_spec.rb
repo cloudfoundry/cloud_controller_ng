@@ -4,7 +4,6 @@ module VCAP::CloudController
   describe ServicePlan, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :free, :description, :service],
-      :unique_attributes => [ [:service, :name] ],
       :stripped_string_attributes => :name,
       :many_to_one => {
         :service => {
@@ -36,6 +35,19 @@ module VCAP::CloudController
             expect(plan.unique_id).to eq(attrs[:unique_id])
           end
         end
+
+        context 'when a plan with the same name has already been added for this service' do
+          let(:attrs1) { {name: 'dumbo', service_id: service.id }}
+          let(:attrs2) { {name: 'dumbo', service_id: service.id }}
+          let(:service) { Service.make({})}
+
+          before { plan = ServicePlan.make(attrs1) }
+
+          it 'throws a useful error' do
+            expect{ ServicePlan.make(attrs2) }.to raise_exception('Plans within a service must have unique names')
+          end
+        end
+
       end
 
       context 'on update' do

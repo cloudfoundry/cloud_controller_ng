@@ -159,7 +159,7 @@ module ControllerHelpers
         # make sure we get failures if all of the unique attributes are the
         # same
         #
-        dup_attrs = opts[:unique_attributes].dup
+        dup_attrs = opts.fetch(:unique_attributes, []).dup
         dup_attrs = dup_attrs - ["id"]
         unless dup_attrs.empty?
           desc = dup_attrs.map { |v| ":#{v}" }.join(", ")

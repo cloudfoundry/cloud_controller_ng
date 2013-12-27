@@ -9,7 +9,6 @@ module VCAP::CloudController
     include_examples "operations on an invalid object", path: "/v2/service_plans"
     include_examples "creating and updating", path: "/v2/service_plans", model: ServicePlan,
                      required_attributes: %w(name free description service_guid),
-                     unique_attributes: %w(name service_guid),
                      extra_attributes: {extra: ->{Sham.extra}}
     include_examples "collection operations", path: "/v2/service_plans", model: ServicePlan,
       one_to_many_collection_ids: {

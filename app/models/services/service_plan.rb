@@ -32,7 +32,7 @@ module VCAP::CloudController
       validates_presence :free
       validates_presence :service
       validates_presence :unique_id
-      validates_unique   [:service_id, :name]
+      validates_unique   [:service_id, :name], {message: Sequel.lit("Plans within a service must have unique names")}
     end
 
     def_dataset_method(:organization_visible) do |organization|
