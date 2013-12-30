@@ -12,7 +12,9 @@ module VCAP::CloudController
       AppUsageEvent.db[:app_usage_events].truncate
       usage_query = App.join(:spaces, id: :apps__space_id).
         join(:organizations, id: :spaces__organization_id).
-        select(:apps__guid, :apps__guid, :apps__name, :apps__state, :apps__instances, :apps__memory, :spaces__guid, :spaces__name, :organizations__guid, Sequel.datetime_class.now).order(:apps__id)
+        select(:apps__guid, :apps__guid, :apps__name, :apps__state, :apps__instances, :apps__memory, :spaces__guid, :spaces__name, :organizations__guid, Sequel.datetime_class.now).
+        where(:apps__state => 'STARTED').
+        order(:apps__id)
       AppUsageEvent.insert([:guid, :app_guid, :app_name, :state, :instance_count, :memory_in_mb_per_instance, :space_guid, :space_name, :org_guid, :created_at], usage_query)
 
       [HTTP::NO_CONTENT, nil]
