@@ -26,17 +26,7 @@ module VCAP::CloudController
 
     def update(guid)
       obj = find_for_update(guid)
-
-      attrs = @request_attrs.dup
-      target_position = attrs.delete('position')
-      model.db.transaction(savepoint: true) do
-        obj.lock!
-        obj.update_from_hash(attrs)
-        if target_position
-          target_position = 1 if target_position < 1
-          obj.shift_to_position(target_position)
-        end
-      end
+      model.update(obj, @request_attrs)
 
       [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
     end

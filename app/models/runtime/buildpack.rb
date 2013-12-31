@@ -44,6 +44,19 @@ module VCAP::CloudController
       end
     end
 
+    def self.update(obj, values = {})
+      attrs = values.dup
+      target_position = attrs.delete('position')
+      db.transaction(savepoint: true) do
+        obj.lock!
+        obj.update_from_hash(attrs)
+        if target_position
+          target_position = 1 if target_position < 1
+          obj.shift_to_position(target_position)
+        end
+      end
+    end
+
     def after_destroy
       Buildpack.shift_positions_up_from(position)
       super
