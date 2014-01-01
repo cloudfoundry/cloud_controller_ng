@@ -63,7 +63,6 @@ module VCAP::CloudController
     APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
     PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
 
-    AUDITABLE_FIELDS = [:encrypted_environment_json, :instances, :memory, :state, :name]
     CENSORED_FIELDS = [:encrypted_environment_json, :command, :environment_json]
 
     CENSORED_MESSAGE = "PRIVATE DATA HIDDEN".freeze
@@ -71,14 +70,6 @@ module VCAP::CloudController
     def self.audit_hash(request_attrs)
       request_attrs.dup.tap do |changes|
         CENSORED_FIELDS.map(&:to_s).each do |censored|
-          changes[censored] = CENSORED_MESSAGE if changes.has_key?(censored)
-        end
-      end
-    end
-
-    def auditable_values
-      values.slice(*AUDITABLE_FIELDS).tap do |changes|
-        CENSORED_FIELDS.each do |censored|
           changes[censored] = CENSORED_MESSAGE if changes.has_key?(censored)
         end
       end
