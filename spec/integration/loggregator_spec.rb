@@ -7,7 +7,7 @@ describe "Cloud controller Loggregator Integration", :type => :integration do
     @loggregator_server = FakeLoggregatorServer.new(12345)
     @loggregator_server.start
 
-    authed_headers = @authed_headers = {
+    @authed_headers = {
         "Authorization" => "bearer #{admin_token}",
         "Accept" => "application/json",
         "Content-Type" => "application/json"
@@ -16,61 +16,62 @@ describe "Cloud controller Loggregator Integration", :type => :integration do
     start_nats debug: false
     start_cc(debug: false, config: "spec/fixtures/config/port_8181_config.yml")
 
-    org = org_with_default_quota(authed_headers)
+    org = org_with_default_quota(@authed_headers)
     org_guid = org.json_body["metadata"]["guid"]
 
     space = make_post_request(
-        "/v2/spaces",
-        {"name" => "foo_space",
-         "organization_guid" => org_guid
-        }.to_json,
-        authed_headers
+      "/v2/spaces",
+      {
+        "name" => "foo_space",
+        "organization_guid" => org_guid
+      }.to_json,
+      @authed_headers
     )
     @space_guid = space.json_body["metadata"]["guid"]
 
-    app = make_post_request(
-        "/v2/apps",
-        {"name" => "foo_app",
-         "space_guid" => @space_guid
-        }.to_json,
-        authed_headers
-    )
-
-    @app_id = app.json_body["metadata"]["guid"]
   end
 
   after(:all) do
     stop_cc
     stop_nats
-    @loggregator_server.stop(2)
+    @loggregator_server.stop
   end
 
-  it "to the loggregator" do
-    messages = @loggregator_server.messages
-
-    expect(messages.length).to eq 1
-
-    message = messages[0]
-    expect(message.message).to eq "Created app with guid #{@app_id}"
-    expect(message.app_id).to eq @app_id
-    expect(message.source_name).to eq "API"
-    expect(message.message_type).to eq LogMessage::MessageType::OUT
-  end
-
-  it "logs updated changes" do
-    make_put_request(
-      "/v2/apps/#{@app_id}",
-      {"state" => "STOPPED",
-       "environment_json" => {"FOO" => "BAR"}
+  it "send logs to the loggregator" do
+    app = make_post_request(
+      "/v2/apps",
+      {
+        "name" => "foo_app",
+        "space_guid" => @space_guid
       }.to_json,
       @authed_headers
     )
 
+    app_id = app.json_body["metadata"]["guid"]
+
     messages = @loggregator_server.messages
 
-    message = messages[1]
-    expect(message.message).to eq "Updated app with guid #{@app_id} ({\"state\"=>\"STOPPED\", \"environment_json\"=>\"PRIVATE DATA HIDDEN\"})"
-    expect(message.app_id).to eq @app_id
+    expect(messages).to have(1).item
+
+    message = messages.first
+    expect(message.message).to eq "Created app with guid #{app_id}"
+    expect(message.app_id).to eq app_id
+    expect(message.source_name).to eq "API"
+    expect(message.message_type).to eq LogMessage::MessageType::OUT
+
+    @loggregator_server.clear
+    make_put_request(
+      "/v2/apps/#{app_id}",
+      {
+        "state" => "STOPPED",
+        "environment_json" => {"FOO" => "BAR"}
+      }.to_json,
+      @authed_headers
+    )
+
+    message = @loggregator_server.messages.first
+    expect(message.message).to eq "Updated app with guid #{app_id} ({\"state\"=>\"STOPPED\", \"environment_json\"=>\"PRIVATE DATA HIDDEN\"})"
+    expect(message.app_id).to eq app_id
     expect(message.source_name).to eq "API"
     expect(message.message_type).to eq LogMessage::MessageType::OUT
   end

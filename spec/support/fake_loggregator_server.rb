@@ -6,7 +6,7 @@ class FakeLoggregatorServer
   attr_reader :messages, :port, :sock
 
   def initialize(port)
-    @messages = []
+    clear
     @port = port
     @sock = UDPSocket.new
   end
@@ -29,15 +29,12 @@ class FakeLoggregatorServer
     end
   end
 
-  def stop(number_expected_messages)
-    max_tries = 0
-    while messages.length < number_expected_messages
-      sleep 0.2
-      max_tries += 1
-      break if max_tries > 10
-    end
-    @sock.close
+  def clear
+    @messages = []
+  end
 
+  def stop
+    @sock.close
     Thread.kill(@thread)
   end
 end
