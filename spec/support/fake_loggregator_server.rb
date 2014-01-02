@@ -6,7 +6,7 @@ class FakeLoggregatorServer
   attr_reader :messages, :port, :sock
 
   def initialize(port)
-    clear
+    @messages = []
     @port = port
     @sock = UDPSocket.new
   end
@@ -27,10 +27,6 @@ class FakeLoggregatorServer
 
       end
     end
-  end
-
-  def clear
-    @messages = []
   end
 
   def stop

@@ -48,29 +48,12 @@ describe "Cloud controller Loggregator Integration", :type => :integration do
     )
 
     app_id = app.json_body["metadata"]["guid"]
-
     messages = @loggregator_server.messages
 
     expect(messages).to have(1).item
 
     message = messages.first
     expect(message.message).to eq "Created app with guid #{app_id}"
-    expect(message.app_id).to eq app_id
-    expect(message.source_name).to eq "API"
-    expect(message.message_type).to eq LogMessage::MessageType::OUT
-
-    @loggregator_server.clear
-    make_put_request(
-      "/v2/apps/#{app_id}",
-      {
-        "state" => "STOPPED",
-        "environment_json" => {"FOO" => "BAR"}
-      }.to_json,
-      @authed_headers
-    )
-
-    message = @loggregator_server.messages.first
-    expect(message.message).to eq "Updated app with guid #{app_id} ({\"state\"=>\"STOPPED\", \"environment_json\"=>\"PRIVATE DATA HIDDEN\"})"
     expect(message.app_id).to eq app_id
     expect(message.source_name).to eq "API"
     expect(message.message_type).to eq LogMessage::MessageType::OUT
