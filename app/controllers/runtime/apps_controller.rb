@@ -57,7 +57,8 @@ module VCAP::CloudController
       end
 
       Loggregator.emit(app.guid, "Deleted app with guid #{app.guid}")
-      Event.record_app_delete_request(app, SecurityContext.current_user, recursive?)
+      event_repository = Repositories::Runtime::EventRepository.new
+      event_repository.record_app_delete_request(app, SecurityContext.current_user, recursive?)
       app.destroy
 
       [ HTTP::NO_CONTENT, nil ]
@@ -67,7 +68,9 @@ module VCAP::CloudController
 
     def after_create(app)
       Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
-      Event.record_app_create(app, SecurityContext.current_user, request_attrs) if request_attrs
+      event_repository = Repositories::Runtime::EventRepository.new
+      record_app_create_value = event_repository.record_app_create(app, SecurityContext.current_user, request_attrs)
+      record_app_create_value if request_attrs
     end
 
     def after_update(app)
@@ -81,7 +84,8 @@ module VCAP::CloudController
       end
 
       Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{App.audit_hash(request_attrs)})")
-      Event.record_app_update(app, SecurityContext.current_user, request_attrs)
+      event_repository = Repositories::Runtime::EventRepository.new
+      event_repository.record_app_update(app, SecurityContext.current_user, request_attrs)
     end
 
     define_messages

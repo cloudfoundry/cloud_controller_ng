@@ -46,40 +46,5 @@ module VCAP::CloudController
         [:space, user.spaces_dataset]
       ])
     end
-
-    def self.create_app_exit_event(app, droplet_exited_payload)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.create_app_exit_event(app, droplet_exited_payload)
-    end
-
-    def self.record_app_update(app, actor, request_attrs)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_app_update(app, actor, request_attrs)
-    end
-
-    def self.record_app_create(app, actor, request_attrs)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_app_create(app, actor, request_attrs)
-    end
-
-    def self.record_app_delete_request(deleting_app, actor, recursive)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_app_delete_request(deleting_app, actor, recursive)
-    end
-
-    def self.record_space_create(space, actor, request_attrs)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_space_create(space, actor, request_attrs)
-    end
-
-    def self.record_space_update(space, actor, request_attrs)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_space_update(space, actor, request_attrs)
-    end
-
-    def self.record_space_delete_request(space, actor, recursive)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_space_delete_request(space, actor, recursive)
-    end
   end
 end
