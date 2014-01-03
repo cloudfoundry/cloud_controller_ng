@@ -135,8 +135,8 @@ module VCAP::CloudController
 
         context 'when the catalog has a service without any plans' do
           before do
-            broker.stub(:load_catalog).and_raise(Errors::ServiceBrokerInvalid.new('each service must have at least one plan'))
-            errors.stub(:on).with(:services).and_return('each service must have at least one plan')
+            broker.stub(:save).and_raise(Errors::ServiceBrokerInvalid.new('each service must have at least one plan'))
+            errors.stub(:on).with(:services).and_return(['each service must have at least one plan'])
           end
 
           it 'returns an error' do
@@ -145,6 +145,21 @@ module VCAP::CloudController
             last_response.status.should == 400
             decoded_response.fetch('code').should == 270001
             decoded_response.fetch('description').should == 'Service broker is invalid: each service must have at least one plan'
+          end
+        end
+
+        context 'when the catalog has plans with non-unique names' do
+          before do
+            broker.stub(:save).and_raise(Errors::ServiceBrokerInvalid.new('Plans within a service must have unique names'))
+            errors.stub(:full_messages).and_return(['Plans within a service must have unique names'])
+          end
+
+          it 'returns an error' do
+            post '/v2/service_brokers', body, headers
+
+            last_response.status.should == 400
+            decoded_response.fetch('code').should == 270001
+            decoded_response.fetch('description').should == 'Service broker is invalid: Plans within a service must have unique names'
           end
         end
       end
