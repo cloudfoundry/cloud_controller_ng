@@ -40,7 +40,10 @@ module VCAP::CloudController
           buildpack
         end
       else
-        super(values.merge(position: 1), &block)
+        super(values) do |instance|
+          block.yield(instance) if block
+          instance.position = 1 
+        end
       end
     end
 

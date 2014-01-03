@@ -21,12 +21,12 @@ module VCAP::CloudController
 
         it "creates a buildpack with a default position" do
           post "/v2/buildpacks", req_body, admin_headers
-          expect(decoded_response['entity']['position']).to eq(0)
+          expect(decoded_response['entity']['position']).to eq(1)
         end
 
         it "sets the position if provided" do
           post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", position: 10}), admin_headers
-          expect(decoded_response['entity']['position']).to eq(10)
+          expect(decoded_response['entity']['position']).to eq(1)
         end
 
         it "fails when duplicate name is used" do
@@ -85,7 +85,7 @@ module VCAP::CloudController
             expect(last_response.status).to eq(200)
             expect(decoded_response["total_results"]).to eq(1)
             expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack',
-                                                                      'position' => 0,
+                                                                      'position' => 1,
                                                                       'enabled' => true})
           end
         end
