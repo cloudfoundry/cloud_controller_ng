@@ -1,3 +1,5 @@
+require "repositories/runtime/event_repository"
+
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     define_attributes do

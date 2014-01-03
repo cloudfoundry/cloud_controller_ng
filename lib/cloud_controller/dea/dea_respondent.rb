@@ -1,3 +1,5 @@
+require "repositories/runtime/event_repository"
+
 module VCAP::CloudController
   class << self
     attr_accessor :dea_respondent
