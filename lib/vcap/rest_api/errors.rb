@@ -23,10 +23,7 @@ module VCAP::RestAPI
       def initialize(response_code, error_code, format, *args)
         @response_code = response_code
         @error_code = error_code
-        formatted_args = args.map do |arg|
-          (arg.is_a? Array) ? arg.map(&:to_s).join(', ') : arg.to_s
-        end
-        msg = sprintf(format, *formatted_args)
+        msg = sprintf(format, *args)
         super(msg)
       end
     end
@@ -45,7 +42,10 @@ module VCAP::RestAPI
       def define_error(class_name, response_code, error_code, format)
         klass = Class.new Error do
           define_method :initialize do |*args|
-            super(response_code, error_code, format, *args)
+            formatted_args = args.map do |arg|
+              (arg.is_a? Array) ? arg.map(&:to_s).join(', ') : arg.to_s
+            end
+            super(response_code, error_code, format, *formatted_args)
           end
         end
 
