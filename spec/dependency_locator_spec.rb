@@ -154,7 +154,7 @@ describe CloudController::DependencyLocator do
     end
   end
 
-  describe "blobstore_url_generator" do
+  describe "#blobstore_url_generator" do
     let(:my_config) do
       {
         bind_address: "bind.address",
@@ -188,5 +188,11 @@ describe CloudController::DependencyLocator do
       )
       locator.blobstore_url_generator
     end
+  end
+
+  describe "#event_repository" do
+    subject { locator.event_repository }
+
+    it { should be_a(VCAP::CloudController::Repositories::Runtime::EventRepository) }
   end
 end

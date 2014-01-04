@@ -31,6 +31,16 @@ module CloudController
         controller = @controller_factory.create_controller(BuildpacksController)
         expect(controller).to be_instance_of(BuildpacksController)
       end
+
+      it "instantiates an AppsController" do
+        controller = @controller_factory.create_controller(AppsController)
+        expect(controller).to be_instance_of(AppsController)
+      end
+
+      it "instantiates a SpacesController" do
+        controller = @controller_factory.create_controller(SpacesController)
+        expect(controller).to be_instance_of(SpacesController)
+      end
     end
   end
 end

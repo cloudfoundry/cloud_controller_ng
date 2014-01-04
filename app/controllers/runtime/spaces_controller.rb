@@ -1,5 +1,3 @@
-require "repositories/runtime/event_repository"
-
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     define_attributes do
@@ -26,6 +24,10 @@ module VCAP::CloudController
       else
         Errors::SpaceInvalid.new(e.errors.full_messages)
       end
+    end
+
+    def inject_dependencies(dependencies)
+      @event_repository = dependencies.fetch(:event_repository)
     end
 
     get "/v2/spaces/:guid/services", :enumerate_services
@@ -75,20 +77,17 @@ module VCAP::CloudController
 
     def delete(guid)
       space = find_guid_and_validate_access(:delete, guid)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_space_delete_request(space, SecurityContext.current_user, recursive?)
+      @event_repository.record_space_delete_request(space, SecurityContext.current_user, recursive?)
       do_delete(space)
     end
 
     private
     def after_create(space)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_space_create(space, SecurityContext.current_user, request_attrs)
+      @event_repository.record_space_create(space, SecurityContext.current_user, request_attrs)
     end
 
     def after_update(space)
-      event_repository = Repositories::Runtime::EventRepository.new
-      event_repository.record_space_update(space, SecurityContext.current_user, request_attrs)
+      @event_repository.record_space_update(space, SecurityContext.current_user, request_attrs)
     end
 
     module ServiceSerialization

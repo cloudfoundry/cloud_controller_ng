@@ -38,6 +38,10 @@ module CloudController
             package_blobstore: dependency_locator.package_blobstore,
             config: @config,
           }
+        when "AppsController", "SpacesController"
+          {
+            event_repository: dependency_locator.event_repository
+          }
         else
           {}
       end

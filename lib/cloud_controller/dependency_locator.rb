@@ -1,3 +1,5 @@
+require "repositories/runtime/event_repository"
+
 module CloudController
   class DependencyLocator
     include Singleton
@@ -94,6 +96,10 @@ module CloudController
         buildpack_blobstore,
         droplet_blobstore
       )
+    end
+
+    def event_repository
+      Repositories::Runtime::EventRepository.new
     end
 
     private

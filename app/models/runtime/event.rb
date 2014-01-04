@@ -1,5 +1,3 @@
-require "repositories/runtime/event_repository"
-
 module VCAP::CloudController
   class Event < Sequel::Model
     plugin :serialization

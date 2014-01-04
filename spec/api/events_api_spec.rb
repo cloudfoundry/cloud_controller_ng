@@ -63,8 +63,11 @@ resource "Events (experimental)", :type => :api do
       expected_request
     end
 
+    let(:event_repository) do
+      VCAP::CloudController::Repositories::Runtime::EventRepository.new
+    end
+
     example "List app create events" do
-      event_repository = VCAP::CloudController::Repositories::Runtime::EventRepository.new
       event_repository.record_app_create(test_app, test_user, app_request)
 
       client.get "/v2/events?q=type:audit.app.create", {}, headers
@@ -80,7 +83,6 @@ resource "Events (experimental)", :type => :api do
     end
 
     example "List app exited events" do
-      event_repository = VCAP::CloudController::Repositories::Runtime::EventRepository.new
       event_repository.create_app_exit_event(test_app, droplet_exited_payload)
 
       client.get "/v2/events?q=type:app.crash", {}, headers
@@ -96,7 +98,6 @@ resource "Events (experimental)", :type => :api do
     end
 
     example "List app update events" do
-      event_repository = VCAP::CloudController::Repositories::Runtime::EventRepository.new
       event_repository.record_app_update(test_app, test_user, app_request)
 
       client.get "/v2/events?q=type:audit.app.update", {}, headers
@@ -114,7 +115,6 @@ resource "Events (experimental)", :type => :api do
     end
 
     example "List app delete events" do
-      event_repository = VCAP::CloudController::Repositories::Runtime::EventRepository.new
       event_repository.record_app_delete_request(test_app, test_user, false)
 
       client.get "/v2/events?q=type:audit.app.delete-request", {}, headers
@@ -129,7 +129,6 @@ resource "Events (experimental)", :type => :api do
     end
 
     example "List space create events" do
-      event_repository = VCAP::CloudController::Repositories::Runtime::EventRepository.new
       event_repository.record_space_create(test_space, test_user, space_request)
 
       client.get "/v2/events?q=type:audit.space.create", {}, headers
@@ -145,7 +144,6 @@ resource "Events (experimental)", :type => :api do
     end
 
     example "List space update events" do
-      event_repository = VCAP::CloudController::Repositories::Runtime::EventRepository.new
       event_repository.record_space_update(test_space, test_user, space_request)
 
       client.get "/v2/events?q=type:audit.space.update", {}, headers
@@ -160,7 +158,6 @@ resource "Events (experimental)", :type => :api do
     end
 
     example "List space delete events" do
-      event_repository = VCAP::CloudController::Repositories::Runtime::EventRepository.new
       event_repository.record_space_delete_request(test_space, test_user, true)
 
       client.get "/v2/events?q=type:audit.space.delete-request", {}, headers
