@@ -2,11 +2,9 @@ require "spec_helper"
 
 module VCAP::CloudController
   module Repositories::Runtime
-    describe EventRepository do
-      let(:space) { Space.make }
-
-      subject(:event_repository) do
-        EventRepository.new
+    describe AppEventRepository do
+      subject(:app_event_repository) do
+        AppEventRepository.new
       end
 
       describe ".record_app_update" do
@@ -19,7 +17,7 @@ module VCAP::CloudController
 
         let(:event) do
           new_request_attrs = request_attrs.merge("environment_json" => {"foo" => 1})
-          event_repository.record_app_update(app, user, new_request_attrs)
+          app_event_repository.record_app_update(app, user, new_request_attrs)
         end
 
         it "does not expose the ENV variables" do
@@ -56,7 +54,7 @@ module VCAP::CloudController
         let(:user) { User.make }
 
         it "records the changes in metadata" do
-          event = event_repository.record_app_create(app, user, request_attrs)
+          event = app_event_repository.record_app_create(app, user, request_attrs)
           expect(event.actor_type).to eq("user")
           expect(event.type).to eq("audit.app.create")
           request = event.metadata.fetch("request")
@@ -76,7 +74,7 @@ module VCAP::CloudController
         let(:user) { User.make }
 
         it "records an empty changes in metadata" do
-          event = event_repository.record_app_delete_request(deleting_app, user, false)
+          event = app_event_repository.record_app_delete_request(deleting_app, user, false)
           expect(event.actor_type).to eq("user")
           expect(event.type).to eq("audit.app.delete-request")
           expect(event.actee).to eq(deleting_app.guid)
@@ -99,7 +97,7 @@ module VCAP::CloudController
         }
 
         it "creates a new app exit event" do
-          event = event_repository.create_app_exit_event(exiting_app, droplet_exited_payload)
+          event = app_event_repository.create_app_exit_event(exiting_app, droplet_exited_payload)
           expect(event.type).to eq("app.crash")
           expect(event.actor).to eq(exiting_app.guid)
           expect(event.actor_type).to eq("app")

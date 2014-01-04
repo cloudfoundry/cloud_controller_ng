@@ -1,4 +1,5 @@
-require "repositories/runtime/event_repository"
+require "repositories/runtime/app_event_repository"
+require "repositories/runtime/space_event_repository"
 
 module CloudController
   class DependencyLocator
@@ -98,8 +99,12 @@ module CloudController
       )
     end
 
-    def event_repository
-      Repositories::Runtime::EventRepository.new
+    def app_event_repository
+      Repositories::Runtime::AppEventRepository.new
+    end
+
+    def space_event_repository
+      Repositories::Runtime::SpaceEventRepository.new
     end
 
     private

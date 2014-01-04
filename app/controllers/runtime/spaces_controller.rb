@@ -27,7 +27,7 @@ module VCAP::CloudController
     end
 
     def inject_dependencies(dependencies)
-      @event_repository = dependencies.fetch(:event_repository)
+      @space_event_repository = dependencies.fetch(:space_event_repository)
     end
 
     get "/v2/spaces/:guid/services", :enumerate_services
@@ -77,17 +77,17 @@ module VCAP::CloudController
 
     def delete(guid)
       space = find_guid_and_validate_access(:delete, guid)
-      @event_repository.record_space_delete_request(space, SecurityContext.current_user, recursive?)
+      @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, recursive?)
       do_delete(space)
     end
 
     private
     def after_create(space)
-      @event_repository.record_space_create(space, SecurityContext.current_user, request_attrs)
+      @space_event_repository.record_space_create(space, SecurityContext.current_user, request_attrs)
     end
 
     def after_update(space)
-      @event_repository.record_space_update(space, SecurityContext.current_user, request_attrs)
+      @space_event_repository.record_space_update(space, SecurityContext.current_user, request_attrs)
     end
 
     module ServiceSerialization

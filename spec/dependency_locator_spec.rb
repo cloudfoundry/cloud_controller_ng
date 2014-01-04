@@ -190,9 +190,15 @@ describe CloudController::DependencyLocator do
     end
   end
 
-  describe "#event_repository" do
-    subject { locator.event_repository }
+  describe "#app_event_repository" do
+    subject { locator.app_event_repository }
 
-    it { should be_a(VCAP::CloudController::Repositories::Runtime::EventRepository) }
+    it { should be_a(VCAP::CloudController::Repositories::Runtime::AppEventRepository) }
+  end
+
+  describe "#space_event_repository" do
+    subject { locator.space_event_repository }
+
+    it { should be_a(VCAP::CloudController::Repositories::Runtime::SpaceEventRepository) }
   end
 end
