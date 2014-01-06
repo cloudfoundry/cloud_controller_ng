@@ -313,7 +313,12 @@ module VCAP::CloudController
 
             update_app
 
-            expect(app_event_repository).to have_received(:record_app_update).with(app_obj.reload, admin_user, {"instances" => 2})
+            expect(app_event_repository).to have_received(:record_app_update) do |recorded_app, recorded_user, recorded_hash|
+              expect(recorded_app.guid).to eq(app_obj.guid)
+              expect(recorded_app.instances).to eq(2)
+              expect(recorded_user).to eq(admin_user)
+              expect(recorded_hash).to eq({"instances" => 2})
+            end
           end
         end
 
