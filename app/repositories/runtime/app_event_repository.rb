@@ -3,6 +3,8 @@ module VCAP::CloudController
     module Runtime
       class AppEventRepository
         def create_app_exit_event(app, droplet_exited_payload)
+          Loggregator.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")
+
           Event.create(
             space: app.space,
             type: "app.crash",

@@ -128,6 +128,12 @@ module VCAP::CloudController
           expect(event.metadata["exit_description"]).to eq("shut down")
           expect(event.metadata["reason"]).to eq("evacuation")
         end
+
+        it "logs the event" do
+          expect(Loggregator).to receive(:emit).with(exiting_app.guid, "App instance exited with guid #{exiting_app.guid} payload: #{droplet_exited_payload}")
+
+          app_event_repository.create_app_exit_event(exiting_app, droplet_exited_payload)
+        end
       end
     end
   end
