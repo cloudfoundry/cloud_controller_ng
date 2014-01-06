@@ -18,6 +18,8 @@ module VCAP::CloudController
         end
 
         def record_app_update(app, actor, request_attrs)
+          Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{App.audit_hash(request_attrs)})")
+
           Event.create(
             space: app.space,
             type: "audit.app.update",

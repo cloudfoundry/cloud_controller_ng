@@ -34,6 +34,12 @@ module VCAP::CloudController
                                "state" => "STOPPED"
                              )
         end
+
+        it "logs the event" do
+          expect(Loggregator).to receive(:emit).with(app.guid, "Updated app with guid #{app.guid} (#{request_attrs.to_s})")
+
+          app_event_repository.record_app_update(app, user, request_attrs)
+        end
       end
 
       describe ".record_app_create" do

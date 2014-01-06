@@ -44,6 +44,8 @@ module VCAP::CloudController
         }
       }
 
+    let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
+
     describe "create app" do
       let(:space_guid) { Space.make.guid.to_s }
       let(:initial_hash) do
@@ -183,22 +185,6 @@ module VCAP::CloudController
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
       end
 
-      describe "log when" do
-        let(:update_hash) { {"name" => "abc"} }
-
-        it "successful update" do
-          Loggregator.should_receive(:emit).with(app_obj.guid, "Updated app with guid #{app_obj.guid} ({\"name\"=>\"abc\"})")
-          update_app
-        end
-
-        it "should not log update when failed" do
-          app_obj
-          App.any_instance.stub(:update_from_hash).and_raise "Error saving"
-          Loggregator.should_not_receive(:emit)
-          expect {update_app}.to raise_error
-        end
-      end
-
       describe "update app health_check_timeout" do
         context "when health_check_timeout value is provided" do
           let(:update_hash) { {"health_check_timeout" => 80} }
@@ -322,62 +308,26 @@ module VCAP::CloudController
       end
 
       describe "events" do
-        before { update_hash[:instances] = 2 }
+        let(:update_hash) { {instances: 2, foo: "foo_value"} }
 
-        it "registers an app.start event" do
-          update_app
+        context "when the update succeeds" do
+          it "records app update with whitelisted attributes" do
+            allow(app_event_repository).to receive(:record_app_update)
 
-          event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
-          expect(event).to be
-          expect(event.actor).to eq(admin_user.guid)
-        end
-      end
-
-      describe "audit logs" do
-        before { update_hash[:instances] = 2 }
-
-        it "creates an audit log including the request body" do
-          update_app
-
-          audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
-          expect(audit_event.metadata["request"]).to eq("instances" => 2)
-        end
-
-        context "when the request body has non-whitelisted attributes" do
-          before do
-            update_hash[:foo] = "foo"
-          end
-
-          it "only puts whitelisted attributes from the request body into the audit log" do
             update_app
 
-            audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
-            expect(audit_event.metadata["request"]).to eq("instances" => 2)
+            expect(app_event_repository).to have_received(:record_app_update).with(app_obj.reload, admin_user, {"instances" => 2})
           end
         end
 
-        describe "sensitive app properties" do
-          before do
-            update_hash[:environment_json] = {:password => "my_password"}
-            update_hash[:command] = "DB_PASSWORD=foo ./my-app"
+        context "when the update fails" do
+          before { App.any_instance.stub(:update_from_hash).and_raise("Error saving") }
+
+          it "does not record app update" do
+            expect(app_event_repository).not_to receive(:record_app_update)
+
+            expect { update_app }.to raise_error
           end
-
-          it "hides them" do
-            update_app
-
-            audit_event = Event.find(:type => "audit.app.update", :actee => app_obj.guid)
-            expect(audit_event.metadata["request"]).to eq("instances" => 2, "environment_json" => "PRIVATE DATA HIDDEN", "command" => "PRIVATE DATA HIDDEN")
-          end
-        end
-
-        it "does not create an audit log when the app is not found" do
-          guid = app_obj.guid
-
-          app_obj.delete
-
-          update_app
-
-          expect(Event.find(:type => "audit.app.update", :actee => guid)).to be_nil
         end
       end
     end
