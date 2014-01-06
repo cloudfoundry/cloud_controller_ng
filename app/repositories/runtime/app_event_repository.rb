@@ -54,6 +54,8 @@ module VCAP::CloudController
         end
 
         def record_app_delete_request(deleting_app, actor, recursive)
+          Loggregator.emit(deleting_app.guid, "Deleted app with guid #{deleting_app.guid}")
+
           Event.create(
             space: deleting_app.space,
             type: "audit.app.delete-request",

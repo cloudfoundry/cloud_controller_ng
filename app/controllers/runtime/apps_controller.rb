@@ -60,7 +60,6 @@ module VCAP::CloudController
         raise VCAP::Errors::AssociationNotEmpty.new("service_bindings", app.class.table_name)
       end
 
-      Loggregator.emit(app.guid, "Deleted app with guid #{app.guid}")
       @app_event_repository.record_app_delete_request(app, SecurityContext.current_user, recursive?)
       app.destroy
 

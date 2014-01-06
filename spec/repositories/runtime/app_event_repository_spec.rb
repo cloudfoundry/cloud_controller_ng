@@ -93,6 +93,12 @@ module VCAP::CloudController
           expect(event.actee_type).to eq("app")
           expect(event.metadata["request"]["recursive"]).to eq(false)
         end
+
+        it "logs the event" do
+          expect(Loggregator).to receive(:emit).with(deleting_app.guid, "Deleted app with guid #{deleting_app.guid}")
+
+          app_event_repository.record_app_delete_request(deleting_app, user, false)
+        end
       end
 
       describe ".create_app_exit_event" do

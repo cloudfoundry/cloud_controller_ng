@@ -435,28 +435,21 @@ module VCAP::CloudController
 
       end
 
-      describe "audit logs" do
-        it "records an app.delete-request event" do
+      describe "events" do
+        it "records an app delete-request" do
+          allow(app_event_repository).to receive(:record_app_delete_request)
+
           delete_app
-          last_response.status.should == 204
-          event = Event.find(:type => "audit.app.delete-request", :actee => app_obj.guid)
-          expect(event).to be
-          expect(event.actor).to eq(admin_user.guid)
+
+          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, admin_user, false)
         end
 
-        it "saves the recursive query parameter when recursive"  do
+        it "records the recursive query parameter when recursive"  do
+          allow(app_event_repository).to receive(:record_app_delete_request)
+
           delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
 
-          audit_event = Event.find(:type => "audit.app.delete-request", :actee => app_obj.guid)
-          expect(audit_event.metadata["request"]).to eq({ "recursive" => true })
-        end
-      end
-
-      describe "log" do
-        it "logs that app was deleted" do
-          Loggregator.should_receive(:emit).with(app_obj.guid,
-            "Deleted app with guid #{app_obj.guid}")
-          delete_app
+          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, admin_user, true)
         end
       end
     end
