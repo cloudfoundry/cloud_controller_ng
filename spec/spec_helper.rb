@@ -437,19 +437,7 @@ module VCAP::CloudController::SpecHelper
   end
 
   shared_context "resource pool" do
-    let(:resource_pool_config) do
-      {
-        :maximum_size => @max_file_size,
-        :resource_directory_key => "spec-cc-resources",
-        :fog_connection => {
-          :provider => "AWS",
-          :aws_access_key_id => "fake_aws_key_id",
-          :aws_secret_access_key => "fake_secret_access_key",
-        }
-      }
-    end
-
-    before do
+    before(:all) do
       num_dirs = 3
       num_unique_allowed_files_per_dir = 7
       file_duplication_factor = 2
@@ -489,13 +477,27 @@ module VCAP::CloudController::SpecHelper
       end
 
       Fog.mock!
+    end
 
+    let(:resource_pool_config) do
+      {
+        :maximum_size => @max_file_size,
+        :resource_directory_key => "spec-cc-resources",
+        :fog_connection => {
+          :provider => "AWS",
+          :aws_access_key_id => "fake_aws_key_id",
+          :aws_secret_access_key => "fake_secret_access_key",
+        }
+      }
+    end
+
+    before do
       @resource_pool = VCAP::CloudController::ResourcePool.new(
         :resource_pool => resource_pool_config
       )
     end
 
-    after do
+    after(:all) do
       FileUtils.rm_rf(@tmpdir)
     end
   end

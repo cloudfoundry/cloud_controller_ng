@@ -6,7 +6,8 @@ describe 'Service Broker API integration', type: :controller do
       VCAP::CloudController::Controller.any_instance.stub(:in_test_mode?).and_return(false)
     end
 
-    before { setup_cc }
+    before(:all) { setup_cc }
+    after(:all) { $spec_env.reset_database_with_seeds }
     let(:space_guid) { @space_guid}
     let(:org_guid) { @org_guid }
 
