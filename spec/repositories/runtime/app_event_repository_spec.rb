@@ -72,6 +72,12 @@ module VCAP::CloudController
                                "environment_json" => "PRIVATE DATA HIDDEN",
                              )
         end
+
+        it "logs the event" do
+          expect(Loggregator).to receive(:emit).with(app.guid, "Created app with guid #{app.guid}")
+
+          app_event_repository.record_app_create(app, user, request_attrs)
+        end
       end
 
       describe ".record_app_delete" do

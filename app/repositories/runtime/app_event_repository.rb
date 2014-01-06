@@ -35,6 +35,8 @@ module VCAP::CloudController
         end
 
         def record_app_create(app, actor, request_attrs)
+          Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
+
           opts = {
             type: "audit.app.create",
             actee: app.nil? ? "0" : app.guid,

@@ -49,8 +49,9 @@ module VCAP::CloudController
     describe "create app" do
       let(:space_guid) { Space.make.guid.to_s }
       let(:initial_hash) do
-        { :name => "maria",
-          :space_guid => space_guid
+        {
+          name: "maria",
+          space_guid: space_guid
         }
       end
 
@@ -137,19 +138,15 @@ module VCAP::CloudController
         end
       end
 
-      describe "audit logs" do
-        it "records an app.create event" do
+      describe "events" do
+        it "records app create" do
+          expected_attrs = AppsController::CreateMessage.decode(initial_hash.to_json).extract(stringify_keys: true)
+
+          allow(app_event_repository).to receive(:record_app_create)
+
           create_app
 
-          last_response.status.should == 201
-
-          new_app_guid = decoded_response['metadata']['guid']
-          event = Event.find(:type => "audit.app.create", :actee => new_app_guid)
-
-          expect(event).to be
-          expect(event.actor).to eq(admin_user.guid)
-          expect(event.metadata["request"]["name"]).to eq("maria")
-          expect(event.metadata["request"]["space_guid"]).to eq(space_guid)
+          expect(app_event_repository).to have_received(:record_app_create).with(App.last, admin_user, expected_attrs)
         end
       end
 

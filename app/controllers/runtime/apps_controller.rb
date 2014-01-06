@@ -70,7 +70,6 @@ module VCAP::CloudController
     private
 
     def after_create(app)
-      Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
       record_app_create_value = @app_event_repository.record_app_create(app, SecurityContext.current_user, request_attrs)
       record_app_create_value if request_attrs
     end
