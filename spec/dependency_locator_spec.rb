@@ -194,6 +194,10 @@ describe CloudController::DependencyLocator do
     subject { locator.app_event_repository }
 
     it { should be_a(VCAP::CloudController::Repositories::Runtime::AppEventRepository) }
+
+    it "memoizes the instance" do
+      expect(locator.app_event_repository).to eq(locator.app_event_repository)
+    end
   end
 
   describe "#space_event_repository" do

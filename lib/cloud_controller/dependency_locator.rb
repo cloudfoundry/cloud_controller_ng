@@ -100,7 +100,7 @@ module CloudController
     end
 
     def app_event_repository
-      Repositories::Runtime::AppEventRepository.new
+      @app_event_repository ||= Repositories::Runtime::AppEventRepository.new
     end
 
     def space_event_repository
