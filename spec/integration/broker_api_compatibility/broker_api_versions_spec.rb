@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Broker API Versions' do
+describe 'Broker API Versions', type: :controller do
 
   let(:spec_sha) do
     {
