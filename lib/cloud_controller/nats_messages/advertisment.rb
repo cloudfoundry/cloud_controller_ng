@@ -20,10 +20,6 @@ class Advertisement
    stats["available_instances"]
   end
 
-  def available_instances
-    stats["available_instances"]
-  end
-
   def expired?
     (Time.now.to_i - @updated_at.to_i) > ADVERTISEMENT_EXPIRATION
   end

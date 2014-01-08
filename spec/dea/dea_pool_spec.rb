@@ -244,24 +244,6 @@ module VCAP::CloudController
         end
       end
 
-      describe "instances capacity" do
-        context "when the instance capacity is not available" do
-          let(:available_instances) { 0 }
-          it "it doesn't find any deas" do
-            subject.process_advertise_message(dea_advertise_msg)
-            subject.find_dea(mem: 1024, disk: 10, stack: "stack", app_id: "app-id").should be_nil
-          end
-        end
-
-        context "when the instance capacity is available" do
-          let(:available_instances) { 1 }
-          it "finds the DEA" do
-            subject.process_advertise_message(dea_advertise_msg)
-            subject.find_dea(mem: 1024, disk: 10, stack: "stack", app_id: "app-id").should == "dea-id"
-          end
-        end
-      end
-
       describe "stacks availability" do
         it "only finds deas that can satisfy stack request" do
           subject.process_advertise_message(dea_advertise_msg)
