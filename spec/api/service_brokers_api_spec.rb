@@ -53,7 +53,7 @@ resource "Service Brokers", :type => :api do
   post "/v2/service_brokers" do
     before do
       stub_request(:get, "https://admin:secretpassw0rd@broker.example.com:443/v2/catalog").
-        with(:headers => {"Accept" => "application/json", "Content-Type" => "application/json"}).
+        with(:headers => {"Accept" => "application/json"}).
         to_return(status: 200, body: broker_catalog, headers: {})
     end
 
@@ -80,7 +80,7 @@ resource "Service Brokers", :type => :api do
   put "/v2/service_brokers/:guid" do
     before do
       stub_request(:get, "https://admin:secretpassw0rd@broker.example.com:443/v2/catalog").
-        with(:headers => {'Accept' => 'application/json', 'Content-Type' => 'application/json'}).
+        with(:headers => {'Accept' => 'application/json'}).
         to_return(status: 200, body: broker_catalog, headers: {})
     end
 

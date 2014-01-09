@@ -152,30 +152,30 @@ module VCAP::CloudController
 
       def get(path)
         uri = URI( url + path )
-        response = make_request(:get, uri, nil)
+        response = make_request(:get, uri, nil, nil)
         parse_response(:get, uri, response)
       end
 
       def put(path, message)
         uri = URI( url + path )
-        response = make_request(:put, uri, message.to_json)
+        response = make_request(:put, uri, message.to_json, 'application/json')
         parse_response(:put, uri, response)
       end
 
       def delete(path, message)
         uri = URI( url + path )
         uri.query = message.to_query
-        response = make_request(:delete, uri, nil)
+        response = make_request(:delete, uri, nil, nil)
         parse_response(:delete, uri, response)
       end
 
-      def make_request(method, uri, body)
+      def make_request(method, uri, body, content_type)
         begin
           req_class = method.to_s.capitalize
           req = Net::HTTP.const_get(req_class).new(uri.request_uri)
           req.basic_auth(auth_username, auth_password)
           req.body = body
-          req.content_type = 'application/json'
+          req.content_type = content_type if content_type
           req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
           req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.1'
           req['Accept'] = 'application/json'

@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 module VCAP::CloudController::ServiceBroker::V2
-
   describe ServiceBrokerBadResponse do
     let(:uri) { 'http://www.example.com/' }
     let(:response) { double(code: 500, message: 'Internal Server Error', body: response_body) }
@@ -285,14 +284,39 @@ module VCAP::CloudController::ServiceBroker::V2
         }
       end
 
-      it 'sends a GET to /v2/catalog' do
-        stub_request(:get, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog").
-          with(headers: expected_request_headers).
+      before do
+        @request = stub_request(:get, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog").
           to_return(body: catalog_response.to_json)
+      end
 
+      it 'sends a GET to /v2/catalog' do
         catalog = client.catalog
 
         expect(catalog).to eq(catalog_response)
+      end
+
+      it 'makes a request with the correct headers' do
+        client.catalog
+
+        expect(
+          @request.with(
+            headers: {
+              'X-Vcap-Request-Id' => request_id,
+              'Accept' => 'application/json'
+            }
+          )
+        ).to have_been_made
+      end
+
+      it 'does not send a content type' do
+        client.catalog
+
+        correct_headers = ->(request) {
+          expect(request.headers).not_to have_key('Content-Type')
+          true
+        }
+
+        expect(@request.with(&correct_headers)).to have_been_made
       end
     end
 
@@ -313,11 +337,12 @@ module VCAP::CloudController::ServiceBroker::V2
         }.to_json
       end
 
-      it 'sends a PUT to /v2/service_instances/:id' do
-        stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-          with(body: expected_request_body, headers: expected_request_headers).
+      before do
+        @request = stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
           to_return(status: 201, body: expected_response_body)
+      end
 
+      it 'sends a PUT to /v2/service_instances/:id' do
         response = client.provision(
           instance_id: instance_id,
           plan_id: plan_id,
@@ -327,6 +352,38 @@ module VCAP::CloudController::ServiceBroker::V2
         )
 
         expect(response.fetch('dashboard_url')).to eq('dashboard url')
+      end
+
+      it 'makes a request with the correct body' do
+        client.provision(
+          instance_id: instance_id,
+          plan_id: plan_id,
+          service_id: service_id,
+          org_guid: "org-guid",
+          space_guid: "space-guid"
+        )
+
+        expect(@request.with(body: expected_request_body)).to have_been_made
+      end
+
+      it 'makes a request with the correct headers' do
+        client.provision(
+          instance_id: instance_id,
+          plan_id: plan_id,
+          service_id: service_id,
+          org_guid: "org-guid",
+          space_guid: "space-guid"
+        )
+
+        expect(
+          @request.with(
+            headers: {
+              'X-Vcap-Request-Id' => request_id,
+              'Accept' => 'application/json',
+              'Content-Type' => 'application/json',
+            }
+          )
+        ).to have_been_made
       end
 
       context 'the reference_id is already in use' do
@@ -354,7 +411,7 @@ module VCAP::CloudController::ServiceBroker::V2
       let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}" }
 
       before do
-        @request = stub_request(:put, bind_url).with(headers: expected_request_headers).to_return(
+        @request = stub_request(:put, bind_url).to_return(
           body: {
             credentials: {user: 'admin', pass: 'secret'}
           }.to_json
@@ -362,16 +419,36 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       it 'sends a PUT to /v2/service_instances/:instance_id/service_bindings/:id' do
-        client.bind({
+        client.bind(
           binding_id: binding_id,
           instance_id: instance_id,
           service_id: service_id,
           plan_id: plan_id,
           app_guid: app_guid
-        })
+        )
 
         expect(
           @request.with(body: { service_id: service_id, plan_id: plan_id, app_guid: app_guid })
+        ).to have_been_made
+      end
+
+      it 'makes a request with the correct headers' do
+        client.bind(
+          binding_id: binding_id,
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+          app_guid: app_guid
+        )
+
+        expect(
+          @request.with(
+            headers: {
+              'X-Vcap-Request-Id' => request_id,
+              'Accept' => 'application/json',
+              'Content-Type' => 'application/json',
+            }
+          )
         ).to have_been_made
       end
 
@@ -397,21 +474,37 @@ module VCAP::CloudController::ServiceBroker::V2
 
       before do
         @request = stub_request(:delete, bind_url).
-          with(headers: expected_request_headers, query: hash_including({})).
+          with(query: hash_including({})).
           to_return(status: 204)
       end
 
       it 'sends a DELETE to /v2/service_instances/:instance_id/service_bindings/:id' do
-        client.unbind({
+        client.unbind(
           binding_id: binding_id,
           instance_id: instance_id,
           service_id: service_id,
           plan_id: plan_id,
-        })
+        )
 
         expect(
           @request.with(query: { service_id: service_id, plan_id: plan_id })
         ).to have_been_made
+      end
+
+      it 'makes a request with the correct headers' do
+        client.unbind(
+          binding_id: binding_id,
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        )
+        correct_headers = ->(request) {
+          expect(request.headers['X-Vcap-Request-Id']).to eq(request_id)
+          expect(request.headers['Accept']).to eq('application/json')
+          expect(request.headers).not_to have_key('Content-Type')
+          true
+        }
+        expect(@request.with(&correct_headers)).to have_been_made
       end
     end
 
@@ -419,7 +512,7 @@ module VCAP::CloudController::ServiceBroker::V2
       let(:instance_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}" }
       before do
         @request = stub_request(:delete, instance_url).
-          with(headers: expected_request_headers, query: hash_including({})).
+          with(query: hash_including({})).
           to_return(status: 204)
       end
 
@@ -433,6 +526,37 @@ module VCAP::CloudController::ServiceBroker::V2
         expect(
           @request.with(query: { service_id: service_id, plan_id: plan_id })
         ).to have_been_made
+      end
+
+      it 'makes a request with the correct headers' do
+        client.deprovision(
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        )
+        expect(
+          @request.with(
+            headers: {
+              'X-Vcap-Request-Id' => request_id,
+              'Accept' => 'application/json'
+            }
+          )
+        ).to have_been_made
+      end
+
+      it 'does not send a content type' do
+        client.deprovision(
+          instance_id: instance_id,
+          service_id: service_id,
+          plan_id: plan_id,
+        )
+
+        correct_headers = ->(request) {
+          expect(request.headers).not_to have_key('Content-Type')
+          true
+        }
+
+        expect(@request.with(&correct_headers)).to have_been_made
       end
     end
 
