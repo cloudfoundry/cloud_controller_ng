@@ -5,7 +5,7 @@ describe 'Broker API Versions', type: :controller do
   let(:spec_sha) do
     {
       'broker_api_v2.0_spec.rb' => '2f9e3084048c6698a8cd5e9a511942ec',
-      'broker_api_v2.1_spec.rb' => '4d47aa563e064b3a7b8c9cdc46b55587'
+      'broker_api_v2.1_spec.rb' => '7f054428cedb220dba569249e338faff',
     }
   end
 
