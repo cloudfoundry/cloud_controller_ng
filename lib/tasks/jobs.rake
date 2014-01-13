@@ -5,18 +5,32 @@ namespace :jobs do
     Delayed::Job.delete_all
   end
 
+  desc "Start a delayed_job worker that works on jobs that require access to local resources."
+  task :local do
+    CloudController::DelayedWorker.new(queues: [LocalQueue.new(config).to_s]).start_working
+  end
+
   desc "Start a delayed_job worker."
-  task :work do
-    queue_options = {
-      min_priority: ENV['MIN_PRIORITY'],
-      max_priority: ENV['MAX_PRIORITY'],
-      queues: (ENV['QUEUES'] || ENV['QUEUE'] || '').split(','),
-      quiet: false
-    }
-    BackgroundJobEnvironment.new(config).setup_environment
-    Delayed::Worker.destroy_failed_jobs = false
-    logger = Steno.logger("cc-worker")
-    logger.info("Starting job with options #{queue_options}")
-    Delayed::Worker.new(queue_options).start
+  task :generic do
+    CloudController::DelayedWorker.new(queues: ['cc-generic']).start_working
+  end
+
+  class CloudController::DelayedWorker
+    def initialize(options)
+      @queue_options = {
+        min_priority: ENV['MIN_PRIORITY'],
+        max_priority: ENV['MAX_PRIORITY'],
+        queues: options.fetch(:queues),
+        quiet: false
+      }
+    end
+
+    def start_working
+      BackgroundJobEnvironment.new(config).setup_environment
+      Delayed::Worker.destroy_failed_jobs = false
+      logger = Steno.logger("cc-worker")
+      logger.info("Starting job with options #{@queue_options}")
+      Delayed::Worker.new(@queue_options).start
+    end
   end
 end
