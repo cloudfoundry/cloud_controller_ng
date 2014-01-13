@@ -11,24 +11,31 @@ module VCAP::CloudController
     put "#{path_guid}/bits", :upload
     def upload(guid)
       buildpack = find_guid_and_validate_access(:read_bits, guid)
+
       uploaded_file = upload_handler.uploaded_file(params, "buildpack")
       uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
+
       logger.info uploaded_file
       logger.info uploaded_filename
       logger.info buildpack
 
+      raise Errors::BuildpackBitsUploadInvalid, "a filename must be specified" if uploaded_filename.to_s == ""
       raise Errors::BuildpackBitsUploadInvalid, "only zip files allowed" unless File.extname(uploaded_filename) == ".zip"
+      raise Errors::BuildpackBitsUploadInvalid, "a file must be provided" if uploaded_file.to_s == ""
 
       sha1 = File.new(uploaded_file).hexdigest
+      uploaded_filename = File.basename(uploaded_filename)
 
-      return [HTTP::CONFLICT, nil] if sha1 == buildpack.key
+      return [HTTP::CONFLICT, nil] if sha1 == buildpack.key && uploaded_filename == buildpack.filename
 
-      buildpack_blobstore.cp_to_blobstore(uploaded_file, sha1)
+      if sha1 != buildpack.key
+        buildpack_blobstore.cp_to_blobstore(uploaded_file, sha1)
+        old_buildpack_key = buildpack.key
+      end
 
-      old_buildpack_key = buildpack.key
       model.db.transaction(savepoint: true) do
         buildpack.lock!
-        buildpack.update_from_hash(key: sha1)
+        buildpack.update_from_hash(key: sha1, filename: uploaded_filename)
       end
 
       buildpack_blobstore.delete(old_buildpack_key) if old_buildpack_key

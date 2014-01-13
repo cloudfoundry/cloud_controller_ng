@@ -80,6 +80,8 @@ module VCAP::CloudController
             metadata = resource['metadata']
             expect(metadata['guid']).to eq(buildpack[:guid])
             expect(entity['name']).to eq(buildpack[:name])
+            expect(entity['key']).to eq(buildpack[:key])
+            expect(entity['filename']).to be_nil
           end
         end
 
@@ -90,7 +92,9 @@ module VCAP::CloudController
             expect(decoded_response["total_results"]).to eq(1)
             expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack',
                                                                       'position' => 1,
-                                                                      'enabled' => true})
+                                                                      'enabled' => true,
+                                                                      'key' => 'xyz',
+                                                                      'filename' => nil})
           end
         end
       end
@@ -98,12 +102,12 @@ module VCAP::CloudController
       context "UPDATE" do
         let!(:buildpack1) do
           should_have_been_1 = 5
-          VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: should_have_been_1})
+          VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", filename: "a", position: should_have_been_1})
         end
 
         let!(:buildpack2) do
           should_have_been_2 = 10
-          VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: should_have_been_2})
+          VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", filename: "b", position: should_have_been_2})
         end
 
         it "returns NOT AUTHORIZED (403) for non admins" do
@@ -117,11 +121,11 @@ module VCAP::CloudController
               put "/v2/buildpacks/#{buildpack2.guid}", '{"position": 1}', admin_headers
               expect(last_response.status).to eq(201)
             }.to change {
-              Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
+              Buildpack.order(:position).map { |bp| [bp.name, bp.position, bp.filename] }
             }.from(
-                   [["first_buildpack", 1], ["second_buildpack", 2]]
+                   [["first_buildpack", 1, 'a'], ["second_buildpack", 2, 'b']]
                  ).to(
-                   [["second_buildpack", 1], ["first_buildpack", 2]]
+                   [["second_buildpack", 1, 'b'], ["first_buildpack", 2, 'a']]
                  )
           end
 

@@ -41,9 +41,6 @@ describe "Staging an app", type: :integration do
     end
 
     before do
-      @tmpdir = Dir.mktmpdir
-      @expected_buildpack_shas = [valid_zip(4).hexdigest, valid_zip.hexdigest]
-
       @buildpack_response_1 = make_post_request(
         "/v2/buildpacks",
         { "name" => "buildpack-1", "position" => 2 }.to_json,
@@ -132,6 +129,7 @@ describe "Staging an app", type: :integration do
 
     context "and the admin has uploaded the buildpacks" do
       before do
+        @expected_buildpack_shas = [valid_zip(4).hexdigest, valid_zip.hexdigest]
         @buildpack_bits_response_1 = make_put_request(
           "/v2/buildpacks/#{@buildpack_response_1.json_body["metadata"]["guid"]}/bits?buildpack[tempfile]=#{valid_zip(4).path}&buildpack_name=foo.zip",
           "{}",
