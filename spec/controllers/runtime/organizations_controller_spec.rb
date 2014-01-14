@@ -206,7 +206,7 @@ module VCAP::CloudController
 
     describe "Deprecated endpoints" do
       let!(:domain) { SharedDomain.make }
-      describe "DELETE /v2/organizations/:guid/domains/:shared_domain" do
+      describe "DELETE /v2/organizations/:guid/domains/:shared_domain_guid" do
         it "should pretends that it deleted a domain" do
           expect{delete "/v2/organizations/#{org.guid}/domains/#{domain.guid}", {},
                         headers_for(@org_a_manager)}.not_to change{SharedDomain.count}
@@ -218,6 +218,24 @@ module VCAP::CloudController
       describe "GET /v2/organizations/:guid/domains/:guid" do
         it "should be deprecated" do
           get "/v2/organizations/#{org.guid}/domains/#{domain.guid}"
+          expect(last_response).to be_a_deprecated_response
+        end
+      end
+
+      describe "PUT /v2/organizations/:guid/domains/:domain_guid" do
+        it "should be deprecated" do
+          put "/v2/organizations/#{org.guid}/domains/#{domain.guid}", {}, admin_headers
+          expect(last_response.status).to eql(201)
+          expect(last_response).to be_a_deprecated_response
+        end
+      end
+
+      describe "PUT /v2/organizations/:guid/domains/:private_domain_guid" do
+        let(:private_domain) { PrivateDomain.make(owning_organization: org) }
+        it "should be deprecated" do
+          expect(org.domains).to include(private_domain)
+          put "/v2/organizations/#{org.guid}/domains/#{private_domain.guid}", {}, admin_headers
+          expect(last_response.status).to eql(201)
           expect(last_response).to be_a_deprecated_response
         end
       end

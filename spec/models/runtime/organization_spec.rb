@@ -6,7 +6,7 @@ module VCAP::CloudController
     it_behaves_like "a CloudController model", {
       required_attributes: :name,
       unique_attributes: :name,
-      custom_attributes_for_uniqueness_tests: -> { {quota_definition: QuotaDefinition.make} },
+      custom_attributes_for_uniqueness_tests: -> { { quota_definition: QuotaDefinition.make } },
       stripped_string_attributes: :name,
       many_to_zero_or_more: {
         users: ->(_) { User.make },
@@ -27,35 +27,35 @@ module VCAP::CloudController
 
         it "shoud allow standard ascii characters" do
           org.name = "A -_- word 2!?()\'\"&+."
-          expect{
+          expect {
             org.save
           }.to_not raise_error
         end
 
         it "should allow backslash characters" do
           org.name = "a\\word"
-          expect{
+          expect {
             org.save
           }.to_not raise_error
         end
 
         it "should allow unicode characters" do
           org.name = "防御力¡"
-          expect{
+          expect {
             org.save
           }.to_not raise_error
         end
 
         it "should not allow newline characters" do
           org.name = "one\ntwo"
-          expect{
+          expect {
             org.save
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it "should not allow escape characters" do
           org.name = "a\e word"
-          expect{
+          expect {
             org.save
           }.to raise_error(Sequel::ValidationFailed)
         end
@@ -75,7 +75,7 @@ module VCAP::CloudController
               :organization => o,
             )
             2.times do
-              app = AppFactory.make(
+              AppFactory.make(
                 :space => space,
                 :state => "STARTED",
                 :package_hash => "abc",
@@ -85,9 +85,7 @@ module VCAP::CloudController
                 :space => space,
                 :state => "STOPPED",
               )
-              service_instance = ManagedServiceInstance.make(
-                :space => space,
-              )
+              ManagedServiceInstance.make(:space => space)
             end
           end
           o
@@ -134,11 +132,11 @@ module VCAP::CloudController
         org = Organization.make(:quota_definition => quota)
         space = Space.make(:organization => org)
         AppFactory.make(:space => space,
-                         :memory => 200,
-                         :instances => 2)
+                        :memory => 200,
+                        :instances => 2)
         AppFactory.make(:space => space,
-                         :memory => 50,
-                         :instances => 1)
+                        :memory => 50,
+                        :instances => 1)
 
         org.memory_remaining.should == 50
       end
@@ -195,6 +193,26 @@ module VCAP::CloudController
         }.to change {
           Domain[:id => domain.id]
         }.from(domain).to(nil)
+      end
+    end
+
+    describe "adding domains" do
+      it "does not add domains to the organization if it is a shared domain" do
+        shared_domain = SharedDomain.make
+        org = Organization.make
+        expect { org.add_domain(shared_domain) }.not_to change { org.domains }
+      end
+
+      it "does nothing if it is a private domain that belongs to the org" do
+        org = Organization.make
+        private_domain = PrivateDomain.make(owning_organization: org)
+        expect { org.add_domain(private_domain) }.not_to change { org.domains.collect(&:id) }
+      end
+
+      it "raises error if the private domain does not belongs to the organization" do
+        org = Organization.make
+        private_domain = PrivateDomain.make(owning_organization: Organization.make)
+        expect { org.add_domain(private_domain) }.to raise_error(Organization::UnauthorizedAccessToPrivateDomain)
       end
     end
   end

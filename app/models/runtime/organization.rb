@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class Organization < Sequel::Model
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    class UnauthorizedAccessToPrivateDomain < RuntimeError; end
 
     one_to_many :spaces
     one_to_many :service_instances, dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
@@ -13,7 +14,10 @@ module VCAP::CloudController
                 dataset: -> { VCAP::CloudController::Domain.filter(owning_organization_id: id).or(owning_organization_id: nil) },
                 remover: ->(legacy_domain) { legacy_domain.destroy if legacy_domain.owning_organization_id == id },
                 clearer: -> { remove_all_private_domains },
-                adder: ->(legacy_domain) { add_private_domain(legacy_domain) }
+                adder: ->(legacy_domain) do
+                  return unless legacy_domain.owning_organization_id
+                  raise UnauthorizedAccessToPrivateDomain unless legacy_domain.owning_organization_id == id
+                end
 
     add_association_dependencies spaces: :destroy,
       service_instances: :destroy,
