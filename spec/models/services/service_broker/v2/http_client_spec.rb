@@ -159,13 +159,8 @@ module VCAP::CloudController::ServiceBroker::V2
     let(:service_id) { Sham.guid }
     let(:instance_id) { Sham.guid }
     let(:url) { 'http://broker.example.com' }
-    let(:expected_request_headers) do
-      {
-        'X-VCAP-Request-ID' => request_id,
-        'Accept' => 'application/json',
-        'Content-Type' => 'application/json'
-      }
-    end
+    let(:full_url) { "http://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
+    let(:path) { '/the/path' }
 
     subject(:client) do
       HttpClient.new(
@@ -179,412 +174,68 @@ module VCAP::CloudController::ServiceBroker::V2
       VCAP::Request.stub(:current_id).and_return(request_id)
     end
 
-    describe 'request headers' do
-      it 'has X-Broker-Api-Version set correctly in header' do
-        stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-          to_return(status: 201, body: {}.to_json)
+    shared_examples 'a basic successful request' do
+      describe 'returning a correct response object' do
+        subject { response }
 
-        client.provision(
-          instance_id: instance_id,
-          plan_id:     plan_id,
-          service_id:  service_id,
-          org_guid:    "org-guid",
-          space_guid:  "space-guid"
-        )
-
-        WebMock.should have_requested(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-                         with(:headers => {'X-Broker-Api-Version' => '2.1'})
-      end
-    end
-
-    context 'when an https URL is used' do
-      let(:url) { 'https://broker.example.com' }
-      it 'uses SSL' do
-        stub_request(:get, "https://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog").to_return(status: 200, body: {}.to_json)
-        client.catalog
-        WebMock.should have_requested(:get, "https://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog")
-      end
-    end
-
-    describe 'http client timeout' do
-      let(:http) { double('http', request: response) }
-      let(:response) { double(:response, code: 200, body: {}.to_json, to_hash: {}) }
-      let(:provision_request) do
-        {
-          instance_id: instance_id,
-          plan_id:     plan_id,
-          service_id:  service_id,
-          org_guid:    "org-guid",
-          space_guid:  "space-guid"
-        }
+        its(:code) { should eq('200') }
+        its(:body) { should_not be_nil }
       end
 
-      def expect_timeout_to_be(timeout)
-        expect(http).to receive(:open_timeout=).with(timeout)
-        expect(http).to receive(:read_timeout=).with(timeout)
+      it 'sets X-Broker-Api-Version header correctly' do
+        a_request(http_method, full_url).
+          with(:query => hash_including({})).
+          with(:headers => {'X-Broker-Api-Version' => '2.1'}).
+          should have_been_made
       end
 
-      before do
-        allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
-        allow(Net::HTTP).to receive(:start).and_yield(http)
+      it 'sets the X-Vcap-Request-Id header to the current request id' do
+        a_request(http_method, full_url).
+          with(:query => hash_including({})).
+          with(:headers => { 'X-Vcap-Request-Id' => request_id }).
+          should have_been_made
       end
 
-      context 'when the broker client timeout is set' do
-        let(:config) { {broker_client_timeout_seconds: 100} }
-
-        it 'sets HTTP timeouts on catalog requests' do
-          expect_timeout_to_be 100
-          client.catalog
-        end
-
-        it 'sets HTTP timeouts on provisions' do
-          expect_timeout_to_be 100
-          client.provision(provision_request)
-        end
+      it 'sets the Accept header to application/json' do
+        a_request(http_method, full_url).
+          with(:query => hash_including({})).
+          with(:headers => { 'Accept' => 'application/json' }).
+          should have_been_made
       end
 
-      context 'when the broker timeout is not set' do
-        let(:config) { {missing_broker_client_timeout: nil} }
+      context 'when an https URL is used' do
+        let(:url) { "https://broker.example.com" }
+        let(:full_url) { "https://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
 
-        it 'defaults to 60 seconds on catalog requests' do
-          expect_timeout_to_be 60
-          client.catalog
-        end
-
-        it 'sets HTTP timeouts on provisions' do
-          expect_timeout_to_be 60
-          client.provision(provision_request)
+        it 'uses SSL' do
+          a_request(http_method, 'https://me:abc123@broker.example.com/the/path').
+            with(query: hash_including({})).
+            should have_been_made
         end
       end
     end
 
-    describe '#catalog' do
-      let(:service_id) { Sham.guid }
-      let(:service_name) { Sham.name }
-      let(:service_description) { Sham.description }
-      let(:plan_id) { Sham.guid }
-      let(:plan_name) { Sham.name }
-      let(:plan_description) { Sham.description }
-      let(:catalog_response) do
-        {
-          'services' => [
-            {
-              'id' => service_id,
-              'name' => service_name,
-              'description' => service_description,
-              'plans' => [
-                {
-                  'id' => plan_id,
-                  'name' => plan_name,
-                  'description' => plan_description
-                }
-              ]
-            }
-          ]
-        }
-      end
-
-      before do
-        @request = stub_request(:get, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog").
-          to_return(body: catalog_response.to_json)
-      end
-
-      it 'sends a GET to /v2/catalog' do
-        catalog = client.catalog
-
-        expect(catalog).to eq(catalog_response)
-      end
-
-      it 'makes a request with the correct headers' do
-        client.catalog
-
-        expect(
-          @request.with(
-            headers: {
-              'X-Vcap-Request-Id' => request_id,
-              'Accept' => 'application/json'
-            }
-          )
-        ).to have_been_made
-      end
-
-      it 'does not send a content type' do
-        client.catalog
-
-        correct_headers = ->(request) {
-          expect(request.headers).not_to have_key('Content-Type')
-          true
-        }
-
-        expect(@request.with(&correct_headers)).to have_been_made
-      end
-    end
-
-    describe '#provision' do
-
-      let(:expected_request_body) do
-        {
-          plan_id: plan_id,
-          organization_guid: "org-guid",
-          service_id: service_id,
-          space_guid: "space-guid"
-        }
-      end
-
-      let(:expected_response_body) do
-        {
-          dashboard_url: 'dashboard url'
-        }.to_json
-      end
-
-      before do
-        @request = stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-          to_return(status: 201, body: expected_response_body)
-      end
-
-      it 'sends a PUT to /v2/service_instances/:id' do
-        response = client.provision(
-          instance_id: instance_id,
-          plan_id: plan_id,
-          service_id: service_id,
-          org_guid: "org-guid",
-          space_guid: "space-guid"
-        )
-
-        expect(response.fetch('dashboard_url')).to eq('dashboard url')
-      end
-
-      it 'makes a request with the correct body' do
-        client.provision(
-          instance_id: instance_id,
-          plan_id: plan_id,
-          service_id: service_id,
-          org_guid: "org-guid",
-          space_guid: "space-guid"
-        )
-
-        expect(@request.with(body: expected_request_body)).to have_been_made
-      end
-
-      it 'makes a request with the correct headers' do
-        client.provision(
-          instance_id: instance_id,
-          plan_id: plan_id,
-          service_id: service_id,
-          org_guid: "org-guid",
-          space_guid: "space-guid"
-        )
-
-        expect(
-          @request.with(
-            headers: {
-              'X-Vcap-Request-Id' => request_id,
-              'Accept' => 'application/json',
-              'Content-Type' => 'application/json',
-            }
-          )
-        ).to have_been_made
-      end
-
-      context 'the reference_id is already in use' do
-        it 'raises ServiceBrokerConflict' do
-          stub_request(:put, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-            to_return(status: 409) # 409 is CONFLICT
-
-          expect {
-            client.provision(
-              instance_id: instance_id,
-              plan_id: plan_id,
-              service_id: service_id,
-              org_guid: "org-guid",
-              space_guid: "space-guid"
-            )
-          }.to raise_error(ServiceBrokerConflict)
-        end
-      end
-    end
-
-    describe '#bind' do
-      let(:binding_id) { Sham.guid }
-      let(:app_guid) { Sham.guid }
-
-      let(:bind_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}" }
-
-      before do
-        @request = stub_request(:put, bind_url).to_return(
-          body: {
-            credentials: {user: 'admin', pass: 'secret'}
-          }.to_json
-        )
-      end
-
-      it 'sends a PUT to /v2/service_instances/:instance_id/service_bindings/:id' do
-        client.bind(
-          binding_id: binding_id,
-          instance_id: instance_id,
-          service_id: service_id,
-          plan_id: plan_id,
-          app_guid: app_guid
-        )
-
-        expect(
-          @request.with(body: { service_id: service_id, plan_id: plan_id, app_guid: app_guid })
-        ).to have_been_made
-      end
-
-      it 'makes a request with the correct headers' do
-        client.bind(
-          binding_id: binding_id,
-          instance_id: instance_id,
-          service_id: service_id,
-          plan_id: plan_id,
-          app_guid: app_guid
-        )
-
-        expect(
-          @request.with(
-            headers: {
-              'X-Vcap-Request-Id' => request_id,
-              'Accept' => 'application/json',
-              'Content-Type' => 'application/json',
-            }
-          )
-        ).to have_been_made
-      end
-
-      it 'returns the response body' do
-        response = client.bind({
-          binding_id: binding_id,
-          instance_id: instance_id,
-          service_id: service_id,
-          plan_id: plan_id,
-          app_guid: app_guid
-        })
-
-        expect(response).to eq('credentials' => {'user' => 'admin', 'pass' => 'secret'})
-      end
-    end
-
-    describe '#unbind' do
-      let(:binding_id) { Sham.guid }
-
-      let(:bind_url) {
-        "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}"
-      }
-
-      before do
-        @request = stub_request(:delete, bind_url).
-          with(query: hash_including({})).
-          to_return(status: 204)
-      end
-
-      it 'sends a DELETE to /v2/service_instances/:instance_id/service_bindings/:id' do
-        client.unbind(
-          binding_id: binding_id,
-          instance_id: instance_id,
-          service_id: service_id,
-          plan_id: plan_id,
-        )
-
-        expect(
-          @request.with(query: { service_id: service_id, plan_id: plan_id })
-        ).to have_been_made
-      end
-
-      it 'makes a request with the correct headers' do
-        client.unbind(
-          binding_id: binding_id,
-          instance_id: instance_id,
-          service_id: service_id,
-          plan_id: plan_id,
-        )
-        correct_headers = ->(request) {
-          expect(request.headers['X-Vcap-Request-Id']).to eq(request_id)
-          expect(request.headers['Accept']).to eq('application/json')
-          expect(request.headers).not_to have_key('Content-Type')
-          true
-        }
-        expect(@request.with(&correct_headers)).to have_been_made
-      end
-    end
-
-    describe '#deprovision' do
-      let(:instance_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}" }
-      before do
-        @request = stub_request(:delete, instance_url).
-          with(query: hash_including({})).
-          to_return(status: 204)
-      end
-
-      it 'sends a DELETE to /v2/service_instances/:id' do
-        client.deprovision(
-          instance_id: instance_id,
-          service_id: service_id,
-          plan_id: plan_id,
-        )
-
-        expect(
-          @request.with(query: { service_id: service_id, plan_id: plan_id })
-        ).to have_been_made
-      end
-
-      it 'makes a request with the correct headers' do
-        client.deprovision(
-          instance_id: instance_id,
-          service_id: service_id,
-          plan_id: plan_id,
-        )
-        expect(
-          @request.with(
-            headers: {
-              'X-Vcap-Request-Id' => request_id,
-              'Accept' => 'application/json'
-            }
-          )
-        ).to have_been_made
-      end
-
-      it 'does not send a content type' do
-        client.deprovision(
-          instance_id: instance_id,
-          service_id: service_id,
-          plan_id: plan_id,
-        )
-
-        correct_headers = ->(request) {
-          expect(request.headers).not_to have_key('Content-Type')
-          true
-        }
-
-        expect(@request.with(&correct_headers)).to have_been_made
-      end
-    end
-
-    describe 'error conditions' do
-      let(:broker_catalog_url) { "http://#{auth_username}:#{auth_password}@broker.example.com/v2/catalog" }
-
+    shared_examples 'broker communication errors' do
       context 'when the API is not reachable' do
         context 'because the host could not be resolved' do
           before do
-            stub_request(:get, broker_catalog_url).to_raise(SocketError)
+            stub_request(http_method, full_url).to_raise(SocketError)
           end
 
-          it 'should raise an unreachable error' do
-            expect {
-              client.catalog
-            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable)
+          it 'raises an unreachable error' do
+            expect { request }.
+              to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable)
           end
         end
 
         context 'because the server refused our connection' do
           before do
-            stub_request(:get, broker_catalog_url).to_raise(Errno::ECONNREFUSED)
+            stub_request(http_method, full_url).to_raise(Errno::ECONNREFUSED)
           end
 
-          it 'should raise an unreachable error' do
-            expect {
-              client.catalog
-            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable)
+          it 'raises an unreachable error' do
+            expect { request }.
+              to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiUnreachable)
           end
         end
       end
@@ -592,114 +243,193 @@ module VCAP::CloudController::ServiceBroker::V2
       context 'when the API times out' do
         context 'because the client gave up' do
           before do
-            stub_request(:get, broker_catalog_url).to_raise(Timeout::Error)
+            stub_request(http_method, full_url).to_raise(Timeout::Error)
           end
 
-          it 'should raise a timeout error' do
-            expect {
-              client.catalog
-            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiTimeout)
+          it 'raises a timeout error' do
+            expect { request }.
+              to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiTimeout)
           end
         end
       end
+    end
 
-      context 'when the API returns an error code' do
-        let(:error_response) { {'foo' => 'bar'} }
+    shared_examples 'timeout behavior' do
+      before do
+        allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+        allow(Net::HTTP).to receive(:start).and_yield(http)
+      end
+
+      let(:http)     { double('http', request: response) }
+      let(:response) { double(:response, code: 200, body: {}.to_json, to_hash: {}) }
+
+      def expect_timeout_to_be(timeout)
+        expect(http).to receive(:open_timeout=).with(timeout)
+        expect(http).to receive(:read_timeout=).with(timeout)
+      end
+
+      context 'when the broker client timeout is set' do
+        let(:config) { {broker_client_timeout_seconds: 100} }
+
+        it 'sets HTTP timeouts on request' do
+          expect_timeout_to_be 100
+          request
+        end
+      end
+
+      context 'when the broker client timeout is not set' do
+        let(:config) { {missing_broker_client_timeout: nil} }
+
+        it 'defaults to a 60 second timeout' do
+          expect_timeout_to_be 60
+          request
+        end
+      end
+    end
+
+    describe '#get' do
+      let(:http_method) { :get }
+
+      describe 'http request' do
+        let(:response) { client.get(path) }
 
         before do
-          stub_request(:get, broker_catalog_url).to_return(
-            status: [500, 'Internal Server Error'], body: error_response.to_json
-          )
+          stub_request(:get, full_url).to_return(status: 200, body: {}.to_json)
+          response
         end
 
-        it 'should raise a ServiceBrokerBadResponse' do
-          expect {
-            client.catalog
-          }.to raise_error { |e|
-            expect(e).to be_a(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse)
-            error_hash = e.to_h
-            error_hash.fetch('description').should eq('The service broker API returned an error from http://broker.example.com/v2/catalog: 500 Internal Server Error')
-            error_hash.fetch('types').should include('ServiceBrokerBadResponse', 'HttpResponseError')
-            error_hash.fetch('source').should include({'foo' => 'bar'})
+        it 'makes the correct GET http request' do
+          a_request(:get, 'http://me:abc123@broker.example.com/the/path').should have_been_made
+        end
+
+        it 'does not set a Content-Type header' do
+          no_content_type = ->(request) {
+            request.headers.should_not have_key('Content-Type')
+            true
           }
+
+          a_request(:get, full_url).with(&no_content_type).should have_been_made
+        end
+
+        it 'does not have a content body' do
+          a_request(:get, full_url).
+            with { |req| req.body.should be_nil }.
+            should have_been_made
+        end
+
+        it_behaves_like 'a basic successful request'
+      end
+
+      describe 'handling errors' do
+        include_examples 'broker communication errors' do
+          let(:request) { client.get(path) }
         end
       end
 
-      context 'when the API returns an invalid response' do
-        context 'because of an unexpected status code' do
-          let(:catalog_response) { {'services' => []} }
+      it_behaves_like 'timeout behavior' do
+        let(:request) { client.get(path) }
+      end
+    end
 
-          before do
-            stub_request(:get, broker_catalog_url).to_return(
-              status: [404, 'Not Found'], body: catalog_response.to_json
-            )
-          end
-
-          it 'should raise an invalid response error' do
-            expect {
-              client.catalog
-            }.to raise_error(
-              VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse,
-              'The service broker API returned an error from http://broker.example.com/v2/catalog: 404 Not Found'
-            )
-          end
-        end
-
-        context 'because of an unexpected body' do
-          before do
-            stub_request(:get, broker_catalog_url).to_return(status: 200, body: '[]')
-          end
-
-          it 'should raise an invalid response error' do
-            expect {
-              client.catalog
-            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerResponseMalformed)
-          end
-        end
-
-        context 'because of an invalid JSON body' do
-          before do
-            stub_request(:get, broker_catalog_url).to_return(status: 200, body: 'invalid')
-          end
-
-          it 'should raise an invalid response error' do
-            expect {
-              client.catalog
-            }.to raise_error(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerResponseMalformed)
-          end
-        end
+    describe '#put' do
+      let(:http_method) { :put }
+      let(:message) do
+        {
+          :key1 => 'value1',
+          :key2 => 'value2'
+        }
       end
 
-      context 'when the API cannot authenticate the client' do
+      describe 'http request' do
+        let(:response) { client.put(path, message) }
+
         before do
-          stub_request(:get, broker_catalog_url).to_return(status: 401)
+          stub_request(:put, full_url).to_return(status: 200, body: {}.to_json)
+          response
         end
 
-        it 'should raise an authentication error' do
-          expect {
-            client.catalog
-          }.to raise_error { |e|
-            expect(e).to be_a(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerApiAuthenticationFailed)
-            error_hash = e.to_h
-            error_hash.fetch('description').
-              should eq("Authentication failed for the service broker API. Double-check that the username and password are correct: http://broker.example.com/v2/catalog")
+        it 'makes the correct PUT http request' do
+          a_request(:put, 'http://me:abc123@broker.example.com/the/path').should have_been_made
+        end
+
+        it 'sets the Content-Type header to application/json' do
+          a_request(:put, full_url).
+            with(headers: { 'Content-Type' => 'application/json' }).
+            should have_been_made
+        end
+
+        it 'has a content body' do
+          a_request(:put, full_url).
+            with(body: {
+              'key1' => 'value1',
+              'key2' => 'value2'
+            }.to_json).
+            should have_been_made
+        end
+
+        it_behaves_like 'a basic successful request'
+      end
+
+      describe 'handling errors' do
+        include_examples 'broker communication errors' do
+          let(:request) { client.put(path, message) }
+        end
+      end
+
+      it_behaves_like 'timeout behavior' do
+        let(:request) { client.put(path, message) }
+      end
+    end
+
+    describe '#delete' do
+      let(:http_method) { :delete }
+      let(:message) do
+        {
+          :key1 => 'value1',
+          :key2 => 'value2'
+        }
+      end
+
+      describe 'http request' do
+        let(:response) { client.delete(path, message) }
+
+        before do
+          stub_request(:delete, full_url).with(query: message).to_return(status: 200, body: {}.to_json)
+          response
+        end
+
+        it 'makes the correct DELETE http request' do
+          a_request(:delete, 'http://me:abc123@broker.example.com/the/path?key1=value1&key2=value2').should have_been_made
+        end
+
+        it 'does not set a Content-Type header' do
+          no_content_type = ->(request) {
+            request.headers.should_not have_key('Content-Type')
+            true
           }
+
+          a_request(:delete, full_url).with(query: message, &no_content_type).should have_been_made
+        end
+
+        it 'does not have a content body' do
+          a_request(:delete, full_url).
+            with(query: message).
+            with { |req| req.body.should be_nil }.
+            should have_been_made
+        end
+
+        it_behaves_like 'a basic successful request'
+      end
+
+      describe 'handling errors' do
+        include_examples 'broker communication errors' do
+          let(:full_url) { "http://#{auth_username}:#{auth_password}@broker.example.com#{path}?#{message.to_query}" }
+          let(:request) { client.delete(path, message) }
         end
       end
 
-      context 'when the API returns 410 to a DELETE request' do
-        before do
-          @stub = stub_request(:delete, "http://#{auth_username}:#{auth_password}@broker.example.com/v2/service_instances/#{instance_id}").
-            with(query: hash_including({})).
-            to_return(status: [410, 'Gone'])
-        end
-
-        it 'should swallow the error' do
-          expect(
-            client.deprovision(instance_id: instance_id, plan_id: plan_id, service_id: service_id)
-          ).to be_nil
-          @stub.should have_been_requested
-        end
+      it_behaves_like 'timeout behavior' do
+        let(:request) { client.delete(path, message) }
       end
     end
   end

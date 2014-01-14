@@ -81,6 +81,8 @@ module VCAP::CloudController
 
     class HttpClient
 
+      attr_reader :url
+
       def initialize(attrs)
         @url = attrs.fetch(:url)
         @auth_username = attrs.fetch(:auth_username)
@@ -88,88 +90,31 @@ module VCAP::CloudController
         @broker_client_timeout = VCAP::CloudController::Config.config[:broker_client_timeout_seconds] || 60
       end
 
-      def catalog
-        get('/v2/catalog')
+      def get(path)
+        make_request(:get, path, nil, nil)
       end
 
-      # The broker is expected to guarantee uniqueness of instance_id.
-      # raises ServiceBrokerConflict if the id is already in use
-      def provision(params)
-        instance_id = params.fetch(:instance_id)
-        plan_id = params.fetch(:plan_id)
-        service_id = params.fetch(:service_id)
-        org_guid = params.fetch(:org_guid)
-        space_guid = params.fetch(:space_guid)
-
-        put("/v2/service_instances/#{instance_id}", {
-          service_id: service_id,
-          plan_id: plan_id,
-          organization_guid: org_guid,
-          space_guid: space_guid,
-        })
+      def put(path, message)
+        make_request(:put, path, message.to_json, 'application/json')
       end
 
-      def bind(params)
-        binding_id = params.fetch(:binding_id)
-        instance_id = params.fetch(:instance_id)
-        plan_id = params.fetch(:plan_id)
-        service_id = params.fetch(:service_id)
-        app_guid = params.fetch(:app_guid)
+      def delete(path, message)
+        uri = uri_for(path)
+        uri.query = message.to_query
 
-        put("/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
-          plan_id: plan_id,
-          service_id: service_id,
-          app_guid: app_guid
-        })
-      end
-
-      def unbind(params)
-        binding_id = params.fetch(:binding_id)
-        instance_id = params.fetch(:instance_id)
-        plan_id = params.fetch(:plan_id)
-        service_id = params.fetch(:service_id)
-
-        delete("/v2/service_instances/#{instance_id}/service_bindings/#{binding_id}", {
-          plan_id: plan_id,
-          service_id: service_id,
-        })
-      end
-
-      def deprovision(params)
-        instance_id = params.fetch(:instance_id)
-        plan_id = params.fetch(:plan_id)
-        service_id = params.fetch(:service_id)
-
-        delete("/v2/service_instances/#{instance_id}", {
-          plan_id: plan_id,
-          service_id: service_id,
-        })
+        make_request(:delete, uri.request_uri, nil, nil)
       end
 
       private
 
-      attr_reader :url, :auth_username, :auth_password, :broker_client_timeout
+      attr_reader :auth_username, :auth_password, :broker_client_timeout
 
-      def get(path)
-        uri = URI( url + path )
-        response = make_request(:get, uri, nil, nil)
-        parse_response(:get, uri, response)
+      def uri_for(path)
+        URI(url + path)
       end
 
-      def put(path, message)
-        uri = URI( url + path )
-        response = make_request(:put, uri, message.to_json, 'application/json')
-        parse_response(:put, uri, response)
-      end
-
-      def delete(path, message)
-        uri = URI( url + path )
-        uri.query = message.to_query
-        response = make_request(:delete, uri, nil, nil)
-        parse_response(:delete, uri, response)
-      end
-
-      def make_request(method, uri, body, content_type)
+      def make_request(method, path_with_query, body, content_type)
+        uri = uri_for(path_with_query)
         begin
           req_class = method.to_s.capitalize
           req = Net::HTTP.const_get(req_class).new(uri.request_uri)
@@ -189,6 +134,9 @@ module VCAP::CloudController
 
             http.request(req)
           end
+
+          logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.to_hash.inspect}"
+          return response
         rescue SocketError, Errno::ECONNREFUSED => error
           raise ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
         rescue Timeout::Error => error
@@ -198,46 +146,8 @@ module VCAP::CloudController
         end
       end
 
-      def parse_response(method, uri, response)
-        code = response.code.to_i
-
-        logger.debug "Response from request to #{uri}: STATUS #{code}, BODY: #{response.body.inspect}, HEADERS: #{response.to_hash.inspect}"
-
-        case code
-
-          when 204
-            return nil # no body
-
-          when 200..299
-            begin
-              response_hash = Yajl::Parser.parse(response.body)
-            rescue Yajl::ParseError
-            end
-
-            unless response_hash.is_a?(Hash)
-              raise ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
-            end
-
-            return response_hash
-
-          when HTTP::Status::UNAUTHORIZED
-            raise ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
-
-          when 409
-            raise ServiceBrokerConflict.new(uri.to_s, method, response)
-
-          when 410
-            if method == :delete
-              logger.warn("Already deleted: #{uri.to_s}")
-              return nil
-            end
-        end
-
-        raise ServiceBrokerBadResponse.new(uri.to_s, method, response)
-      end
-
       def logger
-        @logger ||= Steno.logger("cc.service_broker.v2.http_client")
+        @logger ||= Steno.logger('cc.service_broker.v2.http_client')
       end
     end
   end
