@@ -6,8 +6,8 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class AppBitsPacker < Struct.new(:app_guid, :uploaded_compressed_path, :fingerprints)
-
         include VCAP::CloudController::TimedJob
+
         def perform
           Timeout.timeout max_run_time(:app_bits_packer) do
             app = VCAP::CloudController::App.find(guid: app_guid)

@@ -51,7 +51,7 @@ module VCAP::CloudController
             sleep 2
           end
 
-          job.stub(:max_run_time) { 1 }
+          job.stub(:max_run_time).with(:app_bits_packer).and_return( 0.001 )
 
           expect {
             job.perform

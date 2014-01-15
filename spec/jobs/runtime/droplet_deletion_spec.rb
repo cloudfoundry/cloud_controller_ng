@@ -44,6 +44,18 @@ module VCAP::CloudController
             expect(droplet_blobstore).to receive(:delete).with(old_droplet_key).ordered.and_raise Errno::EINVAL
             expect { subject.perform }.to raise_error(Errno::EINVAL)
           end
+
+          it "times out if the job takes longer than its timeout" do
+            CloudController::DependencyLocator.stub(:instance) do
+              sleep 2
+            end
+
+            droplet_deletion_job.stub(:max_run_time).and_return(1)
+
+            expect {
+              droplet_deletion_job.perform
+            }.to raise_error(Timeout::Error)
+          end
         end
       end
 

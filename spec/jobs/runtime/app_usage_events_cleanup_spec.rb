@@ -45,6 +45,18 @@ module VCAP::CloudController
             }.not_to change { event_after_threshold.exists? }.from(true)
           end
         end
+
+        it "times out if the job takes longer than its timeout" do
+          Steno.stub(:logger) do
+            sleep 2
+          end
+
+          job.stub(:max_run_time).with(:app_usage_events_cleanup).and_return( 0.001 )
+
+          expect {
+            job.perform
+          }.to raise_error(Timeout::Error)
+        end
       end
     end
   end

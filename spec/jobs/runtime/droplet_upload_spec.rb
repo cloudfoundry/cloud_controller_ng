@@ -63,6 +63,19 @@ module VCAP::CloudController
         droplet_uploader
       end
 
+      it "times out if the job takes longer than its timeout" do
+        CloudController::DependencyLocator.stub(:instance) do
+          sleep 2
+        end
+
+        job = DropletUpload.new(local_file.path, app.id)
+        job.stub(:max_run_time).with(:droplet_upload).and_return( 0.001 )
+
+        expect {
+          job.perform
+        }.to raise_error(Timeout::Error)
+      end
+
       context "when the app no longer exists" do
         subject(:droplet_uploader) { DropletUpload.new(local_file.path, 99999999).perform }
 

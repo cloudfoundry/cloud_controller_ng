@@ -29,6 +29,32 @@ module VCAP::CloudController
         subject.perform
         expect(File.exists?(local_file.path)).to be_false
       end
+
+      it "times out if the job takes longer than its timeout" do
+        CloudController::DependencyLocator.stub(:instance) do
+          sleep 2
+        end
+
+        subject.stub(:max_run_time).with(:blobstore_upload).and_return( 0.001 )
+
+        expect {
+          subject.perform
+        }.to raise_error(Timeout::Error)
+      end
+
+      it "cleans up the file even on timeout" do
+        CloudController::DependencyLocator.stub(:instance) do
+          sleep 2
+        end
+
+        subject.stub(:max_run_time) { 1 }
+
+        expect {
+          subject.perform
+        }.to raise_error(Timeout::Error)
+
+        expect(File.exists?(local_file.path)).to be_false
+      end
     end
   end
 end
