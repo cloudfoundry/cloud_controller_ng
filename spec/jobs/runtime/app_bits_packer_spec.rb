@@ -3,9 +3,14 @@ require "spec_helper"
 module VCAP::CloudController
   module Jobs::Runtime
     describe AppBitsPacker do
+      let(:uploaded_path) { "tmp/uploaded.zip" }
+
+      subject(:job) do
+        AppBitsPacker.new("app_guid", uploaded_path, [:fingerprints])
+      end
+
       describe "#perform" do
         let(:app) { double(:app) }
-        let(:uploaded_path) { "tmp/uploaded.zip" }
         let(:fingerprints) { double(:fingerprints) }
         let(:package_blobstore) { double(:package_blobstore) }
         let(:global_app_bits_cache) { double(:global_app_bits_cache) }
@@ -19,9 +24,6 @@ module VCAP::CloudController
           App.stub(:find) { app }
           AppBitsPackage.stub(:new) { double(:packer, create: "done") }
         end
-
-        subject(:job) {
-          AppBitsPacker.new("app_guid", uploaded_path, [:fingerprints]) }
 
         it "finds the app from the guid" do
           App.should_receive(:find).with(guid: "app_guid")
@@ -42,6 +44,18 @@ module VCAP::CloudController
           AppBitsPackage.should_receive(:new).with(package_blobstore, global_app_bits_cache, max_droplet_size, tmpdir).and_return(packer)
           packer.should_receive(:create).with(app, uploaded_path, fingerprints)
           job.perform
+        end
+
+        it "times out if the job takes longer than its timeout" do
+          CloudController::DependencyLocator.stub(:instance) do
+            sleep 2
+          end
+
+          job.stub(:max_run_time) { 1 }
+
+          expect {
+            job.perform
+          }.to raise_error(Timeout::Error)
         end
       end
     end
