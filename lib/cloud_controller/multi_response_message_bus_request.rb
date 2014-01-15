@@ -22,7 +22,7 @@ class MultiResponseMessageBusRequest
       handle_received_response(response, error)
     end
 
-    logger.info "request: sid=#{@sid} response='#{data}'"
+    logger.debug "request: sid=#{@sid} response='#{data}'"
     timeout_request
   end
 
@@ -36,7 +36,7 @@ class MultiResponseMessageBusRequest
   private
 
   def handle_received_response(response, response_error = nil)
-    logger.info "handle_received_response: sid=#{@sid} response='#{response}'"
+    logger.debug "handle_received_response: sid=#{@sid} response='#{response}'"
 
     error = Error.new("Internal error: failed to decode response") if response_error
     timeout_request
