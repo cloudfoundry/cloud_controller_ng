@@ -90,7 +90,8 @@ module VCAP::CloudController
             expect(decoded_response["total_results"]).to eq(1)
             expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack',
                                                                       'position' => 1,
-                                                                      'enabled' => true})
+                                                                      'enabled' => true,
+                                                                      'locked' => false})
           end
         end
       end

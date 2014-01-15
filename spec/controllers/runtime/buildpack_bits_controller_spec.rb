@@ -113,6 +113,20 @@ module VCAP::CloudController
           put "/v2/buildpacks/#{@test_buildpack.guid}/bits", { :buildpack => valid_zip }, admin_headers
         end
 
+        it "does not allow upload if the buildpack is locked" do
+          locked_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "locked_buildpack", locked: true, position: 0 })
+          put "/v2/buildpacks/#{locked_buildpack.guid}/bits", { :buildpack => valid_zip2 }, admin_headers
+          expect(last_response.status).to eq(409)
+        end
+        
+        it "does allow upload if the buildpack has been unlocked" do
+          locked_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "locked_buildpack", locked: true, position: 0 })
+          put "/v2/buildpacks/#{locked_buildpack.guid}", '{"locked": false}', admin_headers
+          
+          put "/v2/buildpacks/#{locked_buildpack.guid}/bits", { :buildpack => valid_zip2 }, admin_headers
+          expect(last_response.status).to eq(201)
+        end
+        
         context "when the upload file is nil" do
           it "should be okay" do
             FileUtils.should_not_receive(:rm_f)
