@@ -17,6 +17,10 @@ app_domains:
   - customer-app-domain1.com
   - customer-app-domain2.com
 
+jobs:
+  global:
+    timeout_in_seconds: 14400
+
 app_events:
   cutoff_age_in_days: 31
 
