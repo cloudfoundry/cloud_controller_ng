@@ -22,6 +22,18 @@ module VCAP::CloudController
           job.perform
         }.not_to change { AppEvent.find(id: @event.id) }.to(nil)
       end
+
+      it "times out if the job takes longer than its timeout" do
+        AppEvent.stub(:where) do
+          sleep 2
+        end
+
+        job.stub(:max_run_time) { 1 }
+
+        expect {
+          job.perform
+        }.to raise_error(Timeout::Error)
+      end
     end
   end
 end
