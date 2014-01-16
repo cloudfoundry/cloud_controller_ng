@@ -36,39 +36,18 @@ module VCAP::CloudController
                       :auditor_guids, :private_domain_guids, :quota_definition_guid,
                       :status, :domain_guids
 
-    def billing_enabled?
-      billing_enabled
+
+    def self.user_visibility_filter(user)
+      Sequel.or(
+        managers: [user],
+        users: [user],
+        billing_managers: [user],
+        auditors: [user])
     end
 
     def before_create
       add_default_quota
       super
-    end
-
-    def validate
-      validates_presence :name
-      validates_unique   :name
-      validate_only_admin_can_update(:billing_enabled)
-      validate_only_admin_can_update(:quota_definition_id)
-      validates_format ORG_NAME_REGEX, :name
-    end
-
-    def validate_only_admin_can_enable_on_new(field_name)
-      if new? && !!public_send(field_name)
-        require_admin_for(field_name)
-      end
-    end
-
-    def validate_only_admin_can_update(field_name)
-      if !new? && column_changed?(field_name)
-        require_admin_for(field_name)
-      end
-    end
-
-    def require_admin_for(field_name)
-      unless VCAP::CloudController::SecurityContext.admin?
-        errors.add(field_name, :not_authorized)
-      end
     end
 
     def before_save
@@ -93,6 +72,26 @@ module VCAP::CloudController
       end
     end
 
+    def validate
+      validates_presence :name
+      validates_unique   :name
+      validate_only_admin_can_update(:billing_enabled)
+      validate_only_admin_can_update(:quota_definition_id)
+      validates_format ORG_NAME_REGEX, :name
+    end
+
+    def validate_only_admin_can_enable_on_new(field_name)
+      if new? && !!public_send(field_name)
+        require_admin_for(field_name)
+      end
+    end
+
+    def validate_only_admin_can_update(field_name)
+      if !new? && column_changed?(field_name)
+        require_admin_for(field_name)
+      end
+    end
+
     def add_default_quota
       unless quota_definition_id
         self.quota_definition_id = QuotaDefinition.default.id
@@ -108,12 +107,8 @@ module VCAP::CloudController
       status == 'active'
     end
 
-    def self.user_visibility_filter(user)
-      Sequel.or(
-        managers: [user],
-        users: [user],
-        billing_managers: [user],
-        auditors: [user])
+    def billing_enabled?
+      billing_enabled
     end
 
     private
@@ -121,6 +116,12 @@ module VCAP::CloudController
     def check_addable!(legacy_domain)
       if legacy_domain.owning_organization_id && legacy_domain.owning_organization_id != id
         raise UnauthorizedAccessToPrivateDomain
+      end
+    end
+
+    def require_admin_for(field_name)
+      unless VCAP::CloudController::SecurityContext.admin?
+        errors.add(field_name, :not_authorized)
       end
     end
   end
