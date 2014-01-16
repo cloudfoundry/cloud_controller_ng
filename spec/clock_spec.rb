@@ -35,12 +35,6 @@ module VCAP::CloudController
         expect(Clockwork).to have_received(:run)
       end
 
-      describe "dummy.scheduled.job" do
-        it "schedules a dummy job to run every 10 minutes" do
-          expect(Clockwork).to have_received(:every).with(10.minutes, "dummy.scheduled.job")
-        end
-      end
-
       describe "app_usage_events.cleanup.job" do
         it "schedules an AppUsageEventsCleanup job to run every day during business hours in SF" do
           expect(Clockwork).to have_received(:every).with(1.day, "app_usage_events.cleanup.job", at: "18:00")
