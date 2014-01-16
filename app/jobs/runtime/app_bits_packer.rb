@@ -1,6 +1,5 @@
 require "cloud_controller/blobstore/cdn"
 require "cloud_controller/dependency_locator"
-require File.dirname(__FILE__) +  "/timed_job"
 
 module VCAP::CloudController
   module Jobs

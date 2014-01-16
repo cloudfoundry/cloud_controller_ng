@@ -24,6 +24,9 @@ app_events:
 app_usage_events:
   cutoff_age_in_days: 31
 
+audit_events:
+  cutoff_age_in_days: 31
+
 default_app_memory: 1024 #mb
 
 uaa:
