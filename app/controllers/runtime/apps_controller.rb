@@ -8,6 +8,7 @@ module VCAP::CloudController
       to_one     :stack,               :optional_in => :create
 
       attribute  :environment_json,    Hash,       :default => {}
+      attribute  :system_env_json,     Hash,       :default => {}
       attribute  :memory,              Integer,    :default => nil
       attribute  :instances,           Integer,    :default => 1
       attribute  :disk_quota,          Integer,    :default => 1024

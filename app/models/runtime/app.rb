@@ -48,7 +48,7 @@ module VCAP::CloudController
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :version, :command, :console, :debug,
-      :staging_task_id, :package_state, :health_check_timeout
+      :staging_task_id, :package_state, :health_check_timeout, :system_env_json
 
     import_attributes :name, :production,
       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
@@ -272,6 +272,10 @@ module VCAP::CloudController
           encrypted_environment_json, salt))
     end
 
+    def system_env_json
+      vcap_services
+    end
+
     def validate_environment
       return if environment_json.nil?
       unless environment_json.kind_of?(Hash)
@@ -481,6 +485,26 @@ module VCAP::CloudController
     end
 
     private
+
+    WHITELIST_SERVICE_KEYS = %W[name label tags plan credentials].freeze
+    def service_binding_json (binding)
+      vcap_service = {}
+      WHITELIST_SERVICE_KEYS.each do |key|
+        vcap_service[key] = binding[key.to_sym] if binding[key.to_sym]
+      end
+      vcap_service
+    end
+
+    def vcap_services
+      services_hash = {}
+      self.service_bindings.each do |sb|
+        binding = ServiceBindingPresenter.new(sb).to_hash
+        service = service_binding_json(binding)
+        services_hash[binding[:label]] ||= []
+        services_hash[binding[:label]] << service
+      end
+      {"VCAP_SERVICES" => services_hash}
+    end
 
     def health_manager_client
       CloudController::DependencyLocator.instance.health_manager_client
