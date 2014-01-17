@@ -168,6 +168,8 @@ module VCAP::CloudController
           dea_publish_start(dea_id, message)
           dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
         else
+          message.delete(:services)
+          message.delete(:executableUri)
           logger.error "dea-client.no-resources-available", message: message
         end
       end
