@@ -345,29 +345,20 @@ module VCAP::CloudController
         it "contains a popluated vcap_services" do
           expect(app.system_env_json["VCAP_SERVICES"]).not_to eq({})
           expect(app.system_env_json["VCAP_SERVICES"]).to have_key("#{service.label}-#{service.version}")
+          expect(app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"]).to have(1).services
         end
 
-        keys = %W(
-          name
-          label
-          tags
-          plan
-          credentials
-        )
-
-        keys.each do |key|
-          before do
-            service.tags = ["one", "two"]
+        describe "service hash includes only white-listed keys" do
+          subject(:service_hash_keys) do
+            app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].first.keys
           end
 
-          it "includes #{key.inspect}" do
-            app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].first.should include(key)
-          end
-        end
-
-        it "doesn't include unknown keys" do
-          app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].should have(1).service
-          app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].first.keys.should_not include("invalid")
+          its(:count) { should eq(5) }
+          it { should include('name') }
+          it { should include('label') }
+          it { should include('tags') }
+          it { should include('plan') }
+          it { should include('credentials') }
         end
 
         describe "grouping" do
