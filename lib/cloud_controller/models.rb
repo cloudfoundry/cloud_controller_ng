@@ -52,7 +52,7 @@ module Sequel::Plugins::VcapUserVisibility
     end
 
     def full_dataset_filter
-      Sequel.~({:id => nil})
+      {}
     end
   end
 end
