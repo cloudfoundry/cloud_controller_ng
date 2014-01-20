@@ -24,8 +24,9 @@ module VCAP::CloudController
           expect(decoded_response['entity']['position']).to eq(1)
         end
 
-        it "sets the position if provided" do
-          post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", position: 10}), admin_headers
+        it "sets the position correctly even if an invalid position is provided" do
+          should_have_been_1 = 10
+          post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", position: should_have_been_1}), admin_headers
           expect(decoded_response['entity']['position']).to eq(1)
         end
 
@@ -53,7 +54,10 @@ module VCAP::CloudController
       end
 
       context "GET" do
-        let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash(name: "get_buildpack", key: "xyz", position: 0) }
+        let!(:buildpack) do
+          should_have_been_1 = 0
+          VCAP::CloudController::Buildpack.create_from_hash(name: "get_buildpack", key: "xyz", position: should_have_been_1)
+        end
 
         describe "/v2/buildpacks/:guid" do
           it "lets you retrieve info for a specific buildpack" do
@@ -92,8 +96,15 @@ module VCAP::CloudController
       end
 
       context "UPDATE" do
-        let!(:buildpack1) { VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
-        let!(:buildpack2) { VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
+        let!(:buildpack1) do
+          should_have_been_1 = 5
+          VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: should_have_been_1})
+        end
+
+        let!(:buildpack2) do
+          should_have_been_2 = 10
+          VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: should_have_been_2})
+        end
 
         it "returns NOT AUTHORIZED (403) for non admins" do
           put "/v2/buildpacks/#{buildpack2.guid}", {}, headers_for(user)
@@ -139,7 +150,10 @@ module VCAP::CloudController
       end
 
       context "DELETE" do
-        let!(:buildpack1) { VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
+        let!(:buildpack1) do
+          should_have_been_1 = 5
+          VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: should_have_been_1})
+        end
 
         it "returns NOT FOUND (404) if the buildpack does not exist" do
           delete "/v2/buildpacks/abcd", {}, admin_headers
@@ -180,8 +194,15 @@ module VCAP::CloudController
         end
 
         context "positions are adjusted" do
-          let!(:buildpack2) { VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
-          let!(:buildpack3) { VCAP::CloudController::Buildpack.create({name: "third_buildpack", key: "xyz", position: 15}) }
+          let!(:buildpack2) do
+            should_have_been_2 = 10
+            VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: should_have_been_2})
+          end
+
+          let!(:buildpack3) do
+            should_have_been_3 = 15
+            VCAP::CloudController::Buildpack.create({name: "third_buildpack", key: "xyz", position: should_have_been_3})
+          end
 
           it "shifts down" do
             expect {
