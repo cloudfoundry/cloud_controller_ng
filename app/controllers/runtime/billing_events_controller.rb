@@ -21,6 +21,8 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
+    deprecated_endpoint "/v2/billing_events"
+
     private
 
     def start_time

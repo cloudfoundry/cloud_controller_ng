@@ -50,12 +50,22 @@ module VCAP::CloudController
             get "/v2/billing_events", {}, admin_headers
             last_response.status.should == 400
           end
+
+          it "should be deprecated" do
+            get "/v2/billing_events", {}, admin_headers
+            expect(last_response).to be_a_deprecated_response
+          end
         end
 
         describe 'GET /v2/billing_events?start_date=#{start_date}' do
           it "should return 400" do
             get "/v2/billing_events?start_date=#{@start_time.iso8601}", {}, admin_headers
             last_response.status.should == 400
+          end
+
+          it "should be deprecated" do
+            get "/v2/billing_events?start_date=#{@start_time.iso8601}", {}, admin_headers
+            expect(last_response).to be_a_deprecated_response
           end
         end
 
