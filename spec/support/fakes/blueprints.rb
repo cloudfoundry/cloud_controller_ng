@@ -1,4 +1,5 @@
 require "securerandom"
+require_relative "app_factory"
 
 Sham.define do
   email               { |index| "email-#{index}@somedomain.com" }
