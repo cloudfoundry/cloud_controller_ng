@@ -133,13 +133,13 @@ describe "Staging an app", type: :integration do
     context "and the admin has uploaded the buildpacks" do
       before do
         @buildpack_bits_response_1 = make_put_request(
-          "/v2/buildpacks/#{@buildpack_response_1.json_body["metadata"]["guid"]}/bits?buildpack[tempfile]=#{valid_zip.path}&buildpack_name=foo.zip",
+          "/v2/buildpacks/#{@buildpack_response_1.json_body["metadata"]["guid"]}/bits?buildpack[tempfile]=#{valid_zip(4).path}&buildpack_name=foo.zip",
           "{}",
           authed_headers
         )
 
         @buildpack_bits_response_2 = make_put_request(
-          "/v2/buildpacks/#{@buildpack_response_2.json_body["metadata"]["guid"]}/bits?buildpack[tempfile]=#{valid_zip(4).path}&buildpack_name=bar.zip",
+          "/v2/buildpacks/#{@buildpack_response_2.json_body["metadata"]["guid"]}/bits?buildpack[tempfile]=#{valid_zip.path}&buildpack_name=bar.zip",
           "{}",
           authed_headers
         )
@@ -179,7 +179,7 @@ describe "Staging an app", type: :integration do
         
         context "excludes disabled buildpacks" do
           before do
-            @enabled_buildpack_shas = @expected_buildpack_shas[1..-1]
+            @enabled_buildpack_shas = @expected_buildpack_shas[0..0]
             @buildpack_response_2_disable = make_put_request(
               "/v2/buildpacks/#{@buildpack_response_2.json_body["metadata"]["guid"]}",
               { "enabled" => false }.to_json,

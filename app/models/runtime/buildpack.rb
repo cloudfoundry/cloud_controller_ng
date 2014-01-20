@@ -32,14 +32,37 @@ module VCAP::CloudController
 
           if !buildpack.position || buildpack.position >= last_position
             buildpack.position = last_position + 1
+          elsif buildpack.position < 1
+            buildpack.position = 1
           end
 
           buildpack.shift_and_update_positions(last_position, buildpack.position)
           buildpack
         end
       else
-        super(values.merge(position: 1), &block)
+        super(values) do |instance|
+          block.yield(instance) if block
+          instance.position = 1 
+        end
       end
+    end
+
+    def self.update(obj, values = {})
+      attrs = values.dup
+      target_position = attrs.delete('position')
+      db.transaction(savepoint: true) do
+        obj.lock!
+        obj.update_from_hash(attrs)
+        if target_position
+          target_position = 1 if target_position < 1
+          obj.shift_to_position(target_position)
+        end
+      end
+    end
+
+    def after_destroy
+      Buildpack.shift_positions_up_from(position)
+      super
     end
 
     def shift_to_position(target_position)
