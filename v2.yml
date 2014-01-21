@@ -276,7 +276,7 @@
 120002:
   name: ServiceLabelTaken
   http_code: 400
-  message: "The service lable is taken: %s"
+  message: "The service label is taken: %s"
 
 120003:
   name: ServiceNotFound
