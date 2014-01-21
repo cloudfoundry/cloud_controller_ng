@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       registration = ServiceBrokerRegistration.new(broker)
 
-      unless registration.save(raise_on_failure: false)
+      unless registration.save
         raise get_exception_from_errors(registration)
       end
 
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
       broker.set(params)
 
-      unless registration.save(raise_on_failure: false)
+      unless registration.save
         raise get_exception_from_errors(registration)
       end
 

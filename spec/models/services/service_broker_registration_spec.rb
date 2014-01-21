@@ -20,12 +20,12 @@ module VCAP::CloudController
       end
 
       it 'returns itself' do
-        expect(registration.save(raise_on_failure: false)).to eq(registration)
+        expect(registration.save).to eq(registration)
       end
 
       it 'creates a service broker' do
         expect {
-          registration.save(raise_on_failure: false)
+          registration.save
         }.to change(ServiceBroker, :count).from(0).to(1)
 
         expect(broker).to eq(ServiceBroker.last)
@@ -38,16 +38,16 @@ module VCAP::CloudController
       end
 
       it 'fetches the catalog' do
-        registration.save(raise_on_failure: false)
+        registration.save
 
         expect(a_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog')).to have_been_requested
       end
 
       it 'resets errors before saving' do
         registration.broker.name = ''
-        expect(registration.save(raise_on_failure: false)).to be_nil
+        expect(registration.save).to be_nil
         expect(registration.errors.on(:name)).to have_exactly(1).error
-        expect(registration.save(raise_on_failure: false)).to be_nil
+        expect(registration.save).to be_nil
         expect(registration.errors.on(:name)).to have_exactly(1).error
       end
 
@@ -57,23 +57,23 @@ module VCAP::CloudController
           let(:registration) { ServiceBrokerRegistration.new(broker) }
 
           it 'returns nil' do
-            expect(registration.save(raise_on_failure: false)).to be_nil
+            expect(registration.save).to be_nil
           end
 
           it 'does not create a new service broker' do
             expect {
-              registration.save(raise_on_failure: false)
+              registration.save
             }.to_not change(ServiceBroker, :count)
           end
 
           it 'does not fetch the catalog' do
-            registration.save(raise_on_failure: false)
+            registration.save
 
             expect(a_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog')).to_not have_been_requested
           end
 
           it 'adds the broker errors to the registration errors' do
-            registration.save(raise_on_failure: false)
+            registration.save
 
             expect(registration.errors.on(:name)).to include(:presence)
           end
@@ -84,13 +84,13 @@ module VCAP::CloudController
 
           it 'raises an error, even though we\'d rather it not' do
             expect {
-              registration.save(raise_on_failure: false)
+              registration.save
             }.to raise_error ServiceBroker::V2::ServiceBrokerBadResponse
           end
 
           it 'does not create a new service broker' do
             expect {
-              registration.save(raise_on_failure: false) rescue nil
+              registration.save rescue nil
             }.to_not change(ServiceBroker, :count)
           end
         end
@@ -108,7 +108,7 @@ module VCAP::CloudController
             broker.name = 'Awesome new broker name'
 
             expect{
-              expect { registration.save(raise_on_failure: false) }.to raise_error(Errors::ServiceBrokerInvalid)
+              expect { registration.save }.to raise_error(Errors::ServiceBrokerInvalid)
             }.to change{ServiceBroker.count}.by(0)
             broker.reload
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
           it 'does not save new broker' do
             expect(ServiceBroker.count).to eq(0)
             expect{
-              expect { registration.save(raise_on_failure: false) }.to raise_error(Errors::ServiceBrokerInvalid)
+              expect { registration.save }.to raise_error(Errors::ServiceBrokerInvalid)
             }.to change{ServiceBroker.count}.by(0)
           end
         end
