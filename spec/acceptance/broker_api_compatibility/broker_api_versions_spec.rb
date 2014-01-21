@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe 'Broker API Versions', type: :controller do
+describe 'Broker API Versions' do
 
   let(:spec_sha) do
     {
-      'broker_api_v2.0_spec.rb' => '2f9e3084048c6698a8cd5e9a511942ec',
-      'broker_api_v2.1_spec.rb' => '7f054428cedb220dba569249e338faff',
+      'broker_api_v2.0_spec.rb' => '27022a5862c5de049ea156dd500b61f4',
+      'broker_api_v2.1_spec.rb' => 'a3e78cccf3bb393ea00d8ab27e1e5dfd',
     }
   end
 
@@ -35,7 +35,11 @@ describe 'Broker API Versions', type: :controller do
       filename = "#{current_directory}/#{spec}"
       actual_checksum = Digest::MD5.hexdigest(File.read(filename))
 
-      expect(actual_checksum).to eq(spec_sha[spec]), "You have made changes to the Service Broker API compatibility test: #{spec}.  These tests are not meant to be changed since they help ensure backwards compatiblity. If you do need to update this test, you can update the expected sha."
+      expect(actual_checksum).to eq(spec_sha[spec]), <<-MESSAGE.gsub(/\s+/,' ')
+        You have made changes to the Service Broker API compatibility test: #{spec}. These tests are not meant to be
+        changed since they help ensure backwards compatibility. If you do need to update this test, you can update the
+        expected sha to #{actual_checksum}.
+      MESSAGE
     end
   end
 end

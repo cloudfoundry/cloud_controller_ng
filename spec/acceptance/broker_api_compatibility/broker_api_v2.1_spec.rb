@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Service Broker API integration', type: :controller do
+describe 'Service Broker API integration' do
   describe 'v2.1' do
     before do
       VCAP::CloudController::Controller.any_instance.stub(:in_test_mode?).and_return(false)

@@ -554,6 +554,10 @@ RSpec.configure do |rspec_config|
     :file_path => rspec_config.escaped_path(%w[spec api])
   }
 
+  rspec_config.include ControllerHelpers, type: :acceptance, :example_group => {
+    :file_path => rspec_config.escaped_path(%w[spec acceptance])
+  }
+
   rspec_config.include ApiDsl, type: :api, :example_group => {
     :file_path => rspec_config.escaped_path(%w[spec api])
   }
