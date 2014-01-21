@@ -14,6 +14,18 @@ module VCAP::CloudController
       }
     }
 
+    describe "validation" do
+      context 'when the unique_id is not unique' do
+        let(:existing_service) { Service.make }
+        let(:service) { Service.make_unsaved(unique_id: existing_service.unique_id) }
+
+        it 'shows a human-readable error message' do
+          expect(service).not_to be_valid
+          expect(service.errors.on(:unique_id)).to eql(['is taken'])
+        end
+      end
+    end
+
     describe "#destroy" do
       let!(:service) { Service.make }
       subject { service.destroy(savepoint: true) }

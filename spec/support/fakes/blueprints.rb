@@ -74,7 +74,7 @@ module VCAP::CloudController
     provider          { Sham.provider }
     url               { Sham.url }
     version           { Sham.version }
-    unique_id         { "#{provider}_#{label}" }
+    unique_id         { SecureRandom.uuid }
     description do
       # Hack since Sequel does not allow two foreign keys natively
       # and putting this side effect outside memoizes the label and provider.
@@ -143,7 +143,7 @@ module VCAP::CloudController
     free              { false }
     description       { Sham.description }
     service           { Service.make }
-    unique_id         { [service.provider, service.label, name].join("_") }
+    unique_id         { SecureRandom.uuid }
     active            { true }
   end
 

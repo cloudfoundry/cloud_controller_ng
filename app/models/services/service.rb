@@ -27,6 +27,7 @@ module VCAP::CloudController
       validates_url      :url
       validates_url      :info_url
       validates_unique   [:label, :provider]
+      validates_unique   :unique_id, message: 'is taken'
     end
 
     serialize_attributes :json, :tags, :requires

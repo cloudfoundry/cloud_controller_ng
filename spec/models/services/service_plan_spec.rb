@@ -16,6 +16,18 @@ module VCAP::CloudController
       },
     }
 
+    describe "validation" do
+      context 'when the unique_id is not unique' do
+        let(:existing_service_plan) { ServicePlan.make }
+        let(:service_plan) { ServicePlan.make_unsaved(unique_id: existing_service_plan.unique_id, service: Service.make) }
+
+        it 'shows a human-readable error message' do
+          expect(service_plan).not_to be_valid
+          expect(service_plan.errors.on(:unique_id)).to eql(['is taken'])
+        end
+      end
+    end
+
     describe '#save' do
       context 'on create' do
         context 'when no unique_id is set' do

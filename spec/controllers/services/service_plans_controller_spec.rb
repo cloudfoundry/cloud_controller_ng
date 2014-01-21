@@ -207,6 +207,23 @@ module VCAP::CloudController
       expect(last_response.status).to be == 201
       expect(service_plan.unique_id).to be == new_unique_id
     end
+
+    context "when the given unique_id is already taken" do
+      it "returns an error response" do
+        service_plan = ServicePlan.make
+        other_service_plan = ServicePlan.make
+        payload = Yajl::Encoder.encode({"unique_id" => other_service_plan.unique_id})
+
+        put "/v2/service_plans/#{service_plan.guid}", payload, json_headers(admin_headers)
+
+        expect(last_response.status).to be == 400
+        expect(decoded_response).to have_key('backtrace')
+        expect(decoded_response.fetch('code')).to eql(110001)
+        expect(decoded_response.fetch('error_code')).to eql('CF-ServicePlanInvalid')
+        expect(decoded_response.fetch('types')).to eql(['ServicePlanInvalid', 'Error'])
+        expect(decoded_response.fetch('description')).to eql('The service plan is invalid: unique_id is taken')
+      end
+    end
   end
 
   describe "DELETE", "/v2/service_plans/:guid" do

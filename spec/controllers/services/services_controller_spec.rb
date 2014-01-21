@@ -183,7 +183,6 @@ module VCAP::CloudController
     end
 
     describe 'POST', '/v2/services' do
-
       it 'creates a service' do
         unique_id = Sham.unique_id
         url = Sham.url
@@ -299,18 +298,37 @@ module VCAP::CloudController
     end
 
     describe "PUT", "/v2/services/:guid" do
-      it "updates the unique_id attribute" do
-        service = Service.make
-        old_unique_id = service.unique_id
-        new_unique_id = old_unique_id.reverse
-        payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
+      context "when updating the unique_id attribute" do
+        let!(:service) { Service.make }
 
-        put "/v2/services/#{service.guid}", payload, json_headers(admin_headers)
+        it "is successful" do
+          new_unique_id = service.unique_id.reverse
+          payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
 
-        service.reload
-        expect(last_response.status).to be == 201
-        expect(service.unique_id).to be == new_unique_id
+          put "/v2/services/#{service.guid}", payload, json_headers(admin_headers)
+
+          service.reload
+          expect(last_response.status).to be == 201
+          expect(service.unique_id).to be == new_unique_id
+        end
+
+        context "when the given unique_id is taken" do
+          let!(:other_service) { Service.make }
+
+          it "gives the correct error response" do
+            payload = Yajl::Encoder.encode({"unique_id" => other_service.unique_id})
+            put "/v2/services/#{service.guid}", payload, json_headers(admin_headers)
+            expect(last_response.status).to be == 400
+            expect(decoded_response).to have_key('backtrace')
+            expect(decoded_response.fetch('code')).to eql(120001)
+            expect(decoded_response.fetch('error_code')).to eql('CF-ServiceInvalid')
+            expect(decoded_response.fetch('types')).to eql(['ServiceInvalid', 'Error'])
+            expect(decoded_response.fetch('description')).to eql('The service is invalid: unique_id is taken')
+          end
+        end
       end
+
+
     end
   end
 end
