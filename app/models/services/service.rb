@@ -21,13 +21,13 @@ module VCAP::CloudController
     strip_attributes  :label, :provider
 
     def validate
-      validates_presence :label
-      validates_presence :description
-      validates_presence :bindable
-      validates_url      :url
-      validates_url      :info_url
-      validates_unique   [:label, :provider]
-      validates_unique   :unique_id, message: 'is taken'
+      validates_presence :label,              message: 'is required'
+      validates_presence :description,        message: 'is required'
+      validates_presence :bindable,           message: 'is required'
+      validates_url      :url,                message: 'must be a valid url'
+      validates_url      :info_url,           message: 'must be a valid url'
+      validates_unique   [:label, :provider], message: 'is taken'
+      validates_unique   :unique_id,          message: 'is taken'
     end
 
     serialize_attributes :json, :tags, :requires

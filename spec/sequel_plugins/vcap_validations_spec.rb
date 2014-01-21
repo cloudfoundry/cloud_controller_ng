@@ -51,6 +51,16 @@ describe "Sequel::Plugins::VcapValidations" do
       @m.val = " "
       @m.should_not be_valid
     end
+
+    context "with a given error message" do
+      before { @c.set_validations { validates_url(:val, message: 'must be a valid url') } }
+
+      it "uses that message for the validation error" do
+        @m.val = ""
+        @m.valid?
+        @m.errors.on(:val).should eql(['must be a valid url'])
+      end
+    end
   end
 
   describe "validates_email" do

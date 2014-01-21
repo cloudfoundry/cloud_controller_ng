@@ -21,9 +21,8 @@ module VCAP::CloudController
         let(:existing_service_plan) { ServicePlan.make }
         let(:service_plan) { ServicePlan.make_unsaved(unique_id: existing_service_plan.unique_id, service: Service.make) }
 
-        it 'shows a human-readable error message' do
+        it 'is not valid' do
           expect(service_plan).not_to be_valid
-          expect(service_plan.errors.on(:unique_id)).to eql(['is taken'])
         end
       end
     end
