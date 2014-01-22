@@ -72,11 +72,11 @@ module VCAP::CloudController
 
       let(:app) do
         app = VCAP::CloudController::App.make(
-          last_stager_response: nil,
-          instances: 1,
-          package_hash: package_hash,
-          droplet_hash: "initial-droplet-hash",
-          name: "app-name"
+            last_stager_response: nil,
+            instances:            1,
+            package_hash:         package_hash,
+            droplet_hash:         "initial-droplet-hash",
+            name:                 "app-name"
         )
         app.stub(:needs_staging?) { needs_staging }
         app
@@ -84,221 +84,249 @@ module VCAP::CloudController
 
       subject { AppObserver.updated(app) }
 
-      before do
-        AppStagerTask.stub(:new).
-          with(config_hash,
-          message_bus,
-          app,
-          dea_pool,
-          stager_pool,
-          instance_of(CloudController::BlobstoreUrlGenerator),
-        ).and_return(stager_task)
+      describe "when the 'diego' flag is set" do
+        let(:config_hash) { { :diego => true } }
 
-        stager_task.stub(:stage) do |&callback|
-          app.stub(:droplet_hash) { "staged-droplet-hash" }
-          callback.call(:started_instances => started_instances)
+        let(:needs_staging) { true }
+
+        it 'uses the diego stager to do staging' do
+          DiegoStagerTask.should_receive(:new).
+              with(config_hash,
+                   message_bus,
+                   app,
+                   instance_of(CloudController::BlobstoreUrlGenerator),
+          ).and_return(stager_task)
+
+          stager_task.stub(:stage) do |&callback|
+            app.stub(:droplet_hash) { "staged-droplet-hash" }
+            callback.call(:started_instances => started_instances)
+          end
+
+          app.stub(previous_changes: { :state => "anything" })
+          app.stub(:started?).and_return(true)
+
+          subject
         end
-
-        app.stub(previous_changes: changes)
-
-        DeaClient.stub(:start)
-        DeaClient.stub(:stop)
-        DeaClient.stub(:change_running_instances)
       end
 
-      shared_examples_for(:stages_if_needed) do
-        def self.it_stages
-          it "initiates a staging task and waits for a response" do
-            stager_task.should_receive(:stage) do |&callback|
-              callback.call(started_instances: 1)
-              "stager response"
-            end
+      describe "when the 'diego' flag is not set" do
+        let(:config_hash) { { :diego => false } }
+        before do
+         AppStagerTask.stub(:new).
+            with(config_hash,
+                 message_bus,
+                 app,
+                 dea_pool,
+                 stager_pool,
+                 instance_of(CloudController::BlobstoreUrlGenerator),
+         ).and_return(stager_task)
 
-            app.should_receive(:last_stager_response=).with("stager response")
-
-            subject
+          stager_task.stub(:stage) do |&callback|
+            app.stub(:droplet_hash) { "staged-droplet-hash" }
+            callback.call(:started_instances => started_instances)
           end
+
+          app.stub(previous_changes: changes)
+
+          DeaClient.stub(:start)
+          DeaClient.stub(:stop)
+          DeaClient.stub(:change_running_instances)
         end
 
-        context "when the app needs staging" do
-          let(:needs_staging) { true }
-
-          context "when the app package hash is nil" do
-            let(:package_hash) { nil }
-
-            it "raises" do
-              expect {
-                subject
-              }.to raise_error(Errors::AppPackageInvalid)
-            end
-          end
-
-          context "when the app package hash is blank" do
-            let(:package_hash) { '' }
-
-            it "raises" do
-              expect {
-                subject
-              }.to raise_error(Errors::AppPackageInvalid)
-            end
-          end
-
-          context "when the app package is valid" do
-            let(:package_hash) { 'abc' }
-
-            it_stages
-          end
-
-          context "when custom buildpacks are disabled" do
-            context "and the app has a custom buildpack" do
-              before do
-                app.buildpack = "git://example.com/foo/bar.git"
-                app.save
-
-                App.stub(:custom_buildpacks_enabled?) { false }
+        shared_examples_for(:stages_if_needed) do
+          def self.it_stages
+            it "initiates a staging task and waits for a response" do
+              stager_task.should_receive(:stage) do |&callback|
+                callback.call(started_instances: 1)
+                "stager response"
               end
+
+              app.should_receive(:last_stager_response=).with("stager response")
+
+              subject
+            end
+          end
+
+          context "when the app needs staging" do
+            let(:needs_staging) { true }
+
+            context "when the app package hash is nil" do
+              let(:package_hash) { nil }
 
               it "raises" do
                 expect {
                   subject
-                }.to raise_error(Errors::CustomBuildpacksDisabled)
+                }.to raise_error(Errors::AppPackageInvalid)
               end
             end
 
-            context "and the app has an admin buildpack" do
-              before do
-                buildpack = Buildpack.make name: "some-admin-buildpack"
-                app.buildpack = "some-admin-buildpack"
-                app.save
+            context "when the app package hash is blank" do
+              let(:package_hash) { '' }
 
-                App.stub(:custom_buildpacks_enabled?) { false }
+              it "raises" do
+                expect {
+                  subject
+                }.to raise_error(Errors::AppPackageInvalid)
               end
+            end
+
+            context "when the app package is valid" do
+              let(:package_hash) { 'abc' }
 
               it_stages
             end
 
-            context "and the app has no buildpack configured" do
-              before do
-                app.buildpack = nil
-                app.save
+            context "when custom buildpacks are disabled" do
+              context "and the app has a custom buildpack" do
+                before do
+                  app.buildpack = "git://example.com/foo/bar.git"
+                  app.save
 
-                App.stub(:custom_buildpacks_enabled?) { false }
+                  App.stub(:custom_buildpacks_enabled?) { false }
+                end
+
+                it "raises" do
+                  expect {
+                    subject
+                  }.to raise_error(Errors::CustomBuildpacksDisabled)
+                end
               end
 
-              it_stages
+              context "and the app has an admin buildpack" do
+                before do
+                  buildpack     = Buildpack.make name: "some-admin-buildpack"
+                  app.buildpack = "some-admin-buildpack"
+                  app.save
+
+                  App.stub(:custom_buildpacks_enabled?) { false }
+                end
+
+                it_stages
+              end
+
+              context "and the app has no buildpack configured" do
+                before do
+                  app.buildpack = nil
+                  app.save
+
+                  App.stub(:custom_buildpacks_enabled?) { false }
+                end
+
+                it_stages
+              end
+            end
+          end
+
+          context "when staging is not needed" do
+            let(:needs_staging) { false }
+
+            it "should not make a stager task" do
+              AppStagerTask.should_not_receive(:new)
+              subject
             end
           end
         end
 
-        context "when staging is not needed" do
-          let(:needs_staging) { false }
-
-          it "should not make a stager task" do
-            AppStagerTask.should_not_receive(:new)
+        shared_examples_for(:sends_droplet_updated) do
+          it "should send droplet updated message" do
             subject
-          end
-        end
-      end
-
-      shared_examples_for(:sends_droplet_updated) do
-        it "should send droplet updated message" do
-          subject
-          expect(message_bus).to have_published_with_message("droplet.updated", droplet: app.guid)
-        end
-      end
-
-      context "when the state changes" do
-        let(:changes) { {:state => "anything"} }
-
-        context "when the app is started" do
-          let(:needs_staging) { true }
-
-          before do
-            app.stub(:started?) { true }
-          end
-
-          it_behaves_like :stages_if_needed
-          it_behaves_like :sends_droplet_updated
-
-          it "should start the app with specified number of instances" do
-            DeaClient.should_receive(:start).with(app, :instances_to_start => app.instances - started_instances)
-            subject
+            expect(message_bus).to have_published_with_message("droplet.updated", droplet: app.guid)
           end
         end
 
-        context "when the app is not started" do
-          before do
-            app.stub(:started?) { false }
-          end
+        context "when the state changes" do
+          let(:changes) { { :state => "anything" } }
 
-          it_behaves_like :sends_droplet_updated
-
-          it "should stop the app" do
-            DeaClient.should_receive(:stop).with(app)
-            subject
-          end
-        end
-      end
-
-      context "when the desired instance count change" do
-        context "when the app is started" do
-          context "when the instance count change increases the number of instances" do
-            let(:changes) { {:instances => [5, 8]} }
+          context "when the app is started" do
+            let(:needs_staging) { true }
 
             before do
-              DeaClient.unstub(:change_running_instances)
               app.stub(:started?) { true }
+            end
+
+            it_behaves_like :stages_if_needed
+            it_behaves_like :sends_droplet_updated
+
+            it "should start the app with specified number of instances" do
+              DeaClient.should_receive(:start).with(app, :instances_to_start => app.instances - started_instances)
+              subject
+            end
+          end
+
+          context "when the app is not started" do
+            before do
+              app.stub(:started?) { false }
             end
 
             it_behaves_like :sends_droplet_updated
 
-            it "should change the running instance count" do
-              DeaClient.should_receive(:change_running_instances).with(app, 3)
+            it "should stop the app" do
+              DeaClient.should_receive(:stop).with(app)
               subject
             end
+          end
+        end
 
-            context "when the app bits were changed as well" do
-              let(:needs_staging) { true }
-              let(:package_hash) { "something new" }
+        context "when the desired instance count change" do
+          context "when the app is started" do
+            context "when the instance count change increases the number of instances" do
+              let(:changes) { { :instances => [5, 8] } }
 
-              it "should start more instances of the old version" do
-                message_bus.should_receive(:publish) do |subject, message|
-                  expect(message).to include({
-                    sha1: "initial-droplet-hash"
-                  })
-                end.exactly(3).times.ordered
-                message_bus.should_receive(:publish).with("droplet.updated", anything).ordered
+              before do
+                DeaClient.unstub(:change_running_instances)
+                app.stub(:started?) { true }
+              end
+
+              it_behaves_like :sends_droplet_updated
+
+              it "should change the running instance count" do
+                DeaClient.should_receive(:change_running_instances).with(app, 3)
+                subject
+              end
+
+              context "when the app bits were changed as well" do
+                let(:needs_staging) { true }
+                let(:package_hash) { "something new" }
+
+                it "should start more instances of the old version" do
+                  message_bus.should_receive(:publish) do |subject, message|
+                    expect(message).to include({
+                                                   sha1: "initial-droplet-hash"
+                                               })
+                  end.exactly(3).times.ordered
+                  message_bus.should_receive(:publish).with("droplet.updated", anything).ordered
+                  subject
+                end
+              end
+            end
+
+            context "when the instance count change decreases the number of instances" do
+              let(:changes) { { :instances => [5, 2] } }
+
+              before do
+                app.stub(:started?) { true }
+              end
+
+              it_behaves_like :sends_droplet_updated
+
+              it "should change the running instance count" do
+                DeaClient.should_receive(:change_running_instances).with(app, -3)
                 subject
               end
             end
           end
 
-          context "when the instance count change decreases the number of instances" do
-            let(:changes) { {:instances => [5, 2]} }
+          context "when the app is not started" do
+            let(:changes) { { :instances => [1, 2] } }
 
             before do
-              app.stub(:started?) { true }
+              app.stub(:started?) { false }
             end
 
-            it_behaves_like :sends_droplet_updated
-
-            it "should change the running instance count" do
-              DeaClient.should_receive(:change_running_instances).with(app, -3)
+            it "should not change running instance count" do
+              DeaClient.should_not_receive(:change_running_instances)
               subject
             end
-          end
-        end
-
-        context "when the app is not started" do
-          let(:changes) { {:instances => [1, 2]} }
-
-          before do
-            app.stub(:started?) { false }
-          end
-
-          it "should not change running instance count" do
-            DeaClient.should_not_receive(:change_running_instances)
-            subject
           end
         end
       end
@@ -307,18 +335,18 @@ module VCAP::CloudController
 
   def stager_config(fog_credentials)
     {
-      :resource_pool => {
-        :resource_directory_key => "spec-cc-resources",
-        :fog_connection => fog_credentials
-      },
-      :packages => {
-        :app_package_directory_key => "cc-packages",
-        :fog_connection => fog_credentials
-      },
-      :droplets => {
-        :droplet_directory_key => "cc-droplets",
-        :fog_connection => fog_credentials
-      }
+        :resource_pool => {
+            :resource_directory_key => "spec-cc-resources",
+            :fog_connection         => fog_credentials
+        },
+        :packages      => {
+            :app_package_directory_key => "cc-packages",
+            :fog_connection            => fog_credentials
+        },
+        :droplets      => {
+            :droplet_directory_key => "cc-droplets",
+            :fog_connection        => fog_credentials
+        }
     }
   end
 end

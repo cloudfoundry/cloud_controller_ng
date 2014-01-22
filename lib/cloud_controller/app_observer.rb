@@ -1,5 +1,6 @@
 require "cloud_controller/multi_response_message_bus_request"
 require "models/runtime/droplet_uploader"
+require "cloud_controller/diego_stager_task"
 
 module VCAP::CloudController
   module AppObserver
@@ -61,7 +62,12 @@ module VCAP::CloudController
           raise Errors::CustomBuildpacksDisabled
         end
 
-        task = AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
+        if @config[:diego]
+          task = DiegoStagerTask.new(@config, @message_bus, app, dependency_locator.blobstore_url_generator)
+        else
+          task = AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
+        end
+
         task.stage(&completion_callback)
       end
 
