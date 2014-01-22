@@ -74,6 +74,7 @@ bulk_api:
 staging:
   # Max duration for staging process
   max_staging_runtime: 120 # secs
+  minimum_staging_memory_mb: 1024
   auth:
     user: zxsfhgjg
     password: ZNVfdase9

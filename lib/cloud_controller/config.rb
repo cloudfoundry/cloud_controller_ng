@@ -67,6 +67,15 @@ module VCAP::CloudController
           :auth_password => String,
         },
 
+        optional(:staging) => {
+          optional(:max_staging_runtime) => Fixnum,
+          optional(:minimum_staging_memory_mb) => Fixnum,
+          optional(:auth) => {
+            :user => String,
+            :password => String,
+          }
+        },
+
         :cc_partition => String,
 
         optional(:default_account_capacity) => {

@@ -396,17 +396,32 @@ module VCAP::CloudController
       end
 
       describe "reserve app memory" do
-        it "decrement dea's available memory" do
-          DeaClient.dea_pool.should_receive(:reserve_app_memory)
-          staging_task.stage
+        context "when app memory is less when configured minimum_staging_memory_mb" do
+          let(:config_hash) { { :staging => {:minimum_staging_memory_mb => 1025} } }
+
+          it "decrement dea's available memory by minimum_staging_memory_mb" do
+            DeaClient.dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1025)
+            staging_task.stage
+          end
+
+          it "decrement stager's available memory by minimum_staging_memory_mb" do
+            stager_pool.should_receive(:reserve_app_memory).with(stager_id, 1025)
+            staging_task.stage
+          end
         end
 
-        it "decrement stager's available memory" do
-          stager_pool.should_receive(:reserve_app_memory)
-          staging_task.stage
+        context "when app memory is greater when configured minimum_staging_memory_mb" do
+          it "decrement dea's available memory by app memory" do
+            DeaClient.dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1024)
+            staging_task.stage
+          end
+
+          it "decrement stager's available memory by app memory" do
+            stager_pool.should_receive(:reserve_app_memory).with(stager_id, 1024)
+            staging_task.stage
+          end
         end
       end
-
     end
 
     describe ".staging_request" do

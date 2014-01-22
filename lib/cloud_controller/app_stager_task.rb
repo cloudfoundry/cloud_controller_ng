@@ -60,8 +60,8 @@ module VCAP::CloudController
 
       @completion_callback = completion_callback
 
-      @dea_pool.reserve_app_memory(@stager_id, @app.memory)
-      @stager_pool.reserve_app_memory(@stager_id, @app.memory)
+      @dea_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
+      @stager_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
 
       logger.info("staging.begin", :app_guid => @app.guid)
       staging_result = EM.schedule_sync do |promise|
@@ -223,6 +223,13 @@ module VCAP::CloudController
 
     def staging_timeout
       @config[:staging] && @config[:staging][:max_staging_runtime] || 120
+    end
+
+    def staging_task_memory_mb
+      [
+        (@config[:staging] && @config[:staging][:minimum_staging_memory_mb] || 1024),
+        @app.memory
+      ].max
     end
 
     def logger
