@@ -373,5 +373,44 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "#reserve_app_memory" do
+      let(:dea_advertise_msg) do
+        {
+            "id" => "dea-id",
+            "stacks" => ["stack"],
+            "available_memory" => 1024,
+            "app_id_to_count" => { "old_app" => 1 }
+        }
+      end
+
+      let(:new_dea_advertise_msg) do
+        {
+            "id" => "dea-id",
+            "stacks" => ["stack"],
+            "available_memory" => 1024,
+            "app_id_to_count" => { "foo" => 1 }
+        }
+      end
+
+      it "decrement the available memory based on app's memory" do
+        subject.process_advertise_message(dea_advertise_msg)
+        expect {
+          subject.reserve_app_memory("dea-id", 1)
+        }.to change {
+          subject.find_dea(mem: 1024, stack: "stack", app_id: "foo")
+        }.from("dea-id").to(nil)
+      end
+
+      it "update the available memory when next time the dea's ad arrives" do
+        subject.process_advertise_message(dea_advertise_msg)
+        subject.reserve_app_memory("dea-id", 1)
+        expect {
+          subject.process_advertise_message(new_dea_advertise_msg)
+        }.to change {
+          subject.find_dea(mem: 1024, stack: "stack", app_id: "foo")
+        }.from(nil).to("dea-id")
+      end
+    end
   end
 end
