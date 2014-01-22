@@ -26,6 +26,7 @@ module VCAP::CloudController
           :cutoff_age_in_days => Fixnum
         },
         :default_app_memory => Fixnum,
+        :maximum_app_disk => Fixnum,
         :maximum_health_check_timeout => Fixnum,
 
         optional(:allow_debug) => bool,

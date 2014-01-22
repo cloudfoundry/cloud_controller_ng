@@ -602,6 +602,24 @@ module VCAP::CloudController
         end
       end
 
+      describe "disk_quota" do
+        let(:app) { AppFactory.make }
+
+        it "allows any disk_quota below the maximum" do
+          app.disk_quota = 1000
+          expect{
+            app.save
+          }.to_not raise_error
+        end
+
+        it "does not allow a disk_quota above the maximum" do
+          app.disk_quota = 3000
+          expect{
+            app.save
+          }.to raise_error(Sequel::ValidationFailed, /too much disk/)
+        end
+      end
+
       describe "name" do
         let(:space) { Space.make }
         let(:app) { AppFactory.make }
