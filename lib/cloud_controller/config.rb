@@ -169,10 +169,10 @@ module VCAP::CloudController
       def configure_components_depending_on_message_bus(message_bus)
         @message_bus = message_bus
         stager_pool = StagerPool.new(@config, message_bus)
-
-        AppObserver.configure(@config, message_bus, stager_pool)
-
         dea_pool = DeaPool.new(message_bus)
+
+        AppObserver.configure(@config, message_bus, dea_pool, stager_pool)
+
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
         DeaClient.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 

@@ -4,6 +4,7 @@ module VCAP::CloudController
   describe AppStagerTask do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool, :reserve_app_memory => nil) }
+    let(:dea_pool) { double(:stager_pool, :reserve_app_memory => nil) }
     let(:config_hash) { { :config => 'hash' } }
     let(:app) do
       AppFactory.make(:package_hash => "abc",
@@ -16,7 +17,7 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
 
     let(:options) { {} }
-    subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, stager_pool, blobstore_url_generator) }
+    subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, dea_pool, stager_pool, blobstore_url_generator) }
 
     let(:reply_json_error) { nil }
     let(:task_streaming_log_url) { "task-streaming-log-url" }
@@ -53,8 +54,6 @@ module VCAP::CloudController
       EM.stub(:add_timer)
       EM.stub(:defer).and_yield
       EM.stub(:schedule_sync)
-
-      DeaClient.dea_pool.stub(:reserve_app_memory)
     end
 
     context 'when no stager can be found' do
@@ -241,7 +240,7 @@ module VCAP::CloudController
 
             context "when no other staging has happened" do
               before do
-                DeaClient.dea_pool.stub(:mark_app_started)
+                dea_pool.stub(:mark_app_started)
               end
 
               it "saves the detected buildpack" do
@@ -262,7 +261,7 @@ module VCAP::CloudController
               end
 
               it "marks app started in dea pool" do
-                DeaClient.dea_pool.should_receive(:mark_app_started).with({ :dea_id => stager_id, :app_id => app.guid })
+                dea_pool.should_receive(:mark_app_started).with({ :dea_id => stager_id, :app_id => app.guid })
                 stage
               end
 
@@ -400,7 +399,7 @@ module VCAP::CloudController
           let(:config_hash) { { :staging => {:minimum_staging_memory_mb => 1025} } }
 
           it "decrement dea's available memory by minimum_staging_memory_mb" do
-            DeaClient.dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1025)
+            dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1025)
             staging_task.stage
           end
 
@@ -412,7 +411,7 @@ module VCAP::CloudController
 
         context "when app memory is greater when configured minimum_staging_memory_mb" do
           it "decrement dea's available memory by app memory" do
-            DeaClient.dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1024)
+            dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1024)
             staging_task.stage
           end
 

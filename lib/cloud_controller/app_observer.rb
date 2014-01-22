@@ -6,9 +6,10 @@ module VCAP::CloudController
     class << self
       extend Forwardable
 
-      def configure(config, message_bus, stager_pool)
+      def configure(config, message_bus, dea_pool, stager_pool)
         @config = config
         @message_bus = message_bus
+        @dea_pool = dea_pool
         @stager_pool = stager_pool
       end
 
@@ -60,7 +61,7 @@ module VCAP::CloudController
           raise Errors::CustomBuildpacksDisabled
         end
 
-        task = AppStagerTask.new(@config, @message_bus, app, @stager_pool, dependency_locator.blobstore_url_generator)
+        task = AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
         task.stage(&completion_callback)
       end
 

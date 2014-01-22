@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     before do
       DeaClient.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
-      AppObserver.configure(config_hash, message_bus, stager_pool)
+      AppObserver.configure(config_hash, message_bus, dea_pool, stager_pool)
     end
 
     describe ".run" do
@@ -89,6 +89,7 @@ module VCAP::CloudController
           with(config_hash,
           message_bus,
           app,
+          dea_pool,
           stager_pool,
           instance_of(CloudController::BlobstoreUrlGenerator),
         ).and_return(stager_task)

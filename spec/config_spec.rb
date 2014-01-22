@@ -48,6 +48,7 @@ module VCAP::CloudController
         expect(AppObserver).to receive(:configure).with(
           @test_config,
           message_bus,
+          instance_of(DeaPool),
           instance_of(StagerPool))
 
         Config.configure_components(@test_config)

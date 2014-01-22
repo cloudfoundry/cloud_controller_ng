@@ -27,13 +27,13 @@ module VCAP::CloudController
     attr_reader :config
     attr_reader :message_bus
 
-    def initialize(config, message_bus, app, stager_pool, blobstore_url_generator)
+    def initialize(config, message_bus, app, dea_pool, stager_pool, blobstore_url_generator)
       @config = config
       @message_bus = message_bus
       @app = app
+      @dea_pool = dea_pool
       @stager_pool = stager_pool
       @blobstore_url_generator = blobstore_url_generator
-      @dea_pool = DeaClient.dea_pool
     end
 
     def task_id
