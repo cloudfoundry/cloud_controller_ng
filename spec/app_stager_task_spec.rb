@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe AppStagerTask do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:stager_pool) { double(:stager_pool) }
+    let(:stager_pool) { double(:stager_pool, :reserve_app_memory => nil) }
     let(:config_hash) { { :config => 'hash' } }
     let(:app) do
       AppFactory.make(:package_hash => "abc",
@@ -53,6 +53,8 @@ module VCAP::CloudController
       EM.stub(:add_timer)
       EM.stub(:defer).and_yield
       EM.stub(:schedule_sync)
+
+      DeaClient.dea_pool.stub(:reserve_app_memory)
     end
 
     context 'when no stager can be found' do
@@ -392,6 +394,19 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe "reserve app memory" do
+        it "decrement dea's available memory" do
+          DeaClient.dea_pool.should_receive(:reserve_app_memory)
+          staging_task.stage
+        end
+
+        it "decrement stager's available memory" do
+          stager_pool.should_receive(:reserve_app_memory)
+          staging_task.stage
+        end
+      end
+
     end
 
     describe ".staging_request" do

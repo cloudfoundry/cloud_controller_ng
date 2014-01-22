@@ -106,4 +106,14 @@ describe StagerAdvertisement do
       end
     end
   end
+
+  describe "decrement_memory" do
+    it "decrement the stager's memory" do
+      expect {
+        ad.decrement_memory(512)
+      }.to change {
+        ad.available_memory
+      }.from(1024).to(512)
+    end
+  end
 end

@@ -153,6 +153,16 @@ describe DeaAdvertisement do
     end
   end
 
+  describe "decrement_memory" do
+    it "decrement the dea's memory" do
+      expect {
+        ad.decrement_memory(512)
+      }.to change {
+        ad.available_memory
+      }.from(1024).to(512)
+    end
+  end
+
   describe "#zone" do
     context "when the dea does not have the placement properties" do
       it "returns default zone" do

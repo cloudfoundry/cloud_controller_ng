@@ -3,13 +3,14 @@ require "spec_helper"
 module VCAP::CloudController
   describe AppObserver do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:stager_pool) { double(:stager_pool) }
-    let(:dea_pool) { double(:dea_pool, :find_dea => "dea-id", :mark_app_started => nil ) }
+    let(:stager_pool) { double(:stager_pool, :reserve_app_memory => nil) }
+    let(:dea_pool) { double(:dea_pool, :find_dea => "dea-id", :mark_app_started => nil,
+                            :reserve_app_memory => nil) }
     let(:config_hash) { {:config => 'hash'} }
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
 
     before do
-      DeaClient.configure(config_hash, message_bus, dea_pool, blobstore_url_generator)
+      DeaClient.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
       AppObserver.configure(config_hash, message_bus, stager_pool)
     end
 
