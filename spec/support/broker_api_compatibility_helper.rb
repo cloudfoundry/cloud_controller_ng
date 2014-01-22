@@ -6,8 +6,8 @@ module VCAP::CloudController::BrokerApiHelper
       should have_been_made
   end
 
-  def stub_catalog_fetch(broker_response_status=200)
-    catalog = {
+  def stub_catalog_fetch(broker_response_status=200, catalog = nil)
+    catalog ||= {
       services: [{
         id:          "service-guid-here",
         name:        "MySQL",
