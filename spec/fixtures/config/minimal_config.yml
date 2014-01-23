@@ -93,3 +93,7 @@ db_encryption_key: some-key
 
 hm9000_noop: true
 maximum_health_check_timeout: 180
+
+loggregator:
+  router: "127.0.0.1:8080"
+  shared_secret: "loggregator-secret"

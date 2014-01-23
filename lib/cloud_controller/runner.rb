@@ -69,33 +69,6 @@ module VCAP::CloudController
       exit 1
     end
 
-    def create_pidfile
-      pid_file = VCAP::PidFile.new(@config[:pid_filename])
-      pid_file.unlink_at_exit
-    rescue
-      puts "ERROR: Can't create pid file #{@config[:pid_filename]}"
-      exit 1
-    end
-
-    def setup_logging
-      steno_config = Steno::Config.to_config_hash(@config[:logging])
-      steno_config[:context] = Steno::Context::ThreadLocal.new
-      steno_config[:sinks] << @log_counter
-      Steno.init(Steno::Config.new(steno_config))
-    end
-
-    def setup_db
-      logger.info "db config #{@config[:db]}"
-      db_logger = Steno.logger("cc.db")
-      DB.load_models(@config[:db], db_logger)
-    end
-
-    def setup_loggregator_emitter
-      if @config[:loggregator] && @config[:loggregator][:router] && @config[:loggregator][:shared_secret]
-        Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], "API", @config[:index], @config[:loggregator][:shared_secret])
-      end
-    end
-
     def development_mode?
       @config[:development_mode]
     end
@@ -164,6 +137,33 @@ module VCAP::CloudController
 
       @config[:bind_address] = VCAP.local_ip(@config[:local_route])
       Config.configure_components_depending_on_message_bus(message_bus)
+    end
+
+    def create_pidfile
+      pid_file = VCAP::PidFile.new(@config[:pid_filename])
+      pid_file.unlink_at_exit
+    rescue
+      puts "ERROR: Can't create pid file #{@config[:pid_filename]}"
+      exit 1
+    end
+
+    def setup_logging
+      steno_config = Steno::Config.to_config_hash(@config[:logging])
+      steno_config[:context] = Steno::Context::ThreadLocal.new
+      steno_config[:sinks] << @log_counter
+      Steno.init(Steno::Config.new(steno_config))
+    end
+
+    def setup_db
+      logger.info "db config #{@config[:db]}"
+      db_logger = Steno.logger("cc.db")
+      DB.load_models(@config[:db], db_logger)
+    end
+
+    def setup_loggregator_emitter
+      if @config[:loggregator] && @config[:loggregator][:router] && @config[:loggregator][:shared_secret]
+        Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], "API", @config[:index], @config[:loggregator][:shared_secret])
+      end
     end
 
     def build_rack_app(config, message_bus, development)
