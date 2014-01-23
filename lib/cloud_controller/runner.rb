@@ -91,11 +91,7 @@ module VCAP::CloudController
 
         router_registrar.register_with_router
 
-        VCAP::CloudController::Varz.bump_user_count
-
-        EM.add_periodic_timer(@config[:varz_update_user_count_period_in_seconds] || 30) do
-          VCAP::CloudController::Varz.bump_user_count
-        end
+        VCAP::CloudController::Varz.setup_updates
       end
     end
 

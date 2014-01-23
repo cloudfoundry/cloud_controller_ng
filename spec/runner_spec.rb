@@ -13,10 +13,7 @@ module VCAP::CloudController
       MessageBus::Configurer.any_instance.stub(:go).and_return(message_bus)
       VCAP::Component.stub(:register)
       EM.stub(:run).and_yield
-      EM.stub(:add_periodic_timer) do |&blk|
-        @periodic_timer_blk = blk
-      end
-
+      VCAP::CloudController::Varz.stub(:setup_updates)
       registrar.stub(:message_bus => message_bus)
       registrar.stub(:register_with_router)
     end
@@ -112,12 +109,9 @@ module VCAP::CloudController
           subject.run!
         end
 
-        describe "varz" do
-          it "bumps the number of users and sets periodic timer" do
-            expect(VCAP::CloudController::Varz).to receive(:bump_user_count).twice
-            subject.run!
-            @periodic_timer_blk.call
-          end
+        it "sets up varz updates" do
+          expect(VCAP::CloudController::Varz).to receive(:setup_updates)
+          subject.run!
         end
       end
 
