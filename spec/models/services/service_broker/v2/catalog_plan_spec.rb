@@ -6,6 +6,37 @@ require 'models/services/service_broker/v2/catalog_service'
 
 module VCAP::CloudController::ServiceBroker::V2
   describe CatalogPlan do
+    describe 'validations' do
+      def build_valid_plan_attrs(opts = {})
+        {
+          'id' => opts[:id] || 'broker-provided-plan-id',
+          'metadata' => opts[:metadata] || {},
+          'name' => opts[:name] || 'service-plan-name',
+          'description' => opts[:description] || 'The description of the service plan'
+        }
+      end
+
+      it 'validates that @broker_provided_id is a string' do
+        attrs = build_valid_plan_attrs(id: 123)
+        expect { CatalogPlan.new(double('broker'), attrs) }.to raise_error VCAP::Errors::ServiceBrokerCatalogInvalid, /plan id should be a string, but had value 123/
+      end
+
+      it 'validates that @name is a string' do
+        attrs = build_valid_plan_attrs(name: 123)
+        expect { CatalogPlan.new(double('broker'), attrs) }.to raise_error VCAP::Errors::ServiceBrokerCatalogInvalid, /plan name should be a string, but had value 123/
+      end
+
+      it 'validates that @description is a string' do
+        attrs = build_valid_plan_attrs(description: 123)
+        expect { CatalogPlan.new(double('broker'), attrs) }.to raise_error VCAP::Errors::ServiceBrokerCatalogInvalid, /plan description should be a string, but had value 123/
+      end
+
+      it 'validates that @metadata is a hash' do
+        attrs = build_valid_plan_attrs(metadata: ['list', 'of', 'strings'])
+        expect { CatalogPlan.new(double('broker'), attrs) }.to raise_error VCAP::Errors::ServiceBrokerCatalogInvalid, /plan metadata should be a hash, but had value \["list", "of", "strings"\]/
+      end
+    end
+
     describe '#cc_plan' do
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
       let(:cc_service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
@@ -16,6 +47,11 @@ module VCAP::CloudController::ServiceBroker::V2
           'name' => 'my-service-name',
           'description' => 'my service description',
           'bindable' => true,
+          'plans' => [{
+            'id' => plan_broker_provided_id,
+            'name' => 'my-plan-name',
+            'description' => 'my plan description'
+          }]
         )
       end
       let(:catalog_plan) do

@@ -24,12 +24,6 @@ module VCAP::CloudController
       validates_url :broker_url
     end
 
-    def load_catalog
-      raise unless valid?
-      catalog = V2::Catalog.new(self, client.catalog)
-      catalog.sync_services_and_plans
-    end
-
     def auth_password
       return unless super
       VCAP::CloudController::Encryptor.decrypt(super, salt)

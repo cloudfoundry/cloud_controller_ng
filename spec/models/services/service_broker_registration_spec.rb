@@ -97,10 +97,13 @@ module VCAP::CloudController
       end
 
       context 'when exception is raised during transaction' do
+        before do
+          VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_raise(Errors::ServiceBrokerCatalogInvalid.new('each service must have at least one plan'))
+        end
+
         context 'when broker already exists' do
           before do
             broker.save
-            broker.stub(:load_catalog).and_raise(Errors::ServiceBrokerInvalid.new('each service must have at least one plan'))
           end
 
           it 'does not update broker' do
@@ -108,7 +111,7 @@ module VCAP::CloudController
             broker.name = 'Awesome new broker name'
 
             expect{
-              expect { registration.save }.to raise_error(Errors::ServiceBrokerInvalid)
+              expect { registration.save }.to raise_error(Errors::ServiceBrokerCatalogInvalid)
             }.to change{ServiceBroker.count}.by(0)
             broker.reload
 
@@ -117,14 +120,10 @@ module VCAP::CloudController
         end
 
         context 'when broker does not exist' do
-          before do
-            broker.stub(:load_catalog).and_raise(Errors::ServiceBrokerInvalid.new('each service must have at least one plan'))
-          end
-
           it 'does not save new broker' do
             expect(ServiceBroker.count).to eq(0)
             expect{
-              expect { registration.save }.to raise_error(Errors::ServiceBrokerInvalid)
+              expect { registration.save }.to raise_error(Errors::ServiceBrokerCatalogInvalid)
             }.to change{ServiceBroker.count}.by(0)
           end
         end

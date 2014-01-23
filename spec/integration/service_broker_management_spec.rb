@@ -320,7 +320,7 @@ describe "Service Broker Management", type: :integration do
 
           # attempt to update the service broker, expect error
           update_response = make_put_request("/v2/service_brokers/#{@broker_guid}", {}.to_json, admin_headers)
-          expect(update_response.code.to_i).to eq(400)
+          expect(update_response.code.to_i).to eq(502)
 
           # verify plans are unchanged
           plans = get_plans

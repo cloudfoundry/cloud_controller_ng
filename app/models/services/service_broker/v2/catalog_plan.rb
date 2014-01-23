@@ -6,10 +6,12 @@ module VCAP::CloudController::ServiceBroker::V2
 
     def initialize(catalog_service, attrs)
       @catalog_service    = catalog_service
-      @broker_provided_id = attrs.fetch('id')
+      @broker_provided_id = attrs['id']
       @metadata           = attrs['metadata']
-      @name               = attrs.fetch('name')
-      @description        = attrs.fetch('description')
+      @name               = attrs['name']
+      @description        = attrs['description']
+
+      validate!
     end
 
     def cc_plan
@@ -17,5 +19,37 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     delegate :cc_service, :to => :catalog_service
+
+    private
+
+    def validate!
+      validate_string!(:broker_provided_id, broker_provided_id)
+      validate_string!(:name, name)
+      validate_string!(:description, description)
+      validate_hash!(:metadata, metadata) if metadata
+    rescue ValidationError => e
+      raise VCAP::Errors::ServiceBrokerCatalogInvalid.new(e.message)
+    end
+
+    def validate_string!(name, input)
+      raise ValidationError.new("#{human_readable_attr_name(name)} should be a string, but had value #{input.inspect}") unless input.is_a? String
+    end
+
+    def validate_hash!(name, input)
+      raise ValidationError.new("#{human_readable_attr_name(name)} should be a hash, but had value #{input.inspect}") unless input.is_a? Hash
+    end
+
+    def human_readable_attr_name(name)
+      case name
+      when :broker_provided_id
+        "plan id"
+      when :name
+        "plan name"
+      when :description
+        "plan description"
+      when :metadata
+        "plan metadata"
+      end
+    end
   end
 end
