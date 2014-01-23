@@ -453,6 +453,11 @@
   http_code: 400
   message: "%s is not a valid URL"
 
+270012:
+  name: ServiceBrokerCatalogInvalid
+  http_code: 502
+  message: "Service broker catalog is invalid: %s"
+
 280001:
   name: TaskNotFound
   http_code: 404
