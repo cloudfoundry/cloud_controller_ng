@@ -8,6 +8,7 @@ require "jobs/runtime/droplet_deletion"
 require "jobs/runtime/droplet_upload"
 require "jobs/runtime/events_cleanup"
 require "jobs/runtime/model_deletion"
+require "jobs/runtime/buildpack_bits_delete"
 require "jobs/runtime/legacy_jobs"
 
 class LocalQueue < Struct.new(:config)

@@ -20,7 +20,7 @@ module VCAP::CloudController
     def delete(guid)
       buildpack = find_guid_and_validate_access(:delete, guid)
       response = do_delete(buildpack)
-      delete_buildpack_in_blobstore(buildpack.key)
+      Jobs::Runtime::BuildpackBitsDelete.delete_buildpack_in_blobstore(buildpack.key, :buildpack_blobstore, @config)
       response
     end
 
@@ -34,12 +34,6 @@ module VCAP::CloudController
     private
 
     attr_reader :buildpack_blobstore
-
-    def delete_buildpack_in_blobstore(blobstore_key)
-      return unless blobstore_key
-      blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(blobstore_key, :buildpack_blobstore)
-      Delayed::Job.enqueue(blobstore_delete, queue: "cc-generic")
-    end
 
     def inject_dependencies(dependencies)
       @buildpack_blobstore = dependencies[:buildpack_blobstore]

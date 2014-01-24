@@ -45,7 +45,12 @@ module VCAP::CloudController
 
     context "Buildpack binaries" do
       context "/v2/buildpacks/:guid/bits" do
-        before { @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "upload_binary_buildpack", position: 0 }) }
+        before do
+          @test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "upload_binary_buildpack", position: 0 })
+          Delayed::Worker.delay_jobs = false
+        end
+
+        after { Delayed::Worker.delay_jobs = true }
 
         let(:upload_body) { { :buildpack => valid_zip } }
 

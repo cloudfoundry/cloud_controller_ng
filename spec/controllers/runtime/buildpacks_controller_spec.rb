@@ -155,6 +155,9 @@ module VCAP::CloudController
           VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: should_have_been_1})
         end
 
+        before { Delayed::Worker.delay_jobs = false }
+        after { Delayed::Worker.delay_jobs = true }
+
         it "returns NOT FOUND (404) if the buildpack does not exist" do
           delete "/v2/buildpacks/abcd", {}, admin_headers
           expect(last_response.status).to eq(404)
@@ -175,12 +178,11 @@ module VCAP::CloudController
             buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
             buildpack_blobstore.cp_to_blobstore(Tempfile.new(['FAKE_BUILDPACK', '.zip']), buildpack1.key)
 
-            delete "/v2/buildpacks/#{buildpack1.guid}", {}, admin_headers
-
-            expect(Buildpack.find(name: buildpack1.name)).to be_nil
-            expect { Delayed::Worker.new.work_off(1) }.to change {
+            expect { delete "/v2/buildpacks/#{buildpack1.guid}", {}, admin_headers }.to change {
               buildpack_blobstore.exists?(buildpack1.key)
             }.from(true).to(false)
+
+            expect(Buildpack.find(name: buildpack1.name)).to be_nil
           end
 
           it "does not fail if no buildpack bits were ever uploaded" do
