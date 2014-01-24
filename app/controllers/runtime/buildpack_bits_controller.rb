@@ -50,7 +50,7 @@ module VCAP::CloudController
         buildpack.update_from_hash(key: new_key, filename: new_filename)
       end
 
-      buildpack_blobstore.delete(old_buildpack_key) if old_buildpack_key
+      Jobs::Runtime::BuildpackBitsDelete.delete_buildpack_in_blobstore(old_buildpack_key, :buildpack_blobstore, @config)
       return true
     end
 
