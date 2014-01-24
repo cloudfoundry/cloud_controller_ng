@@ -101,11 +101,11 @@ module VCAP::CloudController
           expect(buildpack_blobstore.exists?(sha_valid_zip2)).to be_false
         end
 
-        it 'reports a conflict if the same buildpack is uploaded again' do
+        it 'reports a no content if the same buildpack is uploaded again' do
           put "/v2/buildpacks/#{@test_buildpack.guid}/bits", { :buildpack => valid_zip }, admin_headers
           put "/v2/buildpacks/#{@test_buildpack.guid}/bits", { :buildpack => valid_zip }, admin_headers
 
-          expect(last_response.status).to eq(409)
+          expect(last_response.status).to eq(204)
         end
 
         it "removes the uploaded buildpack file" do

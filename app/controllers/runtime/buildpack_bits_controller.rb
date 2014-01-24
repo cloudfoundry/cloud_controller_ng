@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       sha1 = File.new(uploaded_file).hexdigest
 
-      return [HTTP::CONFLICT, nil] if sha1 == buildpack.key
+      return [HTTP::NO_CONTENT, nil] if sha1 == buildpack.key
 
       buildpack_blobstore.cp_to_blobstore(uploaded_file, sha1)
 
