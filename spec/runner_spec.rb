@@ -14,11 +14,10 @@ module VCAP::CloudController
       VCAP::Component.stub(:register)
       EM.stub(:run).and_yield
       VCAP::CloudController::Varz.stub(:setup_updates)
+      VCAP::PidFile.stub(:new) { double(:pidfile, unlink_at_exit: nil) }
       registrar.stub(:message_bus => message_bus)
       registrar.stub(:register_with_router)
     end
-
-    after { FileUtils.rm_rf("/tmp/cloud_controller.pid") }
 
     subject do
       Runner.new(argv + ["-c", config_file.path]).tap do |r|
@@ -30,8 +29,8 @@ module VCAP::CloudController
     describe "#run!" do
       shared_examples "running Cloud Controller" do
         it "creates a pidfile" do
+          expect(VCAP::PidFile).to receive(:new).with("/tmp/cloud_controller.pid")
           subject.run!
-          expect(File.exists?("/tmp/cloud_controller.pid")).to be_true
         end
 
         it "registers a log counter with the component" do
