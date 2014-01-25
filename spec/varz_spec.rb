@@ -31,7 +31,7 @@ module VCAP::CloudController
           VCAP::Component.varz[:cc_user_count] = 0
         end
 
-        4.times{ User.make() }
+        4.times{ User.create(guid: SecureRandom.uuid) }
         Varz.bump_user_count
 
         VCAP::Component.varz.synchronize do
