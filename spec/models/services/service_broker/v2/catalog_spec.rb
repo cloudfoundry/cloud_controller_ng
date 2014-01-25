@@ -4,6 +4,27 @@ require 'models/services/service_broker/v2/catalog'
 
 module VCAP::CloudController::ServiceBroker::V2
   describe Catalog do
+    let(:broker) { VCAP::CloudController::ServiceBroker.make }
+
+    def service_entry(opts = {})
+      {
+        'id'          => opts[:id] || Sham.guid,
+        'name'        => opts[:name] || Sham.name,
+        'description' => Sham.description,
+        'bindable'    => true,
+        'tags'        => ['magical', 'webscale'],
+        'plans'       => opts[:plans] || [plan_entry]
+      }
+    end
+
+    def plan_entry(opts={})
+      {
+        'id'          => opts[:id] || Sham.guid,
+        'name'        => opts[:name] || Sham.name,
+        'description' => Sham.description,
+      }
+    end
+
     describe '#sync_services_and_plans' do
 
       let(:service_id) { Sham.guid }
@@ -41,7 +62,6 @@ module VCAP::CloudController::ServiceBroker::V2
         }
       end
 
-      let(:broker) { VCAP::CloudController::ServiceBroker.make }
       let(:catalog) { Catalog.new(broker, catalog_hash) }
 
       it 'creates services from the catalog' do
@@ -257,62 +277,61 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe 'validations' do
-      let(:broker) { double(VCAP::CloudController::ServiceBroker, errors: double.as_null_object) }
-
-      def service_entry(opts = {plans: [plan_entry]} )
-        {
-          'id'          => opts[:id] || Sham.guid,
-          'name'        => Sham.name,
-          'description' => Sham.description,
-          'bindable'    => true,
-          'tags'        => ['magical', 'webscale'],
-          'plans'       => opts.fetch(:plans)
-        }
-      end
-
-      def plan_entry(opts={id: Sham.guid})
-        {
-          'id'          => opts.fetch(:id),
-          'name'        => Sham.name,
-          'description' => Sham.description,
-        }
-      end
-
       context 'when a service has no plans' do
-        let(:catalog) do
+        let(:catalog_hash) do
           {
             'services' => [
               service_entry,
+              service_entry(id: 123),
+              service_entry(plans: [plan_entry(id: 'plan-id'), plan_entry(id: 'plan-id', name: 123)]),
               service_entry(plans: [])
             ]
           }
         end
 
-        it 'throws an exception' do
-          expect {
-            Catalog.new(broker, catalog)
-          }.to raise_error(VCAP::Errors::ServiceBrokerCatalogInvalid, /each service must have at least one plan/)
+        specify '#valid? returns false and #error_text includes all error messages' do
+          catalog = Catalog.new(broker, catalog_hash)
+          expect(catalog.valid?).to eq false
+
+          expect(catalog.error_text).to match /service id should be a string, but had value 123/
+          expect(catalog.error_text).to match /plan name should be a string, but had value 123/
+          expect(catalog.error_text).to match /each plan ID must be unique/
+          expect(catalog.error_text).to match /each service must have at least one plan/
         end
       end
+    end
 
-      context 'when the catalog contains duplicate plan ids within a single service' do
-        let(:catalog) do
-          {
-            'services' => [
-              service_entry(plans: [
-                                     plan_entry(id: 'abc123'),
-                                     plan_entry(id: 'abc123'),
-                                   ]
-              )
-            ]
-          }
-        end
+    describe '#error_text' do
+      let(:catalog_hash) do
+        {
+          'services' => [
+            service_entry(name: 'service-1'),
+            service_entry(name: 'service-2', id: 123),
+            service_entry(name: 'service-3',
+                          plans: [ plan_entry(name: 'plan-1', id: 'plan-id'),
+                                   plan_entry(id: 'plan-id', name: 123) ]),
+            service_entry(name: 'service-4', plans: [])
+          ]
+        }
+      end
 
-        it 'throws an exception' do
-          expect {
-            Catalog.new(broker, catalog)
-          }.to raise_error(VCAP::Errors::ServiceBrokerCatalogInvalid, /each plan ID must be unique/)
-        end
+      it 'builds a formatted string' do
+        catalog = Catalog.new(broker, catalog_hash)
+        catalog.valid?
+
+        expect(catalog.error_text).to eq(
+<<-HEREDOC
+
+Service service-2
+  service id should be a string, but had value 123
+Service service-3
+  each plan ID must be unique
+  Plan 123
+    plan name should be a string, but had value 123
+Service service-4
+  each service must have at least one plan
+HEREDOC
+        )
       end
     end
   end

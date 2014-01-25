@@ -18,22 +18,41 @@ module VCAP::CloudController::ServiceBroker::V2
 
       it 'validates that @broker_provided_id is a string' do
         attrs = build_valid_plan_attrs(id: 123)
-        expect { CatalogPlan.new(double('broker'), attrs) }.to raise_error VCAP::Errors::ServiceBrokerCatalogInvalid, /plan id should be a string, but had value 123/
+        plan = CatalogPlan.new(double('broker'), attrs)
+        plan.valid?
+
+        expect(plan.errors).to include 'plan id should be a string, but had value 123'
       end
 
       it 'validates that @name is a string' do
         attrs = build_valid_plan_attrs(name: 123)
-        expect { CatalogPlan.new(double('broker'), attrs) }.to raise_error VCAP::Errors::ServiceBrokerCatalogInvalid, /plan name should be a string, but had value 123/
+        plan = CatalogPlan.new(double('broker'), attrs)
+        plan.valid?
+
+        expect(plan.errors).to include 'plan name should be a string, but had value 123'
       end
 
       it 'validates that @description is a string' do
         attrs = build_valid_plan_attrs(description: 123)
-        expect { CatalogPlan.new(double('broker'), attrs) }.to raise_error VCAP::Errors::ServiceBrokerCatalogInvalid, /plan description should be a string, but had value 123/
+        plan = CatalogPlan.new(double('broker'), attrs)
+        plan.valid?
+
+        expect(plan.errors).to include 'plan description should be a string, but had value 123'
       end
 
       it 'validates that @metadata is a hash' do
         attrs = build_valid_plan_attrs(metadata: ['list', 'of', 'strings'])
-        expect { CatalogPlan.new(double('broker'), attrs) }.to raise_error VCAP::Errors::ServiceBrokerCatalogInvalid, /plan metadata should be a hash, but had value \["list", "of", "strings"\]/
+        plan = CatalogPlan.new(double('broker'), attrs)
+        plan.valid?
+
+        expect(plan.errors).to include 'plan metadata should be a hash, but had value ["list", "of", "strings"]'
+      end
+
+      describe "#valid?" do
+        it 'is false if plan has errors' do
+          attrs = build_valid_plan_attrs(metadata: ['list', 'of', 'strings'])
+          expect(CatalogPlan.new(double('broker'), attrs).valid?).to be_false
+        end
       end
     end
 

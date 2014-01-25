@@ -13,6 +13,7 @@ module VCAP::CloudController
         broker.save
         catalog_hash = broker.client.catalog
         catalog = VCAP::CloudController::ServiceBroker::V2::Catalog.new(broker, catalog_hash)
+        raise VCAP::Errors::ServiceBrokerCatalogInvalid.new(catalog.error_text) unless catalog.valid?
         catalog.sync_services_and_plans
       end
       self

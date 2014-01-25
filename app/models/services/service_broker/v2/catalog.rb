@@ -16,10 +16,35 @@ module VCAP::CloudController::ServiceBroker::V2
       catalog_hash.fetch('services', []).each do |service_attrs|
         service = CatalogService.new(service_broker, service_attrs)
         @services << service
-
-        plans_config = service_attrs.fetch('plans', [])
-        @plans += plans_config.map { |attrs| CatalogPlan.new(service, attrs) }
+        @plans += service.plans
       end
+    end
+
+    def valid?
+      @services.map(&:valid?).all?
+    end
+
+    INDENT = '  '.freeze
+    def error_text
+      message = "\n"
+      @services.each do |service|
+        next if service.valid?
+
+        message += "Service #{service.name}\n"
+        service.errors.each do |error|
+          message += "#{INDENT}#{error}\n"
+        end
+
+        service.plans.each do |plan|
+          next if plan.valid?
+
+          message += "#{INDENT}Plan #{plan.name}\n"
+          plan.errors.each do |error|
+            message += "#{INDENT}#{INDENT}#{error}\n"
+          end
+        end
+      end
+      message
     end
 
     def sync_services_and_plans

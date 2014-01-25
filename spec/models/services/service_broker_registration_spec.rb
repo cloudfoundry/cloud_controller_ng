@@ -79,6 +79,20 @@ module VCAP::CloudController
           end
         end
 
+        context 'because the catalog has errors' do
+          let(:error_text) { "error text" }
+          before do
+            catalog = double('catalog')
+            VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_return(catalog)
+            catalog.stub(:valid?).and_return(false)
+            catalog.stub(:error_text).and_return(error_text)
+          end
+
+          it 'raises a ServiceBrokerCatalogInvalid error' do
+            expect { registration.save }.to raise_error(VCAP::Errors::ServiceBrokerCatalogInvalid, /#{error_text}/)
+          end
+        end
+
         context 'because the catalog fetch failed' do
           before { stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(status: 500) }
 
