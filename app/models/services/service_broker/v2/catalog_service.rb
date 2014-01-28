@@ -3,7 +3,7 @@ require 'models/services/service_broker/v2'
 module VCAP::CloudController::ServiceBroker::V2
   class CatalogService
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
-      :description, :bindable, :tags, :errors, :plans
+      :description, :bindable, :tags, :errors, :plans, :requires
 
     def initialize(service_broker, attrs)
       @service_broker     = service_broker
@@ -13,6 +13,7 @@ module VCAP::CloudController::ServiceBroker::V2
       @description        = attrs['description']
       @bindable           = attrs['bindable']
       @tags               = attrs.fetch('tags', [])
+      @requires           = attrs.fetch('requires', [])
       @plans_data         = attrs['plans']
       @errors             = []
       @plans              = []
@@ -42,12 +43,13 @@ module VCAP::CloudController::ServiceBroker::V2
     attr_reader :plans_data
 
     def validate_service
-      validate_string!(:broker_provided_id, broker_provided_id)
-      validate_string!(:name, name)
-      validate_string!(:description, description)
-      validate_bool!(:bindable, bindable)
+      validate_string!(:broker_provided_id, broker_provided_id, required: true)
+      validate_string!(:name, name, required: true)
+      validate_string!(:description, description, required: true)
+      validate_bool!(:bindable, bindable, required: true)
 
       validate_array_of_strings!(:tags, tags)
+      validate_array_of_strings!(:requires, requires)
 
       validate_hash!(:metadata, metadata) if metadata
     end
@@ -64,12 +66,26 @@ module VCAP::CloudController::ServiceBroker::V2
       end
     end
 
-    def validate_string!(name, input)
-      @errors << "#{human_readable_attr_name(name)} should be a string, but had value #{input.inspect}" unless input.is_a? String
+    def validate_string!(name, input, opts={})
+      if !input.is_a?(String) && !input.nil?
+        @errors << "#{human_readable_attr_name(name)} should be a string, but had value #{input.inspect}"
+        return
+      end
+
+      if opts[:required] && (input.nil? || input.empty?)
+        @errors << "#{human_readable_attr_name(name)} must be non-empty and a string"
+      end
     end
 
-    def validate_bool!(name, input)
-      @errors << "#{human_readable_attr_name(name)} should be a boolean, but had value #{input.inspect}" unless is_a_bool?(input)
+    def validate_bool!(name, input, opts={})
+      if !is_a_bool?(input) && !input.nil?
+        @errors << "#{human_readable_attr_name(name)} should be a boolean, but had value #{input.inspect}"
+        return
+      end
+
+      if opts[:required] && input.nil?
+        @errors << "#{human_readable_attr_name(name)} must be present and a boolean"
+      end
     end
 
     def validate_array_of_strings!(name, input)
@@ -126,6 +142,8 @@ module VCAP::CloudController::ServiceBroker::V2
         'service metadata'
       when :plans
         'service plans list'
+      when :requires
+        'service "requires" field'
       else
         raise NotImplementedError.new
       end

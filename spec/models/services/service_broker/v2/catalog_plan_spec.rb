@@ -24,6 +24,15 @@ module VCAP::CloudController::ServiceBroker::V2
         expect(plan.errors).to include 'plan id should be a string, but had value 123'
       end
 
+      it 'validates that @broker_provided_id is present' do
+        attrs = build_valid_plan_attrs
+        attrs['id'] = nil
+        plan = CatalogPlan.new(double('broker'), attrs)
+        plan.valid?
+
+        expect(plan.errors).to include 'plan id must be non-empty and a string'
+      end
+
       it 'validates that @name is a string' do
         attrs = build_valid_plan_attrs(name: 123)
         plan = CatalogPlan.new(double('broker'), attrs)
@@ -32,12 +41,30 @@ module VCAP::CloudController::ServiceBroker::V2
         expect(plan.errors).to include 'plan name should be a string, but had value 123'
       end
 
+      it 'validates that @name is present' do
+        attrs = build_valid_plan_attrs
+        attrs['name'] = nil
+        plan = CatalogPlan.new(double('broker'), attrs)
+        plan.valid?
+
+        expect(plan.errors).to include 'plan name must be non-empty and a string'
+      end
+
       it 'validates that @description is a string' do
         attrs = build_valid_plan_attrs(description: 123)
         plan = CatalogPlan.new(double('broker'), attrs)
         plan.valid?
 
         expect(plan.errors).to include 'plan description should be a string, but had value 123'
+      end
+
+      it 'validates that @description is present' do
+        attrs = build_valid_plan_attrs
+        attrs['description'] = nil
+        plan = CatalogPlan.new(double('broker'), attrs)
+        plan.valid?
+
+        expect(plan.errors).to include 'plan description must be non-empty and a string'
       end
 
       it 'validates that @metadata is a hash' do

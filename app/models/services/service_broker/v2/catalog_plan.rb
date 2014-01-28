@@ -28,14 +28,21 @@ module VCAP::CloudController::ServiceBroker::V2
     private
 
     def validate!
-      validate_string!(:broker_provided_id, broker_provided_id)
-      validate_string!(:name, name)
-      validate_string!(:description, description)
+      validate_string!(:broker_provided_id, broker_provided_id, required: true)
+      validate_string!(:name, name, required: true)
+      validate_string!(:description, description, required: true)
       validate_hash!(:metadata, metadata) if metadata
     end
 
-    def validate_string!(name, input)
-      @errors << "#{human_readable_attr_name(name)} should be a string, but had value #{input.inspect}" unless input.is_a? String
+    def validate_string!(name, input, opts={})
+      if !input.is_a?(String) && !input.nil?
+        @errors << "#{human_readable_attr_name(name)} should be a string, but had value #{input.inspect}"
+        return
+      end
+
+      if opts[:required] && (input.nil? || input.empty?)
+        @errors << "#{human_readable_attr_name(name)} must be non-empty and a string"
+      end
     end
 
     def validate_hash!(name, input)

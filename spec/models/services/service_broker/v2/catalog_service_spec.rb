@@ -13,7 +13,8 @@ module VCAP::CloudController::ServiceBroker::V2
         'description' => opts[:description] || 'The description of this service',
         'bindable' => opts[:bindable] || true,
         'tags' => opts[:tags] || [],
-        'plans' => opts[:plans] || [build_valid_plan_attrs]
+        'plans' => opts[:plans] || [build_valid_plan_attrs],
+        'requires' => opts[:requires] || []
       }
     end
 
@@ -35,12 +36,30 @@ module VCAP::CloudController::ServiceBroker::V2
         expect(service.errors).to include 'service id should be a string, but had value 123'
       end
 
+      it 'validates that @broker_provided_id is present' do
+        attrs = build_valid_service_attrs
+        attrs['id'] = nil
+        service = CatalogService.new(double('broker'), attrs)
+        service.valid?
+
+        expect(service.errors).to include 'service id must be non-empty and a string'
+      end
+
       it 'validates that @name is a string' do
         attrs = build_valid_service_attrs(name: 123)
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
         expect(service.errors).to include 'service name should be a string, but had value 123'
+      end
+
+      it 'validates that @name is present' do
+        attrs = build_valid_service_attrs
+        attrs['name'] = nil
+        service = CatalogService.new(double('broker'), attrs)
+        service.valid?
+
+        expect(service.errors).to include 'service name must be non-empty and a string'
       end
 
       it 'validates that @description is a string' do
@@ -51,12 +70,30 @@ module VCAP::CloudController::ServiceBroker::V2
         expect(service.errors).to include 'service description should be a string, but had value 123'
       end
 
+      it 'validates that @description is present' do
+        attrs = build_valid_service_attrs
+        attrs['description'] = nil
+        service = CatalogService.new(double('broker'), attrs)
+        service.valid?
+
+        expect(service.errors).to include 'service description must be non-empty and a string'
+      end
+
       it 'validates that @bindable is a boolean' do
         attrs = build_valid_service_attrs(bindable: "true")
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
         expect(service.errors).to include 'service "bindable" field should be a boolean, but had value "true"'
+      end
+
+      it 'validates that @bindable is present' do
+        attrs = build_valid_service_attrs
+        attrs['bindable'] = nil
+        service = CatalogService.new(double('broker'), attrs)
+        service.valid?
+
+        expect(service.errors).to include 'service "bindable" field must be present and a boolean'
       end
 
       it 'validates that @tags is an array of strings' do
@@ -71,6 +108,20 @@ module VCAP::CloudController::ServiceBroker::V2
         service.valid?
 
         expect(service.errors).to include 'service tags should be an array of strings, but had value [123]'
+      end
+
+      it 'validates that @requires is an array of strings' do
+        attrs = build_valid_service_attrs(requires: "a string")
+        service = CatalogService.new(double('broker'), attrs)
+        service.valid?
+
+        expect(service.errors).to include 'service "requires" field should be an array of strings, but had value "a string"'
+
+        attrs = build_valid_service_attrs(requires: [123])
+        service = CatalogService.new(double('broker'), attrs)
+        service.valid?
+
+        expect(service.errors).to include 'service "requires" field should be an array of strings, but had value [123]'
       end
 
       it 'validates that @metadata is a hash' do

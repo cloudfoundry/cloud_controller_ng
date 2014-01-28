@@ -323,7 +323,7 @@ module VCAP::CloudController
             expect(decoded_response.fetch('code')).to eql(120001)
             expect(decoded_response.fetch('error_code')).to eql('CF-ServiceInvalid')
             expect(decoded_response.fetch('types')).to eql(['ServiceInvalid', 'Error'])
-            expect(decoded_response.fetch('description')).to eql('The service is invalid: unique_id is taken')
+            expect(decoded_response.fetch('description')).to eql("The service is invalid: service id '#{other_service.unique_id}' is taken")
           end
         end
       end

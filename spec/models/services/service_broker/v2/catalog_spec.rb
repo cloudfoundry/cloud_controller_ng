@@ -277,7 +277,7 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe 'validations' do
-      context 'when a service has no plans' do
+      context 'when the catalog is invalid' do
         let(:catalog_hash) do
           {
             'services' => [

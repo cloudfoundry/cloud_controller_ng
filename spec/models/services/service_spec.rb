@@ -22,6 +22,11 @@ module VCAP::CloudController
         it 'is not valid' do
           expect(service).not_to be_valid
         end
+
+        it 'raises an error on save' do
+          expect { service.save }.
+            to raise_error(Sequel::ValidationFailed, "service id '#{service.unique_id}' is taken")
+        end
       end
     end
 
