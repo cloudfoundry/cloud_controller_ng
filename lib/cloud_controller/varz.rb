@@ -1,4 +1,4 @@
-require "vcap/component"
+require 'vcap/component'
 
 module VCAP::CloudController
   class Varz

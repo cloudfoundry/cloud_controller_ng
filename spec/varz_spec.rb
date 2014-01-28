@@ -1,8 +1,8 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe Varz do
-    describe "#setup_updates" do
+    describe '#setup_updates' do
       before do
         @periodic_timer_blks = []
         EM.stub(:add_periodic_timer) do |&blk|
@@ -10,21 +10,21 @@ module VCAP::CloudController
         end
       end
 
-      it "bumps the number of users and sets periodic timer" do
+      it 'bumps the number of users and sets periodic timer' do
         expect(VCAP::CloudController::Varz).to receive(:bump_user_count).twice
         Varz.setup_updates
         @periodic_timer_blks.map(&:call)
       end
 
-      it "bumps the length of cc job queues and sets periodic timer" do
+      it 'bumps the length of cc job queues and sets periodic timer' do
         expect(VCAP::CloudController::Varz).to receive(:bump_cc_job_queue_length).twice
         Varz.setup_updates
         @periodic_timer_blks.map(&:call)
       end
     end
 
-    describe "#bump_user_count" do
-      it "should include the number of users in varz" do
+    describe '#bump_user_count' do
+      it 'should include the number of users in varz' do
         # We have to use stubbing here because when we run in parallel mode,
         # there might other tests running and create/delete users concurrently.
         VCAP::Component.varz.synchronize do
@@ -40,15 +40,15 @@ module VCAP::CloudController
       end
     end
 
-    describe "#bump_cc_job_queue_length" do
-      it "should include the length of the delayed job queue" do
+    describe '#bump_cc_job_queue_length' do
+      it 'should include the length of the delayed job queue' do
         VCAP::Component.varz.synchronize do
           VCAP::Component.varz[:cc_job_queue_length] = 0
         end
 
-        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new("abc", "def", []), queue: "cc_local")
-        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new("ghj", "klm", []), queue: "cc_local")
-        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new("abc", "def", []), queue: "cc_generic")
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
 
         Varz.bump_cc_job_queue_length
 
@@ -58,9 +58,9 @@ module VCAP::CloudController
         end
       end
 
-      it "should find jobs which have not been attempted yet" do
-        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new("abc", "def", []), queue: "cc_local")
-        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new("abc", "def", []), queue: "cc_generic")
+      it 'should find jobs which have not been attempted yet' do
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
 
         Varz.bump_cc_job_queue_length
 
@@ -70,9 +70,9 @@ module VCAP::CloudController
         end
       end
 
-      it "should ignore jobs that have already been attempted" do
-        job = Jobs::Runtime::AppBitsPacker.new("abc", "def", [])
-        Delayed::Job.enqueue(job, queue: "cc_generic", attempts: 1)
+      it 'should ignore jobs that have already been attempted' do
+        job = Jobs::Runtime::AppBitsPacker.new('abc', 'def', [])
+        Delayed::Job.enqueue(job, queue: 'cc_generic', attempts: 1)
 
         Varz.bump_cc_job_queue_length
 
