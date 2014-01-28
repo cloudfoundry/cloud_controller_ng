@@ -90,9 +90,13 @@ module VCAP::CloudController::RestController
       raise NotAuthenticated unless user || roles.admin?
       validate_access(:index, model, user, roles)
 
-      Paginator.render_json(
-        self.class, enumerate_dataset, self.class.path,
-        @opts.merge(serialization: serialization), params)
+      PaginatedCollectionRenderer.render_json(
+        self.class,
+        enumerate_dataset,
+        self.class.path,
+        @opts,
+        params,
+      )
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
@@ -126,7 +130,13 @@ module VCAP::CloudController::RestController
           @opts
         )
 
-      Paginator.render_json(associated_controller, filtered_dataset, associated_path, @opts)
+      PaginatedCollectionRenderer.render_json(
+        associated_controller,
+        filtered_dataset,
+        associated_path,
+        @opts,
+        {}
+      )
     end
 
     # Add a related object.
@@ -305,7 +315,7 @@ module VCAP::CloudController::RestController
 
       def serialization(klass = nil)
         @serialization = klass if klass
-        @serialization || ObjectSerialization
+        @serialization || ObjectRenderer
       end
 
       # Model class name associated with this rest/api endpoint.

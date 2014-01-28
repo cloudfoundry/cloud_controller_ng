@@ -17,11 +17,35 @@ module VCAP::CloudController
     one_to_many :service_instances
     one_to_many :managed_service_instances
     one_to_many :routes
-    one_to_many :app_events, dataset: -> { AppEvent.filter(app: apps) }
+
+    one_to_many :app_events,
+                dataset: -> { AppEvent.filter(app: apps) }
+
     one_to_many :default_users, class: "VCAP::CloudController::User", key: :default_space_id
+
     one_to_many :domains,
                 dataset: -> { organization.domains_dataset },
-                adder: ->(domain) { check_addable!(domain) }
+                adder: ->(domain) { check_addable!(domain) },
+                eager_loader: proc { |eo|
+                  id_map = {}
+                  eo[:rows].each do |space|
+                    space.associations[:domains] = []
+                    id_map[space.organization_id] ||= []
+                    id_map[space.organization_id] << space
+                  end
+
+                  ds = Domain.filter(owning_organization_id: id_map.keys).or(owning_organization_id: nil)
+                  ds = ds.eager(eo[:associations]) if eo[:associations]
+                  ds = eo[:eager_block].call(ds) if eo[:eager_block]
+
+                  ds.all do |domain|
+                    if domain.shared?
+                      id_map.each { |_, spaces| spaces.each { |space| space.associations[:domains] << domain } }
+                    else
+                      id_map[domain.owning_organization_id].each { |space| space.associations[:domains] << domain }
+                    end
+                  end
+                }
 
     add_association_dependencies default_users: :nullify, apps: :destroy, service_instances: :destroy, routes: :destroy, events: :nullify
 

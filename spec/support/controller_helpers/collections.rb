@@ -162,12 +162,12 @@ module ControllerHelpers
         end
 
         it "should return resources => [child1, child2]" do
-          os = VCAP::CloudController::RestController::ObjectSerialization
+          os = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
           ar = opts[:model].association_reflection(attr)
           child_controller = VCAP::CloudController.controller_from_model_name(ar.associated_class.name)
 
-          c1 = normalize_attributes(os.to_hash(child_controller, @child1, {}))
-          c2 = normalize_attributes(os.to_hash(child_controller, @child2, {}))
+          c1 = normalize_attributes(os.serialize(child_controller, @child1, {}))
+          c2 = normalize_attributes(os.serialize(child_controller, @child2, {}))
 
           decoded_response["resources"].size.should == 2
           decoded_response["resources"].should =~ [c1, c2]

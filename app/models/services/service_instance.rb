@@ -17,6 +17,27 @@ module VCAP::CloudController
     one_to_many :service_bindings, :before_add => :validate_service_binding
     many_to_one :space
 
+    many_to_one :service_plan_sti_eager_load,
+                class: "VCAP::CloudController::ServicePlan",
+                dataset: -> { raise "Must be used for eager loading" },
+                eager_loader_key: nil, # set up id_map ourselves
+                eager_loader: proc { |eo|
+                  id_map = {}
+                  eo[:rows].each do |service_instance|
+                    service_instance.associations[:service_plan] = nil
+                    id_map[service_instance.service_plan_id] ||= []
+                    id_map[service_instance.service_plan_id] << service_instance
+                  end
+
+                  ds = ServicePlan.where(id: id_map.keys)
+                  ds = ds.eager(eo[:associations]) if eo[:associations]
+                  ds = eo[:eager_block].call(ds) if eo[:eager_block]
+
+                  ds.all do |service_plan|
+                    id_map[service_plan.id].each { |si| si.associations[:service_plan] = service_plan }
+                  end
+                }
+
     delegate :organization, to: :space
 
     add_association_dependencies :service_bindings => :destroy

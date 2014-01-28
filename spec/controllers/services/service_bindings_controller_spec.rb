@@ -307,5 +307,27 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET', '/v2/service_bindings?inline-relations-depth=1', regression: true do
+      it 'returns both user provided and managed service instances' do
+        managed_service_instance = ManagedServiceInstance.make
+        managed_binding = ServiceBinding.make(service_instance: managed_service_instance)
+
+        user_provided_service_instance = UserProvidedServiceInstance.make
+        user_provided_binding = ServiceBinding.make(service_instance: user_provided_service_instance)
+
+        get "/v2/service_bindings?inline-relations-depth=1", {}, admin_headers
+        expect(last_response.status).to eql(200)
+
+        service_bindings = decoded_response["resources"]
+        service_instance_guids = service_bindings.map do |res|
+          res["entity"]["service_instance"]["metadata"]["guid"]
+        end
+
+        expect(service_instance_guids).to match_array([
+          managed_service_instance.guid,
+          user_provided_service_instance.guid,
+        ])
+      end
+    end
   end
 end

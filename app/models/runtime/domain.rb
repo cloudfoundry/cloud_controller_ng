@@ -20,6 +20,25 @@ module VCAP::CloudController
       end
     end
 
+    one_to_many :spaces_sti_eager_load,
+                class: "VCAP::CloudController::Space",
+                dataset: -> { raise "Must be used for eager loading" },
+                eager_loader: proc { |eo|
+                  id_map = {}
+                  eo[:rows].each do |domain|
+                    domain.associations[:spaces] = []
+                    id_map[domain.owning_organization_id] = domain
+                  end
+
+                  ds = Space.filter(organization_id: id_map.keys)
+                  ds = ds.eager(eo[:associations]) if eo[:associations]
+                  ds = eo[:eager_block].call(ds) if eo[:eager_block]
+
+                  ds.all do |space|
+                    id_map[space.organization_id].associations[:spaces] << space
+                  end
+                }
+
     many_to_one :owning_organization, class: "VCAP::CloudController::Organization"
     one_to_many :routes
 
@@ -80,11 +99,11 @@ module VCAP::CloudController
     end
 
     def shared?
-      owning_organization.nil?
+      owning_organization_id.nil?
     end
 
     def owned_by?(org)
-      owning_organization.id == org.id
+      owning_organization_id == org.id
     end
 
     private

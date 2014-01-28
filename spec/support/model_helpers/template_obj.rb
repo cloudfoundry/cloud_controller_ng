@@ -24,6 +24,8 @@ module ModelHelpers
 
     def refresh
       @klass.associations.each do |name|
+        next if name.to_s.end_with?("_sti_eager_load")
+
         association = @obj.send(name)
         ["id", "guid"].each do |k|
           key = "#{name}_#{k}"

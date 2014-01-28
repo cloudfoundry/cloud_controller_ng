@@ -4,17 +4,44 @@ module VCAP::CloudController
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
 
     one_to_many :spaces
-    one_to_many :service_instances, dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
-    one_to_many :apps, dataset: -> { App.filter(space: spaces) }
-    one_to_many :app_events, dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
+
+    one_to_many :service_instances,
+                dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
+
+    one_to_many :apps,
+                dataset: -> { App.filter(space: spaces) }
+
+    one_to_many :app_events,
+                dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
+
     one_to_many :private_domains, key: :owning_organization_id
     one_to_many :service_plan_visibilities
     many_to_one :quota_definition
+
     one_to_many :domains,
                 dataset: -> { VCAP::CloudController::Domain.filter(owning_organization_id: id).or(owning_organization_id: nil) },
                 remover: ->(legacy_domain) { legacy_domain.destroy if legacy_domain.owning_organization_id == id },
                 clearer: -> { remove_all_private_domains },
-                adder: ->(legacy_domain) { check_addable!(legacy_domain) }
+                adder: ->(legacy_domain) { check_addable!(legacy_domain) },
+                eager_loader: proc { |eo|
+                  id_map = {}
+                  eo[:rows].each do |org|
+                    org.associations[:domains] = []
+                    id_map[org.id] = org
+                  end
+
+                  ds = Domain.filter(owning_organization_id: id_map.keys).or(owning_organization_id: nil)
+                  ds = ds.eager(eo[:associations]) if eo[:associations]
+                  ds = eo[:eager_block].call(ds) if eo[:eager_block]
+
+                  ds.all do |domain|
+                    if domain.shared?
+                      id_map.each { |_, org| org.associations[:domains] << domain }
+                    else
+                      id_map[domain.owning_organization_id].associations[:domains] << domain
+                    end
+                  end
+                }
 
     add_association_dependencies spaces: :destroy,
       service_instances: :destroy,

@@ -12,7 +12,24 @@ module VCAP::CloudController
     import_attributes :name, :owning_organization_guid
     strip_attributes  :name
 
-    one_to_many :spaces, dataset: -> { owning_organization.spaces_dataset }
+    one_to_many :spaces,
+                dataset: -> { owning_organization.spaces_dataset },
+                eager_loader: proc { |eo|
+                  id_map = {}
+                  eo[:rows].each do |domain|
+                    domain.associations[:spaces] = []
+                    id_map[domain.owning_organization_id] ||= []
+                    id_map[domain.owning_organization_id] << domain
+                  end
+
+                  ds = Space.filter(organization_id: id_map.keys)
+                  ds = ds.eager(eo[:associations]) if eo[:associations]
+                  ds = eo[:eager_block].call(ds) if eo[:eager_block]
+
+                  ds.all do |space|
+                    id_map[space.organization_id].each { |domain| domain.associations[:spaces] << space }
+                  end
+                }
 
     def as_summary_json
       {

@@ -368,7 +368,7 @@ module VCAP::CloudController
 
         controller_class.stub(path: fake_class_path)
 
-        RestController::Paginator.should_receive(:render_json).with(
+        RestController::PaginatedCollectionRenderer.should_receive(:render_json).with(
           controller_class,
           filtered_dataset,
           fake_class_path,

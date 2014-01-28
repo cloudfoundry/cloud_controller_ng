@@ -591,5 +591,44 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'GET', '/v2/spaces?inline-relations-depth=3', regression: true do
+      let(:space) { Space.make }
+
+      it 'returns managed service instances associated with service plans' do
+        managed_service_instance = ManagedServiceInstance.make(space: space)
+        ServiceBinding.make(service_instance: managed_service_instance)
+
+        get "/v2/spaces/#{space.guid}?inline-relations-depth=3", {}, admin_headers
+        expect(last_response.status).to eql(200)
+        service_instance_hashes = decoded_response["entity"]["service_instances"]
+
+        managed_service_instance_hash =
+          find_service_instance_with_guid(service_instance_hashes, managed_service_instance.guid)
+        expect(managed_service_instance_hash["entity"]["service_plan_url"]).to be
+        expect(managed_service_instance_hash["entity"]["service_plan_guid"]).to be
+        expect(managed_service_instance_hash["entity"]["service_plan"]).to be
+      end
+
+      it 'returns provided service instances without plans' do
+        user_provided_service_instance = UserProvidedServiceInstance.make(space: space)
+        ServiceBinding.make(service_instance: user_provided_service_instance)
+
+        get "/v2/spaces/#{space.guid}?inline-relations-depth=3", {}, admin_headers
+        expect(last_response.status).to eql(200)
+        service_instance_hashes = decoded_response["entity"]["service_instances"]
+
+        user_provided_service_instance_hash =
+          find_service_instance_with_guid(service_instance_hashes, user_provided_service_instance.guid)
+        expect(user_provided_service_instance_hash["entity"]).to_not have_key("service_plan_url")
+        expect(user_provided_service_instance_hash["entity"]).to_not have_key("service_plan_guid")
+        expect(user_provided_service_instance_hash["entity"]).to_not have_key("service_plan")
+      end
+
+      def find_service_instance_with_guid(service_instances, guid)
+        service_instances.detect { |res| res["metadata"]["guid"] == guid } ||
+          raise("Failed to find service instance with #{guid}")
+      end
+    end
   end
 end

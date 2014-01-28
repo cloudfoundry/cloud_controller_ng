@@ -1,7 +1,8 @@
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     define_attributes do
-      attribute  :name,            String
+      attribute  :name, String
+
       to_one     :organization
       to_many    :developers
       to_many    :managers
@@ -32,20 +33,33 @@ module VCAP::CloudController
 
     get "/v2/spaces/:guid/services", :enumerate_services
     def enumerate_services(guid)
+      logger.debug "cc.enumerate.related", guid: guid, association: "services"
+
       space = find_guid_and_validate_access(:read, guid)
 
-      services = Query.filtered_dataset_from_query_params(
-        Service,
-        Service.organization_visible(space.organization),
-        ServicesController.query_parameters,
-        @opts
+      associated_controller, associated_model = ServicesController, Service
+
+      filtered_dataset = Query.filtered_dataset_from_query_params(
+        associated_model,
+        associated_model.organization_visible(space.organization),
+        associated_controller.query_parameters,
+        @opts,
       )
 
-      RestController::Paginator.render_json(
-        ServicesController,
-        services,
-        "/v2/spaces/#{guid}/services",
-        @opts.merge(serialization: ServiceSerialization, organization: space.organization)
+      associated_path = "#{self.class.url_for_guid(guid)}/services"
+
+      opts = @opts.merge(
+        additional_visibility_filters: {
+          service_plans: proc { |ds| ds.organization_visible(space.organization) },
+        }
+      )
+
+      RestController::PaginatedCollectionRenderer.render_json(
+        associated_controller,
+        filtered_dataset,
+        associated_path,
+        opts,
+        {},
       )
     end
 
@@ -67,11 +81,12 @@ module VCAP::CloudController
         @opts)
       service_instances.filter(space: space)
 
-      RestController::Paginator.render_json(
+      RestController::PaginatedCollectionRenderer.render_json(
         ServiceInstancesController,
         service_instances,
         "/v2/spaces/#{guid}/service_instances",
-        @opts
+        @opts,
+        {}
       )
     end
 
@@ -88,25 +103,6 @@ module VCAP::CloudController
 
     def after_update(space)
       @space_event_repository.record_space_update(space, SecurityContext.current_user, request_attrs)
-    end
-
-    module ServiceSerialization
-      def self.to_hash(controller, service, opts)
-        entity_hash = service.to_hash.merge({
-          "service_plans" => service.service_plans_dataset.organization_visible(opts[:organization]).map do |service_plan|
-            RestController::ObjectSerialization.to_hash(controller, service_plan, opts)
-          end
-        })
-
-        metadata_hash = {
-          "guid" => service.guid,
-          "url" => controller.url_for_guid(service.guid),
-          "created_at" => service.created_at,
-          "updated_at" => service.updated_at
-        }
-
-        {"metadata" => metadata_hash, "entity" => entity_hash}
-      end
     end
 
     define_messages

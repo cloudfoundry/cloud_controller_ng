@@ -215,5 +215,87 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "#domains (eager loading)" do
+      before { SharedDomain.dataset.delete }
+
+      it "is able to eager load domains" do
+        space = Space.make
+        org = space.organization
+
+        private_domain1 = PrivateDomain.make(owning_organization: org)
+        private_domain2 = PrivateDomain.make(owning_organization: org)
+        shared_domain = SharedDomain.make
+
+        expect {
+          @eager_loaded_space = Space.eager(:domains).where(id: space.id).all.first
+        }.to have_queried_db_times(/domains/i, 1)
+
+        expect {
+          @eager_loaded_domains = @eager_loaded_space.domains.to_a
+        }.to have_queried_db_times(//, 0)
+
+        expect(@eager_loaded_space).to eql(space)
+        expect(@eager_loaded_domains).to eql([private_domain1, private_domain2, shared_domain])
+        expect(@eager_loaded_domains).to eql(org.domains)
+      end
+
+      it "has correct domains for each space" do
+        space1 = Space.make
+        space2 = Space.make
+
+        org1 = space1.organization
+        org2 = space2.organization
+
+        private_domain1 = PrivateDomain.make(owning_organization: org1)
+        private_domain2 = PrivateDomain.make(owning_organization: org2)
+        shared_domain = SharedDomain.make
+
+        expect {
+          @eager_loaded_spaces = Space.eager(:domains).where(id: [space1.id, space2.id]).limit(2).all
+        }.to have_queried_db_times(/domains/i, 1)
+
+        expect {
+          expect(@eager_loaded_spaces[0].domains).to eql([private_domain1, shared_domain])
+          expect(@eager_loaded_spaces[1].domains).to eql([private_domain2, shared_domain])
+        }.to have_queried_db_times(//, 0)
+      end
+
+      it "passes in dataset to be loaded to eager_block option" do
+        space = Space.make
+        org = space.organization
+
+        private_domain1 = PrivateDomain.make(owning_organization: org)
+        private_domain2 = PrivateDomain.make(owning_organization: org)
+
+        eager_block = proc { |ds| ds.where(id: private_domain1.id) }
+
+        expect {
+          @eager_loaded_space = Space.eager(domains: eager_block).where(id: space.id).all.first
+        }.to have_queried_db_times(/domains/i, 1)
+
+        expect(@eager_loaded_space.domains).to eql([private_domain1])
+      end
+
+      it "allow nested eager_load" do
+        space = Space.make
+        org = space.organization
+
+        domain1 = PrivateDomain.make(owning_organization: org)
+        domain2 = PrivateDomain.make(owning_organization: org)
+
+        route1 = Route.make(domain: domain1, space: space)
+        route2 = Route.make(domain: domain2, space: space)
+
+        expect {
+          @eager_loaded_space = Space.eager(domains: :routes).where(id: space.id).all.first
+        }.to have_queried_db_times(/domains/i, 1)
+
+        expect {
+          expect(@eager_loaded_space.domains[0].routes).to eql([route1])
+          expect(@eager_loaded_space.domains[1].routes).to eql([route2])
+        }.to have_queried_db_times(//, 0)
+      end
+    end
   end
 end

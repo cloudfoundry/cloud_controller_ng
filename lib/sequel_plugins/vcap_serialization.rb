@@ -16,7 +16,7 @@ module Sequel::Plugins::VcapSerialization
     # parameter.
     def to_hash(opts = {})
       hash = {}
-      attrs = self.class.export_attrs || []
+      attrs = opts[:attrs] || self.class.export_attrs || []
       attrs.each do |k|
         if opts[:only].nil? || opts[:only].include?(k)
           value = send(k)
