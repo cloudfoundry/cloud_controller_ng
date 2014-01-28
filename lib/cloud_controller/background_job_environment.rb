@@ -13,8 +13,13 @@ class BackgroundJobEnvironment
         message_bus = MessageBus::Configurer.new(
           :servers => @config[:message_bus_servers],
           :logger => Steno.logger("cc.message_bus")).go
+
+        # The worker should not interact with DEA
+        # so we using null object for stager and dea pool
+        # The AppObserver should be refactored and don't depend on stager and dea pools
         no_op_staging_pool = Object.new
-        VCAP::CloudController::AppObserver.configure(@config, message_bus, no_op_staging_pool)
+        no_op_dea_pool = Object.new
+        VCAP::CloudController::AppObserver.configure(@config, message_bus, no_op_dea_pool, no_op_staging_pool)
       end
     end
   end

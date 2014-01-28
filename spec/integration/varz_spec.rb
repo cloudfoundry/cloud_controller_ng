@@ -25,7 +25,7 @@ describe "Cloud Controller", :type => :integration do
 
   before(:all) do
     start_nats
-    start_cc(config: "spec/fixtures/config/varz_config.yml", debug: true)
+    start_cc(config: "spec/fixtures/config/varz_config.yml")
   end
 
   after(:all) do
