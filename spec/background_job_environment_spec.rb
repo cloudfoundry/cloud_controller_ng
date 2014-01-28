@@ -3,6 +3,11 @@ require "spec_helper"
 describe BackgroundJobEnvironment do
   let(:bg_config) { { db: "cc-db" } }
   subject(:background_job_environment) { described_class.new(bg_config) }
+
+  before do
+    Steno.stub(:init)
+  end
+
   describe "#setup_environment" do
     let(:message_bus) { double(:message_bus) }
     let(:message_bus_configurer) { double(MessageBus::Configurer, go: message_bus)}
