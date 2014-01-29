@@ -84,9 +84,11 @@ module VCAP::CloudController
         Seeds.write_seed_data(config) if @insert_seed_data
         register_with_collector(message_bus)
 
-        builder = RackAppBuilder.new
         globals = Globals.new(config, message_bus)
-        app = builder.build(globals, config)
+        globals.setup!
+
+        builder = RackAppBuilder.new
+        app = builder.build(config)
 
         start_thin_server(app, config)
 

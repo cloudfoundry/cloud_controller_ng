@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class RackAppBuilder
-    def build(globals, config)
+    def build(config)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
       Rack::Builder.new do
         use Rack::CommonLogger
@@ -10,7 +10,6 @@ module VCAP::CloudController
           use NewRelic::Rack::DeveloperMode
         end
 
-        globals.setup!
 
         map "/" do
           run Controller.new(config, token_decoder)
