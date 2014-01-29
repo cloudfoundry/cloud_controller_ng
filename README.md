@@ -68,7 +68,7 @@ The development team typically will run the specs to a single file as (e.g.)
 
 There are a very large number of tests in Cloud Controller, so the development team typically uses [parallel_rspec](https://github.com/grosser/parallel_tests):
 
-    bundle exec parallel_rspec spec -s integration
+    bundle exec parallel_rspec spec -s 'integration|acceptance'
 
 It is important to remember to use `-s integration` to force all the integration specs to run in the same process.
 Without it, you will see failures due to two tests trying to start NATS on the same port at the same time, for instance.
