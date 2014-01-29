@@ -32,10 +32,12 @@ module VCAP::CloudController
     end
 
     def validate_logging_service_binding
-      unless syslog_drain_url.nil? || syslog_drain_url.empty? ||
-          service_instance.service_plan.service.requires.include?("syslog_drain")
-        raise InvalidLoggingServiceBinding.new("Service is not advertised as a logging service. Please contact the service provider.")
-      end
+      return if syslog_drain_url.blank?
+
+      error_msg = "Service is not advertised as a logging service. Please contact the service provider."
+      service_advertised_as_logging_service = service_instance.service_plan.service.requires.include?("syslog_drain")
+
+      raise InvalidLoggingServiceBinding.new(error_msg) unless service_advertised_as_logging_service
     end
 
     def validate_app_and_service_instance(app, service_instance)
