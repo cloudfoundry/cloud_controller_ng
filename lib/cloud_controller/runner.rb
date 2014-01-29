@@ -5,6 +5,8 @@ require "cf_message_bus/message_bus"
 require "cf/registrar"
 require "loggregator_emitter"
 require "loggregator"
+require "cloud_controller/globals"
+require "cloud_controller/rack_app_builder"
 require "cloud_controller/varz"
 
 require_relative "seeds"
@@ -69,10 +71,6 @@ module VCAP::CloudController
       exit 1
     end
 
-    def development_mode?
-      @config[:development_mode]
-    end
-
     def run!
       EM.run do
         config = @config.dup
@@ -84,8 +82,11 @@ module VCAP::CloudController
         start_cloud_controller(message_bus)
 
         Seeds.write_seed_data(config) if @insert_seed_data
+        register_with_collector(message_bus)
 
-        app = build_rack_app(config, message_bus, development_mode?)
+        builder = RackAppBuilder.new
+        globals = Globals.new(config, message_bus)
+        app = builder.build(globals, config)
 
         start_thin_server(app, config)
 
@@ -159,38 +160,6 @@ module VCAP::CloudController
     def setup_loggregator_emitter
       if @config[:loggregator] && @config[:loggregator][:router] && @config[:loggregator][:shared_secret]
         Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config[:loggregator][:router], "API", @config[:index], @config[:loggregator][:shared_secret])
-      end
-    end
-
-    def build_rack_app(config, message_bus, development)
-      token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
-      register_with_collector(message_bus)
-
-      Rack::Builder.new do
-        use Rack::CommonLogger
-
-        if development
-          require 'new_relic/rack/developer_mode'
-          use NewRelic::Rack::DeveloperMode
-        end
-
-        DeaClient.run
-        AppObserver.run
-
-        LegacyBulk.register_subscription
-
-        VCAP::CloudController.health_manager_respondent = HealthManagerRespondent.new(DeaClient, message_bus)
-        VCAP::CloudController.health_manager_respondent.handle_requests
-
-        HM9000Respondent.new(DeaClient, message_bus, config[:hm9000_noop]).handle_requests
-
-        VCAP::CloudController.dea_respondent = DeaRespondent.new(message_bus)
-
-        VCAP::CloudController.dea_respondent.start
-
-        map "/" do
-          run Controller.new(config, token_decoder)
-        end
       end
     end
 
