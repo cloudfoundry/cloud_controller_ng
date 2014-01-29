@@ -2,10 +2,23 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe Varz do
+    before do
+      allow(EventMachine).to receive(:connection_count).and_return(123)
+
+      allow(EventMachine).to receive(:instance_variable_get) do |instance_var|
+        case instance_var
+        when :@threadqueue then double(EventMachine::Queue, size: 20, num_waiting: 0)
+        when :@resultqueue then double(EventMachine::Queue, size: 0, num_waiting: 1)
+        else raise "Unexpected call: #{instance_var}"
+        end
+      end
+    end
+
     describe '#setup_updates' do
       before do
         @periodic_timer_blks = []
-        EM.stub(:add_periodic_timer) do |&blk|
+
+        allow(EventMachine).to receive(:add_periodic_timer) do |&blk|
           @periodic_timer_blks << blk
         end
       end
@@ -18,6 +31,12 @@ module VCAP::CloudController
 
       it 'bumps the length of cc job queues and sets periodic timer' do
         expect(VCAP::CloudController::Varz).to receive(:bump_cc_job_queue_length).twice
+        Varz.setup_updates
+        @periodic_timer_blks.map(&:call)
+      end
+
+      it 'updates thread count and event machine queues' do
+        expect(VCAP::CloudController::Varz).to receive(:record_thread_info).twice
         Varz.setup_updates
         @periodic_timer_blks.map(&:call)
       end
@@ -78,6 +97,38 @@ module VCAP::CloudController
 
         VCAP::Component.varz.synchronize do
           expect(VCAP::Component.varz[:cc_job_queue_length]).to eq({})
+        end
+      end
+    end
+
+    describe '#record_thread_info' do
+      before do
+        Varz.record_thread_info
+      end
+
+      it 'should contain thread count' do
+        VCAP::Component.varz.synchronize do
+          VCAP::Component.varz[:thread_info][:thread_count].should == Thread.list.size
+        end
+      end
+
+      it 'should contain EventMachine connection count' do
+        VCAP::Component.varz.synchronize do
+          VCAP::Component.varz[:thread_info][:event_machine][:connection_count].should == 123
+        end
+      end
+
+      it 'should contain EventMachine @threadqueue size and num_waiting' do
+        VCAP::Component.varz.synchronize do
+          VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:size].should == 20
+          VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:num_waiting].should == 0
+        end
+      end
+
+      it 'should contain EventMachine @resultqueue size and num_waiting' do
+        VCAP::Component.varz.synchronize do
+          VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:size].should == 0
+          VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:num_waiting].should == 1
         end
       end
     end
