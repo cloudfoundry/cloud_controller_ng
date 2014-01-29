@@ -1,10 +1,10 @@
-require "vcap/component"
-require "vcap/ring_buffer"
-require "vcap/rest_api"
-require "vcap/request"
-require "sinatra/reloader"
-require "securerandom"
-require "steno"
+require 'vcap/component'
+require 'vcap/ring_buffer'
+require 'vcap/rest_api'
+require 'vcap/request'
+require 'sinatra/reloader'
+require 'securerandom'
+require 'steno'
 
 module Sinatra
   module VCAP
@@ -14,7 +14,7 @@ module Sinatra
       end
 
       def in_test_mode?
-        ENV["CC_TEST"]
+        ENV['CC_TEST']
       end
 
       def error_payload(exception)
@@ -52,13 +52,13 @@ module Sinatra
         # from our logic. This is a check to see if we already did a 404 below.
         # We don't really have a class to attach a member variable to, so we have to
         # use the env to flag this.
-        unless request.env["vcap_exception_body_set"]
+        unless request.env['vcap_exception_body_set']
           body Yajl::Encoder.encode(error_payload(::VCAP::Errors::NotFound.new))
         end
       end
 
       app.error do
-        exception = request.env["sinatra.error"]
+        exception = request.env['sinatra.error']
 
         raise exception if in_test_mode? && !exception.respond_to?(:error_code)
 
@@ -82,7 +82,7 @@ module Sinatra
           varz[:recent_errors] << payload
         end
 
-        request.env["vcap_exception_body_set"] = true
+        request.env['vcap_exception_body_set'] = true
 
         body payload.concat("\n")
       end
@@ -121,11 +121,11 @@ module Sinatra
         ::VCAP::Component.varz.synchronize do
           varz[:requests][:outstanding] += 1
         end
-        logger_name = opts[:logger_name] || "vcap.api"
-        env["rack.logger"] = Steno.logger(logger_name)
+        logger_name = opts[:logger_name] || 'vcap.api'
+        env['rack.logger'] = Steno.logger(logger_name)
 
-        @request_guid = env["X_VCAP_REQUEST_ID"]
-        @request_guid ||= env["X_REQUEST_ID"]
+        @request_guid = env['X_VCAP_REQUEST_ID']
+        @request_guid ||= env['X_REQUEST_ID']
 
         # we append a new guid to the request because we have no idea if the
         # caller is really going to be giving us a unique guid, i.e. they might
@@ -137,7 +137,7 @@ module Sinatra
         end
 
         ::VCAP::Request.current_id = @request_guid
-        Steno.config.context.data["request_guid"] = @request_guid
+        Steno.config.context.data['request_guid'] = @request_guid
       end
 
       after do
@@ -146,21 +146,20 @@ module Sinatra
           varz[:requests][:completed] += 1
           varz[:http_status][response.status] += 1
         end
-        headers["Content-Type"] = "application/json;charset=utf-8"
+        headers['Content-Type'] = 'application/json;charset=utf-8'
         headers[::VCAP::Request::HEADER_NAME] = @request_guid
         ::VCAP::Request.current_id = nil
-        Steno.config.context.data.delete("request_guid")
+        Steno.config.context.data.delete('request_guid')
         nil
       end
     end
-
 
     private
 
     def self.init_varz
       ::VCAP::Component.varz.threadsafe!
 
-      requests = { :outstanding => 0, :completed => 0 }
+      requests = {:outstanding => 0, :completed => 0}
       http_status = {}
       [(100..101), (200..206), (300..307), (400..417), (500..505)].each do |r|
         r.each { |c| http_status[c] = 0 }
