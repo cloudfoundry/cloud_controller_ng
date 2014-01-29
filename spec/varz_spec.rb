@@ -16,29 +16,49 @@ module VCAP::CloudController
 
     describe '#setup_updates' do
       before do
-        @periodic_timer_blks = []
-
-        allow(EventMachine).to receive(:add_periodic_timer) do |&blk|
-          @periodic_timer_blks << blk
-        end
+        allow(EventMachine).to receive(:add_periodic_timer)
       end
 
       it 'bumps the number of users and sets periodic timer' do
-        expect(VCAP::CloudController::Varz).to receive(:bump_user_count).twice
+        expect(VCAP::CloudController::Varz).to receive(:bump_user_count).once
         Varz.setup_updates
-        @periodic_timer_blks.map(&:call)
       end
 
       it 'bumps the length of cc job queues and sets periodic timer' do
-        expect(VCAP::CloudController::Varz).to receive(:bump_cc_job_queue_length).twice
+        expect(VCAP::CloudController::Varz).to receive(:bump_cc_job_queue_length).once
         Varz.setup_updates
-        @periodic_timer_blks.map(&:call)
       end
 
       it 'updates thread count and event machine queues' do
-        expect(VCAP::CloudController::Varz).to receive(:record_thread_info).twice
+        expect(VCAP::CloudController::Varz).to receive(:record_thread_info).once
         Varz.setup_updates
-        @periodic_timer_blks.map(&:call)
+      end
+
+      context 'when EventMachine periodic_timer tasks are run' do
+        before do
+          @periodic_timer_blks = []
+
+          allow(EventMachine).to receive(:add_periodic_timer) do |&blk|
+            @periodic_timer_blks << blk
+          end
+
+          Varz.setup_updates
+        end
+
+        it 'bumps the number of users and sets periodic timer' do
+          expect(VCAP::CloudController::Varz).to receive(:bump_user_count).once
+          @periodic_timer_blks.map(&:call)
+        end
+
+        it 'bumps the length of cc job queues and sets periodic timer' do
+          expect(VCAP::CloudController::Varz).to receive(:bump_cc_job_queue_length).once
+          @periodic_timer_blks.map(&:call)
+        end
+
+        it 'updates thread count and event machine queues' do
+          expect(VCAP::CloudController::Varz).to receive(:record_thread_info).once
+          @periodic_timer_blks.map(&:call)
+        end
       end
     end
 
