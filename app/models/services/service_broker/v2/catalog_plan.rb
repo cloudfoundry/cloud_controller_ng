@@ -1,7 +1,10 @@
 require 'models/services/service_broker/v2'
+require 'models/services/service_broker/v2/catalog_validation_helper'
 
 module VCAP::CloudController::ServiceBroker::V2
   class CatalogPlan
+    include CatalogValidationHelper
+
     attr_reader :broker_provided_id, :name, :description, :metadata, :catalog_service, :errors
 
     def initialize(catalog_service, attrs)
@@ -32,21 +35,6 @@ module VCAP::CloudController::ServiceBroker::V2
       validate_string!(:name, name, required: true)
       validate_string!(:description, description, required: true)
       validate_hash!(:metadata, metadata) if metadata
-    end
-
-    def validate_string!(name, input, opts={})
-      if !input.is_a?(String) && !input.nil?
-        @errors << "#{human_readable_attr_name(name)} should be a string, but had value #{input.inspect}"
-        return
-      end
-
-      if opts[:required] && (input.nil? || input.empty?)
-        @errors << "#{human_readable_attr_name(name)} must be non-empty and a string"
-      end
-    end
-
-    def validate_hash!(name, input)
-      @errors << "#{human_readable_attr_name(name)} should be a hash, but had value #{input.inspect}" unless input.is_a? Hash
     end
 
     def human_readable_attr_name(name)

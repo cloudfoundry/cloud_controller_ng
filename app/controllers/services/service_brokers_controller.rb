@@ -76,7 +76,7 @@ module VCAP::CloudController
       elsif e.errors.on(:broker_url) && e.errors.on(:broker_url).include?(:unique)
         Errors::ServiceBrokerUrlTaken.new(e.model.broker_url)
       else
-        Errors::ServiceBrokerInvalid.new(e.errors.full_messages)
+        Errors::ServiceBrokerCatalogInvalid.new(e.errors.full_messages)
       end
     end
 

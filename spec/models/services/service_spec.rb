@@ -4,6 +4,9 @@ module VCAP::CloudController
   describe Service, type: :model do
     it_behaves_like "a CloudController model", {
       :required_attributes  => [:label, :description, :bindable],
+      :required_attribute_error_message => {
+        :label => 'name is required'
+      },
       :unique_attributes    => [ [:label, :provider] ],
       :stripped_string_attributes => [:label, :provider],
       :one_to_zero_or_more   => {

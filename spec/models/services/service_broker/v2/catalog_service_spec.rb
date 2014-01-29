@@ -162,6 +162,14 @@ module VCAP::CloudController::ServiceBroker::V2
         expect(service.errors).to include 'each plan ID must be unique'
       end
 
+      it 'validates that the plan names are all unique' do
+        attrs = build_valid_service_attrs(plans: [build_valid_plan_attrs(name: 'same-name'), build_valid_plan_attrs(name: 'same-name')])
+        service = CatalogService.new(double('broker'), attrs)
+        service.valid?
+
+        expect(service.errors).to include 'each plan name must be unique within the same service'
+      end
+
       describe '#valid?' do
         it 'is false if service has errors' do
           attrs = build_valid_service_attrs(metadata: ['list', 'of', 'strings'])

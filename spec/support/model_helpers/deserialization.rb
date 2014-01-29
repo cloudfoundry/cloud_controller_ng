@@ -57,12 +57,17 @@ module ModelHelpers
         end
 
         it "should fail due to Sequel validations" do
+          expected_message = without_attr
+          if opts[:required_attribute_error_message] && opts[:required_attribute_error_message].has_key?(without_attr)
+            expected_message = opts[:required_attribute_error_message][without_attr]
+          end
+
           # keep this out of the lambda to make sure we are testing the
           # right exception
           data = json_data
           expect {
             obj = described_class.create_from_json(data)
-          }.to raise_error Sequel::ValidationFailed, /#{without_attr}/
+          }.to raise_error Sequel::ValidationFailed, /#{expected_message}/
         end
       end
     end

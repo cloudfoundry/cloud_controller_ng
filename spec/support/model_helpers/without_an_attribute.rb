@@ -9,11 +9,16 @@ module ModelHelpers
         end
 
         it "should fail due to Sequel validations" do
+          expected_message = without_attr
+          if opts[:required_attribute_error_message] && opts[:required_attribute_error_message].has_key?(without_attr)
+            expected_message = opts[:required_attribute_error_message][without_attr]
+          end
+
           expect {
             described_class.create do |instance|
               instance.set_all(filtered_opts)
             end
-          }.to raise_error Sequel::ValidationFailed, /#{without_attr}/
+          }.to raise_error Sequel::ValidationFailed, /#{expected_message}/
         end
 
         unless opts[:db_required_attributes]

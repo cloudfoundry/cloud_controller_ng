@@ -1,7 +1,10 @@
 require 'models/services/service_broker/v2'
+require 'models/services/service_broker/v2/catalog_validation_helper'
 
 module VCAP::CloudController::ServiceBroker::V2
   class CatalogService
+    include CatalogValidationHelper
+
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
       :description, :bindable, :tags, :errors, :plans, :requires
 
@@ -26,6 +29,7 @@ module VCAP::CloudController::ServiceBroker::V2
       validate_service
       validate_at_least_one_plan_present!
       validate_all_plan_ids_are_unique!
+      validate_all_plan_names_are_unique!
       all_plans_valid = plans.map(&:valid?).all?
       @valid = !@errors.any? && all_plans_valid
     end
@@ -66,54 +70,6 @@ module VCAP::CloudController::ServiceBroker::V2
       end
     end
 
-    def validate_string!(name, input, opts={})
-      if !input.is_a?(String) && !input.nil?
-        @errors << "#{human_readable_attr_name(name)} should be a string, but had value #{input.inspect}"
-        return
-      end
-
-      if opts[:required] && (input.nil? || input.empty?)
-        @errors << "#{human_readable_attr_name(name)} must be non-empty and a string"
-      end
-    end
-
-    def validate_bool!(name, input, opts={})
-      if !is_a_bool?(input) && !input.nil?
-        @errors << "#{human_readable_attr_name(name)} should be a boolean, but had value #{input.inspect}"
-        return
-      end
-
-      if opts[:required] && input.nil?
-        @errors << "#{human_readable_attr_name(name)} must be present and a boolean"
-      end
-    end
-
-    def validate_array_of_strings!(name, input)
-      unless input.is_a? Array
-        @errors << "#{human_readable_attr_name(name)} should be an array of strings, but had value #{input.inspect}"
-        return
-      end
-
-      input.each do |value|
-        @errors << "#{human_readable_attr_name(name)} should be an array of strings, but had value #{input.inspect}" unless value.is_a? String
-      end
-    end
-
-    def validate_hash!(name, input)
-      @errors << "#{human_readable_attr_name(name)} should be a hash, but had value #{input.inspect}" unless input.is_a? Hash
-    end
-
-    def validate_array_of_hashes!(name, input)
-      unless input.is_a? Array
-        @errors << "#{human_readable_attr_name(name)} should be an array of hashes, but had value #{input.inspect}"
-        return
-      end
-
-      input.each do |value|
-        @errors << "#{human_readable_attr_name(name)} should be an array of hashes, but had value #{input.inspect}" unless value.is_a? Hash
-      end
-    end
-
     def validate_at_least_one_plan_present!
       @errors << 'each service must have at least one plan' if plans.empty?
     end
@@ -122,8 +78,8 @@ module VCAP::CloudController::ServiceBroker::V2
       @errors << 'each plan ID must be unique' if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
     end
 
-    def is_a_bool?(value)
-      [true, false].include?(value)
+    def validate_all_plan_names_are_unique!
+      @errors << 'each plan name must be unique within the same service' if plans.uniq { |plan| plan.name }.count < plans.count
     end
 
     def human_readable_attr_name(name)

@@ -122,47 +122,21 @@ module VCAP::CloudController
         end
 
         context 'when there are other errors on the registration' do
-          before { errors.stub(:full_messages).and_return('A bunch of stuff was wrong') }
-
-          it 'returns an error' do
-            post '/v2/service_brokers', body, headers
-
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270001
-            decoded_response.fetch('description').should == 'Service broker is invalid: A bunch of stuff was wrong'
-          end
-        end
-
-        context 'when the catalog has a service without any plans' do
+          let(:error_message) { 'A bunch of stuff was wrong' }
           before do
-            broker.stub(:save).and_raise(Errors::ServiceBrokerInvalid.new('each service must have at least one plan'))
-            errors.stub(:on).with(:services).and_return(['each service must have at least one plan'])
+            errors.stub(:full_messages).and_return([error_message])
+            registration.stub(:save).and_raise(Sequel::ValidationFailed.new(errors))
           end
 
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270001
-            decoded_response.fetch('description').should == 'Service broker is invalid: each service must have at least one plan'
+            last_response.status.should == 502
+            decoded_response.fetch('code').should == 270012
+            decoded_response.fetch('description').should == 'Service broker catalog is invalid: A bunch of stuff was wrong'
           end
         end
-
-        context 'when the catalog has plans with non-unique names' do
-          before do
-            broker.stub(:save).and_raise(Errors::ServiceBrokerInvalid.new('Plans within a service must have unique names'))
-            errors.stub(:full_messages).and_return(['Plans within a service must have unique names'])
-          end
-
-          it 'returns an error' do
-            post '/v2/service_brokers', body, headers
-
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270001
-            decoded_response.fetch('description').should == 'Service broker is invalid: Plans within a service must have unique names'
-          end
-        end
-      end
+     end
 
       describe 'authentication' do
         it 'returns a forbidden status for non-admin users' do
