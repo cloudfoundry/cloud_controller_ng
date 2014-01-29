@@ -26,8 +26,8 @@ module VCAP::CloudController
           :cutoff_age_in_days => Fixnum
         },
         :default_app_memory => Fixnum,
-        :maximum_app_disk => Fixnum,
         :maximum_health_check_timeout => Fixnum,
+        optional(:maximum_app_disk) => Fixnum,
 
         optional(:allow_debug) => bool,
 
@@ -201,6 +201,7 @@ module VCAP::CloudController
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
         config[:directories] ||= {}
+        config[:maximum_app_disk] ||= 2048
         config
       end
     end

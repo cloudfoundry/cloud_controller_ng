@@ -10,14 +10,26 @@ module VCAP::CloudController
           Config.from_file("nonexistent.yml")
         }.to raise_error(Errno::ENOENT, /No such file or directory - nonexistent.yml/)
       end
+    end
 
-      it "adds default stack file path" do
+    describe "default" do
+      it "sets default stacks_file" do
         config = Config.from_file(File.join(fixture_path, "config/minimal_config.yml"))
-        config[:stacks_file].should == File.join(Config.config_dir, "stacks.yml")
+        expect(config[:stacks_file]).to eq(File.join(Config.config_dir, "stacks.yml"))
+      end
+
+      it "sets default maximum_app_disk" do
+        config = Config.from_file(File.join(fixture_path, "config/minimal_config.yml"))
+        expect(config[:maximum_app_disk]).to eq(2048)
+      end
+
+      it "sets default directories" do
+        config = Config.from_file(File.join(fixture_path, "config/minimal_config.yml"))
+        expect(config[:directories]).to eq({})
       end
     end
 
-    describe ".configure" do
+    describe ".configure_components" do
       before do
         @test_config = {
           packages: {},
