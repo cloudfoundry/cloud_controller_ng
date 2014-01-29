@@ -80,7 +80,6 @@ module VCAP::CloudController::RestController
       end
     end
 
-
     def self.serialize_relationships(relationships, controller, depth, obj, opts, parents, inline_relations_depth, max_number_of_associated_objects_to_inline= nil)
       response = {}
       (relationships || {}).each do |association_name, association|
@@ -98,6 +97,7 @@ module VCAP::CloudController::RestController
           controller, associated_controller, obj, associated_model_instances, association)
 
         response["#{association_name}_url"] = associated_url if associated_url
+        next if association.link_only?
 
         if depth < inline_relations_depth && !parents.include?(associated_controller)
           if association.is_a?(ControllerDSL::ToOneAttribute)

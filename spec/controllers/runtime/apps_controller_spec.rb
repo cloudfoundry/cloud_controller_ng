@@ -767,5 +767,21 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "events associations (via AppEvents)" do
+      it "does not return events with inline-relations-depth=0" do
+        app = App.make
+        get "/v2/apps/#{app.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+        expect(entity).to have_key("events_url")
+        expect(entity).to_not have_key("events")
+      end
+
+      it "does not return events with inline-relations-depth=1 since app_events dataset is relatively expensive to query" do
+        app = App.make
+        get "/v2/apps/#{app.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+        expect(entity).to have_key("events_url")
+        expect(entity).to_not have_key("events")
+      end
+    end
   end
 end

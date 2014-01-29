@@ -204,6 +204,22 @@ module VCAP::CloudController
       end
     end
 
+    describe "app_events associations" do
+      it "does not return app_events with inline-relations-depth=0" do
+        org = Organization.make
+        get "/v2/organizations/#{org.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+        expect(entity).to have_key("app_events_url")
+        expect(entity).to_not have_key("app_events")
+      end
+
+      it "does not return app_events with inline-relations-depth=1 since app_events dataset is relatively expensive to query" do
+        org = Organization.make
+        get "/v2/organizations/#{org.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+        expect(entity).to have_key("app_events_url")
+        expect(entity).to_not have_key("app_events")
+      end
+    end
+
     describe "Deprecated endpoints" do
       let!(:domain) { SharedDomain.make }
       describe "DELETE /v2/organizations/:guid/domains/:shared_domain_guid" do

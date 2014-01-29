@@ -9,8 +9,8 @@ module VCAP::CloudController
       to_many    :apps
       to_many    :domains
       to_many    :service_instances
-      to_many    :app_events
-      to_many    :events
+      to_many    :app_events,        :link_only => true
+      to_many    :events,            :link_only => true
     end
 
     query_parameters :name, :organization_guid, :developer_guid, :app_guid
