@@ -7,7 +7,7 @@ module VCAP::CloudController
       VCAP::CloudController::Varz.bump_cc_job_queue_length
       VCAP::CloudController::Varz.record_thread_info
 
-      EM.add_periodic_timer(VCAP::CloudController::Config.config[:varz_update_user_count_period_in_seconds] || 30) do
+      EM.add_periodic_timer(VCAP::CloudController::Config.config[:varz_update_user_count_period_in_seconds] || 600) do
         VCAP::CloudController::Varz.bump_user_count
       end
 
