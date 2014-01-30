@@ -7,10 +7,10 @@ module VCAP::CloudController
       EM.add_periodic_timer(config[:varz_update_user_count_period_in_seconds] || 600) { record_user_count }
 
       update_job_queue_length
-      EM.add_periodic_timer(config[:varz_update_cc_job_queue_length_in_seconds] || 30) { update_job_queue_length }
+      EM.add_periodic_timer(config[:varz_update_job_queue_length_in_seconds] || 30) { update_job_queue_length }
 
       update_thread_info
-      EM.add_periodic_timer(config[:varz_update_cc_record_thread_info] || 30) { update_thread_info }
+      EM.add_periodic_timer(config[:varz_update_thread_info_in_seconds] || 30) { update_thread_info }
     end
 
     def self.record_user_count
