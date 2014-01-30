@@ -125,7 +125,5 @@ hm9000_noop: true
 varz_port: 7800
 varz_user: varz
 varz_password: password
-varz_update_user_count_period_in_seconds: 0.5
-varz_update_cc_job_queue_length_in_seconds: 0.5
 
 maximum_health_check_timeout: 180
