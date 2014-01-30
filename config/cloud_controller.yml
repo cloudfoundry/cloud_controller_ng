@@ -32,7 +32,7 @@ audit_events:
   cutoff_age_in_days: 31
 
 default_app_memory: 1024 #mb
-maximum_app_disk: 2048
+maximum_app_disk_in_mb: 2048
 
 info:
   name: "vcap"

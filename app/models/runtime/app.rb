@@ -104,7 +104,7 @@ module VCAP::CloudController
 
     def validate_disk_quota
       return unless disk_quota
-      max_app_disk = Config.config[:maximum_app_disk]
+      max_app_disk = Config.config[:maximum_app_disk_in_mb]
       if disk_quota > max_app_disk
         errors.add(:disk_quota, "too much disk requested (must be less than #{max_app_disk})")
       end
