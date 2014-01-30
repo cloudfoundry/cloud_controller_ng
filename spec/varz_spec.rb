@@ -36,10 +36,13 @@ module VCAP::CloudController
 
       context 'when EventMachine periodic_timer tasks are run' do
         before do
-          @periodic_timer_blks = []
+          @periodic_timers = []
 
-          allow(EventMachine).to receive(:add_periodic_timer) do |&blk|
-            @periodic_timer_blks << blk
+          allow(EventMachine).to receive(:add_periodic_timer) do |interval, &block|
+            @periodic_timers << {
+              interval: interval,
+              block: block
+            }
           end
 
           Varz.setup_updates
@@ -47,17 +50,23 @@ module VCAP::CloudController
 
         it 'bumps the number of users and sets periodic timer' do
           expect(VCAP::CloudController::Varz).to receive(:record_user_count).once
-          @periodic_timer_blks.map(&:call)
+          expect(@periodic_timers[0][:interval]).to eq(600)
+
+          @periodic_timers[0][:block].call
         end
 
         it 'bumps the length of cc job queues and sets periodic timer' do
           expect(VCAP::CloudController::Varz).to receive(:update_job_queue_length).once
-          @periodic_timer_blks.map(&:call)
+          expect(@periodic_timers[1][:interval]).to eq(30)
+
+          @periodic_timers[1][:block].call
         end
 
         it 'updates thread count and event machine queues' do
           expect(VCAP::CloudController::Varz).to receive(:update_thread_info).once
-          @periodic_timer_blks.map(&:call)
+          expect(@periodic_timers[2][:interval]).to eq(30)
+
+          @periodic_timers[2][:block].call
         end
       end
     end
