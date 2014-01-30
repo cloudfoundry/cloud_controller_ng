@@ -1,31 +1,9 @@
 require 'spec_helper'
 
 describe 'Cloud Controller', :type => :integration do
-  let(:auth_headers) do
-    {
-      'Authorization' => "bearer #{admin_token}",
-      'Accept' => 'application/json',
-      'Content-Type' => 'application/json'
-    }
-  end
-
-  let(:varz_headers) do
-    {
-      'Authorization' => "Basic #{Base64.encode64('varz:password')}"
-    }
-  end
-
-  let(:user_guid) { SecureRandom.uuid }
-
-  let(:user_params) do
-    {
-      'guid' => user_guid
-    }
-  end
-
   before(:all) do
     start_nats
-    start_cc(config: 'spec/fixtures/config/varz_config.yml')
+    start_cc
   end
 
   after(:all) do
@@ -34,6 +12,10 @@ describe 'Cloud Controller', :type => :integration do
   end
 
   it 'responds to /varz with the expected keys' do
+    varz_headers = {
+      'Authorization' => "Basic #{Base64.encode64('varz:password')}"
+    }
+
     make_get_request('/varz', varz_headers, 7800).tap do |response|
       response_hash = JSON.parse(response.body)
       expect(response_hash).to have_key('vcap_sinatra')
