@@ -71,15 +71,15 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def validate_at_least_one_plan_present!
-      @errors << 'each service must have at least one plan' if plans.empty?
+      @errors << 'at least one plan is required' if plans.empty?
     end
 
     def validate_all_plan_ids_are_unique!
-      @errors << 'each plan ID must be unique' if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
+      @errors << 'plan id must be unique' if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
     end
 
     def validate_all_plan_names_are_unique!
-      @errors << 'each plan name must be unique within the same service' if plans.uniq { |plan| plan.name }.count < plans.count
+      @errors << 'plan names must be unique within a service' if plans.uniq { |plan| plan.name }.count < plans.count
     end
 
     def human_readable_attr_name(name)

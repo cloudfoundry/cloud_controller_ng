@@ -33,7 +33,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service id should be a string, but had value 123'
+        expect(service.errors).to include 'service id must be a string, but has value 123'
       end
 
       it 'validates that @broker_provided_id is present' do
@@ -42,7 +42,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service id must be non-empty and a string'
+        expect(service.errors).to include 'service id is required'
       end
 
       it 'validates that @name is a string' do
@@ -50,7 +50,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service name should be a string, but had value 123'
+        expect(service.errors).to include 'service name must be a string, but has value 123'
       end
 
       it 'validates that @name is present' do
@@ -59,7 +59,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service name must be non-empty and a string'
+        expect(service.errors).to include 'service name is required'
       end
 
       it 'validates that @description is a string' do
@@ -67,7 +67,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service description should be a string, but had value 123'
+        expect(service.errors).to include 'service description must be a string, but has value 123'
       end
 
       it 'validates that @description is present' do
@@ -76,7 +76,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service description must be non-empty and a string'
+        expect(service.errors).to include 'service description is required'
       end
 
       it 'validates that @bindable is a boolean' do
@@ -84,7 +84,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service "bindable" field should be a boolean, but had value "true"'
+        expect(service.errors).to include 'service "bindable" field must be a boolean, but has value "true"'
       end
 
       it 'validates that @bindable is present' do
@@ -93,7 +93,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service "bindable" field must be present and a boolean'
+        expect(service.errors).to include 'service "bindable" field is required'
       end
 
       it 'validates that @tags is an array of strings' do
@@ -101,13 +101,13 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service tags should be an array of strings, but had value "a string"'
+        expect(service.errors).to include 'service tags must be an array of strings, but has value "a string"'
 
         attrs = build_valid_service_attrs(tags: [123])
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service tags should be an array of strings, but had value [123]'
+        expect(service.errors).to include 'service tags must be an array of strings, but has value [123]'
       end
 
       it 'validates that @requires is an array of strings' do
@@ -115,13 +115,13 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service "requires" field should be an array of strings, but had value "a string"'
+        expect(service.errors).to include 'service "requires" field must be an array of strings, but has value "a string"'
 
         attrs = build_valid_service_attrs(requires: [123])
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service "requires" field should be an array of strings, but had value [123]'
+        expect(service.errors).to include 'service "requires" field must be an array of strings, but has value [123]'
       end
 
       it 'validates that @metadata is a hash' do
@@ -129,7 +129,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service metadata should be a hash, but had value ["list", "of", "strings"]'
+        expect(service.errors).to include 'service metadata must be a hash, but has value ["list", "of", "strings"]'
       end
 
       it 'validates that the plans list is an array of hashes' do
@@ -137,13 +137,13 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service plans list should be an array of hashes, but had value "invalid"'
+        expect(service.errors).to include 'service plans list must be an array of hashes, but has value "invalid"'
 
         attrs = build_valid_service_attrs(plans: ["list", "of", "strings"])
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'service plans list should be an array of hashes, but had value ["list", "of", "strings"]'
+        expect(service.errors).to include 'service plans list must be an array of hashes, but has value ["list", "of", "strings"]'
       end
 
       it 'validates that the plans list is not empty' do
@@ -151,7 +151,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'each service must have at least one plan'
+        expect(service.errors).to include 'at least one plan is required'
       end
 
       it 'validates that the plan ids are all unique' do
@@ -159,7 +159,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'each plan ID must be unique'
+        expect(service.errors).to include 'plan id must be unique'
       end
 
       it 'validates that the plan names are all unique' do
@@ -167,7 +167,7 @@ module VCAP::CloudController::ServiceBroker::V2
         service = CatalogService.new(double('broker'), attrs)
         service.valid?
 
-        expect(service.errors).to include 'each plan name must be unique within the same service'
+        expect(service.errors).to include 'plan names must be unique within a service'
       end
 
       describe '#valid?' do

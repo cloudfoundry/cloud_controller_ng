@@ -27,7 +27,7 @@ module VCAP::CloudController
       validates_url      :url,                message: 'must be a valid url'
       validates_url      :info_url,           message: 'must be a valid url'
       validates_unique   [:label, :provider], message: 'is taken'
-      validates_unique   :unique_id,          message: Sequel.lit("service id '#{unique_id}' is taken")
+      validates_unique   :unique_id,          message: Sequel.lit('service id must be unique')
     end
 
     serialize_attributes :json, :tags, :requires

@@ -28,7 +28,7 @@ module VCAP::CloudController
 
         it 'raises an error on save' do
           expect { service.save }.
-            to raise_error(Sequel::ValidationFailed, "service id '#{service.unique_id}' is taken")
+            to raise_error(Sequel::ValidationFailed, 'service id must be unique')
         end
       end
     end

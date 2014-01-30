@@ -292,11 +292,6 @@ module VCAP::CloudController::ServiceBroker::V2
         specify '#valid? returns false and #error_text includes all error messages' do
           catalog = Catalog.new(broker, catalog_hash)
           expect(catalog.valid?).to eq false
-
-          expect(catalog.error_text).to match /service id should be a string, but had value 123/
-          expect(catalog.error_text).to match /plan name should be a string, but had value 123/
-          expect(catalog.error_text).to match /each plan ID must be unique/
-          expect(catalog.error_text).to match /each service must have at least one plan/
         end
       end
     end
@@ -323,13 +318,13 @@ module VCAP::CloudController::ServiceBroker::V2
 <<-HEREDOC
 
 Service service-2
-  service id should be a string, but had value 123
+  service id must be a string, but has value 123
 Service service-3
-  each plan ID must be unique
+  plan id must be unique
   Plan 123
-    plan name should be a string, but had value 123
+    plan name must be a string, but has value 123
 Service service-4
-  each service must have at least one plan
+  at least one plan is required
 HEREDOC
         )
       end
