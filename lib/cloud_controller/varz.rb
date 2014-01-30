@@ -21,18 +21,21 @@ module VCAP::CloudController
     end
 
     def self.bump_user_count
+      user_count = User.count
       ::VCAP::Component.varz.synchronize do
-        ::VCAP::Component.varz[:cc_user_count] = User.count
+        ::VCAP::Component.varz[:cc_user_count] = user_count
       end
     end
 
     def self.bump_cc_job_queue_length
+      pending_job_count_by_queue = get_pending_job_count_by_queue
       ::VCAP::Component.varz.synchronize do
         ::VCAP::Component.varz[:cc_job_queue_length] = pending_job_count_by_queue
       end
     end
 
     def self.record_thread_info
+      thread_info = get_thread_info
       ::VCAP::Component.varz.synchronize do
         ::VCAP::Component.varz[:thread_info] = thread_info
       end
@@ -40,7 +43,7 @@ module VCAP::CloudController
 
     private
 
-    def self.pending_job_count_by_queue
+    def self.get_pending_job_count_by_queue
       data = db[:delayed_jobs].where(attempts: 0).group_and_count(:queue)
       data.reduce({}) do |hash, row|
         hash[row[:queue].to_sym] = row[:count]
@@ -48,7 +51,7 @@ module VCAP::CloudController
       end
     end
 
-    def self.thread_info
+    def self.get_thread_info
       threadqueue = EM.instance_variable_get(:@threadqueue)
       resultqueue = EM.instance_variable_get(:@resultqueue)
       {
