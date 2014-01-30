@@ -3,36 +3,36 @@ require 'vcap/component'
 module VCAP::CloudController
   class Varz
     def self.setup_updates
-      VCAP::CloudController::Varz.bump_user_count
-      VCAP::CloudController::Varz.bump_cc_job_queue_length
-      VCAP::CloudController::Varz.record_thread_info
+      VCAP::CloudController::Varz.record_user_count
+      VCAP::CloudController::Varz.update_job_queue_length
+      VCAP::CloudController::Varz.update_thread_info
 
       EM.add_periodic_timer(VCAP::CloudController::Config.config[:varz_update_user_count_period_in_seconds] || 600) do
-        VCAP::CloudController::Varz.bump_user_count
+        VCAP::CloudController::Varz.record_user_count
       end
 
       EM.add_periodic_timer(VCAP::CloudController::Config.config[:varz_update_cc_job_queue_length_in_seconds] || 30) do
-        VCAP::CloudController::Varz.bump_cc_job_queue_length
+        VCAP::CloudController::Varz.update_job_queue_length
       end
 
       EM.add_periodic_timer(VCAP::CloudController::Config.config[:varz_update_cc_record_thread_info] || 30) do
-        VCAP::CloudController::Varz.record_thread_info
+        VCAP::CloudController::Varz.update_thread_info
       end
     end
 
-    def self.bump_user_count
+    def self.record_user_count
       user_count = User.count
 
       ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_user_count] = user_count }
     end
 
-    def self.bump_cc_job_queue_length
+    def self.update_job_queue_length
       pending_job_count_by_queue = get_pending_job_count_by_queue
 
       ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_job_queue_length] = pending_job_count_by_queue }
     end
 
-    def self.record_thread_info
+    def self.update_thread_info
       thread_info = get_thread_info
 
       ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:thread_info] = thread_info }
