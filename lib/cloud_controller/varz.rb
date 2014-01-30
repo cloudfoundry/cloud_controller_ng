@@ -3,20 +3,20 @@ require 'vcap/component'
 module VCAP::CloudController
   class Varz
     def self.setup_updates
-      VCAP::CloudController::Varz.record_user_count
-      VCAP::CloudController::Varz.update_job_queue_length
-      VCAP::CloudController::Varz.update_thread_info
+      record_user_count
+      update_job_queue_length
+      update_thread_info
 
-      EM.add_periodic_timer(VCAP::CloudController::Config.config[:varz_update_user_count_period_in_seconds] || 600) do
-        VCAP::CloudController::Varz.record_user_count
+      EM.add_periodic_timer(config[:varz_update_user_count_period_in_seconds] || 600) do
+        record_user_count
       end
 
-      EM.add_periodic_timer(VCAP::CloudController::Config.config[:varz_update_cc_job_queue_length_in_seconds] || 30) do
-        VCAP::CloudController::Varz.update_job_queue_length
+      EM.add_periodic_timer(config[:varz_update_cc_job_queue_length_in_seconds] || 30) do
+        update_job_queue_length
       end
 
-      EM.add_periodic_timer(VCAP::CloudController::Config.config[:varz_update_cc_record_thread_info] || 30) do
-        VCAP::CloudController::Varz.update_thread_info
+      EM.add_periodic_timer(config[:varz_update_cc_record_thread_info] || 30) do
+        update_thread_info
       end
     end
 
@@ -39,6 +39,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def self.config
+      VCAP::CloudController::Config.config
+    end
 
     def self.get_pending_job_count_by_queue
       jobs_by_queue_with_count = Delayed::Job.where(attempts: 0).group_and_count(:queue)
