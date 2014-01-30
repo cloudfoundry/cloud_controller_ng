@@ -22,23 +22,20 @@ module VCAP::CloudController
 
     def self.bump_user_count
       user_count = User.count
-      ::VCAP::Component.varz.synchronize do
-        ::VCAP::Component.varz[:cc_user_count] = user_count
-      end
+
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_user_count] = user_count }
     end
 
     def self.bump_cc_job_queue_length
       pending_job_count_by_queue = get_pending_job_count_by_queue
-      ::VCAP::Component.varz.synchronize do
-        ::VCAP::Component.varz[:cc_job_queue_length] = pending_job_count_by_queue
-      end
+
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_job_queue_length] = pending_job_count_by_queue }
     end
 
     def self.record_thread_info
       thread_info = get_thread_info
-      ::VCAP::Component.varz.synchronize do
-        ::VCAP::Component.varz[:thread_info] = thread_info
-      end
+
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:thread_info] = thread_info }
     end
 
     private
