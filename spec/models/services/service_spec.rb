@@ -31,6 +31,34 @@ module VCAP::CloudController
             to raise_error(Sequel::ValidationFailed, 'service id must be unique')
         end
       end
+
+      context 'when the provider is nil' do
+        it 'maintains the uniqueness of the label key' do
+          existing_service = Service.make_unsaved(label: 'other', provider: '').save
+          expect {
+            Service.make_unsaved(label: existing_service.label, provider: '').save
+          }.to raise_error('service name must be unique')
+
+          other_service = Service.make_unsaved(label: existing_service.label + ' label', provider: '').save
+          expect {
+            other_service.update(label: existing_service.label)
+          }.to raise_error('service name must be unique')
+        end
+      end
+
+      context 'when the provider is present' do
+        it 'maintains the uniqueness of the compound key [label, provider]' do
+          expect {
+            Service.make_unsaved(label: 'blah', provider: 'blah').save
+            Service.make_unsaved(label: 'blah', provider: 'blah').save
+          }.to raise_error('label and provider is taken')
+        end
+      end
+    end
+
+    it 'ensures that blank provider values will be treated as nil' do
+      service = Service.make_unsaved(provider: '').save
+      expect(service.provider).to be_nil
     end
 
     describe "#destroy" do

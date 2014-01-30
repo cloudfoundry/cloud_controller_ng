@@ -26,8 +26,13 @@ module VCAP::CloudController
       validates_presence :bindable,           message: 'is required'
       validates_url      :url,                message: 'must be a valid url'
       validates_url      :info_url,           message: 'must be a valid url'
-      validates_unique   [:label, :provider], message: 'is taken'
       validates_unique   :unique_id,          message: Sequel.lit('service id must be unique')
+
+      if provider.blank?
+        validates_unique :label, message: Sequel.lit('service name must be unique')
+      else
+        validates_unique [:label, :provider], message: 'is taken'
+      end
     end
 
     serialize_attributes :json, :tags, :requires
@@ -45,6 +50,11 @@ module VCAP::CloudController
     def self.user_visibility_filter(current_user)
       plans_I_can_see = ServicePlan.user_visible(current_user)
       {id: plans_I_can_see.map(&:service_id).uniq}
+    end
+
+    def provider
+      provider = self[:provider]
+      provider.blank? ? nil : provider
     end
 
     def tags
