@@ -44,8 +44,9 @@ module VCAP::CloudController
     private
 
     def self.get_pending_job_count_by_queue
-      data = db[:delayed_jobs].where(attempts: 0).group_and_count(:queue)
-      data.reduce({}) do |hash, row|
+      jobs_by_queue_with_count = Delayed::Job.where(attempts: 0).group_and_count(:queue)
+
+      jobs_by_queue_with_count.reduce({}) do |hash, row|
         hash[row[:queue].to_sym] = row[:count]
         hash
       end
@@ -68,10 +69,6 @@ module VCAP::CloudController
           },
         },
       }
-    end
-
-    def self.db
-      Sequel.synchronize { Sequel::DATABASES.first }
     end
   end
 end
