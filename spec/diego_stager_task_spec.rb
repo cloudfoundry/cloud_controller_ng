@@ -49,10 +49,18 @@ module VCAP::CloudController
         perform_stage
       end
 
-      it 'publishes the staging.start message' do
+      it 'publishes the diego.staging.start message' do
         perform_stage
         expect(message_bus.published_messages.first).
             to include(subject: "diego.staging.start", message: diego_stager_task.staging_request)
+      end
+
+      it 'the diego.staging.start message includes a stack' do
+        perform_stage
+        expect(message_bus.published_messages.first[:message]).
+            to include(
+                   stack: app.stack.name
+               )
       end
 
       context 'when staging finishes' do

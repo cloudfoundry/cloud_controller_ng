@@ -78,6 +78,7 @@ module VCAP::CloudController
       { :app_id                       => @app.guid,
         :task_id                      => task_id,
         :properties                   => staging_task_properties(@app),
+        :stack                        => @app.stack.name,
         # All url generation should go to blobstore_url_generator
         :download_uri                 => @blobstore_url_generator.app_package_download_url(@app),
         :upload_uri                   => @blobstore_url_generator.droplet_upload_url(@app),
