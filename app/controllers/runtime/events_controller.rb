@@ -1,9 +1,5 @@
 module VCAP::CloudController
   class EventsController < RestController::ModelController
-    define_attributes do
-      to_one :space
-    end
-
     query_parameters :timestamp, :type, :actee
 
     def initialize(*args)

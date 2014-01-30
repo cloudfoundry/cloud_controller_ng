@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         it "records event correctly" do
           event = space_event_repository.record_space_delete_request(space, user, recursive)
-          expect(event.space).to be_a(DeletedSpace)
+          expect(event.space).to be_nil
           expect(event.type).to eq("audit.space.delete-request")
           expect(event.actee).to eq(space.guid)
           expect(event.actee_type).to eq("space")

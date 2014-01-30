@@ -161,7 +161,7 @@ module VCAP::CloudController
         expect { subject.destroy(savepoint: true) }.to change { user.reload.default_space }.from(space).to(nil)
       end
 
-      it "destroys all events" do
+      it "does not destroy any events related to the space" do
         event = Event.make(space: space)
 
         expect {
@@ -170,7 +170,9 @@ module VCAP::CloudController
           Event.where(id: [event.id]).count
         }
 
-        Event.find(id: event.id).space.should be_a(DeletedSpace)
+        event = Event.find(id: event.id)
+        expect(event).to be
+        expect(event.space).to be_nil
       end
     end
 

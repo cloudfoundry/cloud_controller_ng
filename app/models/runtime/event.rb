@@ -23,10 +23,6 @@ module VCAP::CloudController
       super || {}
     end
 
-    def space
-      super || DeletedSpace.new
-    end
-
     def before_save
       denormalize_space_and_org_guids
       super

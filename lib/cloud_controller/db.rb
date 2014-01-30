@@ -47,7 +47,6 @@ module VCAP::CloudController
       require "models/runtime/app_bits_package"
       require "models/runtime/app_usage_event"
       require "models/runtime/auto_detection_buildpack"
-      require "models/runtime/deleted_space"
       require "models/runtime/billing_event"
       require "models/runtime/organization_start_event"
       require "models/runtime/app_start_event"

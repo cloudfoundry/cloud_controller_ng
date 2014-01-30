@@ -67,8 +67,8 @@ module VCAP::CloudController
           expect(Event.find(:id => new_event.id)).to_not be_nil
         end
 
-        it "returns a NullObject for the associated space" do
-          expect(new_event.space).to_not be_nil
+        it "returns nil" do
+          expect(new_event.space).to be_nil
         end
 
         it "has a denormalized space guid" do
