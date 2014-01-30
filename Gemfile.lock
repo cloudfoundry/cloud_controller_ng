@@ -198,6 +198,7 @@ GEM
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
+    rack-timeout (0.0.4)
     rake (10.1.1)
     rb-fsevent (0.9.3)
     rb-inotify (0.9.3)
@@ -306,6 +307,7 @@ DEPENDENCIES
   pg
   pry
   rack-test
+  rack-timeout
   rake
   rfc822
   rspec
