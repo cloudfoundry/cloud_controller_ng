@@ -8,7 +8,6 @@ module VCAP::CloudController
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
       Rack::Builder.new do
         use Rack::CommonLogger
-        use Rack::Timeout
 
         if config[:development_mode]
           require 'new_relic/rack/developer_mode'

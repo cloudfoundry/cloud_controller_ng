@@ -9,7 +9,6 @@ module VCAP::CloudController
     describe "#build" do
       before do
         allow(Rack::CommonLogger).to receive(:new)
-        allow(Rack::Timeout).to receive(:new)
       end
 
       it "returns a Rack application" do
@@ -26,7 +25,6 @@ module VCAP::CloudController
       it "uses Rack::Timeout to interrupt requests that take more than configured" do
         builder.build(config).to_app
 
-        expect(Rack::Timeout).to have_received(:new)
         expect(Rack::Timeout.timeout).to eq(RackAppBuilder::TIMEOUT)
         expect(RackAppBuilder::TIMEOUT).to eq(5.minutes)
       end
