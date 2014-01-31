@@ -189,6 +189,29 @@ module VCAP::CloudController
           expect(space.domains).to match_array(domains)
         end
       end
+
+      context "adding domains" do
+        it "does not add the domain to the space if it is a shared domain" do
+          shared_domain = SharedDomain.make
+          expect { space.add_domain(shared_domain) }.not_to change { space.domains }
+        end
+
+        it "does nothing if the private domain already belongs to the space's org" do
+          org = Organization.make
+          private_domain = PrivateDomain.make(owning_organization: org)
+          space = Space.make(organization: org)
+          expect { space.add_domain(private_domain) }.not_to change { space.domains }
+        end
+
+        it "reports an error if the private domain belongs to another org" do
+          space_org = Organization.make
+          space = Space.make(organization: space_org)
+
+          domain_org = Organization.make
+          private_domain = PrivateDomain.make(owning_organization: domain_org)
+          expect { space.add_domain(private_domain) }.to raise_error(Space::UnauthorizedAccessToPrivateDomain)
+        end
+      end
     end
   end
 end
