@@ -180,7 +180,6 @@ GEM
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
-    rack-timeout (0.0.4)
     rake (10.1.1)
     rfc822 (0.1.4)
     rspec (2.14.1)
@@ -276,7 +275,6 @@ DEPENDENCIES
   pg
   pry
   rack-test
-  rack-timeout
   rake
   rfc822
   rspec

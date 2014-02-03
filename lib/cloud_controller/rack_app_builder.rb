@@ -1,9 +1,5 @@
-require "rack/timeout"
-
 module VCAP::CloudController
   class RackAppBuilder
-    TIMEOUT = ::Rack::Timeout.timeout = 5.minutes
-
     def build(config)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
       Rack::Builder.new do

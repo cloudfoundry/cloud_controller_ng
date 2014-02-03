@@ -322,7 +322,7 @@ module VCAP::CloudController
       it "has the same timeout as the rack application" do
         start_thin_server
 
-        expect(thin_server.timeout).to eq(RackAppBuilder::TIMEOUT)
+        expect(thin_server.timeout).to eq(5.minutes)
       end
 
       it "uses thin's experimental threaded mode intentionally" do
