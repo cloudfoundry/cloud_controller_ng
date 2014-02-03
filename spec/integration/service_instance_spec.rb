@@ -1,16 +1,8 @@
 require "spec_helper"
 
 describe "Service Instance Management", type: :integration do
-  def start_fake_service_broker
-    fake_service_broker_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'support', 'integration', 'fake_service_broker.rb'))
-    @fake_service_broker_pid = run_cmd("ruby #{fake_service_broker_path}")
-  end
-
-  def stop_fake_service_broker
-    Process.kill("KILL", @fake_service_broker_pid)
-  end
-
   before(:all) do
+    at_exit { stop_fake_service_broker }
     start_fake_service_broker
     start_nats
     start_cc
