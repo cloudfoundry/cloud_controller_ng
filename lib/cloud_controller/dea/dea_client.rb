@@ -43,7 +43,6 @@ module VCAP::CloudController
 
       attr_reader :config, :message_bus, :dea_pool, :stager_pool
 
-
       def configure(config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
         @config = config
         @message_bus = message_bus
