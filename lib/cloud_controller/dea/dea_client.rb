@@ -168,9 +168,7 @@ module VCAP::CloudController
           dea_publish_start(dea_id, message)
           dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
         else
-          message.delete(:services)
-          message.delete(:executableUri)
-          logger.error "dea-client.no-resources-available", message: message
+          logger.error "dea-client.no-resources-available", message: scrub_sensitive_fields(message)
         end
       end
 
@@ -372,6 +370,14 @@ module VCAP::CloudController
       def dea_request_find_droplet(args, opts = {})
         logger.debug "sending dea.find.droplet with args: '#{args}' and opts: '#{opts}'"
         message_bus.synchronous_request("dea.find.droplet", args, opts)
+      end
+
+      def scrub_sensitive_fields(message)
+        scrubbed_message = message.dup
+        scrubbed_message.delete(:services)
+        scrubbed_message.delete(:executableUri)
+        scrubbed_message.delete(:env)
+        scrubbed_message
       end
 
       def logger

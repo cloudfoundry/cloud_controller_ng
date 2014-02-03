@@ -145,6 +145,12 @@ module VCAP::CloudController
 
         DeaClient.start_instance_at_index(app, 1)
       end
+
+      it "should not log passwords" do
+        start_app_message = DeaClient.start_app_message(app)
+        scrubbed_message = DeaClient.send(:scrub_sensitive_fields, start_app_message)
+        scrubbed_message.should_not include(:services, :env, :executableUri)
+      end
     end
 
     describe "start" do
