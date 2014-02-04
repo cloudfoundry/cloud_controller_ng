@@ -28,9 +28,9 @@ module VCAP::CloudController
     attr_reader :message_bus
 
     def initialize(config, message_bus, app, blobstore_url_generator)
-      @config                  = config
-      @message_bus             = message_bus
-      @app                     = app
+      @config = config
+      @message_bus = message_bus
+      @app = app
       @blobstore_url_generator = blobstore_url_generator
     end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
       logger.info("staging.begin", :app_guid => @app.guid)
       subject = "diego.staging.start"
-      @message_bus.request(subject, staging_request, { timeout: staging_timeout }) do |bus_response, _|
+      @message_bus.request(subject, staging_request, {timeout: staging_timeout}) do |bus_response, _|
         logger.info("diego.staging.response", :app_guid => @app.guid, :response => bus_response)
 
         return unless this_task_is_current_task?
@@ -75,25 +75,35 @@ module VCAP::CloudController
     end
 
     def staging_request
-      { :app_id                       => @app.guid,
-        :task_id                      => task_id,
-        :properties                   => staging_task_properties(@app),
-        :stack                        => @app.stack.name,
-        # All url generation should go to blobstore_url_generator
-        :download_uri                 => @blobstore_url_generator.app_package_download_url(@app),
-        :upload_uri                   => @blobstore_url_generator.droplet_upload_url(@app),
-        :buildpack_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(@app),
-        :buildpack_cache_upload_uri   => @blobstore_url_generator.buildpack_cache_upload_url(@app),
-        :admin_buildpacks             => admin_buildpacks
+      {:app_id => app.guid,
+       :task_id => task_id,
+       :services => app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
+       :memoryMB => app.memory,
+       :diskMB => app.disk_quota,
+       :fileDescriptors => app.file_descriptors,
+       :environment => (app.environment_json || {}).map { |k, v| "#{k}=#{v}" },
+       :meta => app.metadata,
+       :buildpack_key => app.buildpack.key,
+       :stack => app.stack.name,
+       # All url generation should go to blobstore_url_generator
+       :download_uri => @blobstore_url_generator.app_package_download_url(app),
+       :upload_uri => @blobstore_url_generator.droplet_upload_url(app),
+       :buildpack_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(app),
+       :buildpack_cache_upload_uri => @blobstore_url_generator.buildpack_cache_upload_url(app),
+       :admin_buildpacks => admin_buildpacks
       }
     end
 
     private
 
-    def this_task_is_current_task?
-      @app.refresh
+    def app
+      @app
+    end
 
-      return @app.staging_task_id == task_id
+    def this_task_is_current_task?
+      app.refresh
+
+      return app.staging_task_id == task_id
     end
 
     def admin_buildpacks
@@ -106,24 +116,6 @@ module VCAP::CloudController
       {
           key: buildpack.key,
           url: @blobstore_url_generator.admin_buildpack_download_url(buildpack)
-      }
-    end
-
-    def staging_task_properties(app)
-      staging_task_base_properties(app).merge(app.buildpack.staging_message)
-    end
-
-    def staging_task_base_properties(app)
-      {
-          :services    => app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
-          :resources   => {
-              :memory => app.memory,
-              :disk   => app.disk_quota,
-              :fds    => app.file_descriptors
-          },
-
-          :environment => (app.environment_json || {}).map { |k, v| "#{k}=#{v}" },
-          :meta        => app.metadata
       }
     end
 

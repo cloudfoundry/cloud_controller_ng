@@ -12,6 +12,10 @@ module VCAP::CloudController
       {}
     end
 
+    def key
+      nil
+    end
+
     def eql?(another)
       another.nil? || another.is_a?(AutoDetectionBuildpack)
     end
