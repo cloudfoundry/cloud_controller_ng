@@ -87,6 +87,14 @@ module VCAP::CloudController
     active            { true }
   end
 
+  Service.blueprint(:v2) do
+    service_broker
+    description { Sham.description } # remove hack
+    provider    { '' }
+    url         { nil }
+    version     { nil }
+  end
+
   ServiceInstance.blueprint do
     name        { Sham.name }
     credentials { Sham.service_credentials }

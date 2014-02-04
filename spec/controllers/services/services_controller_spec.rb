@@ -108,13 +108,20 @@ module VCAP::CloudController
     end
 
     describe "get /v2/services" do
-      let(:user) {VCAP::CloudController::User.make  }
+      let(:user) { VCAP::CloudController::User.make }
       let(:headers) { headers_for(user) }
 
       before do
-        @active = 3.times.map { Service.make(:active => true, :long_description => Sham.long_description).
-          tap{|svc| ServicePlan.make(:service => svc) } }
-        @inactive = 2.times.map { Service.make(:active => false).tap{|svc| ServicePlan.make(:service => svc) } }
+        @active = 3.times.map do
+          Service.make(active: true, long_description: Sham.long_description).tap do |svc|
+            ServicePlan.make(service: svc)
+          end
+        end
+        @inactive = 2.times.map do
+          Service.make(active: false).tap do |svc|
+            ServicePlan.make(service: svc)
+          end
+        end
       end
 
       def decoded_guids
@@ -178,6 +185,52 @@ module VCAP::CloudController
           get "/v2/services?q=active:f", {}, headers
           last_response.should be_ok
           decoded_guids.should =~ @inactive.map(&:guid)
+        end
+      end
+
+      describe 'filtering by label' do
+        let(:my_service) { @active.fetch(0) }
+
+        before do
+          my_service.label = 'my-service'
+          my_service.save
+        end
+
+        it 'includes only matching services in the response' do
+          get '/v2/services?q=label:my-service', {}, headers
+          last_response.should be_ok
+          decoded_guids.should == [my_service.guid]
+        end
+      end
+
+      describe 'filtering by provider' do
+        context 'for a v1 service' do
+          let(:my_service) { @active.fetch(0) }
+
+          before do
+            my_service.provider = 'my-provider'
+            my_service.save
+          end
+
+          it 'includes only matching services in the response' do
+            get '/v2/services?q=provider:my-provider', {}, headers
+            last_response.should be_ok
+            decoded_guids.should == [my_service.guid]
+          end
+        end
+
+        context 'for a v2 service' do
+          let!(:my_service) do
+            Service.make(:v2).tap do |service|
+              ServicePlan.make(service: service)
+            end
+          end
+
+          it 'matches when provider is blank' do
+            get '/v2/services?q=provider:', {}, headers
+            last_response.should be_ok
+            decoded_guids.should == [my_service.guid]
+          end
         end
       end
     end
