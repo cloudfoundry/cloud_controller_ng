@@ -87,6 +87,9 @@ module VCAP::CloudController
     active            { true }
   end
 
+  Service.blueprint(:v1) do
+  end
+
   Service.blueprint(:v2) do
     service_broker
     description { Sham.description } # remove hack

@@ -107,7 +107,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "get /v2/services" do
+    describe 'GET /v2/services' do
       let(:user) { VCAP::CloudController::User.make }
       let(:headers) { headers_for(user) }
 
@@ -235,7 +235,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'POST', '/v2/services' do
+    describe 'POST /v2/services' do
       it 'creates a service' do
         unique_id = Sham.unique_id
         url = Sham.url
@@ -350,7 +350,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "PUT", "/v2/services/:guid" do
+    describe 'PUT /v2/services/:guid' do
       context "when updating the unique_id attribute" do
         let!(:service) { Service.make }
 
@@ -382,6 +382,33 @@ module VCAP::CloudController
       end
 
 
+    end
+
+    describe 'DELETE /v2/services/:guid' do
+      context 'when the purge parameter is "true"'
+      let!(:service) { Service.make(:v2) }
+      let!(:service_plan) { ServicePlan.make(service: service) }
+      let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+      before do
+        stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: {}, code: 200)
+      end
+
+      it 'deletes the service and its dependent models' do
+        delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+        expect(Service.first(guid: service.guid)).to be_nil
+        expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+        expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+      end
+
+      it 'does not contact the broker' do
+        delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+
+        expect(a_request(:delete, /#{service.service_broker.broker_url}.*/)).not_to have_been_made
+      end
     end
   end
 end

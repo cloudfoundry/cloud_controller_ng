@@ -1,3 +1,5 @@
+require 'models/services/service_brokers/null_client'
+
 module VCAP::CloudController
   class Service < Sequel::Model
     plugin :serialization
@@ -76,7 +78,9 @@ module VCAP::CloudController
     end
 
     def client
-      if v2?
+      if purging
+        ServiceBrokers::NullClient.new
+      elsif v2?
         service_broker.client
       else
         raise MissingServiceAuthToken, "Missing Service Auth Token for service: #{label}" if(service_auth_token.nil?)
@@ -92,6 +96,16 @@ module VCAP::CloudController
     # The "unique_id" should really be called broker_provided_id because it's the id assigned by the broker
     def broker_provided_id
       unique_id
+    end
+
+    def purge
+      db.transaction(savepoint: true) do
+        self.update(purging: true)
+        service_plans.each do |plan|
+          plan.service_instances_dataset.destroy
+        end
+        self.destroy
+      end
     end
   end
 end

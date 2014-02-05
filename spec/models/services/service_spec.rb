@@ -188,6 +188,107 @@ module VCAP::CloudController
       end
     end
 
+    describe '#purge' do
+      let!(:service_plan) { ServicePlan.make(service: service) }
+      let!(:service_plan_visibility) { ServicePlanVisibility.make(service_plan: service_plan) }
+      let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+      let!(:service_plan_2) { ServicePlan.make(service: service) }
+      let!(:service_plan_visibility_2) { ServicePlanVisibility.make(service_plan: service_plan_2) }
+      let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: service_plan_2) }
+      let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance_2) }
+
+      before do
+        stub_request(:delete, /.*/).to_return(body: '{}', status: 200)
+      end
+
+      context 'for v1 services' do
+        let!(:service) { Service.make(:v1) }
+
+        it 'destroys all models that depend on it' do
+          service.purge
+
+          expect(Service.find(guid: service.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan_2.guid)).to be_nil
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility.guid)).to be_nil
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility_2.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance_2.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding_2.guid)).to be_nil
+        end
+
+        it 'does not make any requests to the service broker' do
+          service.purge
+          http_client_stub = VCAP::CloudController::ServiceBroker::V1::HttpClient.new
+          expect(http_client_stub).not_to have_received(:unbind)
+          expect(http_client_stub).not_to have_received(:deprovision)
+        end
+
+        it 'marks apps for restaging that were bound to the deleted service' do
+          service_binding.app.update(package_state: 'STAGED')
+          expect { service.purge }.to change{ service_binding.app.reload.pending? }.to(true)
+        end
+      end
+
+      context 'for v2 services' do
+        let!(:service) { Service.make(:v2) }
+
+        it 'destroys all models that depend on it' do
+          service.purge
+
+          expect(Service.find(guid: service.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan_2.guid)).to be_nil
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility.guid)).to be_nil
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility_2.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance_2.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding_2.guid)).to be_nil
+        end
+
+        it 'does not make any requests to the service broker' do
+          service.purge
+          expect(a_request(:delete, /.*/)).not_to have_been_made
+        end
+
+        it 'marks apps for restaging that were bound to the deleted service' do
+          service_binding.app.update(package_state: 'STAGED')
+          expect { service.purge }.to change{ service_binding.app.reload.pending? }.to(true)
+        end
+      end
+
+      context 'when deleting one of the records fails' do
+        let(:service) { Service.make }
+
+        before do
+          allow_any_instance_of(VCAP::CloudController::ServicePlan).to receive(:destroy).and_raise('Boom')
+        end
+
+        it 'rolls back the transaction and does not destroy any records' do
+          service.purge rescue nil
+
+          expect(Service.find(guid: service.guid)).to be
+          expect(ServicePlan.first(guid: service_plan.guid)).to be
+          expect(ServicePlan.first(guid: service_plan_2.guid)).to be
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility.guid)).to be
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility_2.guid)).to be
+          expect(ServiceInstance.first(guid: service_instance.guid)).to be
+          expect(ServiceInstance.first(guid: service_instance_2.guid)).to be
+          expect(ServiceBinding.first(guid: service_binding.guid)).to be
+          expect(ServiceBinding.first(guid: service_binding_2.guid)).to be
+        end
+
+        it "does not leave the service in 'purging' state" do
+          service.purge rescue nil
+          expect(service.reload.purging).to be_false
+        end
+      end
+    end
+
     describe '.organization_visible' do
       it 'returns plans that are visible to the organization' do
         hidden_private_plan = ServicePlan.make(public: false)
@@ -208,6 +309,14 @@ module VCAP::CloudController
     end
 
     describe '#client' do
+      context 'when the purging field is true' do
+        let(:service) { Service.make(purging: true) }
+
+        it 'returns a null broker client' do
+          expect(service.client).to be_a(VCAP::CloudController::ServiceBrokers::NullClient)
+        end
+      end
+
       context 'for a v1 service' do
         let(:service) { Service.make(service_broker: nil) }
 

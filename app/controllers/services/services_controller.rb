@@ -43,10 +43,22 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      service = find_guid_and_validate_access(:delete, guid)
+      if purge?
+        service.purge
+        [HTTP::NO_CONTENT, nil]
+      else
+        do_delete(find_guid_and_validate_access(:delete, guid))
+      end
     end
 
     define_messages
     define_routes
+
+    private
+
+    def purge?
+      params['purge'] == 'true'
+    end
   end
 end
