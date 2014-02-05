@@ -256,5 +256,65 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "update user" do
+      let(:user_1) { User.make }
+      let(:user_2) { User.make }
+      let(:org) { Organization.make(:user_guids => [user_1.guid, user_2.guid], :manager_guids => [user_1.guid,user_2.guid], :auditor_guids => [user_1.guid, user_2.guid]) }
+      let(:space_1) { Space.make(:organization => org, :manager_guids => [user_1.guid, user_2.guid], :developer_guids => [user_1.guid, user_2.guid], :auditor_guids => [user_1.guid, user_2.guid]) }
+      let(:space_2) { Space.make(:organization => org, :manager_guids => [user_1.guid, user_2.guid], :developer_guids => [user_1.guid, user_2.guid], :auditor_guids => [user_1.guid, user_2.guid]) }
+
+      def update_org param
+        put "/v2/organizations/#{org.guid}", Yajl::Encoder.encode(param), json_headers(admin_headers)
+      end
+
+      def update_org_recursively param
+        put "/v2/organizations/#{org.guid}?recursive=true", Yajl::Encoder.encode(param), json_headers(admin_headers)
+      end
+
+      before :each do
+        org.add_space(space_1)
+        org.add_space(space_2)
+      end
+
+      def validate_spaces  users
+        %w[developer manager auditor].each do |user|
+          space_1.send("#{user}_guids").should == users
+          space_2.send("#{user}_guids").should == users
+        end
+      end
+
+      context "without recursive flag" do
+        it "should remove a single user from an organization but not the spaces" do
+          update_org("user_guids" => [user_1.guid])
+          org.refresh
+          org.user_guids.should == [user_1.guid]
+          validate_spaces([user_1.guid, user_2.guid])
+        end
+
+        it "should remove multiple users form an organization but not the spaces" do
+          update_org("user_guids" => [])
+          org.refresh
+          org.user_guids.should == []
+          validate_spaces([user_1.guid, user_2.guid])
+        end
+      end
+
+      context "with recursive flag" do
+        it "should remove a single user from the organization and each spaces" do
+          update_org_recursively("user_guids" => [user_1.guid])
+          org.refresh
+          org.user_guids.should == [user_1.guid]
+          validate_spaces([user_1.guid])
+        end
+
+        it "should remove multiple users from the organization and each spaces" do
+          update_org_recursively("user_guids" => [])
+          org.refresh
+          org.user_guids.should == []
+          validate_spaces([])
+        end
+      end
+    end
   end
 end
