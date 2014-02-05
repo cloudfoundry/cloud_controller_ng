@@ -320,6 +320,7 @@ module VCAP::CloudController
     end
 
     describe "#system_env_json" do
+      before { pending("This attribute should remain hidden for now. We have a story to re-do this logic later") }
       context "when there are no services" do
         it "contains an empty vcap_services" do
           app = App.make(:environment_json => {"jesse" => "awesome"})
