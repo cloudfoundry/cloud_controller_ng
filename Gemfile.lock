@@ -246,7 +246,7 @@ GEM
     webmock (1.16.1)
       addressable (>= 2.2.7)
       crack (>= 0.3.2)
-    yajl-ruby (1.1.0)
+    yajl-ruby (1.2.0)
 
 PLATFORMS
   ruby
