@@ -6,7 +6,9 @@ module VCAP::CloudController::ServiceBroker::V2
     include CatalogValidationHelper
 
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
-      :description, :bindable, :tags, :errors, :plans, :requires
+      :description, :bindable, :tags, :plans, :requires, :dashboard_client
+
+    attr_accessor :errors
 
     def initialize(service_broker, attrs)
       @service_broker     = service_broker
@@ -18,10 +20,11 @@ module VCAP::CloudController::ServiceBroker::V2
       @tags               = attrs.fetch('tags', [])
       @requires           = attrs.fetch('requires', [])
       @plans_data         = attrs['plans']
+      @dashboard_client   = attrs['dashboard_client']
       @errors             = []
       @plans              = []
 
-      build_plans()
+      build_plans
     end
 
     def valid?
@@ -30,6 +33,7 @@ module VCAP::CloudController::ServiceBroker::V2
       validate_at_least_one_plan_present!
       validate_all_plan_ids_are_unique!
       validate_all_plan_names_are_unique!
+      validate_dashboard_client!
       all_plans_valid = plans.map(&:valid?).all?
       @valid = !@errors.any? && all_plans_valid
     end
@@ -82,27 +86,27 @@ module VCAP::CloudController::ServiceBroker::V2
       @errors << 'plan names must be unique within a service' if plans.uniq { |plan| plan.name }.count < plans.count
     end
 
+    def validate_dashboard_client!
+      return unless dashboard_client
+      validate_string!(:dashboard_client_id, dashboard_client['id'], required: true)
+      validate_string!(:dashboard_client_secret, dashboard_client['secret'], required: true)
+      validate_string!(:dashboard_client_redirect_uri, dashboard_client['redirect_uri'], required: true)
+    end
+
     def human_readable_attr_name(name)
-      case name
-      when :broker_provided_id
-        'service id'
-      when :name
-        'service name'
-      when :description
-        'service description'
-      when :bindable
-        'service "bindable" field'
-      when :tags
-        'service tags'
-      when :metadata
-        'service metadata'
-      when :plans
-        'service plans list'
-      when :requires
-        'service "requires" field'
-      else
-        raise NotImplementedError.new
-      end
+      {
+        broker_provided_id: 'service id',
+        name: 'service name',
+        description: 'service description',
+        bindable: 'service "bindable" field',
+        tags: 'service tags',
+        metadata: 'service metadata',
+        plans: 'service plans list',
+        requires: 'service "requires" field',
+        dashboard_client_id: 'service dashboard client id',
+        dashboard_client_secret: 'service dashboard client secret',
+        dashboard_client_redirect_uri: 'service dashboard client redirect_uri'
+      }.fetch(name) { raise NotImplementedError }
     end
   end
 end

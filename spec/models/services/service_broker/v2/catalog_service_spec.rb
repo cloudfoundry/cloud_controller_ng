@@ -7,15 +7,16 @@ module VCAP::CloudController::ServiceBroker::V2
   describe CatalogService do
     def build_valid_service_attrs(opts = {})
       {
-        'id' => opts[:id] || 'broker-provided-service-id',
-        'metadata' => opts[:metadata] || {},
-        'name' => opts[:name] || 'service-name',
-        'description' => opts[:description] || 'The description of this service',
-        'bindable' => opts[:bindable] || true,
-        'tags' => opts[:tags] || [],
-        'plans' => opts[:plans] || [build_valid_plan_attrs],
-        'requires' => opts[:requires] || []
-      }
+        'id' => 'broker-provided-service-id',
+        'metadata' => {},
+        'name' => 'service-name',
+        'description' => 'The description of this service',
+        'bindable' => true,
+        'tags' => [],
+        'plans' => [build_valid_plan_attrs],
+        'requires' => [],
+        'dashboard_client' => {}
+      }.merge(opts.stringify_keys)
     end
 
     def build_valid_plan_attrs(opts = {})
@@ -25,6 +26,14 @@ module VCAP::CloudController::ServiceBroker::V2
         'name' => opts[:name] || 'service-plan-name',
         'description' => opts[:description] || 'The description of the service plan'
       }
+    end
+
+    def build_valid_dashboard_client_attrs(opts={})
+      {
+        'id' => 'some-id',
+        'secret' => 'some-secret',
+        'redirect_uri' => 'http://redirect.com'
+      }.merge(opts.stringify_keys)
     end
 
     describe 'validations' do
@@ -168,6 +177,62 @@ module VCAP::CloudController::ServiceBroker::V2
         service.valid?
 
         expect(service.errors).to include 'plan names must be unique within a service'
+      end
+
+      context 'when dashboard_client attributes are provided' do
+        it 'validates that the dashboard_client.id is present' do
+          dashboard_client_attrs = build_valid_dashboard_client_attrs(id: nil)
+          attrs = build_valid_service_attrs(dashboard_client: dashboard_client_attrs)
+          service = CatalogService.new(double('broker'), attrs)
+          service.valid?
+
+          expect(service.errors).to include 'service dashboard client id is required'
+        end
+
+        it 'validates that the dashboard_client.id is a string' do
+          dashboard_client_attrs = build_valid_dashboard_client_attrs(id: 123)
+          attrs = build_valid_service_attrs(dashboard_client: dashboard_client_attrs)
+          service = CatalogService.new(double('broker'), attrs)
+          service.valid?
+
+          expect(service.errors).to include 'service dashboard client id must be a string, but has value 123'
+        end
+
+        it 'validates that the dashboard_client.secret is present' do
+          dashboard_client_attrs = build_valid_dashboard_client_attrs(secret: nil)
+          attrs = build_valid_service_attrs(dashboard_client: dashboard_client_attrs)
+          service = CatalogService.new(double('broker'), attrs)
+          service.valid?
+
+          expect(service.errors).to include 'service dashboard client secret is required'
+        end
+
+        it 'validates that the dashboard_client.secret is a string' do
+          dashboard_client_attrs = build_valid_dashboard_client_attrs(secret: 123)
+          attrs = build_valid_service_attrs(dashboard_client: dashboard_client_attrs)
+          service = CatalogService.new(double('broker'), attrs)
+          service.valid?
+
+          expect(service.errors).to include 'service dashboard client secret must be a string, but has value 123'
+        end
+
+        it 'validates that the dashboard_client.redirect_uri is present' do
+          dashboard_client_attrs = build_valid_dashboard_client_attrs(redirect_uri: nil)
+          attrs = build_valid_service_attrs(dashboard_client: dashboard_client_attrs)
+          service = CatalogService.new(double('broker'), attrs)
+          service.valid?
+
+          expect(service.errors).to include 'service dashboard client redirect_uri is required'
+        end
+
+        it 'validates that the dashboard_client.redirect_uri is a string' do
+          dashboard_client_attrs = build_valid_dashboard_client_attrs(redirect_uri: 123)
+          attrs = build_valid_service_attrs(dashboard_client: dashboard_client_attrs)
+          service = CatalogService.new(double('broker'), attrs)
+          service.valid?
+
+          expect(service.errors).to include 'service dashboard client redirect_uri must be a string, but has value 123'
+        end
       end
 
       describe '#valid?' do

@@ -51,6 +51,15 @@ module VCAP::CloudController
         expect(registration.errors.on(:name)).to have_exactly(1).error
       end
 
+      it 'syncs services and plans and creates dashboard clients' do
+        catalog = double('catalog', sync_services_and_plans: nil, create_service_dashboard_clients: nil)
+        VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_return(catalog)
+        catalog.stub(:valid?).and_return(true)
+        registration.save
+        expect(catalog).to have_received(:sync_services_and_plans)
+        expect(catalog).to have_received(:create_service_dashboard_clients)
+      end
+
       context 'when invalid' do
         context 'because the broker has errors' do
           let(:broker) { ServiceBroker.new }
@@ -111,8 +120,14 @@ module VCAP::CloudController
       end
 
       context 'when exception is raised during transaction' do
+        let(:catalog) { double('catalog') }
+
         before do
-          VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_raise(Errors::ServiceBrokerCatalogInvalid.new('each service must have at least one plan'))
+          VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_return(catalog)
+          catalog.stub(:valid?).and_return(true)
+          catalog.stub(:create_service_dashboard_clients)
+          catalog.stub(:revert_dashboard_clients)
+          catalog.stub(:sync_services_and_plans).and_raise(Errors::ServiceBrokerCatalogInvalid.new('omg it broke'))
         end
 
         context 'when broker already exists' do
@@ -144,6 +159,20 @@ module VCAP::CloudController
 
       end
 
+      context 'when exception is raised during dashboard client creation' do
+        let(:catalog) { double('catalog') }
+        before do
+          VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_return(catalog)
+          catalog.stub(:valid?).and_return(true)
+          catalog.stub(:create_service_dashboard_clients).and_raise
+        end
+
+        it 'raises the error and does not create a new service broker' do
+          expect {
+            expect {registration.save}.to raise_error
+          }.to_not change(ServiceBroker, :count)
+        end
+      end
     end
   end
 end

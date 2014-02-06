@@ -37,8 +37,12 @@ module VCAP::CloudController::BrokerApiHelper
     @space_guid = @space.guid
   end
 
-  def setup_broker
-    stub_catalog_fetch
+  def setup_broker(catalog = nil)
+    if (catalog)
+      stub_catalog_fetch(200, catalog)
+    else
+      stub_catalog_fetch
+    end
 
     post('/v2/service_brokers',
       { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
