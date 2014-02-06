@@ -54,6 +54,20 @@ module VCAP::CloudController
           }.to raise_error('label and provider is taken')
         end
       end
+
+      context 'when the dashboard_client_id is not unique' do
+        let(:existing_service) { Service.make }
+        let(:service) { Service.make_unsaved(dashboard_client_id: existing_service.dashboard_client_id) }
+
+        it 'is not valid' do
+          expect(service).not_to be_valid
+        end
+
+        it 'raises an error on save' do
+          expect { service.save }.
+            to raise_error(Sequel::ValidationFailed, 'dashboard client id must be unique')
+        end
+      end
     end
 
     it 'ensures that blank provider values will be treated as nil' do

@@ -29,6 +29,7 @@ module VCAP::CloudController
       validates_url      :url,                message: 'must be a valid url'
       validates_url      :info_url,           message: 'must be a valid url'
       validates_unique   :unique_id,          message: Sequel.lit('service id must be unique')
+      validates_unique   :dashboard_client_id, message: Sequel.lit('dashboard client id must be unique')
 
       if provider.blank?
         validates_unique :label, message: Sequel.lit('service name must be unique')
