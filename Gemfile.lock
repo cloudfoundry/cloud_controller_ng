@@ -29,7 +29,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: 3caadaa345cede62007632a760e0db4dda6bd37a
+  revision: 4ad156de3fcb51742f8539fd3da570da3862941e
   specs:
     vcap_common (3.0.0)
       addressable (~> 2.2)
@@ -69,7 +69,7 @@ GEM
     axiom-types (0.0.5)
       descendants_tracker (~> 0.0.1)
       ice_nine (~> 0.9)
-    backports (3.3.5)
+    backports (3.5.0)
     bcrypt-ruby (3.1.1)
     beefcake (0.3.7)
     builder (3.2.2)
@@ -77,8 +77,7 @@ GEM
       tzinfo
     cloudfront-signer (2.1.0)
     coderay (1.1.0)
-    coercible (0.2.0)
-      backports (~> 3.0, >= 3.1.0)
+    coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
     columnize (0.3.6)
     cookiejar (0.3.0)
@@ -103,11 +102,11 @@ GEM
       http_parser.rb (>= 0.6.0)
     em-socksify (0.3.0)
       eventmachine (>= 1.0.0.beta.4)
-    equalizer (0.0.7)
+    equalizer (0.0.9)
     eventmachine (1.0.3)
     excon (0.28.0)
     fakefs (0.4.3)
-    fluent-logger (0.4.6)
+    fluent-logger (0.4.7)
       msgpack (>= 0.4.4, < 0.6.0, != 0.5.3, != 0.5.2, != 0.5.1, != 0.5.0)
       yajl-ruby (~> 1.0)
     fog (1.18.0)
@@ -135,7 +134,7 @@ GEM
     http_parser.rb (0.6.0)
     httpclient (2.3.4.1)
     i18n (0.6.9)
-    ice_nine (0.10.0)
+    ice_nine (0.11.0)
     json (1.8.1)
     json_pure (1.8.1)
     loggregator_emitter (3.0.0)
@@ -143,10 +142,10 @@ GEM
     machinist (1.0.6)
     membrane (0.0.2)
     method_source (0.8.2)
-    mime-types (2.0)
+    mime-types (2.1)
     mini_portile (0.5.2)
-    msgpack (0.5.7)
-    multi_json (1.8.2)
+    msgpack (0.5.8)
+    multi_json (1.8.4)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
     mustache (0.99.5)
@@ -237,9 +236,9 @@ GEM
       unf_ext
     unf_ext (0.0.6)
     uuidtools (2.1.4)
-    virtus (1.0.0)
+    virtus (1.0.1)
       axiom-types (~> 0.0.5)
-      coercible (~> 0.2)
+      coercible (~> 1.0)
       descendants_tracker (~> 0.0.1)
       equalizer (~> 0.0.7)
     vmstat (2.1.0)
