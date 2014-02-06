@@ -135,4 +135,7 @@ flapping_crash_count_threshold: 3
 disable_custom_buildpacks: false
 broker_client_timeout_seconds: 60
 
+uaa_client_name: 'cc_service_broker_client'
+uaa_client_secret: 'some-sekret'
+
 diego: false
