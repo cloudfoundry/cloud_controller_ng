@@ -63,9 +63,7 @@ module VCAP::CloudController
 
       raise InvalidRequest unless request_attrs
 
-      unless ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.admin?).filter(:guid => request_attrs['service_plan_guid']).count > 0
-        raise Errors::NotAuthorized
-      end
+      raise Errors::NotAuthorized unless current_user_can_manage_plan(request_attrs['service_plan_guid'])
 
       organization = requested_space.organization
 
@@ -80,19 +78,12 @@ module VCAP::CloudController
         raise Sequel::ValidationFailed.new(service_instance)
       end
 
-      client = service_instance.client
-      client.provision(service_instance)
+      service_instance.client.provision(service_instance)
 
       begin
         service_instance.save
       rescue => e
-        begin
-          # this needs to go into a retry queue
-          client.deprovision(service_instance)
-        rescue => deprovision_e
-          logger.error "Unable to deprovision #{service_instance}: #{deprovision_e}"
-        end
-
+        safe_deprovision_instance(service_instance)
         raise e
       end
 
@@ -138,5 +129,18 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    private
+
+    def current_user_can_manage_plan(plan_guid)
+      ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.admin?).filter(:guid => plan_guid).count > 0
+    end
+
+    def safe_deprovision_instance(service_instance)
+      # this needs to go into a retry queue
+      service_instance.client.deprovision(service_instance)
+    rescue => e
+      logger.error "Unable to deprovision #{service_instance}: #{e}"
+    end
   end
 end

@@ -249,7 +249,7 @@ module VCAP::CloudController
           post '/v2/service_instances', body, headers
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match /name is invalid/
+          expect(decoded_response['description']).to match(/name is invalid/)
         end
 
         it 'does not provision or deprovision an instance' do
@@ -530,7 +530,6 @@ module VCAP::CloudController
         it "returns a user friendly error" do
           org = Organization.make()
           space = Space.make(:organization => org)
-          service = Service.make
           plan = ServicePlan.make(free: true)
 
           body = {
