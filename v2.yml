@@ -482,3 +482,8 @@
   name: CustomBuildpacksDisabled
   http_code: 400
   message: "Custom buildpacks are disabled"
+
+290005:
+  name: BuildpackLocked
+  http_code: 409
+  message: "The buildpack is locked"
