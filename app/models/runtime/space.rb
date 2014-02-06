@@ -3,6 +3,7 @@ module VCAP::CloudController
     class InvalidDeveloperRelation < InvalidRelation; end
     class InvalidAuditorRelation < InvalidRelation; end
     class InvalidManagerRelation < InvalidRelation; end
+    class UnauthorizedAccessToPrivateDomain < RuntimeError; end
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
@@ -18,7 +19,9 @@ module VCAP::CloudController
     one_to_many :routes
     one_to_many :app_events, dataset: -> { AppEvent.filter(app: apps) }
     one_to_many :default_users, class: "VCAP::CloudController::User", key: :default_space_id
-    one_to_many :domains, dataset: -> { organization.domains_dataset }
+    one_to_many :domains,
+                dataset: -> { organization.domains_dataset },
+                adder: ->(domain) { check_addable!(domain) }
 
     add_association_dependencies default_users: :nullify, apps: :destroy, service_instances: :destroy, routes: :destroy, events: :nullify
 
@@ -62,5 +65,15 @@ module VCAP::CloudController
         auditors: [user]
       )
     end
+
+    private
+
+    def check_addable!(domain)
+      if domain.owning_organization_id && domain.owning_organization_id != organization.id
+        raise UnauthorizedAccessToPrivateDomain
+      end
+    end
+
+
   end
 end

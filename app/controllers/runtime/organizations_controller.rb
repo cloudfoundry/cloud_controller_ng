@@ -12,7 +12,7 @@ module VCAP::CloudController
       to_many   :managers
       to_many   :billing_managers
       to_many   :auditors
-      to_many   :app_events
+      to_many   :app_events, :link_only => true
     end
 
     query_parameters :name, :space_guid, :user_guid,
@@ -33,6 +33,31 @@ module VCAP::CloudController
       end
     end
 
+    def update(guid)
+      org = find_for_update(guid)
+
+      model.db.transaction(savepoint: true) do
+        if params["recursive"] == "true" && request_attrs.include?("user_guids")
+
+          user_guids_remove = org.user_guids - request_attrs["user_guids"]
+
+          org.spaces.each do |space|
+            space.lock!
+            space.update_from_hash({
+                                     "developer_guids" => space.developer_guids - user_guids_remove,
+                                     "manager_guids" => space.manager_guids - user_guids_remove,
+                                     "auditor_guids" => space.auditor_guids - user_guids_remove
+                                   })
+          end
+        end
+
+        org.lock!
+        org.update_from_hash(request_attrs)
+      end
+
+      [HTTP::CREATED, serialization.render_json(self.class, org, @opts)]
+    end
+    
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end

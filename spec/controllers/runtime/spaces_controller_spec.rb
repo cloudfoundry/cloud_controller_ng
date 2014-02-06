@@ -543,6 +543,38 @@ module VCAP::CloudController
       end
     end
 
+    describe "app_events associations" do
+      it "does not return app_events with inline-relations-depth=0" do
+        space = Space.make
+        get "/v2/spaces/#{space.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+        expect(entity).to have_key("app_events_url")
+        expect(entity).to_not have_key("app_events")
+      end
+
+      it "does not return app_events with inline-relations-depth=1 since app_events dataset is relatively expensive to query" do
+        space = Space.make
+        get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+        expect(entity).to have_key("app_events_url")
+        expect(entity).to_not have_key("app_events")
+      end
+    end
+
+    describe "events associations" do
+      it "does not return events with inline-relations-depth=0" do
+        space = Space.make
+        get "/v2/spaces/#{space.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+        expect(entity).to have_key("events_url")
+        expect(entity).to_not have_key("events")
+      end
+
+      it "does not return events with inline-relations-depth=1 since events dataset is relatively expensive to query" do
+        space = Space.make
+        get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+        expect(entity).to have_key("events_url")
+        expect(entity).to_not have_key("events")
+      end
+    end
+
     describe "Deprecated endpoints" do
       let!(:domain) { SharedDomain.make }
       describe "DELETE /v2/spaces/:guid/domains/:shared_domain" do

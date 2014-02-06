@@ -20,44 +20,53 @@ module VCAP::CloudController
       end
 
       it 'bumps the number of users and sets periodic timer' do
-        expect(VCAP::CloudController::Varz).to receive(:bump_user_count).once
+        expect(VCAP::CloudController::Varz).to receive(:record_user_count).once
         Varz.setup_updates
       end
 
       it 'bumps the length of cc job queues and sets periodic timer' do
-        expect(VCAP::CloudController::Varz).to receive(:bump_cc_job_queue_length).once
+        expect(VCAP::CloudController::Varz).to receive(:update_job_queue_length).once
         Varz.setup_updates
       end
 
       it 'updates thread count and event machine queues' do
-        expect(VCAP::CloudController::Varz).to receive(:record_thread_info).once
+        expect(VCAP::CloudController::Varz).to receive(:update_thread_info).once
         Varz.setup_updates
       end
 
       context 'when EventMachine periodic_timer tasks are run' do
         before do
-          @periodic_timer_blks = []
+          @periodic_timers = []
 
-          allow(EventMachine).to receive(:add_periodic_timer) do |&blk|
-            @periodic_timer_blks << blk
+          allow(EventMachine).to receive(:add_periodic_timer) do |interval, &block|
+            @periodic_timers << {
+              interval: interval,
+              block: block
+            }
           end
 
           Varz.setup_updates
         end
 
         it 'bumps the number of users and sets periodic timer' do
-          expect(VCAP::CloudController::Varz).to receive(:bump_user_count).once
-          @periodic_timer_blks.map(&:call)
+          expect(VCAP::CloudController::Varz).to receive(:record_user_count).once
+          expect(@periodic_timers[0][:interval]).to eq(600)
+
+          @periodic_timers[0][:block].call
         end
 
         it 'bumps the length of cc job queues and sets periodic timer' do
-          expect(VCAP::CloudController::Varz).to receive(:bump_cc_job_queue_length).once
-          @periodic_timer_blks.map(&:call)
+          expect(VCAP::CloudController::Varz).to receive(:update_job_queue_length).once
+          expect(@periodic_timers[1][:interval]).to eq(30)
+
+          @periodic_timers[1][:block].call
         end
 
         it 'updates thread count and event machine queues' do
-          expect(VCAP::CloudController::Varz).to receive(:record_thread_info).once
-          @periodic_timer_blks.map(&:call)
+          expect(VCAP::CloudController::Varz).to receive(:update_thread_info).once
+          expect(@periodic_timers[2][:interval]).to eq(30)
+
+          @periodic_timers[2][:block].call
         end
       end
     end
@@ -71,7 +80,7 @@ module VCAP::CloudController
         end
 
         4.times{ User.create(guid: SecureRandom.uuid) }
-        Varz.bump_user_count
+        Varz.record_user_count
 
         VCAP::Component.varz.synchronize do
           VCAP::Component.varz[:cc_user_count].should == 4
@@ -89,7 +98,7 @@ module VCAP::CloudController
         Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
         Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
 
-        Varz.bump_cc_job_queue_length
+        Varz.update_job_queue_length
 
         VCAP::Component.varz.synchronize do
           VCAP::Component.varz[:cc_job_queue_length][:cc_local].should == 2
@@ -101,7 +110,7 @@ module VCAP::CloudController
         Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
         Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
 
-        Varz.bump_cc_job_queue_length
+        Varz.update_job_queue_length
 
         VCAP::Component.varz.synchronize do
           expect(VCAP::Component.varz[:cc_job_queue_length][:cc_local]).to eq(1)
@@ -113,7 +122,7 @@ module VCAP::CloudController
         job = Jobs::Runtime::AppBitsPacker.new('abc', 'def', [])
         Delayed::Job.enqueue(job, queue: 'cc_generic', attempts: 1)
 
-        Varz.bump_cc_job_queue_length
+        Varz.update_job_queue_length
 
         VCAP::Component.varz.synchronize do
           expect(VCAP::Component.varz[:cc_job_queue_length]).to eq({})
@@ -123,7 +132,7 @@ module VCAP::CloudController
 
     describe '#record_thread_info' do
       before do
-        Varz.record_thread_info
+        Varz.update_thread_info
       end
 
       it 'should contain thread count' do

@@ -26,8 +26,8 @@ module VCAP::CloudController
           :cutoff_age_in_days => Fixnum
         },
         :default_app_memory => Fixnum,
+        optional(:maximum_app_disk_in_mb) => Fixnum,
         :maximum_health_check_timeout => Fixnum,
-        optional(:maximum_app_disk) => Fixnum,
 
         optional(:allow_debug) => bool,
 
@@ -138,8 +138,6 @@ module VCAP::CloudController
         optional(:varz_port) => Integer,
         optional(:varz_user) => String,
         optional(:varz_password) => String,
-        optional(:varz_update_user_count_period_in_seconds) => Float,
-        optional(:varz_update_cc_job_queue_length_in_seconds) => Float,
         optional(:disable_custom_buildpacks) => bool,
         optional(:broker_client_timeout_seconds) => Integer
       }
@@ -201,7 +199,6 @@ module VCAP::CloudController
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
         config[:directories] ||= {}
-        config[:maximum_app_disk] ||= 2048
         config
       end
     end

@@ -10,7 +10,6 @@ module VCAP::CloudController
           use NewRelic::Rack::DeveloperMode
         end
 
-
         map "/" do
           run Controller.new(config, token_decoder)
         end

@@ -18,9 +18,9 @@ module VCAP::CloudController
         expect(config[:stacks_file]).to eq(File.join(Config.config_dir, "stacks.yml"))
       end
 
-      it "sets default maximum_app_disk" do
+      it "sets default maximum_app_disk_in_mb" do
         config = Config.from_file(File.join(fixture_path, "config/minimal_config.yml"))
-        expect(config[:maximum_app_disk]).to eq(2048)
+        expect(config[:maximum_app_disk_in_mb]).to eq(2048)
       end
 
       it "sets default directories" do

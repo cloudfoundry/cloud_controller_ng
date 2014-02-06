@@ -4,10 +4,22 @@ module VCAP::CloudController::RestController
   module ControllerDSL
     include VCAP::RestAPI
 
-    # these aren't *really* necessary, but it makes .inspect on them
-    # a bit more informative
-    class ToManyAttribute < NamedAttribute; end
-    class ToOneAttribute  < NamedAttribute; end
+    class ToRelationshipAttribute < NamedAttribute
+      attr_reader :association_name
+
+      def initialize(name, opts = {})
+        @association_name = opts[:association_name] || name
+        @link_only = opts[:link_only] || false
+        super
+      end
+
+      def link_only?
+        @link_only
+      end
+    end
+
+    class ToManyAttribute < ToRelationshipAttribute; end
+    class ToOneAttribute < ToRelationshipAttribute; end
 
     def initialize(controller)
       @controller = controller

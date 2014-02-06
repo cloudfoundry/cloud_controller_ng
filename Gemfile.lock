@@ -29,7 +29,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: c731a3eed1bb7630e834f8918a5b2401f8d321ba
+  revision: 3caadaa345cede62007632a760e0db4dda6bd37a
   specs:
     vcap_common (3.0.0)
       addressable (~> 2.2)
@@ -73,8 +73,6 @@ GEM
     bcrypt-ruby (3.1.1)
     beefcake (0.3.7)
     builder (3.2.2)
-    celluloid (0.15.2)
-      timers (~> 1.1.0)
     clockwork (0.4.1)
       tzinfo
     cloudfront-signer (2.1.0)
@@ -97,7 +95,6 @@ GEM
       activesupport (>= 3.0, < 4.1)
     descendants_tracker (0.0.3)
     diff-lcs (1.2.5)
-    docile (1.1.1)
     em-http-request (1.1.2)
       addressable (>= 2.3.4)
       cookiejar
@@ -110,7 +107,6 @@ GEM
     eventmachine (1.0.3)
     excon (0.28.0)
     fakefs (0.4.3)
-    ffi (1.9.3)
     fluent-logger (0.4.6)
       msgpack (>= 0.4.4, < 0.6.0, != 0.5.3, != 0.5.2, != 0.5.1, != 0.5.0)
       yajl-ruby (~> 1.0)
@@ -135,15 +131,6 @@ GEM
       rack-accept
       rack-mount
       virtus (>= 1.0.0)
-    guard (2.2.5)
-      formatador (>= 0.2.4)
-      listen (~> 2.1)
-      lumberjack (~> 1.0)
-      pry (>= 0.9.12)
-      thor (>= 0.18.1)
-    guard-rspec (4.2.0)
-      guard (>= 2.1.1)
-      rspec (>= 2.14, < 4.0)
     hashie (2.0.5)
     http_parser.rb (0.6.0)
     httpclient (2.3.4.1)
@@ -151,13 +138,8 @@ GEM
     ice_nine (0.10.0)
     json (1.8.1)
     json_pure (1.8.1)
-    listen (2.4.0)
-      celluloid (>= 0.15.2)
-      rb-fsevent (>= 0.9.3)
-      rb-inotify (>= 0.9)
     loggregator_emitter (3.0.0)
       beefcake (~> 0.3.7)
-    lumberjack (1.0.4)
     machinist (1.0.6)
     membrane (0.0.2)
     method_source (0.8.2)
@@ -199,9 +181,6 @@ GEM
     rack-test (0.6.2)
       rack (>= 1.0)
     rake (10.1.1)
-    rb-fsevent (0.9.3)
-    rb-inotify (0.9.3)
-      ffi (>= 0.5.0)
     rfc822 (0.1.4)
     rspec (2.14.1)
       rspec-core (~> 2.14.0)
@@ -221,13 +200,6 @@ GEM
     ruby-hmac (0.4.0)
     safe_yaml (0.9.7)
     sequel (3.48.0)
-    simplecov (0.8.2)
-      docile (~> 1.1.0)
-      multi_json
-      simplecov-html (~> 0.8.0)
-    simplecov-html (0.8.0)
-    simplecov-rcov (0.2.3)
-      simplecov (>= 0.4.1)
     sinatra (1.4.3)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -255,12 +227,10 @@ GEM
       daemons (>= 1.0.9)
       eventmachine (>= 0.12.6)
       rack (>= 1.0.0)
-    thor (0.18.1)
     thread_safe (0.1.3)
       atomic
     tilt (1.4.1)
     timecop (0.7.0)
-    timers (1.1.0)
     tzinfo (1.1.0)
       thread_safe (~> 0.1)
     unf (0.1.3)
@@ -276,7 +246,7 @@ GEM
     webmock (1.16.1)
       addressable (>= 2.2.7)
       crack (>= 0.3.2)
-    yajl-ruby (1.1.0)
+    yajl-ruby (1.2.0)
 
 PLATFORMS
   ruby
@@ -295,7 +265,6 @@ DEPENDENCIES
   eventmachine (~> 1.0.0)
   fakefs
   fog
-  guard-rspec
   httpclient
   loggregator_emitter (~> 3.0)
   machinist (~> 1.0.6)
@@ -311,8 +280,6 @@ DEPENDENCIES
   rspec
   rspec_api_documentation
   sequel (~> 3.48)
-  simplecov
-  simplecov-rcov
   sinatra (~> 1.4)
   sinatra-contrib
   sqlite3

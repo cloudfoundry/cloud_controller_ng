@@ -303,5 +303,39 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "#start_thin_server" do
+      let(:app) { double(:app) }
+      let(:config) { double(:config) }
+      let(:thin_server) { OpenStruct.new }
+
+      subject(:start_thin_server) do
+        runner = Runner.new(argv + ["-c", config_file.path])
+        runner.send(:start_thin_server, app, config)
+      end
+
+      before do
+        allow(Thin::Server).to receive(:new).and_return(thin_server)
+        allow(thin_server).to receive(:start!)
+      end
+
+      it "has the same timeout as the rack application" do
+        start_thin_server
+
+        expect(thin_server.timeout).to eq(5.minutes)
+      end
+
+      it "uses thin's experimental threaded mode intentionally" do
+        start_thin_server
+
+        expect(thin_server.threaded).to eq(true)
+      end
+
+      it "starts the thin server" do
+        start_thin_server
+
+        expect(thin_server).to have_received(:start!)
+      end
+    end
   end
 end

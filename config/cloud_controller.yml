@@ -2,9 +2,6 @@
 local_route: 127.0.0.1
 port: 8181
 pid_filename: /tmp/cloud_controller.pid
-
-# development_mode: true
-
 message_bus_servers:
   - nats://127.0.0.1:4222
 
@@ -32,7 +29,7 @@ audit_events:
   cutoff_age_in_days: 31
 
 default_app_memory: 1024 #mb
-maximum_app_disk: 2048
+maximum_app_disk_in_mb: 2048
 
 info:
   name: "vcap"
@@ -126,10 +123,16 @@ trial_db:
 tasks_disabled: false
 
 hm9000_noop: true
+
+varz_port: 7800
+varz_user: varz
+varz_password: password
+
+maximum_health_check_timeout: 180
+
 flapping_crash_count_threshold: 3
 
 disable_custom_buildpacks: false
 broker_client_timeout_seconds: 60
-maximum_health_check_timeout: 180
 
 diego: false
