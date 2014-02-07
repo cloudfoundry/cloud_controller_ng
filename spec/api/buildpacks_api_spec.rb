@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource "Buildpacks", :type => :api do
+resource "Buildpacks (experimental)", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   let!(:buildpacks) { (1..3).map { |i| VCAP::CloudController::Buildpack.make(name: "name_#{i}", position: i) } }
   let(:guid) { buildpacks.first.guid }

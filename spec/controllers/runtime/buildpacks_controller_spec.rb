@@ -80,7 +80,6 @@ module VCAP::CloudController
             metadata = resource['metadata']
             expect(metadata['guid']).to eq(buildpack[:guid])
             expect(entity['name']).to eq(buildpack[:name])
-            expect(entity['key']).to eq(buildpack[:key])
             expect(entity['filename']).to be_nil
           end
         end
@@ -93,7 +92,6 @@ module VCAP::CloudController
             expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack',
                                                                       'position' => 1,
                                                                       'enabled' => true,
-                                                                      'key' => 'xyz',
                                                                       'filename' => nil})
           end
         end

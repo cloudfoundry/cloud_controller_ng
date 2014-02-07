@@ -2,7 +2,7 @@ require "spec_helper"
 require "digest/sha1"
 
 describe "Stable API warning system", api_version_check: true do
-  API_FOLDER_CHECKSUM = "22e575361cc2fdc7cbd6686a8a54009dee36af41".freeze
+  API_FOLDER_CHECKSUM = "7362a32313cc8d0284258b0f5ac61840210cab7c".freeze
 
   it "tells the developer if the API specs change" do
     api_folder = File.expand_path("..", __FILE__)

@@ -26,23 +26,31 @@ module VCAP::CloudController
       sha1 = File.new(uploaded_file).hexdigest
       uploaded_filename = File.basename(uploaded_filename)
 
-      return [HTTP::CONFLICT, nil] if sha1 == buildpack.key && uploaded_filename == buildpack.filename
+      if upload_bits(buildpack, sha1, uploaded_file, uploaded_filename)
+        [HTTP::CREATED, serialization.render_json(self.class, buildpack, @opts)]
+      else
+         [HTTP::CONFLICT, nil]
+      end
+    ensure
+      FileUtils.rm_f(uploaded_file) if uploaded_file
+    end
 
-      if sha1 != buildpack.key
-        buildpack_blobstore.cp_to_blobstore(uploaded_file, sha1)
+    def upload_bits(buildpack, new_key, bits_file, new_filename)
+      return false if !new_bits?(buildpack, new_key) && !new_filename?(buildpack, new_filename)
+
+      # replace blob if new
+      if new_bits?(buildpack, new_key)
+        buildpack_blobstore.cp_to_blobstore(bits_file, new_key)
         old_buildpack_key = buildpack.key
       end
 
       model.db.transaction(savepoint: true) do
         buildpack.lock!
-        buildpack.update_from_hash(key: sha1, filename: uploaded_filename)
+        buildpack.update_from_hash(key: new_key, filename: new_filename)
       end
 
       buildpack_blobstore.delete(old_buildpack_key) if old_buildpack_key
-
-      [HTTP::CREATED, serialization.render_json(self.class, buildpack, @opts)]
-    ensure
-      FileUtils.rm_f(uploaded_file) if uploaded_file
+      return true
     end
 
     get "#{path_guid}/download", :download
@@ -79,6 +87,14 @@ module VCAP::CloudController
       else
         f.public_url
       end
+    end
+
+    def new_bits?(buildpack, sha)
+      return buildpack.key != sha
+    end
+
+    def new_filename?(buildpack, filename)
+      return buildpack.filename != filename
     end
   end
 end

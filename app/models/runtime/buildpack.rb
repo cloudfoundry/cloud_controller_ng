@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class Buildpack < Sequel::Model
 
-    export_attributes :name, :key, :position, :enabled, :filename
+    export_attributes :name, :position, :enabled, :filename
 
     import_attributes :name, :key, :position, :enabled, :filename
 

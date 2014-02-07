@@ -145,6 +145,77 @@ module VCAP::CloudController
         end
       end
 
+      context "upload_bits" do
+        before do
+          config = Config.config
+          logger = double(:logger).as_null_object
+          env = {}
+          params = {}
+          body = ""
+          sinatra = nil
+
+          controller_factory = CloudController::ControllerFactory.new(config, logger, env, params, body, sinatra)
+          @buildpack_blobstore = double(:buildpack_blobstore).as_null_object
+          CloudController::DependencyLocator.instance.stub(:buildpack_blobstore).and_return(@buildpack_blobstore)
+          @controller = controller_factory.create_controller(BuildpackBitsController)
+          @buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "upload_binary_buildpack", position: 0 })
+        end
+
+        it "updates the buildpack filename" do
+          expect{
+            @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
+          }.to change {
+            Buildpack.find(name: 'upload_binary_buildpack').filename
+          }.from(nil).to(filename)
+        end
+
+        context "new bits (new sha)" do
+          it "copies new bits to the blobstore" do
+            @buildpack_blobstore.should_receive(:cp_to_blobstore).with(valid_zip, sha_valid_zip)
+
+            expect(@controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)).to be_true
+          end
+
+          it "updates the buildpack key" do
+            expect{
+              @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
+            }.to change {
+              Buildpack.find(name: 'upload_binary_buildpack').key
+            }.from(nil).to(sha_valid_zip)
+          end
+
+          it "removes the old buildpack binary when a new one is uploaded" do
+            @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
+            @buildpack_blobstore.should_receive(:delete).with(sha_valid_zip)
+
+            @controller.upload_bits(@buildpack, sha_valid_zip2, valid_zip2, filename)
+          end
+        end
+
+        context "same bits (same sha)" do
+          it "returns false if both bits and filename are not changed" do
+            @buildpack.key = sha_valid_zip
+            @buildpack.filename = filename
+
+            expect(@controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)).to be_false
+          end
+
+          it "does not copy the same bits to the blobstore" do
+            @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
+
+            @buildpack_blobstore.should_not_receive(:cp_to_blobstore)
+            @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
+          end
+
+          it "does not remove the bits if the same one is provided" do
+            @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
+            @buildpack_blobstore.should_not_receive(:delete).with(sha_valid_zip)
+
+            @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
+          end
+        end
+      end
+
       context "/v2/buildpacks/:guid/download" do
         let(:staging_user) { "user" }
         let(:staging_password) { "password" }
