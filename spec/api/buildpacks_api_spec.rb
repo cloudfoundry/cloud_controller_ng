@@ -12,6 +12,7 @@ resource "Buildpacks (experimental)", :type => :api do
   field :name, "The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)", required: true, example_values: ["Golang_buildpack"]
   field :position, "The order in which the buildpacks are checked during buildpack auto-detection.", required: false
   field :enabled, "Whether or not the buildpack will be used for staging", required: false, default: true
+  field :filename, "The name of the uploaded buildpack file", required: false
 
   standard_model_list(:buildpack, VCAP::CloudController::BuildpacksController)
   standard_model_get(:buildpack)
