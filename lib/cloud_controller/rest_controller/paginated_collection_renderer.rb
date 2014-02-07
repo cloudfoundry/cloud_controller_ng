@@ -2,9 +2,11 @@ require 'addressable/uri'
 
 module VCAP::CloudController::RestController
   class PaginatedCollectionRenderer
-    def initialize(eager_loader, serializer)
+    def initialize(eager_loader, serializer, opts)
       @eager_loader = eager_loader
       @serializer = serializer
+      @max_results_per_page = opts.fetch(:max_results_per_page)
+      @default_results_per_page = 50
     end
 
     # @param [RestController] controller Controller for the
@@ -29,8 +31,12 @@ module VCAP::CloudController::RestController
     # expand inline in a relationship.
     def render_json(controller, ds, path, opts, request_params)
       page      = opts[:page] || 1
-      page_size = opts[:results_per_page] || 50
+      page_size = opts[:results_per_page] || @default_results_per_page
       criteria  = opts[:order_by] || :id
+
+      if page_size > @max_results_per_page
+        raise VCAP::Errors::BadQueryParameter.new("results_per_page must be <= #{@max_results_per_page}")
+      end
 
       paginated = ds.order_by(criteria).extension(:pagination).paginate(page, page_size)
 

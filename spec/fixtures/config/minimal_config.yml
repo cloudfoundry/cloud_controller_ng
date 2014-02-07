@@ -97,3 +97,6 @@ maximum_health_check_timeout: 180
 loggregator:
   router: "127.0.0.1:8080"
   shared_secret: "loggregator-secret"
+
+renderer:
+  max_results_per_page: 100

@@ -136,3 +136,6 @@ disable_custom_buildpacks: false
 broker_client_timeout_seconds: 60
 
 diego: false
+
+renderer:
+  max_results_per_page: 100

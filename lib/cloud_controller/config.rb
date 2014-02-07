@@ -139,7 +139,11 @@ module VCAP::CloudController
         optional(:varz_user) => String,
         optional(:varz_password) => String,
         optional(:disable_custom_buildpacks) => bool,
-        optional(:broker_client_timeout_seconds) => Integer
+        optional(:broker_client_timeout_seconds) => Integer,
+
+        :renderer => {
+          :max_results_per_page => Integer,
+        },
       }
     end
 

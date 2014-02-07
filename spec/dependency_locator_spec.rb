@@ -213,8 +213,32 @@ describe CloudController::DependencyLocator do
   end
 
   describe "#paginated_collection_renderer" do
-    subject { locator.paginated_collection_renderer }
+    it "returns paginated collection renderer configured via config" do
+      eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
+      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      renderer = double('renderer')
 
-    it { should be_a(VCAP::CloudController::RestController::PaginatedCollectionRenderer) }
+      VCAP::CloudController::RestController::PaginatedCollectionRenderer.
+        should_receive(:new).
+        with(eager_loader, serializer, {max_results_per_page: 100}).
+        and_return(renderer)
+
+      expect(locator.paginated_collection_renderer).to eq(renderer)
+    end
+  end
+
+  describe "#entity_only_paginated_collection_renderer" do
+    it "returns paginated collection renderer configured via config" do
+      eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
+      serializer = instance_of(VCAP::CloudController::RestController::EntityOnlyPreloadedObjectSerializer)
+      renderer = double('renderer')
+
+      VCAP::CloudController::RestController::PaginatedCollectionRenderer.
+        should_receive(:new).
+        with(eager_loader, serializer, {max_results_per_page: 100}).
+        and_return(renderer)
+
+      expect(locator.entity_only_paginated_collection_renderer).to eq(renderer)
+    end
   end
 end
