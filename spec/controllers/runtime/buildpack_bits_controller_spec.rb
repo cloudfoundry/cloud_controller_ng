@@ -191,9 +191,12 @@ module VCAP::CloudController
 
           it "removes the old buildpack binary when a new one is uploaded" do
             @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
-            @buildpack_blobstore.should_receive(:delete).with(sha_valid_zip)
+
+            allow(VCAP::CloudController::BuildpackBitsDelete).to receive(:delete_when_safe)
 
             @controller.upload_bits(@buildpack, sha_valid_zip2, valid_zip2, filename)
+
+            expect(VCAP::CloudController::BuildpackBitsDelete).to have_received(:delete_when_safe).with(sha_valid_zip, :buildpack_blobstore, Config.config)
           end
         end
 
@@ -214,9 +217,10 @@ module VCAP::CloudController
 
           it "does not remove the bits if the same one is provided" do
             @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
-            @buildpack_blobstore.should_not_receive(:delete).with(sha_valid_zip)
+            allow(VCAP::CloudController::BuildpackBitsDelete).to receive(:delete_when_safe)
 
             @controller.upload_bits(@buildpack, sha_valid_zip, valid_zip, filename)
+            expect(VCAP::CloudController::BuildpackBitsDelete).not_to have_received(:delete_when_safe)
           end
 
           it "does not allow upload if the buildpack is locked" do
