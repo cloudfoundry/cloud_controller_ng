@@ -27,8 +27,7 @@ module VCAP::CloudController
     def update(guid)
       obj = find_for_update(guid)
       model.update(obj, @request_attrs)
-
-      [HTTP::CREATED, serialization.render_json(self.class, obj, @opts)]
+      [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
     end
 
     private
@@ -42,6 +41,7 @@ module VCAP::CloudController
     end
 
     def inject_dependencies(dependencies)
+      super
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
     end
 

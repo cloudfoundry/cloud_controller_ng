@@ -98,7 +98,7 @@ module VCAP::CloudController
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{service_instance.guid}" },
-        serialization.render_json(self.class, service_instance, @opts)
+        object_renderer.render_json(self.class, service_instance, @opts)
       ]
     end
 
@@ -107,7 +107,7 @@ module VCAP::CloudController
       logger.debug "cc.read", model: :ServiceInstance, guid: guid
 
       service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
-      serialization.render_json(self.class, service_instance, @opts)
+      object_renderer.render_json(self.class, service_instance, @opts)
     end
 
     delete "/v2/service_instances/:guid", :delete

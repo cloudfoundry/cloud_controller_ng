@@ -40,7 +40,8 @@ module VCAP::CloudController
       }
 
       req = Yajl::Encoder.encode(attrs)
-      svc_api = VCAP::CloudController::ServiceInstancesController.new(config, logger, env, params, req)
+      controller_factory = CloudController::ControllerFactory.new(config, logger, env, params, req)
+      svc_api = controller_factory.create_controller(VCAP::CloudController::ServiceInstancesController)
       svc_api.dispatch(:create)
       "{}"
     end
@@ -52,7 +53,9 @@ module VCAP::CloudController
 
     def delete(name)
       service_instance = service_instance_from_name(name)
-      VCAP::CloudController::ServiceInstancesController.new(config, logger, env, params, body).dispatch(:delete, service_instance.guid)
+      controller_factory = CloudController::ControllerFactory.new(config, logger, env, params, body)
+      controller = controller_factory.create_controller(VCAP::CloudController::ServiceInstancesController)
+      controller.dispatch(:delete, service_instance.guid)
       HTTP::OK
     end
 

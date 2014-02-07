@@ -14,6 +14,7 @@ module VCAP::CloudController
     attr_reader :health_manager_client
 
     def inject_dependencies(dependencies)
+      super
       @health_manager_client = dependencies[:health_manager_client]
     end
   end

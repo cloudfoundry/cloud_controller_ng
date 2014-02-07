@@ -51,6 +51,7 @@ module VCAP::CloudController
     end
 
     def inject_dependencies(dependencies)
+      super
       @app_event_repository = dependencies.fetch(:app_event_repository)
     end
 

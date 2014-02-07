@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{binding.guid}" },
-        serialization.render_json(self.class, binding, @opts)
+        object_renderer.render_json(self.class, binding, @opts)
       ]
     end
 

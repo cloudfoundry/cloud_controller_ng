@@ -126,7 +126,7 @@ module VCAP::CloudController::RestController
     end
   end
 
-  class UnsafeEntityOnlyObjectSerializer < PreloadedObjectSerializer
+  class EntityOnlyPreloadedObjectSerializer < PreloadedObjectSerializer
     def to_hash(controller, obj, opts, depth, parents)
       obj.to_hash.merge(relations_hash(controller, obj, opts, depth, parents))
     end

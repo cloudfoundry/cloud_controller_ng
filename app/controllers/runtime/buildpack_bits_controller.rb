@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       buildpack_blobstore.delete(old_buildpack_key) if old_buildpack_key
 
-      [HTTP::CREATED, serialization.render_json(self.class, buildpack, @opts)]
+      [HTTP::CREATED, object_renderer.render_json(self.class, buildpack, @opts)]
     ensure
       FileUtils.rm_f(uploaded_file) if uploaded_file
     end
@@ -57,6 +57,7 @@ module VCAP::CloudController
     attr_reader :buildpack_blobstore, :upload_handler
 
     def inject_dependencies(dependencies)
+      super
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
       @upload_handler = dependencies[:upload_handler]
     end

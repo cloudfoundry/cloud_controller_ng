@@ -23,7 +23,12 @@ module CloudController
     end
 
     def dependencies_for_class(klass)
-      case klass.name.demodulize
+      default_dependencies = {
+        object_renderer: dependency_locator.object_renderer,
+        collection_renderer: dependency_locator.paginated_collection_renderer,
+      }
+
+      custom_dependencies = case klass.name.demodulize
         when "CrashesController", "SpaceSummariesController"
           {health_manager_client: dependency_locator.health_manager_client}
         when "BuildpacksController", "BuildpackBitsController"
@@ -42,9 +47,16 @@ module CloudController
           { app_event_repository: dependency_locator.app_event_repository }
         when "SpacesController"
           { space_event_repository: dependency_locator.space_event_repository }
+        when "BillingEventsController"
+          {
+            object_renderer: nil, # no object rendering
+            collection_renderer: dependency_locator.entity_only_paginated_collection_renderer,
+          }
         else
           {}
       end
+
+      default_dependencies.merge(custom_dependencies)
     end
   end
 end

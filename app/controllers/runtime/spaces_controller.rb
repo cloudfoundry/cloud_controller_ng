@@ -28,6 +28,7 @@ module VCAP::CloudController
     end
 
     def inject_dependencies(dependencies)
+      super
       @space_event_repository = dependencies.fetch(:space_event_repository)
     end
 
@@ -54,7 +55,7 @@ module VCAP::CloudController
         }
       )
 
-      RestController::PaginatedCollectionRenderer.render_json(
+      collection_renderer.render_json(
         associated_controller,
         filtered_dataset,
         associated_path,
@@ -81,7 +82,7 @@ module VCAP::CloudController
         @opts)
       service_instances.filter(space: space)
 
-      RestController::PaginatedCollectionRenderer.render_json(
+      collection_renderer.render_json(
         ServiceInstancesController,
         service_instances,
         "/v2/spaces/#{guid}/service_instances",

@@ -3,7 +3,12 @@ require 'addressable/uri'
 module VCAP::CloudController::RestController
   class ObjectRenderer
     def self.render_json(controller, obj, opts)
-      new(controller, obj, opts, PreloadedObjectSerializer.new).render_json
+      new(controller, obj, opts, ).render_json
+    end
+
+    def initialize(eager_loader, serializer)
+      @eager_loader = eager_loader
+      @serializer = serializer
     end
 
     # Render an object to json, using export and security properties
@@ -22,58 +27,36 @@ module VCAP::CloudController::RestController
     #
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
-    def initialize(controller, obj, opts, serializer)
-      @controller = controller
-      @obj = obj
-      @opts = opts
-
-      @eager_loader = SecureEagerLoader.new
-      @serializer = serializer
-
-      @inline_relations_depth = opts[:inline_relations_depth] || 0
-      @additional_visibility_filters = opts[:additional_visibility_filters] || {}
-
-      @pretty = opts[:pretty] || false
-      @pretty = true unless opts.has_key?(:pretty)
-    end
-
-    def render_json
-      eager_loaded_objects = eager_load_dataset(@obj.model.dataset)
-      eager_loaded_object  = eager_loaded_objects.where(id: @obj.id).all.first
-      hash = serialize(eager_loaded_object)
-      Yajl::Encoder.encode(hash, pretty: @pretty)
-    end
-
-    private
-
-    def eager_load_dataset(dataset)
-      user = VCAP::CloudController::SecurityContext.current_user
-      admin = VCAP::CloudController::SecurityContext.admin?
-      default_visibility_filter = proc { |ds| ds.filter(ds.model.user_visibility(user, admin)) }
-
-      @eager_loader.eager_load_dataset(
-        dataset,
-        @controller,
+    def render_json(controller, obj, opts)
+      eager_loaded_objects = @eager_loader.eager_load_dataset(
+        obj.model.dataset,
+        controller,
         default_visibility_filter,
-        @additional_visibility_filters,
-        @inline_relations_depth,
+        opts[:additional_visibility_filters] || {},
+        opts[:inline_relations_depth] || 0,
       )
-    end
 
-    def serialize(obj)
+      eager_loaded_object = eager_loaded_objects.where(id: obj.id).all.first
+
       # The class of object and eager_loaded_object could be different
       # if they are part of STI. Attributes exported by the object
       # are the ones that are expected in the response.
       # (e.g. Domain vs SharedDomain < Domain)
-      serialize_ops = @opts.merge(export_attrs: @obj.model.export_attrs)
+      hash = @serializer.serialize(
+        controller,
+        eager_loaded_object,
+        opts.merge(export_attrs: obj.model.export_attrs),
+      )
 
-      @serializer.serialize(@controller, obj, serialize_ops)
+      Yajl::Encoder.encode(hash, pretty: opts.fetch(:pretty, true))
     end
-  end
 
-  class EntityOnlyObjectRenderer
-    def self.render_json(controller, obj, opts)
-      new(controller, obj, opts, UnsafeEntityOnlyObjectSerializer.new).render_json
+    private
+
+    def default_visibility_filter
+      user = VCAP::CloudController::SecurityContext.current_user
+      admin = VCAP::CloudController::SecurityContext.admin?
+      proc { |ds| ds.filter(ds.model.user_visibility(user, admin)) }
     end
   end
 end

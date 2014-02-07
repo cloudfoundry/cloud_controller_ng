@@ -36,7 +36,11 @@ module VCAP::CloudController
       end
     end
 
-    subject(:controller) { controller_class.new({}, logger, env, params, request_body) }
+    subject(:controller) { controller_class.new({}, logger, env, params, request_body, sinatra, dependencies) }
+    let(:sinatra) { double('sinatra') }
+    let(:dependencies) { {object_renderer: object_renderer, collection_renderer: collection_renderer} }
+    let(:object_renderer) { double('object_renderer', render_json: nil) }
+    let(:collection_renderer) { double('collection_renderer', render_json: nil) }
 
     def define_model_class(class_name, table_name)
       stub_const("VCAP::Errors::#{class_name}NotFound", Errors::AppPackageNotFound)
@@ -107,15 +111,13 @@ module VCAP::CloudController
 
         expect(result[0]).to eq(201)
         expect(result[1]).to eq({"Location" => url})
-
-        parsed_json = JSON.parse(result[2])
-        expect(parsed_json.keys).to match_array(%w(metadata entity))
       end
 
       it "should call the serialization instance asssociated with controller to generate response data" do
-        serializer = double
-        controller.should_receive(:serialization).and_return(serializer)
-        serializer.should_receive(:render_json).with(controller_class, instance_of(model_klass), {}).and_return("serialized json")
+        object_renderer.
+          should_receive(:render_json).
+          with(controller_class, instance_of(model_klass), {}).
+          and_return("serialized json")
 
         result = controller.create
         expect(result[2]).to eq("serialized json")
@@ -136,9 +138,10 @@ module VCAP::CloudController
         end
 
         it "returns the serialized object if access is validated" do
-          serializer = double
-          controller.should_receive(:serialization).and_return(serializer)
-          serializer.should_receive(:render_json).with(controller_class, model, {}).and_return("serialized json")
+          object_renderer.
+            should_receive(:render_json).
+            with(controller_class, model, {}).
+            and_return("serialized json")
 
           expect(controller.read(model.guid)).to eq("serialized json")
         end
@@ -179,9 +182,10 @@ module VCAP::CloudController
         end
 
         it "returns the serialized updated object if access is validated" do
-          serializer = double
-          controller.should_receive(:serialization).and_return(serializer)
-          serializer.should_receive(:render_json).with(controller_class, instance_of(model_klass), {}).and_return("serialized json")
+          object_renderer.
+            should_receive(:render_json).
+            with(controller_class, instance_of(model_klass), {}).
+            and_return("serialized json")
 
           result = controller.update(model.guid)
           expect(result[0]).to eq(201)
@@ -263,7 +267,7 @@ module VCAP::CloudController
         context "when deleting with recursive set to true" do
           let(:run_delayed_job) { Delayed::Worker.new.work_off if Delayed::Job.last }
 
-          subject(:controller) { controller_class.new({}, logger, env, params.merge("recursive" => "true"), request_body) }
+          before { params.merge!("recursive" => "true") }
 
           it "successfully deletes" do
             expect {
@@ -368,7 +372,7 @@ module VCAP::CloudController
 
         controller_class.stub(path: fake_class_path)
 
-        RestController::PaginatedCollectionRenderer.should_receive(:render_json).with(
+        collection_renderer.should_receive(:render_json).with(
           controller_class,
           filtered_dataset,
           fake_class_path,

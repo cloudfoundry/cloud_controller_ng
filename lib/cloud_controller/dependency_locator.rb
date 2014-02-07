@@ -1,5 +1,7 @@
 require "repositories/runtime/app_event_repository"
 require "repositories/runtime/space_event_repository"
+require "cloud_controller/rest_controller/object_renderer"
+require "cloud_controller/rest_controller/paginated_collection_renderer"
 
 module CloudController
   class DependencyLocator
@@ -105,6 +107,24 @@ module CloudController
 
     def space_event_repository
       Repositories::Runtime::SpaceEventRepository.new
+    end
+
+    def object_renderer
+      eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
+      serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
+      VCAP::CloudController::RestController::ObjectRenderer.new(eager_loader, serializer)
+    end
+
+    def paginated_collection_renderer
+      eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
+      serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
+      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer)
+    end
+
+    def entity_only_paginated_collection_renderer
+      eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
+      serializer   = VCAP::CloudController::RestController::EntityOnlyPreloadedObjectSerializer.new
+      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer)
     end
 
     private

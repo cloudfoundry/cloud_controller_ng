@@ -106,6 +106,7 @@ module VCAP::CloudController
     private
 
     def inject_dependencies(dependencies)
+      super
       @blobstore = dependencies.fetch(:droplet_blobstore)
       @buildpack_cache_blobstore = dependencies.fetch(:buildpack_cache_blobstore)
       @package_blobstore = dependencies.fetch(:package_blobstore)

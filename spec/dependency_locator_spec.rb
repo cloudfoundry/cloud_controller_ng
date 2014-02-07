@@ -205,4 +205,16 @@ describe CloudController::DependencyLocator do
 
     it { should be_a(VCAP::CloudController::Repositories::Runtime::SpaceEventRepository) }
   end
+
+  describe "#object_renderer" do
+    subject { locator.object_renderer }
+
+    it { should be_a(VCAP::CloudController::RestController::ObjectRenderer) }
+  end
+
+  describe "#paginated_collection_renderer" do
+    subject { locator.paginated_collection_renderer }
+
+    it { should be_a(VCAP::CloudController::RestController::PaginatedCollectionRenderer) }
+  end
 end

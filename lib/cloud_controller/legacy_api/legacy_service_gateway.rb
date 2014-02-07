@@ -136,7 +136,9 @@ module VCAP::CloudController
 
       set_v2_security_context
       svc_guid = Service[:label => label, :provider => provider].guid
-      svc_api = VCAP::CloudController::ServicesController.new(config, logger, env, params, body)
+
+      controller_factory = CloudController::ControllerFactory.new(config, logger, env, params, body)
+      svc_api = controller_factory.create_controller(VCAP::CloudController::ServicesController)
       svc_api.dispatch(:delete, svc_guid)
 
       empty_json
