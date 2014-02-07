@@ -103,9 +103,9 @@ module VCAP::CloudController::ServiceBroker::V2
         metadata: 'service metadata',
         plans: 'service plans list',
         requires: 'service "requires" field',
-        dashboard_client_id: 'service dashboard client id',
-        dashboard_client_secret: 'service dashboard client secret',
-        dashboard_client_redirect_uri: 'service dashboard client redirect_uri'
+        dashboard_client_id: 'Service dashboard client id',
+        dashboard_client_secret: 'Service dashboard client secret',
+        dashboard_client_redirect_uri: 'Service dashboard client redirect_uri'
       }.fetch(name) { raise NotImplementedError }
     end
   end

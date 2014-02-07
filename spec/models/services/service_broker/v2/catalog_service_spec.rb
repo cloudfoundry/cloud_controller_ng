@@ -186,7 +186,7 @@ module VCAP::CloudController::ServiceBroker::V2
           service = CatalogService.new(double('broker'), attrs)
           service.valid?
 
-          expect(service.errors).to include 'service dashboard client id is required'
+          expect(service.errors).to include 'Service dashboard client id is required'
         end
 
         it 'validates that the dashboard_client.id is a string' do
@@ -195,7 +195,7 @@ module VCAP::CloudController::ServiceBroker::V2
           service = CatalogService.new(double('broker'), attrs)
           service.valid?
 
-          expect(service.errors).to include 'service dashboard client id must be a string, but has value 123'
+          expect(service.errors).to include 'Service dashboard client id must be a string, but has value 123'
         end
 
         it 'validates that the dashboard_client.secret is present' do
@@ -204,7 +204,7 @@ module VCAP::CloudController::ServiceBroker::V2
           service = CatalogService.new(double('broker'), attrs)
           service.valid?
 
-          expect(service.errors).to include 'service dashboard client secret is required'
+          expect(service.errors).to include 'Service dashboard client secret is required'
         end
 
         it 'validates that the dashboard_client.secret is a string' do
@@ -213,7 +213,7 @@ module VCAP::CloudController::ServiceBroker::V2
           service = CatalogService.new(double('broker'), attrs)
           service.valid?
 
-          expect(service.errors).to include 'service dashboard client secret must be a string, but has value 123'
+          expect(service.errors).to include 'Service dashboard client secret must be a string, but has value 123'
         end
 
         it 'validates that the dashboard_client.redirect_uri is present' do
@@ -222,7 +222,7 @@ module VCAP::CloudController::ServiceBroker::V2
           service = CatalogService.new(double('broker'), attrs)
           service.valid?
 
-          expect(service.errors).to include 'service dashboard client redirect_uri is required'
+          expect(service.errors).to include 'Service dashboard client redirect_uri is required'
         end
 
         it 'validates that the dashboard_client.redirect_uri is a string' do
@@ -231,7 +231,7 @@ module VCAP::CloudController::ServiceBroker::V2
           service = CatalogService.new(double('broker'), attrs)
           service.valid?
 
-          expect(service.errors).to include 'service dashboard client redirect_uri must be a string, but has value 123'
+          expect(service.errors).to include 'Service dashboard client redirect_uri must be a string, but has value 123'
         end
       end
 
