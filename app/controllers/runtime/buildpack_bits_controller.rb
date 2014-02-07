@@ -31,7 +31,7 @@ module VCAP::CloudController
         buildpack.update_from_hash(key: sha1)
       end
 
-      Jobs::Runtime::BuildpackBitsDelete.delete_buildpack_in_blobstore(old_buildpack_key, :buildpack_blobstore, @config)
+      BuildpackBitsDelete.delete_when_safe(old_buildpack_key, :buildpack_blobstore, @config)
 
       [HTTP::CREATED, serialization.render_json(self.class, buildpack, @opts)]
     ensure

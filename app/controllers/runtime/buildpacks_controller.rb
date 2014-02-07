@@ -20,7 +20,7 @@ module VCAP::CloudController
     def delete(guid)
       buildpack = find_guid_and_validate_access(:delete, guid)
       response = do_delete(buildpack)
-      Jobs::Runtime::BuildpackBitsDelete.delete_buildpack_in_blobstore(buildpack.key, :buildpack_blobstore, @config)
+      BuildpackBitsDelete.delete_when_safe(buildpack.key, :buildpack_blobstore, @config)
       response
     end
 
