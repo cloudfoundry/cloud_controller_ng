@@ -112,7 +112,10 @@ module CloudController
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
-      VCAP::CloudController::RestController::ObjectRenderer.new(eager_loader, serializer)
+
+      VCAP::CloudController::RestController::ObjectRenderer.new(eager_loader, serializer, {
+        max_inline_relations_depth: config[:renderer][:max_inline_relations_depth],
+      })
     end
 
     def paginated_collection_renderer
@@ -120,8 +123,9 @@ module CloudController
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
 
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, {
-        max_results_per_page:     config[:renderer][:max_results_per_page],
-        default_results_per_page: config[:renderer][:default_results_per_page],
+        max_results_per_page:       config[:renderer][:max_results_per_page],
+        default_results_per_page:   config[:renderer][:default_results_per_page],
+        max_inline_relations_depth: config[:renderer][:max_inline_relations_depth],
       })
     end
 
@@ -130,8 +134,9 @@ module CloudController
       serializer   = VCAP::CloudController::RestController::EntityOnlyPreloadedObjectSerializer.new
 
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, {
-        max_results_per_page:     config[:renderer][:max_results_per_page],
-        default_results_per_page: config[:renderer][:default_results_per_page],
+        max_results_per_page:       config[:renderer][:max_results_per_page],
+        default_results_per_page:   config[:renderer][:default_results_per_page],
+        max_inline_relations_depth: config[:renderer][:max_inline_relations_depth],
       })
     end
 

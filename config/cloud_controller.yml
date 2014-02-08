@@ -140,3 +140,4 @@ diego: false
 renderer:
   max_results_per_page: 100
   default_results_per_page: 50
+  max_inline_relations_depth: 3

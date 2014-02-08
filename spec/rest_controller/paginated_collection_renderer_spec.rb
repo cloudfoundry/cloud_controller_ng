@@ -9,6 +9,7 @@ module VCAP::CloudController::RestController
       {
         default_results_per_page: 100_000,
         max_results_per_page: 100_000,
+        max_inline_relations_depth: 100_000,
       }
     end
 
@@ -75,6 +76,37 @@ module VCAP::CloudController::RestController
         it 'renders limits number of results to default_results_per_page' do
           result = subject.render_json(controller, dataset, path, opts, request_params)
           expect(JSON.parse(result)["resources"].size).to eq(1)
+        end
+      end
+
+      context 'when asked inline_relations_depth is more than max inline_relations_depth' do
+        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
+        before { opts.merge!(inline_relations_depth: 11) }
+
+        it 'raises BadQueryParameter error' do
+          expect {
+            subject.render_json(controller, dataset, path, opts, request_params)
+          }.to raise_error(VCAP::Errors::BadQueryParameter, /inline_relations_depth/)
+        end
+      end
+
+      context 'when asked inline_relations_depth equals to max inline_relations_depth' do
+        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
+        before { opts.merge!(inline_relations_depth: 10) }
+
+        it 'renders json response' do
+          result = subject.render_json(controller, dataset, path, opts, request_params)
+          expect(result).to be_instance_of(String)
+        end
+      end
+
+      context 'when asked inline_relations_depth is less than max inline_relations_depth' do
+        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
+        before { opts.merge!(inline_relations_depth: 9) }
+
+        it 'renders json response' do
+          result = subject.render_json(controller, dataset, path, opts, request_params)
+          expect(result).to be_instance_of(String)
         end
       end
     end

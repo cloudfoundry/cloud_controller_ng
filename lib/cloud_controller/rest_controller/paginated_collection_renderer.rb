@@ -5,8 +5,12 @@ module VCAP::CloudController::RestController
     def initialize(eager_loader, serializer, opts)
       @eager_loader = eager_loader
       @serializer = serializer
+
       @max_results_per_page = opts.fetch(:max_results_per_page)
       @default_results_per_page = opts.fetch(:default_results_per_page)
+
+      @max_inline_relations_depth = opts.fetch(:max_inline_relations_depth)
+      @default_inline_relations_depth = 0
     end
 
     # @param [RestController] controller Controller for the
@@ -30,12 +34,17 @@ module VCAP::CloudController::RestController
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
     def render_json(controller, ds, path, opts, request_params)
-      page      = opts[:page] || 1
-      page_size = opts[:results_per_page] || @default_results_per_page
-      criteria  = opts[:order_by] || :id
+      page     = opts[:page] || 1
+      criteria = opts[:order_by] || :id
 
+      page_size = opts[:results_per_page] || @default_results_per_page
       if page_size > @max_results_per_page
         raise VCAP::Errors::BadQueryParameter.new("results_per_page must be <= #{@max_results_per_page}")
+      end
+
+      inline_relations_depth = opts[:inline_relations_depth] || @default_inline_relations_depth
+      if inline_relations_depth > @max_inline_relations_depth
+        raise VCAP::Errors::BadQueryParameter.new("inline_relations_depth must be <= #{@max_inline_relations_depth}")
       end
 
       paginated = ds.order_by(criteria).extension(:pagination).paginate(page, page_size)
@@ -45,7 +54,7 @@ module VCAP::CloudController::RestController
         controller,
         default_visibility_filter,
         opts[:additional_visibility_filters] || {},
-        opts[:inline_relations_depth] || 0,
+        inline_relations_depth,
       )
 
       prev_url = url(controller, path, paginated.prev_page, page_size, opts, request_params) if paginated.prev_page

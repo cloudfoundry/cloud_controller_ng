@@ -2,13 +2,12 @@ require 'addressable/uri'
 
 module VCAP::CloudController::RestController
   class ObjectRenderer
-    def self.render_json(controller, obj, opts)
-      new(controller, obj, opts, ).render_json
-    end
-
-    def initialize(eager_loader, serializer)
+    def initialize(eager_loader, serializer, opts)
       @eager_loader = eager_loader
       @serializer = serializer
+
+      @max_inline_relations_depth = opts.fetch(:max_inline_relations_depth)
+      @default_inline_relations_depth = 0
     end
 
     # Render an object to json, using export and security properties
@@ -28,12 +27,17 @@ module VCAP::CloudController::RestController
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
     def render_json(controller, obj, opts)
+      inline_relations_depth = opts[:inline_relations_depth] || @default_inline_relations_depth
+      if inline_relations_depth > @max_inline_relations_depth
+        raise VCAP::Errors::BadQueryParameter.new("inline_relations_depth must be <= #{@max_inline_relations_depth}")
+      end
+
       eager_loaded_objects = @eager_loader.eager_load_dataset(
         obj.model.dataset,
         controller,
         default_visibility_filter,
         opts[:additional_visibility_filters] || {},
-        opts[:inline_relations_depth] || 0,
+        inline_relations_depth,
       )
 
       eager_loaded_object = eager_loaded_objects.where(id: obj.id).all.first
