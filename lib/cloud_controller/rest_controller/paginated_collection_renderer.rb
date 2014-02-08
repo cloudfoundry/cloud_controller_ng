@@ -6,7 +6,7 @@ module VCAP::CloudController::RestController
       @eager_loader = eager_loader
       @serializer = serializer
       @max_results_per_page = opts.fetch(:max_results_per_page)
-      @default_results_per_page = 50
+      @default_results_per_page = opts.fetch(:default_results_per_page)
     end
 
     # @param [RestController] controller Controller for the

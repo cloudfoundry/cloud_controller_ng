@@ -4,10 +4,11 @@ module VCAP::CloudController::RestController
   describe PaginatedCollectionRenderer do
     subject(:renderer) { described_class.new(eager_loader, serializer, renderer_opts) }
     let(:eager_loader) { SecureEagerLoader.new }
-    let(:serializer) { double('serializer') }
+    let(:serializer) { PreloadedObjectSerializer.new }
     let(:renderer_opts) do
       {
-        max_results_per_page: 100
+        default_results_per_page: 100_000,
+        max_results_per_page: 100_000,
       }
     end
 
@@ -24,10 +25,11 @@ module VCAP::CloudController::RestController
         primary_key :id
         String :guid
         String :name
+        Time :created_at
       end
 
       class Car < Sequel::Model(DB)
-        attr_accessor :id
+        attr_accessor :id, :created_at
         export_attributes :name
       end
 
@@ -63,6 +65,16 @@ module VCAP::CloudController::RestController
         it 'renders json response' do
           result = subject.render_json(controller, dataset, path, opts, request_params)
           expect(result).to be_instance_of(String)
+        end
+      end
+
+      context 'when results_per_page were not specified' do
+        before { renderer_opts.merge!(default_results_per_page: 1) }
+        before { Car.create(name: "car-1"); Car.create(name: "car-2") }
+
+        it 'renders limits number of results to default_results_per_page' do
+          result = subject.render_json(controller, dataset, path, opts, request_params)
+          expect(JSON.parse(result)["resources"].size).to eq(1)
         end
       end
     end

@@ -143,6 +143,7 @@ module VCAP::CloudController
 
         :renderer => {
           :max_results_per_page => Integer,
+          :default_results_per_page => Integer,
         },
       }
     end

@@ -118,15 +118,21 @@ module CloudController
     def paginated_collection_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
-      opts         = {max_results_per_page: config[:renderer][:max_results_per_page]}
-      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, opts)
+
+      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, {
+        max_results_per_page:     config[:renderer][:max_results_per_page],
+        default_results_per_page: config[:renderer][:default_results_per_page],
+      })
     end
 
     def entity_only_paginated_collection_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::EntityOnlyPreloadedObjectSerializer.new
-      opts         = {max_results_per_page: config[:renderer][:max_results_per_page]}
-      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, opts)
+
+      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, {
+        max_results_per_page:     config[:renderer][:max_results_per_page],
+        default_results_per_page: config[:renderer][:default_results_per_page],
+      })
     end
 
     private
