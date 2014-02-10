@@ -55,6 +55,7 @@ module VCAP::CloudController
       require "models/runtime/app"
       require "models/runtime/droplet"
       require "models/runtime/buildpack"
+      require "models/runtime/buildpack_bits_delete"
       require "models/runtime/domain"
       require "models/runtime/shared_domain"
       require "models/runtime/private_domain"
