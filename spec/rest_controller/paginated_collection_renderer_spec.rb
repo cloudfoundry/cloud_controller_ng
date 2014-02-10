@@ -20,16 +20,16 @@ module VCAP::CloudController::RestController
       let(:opts) { {} }
       let(:request_params) { {} }
 
-      DB = Sequel.sqlite(':memory:')
+      db = Sequel.sqlite(':memory:')
 
-      DB.create_table :cars do
+      db.create_table :cars do
         primary_key :id
         String :guid
         String :name
         Time :created_at
       end
 
-      class Car < Sequel::Model(DB)
+      class Car < Sequel::Model(db)
         attr_accessor :id, :created_at
         export_attributes :name
       end

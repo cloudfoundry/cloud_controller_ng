@@ -8,26 +8,26 @@ module VCAP::CloudController::RestController
     let(:renderer_opts) { { max_inline_relations_depth: 100_000 } }
 
     describe '#render_json' do
-      let(:controller) { CarsController }
-      let(:obj) { Car.create { |c| c.id = 1; c.name = 'car-1' } }
+      let(:controller) { BicyclesController }
+      let(:obj) { Bicycle.create { |c| c.id = 1; c.name = 'bicycle-1' } }
       let(:opts) { {} }
 
-      DB = Sequel.sqlite(':memory:')
+      db = Sequel.sqlite(':memory:')
 
-      DB.create_table :cars do
+      db.create_table :bicycles do
         primary_key :id
         String :guid
         String :name
         Time :created_at
       end
 
-      class Car < Sequel::Model(DB)
+      class Bicycle < Sequel::Model(db)
         attr_accessor :id, :created_at
         export_attributes :name
         alias_method :model, :class
       end
 
-      class CarsController < ModelController
+      class BicyclesController < ModelController
         define_attributes {}
       end
 
