@@ -575,6 +575,17 @@ module VCAP::CloudController
               end
             end
           end
+
+          context "when a buildpack has missing bits" do
+            it "does not include the buildpack" do
+              buildpack_d = Buildpack.make(key: "d key", position: 5)
+
+              request = staging_task.staging_request
+              admin_buildpacks = request[:admin_buildpacks]
+              expect(admin_buildpacks).to have(2).items
+              expect(admin_buildpacks).to_not include(key: "d key", url: nil)
+            end
+          end
         end
 
       end
