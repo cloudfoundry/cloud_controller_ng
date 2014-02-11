@@ -75,9 +75,7 @@ module VCAP::CloudController
       EM.run do
         config = @config.dup
 
-        message_bus = MessageBus::Configurer.new(
-          :servers => config[:message_bus_servers],
-          :logger => logger).go
+        message_bus = MessageBus::Configurer.new(servers: config[:message_bus_servers], logger: logger).go
 
         start_cloud_controller(message_bus)
 
@@ -167,10 +165,7 @@ module VCAP::CloudController
 
     def start_thin_server(app, config)
       if @config[:nginx][:use_nginx]
-        @thin_server = Thin::Server.new(
-            config[:nginx][:instance_socket],
-            :signals => false
-        )
+        @thin_server = Thin::Server.new(config[:nginx][:instance_socket], signals: false)
       else
         @thin_server = Thin::Server.new(@config[:bind_address], @config[:port])
       end
