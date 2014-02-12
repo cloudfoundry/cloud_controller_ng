@@ -67,7 +67,7 @@ module VCAP::CloudController
         it "takes a buildpack file and adds it to the custom buildpacks blobstore with the correct key" do
           CloudController::DependencyLocator.instance.upload_handler.stub(:uploaded_file).and_return(valid_zip)
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-          expected_key = sha_valid_zip
+          expected_key = "#{@test_buildpack.guid}_#{sha_valid_zip}"
 
           put "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
@@ -115,16 +115,16 @@ module VCAP::CloudController
         it "removes the old buildpack binary when a new one is uploaded" do
           put "/v2/buildpacks/#{@test_buildpack.guid}/bits", { :buildpack => valid_zip2 }, admin_headers
 
+          expected_sha = "#{@test_buildpack.guid}_#{sha_valid_zip2}"
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-          buildpack_key = sha_valid_zip2
-          expect(buildpack_blobstore.exists?(buildpack_key)).to be_true
+          expect(buildpack_blobstore.exists?(expected_sha)).to be_true
 
           put "/v2/buildpacks/#{@test_buildpack.guid}/bits", upload_body, admin_headers
           response = Yajl::Parser.parse(last_response.body)
           entity = response['entity']
           expect(entity['name']).to eq('upload_binary_buildpack')
           expect(entity['filename']).to eq(filename)
-          expect(buildpack_blobstore.exists?(buildpack_key)).to be_false
+          expect(buildpack_blobstore.exists?(expected_sha)).to be_false
         end
 
         it 'reports a no content if the same buildpack is uploaded again' do
@@ -254,6 +254,20 @@ module VCAP::CloudController
                 put "/v2/buildpacks/#{@test_buildpack.guid}/bits", { buildpack: nil }, admin_headers
               }.to raise_error
             end
+          end
+        end
+
+        context "when the same bits are uploaded twice" do
+          before do
+            @test_buildpack2 = VCAP::CloudController::Buildpack.create_from_hash({ name: "buildpack2", position: 0 })
+            put "/v2/buildpacks/#{@buildpack.guid}/bits", { :buildpack => valid_zip2 }, admin_headers
+            put "/v2/buildpacks/#{@test_buildpack2.guid}/bits", { :buildpack => valid_zip2 }, admin_headers
+          end
+
+          it "should have different keys" do
+            bp1 = Buildpack.find(name: 'upload_binary_buildpack')
+            bp2 = Buildpack.find(name: 'buildpack2')
+            expect(bp1.key).to_not eq(bp2.key)
           end
         end
       end
