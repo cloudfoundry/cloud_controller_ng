@@ -5,6 +5,13 @@ describe Blobstore do
   let(:sha_of_content) { Digest::SHA1.hexdigest(content) }
   let(:local_dir) { Dir.mktmpdir }
   let(:directory_key) { "a-directory-key" }
+  let(:connection_config) do
+    {
+      provider: "AWS",
+      aws_access_key_id: 'fake_access_key_id',
+      aws_secret_access_key: 'fake_secret_access_key',
+    }
+  end
 
   def upload_tmpfile(blobstore, key="abcdef")
     Tempfile.open("") do |tmpfile|
@@ -19,20 +26,12 @@ describe Blobstore do
   end
 
   context "for a remote blobstore backed by a CDN" do
+    subject(:blobstore) do
+      Blobstore.new(connection_config, directory_key, cdn)
+    end
+
     let(:cdn) { double(:cdn) }
-    let(:blobstore) do
-      Blobstore.new(
-          {
-              provider: "AWS",
-              aws_access_key_id: 'fake_access_key_id',
-              aws_secret_access_key: 'fake_secret_access_key',
-          }, directory_key, cdn)
-    end
-
-    let(:url_from_cdn) do
-      "http://some_distribution.cloudfront.net/ab/cd/abcdef"
-    end
-
+    let(:url_from_cdn) { "http://some_distribution.cloudfront.net/ab/cd/abcdef" }
     let(:key) { "abcdef" }
 
     before do
@@ -75,11 +74,7 @@ describe Blobstore do
 
   context "common behaviors" do
     subject(:blobstore) do
-      Blobstore.new({
-                      provider: "AWS",
-                      aws_access_key_id: 'fake_access_key_id',
-                      aws_secret_access_key: 'fake_secret_access_key',
-                    }, directory_key)
+      Blobstore.new(connection_config, directory_key)
     end
 
     context "with existing files" do
@@ -151,14 +146,14 @@ describe Blobstore do
 
     describe "returns a download uri" do
       context "when the blob store is a local" do
+        subject(:blobstore) do
+          Blobstore.new({provider: "Local", local_root: "/tmp"}, directory_key)
+        end
+
         around do |instance|
           Fog.unmock!
           instance.run
           Fog.mock!
-        end
-
-        subject(:blobstore) do
-          Blobstore.new({provider: "Local", local_root: "/tmp"}, directory_key)
         end
 
         it "does have a public url" do
@@ -267,11 +262,7 @@ describe Blobstore do
 
   context "with root directory specified" do
     subject(:blobstore) do
-      Blobstore.new({
-                        provider: "AWS",
-                        aws_access_key_id: 'fake_access_key_id',
-                        aws_secret_access_key: 'fake_secret_access_key',
-                    }, directory_key, nil, "my-root")
+      Blobstore.new(connection_config, directory_key, nil, "my-root")
     end
 
     it "includes the directory in the partitioned key" do
