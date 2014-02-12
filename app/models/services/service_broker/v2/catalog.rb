@@ -13,6 +13,7 @@ module VCAP::CloudController::ServiceBroker::V2
       @service_broker = service_broker
       @services       = []
       @plans          = []
+      @errors         = []
 
       catalog_hash.fetch('services', []).each do |service_attrs|
         service = CatalogService.new(service_broker, service_attrs)
@@ -22,12 +23,15 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def valid?
-      @services.map(&:valid?).all?
+      validate_all_service_ids_are_unique!
+      all_services_valid = @services.map(&:valid?).all?
+      @errors.empty? && all_services_valid
     end
 
     INDENT = '  '.freeze
     def error_text
       message = "\n"
+      @errors.each { |e| message += "#{e}\n" }
       @services.each do |service|
         next if service.valid?
 
@@ -80,13 +84,17 @@ module VCAP::CloudController::ServiceBroker::V2
 
     private
 
+    def validate_all_service_ids_are_unique!
+      @errors << "Service ids must be unique" if services.uniq{ |service| service.broker_provided_id }.count < services.count
+    end
+
     def validate_existing_clients_match_existing_services(services_with_existing_clients)
       catalog_to_db_service_hash = map_catalog_to_db_service(services_with_existing_clients)
 
       catalog_to_db_service_hash.each do |catalog_service, db_service|
         # ensure that the service requesting the existing uaa client is the one that originally created it
         unless db_service && (db_service.sso_client_id == catalog_service.dashboard_client['id'])
-          catalog_service.errors << 'Service dashboard client id must be unique'
+          catalog_service.errors << 'Service dashboard client ids must be unique'
         end
       end
     end

@@ -170,6 +170,22 @@ module VCAP::CloudController::ServiceBroker::V2
           expect(service.description).to eq(service_description)
         end
 
+        context 'when the broker is different' do
+          let(:different_broker) { VCAP::CloudController::ServiceBroker.make }
+          let!(:service) do
+            VCAP::CloudController::Service.make(
+              service_broker: different_broker,
+              unique_id: service_id
+            )
+          end
+
+          it 'raises a database error' do
+            expect {
+              catalog.sync_services_and_plans
+            }.to raise_error Sequel::ValidationFailed
+          end
+        end
+
         it 'creates the new plan' do
           expect {
             catalog.sync_services_and_plans
@@ -424,7 +440,7 @@ module VCAP::CloudController::ServiceBroker::V2
             catalog.create_service_dashboard_clients rescue nil
             service_with_client = catalog.services.find { |s| s.name == 'service-with-dashboard-client' }
 
-            expect(service_with_client.errors).to include 'Service dashboard client id must be unique'
+            expect(service_with_client.errors).to include 'Service dashboard client ids must be unique'
           end
 
           it 'raises a ServiceBrokerCatalogInvalid error' do
@@ -468,6 +484,52 @@ module VCAP::CloudController::ServiceBroker::V2
           expect(catalog.valid?).to eq false
         end
       end
+
+      context 'when two services in the catalog have the same id' do
+        let(:catalog_hash) do
+          {
+            "services" => [
+              {
+                "id" =>"1",
+                "name" =>"1",
+                "description" =>"1",
+                "bindable" =>true,
+                "tags" =>["1"],
+                "metadata" => {"foo" =>"bar"},
+                "plans" =>[
+                  {
+                    "id" => "1",
+                    "name" => "1",
+                    "description" => "1",
+                    "metadata" => {"foo" =>"bar"}
+                  }
+                ]
+              },
+              {
+                "id" =>"1",
+                "name" => "2",
+                "description" =>"2",
+                "bindable" =>true,
+                "tags" =>["2"],
+                "metadata" =>{"foo" =>"bar"},
+                "plans" =>[
+                  {
+                    "id" => "2",
+                    "name" => "2",
+                    "description" => "2",
+                    "metadata" =>{"foo" =>"bar"}
+                  }
+                ]
+              }
+            ]
+          }
+        end
+
+        it 'gives an error' do
+          catalog = Catalog.new(broker, catalog_hash)
+          expect(catalog.valid?).to eq false
+        end
+      end
     end
 
     describe '#error_text' do
@@ -479,7 +541,8 @@ module VCAP::CloudController::ServiceBroker::V2
             service_entry(name: 'service-3',
                           plans: [ plan_entry(name: 'plan-1', id: 'plan-id'),
                                    plan_entry(id: 'plan-id', name: 123) ]),
-            service_entry(name: 'service-4', plans: [])
+            service_entry(name: 'service-4', plans: [], id: 'duplicate-id'),
+            service_entry(name: 'service-5', id: 'duplicate-id')
           ]
         }
       end
@@ -491,10 +554,11 @@ module VCAP::CloudController::ServiceBroker::V2
         expect(catalog.error_text).to eq(
 <<-HEREDOC
 
+Service ids must be unique
 Service service-2
   Service id must be a string, but has value 123
 Service service-3
-  Plan id must be unique
+  Plan ids must be unique
   Plan 123
     Plan name must be a string, but has value 123
 Service service-4

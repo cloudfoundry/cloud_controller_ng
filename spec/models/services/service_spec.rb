@@ -28,7 +28,7 @@ module VCAP::CloudController
 
         it 'raises an error on save' do
           expect { service.save }.
-            to raise_error(Sequel::ValidationFailed, 'service id must be unique')
+            to raise_error(Sequel::ValidationFailed, 'Service ids must be unique')
         end
       end
 
@@ -37,12 +37,12 @@ module VCAP::CloudController
           existing_service = Service.make_unsaved(label: 'other', provider: '').save
           expect {
             Service.make_unsaved(label: existing_service.label, provider: '').save
-          }.to raise_error('service name must be unique')
+          }.to raise_error('Service name must be unique')
 
           other_service = Service.make_unsaved(label: existing_service.label + ' label', provider: '').save
           expect {
             other_service.update(label: existing_service.label)
-          }.to raise_error('service name must be unique')
+          }.to raise_error('Service name must be unique')
         end
       end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
 
         it 'raises an error on save' do
           expect { service.save }.
-            to raise_error(Sequel::ValidationFailed, 'dashboard client id must be unique')
+            to raise_error(Sequel::ValidationFailed, 'Dashboard client ids must be unique')
         end
       end
     end

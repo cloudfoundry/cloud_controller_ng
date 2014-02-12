@@ -94,7 +94,7 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def validate_all_plan_ids_are_unique!
-      @errors << 'Plan id must be unique' if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
+      @errors << 'Plan ids must be unique' if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
     end
 
     def validate_all_plan_names_are_unique!

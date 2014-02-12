@@ -23,16 +23,16 @@ module VCAP::CloudController
     strip_attributes  :label, :provider
 
     def validate
-      validates_presence :label,              message:  Sequel.lit('name is required')
+      validates_presence :label,              message:  Sequel.lit('Service name is required')
       validates_presence :description,        message: 'is required'
       validates_presence :bindable,           message: 'is required'
       validates_url      :url,                message: 'must be a valid url'
       validates_url      :info_url,           message: 'must be a valid url'
-      validates_unique   :unique_id,          message: Sequel.lit('service id must be unique')
-      validates_unique   :sso_client_id,      message: Sequel.lit('dashboard client id must be unique')
+      validates_unique   :unique_id,          message: Sequel.lit('Service ids must be unique')
+      validates_unique   :sso_client_id,      message: Sequel.lit('Dashboard client ids must be unique')
 
       if provider.blank?
-        validates_unique :label, message: Sequel.lit('service name must be unique')
+        validates_unique :label, message: Sequel.lit('Service name must be unique')
       else
         validates_unique [:label, :provider], message: 'is taken'
       end
