@@ -20,7 +20,7 @@ describe Blobstore do
 
   context "for a remote blobstore backed by a CDN" do
     let(:cdn) { double(:cdn) }
-    let(:cdn_blobstore) do
+    let(:blobstore) do
       Blobstore.new(
           {
               provider: "AWS",
@@ -36,16 +36,16 @@ describe Blobstore do
     let(:key) { "abcdef" }
 
     before do
-      upload_tmpfile(cdn_blobstore, key)
+      upload_tmpfile(blobstore, key)
       cdn.stub(:download_uri).and_return(url_from_cdn)
     end
 
     it "is not local" do
-      expect(cdn_blobstore).to_not be_local
+      expect(blobstore).to_not be_local
     end
 
     it "returns a url to the cdn" do
-      expect(cdn_blobstore.download_uri("abcdef")).to eql(url_from_cdn)
+      expect(blobstore.download_uri("abcdef")).to eql(url_from_cdn)
     end
 
     it "downloads through the CDN" do
@@ -55,7 +55,7 @@ describe Blobstore do
 
       destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
 
-      expect { cdn_blobstore.download_from_blobstore(key, destination) }.to change {
+      expect { blobstore.download_from_blobstore(key, destination) }.to change {
         File.exists?(destination)
       }.from(false).to(true)
 
@@ -64,21 +64,24 @@ describe Blobstore do
   end
 
   context "a local blobstore" do
+    subject(:blobstore) do
+      Blobstore.new({provider: "Local"}, directory_key)
+    end
+
     it "is true if the provider is local" do
-      blobstore = Blobstore.new({provider: "Local"}, directory_key)
       expect(blobstore).to be_local
     end
   end
 
-  subject(:blobstore) do
-    Blobstore.new({
+  context "common behaviors" do
+    subject(:blobstore) do
+      Blobstore.new({
                       provider: "AWS",
                       aws_access_key_id: 'fake_access_key_id',
                       aws_secret_access_key: 'fake_secret_access_key',
-                  }, directory_key)
-  end
+                    }, directory_key)
+    end
 
-  context "common behaviors" do
     context "with existing files" do
       before do
         upload_tmpfile(blobstore, sha_of_content)
@@ -154,13 +157,13 @@ describe Blobstore do
           Fog.mock!
         end
 
-        subject(:local_blobstore) do
+        subject(:blobstore) do
           Blobstore.new({provider: "Local", local_root: "/tmp"}, directory_key)
         end
 
         it "does have a public url" do
-          upload_tmpfile(local_blobstore)
-          expect(local_blobstore.download_uri("abcdef")).to match(%r{/ab/cd/abcdef})
+          upload_tmpfile(blobstore)
+          expect(blobstore.download_uri("abcdef")).to match(%r{/ab/cd/abcdef})
         end
       end
 
@@ -260,7 +263,6 @@ describe Blobstore do
         }.to_not raise_error
       end
     end
-
   end
 
   context "with root directory specified" do
