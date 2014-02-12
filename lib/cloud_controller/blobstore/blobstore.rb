@@ -18,6 +18,12 @@ class Blobstore
     !file(key).nil?
   end
 
+  def ensure_directory_exists
+    unless connection.directories.get(@directory_key, max_keys: 0)
+      connection.directories.create(key: @directory_key, public: false)
+    end
+  end
+
   def download_from_blobstore(source_key, destination_path)
     FileUtils.mkdir_p(File.dirname(destination_path))
     File.open(destination_path, "w") do |file|
