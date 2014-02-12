@@ -30,11 +30,7 @@ module VCAP::CloudController::ServiceBroker::V2
     def valid?
       return @valid if defined? @valid
       validate_service
-      validate_at_least_one_plan_present!
-      validate_all_plan_ids_are_unique!
-      validate_all_plan_names_are_unique!
-      validate_dashboard_client!
-      all_plans_valid = plans.map(&:valid?).all?
+      all_plans_valid = validate_plans
       @valid = !@errors.any? && all_plans_valid
     end
 
@@ -60,30 +56,49 @@ module VCAP::CloudController::ServiceBroker::V2
       validate_array_of_strings!(:requires, requires)
 
       validate_hash!(:metadata, metadata) if metadata
+      validate_dashboard_client!
+    end
+
+    def validate_plans
+      validate_dependently_in_order([:validate_at_least_one_plan_present!,
+                            :validate_plans_format,
+                            :validate_uniqueness_constraints,
+                            :validate_plans_data])
+    end
+
+    def validate_plans_format
+      validate_array_of_hashes!(:plans, plans_data)
+    end
+
+    def validate_uniqueness_constraints
+      validate_all_plan_ids_are_unique!
+      validate_all_plan_names_are_unique!
     end
 
     def validate_plans_data
-      errors_count = errors.count
-      validate_array_of_hashes!(:plans, plans_data)
-      return errors.count == errors_count
+      plans.map(&:valid?).all?
     end
 
     def build_plans
-      if validate_plans_data
+      return unless plans_data
+
+      if plans_data.is_a?(Array)
         @plans = @plans_data.map { |attrs| CatalogPlan.new(self, attrs) }
+      else
+        @plans = @plans_data
       end
     end
 
     def validate_at_least_one_plan_present!
-      @errors << 'at least one plan is required' if plans.empty?
+      @errors << 'At least one plan is required' if plans.empty?
     end
 
     def validate_all_plan_ids_are_unique!
-      @errors << 'plan id must be unique' if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
+      @errors << 'Plan id must be unique' if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
     end
 
     def validate_all_plan_names_are_unique!
-      @errors << 'plan names must be unique within a service' if plans.uniq { |plan| plan.name }.count < plans.count
+      @errors << 'Plan names must be unique within a service' if plans.uniq { |plan| plan.name }.count < plans.count
     end
 
     def validate_dashboard_client!
@@ -95,14 +110,14 @@ module VCAP::CloudController::ServiceBroker::V2
 
     def human_readable_attr_name(name)
       {
-        broker_provided_id: 'service id',
-        name: 'service name',
-        description: 'service description',
-        bindable: 'service "bindable" field',
-        tags: 'service tags',
-        metadata: 'service metadata',
-        plans: 'service plans list',
-        requires: 'service "requires" field',
+        broker_provided_id: 'Service id',
+        name: 'Service name',
+        description: 'Service description',
+        bindable: 'Service "bindable" field',
+        tags: 'Service tags',
+        metadata: 'Service metadata',
+        plans: 'Service plans list',
+        requires: 'Service "requires" field',
         dashboard_client_id: 'Service dashboard client id',
         dashboard_client_secret: 'Service dashboard client secret',
         dashboard_client_redirect_uri: 'Service dashboard client redirect_uri'

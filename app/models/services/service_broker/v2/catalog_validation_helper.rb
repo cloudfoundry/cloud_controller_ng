@@ -38,6 +38,14 @@ module VCAP::CloudController::ServiceBroker::V2
       end
     end
 
+    def validate_dependently_in_order(validations)
+      validations.each do |validation|
+        errors_count = errors.count
+        send(validation)
+        break if errors_count != errors.count
+      end
+    end
+
     def is_an_array_of(klass, input)
       input.is_a?(Array) && input.all? { |i| i.is_a?(klass) }
     end

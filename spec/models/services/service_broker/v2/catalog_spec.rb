@@ -492,13 +492,13 @@ module VCAP::CloudController::ServiceBroker::V2
 <<-HEREDOC
 
 Service service-2
-  service id must be a string, but has value 123
+  Service id must be a string, but has value 123
 Service service-3
-  plan id must be unique
+  Plan id must be unique
   Plan 123
-    plan name must be a string, but has value 123
+    Plan name must be a string, but has value 123
 Service service-4
-  at least one plan is required
+  At least one plan is required
 HEREDOC
         )
       end

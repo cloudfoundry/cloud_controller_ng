@@ -38,16 +38,12 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def human_readable_attr_name(name)
-      case name
-      when :broker_provided_id
-        "plan id"
-      when :name
-        "plan name"
-      when :description
-        "plan description"
-      when :metadata
-        "plan metadata"
-      end
+      {
+        broker_provided_id: "Plan id",
+        name: "Plan name",
+        description: "Plan description",
+        metadata: "Plan metadata"
+      }.fetch(name) { raise NotImplementedError }
     end
   end
 end

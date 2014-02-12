@@ -21,7 +21,7 @@ module VCAP::CloudController::ServiceBroker::V2
         plan = CatalogPlan.new(double('broker'), attrs)
         plan.valid?
 
-        expect(plan.errors).to include 'plan id must be a string, but has value 123'
+        expect(plan.errors).to include 'Plan id must be a string, but has value 123'
       end
 
       it 'validates that @broker_provided_id is present' do
@@ -30,7 +30,7 @@ module VCAP::CloudController::ServiceBroker::V2
         plan = CatalogPlan.new(double('broker'), attrs)
         plan.valid?
 
-        expect(plan.errors).to include 'plan id is required'
+        expect(plan.errors).to include 'Plan id is required'
       end
 
       it 'validates that @name is a string' do
@@ -38,7 +38,7 @@ module VCAP::CloudController::ServiceBroker::V2
         plan = CatalogPlan.new(double('broker'), attrs)
         plan.valid?
 
-        expect(plan.errors).to include 'plan name must be a string, but has value 123'
+        expect(plan.errors).to include 'Plan name must be a string, but has value 123'
       end
 
       it 'validates that @name is present' do
@@ -47,7 +47,7 @@ module VCAP::CloudController::ServiceBroker::V2
         plan = CatalogPlan.new(double('broker'), attrs)
         plan.valid?
 
-        expect(plan.errors).to include 'plan name is required'
+        expect(plan.errors).to include 'Plan name is required'
       end
 
       it 'validates that @description is a string' do
@@ -55,7 +55,7 @@ module VCAP::CloudController::ServiceBroker::V2
         plan = CatalogPlan.new(double('broker'), attrs)
         plan.valid?
 
-        expect(plan.errors).to include 'plan description must be a string, but has value 123'
+        expect(plan.errors).to include 'Plan description must be a string, but has value 123'
       end
 
       it 'validates that @description is present' do
@@ -64,7 +64,7 @@ module VCAP::CloudController::ServiceBroker::V2
         plan = CatalogPlan.new(double('broker'), attrs)
         plan.valid?
 
-        expect(plan.errors).to include 'plan description is required'
+        expect(plan.errors).to include 'Plan description is required'
       end
 
       it 'validates that @metadata is a hash' do
@@ -72,7 +72,7 @@ module VCAP::CloudController::ServiceBroker::V2
         plan = CatalogPlan.new(double('broker'), attrs)
         plan.valid?
 
-        expect(plan.errors).to include 'plan metadata must be a hash, but has value ["list", "of", "strings"]'
+        expect(plan.errors).to include 'Plan metadata must be a hash, but has value ["list", "of", "strings"]'
       end
 
       describe "#valid?" do
