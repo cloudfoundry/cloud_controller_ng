@@ -112,7 +112,8 @@ module VCAP::CloudController
       let(:headers) { headers_for(user) }
 
       before do
-        @active = 3.times.map { Service.make(:active => true, :long_description => Sham.long_description).
+        @service_broker=ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', auth_password: 'secret')
+        @active = 3.times.map { Service.make(:active => true, :long_description => Sham.long_description, :service_broker => @service_broker).
           tap{|svc| ServicePlan.make(:service => svc) } }
         @inactive = 2.times.map { Service.make(:active => false).tap{|svc| ServicePlan.make(:service => svc) } }
       end
@@ -178,6 +179,14 @@ module VCAP::CloudController
           get "/v2/services?q=active:f", {}, headers
           last_response.should be_ok
           decoded_guids.should =~ @inactive.map(&:guid)
+        end
+      end
+      
+      describe "get /v2/services?q=service_broker_guid:<guid>" do
+        it "can list services by broker" do
+          get "/v2/services?q=service_broker_guid:"+@service_broker.guid, {}, headers
+          last_response.should be_ok
+          decoded_guids.should =~ @active.map(&:guid)
         end
       end
     end
