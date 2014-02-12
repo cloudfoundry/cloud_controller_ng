@@ -25,6 +25,19 @@ describe Blobstore do
     Fog::Mock.reset
   end
 
+  describe "#directory_exists?" do
+    subject(:blobstore) do
+      Blobstore.new(connection_config, directory_key)
+    end
+
+    it "doesn't get a full listing of the contents of the directory" do
+      directories = double('Fog::Storage::AWS::Directories')
+      allow(Fog::Storage).to receive(:new).and_return(double(Fog::Storage, directories: directories))
+      expect(directories).to receive(:get).with(directory_key, max_keys: 0)
+      blobstore.directory_exists?
+    end
+  end
+
   describe "#ensure_directory_exists" do
     subject(:blobstore) do
       Blobstore.new(connection_config, directory_key)

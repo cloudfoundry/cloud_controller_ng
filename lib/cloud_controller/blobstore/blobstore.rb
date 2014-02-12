@@ -19,9 +19,11 @@ class Blobstore
   end
 
   def ensure_directory_exists
-    unless connection.directories.get(@directory_key, max_keys: 0)
-      connection.directories.create(key: @directory_key, public: false)
-    end
+    create_directory unless directory_exists?
+  end
+
+  def directory_exists?
+    connection.directories.get(@directory_key, max_keys: 0)
   end
 
   def download_from_blobstore(source_key, destination_path)
@@ -97,6 +99,11 @@ class Blobstore
   end
 
   private
+
+  def create_directory
+    connection.directories.create(key: @directory_key, public: false)
+  end
+
   def partitioned_key(key)
     key = key.to_s.downcase
     key = File.join(key[0..1], key[2..3], key)
