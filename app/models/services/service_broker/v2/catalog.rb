@@ -85,7 +85,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
       catalog_to_db_service_hash.each do |catalog_service, db_service|
         # ensure that the service requesting the existing uaa client is the one that originally created it
-        unless db_service && (db_service.dashboard_client_id == catalog_service.dashboard_client['id'])
+        unless db_service && (db_service.sso_client_id == catalog_service.dashboard_client['id'])
           catalog_service.errors << 'Service dashboard client id must be unique'
         end
       end
@@ -113,7 +113,7 @@ module VCAP::CloudController::ServiceBroker::V2
     def update_or_create_services
       services.each do |catalog_service|
         service_id = catalog_service.broker_provided_id
-        dashboard_client_id = catalog_service.dashboard_client ?
+        sso_client_id = catalog_service.dashboard_client ?
             catalog_service.dashboard_client['id'] : nil
 
         VCAP::CloudController::Service.update_or_create(
@@ -127,7 +127,7 @@ module VCAP::CloudController::ServiceBroker::V2
             tags:        catalog_service.tags,
             extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
             active:      catalog_service.plans_present?,
-            dashboard_client_id: dashboard_client_id
+            sso_client_id: sso_client_id
           )
         end
       end

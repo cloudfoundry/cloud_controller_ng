@@ -323,8 +323,8 @@ module VCAP::CloudController::ServiceBroker::V2
           ServiceDashboardClientManager.stub(:create).once
           catalog.sync_services_and_plans
 
-          expect(VCAP::CloudController::Service.find(label: 'service-with-dashboard-client').dashboard_client_id).to eq 'abcde123'
-          expect(VCAP::CloudController::Service.find(label: 'service-without-dashboard-client').dashboard_client_id).to be_nil
+          expect(VCAP::CloudController::Service.find(label: 'service-with-dashboard-client').sso_client_id).to eq 'abcde123'
+          expect(VCAP::CloudController::Service.find(label: 'service-without-dashboard-client').sso_client_id).to be_nil
         end
       end
     end
@@ -396,9 +396,9 @@ module VCAP::CloudController::ServiceBroker::V2
             and_return([ { 'client_id' => dashboard_client_attrs['id'] } ])
         end
 
-        context 'and the service exists in the db with a matching dashboard_client_id' do
+        context 'and the service exists in the db with a matching sso_client_id' do
           before do
-            VCAP::CloudController::Service.make(unique_id: 'service-with-dashboard-client-id', dashboard_client_id: dashboard_client_attrs['id'])
+            VCAP::CloudController::Service.make(unique_id: 'service-with-dashboard-client-id', sso_client_id: dashboard_client_attrs['id'])
             allow(client_manager).to receive(:create)
           end
 
@@ -409,7 +409,7 @@ module VCAP::CloudController::ServiceBroker::V2
           end
         end
 
-        context 'and the service does not have a matching dashboard_client_id in the db' do
+        context 'and the service does not have a matching sso_client_id in the db' do
           before do
             allow(client_manager).to receive(:create)
           end
@@ -435,7 +435,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
       context 'when some clients we want to create do not already exist in uaa' do
         before do
-          VCAP::CloudController::Service.make(unique_id: 'other-service-with-dashboard-client-id', dashboard_client_id: 'otherid')
+          VCAP::CloudController::Service.make(unique_id: 'other-service-with-dashboard-client-id', sso_client_id: 'otherid')
           allow(client_manager).to receive(:get_clients).with([dashboard_client_attrs['id'], 'otherid']).
             and_return([{ 'client_id' => 'otherid' }])
           allow(client_manager).to receive(:create)

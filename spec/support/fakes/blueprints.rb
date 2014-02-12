@@ -85,7 +85,7 @@ module VCAP::CloudController
     end
     bindable          { true }
     active            { true }
-    dashboard_client_id { Sham.guid }
+    sso_client_id { Sham.guid }
   end
 
   Service.blueprint(:v1) do

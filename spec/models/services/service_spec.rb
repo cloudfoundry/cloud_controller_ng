@@ -55,9 +55,9 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the dashboard_client_id is not unique' do
+      context 'when the sso_client_id is not unique' do
         let(:existing_service) { Service.make }
-        let(:service) { Service.make_unsaved(dashboard_client_id: existing_service.dashboard_client_id) }
+        let(:service) { Service.make_unsaved(sso_client_id: existing_service.sso_client_id) }
 
         it 'is not valid' do
           expect(service).not_to be_valid
