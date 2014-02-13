@@ -1,6 +1,9 @@
+require 'presenters/error_hasher'
+
 class ErrorPresenter
-  def initialize(error)
+  def initialize(error, error_hasher = ErrorHasher.new)
     @error = error
+    @error_hasher = error_hasher
   end
 
   def api_error?
@@ -16,23 +19,11 @@ class ErrorPresenter
   end
 
   def payload
-    payload = {
-      'code' => 10001,
-      'description' => @error.message,
-      'error_code' => "CF-#{Hashify.demodulize(@error.class)}"
-    }
+    @error_hasher.hashify(@error, api_error?)
+  end
 
-    if @error.respond_to?(:error_code)
-      payload['code'] = @error.error_code
-    end
-
-    if @error.respond_to?(:to_h)
-      payload.merge!(@error.to_h)
-    else
-      payload.merge!(Hashify.exception(@error))
-    end
-
-    payload
+  def message
+    @error.message
   end
 
   def response_code

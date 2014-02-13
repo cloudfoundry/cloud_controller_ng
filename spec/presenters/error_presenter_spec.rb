@@ -5,8 +5,12 @@ describe ErrorPresenter do
     StandardError.new
   end
 
+  let(:error_hasher) do
+    double(ErrorHasher, hashify: {fake: 'error'})
+  end
+
   subject(:presenter) do
-    ErrorPresenter.new(error)
+    ErrorPresenter.new(error, error_hasher)
   end
 
   describe "#api_error?" do
@@ -41,9 +45,18 @@ describe ErrorPresenter do
     end
   end
 
-  describe "#log_message"
+  describe "#log_message" do
+    it "logs the response code and error hash" do
+      expect(presenter.log_message).to eq("Request failed: 500: {:fake=>\"error\"}")
+    end
+  end
 
-  describe "#payload"
+  describe "#payload" do
+    it "returns hash representation of the error" do
+      expect(presenter.payload).to eq(fake: 'error')
+      expect(error_hasher).to have_received(:hashify).with(error, false)
+    end
+  end
 
   describe "#reponse_code" do
     context "when the error knows its response code" do
