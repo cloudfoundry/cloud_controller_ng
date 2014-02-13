@@ -1,5 +1,5 @@
 ---
-port: 8181
+external_port: 8181
 
 info:
   name: "vcap"

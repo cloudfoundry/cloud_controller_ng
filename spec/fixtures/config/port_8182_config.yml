@@ -1,6 +1,6 @@
 ---
 local_route: 127.0.0.1
-port: 8182
+external_port: 8182
 pid_filename: /tmp/cloud_controller.8182.pid
 
 info:

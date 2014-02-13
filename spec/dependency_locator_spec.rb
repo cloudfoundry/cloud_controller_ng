@@ -157,8 +157,8 @@ describe CloudController::DependencyLocator do
   describe "#blobstore_url_generator" do
     let(:my_config) do
       {
-        bind_address: "bind.address",
-        port: 8282,
+        external_host: "external.host",
+        external_port: 8282,
         staging: {
           auth: {
             user: "username",

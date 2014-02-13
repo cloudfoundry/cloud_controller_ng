@@ -19,8 +19,8 @@ module VCAP::CloudController
     let(:original_staging_config) do
       {
           max_staging_runtime: max_staging_runtime,
-          bind_address: cc_addr,
-          port: cc_port,
+          external_host: cc_addr,
+          external_port: cc_port,
           staging: {
               auth: {
                   user: staging_user,

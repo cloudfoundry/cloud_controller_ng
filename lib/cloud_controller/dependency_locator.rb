@@ -87,8 +87,8 @@ module CloudController
 
     def blobstore_url_generator
       connection_options = {
-        blobstore_host: config[:bind_address],
-        blobstore_port: config[:port],
+        blobstore_host: config[:external_host],
+        blobstore_port: config[:external_port],
         user: config[:staging][:auth][:user],
         password: config[:staging][:auth][:password]
       }

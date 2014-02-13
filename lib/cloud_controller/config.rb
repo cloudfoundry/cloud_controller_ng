@@ -7,7 +7,7 @@ module VCAP::CloudController
   class Config < VCAP::Config
     define_schema do
       {
-        :port => Integer,
+        :external_port => Integer,
         :info => {
           :name            => String,
           :build           => String,
