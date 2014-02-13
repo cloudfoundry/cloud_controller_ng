@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     export_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
-                      :unique_id, :extra, :tags, :requires, :documentation_url
+                      :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid
 
     import_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
@@ -82,6 +82,14 @@ module VCAP::CloudController
     # The "unique_id" should really be called broker_provided_id because it's the id assigned by the broker
     def broker_provided_id
       unique_id
+    end
+
+    def service_broker_guid
+      if (service_broker.nil?)
+        nil
+      else
+        service_broker.guid
+      end
     end
   end
 end
