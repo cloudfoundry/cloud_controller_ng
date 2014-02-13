@@ -13,6 +13,7 @@ resource "Buildpacks (experimental)", :type => :api do
   field :position, "The order in which the buildpacks are checked during buildpack auto-detection.", required: false
   field :enabled, "Whether or not the buildpack will be used for staging", required: false, default: true
   field :locked, "Whether or not the buildpack is locked to prevent updates", required: false, default: false
+  field :filename, "The name of the uploaded buildpack file", required: false
 
   standard_model_list(:buildpack, VCAP::CloudController::BuildpacksController)
   standard_model_get(:buildpack)

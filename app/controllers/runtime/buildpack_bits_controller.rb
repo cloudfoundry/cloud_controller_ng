@@ -11,34 +11,47 @@ module VCAP::CloudController
     put "#{path_guid}/bits", :upload
     def upload(guid)
       buildpack = find_guid_and_validate_access(:read_bits, guid)
-      
       raise Errors::BuildpackLocked if buildpack.locked?
-      
+
       uploaded_file = upload_handler.uploaded_file(params, "buildpack")
       uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
+
       logger.info uploaded_file
       logger.info uploaded_filename
       logger.info buildpack
 
+      raise Errors::BuildpackBitsUploadInvalid, "a filename must be specified" if uploaded_filename.to_s == ""
       raise Errors::BuildpackBitsUploadInvalid, "only zip files allowed" unless File.extname(uploaded_filename) == ".zip"
+      raise Errors::BuildpackBitsUploadInvalid, "a file must be provided" if uploaded_file.to_s == ""
 
       sha1 = File.new(uploaded_file).hexdigest
+      uploaded_filename = File.basename(uploaded_filename)
 
-      return [HTTP::CONFLICT, nil] if sha1 == buildpack.key
+      if upload_bits(buildpack, sha1, uploaded_file, uploaded_filename)
+        [HTTP::CREATED, object_renderer.render_json(self.class, buildpack, @opts)]
+      else
+         [HTTP::CONFLICT, nil]
+      end
+    ensure
+      FileUtils.rm_f(uploaded_file) if uploaded_file
+    end
 
-      buildpack_blobstore.cp_to_blobstore(uploaded_file, sha1)
+    def upload_bits(buildpack, new_key, bits_file, new_filename)
+      return false if !new_bits?(buildpack, new_key) && !new_filename?(buildpack, new_filename)
 
-      old_buildpack_key = buildpack.key
+      # replace blob if new
+      if new_bits?(buildpack, new_key)
+        buildpack_blobstore.cp_to_blobstore(bits_file, new_key)
+        old_buildpack_key = buildpack.key
+      end
+
       model.db.transaction(savepoint: true) do
         buildpack.lock!
-        buildpack.update_from_hash(key: sha1)
+        buildpack.update_from_hash(key: new_key, filename: new_filename)
       end
 
       buildpack_blobstore.delete(old_buildpack_key) if old_buildpack_key
-
-      [HTTP::CREATED, object_renderer.render_json(self.class, buildpack, @opts)]
-    ensure
-      FileUtils.rm_f(uploaded_file) if uploaded_file
+      return true
     end
 
     get "#{path_guid}/download", :download
@@ -76,6 +89,14 @@ module VCAP::CloudController
       else
         f.public_url
       end
+    end
+
+    def new_bits?(buildpack, sha)
+      return buildpack.key != sha
+    end
+
+    def new_filename?(buildpack, filename)
+      return buildpack.filename != filename
     end
   end
 end
