@@ -473,6 +473,41 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET', '/v2/service_instances/:service_instance_guid/permissions' do
+      let(:space)     { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+
+      context 'when the user is a member of the space this instance exists in' do
+        let(:instance)  { ServiceInstance.make(space: space) }
+
+        it 'returns a JSON payload indicating they have permission to manage this instance' do
+          get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          expect(JSON.parse(last_response.body)['manage']).to be_true
+        end
+      end
+
+      context 'when the user is NOT a member of the space this instance exists in' do
+        let(:instance)  { ServiceInstance.make }
+
+        it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
+          get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          expect(JSON.parse(last_response.body)['manage']).to be_false
+        end
+      end
+
+      context 'when the user has not authenticated with Cloud Controller' do
+        let(:instance)  { ServiceInstance.make }
+        let(:developer) { nil }
+
+        it 'returns an error saying that the user is not authenticated' do
+          get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eq(401)
+        end
+      end
+    end
+
     describe "Quota enforcement" do
       let(:paid_quota) { QuotaDefinition.make(:total_services => 0) }
       let(:free_quota_with_no_services) do

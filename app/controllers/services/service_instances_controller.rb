@@ -122,6 +122,14 @@ module VCAP::CloudController
       serialization.render_json(self.class, service_instance, @opts)
     end
 
+    get '/v2/service_instances/:guid/permissions', :permissions
+    def permissions(guid)
+      find_guid_and_validate_access(:create, guid, ServiceInstance)
+      [HTTP::OK, {}, JSON.generate({ manage: true })]
+    rescue Errors::NotAuthorized
+      [HTTP::OK, {}, JSON.generate({ manage: false })]
+    end
+
     delete "/v2/service_instances/:guid", :delete
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
