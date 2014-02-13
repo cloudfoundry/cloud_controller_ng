@@ -45,7 +45,7 @@ module Sinatra
         error = request.env['sinatra.error']
         presenter = ErrorPresenter.new(error)
 
-        raise error if in_test_mode? && presenter.blow_up?
+        raise error if in_test_mode? && !presenter.api_error?
 
         status(presenter.response_code)
 

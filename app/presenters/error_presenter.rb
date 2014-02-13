@@ -3,8 +3,8 @@ class ErrorPresenter
     @error = error
   end
 
-  def blow_up?
-    !@error.respond_to?(:error_code)
+  def api_error?
+    @error.respond_to?(:error_code)
   end
 
   def client_error?
