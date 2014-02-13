@@ -98,17 +98,17 @@ module VCAP::CloudController
     end
 
     put "/v2/service_plans/:service_plan_guid/service_instances", :bulk_update
-    def bulk_update(service_plan_guid)
+    def bulk_update(existing_service_plan_guid)
       raise Errors::NotAuthorized unless SecurityContext.admin?
 
       @request_attrs = self.class::BulkUpdateMessage.decode(body).extract(:stringify_keys => true)
 
-      existing_plan = ServicePlan.filter(:guid => service_plan_guid).first
+      existing_plan = ServicePlan.filter(:guid => existing_service_plan_guid).first
       new_plan = ServicePlan.filter(:guid => request_attrs['service_plan_guid']).first
 
       if existing_plan && new_plan
-        existing_plan.service_instances_dataset.update(:service_plan_id => new_plan.id)
-        [HTTP::OK, {}, '']
+        changed_count = existing_plan.service_instances_dataset.update(:service_plan_id => new_plan.id)
+        [HTTP::OK, {}, { changed_count: changed_count }.to_json]
       else
         [HTTP::BAD_REQUEST, {}, '']
       end

@@ -411,6 +411,14 @@ module VCAP::CloudController
         expect(third_service_plan.service_instances.count).to eql(2)
       end
 
+      it 'returns the number of instances moved' do
+        ManagedServiceInstance.make(service_plan: first_service_plan)
+
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
+
+        expect(decoded_response['changed_count']).to eql(2)
+      end
+
       context 'when given an invalid new plan guid' do
         let(:new_plan_guid) { "a-plan-that-does-not-exist" }
 

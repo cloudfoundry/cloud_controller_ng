@@ -141,7 +141,7 @@ module ApiDsl
     end
 
     def field(name, description = "", options = {})
-      metadata[:fields] ||= []
+      metadata[:fields] = metadata[:fields] ? metadata[:fields].dup : []
       metadata[:fields].push(options.merge(:name => name.to_s, :description => description))
     end
 
