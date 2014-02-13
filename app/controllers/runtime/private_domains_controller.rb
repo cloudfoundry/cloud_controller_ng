@@ -5,6 +5,8 @@ module VCAP::CloudController
       to_one :owning_organization
     end
 
+    query_parameters :name
+
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end

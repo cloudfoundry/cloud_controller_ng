@@ -4,6 +4,8 @@ module VCAP::CloudController
       attribute :name, String
     end
 
+    query_parameters :name
+
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end

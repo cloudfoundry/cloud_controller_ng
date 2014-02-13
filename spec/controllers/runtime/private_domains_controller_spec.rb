@@ -76,6 +76,17 @@ module VCAP::CloudController
         parsed_body["total_results"].should == 2
       end
 
+      describe "filtering by name" do
+        let(:domain) { PrivateDomain.make }
+
+        it "should return the domain with the matching name" do
+          get "/v2/private_domains?q=name:#{domain.name}", {}, admin_headers
+          last_response.status.should == 200
+          decoded_response["resources"].size.should == 1
+          decoded_response["resources"][0]["entity"]["name"].should == domain.name
+        end
+      end
+
       describe "GET /v2/private_domains/:guid" do
         context "when the guid is valid" do
           it "returns the correct private domain" do
