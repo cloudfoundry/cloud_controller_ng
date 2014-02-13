@@ -5,8 +5,12 @@ describe ErrorPresenter do
     StandardError.new
   end
 
+  let(:error_hash) do
+    {"fake" => "error"}
+  end
+
   let(:error_hasher) do
-    double(ErrorHasher, hashify: {fake: 'error'})
+    double(ErrorHasher, hashify: error_hash)
   end
 
   subject(:presenter) do
@@ -46,14 +50,14 @@ describe ErrorPresenter do
   end
 
   describe "#log_message" do
-    it "logs the response code and error hash" do
-      expect(presenter.log_message).to eq("Request failed: 500: {:fake=>\"error\"}")
+    it "logs the response code and unsanitized error hash" do
+      expect(presenter.log_message).to eq("Request failed: 500: {\"fake\"=>\"error\"}")
     end
   end
 
-  describe "#payload" do
+  describe "#unsanitized_hash" do
     it "returns hash representation of the error" do
-      expect(presenter.payload).to eq(fake: 'error')
+      expect(presenter.unsanitized_hash).to eq("fake" => "error")
       expect(error_hasher).to have_received(:hashify).with(error, false)
     end
   end
@@ -73,6 +77,16 @@ describe ErrorPresenter do
       it "returns 500" do
         expect(presenter.response_code).to eq(500)
       end
+    end
+  end
+
+  describe "#sanitized_hash" do
+    let(:error_hash) do
+      {"fake" => "error", "source" => "top secret" }
+    end
+
+    it "returns the error hash without the 'source' key" do
+      expect(presenter.sanitized_hash).to eq({"fake" => "error"})
     end
   end
 end

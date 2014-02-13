@@ -37,7 +37,7 @@ module Sinatra
           error = ::VCAP::Errors::NotFound.new
           presenter = ErrorPresenter.new(error)
 
-          body Yajl::Encoder.encode(presenter.payload)
+          body Yajl::Encoder.encode(presenter.sanitized_hash)
         end
       end
 
@@ -49,18 +49,13 @@ module Sinatra
 
         status(presenter.response_code)
 
-        payload_hash = presenter.payload
-
         if presenter.client_error?
           logger.info(presenter.log_message)
         else
           logger.error(presenter.log_message)
         end
 
-        # Temporarily remove this key pending security review
-        payload_hash.delete('source')
-
-        payload = Yajl::Encoder.encode(payload_hash)
+        payload = Yajl::Encoder.encode(presenter.sanitized_hash)
 
         ::VCAP::Component.varz.synchronize do
           varz[:recent_errors] << payload

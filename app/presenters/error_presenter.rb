@@ -15,10 +15,10 @@ class ErrorPresenter
   end
 
   def log_message
-    "Request failed: #{response_code}: #{payload}"
+    "Request failed: #{response_code}: #{unsanitized_hash}"
   end
 
-  def payload
+  def unsanitized_hash
     @error_hasher.hashify(@error, api_error?)
   end
 
@@ -28,5 +28,11 @@ class ErrorPresenter
 
   def response_code
     @error.respond_to?(:response_code) ? @error.response_code : 500
+  end
+
+  def sanitized_hash
+    duplicate = unsanitized_hash.dup
+    duplicate.delete("source")
+    duplicate
   end
 end
