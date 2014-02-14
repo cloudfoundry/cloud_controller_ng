@@ -174,7 +174,7 @@ describe CloudController::DependencyLocator do
 
     it "creates blobstore_url_generator with the host, port, and blobstores" do
       connection_options = {
-        blobstore_host: "bind.address",
+        blobstore_host: "external.host",
         blobstore_port: 8282,
         user: "username",
         password: "password"

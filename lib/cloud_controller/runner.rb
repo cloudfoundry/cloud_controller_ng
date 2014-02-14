@@ -73,22 +73,20 @@ module VCAP::CloudController
 
     def run!
       EM.run do
-        config = @config.dup
-
-        message_bus = MessageBus::Configurer.new(servers: config[:message_bus_servers], logger: logger).go
+        message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
 
         start_cloud_controller(message_bus)
 
-        Seeds.write_seed_data(config) if @insert_seed_data
+        Seeds.write_seed_data(@config) if @insert_seed_data
         register_with_collector(message_bus)
 
-        globals = Globals.new(config, message_bus)
+        globals = Globals.new(@config, message_bus)
         globals.setup!
 
         builder = RackAppBuilder.new
-        app = builder.build(config)
+        app = builder.build(@config)
 
-        start_thin_server(app, config)
+        start_thin_server(app)
 
         router_registrar.register_with_router
 
@@ -163,9 +161,9 @@ module VCAP::CloudController
       end
     end
 
-    def start_thin_server(app, config)
+    def start_thin_server(app)
       if @config[:nginx][:use_nginx]
-        @thin_server = Thin::Server.new(config[:nginx][:instance_socket], signals: false)
+        @thin_server = Thin::Server.new(@config[:nginx][:instance_socket], signals: false)
       else
         @thin_server = Thin::Server.new(@config[:external_host], @config[:external_port])
       end
