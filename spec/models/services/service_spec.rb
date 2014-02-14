@@ -32,21 +32,34 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the provider is nil' do
+      context 'for a v2 service' do
+        let(:service_broker) { ServiceBroker.make }
         it 'maintains the uniqueness of the label key' do
-          existing_service = Service.make_unsaved(label: 'other', provider: '').save
+          existing_service = Service.make_unsaved(:v2, label: 'other', service_broker: service_broker).save
+
           expect {
-            Service.make_unsaved(label: existing_service.label, provider: '').save
+            Service.make_unsaved(:v2, label: existing_service.label, service_broker: service_broker).save
           }.to raise_error('Service name must be unique')
 
-          other_service = Service.make_unsaved(label: existing_service.label + ' label', provider: '').save
+          other_service = Service.make_unsaved(:v2,
+            label: existing_service.label + ' label',
+            service_broker: service_broker
+          ).save
+
           expect {
             other_service.update(label: existing_service.label)
           }.to raise_error('Service name must be unique')
         end
+
+        it 'allows the service to have the same label as a v1 service' do
+          existing_service = Service.make_unsaved(label: 'other', provider: 'core').save
+          expect {
+            Service.make_unsaved(:v2, label: existing_service.label, service_broker: ServiceBroker.make).save
+          }.not_to raise_error
+        end
       end
 
-      context 'when the provider is present' do
+      context 'for a v1 service' do
         it 'maintains the uniqueness of the compound key [label, provider]' do
           expect {
             Service.make_unsaved(label: 'blah', provider: 'blah').save

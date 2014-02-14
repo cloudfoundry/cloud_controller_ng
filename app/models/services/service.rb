@@ -31,8 +31,10 @@ module VCAP::CloudController
       validates_unique   :unique_id,          message: Sequel.lit('Service ids must be unique')
       validates_unique   :sso_client_id,      message: Sequel.lit('Dashboard client ids must be unique')
 
-      if provider.blank?
-        validates_unique :label, message: Sequel.lit('Service name must be unique')
+      if v2?
+        validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
+          ds.exclude(service_broker_id: nil)
+        end
       else
         validates_unique [:label, :provider], message: 'is taken'
       end
