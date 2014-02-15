@@ -94,7 +94,7 @@ module VCAP::CloudController
       def self.to_hash(controller, service, opts)
         entity_hash = service.to_hash.merge({
           "service_plans" => service.service_plans_dataset.organization_visible(opts[:organization]).map do |service_plan|
-            RestController::ObjectSerialization.to_hash(controller, service_plan, opts)
+            RestController::ObjectSerialization.to_hash(ServicePlansController, service_plan, opts)
           end
         })
 
