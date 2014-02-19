@@ -25,53 +25,6 @@ describe Blobstore do
     Fog::Mock.reset
   end
 
-  describe "#directory_exists?" do
-    subject(:blobstore) do
-      Blobstore.new(connection_config, directory_key)
-    end
-
-    it "doesn't get a full listing of the contents of the directory" do
-      directories = double('Fog::Storage::AWS::Directories')
-      allow(Fog::Storage).to receive(:new).and_return(double(Fog::Storage, directories: directories))
-      expect(directories).to receive(:get).with(directory_key, max_keys: 0)
-      blobstore.directory_exists?
-    end
-  end
-
-  describe "#ensure_directory_exists" do
-    subject(:blobstore) do
-      Blobstore.new(connection_config, directory_key)
-    end
-
-    let(:directories) do
-      blobstore.__send__(:connection).directories
-    end
-
-    context "when the directory already exists" do
-      before do
-        Fog::Storage.new(connection_config).directories.create(key: directory_key)
-      end
-
-      it "doesn't create the directory" do
-        allow(Fog::Storage).to receive(:new).and_return(double(Fog::Storage, directories: directories))
-
-        expect(directories).not_to receive(:create)
-
-        blobstore.ensure_directory_exists
-      end
-    end
-
-    context "when the directory doesn't exist" do
-      it "creates the directory" do
-        allow(Fog::Storage).to receive(:new).and_return(double(Fog::Storage, directories: directories))
-
-        expect(directories).to receive(:create)
-
-        blobstore.ensure_directory_exists
-      end
-    end
-  end
-
   context "for a remote blobstore backed by a CDN" do
     subject(:blobstore) do
       Blobstore.new(connection_config, directory_key, cdn)

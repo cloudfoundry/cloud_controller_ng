@@ -1,6 +1,7 @@
 require "fileutils"
 require "find"
 require "fog"
+require "cloud_controller/blobstore/blobstore_directory"
 
 class Blobstore
   def initialize(connection_config, directory_key, cdn=nil, root_dir=nil)
@@ -16,14 +17,6 @@ class Blobstore
 
   def exists?(key)
     !file(key).nil?
-  end
-
-  def ensure_directory_exists
-    create_directory unless directory_exists?
-  end
-
-  def directory_exists?
-    connection.directories.get(@directory_key, max_keys: 0)
   end
 
   def download_from_blobstore(source_key, destination_path)
@@ -100,10 +93,6 @@ class Blobstore
 
   private
 
-  def create_directory
-    connection.directories.create(key: @directory_key, public: false)
-  end
-
   def partitioned_key(key)
     key = key.to_s.downcase
     key = File.join(key[0..1], key[2..3], key)
@@ -114,7 +103,11 @@ class Blobstore
   end
 
   def dir
-    @dir ||= connection.directories.create(:key => @directory_key, :public => false)
+    @dir ||= blobstore_directory.create
+  end
+
+  def blobstore_directory
+    @blobstore_directory ||= BlobstoreDirectory.new(connection, @directory_key)
   end
 
   def connection
