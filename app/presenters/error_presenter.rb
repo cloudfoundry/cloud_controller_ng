@@ -22,10 +22,6 @@ class ErrorPresenter
     @error_hasher.hashify(@error, api_error?)
   end
 
-  def message
-    @error.message
-  end
-
   def response_code
     @error.respond_to?(:response_code) ? @error.response_code : 500
   end
