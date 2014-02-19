@@ -18,12 +18,10 @@ class JobPresenter < ApiPresenter
   end
 
   def entity_hash
-    entity_hash = {
+    {
       guid: @object.guid,
       status: status
     }
-    entity_hash[:error] = @object.last_error if @object.last_error.present?
-    entity_hash
   end
 
   private

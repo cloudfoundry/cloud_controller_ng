@@ -83,8 +83,7 @@ describe JobPresenter do
           },
           entity: {
             guid: job.guid,
-            status: "failed",
-            error: "failed to upload app"
+            status: "failed"
           }
         )
       end
