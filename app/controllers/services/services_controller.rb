@@ -1,3 +1,5 @@
+require 'ext/validation_error_message_overrides'
+
 module VCAP::CloudController
   class ServicesController < RestController::ModelController
     define_attributes do

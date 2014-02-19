@@ -140,7 +140,7 @@ GEM
     loggregator_emitter (3.0.0)
       beefcake (~> 0.3.7)
     machinist (1.0.6)
-    membrane (0.0.2)
+    membrane (0.0.5)
     method_source (0.8.2)
     mime-types (2.1)
     mini_portile (0.5.2)
@@ -267,7 +267,7 @@ DEPENDENCIES
   httpclient
   loggregator_emitter (~> 3.0)
   machinist (~> 1.0.6)
-  membrane (~> 0.0.2)
+  membrane (~> 0.0.5)
   mysql2
   newrelic_rpm
   parallel_tests

@@ -351,9 +351,9 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/services/:guid' do
-      context "when updating the unique_id attribute" do
-        let!(:service) { Service.make }
+      let!(:service) { Service.make }
 
+      context "when updating the unique_id attribute" do
         it "is successful" do
           new_unique_id = service.unique_id.reverse
           payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
@@ -381,7 +381,25 @@ module VCAP::CloudController
         end
       end
 
+      context 'when providing an invalid url attribute' do
+        before do
+          put "/v2/services/#{service.guid}", Yajl::Encoder.encode({ url: 'banana' }), json_headers(admin_headers)
+        end
 
+        it "should return a 400" do
+          last_response.status.should == 400
+        end
+
+        it "should not return a location header" do
+          last_response.location.should be_nil
+        end
+
+        it "should return the request guid in the header" do
+          last_response.headers["X-VCAP-Request-ID"].should_not be_nil
+        end
+
+        it_behaves_like "a vcap rest error response", /must be a valid URL/
+      end
     end
 
     describe 'DELETE /v2/services/:guid' do
