@@ -160,7 +160,6 @@ describe 'Sinatra::VCAP' do
                                        'error_code' => 'CF-ZeroDivisionError',
                                        'description' => 'divided by 0',
                                        'types' => ['ZeroDivisionError'],
-                                       'backtrace' => ['/foo:1', '/bar:2']
                                      })
     end
   end
@@ -182,7 +181,6 @@ describe 'Sinatra::VCAP' do
       expect(decoded_response['description']).to eq('Request invalid due to parse error: some message')
 
       expect(decoded_response['error_code']).to eq('CF-MessageParseError')
-      expect(decoded_response['backtrace']).to eq(['/vcap:1', '/error:2'])
       expect(decoded_response['types']).to eq(['MessageParseError', 'Error'])
     end
   end
@@ -204,7 +202,6 @@ describe 'Sinatra::VCAP' do
       expect(decoded_response['description']).to eq('boring message')
 
       expect(decoded_response['error_code']).to eq('CF-StructuredErrorWithResponseCode')
-      expect(decoded_response['backtrace']).to eq(['/foo:1', '/bar:2'])
       expect(decoded_response['types']).to eq(['StructuredErrorWithResponseCode'])
 
       # temporarily removed pending security review

@@ -81,12 +81,16 @@ describe ErrorPresenter do
   end
 
   describe "#sanitized_hash" do
-    let(:error_hash) do
-      {"fake" => "error", "source" => "top secret" }
+    it "returns the error hash without the 'source' key" do
+      error_hash.merge!("source" => "top secret")
+      expect(presenter.unsanitized_hash).to have_key("source")
+      expect(presenter.sanitized_hash).not_to have_key("source")
     end
 
-    it "returns the error hash without the 'source' key" do
-      expect(presenter.sanitized_hash).to eq({"fake" => "error"})
+    it "returns the error hash without the 'backtrace' key" do
+      error_hash.merge!("backtrace" => "top secret")
+      expect(presenter.unsanitized_hash).to have_key("backtrace")
+      expect(presenter.sanitized_hash).not_to have_key("backtrace")
     end
   end
 end

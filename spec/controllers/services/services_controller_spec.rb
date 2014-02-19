@@ -319,7 +319,6 @@ module VCAP::CloudController
             payload = Yajl::Encoder.encode({"unique_id" => other_service.unique_id})
             put "/v2/services/#{service.guid}", payload, json_headers(admin_headers)
             expect(last_response.status).to be == 400
-            expect(decoded_response).to have_key('backtrace')
             expect(decoded_response.fetch('code')).to eql(120001)
             expect(decoded_response.fetch('error_code')).to eql('CF-ServiceInvalid')
             expect(decoded_response.fetch('types')).to eql(['ServiceInvalid', 'Error'])
@@ -327,8 +326,6 @@ module VCAP::CloudController
           end
         end
       end
-
-
     end
   end
 end

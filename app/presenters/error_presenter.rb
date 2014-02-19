@@ -33,6 +33,7 @@ class ErrorPresenter
   def sanitized_hash
     duplicate = unsanitized_hash.dup
     duplicate.delete("source")
+    duplicate.delete("backtrace")
     duplicate
   end
 end
