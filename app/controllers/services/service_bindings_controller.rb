@@ -42,9 +42,7 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)
-        Errors::ServiceBindingAppServiceTaken.new(
-          "#{attributes["app_guid"]} #{attributes["service_instance_guid"]}"
-        )
+        Errors::ServiceBindingAppServiceTaken.new("#{attributes["app_guid"]} #{attributes["service_instance_guid"]}")
       else
         Errors::ServiceBindingInvalid.new(e.errors.full_messages)
       end
