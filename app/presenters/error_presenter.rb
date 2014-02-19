@@ -1,13 +1,9 @@
 require 'presenters/error_hasher'
 
 class ErrorPresenter
-  def initialize(error, error_hasher = ErrorHasher.new)
+  def initialize(error, error_hasher = ErrorHasher.new(error))
     @error = error
     @error_hasher = error_hasher
-  end
-
-  def api_error?
-    @error.respond_to?(:error_code)
   end
 
   def client_error?
@@ -18,18 +14,19 @@ class ErrorPresenter
     "Request failed: #{response_code}: #{unsanitized_hash}"
   end
 
-  def unsanitized_hash
-    @error_hasher.hashify(@error, api_error?)
-  end
-
   def response_code
     @error.respond_to?(:response_code) ? @error.response_code : 500
   end
 
+  def unsanitized_hash
+    @error_hasher.unsanitized_hash
+  end
+
   def sanitized_hash
-    duplicate = unsanitized_hash.dup
-    duplicate.delete("source")
-    duplicate.delete("backtrace")
-    duplicate
+    @error_hasher.sanitized_hash
+  end
+
+  def api_error?
+    @error_hasher.api_error?
   end
 end

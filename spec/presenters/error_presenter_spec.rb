@@ -10,25 +10,11 @@ describe ErrorPresenter do
   end
 
   let(:error_hasher) do
-    double(ErrorHasher, hashify: error_hash)
+    double(ErrorHasher, unsanitized_hash: error_hash, sanitized_hash: error_hash)
   end
 
   subject(:presenter) do
     ErrorPresenter.new(error, error_hasher)
-  end
-
-  describe "#api_error?" do
-    context "when the error is one of ours" do
-      before do
-        allow(error).to receive(:error_code)
-      end
-
-      it { should be_an_api_error }
-    end
-
-    context "when the error is built-in or from a gem" do
-      it { should_not be_an_api_error }
-    end
   end
 
   describe "#client_error?" do
@@ -58,7 +44,14 @@ describe ErrorPresenter do
   describe "#unsanitized_hash" do
     it "returns hash representation of the error" do
       expect(presenter.unsanitized_hash).to eq("fake" => "error")
-      expect(error_hasher).to have_received(:hashify).with(error, false)
+      expect(error_hasher).to have_received(:unsanitized_hash)
+    end
+  end
+
+  describe "#api_error?" do
+    it "delegates to the error" do
+      expect(error_hasher).to receive(:api_error?).and_return("foo")
+      presenter.api_error?.should == "foo"
     end
   end
 
@@ -77,20 +70,6 @@ describe ErrorPresenter do
       it "returns 500" do
         expect(presenter.response_code).to eq(500)
       end
-    end
-  end
-
-  describe "#sanitized_hash" do
-    it "returns the error hash without the 'source' key" do
-      error_hash.merge!("source" => "top secret")
-      expect(presenter.unsanitized_hash).to have_key("source")
-      expect(presenter.sanitized_hash).not_to have_key("source")
-    end
-
-    it "returns the error hash without the 'backtrace' key" do
-      error_hash.merge!("backtrace" => "top secret")
-      expect(presenter.unsanitized_hash).to have_key("backtrace")
-      expect(presenter.sanitized_hash).not_to have_key("backtrace")
     end
   end
 end

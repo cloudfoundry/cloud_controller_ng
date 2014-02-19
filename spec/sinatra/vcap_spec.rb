@@ -151,14 +151,14 @@ describe 'Sinatra::VCAP' do
     include_examples 'vcap sinatra varz stats', 500
     include_examples 'vcap request id'
     include_examples 'http header content type'
-    it_behaves_like 'a vcap rest error response', /divided by 0/
+    it_behaves_like 'a vcap rest error response'
 
     it 'returns an error structure' do
       decoded_response = Yajl::Parser.parse(last_response.body)
       expect(decoded_response).to eq({
                                        'code' => 10001,
-                                       'error_code' => 'CF-ZeroDivisionError',
-                                       'description' => 'divided by 0',
+                                       'error_code' => 'UnknownError',
+                                       'description' => 'An unknown error occured.',
                                        'types' => ['ZeroDivisionError'],
                                      })
     end
