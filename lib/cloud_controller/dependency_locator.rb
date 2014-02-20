@@ -28,7 +28,7 @@ module CloudController
     def droplet_blobstore
       droplets = config.fetch(:droplets)
       cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)
-      droplet_cdn = Cdn.make(cdn_uri)
+      droplet_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
 
       Blobstore::Client.new(
         droplets.fetch(:fog_connection),
@@ -40,7 +40,7 @@ module CloudController
     def buildpack_cache_blobstore
       droplets = config.fetch(:droplets)
       cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)
-      droplet_cdn = Cdn.make(cdn_uri)
+      droplet_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
 
       Blobstore::Client.new(
         droplets.fetch(:fog_connection),
@@ -53,7 +53,7 @@ module CloudController
     def package_blobstore
       packages = config.fetch(:packages)
       cdn_uri = packages.fetch(:cdn, nil) && packages.fetch(:cdn).fetch(:uri, nil)
-      package_cdn = Cdn.make(cdn_uri)
+      package_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
 
       Blobstore::Client.new(
         packages.fetch(:fog_connection),
@@ -65,7 +65,7 @@ module CloudController
     def global_app_bits_cache
       resource_pool = config.fetch(:resource_pool)
       cdn_uri = resource_pool.fetch(:cdn, nil) && resource_pool.fetch(:cdn).fetch(:uri, nil)
-      app_bit_cdn = Cdn.make(cdn_uri)
+      app_bit_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
 
       Blobstore::Client.new(
         resource_pool.fetch(:fog_connection),
