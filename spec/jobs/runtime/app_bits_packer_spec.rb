@@ -20,7 +20,7 @@ module VCAP::CloudController
         before do
           config_override({:directories => {:tmpdir => tmpdir}, :packages => config[:packages].merge(:max_droplet_size => max_droplet_size)})
 
-          FingerprintsCollection.stub(:new) { fingerprints }
+          CloudController::Blobstore::FingerprintsCollection.stub(:new) { fingerprints }
           App.stub(:find) { app }
           AppBitsPackage.stub(:new) { double(:packer, create: "done") }
         end
