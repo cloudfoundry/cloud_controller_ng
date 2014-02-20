@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     describe BlobstoreDelete do
       let(:key) { "key" }
-      subject do
+      subject(:job) do
         BlobstoreDelete.new(key, :droplet_blobstore)
       end
 
@@ -21,22 +21,14 @@ module VCAP::CloudController
 
       it "deletes the blob blobstore" do
         expect {
-          subject.perform
+          job.perform
         }.to change {
           blobstore.exists?(key)
         }.from(true).to(false)
       end
 
-      it "times out if the job takes longer than its timeout" do
-        CloudController::DependencyLocator.stub(:instance) do
-          sleep 2
-        end
-
-        subject.stub(:max_run_time).with(:blobstore_delete).and_return( 0.001 )
-
-        expect {
-          subject.perform
-        }.to raise_error(Timeout::Error)
+      it "knows its job name" do
+        expect(job.job_name).to equal(:blobstore_delete)
       end
     end
   end

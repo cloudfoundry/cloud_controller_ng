@@ -330,25 +330,35 @@ module VCAP::CloudController
       context "when async" do
         let(:params) { {"async" => "true"} }
 
-        it "enqueues a job to delete the object" do
-          expect {
+        context "and using the job enqueuer" do
+          let(:job) { double(Jobs::Runtime::ModelDeletion) }
+          let(:enqueuer) { double(Jobs::Enqueuer) }
+          let(:presenter) { double(JobPresenter) }
+
+          before do
+            allow(Jobs::Runtime::ModelDeletion).to receive(:new).with(model_klass, model.guid).and_return(job)
+            allow(Jobs::Enqueuer).to receive(:new).with(job, queue: "cc-generic").and_return(enqueuer)
+            allow(enqueuer).to receive(:enqueue)
+
+            allow(JobPresenter).to receive(:new).and_return(presenter)
+            allow(presenter).to receive(:to_json)
+          end
+
+          it "enqueues a job to delete the object" do
             expect { controller.do_delete(model) }.to_not change { model_klass.count }
-          }.to change {
-            Delayed::Job.count
-          }.by(1)
 
-          job = Delayed::Job.last
-          expect(job.queue).to eq "cc-generic"
-          expect(job.payload_object).to be_a Jobs::Runtime::ModelDeletion
-          expect(job.payload_object.model_class).to eq model_klass
-          expect(job.payload_object.guid).to eq model.guid
-        end
+            expect(Jobs::Runtime::ModelDeletion).to have_received(:new).with(model_klass, model.guid)
+            expect(Jobs::Enqueuer).to have_received(:new).with(job, queue: "cc-generic")
+            expect(enqueuer).to have_received(:enqueue)
+          end
 
-        it "returns a 202 with the job information" do
-          http_code, body = controller.do_delete(model)
+          it "returns a 202 with the job information" do
+            http_code, body = controller.do_delete(model)
 
-          expect(http_code).to eq(202)
-          expect(body).to include('"status": "queued"')
+            expect(http_code).to eq(202)
+            expect(JobPresenter).to have_received(:new)
+            expect(presenter).to have_received(:to_json)
+          end
         end
 
         context "when the model has active associations" do

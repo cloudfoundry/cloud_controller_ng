@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:blobstore_key) { "key" }
       let(:blobstore_name) { :droplet_blobstore }
 
-      subject do
+      subject(:job) do
         BlobstoreUpload.new(local_file.path, blobstore_key, blobstore_name)
       end
 
@@ -19,41 +19,27 @@ module VCAP::CloudController
 
       it "uploads the file to the blostore" do
         expect {
-          subject.perform
+          job.perform
         }.to change {
           blobstore.exists?(blobstore_key)
         }.to(true)
       end
 
       it "cleans up the file at the end" do
-        subject.perform
+        job.perform
         expect(File.exists?(local_file.path)).to be_false
       end
 
-      it "times out if the job takes longer than its timeout" do
-        CloudController::DependencyLocator.stub(:instance) do
-          sleep 2
-        end
+      it "cleans up the file even on error" do
+        expect(blobstore).to receive(:cp_to_blobstore) { raise "UPLOAD FAILED" }
 
-        subject.stub(:max_run_time).with(:blobstore_upload).and_return( 0.001 )
-
-        expect {
-          subject.perform
-        }.to raise_error(Timeout::Error)
-      end
-
-      it "cleans up the file even on timeout" do
-        CloudController::DependencyLocator.stub(:instance) do
-          sleep 2
-        end
-
-        subject.stub(:max_run_time) { 1 }
-
-        expect {
-          subject.perform
-        }.to raise_error(Timeout::Error)
+        expect { job.perform }.to raise_error
 
         expect(File.exists?(local_file.path)).to be_false
+      end
+
+      it "knows its job name" do
+        expect(job.job_name).to equal(:blobstore_upload)
       end
     end
   end

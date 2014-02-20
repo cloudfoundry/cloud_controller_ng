@@ -44,17 +44,8 @@ module VCAP::CloudController
           end
         end
 
-
-        it "times out if the job takes longer than its timeout" do
-          Space.stub(:find) do
-            sleep 2
-          end
-
-          job.stub(:max_run_time).with(:model_deletion).and_return( 0.001 )
-
-          expect {
-            job.perform
-          }.to raise_error(Timeout::Error)
+        it "knows its job name" do
+          expect(job.job_name).to equal(:model_deletion)
         end
       end
     end

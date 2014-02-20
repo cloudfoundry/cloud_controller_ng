@@ -20,11 +20,11 @@ module VCAP::CloudController
         blobstore
       end
 
-      subject(:droplet_uploader) { DropletUpload.new(local_file.path, app.id).perform }
+      subject(:job) { DropletUpload.new(local_file.path, app.id) }
 
       it "updates the app's droplet hash" do
         expect {
-          droplet_uploader
+          job.perform
         }.to change {
           app.refresh.droplet_hash
         }
@@ -32,14 +32,14 @@ module VCAP::CloudController
 
       it "marks the app as staged" do
         expect {
-          droplet_uploader
+          job.perform
         }.to change {
           app.refresh.staged?
         }.from(false).to(true)
       end
 
       it "makes the app have a downloadable droplet" do
-        droplet_uploader
+        job.perform
         app.reload
 
         expect(app.current_droplet).to be
@@ -51,7 +51,7 @@ module VCAP::CloudController
 
       it "stores the droplet in the blobstore" do
         expect {
-          droplet_uploader
+          job.perform
         }.to change {
           CloudController::DropletUploader.new(app.refresh, blobstore)
           app.droplets.size
@@ -60,30 +60,17 @@ module VCAP::CloudController
 
       it "deletes the uploaded file" do
         FileUtils.should_receive(:rm_f).with(local_file.path)
-        droplet_uploader
-      end
-
-      it "times out if the job takes longer than its timeout" do
-        CloudController::DependencyLocator.stub(:instance) do
-          sleep 2
-        end
-
-        job = DropletUpload.new(local_file.path, app.id)
-        job.stub(:max_run_time).with(:droplet_upload).and_return( 0.001 )
-
-        expect {
-          job.perform
-        }.to raise_error(Timeout::Error)
+        job.perform
       end
 
       context "when the app no longer exists" do
-        subject(:droplet_uploader) { DropletUpload.new(local_file.path, 99999999).perform }
+        subject(:job) { DropletUpload.new(local_file.path, 99999999) }
 
         it "should not try to upload the droplet" do
           uploader = double(:uploader)
           expect(uploader).not_to receive(:upload)
           allow(CloudController::DropletUploader).to receive(:new) { uploader }
-          droplet_uploader
+          job.perform
         end
       end
 
@@ -126,6 +113,10 @@ module VCAP::CloudController
             expect(Delayed::Job.last.last_error).to match /Something Terrible Happened/
           end
         end
+      end
+
+      it "knows its job name" do
+        expect(job.job_name).to equal(:droplet_upload)
       end
     end
   end

@@ -46,16 +46,8 @@ module VCAP::CloudController
           end
         end
 
-        it "times out if the job takes longer than its timeout" do
-          Steno.stub(:logger) do
-            sleep 2
-          end
-
-          job.stub(:max_run_time).with(:app_usage_events_cleanup).and_return( 0.001 )
-
-          expect {
-            job.perform
-          }.to raise_error(Timeout::Error)
+        it "knows its job name" do
+          expect(job.job_name).to equal(:app_usage_events_cleanup)
         end
       end
     end

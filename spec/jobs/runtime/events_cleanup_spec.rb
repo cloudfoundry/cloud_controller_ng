@@ -23,16 +23,8 @@ module VCAP::CloudController
         }.not_to change { Event.find(id: @event.id) }.to(nil)
       end
 
-      it "times out if the job takes longer than its timeout" do
-        Event.stub(:where) do
-          sleep 2
-        end
-
-        job.stub(:max_run_time).with(:events_cleanup).and_return( 0.001 )
-
-        expect {
-          job.perform
-        }.to raise_error(Timeout::Error)
+      it "knows its job name" do
+        expect(job.job_name).to equal(:events_cleanup)
       end
     end
   end
