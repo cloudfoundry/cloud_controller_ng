@@ -179,7 +179,7 @@ describe CloudController::DependencyLocator do
         user: "username",
         password: "password"
       }
-      CloudController::BlobstoreUrlGenerator.should_receive(:new).
+      CloudController::Blobstore::UrlGenerator.should_receive(:new).
         with(hash_including(connection_options),
              instance_of(CloudController::Blobstore::Client),
              instance_of(CloudController::Blobstore::Client),

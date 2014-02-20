@@ -92,7 +92,7 @@ module CloudController
         user: config[:staging][:auth][:user],
         password: config[:staging][:auth][:password]
       }
-      BlobstoreUrlGenerator.new(
+      Blobstore::UrlGenerator.new(
         connection_options,
         package_blobstore,
         buildpack_cache_blobstore,

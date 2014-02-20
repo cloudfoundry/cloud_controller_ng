@@ -94,7 +94,7 @@ module VCAP::CloudController
               with(config_hash,
                    message_bus,
                    app,
-                   instance_of(CloudController::BlobstoreUrlGenerator),
+                   instance_of(CloudController::Blobstore::UrlGenerator),
           ).and_return(stager_task)
 
           stager_task.stub(:stage) do |&callback|
@@ -118,7 +118,7 @@ module VCAP::CloudController
                  app,
                  dea_pool,
                  stager_pool,
-                 instance_of(CloudController::BlobstoreUrlGenerator),
+                 instance_of(CloudController::Blobstore::UrlGenerator),
          ).and_return(stager_task)
 
           stager_task.stub(:stage) do |&callback|
