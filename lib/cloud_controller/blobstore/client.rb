@@ -1,7 +1,7 @@
 require "fileutils"
 require "find"
 require "fog"
-require "cloud_controller/blobstore/blobstore_directory"
+require "cloud_controller/blobstore/directory"
 require "cloud_controller/blobstore/idempotent_directory"
 
 module CloudController
@@ -106,11 +106,11 @@ module CloudController
       end
 
       def dir
-        @dir ||= blobstore_directory.get_or_create
+        @dir ||= directory.get_or_create
       end
 
-      def blobstore_directory
-        @blobstore_directory ||= IdempotentDirectory.new(BlobstoreDirectory.new(connection, @directory_key))
+      def directory
+        @directory ||= IdempotentDirectory.new(Directory.new(connection, @directory_key))
       end
 
       def connection
