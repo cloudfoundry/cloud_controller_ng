@@ -8,7 +8,7 @@ class BlobstoreDirectory
     @connection.directories.create(key: @key, public: false)
   end
 
-  def exists?
-    @connection.directories.get(@key, max_keys: 0)
+  def get
+    @connection.directories.get(@key)
   end
 end

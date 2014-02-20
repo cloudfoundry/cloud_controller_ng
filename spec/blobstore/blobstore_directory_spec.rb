@@ -1,10 +1,14 @@
 require "spec_helper"
 
 describe BlobstoreDirectory do
+  let(:fog_directory) do
+    double("Fog::**::Directory")
+  end
+
   let(:directory_key) { "a-directory-key" }
 
   let(:directories) do
-    double("Fog::Storage::AWS::Directories", directories: [])
+    double("Fog::**::Directories", directories: [])
   end
 
   let(:connection) do
@@ -15,17 +19,17 @@ describe BlobstoreDirectory do
     BlobstoreDirectory.new(connection, directory_key)
   end
 
-  describe "#exists?" do
-    it "doesn't get a full listing of the contents of the directory" do
-      expect(directories).to receive(:get).with(directory_key, max_keys: 0).and_return(true)
-      expect(blobstore_directory).to be_exists
+  describe "#create" do
+    it "creates a private directory with the specified key and retrieves it" do
+      expect(directories).to receive(:create).with(key: directory_key, public: false).and_return(fog_directory)
+      expect(blobstore_directory.create).to eq(fog_directory)
     end
   end
 
-  describe "#create" do
-    it "creates a private directory with the specified key" do
-      expect(directories).to receive(:create).with(key: directory_key, public: false)
-      blobstore_directory.create
+  describe "#get" do
+    it "retrieves the directory" do
+      expect(directories).to receive(:get).with(directory_key).and_return(fog_directory)
+      expect(blobstore_directory.get).to eq(fog_directory)
     end
   end
 end
