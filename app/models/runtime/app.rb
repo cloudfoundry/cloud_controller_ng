@@ -1,4 +1,5 @@
 require "cloud_controller/app_observer"
+require "cloud_controller/database_uri_generator"
 require_relative "buildpack"
 
 module VCAP::CloudController
@@ -284,6 +285,11 @@ module VCAP::CloudController
       vcap_services
     end
 
+    def database_uri
+      service_uris = service_bindings.map {|binding| binding.credentials["uri"]}.compact
+      DatabaseUriGenerator.new(service_uris).database_uri
+    end
+
     def validate_environment
       return if environment_json.nil?
       unless environment_json.kind_of?(Hash)
@@ -494,7 +500,7 @@ module VCAP::CloudController
 
     private
 
-    WHITELIST_SERVICE_KEYS = %W[name label tags plan credentials].freeze
+    WHITELIST_SERVICE_KEYS = %W[name label tags plan credentials syslog_drain_url].freeze
     def service_binding_json (binding)
       vcap_service = {}
       WHITELIST_SERVICE_KEYS.each do |key|

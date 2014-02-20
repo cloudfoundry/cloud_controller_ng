@@ -319,6 +319,49 @@ module VCAP::CloudController
       end
     end
 
+    describe "#database_uri" do
+      let(:space) { Space.make }
+      let(:app) { App.make(:environment_json => {"jesse" => "awesome"}, :space => space) }
+
+      context "when there are database-like services" do
+        before do
+          sql_service_plan = ServicePlan.make(:service => Service.make(:label => "elephantsql-n/a"))
+          sql_service_instance = ManagedServiceInstance.make(:space => space, :service_plan => sql_service_plan, :name => "elephantsql-vip-uat")
+          sql_binding = ServiceBinding.make(:app => app, :service_instance => sql_service_instance, :credentials => {"uri" => "mysql://foo.com"})
+
+          banana_service_plan = ServicePlan.make(:service => Service.make(:label => "chiquita-n/a"))
+          banana_service_instance = ManagedServiceInstance.make(:space => space, :service_plan => banana_service_plan, :name => "chiqiuta-yummy")
+          banana_binding = ServiceBinding.make(:app => app, :service_instance => banana_service_instance, :credentials => {"uri" => "banana://yum.com"})
+        end
+
+        it "returns database uri" do
+          expect(app.database_uri).to eq("mysql2://foo.com")
+        end
+      end
+
+      context "when there are non-database-like services" do
+        before do
+          banana_service_plan = ServicePlan.make(:service => Service.make(:label => "chiquita-n/a"))
+          banana_service_instance = ManagedServiceInstance.make(:space => space, :service_plan => banana_service_plan, :name => "chiqiuta-yummy")
+          banana_binding = ServiceBinding.make(:app => app, :service_instance => banana_service_instance, :credentials => {"uri" => "banana://yum.com"})
+
+          uncredentialed_service_plan = ServicePlan.make(:service => Service.make(:label => "mysterious-n/a"))
+          uncredentialed_service_instance = ManagedServiceInstance.make(:space => space, :service_plan => uncredentialed_service_plan, :name => "mysterious-mystery")
+          uncredentialed_binding = ServiceBinding.make(:app => app, :service_instance => uncredentialed_service_instance, :credentials => {})
+        end
+
+        it "returns nil" do
+          expect(app.database_uri).to be_nil
+        end
+      end
+
+      context "when there are no services" do
+        it "returns nil" do
+          expect(app.database_uri).to be_nil
+        end
+      end
+    end
+
     describe "#system_env_json" do
       before { pending("This attribute should remain hidden for now. We have a story to re-do this logic later") }
       context "when there are no services" do

@@ -10,12 +10,19 @@ module VCAP::CloudController
 
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:config_hash) { { diego: true } }
+    let(:environment_json) { {} }
     let(:app) do
       AppFactory.make(:package_hash  => "abc",
+                      :name => "app-name",
                       :droplet_hash  => "I DO NOTHING",
                       :package_state => "PENDING",
                       :state         => "STARTED",
-                      :instances     => 1)
+                      :instances     => 1,
+                      :memory => 259,
+                      :disk_quota => 799,
+                      :file_descriptors => 1234,
+                      :environment_json => environment_json
+      )
     end
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
     let(:completion_callback) { lambda {|x| return x } }
@@ -25,14 +32,14 @@ module VCAP::CloudController
       EM.stub(:defer).and_yield
     end
 
+    let(:diego_stager_task) { DiegoStagerTask.new(config_hash, message_bus, app, blobstore_url_generator) }
+
     describe '#stage' do
       let(:logger) { FakeLogger.new([]) }
 
       before do
         Steno.stub(:logger).and_return(logger)
       end
-
-      let(:diego_stager_task) { DiegoStagerTask.new(config_hash, message_bus, app, blobstore_url_generator) }
 
       def perform_stage
         diego_stager_task.stage &completion_callback
@@ -155,6 +162,101 @@ module VCAP::CloudController
             completion_callback.should_not_receive(:call)
             perform_stage
           end
+        end
+      end
+    end
+
+    describe "staging_request" do
+      let(:environment_json) {  { "USER_DEFINED" => "OK" } }
+      let(:domain) {  PrivateDomain.make :owning_organization => app.space.organization }
+      let(:route) { Route.make(:domain => domain, :space => app.space) }
+
+      let(:service_instance_one) do
+        service = Service.make(:label => "elephant-label", :requires => ["syslog_drain"])
+        service_plan = ServicePlan.make(:service => service)
+        ManagedServiceInstance.make(:space => app.space, :service_plan => service_plan, :name => "elephant-name")
+      end
+
+      let(:service_instance_two) do
+        service = Service.make(:label => "giraffesql-label")
+        service_plan = ServicePlan.make(:service => service)
+        ManagedServiceInstance.make(:space => app.space, :service_plan => service_plan, :name => "giraffesql-name")
+      end
+
+      let!(:service_binding_one) do
+        ServiceBinding.make(:app => app, :service_instance => service_instance_one, :syslog_drain_url => "syslog_drain_url-syslog-url")
+      end
+
+      let!(:service_binding_two) do
+        ServiceBinding.make(:app => app, :service_instance => service_instance_two, :credentials => {"uri" => "mysql://giraffes.rock"})
+      end
+
+      before do
+        app.add_route(route)
+      end
+
+      describe "environment" do
+        it "contains user defined environment variables" do
+          expect(diego_stager_task.staging_request[:environment].last).to eq(["USER_DEFINED","OK"])
+        end
+
+        it "contains VCAP_APPLICATION" do
+          expected_hash = {
+            limits: {
+              mem: 259,
+              disk: 799,
+              fds: 1234,
+            },
+            application_version: app.version,
+            application_name: "app-name",
+            application_uris: app.uris,
+            version: app.version,
+            name: "app-name",
+            uris: app.uris,
+            users: nil
+          }
+
+          expect(
+            diego_stager_task.staging_request[:environment]
+          ).to include(["VCAP_APPLICATION", expected_hash.to_json])
+        end
+
+        it "contains VCAP_SERVICES" do
+          elephant_label = service_instance_one.service.label + "-" + service_instance_one.service.version
+          giraffe_label = service_instance_two.service.label + "-" + service_instance_two.service.version
+          expected_hash = {
+            elephant_label => [{
+              "name" => service_instance_one.name,
+              "label" => elephant_label,
+              "tags" => service_instance_one.tags,
+              "plan" => service_instance_one.service_plan.name,
+              "credentials" => service_binding_one.credentials,
+              "syslog_drain_url" => "syslog_drain_url-syslog-url"
+            }],
+
+            giraffe_label => [{
+              "name" => service_instance_two.name,
+              "label" => giraffe_label,
+              "tags" => service_instance_two.tags,
+              "plan" => service_instance_two.service_plan.name,
+              "credentials" => service_binding_two.credentials,
+            }]
+          }
+          expect(
+            diego_stager_task.staging_request[:environment]
+          ).to include(["VCAP_SERVICES", expected_hash.to_json])
+        end
+
+        it "contains DATABASE_URL" do
+          expect(
+            diego_stager_task.staging_request[:environment]
+          ).to include(["DATABASE_URL", "mysql2://giraffes.rock"])
+        end
+
+        it "contains MEMORY_LIMIT" do
+          expect(
+            diego_stager_task.staging_request[:environment]
+          ).to include(["MEMORY_LIMIT", "259m"])
         end
       end
     end

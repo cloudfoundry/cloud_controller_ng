@@ -75,15 +75,13 @@ module VCAP::CloudController
     end
 
     def staging_request
-      {:app_id => app.guid,
+      {
+       :app_id => app.guid,
        :task_id => task_id,
-       :services => app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
        :memoryMB => app.memory,
        :diskMB => app.disk_quota,
        :fileDescriptors => app.file_descriptors,
-       :environment => (app.environment_json || {}).map { |k, v| "#{k}=#{v}" },
-       :meta => app.metadata,
-       :buildpack_key => app.buildpack.key,
+       :environment => environment,
        :stack => app.stack.name,
        # All url generation should go to blobstore_url_generator
        :download_uri => @blobstore_url_generator.app_package_download_url(app),
@@ -95,6 +93,34 @@ module VCAP::CloudController
     end
 
     private
+
+    def environment
+      env = []
+      vcap_application = {
+        limits: {
+          mem: app.memory,
+          disk: app.disk_quota,
+          fds: app.file_descriptors
+        },
+        application_version: app.version,
+        application_name: app.name,
+        application_uris: app.uris,
+        version: app.version,
+        name: app.name,
+        uris: app.uris,
+        users: nil
+      }
+
+      app.service_bindings.each
+
+      env << ["VCAP_APPLICATION", vcap_application.to_json]
+      env << ["VCAP_SERVICES", app.system_env_json["VCAP_SERVICES"].to_json]
+      db_uri = app.database_uri
+      env << ["DATABASE_URL", db_uri] if db_uri
+      env << ["MEMORY_LIMIT", "#{app.memory}m"]
+      app.environment_json.each { |k, v| env << [k, v] }
+      env
+    end
 
     def app
       @app
