@@ -128,6 +128,16 @@ describe ErrorHasher do
       it "sets the description to 'An unknown error occured.'" do
         expect(sanitized_hash["description"]).to eq("An unknown error occured.")
       end
+
+      context "when the error doesn't know how to hash itself" do
+        before do
+          error.unstub(:to_h)
+        end
+
+        it "doesn't reveal the error types" do
+          expect(sanitized_hash).not_to have_key("types")
+        end
+      end
     end
 
     context "when the error is a services error" do

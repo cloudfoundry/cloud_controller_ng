@@ -158,8 +158,7 @@ describe 'Sinatra::VCAP' do
       expect(decoded_response).to eq({
                                        'code' => 10001,
                                        'error_code' => 'UnknownError',
-                                       'description' => 'An unknown error occured.',
-                                       'types' => ['ZeroDivisionError'],
+                                       'description' => 'An unknown error occured.'
                                      })
     end
   end
