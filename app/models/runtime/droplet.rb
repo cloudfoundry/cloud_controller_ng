@@ -10,7 +10,7 @@ module VCAP::CloudController
     def after_destroy
       super
       droplet_deletion_job = Jobs::Runtime::DropletDeletion.new(new_blobstore_key, old_blobstore_key)
-      Delayed::Job.enqueue(droplet_deletion_job, queue: "cc-generic")
+      Jobs::Enqueuer.new(droplet_deletion_job, queue: "cc-generic").enqueue()
     end
 
     def download_url

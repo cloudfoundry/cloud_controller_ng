@@ -22,7 +22,7 @@ module VCAP::CloudController
         @logger.info("Queueing #{klass} at #{Time.now}")
         cutoff_age_in_days = @config.fetch(name.to_sym).fetch(:cutoff_age_in_days)
         job = klass.new(cutoff_age_in_days)
-        Delayed::Job.enqueue(job, queue: "cc-generic")
+        Jobs::Enqueuer.new(job, queue: "cc-generic").enqueue()
       end
     end
   end

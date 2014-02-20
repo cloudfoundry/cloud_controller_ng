@@ -9,6 +9,7 @@ require "jobs/runtime/droplet_upload"
 require "jobs/runtime/events_cleanup"
 require "jobs/runtime/model_deletion"
 require "jobs/runtime/legacy_jobs"
+require "jobs/enqueuer"
 
 class LocalQueue < Struct.new(:config)
   def to_s

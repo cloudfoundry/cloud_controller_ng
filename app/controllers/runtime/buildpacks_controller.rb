@@ -38,7 +38,7 @@ module VCAP::CloudController
     def delete_buildpack_in_blobstore(blobstore_key)
       return unless blobstore_key
       blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(blobstore_key, :buildpack_blobstore)
-      Delayed::Job.enqueue(blobstore_delete, queue: "cc-generic")
+      Jobs::Enqueuer.new(blobstore_delete, queue: "cc-generic").enqueue()
     end
 
     def inject_dependencies(dependencies)

@@ -83,7 +83,7 @@ module VCAP::CloudController::RestController
       model_deletion_job = Jobs::Runtime::ModelDeletion.new(obj.class, obj.guid)
 
       if async?
-        job = Delayed::Job.enqueue(model_deletion_job, queue: "cc-generic")
+        job = Jobs::Enqueuer.new(model_deletion_job, queue: "cc-generic").enqueue()
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
         model_deletion_job.perform
