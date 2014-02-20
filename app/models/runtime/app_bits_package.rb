@@ -12,7 +12,7 @@ class AppBitsPackage
   end
 
   def create(app, uploaded_tmp_compressed_path, fingerprints_in_app_cache)
-    LocalAppBits.from_compressed_bits(uploaded_tmp_compressed_path, tmp_dir) do |local_app_bits|
+    CloudController::Blobstore::LocalAppBits.from_compressed_bits(uploaded_tmp_compressed_path, tmp_dir) do |local_app_bits|
       validate_size!(fingerprints_in_app_cache, local_app_bits)
 
       global_app_bits_cache.cp_r_to_blobstore(local_app_bits.uncompressed_path)
