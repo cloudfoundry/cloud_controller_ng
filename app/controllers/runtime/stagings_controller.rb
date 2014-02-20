@@ -1,5 +1,5 @@
 require "cloudfront-signer"
-require "cloud_controller/blobstore/blobstore"
+require "cloud_controller/blobstore/client"
 
 module VCAP::CloudController
   class StagingsController < RestController::Base

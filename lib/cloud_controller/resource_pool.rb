@@ -20,7 +20,7 @@ class VCAP::CloudController::ResourcePool
     options = config[:resource_pool] || {}
     @cdn = options[:cdn]
 
-    @blobstore = Blobstore.new(
+    @blobstore = CloudController::Blobstore::Client.new(
         options[:fog_connection],
         options[:resource_directory_key] || "cc-resources"
     )

@@ -30,7 +30,7 @@ module CloudController
       cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)
       droplet_cdn = Cdn.make(cdn_uri)
 
-      Blobstore.new(
+      Blobstore::Client.new(
         droplets.fetch(:fog_connection),
         droplets.fetch(:droplet_directory_key),
         droplet_cdn
@@ -42,7 +42,7 @@ module CloudController
       cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)
       droplet_cdn = Cdn.make(cdn_uri)
 
-      Blobstore.new(
+      Blobstore::Client.new(
         droplets.fetch(:fog_connection),
         droplets.fetch(:droplet_directory_key),
         droplet_cdn,
@@ -55,7 +55,7 @@ module CloudController
       cdn_uri = packages.fetch(:cdn, nil) && packages.fetch(:cdn).fetch(:uri, nil)
       package_cdn = Cdn.make(cdn_uri)
 
-      Blobstore.new(
+      Blobstore::Client.new(
         packages.fetch(:fog_connection),
         packages.fetch(:app_package_directory_key),
         package_cdn
@@ -67,7 +67,7 @@ module CloudController
       cdn_uri = resource_pool.fetch(:cdn, nil) && resource_pool.fetch(:cdn).fetch(:uri, nil)
       app_bit_cdn = Cdn.make(cdn_uri)
 
-      Blobstore.new(
+      Blobstore::Client.new(
         resource_pool.fetch(:fog_connection),
         resource_pool.fetch(:resource_directory_key),
         app_bit_cdn
@@ -75,7 +75,7 @@ module CloudController
     end
 
     def buildpack_blobstore
-      Blobstore.new(
+      Blobstore::Client.new(
         config[:buildpacks][:fog_connection],
         config[:buildpacks][:buildpack_directory_key] || "cc-buildpacks"
       )

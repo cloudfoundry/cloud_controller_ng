@@ -14,8 +14,15 @@ describe AppBitsPackage do
   let(:app) { VCAP::CloudController::AppFactory.make }
   let(:blobstore_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
-  let(:global_app_bits_cache) { Blobstore.new({ provider: "Local", local_root: blobstore_dir }, "global_app_bits_cache") }
-  let(:package_blobstore) { Blobstore.new({provider: "Local", local_root: blobstore_dir}, "package") }
+
+  let(:global_app_bits_cache) do
+    CloudController::Blobstore::Client.new({provider: "Local", local_root: blobstore_dir}, "global_app_bits_cache")
+  end
+
+  let(:package_blobstore) do
+    CloudController::Blobstore::Client.new({provider: "Local", local_root: blobstore_dir}, "package")
+  end
+
   let(:packer) { AppBitsPackage.new(package_blobstore, global_app_bits_cache, max_droplet_size, local_tmp_dir) }
   let(:max_droplet_size) { 1_073_741_824 }
 
