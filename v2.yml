@@ -487,3 +487,9 @@
   name: BuildpackLocked
   http_code: 409
   message: "The buildpack is locked"
+
+290006:
+  name: JobTimeout
+  http_code: 524
+  message: "The job execution has timed out."
+
