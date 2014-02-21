@@ -1,3 +1,5 @@
+require 'models/services/service_brokers/null_client'
+
 module VCAP::CloudController
   class Service < Sequel::Model
     plugin :serialization
@@ -21,13 +23,21 @@ module VCAP::CloudController
     strip_attributes  :label, :provider
 
     def validate
-      validates_presence :label,              message:  Sequel.lit('name is required')
+      validates_presence :label,              message:  Sequel.lit('Service name is required')
       validates_presence :description,        message: 'is required'
       validates_presence :bindable,           message: 'is required'
       validates_url      :url,                message: 'must be a valid url'
       validates_url      :info_url,           message: 'must be a valid url'
-      validates_unique   [:label, :provider], message: 'is taken'
-      validates_unique   :unique_id,          message: Sequel.lit("service id '#{unique_id}' is taken")
+      validates_unique   :unique_id,          message: Sequel.lit('Service ids must be unique')
+      validates_unique   :sso_client_id,      message: Sequel.lit('Dashboard client ids must be unique')
+
+      if v2?
+        validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
+          ds.exclude(service_broker_id: nil)
+        end
+      else
+        validates_unique [:label, :provider], message: 'is taken'
+      end
     end
 
     serialize_attributes :json, :tags, :requires
@@ -45,6 +55,11 @@ module VCAP::CloudController
     def self.user_visibility_filter(current_user)
       plans_I_can_see = ServicePlan.user_visible(current_user)
       {id: plans_I_can_see.map(&:service_id).uniq}
+    end
+
+    def provider
+      provider = self[:provider]
+      provider.blank? ? nil : provider
     end
 
     def tags
@@ -66,7 +81,9 @@ module VCAP::CloudController
     end
 
     def client
-      if v2?
+      if purging
+        ServiceBrokers::NullClient.new
+      elsif v2?
         service_broker.client
       else
         raise MissingServiceAuthToken, "Missing Service Auth Token for service: #{label}" if(service_auth_token.nil?)
@@ -82,6 +99,16 @@ module VCAP::CloudController
     # The "unique_id" should really be called broker_provided_id because it's the id assigned by the broker
     def broker_provided_id
       unique_id
+    end
+
+    def purge
+      db.transaction(savepoint: true) do
+        self.update(purging: true)
+        service_plans.each do |plan|
+          plan.service_instances_dataset.destroy
+        end
+        self.destroy
+      end
     end
   end
 end

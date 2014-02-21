@@ -460,6 +460,7 @@ module VCAP::CloudController
           service_plans = service.fetch('entity').fetch('service_plans')
           service_plans.length.should == 1
           service_plans.first.fetch('metadata').fetch('guid').should == @service_plan.guid
+          service_plans.first.fetch('metadata').fetch('url').should == "/v2/service_plans/#{@service_plan.guid}"
         end
 
         it 'should exclude plans that are not visible to the org' do

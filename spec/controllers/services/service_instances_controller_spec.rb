@@ -249,7 +249,7 @@ module VCAP::CloudController
           post '/v2/service_instances', body, headers
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match /name is invalid/
+          expect(decoded_response['description']).to match(/name is invalid/)
         end
 
         it 'does not provision or deprovision an instance' do
@@ -383,6 +383,78 @@ module VCAP::CloudController
       end
     end
 
+    describe 'PUT', '/v2/service_plans/:service_plan_guid/services_instances' do
+      let(:first_service_plan)  { ServicePlan.make }
+      let(:second_service_plan) { ServicePlan.make }
+      let(:third_service_plan)  { ServicePlan.make }
+      let(:space)               { Space.make }
+      let(:developer)           { make_developer_for_space(space) }
+      let(:new_plan_guid)       { third_service_plan.guid }
+      let(:body) do
+        Yajl::Encoder.encode(
+          :service_plan_guid => new_plan_guid
+        )
+      end
+
+      before do
+        ManagedServiceInstance.make(service_plan: first_service_plan)
+        ManagedServiceInstance.make(service_plan: second_service_plan)
+        ManagedServiceInstance.make(service_plan: third_service_plan)
+      end
+
+      it 'updates all services instances for a given plan with the new plan id' do
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
+
+        expect(last_response.status).to eql(200)
+        expect(first_service_plan.service_instances.count).to eql(0)
+        expect(second_service_plan.service_instances.count).to eql(1)
+        expect(third_service_plan.service_instances.count).to eql(2)
+      end
+
+      it 'returns the number of instances moved' do
+        ManagedServiceInstance.make(service_plan: first_service_plan)
+
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
+
+        expect(decoded_response['changed_count']).to eql(2)
+      end
+
+      context 'when given an invalid new plan guid' do
+        let(:new_plan_guid) { "a-plan-that-does-not-exist" }
+
+        it 'does not update any service instances' do
+          put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
+
+          expect(last_response.status).to eql(400)
+          expect(first_service_plan.service_instances.count).to eql(1)
+          expect(second_service_plan.service_instances.count).to eql(1)
+          expect(third_service_plan.service_instances.count).to eql(1)
+        end
+      end
+
+      context 'when given an invalid existing plan guid' do
+        it 'does not update any service instances' do
+          put "/v2/service_plans/some-non-existant-plan/service_instances", body, admin_headers
+
+          expect(last_response.status).to eql(400)
+          expect(first_service_plan.service_instances.count).to eql(1)
+          expect(second_service_plan.service_instances.count).to eql(1)
+          expect(third_service_plan.service_instances.count).to eql(1)
+        end
+      end
+
+      it 'requires admin permissions' do
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body
+        expect(last_response.status).to eql(401)
+
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, json_headers(headers_for(developer))
+        expect(last_response.status).to eql(403)
+
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
+        expect(last_response.status).to eql(200)
+      end
+    end
+
     describe 'DELETE', '/v2/service_instances/:service_instance_guid' do
       context 'with a managed service instance' do
         let!(:service_instance) { ManagedServiceInstance.make }
@@ -405,6 +477,41 @@ module VCAP::CloudController
           }.to change(ServiceInstance, :count).by(-1)
           last_response.status.should == 204
           ServiceInstance.find(:guid => service_instance.guid).should be_nil
+        end
+      end
+    end
+
+    describe 'GET', '/v2/service_instances/:service_instance_guid/permissions' do
+      let(:space)     { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+
+      context 'when the user is a member of the space this instance exists in' do
+        let(:instance)  { ServiceInstance.make(space: space) }
+
+        it 'returns a JSON payload indicating they have permission to manage this instance' do
+          get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          expect(JSON.parse(last_response.body)['manage']).to be_true
+        end
+      end
+
+      context 'when the user is NOT a member of the space this instance exists in' do
+        let(:instance)  { ServiceInstance.make }
+
+        it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
+          get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          expect(JSON.parse(last_response.body)['manage']).to be_false
+        end
+      end
+
+      context 'when the user has not authenticated with Cloud Controller' do
+        let(:instance)  { ServiceInstance.make }
+        let(:developer) { nil }
+
+        it 'returns an error saying that the user is not authenticated' do
+          get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eq(401)
         end
       end
     end
@@ -466,7 +573,6 @@ module VCAP::CloudController
         it "returns a user friendly error" do
           org = Organization.make()
           space = Space.make(:organization => org)
-          service = Service.make
           plan = ServicePlan.make(free: true)
 
           body = {

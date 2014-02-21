@@ -28,9 +28,64 @@ module VCAP::CloudController
 
         it 'raises an error on save' do
           expect { service.save }.
-            to raise_error(Sequel::ValidationFailed, "service id '#{service.unique_id}' is taken")
+            to raise_error(Sequel::ValidationFailed, 'Service ids must be unique')
         end
       end
+
+      context 'for a v2 service' do
+        let(:service_broker) { ServiceBroker.make }
+        it 'maintains the uniqueness of the label key' do
+          existing_service = Service.make_unsaved(:v2, label: 'other', service_broker: service_broker).save
+
+          expect {
+            Service.make_unsaved(:v2, label: existing_service.label, service_broker: service_broker).save
+          }.to raise_error('Service name must be unique')
+
+          other_service = Service.make_unsaved(:v2,
+            label: existing_service.label + ' label',
+            service_broker: service_broker
+          ).save
+
+          expect {
+            other_service.update(label: existing_service.label)
+          }.to raise_error('Service name must be unique')
+        end
+
+        it 'allows the service to have the same label as a v1 service' do
+          existing_service = Service.make_unsaved(label: 'other', provider: 'core').save
+          expect {
+            Service.make_unsaved(:v2, label: existing_service.label, service_broker: ServiceBroker.make).save
+          }.not_to raise_error
+        end
+      end
+
+      context 'for a v1 service' do
+        it 'maintains the uniqueness of the compound key [label, provider]' do
+          expect {
+            Service.make_unsaved(label: 'blah', provider: 'blah').save
+            Service.make_unsaved(label: 'blah', provider: 'blah').save
+          }.to raise_error('label and provider is taken')
+        end
+      end
+
+      context 'when the sso_client_id is not unique' do
+        let(:existing_service) { Service.make }
+        let(:service) { Service.make_unsaved(sso_client_id: existing_service.sso_client_id) }
+
+        it 'is not valid' do
+          expect(service).not_to be_valid
+        end
+
+        it 'raises an error on save' do
+          expect { service.save }.
+            to raise_error(Sequel::ValidationFailed, 'Dashboard client ids must be unique')
+        end
+      end
+    end
+
+    it 'ensures that blank provider values will be treated as nil' do
+      service = Service.make_unsaved(provider: '').save
+      expect(service.provider).to be_nil
     end
 
     describe "#destroy" do
@@ -160,6 +215,107 @@ module VCAP::CloudController
       end
     end
 
+    describe '#purge' do
+      let!(:service_plan) { ServicePlan.make(service: service) }
+      let!(:service_plan_visibility) { ServicePlanVisibility.make(service_plan: service_plan) }
+      let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+      let!(:service_plan_2) { ServicePlan.make(service: service) }
+      let!(:service_plan_visibility_2) { ServicePlanVisibility.make(service_plan: service_plan_2) }
+      let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: service_plan_2) }
+      let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance_2) }
+
+      before do
+        stub_request(:delete, /.*/).to_return(body: '{}', status: 200)
+      end
+
+      context 'for v1 services' do
+        let!(:service) { Service.make(:v1) }
+
+        it 'destroys all models that depend on it' do
+          service.purge
+
+          expect(Service.find(guid: service.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan_2.guid)).to be_nil
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility.guid)).to be_nil
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility_2.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance_2.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding_2.guid)).to be_nil
+        end
+
+        it 'does not make any requests to the service broker' do
+          service.purge
+          http_client_stub = VCAP::CloudController::ServiceBroker::V1::HttpClient.new
+          expect(http_client_stub).not_to have_received(:unbind)
+          expect(http_client_stub).not_to have_received(:deprovision)
+        end
+
+        it 'marks apps for restaging that were bound to the deleted service' do
+          service_binding.app.update(package_state: 'STAGED')
+          expect { service.purge }.to change{ service_binding.app.reload.pending? }.to(true)
+        end
+      end
+
+      context 'for v2 services' do
+        let!(:service) { Service.make(:v2) }
+
+        it 'destroys all models that depend on it' do
+          service.purge
+
+          expect(Service.find(guid: service.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan_2.guid)).to be_nil
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility.guid)).to be_nil
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility_2.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance_2.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding_2.guid)).to be_nil
+        end
+
+        it 'does not make any requests to the service broker' do
+          service.purge
+          expect(a_request(:delete, /.*/)).not_to have_been_made
+        end
+
+        it 'marks apps for restaging that were bound to the deleted service' do
+          service_binding.app.update(package_state: 'STAGED')
+          expect { service.purge }.to change{ service_binding.app.reload.pending? }.to(true)
+        end
+      end
+
+      context 'when deleting one of the records fails' do
+        let(:service) { Service.make }
+
+        before do
+          allow_any_instance_of(VCAP::CloudController::ServicePlan).to receive(:destroy).and_raise('Boom')
+        end
+
+        it 'rolls back the transaction and does not destroy any records' do
+          service.purge rescue nil
+
+          expect(Service.find(guid: service.guid)).to be
+          expect(ServicePlan.first(guid: service_plan.guid)).to be
+          expect(ServicePlan.first(guid: service_plan_2.guid)).to be
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility.guid)).to be
+          expect(ServicePlanVisibility.first(guid: service_plan_visibility_2.guid)).to be
+          expect(ServiceInstance.first(guid: service_instance.guid)).to be
+          expect(ServiceInstance.first(guid: service_instance_2.guid)).to be
+          expect(ServiceBinding.first(guid: service_binding.guid)).to be
+          expect(ServiceBinding.first(guid: service_binding_2.guid)).to be
+        end
+
+        it "does not leave the service in 'purging' state" do
+          service.purge rescue nil
+          expect(service.reload.purging).to be_false
+        end
+      end
+    end
+
     describe '.organization_visible' do
       it 'returns plans that are visible to the organization' do
         hidden_private_plan = ServicePlan.make(public: false)
@@ -180,6 +336,14 @@ module VCAP::CloudController
     end
 
     describe '#client' do
+      context 'when the purging field is true' do
+        let(:service) { Service.make(purging: true) }
+
+        it 'returns a null broker client' do
+          expect(service.client).to be_a(VCAP::CloudController::ServiceBrokers::NullClient)
+        end
+      end
+
       context 'for a v1 service' do
         let(:service) { Service.make(service_broker: nil) }
 

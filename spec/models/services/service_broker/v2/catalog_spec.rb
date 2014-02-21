@@ -25,45 +25,52 @@ module VCAP::CloudController::ServiceBroker::V2
       }
     end
 
+    let(:service_id) { Sham.guid }
+    let(:service_name) { Sham.name }
+    let(:service_description) { Sham.description }
+
+    let(:plan_id) { Sham.guid }
+    let(:plan_name) { Sham.name }
+    let(:plan_description) { Sham.description }
+    let(:service_metadata_hash) do
+      {'metadata' => {'foo' => 'bar'}}
+    end
+    let(:plan_metadata_hash) do
+      {'metadata' => { "cost" => "0.0" }}
+    end
+    let(:dashboard_client_attrs) do
+      {
+        'id' => 'abcde123',
+        'secret' => 'sekret',
+        'redirect_uri' => 'http://example.com'
+      }
+    end
+
+    let(:catalog_hash) do
+      {
+        'services' => [
+          {
+            'id'          => service_id,
+            'name'        => service_name,
+            'description' => service_description,
+            'bindable'    => true,
+            'dashboard_client' => dashboard_client_attrs,
+            'tags'        => ['mysql', 'relational'],
+            'plans'       => [
+              {
+                'id'          => plan_id,
+                'name'        => plan_name,
+                'description' => plan_description,
+              }.merge(plan_metadata_hash)
+            ]
+          }.merge(service_metadata_hash)
+        ]
+      }
+    end
+
+    let(:catalog) { Catalog.new(broker, catalog_hash) }
+
     describe '#sync_services_and_plans' do
-
-      let(:service_id) { Sham.guid }
-      let(:service_name) { Sham.name }
-      let(:service_description) { Sham.description }
-
-      let(:plan_id) { Sham.guid }
-      let(:plan_name) { Sham.name }
-      let(:plan_description) { Sham.description }
-      let(:service_metadata_hash) do
-        {'metadata' => {'foo' => 'bar'}}
-      end
-      let(:plan_metadata_hash) do
-        {'metadata' => { "cost" => "0.0" }}
-      end
-
-      let(:catalog_hash) do
-        {
-          'services' => [
-            {
-              'id'          => service_id,
-              'name'        => service_name,
-              'description' => service_description,
-              'bindable'    => true,
-              'tags'        => ['mysql', 'relational'],
-              'plans'       => [
-                {
-                  'id'          => plan_id,
-                  'name'        => plan_name,
-                  'description' => plan_description,
-                }.merge(plan_metadata_hash)
-              ]
-            }.merge(service_metadata_hash)
-          ]
-        }
-      end
-
-      let(:catalog) { Catalog.new(broker, catalog_hash) }
-
       it 'creates services from the catalog' do
         expect {
           catalog.sync_services_and_plans
@@ -161,6 +168,22 @@ module VCAP::CloudController::ServiceBroker::V2
           service.reload
           expect(service.label).to eq(service_name)
           expect(service.description).to eq(service_description)
+        end
+
+        context 'when the broker is different' do
+          let(:different_broker) { VCAP::CloudController::ServiceBroker.make }
+          let!(:service) do
+            VCAP::CloudController::Service.make(
+              service_broker: different_broker,
+              unique_id: service_id
+            )
+          end
+
+          it 'raises a database error' do
+            expect {
+              catalog.sync_services_and_plans
+            }.to raise_error Sequel::ValidationFailed
+          end
         end
 
         it 'creates the new plan' do
@@ -274,6 +297,173 @@ module VCAP::CloudController::ServiceBroker::V2
         end
 
       end
+
+      describe 'creating dashboard clients for sso' do
+        let(:catalog_hash) do
+          {
+            'services' => [
+              {
+                'id'          => Sham.guid,
+                'name'        => 'service-with-dashboard-client',
+                'description' => service_description,
+                'bindable'    => true,
+                'dashboard_client' => dashboard_client_attrs,
+                'tags'        => ['mysql', 'relational'],
+                'plans'       => [
+                  {
+                    'id'          => plan_id,
+                    'name'        => plan_name,
+                    'description' => plan_description,
+                  }.merge(plan_metadata_hash)
+                ]
+              }.merge(service_metadata_hash),
+              {
+                'id'          => Sham.guid,
+                'name'        => 'service-without-dashboard-client',
+                'description' => service_description,
+                'bindable'    => true,
+                'tags'        => ['mysql', 'relational'],
+                'plans'       => [
+                  {
+                    'id'          => Sham.guid,
+                    'name'        => Sham.name,
+                    'description' => plan_description,
+                  }.merge(plan_metadata_hash)
+                ]
+              }.merge(service_metadata_hash)
+            ]
+          }
+        end
+
+        it 'persists a dashboard client id for each service that is configured with one' do
+          ServiceDashboardClientManager.stub(:create).once
+          catalog.sync_services_and_plans
+
+          expect(VCAP::CloudController::Service.find(label: 'service-with-dashboard-client').sso_client_id).to eq 'abcde123'
+          expect(VCAP::CloudController::Service.find(label: 'service-without-dashboard-client').sso_client_id).to be_nil
+        end
+      end
+    end
+
+    describe '#create_service_dashboard_clients' do
+      let(:catalog_hash) do
+        {
+          'services' => [
+            {
+              'id'          => 'service-with-dashboard-client-id',
+              'name'        => 'service-with-dashboard-client',
+              'description' => service_description,
+              'bindable'    => true,
+              'dashboard_client' => dashboard_client_attrs,
+              'tags'        => ['mysql', 'relational'],
+              'plans'       => [
+                {
+                  'id'          => plan_id,
+                  'name'        => plan_name,
+                  'description' => plan_description,
+                }.merge(plan_metadata_hash)
+              ]
+            }.merge(service_metadata_hash),
+            {
+              'id'          => Sham.guid,
+              'name'        => 'service-without-dashboard-client',
+              'description' => service_description,
+              'bindable'    => true,
+              'tags'        => ['mysql', 'relational'],
+              'plans'       => [
+                {
+                  'id'          => Sham.guid,
+                  'name'        => Sham.name,
+                  'description' => plan_description,
+                }.merge(plan_metadata_hash)
+              ]
+            }.merge(service_metadata_hash),
+            {
+              'id'               => 'other-service-with-dashboard-client-id',
+              'name'             => 'other-service-with-dashboard-client',
+              'description'      => service_description,
+              'bindable'         => true,
+              'dashboard_client' => {
+                'id'           => 'otherid',
+                'secret'       => 'top-sekret',
+                'redirect_uri' => 'http://redirect.com'
+              },
+              'tags'             => ['mysql', 'relational'],
+              'plans'            => [
+                {
+                  'id'          => Sham.guid,
+                  'name'        => Sham.name,
+                  'description' => plan_description,
+                }.merge(plan_metadata_hash)
+              ]
+            }.merge(service_metadata_hash),
+          ]
+        }
+      end
+      let(:client_manager) { double('client_manager') }
+
+      before do
+        allow(ServiceDashboardClientManager).to receive(:new).and_return(client_manager)
+      end
+
+      context 'when clients we want to create already exist in uaa' do
+        before do
+          allow(client_manager).to receive(:get_clients).with([ dashboard_client_attrs['id'], 'otherid' ]).
+            and_return([ { 'client_id' => dashboard_client_attrs['id'] } ])
+        end
+
+        context 'and the service exists in the db with a matching sso_client_id' do
+          before do
+            VCAP::CloudController::Service.make(unique_id: 'service-with-dashboard-client-id', sso_client_id: dashboard_client_attrs['id'])
+            allow(client_manager).to receive(:create)
+          end
+
+          it 'does not create that client' do
+            catalog.create_service_dashboard_clients
+
+            expect(client_manager).to_not have_received(:create).with(dashboard_client_attrs)
+          end
+        end
+
+        context 'and the service does not have a matching sso_client_id in the db' do
+          before do
+            allow(client_manager).to receive(:create)
+          end
+
+          it 'creates no clients' do
+            catalog.create_service_dashboard_clients rescue nil
+
+            expect(client_manager).to_not have_received(:create)
+          end
+
+          it 'adds an error to the catalog service' do
+            catalog.create_service_dashboard_clients rescue nil
+            service_with_client = catalog.services.find { |s| s.name == 'service-with-dashboard-client' }
+
+            expect(service_with_client.errors).to include 'Service dashboard client ids must be unique'
+          end
+
+          it 'raises a ServiceBrokerCatalogInvalid error' do
+            expect { catalog.create_service_dashboard_clients }.to raise_error(VCAP::Errors::ServiceBrokerCatalogInvalid)
+          end
+        end
+      end
+
+      context 'when some clients we want to create do not already exist in uaa' do
+        before do
+          VCAP::CloudController::Service.make(unique_id: 'other-service-with-dashboard-client-id', sso_client_id: 'otherid')
+          allow(client_manager).to receive(:get_clients).with([dashboard_client_attrs['id'], 'otherid']).
+            and_return([{ 'client_id' => 'otherid' }])
+          allow(client_manager).to receive(:create)
+        end
+
+        it 'creates the clients' do
+          catalog.create_service_dashboard_clients
+
+          expect(client_manager).to have_received(:create).once
+          expect(client_manager).to have_received(:create).with(dashboard_client_attrs)
+        end
+      end
     end
 
     describe 'validations' do
@@ -292,11 +482,52 @@ module VCAP::CloudController::ServiceBroker::V2
         specify '#valid? returns false and #error_text includes all error messages' do
           catalog = Catalog.new(broker, catalog_hash)
           expect(catalog.valid?).to eq false
+        end
+      end
 
-          expect(catalog.error_text).to match /service id should be a string, but had value 123/
-          expect(catalog.error_text).to match /plan name should be a string, but had value 123/
-          expect(catalog.error_text).to match /each plan ID must be unique/
-          expect(catalog.error_text).to match /each service must have at least one plan/
+      context 'when two services in the catalog have the same id' do
+        let(:catalog_hash) do
+          {
+            "services" => [
+              {
+                "id" =>"1",
+                "name" =>"1",
+                "description" =>"1",
+                "bindable" =>true,
+                "tags" =>["1"],
+                "metadata" => {"foo" =>"bar"},
+                "plans" =>[
+                  {
+                    "id" => "1",
+                    "name" => "1",
+                    "description" => "1",
+                    "metadata" => {"foo" =>"bar"}
+                  }
+                ]
+              },
+              {
+                "id" =>"1",
+                "name" => "2",
+                "description" =>"2",
+                "bindable" =>true,
+                "tags" =>["2"],
+                "metadata" =>{"foo" =>"bar"},
+                "plans" =>[
+                  {
+                    "id" => "2",
+                    "name" => "2",
+                    "description" => "2",
+                    "metadata" =>{"foo" =>"bar"}
+                  }
+                ]
+              }
+            ]
+          }
+        end
+
+        it 'gives an error' do
+          catalog = Catalog.new(broker, catalog_hash)
+          expect(catalog.valid?).to eq false
         end
       end
     end
@@ -310,7 +541,8 @@ module VCAP::CloudController::ServiceBroker::V2
             service_entry(name: 'service-3',
                           plans: [ plan_entry(name: 'plan-1', id: 'plan-id'),
                                    plan_entry(id: 'plan-id', name: 123) ]),
-            service_entry(name: 'service-4', plans: [])
+            service_entry(name: 'service-4', plans: [], id: 'duplicate-id'),
+            service_entry(name: 'service-5', id: 'duplicate-id')
           ]
         }
       end
@@ -322,14 +554,15 @@ module VCAP::CloudController::ServiceBroker::V2
         expect(catalog.error_text).to eq(
 <<-HEREDOC
 
+Service ids must be unique
 Service service-2
-  service id should be a string, but had value 123
+  Service id must be a string, but has value 123
 Service service-3
-  each plan ID must be unique
+  Plan ids must be unique
   Plan 123
-    plan name should be a string, but had value 123
+    Plan name must be a string, but has value 123
 Service service-4
-  each service must have at least one plan
+  At least one plan is required
 HEREDOC
         )
       end

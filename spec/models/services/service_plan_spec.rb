@@ -27,7 +27,7 @@ module VCAP::CloudController
 
         it 'raises an error on save' do
           expect { service_plan.save }.
-            to raise_error(Sequel::ValidationFailed, "plan id '#{service_plan.unique_id}' is taken")
+            to raise_error(Sequel::ValidationFailed, "Plan ids must be unique")
         end
       end
     end
@@ -60,7 +60,7 @@ module VCAP::CloudController
           before { plan = ServicePlan.make(attrs1) }
 
           it 'throws a useful error' do
-            expect{ ServicePlan.make(attrs2) }.to raise_exception('Plans within a service must have unique names')
+            expect{ ServicePlan.make(attrs2) }.to raise_exception('Plan names must be unique within a service')
           end
         end
 

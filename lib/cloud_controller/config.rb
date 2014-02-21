@@ -140,6 +140,8 @@ module VCAP::CloudController
         optional(:varz_password) => String,
         optional(:disable_custom_buildpacks) => bool,
         optional(:broker_client_timeout_seconds) => Integer,
+        optional(:uaa_client_name) => String,
+        optional(:uaa_client_secret) => String,
 
         :renderer => {
           :max_results_per_page => Integer,
@@ -204,7 +206,6 @@ module VCAP::CloudController
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
         config[:directories] ||= {}
-        config[:maximum_app_disk_in_mb] ||= 2048
         config
       end
     end

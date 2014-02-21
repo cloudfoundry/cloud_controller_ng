@@ -106,6 +106,25 @@ module VCAP::CloudController
       @space_event_repository.record_space_update(space, SecurityContext.current_user, request_attrs)
     end
 
+    module ServiceSerialization
+      def self.to_hash(controller, service, opts)
+        entity_hash = service.to_hash.merge({
+          "service_plans" => service.service_plans_dataset.organization_visible(opts[:organization]).map do |service_plan|
+            RestController::ObjectSerialization.to_hash(ServicePlansController, service_plan, opts)
+          end
+        })
+
+        metadata_hash = {
+          "guid" => service.guid,
+          "url" => controller.url_for_guid(service.guid),
+          "created_at" => service.created_at,
+          "updated_at" => service.updated_at
+        }
+
+        {"metadata" => metadata_hash, "entity" => entity_hash}
+      end
+    end
+
     define_messages
     define_routes
   end

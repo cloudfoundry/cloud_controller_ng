@@ -32,8 +32,8 @@ module VCAP::CloudController
       validates_presence :free,                message: 'is required'
       validates_presence :service,             message: 'is required'
       validates_presence :unique_id,           message: 'is required'
-      validates_unique   [:service_id, :name], message: Sequel.lit('Plans within a service must have unique names')
-      validates_unique   :unique_id,           message: Sequel.lit("plan id '#{unique_id}' is taken")
+      validates_unique   [:service_id, :name], message: Sequel.lit('Plan names must be unique within a service')
+      validates_unique   :unique_id,           message: Sequel.lit('Plan ids must be unique')
     end
 
     def_dataset_method(:organization_visible) do |organization|

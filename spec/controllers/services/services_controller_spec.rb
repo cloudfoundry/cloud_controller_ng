@@ -107,14 +107,21 @@ module VCAP::CloudController
       end
     end
 
-    describe "get /v2/services" do
-      let(:user) {VCAP::CloudController::User.make  }
+    describe 'GET /v2/services' do
+      let(:user) { VCAP::CloudController::User.make }
       let(:headers) { headers_for(user) }
 
       before do
-        @active = 3.times.map { Service.make(:active => true, :long_description => Sham.long_description).
-          tap{|svc| ServicePlan.make(:service => svc) } }
-        @inactive = 2.times.map { Service.make(:active => false).tap{|svc| ServicePlan.make(:service => svc) } }
+        @active = 3.times.map do
+          Service.make(active: true, long_description: Sham.long_description).tap do |svc|
+            ServicePlan.make(service: svc)
+          end
+        end
+        @inactive = 2.times.map do
+          Service.make(active: false).tap do |svc|
+            ServicePlan.make(service: svc)
+          end
+        end
       end
 
       def decoded_guids
@@ -180,9 +187,55 @@ module VCAP::CloudController
           decoded_guids.should =~ @inactive.map(&:guid)
         end
       end
+
+      describe 'filtering by label' do
+        let(:my_service) { @active.fetch(0) }
+
+        before do
+          my_service.label = 'my-service'
+          my_service.save
+        end
+
+        it 'includes only matching services in the response' do
+          get '/v2/services?q=label:my-service', {}, headers
+          last_response.should be_ok
+          decoded_guids.should == [my_service.guid]
+        end
+      end
+
+      describe 'filtering by provider' do
+        context 'for a v1 service' do
+          let(:my_service) { @active.fetch(0) }
+
+          before do
+            my_service.provider = 'my-provider'
+            my_service.save
+          end
+
+          it 'includes only matching services in the response' do
+            get '/v2/services?q=provider:my-provider', {}, headers
+            last_response.should be_ok
+            decoded_guids.should == [my_service.guid]
+          end
+        end
+
+        context 'for a v2 service' do
+          let!(:my_service) do
+            Service.make(:v2).tap do |service|
+              ServicePlan.make(service: service)
+            end
+          end
+
+          it 'matches when provider is blank' do
+            get '/v2/services?q=provider:', {}, headers
+            last_response.should be_ok
+            decoded_guids.should == [my_service.guid]
+          end
+        end
+      end
     end
 
-    describe 'POST', '/v2/services' do
+    describe 'POST /v2/services' do
       it 'creates a service' do
         unique_id = Sham.unique_id
         url = Sham.url
@@ -297,10 +350,10 @@ module VCAP::CloudController
       end
     end
 
-    describe "PUT", "/v2/services/:guid" do
-      context "when updating the unique_id attribute" do
-        let!(:service) { Service.make }
+    describe 'PUT /v2/services/:guid' do
+      let!(:service) { Service.make }
 
+      context "when updating the unique_id attribute" do
         it "is successful" do
           new_unique_id = service.unique_id.reverse
           payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
@@ -321,10 +374,57 @@ module VCAP::CloudController
             expect(last_response.status).to be == 400
             expect(decoded_response.fetch('code')).to eql(120001)
             expect(decoded_response.fetch('error_code')).to eql('CF-ServiceInvalid')
-            expect(decoded_response.fetch('types')).to eql(['ServiceInvalid', 'Error'])
-            expect(decoded_response.fetch('description')).to eql("The service is invalid: service id '#{other_service.unique_id}' is taken")
+            expect(decoded_response.fetch('types')).to eql(%w(ServiceInvalid Error))
+            expect(decoded_response.fetch('description')).to eql('The service is invalid: Service ids must be unique')
           end
         end
+      end
+
+      context 'when providing an invalid url attribute' do
+        before do
+          put "/v2/services/#{service.guid}", Yajl::Encoder.encode({ url: 'banana' }), json_headers(admin_headers)
+        end
+
+        it "should return a 400" do
+          last_response.status.should == 400
+        end
+
+        it "should not return a location header" do
+          last_response.location.should be_nil
+        end
+
+        it "should return the request guid in the header" do
+          last_response.headers["X-VCAP-Request-ID"].should_not be_nil
+        end
+
+        it_behaves_like "a vcap rest error response", /must be a valid URL/
+      end
+    end
+
+    describe 'DELETE /v2/services/:guid' do
+      context 'when the purge parameter is "true"'
+      let!(:service) { Service.make(:v2) }
+      let!(:service_plan) { ServicePlan.make(service: service) }
+      let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+      before do
+        stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: {}, code: 200)
+      end
+
+      it 'deletes the service and its dependent models' do
+        delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+        expect(Service.first(guid: service.guid)).to be_nil
+        expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+        expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+      end
+
+      it 'does not contact the broker' do
+        delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+
+        expect(a_request(:delete, /#{service.service_broker.broker_url}.*/)).not_to have_been_made
       end
     end
   end

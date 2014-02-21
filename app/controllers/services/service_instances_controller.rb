@@ -63,9 +63,7 @@ module VCAP::CloudController
 
       raise InvalidRequest unless request_attrs
 
-      unless ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.admin?).filter(:guid => request_attrs['service_plan_guid']).count > 0
-        raise Errors::NotAuthorized
-      end
+      raise Errors::NotAuthorized unless current_user_can_manage_plan(request_attrs['service_plan_guid'])
 
       organization = requested_space.organization
 
@@ -80,19 +78,12 @@ module VCAP::CloudController
         raise Sequel::ValidationFailed.new(service_instance)
       end
 
-      client = service_instance.client
-      client.provision(service_instance)
+      service_instance.client.provision(service_instance)
 
       begin
         service_instance.save
       rescue => e
-        begin
-          # this needs to go into a retry queue
-          client.deprovision(service_instance)
-        rescue => deprovision_e
-          logger.error "Unable to deprovision #{service_instance}: #{deprovision_e}"
-        end
-
+        safe_deprovision_instance(service_instance)
         raise e
       end
 
@@ -100,6 +91,27 @@ module VCAP::CloudController
         { "Location" => "#{self.class.path}/#{service_instance.guid}" },
         object_renderer.render_json(self.class, service_instance, @opts)
       ]
+    end
+
+    class BulkUpdateMessage < VCAP::RestAPI::Message
+      required :service_plan_guid, String
+    end
+
+    put "/v2/service_plans/:service_plan_guid/service_instances", :bulk_update
+    def bulk_update(existing_service_plan_guid)
+      raise Errors::NotAuthorized unless SecurityContext.admin?
+
+      @request_attrs = self.class::BulkUpdateMessage.decode(body).extract(:stringify_keys => true)
+
+      existing_plan = ServicePlan.filter(:guid => existing_service_plan_guid).first
+      new_plan = ServicePlan.filter(:guid => request_attrs['service_plan_guid']).first
+
+      if existing_plan && new_plan
+        changed_count = existing_plan.service_instances_dataset.update(:service_plan_id => new_plan.id)
+        [HTTP::OK, {}, { changed_count: changed_count }.to_json]
+      else
+        [HTTP::BAD_REQUEST, {}, '']
+      end
     end
 
     get "/v2/service_instances/:guid", :read
@@ -110,6 +122,14 @@ module VCAP::CloudController
       object_renderer.render_json(self.class, service_instance, @opts)
     end
 
+    get '/v2/service_instances/:guid/permissions', :permissions
+    def permissions(guid)
+      find_guid_and_validate_access(:create, guid, ServiceInstance)
+      [HTTP::OK, {}, JSON.generate({ manage: true })]
+    rescue Errors::NotAuthorized
+      [HTTP::OK, {}, JSON.generate({ manage: false })]
+    end
+
     delete "/v2/service_instances/:guid", :delete
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
@@ -117,5 +137,18 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    private
+
+    def current_user_can_manage_plan(plan_guid)
+      ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.admin?).filter(:guid => plan_guid).count > 0
+    end
+
+    def safe_deprovision_instance(service_instance)
+      # this needs to go into a retry queue
+      service_instance.client.deprovision(service_instance)
+    rescue => e
+      logger.error "Unable to deprovision #{service_instance}: #{e}"
+    end
   end
 end

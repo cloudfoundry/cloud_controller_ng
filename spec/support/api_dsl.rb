@@ -66,8 +66,8 @@ module ApiDsl
     example.metadata[:audit_records] << {type: event[:type], attributes: attributes}
   end
 
-  def fields_json
-    Yajl::Encoder.encode(required_fields, pretty: true)
+  def fields_json(overrides = {})
+    Yajl::Encoder.encode(required_fields.merge(overrides), pretty: true)
   end
 
   def required_fields
@@ -141,7 +141,7 @@ module ApiDsl
     end
 
     def field(name, description = "", options = {})
-      metadata[:fields] ||= []
+      metadata[:fields] = metadata[:fields] ? metadata[:fields].dup : []
       metadata[:fields].push(options.merge(:name => name.to_s, :description => description))
     end
 

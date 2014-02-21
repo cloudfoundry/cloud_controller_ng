@@ -32,7 +32,7 @@ describe 'Service Broker' do
 
         expect(last_response.status).to eql(502)
         expect(decoded_response['code']).to eql(270012)
-        expect(decoded_response['description']).to eql("Service broker catalog is invalid: \nService MySQL\n  each service must have at least one plan\n")
+        expect(decoded_response['description']).to eql("Service broker catalog is invalid: \nService MySQL\n  At least one plan is required\n")
       end
     end
 
@@ -67,7 +67,7 @@ describe 'Service Broker' do
 
         expect(last_response.status).to eql(502)
         expect(decoded_response['code']).to eql(270012)
-        expect(decoded_response['description']).to eql("Service broker catalog is invalid: \nService MySQL\n  service id should be a string, but had value 12345\n")
+        expect(decoded_response['description']).to eql("Service broker catalog is invalid: \nService MySQL\n  Service id must be a string, but has value 12345\n")
       end
     end
   end

@@ -80,11 +80,23 @@ module VCAP::CloudController
       # and putting this side effect outside memoizes the label and provider.
       # This also creates a ServiceAuthToken for v2 services despite the fact
       # that they do not use it.
-      ServiceAuthToken.make(:label => label, :provider => provider, :token => Sham.token)
+      ServiceAuthToken.make(label: label, provider: provider, token: Sham.token)
       Sham.description
     end
     bindable          { true }
     active            { true }
+    sso_client_id { Sham.guid }
+  end
+
+  Service.blueprint(:v1) do
+  end
+
+  Service.blueprint(:v2) do
+    service_broker
+    description { Sham.description } # remove hack
+    provider    { '' }
+    url         { nil }
+    version     { nil }
   end
 
   ServiceInstance.blueprint do
