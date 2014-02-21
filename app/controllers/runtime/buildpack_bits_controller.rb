@@ -30,7 +30,7 @@ module VCAP::CloudController
       if upload_bits(buildpack, sha1, uploaded_file, uploaded_filename)
         [HTTP::CREATED, object_renderer.render_json(self.class, buildpack, @opts)]
       else
-         [HTTP::CONFLICT, nil]
+         [HTTP::NO_CONTENT, nil]
       end
     ensure
       FileUtils.rm_f(uploaded_file) if uploaded_file
