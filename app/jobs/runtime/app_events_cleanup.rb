@@ -10,7 +10,7 @@ module VCAP::CloudController
           old_app_events.delete
         end
 
-        def job_name
+        def job_name_in_configuration
           :app_events_cleanup
         end
 

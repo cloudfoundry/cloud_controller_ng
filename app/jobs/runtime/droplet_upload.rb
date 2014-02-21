@@ -13,7 +13,7 @@ module VCAP::CloudController
           FileUtils.rm_f(local_path)
         end
 
-        def job_name
+        def job_name_in_configuration
           :droplet_upload
         end
 

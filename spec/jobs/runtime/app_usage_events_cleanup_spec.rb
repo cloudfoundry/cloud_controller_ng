@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         it "knows its job name" do
-          expect(job.job_name).to equal(:app_usage_events_cleanup)
+          expect(job.job_name_in_configuration).to equal(:app_usage_events_cleanup)
         end
       end
     end

@@ -45,7 +45,7 @@ module VCAP::CloudController
         end
 
         it "knows its job name" do
-          expect(job.job_name).to equal(:model_deletion)
+          expect(job.job_name_in_configuration).to equal(:model_deletion)
         end
       end
     end

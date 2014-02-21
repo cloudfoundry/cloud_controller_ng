@@ -16,7 +16,7 @@ module VCAP::CloudController
           end
         end
 
-        def job_name
+        def job_name_in_configuration
           :droplet_deletion
         end
 

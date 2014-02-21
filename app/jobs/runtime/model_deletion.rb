@@ -9,7 +9,7 @@ module VCAP::CloudController
           model.destroy
         end
 
-        def job_name
+        def job_name_in_configuration
           :model_deletion
         end
 

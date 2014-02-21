@@ -47,7 +47,7 @@ module VCAP::CloudController
       end
 
       it "knows its job name" do
-        expect(job.job_name).to equal(:droplet_deletion)
+        expect(job.job_name_in_configuration).to equal(:droplet_deletion)
       end
 
       describe "#max_attempts" do
