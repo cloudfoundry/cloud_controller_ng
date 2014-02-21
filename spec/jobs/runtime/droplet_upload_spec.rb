@@ -116,7 +116,7 @@ module VCAP::CloudController
       end
 
       it "knows its job name" do
-        expect(job.job_name).to equal(:droplet_upload)
+        expect(job.job_name_in_configuration).to equal(:droplet_upload)
       end
     end
   end

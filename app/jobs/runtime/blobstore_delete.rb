@@ -7,7 +7,7 @@ module VCAP::CloudController
           blobstore.delete(key)
         end
 
-        def job_name
+        def job_name_in_configuration
           :blobstore_delete
         end
       end

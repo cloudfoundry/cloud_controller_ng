@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       it "knows its job name" do
-        expect(job.job_name).to equal(:blobstore_upload)
+        expect(job.job_name_in_configuration).to equal(:blobstore_upload)
       end
     end
   end

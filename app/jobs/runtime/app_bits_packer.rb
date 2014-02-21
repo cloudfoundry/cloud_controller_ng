@@ -15,7 +15,7 @@ module VCAP::CloudController
           app_bits_packer.create(app, uploaded_compressed_path, CloudController::Blobstore::FingerprintsCollection.new(fingerprints))
         end
 
-        def job_name
+        def job_name_in_configuration
           :app_bits_packer
         end
 
