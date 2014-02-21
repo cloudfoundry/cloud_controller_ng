@@ -17,9 +17,12 @@ module VCAP::CloudController::Jobs
 
       it "doesn't allow the job to exceed the timeout" do
         expect(timeout_job).to receive(:max_run_time).with("my-job").and_return(1)
-        expect{
-          timeout_job.perform
-        }.to raise_error(Timeout::Error)
+        expect{ timeout_job.perform }.to raise_error
+      end
+
+      it "raises a VCAP::Errors::JobTimeout to ensure the error message reaches the API consumer" do
+        expect(timeout_job).to receive(:max_run_time).with("my-job").and_return(1)
+        expect{ timeout_job.perform }.to raise_error(VCAP::Errors::JobTimeout)
       end
     end
 

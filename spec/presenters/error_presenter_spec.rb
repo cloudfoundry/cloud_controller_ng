@@ -1,21 +1,11 @@
 require "spec_helper"
 
 describe ErrorPresenter do
-  let(:error) do
-    StandardError.new
-  end
+  subject(:presenter) { ErrorPresenter.new(error, error_hasher) }
 
-  let(:error_hash) do
-    {"fake" => "error"}
-  end
-
-  let(:error_hasher) do
-    double(ErrorHasher, unsanitized_hash: error_hash, sanitized_hash: error_hash)
-  end
-
-  subject(:presenter) do
-    ErrorPresenter.new(error, error_hasher)
-  end
+  let(:error) { StandardError.new }
+  let(:error_hash) { {"fake" => "error"} }
+  let(:error_hasher) { double(ErrorHasher, unsanitized_hash: error_hash, sanitized_hash: error_hash) }
 
   describe "#client_error?" do
     context "when the response code is 4xx" do

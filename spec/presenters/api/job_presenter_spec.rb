@@ -68,10 +68,10 @@ describe JobPresenter do
     end
 
     context "when the job has an error" do
-      let(:job) do
-        job = Delayed::Job.enqueue double(:obj, perform: nil)
-        job.stub(:last_error) { "failed to upload app" }
-        job
+      let(:exception) { VCAP::Errors::BuildpackLocked.new }
+      let(:job) { Delayed::Job.enqueue double(:obj, perform: nil) }
+      before do
+        allow(job).to receive(:cf_api_error).and_return(VCAP::CloudController::ExceptionMarshaler.marshal(exception))
       end
 
       it "creates a valid JSON" do
@@ -83,9 +83,40 @@ describe JobPresenter do
           },
           entity: {
             guid: job.guid,
-            status: "failed"
+            status: "failed",
+            error: "Use of entity>error is deprecated in favor of entity>error_details.",
+            error_details: ErrorPresenter.new(exception).sanitized_hash
           }
         )
+      end
+    end
+
+    context "when the job has an error" do
+      let(:exception) { VCAP::Errors::BuildpackLocked.new }
+      let(:job) { Delayed::Job.enqueue double(:obj, perform: nil) }
+      before do
+        allow(job).to receive(:cf_api_error).and_return(nil)
+        allow(job).to receive(:last_error).and_return("backtrace")
+      end
+
+      it "creates a valid JSON" do
+        expect(JobPresenter.new(job).to_hash).to eq(
+           metadata: {
+             guid: job.guid,
+             created_at: job.created_at.iso8601,
+             url: "/v2/jobs/#{job.guid}"
+           },
+           entity: {
+             guid: job.guid,
+             status: "failed",
+             error: "Use of entity>error is deprecated in favor of entity>error_details.",
+             error_details: {
+               "error_code" => "UnknownError",
+               "description" => "An unknown error occurred.",
+               "code" => 10001,
+             }
+           }
+         )
       end
     end
   end

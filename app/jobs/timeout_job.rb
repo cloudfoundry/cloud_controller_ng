@@ -5,6 +5,8 @@ module VCAP::CloudController
         Timeout.timeout max_run_time(job.job_name_in_configuration) do
           job.perform
         end
+      rescue Timeout::Error => e
+        raise VCAP::Errors::JobTimeout
       end
 
       def max_run_time(job_name_in_configuration)

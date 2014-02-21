@@ -2,9 +2,13 @@ require "jobs/timeout_job"
 
 module VCAP::CloudController
   module Jobs
-    class Enqueuer < Struct.new(:job, :opts)
+    class Enqueuer
+      def initialize(job, opts = {})
+        @job = job
+        @opts = opts
+      end
       def enqueue
-        Delayed::Job.enqueue(TimeoutJob.new(job), opts)
+        Delayed::Job.enqueue(ExceptionCatchingJob.new(TimeoutJob.new(@job)), @opts)
       end
     end
   end
