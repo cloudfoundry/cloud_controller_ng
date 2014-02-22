@@ -11,7 +11,9 @@ bundler_args: --deployment --without development
 rvm:
   - 1.9.3-p484
 
-script: bundle exec parallel_rspec spec$SUB -s 'integration|acceptance' -n $THREADS -o "--format $FORMAT --order rand:$RANDOM"
+script:
+  - bundle exec parallel_rspec spec$SUB -s 'integration|acceptance' -n $THREADS -o "--format $FORMAT --order rand:$RANDOM"
+  - bundle exec rubocop
 
 env:
   global:

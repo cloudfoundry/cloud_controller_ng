@@ -40,6 +40,7 @@ group :operations do
 end
 
 group :test do
+  gem 'rubocop'
   gem 'debugger'
   gem 'rspec'
   gem 'rspec_api_documentation'

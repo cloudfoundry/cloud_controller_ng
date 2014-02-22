@@ -1,0 +1,9 @@
+inherit_from: rubocop-todo.yml
+
+AllCops:
+  Includes:
+    - Gemfile
+    - Rakefile
+
+RegexpLiteral:
+  MaxSlashes: 1
