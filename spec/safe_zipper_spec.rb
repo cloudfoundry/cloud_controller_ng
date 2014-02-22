@@ -33,7 +33,7 @@ describe SafeZipper do
           nil,
           double("status", :success? => true)]
       )
-      expect(SafeZipper.unzip(zip_path, zip_destination)).to eq 10000000001
+      expect(SafeZipper.unzip(zip_path, zip_destination)).to eq 10_000_000_001
     end
 
     context "when the zip_destination doesn't exist" do
@@ -110,7 +110,7 @@ describe SafeZipper do
       expect(output).not_to include "./"
       expect(output).not_to include "spec/fixtures/fake_package"
       expect(output).to include "subdir/there"
-      expect(output).to match %r{^l.+coming_from_inside$}
+      expect(output).to match /^l.+coming_from_inside$/
       expect(output).to include "4 files"
     end
 

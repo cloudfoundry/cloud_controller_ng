@@ -63,7 +63,7 @@ module ControllerHelpers
 
           it "should return the path to the new instance in the location header" do
             last_response.location.should_not be_nil
-            last_response.location.should match /#{opts[:path]}\/[^ \/]/
+            last_response.location.should match %(#{opts[:path]}/[^ /])
             metadata["url"].should == last_response.location
           end
 
