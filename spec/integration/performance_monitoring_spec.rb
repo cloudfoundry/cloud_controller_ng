@@ -17,7 +17,7 @@ describe "Cloud controller", type: :integration, monitoring: true do
     before do
       start_nats(debug: false)
       opts = {
-        debug: true,
+        debug: false,
         config: cc_config_file.path,
         env: {
           "NRCONFIG" => newrelic_config_file,
