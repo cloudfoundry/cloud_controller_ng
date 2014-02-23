@@ -44,6 +44,18 @@ describe 'Sinatra::VCAP' do
       e.set_backtrace(['/vcap:1', '/error:2'])
       raise e
     end
+
+    get '/active_varz' do
+      VCAP::Component.varz.synchronize do
+        VCAP::Component.varz[:vcap_sinatra].to_json
+      end
+    end
+
+    put '/active_varz' do
+      VCAP::Component.varz.synchronize do
+        VCAP::Component.varz[:vcap_sinatra].to_json
+      end
+    end
   end
 
   def app
@@ -264,6 +276,67 @@ describe 'Sinatra::VCAP' do
     it 'should access the request id via Thread.current[:request_id]' do
       last_response.status.should == 200
       last_response.body.should match /def::.*/
+    end
+  end
+
+  describe 'varz information about outstanding requests' do
+    before do
+      get '/active_varz'
+    end
+
+    def sinatra_varz
+      Yajl::Parser.parse(last_response.body)
+    end
+
+    def request_id
+      last_response.headers['X-VCAP-Request-ID']
+    end
+
+    def varz_active_request
+      sinatra_varz['outstanding_requests'][request_id]
+    end
+
+    it 'should indicate there is 1 outstanding request when processing the request' do
+      sinatra_varz['requests']['outstanding'].should == 1
+    end
+
+    it 'should have data associated with the request_guid' do
+      varz_active_request.should_not be_nil
+      varz_active_request.should_not be_empty
+    end
+
+    it 'should have a valid start time' do
+      varz_active_request.has_key?('start_time').should be_true
+      varz_active_request['start_time'].should < Time.now.to_f
+    end
+
+    it 'should contain the id of the thread executing the request' do
+      varz_active_request.has_key?('thread_id').should be_true
+      varz_active_request['thread_id'].should == Thread.current.object_id
+    end
+
+    it 'should contain the request method used' do
+      get '/active_varz'
+      varz_active_request['request_method'].should == 'GET'
+
+      put '/active_varz'
+      varz_active_request['request_method'].should == 'PUT'
+    end
+
+    describe 'request_uri' do
+      it 'should contain the requested uri' do
+        varz_active_request['request_uri'].should eq('/active_varz')
+      end
+
+      context 'when a query string is provided' do
+        before do
+          get '/active_varz?query=true'
+        end
+
+        it 'should contain the path and query string in request_uri' do
+          varz_active_request['request_uri'].should eq('/active_varz?query=true')
+        end
+      end
     end
   end
 end
