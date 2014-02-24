@@ -5,6 +5,56 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
+
+# Manually moved linting rules to top of this TODO file:
+
+# Offence count: 33
+AmbiguousRegexpLiteral:
+  Enabled: false
+
+# Offence count: 15
+BlockAlignment:
+  Enabled: false
+
+# Offence count: 2
+# Configuration parameters: AlignWith, SupportedStyles.
+EndAlignment:
+  Enabled: false
+
+# Offence count: 10
+HandleExceptions:
+  Enabled: false
+
+# Offence count: 1
+LiteralInCondition:
+  Enabled: false
+
+# Offence count: 15
+ParenthesesAsGroupedExpression:
+  Enabled: false
+
+# Offence count: 3
+RescueException:
+  Enabled: false
+
+# Offence count: 15
+ShadowingOuterLocalVariable:
+  Enabled: false
+
+# Offence count: 39
+UselessAssignment:
+  Enabled: false
+
+# Offence count: 349
+Void:
+  Enabled: false
+
+
+
+
+
+# Other Rubocop violations:
+
 # Offence count: 7
 AccessorMethodName:
   Enabled: false
@@ -25,17 +75,9 @@ AlignHash:
 AlignParameters:
   Enabled: false
 
-# Offence count: 33
-AmbiguousRegexpLiteral:
-  Enabled: false
-
 # Offence count: 7
 # Cop supports --auto-correct.
 AndOr:
-  Enabled: false
-
-# Offence count: 15
-BlockAlignment:
   Enabled: false
 
 # Offence count: 419
@@ -116,11 +158,6 @@ Encoding:
   Enabled: false
 
 # Offence count: 2
-# Configuration parameters: AlignWith, SupportedStyles.
-EndAlignment:
-  Enabled: false
-
-# Offence count: 2
 FavorSprintf:
   Enabled: false
 
@@ -136,10 +173,6 @@ FinalNewline:
 # Offence count: 18
 # Configuration parameters: AllowedVariables.
 GlobalVars:
-  Enabled: false
-
-# Offence count: 10
-HandleExceptions:
   Enabled: false
 
 # Offence count: 17
@@ -182,10 +215,6 @@ LineEndConcatenation:
 # Offence count: 3142
 LineLength:
   Max: 312
-
-# Offence count: 1
-LiteralInCondition:
-  Enabled: false
 
 # Offence count: 32
 # Cop supports --auto-correct.
@@ -240,10 +269,6 @@ ParameterLists:
 ParenthesesAroundCondition:
   Enabled: false
 
-# Offence count: 15
-ParenthesesAsGroupedExpression:
-  Enabled: false
-
 # Offence count: 2
 # Cop supports --auto-correct.
 PerlBackrefs:
@@ -283,10 +308,6 @@ RedundantSelf:
 RegexpLiteral:
   MaxSlashes: 2
 
-# Offence count: 3
-RescueException:
-  Enabled: false
-
 # Offence count: 9
 RescueModifier:
   Enabled: false
@@ -294,10 +315,6 @@ RescueModifier:
 # Offence count: 10
 # Configuration parameters: AllowAsExpressionSeparator.
 Semicolon:
-  Enabled: false
-
-# Offence count: 15
-ShadowingOuterLocalVariable:
   Enabled: false
 
 # Offence count: 172
@@ -403,10 +420,6 @@ TrailingWhitespace:
 TrivialAccessors:
   Enabled: false
 
-# Offence count: 39
-UselessAssignment:
-  Enabled: false
-
 # Offence count: 1
 VariableInterpolation:
   Enabled: false
@@ -414,10 +427,6 @@ VariableInterpolation:
 # Offence count: 1
 # Configuration parameters: EnforcedStyle, SupportedStyles.
 VariableName:
-  Enabled: false
-
-# Offence count: 349
-Void:
   Enabled: false
 
 # Offence count: 1
