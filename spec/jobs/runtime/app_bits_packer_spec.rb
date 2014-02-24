@@ -16,10 +16,10 @@ module VCAP::CloudController
         let(:package_blobstore) { double(:package_blobstore) }
         let(:global_app_bits_cache) { double(:global_app_bits_cache) }
         let(:tmpdir) { "/tmp/special_temp" }
-        let(:max_droplet_size) { 256 }
+        let(:max_package_size) { 256 }
 
         before do
-          config_override({:directories => {:tmpdir => tmpdir}, :packages => config[:packages].merge(:max_droplet_size => max_droplet_size)})
+          config_override({:directories => {:tmpdir => tmpdir}, :packages => config[:packages].merge(:max_package_size => max_package_size)})
 
           CloudController::Blobstore::FingerprintsCollection.stub(:new) { fingerprints }
           App.stub(:find) { app }
@@ -42,7 +42,7 @@ module VCAP::CloudController
           CloudController::DependencyLocator.instance.should_receive(:global_app_bits_cache).and_return(global_app_bits_cache)
 
           packer = double
-          AppBitsPackage.should_receive(:new).with(package_blobstore, global_app_bits_cache, max_droplet_size, tmpdir).and_return(packer)
+          AppBitsPackage.should_receive(:new).with(package_blobstore, global_app_bits_cache, max_package_size, tmpdir).and_return(packer)
           packer.should_receive(:create).with(app, uploaded_path, fingerprints)
           job.perform
         end

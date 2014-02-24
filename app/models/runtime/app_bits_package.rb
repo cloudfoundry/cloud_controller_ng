@@ -2,12 +2,12 @@ require "cloud_controller/blobstore/local_app_bits"
 require "cloud_controller/blobstore/fingerprints_collection"
 
 class AppBitsPackage
-  attr_reader :package_blobstore, :global_app_bits_cache, :max_droplet_size, :tmp_dir
+  attr_reader :package_blobstore, :global_app_bits_cache, :max_package_size, :tmp_dir
 
-  def initialize(package_blobstore, global_app_bits_cache, max_droplet_size, tmp_dir)
+  def initialize(package_blobstore, global_app_bits_cache, max_package_size, tmp_dir)
     @package_blobstore = package_blobstore
     @global_app_bits_cache = global_app_bits_cache
-    @max_droplet_size = max_droplet_size
+    @max_package_size = max_package_size
     @tmp_dir = tmp_dir
   end
 
@@ -33,11 +33,11 @@ class AppBitsPackage
   private
 
   def validate_size!(fingerprints_in_app_cache, local_app_bits)
-    return unless max_droplet_size
+    return unless max_package_size
 
     total_size = local_app_bits.storage_size + fingerprints_in_app_cache.storage_size
-    if total_size > max_droplet_size
-      raise VCAP::Errors::ApiError.new_from_details("AppPackageInvalid", "Package may not be larger than #{max_droplet_size} bytes")
+    if total_size > max_package_size
+      raise VCAP::Errors::ApiError.new_from_details("AppPackageInvalid", "Package may not be larger than #{max_package_size} bytes")
     end
   end
 end
