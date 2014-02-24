@@ -81,7 +81,8 @@ module VCAP::CloudController::RestController
 
         associated_controller = VCAP::CloudController.controller_from_model_name(associated_model.name)
         if association.is_a?(ControllerDSL::ToOneAttribute)
-          if associated_model_instance = get_preloaded_association_contents!(obj, association)
+          associated_model_instance = get_preloaded_association_contents!(obj, association)
+          if associated_model_instance
             associated_url = associated_controller.url_for_guid(associated_model_instance.guid)
           end
         else
@@ -120,7 +121,8 @@ module VCAP::CloudController::RestController
     end
 
     def get_associated_model_class_for(obj, name)
-      if model_association = obj.model.association_reflection(name)
+      model_association = obj.model.association_reflection(name)
+      if model_association
         model_association.associated_class
       end
     end

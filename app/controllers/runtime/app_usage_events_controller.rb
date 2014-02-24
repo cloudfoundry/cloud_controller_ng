@@ -22,7 +22,8 @@ module VCAP::CloudController
 
     private
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      if after_guid = params["after_guid"]
+      after_guid = params["after_guid"]
+      if after_guid
         previous_event = AppUsageEvent.find(guid: after_guid)
         raise Errors::BadQueryParameter, after_guid unless previous_event
         ds = ds.filter{ id > previous_event.id }

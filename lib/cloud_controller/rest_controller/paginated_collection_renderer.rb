@@ -86,7 +86,9 @@ module VCAP::CloudController::RestController
         'results-per-page' => page_size,
       }
 
-      if depth = opts[:inline_relations_depth]
+      depth = opts[:inline_relations_depth]
+
+      if depth
         params['inline-relations-depth'] = depth
       end
 

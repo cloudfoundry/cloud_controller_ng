@@ -145,7 +145,8 @@ module VCAP::CloudController
     end
 
     def validate_access(label, provider = DEFAULT_PROVIDER)
-      raise NotAuthorized unless auth_token = env[SERVICE_TOKEN_KEY]
+      auth_token = env[SERVICE_TOKEN_KEY]
+      raise NotAuthorized unless auth_token
 
       svc_auth_token = ServiceAuthToken[
         :label => label, :provider => provider,
@@ -213,13 +214,16 @@ module VCAP::CloudController
       instances_ds = ManagedServiceInstance.filter(:service_plan => plans_ds)
       bindings_ds = ServiceBinding.filter(:service_instance => instances_ds)
 
-      if instance = instances_ds[:gateway_name => id]
+      instance = instances_ds[:gateway_name => id]
+      binding = bindings_ds[:gateway_name => id]
+
+      if instance
         instance.set(
           :gateway_data => req.configuration,
           :credentials => req.credentials,
         )
         instance.save_changes
-      elsif binding = bindings_ds[:gateway_name => id]
+      elsif binding
         binding.set(
           :configuration => req.configuration.to_s,
           :credentials => req.credentials.to_s,

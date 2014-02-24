@@ -34,7 +34,8 @@ module VCAP::CloudController::RestController
       all_relationships.each do |relationship_name, association|
         association_name = association.association_name
 
-        unless association_model_class = model_class.association_reflection(association_name)
+        association_model_class = model_class.association_reflection(association_name)
+        unless association_model_class
           # Since we are using STI in some models (e.g. Domain, ServiceInstance)
           # we are not able to find association on the parent class defined on a child class.
           # We are assuming that parent will have an association with a suffix.
@@ -49,7 +50,8 @@ module VCAP::CloudController::RestController
         end
 
         visibility_filter = default_visibility_filter
-        if additional_filter = additional_visibility_filters[relationship_name]
+        additional_filter = additional_visibility_filters[relationship_name]
+        if additional_filter
           visibility_filter = proc { |ds| additional_filter.call(default_visibility_filter.call(ds)) }
         end
 

@@ -76,7 +76,8 @@ module IntegrationSetup
   end
 
   def kill_existing_fake_broker
-    if existing_broker_process = `ps -o pid,command`.split("\n").find { |s| s[/\d+.*fake_service_broker/] }
+    existing_broker_process = `ps -o pid,command`.split("\n").find { |s| s[/\d+.*fake_service_broker/] }
+    if existing_broker_process
       Process.kill('KILL', existing_broker_process[/\d+/].to_i)
     end
   end

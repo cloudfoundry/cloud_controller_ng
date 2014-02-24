@@ -14,7 +14,8 @@ module VCAP::CloudController
       info = get_file_uri_for_search_param(app, path, search_param)
 
       headers = {}
-      if range = env["HTTP_RANGE"]
+      range = env["HTTP_RANGE"]
+      if range
         headers["Range"] = range
       end
 
@@ -77,7 +78,8 @@ module VCAP::CloudController
       # harmless, but it is weird.  Getting rid of it would require checking
       # with the VMC and STS teams to make sure no one expects to be able to
       # send a +.
-      if match = search_param.match(/^[+]?([0-9]+)$/)
+      match = search_param.match(/^[+]?([0-9]+)$/)
+      if match
         instance = match.captures[0].to_i
         DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
       elsif search_param.match(/^[0-9a-zA-z]+$/)
