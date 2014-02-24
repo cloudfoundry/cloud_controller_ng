@@ -42,7 +42,7 @@ module VCAP::CloudController
       end
 
       def perform_stage
-        diego_stager_task.stage &completion_callback
+        diego_stager_task.stage(&completion_callback)
       end
 
       it 'assigns a new staging_task_id to the app being staged' do
