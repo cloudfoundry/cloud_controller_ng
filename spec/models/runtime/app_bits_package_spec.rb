@@ -23,8 +23,8 @@ describe AppBitsPackage do
     CloudController::Blobstore::Client.new({provider: "Local", local_root: blobstore_dir}, "package")
   end
 
-  let(:packer) { AppBitsPackage.new(package_blobstore, global_app_bits_cache, max_droplet_size, local_tmp_dir) }
-  let(:max_droplet_size) { 1_073_741_824 }
+  let(:packer) { AppBitsPackage.new(package_blobstore, global_app_bits_cache, max_package_size, local_tmp_dir) }
+  let(:max_package_size) { 1_073_741_824 }
 
   around do |example|
     begin
@@ -90,7 +90,7 @@ describe AppBitsPackage do
     end
 
     context "when the app bits are too large" do
-      let(:max_droplet_size) { 10 }
+      let(:max_package_size) { 10 }
 
       it "raises an exception" do
         expect {
@@ -105,7 +105,7 @@ describe AppBitsPackage do
     end
 
     context "when the max droplet size is not configured" do
-      let(:max_droplet_size) { nil }
+      let(:max_package_size) { nil }
 
       it "always accepts any droplet size" do
         fingerprints_in_app_cache = CloudController::Blobstore::FingerprintsCollection.new(

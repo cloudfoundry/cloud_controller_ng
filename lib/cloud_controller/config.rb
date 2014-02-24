@@ -113,13 +113,12 @@ module VCAP::CloudController
         },
 
         :packages => {
-          optional(:max_droplet_size) => Integer,
+          optional(:max_package_size) => Integer,
           optional(:app_package_directory_key) => String,
           :fog_connection => Hash
         },
 
         :droplets => {
-          optional(:max_droplet_size) => Integer,
           optional(:droplet_directory_key) => String,
           :fog_connection => Hash
         },
