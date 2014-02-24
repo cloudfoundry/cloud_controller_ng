@@ -4,6 +4,8 @@ AllCops:
   Includes:
     - Gemfile
     - Rakefile
+  Excludes:
+    - vendor/**
 
 RegexpLiteral:
   MaxSlashes: 1
