@@ -9,11 +9,6 @@
 AccessorMethodName:
   Enabled: false
 
-# Offence count: 16
-# Cop supports --auto-correct.
-Alias:
-  Enabled: false
-
 # Offence count: 6
 # Cop supports --auto-correct.
 AlignArray:

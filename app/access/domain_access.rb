@@ -4,7 +4,7 @@ module VCAP::CloudController
       super || (domain.owning_organization && domain.owning_organization.managers.include?(context.user))
     end
 
-    alias :update? :create?
-    alias :delete? :create?
+    alias_method :update?, :create?
+    alias_method :delete?, :create?
   end
 end

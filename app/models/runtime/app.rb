@@ -83,7 +83,7 @@ module VCAP::CloudController
     # Last staging response which will contain streaming log url
     attr_accessor :last_stager_response
 
-    alias :kill_after_multiple_restarts? :kill_after_multiple_restarts
+    alias_method :kill_after_multiple_restarts?, :kill_after_multiple_restarts
 
     def validate_buildpack_name_or_git_url
       bp = buildpack
