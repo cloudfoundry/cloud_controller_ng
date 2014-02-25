@@ -29,17 +29,6 @@ module VCAP::CloudController
         routes: lambda { |space| Route.make(space: space) },
         service_instances: lambda { |space| ManagedServiceInstance.make(space: space) }
       },
-      one_to_many_collection_ids_without_url: {
-        default_users: lambda { |space|
-          user = VCAP::CloudController::User.make
-          space.organization.add_user(user)
-          space.add_developer(user)
-          space.save
-          user.default_space = space
-          user.save
-          user
-        }
-      },
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {
         developers: lambda { |space| make_user_for_space(space) },

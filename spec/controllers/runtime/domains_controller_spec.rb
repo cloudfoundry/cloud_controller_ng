@@ -20,18 +20,11 @@ module VCAP::CloudController
 
     include_examples "collection operations", path: "/v2/domains", model: PrivateDomain,
       one_to_many_collection_ids: {},
-      one_to_many_collection_ids_without_url: {
-        routes: lambda { |domain|
-          space = Space.make(organization: domain.owning_organization)
-          Route.make(domain: domain, space: space)
-        }
-      },
       many_to_one_collection_ids: {owning_organization: lambda { |user| user.organizations.first || Organization.make }},
       many_to_many_collection_ids: {}
 
     include_examples "collection operations", path: "/v2/domains", model: SharedDomain,
       one_to_many_collection_ids: {},
-      one_to_many_collection_ids_without_url: {routes: lambda { |domain| Route.make(domain: domain) }},
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {}
 
