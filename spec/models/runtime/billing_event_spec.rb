@@ -6,6 +6,34 @@ module VCAP::CloudController
       BillingEvent.dataset.delete
     end
 
+    describe ".create" do
+      let(:values) { {
+          timestamp: Time.now,
+          organization_guid: "abc",
+          organization_name: "def",
+      } }
+
+      context "when billing event writing is enabled" do
+        before do
+          config_override({ :billing_event_writing_enabled => true })
+        end
+
+        it "adds a new row to the database table" do
+          expect { BillingEvent.create(values) }.to change { BillingEvent.count }.from(0).to(1)
+        end
+      end
+
+      context "when billing event writing is disabled" do
+        before do
+          config_override({ :billing_event_writing_enabled => false })
+        end
+
+        it "does not add a new row to the database table" do
+          expect { BillingEvent.create(values) }.not_to change { BillingEvent.count }
+        end
+      end
+    end
+
     describe "all" do
       before do
         @org_event = OrganizationStartEvent.make

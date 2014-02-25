@@ -28,6 +28,8 @@ app_usage_events:
 audit_events:
   cutoff_age_in_days: 31
 
+billing_event_writing_enabled: true
+
 default_app_memory: 1024 #mb
 maximum_app_disk_in_mb: 2048
 

@@ -2,6 +2,10 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::OrganizationStartEvent, type: :model do
+    before do
+      config_override({ :billing_event_writing_enabled => true })
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes => [
         :timestamp,

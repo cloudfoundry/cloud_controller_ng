@@ -25,6 +25,7 @@ module VCAP::CloudController
         :app_usage_events => {
           :cutoff_age_in_days => Fixnum
         },
+        optional(:billing_event_writing_enabled) => bool,
         :default_app_memory => Fixnum,
         optional(:maximum_app_disk_in_mb) => Fixnum,
         :maximum_health_check_timeout => Fixnum,
@@ -202,10 +203,11 @@ module VCAP::CloudController
         @initialized = true
       end
 
-      private
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
+        config[:maximum_app_disk_in_mb] ||= 2048
         config[:directories] ||= {}
+        config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
         config
       end
     end

@@ -2,6 +2,10 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe BillingEventAccess, type: :access do
+    before do
+      config_override({ :billing_event_writing_enabled => true })
+    end
+
     subject(:access) { BillingEventAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }

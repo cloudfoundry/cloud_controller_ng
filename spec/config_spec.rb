@@ -12,21 +12,54 @@ module VCAP::CloudController
       end
     end
 
-    describe "default" do
-      it "sets default stacks_file" do
-        config = Config.from_file(File.join(fixture_path, "config/minimal_config.yml"))
-        expect(config[:stacks_file]).to eq(File.join(Config.config_dir, "stacks.yml"))
+    describe ".merge_defaults" do
+      let (:config) { Config.merge_defaults(config_from_file) }
+
+      context "when no config values are provided" do
+        let (:config_from_file) { { } }
+
+        it "sets default stacks_file" do
+          expect(config[:stacks_file]).to eq(File.join(Config.config_dir, "stacks.yml"))
+        end
+
+        it "sets default maximum_app_disk_in_mb" do
+          expect(config[:maximum_app_disk_in_mb]).to eq(2048)
+        end
+
+        it "sets default directories" do
+          expect(config[:directories]).to eq({})
+        end
+
+        it "enables writing billing events" do
+          expect(config[:billing_event_writing_enabled]).to be_true
+        end
       end
 
-      it "sets default maximum_app_disk_in_mb" do
-        config = Config.from_file(File.join(fixture_path, "config/minimal_config.yml"))
-        expect(config[:maximum_app_disk_in_mb]).to eq(2048)
+      context "when config values are provided" do
+        let (:config_from_file) { {
+            stacks_file: "/tmp/foo",
+            maximum_app_disk_in_mb: 3,
+            directories: { some: "value" },
+            billing_event_writing_enabled: false,
+        } }
+
+        it "preserves the stacks_file value from the file" do
+          expect(config[:stacks_file]).to eq("/tmp/foo")
+        end
+
+        it "preserves the maximum_app_disk_in_mb value from the file" do
+          expect(config[:maximum_app_disk_in_mb]).to eq(3)
+        end
+
+        it "preserves the directories value from the file" do
+          expect(config[:directories]).to eq({ some: "value" })
+        end
+
+        it "preserves the billing_event_writing_enabled value from the file" do
+          expect(config[:billing_event_writing_enabled]).to be_false
+        end
       end
 
-      it "sets default directories" do
-        config = Config.from_file(File.join(fixture_path, "config/minimal_config.yml"))
-        expect(config[:directories]).to eq({})
-      end
     end
 
     describe ".configure_components" do

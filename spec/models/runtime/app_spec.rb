@@ -1189,6 +1189,10 @@ module VCAP::CloudController
     end
 
     describe "billing", deprecated_billing: true do
+      before do
+        config_override({ :billing_event_writing_enabled => true })
+      end
+
       context "app state changes" do
         context "creating a stopped app" do
           it "does not generate a start event or stop event" do
