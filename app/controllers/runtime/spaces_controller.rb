@@ -8,6 +8,7 @@ module VCAP::CloudController
       to_many    :managers
       to_many    :auditors
       to_many    :apps
+      to_many    :routes
       to_many    :domains
       to_many    :service_instances
       to_many    :app_events,        :link_only => true
