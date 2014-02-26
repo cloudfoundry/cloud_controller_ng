@@ -13,11 +13,8 @@ module VCAP::CloudController
     end
 
     describe ".merge_defaults" do
-      let (:config) { Config.merge_defaults(config_from_file) }
-
       context "when no config values are provided" do
-        let (:config_from_file) { { } }
-
+        let (:config) { Config.from_file(File.join(fixture_path, "config/minimal_config.yml")) }
         it "sets default stacks_file" do
           expect(config[:stacks_file]).to eq(File.join(Config.config_dir, "stacks.yml"))
         end
@@ -36,12 +33,7 @@ module VCAP::CloudController
       end
 
       context "when config values are provided" do
-        let (:config_from_file) { {
-            stacks_file: "/tmp/foo",
-            maximum_app_disk_in_mb: 3,
-            directories: { some: "value" },
-            billing_event_writing_enabled: false,
-        } }
+        let (:config) { Config.from_file(File.join(fixture_path, "config/default_overriding_config.yml")) }
 
         it "preserves the stacks_file value from the file" do
           expect(config[:stacks_file]).to eq("/tmp/foo")
@@ -59,7 +51,6 @@ module VCAP::CloudController
           expect(config[:billing_event_writing_enabled]).to be_false
         end
       end
-
     end
 
     describe ".configure_components" do

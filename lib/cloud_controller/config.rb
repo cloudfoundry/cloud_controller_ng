@@ -148,6 +148,11 @@ module VCAP::CloudController
           :max_results_per_page => Integer,
           :default_results_per_page => Integer,
         },
+
+        optional(:loggregator) => {
+          optional(:router) => String,
+          optional(:shared_secret) => String,
+        }
       }
     end
 
