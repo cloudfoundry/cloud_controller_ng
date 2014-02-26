@@ -274,5 +274,56 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "Removeing a user from the organization" do
+      let(:user) { User.make }
+      let(:org) { Organization.make(:user_guids => [user.guid]) }
+      let(:space_empty_user) { Space.make(organization: org) }
+      let(:space_full_user)  { Space.make(organization: org, :manager_guids => [user.guid], :developer_guids => [user.guid], :auditor_guids => [user.guid]) }
+
+      def update_org_user user_guid
+        put "/v2/organizations/#{org.guid}", Yajl::Encoder.encode(user_guid), admin_headers
+      end
+
+      def remove_org_user user_guid
+        delete "/v2/organizations/#{org.guid}/users/#{user_guid}", {}, admin_headers
+      end
+
+      describe "through a delete" do
+        context "without the recursive flag" do
+          it "should remove the user from the organization if that user does not belong to any space" do
+            org.add_space(space_empty_user)
+            org.user_guids.should == [user.guid]
+            remove_org_user(user.guid)
+            org.refresh
+            org.user_guids.should == []
+          end
+
+          it "should not remove the user from the organization if that user belongs to a space associated with the organization" do
+            org.add_space(space_full_user)
+            remove_org_user(user.guid)
+            expect(last_response.status).to eql(400)
+            org.user_guids.should == [user.guid]
+          end
+        end
+      end
+
+      describe "through an update" do
+        it "should remove the user on an update if that user does not belong to any space associated with the organization" do
+          org.add_space(space_empty_user)
+          org.user_guids.should == [user.guid]
+          update_org_user("user_guids" => [])
+          org.refresh
+          org.user_guids.should == []
+        end
+
+        it "should not remove the user on an update if that user belongs to a space associated with the organization" do
+          org.add_space(space_full_user)
+          update_org_user("user_guids" => [])
+          expect(last_response.status).to eql(400)
+          org.user_guids.should == [user.guid]
+        end
+      end
+    end
   end
 end
