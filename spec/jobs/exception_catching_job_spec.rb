@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       context "#error(job, exception)" do
         let(:job) { double("Job") }
-        let(:exception) { double("Exception") }
+        let(:exception) { double("Exception", message: "ERROR") }
         before do
           allow(ExceptionMarshaler).to receive("marshal").with(exception).and_return("marshaled exception")
         end

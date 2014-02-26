@@ -18,7 +18,7 @@ module CloudController
         it "validates that the input is a array of hashes" do
           expect {
             FingerprintsCollection.new("")
-          }.to raise_error VCAP::Errors::AppBitsUploadInvalid, /invalid/
+          }.to raise_error VCAP::Errors::ApiError, /invalid/
         end
       end
 

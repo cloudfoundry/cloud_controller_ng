@@ -78,6 +78,14 @@ module VCAP::CloudController
       def error_code
         500
       end
+
+      def code
+        10001
+      end
+
+      def name
+        "MissingServiceAuthToken"
+      end
     end
 
     def client

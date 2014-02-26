@@ -40,7 +40,7 @@ describe 'Sinatra::VCAP' do
     end
 
     get '/vcap_error' do
-      e = VCAP::Errors::MessageParseError.new('some message')
+      e = VCAP::Errors::ApiError.new_from_details("MessageParseError", 'some message')
       e.set_backtrace(['/vcap:1', '/error:2'])
       raise e
     end
@@ -180,7 +180,7 @@ describe 'Sinatra::VCAP' do
       expect(decoded_response['description']).to eq('Request invalid due to parse error: some message')
 
       expect(decoded_response['error_code']).to eq('CF-MessageParseError')
-      expect(decoded_response['types']).to eq(['MessageParseError', 'Error'])
+      expect(decoded_response['types']).to eq(['ApiError', 'RuntimeError'])
     end
   end
 

@@ -32,7 +32,7 @@ module VCAP::CloudController
       instance.dashboard_url = response.fetch('dashboard_url', nil)
     rescue HttpResponseError => e
       if e.source.is_a?(Hash) && e.source['code'] == 33106
-        raise VCAP::Errors::ServiceInstanceDuplicateNotAllowed
+        raise VCAP::Errors::ApiError.new_from_details("ServiceInstanceDuplicateNotAllowed")
       else
         raise
       end

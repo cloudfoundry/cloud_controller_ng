@@ -12,9 +12,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       buildpack_errors = e.errors.on(:name)
       if buildpack_errors && buildpack_errors.include?(:unique)
-        Errors::BuildpackNameTaken.new("#{attributes["name"]}")
+        Errors::ApiError.new_from_details("BuildpackNameTaken", "#{attributes["name"]}")
       else
-        Errors::BuildpackInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("BuildpackInvalid", e.errors.full_messages)
       end
     end
 

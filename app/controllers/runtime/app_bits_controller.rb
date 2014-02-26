@@ -10,7 +10,7 @@ module VCAP::CloudController
     def upload(guid)
       app = find_guid_and_validate_access(:update, guid)
 
-      raise Errors::AppBitsUploadInvalid, "missing :resources" unless params["resources"]
+      raise Errors::ApiError.new_from_details("AppBitsUploadInvalid", "missing :resources") unless params["resources"]
 
       uploaded_zip_of_files_not_in_blobstore_path = CloudController::DependencyLocator.instance.upload_handler.uploaded_file(params, "application")
       app_bits_packer_job = Jobs::Runtime::AppBitsPacker.new(guid, uploaded_zip_of_files_not_in_blobstore_path, json_param("resources"))
@@ -22,8 +22,11 @@ module VCAP::CloudController
         app_bits_packer_job.perform
         [HTTP::CREATED, "{}"]
       end
-    rescue VCAP::CloudController::Errors::AppBitsUploadInvalid, VCAP::CloudController::Errors::AppPackageInvalid
-      app.mark_as_failed_to_stage
+    rescue VCAP::CloudController::Errors::ApiError => e
+
+      if e.name == "AppBitsUploadInvalid" || e.name == "AppPackageInvalid"
+        app.mark_as_failed_to_stage
+      end
       raise
     end
 
@@ -38,7 +41,7 @@ module VCAP::CloudController
       if package_uri.nil?
         Loggregator.emit_error(guid, "Could not find package for #{guid}")
         logger.error "could not find package for #{guid}"
-        raise Errors::AppPackageNotFound.new(guid)
+        raise Errors::ApiError.new_from_details("AppPackageNotFound", guid)
       end
 
       if blobstore.local?
@@ -58,7 +61,7 @@ module VCAP::CloudController
       raw = params[name]
       Yajl::Parser.parse(raw)
     rescue Yajl::ParseError
-      raise Errors::AppBitsUploadInvalid.new("invalid :#{name}")
+      raise Errors::ApiError.new_from_details("AppBitsUploadInvalid", "invalid :#{name}")
     end
   end
 end

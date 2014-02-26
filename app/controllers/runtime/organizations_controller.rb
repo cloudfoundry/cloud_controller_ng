@@ -25,11 +25,11 @@ module VCAP::CloudController
       quota_def_errors = e.errors.on(:quota_definition_id)
       name_errors = e.errors.on(:name)
       if quota_def_errors && quota_def_errors.include?(:not_authorized)
-        Errors::NotAuthorized.new(attributes["quota_definition_id"])
+        Errors::ApiError.new_from_details("NotAuthorized", attributes["quota_definition_id"])
       elsif name_errors && name_errors.include?(:unique)
-        Errors::OrganizationNameTaken.new(attributes["name"])
+        Errors::ApiError.new_from_details("OrganizationNameTaken", attributes["name"])
       else
-        Errors::OrganizationInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("OrganizationInvalid", e.errors.full_messages)
       end
     end
 

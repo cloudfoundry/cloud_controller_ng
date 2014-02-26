@@ -156,7 +156,7 @@ module VCAP::CloudController
               it "raises" do
                 expect {
                   subject
-                }.to raise_error(Errors::AppPackageInvalid)
+                }.to raise_error(Errors::ApiError, /app package is invalid/)
               end
             end
 
@@ -166,7 +166,7 @@ module VCAP::CloudController
               it "raises" do
                 expect {
                   subject
-                }.to raise_error(Errors::AppPackageInvalid)
+                }.to raise_error(Errors::ApiError, /app package is invalid/)
               end
             end
 
@@ -188,7 +188,7 @@ module VCAP::CloudController
                 it "raises" do
                   expect {
                     subject
-                  }.to raise_error(Errors::CustomBuildpacksDisabled)
+                  }.to raise_error(Errors::ApiError, /Custom buildpacks are disabled/)
                 end
               end
 

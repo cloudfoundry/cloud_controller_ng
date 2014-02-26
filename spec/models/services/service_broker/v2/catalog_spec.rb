@@ -444,7 +444,7 @@ module VCAP::CloudController::ServiceBroker::V2
           end
 
           it 'raises a ServiceBrokerCatalogInvalid error' do
-            expect { catalog.create_service_dashboard_clients }.to raise_error(VCAP::Errors::ServiceBrokerCatalogInvalid)
+            expect { catalog.create_service_dashboard_clients }.to raise_error(VCAP::Errors::ApiError, /Service broker catalog is invalid/)
           end
         end
       end

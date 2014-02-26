@@ -8,9 +8,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       associations_errors = e.errors.on([:organization_id, :service_plan_id])
       if associations_errors && associations_errors.include?(:unique)
-        Errors::ServicePlanVisibilityAlreadyExists.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("ServicePlanVisibilityAlreadyExists", e.errors.full_messages)
       else
-        Errors::ServicePlanVisibilityInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("ServicePlanVisibilityInvalid", e.errors.full_messages)
       end
     end
 

@@ -23,22 +23,22 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       guid_errors = e.errors.on(:guid)
       if guid_errors && guid_errors.include?(:unique)
-        Errors::UaaIdTaken.new(attributes["guid"])
+        Errors::ApiError.new_from_details("UaaIdTaken", attributes["guid"])
       else
-        Errors::UserInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("UserInvalid", e.errors.full_messages)
       end
     end
 
     def read(guid)
       # only admins should have unfettered access to all users
       # UserAccess allows all to read so org and space user lists show all users in those lists
-      raise Errors::NotAuthorized unless roles.admin?
+      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
       super
     end
 
     def enumerate
-      raise Errors::NotAuthenticated unless user
-      raise Errors::NotAuthorized unless roles.admin?
+      raise Errors::ApiError.new_from_details("NotAuthenticated") unless user
+      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
       super
     end
 

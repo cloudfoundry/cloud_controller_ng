@@ -23,7 +23,7 @@ module VCAP::CloudController
       plan = find_guid_and_validate_access(:delete, guid)
 
       if plan.service_instances.present?
-        raise VCAP::Errors::AssociationNotEmpty.new("service_instances", plan.class.table_name)
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "service_instances", plan.class.table_name)
       end
 
       plan.destroy
@@ -34,9 +34,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:service_id, :name])
       if name_errors && name_errors.include?(:unique)
-        Errors::ServicePlanNameTaken.new("#{attributes["service_id"]}-#{attributes["name"]}")
+        Errors::ApiError.new_from_details("ServicePlanNameTaken", "#{attributes["service_id"]}-#{attributes["name"]}")
       else
-        Errors::ServicePlanInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("ServicePlanInvalid", e.errors.full_messages)
       end
     end
 

@@ -129,14 +129,14 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
         subject.stub(:to_s).and_raise(JsonMessage::Error)
         expect {
           subject.dispatch(:to_s)
-        }.to raise_error VCAP::Errors::MessageParseError
+        }.to raise_error(VCAP::Errors::ApiError, /Request invalid due to parse error/)
       end
 
       it "should log an error for a Model error" do
         subject.stub(:to_s).and_raise(VCAP::CloudController::InvalidRelation)
         expect {
           subject.dispatch(:to_s)
-        }.to raise_error VCAP::Errors::InvalidRelation
+        }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
       end
 
       describe '#redirect' do

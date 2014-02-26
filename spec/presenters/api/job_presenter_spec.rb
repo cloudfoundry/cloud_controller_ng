@@ -68,7 +68,7 @@ describe JobPresenter do
     end
 
     context "when the job has an error" do
-      let(:exception) { VCAP::Errors::BuildpackLocked.new }
+      let(:exception) { VCAP::Errors::ApiError.new_from_details("BuildpackLocked") }
       let(:job) { Delayed::Job.enqueue double(:obj, perform: nil) }
       before do
         allow(job).to receive(:cf_api_error).and_return(VCAP::CloudController::ExceptionMarshaler.marshal(exception))
@@ -92,7 +92,7 @@ describe JobPresenter do
     end
 
     context "when the job has an error" do
-      let(:exception) { VCAP::Errors::BuildpackLocked.new }
+      let(:exception) { VCAP::Errors::ApiError.new_from_details("BuildpackLocked") }
       let(:job) { Delayed::Job.enqueue double(:obj, perform: nil) }
       before do
         allow(job).to receive(:cf_api_error).and_return(nil)

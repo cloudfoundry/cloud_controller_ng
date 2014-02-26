@@ -18,13 +18,13 @@ resource "Jobs", type: :api do
     field :guid, "The guid of the job.", required: false
     field :status, "The status of the job.", required: false, readonly: true, valid_values: %w[failed finished queued running]
 
-    describe "When a legacy job has failed without storing the failure" do
-      class KnownFailingJob < FakeJob
-        def perform
-          raise VCAP::Errors::MessageParseError, "arbitrary string"
-        end
+    class KnownFailingJob < FakeJob
+      def perform
+        raise VCAP::Errors::ApiError.new_from_details("MessageParseError", "arbitrary string")
       end
+    end
 
+    describe "When a legacy job has failed without storing the failure" do
       before { VCAP::CloudController::Jobs::Enqueuer.new(KnownFailingJob.new).enqueue }
 
       example "Retrieve Job Error message" do
@@ -53,12 +53,6 @@ resource "Jobs", type: :api do
 
 
     describe "When a job has failed with a known failure from v2.yml" do
-      class KnownFailingJob < FakeJob
-        def perform
-          raise VCAP::Errors::MessageParseError.new("arbitrary string")
-        end
-      end
-
       before { VCAP::CloudController::Jobs::Enqueuer.new(KnownFailingJob.new).enqueue }
 
       example "Retrieve Job Error message" do

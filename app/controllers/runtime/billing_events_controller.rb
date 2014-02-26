@@ -4,10 +4,10 @@ module VCAP::CloudController
     # better controll over the dataset returned, and we don't have generic
     # functionality for the controller to configure its dataset.
     def enumerate
-      raise NotAuthenticated unless user
+      raise Errors::ApiError.new_from_details("NotAuthenticated") unless user
 
       unless start_time && end_time
-        raise Errors::BillingEventQueryInvalid
+        raise Errors::ApiError.new_from_details("BillingEventQueryInvalid")
       end
 
       ds = model.user_visible(SecurityContext.current_user, SecurityContext.admin?)
@@ -36,7 +36,7 @@ module VCAP::CloudController
       str = @params[param]
       Time.parse(str).localtime if str
     rescue
-      raise Errors::BillingEventQueryInvalid
+      raise Errors::ApiError.new_from_details("BillingEventQueryInvalid")
     end
 
     define_messages

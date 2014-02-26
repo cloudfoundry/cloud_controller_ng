@@ -6,6 +6,7 @@ module VCAP::CloudController
       end
 
       def error(job, e)
+        _ = e.message
         job.cf_api_error = ExceptionMarshaler.marshal(e)
         job.save
       end

@@ -37,7 +37,7 @@ module VCAP::CloudController
 
     def validate_stack_availability(stack)
       unless @stager_advertisements.any? { |ad| ad.has_stack?(stack) }
-        raise Errors::StackNotFound, "The requested app stack #{stack} is not available on this system."
+        raise Errors::ApiError.new_from_details("StackNotFound", "The requested app stack #{stack} is not available on this system.")
       end
     end
 

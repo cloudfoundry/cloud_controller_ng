@@ -7,7 +7,10 @@ class ErrorHasher < Struct.new(:error)
       "description" => error.message,
       "error_code" => "CF-#{Hashify.demodulize(error.class)}",
     }
-    payload["code"] = error.error_code if api_error?
+    if api_error?
+      payload["code"] = error.code
+      payload["error_code"] = "CF-#{error.name}"
+    end
 
     payload.merge!(error_hash(error))
     payload
@@ -27,7 +30,7 @@ class ErrorHasher < Struct.new(:error)
   end
 
   def api_error?
-    error.respond_to?(:error_code)
+    error.is_a?(VCAP::Errors::ApiError) || error.respond_to?(:error_code)
   end
 
   def services_error?

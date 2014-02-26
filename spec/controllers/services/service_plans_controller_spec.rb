@@ -219,7 +219,7 @@ module VCAP::CloudController
         expect(last_response.status).to be == 400
         expect(decoded_response.fetch('code')).to eql(110001)
         expect(decoded_response.fetch('error_code')).to eql('CF-ServicePlanInvalid')
-        expect(decoded_response.fetch('types')).to eql(['ServicePlanInvalid', 'Error'])
+        expect(decoded_response.fetch('types')).to eql(['ApiError', 'RuntimeError'])
         expect(decoded_response.fetch('description')).to eql("The service plan is invalid: Plan ids must be unique")
       end
     end

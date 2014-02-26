@@ -40,7 +40,7 @@ describe SafeZipper do
       let(:zip_destination) { 'bar' }
 
       it "raises an exception" do
-        expect { unzip }.to raise_exception VCAP::Errors::AppBitsUploadInvalid, /destination does not exist/i
+        expect { unzip }.to raise_exception VCAP::Errors::ApiError, /destination does not exist/i
       end
     end
 
@@ -48,7 +48,7 @@ describe SafeZipper do
       let(:zip_path) { File.expand_path("../fixtures/corrupt.zip")}
 
       it "raises an exception" do
-        expect { unzip }.to raise_exception VCAP::Errors::AppBitsUploadInvalid, /unzipping had errors\n STDOUT: ""\n STDERR: "unzip:\s+cannot find or open/im
+        expect { unzip }.to raise_exception VCAP::Errors::ApiError, /unzipping had errors\n STDOUT: ""\n STDERR: "unzip:\s+cannot find or open/im
       end
     end
 
@@ -56,7 +56,7 @@ describe SafeZipper do
       let(:zip_path) { File.expand_path("../fixtures/empty.zip", __FILE__) }
 
       it "raises an exception" do
-        expect { unzip }.to raise_exception VCAP::Errors::AppBitsUploadInvalid, /unzipping had errors/i
+        expect { unzip }.to raise_exception VCAP::Errors::ApiError, /unzipping had errors/i
       end
     end
 
@@ -74,7 +74,7 @@ describe SafeZipper do
         let(:zip_path) { File.expand_path("../fixtures/bad_symlinks.zip", __FILE__) }
 
         it "raises an exception" do
-          expect { unzip }.to raise_exception VCAP::Errors::AppBitsUploadInvalid, /symlink.+outside/i
+          expect { unzip }.to raise_exception VCAP::Errors::ApiError, /symlink.+outside/i
         end
       end
     end
@@ -93,7 +93,7 @@ describe SafeZipper do
         let(:zip_path) { File.expand_path("../fixtures/bad_relative_paths.zip", __FILE__) }
 
         it "raises an exception" do
-          expect { unzip }.to raise_exception VCAP::Errors::AppBitsUploadInvalid, /relative path.+outside/i
+          expect { unzip }.to raise_exception VCAP::Errors::ApiError, /relative path.+outside/i
         end
       end
     end
@@ -120,7 +120,7 @@ describe SafeZipper do
       it "will raise an error" do
         expect {
           SafeZipper.zip(root_path, tmp_zip)
-        }.to raise_exception VCAP::Errors::AppPackageInvalid, /path does not exist/i
+        }.to raise_exception VCAP::Errors::ApiError, /path does not exist/i
       end
     end
 
@@ -130,7 +130,7 @@ describe SafeZipper do
       it "will raise an error" do
         expect {
           SafeZipper.zip(root_path, tmp_zip)
-        }.to raise_exception VCAP::Errors::AppPackageInvalid, /path does not exist/i
+        }.to raise_exception VCAP::Errors::ApiError, /path does not exist/i
       end
     end
 
@@ -142,7 +142,7 @@ describe SafeZipper do
 
         expect {
           SafeZipper.zip(root_path, tmp_zip)
-        }.to raise_exception VCAP::Errors::AppPackageInvalid, /could not zip the package\n STDOUT: "zip .+?"\n STDERR: ""/im
+        }.to raise_exception VCAP::Errors::ApiError, /could not zip the package\n STDOUT: "zip .+?"\n STDERR: ""/im
       end
     end
   end

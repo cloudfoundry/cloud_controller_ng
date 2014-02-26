@@ -78,7 +78,7 @@ module VCAP::CloudController
 
         expect {
           client.provision(instance)
-        }.to raise_error(VCAP::CloudController::Errors::ServiceInstanceDuplicateNotAllowed)
+        }.to raise_error(VCAP::CloudController::Errors::ApiError, /service is already present in this space/)
       end
     end
 

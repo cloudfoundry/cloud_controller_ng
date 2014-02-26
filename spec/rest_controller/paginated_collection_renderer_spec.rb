@@ -45,7 +45,7 @@ module VCAP::CloudController::RestController
         it 'raises BadQueryParameter error' do
           expect {
             subject.render_json(controller, dataset, path, opts, request_params)
-          }.to raise_error(VCAP::Errors::BadQueryParameter, /results_per_page/)
+          }.to raise_error(VCAP::Errors::ApiError, /results_per_page/)
         end
       end
 
@@ -86,7 +86,7 @@ module VCAP::CloudController::RestController
         it 'raises BadQueryParameter error' do
           expect {
             subject.render_json(controller, dataset, path, opts, request_params)
-          }.to raise_error(VCAP::Errors::BadQueryParameter, /inline_relations_depth/)
+          }.to raise_error(VCAP::Errors::ApiError, /inline_relations_depth/)
         end
       end
 

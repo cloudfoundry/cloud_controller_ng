@@ -42,7 +42,7 @@ module VCAP::CloudController
 
     def stage(&completion_callback)
       @stager_id = @stager_pool.find_stager(@app.stack.name, [1024, @app.memory].max)
-      raise Errors::StagingError, "no available stagers" unless @stager_id
+      raise Errors::ApiError.new_from_details("StagingError", "no available stagers") unless @stager_id
 
       subject = "staging.#{@stager_id}.start"
       @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
@@ -159,7 +159,7 @@ module VCAP::CloudController
     def check_staging_error!(response, error)
       if (msg = error_message(response))
         @app.mark_as_failed_to_stage
-        raise Errors::StagingError, msg
+        raise Errors::ApiError.new_from_details("StagingError", msg)
       end
     end
 
@@ -173,7 +173,7 @@ module VCAP::CloudController
 
     def ensure_staging_is_current!
       unless staging_is_current?
-        raise Errors::StagingError, "failed to stage application: another staging request was initiated"
+        raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: another staging request was initiated")
       end
     end
 

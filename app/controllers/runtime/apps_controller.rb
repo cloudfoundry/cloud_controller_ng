@@ -36,17 +36,17 @@ module VCAP::CloudController
       instance_number_errors = e.errors.on(:instances)
 
       if space_and_name_errors && space_and_name_errors.include?(:unique)
-        Errors::AppNameTaken.new(attributes["name"])
+        Errors::ApiError.new_from_details("AppNameTaken", attributes["name"])
       elsif memory_quota_errors
         if memory_quota_errors.include?(:quota_exceeded)
-          Errors::AppMemoryQuotaExceeded.new
+          Errors::ApiError.new_from_details("AppMemoryQuotaExceeded")
         elsif memory_quota_errors.include?(:zero_or_less)
-          Errors::AppMemoryInvalid.new
+          Errors::ApiError.new_from_details("AppMemoryInvalid")
         end
       elsif instance_number_errors
-        Errors::AppInvalid.new("Number of instances less than 0")
+        Errors::ApiError.new_from_details("AppInvalid", "Number of instances less than 0")
       else
-        Errors::AppInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("AppInvalid", e.errors.full_messages)
       end
     end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:delete, guid)
 
       if !recursive? && app.service_bindings.present?
-        raise VCAP::Errors::AssociationNotEmpty.new("service_bindings", app.class.table_name)
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "service_bindings", app.class.table_name)
       end
 
       @app_event_repository.record_app_delete_request(app, SecurityContext.current_user, recursive?)

@@ -13,6 +13,8 @@ require "eventmachine/schedule_sync"
 require "vcap/common"
 require "cf-registrar"
 require "vcap/errors"
+require "vcap/errors/details"
+require "vcap/errors/api_error"
 require "uaa/token_coder"
 
 require "sinatra/vcap"
@@ -85,11 +87,11 @@ module VCAP::CloudController
       return unless user || admin
 
       if @config[:https_required]
-        raise Errors::NotAuthorized unless request.scheme == "https"
+        raise Errors::ApiError.new_from_details("NotAuthorized") unless request.scheme == "https"
       end
 
       if @config[:https_required_for_admins] && admin
-        raise Errors::NotAuthorized unless request.scheme == "https"
+        raise Errors::ApiError.new_from_details("NotAuthorized") unless request.scheme == "https"
       end
     end
 

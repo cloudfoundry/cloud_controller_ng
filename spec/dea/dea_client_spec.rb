@@ -340,7 +340,7 @@ module VCAP::CloudController
 
         expect {
           DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
-        }.to raise_error Errors::FileError, "File error: Request failed for app: #{app.name} path: #{path} as the app is in stopped state."
+        }.to raise_error Errors::ApiError, "File error: Request failed for app: #{app.name} path: #{path} as the app is in stopped state."
       end
 
       it "should raise an error if the instance is out of range" do
@@ -352,7 +352,8 @@ module VCAP::CloudController
         expect {
           DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
         }.to raise_error { |error|
-          error.should be_an_instance_of Errors::FileError
+          error.should be_an_instance_of Errors::ApiError
+          error.name.should == "FileError"
 
           msg = "File error: Request failed for app: #{app.name}"
           msg << ", instance: #{instance} and path: #{path} as the instance is"
@@ -447,7 +448,7 @@ module VCAP::CloudController
 
         expect {
           DeaClient.get_file_uri_for_active_instance_by_index(app, path, instance)
-        }.to raise_error Errors::FileError, msg
+        }.to raise_error Errors::ApiError, msg
 
         expect(message_bus).to have_requested_synchronous_messages("dea.find.droplet", search_options, {timeout: 2})
       end
@@ -466,7 +467,7 @@ module VCAP::CloudController
 
         expect {
           DeaClient.get_file_uri_by_instance_guid(app, path, instance_id)
-        }.to raise_error Errors::FileError, msg
+        }.to raise_error Errors::ApiError, msg
       end
 
       it "should return the file uri if the required instance is found via DEA v1" do
@@ -549,7 +550,8 @@ module VCAP::CloudController
         expect {
           DeaClient.get_file_uri_by_instance_guid(app, path, instance_id)
         }.to raise_error { |error|
-          error.should be_an_instance_of Errors::FileError
+          error.should be_an_instance_of Errors::ApiError
+          error.name.should == "FileError"
 
           msg = "File error: Request failed for app: #{app.name}"
           msg << ", instance_id: #{instance_id} and path: #{path} as the instance_id is"
@@ -568,7 +570,7 @@ module VCAP::CloudController
 
         expect {
           DeaClient.find_stats(app)
-        }.to raise_error Errors::StatsError, "Stats error: Request failed for app: #{app.name} as the app is in stopped state."
+        }.to raise_error Errors::ApiError, "Stats error: Request failed for app: #{app.name} as the app is in stopped state."
       end
 
       it "should return an empty hash if the app is allowed to be in stopped state" do
@@ -714,7 +716,7 @@ module VCAP::CloudController
 
         expect {
           DeaClient.find_all_instances(app)
-        }.to raise_error(Errors::InstancesError, expected_msg)
+        }.to raise_error(Errors::ApiError, expected_msg)
       end
 
       it "should return flapping instances" do

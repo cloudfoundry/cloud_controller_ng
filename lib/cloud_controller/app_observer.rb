@@ -55,11 +55,11 @@ module VCAP::CloudController
 
       def stage_app(app, &completion_callback)
         if app.package_hash.nil? || app.package_hash.empty?
-          raise Errors::AppPackageInvalid, "The app package hash is empty"
+          raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
         end
 
         if app.buildpack.custom? && !App.custom_buildpacks_enabled?
-          raise Errors::CustomBuildpacksDisabled
+          raise Errors::ApiError.new_from_details("CustomBuildpacksDisabled")
         end
 
         if @config[:diego]

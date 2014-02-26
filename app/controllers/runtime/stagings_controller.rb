@@ -25,7 +25,7 @@ module VCAP::CloudController
       raise InvalidRequest unless package_blobstore.local?
 
       app = App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
+      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
 
       file = package_blobstore.file(guid)
       package_path = file.send(:path) if file
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       unless package_path
         logger.error "could not find package for #{guid}"
-        raise AppPackageNotFound.new(guid)
+        raise ApiError.new_from_details("AppPackageNotFound", guid)
       end
 
       if config[:nginx][:use_nginx]
@@ -49,8 +49,8 @@ module VCAP::CloudController
     post "#{DROPLET_PATH}/:guid/upload", :upload_droplet
     def upload_droplet(guid)
       app = App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
-      raise StagingError.new("malformed droplet upload request for #{app.guid}") unless upload_path
+      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
+      raise ApiError.new_from_details("StagingError", "malformed droplet upload request for #{app.guid}") unless upload_path
 
       logger.info "droplet.begin-upload", :app_guid => app.guid
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
     get "#{DROPLET_PATH}/:guid/download", :download_droplet
     def download_droplet(guid)
       app = App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
+      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
 
       droplet = app.current_droplet
       blob_name = "droplet"
@@ -80,8 +80,8 @@ module VCAP::CloudController
     post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
     def upload_buildpack_cache(guid)
       app = App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
-      raise StagingError.new("malformed buildpack cache upload request for #{app.guid}") unless upload_path
+      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
+      raise ApiError.new_from_details("StagingError", "malformed buildpack cache upload request for #{app.guid}") unless upload_path
 
       blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: LocalQueue.new(config)).enqueue()
@@ -91,7 +91,7 @@ module VCAP::CloudController
     get "#{BUILDPACK_CACHE_PATH}/:guid/download", :download_buildpack_cache
     def download_buildpack_cache(guid)
       app = App.find(:guid => guid)
-      raise AppNotFound.new(guid) if app.nil?
+      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
 
       file = buildpack_cache_blobstore.file(app.guid)
       buildpack_cache_path = file.send(:path) if file
@@ -116,11 +116,11 @@ module VCAP::CloudController
     def log_and_raise_missing_blob(app_guid, name)
       Loggregator.emit_error(app_guid, "Did not find #{name} for app with guid: #{app_guid}")
       logger.error "could not find #{name} for #{app_guid}"
-      raise StagingError.new("#{name} not found for #{app_guid}")
+      raise ApiError.new_from_details("StagingError", "#{name} not found for #{app_guid}")
     end
 
     def download(app, blob_path, url, name)
-      raise InvalidRequest unless blobstore.local?
+      raise ApiError.new_from_details("InvalidRequest") unless blobstore.local?
 
       logger.debug "guid: #{app.guid} #{name} #{blob_path} #{url}"
 
