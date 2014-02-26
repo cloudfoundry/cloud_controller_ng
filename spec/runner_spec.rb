@@ -307,6 +307,7 @@ module VCAP::CloudController
     describe "#start_thin_server" do
       let(:app) { double(:app) }
       let(:thin_server) { OpenStruct.new }
+      let(:valid_config_file_path) { File.join(fixture_path, "config/default_overriding_config.yml") }
 
       subject(:start_thin_server) do
         runner = Runner.new(argv + ["-c", config_file.path])
@@ -318,10 +319,10 @@ module VCAP::CloudController
         allow(thin_server).to receive(:start!)
       end
 
-      it "has the same timeout as the rack application" do
+      it "gets the timeout from the config" do
         start_thin_server
 
-        expect(thin_server.timeout).to eq(5.minutes)
+        expect(thin_server.timeout).to eq(600)
       end
 
       it "uses thin's experimental threaded mode intentionally" do

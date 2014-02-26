@@ -30,6 +30,10 @@ module VCAP::CloudController
         it "enables writing billing events" do
           expect(config[:billing_event_writing_enabled]).to be_true
         end
+
+        it "sets a default request_timeout_in_seconds value" do
+          expect(config[:request_timeout_in_seconds]).to eq(300)
+        end
       end
 
       context "when config values are provided" do
@@ -49,6 +53,10 @@ module VCAP::CloudController
 
         it "preserves the billing_event_writing_enabled value from the file" do
           expect(config[:billing_event_writing_enabled]).to be_false
+        end
+
+        it "preserves the request_timeout_in_seconds value from the file" do
+          expect(config[:request_timeout_in_seconds]).to eq(600)
         end
       end
     end

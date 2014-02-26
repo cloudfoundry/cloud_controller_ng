@@ -173,7 +173,7 @@ module VCAP::CloudController
 
       # The routers proxying to us handle killing inactive connections.
       # Set an upper limit just to be safe.
-      @thin_server.timeout = 5.minutes
+      @thin_server.timeout = @config[:request_timeout_in_seconds]
       @thin_server.threaded = true
       @thin_server.start!
     end

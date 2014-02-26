@@ -152,7 +152,9 @@ module VCAP::CloudController
         optional(:loggregator) => {
           optional(:router) => String,
           optional(:shared_secret) => String,
-        }
+        },
+
+        optional(:request_timeout_in_seconds) => Integer,
       }
     end
 
@@ -211,6 +213,7 @@ module VCAP::CloudController
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
         config[:maximum_app_disk_in_mb] ||= 2048
+        config[:request_timeout_in_seconds] ||= 300
         config[:directories] ||= {}
         config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
         config
