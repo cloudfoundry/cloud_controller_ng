@@ -110,11 +110,10 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
       end
 
       it "should reraise any vcap error" do
-        error_class = Class.new(VCAP::Errors::Error)
-        subject.stub(:to_s).and_raise(error_class.new(423, 10234, "Foo"))
+        subject.stub(:to_s).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
         expect {
           subject.dispatch(:to_s)
-        }.to raise_error error_class
+        }.to raise_error VCAP::Errors::ApiError
       end
 
       it "should log an error for a Sequel Database Error error" do

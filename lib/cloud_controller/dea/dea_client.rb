@@ -1,5 +1,3 @@
-require "vcap/errors"
-
 module VCAP::CloudController
   class AppStopper
     attr_reader :message_bus

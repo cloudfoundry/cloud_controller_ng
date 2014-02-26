@@ -12,7 +12,6 @@ require "eventmachine/schedule_sync"
 
 require "vcap/common"
 require "cf-registrar"
-require "vcap/errors"
 require "vcap/errors/details"
 require "vcap/errors/api_error"
 require "uaa/token_coder"
@@ -105,8 +104,6 @@ module VCAP::CloudController
     end
   end
 end
-
-require "vcap/errors"
 
 require "cloud_controller/config"
 require "cloud_controller/db"

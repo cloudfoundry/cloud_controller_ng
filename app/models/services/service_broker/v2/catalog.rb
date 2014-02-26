@@ -2,7 +2,6 @@ require 'models/services/service_broker/v2'
 require 'models/services/service_broker/v2/catalog_service'
 require 'models/services/service_broker/v2/catalog_plan'
 require 'models/services/service_broker/v2/service_dashboard_client_manager'
-require 'vcap/errors'
 
 
 module VCAP::CloudController::ServiceBroker::V2
