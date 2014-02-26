@@ -91,6 +91,12 @@ module VCAP::CloudController
       active
     end
 
+    def remove_spaces(space)
+      remove_space space
+      remove_managed_space space
+      remove_audited_space space
+    end
+
     def self.user_visibility_filter(_)
       full_dataset_filter
     end

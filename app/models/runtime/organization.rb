@@ -63,6 +63,17 @@ module VCAP::CloudController
                       :auditor_guids, :private_domain_guids, :quota_definition_guid,
                       :status, :domain_guids
 
+    def remove_user(user)
+      raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "user", "spaces in the org") unless ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
+      super(user)
+    end
+
+    def remove_user_recursive(user)
+      ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).each do |space|
+        user.remove_spaces space
+      end
+    end
+
 
     def self.user_visibility_filter(user)
       Sequel.or(

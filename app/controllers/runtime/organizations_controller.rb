@@ -37,6 +37,19 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
+    def remove_related(guid, name, other_guid)
+      model.db.transaction(savepoint: true) do
+        if recursive? && name.to_s.eql?("users")
+          org = find_guid_and_validate_access(:update, guid)
+          user = User.find(:guid => other_guid)
+
+          org.remove_user_recursive(user)
+        end
+
+        super(guid, name, other_guid)
+      end
+    end
+
     delete "#{path_guid}/domains/:domain_guid" do |_|
       headers = {"X-Cf-Warning" => "Endpoint removed", "Location" => "/v2/private_domains/:domain_guid"}
       [HTTP::MOVED_PERMANENTLY, headers, "Use DELETE /v2/private_domains/:domain_guid"]
