@@ -1,12 +1,13 @@
 module VCAP
   module Errors
     class ApiError < StandardError
-      attr_accessor :name
       attr_accessor :args
+      attr_accessor :details
 
       def self.new_from_details(name, *args)
+        details = Details.new(name)
         api_error = new
-        api_error.name = name
+        api_error.details = details
         api_error.args = args
         api_error
       end
@@ -22,14 +23,12 @@ module VCAP
         details.code
       end
 
-      def response_code
-        details.response_code
+      def name
+        details.name
       end
 
-      private
-
-      def details
-        Details.new(name)
+      def response_code
+        details.response_code
       end
     end
   end

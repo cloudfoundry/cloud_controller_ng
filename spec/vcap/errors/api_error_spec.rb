@@ -32,13 +32,25 @@ module VCAP::Errors
       it "sets the message using the format provided in the v2.yml" do
         expect(api_error.message).to eq("Before foo bar after.")
       end
+
+      context "if it doesn't recognise the error from v2.yml" do
+        let(:name) { "What is this?  I don't know?!!"}
+
+        before do
+          Details.unstub(:new)
+        end
+
+        it "explodes" do
+          expect { api_error }.to raise_error
+        end
+      end
     end
 
-    context "with a name" do
+    context "with details" do
       subject(:api_error) { ApiError.new }
 
       before do
-        api_error.name = name
+        api_error.details = details
       end
 
       it "exposes the code" do
@@ -47,6 +59,10 @@ module VCAP::Errors
 
       it "exposes the http code" do
         expect(api_error.response_code).to eq(400)
+      end
+
+      it "exposes the name" do
+        expect(api_error.name).to eq("ServiceInvalid")
       end
     end
   end
