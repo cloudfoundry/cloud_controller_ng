@@ -320,7 +320,7 @@ module VCAP::CloudController
           let(:options) { { :invalid_json => true } }
 
           it "logs StagingError instead of raising to avoid stopping main runloop" do
-            logger = double(:logger, :info => nil, :debug => nil)
+            logger = double(:logger).as_null_object
             logger.should_receive(:error).with(/Encountered error on stager with id #{stager_id}/)
 
             Steno.stub(:logger => logger)
@@ -357,7 +357,7 @@ module VCAP::CloudController
           let(:reply_json_error) { "staging failed" }
 
           it "logs StagingError instead of raising to avoid stopping main runloop" do
-            logger = double(:logger, :info => nil, :debug => nil)
+            logger = double(:logger).as_null_object
 
             logger.should_receive(:error) do |msg|
               msg.should match(/Encountered error on stager with id #{stager_id}/)
