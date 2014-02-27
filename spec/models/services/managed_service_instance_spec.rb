@@ -282,7 +282,7 @@ module VCAP::CloudController
           subject.refresh
           expect do
             subject.enum_snapshots
-          end.to raise_error(ManagedServiceInstance::MissingServiceAuthToken)
+          end.to raise_error(VCAP::Errors::ApiError, /Missing service auth token/)
         end
       end
 
@@ -323,7 +323,7 @@ module VCAP::CloudController
           subject.refresh
           expect do
             subject.create_snapshot(name)
-          end.to raise_error(ManagedServiceInstance::MissingServiceAuthToken)
+          end.to raise_error(VCAP::Errors::ApiError, /Missing service auth token/)
         end
       end
 

@@ -73,7 +73,7 @@ module VCAP::CloudController::RestController
       str = @params[param]
       Time.parse(str).localtime if str
     rescue
-      raise Errors::BadQueryParameter
+      raise Errors::ApiError.new_from_details("BadQueryParameter")
     end
 
     # Main entry point for the rest routes.  Acts as the final location
@@ -100,9 +100,9 @@ module VCAP::CloudController::RestController
       raise self.class.translate_and_log_exception(logger, e)
     rescue JsonMessage::Error => e
       logger.debug("Rescued JsonMessage::Error at #{__FILE__}:#{__LINE__}\n#{e.inspect}\n#{e.backtrace.join("\n")}")
-      raise MessageParseError.new(e)
+      raise VCAP::Errors::ApiError.new_from_details("MessageParseError", e)
     rescue VCAP::CloudController::InvalidRelation => e
-      raise VCAP::Errors::InvalidRelation.new(e)
+      raise VCAP::Errors::ApiError.new_from_details("InvalidRelation", e)
     end
 
     # Fetch the current active user.  May be nil
@@ -136,9 +136,9 @@ module VCAP::CloudController::RestController
       return if VCAP::CloudController::SecurityContext.admin?
 
       if VCAP::CloudController::SecurityContext.token
-        raise NotAuthorized
+        raise VCAP::Errors::ApiError.new_from_details("NotAuthorized")
       else
-        raise InvalidAuthToken
+        raise VCAP::Errors::ApiError.new_from_details("InvalidAuthToken")
       end
     end
 
@@ -246,7 +246,7 @@ module VCAP::CloudController::RestController
         controller.before path do
           auth = Rack::Auth::Basic::Request.new(env)
           unless auth.provided? && auth.basic? && auth.credentials == block.call
-            raise Errors::NotAuthorized
+            raise Errors::ApiError.new_from_details("NotAuthorized")
           end
         end
       end
@@ -264,7 +264,7 @@ module VCAP::CloudController::RestController
         msg[0] = msg[0] + ":"
         msg.concat(e.backtrace).join("\\n")
         logger.warn(msg.join("\\n"))
-        Errors::InvalidRequest
+        Errors::ApiError.new_from_details("InvalidRequest")
       end
     end
   end

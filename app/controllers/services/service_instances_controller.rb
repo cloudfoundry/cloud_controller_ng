@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     def requested_space
       space = Space.filter(:guid => request_attrs['space_guid']).first
-      raise Errors::ServiceInstanceInvalid.new('not a valid space') unless space
+      raise Errors::ApiError.new_from_details("ServiceInstanceInvalid", 'not a valid space') unless space
       space
     end
 
@@ -25,31 +25,31 @@ module VCAP::CloudController
       service_plan_errors = e.errors.on(:service_plan)
       service_instance_name_errors = e.errors.on(:name)
       if space_and_name_errors && space_and_name_errors.include?(:unique)
-        Errors::ServiceInstanceNameTaken.new(attributes["name"])
+        Errors::ApiError.new_from_details("ServiceInstanceNameTaken", attributes["name"])
       elsif quota_errors
         if quota_errors.include?(:free_quota_exceeded) ||
           quota_errors.include?(:trial_quota_exceeded)
-          Errors::ServiceInstanceFreeQuotaExceeded.new
+          Errors::ApiError.new_from_details("ServiceInstanceFreeQuotaExceeded")
         elsif quota_errors.include?(:paid_quota_exceeded)
-          Errors::ServiceInstancePaidQuotaExceeded.new
+          Errors::ApiError.new_from_details("ServiceInstancePaidQuotaExceeded")
         else
-          Errors::ServiceInstanceInvalid.new(e.errors.full_messages)
+          Errors::ApiError.new_from_details("ServiceInstanceInvalid", e.errors.full_messages)
         end
       elsif service_plan_errors
-        Errors::ServiceInstanceServicePlanNotAllowed.new
+        Errors::ApiError.new_from_details("ServiceInstanceServicePlanNotAllowed")
       elsif service_instance_name_errors
         if service_instance_name_errors.include?(:max_length)
-          Errors::ServiceInstanceNameTooLong.new
+          Errors::ApiError.new_from_details("ServiceInstanceNameTooLong")
         else
-          Errors::ServiceInstanceNameInvalid.new(attributes['name'])
+          Errors::ApiError.new_from_details("ServiceInstanceNameInvalid", attributes['name'])
         end
       else
-        Errors::ServiceInstanceInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("ServiceInstanceInvalid", e.errors.full_messages)
       end
     end
 
-    def self.not_found_exception
-      Errors::ServiceInstanceNotFound
+    def self.not_found_exception(guid)
+      Errors::ApiError.new_from_details("ServiceInstanceNotFound", guid)
     end
 
     post "/v2/service_instances", :create
@@ -61,14 +61,14 @@ module VCAP::CloudController
       logger.debug "cc.create", :model => self.class.model_class_name,
         :attributes => request_attrs
 
-      raise InvalidRequest unless request_attrs
+      raise Errors::ApiError.new_from_details("InvalidRequest") unless request_attrs
 
-      raise Errors::NotAuthorized unless current_user_can_manage_plan(request_attrs['service_plan_guid'])
+      raise Errors::ApiError.new_from_details("NotAuthorized") unless current_user_can_manage_plan(request_attrs['service_plan_guid'])
 
       organization = requested_space.organization
 
       unless ServicePlan.organization_visible(organization).filter(:guid => request_attrs['service_plan_guid']).count > 0
-        raise Errors::ServiceInstanceOrganizationNotAuthorized
+        raise Errors::ApiError.new_from_details("ServiceInstanceOrganizationNotAuthorized")
       end
 
       service_instance = ManagedServiceInstance.new(request_attrs)
@@ -99,7 +99,7 @@ module VCAP::CloudController
 
     put "/v2/service_plans/:service_plan_guid/service_instances", :bulk_update
     def bulk_update(existing_service_plan_guid)
-      raise Errors::NotAuthorized unless SecurityContext.admin?
+      raise Errors::ApiError.new_from_details("NotAuthorized") unless SecurityContext.admin?
 
       @request_attrs = self.class::BulkUpdateMessage.decode(body).extract(:stringify_keys => true)
 
@@ -126,8 +126,10 @@ module VCAP::CloudController
     def permissions(guid)
       find_guid_and_validate_access(:create, guid, ServiceInstance)
       [HTTP::OK, {}, JSON.generate({ manage: true })]
-    rescue Errors::NotAuthorized
-      [HTTP::OK, {}, JSON.generate({ manage: false })]
+    rescue Errors::ApiError => e
+      if e.name == "NotAuthorized"
+        [HTTP::OK, {}, JSON.generate({ manage: false })]
+      end
     end
 
     delete "/v2/service_instances/:guid", :delete

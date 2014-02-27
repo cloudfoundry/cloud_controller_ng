@@ -138,7 +138,7 @@ module VCAP::CloudController
 
     def before_save
       if generate_start_event? && !package_hash
-        raise VCAP::Errors::AppPackageInvalid.new("bits have not been uploaded")
+        raise VCAP::Errors::ApiError.new_from_details("AppPackageInvalid", "bits have not been uploaded")
       end
 
       super

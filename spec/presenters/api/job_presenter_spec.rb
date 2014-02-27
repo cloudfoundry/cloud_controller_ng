@@ -68,10 +68,12 @@ describe JobPresenter do
     end
 
     context "when the job has an error" do
-      let(:exception) { VCAP::Errors::BuildpackLocked.new }
+      let(:error_hash) { { code: 123456 } }
+      let(:serialized_hash) { YAML.dump(error_hash) }
       let(:job) { Delayed::Job.enqueue double(:obj, perform: nil) }
+
       before do
-        allow(job).to receive(:cf_api_error).and_return(VCAP::CloudController::ExceptionMarshaler.marshal(exception))
+        allow(job).to receive(:cf_api_error).and_return(serialized_hash)
       end
 
       it "creates a valid JSON" do
@@ -85,14 +87,14 @@ describe JobPresenter do
             guid: job.guid,
             status: "failed",
             error: "Use of entity>error is deprecated in favor of entity>error_details.",
-            error_details: ErrorPresenter.new(exception).sanitized_hash
+            error_details: error_hash
           }
         )
       end
     end
 
     context "when the job has an error" do
-      let(:exception) { VCAP::Errors::BuildpackLocked.new }
+      let(:exception) { VCAP::Errors::ApiError.new_from_details("BuildpackLocked") }
       let(:job) { Delayed::Job.enqueue double(:obj, perform: nil) }
       before do
         allow(job).to receive(:cf_api_error).and_return(nil)

@@ -19,7 +19,6 @@ module VCAP::CloudController::ServiceBroker::V2
 
         expect(exception.to_h).to eq({
           'description' => "Service broker error: Some error text",
-          'types' => ["ServiceBrokerBadResponse", "HttpResponseError"],
           'backtrace' => ['/foo:1', '/bar:2'],
           "http" => {
             "status" => 500,
@@ -44,7 +43,6 @@ module VCAP::CloudController::ServiceBroker::V2
 
         expect(exception.to_h).to eq({
           'description' => "The service broker API returned an error from http://www.example.com/: 500 Internal Server Error",
-          'types' => ["ServiceBrokerBadResponse", "HttpResponseError"],
           'backtrace' => ['/foo:1', '/bar:2'],
           "http" => {
             "status" => 500,
@@ -73,10 +71,6 @@ module VCAP::CloudController::ServiceBroker::V2
 
       expect(exception.to_h).to eq({
         'description' => 'The service broker API could not be reached: http://www.example.com/',
-        'types' => [
-          'ServiceBrokerApiUnreachable',
-          'HttpRequestError',
-        ],
         'backtrace' => ['/generatedexception:3', '/backtrace:4'],
         'http' => {
           'uri' => uri,
@@ -84,7 +78,6 @@ module VCAP::CloudController::ServiceBroker::V2
         },
         'source' => {
           'description' => error.message,
-          'types' => ['SocketError'],
           'backtrace' => ['/socketerror:1', '/backtrace:2']
         }
       })

@@ -25,7 +25,7 @@ module VCAP::CloudController
       after_guid = params["after_guid"]
       if after_guid
         previous_event = AppUsageEvent.find(guid: after_guid)
-        raise Errors::BadQueryParameter, after_guid unless previous_event
+        raise Errors::ApiError.new_from_details("BadQueryParameter", after_guid) unless previous_event
         ds = ds.filter{ id > previous_event.id }
       end
       super(model, ds, qp, opts)

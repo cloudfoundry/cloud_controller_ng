@@ -8,9 +8,9 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:read, guid)
 
       if app.staging_failed?
-        raise VCAP::Errors::StagingError.new("cannot get instances since staging failed")
+        raise VCAP::Errors::ApiError.new_from_details("StagingError", "cannot get instances since staging failed")
       elsif app.pending?
-        raise VCAP::Errors::NotStaged
+        raise VCAP::Errors::ApiError.new_from_details("NotStaged")
       end
 
       instances = DeaClient.find_all_instances(app)

@@ -46,7 +46,7 @@ module VCAP::CloudController
         msg = "Request failed for app: #{app.name}, search_param: #{search_param}"
         msg << " as there was an error retrieving the files."
 
-        raise Errors::FileError.new(msg)
+        raise Errors::ApiError.new_from_details("FileError", msg)
       end
 
       [http_response.status, http_response.body]
@@ -88,7 +88,7 @@ module VCAP::CloudController
         msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
         msg << " as the search_param: #{search_param} is invalid."
 
-        raise Errors::FileError.new(msg)
+        raise Errors::ApiError.new_from_details("FileError", msg)
       end
     end
   end

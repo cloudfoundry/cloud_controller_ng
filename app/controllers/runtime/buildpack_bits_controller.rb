@@ -11,7 +11,7 @@ module VCAP::CloudController
     put "#{path_guid}/bits", :upload
     def upload(guid)
       buildpack = find_guid_and_validate_access(:read_bits, guid)
-      raise Errors::BuildpackLocked if buildpack.locked?
+      raise Errors::ApiError.new_from_details("BuildpackLocked") if buildpack.locked?
 
       uploaded_file = upload_handler.uploaded_file(params, "buildpack")
       uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
@@ -20,9 +20,9 @@ module VCAP::CloudController
       logger.info uploaded_filename
       logger.info buildpack
 
-      raise Errors::BuildpackBitsUploadInvalid, "a filename must be specified" if uploaded_filename.to_s == ""
-      raise Errors::BuildpackBitsUploadInvalid, "only zip files allowed" unless File.extname(uploaded_filename) == ".zip"
-      raise Errors::BuildpackBitsUploadInvalid, "a file must be provided" if uploaded_file.to_s == ""
+      raise Errors::ApiError.new_from_details("BuildpackBitsUploadInvalid", "a filename must be specified") if uploaded_filename.to_s == ""
+      raise Errors::ApiError.new_from_details("BuildpackBitsUploadInvalid", "only zip files allowed") unless File.extname(uploaded_filename) == ".zip"
+      raise Errors::ApiError.new_from_details("BuildpackBitsUploadInvalid", "a file must be provided") if uploaded_file.to_s == ""
 
       sha1 = File.new(uploaded_file).hexdigest
       uploaded_filename = File.basename(uploaded_filename)

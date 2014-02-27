@@ -20,7 +20,7 @@ module VCAP::CloudController
         :attributes => request_attrs
 
       raise InvalidRequest unless request_attrs
-      raise VCAP::Errors::UnbindableService unless service_bindable?
+      raise VCAP::Errors::ApiError.new_from_details("UnbindableService") unless service_bindable?
 
       binding = ServiceBinding.new(@request_attrs)
       validate_access(:create, binding, user, roles)
@@ -42,9 +42,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)
-        Errors::ServiceBindingAppServiceTaken.new("#{attributes["app_guid"]} #{attributes["service_instance_guid"]}")
+        Errors::ApiError.new_from_details("ServiceBindingAppServiceTaken", "#{attributes["app_guid"]} #{attributes["service_instance_guid"]}")
       else
-        Errors::ServiceBindingInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("ServiceBindingInvalid", e.errors.full_messages)
       end
     end
 

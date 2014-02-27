@@ -1,5 +1,3 @@
-require "vcap/errors"
-
 module VCAP::CloudController
   class AppStopper
     attr_reader :message_bus
@@ -87,7 +85,7 @@ module VCAP::CloudController
           msg = "Request failed for app: #{app.name}"
           msg << " as the app is in stopped state."
 
-          raise InstancesError.new(msg)
+          raise VCAP::Errors::ApiError.new_from_details("InstancesError", msg)
         end
 
         all_instances = {}
@@ -200,7 +198,7 @@ module VCAP::CloudController
           msg = "Request failed for app: #{app.name}, instance: #{index}"
           msg << " and path: #{path || '/'} as the instance is out of range."
 
-          raise FileError.new(msg)
+          raise ApiError.new_from_details("FileError", msg)
         end
 
         search_criteria = {
@@ -214,7 +212,7 @@ module VCAP::CloudController
           msg = "Request failed for app: #{app.name}, instance: #{index}"
           msg << " and path: #{path || '/'} as the instance is not found."
 
-          raise FileError.new(msg)
+          raise ApiError.new_from_details("FileError", msg)
         end
         result
       end
@@ -225,7 +223,7 @@ module VCAP::CloudController
           msg = "Request failed for app: #{app.name}, instance_id: #{instance_id}"
           msg << " and path: #{path || '/'} as the instance_id is not found."
 
-          raise FileError.new(msg)
+          raise ApiError.new_from_details("FileError", msg)
         end
         result
       end
@@ -245,7 +243,7 @@ module VCAP::CloudController
             msg = "Request failed for app: #{app.name}"
             msg << " as the app is in stopped state."
 
-            raise StatsError.new(msg)
+            raise ApiError.new_from_details("StatsError", msg)
           end
 
           return {}
@@ -327,7 +325,7 @@ module VCAP::CloudController
           msg = "Request failed for app: #{app.name} path: #{path || '/'} "
           msg << "as the app is in stopped state."
 
-          raise FileError.new(msg)
+          raise ApiError.new_from_details("FileError", msg)
         end
 
         search_options = {

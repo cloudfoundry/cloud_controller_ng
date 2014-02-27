@@ -7,6 +7,7 @@ module VCAP::CloudController
         @job = job
         @opts = opts
       end
+
       def enqueue
         Delayed::Job.enqueue(ExceptionCatchingJob.new(TimeoutJob.new(@job)), @opts)
       end

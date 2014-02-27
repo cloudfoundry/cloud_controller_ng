@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     def build_catalog(catalog_hash)
       catalog = VCAP::CloudController::ServiceBroker::V2::Catalog.new(broker, catalog_hash)
-      raise VCAP::Errors::ServiceBrokerCatalogInvalid.new(catalog.error_text) unless catalog.valid?
+      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", catalog.error_text) unless catalog.valid?
       catalog
     end
 

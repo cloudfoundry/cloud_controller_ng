@@ -95,7 +95,7 @@ module VCAP::CloudController
             post "/v2/service_instances", req, json_headers(headers_for(member_a))
 
             last_response.status.should == 403
-            Yajl::Parser.parse(last_response.body)['description'].should == VCAP::CloudController::Errors::NotAuthorized.new.message
+            Yajl::Parser.parse(last_response.body)['description'].should eq("You are not authorized to perform the requested action")
           end
         end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
               post 'v2/service_instances', payload, json_headers(headers_for(developer))
 
               last_response.status.should == 403
-              Yajl::Parser.parse(last_response.body)['description'].should == VCAP::CloudController::Errors::NotAuthorized.new.message
+              Yajl::Parser.parse(last_response.body)['description'].should eq("You are not authorized to perform the requested action")
             end
           end
 
@@ -157,7 +157,7 @@ module VCAP::CloudController
               post 'v2/service_instances', payload, json_headers(headers_for(developer))
 
               last_response.status.should == 403
-              Yajl::Parser.parse(last_response.body)['description'].should == VCAP::CloudController::Errors::ServiceInstanceOrganizationNotAuthorized.new.message
+              Yajl::Parser.parse(last_response.body)['description'].should match('A service instance for the selected plan cannot be created in this organization.')
             end
           end
         end

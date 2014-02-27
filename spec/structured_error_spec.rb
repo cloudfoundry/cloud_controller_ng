@@ -10,7 +10,6 @@ describe StructuredError do
 
       expect(exception.to_h).to eq({
         'description' => "some msg",
-        'types' => [],
         'backtrace' => ['/foo:1', '/bar:2'],
         'source' => source,
       })
@@ -30,7 +29,6 @@ describe StructuredError do
       source_hash = exception.to_h.fetch('source')
       expect(source_hash).to eq({
         'description' => 'something bad happened',
-        'types' => ['SocketError'],
         'backtrace' => ['/baz:1', '/asdf:2']
       })
     end
@@ -53,11 +51,9 @@ describe StructuredError do
       source_hash = exception.to_h.fetch('source')
       expect(source_hash).to eq({
         'description' => 'pausing the world',
-        'types' => [],
         'backtrace' => ['/qwer:1', '/zxcv:2'],
         'source' => {
           'description' => 'the universe implodes',
-          'types' => ['ZeroDivisionError'],
           'backtrace' => ['/baz:1', '/asdf:2']
         }
       })

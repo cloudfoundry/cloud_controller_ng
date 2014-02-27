@@ -11,9 +11,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       label_provider_errors = e.errors.on([:label, :provider])
       if label_provider_errors && label_provider_errors.include?(:unique)
-        Errors::ServiceAuthTokenLabelTaken.new("#{attributes["label"]}-#{attributes["provider"]}")
+        Errors::ApiError.new_from_details("ServiceAuthTokenLabelTaken", "#{attributes["label"]}-#{attributes["provider"]}")
       else
-        Errors::ServiceAuthTokenInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("ServiceAuthTokenInvalid", e.errors.full_messages)
       end
     end
 

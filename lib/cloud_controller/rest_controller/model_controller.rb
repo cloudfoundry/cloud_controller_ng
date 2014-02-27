@@ -19,7 +19,7 @@ module VCAP::CloudController::RestController
 
       logger.debug "cc.create", model: self.class.model_class_name, attributes: request_attrs
 
-      raise InvalidRequest unless request_attrs
+      raise VCAP::Errors::ApiError.new_from_details("InvalidRequest") unless request_attrs
 
       before_create
 
@@ -93,7 +93,7 @@ module VCAP::CloudController::RestController
 
     # Enumerate operation
     def enumerate
-      raise NotAuthenticated unless user || roles.admin?
+      raise ApiError.new_from_details("NotAuthenticated") unless user || roles.admin?
       validate_access(:index, model, user, roles)
 
       collection_renderer.render_json(
@@ -213,7 +213,7 @@ module VCAP::CloudController::RestController
     # the use has access.
     def find_guid_and_validate_access(op, guid, find_model = model)
       obj = find_model.find(guid: guid)
-      raise self.class.not_found_exception.new(guid) if obj.nil?
+      raise self.class.not_found_exception(guid) if obj.nil?
       validate_access(op, obj, user, roles)
       obj
     end
@@ -232,10 +232,10 @@ module VCAP::CloudController::RestController
     # @param [Roles] The roles for the current user or client.
     def validate_access(op, obj, user, roles)
       if cannot? op, obj
-        raise NotAuthenticated if user.nil? && roles.none?
+        raise VCAP::Errors::ApiError.new_from_details("NotAuthenticated") if user.nil? && roles.none?
 
         logger.info("allowy.access-denied", op: op, obj: obj, user: user, roles: roles)
-        raise Errors::NotAuthorized
+        raise VCAP::Errors::ApiError.new_from_details("NotAuthorized")
       end
     end
 
@@ -267,7 +267,7 @@ module VCAP::CloudController::RestController
       end
 
       if associations.any?
-        raise VCAP::Errors::AssociationNotEmpty.new(associations.join(", "), obj.class.table_name)
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", associations.join(", "), obj.class.table_name)
       end
     end
 
@@ -329,8 +329,8 @@ module VCAP::CloudController::RestController
       #
       # @return [Exception] The vcap not-found exception for this
       # rest/api endpoint.
-      def not_found_exception
-        Errors.const_get(not_found_exception_name)
+      def not_found_exception(guid)
+        Errors::ApiError.new_from_details(not_found_exception_name, guid)
       end
 
       # Start the DSL for defining attributes.  This is used inside

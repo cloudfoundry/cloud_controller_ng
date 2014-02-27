@@ -95,7 +95,7 @@ describe AppBitsPackage do
       it "raises an exception" do
         expect {
           create
-        }.to raise_exception VCAP::Errors::AppPackageInvalid, /package.+larger/i
+        }.to raise_exception VCAP::Errors::ApiError, /package.+larger/i
       end
 
       it "removes the compressed path afterwards" do

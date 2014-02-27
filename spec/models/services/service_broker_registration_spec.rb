@@ -98,7 +98,7 @@ module VCAP::CloudController
           end
 
           it 'raises a ServiceBrokerCatalogInvalid error' do
-            expect { registration.save }.to raise_error(VCAP::Errors::ServiceBrokerCatalogInvalid, /#{error_text}/)
+            expect { registration.save }.to raise_error(VCAP::Errors::ApiError, /#{error_text}/)
           end
         end
 
@@ -127,7 +127,7 @@ module VCAP::CloudController
           catalog.stub(:valid?).and_return(true)
           catalog.stub(:create_service_dashboard_clients)
           catalog.stub(:revert_dashboard_clients)
-          catalog.stub(:sync_services_and_plans).and_raise(Errors::ServiceBrokerCatalogInvalid.new('omg it broke'))
+          catalog.stub(:sync_services_and_plans).and_raise(Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
         end
 
         context 'when broker already exists' do
@@ -140,7 +140,7 @@ module VCAP::CloudController
             broker.name = 'Awesome new broker name'
 
             expect{
-              expect { registration.save }.to raise_error(Errors::ServiceBrokerCatalogInvalid)
+              expect { registration.save }.to raise_error(VCAP::Errors::ApiError, /Service broker catalog is invalid/)
             }.to change{ServiceBroker.count}.by(0)
             broker.reload
 
@@ -152,7 +152,7 @@ module VCAP::CloudController
           it 'does not save new broker' do
             expect(ServiceBroker.count).to eq(0)
             expect{
-              expect { registration.save }.to raise_error(Errors::ServiceBrokerCatalogInvalid)
+              expect { registration.save }.to raise_error(VCAP::Errors::ApiError, /Service broker catalog is invalid/)
             }.to change{ServiceBroker.count}.by(0)
           end
         end

@@ -2,7 +2,6 @@ require 'models/services/service_broker/v2'
 require 'models/services/service_broker/v2/catalog_service'
 require 'models/services/service_broker/v2/catalog_plan'
 require 'models/services/service_broker/v2/service_dashboard_client_manager'
-require 'vcap/errors'
 
 
 module VCAP::CloudController::ServiceBroker::V2
@@ -74,7 +73,7 @@ module VCAP::CloudController::ServiceBroker::V2
 
       if (services_with_existing_clients.count > 0)
         validate_existing_clients_match_existing_services(services_with_existing_clients)
-        raise VCAP::Errors::ServiceBrokerCatalogInvalid.new(error_text) unless valid?
+        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", error_text) unless valid?
       end
 
       services_needing_clients.each do |service|

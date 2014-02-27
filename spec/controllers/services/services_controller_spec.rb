@@ -374,7 +374,6 @@ module VCAP::CloudController
             expect(last_response.status).to be == 400
             expect(decoded_response.fetch('code')).to eql(120001)
             expect(decoded_response.fetch('error_code')).to eql('CF-ServiceInvalid')
-            expect(decoded_response.fetch('types')).to eql(%w(ServiceInvalid Error))
             expect(decoded_response.fetch('description')).to eql('The service is invalid: Service ids must be unique')
           end
         end

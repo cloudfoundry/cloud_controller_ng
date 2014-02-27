@@ -38,7 +38,7 @@ module VCAP::CloudController::RestController
         it 'raises BadQueryParameter error' do
           expect {
             subject.render_json(controller, obj, opts)
-          }.to raise_error(VCAP::Errors::BadQueryParameter, /inline_relations_depth/)
+          }.to raise_error(VCAP::Errors::ApiError, /inline_relations_depth/)
         end
       end
 

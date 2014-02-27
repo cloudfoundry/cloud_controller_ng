@@ -22,9 +22,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:organization_id, :name])
       if name_errors && name_errors.include?(:unique)
-        Errors::SpaceNameTaken.new(attributes["name"])
+        Errors::ApiError.new_from_details("SpaceNameTaken", attributes["name"])
       else
-        Errors::SpaceInvalid.new(e.errors.full_messages)
+        Errors::ApiError.new_from_details("SpaceInvalid", e.errors.full_messages)
       end
     end
 

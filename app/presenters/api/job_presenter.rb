@@ -22,14 +22,24 @@ class JobPresenter < ApiPresenter
       guid: @object.guid,
       status: status
     }
+
     if job_errored?
       entity_hash[:error] = error_deprecation_message
-      entity_hash[:error_details] = ErrorPresenter.new(job_exception_or_nil).sanitized_hash
+      entity_hash[:error_details] = error_details
     end
+
     entity_hash
   end
 
   private
+
+  def error_details
+    if job_has_exception?
+      YAML.load(@object.cf_api_error)
+    else
+      ErrorHasher::UNKNOWN_ERROR_HASH
+    end
+  end
 
   def job_exception_or_nil
     if job_has_exception?

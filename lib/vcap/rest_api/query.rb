@@ -81,7 +81,7 @@ module VCAP::RestAPI
         comparison = "=" if comparison == ":"
 
         unless queryable_attributes.include?(key)
-          raise VCAP::Errors::BadQueryParameter.new(key)
+          raise VCAP::Errors::ApiError.new_from_details("BadQueryParameter", key)
         end
 
         [key.to_sym, comparison, value]
@@ -125,7 +125,7 @@ module VCAP::RestAPI
       # One could argue that this should be a server error.  It means
       # that a query key came in for an attribute that is explicitly
       # in the queryable_attributes, but is not a column or an association.
-      raise VCAP::Errors::BadQueryParameter.new(q_key) unless f_key
+      raise VCAP::Errors::ApiError.new_from_details("BadQueryParameter", q_key) unless f_key
 
       other_model = model.association_reflection(f_key).associated_class
       id_key = other_model.columns.include?(:guid) ? :guid : :id

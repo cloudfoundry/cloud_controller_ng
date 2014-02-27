@@ -74,19 +74,13 @@ module VCAP::CloudController
       !service_broker.nil?
     end
 
-    class MissingServiceAuthToken < StandardError;
-      def error_code
-        500
-      end
-    end
-
     def client
       if purging
         ServiceBrokers::NullClient.new
       elsif v2?
         service_broker.client
       else
-        raise MissingServiceAuthToken, "Missing Service Auth Token for service: #{label}" if(service_auth_token.nil?)
+        raise VCAP::Errors::ApiError.new_from_details("MissingServiceAuthToken", label) if service_auth_token.nil?
 
         @v1_client ||= ServiceBroker::V1::Client.new(
           url: url,
