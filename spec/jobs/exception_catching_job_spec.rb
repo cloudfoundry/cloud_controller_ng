@@ -18,13 +18,16 @@ module VCAP::CloudController
       context "#error(job, exception)" do
         let(:job) { double("Job") }
         let(:exception) { double("Exception", message: "ERROR") }
-        before do
-          allow(ExceptionMarshaler).to receive("marshal").with(exception).and_return("marshaled exception")
-        end
+        let(:exception_hash) { { } }
+        let(:error_presenter) { double("ErrorPresenter") }
 
         it "saves the exception on the job as cf_api_error" do
-          expect(job).to receive("cf_api_error=").with("marshaled exception")
+          expect(ErrorPresenter).to receive(:new).with(exception).and_return(error_presenter)
+          expect(error_presenter).to receive(:sanitized_hash).and_return(exception_hash)
+          expect(YAML).to receive(:dump).with(exception_hash).and_return("marshaled hash")
+          expect(job).to receive("cf_api_error=").with("marshaled hash")
           expect(job).to receive("save")
+
           exception_catching_job.error(job, exception)
         end
       end

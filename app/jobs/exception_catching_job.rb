@@ -6,8 +6,8 @@ module VCAP::CloudController
       end
 
       def error(job, e)
-        _ = e.message
-        job.cf_api_error = ExceptionMarshaler.marshal(e)
+        error_hash = ErrorPresenter.new(e).sanitized_hash
+        job.cf_api_error = YAML.dump(error_hash)
         job.save
       end
     end

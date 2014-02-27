@@ -1,6 +1,12 @@
 class ErrorHasher < Struct.new(:error)
+  UNKNOWN_ERROR_HASH = {
+    "error_code" => "UnknownError",
+    "description" => "An unknown error occurred.",
+    "code" => 10001,
+  }.freeze
+
   def unsanitized_hash
-    return nil_hash if error.nil?
+    return UNKNOWN_ERROR_HASH if error.nil?
 
     payload = {
       "code" => 10001,
@@ -38,15 +44,6 @@ class ErrorHasher < Struct.new(:error)
   end
 
   private
-
-  def nil_hash
-    {
-      "error_code" => "UnknownError",
-      "description" => "An unknown error occurred.",
-      "code" => 10001,
-    }
-  end
-
   def error_hash(error)
     if error.respond_to?(:to_h)
       error.to_h

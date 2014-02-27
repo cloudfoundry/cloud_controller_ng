@@ -11,6 +11,14 @@ describe ErrorHasher do
     error_hasher.unsanitized_hash
   end
 
+  describe "UNKNOWN_ERROR_HASH" do
+    it "should be a minimal error hash" do
+      expect(ErrorHasher::UNKNOWN_ERROR_HASH).to have_key("code")
+      expect(ErrorHasher::UNKNOWN_ERROR_HASH).to have_key("description")
+      expect(ErrorHasher::UNKNOWN_ERROR_HASH).to have_key("error_code")
+    end
+  end
+
   describe "given an ApiError" do
     let(:error) { VCAP::Errors::ApiError.new_from_details("DomainInvalid", "notadomain") }
     it { should be_an_api_error }
