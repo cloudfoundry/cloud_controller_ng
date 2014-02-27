@@ -500,6 +500,7 @@ module VCAP::CloudController
           new_space_guid = decoded_response['metadata']['guid']
           event = Event.find(:type => "audit.space.create", :actee => new_space_guid)
           expect(event).not_to be_nil
+          expect(event.actor_name).to eq(SecurityContext.current_user_email)
           expect(event.metadata["request"]).to eq("organization_guid" => organization.guid, "name" => "space_name")
         end
       end
@@ -514,6 +515,7 @@ module VCAP::CloudController
         space_guid = decoded_response['metadata']['guid']
         event = Event.find(:type => "audit.space.update", :actee => space_guid)
         expect(event).not_to be_nil
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
         expect(event.metadata["request"]).to eq("name" => "new_space_name")
       end
 
@@ -529,6 +531,7 @@ module VCAP::CloudController
         expect(event).not_to be_nil
         expect(event.metadata["request"]).to eq("recursive" => false)
         expect(event.space_guid).to eq(space_guid)
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
         expect(event.organization_guid).to eq(organization_guid)
       end
     end

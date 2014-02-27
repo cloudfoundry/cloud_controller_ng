@@ -94,17 +94,17 @@ module VCAP::CloudController
 
     def delete(guid)
       space = find_guid_and_validate_access(:delete, guid)
-      @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, recursive?)
+      @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, SecurityContext.current_user_email, recursive?)
       do_delete(space)
     end
 
     private
     def after_create(space)
-      @space_event_repository.record_space_create(space, SecurityContext.current_user, request_attrs)
+      @space_event_repository.record_space_create(space, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
     end
 
     def after_update(space)
-      @space_event_repository.record_space_update(space, SecurityContext.current_user, request_attrs)
+      @space_event_repository.record_space_update(space, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
     end
 
     module ServiceSerialization

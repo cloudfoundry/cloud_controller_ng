@@ -62,7 +62,11 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "service_bindings", app.class.table_name)
       end
 
-      @app_event_repository.record_app_delete_request(app, SecurityContext.current_user, recursive?)
+      @app_event_repository.record_app_delete_request(
+          app,
+          SecurityContext.current_user,
+          SecurityContext.current_user_email,
+          recursive?)
       app.destroy
 
       [ HTTP::NO_CONTENT, nil ]
@@ -71,7 +75,11 @@ module VCAP::CloudController
     private
 
     def after_create(app)
-      record_app_create_value = @app_event_repository.record_app_create(app, SecurityContext.current_user, request_attrs)
+      record_app_create_value = @app_event_repository.record_app_create(
+          app,
+          SecurityContext.current_user,
+          SecurityContext.current_user_email,
+          request_attrs)
       record_app_create_value if request_attrs
     end
 
@@ -85,7 +93,7 @@ module VCAP::CloudController
         DeaClient.update_uris(app)
       end
 
-      @app_event_repository.record_app_update(app, SecurityContext.current_user, request_attrs)
+      @app_event_repository.record_app_update(app, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
     end
 
     define_messages

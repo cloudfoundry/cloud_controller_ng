@@ -11,12 +11,13 @@ module VCAP::CloudController
       validates_presence :actor_type
       validates_presence :actee
       validates_presence :actee_type
+      validates_presence :actee_name
     end
 
     serialize_attributes :json, :metadata
 
-    export_attributes :type, :actor, :actor_type, :actee,
-      :actee_type, :timestamp, :metadata, :space_guid,
+    export_attributes :type, :actor, :actor_type, :actor_name, :actee,
+      :actee_type, :actee_name, :timestamp, :metadata, :space_guid,
       :organization_guid
 
     def metadata

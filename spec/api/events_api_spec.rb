@@ -33,6 +33,7 @@ resource "Events (experimental)", :type => :api do
 
     let(:test_app) { VCAP::CloudController::App.make }
     let(:test_user) { VCAP::CloudController::User.make }
+    let(:test_user_email) { "user@email.com" }
     let(:test_space) { VCAP::CloudController::Space.make }
     let(:app_request) do
       {
@@ -72,15 +73,17 @@ resource "Events (experimental)", :type => :api do
     end
 
     example "List app create events" do
-      app_event_repository.record_app_create(test_app, test_user, app_request)
+      app_event_repository.record_app_create(test_app, test_user, test_user_email, app_request)
 
       client.get "/v2/events?q=type:audit.app.create", {}, headers
       status.should == 200
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
+                               :actor_name => test_user_email,
                                :actee_type => "app",
                                :actee => test_app.guid,
+                               :actee_name => test_app.name,
                                :space_guid => test_app.space.guid,
                                :metadata => { "request" => expected_app_request }
 
@@ -94,23 +97,27 @@ resource "Events (experimental)", :type => :api do
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "app",
                                :actor => test_app.guid,
+                               :actor_name => test_app.name,
                                :actee_type => "app",
                                :actee => test_app.guid,
+                               :actee_name => test_app.name,
                                :space_guid => test_app.space.guid,
                                :metadata => droplet_exited_payload
 
     end
 
     example "List app update events" do
-      app_event_repository.record_app_update(test_app, test_user, app_request)
+      app_event_repository.record_app_update(test_app, test_user, test_user_email, app_request)
 
       client.get "/v2/events?q=type:audit.app.update", {}, headers
       status.should == 200
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
+                               :actor_name => test_user_email,
                                :actee_type => "app",
                                :actee => test_app.guid,
+                               :actee_name => test_app.name,
                                :space_guid => test_app.space.guid,
                                :metadata => {
                                  "request" => expected_app_request,
@@ -119,58 +126,66 @@ resource "Events (experimental)", :type => :api do
     end
 
     example "List app delete events" do
-      app_event_repository.record_app_delete_request(test_app, test_user, false)
+      app_event_repository.record_app_delete_request(test_app, test_user, test_user_email, false)
 
       client.get "/v2/events?q=type:audit.app.delete-request", {}, headers
       status.should == 200
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
+                               :actor_name => test_user_email,
                                :actee_type => "app",
                                :actee => test_app.guid,
+                               :actee_name => test_app.name,
                                :space_guid => test_app.space.guid,
                                :metadata => { "request" => { "recursive" => false } }
     end
 
     example "List space create events" do
-      space_event_repository.record_space_create(test_space, test_user, space_request)
+      space_event_repository.record_space_create(test_space, test_user, test_user_email, space_request)
 
       client.get "/v2/events?q=type:audit.space.create", {}, headers
       status.should == 200
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
+                               :actor_name => test_user_email,
                                :actee_type => "space",
                                :actee => test_space.guid,
+                               :actee_name => test_space.name,
                                :space_guid => test_space.guid,
                                :metadata => { "request" => space_request }
 
     end
 
     example "List space update events" do
-      space_event_repository.record_space_update(test_space, test_user, space_request)
+      space_event_repository.record_space_update(test_space, test_user, test_user_email, space_request)
 
       client.get "/v2/events?q=type:audit.space.update", {}, headers
       status.should == 200
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
-                               :actee_type => "space",
+                               :actor_name => test_user_email,
                                :actee => test_space.guid,
+                               :actee_type => "space",
+                               :actee_name => test_space.name,
                                :space_guid => test_space.guid,
                                :metadata => { "request" => space_request }
     end
 
     example "List space delete events" do
-      space_event_repository.record_space_delete_request(test_space, test_user, true)
+      space_event_repository.record_space_delete_request(test_space, test_user, test_user_email, true)
 
       client.get "/v2/events?q=type:audit.space.delete-request", {}, headers
       status.should == 200
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
+                               :actor_name => test_user_email,
                                :actee_type => "space",
                                :actee => test_space.guid,
+                               :actee_name => test_space.name,
                                :space_guid => test_space.guid,
                                :metadata => { "request" => { "recursive" => true } }
     end

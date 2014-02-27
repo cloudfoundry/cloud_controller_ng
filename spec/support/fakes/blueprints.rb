@@ -175,8 +175,10 @@ module VCAP::CloudController
     type       { Sham.name}
     actor      { Sham.guid }
     actor_type { Sham.name }
+    actor_name { Sham.name }
     actee      { Sham.guid }
     actee_type { Sham.name }
+    actee_name { Sham.name }
     space      { Space.make }
   end
 

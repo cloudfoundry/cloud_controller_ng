@@ -14,10 +14,22 @@ module VCAP::CloudController
 
         let(:app) { AppFactory.make(instances: 2, memory: 99) }
         let(:user) { User.make }
+        let(:user_email) { "user email" }
 
         let(:event) do
           new_request_attrs = request_attrs.merge("environment_json" => {"foo" => 1})
-          app_event_repository.record_app_update(app, user, new_request_attrs)
+          app_event_repository.record_app_update(app, user, user_email, new_request_attrs)
+        end
+
+        it "records the expected fields on the event" do
+          expect(event.space).to eq app.space
+          expect(event.type).to eq "audit.app.update"
+          expect(event.actee).to eq app.guid
+          expect(event.actee_type).to eq "app"
+          expect(event.actee_name).to eq app.name
+          expect(event.actor).to eq user.guid
+          expect(event.actor_type).to eq "user"
+          expect(event.actor_name).to eq user_email
         end
 
         it "does not expose the ENV variables" do
@@ -38,7 +50,7 @@ module VCAP::CloudController
         it "logs the event" do
           expect(Loggregator).to receive(:emit).with(app.guid, "Updated app with guid #{app.guid} (#{request_attrs.to_s})")
 
-          app_event_repository.record_app_update(app, user, request_attrs)
+          app_event_repository.record_app_update(app, user, user_email, request_attrs)
         end
       end
 
@@ -58,11 +70,17 @@ module VCAP::CloudController
         end
 
         let(:user) { User.make }
+        let(:user_email) { "user email" }
 
-        it "records the changes in metadata" do
-          event = app_event_repository.record_app_create(app, user, request_attrs)
-          expect(event.actor_type).to eq("user")
+        it "records the event fields and metadata" do
+          event = app_event_repository.record_app_create(app, user, user_email, request_attrs)
           expect(event.type).to eq("audit.app.create")
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq("app")
+          expect(event.actee_name).to eq(app.name)
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq("user")
+          expect(event.actor_name).to eq(user_email)
           request = event.metadata.fetch("request")
           expect(request).to eq(
                                "name" => "new",
@@ -76,7 +94,7 @@ module VCAP::CloudController
         it "logs the event" do
           expect(Loggregator).to receive(:emit).with(app.guid, "Created app with guid #{app.guid}")
 
-          app_event_repository.record_app_create(app, user, request_attrs)
+          app_event_repository.record_app_create(app, user, user_email, request_attrs)
         end
       end
 
@@ -84,20 +102,24 @@ module VCAP::CloudController
         let(:deleting_app) { AppFactory.make }
 
         let(:user) { User.make }
+        let(:user_email) { "user email" }
 
         it "records an empty changes in metadata" do
-          event = app_event_repository.record_app_delete_request(deleting_app, user, false)
+          event = app_event_repository.record_app_delete_request(deleting_app, user, user_email, false)
+          expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq("user")
+          expect(event.actor_name).to eq(user_email)
           expect(event.type).to eq("audit.app.delete-request")
           expect(event.actee).to eq(deleting_app.guid)
           expect(event.actee_type).to eq("app")
+          expect(event.actee_name).to eq(deleting_app.name)
           expect(event.metadata["request"]["recursive"]).to eq(false)
         end
 
         it "logs the event" do
           expect(Loggregator).to receive(:emit).with(deleting_app.guid, "Deleted app with guid #{deleting_app.guid}")
 
-          app_event_repository.record_app_delete_request(deleting_app, user, false)
+          app_event_repository.record_app_delete_request(deleting_app, user, user_email, false)
         end
       end
 
@@ -119,8 +141,10 @@ module VCAP::CloudController
           expect(event.type).to eq("app.crash")
           expect(event.actor).to eq(exiting_app.guid)
           expect(event.actor_type).to eq("app")
+          expect(event.actor_name).to eq(exiting_app.name)
           expect(event.actee).to eq(exiting_app.guid)
           expect(event.actee_type).to eq("app")
+          expect(event.actee_name).to eq(exiting_app.name)
           expect(event.metadata["unknown_key"]).to eq(nil)
           expect(event.metadata["instance"]).to eq("abc")
           expect(event.metadata["index"]).to eq("2")

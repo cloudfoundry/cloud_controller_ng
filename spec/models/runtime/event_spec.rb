@@ -6,29 +6,39 @@ module VCAP::CloudController
 
     subject(:event) do
       Event.make type: "audit.movie.premiere",
-        actor: "Nicolas Cage",
+        actor: "ncage",
         actor_type: "One True God",
-        actee: "John Travolta",
+        actor_name: "Nicolas Cage",
+        actee: "jtravolta",
         actee_type: "Scientologist",
+        actee_name: "John Travolta",
         timestamp: Time.new(1997, 6, 27),
         metadata: {"popcorn_price" => "$(arm + leg)"},
         space: space
     end
 
     it "has an actor" do
-      expect(event.actor).to eq("Nicolas Cage")
+      expect(event.actor).to eq("ncage")
     end
 
     it "has an actor type" do
       expect(event.actor_type).to eq("One True God")
     end
 
+    it "has an actor name" do
+      expect(event.actor_name).to eq("Nicolas Cage")
+    end
+
     it "has an actee" do
-      expect(event.actee).to eq("John Travolta")
+      expect(event.actee).to eq("jtravolta")
     end
 
     it "has an actee type" do
       expect(event.actee_type).to eq("Scientologist")
+    end
+
+    it "has an actee name" do
+      expect(event.actee_name).to eq("John Travolta")
     end
 
     it "has a timestamp" do
@@ -87,8 +97,10 @@ module VCAP::CloudController
               "type" => new_event.type,
               "actor" => new_event.actor,
               "actor_type" => new_event.actor_type,
+              "actor_name" => new_event.actor_name,
               "actee" => new_event.actee,
               "actee_type" => new_event.actee_type,
+              "actee_name" => new_event.actee_name,
               "space_guid" => space_guid,
               "organization_guid" => new_org.guid,
               "timestamp" => new_event.timestamp.iso8601,
@@ -105,10 +117,12 @@ module VCAP::CloudController
 
         expect(json).to eq(
           "type" => "audit.movie.premiere",
-          "actor" => "Nicolas Cage",
+          "actor" => "ncage",
           "actor_type" => "One True God",
-          "actee" => "John Travolta",
+          "actor_name" => "Nicolas Cage",
+          "actee" => "jtravolta",
           "actee_type" => "Scientologist",
+          "actee_name" => "John Travolta",
           "space_guid" => space.guid,
           "organization_guid" => space.organization.guid,
           "timestamp" => Time.new(1997, 6, 27).iso8601,
