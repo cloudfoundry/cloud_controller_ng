@@ -30,7 +30,6 @@ class ErrorHasher < Struct.new(:error)
     unless api_error? || services_error?
       error_hash["error_code"] = "UnknownError"
       error_hash["description"] = "An unknown error occurred."
-      error_hash.delete("types")
     end
     error_hash
   end

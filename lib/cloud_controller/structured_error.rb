@@ -9,7 +9,6 @@ class StructuredError < StandardError
   def to_h
     {
       'description' => message,
-      'types' => Hashify.types(self),
       'backtrace' => backtrace,
       'source' => hashify(source),
     }

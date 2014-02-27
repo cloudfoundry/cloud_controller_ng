@@ -35,7 +35,6 @@ module VCAP::CloudController
             expect(e).to be_a(VCAP::CloudController::ServiceBroker::V2::ServiceBrokerBadResponse)
             error_hash = e.to_h
             error_hash.fetch('description').should eq("The service broker API returned an error from #{service_broker.broker_url}#{path}: 500 Internal Server Error")
-            error_hash.fetch('types').should include('ServiceBrokerBadResponse', 'HttpResponseError')
             error_hash.fetch('source').should include({'foo' => 'bar'})
           }
         end

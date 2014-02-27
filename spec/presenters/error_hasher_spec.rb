@@ -110,7 +110,6 @@ describe ErrorHasher do
                                          "code" => 10001,
                                          "description" => "fake error message",
                                          "error_code" => "CF-FakeError",
-                                         "types" => ["FakeError"],
                                          "backtrace" => "fake backtrace"
                                        })
       end
@@ -141,16 +140,6 @@ describe ErrorHasher do
 
       it "sets the description to 'An unknown error occurred.'" do
         expect(sanitized_hash["description"]).to eq("An unknown error occurred.")
-      end
-
-      context "when the error doesn't know how to hash itself" do
-        before do
-          error.unstub(:to_h)
-        end
-
-        it "doesn't reveal the error types" do
-          expect(sanitized_hash).not_to have_key("types")
-        end
       end
 
       it "returns the error hash without the 'source' key" do
