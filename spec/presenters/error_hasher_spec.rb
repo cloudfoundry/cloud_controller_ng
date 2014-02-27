@@ -145,11 +145,10 @@ describe ErrorHasher do
     context "when the error knows how to convert itself into a hash" do
       let(:error) { to_h_error }
 
-      it "lets the error do the conversion" do
-        expect(sanitized_hash).to eq({"code"=>67890,
+      it "returns the default hash" do
+        expect(sanitized_hash).to eq({"error_code"=>"UnknownError",
                                       "description"=>"An unknown error occurred.",
-                                      "error_code"=>"UnknownError",
-                                      "arbritratry key"=>"arbritratry value"})
+                                      "code"=>10001})
       end
     end
 

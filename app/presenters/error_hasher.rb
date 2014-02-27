@@ -24,13 +24,11 @@ class ErrorHasher < Struct.new(:error)
   end
 
   def sanitized_hash
+    return UNKNOWN_ERROR_HASH unless api_error? or services_error?
+
     error_hash = unsanitized_hash
     error_hash.delete("source")
     error_hash.delete("backtrace")
-    unless api_error? || services_error?
-      error_hash["error_code"] = "UnknownError"
-      error_hash["description"] = "An unknown error occurred."
-    end
     error_hash
   end
 
