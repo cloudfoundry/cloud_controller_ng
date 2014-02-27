@@ -3,7 +3,8 @@ require "rspec_api_documentation/dsl"
 
 resource "Spaces", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
-  let(:guid) { VCAP::CloudController::Space.first.guid }
+  let(:space) { VCAP::CloudController::Space.first }
+  let(:guid) { space.guid }
   let!(:spaces) { 3.times { VCAP::CloudController::Space.make } }
 
   authenticated_request
@@ -47,6 +48,21 @@ resource "Spaces", :type => :api do
       standard_entity_response parsed_response, :space, name: new_name
 
       audited_event VCAP::CloudController::Event.find(type: "audit.space.update", actee: guid)
+    end
+  end
+
+  get "/v2/spaces/:guid/routes" do
+    before do
+      org = VCAP::CloudController::Organization.make
+      space.organization = org
+      domain = VCAP::CloudController::PrivateDomain.make(:owning_organization => org)
+      VCAP::CloudController::Route.make(domain: domain, :space => space)
+    end
+
+    example "List all routes for a space" do
+      client.get "/v2/spaces/#{guid}/routes", {}, headers
+      expect(status).to eq 200
+      standard_list_response parsed_response, :route
     end
   end
 end
