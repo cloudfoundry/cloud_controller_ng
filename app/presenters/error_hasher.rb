@@ -11,16 +11,16 @@ class ErrorHasher < Struct.new(:error)
     payload = {
       "code" => 10001,
       "description" => error.message,
-      "error_code" => "CF-#{Hashify.demodulize(error.class)}",
+      "error_code" => "CF-#{error.class.name.demodulize}",
+      "backtrace" => error.backtrace,
     }
     if api_error?
       payload["code"] = error.code
       payload["error_code"] = "CF-#{error.name}"
     end
 
-    payload.merge!(error_hash(error))
+    payload.merge!(error.to_h) if error.respond_to? :to_h
     payload
-
   end
 
   def sanitized_hash
@@ -40,14 +40,5 @@ class ErrorHasher < Struct.new(:error)
 
   def services_error?
     error.respond_to?(:source)
-  end
-
-  private
-  def error_hash(error)
-    if error.respond_to?(:to_h)
-      error.to_h
-    else
-      Hashify.exception(error)
-    end
   end
 end
