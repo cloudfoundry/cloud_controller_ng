@@ -6,7 +6,7 @@ class ErrorHasher < Struct.new(:error)
   }.freeze
 
   def unsanitized_hash
-    return UNKNOWN_ERROR_HASH if error.nil?
+    return UNKNOWN_ERROR_HASH.dup if error.nil?
 
     payload = {
       "code" => 10001,
