@@ -27,9 +27,13 @@ class ErrorHasher < Struct.new(:error)
     return UNKNOWN_ERROR_HASH unless api_error? or services_error?
 
     error_hash = unsanitized_hash
-    error_hash.delete("source")
-    error_hash.delete("backtrace")
-    error_hash
+
+    sanitized_hash = {}
+    allowed_keys.each do |key|
+      sanitized_hash[key] = error_hash[key] if error_hash.has_key?(key)
+    end
+
+    sanitized_hash
   end
 
   def api_error?
@@ -38,5 +42,11 @@ class ErrorHasher < Struct.new(:error)
 
   def services_error?
     error.respond_to?(:source)
+  end
+
+  private
+
+  def allowed_keys
+    ["error_code", "description", "code", "http"]
   end
 end

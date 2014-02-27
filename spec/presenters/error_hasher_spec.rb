@@ -194,5 +194,29 @@ describe ErrorHasher do
                                       "error_code"=>"UnknownError"})
       end
     end
+
+    context "with a services error where the HTTP key is set" do
+      let(:error) { services_error }
+
+      before do
+        allow(error).to receive(:to_h).and_return("http" => "fake http information")
+      end
+
+      it "exposes the http key" do
+        expect(sanitized_hash["http"]).to eq("fake http information")
+      end
+    end
+
+    context "with a services error where some arbitrary information is set" do
+      let(:error) {services_error}
+      
+      before do
+        allow(error).to receive(:to_h).and_return("arbitrary key" => "arbitrary value")
+      end
+
+      it "does not expose the extra information" do
+        expect(sanitized_hash).not_to have_key("arbitrary key")
+      end
+    end
   end
 end
