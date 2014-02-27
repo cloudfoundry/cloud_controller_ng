@@ -145,6 +145,18 @@ describe MultiResponseMessageBusRequest do
         multi_response_message_bus_request.request(:request => "request-value")
       }.to raise_error(ArgumentError, /request was already made/)
     end
+
+    it "does not log to info, to protect sensitive data" do
+      logger = double(Steno)
+      allow(multi_response_message_bus_request).to receive(:logger).and_return(logger)
+
+      allow(logger).to receive(:debug).with(/sensitive data/)
+      expect(logger).not_to receive(:info).with(/sensitive data/)
+
+      multi_response_message_bus_request.on_response(0) { |_| }
+      multi_response_message_bus_request.request(:request => "sensitive data")
+      message_bus.respond_to_request("fake nats subject", :response => "sensitive data")
+    end
   end
 
   describe "#ignore_subsequent_responses" do
