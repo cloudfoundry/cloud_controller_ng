@@ -25,15 +25,7 @@ class ErrorHasher < Struct.new(:error)
 
   def sanitized_hash
     return UNKNOWN_ERROR_HASH unless api_error? or services_error?
-
-    error_hash = unsanitized_hash
-
-    sanitized_hash = {}
-    allowed_keys.each do |key|
-      sanitized_hash[key] = error_hash[key] if error_hash.has_key?(key)
-    end
-
-    sanitized_hash
+    unsanitized_hash.keep_if {|k, _| allowed_keys.include? k }
   end
 
   def api_error?
