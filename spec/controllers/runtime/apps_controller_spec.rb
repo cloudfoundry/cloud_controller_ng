@@ -310,13 +310,15 @@ module VCAP::CloudController
           it "records app update with whitelisted attributes" do
             allow(app_event_repository).to receive(:record_app_update).and_call_original
 
+            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, user, user_name, attributes|
+              expect(recorded_app.guid).to eq(app_obj.guid)
+              expect(recorded_app.instances).to eq(2)
+              expect(user).to eq(admin_user)
+              expect(user_name).to eq(SecurityContext.current_user_email)
+              expect(attributes).to eq({"instances" => 2})
+            end
+
             update_app
-            app_obj.reload
-            expect(app_event_repository).to have_received(:record_app_update).with(
-                                                app_obj,
-                                                admin_user,
-                                                SecurityContext.current_user_email,
-                                                {"instances" => 2})
           end
         end
 
