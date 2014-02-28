@@ -29,14 +29,14 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: 4ad156de3fcb51742f8539fd3da570da3862941e
+  revision: 9e901ea6c1bbf2b3102a886f3270c63350e7aa20
   specs:
-    vcap_common (3.0.0)
+    vcap_common (3.0.1)
       addressable (~> 2.2)
       em-http-request (~> 1.0)
       eventmachine
       httpclient
-      membrane (~> 0.0.2)
+      membrane (~> 1.0)
       mime-types
       multipart-post
       nats (>= 0.5.0.beta.12, < 0.6)
@@ -58,7 +58,7 @@ GIT
 GEM
   remote: http://rubygems.org/
   specs:
-    activesupport (3.2.16)
+    activesupport (3.2.17)
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.5)
@@ -67,9 +67,6 @@ GEM
       i18n
     ast (1.1.0)
     atomic (1.1.14)
-    axiom-types (0.0.5)
-      descendants_tracker (~> 0.0.1)
-      ice_nine (~> 0.9)
     backports (3.5.0)
     bcrypt-ruby (3.1.1)
     beefcake (0.3.7)
@@ -78,10 +75,8 @@ GEM
       tzinfo
     cloudfront-signer (2.1.0)
     coderay (1.1.0)
-    coercible (1.0.0)
-      descendants_tracker (~> 0.0.1)
     columnize (0.3.6)
-    cookiejar (0.3.0)
+    cookiejar (0.3.1)
     crack (0.4.1)
       safe_yaml (~> 0.9.0)
     daemons (1.1.9)
@@ -93,7 +88,6 @@ GEM
     debugger-ruby_core_source (1.2.4)
     delayed_job (4.0.0)
       activesupport (>= 3.0, < 4.1)
-    descendants_tracker (0.0.3)
     diff-lcs (1.2.5)
     em-http-request (1.1.2)
       addressable (>= 2.3.4)
@@ -103,7 +97,6 @@ GEM
       http_parser.rb (>= 0.6.0)
     em-socksify (0.3.0)
       eventmachine (>= 1.0.0.beta.4)
-    equalizer (0.0.9)
     eventmachine (1.0.3)
     excon (0.28.0)
     fakefs (0.4.3)
@@ -121,33 +114,20 @@ GEM
       nokogiri (~> 1.5)
       ruby-hmac
     formatador (0.2.4)
-    grape (0.6.1)
-      activesupport
-      builder
-      hashie (>= 1.2.0)
-      multi_json (>= 1.3.2)
-      multi_xml (>= 0.5.2)
-      rack (>= 1.3.0)
-      rack-accept
-      rack-mount
-      virtus (>= 1.0.0)
-    hashie (2.0.5)
     http_parser.rb (0.6.0)
     httpclient (2.3.4.1)
     i18n (0.6.9)
-    ice_nine (0.11.0)
     json (1.8.1)
     json_pure (1.8.1)
     loggregator_emitter (3.0.0)
       beefcake (~> 0.3.7)
     machinist (1.0.6)
-    membrane (0.0.5)
+    membrane (1.0.0)
     method_source (0.8.2)
     mime-types (2.1)
     mini_portile (0.5.2)
     msgpack (0.5.8)
     multi_json (1.8.4)
-    multi_xml (0.5.5)
     multipart-post (2.0.0)
     mustache (0.99.5)
     mysql2 (0.3.13)
@@ -176,10 +156,6 @@ GEM
       method_source (~> 0.8)
       slop (~> 3.4)
     rack (1.5.2)
-    rack-accept (0.4.5)
-      rack (>= 0.4)
-    rack-mount (0.8.3)
-      rack (>= 1.0.0)
     rack-protection (1.5.0)
       rack
     rack-test (0.6.2)
@@ -225,9 +201,8 @@ GEM
     sqlite3 (1.3.8)
     squash_ruby (1.4.0)
       json
-    steno (1.2.2)
+    steno (1.2.4)
       fluent-logger
-      grape
       yajl-ruby (~> 1.0)
     talentbox-delayed_job_sequel (4.0.0)
       delayed_job (~> 4.0.0)
@@ -247,11 +222,6 @@ GEM
       unf_ext
     unf_ext (0.0.6)
     uuidtools (2.1.4)
-    virtus (1.0.1)
-      axiom-types (~> 0.0.5)
-      coercible (~> 1.0)
-      descendants_tracker (~> 0.0.1)
-      equalizer (~> 0.0.7)
     vmstat (2.1.0)
     webmock (1.16.1)
       addressable (>= 2.2.7)
@@ -278,7 +248,7 @@ DEPENDENCIES
   httpclient
   loggregator_emitter (~> 3.0)
   machinist (~> 1.0.6)
-  membrane (~> 0.0.5)
+  membrane (~> 1.0)
   mysql2
   newrelic_rpm
   parallel_tests
