@@ -222,7 +222,7 @@ module VCAP::CloudController
     end
 
     def staging_timeout
-      @config[:staging] && @config[:staging][:timeout_in_seconds] || 120
+      @config[:staging][:timeout_in_seconds]
     end
 
     def staging_task_memory_mb

@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool, :reserve_app_memory => nil) }
     let(:dea_pool) { double(:stager_pool, :reserve_app_memory => nil) }
-    let(:config_hash) { { :config => 'hash' } }
+    let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:app) do
       AppFactory.make(:package_hash => "abc",
         :droplet_hash => nil,
@@ -360,7 +360,9 @@ module VCAP::CloudController
 
       describe "reserve app memory" do
         context "when app memory is less when configured minimum_staging_memory_mb" do
-          let(:config_hash) { { :staging => {:minimum_staging_memory_mb => 1025} } }
+          before do
+            config_hash[:staging][:minimum_staging_memory_mb] = 1025
+          end
 
           it "decrement dea's available memory by minimum_staging_memory_mb" do
             dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1025)

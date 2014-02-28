@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
 
         if @config[:diego]
-          task = DiegoStagerTask.new(@config, @message_bus, app, dependency_locator.blobstore_url_generator)
+          task = DiegoStagerTask.new(@config[:staging][:timeout_in_seconds], @message_bus, app, dependency_locator.blobstore_url_generator)
         else
           task = AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
         end

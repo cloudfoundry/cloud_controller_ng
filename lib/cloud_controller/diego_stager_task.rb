@@ -24,11 +24,10 @@ module VCAP::CloudController
       end
     end
 
-    attr_reader :config
     attr_reader :message_bus
 
-    def initialize(config, message_bus, app, blobstore_url_generator)
-      @config = config
+    def initialize(staging_timeout, message_bus, app, blobstore_url_generator)
+      @staging_timeout = staging_timeout
       @message_bus = message_bus
       @app = app
       @blobstore_url_generator = blobstore_url_generator
@@ -50,7 +49,7 @@ module VCAP::CloudController
 
       logger.info("staging.begin", :app_guid => @app.guid)
       subject = "diego.staging.start"
-      @message_bus.request(subject, staging_request, {timeout: staging_timeout}) do |bus_response, _|
+      @message_bus.request(subject, staging_request, {timeout: @staging_timeout}) do |bus_response, _|
         logger.info("diego.staging.response", :app_guid => @app.guid, :response => bus_response)
 
         return unless this_task_is_current_task?
@@ -147,10 +146,6 @@ module VCAP::CloudController
 
     def service_binding_to_staging_request(service_binding)
       ServiceBindingPresenter.new(service_binding).to_hash
-    end
-
-    def staging_timeout
-      @config[:staging] && @config[:staging][:timeout_in_seconds] || 120
     end
 
     def logger

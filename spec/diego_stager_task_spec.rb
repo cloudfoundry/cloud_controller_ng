@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:config_hash) { { diego: true } }
+    let(:staging_timeout) { 360 }
     let(:environment_json) { {} }
     let(:app) do
       AppFactory.make(:package_hash  => "abc",
@@ -32,7 +32,7 @@ module VCAP::CloudController
       EM.stub(:defer).and_yield
     end
 
-    let(:diego_stager_task) { DiegoStagerTask.new(config_hash, message_bus, app, blobstore_url_generator) }
+    let(:diego_stager_task) { DiegoStagerTask.new(staging_timeout, message_bus, app, blobstore_url_generator) }
 
     describe '#stage' do
       let(:logger) { FakeLogger.new([]) }
