@@ -201,7 +201,6 @@ module VCAP::CloudController
           :user => @config[:varz_user],
           :password => @config[:varz_password],
           :index => @config[:index],
-          :config => @config,
           :nats => message_bus,
           :logger => logger,
           :log_counter => @log_counter

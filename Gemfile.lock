@@ -28,27 +28,6 @@ GIT
       multi_json
 
 GIT
-  remote: https://github.com/cloudfoundry/vcap-common.git
-  revision: 9e901ea6c1bbf2b3102a886f3270c63350e7aa20
-  specs:
-    vcap_common (3.0.1)
-      addressable (~> 2.2)
-      em-http-request (~> 1.0)
-      eventmachine
-      httpclient
-      membrane (~> 1.0)
-      mime-types
-      multipart-post
-      nats (>= 0.5.0.beta.12, < 0.6)
-      posix-spawn (~> 0.3.6)
-      squash_ruby
-      steno
-      thin
-      uuidtools
-      vmstat (~> 2.0)
-      yajl-ruby
-
-GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
@@ -222,6 +201,22 @@ GEM
       unf_ext
     unf_ext (0.0.6)
     uuidtools (2.1.4)
+    vcap_common (4.0.0)
+      addressable (~> 2.2)
+      em-http-request (~> 1.0)
+      eventmachine
+      httpclient
+      membrane (~> 1.0)
+      mime-types
+      multipart-post
+      nats (>= 0.5.0.beta.12, < 0.6)
+      posix-spawn (~> 0.3.6)
+      squash_ruby
+      steno
+      thin
+      uuidtools
+      vmstat (~> 2.0)
+      yajl-ruby
     vmstat (2.1.0)
     webmock (1.16.1)
       addressable (>= 2.2.7)
@@ -270,6 +265,6 @@ DEPENDENCIES
   timecop
   unf
   vcap-concurrency!
-  vcap_common!
+  vcap_common (~> 4.0)
   webmock
   yajl-ruby
