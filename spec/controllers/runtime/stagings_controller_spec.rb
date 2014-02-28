@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe StagingsController, type: :controller do
-    let(:max_staging_runtime) { 120 }
+    let(:timeout_in_seconds) { 120 }
     let(:cc_addr) { "1.2.3.4" }
     let(:cc_port) { 5678 }
     let(:staging_user) { "user" }
@@ -18,7 +18,6 @@ module VCAP::CloudController
     let(:workspace) { Dir.mktmpdir }
     let(:original_staging_config) do
       {
-          max_staging_runtime: max_staging_runtime,
           external_host: cc_addr,
           external_port: cc_port,
           staging: {

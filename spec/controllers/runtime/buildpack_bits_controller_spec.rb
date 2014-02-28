@@ -153,6 +153,16 @@ module VCAP::CloudController
       context "upload_bits" do
         before do
           config = Config.config
+          config_override(
+              {
+                  :staging => {
+                      :timeout_in_seconds => 180,
+                      :auth => {
+                          :user => "",
+                          :password => ""
+                      }
+                  },
+              })
           logger = double(:logger).as_null_object
           env = {}
           params = {}
@@ -196,7 +206,7 @@ module VCAP::CloudController
 
             @controller.upload_bits(@buildpack, sha_valid_zip2, valid_zip2, filename)
 
-            expect(VCAP::CloudController::BuildpackBitsDelete).to have_received(:delete_when_safe).with(sha_valid_zip, :buildpack_blobstore, Config.config)
+            expect(VCAP::CloudController::BuildpackBitsDelete).to have_received(:delete_when_safe).with(sha_valid_zip, :buildpack_blobstore, 180)
           end
         end
 
@@ -255,6 +265,7 @@ module VCAP::CloudController
           config_override(
             {
               :staging => {
+                :timeout_in_seconds => 240,
                 :auth => {
                   :user => staging_user,
                   :password => staging_password

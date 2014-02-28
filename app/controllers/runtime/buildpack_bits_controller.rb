@@ -50,7 +50,7 @@ module VCAP::CloudController
         buildpack.update_from_hash(key: new_key, filename: new_filename)
       end
 
-      BuildpackBitsDelete.delete_when_safe(old_buildpack_key, :buildpack_blobstore, @config)
+      BuildpackBitsDelete.delete_when_safe(old_buildpack_key, :buildpack_blobstore, @config[:staging][:timeout_in_seconds])
       return true
     end
 

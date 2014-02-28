@@ -73,7 +73,7 @@ bulk_api:
 # App staging parameters
 staging:
   # Max duration for staging process
-  max_staging_runtime: 120 # secs
+  timeout_in_seconds: 120 # secs
   minimum_staging_memory_mb: 1024
   auth:
     user: zxsfhgjg

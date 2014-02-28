@@ -93,6 +93,7 @@ buildpacks:
 db_encryption_key: some-key
 
 staging:
+  timeout_in_seconds: 120
   auth:
     user: zxsfhgjg
     password: ZNVfdase9
