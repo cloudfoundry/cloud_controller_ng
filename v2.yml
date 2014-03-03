@@ -173,6 +173,11 @@
   http_code: 403
   message: A service instance for the selected plan cannot be created in this organization. The plan is visible because another organization you belong to has access to it.
 
+60011:
+  name: ServiceInstanceDeprovisionFailed
+  http_code: 409
+  message: "The service broker reported an error during deprovisioning: %s"
+
 70001:
   name: RuntimeInvalid
   http_code: 400
