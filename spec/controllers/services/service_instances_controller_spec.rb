@@ -457,7 +457,22 @@ module VCAP::CloudController
 
     describe 'DELETE', '/v2/service_instances/:service_instance_guid' do
       context 'with a managed service instance' do
-        let!(:service_instance) { ManagedServiceInstance.make }
+        let(:service) { Service.make(:v2) }
+        let(:service_plan) { ServicePlan.make(service: service) }
+        let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+        let(:body) { '{}' }
+        let(:status) { 200 }
+
+        before do
+          guid = service_instance.guid
+          plan_id = service_plan.unique_id
+          service_id = service.unique_id
+          path = "/v2/service_instances/#{guid}?plan_id=#{plan_id}&service_id=#{service_id}"
+          uri = URI(service.service_broker.broker_url + path)
+          uri.user = service.service_broker.auth_username
+          uri.password = service.service_broker.auth_password
+          stub_request(:delete, uri.to_s).to_return(body: body, status: status)
+        end
 
         it "deletes the service instance with the given guid" do
           expect {
@@ -465,6 +480,18 @@ module VCAP::CloudController
           }.to change(ServiceInstance, :count).by(-1)
           last_response.status.should == 204
           ServiceInstance.find(:guid => service_instance.guid).should be_nil
+        end
+
+        context 'when the service broker returns a 409' do
+          let(:body) {'{"description": "service broker error"}' }
+          let(:status) { 409 }
+
+          it 'forwards the error message from the service broker' do
+            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+
+            expect(last_response.status).to eq 409
+            expect(JSON.parse(last_response.body)['description']).to include 'service broker error'
+          end
         end
       end
 

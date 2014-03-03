@@ -61,6 +61,9 @@ module VCAP::CloudController
       })
 
       parse_response(:delete, path, response)
+
+    rescue VCAP::CloudController::ServiceBroker::V2::ServiceBrokerConflict => e
+      raise VCAP::Errors::ApiError.new_from_details("ServiceInstanceDeprovisionFailed", e.message)
     end
 
     private

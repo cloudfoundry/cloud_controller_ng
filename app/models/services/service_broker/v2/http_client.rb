@@ -66,8 +66,10 @@ module VCAP::CloudController
 
     class ServiceBrokerConflict < HttpResponseError
       def initialize(uri, method, response)
+        error_message = parsed_json(response.body)["description"]
+
         super(
-          "Resource already exists: #{uri}",
+          error_message || "Resource conflict: #{uri}",
           uri,
           method,
           response
@@ -76,6 +78,14 @@ module VCAP::CloudController
 
       def response_code
         409
+      end
+
+      private
+
+      def parsed_json(str)
+        Yajl::Parser.parse(str)
+      rescue Yajl::ParseError
+        {}
       end
     end
 
@@ -91,30 +101,29 @@ module VCAP::CloudController
       end
 
       def get(path)
-        make_request(:get, path, nil, nil)
+        make_request(:get, uri_for(path), nil, nil)
       end
 
       def put(path, message)
-        make_request(:put, path, message.to_json, 'application/json')
+        make_request(:put, uri_for(path), message.to_json, 'application/json')
       end
 
       def delete(path, message)
         uri = uri_for(path)
         uri.query = message.to_query
 
-        make_request(:delete, uri.request_uri, nil, nil)
+        make_request(:delete, uri, nil, nil)
       end
 
       private
 
-      attr_reader :auth_username, :auth_password, :broker_client_timeout
+      attr_reader :auth_username, :auth_password, :broker_client_timeout, :extra_path
 
       def uri_for(path)
         URI(url + path)
       end
 
-      def make_request(method, path_with_query, body, content_type)
-        uri = uri_for(path_with_query)
+      def make_request(method, uri, body, content_type)
         begin
           req_class = method.to_s.capitalize
           req = Net::HTTP.const_get(req_class).new(uri.request_uri)
