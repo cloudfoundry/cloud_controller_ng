@@ -18,8 +18,10 @@ resource "Events (experimental)", :type => :api do
   field :type, "The type of the event.", required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w[app.crash audit.app.update]
   field :actor, "The GUID of the actor.", required: false, readonly: true
   field :actor_type, "The actor type.", required: false, readonly: true, example_values: %w[user app]
+  field :actor_name, "The name of the actor.", required: false, readonly: true
   field :actee, "The GUID of the actee.", required: false, readonly: true
   field :actee_type, "The actee type.", required: false, readonly: true, example_values: %w[space app]
+  field :actee_name, "The name of the actee.", required: false, readonly: true
   field :timestamp, "The event creation time.", required: false, readonly: true
   field :metadata, "The additional information about event.", required: false, readonly: true, default: {}
   field :space_guid, "The guid of the associated space.", required: false, readonly: true
