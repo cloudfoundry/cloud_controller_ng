@@ -28,3 +28,13 @@ RSpec::Matchers.define :match_app do |app|
       state.space_name == app.space.name
   end
 end
+
+RSpec::Matchers.define :have_status_code do |expected_code|
+  match do |response|
+    response.code.to_i == expected_code
+  end
+
+  failure_message_for_should do |response|
+    "Expected #{expected_code} response, got:\n code: #{response.code.to_i}\n body: \"#{response.body}\""
+  end
+end

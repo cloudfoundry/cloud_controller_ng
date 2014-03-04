@@ -156,17 +156,17 @@ describe "Service Broker Management", type: :integration do
 
       # create it
       create_response = make_post_request('/v2/service_brokers', body, admin_headers)
-      expect(create_response.code.to_i).to eq(201)
+      expect(create_response).to have_status_code(201)
       broker_metadata = create_response.json_body.fetch('metadata')
       guid = broker_metadata.fetch('guid')
 
       # delete it
       delete_response = make_delete_request("/v2/service_brokers/#{guid}", admin_headers)
-      expect(delete_response.code.to_i).to eq(204)
+      expect(delete_response).to have_status_code(204)
 
       # make sure its services are no longer available
       catalog_response = make_get_request('/v2/services?inline-relations-depth=1', admin_headers)
-      expect(catalog_response.code.to_i).to eq(200)
+      expect(catalog_response).to have_status_code(200)
 
       services = catalog_response.json_body.fetch('resources')
       services.each do |service|
@@ -222,15 +222,15 @@ describe "Service Broker Management", type: :integration do
           space_guid: space_guid
         )
         create_response = make_post_request('/v2/service_instances', body, admin_headers)
-        expect(create_response.code.to_i).to eq(201)
+        expect(create_response).to have_status_code(201)
 
         # try to delete it
         delete_response = make_delete_request("/v2/service_brokers/#{guid}", admin_headers)
-        expect(delete_response.code.to_i).to eq(400)
+        expect(delete_response).to have_status_code(400)
 
         # make sure the services are still available
         catalog_response = make_get_request('/v2/services?inline-relations-depth=1', admin_headers)
-        expect(catalog_response.code.to_i).to eq(200)
+        expect(catalog_response).to have_status_code(200)
 
         services = catalog_response.json_body.fetch('resources')
         service = services.first
@@ -255,7 +255,7 @@ describe "Service Broker Management", type: :integration do
       )
 
       create_response = make_post_request('/v2/service_brokers', body, admin_headers)
-      expect(create_response.code.to_i).to eq(201)
+      expect(create_response).to have_status_code(201)
       @broker_guid = create_response.json_body.fetch('metadata').fetch('guid')
 
       make_all_plans_public
@@ -312,7 +312,7 @@ describe "Service Broker Management", type: :integration do
 
           # attempt to update the service broker, expect error
           update_response = make_put_request("/v2/service_brokers/#{@broker_guid}", {}.to_json, admin_headers)
-          expect(update_response.code.to_i).to eq(502)
+          expect(update_response).to have_status_code(502)
 
           # verify plans are unchanged
           plans = get_plans
@@ -325,7 +325,7 @@ describe "Service Broker Management", type: :integration do
 
   def service_plan_guid(index = 0)
     service_plan_response = make_get_request('/v2/service_plans', admin_headers)
-    expect(service_plan_response.code.to_i).to eq(200)
+    expect(service_plan_response).to have_status_code(200)
 
     expect(service_plan_response.json_body.fetch('total_results')).to be > 0
     service_plan_response.json_body.fetch('resources')[index].fetch('metadata').fetch('guid')
@@ -338,24 +338,24 @@ describe "Service Broker Management", type: :integration do
       space_guid: space_guid
     )
     create_response = make_post_request('/v2/service_instances', body, admin_headers)
-    expect(create_response.code.to_i).to eq(201)
+    expect(create_response).to have_status_code(201)
 
     create_response.json_body.fetch('metadata').fetch('guid')
   end
 
   def delete_service_instance(instance_guid)
     delete_response = make_delete_request("/v2/service_instances/#{instance_guid}", admin_headers)
-    expect(delete_response.code.to_i).to eq(204), "Delete request failed with #{delete_response.code}, #{delete_response.body.inspect}"
+    expect(delete_response).to have_status_code(204), "Delete request failed with #{delete_response.code}, #{delete_response.body.inspect}"
   end
 
   def update_service_broker(broker_guid)
     update_response = make_put_request("/v2/service_brokers/#{broker_guid}", {}.to_json, admin_headers)
-    expect(update_response.code.to_i).to eq(200)
+    expect(update_response).to have_status_code(200)
   end
 
   def get_services(headers=user_headers)
     catalog_response = make_get_request('/v2/services?inline-relations-depth=1', headers)
-    expect(catalog_response.code.to_i).to eq(200)
+    expect(catalog_response).to have_status_code(200)
 
     catalog_response.json_body.fetch('resources')
   end
@@ -372,7 +372,7 @@ describe "Service Broker Management", type: :integration do
     request = Net::HTTP::Delete.new('/plan/last')
     request.basic_auth('admin', 'supersecretshh')
     response = http.request(request)
-    expect(response.code.to_i).to eq(204)
+    expect(response).to have_status_code(204)
   end
 
   def user_token
