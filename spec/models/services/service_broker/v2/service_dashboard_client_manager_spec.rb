@@ -78,6 +78,10 @@ module VCAP::CloudController::ServiceBroker::V2
           expect(client_manager).to have_received(:create).with(dashboard_client_attrs_1)
           expect(client_manager).to have_received(:create).with(dashboard_client_attrs_2)
         end
+
+        it 'returns true' do
+          expect(manager.create_service_dashboard_clients).to eq(true)
+        end
       end
 
       context 'when some, but not all dashboard sso clients exist in UAA' do
@@ -101,6 +105,10 @@ module VCAP::CloudController::ServiceBroker::V2
 
             expect(client_manager).to_not have_received(:create).with(dashboard_client_attrs_1)
           end
+
+          it 'returns true' do
+            expect(manager.create_service_dashboard_clients).to eq(true)
+          end
         end
 
         context 'when another service in CC has already claimed the requested UAA client' do
@@ -109,19 +117,19 @@ module VCAP::CloudController::ServiceBroker::V2
           end
 
           it 'does not create any uaa clients' do
-            manager.create_service_dashboard_clients rescue nil
+            manager.create_service_dashboard_clients
 
             expect(client_manager).to_not have_received(:create)
           end
 
-          it 'adds an error to the catalog service' do
-            manager.create_service_dashboard_clients rescue nil
-
-            expect(catalog_service_1.errors).to include 'Service dashboard client ids must be unique'
+          it 'returns false' do
+            expect(manager.create_service_dashboard_clients).to eq(false)
           end
 
-          it 'raises a ServiceBrokerCatalogInvalid error' do
-            expect { manager.create_service_dashboard_clients }.to raise_error(VCAP::Errors::ApiError, /Service broker catalog is invalid/)
+          it 'has errors for the service' do
+            manager.create_service_dashboard_clients
+
+            expect(manager.errors.for(catalog_service_1)).not_to be_empty
           end
         end
 
@@ -132,14 +140,14 @@ module VCAP::CloudController::ServiceBroker::V2
             expect(client_manager).to_not have_received(:create)
           end
 
-          it 'adds an error to the catalog service' do
-            manager.create_service_dashboard_clients rescue nil
-
-            expect(catalog_service_1.errors).to include 'Service dashboard client ids must be unique'
+          it 'returns false' do
+            expect(manager.create_service_dashboard_clients).to eq(false)
           end
 
-          it 'raises a ServiceBrokerCatalogInvalid error' do
-            expect { manager.create_service_dashboard_clients }.to raise_error(VCAP::Errors::ApiError, /Service broker catalog is invalid/)
+          it 'has errors for the service' do
+            manager.create_service_dashboard_clients
+
+            expect(manager.errors.for(catalog_service_1)).not_to be_empty
           end
         end
       end

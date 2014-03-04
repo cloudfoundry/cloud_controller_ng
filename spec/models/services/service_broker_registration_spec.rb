@@ -12,7 +12,7 @@ module VCAP::CloudController
           auth_password: 'auth1234',
         )
       end
-      let(:manager) { double(:service_dashboard_manager, :create_service_dashboard_clients => nil) }
+      let(:manager) { double(:service_dashboard_manager, :create_service_dashboard_clients => true) }
       let(:catalog) { double(:catalog, :sync_services_and_plans => true, :valid? => true)}
 
       subject(:registration) { ServiceBrokerRegistration.new(broker) }
@@ -121,6 +121,21 @@ module VCAP::CloudController
             expect {
               registration.save rescue nil
             }.to_not change(ServiceBroker, :count)
+          end
+        end
+
+        context 'because the dashboard client manager failed' do
+          before do
+            allow(manager).to receive(:create_service_dashboard_clients).and_return(false)
+            allow(manager).to receive(:errors).and_return(validation_errors)
+            allow_any_instance_of(VCAP::CloudController::ValidationErrorsFormatter).to receive(:format).and_return(error_text)
+          end
+
+          let(:error_text) { 'something bad happened' }
+          let(:validation_errors) { double(:validation_errors) }
+
+          it 'raises a ServiceBrokerCatalogInvalid error' do
+            expect { registration.save }.to raise_error(VCAP::Errors::ApiError, /#{error_text}/)
           end
         end
       end
