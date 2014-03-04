@@ -12,11 +12,15 @@ module VCAP::CloudController
           auth_password: 'auth1234',
         )
       end
+      let(:manager) { double(:service_dashboard_manager, :create_service_dashboard_clients => nil) }
+      let(:catalog) { double(:catalog, :sync_services_and_plans => true, :valid? => true)}
 
       subject(:registration) { ServiceBrokerRegistration.new(broker) }
 
       before do
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
+        allow(ServiceBroker::V2::ServiceDashboardClientManager).to receive(:new).and_return(manager)
+        allow(VCAP::CloudController::ServiceBroker::V2::Catalog).to receive(:new).and_return(catalog)
       end
 
       it 'returns itself' do
@@ -51,13 +55,17 @@ module VCAP::CloudController
         expect(registration.errors.on(:name)).to have_exactly(1).error
       end
 
-      it 'syncs services and plans and creates dashboard clients' do
-        catalog = double('catalog', sync_services_and_plans: nil, create_service_dashboard_clients: nil)
-        VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_return(catalog)
-        catalog.stub(:valid?).and_return(true)
+      it 'syncs services and plans' do
         registration.save
+
         expect(catalog).to have_received(:sync_services_and_plans)
-        expect(catalog).to have_received(:create_service_dashboard_clients)
+      end
+
+      it 'creates dashboard clients' do
+        registration.save
+
+        expect(ServiceBroker::V2::ServiceDashboardClientManager).to have_received(:new).with(catalog)
+        expect(manager).to have_received(:create_service_dashboard_clients)
       end
 
       context 'when invalid' do
@@ -91,8 +99,6 @@ module VCAP::CloudController
         context 'because the catalog has errors' do
           let(:error_text) { "error text" }
           before do
-            catalog = double('catalog')
-            VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_return(catalog)
             catalog.stub(:valid?).and_return(false)
             catalog.stub(:error_text).and_return(error_text)
           end
@@ -120,13 +126,8 @@ module VCAP::CloudController
       end
 
       context 'when exception is raised during transaction' do
-        let(:catalog) { double('catalog') }
-
         before do
-          VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_return(catalog)
           catalog.stub(:valid?).and_return(true)
-          catalog.stub(:create_service_dashboard_clients)
-          catalog.stub(:revert_dashboard_clients)
           catalog.stub(:sync_services_and_plans).and_raise(Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
         end
 
@@ -140,36 +141,40 @@ module VCAP::CloudController
             broker.name = 'Awesome new broker name'
 
             expect{
-              expect { registration.save }.to raise_error(VCAP::Errors::ApiError, /Service broker catalog is invalid/)
+              begin
+                registration.save
+              rescue VCAP::Errors::ApiError
+              end
             }.to change{ServiceBroker.count}.by(0)
             broker.reload
 
             expect(broker.name).to eq('Cool Broker')
           end
+
         end
 
         context 'when broker does not exist' do
           it 'does not save new broker' do
             expect(ServiceBroker.count).to eq(0)
             expect{
-              expect { registration.save }.to raise_error(VCAP::Errors::ApiError, /Service broker catalog is invalid/)
+              begin
+                registration.save
+              rescue VCAP::Errors::ApiError
+              end
             }.to change{ServiceBroker.count}.by(0)
           end
         end
-
       end
 
       context 'when exception is raised during dashboard client creation' do
-        let(:catalog) { double('catalog') }
         before do
-          VCAP::CloudController::ServiceBroker::V2::Catalog.stub(:new).and_return(catalog)
           catalog.stub(:valid?).and_return(true)
-          catalog.stub(:create_service_dashboard_clients).and_raise
+          manager.stub(:create_service_dashboard_clients).and_raise
         end
 
         it 'raises the error and does not create a new service broker' do
           expect {
-            expect {registration.save}.to raise_error
+            registration.save rescue nil
           }.to_not change(ServiceBroker, :count)
         end
       end

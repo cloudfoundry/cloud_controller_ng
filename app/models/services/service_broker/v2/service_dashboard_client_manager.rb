@@ -1,70 +1,57 @@
-require 'uaa'
+require 'models/services/service_broker/v2/uaa_client_manager'
 
 module VCAP::CloudController::ServiceBroker::V2
   class ServiceDashboardClientManager
+    attr_reader :catalog, :client_manager, :services_requesting_dashboard_client
 
-    def initialize(opts = {})
-      @opts = opts
+    def initialize(catalog)
+      @catalog                              = catalog
+      @client_manager                       = UaaClientManager.new
+      @services_requesting_dashboard_client = catalog.services.select(&:dashboard_client)
     end
 
-    def create(client_attrs)
-      return unless issuer_client_config
+    def create_service_dashboard_clients
+      existing_clients = client_manager.get_clients(requested_client_ids)
+      existing_client_ids = existing_clients.map { |client| client['client_id'] }
 
-      client_info = sso_client_info(client_attrs)
+      clients_to_create = requested_client_ids - existing_client_ids
 
-      scim.add(:client, client_info)
-    end
+      services_with_existing_clients = find_catalog_services_with_existing_uaa_clients(services_requesting_dashboard_client, existing_clients)
 
-    def get_clients(client_ids)
-      client_ids.map do |id|
-        begin
-          scim.get(:client, id)
-        rescue CF::UAA::NotFound
-          nil
-        end
-      end.compact
+      validate_existing_clients_match_existing_services!(services_with_existing_clients)
+
+      services_requesting_dashboard_client.each do |service|
+        client_manager.create(service.dashboard_client) if clients_to_create.include?(service.dashboard_client['id'])
+      end
     end
 
     private
 
-    def scim
-      @opts.fetch(:scim) do
-        CF::UAA::Scim.new(uaa_target, token_info.auth_header)
+    def requested_client_ids
+      services_requesting_dashboard_client.map { |service| service.dashboard_client['id'] }
+    end
+
+    def validate_existing_clients_match_existing_services!(services_with_existing_clients)
+      return if services_with_existing_clients.empty?
+
+      errors_found = false
+
+      services_with_existing_clients.each do |catalog_service|
+        db_service = catalog_service.cc_service
+
+        # ensure that the service requesting the existing uaa client is the one that originally created it
+        if db_service.nil? || (db_service.sso_client_id != catalog_service.dashboard_client['id'])
+          catalog_service.errors << 'Service dashboard client ids must be unique'
+          errors_found = true
+        end
       end
+      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", catalog.error_text) if errors_found
     end
 
-    def uaa_target
-      VCAP::CloudController::Config.config[:uaa][:url]
-    end
+    def find_catalog_services_with_existing_uaa_clients(catalog_services, existing_clients)
+      existing_client_ids = existing_clients.map { |client| client['client_id'] }
 
-    def issuer
-      uaa_client, uaa_client_secret = issuer_client_config
-      CF::UAA::TokenIssuer.new(uaa_target, uaa_client, uaa_client_secret)
-    end
-
-    def token_info
-      issuer.client_credentials_grant
-    end
-
-    def sso_client_info(client_attrs)
-      {
-        client_id:     client_attrs['id'],
-        client_secret: client_attrs['secret'],
-        redirect_uri:  client_attrs['redirect_uri'],
-        scope:         ['openid', 'cloud_controller.read', 'cloud_controller.write'],
-        authorized_grant_types: ['authorization_code']
-      }
-    end
-
-    def issuer_client_config
-      uaa_client = VCAP::CloudController::Config.config[:uaa_client_name]
-      uaa_client_secret = VCAP::CloudController::Config.config[:uaa_client_secret]
-
-      [uaa_client, uaa_client_secret] if uaa_client && uaa_client_secret
-    end
-
-    def logger
-      @logger ||= Steno.logger('cc.service_dashboard_client_creator')
+      catalog_services.select { |s| existing_client_ids.include?(s.dashboard_client['id']) }
     end
   end
 end

@@ -1,7 +1,6 @@
 require 'models/services/service_broker/v2'
 require 'models/services/service_broker/v2/catalog_service'
 require 'models/services/service_broker/v2/catalog_plan'
-require 'models/services/service_broker/v2/service_dashboard_client_manager'
 
 
 module VCAP::CloudController::ServiceBroker::V2
@@ -60,61 +59,10 @@ module VCAP::CloudController::ServiceBroker::V2
       delete_services
     end
 
-    def create_service_dashboard_clients
-      services_requesting_clients = services.find_all { |service| service.dashboard_client  }
-      return unless services_requesting_clients.count > 0
-
-      client_manager   = ServiceDashboardClientManager.new
-      client_ids       = services_requesting_clients.map { |service| service.dashboard_client['id'] }
-      existing_clients = client_manager.get_clients(client_ids)
-
-      services_with_existing_clients = match_catalog_service_to_uaa_client(existing_clients, services_requesting_clients)
-      services_needing_clients       = services_requesting_clients - services_with_existing_clients
-
-      if (services_with_existing_clients.count > 0)
-        validate_existing_clients_match_existing_services(services_with_existing_clients)
-        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", error_text) unless valid?
-      end
-
-      services_needing_clients.each do |service|
-        client_manager.create(service.dashboard_client)
-      end
-    end
-
     private
 
     def validate_all_service_ids_are_unique!
       @errors << "Service ids must be unique" if services.uniq{ |service| service.broker_provided_id }.count < services.count
-    end
-
-    def validate_existing_clients_match_existing_services(services_with_existing_clients)
-      catalog_to_db_service_hash = map_catalog_to_db_service(services_with_existing_clients)
-
-      catalog_to_db_service_hash.each do |catalog_service, db_service|
-        # ensure that the service requesting the existing uaa client is the one that originally created it
-        unless db_service && (db_service.sso_client_id == catalog_service.dashboard_client['id'])
-          catalog_service.errors << 'Service dashboard client ids must be unique'
-        end
-      end
-    end
-
-    def match_catalog_service_to_uaa_client(existing_clients, services_requesting_clients)
-      existing_client_names = existing_clients.map { |client| client['client_id'] }
-
-      services_requesting_clients.find_all do |service|
-        existing_client_names.include?(service.dashboard_client['id'])
-      end
-    end
-
-    def map_catalog_to_db_service(services_with_existing_clients)
-      broker_provided_ids = services_with_existing_clients.map(&:broker_provided_id)
-      services_from_db    = VCAP::CloudController::Service.where(:unique_id => broker_provided_ids).all
-      ret_hash            = {}
-
-      services_with_existing_clients.each do |catalog_service|
-        ret_hash[catalog_service] = services_from_db.find { |service| service.unique_id == catalog_service.broker_provided_id }
-      end
-      ret_hash
     end
 
     def update_or_create_services

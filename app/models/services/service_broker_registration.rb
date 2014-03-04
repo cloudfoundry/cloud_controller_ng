@@ -1,3 +1,5 @@
+require 'models/services/service_broker/v2/service_dashboard_client_manager'
+
 module VCAP::CloudController
   class ServiceBrokerRegistration
     attr_reader :broker
@@ -12,7 +14,8 @@ module VCAP::CloudController
       catalog_hash = broker.client.catalog
       catalog      = build_catalog(catalog_hash)
 
-      catalog.create_service_dashboard_clients
+      manager = ServiceBroker::V2::ServiceDashboardClientManager.new(catalog)
+      manager.create_service_dashboard_clients
 
       broker.db.transaction(savepoint: true) do
         broker.save
