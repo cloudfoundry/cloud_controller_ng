@@ -1,14 +1,13 @@
 require 'models/services/service_broker/v2'
 require 'models/services/service_broker/v2/catalog_validation_helper'
+require 'models/services/validation_errors'
 
 module VCAP::CloudController::ServiceBroker::V2
   class CatalogService
     include CatalogValidationHelper
 
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
-      :description, :bindable, :tags, :plans, :requires, :dashboard_client
-
-    attr_accessor :errors
+      :description, :bindable, :tags, :plans, :requires, :dashboard_client, :errors
 
     def initialize(service_broker, attrs)
       @service_broker     = service_broker
@@ -21,7 +20,7 @@ module VCAP::CloudController::ServiceBroker::V2
       @requires           = attrs.fetch('requires', [])
       @plans_data         = attrs['plans']
       @dashboard_client   = attrs['dashboard_client']
-      @errors             = []
+      @errors             = VCAP::CloudController::ValidationErrors.new
       @plans              = []
 
       build_plans
@@ -30,12 +29,12 @@ module VCAP::CloudController::ServiceBroker::V2
     def valid?
       return @valid if defined? @valid
       validate_service
-      all_plans_valid = validate_plans
-      @valid = !@errors.any? && all_plans_valid
+      validate_plans
+      @valid = errors.empty?
     end
 
     def plans_present?
-      @plans && !@plans.empty?
+      plans && !plans.empty?
     end
 
     def cc_service
@@ -60,10 +59,12 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def validate_plans
-      validate_dependently_in_order([:validate_at_least_one_plan_present!,
-                            :validate_plans_format,
-                            :validate_uniqueness_constraints,
-                            :validate_plans_data])
+      validate_dependently_in_order([
+        :validate_at_least_one_plan_present!,
+        :validate_plans_format,
+        :validate_plans_data,
+        :validate_uniqueness_constraints
+      ])
     end
 
     def validate_plans_format
@@ -76,7 +77,9 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def validate_plans_data
-      plans.map(&:valid?).all?
+      plans.each do |plan|
+        errors.add_nested(plan, plan.errors) unless plan.valid?
+      end
     end
 
     def build_plans
@@ -90,15 +93,15 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def validate_at_least_one_plan_present!
-      @errors << 'At least one plan is required' if plans.empty?
+      errors.add('At least one plan is required') if plans.empty?
     end
 
     def validate_all_plan_ids_are_unique!
-      @errors << 'Plan ids must be unique' if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
+      errors.add('Plan ids must be unique') if plans.uniq{ |plan| plan.broker_provided_id }.count < plans.count
     end
 
     def validate_all_plan_names_are_unique!
-      @errors << 'Plan names must be unique within a service' if plans.uniq { |plan| plan.name }.count < plans.count
+      errors.add('Plan names must be unique within a service') if plans.uniq { |plan| plan.name }.count < plans.count
     end
 
     def validate_dashboard_client!

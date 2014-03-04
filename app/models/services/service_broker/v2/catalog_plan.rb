@@ -1,5 +1,6 @@
 require 'models/services/service_broker/v2'
 require 'models/services/service_broker/v2/catalog_validation_helper'
+require 'models/services/validation_errors'
 
 module VCAP::CloudController::ServiceBroker::V2
   class CatalogPlan
@@ -13,7 +14,7 @@ module VCAP::CloudController::ServiceBroker::V2
       @metadata           = attrs['metadata']
       @name               = attrs['name']
       @description        = attrs['description']
-      @errors             = []
+      @errors             = VCAP::CloudController::ValidationErrors.new
     end
 
     def cc_plan
@@ -23,7 +24,7 @@ module VCAP::CloudController::ServiceBroker::V2
     def valid?
       return @valid if defined? @valid
       validate!
-      @valid = !errors.any?
+      @valid = errors.empty?
     end
 
     delegate :cc_service, :to => :catalog_service

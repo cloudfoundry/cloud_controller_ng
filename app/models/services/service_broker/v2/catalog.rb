@@ -1,17 +1,19 @@
 require 'models/services/service_broker/v2'
 require 'models/services/service_broker/v2/catalog_service'
 require 'models/services/service_broker/v2/catalog_plan'
+require 'models/services/validation_errors'
+require 'models/services/validation_errors_formatter'
 
 
 module VCAP::CloudController::ServiceBroker::V2
   class Catalog
-    attr_reader :service_broker, :services, :plans
+    attr_reader :service_broker, :services, :plans, :errors
 
     def initialize(service_broker, catalog_hash)
       @service_broker = service_broker
       @services       = []
       @plans          = []
-      @errors         = []
+      @errors         = VCAP::CloudController::ValidationErrors.new
 
       catalog_hash.fetch('services', []).each do |service_attrs|
         service = CatalogService.new(service_broker, service_attrs)
@@ -21,33 +23,14 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def valid?
-      validate_all_service_ids_are_unique!
-      all_services_valid = @services.map(&:valid?).all?
-      @errors.empty? && all_services_valid
+      validate_all_service_ids_are_unique
+      validate_services
+      errors.empty?
     end
 
-    INDENT = '  '.freeze
     def error_text
-      message = "\n"
-      @errors.each { |e| message += "#{e}\n" }
-      @services.each do |service|
-        next if service.valid?
-
-        message += "Service #{service.name}\n"
-        service.errors.each do |error|
-          message += "#{INDENT}#{error}\n"
-        end
-
-        service.plans.each do |plan|
-          next if plan.valid?
-
-          message += "#{INDENT}Plan #{plan.name}\n"
-          plan.errors.each do |error|
-            message += "#{INDENT}#{INDENT}#{error}\n"
-          end
-        end
-      end
-      message
+      formatter = VCAP::CloudController::ValidationErrorsFormatter.new
+      formatter.format(errors)
     end
 
     def sync_services_and_plans
@@ -61,8 +44,16 @@ module VCAP::CloudController::ServiceBroker::V2
 
     private
 
-    def validate_all_service_ids_are_unique!
-      @errors << "Service ids must be unique" if services.uniq{ |service| service.broker_provided_id }.count < services.count
+    def validate_all_service_ids_are_unique
+      if services.uniq(&:broker_provided_id).count < services.count
+        errors.add('Service ids must be unique')
+      end
+    end
+
+    def validate_services
+      services.each do |service|
+        errors.add_nested(service, service.errors) unless service.valid?
+      end
     end
 
     def update_or_create_services

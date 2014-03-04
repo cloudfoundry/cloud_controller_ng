@@ -19,16 +19,33 @@ module VCAP::CloudController
     describe '#add_nested' do
       let(:object_with_errors) { double(:object_with_errors) }
 
-      it 'adds a nested error for the object' do
-        errors.add_nested(object_with_errors)
+      context 'when errors are supplied' do
+        let(:given_errors) { ValidationErrors.new.add('stuff failed') }
 
-        expect(errors.for(object_with_errors)).to be
+        it 'adds a nested error for the object' do
+          errors.add_nested(object_with_errors, given_errors)
+
+          expect(errors.for(object_with_errors)).to eq(given_errors)
+        end
+
+        it 'returns the nested error object' do
+          nested_errors = errors.add_nested(object_with_errors, given_errors)
+          expect(nested_errors).to eq(given_errors)
+        end
       end
 
-      it 'returns the nested error object' do
-        nested_errors = errors.add_nested(object_with_errors)
-        expect(nested_errors).not_to eq(errors)
-        expect(nested_errors).to respond_to(:messages)
+      context 'when errors are not supplied' do
+        it 'adds a nested error for the object' do
+          errors.add_nested(object_with_errors)
+
+          expect(errors.for(object_with_errors)).to be
+        end
+
+        it 'returns the nested error object' do
+          nested_errors = errors.add_nested(object_with_errors)
+          expect(nested_errors).not_to eq(errors)
+          expect(nested_errors).to respond_to(:messages)
+        end
       end
 
       context 'when the nested errors already exist' do

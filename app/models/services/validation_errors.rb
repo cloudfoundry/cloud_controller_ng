@@ -12,8 +12,8 @@ module VCAP::CloudController
       self
     end
 
-    def add_nested(object_with_errors)
-      nested_errors[object_with_errors] ||= ValidationErrors.new
+    def add_nested(object_with_errors, validation_errors=ValidationErrors.new)
+      nested_errors[object_with_errors] ||= validation_errors
     end
 
     def empty?

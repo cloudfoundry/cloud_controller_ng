@@ -348,7 +348,7 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     describe 'validations' do
-      context 'when the catalog is invalid' do
+      context "when the catalog's services include errors" do
         let(:catalog_hash) do
           {
             'services' => [
@@ -360,9 +360,10 @@ module VCAP::CloudController::ServiceBroker::V2
           }
         end
 
-        specify '#valid? returns false and #error_text includes all error messages' do
+        specify '#valid? returns false' do
           catalog = Catalog.new(broker, catalog_hash)
           expect(catalog.valid?).to eq false
+          expect(catalog.errors.nested_errors).not_to be_empty
         end
       end
 
@@ -409,6 +410,7 @@ module VCAP::CloudController::ServiceBroker::V2
         it 'gives an error' do
           catalog = Catalog.new(broker, catalog_hash)
           expect(catalog.valid?).to eq false
+          expect(catalog.errors.messages).to include('Service ids must be unique')
         end
       end
     end
