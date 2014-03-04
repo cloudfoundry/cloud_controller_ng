@@ -1,5 +1,5 @@
 require 'models/services/service_broker/v2/service_dashboard_client_manager'
-require 'models/services/validation_errors_formatter'
+require 'models/services/service_brokers/validation_errors_formatter'
 
 module VCAP::CloudController
   class ServiceBrokerRegistration
@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       manager = ServiceBroker::V2::ServiceDashboardClientManager.new(catalog)
       unless manager.create_service_dashboard_clients
-        formatter = ValidationErrorsFormatter.new
+        formatter = ServiceBrokers::ValidationErrorsFormatter.new
         raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", formatter.format(manager.errors))
       end
 

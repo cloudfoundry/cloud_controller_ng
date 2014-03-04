@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module VCAP::CloudController::ServiceBrokers
   class ValidationErrorsFormatter
     INDENT = '  '.freeze
     def format(validation_errors)
@@ -22,7 +22,6 @@ module VCAP::CloudController
         end
       end
       message
-
     end
   end
 end

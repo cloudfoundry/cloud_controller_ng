@@ -128,7 +128,7 @@ module VCAP::CloudController
           before do
             allow(manager).to receive(:create_service_dashboard_clients).and_return(false)
             allow(manager).to receive(:errors).and_return(validation_errors)
-            allow_any_instance_of(VCAP::CloudController::ValidationErrorsFormatter).to receive(:format).and_return(error_text)
+            allow_any_instance_of(VCAP::CloudController::ServiceBrokers::ValidationErrorsFormatter).to receive(:format).and_return(error_text)
           end
 
           let(:error_text) { 'something bad happened' }

@@ -2,7 +2,7 @@ require 'models/services/service_broker/v2'
 require 'models/services/service_broker/v2/catalog_service'
 require 'models/services/service_broker/v2/catalog_plan'
 require 'models/services/validation_errors'
-require 'models/services/validation_errors_formatter'
+require 'models/services/service_brokers/validation_errors_formatter'
 
 
 module VCAP::CloudController::ServiceBroker::V2
@@ -29,7 +29,7 @@ module VCAP::CloudController::ServiceBroker::V2
     end
 
     def error_text
-      formatter = VCAP::CloudController::ValidationErrorsFormatter.new
+      formatter = VCAP::CloudController::ServiceBrokers::ValidationErrorsFormatter.new
       formatter.format(errors)
     end
 
