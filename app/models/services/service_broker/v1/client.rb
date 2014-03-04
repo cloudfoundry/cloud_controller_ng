@@ -75,6 +75,8 @@ module VCAP::CloudController
       broker_instance_id = instance.broker_provided_id
 
       @http_client.deprovision(broker_instance_id)
+    rescue HttpResponseError => e
+      raise VCAP::Errors::ApiError.new_from_details("ServiceInstanceDeprovisionFailed", e.message)
     end
 
     private

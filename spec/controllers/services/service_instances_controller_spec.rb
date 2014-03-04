@@ -495,6 +495,38 @@ module VCAP::CloudController
         end
       end
 
+      context 'with a v1 service instance' do
+        let(:service) { Service.make(:v1) }
+        let(:service_plan) { ServicePlan.make(service: service)}
+        let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+
+        context 'when the service gateway returns a 409' do
+          before do
+            # Stub 409
+            VCAP::CloudController::ServiceBroker::V1::HttpClient.unstub(:new)
+
+            guid = service_instance.broker_provided_id
+            path = "/gateway/v1/configurations/#{guid}"
+            uri = URI(service.url + path)
+            #uri.user = service.service_broker.auth_username
+            #uri.password = service.service_broker.auth_password
+
+            stub_request(:delete, uri.to_s).to_return(body: '{"description": "service gateway error"}', status: 409)
+
+            #fake_broker_client = VCAP::CloudController::Services::V1::HttpClient.new
+            #fake_broker_client.stub(:deprovision).and_raise
+          end
+
+          it 'forwards the error message from the service gateway' do
+            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+
+            expect(last_response.status).to eq 409
+            expect(JSON.parse(last_response.body)['description']).to include 'service gateway error'
+          end
+        end
+
+      end
+
       context 'with a user provided service instance' do
         let!(:service_instance) { UserProvidedServiceInstance.make }
 
