@@ -4,7 +4,12 @@ module VCAP::CloudController
       super || app.space.developers.include?(context.user)
     end
 
-    alias_method :update?, :create?
-    alias_method :delete?, :create?
+    def update?(app)
+      create?(app)
+    end
+
+    def delete?(app)
+      create?(app)
+    end
   end
 end

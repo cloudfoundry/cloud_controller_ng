@@ -4,8 +4,13 @@ module VCAP::CloudController
       super || service_instance.space.developers.include?(context.user)
     end
 
-    alias_method :update?, :create?
-    alias_method :delete?, :create?
+    def update?(service_instance)
+      create?(service_instance)
+    end
+
+    def delete?(service_instance)
+      create?(service_instance)
+    end
   end
 
   class ManagedServiceInstanceAccess < ServiceInstanceAccess

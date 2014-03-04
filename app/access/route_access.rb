@@ -8,7 +8,12 @@ module VCAP::CloudController
         end
     end
 
-    alias_method :update?, :create?
-    alias_method :delete?, :create?
+    def update?(route)
+      create?(route)
+    end
+
+    def delete?(route)
+      create?(route)
+    end
   end
 end

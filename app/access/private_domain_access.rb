@@ -4,7 +4,12 @@ module VCAP::CloudController
       super || private_domain.owning_organization.managers.include?(context.user)
     end
 
-    alias_method :update?, :create?
-    alias_method :delete?, :create?
+    def update?(private_domain)
+      create?(private_domain)
+    end
+
+    def delete?(private_domain)
+      create?(private_domain)
+    end
   end
 end

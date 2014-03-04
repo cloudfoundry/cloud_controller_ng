@@ -4,6 +4,9 @@ module VCAP::CloudController
       super ||
         service_binding.app.space.developers.include?(context.user)
     end
-    alias_method :delete?, :create?
+
+    def delete?(service_binding)
+      create?(service_binding)
+    end
   end
 end

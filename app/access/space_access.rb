@@ -9,6 +9,8 @@ module VCAP::CloudController
         space.managers.include?(context.user)
     end
 
-    alias_method :delete?, :create?
+    def delete?(space)
+      create?(space)
+    end
   end
 end
