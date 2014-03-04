@@ -152,28 +152,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "binding" do
-      let(:service) { Service.make }
-      let(:service_plan) { ServicePlan.make(:service => service) }
-      let(:service_instance) do
-        ManagedServiceInstance.make(
-          :service_plan => service_plan,
-          :name => "my-postgresql",
-          :space => Space.make,
-          :gateway_name => 'gwname_instance',
-          :credentials => Sham.service_credentials
-        )
-      end
-
-      let(:bind_resp) do
-        VCAP::Services::Api::GatewayHandleResponse.new(
-          :service_id => "gwname_binding",
-          :configuration => "abc",
-          :credentials => {:password => "foo"}
-        )
-      end
-    end
-
     describe "restaging" do
       let(:app) do
         app = AppFactory.make
@@ -185,13 +163,13 @@ module VCAP::CloudController
 
       let(:service_instance) { ManagedServiceInstance.make(:space => app.space) }
 
-      it "should trigger restaging when creating a binding" do
+      it "should not trigger restaging when creating a binding" do
         ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
-        app.needs_staging?.should be_true
+        app.needs_staging?.should be_false
       end
 
-      it "should trigger restaging when directly destroying a binding" do
+      it "should not trigger restaging when directly destroying a binding" do
         binding = ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
         fake_app_staging(app)
@@ -199,17 +177,17 @@ module VCAP::CloudController
 
         binding.destroy(savepoint: true)
         app.refresh
-        app.needs_staging?.should be_true
+        app.needs_staging?.should be_false
       end
 
-      it "should trigger restaging when indirectly destroying a binding" do
+      it "should not trigger restaging when indirectly destroying a binding" do
         binding = ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
         fake_app_staging(app)
         app.needs_staging?.should be_false
 
         app.remove_service_binding(binding)
-        app.needs_staging?.should be_true
+        app.needs_staging?.should be_false
       end
     end
   end

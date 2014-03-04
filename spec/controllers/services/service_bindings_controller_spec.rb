@@ -67,17 +67,17 @@ module VCAP::CloudController
       end
       let(:service_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
 
-      it "should flag app for restaging when creating a binding" do
+      it "does not flag app for restaging when creating a binding" do
         req = Yajl::Encoder.encode(:app_guid => app_obj.guid,
                                    :service_instance_guid => service_instance.guid)
 
         post "/v2/service_bindings", req, json_headers(admin_headers)
         last_response.status.should == 201
         app_obj.refresh
-        app_obj.needs_staging?.should be_true
+        app_obj.needs_staging?.should be_false
       end
 
-      it "should flag app for restaging when deleting a binding" do
+      it " does not flag app for restaging when deleting a binding" do
         binding = ServiceBinding.make(:app => app_obj, :service_instance => service_instance)
         fake_app_staging(app_obj)
         app_obj.service_bindings.should include(binding)
@@ -86,7 +86,7 @@ module VCAP::CloudController
 
         last_response.status.should == 204
         app_obj.refresh
-        app_obj.needs_staging?.should be_true
+        app_obj.needs_staging?.should be_false
       end
     end
 

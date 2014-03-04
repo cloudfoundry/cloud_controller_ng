@@ -254,9 +254,9 @@ module VCAP::CloudController
           expect(http_client_stub).not_to have_received(:deprovision)
         end
 
-        it 'marks apps for restaging that were bound to the deleted service' do
+        it 'does not mark apps for restaging that were bound to the deleted service' do
           service_binding.app.update(package_state: 'STAGED')
-          expect { service.purge }.to change{ service_binding.app.reload.pending? }.to(true)
+          expect { service.purge }.not_to change{ service_binding.app.reload.pending? }
         end
       end
 
@@ -282,9 +282,9 @@ module VCAP::CloudController
           expect(a_request(:delete, /.*/)).not_to have_been_made
         end
 
-        it 'marks apps for restaging that were bound to the deleted service' do
+        it 'does not mark apps for restaging that were bound to the deleted service' do
           service_binding.app.update(package_state: 'STAGED')
-          expect { service.purge }.to change{ service_binding.app.reload.pending? }.to(true)
+          expect { service.purge }.not_to change{ service_binding.app.reload.pending? }
         end
       end
 

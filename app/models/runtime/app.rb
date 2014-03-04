@@ -34,7 +34,7 @@ module VCAP::CloudController
     end
 
     one_to_many :droplets
-    one_to_many :service_bindings, :after_remove => :after_remove_binding
+    one_to_many :service_bindings
     one_to_many :events, :class => VCAP::CloudController::AppEvent
     many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
     many_to_one :space
@@ -412,10 +412,6 @@ module VCAP::CloudController
 
     def uris
       routes.map(&:fqdn)
-    end
-
-    def after_remove_binding(binding)
-      mark_for_restaging
     end
 
     def mark_as_failed_to_stage

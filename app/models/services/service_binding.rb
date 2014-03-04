@@ -69,14 +69,6 @@ module VCAP::CloudController
       service_instance.space
     end
 
-    def after_create
-      mark_app_for_restaging
-    end
-
-    def after_update
-      mark_app_for_restaging
-    end
-
     def after_initialize
       super
       self.guid ||= SecureRandom.uuid
@@ -84,12 +76,6 @@ module VCAP::CloudController
 
     def before_destroy
       client.unbind(self)
-
-      mark_app_for_restaging
-    end
-
-    def mark_app_for_restaging
-      app.mark_for_restaging(:save => true) if app
     end
 
     def self.user_visibility_filter(user)
