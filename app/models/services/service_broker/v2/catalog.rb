@@ -82,6 +82,7 @@ module VCAP::CloudController::ServiceBroker::V2
             tags:        catalog_service.tags,
             extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
             active:      catalog_service.plans_present?,
+            requires:    catalog_service.requires,
             sso_client_id: sso_client_id
           )
         end
