@@ -40,6 +40,7 @@ group :operations do
 end
 
 group :test do
+  gem 'rspec-instafail'
   gem 'rubocop'
   gem 'debugger'
   gem 'rspec'
