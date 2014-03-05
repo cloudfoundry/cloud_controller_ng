@@ -95,6 +95,10 @@ module VCAP::CloudController
       Yajl::Parser.parse(json) if json
     end
 
+    def in_suspended_org?
+      space.in_suspended_org?
+    end
+
     private
 
     def generate_salt

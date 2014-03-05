@@ -18,8 +18,12 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_developer(user)
       end
-
       it_behaves_like :full_access
+
+      context 'when the organization is suspended' do
+        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+        it_behaves_like :read_only
+      end
     end
 
     context 'space auditor' do

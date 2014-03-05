@@ -80,4 +80,23 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
       }
     end
   end
+
+  describe '#in_suspended_org?' do
+    let(:space) { VCAP::CloudController::Space.make }
+    subject(:service_instance) {  VCAP::CloudController::ServiceInstance.new(space: space) }
+
+    context 'when in a suspended organization' do
+      before { allow(space).to receive(:in_suspended_org?).and_return(true) }
+      it 'is true' do
+        expect(service_instance).to be_in_suspended_org
+      end
+    end
+
+    context 'when in an unsuspended organization' do
+      before { allow(space).to receive(:in_suspended_org?).and_return(false) }
+      it 'is false' do
+        expect(service_instance).not_to be_in_suspended_org
+      end
+    end
+  end
 end

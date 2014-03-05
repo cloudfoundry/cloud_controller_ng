@@ -2,6 +2,7 @@ module VCAP::CloudController
   class ServiceInstanceAccess < BaseAccess
     def create?(service_instance)
       return super if super
+      return false if service_instance.in_suspended_org?
       service_instance.space.developers.include?(context.user)
     end
 
