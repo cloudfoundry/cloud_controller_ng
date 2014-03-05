@@ -116,7 +116,6 @@ module Sinatra
         end
 
         ::VCAP::Request.current_id = @request_guid
-        Steno.config.context.data['request_guid'] = @request_guid
       end
 
       after do
@@ -128,7 +127,6 @@ module Sinatra
         headers['Content-Type'] = 'application/json;charset=utf-8'
         headers[::VCAP::Request::HEADER_NAME] = @request_guid
         ::VCAP::Request.current_id = nil
-        Steno.config.context.data.delete('request_guid')
         nil
       end
     end

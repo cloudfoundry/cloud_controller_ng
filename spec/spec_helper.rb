@@ -36,7 +36,8 @@ module VCAP::CloudController
 
       Steno.init(Steno::Config.new(
         default_log_level: "info",
-        sinks: [Steno::Sink::IO.for_file(log_filename)]
+        sinks: [Steno::Sink::IO.for_file(log_filename)],
+        context: Steno::Context::ThreadLocal.new
       ))
 
       reset_database

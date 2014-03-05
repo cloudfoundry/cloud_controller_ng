@@ -6,6 +6,11 @@ module VCAP
     class << self
       def current_id=(request_id)
         Thread.current[:vcap_request_id] = request_id
+        if request_id.nil?
+          Steno.config.context.data.delete('request_guid')
+        else
+          Steno.config.context.data['request_guid'] = request_id
+        end
       end
 
       def current_id
