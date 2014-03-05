@@ -43,5 +43,9 @@ module VCAP::CloudController
       super
       validates_presence :owning_organization
     end
+
+    def in_suspended_org?
+      owning_organization.suspended?
+    end
   end
 end
