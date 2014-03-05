@@ -47,7 +47,8 @@ module VCAP::CloudController
     let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
 
     describe "create app" do
-      let(:space_guid) { Space.make.guid.to_s }
+      let(:space) { Space.make }
+      let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
           name: "maria",
@@ -170,6 +171,18 @@ module VCAP::CloudController
           expect(decoded_response["description"]).to match /is not valid public git url or a known buildpack name/
         end
       end
+
+      context "when the org is suspended" do
+        before do
+          space.organization.update(status: "suspended")
+        end
+
+        it "does not allow user to create new app (spot check)" do
+          post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(headers_for(make_developer_for_space(space)))
+          last_response.status.should == 403
+        end
+      end
+
     end
 
     describe "update app" do
