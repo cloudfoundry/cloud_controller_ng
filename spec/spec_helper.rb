@@ -86,13 +86,6 @@ module VCAP::CloudController
     end
 
     def db
-      #To debug in Travis
-      current_db = Thread.current[:db]
-      if current_db
-        return current_db
-      end
-
-      puts "DB connection string #{config.fetch(:db).inspect}"
       Thread.current[:db] ||= VCAP::CloudController::DB.connect(config.fetch(:db), db_logger)
     end
 

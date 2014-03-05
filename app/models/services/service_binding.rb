@@ -65,6 +65,10 @@ module VCAP::CloudController
       end
     end
 
+    def in_suspended_org?
+      app.in_suspended_org?
+    end
+
     def space
       service_instance.space
     end

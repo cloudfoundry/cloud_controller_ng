@@ -101,6 +101,25 @@ module VCAP::CloudController
       end
     end
 
+    describe '#in_suspended_org?' do
+      let(:app) { VCAP::CloudController::App.make }
+      subject(:service_binding) {  VCAP::CloudController::ServiceBinding.new(app: app) }
+
+      context 'when in a suspended organization' do
+        before { allow(app).to receive(:in_suspended_org?).and_return(true) }
+        it 'is true' do
+          expect(service_binding).to be_in_suspended_org
+        end
+      end
+
+      context 'when in an unsuspended organization' do
+        before { allow(app).to receive(:in_suspended_org?).and_return(false) }
+        it 'is false' do
+          expect(service_binding).not_to be_in_suspended_org
+        end
+      end
+    end
+
     describe "logging service bindings" do
       let(:service) { Service.make }
       let(:service_plan) { ServicePlan.make(:service => service) }
