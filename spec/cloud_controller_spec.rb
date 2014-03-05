@@ -34,7 +34,6 @@ describe VCAP::CloudController::Controller do
 
         VCAP::CloudController::User.last.tap do |u|
           expect(u.guid).to eq(user_id)
-          expect(u.email).to eql(email)
           expect(u.admin).to be_true
           expect(u.active).to be_true
         end
