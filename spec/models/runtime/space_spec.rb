@@ -34,9 +34,28 @@ module VCAP::CloudController
       }
     }
 
+    describe "#in_suspended_org?" do
+      let(:org) { Organization.make }
+      subject(:space) { Space.new(organization: org) }
+
+      context "when in a suspended organization" do
+        before { allow(org).to receive(:suspended?).and_return(true) }
+        it "is true" do
+          expect(space).to be_in_suspended_org
+        end
+      end
+      
+      context "when in an unsuspended organization" do
+        before { allow(org).to receive(:suspended?).and_return(false) }
+        it "is false" do
+          expect(space).not_to be_in_suspended_org
+        end
+      end
+    end
+
     describe "validations" do
       context "name" do
-        let(:space) { Space.make }
+        subject(:space) { Space.make }
 
         it "should allow standard ascii character" do
           space.name = "A -_- word 2!?()\'\"&+."
@@ -76,7 +95,7 @@ module VCAP::CloudController
     end
 
     context "bad relationships" do
-      let(:space) { Space.make }
+      subject(:space) { Space.make }
 
       shared_examples "bad app space permission" do |perm|
         context perm do
@@ -177,7 +196,7 @@ module VCAP::CloudController
     end
 
     describe "domains" do
-      let(:space) { Space.make() }
+      subject(:space) { Space.make() }
 
       context "listing domains" do
         let!(:domains) do

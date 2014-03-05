@@ -62,6 +62,25 @@ module VCAP::CloudController
       }
     }
 
+    describe "#in_suspended_org?" do
+      let(:space) { Space.make }
+      subject(:app) { App.new(space: space) }
+
+      context "when in a space in a suspended organization" do
+        before { allow(space).to receive(:in_suspended_org?).and_return(true) }
+        it "is true" do
+          expect(app).to be_in_suspended_org
+        end
+      end
+
+      context "when in a space in an unsuspended organization" do
+        before { allow(space).to receive(:in_suspended_org?).and_return(false) }
+        it "is false" do
+          expect(app).not_to be_in_suspended_org
+        end
+      end
+    end
+
     describe "#audit_hash" do
       it "should return uncensored data unchanged" do
         request_hash = { "key" => "value", "key2" => "value2" }

@@ -21,9 +21,29 @@ module VCAP::CloudController
       }
     }
 
+    context "statuses" do
+      describe "when status == active" do
+        subject(:org) { Organization.make(status: "active") }
+        it("is active") { expect(org).to be_active }
+        it("is not suspended") { expect(org).not_to be_suspended }
+      end
+
+      describe "when status == suspended" do
+        subject(:org) { Organization.make(status: "suspended") }
+        it("is not active") { expect(org).not_to be_active }
+        it("is suspended") { expect(org).to be_suspended }
+      end
+
+      describe "when status == unknown" do
+        subject(:org) { Organization.make(status: "unknown") }
+        it("is not active") { expect(org).not_to be_active }
+        it("is not suspended") { expect(org).not_to be_suspended }
+      end
+    end
+
     describe "validations" do
       context "name" do
-        let(:org) { Organization.make }
+        subject(:org) { Organization.make }
 
         it "shoud allow standard ascii characters" do
           org.name = "A -_- word 2!?()\'\"&+."
@@ -147,7 +167,7 @@ module VCAP::CloudController
     end
 
     describe "#destroy" do
-      let(:org) { Organization.make }
+      subject(:org) { Organization.make }
       let(:space) { Space.make(:organization => org) }
 
       before { org.reload }

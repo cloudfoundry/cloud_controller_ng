@@ -203,6 +203,10 @@ module VCAP::CloudController
         !has_stop_event_for_latest_run?
     end
 
+    def in_suspended_org?
+      space.in_suspended_org?
+    end
+
     def being_stopped?
       column_changed?(:state) && stopped?
     end

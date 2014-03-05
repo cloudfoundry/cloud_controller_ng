@@ -134,6 +134,10 @@ module VCAP::CloudController
       status == 'active'
     end
 
+    def suspended?
+      status == 'suspended'
+    end
+
     def billing_enabled?
       billing_enabled
     end

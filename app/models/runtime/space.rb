@@ -90,14 +90,15 @@ module VCAP::CloudController
       )
     end
 
-    private
+    def in_suspended_org?
+      organization.suspended?
+    end
 
+    private
     def check_addable!(domain)
       if domain.owning_organization_id && domain.owning_organization_id != organization.id
         raise UnauthorizedAccessToPrivateDomain
       end
     end
-
-
   end
 end
