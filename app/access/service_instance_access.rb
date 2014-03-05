@@ -1,7 +1,8 @@
 module VCAP::CloudController
   class ServiceInstanceAccess < BaseAccess
     def create?(service_instance)
-      super || service_instance.space.developers.include?(context.user)
+      return super if super
+      service_instance.space.developers.include?(context.user)
     end
 
     def update?(service_instance)

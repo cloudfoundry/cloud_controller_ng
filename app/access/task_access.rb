@@ -1,7 +1,8 @@
 module VCAP::CloudController
   class TaskAccess < BaseAccess
     def create?(task)
-      super || task.space.developers.include?(context.user)
+      return super if super
+      task.space.developers.include?(context.user)
     end
 
     def update?(task)

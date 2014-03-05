@@ -1,7 +1,9 @@
 module VCAP::CloudController
   class AppAccess < BaseAccess
     def create?(app)
-      super || (! app.in_suspended_org? && app.space.developers.include?(context.user))
+      return super if super
+      return false if app.in_suspended_org?
+      app.space.developers.include?(context.user)
     end
 
     def update?(app)
