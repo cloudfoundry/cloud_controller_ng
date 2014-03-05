@@ -9,13 +9,6 @@ module VCAP::CloudController
       json_headers(headers_for(user))
     end
 
-    before do
-      Steno.init(Steno::Config.new(
-        :default_log_level => "debug2",
-        :sinks => [Steno::Sink::IO.for_file("/tmp/cloud_controller_test.log")]
-      ))
-    end
-
     describe 'POST /v2/service_brokers' do
       let(:name) { Sham.name }
       let(:broker_url) { 'http://cf-service-broker.example.com' }

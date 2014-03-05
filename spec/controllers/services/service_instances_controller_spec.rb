@@ -25,13 +25,6 @@ module VCAP::CloudController
                      many_to_one_collection_ids: {},
                      many_to_many_collection_ids: {}
 
-    before do
-      Steno.init(Steno::Config.new(
-        :default_log_level => "debug2",
-        :sinks => [Steno::Sink::IO.for_file("/tmp/cloud_controller_test.log")]
-      ))
-    end
-
     describe "Permissions" do
       include_context "permissions"
 

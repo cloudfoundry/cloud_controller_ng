@@ -5,7 +5,7 @@ describe BackgroundJobEnvironment do
   subject(:background_job_environment) { described_class.new(bg_config) }
 
   before do
-    Steno.stub(:init)
+    allow(Steno).to receive(:init)
   end
 
   describe "#setup_environment" do

@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       Steno.init(Steno::Config.new(
-        default_log_level: "info",
+        default_log_level: "debug2",
         sinks: [Steno::Sink::IO.for_file(log_filename)],
         context: Steno::Context::ThreadLocal.new
       ))
