@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     def read?(object)
       return @ok_read if instance_variable_defined?(:@ok_read)
-      @ok_read = (admin_user? || !object.class.user_visible(context.user, context.roles.admin?).where(:guid => object.guid).empty?)
+      @ok_read = (admin_user? || object.class.user_visible(context.user, context.roles.admin?).where(:guid => object.guid).count > 0)
     end
 
     def update?(object)
