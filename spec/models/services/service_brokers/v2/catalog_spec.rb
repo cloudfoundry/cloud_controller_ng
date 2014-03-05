@@ -414,41 +414,5 @@ module VCAP::CloudController::ServiceBrokers::V2
         end
       end
     end
-
-    describe '#error_text' do
-      let(:catalog_hash) do
-        {
-          'services' => [
-            service_entry(name: 'service-1'),
-            service_entry(name: 'service-2', id: 123),
-            service_entry(name: 'service-3',
-                          plans: [ plan_entry(name: 'plan-1', id: 'plan-id'),
-                                   plan_entry(id: 'plan-id', name: 123) ]),
-            service_entry(name: 'service-4', plans: [], id: 'duplicate-id'),
-            service_entry(name: 'service-5', id: 'duplicate-id')
-          ]
-        }
-      end
-
-      it 'builds a formatted string' do
-        catalog = Catalog.new(broker, catalog_hash)
-        catalog.valid?
-
-        expect(catalog.error_text).to eq(
-<<-HEREDOC
-
-Service ids must be unique
-Service service-2
-  Service id must be a string, but has value 123
-Service service-3
-  Plan ids must be unique
-  Plan 123
-    Plan name must be a string, but has value 123
-Service service-4
-  At least one plan is required
-HEREDOC
-        )
-      end
-    end
   end
 end

@@ -97,14 +97,18 @@ module VCAP::CloudController
         end
 
         context 'because the catalog has errors' do
-          let(:error_text) { "error text" }
+          let(:errors) { double(:errors) }
+          let(:formatter) { double(:formatter) }
           before do
             catalog.stub(:valid?).and_return(false)
-            catalog.stub(:error_text).and_return(error_text)
+            catalog.stub(:errors).and_return(errors)
+            allow(ServiceBrokers::V2::ValidationErrorsFormatter).to receive(:new).and_return(formatter)
           end
 
-          it 'raises a ServiceBrokerCatalogInvalid error' do
-            expect { registration.save }.to raise_error(VCAP::Errors::ApiError, /#{error_text}/)
+          it 'raises a ServiceBrokerCatalogInvalid error with a human-readable message' do
+            expect(formatter).to receive(:format).with(errors).and_return('something bad happened')
+
+            expect { registration.save }.to raise_error(VCAP::Errors::ApiError, /something bad happened/)
           end
         end
 

@@ -17,7 +17,6 @@ module VCAP::CloudController
 
       manager = ServiceBrokers::V2::ServiceDashboardClientManager.new(catalog)
       unless manager.create_service_dashboard_clients
-        formatter = ServiceBrokers::V2::ValidationErrorsFormatter.new
         raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", formatter.format(manager.errors))
       end
 
@@ -29,9 +28,16 @@ module VCAP::CloudController
       return self
     end
 
+    def formatter
+      @formatter ||= ServiceBrokers::V2::ValidationErrorsFormatter.new
+    end
+
     def build_catalog(catalog_hash)
       catalog = ServiceBrokers::V2::Catalog.new(broker, catalog_hash)
-      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", catalog.error_text) unless catalog.valid?
+      unless catalog.valid?
+        humanized_message = formatter.format(catalog.errors)
+        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", humanized_message)
+      end
       catalog
     end
 

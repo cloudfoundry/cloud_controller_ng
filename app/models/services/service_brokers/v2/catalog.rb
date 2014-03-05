@@ -1,7 +1,6 @@
 require 'models/services/service_brokers/v2'
 require 'models/services/service_brokers/v2/catalog_service'
 require 'models/services/service_brokers/v2/catalog_plan'
-require 'models/services/service_brokers/v2/validation_errors_formatter'
 require 'models/services/validation_errors'
 
 
@@ -26,11 +25,6 @@ module VCAP::CloudController::ServiceBrokers::V2
       validate_all_service_ids_are_unique
       validate_services
       errors.empty?
-    end
-
-    def error_text
-      formatter = ValidationErrorsFormatter.new
-      formatter.format(errors)
     end
 
     def sync_services_and_plans
