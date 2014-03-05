@@ -78,6 +78,10 @@ module VCAP::CloudController
       {:space => spaces}
     end
 
+    def in_suspended_org?
+      space.in_suspended_org?
+    end
+
     private
 
     def around_destroy
