@@ -7,6 +7,9 @@ module VCAP::CloudController
       class AppBitsPacker < Struct.new(:app_guid, :uploaded_compressed_path, :fingerprints)
 
         def perform
+          logger = Steno.logger("cc.background")
+          logger.info("Packing the app bits for app '#{app_guid}'")
+
           app = VCAP::CloudController::App.find(guid: app_guid)
           package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
           global_app_bits_cache = CloudController::DependencyLocator.instance.global_app_bits_cache

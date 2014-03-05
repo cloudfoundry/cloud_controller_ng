@@ -3,6 +3,9 @@ module VCAP::CloudController
     module Runtime
       class DropletUpload < Struct.new(:local_path, :app_id)
         def perform
+          logger = Steno.logger("cc.background")
+          logger.info("Uploading droplet for '#{app_id}' to droplet blobstore")
+
           app = VCAP::CloudController::App[id: app_id]
 
           if app

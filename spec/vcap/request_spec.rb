@@ -18,11 +18,13 @@ module VCAP
       let(:request_id) { SecureRandom.uuid }
 
       it "sets the new current_id value" do
+        allow(Steno.config.context.data).to receive(:[]=)
+
         described_class.current_id = request_id
 
         expect(described_class.current_id).to eq request_id
 
-        expect(Steno.config.context.data.fetch('request_guid')).to eq request_id
+        expect(Steno.config.context.data).to have_received(:[]=).with('request_guid', request_id)
       end
 
       it "defaults to nil" do
@@ -30,11 +32,13 @@ module VCAP
       end
 
       it "deletes from steno context when set to nil" do
+        allow(Steno.config.context.data).to receive(:delete)
+
         described_class.current_id = nil
 
         expect(described_class.current_id).to be_nil
 
-        expect(Steno.config.context.data.has_key?('request_guid')).to be_false
+        expect(Steno.config.context.data).to have_received(:delete).with('request_guid')
       end
     end
   end

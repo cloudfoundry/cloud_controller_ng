@@ -4,9 +4,10 @@ module VCAP::CloudController
   module Jobs::Runtime
     describe AppBitsPacker do
       let(:uploaded_path) { "tmp/uploaded.zip" }
+      let(:app_guid) { SecureRandom.uuid }
 
       subject(:job) do
-        AppBitsPacker.new("app_guid", uploaded_path, [:fingerprints])
+        AppBitsPacker.new(app_guid, uploaded_path, [:fingerprints])
       end
 
       describe "#perform" do
@@ -26,7 +27,7 @@ module VCAP::CloudController
         end
 
         it "finds the app from the guid" do
-          App.should_receive(:find).with(guid: "app_guid")
+          App.should_receive(:find).with(guid: app_guid)
           job.perform
         end
 

@@ -4,6 +4,8 @@ module VCAP::CloudController
       class BlobstoreUpload < Struct.new(:local_path, :blobstore_key, :blobstore_name)
         def perform
           begin
+            logger = Steno.logger("cc.background")
+            logger.info("Uploading '#{blobstore_key}' to blobstore '#{blobstore_name}'")
             blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
             blobstore.cp_to_blobstore(local_path, blobstore_key)
           ensure

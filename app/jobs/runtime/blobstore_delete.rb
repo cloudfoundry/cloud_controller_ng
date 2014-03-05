@@ -3,6 +3,8 @@ module VCAP::CloudController
     module Runtime
       class BlobstoreDelete < Struct.new(:key, :blobstore_name)
         def perform
+          logger = Steno.logger("cc.background")
+          logger.info("Deleting '#{key}' from blobstore '#{blobstore_name}'")
           blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
           blobstore.delete(key)
         end
