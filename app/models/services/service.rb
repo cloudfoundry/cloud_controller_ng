@@ -82,7 +82,7 @@ module VCAP::CloudController
       else
         raise VCAP::Errors::ApiError.new_from_details("MissingServiceAuthToken", label) if service_auth_token.nil?
 
-        @v1_client ||= ServiceBroker::V1::Client.new(
+        @v1_client ||= ServiceBrokers::V1::Client.new(
           url: url,
           auth_token: service_auth_token.token,
           timeout: timeout

@@ -503,7 +503,7 @@ module VCAP::CloudController
         context 'when the service gateway returns a 409' do
           before do
             # Stub 409
-            VCAP::CloudController::ServiceBroker::V1::HttpClient.unstub(:new)
+            VCAP::CloudController::ServiceBrokers::V1::HttpClient.unstub(:new)
 
             guid = service_instance.broker_provided_id
             path = "/gateway/v1/configurations/#{guid}"

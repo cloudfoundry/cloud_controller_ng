@@ -17,7 +17,7 @@ module VCAP::CloudController
     end
 
     def client
-      ServiceBroker::UserProvided::Client.new
+      ServiceBrokers::UserProvided::Client.new
     end
   end
 end

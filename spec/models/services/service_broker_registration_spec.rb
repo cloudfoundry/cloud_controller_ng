@@ -19,8 +19,8 @@ module VCAP::CloudController
 
       before do
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
-        allow(ServiceBroker::V2::ServiceDashboardClientManager).to receive(:new).and_return(manager)
-        allow(VCAP::CloudController::ServiceBroker::V2::Catalog).to receive(:new).and_return(catalog)
+        allow(ServiceBrokers::V2::ServiceDashboardClientManager).to receive(:new).and_return(manager)
+        allow(ServiceBrokers::V2::Catalog).to receive(:new).and_return(catalog)
       end
 
       it 'returns itself' do
@@ -64,7 +64,7 @@ module VCAP::CloudController
       it 'creates dashboard clients' do
         registration.save
 
-        expect(ServiceBroker::V2::ServiceDashboardClientManager).to have_received(:new).with(catalog)
+        expect(ServiceBrokers::V2::ServiceDashboardClientManager).to have_received(:new).with(catalog)
         expect(manager).to have_received(:create_service_dashboard_clients)
       end
 
@@ -114,7 +114,7 @@ module VCAP::CloudController
           it 'raises an error, even though we\'d rather it not' do
             expect {
               registration.save
-            }.to raise_error ServiceBroker::V2::ServiceBrokerBadResponse
+            }.to raise_error ServiceBrokers::V2::ServiceBrokerBadResponse
           end
 
           it 'does not create a new service broker' do
@@ -128,7 +128,7 @@ module VCAP::CloudController
           before do
             allow(manager).to receive(:create_service_dashboard_clients).and_return(false)
             allow(manager).to receive(:errors).and_return(validation_errors)
-            allow_any_instance_of(VCAP::CloudController::ServiceBrokers::ValidationErrorsFormatter).to receive(:format).and_return(error_text)
+            allow_any_instance_of(ServiceBrokers::V2::ValidationErrorsFormatter).to receive(:format).and_return(error_text)
           end
 
           let(:error_text) { 'something bad happened' }
