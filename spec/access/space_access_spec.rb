@@ -13,6 +13,11 @@ module VCAP::CloudController
     context 'organization manager' do
       before { org.add_manager(user) }
       it_behaves_like :full_access
+
+      context 'when the organization is suspended' do
+        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+        it_behaves_like :read_only
+      end
     end
 
     context 'space manager' do
@@ -25,6 +30,11 @@ module VCAP::CloudController
       it { should be_able_to :read, object }
       it { should be_able_to :update, object }
       it { should_not be_able_to :delete, object }
+
+      context 'when the organization is suspended' do
+        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+        it_behaves_like :read_only
+      end
     end
 
     context 'space developer' do
