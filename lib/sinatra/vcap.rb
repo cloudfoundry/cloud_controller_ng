@@ -14,6 +14,20 @@ module Sinatra
         ::VCAP::Component.varz[:vcap_sinatra]
       end
 
+      def get_varz_request_info
+        request_info = Hash.new
+        request_info[:request_method] = request.request_method
+        if request.query_string.empty?
+          request_info[:request_uri] = request.path
+        else
+          request_info[:request_uri] = [request.path, request.query_string].join('?')
+        end
+        request_info[:thread_id] = Thread.current.object_id
+        request_info[:start_time] = Time.now.to_f
+
+        request_info
+      end
+
       def in_test_mode?
         ENV['CC_TEST']
       end
@@ -97,9 +111,6 @@ module Sinatra
       end
 
       before do
-        ::VCAP::Component.varz.synchronize do
-          varz[:requests][:outstanding] += 1
-        end
         logger_name = opts[:logger_name] || 'vcap.api'
         env['rack.logger'] = Steno.logger(logger_name)
 
@@ -117,6 +128,11 @@ module Sinatra
 
         ::VCAP::Request.current_id = @request_guid
         Steno.config.context.data['request_guid'] = @request_guid
+
+        ::VCAP::Component.varz.synchronize do
+          varz[:requests][:outstanding] += 1
+          varz[:outstanding_requests][@request_guid] = get_varz_request_info
+        end
       end
 
       after do
@@ -124,6 +140,7 @@ module Sinatra
           varz[:requests][:outstanding] -= 1
           varz[:requests][:completed] += 1
           varz[:http_status][response.status] += 1
+          varz[:outstanding_requests].delete(@request_guid)
         end
         headers['Content-Type'] = 'application/json;charset=utf-8'
         headers[::VCAP::Request::HEADER_NAME] = @request_guid
@@ -146,6 +163,7 @@ module Sinatra
       recent_errors = ::VCAP::RingBuffer.new(50)
       vcap_sinatra = {
         :requests => requests,
+        :outstanding_requests => {},
         :http_status => http_status,
         :recent_errors => recent_errors
       }
