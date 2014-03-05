@@ -125,26 +125,17 @@ module VCAP::CloudController
 
       def make_request(method, uri, body, content_type)
         begin
-          req_class = method.to_s.capitalize
-          req = Net::HTTP.const_get(req_class).new(uri.request_uri)
-          req.basic_auth(auth_username, auth_password)
-          req.body = body
-          req.content_type = content_type if content_type
-          req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
-          req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.1'
-          req['Accept'] = 'application/json'
+          req = build_request(method, uri, body, content_type)
+          opts = build_options(uri)
 
-          logger.debug "Sending #{req_class} to #{uri}, BODY: #{req.body.inspect}, HEADERS: #{req.to_hash.inspect}"
-
-          use_ssl = uri.scheme.to_s.downcase == 'https'
-          response = Net::HTTP.start(uri.hostname, uri.port, :use_ssl=> use_ssl) do |http|
+          response = Net::HTTP.start(uri.hostname, uri.port, opts) do |http|
             http.open_timeout = broker_client_timeout
             http.read_timeout = broker_client_timeout
 
             http.request(req)
           end
 
-          logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.to_hash.inspect}"
+          log_response(uri, response)
           return response
         rescue SocketError, Errno::ECONNREFUSED => error
           raise ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
@@ -153,6 +144,47 @@ module VCAP::CloudController
         rescue => error
           raise HttpRequestError.new(error.message, uri.to_s, method, error)
         end
+      end
+
+      def log_request(uri, req)
+        logger.debug "Sending #{req.method} to #{uri}, BODY: #{req.body.inspect}, HEADERS: #{req.to_hash.inspect}"
+      end
+
+      def log_response(uri, response)
+        logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.to_hash.inspect}"
+      end
+
+      def build_request(method, uri, body, content_type)
+        req_class = method.to_s.capitalize
+        req = Net::HTTP.const_get(req_class).new(uri.request_uri)
+
+        req.basic_auth(auth_username, auth_password)
+
+        req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
+        req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.1'
+        req['Accept'] = 'application/json'
+
+        req.body = body
+        req.content_type = content_type if content_type
+
+        log_request(uri, req)
+
+        req
+      end
+
+      def build_options(uri)
+        opts = {}
+
+        use_ssl = uri.scheme.to_s.downcase == 'https'
+        opts.merge!(use_ssl: use_ssl)
+
+        verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+        opts.merge!(verify_mode: verify_mode) if use_ssl
+        opts
+      end
+
+      def verify_certs?
+        !VCAP::CloudController::Config.config[:skip_cert_verify]
       end
 
       def logger

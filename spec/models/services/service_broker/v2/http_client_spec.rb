@@ -194,13 +194,14 @@ module VCAP::CloudController::ServiceBroker::V2
 
     shared_examples 'a basic successful request' do
       describe 'returning a correct response object' do
-        subject { response }
+        subject { make_request }
 
         its(:code) { should eq('200') }
         its(:body) { should_not be_nil }
       end
 
       it 'sets X-Broker-Api-Version header correctly' do
+        make_request
         a_request(http_method, full_url).
           with(:query => hash_including({})).
           with(:headers => {'X-Broker-Api-Version' => '2.1'}).
@@ -208,6 +209,7 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       it 'sets the X-Vcap-Request-Id header to the current request id' do
+        make_request
         a_request(http_method, full_url).
           with(:query => hash_including({})).
           with(:headers => { 'X-Vcap-Request-Id' => request_id }).
@@ -215,6 +217,7 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       it 'sets the Accept header to application/json' do
+        make_request
         a_request(http_method, full_url).
           with(:query => hash_including({})).
           with(:headers => { 'Accept' => 'application/json' }).
@@ -226,9 +229,44 @@ module VCAP::CloudController::ServiceBroker::V2
         let(:full_url) { "https://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
 
         it 'uses SSL' do
+          make_request
           a_request(http_method, 'https://me:abc123@broker.example.com/the/path').
             with(query: hash_including({})).
             should have_been_made
+        end
+
+        describe 'ssl cert verification' do
+          let(:response) { double(code: nil, body: nil, to_hash: nil)}
+
+          before do
+            allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+          end
+
+          context 'and the skip_cert_verify is set to true' do
+            let(:config) { {skip_cert_verify: true } }
+
+            it 'accepts self-signed cert from the broker' do
+              Net::HTTP.should_receive(:start) do |host, port, opts, &blk|
+                expect(host).to eq 'broker.example.com'
+                expect(port).to eq 443
+                expect(opts).to eq({use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE})
+              end.and_return(response)
+              make_request
+            end
+          end
+
+          context 'and the skip_cert_verify is set to false' do
+            let(:config) { {skip_cert_verify: false } }
+
+            it 'does not accept self-signed cert from the broker' do
+              Net::HTTP.should_receive(:start) do |host, port, opts, &blk|
+                expect(host).to eq 'broker.example.com'
+                expect(port).to eq 443
+                expect(opts).to eq({use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_PEER})
+              end.and_return(response)
+              make_request
+            end
+          end
         end
       end
     end
@@ -309,18 +347,19 @@ module VCAP::CloudController::ServiceBroker::V2
       let(:http_method) { :get }
 
       describe 'http request' do
-        let(:response) { client.get(path) }
+        let(:make_request) { client.get(path) }
 
         before do
           stub_request(:get, full_url).to_return(status: 200, body: {}.to_json)
-          response
         end
 
         it 'makes the correct GET http request' do
+          make_request
           a_request(:get, 'http://me:abc123@broker.example.com/the/path').should have_been_made
         end
 
         it 'does not set a Content-Type header' do
+          make_request
           no_content_type = ->(request) {
             request.headers.should_not have_key('Content-Type')
             true
@@ -330,6 +369,7 @@ module VCAP::CloudController::ServiceBroker::V2
         end
 
         it 'does not have a content body' do
+          make_request
           a_request(:get, full_url).
             with { |req| req.body.should be_nil }.
             should have_been_made
@@ -359,24 +399,26 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       describe 'http request' do
-        let(:response) { client.put(path, message) }
+        let(:make_request) { client.put(path, message) }
 
         before do
           stub_request(:put, full_url).to_return(status: 200, body: {}.to_json)
-          response
         end
 
         it 'makes the correct PUT http request' do
+          make_request
           a_request(:put, 'http://me:abc123@broker.example.com/the/path').should have_been_made
         end
 
         it 'sets the Content-Type header to application/json' do
+          make_request
           a_request(:put, full_url).
             with(headers: { 'Content-Type' => 'application/json' }).
             should have_been_made
         end
 
         it 'has a content body' do
+          make_request
           a_request(:put, full_url).
             with(body: {
               'key1' => 'value1',
@@ -409,18 +451,19 @@ module VCAP::CloudController::ServiceBroker::V2
       end
 
       describe 'http request' do
-        let(:response) { client.delete(path, message) }
+        let(:make_request) { client.delete(path, message) }
 
         before do
           stub_request(:delete, full_url).with(query: message).to_return(status: 200, body: {}.to_json)
-          response
         end
 
         it 'makes the correct DELETE http request' do
+          make_request
           a_request(:delete, 'http://me:abc123@broker.example.com/the/path?key1=value1&key2=value2').should have_been_made
         end
 
         it 'does not set a Content-Type header' do
+          make_request
           no_content_type = ->(request) {
             request.headers.should_not have_key('Content-Type')
             true
@@ -430,6 +473,7 @@ module VCAP::CloudController::ServiceBroker::V2
         end
 
         it 'does not have a content body' do
+          make_request
           a_request(:delete, full_url).
             with(query: message).
             with { |req| req.body.should be_nil }.

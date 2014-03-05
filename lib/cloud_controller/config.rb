@@ -155,6 +155,7 @@ module VCAP::CloudController
         },
 
         optional(:request_timeout_in_seconds) => Integer,
+        optional(:skip_cert_verify) => bool,
       }
     end
 
@@ -216,6 +217,7 @@ module VCAP::CloudController
         config[:request_timeout_in_seconds] ||= 300
         config[:directories] ||= {}
         config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
+        config[:skip_cert_verify] = false if config[:skip_cert_verify].nil?
         config
       end
     end

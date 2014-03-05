@@ -34,6 +34,10 @@ module VCAP::CloudController
         it "sets a default request_timeout_in_seconds value" do
           expect(config[:request_timeout_in_seconds]).to eq(300)
         end
+
+        it "sets a default value for skip_cert_verify" do
+          expect(config[:skip_cert_verify]).to eq false
+        end
       end
 
       context "when config values are provided" do
@@ -57,6 +61,10 @@ module VCAP::CloudController
 
         it "preserves the request_timeout_in_seconds value from the file" do
           expect(config[:request_timeout_in_seconds]).to eq(600)
+        end
+
+        it "preserves the value of skip_cert_verify from the file" do
+          expect(config[:skip_cert_verify]).to eq true
         end
       end
     end

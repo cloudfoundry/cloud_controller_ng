@@ -99,3 +99,4 @@ directories:
   some: "value"
 billing_event_writing_enabled: false
 request_timeout_in_seconds: 600
+skip_cert_verify: true
