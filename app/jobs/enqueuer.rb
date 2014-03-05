@@ -9,7 +9,8 @@ module VCAP::CloudController
       end
 
       def enqueue
-        Delayed::Job.enqueue(ExceptionCatchingJob.new(TimeoutJob.new(@job)), @opts)
+        request_id = ::VCAP::Request.current_id
+        Delayed::Job.enqueue(ExceptionCatchingJob.new(RequestJob.new(TimeoutJob.new(@job), request_id)), @opts)
       end
     end
   end
