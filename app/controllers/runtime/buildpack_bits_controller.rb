@@ -25,9 +25,10 @@ module VCAP::CloudController
       raise Errors::ApiError.new_from_details("BuildpackBitsUploadInvalid", "a file must be provided") if uploaded_file.to_s == ""
 
       sha1 = File.new(uploaded_file).hexdigest
+      unique_buildpack_key = "#{buildpack.guid}_#{sha1}"
       uploaded_filename = File.basename(uploaded_filename)
 
-      if upload_bits(buildpack, sha1, uploaded_file, uploaded_filename)
+      if upload_bits(buildpack, unique_buildpack_key, uploaded_file, uploaded_filename)
         [HTTP::CREATED, object_renderer.render_json(self.class, buildpack, @opts)]
       else
          [HTTP::NO_CONTENT, nil]
@@ -36,7 +37,7 @@ module VCAP::CloudController
       FileUtils.rm_f(uploaded_file) if uploaded_file
     end
 
-    def upload_bits(buildpack, new_key, bits_file, new_filename)
+    def upload_bits(buildpack, new_key, bits_file, new_filename)      
       return false if !new_bits?(buildpack, new_key) && !new_filename?(buildpack, new_filename)
 
       # replace blob if new
