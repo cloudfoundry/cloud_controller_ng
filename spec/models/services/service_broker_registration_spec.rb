@@ -12,7 +12,7 @@ module VCAP::CloudController
           auth_password: 'auth1234',
         )
       end
-      let(:manager) { double(:service_dashboard_manager, :create_service_dashboard_clients => true) }
+      let(:manager) { double(:service_dashboard_manager, :synchronize_clients => true) }
       let(:catalog) { double(:catalog, :sync_services_and_plans => true, :valid? => true)}
 
       subject(:registration) { ServiceBrokerRegistration.new(broker) }
@@ -64,8 +64,8 @@ module VCAP::CloudController
       it 'creates dashboard clients' do
         registration.save
 
-        expect(ServiceBrokers::V2::ServiceDashboardClientManager).to have_received(:new).with(catalog)
-        expect(manager).to have_received(:create_service_dashboard_clients)
+        expect(ServiceBrokers::V2::ServiceDashboardClientManager).to have_received(:new).with(catalog, broker)
+        expect(manager).to have_received(:synchronize_clients)
       end
 
       context 'when invalid' do
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
         context 'because the dashboard client manager failed' do
           before do
-            allow(manager).to receive(:create_service_dashboard_clients).and_return(false)
+            allow(manager).to receive(:synchronize_clients).and_return(false)
             allow(manager).to receive(:errors).and_return(validation_errors)
             allow_any_instance_of(ServiceBrokers::V2::ValidationErrorsFormatter).to receive(:format).and_return(error_text)
           end
@@ -188,7 +188,7 @@ module VCAP::CloudController
       context 'when exception is raised during dashboard client creation' do
         before do
           catalog.stub(:valid?).and_return(true)
-          manager.stub(:create_service_dashboard_clients).and_raise
+          manager.stub(:synchronize_clients).and_raise
         end
 
         it 'raises the error and does not create a new service broker' do

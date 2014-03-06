@@ -75,6 +75,7 @@ module VCAP::CloudController
       require "models/services/service"
       require "models/services/service_auth_token"
       require "models/services/service_binding"
+      require "models/services/service_dashboard_client"
       require "models/services/service_instance"
       require "models/services/managed_service_instance"
       require "models/services/user_provided_service_instance"

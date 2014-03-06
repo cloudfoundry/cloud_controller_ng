@@ -15,8 +15,8 @@ module VCAP::CloudController
       catalog_hash = broker.client.catalog
       catalog      = build_catalog(catalog_hash)
 
-      manager = ServiceBrokers::V2::ServiceDashboardClientManager.new(catalog)
-      unless manager.create_service_dashboard_clients
+      manager = ServiceBrokers::V2::ServiceDashboardClientManager.new(catalog, broker)
+      unless manager.synchronize_clients
         raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", formatter.format(manager.errors))
       end
 

@@ -53,8 +53,6 @@ module VCAP::CloudController::ServiceBrokers::V2
     def update_or_create_services
       services.each do |catalog_service|
         service_id = catalog_service.broker_provided_id
-        sso_client_id = catalog_service.dashboard_client ?
-            catalog_service.dashboard_client['id'] : nil
 
         VCAP::CloudController::Service.update_or_create(
           service_broker: service_broker,
@@ -68,7 +66,6 @@ module VCAP::CloudController::ServiceBrokers::V2
             extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
             active:      catalog_service.plans_present?,
             requires:    catalog_service.requires,
-            sso_client_id: sso_client_id
           )
         end
       end

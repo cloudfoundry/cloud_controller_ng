@@ -85,7 +85,6 @@ module VCAP::CloudController
     end
     bindable          { true }
     active            { true }
-    sso_client_id { Sham.guid }
   end
 
   Service.blueprint(:v1) do
@@ -148,6 +147,11 @@ module VCAP::CloudController
     broker_url        { Sham.url }
     auth_username     { Sham.auth_username }
     auth_password     { Sham.auth_password }
+  end
+
+  ServiceDashboardClient.blueprint do
+    uaa_id                { Sham.name }
+    service_id_on_broker  { SecureRandom.uuid }
   end
 
   ServicePlan.blueprint do

@@ -336,14 +336,6 @@ module VCAP::CloudController::ServiceBrokers::V2
             ]
           }
         end
-
-        it 'persists a dashboard client id for each service that is configured with one' do
-          UaaClientManager.stub(:create).once
-          catalog.sync_services_and_plans
-
-          expect(VCAP::CloudController::Service.find(label: 'service-with-dashboard-client').sso_client_id).to eq 'abcde123'
-          expect(VCAP::CloudController::Service.find(label: 'service-without-dashboard-client').sso_client_id).to be_nil
-        end
       end
     end
 
