@@ -74,6 +74,9 @@ describe 'Service Broker' do
               name:        "service-3",
               description: "Yet another service, duh!",
               bindable:    true,
+              dashboard_client: {
+                id: 'client-1'
+              },
               plans:       [{
                 id:          123,
                 name:        "tiny",
@@ -89,6 +92,11 @@ describe 'Service Broker' do
               name:        "service-4",
               description: "Yet another service, duh!",
               bindable:    true,
+              dashboard_client: {
+                id: 'client-1',
+                secret: 'no-one-knows',
+                redirect_uri: 'http://example.com/client-1'
+              },
               plans:       []
             }
           ]
@@ -108,6 +116,7 @@ describe 'Service Broker' do
         expect(decoded_response['description']).to eql(
           "Service broker catalog is invalid: \n" +
           "Service ids must be unique\n" +
+          "Service dashboard_client ids must be unique\n" +
           "Service service-1\n" +
           "  Service id must be a string, but has value 12345\n" +
           "Service service-2\n" +
@@ -115,6 +124,8 @@ describe 'Service Broker' do
           "  Plan large\n" +
           "    Plan description is required\n" +
           "Service service-3\n" +
+          "  Service dashboard client secret is required\n" +
+          "  Service dashboard client redirect_uri is required\n" +
           "  Plan names must be unique within a service\n" +
           "  Plan tiny\n" +
           "    Plan id must be a string, but has value 123\n" +

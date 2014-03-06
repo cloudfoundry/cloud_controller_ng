@@ -106,6 +106,17 @@ module VCAP::CloudController::ServiceBrokers::V2
 
     def validate_dashboard_client!
       return unless dashboard_client
+      validate_dependently_in_order([
+        :validate_dashboard_client_is_a_hash!,
+        :validate_dashboard_client_attributes!
+      ])
+    end
+
+    def validate_dashboard_client_is_a_hash!
+      validate_hash!(:dashboard_client, dashboard_client)
+    end
+
+    def validate_dashboard_client_attributes!
       validate_string!(:dashboard_client_id, dashboard_client['id'], required: true)
       validate_string!(:dashboard_client_secret, dashboard_client['secret'], required: true)
       validate_string!(:dashboard_client_redirect_uri, dashboard_client['redirect_uri'], required: true)
@@ -121,6 +132,7 @@ module VCAP::CloudController::ServiceBrokers::V2
         metadata: 'Service metadata',
         plans: 'Service plans list',
         requires: 'Service "requires" field',
+        dashboard_client: 'Service dashboard client attributes',
         dashboard_client_id: 'Service dashboard client id',
         dashboard_client_secret: 'Service dashboard client secret',
         dashboard_client_redirect_uri: 'Service dashboard client redirect_uri'

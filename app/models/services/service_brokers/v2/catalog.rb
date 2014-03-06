@@ -22,8 +22,9 @@ module VCAP::CloudController::ServiceBrokers::V2
     end
 
     def valid?
-      validate_all_service_ids_are_unique
       validate_services
+      validate_all_service_ids_are_unique
+      validate_all_service_dashboard_clients_are_unique
       errors.empty?
     end
 
@@ -38,10 +39,30 @@ module VCAP::CloudController::ServiceBrokers::V2
 
     private
 
+    def validate_all_service_dashboard_clients_are_unique
+      dashboard_clients = valid_dashboard_clients(services)
+      dashboard_client_ids = valid_dashboard_client_ids(dashboard_clients)
+      if has_duplicates?(dashboard_client_ids)
+        errors.add('Service dashboard_client ids must be unique')
+      end
+    end
+
+    def valid_dashboard_client_ids(clients)
+      clients.map { |client| client['id'] }.compact
+    end
+
+    def valid_dashboard_clients(services)
+      services.map(&:dashboard_client).select { |client| client.is_a? Hash }
+    end
+
     def validate_all_service_ids_are_unique
-      if services.uniq(&:broker_provided_id).count < services.count
+      if has_duplicates?(services.map(&:broker_provided_id).compact)
         errors.add('Service ids must be unique')
       end
+    end
+
+    def has_duplicates?(array)
+      array.uniq.count < array.count
     end
 
     def validate_services

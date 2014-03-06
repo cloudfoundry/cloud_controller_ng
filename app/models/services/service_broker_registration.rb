@@ -12,13 +12,11 @@ module VCAP::CloudController
     def save
       return unless broker.valid?
 
-      catalog_hash = broker.client.catalog
-      catalog      = build_catalog(catalog_hash)
+      catalog = ServiceBrokers::V2::Catalog.new(broker, broker.client.catalog)
+      raise_humanized_exception(catalog.errors) unless catalog.valid?
 
       manager = ServiceBrokers::V2::ServiceDashboardClientManager.new(catalog, broker)
-      unless manager.synchronize_clients
-        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", formatter.format(manager.errors))
-      end
+      raise_humanized_exception(manager.errors) unless manager.synchronize_clients
 
       broker.db.transaction(savepoint: true) do
         broker.save
@@ -32,13 +30,9 @@ module VCAP::CloudController
       @formatter ||= ServiceBrokers::V2::ValidationErrorsFormatter.new
     end
 
-    def build_catalog(catalog_hash)
-      catalog = ServiceBrokers::V2::Catalog.new(broker, catalog_hash)
-      unless catalog.valid?
-        humanized_message = formatter.format(catalog.errors)
-        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", humanized_message)
-      end
-      catalog
+    def raise_humanized_exception(errors)
+      humanized_message = formatter.format(errors)
+      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", humanized_message)
     end
 
     def errors

@@ -240,6 +240,14 @@ module VCAP::CloudController::ServiceBrokers::V2
       end
 
       context 'when dashboard_client attributes are provided' do
+        it 'validates that the dashboard_client is a hash' do
+          attrs = build_valid_service_attrs(dashboard_client: '1')
+          service = CatalogService.new(double('broker'), attrs)
+          service.valid?
+
+          expect(service.errors.messages).to include 'Service dashboard client attributes must be a hash, but has value "1"'
+        end
+
         it 'validates that the dashboard_client.id is present' do
           dashboard_client_attrs = build_valid_dashboard_client_attrs(id: nil)
           attrs = build_valid_service_attrs(dashboard_client: dashboard_client_attrs)
