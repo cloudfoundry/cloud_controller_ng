@@ -439,15 +439,13 @@ module VCAP::CloudController
     end
 
     def buildpack=(buildpack_name)
-      buildpack_name = nil if buildpack_name == ""
-
+      self.admin_buildpack = nil
+      super(nil)
       admin_buildpack = Buildpack.find(name: buildpack_name.to_s)
+      
       if admin_buildpack
         self.admin_buildpack = admin_buildpack
-        super(nil)
-        return
-      else
-        self.admin_buildpack = nil
+      elsif buildpack_name != "" #git url case
         super(buildpack_name)
       end
     end
