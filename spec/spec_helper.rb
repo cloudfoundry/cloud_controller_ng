@@ -34,11 +34,9 @@ module VCAP::CloudController
         FileUtils.rm_f(log_filename)
       end
 
-      Steno.init(Steno::Config.new(
-        default_log_level: "debug2",
-        sinks: [Steno::Sink::IO.for_file(log_filename)],
-        context: Steno::Context::ThreadLocal.new
-      ))
+      StenoConfigurer.new(level: "debug2").configure do |steno_config_hash|
+        steno_config_hash[:sinks] = [Steno::Sink::IO.for_file(log_filename)]
+      end
 
       reset_database
       VCAP::CloudController::DB.load_models(config.fetch(:db), db_logger)

@@ -143,10 +143,9 @@ module VCAP::CloudController
     end
 
     def setup_logging
-      steno_config = Steno::Config.to_config_hash(@config[:logging])
-      steno_config[:context] = Steno::Context::ThreadLocal.new
-      steno_config[:sinks] << @log_counter
-      Steno.init(Steno::Config.new(steno_config))
+      StenoConfigurer.new(@config[:logging]).configure do |steno_config_hash|
+        steno_config_hash[:sinks] << @log_counter
+      end
     end
 
     def setup_db

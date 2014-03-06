@@ -1,7 +1,9 @@
 class BackgroundJobEnvironment
   def initialize(config)
     @config = config
-    Steno.init(Steno::Config.new(:sinks => [Steno::Sink::IO.new(STDOUT)]))
+    VCAP::CloudController::StenoConfigurer.new(config[:logging]).configure do |steno_config_hash|
+      steno_config_hash[:sinks] = [Steno::Sink::IO.new(STDOUT)]
+    end
   end
 
   def setup_environment
