@@ -544,6 +544,12 @@ module VCAP::CloudController
         expect(app.buildpack).to eql(buildpack)
       end
 
+      it "can be set to empty string" do
+        app = App.new
+        app.buildpack = ""
+        expect(app.buildpack).to eql(nil)
+      end
+
       context "switching between buildpacks" do
         it "allows changing from admin buildpacks to a git url" do
           buildpack = Buildpack.make

@@ -438,15 +438,17 @@ module VCAP::CloudController
       AutoDetectionBuildpack.new
     end
 
-    def buildpack=(buildpack)
-      admin_buildpack = Buildpack.find(name: buildpack.to_s)
+    def buildpack=(buildpack_name)
+      buildpack_name = nil if buildpack_name == ""
+
+      admin_buildpack = Buildpack.find(name: buildpack_name.to_s)
       if admin_buildpack
         self.admin_buildpack = admin_buildpack
         super(nil)
         return
       else
         self.admin_buildpack = nil
-        super(buildpack)
+        super(buildpack_name)
       end
     end
 
