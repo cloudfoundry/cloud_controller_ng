@@ -24,9 +24,10 @@ resource 'Apps', :type => :api do
   authenticated_request
 
   field :guid, 'The guid of the app.', required: true
+  let(:async) { true }
   let(:app_bits_put_params) do
     {
-        async: false,
+        async: async,
         resources: fingerprints.to_json,
         application: valid_zip,
     }
@@ -64,33 +65,32 @@ resource 'Apps', :type => :api do
 
     field :application, 'A binary zip file containing the application bits.', required: true
 
-    explanation = <<-eos
-      Defines and uploads the bits (artifacts and dependencies) that this application needs to run, using a multipart PUT request.
-      Bits that have already been uploaded can be referenced by their resource fingerprint(s).
-      Bits that have not already been uploaded to Cloud Foundry must be included as a zipped binary file named "application".
-    eos
-
-    request_body_example = <<EOS
---AaB03x
-Content-Disposition: form-data; name="async"
-
-true
---AaB03x
-Content-Disposition: form-data; name="resources"
-
-[{"fn":"path/to/content.txt","size":123,"sha1":"b907173290db6a155949ab4dc9b2d019dea0c901"},{"fn":"path/to/code.jar","size":123,"sha1":"ff84f89760317996b9dd180ab996b079f418396f"}]
---AaB03x
-Content-Disposition: form-data; name="application"; filename="application.zip"
-Content-Type: application/zip
-Content-Length: 123
-Content-Transfer-Encoding: binary
-
-&lt;&lt;binary artifact bytes&gt;&gt;
---AaB03x
-EOS
-
     example 'Uploads the bits for an app' do
-      explanation explanation
+      explanation <<-eos
+        Defines and uploads the bits (artifacts and dependencies) that this application needs to run, using a multipart PUT request.
+        Bits that have already been uploaded can be referenced by their resource fingerprint(s).
+        Bits that have not already been uploaded to Cloud Foundry must be included as a zipped binary file named "application".
+      eos
+
+      request_body_example = <<-eos.gsub(/^ */, '')
+        --AaB03x
+        Content-Disposition: form-data; name="async"
+
+        true
+        --AaB03x
+        Content-Disposition: form-data; name="resources"
+
+        [{"fn":"path/to/content.txt","size":123,"sha1":"b907173290db6a155949ab4dc9b2d019dea0c901"},{"fn":"path/to/code.jar","size":123,"sha1":"ff84f89760317996b9dd180ab996b079f418396f"}]
+        --AaB03x
+        Content-Disposition: form-data; name="application"; filename="application.zip"
+        Content-Type: application/zip
+        Content-Length: 123
+        Content-Transfer-Encoding: binary
+
+        &lt;&lt;binary artifact bytes&gt;&gt;
+        --AaB03x
+      eos
+
       client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers
       example.metadata[:requests].each do |req|
         req[:request_body] = request_body_example
@@ -101,43 +101,17 @@ EOS
   end
 
   get '/v2/apps/:guid/download' do
-    let(:blobstore_config) do
-      {
-        :packages => {
-          :fog_connection => {
-            :provider => 'Local',
-            :local_root => Dir.mktmpdir('packages', tmpdir)
-          },
-          :app_package_directory_key => 'cc-packages',
-        },
-        :resource_pool => {
-          :resource_directory_key => 'cc-resources',
-          :fog_connection => {
-            :provider => 'Local',
-            :local_root => Dir.mktmpdir('resourse_pool', tmpdir)
-          }
-        },
-      }
-    end
-
-    before do
-      Fog.unmock!
-      @old_config = config
-      config_override(blobstore_config)
-      guid = app_obj.guid
-      zipname = File.join(tmpdir, 'test.zip')
-      create_zip(zipname, 10, 1024)
-      VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new(guid, zipname, []).perform
-    end
-
-    after do
-      config_override(@old_config)
-      FileUtils.rm_rf(tmpdir)
-    end
+    let(:async) { false }
 
     example 'Downloads the bits for an app' do
-      client.get "/v2/apps/#{app_obj.guid}/download", {},  headers
-      status.should == 200
+      explanation <<-eos
+        When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits.
+      eos
+
+      no_doc { client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers }
+      client.get "/v2/apps/#{app_obj.guid}/download", {}, headers
+      expect(response_headers["Location"]).to include("cc-packages.s3.amazonaws.com")
+      status.should == 302
     end
   end
 end
