@@ -85,7 +85,7 @@ module VCAP::CloudController
 
     def after_update(app)
       stager_response = app.last_stager_response
-      if stager_response && stager_response.streaming_log_url
+      if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url
         set_header("X-App-Staging-Log", stager_response.streaming_log_url)
       end
 
