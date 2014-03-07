@@ -58,6 +58,7 @@ module VCAP::CloudController
           obj.shift_to_position(target_position)
         end
       end
+      obj
     end
 
     def after_destroy

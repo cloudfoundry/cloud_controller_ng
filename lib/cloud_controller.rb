@@ -75,3 +75,6 @@ require "cloud_controller/task_client"
 require "cloud_controller/structured_error"
 require "cloud_controller/http_request_error"
 require "cloud_controller/http_response_error"
+
+require "cloud_controller/install_buildpacks"
+require "cloud_controller/upload_buildpack"
