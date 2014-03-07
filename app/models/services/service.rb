@@ -14,7 +14,7 @@ module VCAP::CloudController
 
     export_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
-                      :unique_id, :extra, :tags, :requires, :documentation_url
+                      :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid
 
     import_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
@@ -102,6 +102,14 @@ module VCAP::CloudController
           plan.service_instances_dataset.destroy
         end
         self.destroy
+      end
+    end
+
+    def service_broker_guid
+      if (service_broker.nil?)
+        nil
+      else
+        service_broker.guid
       end
     end
   end

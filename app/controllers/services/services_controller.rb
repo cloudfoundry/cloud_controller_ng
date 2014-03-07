@@ -33,7 +33,7 @@ module VCAP::CloudController
       to_many   :service_plans
     end
 
-    query_parameters :active, :label, :provider
+    query_parameters :active, :label, :provider, :service_broker_guid
 
     def self.translate_validation_exception(e, attributes)
       label_provider_errors = e.errors.on([:label, :provider])
