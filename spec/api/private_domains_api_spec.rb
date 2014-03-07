@@ -32,4 +32,31 @@ resource "Private Domains", :type => :api do
                                owning_organization_guid: org_guid
     end
   end
+
+  get "/v2/private_domains" do
+    standard_list_parameters VCAP::CloudController::PrivateDomainsController
+
+    describe "querying by name" do
+      let(:q) { "name:my-domain.com" }
+
+      before do
+        VCAP::CloudController::PrivateDomain.make :name => "my-domain.com"
+      end
+
+      example "Filtering the result set by name" do
+        client.get "/v2/private_domains", params, headers
+
+        status.should == 200
+
+        standard_paginated_response_format? parsed_response
+
+        parsed_response["resources"].size.should == 1
+
+        standard_entity_response(
+          parsed_response["resources"].first,
+          :private_domain,
+          :name => "my-domain.com")
+      end
+    end
+  end
 end
