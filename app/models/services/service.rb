@@ -106,11 +106,7 @@ module VCAP::CloudController
     end
 
     def service_broker_guid
-      if (service_broker.nil?)
-        nil
-      else
-        service_broker.guid
-      end
+      service_broker ? service_broker.guid : nil
     end
   end
 end
