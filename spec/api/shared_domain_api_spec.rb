@@ -23,4 +23,31 @@ resource "Shared Domains", :type => :api do
                                name: "example.com"
     end
   end
+
+  get "/v2/shared_domains" do
+    standard_list_parameters VCAP::CloudController::SharedDomainsController
+
+    describe "querying by name" do
+      let(:q) { "name:shared-domain.com" }
+
+      before do
+        VCAP::CloudController::SharedDomain.make :name => "shared-domain.com"
+      end
+
+      example "Filtering the result set by name" do
+        client.get "/v2/shared_domains", params, headers
+
+        status.should == 200
+
+        standard_paginated_response_format? parsed_response
+
+        parsed_response["resources"].size.should == 1
+
+        standard_entity_response(
+          parsed_response["resources"].first,
+          :shared_domain,
+          :name => "shared-domain.com")
+      end
+    end
+  end
 end
