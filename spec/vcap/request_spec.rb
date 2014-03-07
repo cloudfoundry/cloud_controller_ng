@@ -29,10 +29,6 @@ module VCAP
         expect(Steno.config.context.data.fetch('request_guid')).to eq request_id
       end
 
-      it "defaults to nil" do
-        expect(described_class.current_id).to be_nil
-      end
-
       it "deletes from steno context when set to nil" do
         described_class.current_id = nil
 
