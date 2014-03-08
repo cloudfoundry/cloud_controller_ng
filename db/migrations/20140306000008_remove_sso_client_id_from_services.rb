@@ -4,7 +4,7 @@ Sequel.migration do
       INSERT INTO service_dashboard_clients (uaa_id, service_id_on_broker)
         SELECT sso_client_id, unique_id
         FROM services
-        WHERE service_broker_id IS NOT NULL
+        WHERE sso_client_id IS NOT NULL
     SQL
     alter_table :services do
       drop_column :sso_client_id
