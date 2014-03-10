@@ -143,24 +143,14 @@ module VCAP::CloudController
                                      :non_basic_services_allowed => true)
       end
 
-      context "with a trial quota" do
-        let(:trial_db_guid) { ServicePlan.trial_db_guid }
-        let(:trial_db_plan) { ServicePlan.make(:unique_id => trial_db_guid) }
-        let(:paid_db_plan) { ServicePlan.make(:unique_id => "aws_rds_mysql_cfinternal") }
-
-        let(:trial_quota) do
-          QuotaDefinition.make(:total_services => 0,
-                                       :non_basic_services_allowed => false,
-                                       :trial_db_allowed => true)
-        end
-
-        let(:org) { Organization.make(:quota_definition => trial_quota) }
+      context "with a free quota" do
+        let(:org) { Organization.make(:quota_definition => free_quota) }
         let(:space) { Space.make(:organization => org) }
 
-        context "when the service instance is not a trial db instance" do
+        context "when the service instance is not associated with a free plan" do
           it "raises an error" do
             expect {
-              ManagedServiceInstance.make(space: space, service_plan: paid_db_plan)
+              ManagedServiceInstance.make(space: space, service_plan: paid_plan)
             }.to raise_error(Sequel::ValidationFailed, /service_plan paid_services_not_allowed/)
           end
         end

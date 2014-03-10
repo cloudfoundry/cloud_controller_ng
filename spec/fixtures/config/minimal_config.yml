@@ -58,7 +58,6 @@ quota_definitions:
     non_basic_services_allowed: true
     total_services: 100
     total_routes: 1000
-    trial_db_allowed: true
     memory_limit: 10240
 
   small:

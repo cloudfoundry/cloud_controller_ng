@@ -28,6 +28,7 @@ module VCAP::CloudController
           total_services: 3,
           total_routes: 1000,
           memory_limit: 20,
+          trial_db_allowed: false,
       }.each do |field, value|
         it "allows export of #{field}" do
           quota_definition.public_send(:"#{field}=", value)
@@ -44,6 +45,30 @@ module VCAP::CloudController
         }.to change {
           Organization.count(:id => org.id)
         }.by(-1)
+      end
+    end
+
+    describe "#trial_db_allowed=" do
+      it "can be called on the model object" do
+        quota_definition.trial_db_allowed = true
+      end
+
+      it "will not change the value returned (deprecated)" do
+        expect(quota_definition.trial_db_allowed)
+        expect {
+          quota_definition.trial_db_allowed = true
+        }.to_not change {
+          quota_definition
+        }
+      end
+    end
+
+    describe "#trial_db_allowed" do
+      it "always returns false (deprecated)" do
+        [false, true].each do |allowed|
+          quota_definition.trial_db_allowed = allowed
+          expect(quota_definition.trial_db_allowed).to be_false
+        end
       end
     end
   end
