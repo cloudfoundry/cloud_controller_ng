@@ -127,10 +127,6 @@ module VCAP::CloudController
 
         :db_encryption_key => String,
 
-        optional(:trial_db) => {
-          :guid => String,
-        },
-
         optional(:tasks_disabled) => bool,
 
         optional(:hm9000_noop) => bool,
@@ -176,7 +172,6 @@ module VCAP::CloudController
 
         QuotaDefinition.configure(config)
         Stack.configure(config[:stacks_file])
-        ServicePlan.configure(config[:trial_db])
         App.configure(!config[:disable_custom_buildpacks])
 
         run_initializers(config)

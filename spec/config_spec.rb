@@ -137,18 +137,6 @@ module VCAP::CloudController
         Config.configure_components(config)
       end
 
-      it "sets up the service plan" do
-        config = @test_config.merge(trial_db: "no quota")
-        ServicePlan.should_receive(:configure).with("no quota")
-        Config.configure_components(config)
-      end
-
-      it "sets up the service plan" do
-        config = @test_config.merge(trial_db: "no quota")
-        ServicePlan.should_receive(:configure).with("no quota")
-        Config.configure_components(config)
-      end
-
       it "sets up app with whether custom buildpacks are enabled" do
         config = @test_config.merge(disable_custom_buildpacks: true)
 

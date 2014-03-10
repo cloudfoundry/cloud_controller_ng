@@ -18,14 +18,6 @@ module VCAP::CloudController
 
     alias_method :active?, :active
 
-    def self.configure(trial_db_config)
-      @trial_db_guid = trial_db_config ? trial_db_config[:guid] : nil
-    end
-
-    def self.trial_db_guid
-      @trial_db_guid
-    end
-
     def validate
       validates_presence :name,                message: 'is required'
       validates_presence :description,         message: 'is required'
@@ -47,10 +39,6 @@ module VCAP::CloudController
       Sequel.
         or(public: true, id: ServicePlanVisibility.visible_private_plan_ids_for_user(user)).
         &(active: true)
-    end
-
-    def trial_db?
-      unique_id == self.class.trial_db_guid
     end
 
     def bindable?

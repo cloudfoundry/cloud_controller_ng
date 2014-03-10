@@ -85,7 +85,6 @@ quota_definitions:
     total_services: 100
     non_basic_services_allowed: true
     total_routes: 1000
-    trial_db_allowed: true
 
 default_quota_definition: default
 
@@ -118,9 +117,6 @@ buildpacks:
     aws_secret_access_key: "fake_secret_access_key"
 
 db_encryption_key: "asdfasdfasdf"
-
-trial_db:
-  guid: "78ad16cf-3c22-4427-a982-b9d35d746914"
 
 tasks_disabled: false
 

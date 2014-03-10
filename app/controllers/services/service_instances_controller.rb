@@ -27,8 +27,7 @@ module VCAP::CloudController
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::ApiError.new_from_details("ServiceInstanceNameTaken", attributes["name"])
       elsif quota_errors
-        if quota_errors.include?(:free_quota_exceeded) ||
-          quota_errors.include?(:trial_quota_exceeded)
+        if quota_errors.include?(:free_quota_exceeded)
           Errors::ApiError.new_from_details("ServiceInstanceFreeQuotaExceeded")
         elsif quota_errors.include?(:paid_quota_exceeded)
           Errors::ApiError.new_from_details("ServiceInstancePaidQuotaExceeded")
