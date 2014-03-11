@@ -23,8 +23,12 @@ resource "Services", type: :api do
   field :provider, "The name of the service provider (used only by v1 service gateways)", required: true, deprecated: true, example_values: ["MySql Provider"]
   field :version, "The version of the service (used only by v1 service gateways)", required: true, deprecated: true, example_values: ["2.0"]
   field :url, "The url of ther service provider (used only by v1 service gateways)", required: true, deprecated: true, example_values: ["http://myql.provider.com"]
+  field :service_broker_guid, "The guid of the v2 service broker associated with the service", required: false, deprecated: false
 
-  before { VCAP::CloudController::Service.make }
+  before do
+    service_broker = VCAP::CloudController::ServiceBroker.make
+    VCAP::CloudController::Service.make(service_broker: service_broker)
+  end
   let(:guid) { VCAP::CloudController::Service.first.guid }
 
   standard_model_list(:services, VCAP::CloudController::ServicesController)
