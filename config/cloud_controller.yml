@@ -39,7 +39,6 @@ info:
   version: 2
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
-  api_version: "2.0.0"
 
 nginx:
   use_nginx: false
