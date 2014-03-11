@@ -194,7 +194,6 @@ module VCAP::CloudController
         @config_dir ||= File.expand_path("../../../config", __FILE__)
       end
 
-
       def run_initializers(config)
         return if @initialized
 
