@@ -28,19 +28,38 @@ resource "Common Functionality", :type => :api do
 
   authenticated_request
 
-  describe "Pagination" do
+  describe "Enumeration" do
     get "/v2/fakes" do
-      it "always includes metadata about pagination" do
-        client.get "/v2/fakes", {}, headers
+      context "when there are no records" do
+        example_request "always includes metadata about pagination" do
+          expect(status).to eq(200)
+          expect(parsed_response).to eq({
+                                            "total_results"=>0,
+                                            "total_pages"=>0,
+                                            "prev_url"=>nil,
+                                            "next_url"=>nil,
+                                            "resources"=>[]
+                                        })
+        end
+      end
 
-        expect(status).to eq(200)
-        expect(parsed_response).to eq({
-                                          "total_results"=>0,
-                                          "total_pages"=>0,
-                                          "prev_url"=>nil,
-                                          "next_url"=>nil,
-                                          "resources"=>[]
-                                      })
+      context "when there are records" do
+        around do |example|
+          3.times do |i|
+            VCAP::CloudController::Fake.create(name: "fake-#{i}")
+          end
+
+          example.run
+
+          VCAP::CloudController::Fake.dataset.destroy
+        end
+
+        example_request "enumerates the resources in ascending order" do
+          expect(status).to eq(200)
+
+          fakes_that_came_back = parsed_response["resources"].map { |resource| resource["entity"]["name"] }
+          expect(fakes_that_came_back).to eq(%w(fake-0 fake-1 fake-2))
+        end
       end
     end
   end
