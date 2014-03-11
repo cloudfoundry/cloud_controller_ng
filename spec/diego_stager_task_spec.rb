@@ -200,11 +200,25 @@ module VCAP::CloudController
           expect(diego_stager_task.staging_request[:environment].last).to eq(["USER_DEFINED","OK"])
         end
 
-        it "contains VCAP_APPLICATION from application" do
-          expect(app.vcap_application).to be
+        it "contains VCAP_APPLICATION" do
+          expected_hash = {
+            limits: {
+              mem: 259,
+              disk: 799,
+              fds: 1234,
+            },
+            application_version: app.version,
+            application_name: "app-name",
+            application_uris: app.uris,
+            version: app.version,
+            name: "app-name",
+            uris: app.uris,
+            users: nil
+          }
+
           expect(
             diego_stager_task.staging_request[:environment]
-          ).to include(["VCAP_APPLICATION", app.vcap_application.to_json])
+          ).to include(["VCAP_APPLICATION", expected_hash.to_json])
         end
 
         it "contains VCAP_SERVICES" do

@@ -95,7 +95,24 @@ module VCAP::CloudController
 
     def environment
       env = []
-      env << ["VCAP_APPLICATION", app.vcap_application.to_json]
+      vcap_application = {
+        limits: {
+          mem: app.memory,
+          disk: app.disk_quota,
+          fds: app.file_descriptors
+        },
+        application_version: app.version,
+        application_name: app.name,
+        application_uris: app.uris,
+        version: app.version,
+        name: app.name,
+        uris: app.uris,
+        users: nil
+      }
+
+      app.service_bindings.each
+
+      env << ["VCAP_APPLICATION", vcap_application.to_json]
       env << ["VCAP_SERVICES", app.system_env_json["VCAP_SERVICES"].to_json]
       db_uri = app.database_uri
       env << ["DATABASE_URL", db_uri] if db_uri
