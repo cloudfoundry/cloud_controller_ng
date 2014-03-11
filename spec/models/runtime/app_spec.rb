@@ -274,6 +274,30 @@ module VCAP::CloudController
       end
     end
 
+    describe "vcap_application" do
+      it "has the expected values" do
+        app = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: "app-name")
+        expected_hash = {
+          limits: {
+            mem: 259,
+            disk: 799,
+            fds: 1234,
+          },
+          application_version: app.version,
+          application_name: "app-name",
+          application_uris: app.uris,
+          version: app.version,
+          name: "app-name",
+          space_name: app.space.name,
+          space_id: app.space.guid,
+          uris: app.uris,
+          users: nil
+        }
+
+        app.vcap_application.should == expected_hash
+      end
+    end
+
     describe "#environment_json" do
       it "deserializes the serialized value" do
         app = AppFactory.make(:environment_json => { "jesse" => "awesome" })

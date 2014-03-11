@@ -286,6 +286,25 @@ module VCAP::CloudController
       vcap_services
     end
 
+    def vcap_application
+      {
+        limits: {
+          mem: memory,
+          disk: disk_quota,
+          fds: file_descriptors
+        },
+        application_version: version,
+        application_name: name,
+        application_uris: uris,
+        version: version,
+        name: name,
+        space_name: space.name,
+        space_id: space_guid,
+        uris: uris,
+        users: nil
+      }
+    end
+
     def database_uri
       service_uris = service_bindings.map {|binding| binding.credentials["uri"]}.compact
       DatabaseUriGenerator.new(service_uris).database_uri

@@ -51,6 +51,9 @@ module VCAP::CloudController
         expect(res[:console]).to eq false
         expect(res[:start_command]).to be_nil
         expect(res[:health_check_timeout]).to be_nil
+
+        expect(app.vcap_application).to be
+        expect(res[:vcap_application]).to eql(app.vcap_application)
       end
 
       context "with an app enabled for console support" do
