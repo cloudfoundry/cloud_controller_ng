@@ -77,7 +77,7 @@ Without it, you will see failures due to two tests trying to start NATS on the s
 
 To genenerate the API documentation
 
-    bundle exec rspec spec/api/ --format RspecApiDocumentation::ApiFormatter
+    bundle exec rspec spec/api/documentation --format RspecApiDocumentation::ApiFormatter
     open doc/api/index.html
 
 ## Logs
