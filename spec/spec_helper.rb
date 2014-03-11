@@ -567,7 +567,7 @@ RSpec.configure do |rspec_config|
     RspecApiDocumentation.configure do |c|
       c.format = [:html, :json]
       c.api_name = "Cloud Foundry API"
-      c.template_path = "spec/api/templates"
+      c.template_path = "spec/api/documentation/templates"
       c.curl_host = "https://api.[your-domain.com]"
       c.app = Struct.new(:config) do
         # generate app() method for rack::test to use
