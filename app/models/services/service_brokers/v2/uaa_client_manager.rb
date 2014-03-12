@@ -15,6 +15,23 @@ module VCAP::CloudController::ServiceBrokers::V2
       scim.add(:client, client_info)
     end
 
+    def update(client_attrs)
+      client_id = client_attrs['id']
+      client_secret = client_attrs['secret']
+      scim.change_secret(client_id, client_secret)
+
+      existing_client = scim.get(:client, client_id)
+
+      if uri_changed?(existing_client, client_attrs)
+        scim.put(:client, sso_client_info(client_attrs))
+      end
+    end
+
+    def delete(client_id)
+      scim.delete(:client, client_id)
+    rescue CF::UAA::NotFound
+    end
+
     def get_clients(client_ids)
       client_ids.map do |id|
         begin
@@ -26,6 +43,13 @@ module VCAP::CloudController::ServiceBrokers::V2
     end
 
     private
+
+    def uri_changed?(old_client_attrs, new_client_attrs)
+      new_uri = new_client_attrs.fetch('redirect_uri')
+      old_uris = old_client_attrs.fetch('redirect_uri') # UAA returns an array
+
+      !old_uris.include?(new_uri)
+    end
 
     def scim
       @opts.fetch(:scim) do

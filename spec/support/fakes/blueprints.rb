@@ -150,8 +150,8 @@ module VCAP::CloudController
   end
 
   ServiceDashboardClient.blueprint do
-    uaa_id                { Sham.name }
-    service_id_on_broker  { SecureRandom.uuid }
+    uaa_id          { Sham.name }
+    service_broker  { ServiceBroker.make }
   end
 
   ServicePlan.blueprint do

@@ -13,7 +13,7 @@ module VCAP::CloudController
         )
       end
       let(:manager) { double(:service_dashboard_manager, :synchronize_clients => true) }
-      let(:catalog) { double(:catalog, :sync_services_and_plans => true, :valid? => true)}
+      let(:catalog) { double(:catalog, :sync_services_and_plans => true, :valid? => true) }
 
       subject(:registration) { ServiceBrokerRegistration.new(broker) }
 
@@ -159,12 +159,12 @@ module VCAP::CloudController
             expect(ServiceBroker.count).to eq(1)
             broker.name = 'Awesome new broker name'
 
-            expect{
+            expect {
               begin
                 registration.save
               rescue VCAP::Errors::ApiError
               end
-            }.to change{ServiceBroker.count}.by(0)
+            }.to change { ServiceBroker.count }.by(0)
             broker.reload
 
             expect(broker.name).to eq('Cool Broker')
@@ -175,12 +175,12 @@ module VCAP::CloudController
         context 'when broker does not exist' do
           it 'does not save new broker' do
             expect(ServiceBroker.count).to eq(0)
-            expect{
+            expect {
               begin
                 registration.save
               rescue VCAP::Errors::ApiError
               end
-            }.to change{ServiceBroker.count}.by(0)
+            }.to change { ServiceBroker.count }.by(0)
           end
         end
       end

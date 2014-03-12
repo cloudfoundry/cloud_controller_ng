@@ -17,7 +17,7 @@ module VCAP::CloudController::ServiceBrokers::V2
       }
     end
     let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-    let(:catalog_service_1) {
+    let(:catalog_service) {
       CatalogService.new(service_broker,
         'id'               => 'f8ccf75f-4552-4143-97ea-24ccca5ad068',
         'dashboard_client' => dashboard_client_attrs_1,
@@ -38,7 +38,7 @@ module VCAP::CloudController::ServiceBrokers::V2
       )
     }
 
-    let(:catalog_services) { [catalog_service_1, catalog_service_2, catalog_service_without_dashboard_client] }
+    let(:catalog_services) { [catalog_service, catalog_service_2, catalog_service_without_dashboard_client] }
 
     let(:catalog) { double(:catalog, services: catalog_services) }
 
@@ -63,9 +63,6 @@ module VCAP::CloudController::ServiceBrokers::V2
         allow(client_manager).to receive(:create)
         allow(UaaClientManager).to receive(:new).and_return(client_manager)
         allow(client_manager).to receive(:get_clients).and_return([])
-        #allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_service)
-        #allow(VCAP::CloudController::ServiceDashboardClient).to receive(:client_claimed_by_service?).
-        #  and_return(false)
       end
 
       it 'checks if uaa clients exist for all services' do
@@ -90,29 +87,29 @@ module VCAP::CloudController::ServiceBrokers::V2
         it 'returns true' do
           expect(manager.synchronize_clients).to eq(true)
         end
-
-        it 'claims the uaa clients for the services' do
-          pending 'completed implementation of catalog update'
-          manager.synchronize_clients
-
-          expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:claim_client_for_service).
-            with(dashboard_client_attrs_1['id'], catalog_service_1.broker_provided_id)
-          expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:claim_client_for_service).
-            with(dashboard_client_attrs_2['id'], catalog_service_2.broker_provided_id)
-        end
       end
 
       context 'when some, but not all dashboard sso clients exist in UAA' do
         before do
-          allow(client_manager).to receive(:get_clients).and_return([{'client_id' => catalog_service_1.dashboard_client['id']}])
+          allow(client_manager).to receive(:get_clients).and_return([{'client_id' => catalog_service.dashboard_client['id']}])
+          allow(client_manager).to receive(:update).with(dashboard_client_attrs_1)
         end
 
         context 'when the service exists in CC and it has already claimed the requested UAA client' do
+          let(:dashboard_client) do
+            VCAP::CloudController::ServiceDashboardClient.new(
+              uaa_id: dashboard_client_attrs_1['id'],
+              service_broker: service_broker
+            )
+          end
+
           before do
-            pending 'completed implementation of catalog update'
-            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:client_claimed_by_service?).
-              with(catalog_service_1.dashboard_client['id'], catalog_service_1.broker_provided_id).
+            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:client_claimed_by_broker?).
+              with(catalog_service.dashboard_client['id'], service_broker).
               and_return(true)
+            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:find_clients_claimed_by_broker).
+              with(service_broker).
+              and_return([dashboard_client])
           end
 
           it "creates the clients that don't currently exist" do
@@ -129,15 +126,6 @@ module VCAP::CloudController::ServiceBrokers::V2
 
           it 'returns true' do
             expect(manager.synchronize_clients).to eq(true)
-          end
-
-          it 'claims the new uaa client for the service' do
-            manager.synchronize_clients
-
-            expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:claim_client_for_service).
-              with(dashboard_client_attrs_2['id'], catalog_service_2.broker_provided_id)
-            expect(VCAP::CloudController::ServiceDashboardClient).not_to have_received(:claim_client_for_service).
-              with(dashboard_client_attrs_1['id'], catalog_service_1.broker_provided_id)
           end
         end
 
@@ -160,16 +148,29 @@ module VCAP::CloudController::ServiceBrokers::V2
           it 'has errors for the service' do
             manager.synchronize_clients
 
-            expect(manager.errors.for(catalog_service_1)).not_to be_empty
+            expect(manager.errors.for(catalog_service)).not_to be_empty
           end
+        end
+      end
 
-          it 'does not claim any UAA clients' do
-            pending 'completed implementation of catalog update'
+      context 'when the cloud controller is not configured to modify sso_client' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_name).and_return nil
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_secret).and_return nil
+          allow(client_manager).to receive(:update)
+          allow(client_manager).to receive(:delete)
+        end
 
-            manager.synchronize_clients
+        it 'does not create/update/delete any clients' do
+          manager.synchronize_clients
+          expect(client_manager).not_to have_received(:create)
+          expect(client_manager).not_to have_received(:update)
+          expect(client_manager).not_to have_received(:delete)
+        end
 
-            expect(VCAP::CloudController::ServiceDashboardClient).not_to have_received(:claim_client_for_service)
-          end
+        it 'returns true' do
+          expect(manager.synchronize_clients).to be_true
         end
       end
     end

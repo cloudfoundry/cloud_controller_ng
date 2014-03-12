@@ -9,10 +9,10 @@ describe 'Service Broker API integration' do
     before(:all) { setup_cc }
     after(:all) { $spec_env.reset_database_with_seeds }
 
-    let(:broker_url) { 'broker-url' }
+    let(:broker_url) { stubbed_broker_url }
     let(:broker_name) { 'broker-name' }
-    let(:broker_auth_username) { 'username' }
-    let(:broker_auth_password) { 'password' }
+    let(:broker_auth_username) { stubbed_broker_username }
+    let(:broker_auth_password) { stubbed_broker_password }
     let(:broker_response_status) { 200 }
 
     describe 'Catalog Management' do
@@ -53,12 +53,12 @@ describe 'Service Broker API integration' do
             stub_catalog_fetch(broker_response_status, catalog)
 
             post('/v2/service_brokers', {
-              name:          broker_name,
-              broker_url:    'http://' + broker_url,
+              name: broker_name,
+              broker_url: broker_url,
               auth_username: broker_auth_username,
               auth_password: broker_auth_password
             }.to_json,
-                 json_headers(admin_headers))
+              json_headers(admin_headers))
           end
 
           it 'handles the dashboard_client in the broker catalog' do
@@ -74,15 +74,15 @@ describe 'Service Broker API integration' do
 
             # stub uaa token request
             stub_request(:post, 'http://cc_service_broker_client:some-sekret@localhost:8080/uaa/oauth/token').to_return(
-              status:  200,
-              body:    { token_type: 'token-type', access_token: 'access-token' }.to_json,
-              headers: { 'content-type' => 'application/json' })
+              status: 200,
+              body: {token_type: 'token-type', access_token: 'access-token'}.to_json,
+              headers: {'content-type' => 'application/json'})
 
             # stub uaa client search request
             stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/dash-id').to_return(
-              status:  200,
-              body:    { id: 'some-id', client_id: 'dash-id' }.to_json,
-              headers: { 'content-type' => 'application/json' })
+              status: 200,
+              body: {id: 'some-id', client_id: 'dash-id'}.to_json,
+              headers: {'content-type' => 'application/json'})
 
             stub_catalog_fetch(broker_response_status, catalog)
 
@@ -100,21 +100,4 @@ describe 'Service Broker API integration' do
       end
     end
   end
-end
-
-def setup_uaa_stubs_to_add_new_client
-  # stub uaa token request
-  stub_request(:post, 'http://cc_service_broker_client:some-sekret@localhost:8080/uaa/oauth/token').to_return(
-    status:  200,
-    body:    { token_type: 'token-type', access_token: 'access-token' }.to_json,
-    headers: { 'content-type' => 'application/json' })
-
-  # stub uaa client search request
-  stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/dash-id').to_return(status: 404)
-
-  # stub uaa client create request
-  stub_request(:post, 'http://localhost:8080/uaa/oauth/clients').to_return(
-    status:  201,
-    body:    { id: 'some-id', client_id: 'dash-id' }.to_json,
-    headers: { 'content-type' => 'application/json' })
 end

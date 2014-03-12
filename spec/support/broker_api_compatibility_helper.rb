@@ -6,6 +6,22 @@ module VCAP::CloudController::BrokerApiHelper
       should have_been_made
   end
 
+  def stubbed_broker_url
+    "http://#{stubbed_broker_host}"
+  end
+
+  def stubbed_broker_host
+    'broker-url'
+  end
+
+  def stubbed_broker_username
+    'username'
+  end
+
+  def stubbed_broker_password
+    'password'
+  end
+
   def stub_catalog_fetch(broker_response_status=200, catalog = nil)
     catalog ||= {
       services: [{
@@ -25,7 +41,7 @@ module VCAP::CloudController::BrokerApiHelper
       }]
     }
 
-    stub_request(:get, 'http://username:password@broker-url/v2/catalog').to_return(
+    stub_request(:get, "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/catalog").to_return(
       status: broker_response_status,
       body: catalog.to_json)
   end

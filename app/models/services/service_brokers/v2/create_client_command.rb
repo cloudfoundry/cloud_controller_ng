@@ -1,18 +1,23 @@
 module VCAP::CloudController::ServiceBrokers::V2
   class CreateClientCommand
-    attr_reader :dashboard_client
+    attr_reader :client_attrs, :service_broker
 
-    def initialize(dashboard_client, uaa_client)
-      @dashboard_client = dashboard_client
-      @uaa_client = uaa_client
+    def initialize(opts)
+      @client_attrs = opts.fetch(:client_attrs)
+      @client_manager = opts.fetch(:client_manager)
+      @service_broker = opts.fetch(:service_broker)
     end
 
     def apply!
-      uaa_client.create(dashboard_client)
+      client_manager.create(client_attrs)
+      VCAP::CloudController::ServiceDashboardClient.claim_client_for_broker(
+        client_attrs['id'],
+        service_broker
+      )
     end
 
     private
 
-    attr_reader :uaa_client
+    attr_reader :client_manager
   end
 end
