@@ -336,12 +336,16 @@ module VCAP::CloudController
         end
 
         context "when the update fails" do
-          before { App.any_instance.stub(:update_from_hash).and_raise("Error saving") }
+          before do
+            allow_any_instance_of(App).to receive(:update_from_hash).and_raise("Error saving")
+            allow(app_event_repository).to receive(:record_app_update)
+          end
 
           it "does not record app update" do
-            expect(app_event_repository).not_to receive(:record_app_update)
+            update_app
 
-            expect { update_app }.to raise_error
+            expect(app_event_repository).to_not have_received(:record_app_update)
+            expect(last_response.status).to eq(500)
           end
         end
       end

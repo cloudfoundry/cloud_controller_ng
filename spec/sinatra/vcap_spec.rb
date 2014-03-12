@@ -16,6 +16,10 @@ describe 'Sinatra::VCAP' do
 
     vcap_configure :logger_name => 'vcap_spec'
 
+    def in_test_mode?
+      false
+    end
+
     get '/' do
       'ok'
     end
@@ -131,7 +135,6 @@ describe 'Sinatra::VCAP' do
 
   describe 'accessing a route that throws a low level exception' do
     before do
-      TestApp.any_instance.stub(:in_test_mode?).and_return(false)
       Steno.logger('vcap_spec').should_receive(:error).once
       get '/div_0'
     end
@@ -165,7 +168,6 @@ describe 'Sinatra::VCAP' do
 
   describe 'accessing a route that throws a vcap error' do
     before do
-      TestApp.any_instance.stub(:in_test_mode?).and_return(false)
       Steno.logger('vcap_spec').should_receive(:info).once
       get '/vcap_error'
     end
@@ -185,7 +187,6 @@ describe 'Sinatra::VCAP' do
 
   describe 'accessing a route that throws a StructuredError' do
     before do
-      TestApp.any_instance.stub(:in_test_mode?).and_return(false)
       Steno.logger('vcap_spec').should_receive(:info).once
       get '/structured_error'
     end

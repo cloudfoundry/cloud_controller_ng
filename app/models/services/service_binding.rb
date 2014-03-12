@@ -55,12 +55,7 @@ module VCAP::CloudController
       begin
         save
       rescue => e
-        begin
-          client.unbind(self)
-        rescue => unbind_e
-          logger.error "Unable to unbind #{self}: #{unbind_e}"
-        end
-
+        safe_unbind
         raise e
       end
     end
@@ -127,6 +122,14 @@ module VCAP::CloudController
 
     def binding_options=(values)
       super(Yajl::Encoder.encode(values))
+    end
+
+    private
+
+    def safe_unbind
+      client.unbind(self)
+    rescue => unbind_e
+      logger.error "Unable to unbind #{self}: #{unbind_e}"
     end
 
   end

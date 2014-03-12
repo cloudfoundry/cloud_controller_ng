@@ -267,7 +267,6 @@ module VCAP::CloudController
         )
 
         ManagedServiceInstance.any_instance.stub(:save).and_raise
-        Controller.any_instance.stub(:in_test_mode?).and_return(false)
 
         post "/v2/service_instances", req, json_headers(headers_for(developer))
 
@@ -276,20 +275,25 @@ module VCAP::CloudController
       end
 
       context 'when the model save and the subsequent deprovision both raise errors' do
-        it 'raises the original error' do
+        let(:save_error_text) { "InvalidRequest" }
+        let(:deprovision_error_text) { "NotAuthorized" }
+
+        before do
+          allow(client).to receive(:deprovision).and_raise(Errors::ApiError.new_from_details(deprovision_error_text))
+          allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise(Errors::ApiError.new_from_details(save_error_text))
+        end
+
+        it 'raises the save error' do
           req = Yajl::Encoder.encode(
             :name => 'foo',
             :space_guid => space.guid,
             :service_plan_guid => plan.guid
           )
 
-          client.stub(:deprovision).and_raise(StandardError, 'deprovision')
-          ManagedServiceInstance.any_instance.stub(:save).and_raise(StandardError, 'save')
-          Controller.any_instance.stub(:in_test_mode?).and_return(true)
+          post "/v2/service_instances", req, json_headers(headers_for(developer))
 
-          expect {
-            post "/v2/service_instances", req, json_headers(headers_for(developer))
-          }.to raise_error(StandardError, "save")
+          expect(last_response.body).to_not match(deprovision_error_text)
+          expect(last_response.body).to match(save_error_text)
         end
       end
 

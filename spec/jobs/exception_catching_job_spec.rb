@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       context "#error(job, exception)" do
         let(:job) { double("Job").as_null_object }
-        let(:error_presenter) { double("ErrorPresenter", sanitized_hash: "sanitized exception hash").as_null_object }
+        let(:error_presenter) { double("ErrorPresenter", error_hash: "sanitized exception hash").as_null_object }
         let(:background_logger) { double("Steno").as_null_object }
 
         before do

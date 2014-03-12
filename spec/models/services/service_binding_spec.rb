@@ -2,8 +2,10 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceBinding, :services, type: :model do
+
+    let(:client) { double('broker client', unbind: nil, deprovision: nil) }
+
     before do
-      client = double('broker client', unbind: nil, deprovision: nil)
       Service.any_instance.stub(:client).and_return(client)
     end
 
@@ -207,6 +209,73 @@ module VCAP::CloudController
 
         app.remove_service_binding(binding)
         app.needs_staging?.should be_false
+      end
+    end
+
+    describe '#bind!' do
+      let(:binding) { ServiceBinding.make }
+
+      before do
+        allow(client).to receive(:bind)
+        allow(binding).to receive(:save)
+      end
+
+      it 'sends a bind request to the broker' do
+        binding.bind!
+
+        expect(client).to have_received(:bind).with(binding)
+      end
+
+      it 'saves the binding to the database' do
+        binding.bind!
+
+        expect(binding).to have_received(:save)
+      end
+
+      context 'when sending a bind request to the broker raises an error' do
+        before do
+          allow(client).to receive(:bind).and_raise(StandardError.new('bind_error'))
+        end
+
+        it 'raises the bind error' do
+          expect { binding.bind! }.to raise_error(/bind_error/)
+        end
+      end
+
+      context 'when the model save raises an error' do
+        before do
+          allow(binding).to receive(:save).and_raise(StandardError.new('save'))
+          allow(client).to receive(:unbind)
+        end
+
+        it 'sends an unbind request to the broker' do
+          binding.bind! rescue nil
+
+          expect(client).to have_received(:unbind).with(binding)
+        end
+
+        it 'raises the save error' do
+          expect { binding.bind! }.to raise_error(/save/)
+        end
+
+        context 'and the unbind also raises an error' do
+          let(:logger) { double('logger') }
+
+          before do
+            allow(client).to receive(:unbind).and_raise(StandardError.new('unbind_error'))
+            allow(binding).to receive(:logger).and_return(logger)
+            allow(logger).to receive(:error)
+          end
+
+          it 'logs the unbind error' do
+            binding.bind! rescue nil
+            expect(logger).to have_received(:error).with(/Unable to unbind.*unbind_error/)
+          end
+
+          it 'raises the save error' do
+            expect { binding.bind! }.to raise_error(/save/)
+          end
+        end
       end
     end
   end

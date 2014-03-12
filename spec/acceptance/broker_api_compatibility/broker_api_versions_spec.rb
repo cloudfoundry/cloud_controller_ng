@@ -4,8 +4,8 @@ describe 'Broker API Versions' do
 
   let(:spec_sha) do
     {
-      'broker_api_v2.0_spec.rb' => '27022a5862c5de049ea156dd500b61f4',
-      'broker_api_v2.1_spec.rb' => 'a3e78cccf3bb393ea00d8ab27e1e5dfd',
+      'broker_api_v2.0_spec.rb' => 'a9f0666cd4eabeb1b9c79351ebb1a923',
+      'broker_api_v2.1_spec.rb' => '7f5ba19d05150295bb957d82d3b7bee5',
     }
   end
 
