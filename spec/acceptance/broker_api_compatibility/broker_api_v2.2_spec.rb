@@ -64,6 +64,31 @@ describe 'Service Broker API integration' do
         end
 
         context 'when update-service-broker' do
+          let(:catalog_with_updated_secret) do
+            {
+              services: [{
+                id: "service-guid-here",
+                name: "MySQL",
+                description: "A MySQL-compatible relational database",
+                bindable: true,
+                dashboard_client: {
+                  id: "dash-id",
+                  secret: "UPDATED_DASHBOARD_CLIENT_SECRET",
+                  redirect_uri: "http://redirect.to.me.plz"
+                },
+                plans: [{
+                  id: "plan1-guid-here",
+                  name: "small",
+                  description: "A small shared database with 100mb storage quota and 10 connections"
+                }, {
+                  id: "plan2-guid-here",
+                  name: "large",
+                  description: "A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections"
+                }]
+              }]
+            }
+          end
+
           after { delete_broker }
           before do
             setup_uaa_stubs_to_add_new_client
@@ -78,10 +103,15 @@ describe 'Service Broker API integration' do
             # stub uaa client search request
             stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/dash-id').to_return(
               status: 200,
-              body: {id: 'some-id', client_id: 'dash-id'}.to_json,
+              body: {id: 'some-id', client_id: 'dash-id', redirect_uri: 'http://redirect.to.me.plz'}.to_json,
               headers: {'content-type' => 'application/json'})
 
-            stub_catalog_fetch(broker_response_status, catalog)
+            # stub uaa client update request
+            stub_request(:put, 'http://localhost:8080/uaa/oauth/clients/dash-id/secret').
+              with(:body => '{"secret":"UPDATED_DASHBOARD_CLIENT_SECRET"}').
+              to_return(:status => 200)
+
+            stub_catalog_fetch(broker_response_status, catalog_with_updated_secret)
 
             put("/v2/service_brokers/#{@broker_guid}",
               {}.to_json,
@@ -89,8 +119,6 @@ describe 'Service Broker API integration' do
           end
 
           it 'handles the dashboard_client in the broker catalog' do
-            pending("We haven't finished the story for updating yet")
-
             expect(last_response.status).to eq(200)
           end
         end
