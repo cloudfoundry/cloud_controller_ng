@@ -492,5 +492,11 @@ module VCAP::CloudController
         expect(Buildpack.new(name: "my_custom_buildpack\r\n").to_json).to eq '"my_custom_buildpack\r\n"'
       end
     end
+
+    describe "custom" do
+      it "is not custom" do
+        expect(subject.custom?).to be_false
+      end
+    end
   end
 end

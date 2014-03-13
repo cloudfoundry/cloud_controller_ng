@@ -17,6 +17,10 @@ module VCAP::CloudController
       expect(subject.staging_message).to include(buildpack: url)
     end
 
+    it "is custom" do
+      expect(subject.custom?).to be_true
+    end
+
     describe "validations" do
       context "with bogus characters at the start of the URI" do
         let(:url) { "\r\nhttp://foo_bar/baz" }

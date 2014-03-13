@@ -18,6 +18,16 @@ module VCAP::CloudController
       App.stub(:custom_buildpacks_enabled?) { false }
     end
 
+    def expect_validator(validator_class)
+      matching_validitor = subject.validation_policies.select{|validator| validator.is_a?(validator_class)}
+      expect(matching_validitor).to be
+    end
+
+    def expect_no_validator(validator_class)
+      matching_validitor = subject.validation_policies.select{|validator| validator.is_a?(validator_class)}
+      expect(matching_validitor).to be_empty
+    end
+
     before do
       client = double('broker client', unbind: nil, deprovision: nil)
       Service.any_instance.stub(:client).and_return(client)
@@ -738,47 +748,19 @@ module VCAP::CloudController
       end
 
       describe "env" do
-        let(:app) { AppFactory.make }
+        subject(:app) { AppFactory.make }
 
-        it "should allow an empty environment" do
-          app.environment_json = {}
-          app.should be_valid
-        end
-
-        it "should not allow an array" do
-          app.environment_json = []
-          app.should_not be_valid
-        end
-
-        it "should allow multiple variables" do
-          app.environment_json = { :abc => 123, :def => "hi" }
-          app.should be_valid
-        end
-
-        ["VMC", "vmc", "VCAP", "vcap"].each do |k|
-          it "should not allow entries to start with #{k}" do
-            app.environment_json = { :abc => 123, "#{k}_abc" => "hi" }
-            app.should_not be_valid
-          end
+        it "validates app environment" do
+          expect_validator(AppEnvironmentPolicy)
         end
       end
 
       describe "metadata" do
         let(:app) { AppFactory.make }
 
-        it "should allow empty metadata" do
+        it "can be set and retrieved" do
           app.metadata = {}
-          app.should be_valid
-        end
-
-        it "should not allow an array" do
-          app.metadata = []
-          app.should_not be_valid
-        end
-
-        it "should allow multiple variables" do
-          app.metadata = { :abc => 123, :def => "hi" }
-          app.should be_valid
+          expect(app.metadata).to eql({})
         end
 
         it "should save direct updates to the metadata" do
@@ -816,26 +798,6 @@ module VCAP::CloudController
           app = AppFactory.make(health_check_timeout: 256)
           expect(app.health_check_timeout).to eq(256)
         end
-      end
-
-      context "when a health_check_timeout exceeds the maximum" do
-        it "should raise error" do
-          expect {
-            AppFactory.make(health_check_timeout: 1024)
-          }.to raise_error(Sequel::ValidationFailed, /health_check_timeout maximum_exceeded/)
-        end
-      end
-
-      it "should raise error if value is less than zero" do
-        expect {
-          AppFactory.make(health_check_timeout: -10)
-        }.to raise_error(Sequel::ValidationFailed, /health_check_timeout less_than_zero/)
-      end
-
-      it "should not raise error if value is greater than zero" do
-        expect {
-          AppFactory.make(health_check_timeout: 10)
-        }.to_not raise_error
       end
     end
 
@@ -1388,38 +1350,56 @@ module VCAP::CloudController
         QuotaDefinition.make(:memory_limit => 128)
       end
 
+      it "has a default requested instances" do
+        expect(App.new.requested_instances).to be
+      end
+
       context "app creation" do
-        it "should raise error when quota is exceeded" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          expect do
-            AppFactory.make(:space => space,
-              :memory => 65,
-              :instances => 2)
-          end.to raise_error(Sequel::ValidationFailed,
-            /memory quota_exceeded/)
+        subject(:app) { App.new }
+
+        it "validates min requested memory" do
+          expect_validator(MinMemoryPolicy)
         end
 
-        it "should not raise error when quota is not exceeded" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          expect do
-            AppFactory.make(:space => space,
-              :memory => 64,
-              :instances => 2)
-          end.to_not raise_error
+        it "validates max requested memory" do
+          expect_validator(MaxMemoryPolicy)
+        end
+
+        it "validates requested instances" do
+          expect_validator(InstancesPolicy)
         end
       end
 
       context "app update" do
         let(:org) { Organization.make(:quota_definition => quota) }
         let(:space) { Space.make(:organization => org) }
-        let!(:app) { AppFactory.make(:space => space, :memory => 64, :instances => 2) }
+        subject!(:app) { AppFactory.make(space: space, memory: 64, instances: 2, state: "STARTED", package_hash: "a-hash") }
+
+        it "validates min requested memory" do
+          expect_validator(MinMemoryPolicy)
+        end
+
+        context "when stopping the app" do
+          before do
+            app.state = "STOPPED"
+          end
+
+          it "does not validates max requested memory" do
+            expect_no_validator(MaxMemoryPolicy)
+          end
+        end
+
+        it "validates max requested memory when not stopping app" do
+          expect_validator(MaxMemoryPolicy)
+        end
+
+        it "validates requested instances" do
+          expect_validator(InstancesPolicy)
+        end
 
         it "should raise error when quota is exceeded" do
           app.memory = 65
-          expect { app.save }.to raise_error(Sequel::ValidationFailed,
-            /memory quota_exceeded/)
+          expect { app.save }.to raise_error(/quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
@@ -1489,23 +1469,21 @@ module VCAP::CloudController
           app.save
           expect(app.memory).to eq(32)
         end
-
-        it "should raise an error if instances is less than zero" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          app = AppFactory.make(:space => space,
-                                :memory => 64,
-                                :instances => 1)
-
-          app.instances = -1
-          expect { app.save }.to raise_error(Sequel::ValidationFailed, /instances less_than_zero/)
-        end
       end
     end
 
     describe "file_descriptors" do
       subject { AppFactory.make }
       its(:file_descriptors) { should == 16_384 }
+    end
+
+    describe "additional_memory_requested" do
+      subject(:app) { AppFactory.make }
+
+      it "raises error if the app is deleted" do
+        app.delete
+        expect{app.save}.to raise_error(App::ApplicationMissing)
+      end
     end
 
     describe ".configure" do
