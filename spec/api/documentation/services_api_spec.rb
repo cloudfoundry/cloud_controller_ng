@@ -33,7 +33,16 @@ resource "Services", type: :api do
 
   standard_model_list(:services, VCAP::CloudController::ServicesController)
   standard_model_get(:services)
-  standard_model_delete(:services)
+
+  delete "/v2/services/:guid" do
+    request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'."
+    request_parameter :purge, "Recursively remove a service and child objects from Cloud Foundry database without making requests to a service broker"
+
+    example "Delete a Particular Service" do
+      client.delete "/v2/services/#{guid}", {}, headers
+      expect(status).to eq 204
+    end
+  end
 
   post "/v2/services", deprecated: true do
     example "Creating a service (deprecated)" do
