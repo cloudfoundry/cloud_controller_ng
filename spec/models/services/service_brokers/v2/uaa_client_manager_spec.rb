@@ -56,84 +56,29 @@ module VCAP::CloudController::ServiceBrokers::V2
     end
 
     describe '#update' do
-      let(:existing_client) do
+      let(:updated_dashboard_client_hash) do
         {
-          'client_id' => 'client-id',
           'id' => 'client-id',
-          'redirect_uri' => ['http://redirect.com'],
-          'scope' =>['cloud_controller.read'],
-          'resource_ids' =>['none'],
-          'authorized_grant_types' =>['client_credentials'],
-          'access_token_validity' =>43200,
-          'authorities' =>['cloud_controller.read']
+          'secret' => 'updated-client-secret',
+          'redirect_uri' => 'http://redirect.updated.com'
         }
       end
 
       before do
-        allow(scim).to receive(:get).and_return(existing_client)
-        allow(scim).to receive(:change_secret)
+        allow(scim).to receive(:delete)
+        allow(scim).to receive(:add)
       end
 
-      it 'updates the client secret' do
+      it 'updates the client' do
         client_manager = UaaClientManager.new(scim: scim)
 
-        client_manager.update(dashboard_client_hash)
-        expect(scim).to have_received(:get).with(:client, 'client-id')
-        expect(scim).to have_received(:change_secret).with('client-id', 'client-secret')
-      end
+        client_manager.update(updated_dashboard_client_hash)
 
-      context 'when a non-secret parameter is being updated' do
-        let(:existing_client) do
-          {
-            'client_id' => 'testclient',
-            'id' => 'testclient',
-            'redirect_uri' => ['http://different-redirect.com'],
-            'scope' =>['cloud_controller.read'],
-            'resource_ids' =>['none'],
-            'authorized_grant_types' =>['client_credentials'],
-            'access_token_validity' =>43200,
-            'authorities' =>['cloud_controller.read']
-          }
-        end
-
-        it 'updates the given client with the new parameters' do
-          scim.stub(:put)
-          client_manager = UaaClientManager.new(scim: scim)
-
-          client_manager.update(dashboard_client_hash)
-
-          expect(scim).to have_received(:get).with(:client, 'client-id')
-          expect(scim).to have_received(:put).with(
-            :client,
-            hash_including(client_id: 'client-id', redirect_uri: 'http://redirect.com')
-          )
-        end
-      end
-
-      context 'when the secret and at least one non-secret parameter are being updated' do
-        let(:existing_client) do
-          {
-            'client_id' => 'client-id',
-            'secret' => 'diffent-client-secret',
-            'redirect_uri' => 'http://different-redirect.com'
-          }
-        end
-
-        it 'updates the given client with the new secret and new parameters' do
-          scim.stub(:put)
-          scim.stub(:change_secret)
-          client_manager = UaaClientManager.new(scim: scim)
-
-          client_manager.update(dashboard_client_hash)
-
-          expect(scim).to have_received(:get).with(:client, 'client-id')
-          expect(scim).to have_received(:change_secret).with('client-id', 'client-secret')
-
-          expect(scim).to have_received(:put).with(
-            :client,
-            hash_including(client_id: 'client-id', redirect_uri: 'http://redirect.com')
-          )
-        end
+        expect(scim).to have_received(:delete).with(:client, 'client-id')
+        expect(scim).to have_received(:add).with(:client,
+          hash_including(client_id: 'client-id',
+                         client_secret: 'updated-client-secret',
+                         redirect_uri: 'http://redirect.updated.com'))
       end
     end
 

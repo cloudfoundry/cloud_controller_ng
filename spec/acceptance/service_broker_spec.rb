@@ -188,49 +188,14 @@ describe 'Service Broker' do
         service_4[:dashboard_client] = {id: 'client-4', secret: '1337', redirect_uri: 'http://example.com/client-4'}
         # change property other than ID or secret
         service_5[:dashboard_client][:redirect_uri] = 'http://nowhere.net'
-        # change nothing about service_6. Should still post to "/clients/client-6/secret".
-        
+
         stub_catalog_fetch(200, services: [service_1, service_2, service_3, service_4, service_5, service_6])
-
-        stub_request(:put, %r{http://localhost:8080/uaa/oauth/clients/.*/secret}).
-          to_return(
-          status: 200,
-          headers: {'content-type' => 'application/json'}
-        )
-
-        stub_request(:put, %r{http://localhost:8080/uaa/oauth/clients/client-.*}).
-          to_return(
-          status: 200,
-          headers: {'content-type' => 'application/json'},
-          body: ""
-        )
 
         stub_request(:delete, %r{http://localhost:8080/uaa/oauth/clients/.*}).
           to_return(
           status: 200,
           headers: {'content-type' => 'application/json'},
           body: ""
-        )
-
-        stub_request(:get, "http://localhost:8080/uaa/oauth/clients/client-3").
-          to_return(
-          status: 200,
-          headers: {'content-type' => 'application/json'},
-          body: {id: 'client-3', redirect_uri: 'http://example.com/client-3'}.to_json
-        )
-
-        stub_request(:get, "http://localhost:8080/uaa/oauth/clients/client-5").
-          to_return(
-          status: 200,
-          headers: {'content-type' => 'application/json'},
-          body: {id: 'client-5', redirect_uri: 'http://example.com/client-5'}.to_json
-        )
-
-        stub_request(:get, "http://localhost:8080/uaa/oauth/clients/client-6").
-          to_return(
-          status: 200,
-          headers: {'content-type' => 'application/json'},
-          body: {id: 'client-6', redirect_uri: 'http://example.com/client-6'}.to_json
         )
       end
 
@@ -271,34 +236,30 @@ describe 'Service Broker' do
         ).to have_been_made
       end
 
-      it 'updates the secret for existing clients with no changes' do
-        put("/v2/service_brokers/#{@service_broker_guid}", '{}', json_headers(admin_headers))
-
-        expect(
-          a_request(:put, 'http://localhost:8080/uaa/oauth/clients/client-6/secret').with(
-            body: hash_including('secret' => 'secret6')
-          )
-        ).to have_been_made
-      end
-
-      it 'updates the secret for existing clients with only a changed secret' do
-        put("/v2/service_brokers/#{@service_broker_guid}", '{}', json_headers(admin_headers))
-
-        expect(last_response).to have_status_code(200)
-
-        expect(
-          a_request(:put, 'http://localhost:8080/uaa/oauth/clients/client-3/secret').with(
-            body: hash_including('secret' => 'SUPERsecret')
-          )
-        ).to have_been_made
-      end
-
       it 'updates changed properties of clients' do
         put("/v2/service_brokers/#{@service_broker_guid}", '{}', json_headers(admin_headers))
 
         expect(
-          a_request(:put, 'http://localhost:8080/uaa/oauth/clients/client-5').with(
+          a_request(:delete, 'http://localhost:8080/uaa/oauth/clients/client-5')
+        ).to have_been_made
+
+        expect(
+          a_request(:post, 'http://localhost:8080/uaa/oauth/clients').with(
             body: hash_including('client_id' => 'client-5', 'redirect_uri' => 'http://nowhere.net')
+          )
+        ).to have_been_made
+      end
+
+      it 'updates the secret' do
+        put("/v2/service_brokers/#{@service_broker_guid}", '{}', json_headers(admin_headers))
+
+        expect(
+          a_request(:delete, 'http://localhost:8080/uaa/oauth/clients/client-3')
+        ).to have_been_made
+
+        expect(
+          a_request(:post, 'http://localhost:8080/uaa/oauth/clients').with(
+            body: hash_including('client_id' => 'client-3', 'client_secret' => 'SUPERsecret')
           )
         ).to have_been_made
       end

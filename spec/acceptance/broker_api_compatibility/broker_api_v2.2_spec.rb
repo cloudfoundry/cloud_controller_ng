@@ -107,9 +107,14 @@ describe 'Service Broker API integration' do
               headers: {'content-type' => 'application/json'})
 
             # stub uaa client update request
-            stub_request(:put, 'http://localhost:8080/uaa/oauth/clients/dash-id/secret').
-              with(:body => '{"secret":"UPDATED_DASHBOARD_CLIENT_SECRET"}').
+            # - an update first deletes the client
+            # - then it recreates it with the new settings
+            stub_request(:delete, 'http://localhost:8080/uaa/oauth/clients/dash-id').
               to_return(:status => 200)
+            stub_request(:post, 'http://localhost:8080/uaa/oauth/clients').to_return(
+              status:  201,
+              body:    { id: 'some-id', client_id: 'dash-id', secret: 'UPDATED_DASHBOARD_CLIENT_SECRET' }.to_json,
+              headers: { 'content-type' => 'application/json' })
 
             stub_catalog_fetch(broker_response_status, catalog_with_updated_secret)
 
