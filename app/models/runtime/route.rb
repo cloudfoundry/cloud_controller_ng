@@ -2,8 +2,8 @@ require "cloud_controller/dea/dea_client"
 
 module VCAP::CloudController
   class Route < Sequel::Model
-    class InvalidDomainRelation < InvalidRelation; end
-    class InvalidAppRelation < InvalidRelation; end
+    class InvalidDomainRelation < VCAP::Errors::InvalidRelation; end
+    class InvalidAppRelation < VCAP::Errors::InvalidRelation; end
 
     many_to_one :domain
     many_to_one :space

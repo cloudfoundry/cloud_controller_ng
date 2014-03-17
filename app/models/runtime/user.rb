@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class User < Sequel::Model
-    class InvalidOrganizationRelation < InvalidRelation; end
+    class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
 
     no_auto_guid
 

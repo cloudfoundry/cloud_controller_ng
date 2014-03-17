@@ -8,13 +8,13 @@ module VCAP::CloudController
 
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
-    class InvalidRouteRelation < InvalidRelation
+    class InvalidRouteRelation < VCAP::Errors::InvalidRelation
       def to_s
         "The URL was not available [route ID #{super}]"
       end
     end
 
-    class InvalidBindingRelation < InvalidRelation;
+    class InvalidBindingRelation < VCAP::Errors::InvalidRelation;
     end
 
     class AlreadyDeletedError < StandardError;
