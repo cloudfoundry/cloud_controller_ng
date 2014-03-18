@@ -1,4 +1,5 @@
 require 'addressable/uri'
+require "cloud_controller/rest_controller/order_applicator"
 
 module VCAP::CloudController::RestController
   class PaginatedCollectionRenderer
@@ -34,8 +35,8 @@ module VCAP::CloudController::RestController
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
     def render_json(controller, ds, path, opts, request_params)
-      page     = opts[:page] || 1
-      criteria = opts[:order_by] || :id
+      page = opts[:page] || 1
+      order_applicator = OrderApplicator.new(opts)
 
       page_size = opts[:results_per_page] || @default_results_per_page
       if page_size > @max_results_per_page
@@ -47,29 +48,34 @@ module VCAP::CloudController::RestController
         raise VCAP::Errors::ApiError.new_from_details("BadQueryParameter", "inline_relations_depth must be <= #{@max_inline_relations_depth}")
       end
 
-      paginated = ds.order_by(criteria).extension(:pagination).paginate(page, page_size)
-
+      ordered_dataset = order_applicator.apply(ds)
+      paginated_dataset = ordered_dataset.extension(:pagination).paginate(page, page_size)
       dataset = @eager_loader.eager_load_dataset(
-        paginated,
-        controller,
-        default_visibility_filter,
-        opts[:additional_visibility_filters] || {},
-        inline_relations_depth,
+          paginated_dataset,
+          controller,
+          default_visibility_filter,
+          opts[:additional_visibility_filters] || {},
+          inline_relations_depth,
       )
 
-      prev_url = url(controller, path, paginated.prev_page, page_size, opts, request_params) if paginated.prev_page
-      next_url = url(controller, path, paginated.next_page, page_size, opts, request_params) if paginated.next_page
+      if paginated_dataset.prev_page
+        prev_url = url(controller, path, paginated_dataset.prev_page, page_size, opts, request_params)
+      end
+
+      if paginated_dataset.next_page
+        next_url = url(controller, path, paginated_dataset.next_page, page_size, opts, request_params)
+      end
 
       opts[:max_inline] ||= PreloadedObjectSerializer::MAX_INLINE_DEFAULT
       resources = dataset.all.map { |obj| @serializer.serialize(controller, obj, opts) }
 
       Yajl::Encoder.encode({
-        :total_results => paginated.pagination_record_count,
-        :total_pages   => paginated.page_count,
-        :prev_url      => prev_url,
-        :next_url      => next_url,
-        :resources     => resources,
-      }, :pretty => true)
+                               :total_results => paginated_dataset.pagination_record_count,
+                               :total_pages => paginated_dataset.page_count,
+                               :prev_url => prev_url,
+                               :next_url => next_url,
+                               :resources => resources,
+                           }, :pretty => true)
     end
 
     private
@@ -82,8 +88,8 @@ module VCAP::CloudController::RestController
 
     def url(controller, path, page, page_size, opts, request_params)
       params = {
-        'page' => page,
-        'results-per-page' => page_size,
+          'page' => page,
+          'results-per-page' => page_size,
       }
 
       depth = opts[:inline_relations_depth]

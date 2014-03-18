@@ -2,13 +2,13 @@ require "spec_helper"
 require "digest/sha1"
 
 describe "Stable API warning system", api_version_check: true do
-  API_FOLDER_CHECKSUM = "d28be0f4a3b60408d74556ef07a1a6c222e1ff4f".freeze
+  API_FOLDER_CHECKSUM = "a21cc9d1457bbacdcf54bb098f7ff1bd54212853".freeze
   it "tells the developer if the API specs change" do
     api_folder = File.expand_path("..", __FILE__)
-    files = Dir.glob("#{api_folder}/**/*").reject {|fn| File.directory?(fn) || fn == __FILE__ }.sort
+    filenames = Dir.glob("#{api_folder}/**/*").reject {|filename| File.directory?(filename) || filename == __FILE__ }.sort
 
-    all_file_checksum = files.inject("") do |memo, f|
-      memo << Digest::SHA1.file(f).hexdigest
+    all_file_checksum = filenames.inject("") do |memo, filename|
+      memo << Digest::SHA1.file(filename).hexdigest
       memo
     end
 
@@ -16,11 +16,14 @@ describe "Stable API warning system", api_version_check: true do
 
     expect(new_checksum).to eql(API_FOLDER_CHECKSUM),
       <<-END
-API checksum mismatch detected. Expected:
+You are about to make a breaking change in API!
+
+Do you really want to do it? Then update the checksum (see below) & CC version.
+
+expected:
   #{API_FOLDER_CHECKSUM}
-but got:
+got:
   #{new_checksum}
-You are about to make a breaking change in API. Do you really want to do it? Then update the checksum & CC version.
 END
   end
 end
