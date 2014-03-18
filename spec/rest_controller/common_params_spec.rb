@@ -26,6 +26,10 @@ module VCAP::CloudController::RestController
         expect(common_params.parse({"q" => "123"})).to eq({:q => "123"})
       end
 
+      it "treats order direction as a String and symbolizes the key" do
+        expect(common_params.parse({"order-direction" => "123"})).to eq({:order_direction => "123"})
+      end
+
       it "discards other params" do
         expect(common_params.parse({"foo" => "bar"})).to eq({})
       end

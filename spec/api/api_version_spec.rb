@@ -2,7 +2,12 @@ require "spec_helper"
 require "digest/sha1"
 
 describe "Stable API warning system", api_version_check: true do
-  API_FOLDER_CHECKSUM = "d28be0f4a3b60408d74556ef07a1a6c222e1ff4f".freeze
+  API_FOLDER_CHECKSUM = "e92ec59b4dcab7e5e4c1355f04d311d7bbb97717"
+
+  it "double-checks the version" do
+    expect(VCAP::CloudController::Constants::API_VERSION).to eq("2.2.0")
+  end
+
   it "tells the developer if the API specs change" do
     api_folder = File.expand_path("..", __FILE__)
     filenames = Dir.glob("#{api_folder}/**/*").reject {|filename| File.directory?(filename) || filename == __FILE__ }.sort

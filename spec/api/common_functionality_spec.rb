@@ -3,6 +3,7 @@ require "rspec_api_documentation/dsl"
 
 module VCAP::CloudController
   db = Sequel.sqlite(':memory:')
+  # db.logger = Logger.new($stdout) # <-- Uncomment to see SQL queries being made by Sequel
   db.create_table :fakes do
     primary_key :id
     String :guid
@@ -34,31 +35,43 @@ resource "Common Functionality", :type => :api do
         example_request "always includes metadata about pagination" do
           expect(status).to eq(200)
           expect(parsed_response).to eq({
-                                            "total_results"=>0,
-                                            "total_pages"=>0,
-                                            "prev_url"=>nil,
-                                            "next_url"=>nil,
-                                            "resources"=>[]
+                                            "total_results" => 0,
+                                            "total_pages" => 0,
+                                            "prev_url" => nil,
+                                            "next_url" => nil,
+                                            "resources" => []
                                         })
         end
       end
 
       context "when there are records" do
         around do |example|
-          3.times do |i|
-            VCAP::CloudController::Fake.create(name: "fake-#{i}")
-          end
+          3.times { |i| VCAP::CloudController::Fake.create(name: "fake-#{i}") }
 
           example.run
 
           VCAP::CloudController::Fake.dataset.destroy
         end
 
-        example_request "enumerates the resources in ascending order" do
-          expect(status).to eq(200)
+        context "when order-direction" do
+          context "is unspecified" do
+            example_request "enumerates in ascending order" do
+              expect(status).to eq(200)
 
-          fakes_that_came_back = parsed_response["resources"].map { |resource| resource["entity"]["name"] }
-          expect(fakes_that_came_back).to eq(%w(fake-0 fake-1 fake-2))
+              fakes_that_came_back = parsed_response["resources"].map { |resource| resource["entity"]["name"] }
+              expect(fakes_that_came_back).to eq(%w(fake-0 fake-1 fake-2))
+            end
+          end
+
+          context "is specified" do
+            example_request "enumerates in the specified order", "order-direction" => "desc" do
+              expect(status).to eq(200)
+
+
+              fakes_that_came_back = parsed_response["resources"].map { |resource| resource["entity"]["name"] }
+              expect(fakes_that_came_back).to eq(%w(fake-2 fake-1 fake-0))
+            end
+          end
         end
       end
     end

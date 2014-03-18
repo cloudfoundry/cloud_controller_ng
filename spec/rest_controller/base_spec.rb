@@ -9,9 +9,9 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
   let(:env) { {} }
   let(:params) { {} }
 
-  subject {
+  subject do
     VCAP::CloudController::RestController::Base.new(double(:config), logger, env, params, double(:body))
-  }
+  end
 
   describe "#dispatch" do
     context "when the dispatch is succesful" do
