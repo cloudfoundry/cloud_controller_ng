@@ -119,8 +119,6 @@ db_encryption_key: "asdfasdfasdf"
 
 tasks_disabled: false
 
-hm9000_noop: true
-
 varz_port: 7800
 varz_user: varz
 varz_password: password

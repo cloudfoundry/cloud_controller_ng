@@ -312,7 +312,7 @@ module VCAP::CloudController
       private
 
       def health_manager_client
-        @health_manager_client ||= CloudController::DependencyLocator.instance.health_manager_client
+        CloudController::DependencyLocator.instance.health_manager_client
       end
 
       # @param [Enumerable, #each] indices the range / sequence of instances to start

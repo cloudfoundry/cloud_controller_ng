@@ -129,7 +129,6 @@ module VCAP::CloudController
 
         optional(:tasks_disabled) => bool,
 
-        optional(:hm9000_noop) => bool,
         optional(:flapping_crash_count_threshold) => Integer,
 
         optional(:varz_port) => Integer,

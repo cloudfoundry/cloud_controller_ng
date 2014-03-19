@@ -7,11 +7,10 @@ module VCAP::CloudController
     attr_reader :logger, :config
     attr_reader :message_bus, :dea_client
 
-    def initialize(dea_client, message_bus, noop)
+    def initialize(dea_client, message_bus)
       @logger = Steno.logger("cc.hm9000")
       @dea_client = dea_client
       @message_bus = message_bus
-      @noop = noop
     end
 
     def handle_requests
@@ -41,10 +40,10 @@ module VCAP::CloudController
 
       should_stop, reason = instance_needs_to_stop?(app_id, version, instance_index, is_duplicate)
       if should_stop
-        dea_client.stop_instances(app_id, instance_guid) unless @noop
-        logger.info "cloudcontroller.hm9000.will-stop", :reason => reason, :payload => message, :noop => @noop
+        dea_client.stop_instances(app_id, instance_guid)
+        logger.info "cloudcontroller.hm9000.will-stop", :reason => reason, :payload => message
       else
-        logger.info "cloudcontroller.hm9000.will-not-stop", :payload => message, :noop => @noop
+        logger.info "cloudcontroller.hm9000.will-not-stop", :payload => message
       end
     end
 
@@ -64,10 +63,10 @@ module VCAP::CloudController
       app = App[:guid => app_id]
       should_start, reason = instance_needs_to_start?(app, version, instance_index)
       if should_start
-        dea_client.start_instance_at_index(app, instance_index) unless @noop
-        logger.info "cloudcontroller.hm9000.will-start", :reason => reason, :payload => message, :noop => @noop
+        dea_client.start_instance_at_index(app, instance_index)
+        logger.info "cloudcontroller.hm9000.will-start", :reason => reason, :payload => message
       else
-        logger.info "cloudcontroller.hm9000.will-not-start", :payload => message, :noop => @noop
+        logger.info "cloudcontroller.hm9000.will-not-start", :payload => message
       end
     end
 

@@ -704,9 +704,9 @@ module VCAP::CloudController
 
     describe "find_all_instances" do
       let!(:health_manager_client) do
-        hm = VCAP::CloudController::HealthManagerClient.new(message_bus)
-        VCAP::CloudController::DeaClient.stub(:health_manager_client) { hm }
-        hm
+        CloudController::DependencyLocator.instance.health_manager_client.tap do |hm|
+          VCAP::CloudController::DeaClient.stub(:health_manager_client) { hm }
+        end
       end
 
       include Errors
@@ -720,84 +720,6 @@ module VCAP::CloudController
         expect {
           DeaClient.find_all_instances(app)
         }.to raise_error(Errors::ApiError, expected_msg)
-      end
-
-      it "should return flapping instances" do
-        app.instances = 2
-        app.should_receive(:stopped?).and_return(false)
-
-        search_options = {
-          state: :FLAPPING,
-          version: app.version,
-          droplet: app.guid
-        }
-
-        flapping_instances = {
-          "indices" => [
-            { "index" => 0, "since" => 1},
-            { "index" => 1, "since" => 2},
-          ],
-        }
-
-        message_bus.respond_to_synchronous_request("healthmanager.status", [flapping_instances])
-
-        # Should not find starting or running instances if all instances are
-        # flapping.
-        DeaClient.should_not_receive(:find_instances)
-
-        app_instances = DeaClient.find_all_instances(app)
-        expect(app_instances).to eq(
-          0 => {
-            :state => "FLAPPING",
-            :since => 1,
-          },
-          1 => {
-            :state => "FLAPPING",
-            :since => 2,
-          }
-        )
-
-        expect(message_bus).to have_requested_synchronous_messages("healthmanager.status", search_options, {result_count: 2, timeout: 2})
-      end
-
-      it "should ignore out of range indices of flapping instances" do
-        app.instances = 2
-        app.should_receive(:stopped?).and_return(false)
-
-        flapping_instances = {
-          "indices" => [
-            { "index" => -1, "since" => 1 },  # -1 is out of range.
-            { "index" => 2, "since" => 2 },  # 2 is out of range.
-          ],
-        }
-
-        message_bus.respond_to_synchronous_request("healthmanager.status", [flapping_instances])
-        message_bus.respond_to_synchronous_request("dea.find.droplet", [])
-
-        Time.stub(:now) { 1 }
-
-        app_instances = DeaClient.find_all_instances(app)
-        expect(app_instances).to eq(
-          0 => {
-            :state => "DOWN",
-            :since => 1,
-          },
-          1 => {
-            :state => "DOWN",
-            :since => 1,
-          }
-        )
-
-        expect(message_bus).to have_requested_synchronous_messages(
-          "healthmanager.status",
-          {state: :FLAPPING, version: app.version, droplet: app.guid},
-          {result_count: 2, timeout: 2}
-        )
-        expect(message_bus).to have_requested_synchronous_messages(
-          "dea.find.droplet",
-          {states: [:STARTING, :RUNNING], version: app.version, droplet: app.guid},
-          {expected: 2, result_count: 2, timeout: 2}
-        )
       end
 
       it "should return starting or running instances" do

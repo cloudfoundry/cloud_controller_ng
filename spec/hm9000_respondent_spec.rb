@@ -2,12 +2,11 @@ require "spec_helper"
 require "cloud_controller/hm9000_respondent"
 
 module VCAP::CloudController
-  describe HealthManagerRespondent do
+  describe HM9000Respondent do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_client) { double("dea client", :message_bus => message_bus) }
-    let(:noop) { false }
 
-    subject { HM9000Respondent.new(dea_client, message_bus, noop) }
+    subject { HM9000Respondent.new(dea_client, message_bus) }
 
     before do
       dea_client.stub(:stop_instances)
@@ -82,30 +81,13 @@ module VCAP::CloudController
           context "if the desired index is within the desired number of instances" do
             let(:start_instance_index) {1}
             context "if app is in STARTED state" do
-              context "without noop flag" do
-                it "should send the start message" do
-                  dea_client.should_receive(:start_instance_at_index) do |app_to_start, index_to_start|
-                    expect(app_to_start).to eq(app)
-                    expect(index_to_start).to eq(1)
-                  end
-
-                  subject.process_hm9000_start(hm9000_start_message)
-                end
-              end
-
-              context "with noop flag" do
-                let(:noop) { true }
-                it "should not send the start message" do
-                  dea_client.should_not_receive(:start_instance_at_index)
-                  subject.process_hm9000_start(hm9000_start_message)
+              it "should send the start message" do
+                dea_client.should_receive(:start_instance_at_index) do |app_to_start, index_to_start|
+                  expect(app_to_start).to eq(app)
+                  expect(index_to_start).to eq(1)
                 end
 
-                it "logs the reason" do
-                  subject.logger.should_receive(:info) do |message|
-                    expect(message).to match(/cloudcontroller.hm9000.will-start/)
-                  end
-                  subject.process_hm9000_start(hm9000_start_message)
-                end
+                subject.process_hm9000_start(hm9000_start_message)
               end
             end
 
@@ -187,30 +169,13 @@ module VCAP::CloudController
         let(:stop_version) { "current-version" }
         let(:stop_instance_index) { 1 }
 
-        context "without the noop flag" do
-          it "should stop the instance" do
-            dea_client.should_receive(:stop_instances) do |app_guid_to_stop, guid|
-              expect(app_guid_to_stop).to eq("a-non-existent-app")
-              expect(guid).to eq("abc")
-            end
-
-            subject.process_hm9000_stop(hm9000_stop_message)
-          end
-        end
-
-        context "with the noop flag" do
-          let(:noop) { true }
-          it "should not send the start message" do
-            dea_client.should_not_receive(:stop_instances)
-            subject.process_hm9000_stop(hm9000_stop_message)
+        it "should stop the instance" do
+          dea_client.should_receive(:stop_instances) do |app_guid_to_stop, guid|
+            expect(app_guid_to_stop).to eq("a-non-existent-app")
+            expect(guid).to eq("abc")
           end
 
-          it "logs the reason" do
-            subject.logger.should_receive(:info) do |message|
-              expect(message).to match(/cloudcontroller.hm9000.will-stop/)
-            end
-            subject.process_hm9000_stop(hm9000_stop_message)
-          end
+          subject.process_hm9000_stop(hm9000_stop_message)
         end
       end
 
