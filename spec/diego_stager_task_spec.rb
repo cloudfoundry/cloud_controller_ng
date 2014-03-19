@@ -195,6 +195,17 @@ module VCAP::CloudController
         app.add_route(route)
       end
 
+      describe "limits" do
+        it "limits memory" do
+          expect(diego_stager_task.staging_request[:memory_mb]).to eq(259)
+        end
+        it "limits disk" do
+          expect(diego_stager_task.staging_request[:disk_mb]).to eq(799)
+        end
+        it "limits file descriptors" do
+          expect(diego_stager_task.staging_request[:file_descriptors]).to eq(1234)
+        end
+      end
       describe "environment" do
         it "contains user defined environment variables" do
           expect(diego_stager_task.staging_request[:environment].last).to eq(["USER_DEFINED","OK"])

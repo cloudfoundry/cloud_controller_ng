@@ -38,18 +38,11 @@ module VCAP::CloudController
     end
 
     def stage(&completion_callback)
-
-      # The creation of upload handle only guarantees that this cloud controller
-      # is disallowed from trying to stage this app again. It does NOT guarantee that a different
-      # cloud controller will NOT start staging the app in parallel. Therefore, we need to
-      # cache the current task_id here, and later check it was NOT changed by a
-      # different cloud controller completing staging request for the same app before
-      # this cloud controller completes the staging.
       @app.update(staging_task_id: task_id)
 
       logger.info("staging.begin", :app_guid => @app.guid)
-      subject = "diego.staging.start"
-      @message_bus.request(subject, staging_request, {timeout: @staging_timeout}) do |bus_response, _|
+
+      @message_bus.request("diego.staging.start", staging_request, {timeout: @staging_timeout}) do |bus_response, _|
         logger.info("diego.staging.response", :app_guid => @app.guid, :response => bus_response)
 
         return unless this_task_is_current_task?
@@ -77,9 +70,9 @@ module VCAP::CloudController
       {
        :app_id => app.guid,
        :task_id => task_id,
-       :memoryMB => app.memory,
-       :diskMB => app.disk_quota,
-       :fileDescriptors => app.file_descriptors,
+       :memory_mb => app.memory,
+       :disk_mb => app.disk_quota,
+       :file_descriptors => app.file_descriptors,
        :environment => environment,
        :stack => app.stack.name,
        # All url generation should go to blobstore_url_generator
