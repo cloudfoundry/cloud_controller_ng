@@ -9,15 +9,18 @@ module VCAP::CloudController
 
     it_should_behave_like :admin_full_access
 
-    context 'with a suspended organization' do
-      before { object.set(status: 'suspended') }
-      it_should_behave_like :admin_full_access
-    end
-
-    context 'changing the name' do
+    context 'an admin of the organization' do
       include_context :admin_setup
-      before { object.name = 'my new name' }
-      it { should be_able_to :update, object }
+
+      context 'changing the name' do
+        before { object.name = 'my new name' }
+        it { should be_able_to :update, object }
+      end
+
+      context 'with a suspended organization' do
+        before { object.set(status: 'suspended') }
+        it_behaves_like :full_access
+      end
     end
 
     context 'a user in the organization' do
@@ -46,7 +49,7 @@ module VCAP::CloudController
 
       context 'changing the name' do
         before { object.name = 'my new name' }
-        it { should_not be_able_to :update, object }
+        it { should be_able_to :update, object }
       end
 
       context 'with a suspended organization' do
