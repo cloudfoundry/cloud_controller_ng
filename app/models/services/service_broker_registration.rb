@@ -9,27 +9,33 @@ module VCAP::CloudController
       @broker = broker
     end
 
-    def save
+    def create
       return unless broker.valid?
-
-      catalog = ServiceBrokers::V2::Catalog.new(broker, broker.client.catalog)
-      raise_humanized_exception(catalog.errors) unless catalog.valid?
-      broker.db.transaction(savepoint: true) do
-        broker.save
-        catalog.sync_services_and_plans
-      end
+      validate_catalog!
+      broker.save
 
       begin
-        manager = ServiceBrokers::V2::ServiceDashboardClientManager.new(catalog, broker)
+        synchronize_dashboard_clients!
 
-        successfully_synced = manager.synchronize_clients
-
-        raise_humanized_exception(manager.errors) unless successfully_synced
+        broker.db.transaction(savepoint: true) do
+          catalog.sync_services_and_plans
+        end
       rescue => e
         broker.destroy
         raise e
       end
+      return self
+    end
 
+    def update
+      return unless broker.valid?
+      validate_catalog!
+      synchronize_dashboard_clients!
+
+      broker.db.transaction(savepoint: true) do
+        broker.save
+        catalog.sync_services_and_plans
+      end
       return self
     end
 
@@ -38,6 +44,24 @@ module VCAP::CloudController
     end
 
     private
+
+    def synchronize_dashboard_clients!
+      unless manager.synchronize_clients
+        raise_humanized_exception(manager.errors)
+      end
+    end
+
+    def validate_catalog!
+      raise_humanized_exception(catalog.errors) unless catalog.valid?
+    end
+
+    def manager
+      @manager ||= ServiceBrokers::V2::ServiceDashboardClientManager.new(catalog, broker)
+    end
+
+    def catalog
+      @catalog ||= ServiceBrokers::V2::Catalog.new(broker, broker.client.catalog)
+    end
 
     def formatter
       @formatter ||= ServiceBrokers::V2::ValidationErrorsFormatter.new

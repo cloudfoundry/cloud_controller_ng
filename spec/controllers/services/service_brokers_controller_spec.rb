@@ -41,9 +41,9 @@ module VCAP::CloudController
       let(:registration) do
         reg = double(ServiceBrokerRegistration, {
           broker: broker,
-          errors: errors
+          errors: errors,
         })
-        reg.stub(:save).and_return(reg)
+        reg.stub(:create).and_return(reg)
         reg
       end
       let(:presenter) { double(ServiceBrokerPresenter, {
@@ -65,7 +65,7 @@ module VCAP::CloudController
       it 'creates a service broker registration' do
         post '/v2/service_brokers', body, headers
 
-        expect(registration).to have_received(:save)
+        expect(registration).to have_received(:create)
       end
 
       it 'returns the serialized broker' do
@@ -88,7 +88,7 @@ module VCAP::CloudController
       end
 
       context 'when there is an error in Broker Registration' do
-        before { registration.stub(:save).and_return(nil) }
+        before { registration.stub(:create).and_return(nil) }
 
         context 'when the broker url is taken' do
           before { errors.stub(:on).with(:broker_url).and_return([:unique]) }
@@ -118,7 +118,7 @@ module VCAP::CloudController
           let(:error_message) { 'A bunch of stuff was wrong' }
           before do
             errors.stub(:full_messages).and_return([error_message])
-            registration.stub(:save).and_raise(Sequel::ValidationFailed.new(errors))
+            registration.stub(:create).and_raise(Sequel::ValidationFailed.new(errors))
           end
 
           it 'returns an error' do
@@ -285,7 +285,7 @@ module VCAP::CloudController
           broker: broker,
           errors: errors
         })
-        reg.stub(:save).and_return(reg)
+        reg.stub(:update).and_return(reg)
         reg
       end
       let(:presenter) { double(ServiceBrokerPresenter, {
@@ -303,7 +303,7 @@ module VCAP::CloudController
         put "/v2/service_brokers/#{broker.guid}", body, headers
 
         expect(broker).to have_received(:set).with(body_hash)
-        expect(registration).to have_received(:save)
+        expect(registration).to have_received(:update)
       end
 
 
@@ -329,7 +329,7 @@ module VCAP::CloudController
       end
 
       context 'when there is an error in Broker Registration' do
-        before { registration.stub(:save).and_return(nil) }
+        before { registration.stub(:update).and_return(nil) }
 
         context 'when the broker url is not a valid http/https url' do
           before { errors.stub(:on).with(:broker_url).and_return([:url]) }
