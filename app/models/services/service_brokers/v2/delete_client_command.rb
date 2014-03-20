@@ -1,11 +1,10 @@
 module VCAP::CloudController::ServiceBrokers::V2
   class DeleteClientCommand
-    attr_reader :client_id#, :service_broker
+    attr_reader :client_id
 
     def initialize(opts)
       @client_id = opts.fetch(:client_id)
       @client_manager = opts.fetch(:client_manager)
-      #@service_broker = opts.fetch(:service_broker)
     end
 
     def apply!
