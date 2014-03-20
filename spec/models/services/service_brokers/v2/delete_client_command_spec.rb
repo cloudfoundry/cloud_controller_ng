@@ -24,10 +24,7 @@ module VCAP::CloudController::ServiceBrokers::V2
       end
 
       before do
-        allow(VCAP::CloudController::ServiceDashboardClient).
-          to receive(:find).
-          with(uaa_id: 'client-id-1').
-          and_return(client)
+        allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client)
       end
 
       it 'deletes the client in the UAA' do
@@ -37,7 +34,19 @@ module VCAP::CloudController::ServiceBrokers::V2
 
       it 'unclaims the client in the DB' do
         command.apply!
-        expect(client).to have_received(:destroy)
+        expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:remove_claim_on_client).
+          with('client-id-1')
+      end
+
+      context 'when deleting the UAA client fails' do
+        before do
+          allow(client_manager).to receive(:delete).and_raise
+        end
+
+        it 'does not remove the claim on the client' do
+          command.apply! rescue nil
+          expect(VCAP::CloudController::ServiceDashboardClient).not_to have_received(:remove_claim_on_client)
+        end
       end
     end
   end

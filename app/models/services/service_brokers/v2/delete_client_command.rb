@@ -9,8 +9,7 @@ module VCAP::CloudController::ServiceBrokers::V2
 
     def apply!
       client_manager.delete(client_id)
-      client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: client_id)
-      client.destroy
+      VCAP::CloudController::ServiceDashboardClient.remove_claim_on_client(client_id)
     end
 
     private

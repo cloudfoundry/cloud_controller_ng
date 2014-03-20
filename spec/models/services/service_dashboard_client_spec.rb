@@ -72,6 +72,18 @@ module VCAP::CloudController
       end
     end
 
+    describe '.remove_claim_on_client' do
+      before do
+        ServiceDashboardClient.claim_client_for_broker(uaa_id, service_broker)
+      end
+
+      it 'removes the claim' do
+        expect {
+          ServiceDashboardClient.remove_claim_on_client(uaa_id)
+        }.to change { ServiceDashboardClient.client_claimed_by_broker?(uaa_id, service_broker)}.to(false)
+      end
+    end
+
     describe 'validation' do
       def build_service_dashboard_client(attrs={})
         if attrs.has_key?(:service_broker)

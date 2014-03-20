@@ -9,11 +9,11 @@ module VCAP::CloudController::ServiceBrokers::V2
     end
 
     def apply!
-      client_manager.create(client_attrs)
       VCAP::CloudController::ServiceDashboardClient.claim_client_for_broker(
         client_attrs['id'],
         service_broker
       )
+      client_manager.create(client_attrs)
     end
 
     private

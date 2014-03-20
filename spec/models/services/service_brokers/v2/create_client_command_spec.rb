@@ -35,6 +35,17 @@ module VCAP::CloudController::ServiceBrokers::V2
         command.apply!
         expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:claim_client_for_broker)
       end
+
+      context 'when claiming the client for the broker fails' do
+        before do
+          allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker).and_raise
+        end
+
+        it 'does not create the UAA client' do
+          command.apply! rescue nil
+          expect(client_manager).not_to have_received(:create)
+        end
+      end
     end
   end
 end

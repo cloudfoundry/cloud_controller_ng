@@ -15,6 +15,10 @@ module VCAP::CloudController
       where(service_broker_id: broker.id, uaa_id: uaa_id).any?
     end
 
+    def self.remove_claim_on_client(uaa_id)
+      where(uaa_id: uaa_id).delete
+    end
+
     def validate
       validates_presence :service_broker
       validates_presence :uaa_id
