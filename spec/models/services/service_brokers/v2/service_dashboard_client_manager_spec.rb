@@ -59,7 +59,6 @@ module VCAP::CloudController::ServiceBrokers::V2
       let(:client_manager) { double('client_manager') }
 
       before do
-        allow(catalog).to receive(:error_text)
         allow(client_manager).to receive(:create)
         allow(UaaClientManager).to receive(:new).and_return(client_manager)
         allow(client_manager).to receive(:get_clients).and_return([])

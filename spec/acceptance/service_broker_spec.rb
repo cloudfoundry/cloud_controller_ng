@@ -5,6 +5,23 @@ describe 'Service Broker' do
   before(:all) { setup_cc }
   after(:all) { $spec_env.reset_database_with_seeds }
 
+
+  def build_service(attrs={})
+    @index ||= 0
+    @index += 1
+    {
+      id: SecureRandom.uuid,
+      name: "service-#{@index}",
+      description: "A service, duh!",
+      bindable: true,
+      plans: [{
+                id: "plan-#{@index}",
+                name: "plan-#{@index}",
+                description: "A plan, duh!"
+              }]
+    }.merge(attrs)
+  end
+
   describe 'adding a service broker' do
     context 'when a service has no plans' do
       before do
@@ -135,23 +152,6 @@ describe 'Service Broker' do
 
   describe 'updating a service broker' do
     context 'when the dashboard_client values for a service have changed' do
-
-      def build_service(attrs={})
-        @index ||= 0
-        @index += 1
-        {
-          id: SecureRandom.uuid,
-          name: "service-#{@index}",
-          description: "A service, duh!",
-          bindable: true,
-          plans: [{
-            id: "plan-#{@index}",
-            name: "plan-#{@index}",
-            description: "A plan, duh!"
-          }]
-        }.merge(attrs)
-      end
-
       before do
         service_1 = build_service(dashboard_client: {id: 'client-1', secret: 'shhhhh', redirect_uri: 'http://example.com/client-1'})
         service_2 = build_service(dashboard_client: {id: 'client-2', secret: 'sekret', redirect_uri: 'http://example.com/client-2'})
@@ -262,6 +262,49 @@ describe 'Service Broker' do
             body: hash_including('client_id' => 'client-3', 'client_secret' => 'SUPERsecret')
           )
         ).to have_been_made
+      end
+    end
+  end
+
+  describe 'deleting a service broker' do
+    context 'when broker has dashboard clients' do
+      before do
+        service_1 = build_service(dashboard_client: {id: 'client-1', secret: 'shhhhh', redirect_uri: 'http://example.com/client-1'})
+        service_2 = build_service(dashboard_client: {id: 'client-2', secret: 'sekret', redirect_uri: 'http://example.com/client-2'})
+        service_3 = build_service
+
+        # set up a fake broker catalog that includes dashboard_client for services
+        stub_catalog_fetch(200, services: [service_1, service_2, service_3])
+        setup_uaa_stubs_to_add_new_client
+        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
+
+        # add that broker to the CC
+        post('/v2/service_brokers',
+             {
+               name: 'broker_name',
+               broker_url: stubbed_broker_url,
+               auth_username: stubbed_broker_username,
+               auth_password: stubbed_broker_password
+             }.to_json,
+             json_headers(admin_headers)
+        )
+        expect(last_response).to have_status_code(201)
+        @service_broker_guid = decoded_response.fetch('metadata').fetch('guid')
+
+        stub_request(:delete, %r{http://localhost:8080/uaa/oauth/clients/.*}).
+          to_return(
+          status: 200,
+          headers: {'content-type' => 'application/json'},
+          body: ""
+        )
+      end
+
+      it 'deletes the dashboard clients from UAA' do
+        delete("/v2/service_brokers/#{@service_broker_guid}", '', json_headers(admin_headers))
+        expect(last_response).to have_status_code(204)
+
+        expect(a_request(:delete, 'http://localhost:8080/uaa/oauth/clients/client-1')).to have_been_made
+        expect(a_request(:delete, 'http://localhost:8080/uaa/oauth/clients/client-2')).to have_been_made
       end
     end
   end

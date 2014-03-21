@@ -64,7 +64,7 @@ module VCAP::CloudController
     def delete(guid)
       broker = ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker
-      broker.destroy
+      ServiceBrokerRemoval.new(broker).execute!
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation
       raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerNotRemovable")
