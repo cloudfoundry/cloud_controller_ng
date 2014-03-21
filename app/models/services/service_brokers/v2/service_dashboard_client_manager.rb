@@ -4,14 +4,16 @@ require 'models/services/validation_errors'
 
 module VCAP::CloudController::ServiceBrokers::V2
   class ServiceDashboardClientManager
-    attr_reader :catalog, :client_manager, :errors, :service_broker, :services_requesting_dashboard_client
+    attr_reader :catalog,  :errors, :service_broker
 
     def initialize(catalog, service_broker)
-      @catalog                              = catalog
-      @client_manager                       = UaaClientManager.new
+      @catalog        = catalog
+      @service_broker = service_broker
+      @errors         = VCAP::CloudController::ValidationErrors.new
+
       @services_requesting_dashboard_client = catalog.services.select(&:dashboard_client)
-      @errors                               = VCAP::CloudController::ValidationErrors.new
-      @service_broker                       = service_broker
+      @client_manager                       = UaaClientManager.new
+      @differ                               = ServiceDashboardClientDiffer.new(service_broker, client_manager)
     end
 
     def synchronize_clients
@@ -21,7 +23,6 @@ module VCAP::CloudController::ServiceBrokers::V2
       return false unless errors.empty?
 
       clients_claimed_by_broker = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
-      differ = ServiceDashboardClientDiffer.new(service_broker, client_manager)
       changeset = differ.create_changeset(services_requesting_dashboard_client, clients_claimed_by_broker)
       changeset.each(&:apply!)
 
@@ -29,6 +30,8 @@ module VCAP::CloudController::ServiceBrokers::V2
     end
 
     private
+
+    attr_reader :client_manager, :differ, :services_requesting_dashboard_client
 
     def validate_requested_clients_are_available!
       existing_clients    = client_manager.get_clients(requested_client_ids)
