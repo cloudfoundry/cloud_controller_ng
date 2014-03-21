@@ -49,6 +49,9 @@ platform using the NATS message bus. For example, it performs the following usin
 
 ## Testing
 
+To maintain a consistent and effective approach to testing, please refer to `spec/README.md` and
+keep it up to date, documenting the purpose of the various types of tests.
+
 By default `rspec` will run test suite with sqlite3 in-memory database;
 however, you can specify connection string via `DB_CONNECTION` environment
 variable to test against postgres and mysql. Examples:
