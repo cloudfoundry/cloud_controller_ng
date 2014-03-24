@@ -48,9 +48,8 @@ module VCAP::CloudController
       broker = ServiceBroker.find(guid: guid)
       return HTTP::NOT_FOUND unless broker
 
-      registration = ServiceBrokerRegistration.new(broker)
-
       broker.set(params)
+      registration = ServiceBrokerRegistration.new(broker)
 
       unless registration.update
         raise get_exception_from_errors(registration)

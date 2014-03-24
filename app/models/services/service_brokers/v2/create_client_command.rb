@@ -9,11 +9,17 @@ module VCAP::CloudController::ServiceBrokers::V2
     end
 
     def apply!
+      client_id = client_attrs.fetch('id')
+
       VCAP::CloudController::ServiceDashboardClient.claim_client_for_broker(
-        client_attrs['id'],
+        client_id,
         service_broker
       )
-      client_manager.create(client_attrs)
+      begin
+        client_manager.create(client_attrs)
+      rescue
+        VCAP::CloudController::ServiceDashboardClient.remove_claim_on_client(client_id)
+      end
     end
 
     private

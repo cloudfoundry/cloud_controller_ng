@@ -15,6 +15,7 @@ module VCAP::CloudController::ServiceBrokers::V2
 
     before do
       allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker)
+      allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client)
     end
 
     let(:command) do
@@ -44,6 +45,18 @@ module VCAP::CloudController::ServiceBrokers::V2
         it 'does not create the UAA client' do
           command.apply! rescue nil
           expect(client_manager).not_to have_received(:create)
+        end
+      end
+
+      context 'when creating the client in UAA fails' do
+        before do
+          allow(client_manager).to receive(:create).and_raise
+        end
+
+        it 'removes the claim' do
+          command.apply! rescue nil
+          expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:remove_claim_on_client).
+            with('client-id-1')
         end
       end
     end
