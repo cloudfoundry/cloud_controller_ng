@@ -62,6 +62,7 @@ module VCAP::CloudController::ServiceBrokers::V2
                 'id'          => plan_id,
                 'name'        => plan_name,
                 'description' => plan_description,
+                'free'        => false
               }.merge(plan_metadata_hash)
             ]
           }.merge(service_metadata_hash)
@@ -118,10 +119,7 @@ module VCAP::CloudController::ServiceBrokers::V2
           expect(plan.name).to eq(plan_name)
           expect(plan.description).to eq(plan_description)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
-
-          # This is a temporary default until cost information is collected from V2
-          # services.
-          expect(plan.free).to be_true
+          expect(plan.free).to be_false
         end
 
         it 'marks the plan as private' do
@@ -197,23 +195,22 @@ module VCAP::CloudController::ServiceBrokers::V2
           expect(plan.service).to eq(VCAP::CloudController::Service.last)
           expect(plan.name).to eq(plan_name)
           expect(plan.description).to eq(plan_description)
-
-          # This is a temporary default until cost information is collected from V2
-          # services.
-          expect(plan.free).to be_true
+          expect(plan.free).to be_false
         end
 
         context 'and a plan already exists' do
           let!(:plan) do
             VCAP::CloudController::ServicePlan.make(
               service: service,
-              unique_id: plan_id
+              unique_id: plan_id,
+              free: true
             )
           end
 
           it 'updates the existing plan' do
             expect(plan.name).to_not eq(plan_name)
             expect(plan.description).to_not eq(plan_description)
+            expect(plan.free).to be_true
 
             expect {
               catalog.sync_services_and_plans
@@ -222,6 +219,7 @@ module VCAP::CloudController::ServiceBrokers::V2
             plan.reload
             expect(plan.name).to eq(plan_name)
             expect(plan.description).to eq(plan_description)
+            expect(plan.free).to be_false
           end
 
           context 'when the plan is public' do

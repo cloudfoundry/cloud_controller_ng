@@ -6,16 +6,38 @@ require 'models/services/service_brokers/v2/catalog_service'
 
 module VCAP::CloudController::ServiceBrokers::V2
   describe CatalogPlan do
-    describe 'validations' do
-      def build_valid_plan_attrs(opts = {})
-        {
-          'id' => opts[:id] || 'broker-provided-plan-id',
-          'metadata' => opts[:metadata] || {},
-          'name' => opts[:name] || 'service-plan-name',
-          'description' => opts[:description] || 'The description of the service plan'
-        }
-      end
+    def build_valid_plan_attrs(opts = {})
+      {
+        'id'          => opts[:id] || 'broker-provided-plan-id',
+        'metadata'    => opts[:metadata] || {},
+        'name'        => opts[:name] || 'service-plan-name',
+        'description' => opts[:description] || 'The description of the service plan',
+        'free'        => opts.fetch(:free, true)
+      }
+    end
 
+    describe 'initializing' do
+      let(:catalog_service) { double('catalog_service') }
+      subject { CatalogPlan.new(catalog_service, build_valid_plan_attrs(free: false)) }
+
+      its(:broker_provided_id) { should eq 'broker-provided-plan-id' }
+      its(:name) { should eq 'service-plan-name' }
+      its(:description) { should eq 'The description of the service plan' }
+      its(:metadata) { should eq({}) }
+      its(:catalog_service) { should eq catalog_service }
+      its(:free) { should be_false }
+      its(:errors) { should be_empty }
+
+      it 'defaults free field to true' do
+        attrs = build_valid_plan_attrs
+        attrs.delete('free')
+        plan = CatalogPlan.new(double('broker'), attrs)
+
+        expect(plan.free).to be_true
+      end
+    end
+
+    describe 'validations' do
       it 'validates that @broker_provided_id is a string' do
         attrs = build_valid_plan_attrs(id: 123)
         plan = CatalogPlan.new(double('broker'), attrs)
@@ -73,6 +95,14 @@ module VCAP::CloudController::ServiceBrokers::V2
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan metadata must be a hash, but has value ["list", "of", "strings"]'
+      end
+
+      it 'validates that @free is a boolean' do
+        attrs = build_valid_plan_attrs(free: 'true')
+        plan = CatalogPlan.new(double('broker'), attrs)
+        plan.valid?
+
+        expect(plan.errors.messages).to include 'Plan free must be a boolean, but has value "true"'
       end
 
       describe '#valid?' do

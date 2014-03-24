@@ -104,7 +104,7 @@ module VCAP::CloudController::ServiceBrokers::V2
         attrs = {
           name:        catalog_plan.name,
           description: catalog_plan.description,
-          free:        true,
+          free:        catalog_plan.free,
           active:      true,
           extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
         }

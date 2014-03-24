@@ -6,7 +6,7 @@ module VCAP::CloudController::ServiceBrokers::V2
   class CatalogPlan
     include CatalogValidationHelper
 
-    attr_reader :broker_provided_id, :name, :description, :metadata, :catalog_service, :errors
+    attr_reader :broker_provided_id, :name, :description, :metadata, :catalog_service, :errors, :free
 
     def initialize(catalog_service, attrs)
       @catalog_service    = catalog_service
@@ -15,6 +15,7 @@ module VCAP::CloudController::ServiceBrokers::V2
       @name               = attrs['name']
       @description        = attrs['description']
       @errors             = VCAP::CloudController::ValidationErrors.new
+      @free               = attrs['free'].nil? ? true : attrs['free']
     end
 
     def cc_plan
@@ -36,14 +37,16 @@ module VCAP::CloudController::ServiceBrokers::V2
       validate_string!(:name, name, required: true)
       validate_string!(:description, description, required: true)
       validate_hash!(:metadata, metadata) if metadata
+      validate_bool!(:free, free) if free
     end
 
     def human_readable_attr_name(name)
       {
         broker_provided_id: "Plan id",
-        name: "Plan name",
-        description: "Plan description",
-        metadata: "Plan metadata"
+        name:               "Plan name",
+        description:        "Plan description",
+        metadata:           "Plan metadata",
+        free:               "Plan free"
       }.fetch(name) { raise NotImplementedError }
     end
   end

@@ -148,6 +148,48 @@ describe 'Service Broker' do
         )
       end
     end
+
+    context 'when a plan has a free field in the catalog' do
+      before do
+        stub_catalog_fetch(200, {
+          services: [{
+            id: '12345',
+            name: 'service-1',
+            description: 'A service, duh!',
+            bindable: true,
+            plans: [{
+              id: 'plan-1',
+              name: 'not-free-plan',
+              description: 'A not free plan',
+              free: false
+            }, {
+              id: 'plan-2',
+              name: 'free-plan',
+              description: 'A free plan',
+              free: true
+            }]
+          }]
+        })
+
+        post('/v2/service_brokers', {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, json_headers(admin_headers))
+      end
+
+      it 'sets the cc plan free field' do
+        get('/v2/service_plans', {}.to_json, json_headers(admin_headers))
+
+        resources     = JSON.parse(last_response.body)['resources']
+        not_free_plan = resources.find { |plan| plan['entity']['name'] == 'not-free-plan' }
+        free_plan     = resources.find { |plan| plan['entity']['name'] == 'free-plan' }
+
+        expect(free_plan['entity']['free']).to be_true
+        expect(not_free_plan['entity']['free']).to be_false
+      end
+    end
   end
 
   describe 'updating a service broker' do
@@ -262,6 +304,77 @@ describe 'Service Broker' do
             body: hash_including('client_id' => 'client-3', 'client_secret' => 'SUPERsecret')
           )
         ).to have_been_made
+      end
+    end
+
+    context 'when the free field for a plan has changed' do
+      before do
+        stub_catalog_fetch(200, {
+          services: [{
+            id: '12345',
+            name: 'service-1',
+            description: 'A service, duh!',
+            bindable: true,
+            plans: [{
+              id: 'plan-1',
+              name: 'not-free-plan',
+              description: 'A not free plan',
+              free: false
+            }, {
+              id: 'plan-2',
+              name: 'free-plan',
+              description: 'A free plan',
+              free: true
+            }]
+          }]
+        })
+
+        post('/v2/service_brokers', {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, json_headers(admin_headers))
+
+        guid = VCAP::CloudController::ServiceBroker.first.guid
+
+        stub_catalog_fetch(200, {
+          services: [{
+            id: '12345',
+            name: 'service-1',
+            description: 'A service, duh!',
+            bindable: true,
+            plans: [{
+              id: 'plan-1',
+              name: 'not-free-plan',
+              description: 'A not free plan',
+              free: true
+            }, {
+              id: 'plan-2',
+              name: 'free-plan',
+              description: 'A free plan',
+              free: false
+            }]
+          }]
+        })
+
+        put("/v2/service_brokers/#{guid}", {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, json_headers(admin_headers))
+      end
+
+      it 'sets the cc plan free field' do
+        get('/v2/service_plans', {}.to_json, json_headers(admin_headers))
+
+        resources               = JSON.parse(last_response.body)['resources']
+        no_longer_not_free_plan = resources.find { |plan| plan['entity']['name'] == 'not-free-plan' }
+        no_longer_free_plan     = resources.find { |plan| plan['entity']['name'] == 'free-plan' }
+
+        expect(no_longer_free_plan['entity']['free']).to be_false
+        expect(no_longer_not_free_plan['entity']['free']).to be_true
       end
     end
   end
