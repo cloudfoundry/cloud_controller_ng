@@ -1,4 +1,5 @@
 require 'models/services/service_brokers/v2/service_dashboard_client_manager'
+require 'models/services/service_brokers/v2/service_manager'
 require 'models/services/service_brokers/v2/validation_errors_formatter'
 
 module VCAP::CloudController
@@ -18,7 +19,7 @@ module VCAP::CloudController
         synchronize_dashboard_clients!
 
         broker.db.transaction(savepoint: true) do
-          catalog.sync_services_and_plans
+          service_manager.sync_services_and_plans
         end
       rescue => e
         broker.destroy
@@ -34,7 +35,7 @@ module VCAP::CloudController
 
       broker.db.transaction(savepoint: true) do
         broker.save
-        catalog.sync_services_and_plans
+        service_manager.sync_services_and_plans
       end
       return self
     end
@@ -46,8 +47,8 @@ module VCAP::CloudController
     private
 
     def synchronize_dashboard_clients!
-      unless manager.synchronize_clients
-        raise_humanized_exception(manager.errors)
+      unless client_manager.synchronize_clients
+        raise_humanized_exception(client_manager.errors)
       end
     end
 
@@ -55,8 +56,12 @@ module VCAP::CloudController
       raise_humanized_exception(catalog.errors) unless catalog.valid?
     end
 
-    def manager
-      @manager ||= ServiceBrokers::V2::ServiceDashboardClientManager.new(catalog, broker)
+    def client_manager
+      @client_manager ||= ServiceBrokers::V2::ServiceDashboardClientManager.new(catalog, broker)
+    end
+
+    def service_manager
+      @service_manager ||= ServiceBrokers::V2::ServiceManager.new(catalog)
     end
 
     def catalog

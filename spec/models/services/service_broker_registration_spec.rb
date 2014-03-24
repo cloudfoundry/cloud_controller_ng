@@ -13,7 +13,8 @@ module VCAP::CloudController
         )
       end
       let(:manager) { double(:service_dashboard_manager, :synchronize_clients => true) }
-      let(:catalog) { double(:catalog, :sync_services_and_plans => true, :valid? => true) }
+      let(:catalog) { double(:catalog, :valid? => true) }
+      let(:service_manager) { double(:service_manager, :sync_services_and_plans => true) }
 
       subject(:registration) { ServiceBrokerRegistration.new(broker) }
 
@@ -21,6 +22,7 @@ module VCAP::CloudController
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
         allow(ServiceBrokers::V2::ServiceDashboardClientManager).to receive(:new).and_return(manager)
         allow(ServiceBrokers::V2::Catalog).to receive(:new).and_return(catalog)
+        allow(ServiceBrokers::V2::ServiceManager).to receive(:new).and_return(service_manager)
       end
 
       it 'returns itself' do
@@ -58,7 +60,7 @@ module VCAP::CloudController
       it 'syncs services and plans' do
         registration.create
 
-        expect(catalog).to have_received(:sync_services_and_plans)
+        expect(service_manager).to have_received(:sync_services_and_plans)
       end
 
       it 'creates dashboard clients' do
@@ -104,7 +106,7 @@ module VCAP::CloudController
           it 'does not synchronize the catalog' do
             registration.create
 
-            expect(catalog).not_to have_received(:sync_services_and_plans)
+            expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
         end
 
@@ -132,7 +134,7 @@ module VCAP::CloudController
             rescue VCAP::Errors::ApiError
             end
 
-            expect(catalog).not_to have_received(:sync_services_and_plans)
+            expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
 
           it 'raises a ServiceBrokerCatalogInvalid error with a human-readable message' do
@@ -173,7 +175,7 @@ module VCAP::CloudController
             rescue ServiceBrokers::V2::ServiceBrokerBadResponse
             end
 
-            expect(catalog).not_to have_received(:sync_services_and_plans)
+            expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
 
         end
@@ -198,7 +200,7 @@ module VCAP::CloudController
             rescue VCAP::Errors::ApiError
             end
 
-            expect(catalog).not_to have_received(:sync_services_and_plans)
+            expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
         end
       end
@@ -206,7 +208,7 @@ module VCAP::CloudController
       context 'when exception is raised during transaction' do
         before do
           catalog.stub(:valid?).and_return(true)
-          catalog.stub(:sync_services_and_plans).and_raise(Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
+          service_manager.stub(:sync_services_and_plans).and_raise(Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
         end
 
         it 'does not save new broker' do
@@ -236,7 +238,7 @@ module VCAP::CloudController
         it 'does not synchronize the catalog' do
           registration.create rescue nil
 
-          expect(catalog).not_to have_received(:sync_services_and_plans)
+          expect(service_manager).not_to have_received(:sync_services_and_plans)
         end
       end
     end
@@ -251,7 +253,8 @@ module VCAP::CloudController
         )
       end
       let(:manager) { double(:service_dashboard_manager, :synchronize_clients => true) }
-      let(:catalog) { double(:catalog, :sync_services_and_plans => true, :valid? => true) }
+      let(:catalog) { double(:catalog, :valid? => true) }
+      let(:service_manager) { double(:service_manager, :sync_services_and_plans => true) }
 
       subject(:registration) { ServiceBrokerRegistration.new(broker) }
 
@@ -259,6 +262,7 @@ module VCAP::CloudController
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
         allow(ServiceBrokers::V2::ServiceDashboardClientManager).to receive(:new).and_return(manager)
         allow(ServiceBrokers::V2::Catalog).to receive(:new).and_return(catalog)
+        allow(ServiceBrokers::V2::ServiceManager).to receive(:new).and_return(service_manager)
       end
 
       it 'returns itself' do
@@ -289,7 +293,7 @@ module VCAP::CloudController
       it 'syncs services and plans' do
         registration.update
 
-        expect(catalog).to have_received(:sync_services_and_plans)
+        expect(service_manager).to have_received(:sync_services_and_plans)
       end
 
       it 'updates dashboard clients' do
@@ -338,7 +342,7 @@ module VCAP::CloudController
           it 'does not synchronize the catalog' do
             registration.update
 
-            expect(catalog).not_to have_received(:sync_services_and_plans)
+            expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
         end
 
@@ -366,7 +370,7 @@ module VCAP::CloudController
             rescue VCAP::Errors::ApiError
             end
 
-            expect(catalog).not_to have_received(:sync_services_and_plans)
+            expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
 
           it 'raises a ServiceBrokerCatalogInvalid error with a human-readable message' do
@@ -408,7 +412,7 @@ module VCAP::CloudController
             rescue ServiceBrokers::V2::ServiceBrokerBadResponse
             end
 
-            expect(catalog).not_to have_received(:sync_services_and_plans)
+            expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
 
         end
@@ -440,7 +444,7 @@ module VCAP::CloudController
             rescue VCAP::Errors::ApiError
             end
 
-            expect(catalog).not_to have_received(:sync_services_and_plans)
+            expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
         end
       end
@@ -448,7 +452,7 @@ module VCAP::CloudController
       context 'when exception is raised during transaction' do
         before do
           catalog.stub(:valid?).and_return(true)
-          catalog.stub(:sync_services_and_plans).and_raise(Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
+          service_manager.stub(:sync_services_and_plans).and_raise(Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
         end
 
         it 'does not update the broker' do
@@ -482,7 +486,7 @@ module VCAP::CloudController
         it 'does not synchronize the catalog' do
           registration.update rescue nil
 
-          expect(catalog).not_to have_received(:sync_services_and_plans)
+          expect(service_manager).not_to have_received(:sync_services_and_plans)
         end
       end
     end
