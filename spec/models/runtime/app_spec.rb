@@ -600,6 +600,78 @@ module VCAP::CloudController
       end
     end
 
+    describe "custom_buildpack_url" do
+      context "when a custom buildpack is associated with the app" do
+        it "should be the custom url" do
+          app = App.make(buildpack: "https://example.com/repo.git")
+          expect(app.custom_buildpack_url).to eq("https://example.com/repo.git")
+        end
+      end
+
+      context "when an admin buildpack is associated with the app" do
+        it "should be nil" do
+          app = App.make
+          app.admin_buildpack = Buildpack.make
+          expect(app.custom_buildpack_url).to be_nil
+        end
+      end
+
+      context "when no buildpack is associated with the app" do
+        it "should be nil" do
+          expect(App.make.custom_buildpack_url).to be_nil
+        end
+      end
+    end
+
+    describe "buildpack_guid" do
+      context "when an admin buildpack is associated with the app" do
+        it "should equal the guid of the admin buildpack" do
+          app = App.make
+          app.admin_buildpack = Buildpack.make
+          expect(app.buildpack_guid).to eq(app.admin_buildpack.guid)
+        end
+      end
+
+      context "when an admin buildpack is detected" do
+        it "should equal the guid of the detected admin buildpack" do
+          app = App.make(detected_buildpack_guid: "abc-123")
+          expect(app.buildpack_guid).to eq("abc-123")
+        end
+      end
+
+      context "when a custom buildpack url is associated with the app" do
+        it "should be nil" do
+          app = App.make(buildpack: "https://example.com/repo.git")
+          expect(app.buildpack_guid).to be_nil
+        end
+      end
+    end
+
+    describe "buildpack_name" do
+      context "when an admin buildpack is associated with the app" do
+        it "should equal the name of the admin buildpack" do
+        app = App.make
+        app.admin_buildpack = Buildpack.make
+        expect(app.buildpack_name).to eq(app.admin_buildpack.name)
+        end
+      end
+
+      context "when an admin buildpack is detected" do
+        it "should equal the name of the detected admin buildpack" do
+          app = App.make
+          app.admin_buildpack = Buildpack.make(name: "my_admin_buildpack")
+          expect(app.buildpack_name).to eq("my_admin_buildpack")
+        end
+      end
+
+      context "when a custom buildpack url is associated with the app" do
+        it "should be nil" do
+          app = App.make(buildpack: "https://example.com/repo.git")
+          expect(app.buildpack_name).to be_nil
+        end
+      end
+    end
+
     describe "validations" do
       describe "buildpack" do
         it "does allow nil value" do
@@ -1136,6 +1208,49 @@ module VCAP::CloudController
           expect {
             app.update(memory: 2)
           }.not_to change {AppUsageEvent.count}
+        end
+      end
+
+      context "when a custom buildpack was used for staging" do
+        it "creates an AppUsageEvent that contains the custom buildpack url" do
+          app = AppFactory.make(buildpack: "https://example.com/repo.git", state: "STOPPED")
+          expect {
+            app.update(state: "STARTED")
+          }.to change {AppUsageEvent.count}.by(1)
+          event = AppUsageEvent.last
+          expect(event.buildpack_name).to eq("https://example.com/repo.git")
+          expect(event).to match_app(app)
+        end
+      end
+
+      context "when an explicit admin buildpack was used for staging" do
+        it "creates an AppUsageEvent that contains the admin buildpack guid" do
+          app = AppFactory.make(state: "STOPPED")
+          buildpack = Buildpack.make
+          app.admin_buildpack = buildpack
+          expect {
+            app.update(state: "STARTED")
+          }.to change {AppUsageEvent.count}.by(1)
+          event = AppUsageEvent.last
+          expect(event.buildpack_guid).to eq(buildpack.guid)
+          expect(event).to match_app(app)
+        end
+      end
+
+      context "when a detected admin buildpack was used for staging" do
+        it "creates an AppUsageEvent that contains the detected buildpack guid" do
+          buildpack = Buildpack.make
+          app = AppFactory.make(
+            state: "STOPPED",
+            detected_buildpack: "Admin buildpack detect string",
+            detected_buildpack_guid: buildpack.guid
+          )
+          expect {
+            app.update(state: "STARTED")
+          }.to change {AppUsageEvent.count}.by(1)
+          event = AppUsageEvent.last
+          expect(event.buildpack_guid).to eq(buildpack.guid)
+          expect(event).to match_app(app)
         end
       end
     end

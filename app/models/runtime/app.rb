@@ -36,7 +36,7 @@ module VCAP::CloudController
     default_order_by :name
 
     export_attributes :name, :production,
-      :space_guid, :stack_guid, :buildpack, :detected_buildpack,
+      :space_guid, :stack_guid, :buildpack, :detected_buildpack, :detected_buildpack_guid,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :version, :command, :console, :debug,
       :staging_task_id, :package_state, :health_check_timeout
@@ -148,8 +148,11 @@ module VCAP::CloudController
                            org_guid: space.organization_guid,
                            space_guid: space_guid,
                            space_name: space.name,
+                           buildpack_name: custom_buildpack_url || buildpack_name,
+                           buildpack_guid: buildpack_guid,
       )
     end
+    private :create_app_usage_event
 
     def version_needs_to_be_updated?
       # change version if:
@@ -424,6 +427,21 @@ module VCAP::CloudController
       elsif buildpack_name != "" #git url case
         super(buildpack_name)
       end
+    end
+
+    def custom_buildpack_url
+      buildpack.url if buildpack.custom?
+    end
+
+    def buildpack_guid
+      return admin_buildpack.guid if admin_buildpack
+      detected_buildpack_guid
+    end
+
+    def buildpack_name
+      current_buildpack = Buildpack.find(guid: buildpack_guid)
+      return nil unless current_buildpack
+      current_buildpack.name
     end
 
     def package_hash=(hash)

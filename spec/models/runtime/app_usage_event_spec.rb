@@ -11,7 +11,9 @@ module VCAP::CloudController
         app_name: 'app-name',
         space_guid: 'space-guid',
         space_name: 'space-name',
-        org_guid: 'org-guid'
+        org_guid: 'org-guid',
+        buildpack_guid: 'buildpack',
+        buildpack_name: 'https://example.com/buildpack.git'
       }
     end
 
@@ -27,6 +29,16 @@ module VCAP::CloudController
       end
     end
 
+    describe "optional attributes" do
+      let(:optional_attributes) { [:buildpack_guid, :buildpack_name] }
+
+      it "does not raise exception when they are missing" do
+        expect {
+          AppUsageEvent.create(valid_attributes.except(optional_attributes))
+        }.to_not raise_error
+      end
+    end
+
     describe "serialization" do
       it "has the relevant fields" do
         event = AppUsageEvent.make
@@ -39,6 +51,8 @@ module VCAP::CloudController
         expect(json_hash.fetch('space_guid')).to eq(event.space_guid)
         expect(json_hash.fetch('space_name')).to eq(event.space_name)
         expect(json_hash.fetch('org_guid')).to eq(event.org_guid)
+        expect(json_hash.fetch('buildpack_guid')).to eq(event.buildpack_guid)
+        expect(json_hash.fetch('buildpack_name')).to eq(event.buildpack_name)
       end
     end
   end

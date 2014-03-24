@@ -99,7 +99,7 @@ CaseIndentation:
 # Offence count: 20
 # Configuration parameters: CountComments.
 ClassLength:
-  Max: 396
+  Max: 398
 
 # Offence count: 2
 ClassVars:
