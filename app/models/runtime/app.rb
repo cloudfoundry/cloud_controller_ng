@@ -96,22 +96,16 @@ module VCAP::CloudController
     end
 
     def validation_policies
-      policies = [
+      [
         AppEnvironmentPolicy.new(self),
         DiskQuotaPolicy.new(self, max_app_disk_in_mb),
-        MetadataPolicy.new(self, deserialized_values[:metadata]),
+        MetadataPolicy.new(self, metadata_deserialized),
         MinMemoryPolicy.new(self),
+        MaxMemoryPolicy.new(self),
         InstancesPolicy.new(self),
-        HealthCheckPolicy.new(self, health_check_timeout)
+        HealthCheckPolicy.new(self, health_check_timeout),
+        CustomBuildpackPolicy.new(self, self.class.custom_buildpacks_enabled?)
       ]
-      if space && (new? || !being_stopped?)
-        policies << MaxMemoryPolicy.new(self, space.organization)
-      end
-
-      if column_changed?(:buildpack)
-        policies << CustomBuildpackPolicy.new(self, self.class.custom_buildpacks_enabled?)
-      end
-      policies
     end
 
     def validate
@@ -206,6 +200,18 @@ module VCAP::CloudController
 
     def being_stopped?
       column_changed?(:state) && stopped?
+    end
+
+    def scaling_operation?
+      new? || !being_stopped?
+    end
+
+    def buildpack_changed?
+      column_changed?(:buildpack)
+    end
+
+    def organization
+      space && space.organization
     end
 
     def has_stop_event_for_latest_run?
@@ -475,6 +481,11 @@ module VCAP::CloudController
     end
 
     private
+
+    def metadata_deserialized
+      deserialized_values[:metadata]
+    end
+
     def app_from_db
       error_message = "Expected app record not found in database with guid %s"
       app_from_db = self.class.find(guid: guid)

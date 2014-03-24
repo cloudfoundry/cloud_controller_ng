@@ -1379,7 +1379,7 @@ module VCAP::CloudController
       end
 
       context "app creation" do
-        subject(:app) { App.new }
+        subject(:app) { App.new(space: space) }
 
         it "validates min requested memory" do
           expect_validator(MinMemoryPolicy)
@@ -1403,17 +1403,7 @@ module VCAP::CloudController
           expect_validator(MinMemoryPolicy)
         end
 
-        context "when stopping the app" do
-          before do
-            app.state = "STOPPED"
-          end
-
-          it "does not validates max requested memory" do
-            expect_no_validator(MaxMemoryPolicy)
-          end
-        end
-
-        it "validates max requested memory when not stopping app" do
+        it "validates max requested memory" do
           expect_validator(MaxMemoryPolicy)
         end
 

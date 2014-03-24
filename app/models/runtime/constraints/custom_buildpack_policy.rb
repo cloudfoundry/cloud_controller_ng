@@ -8,6 +8,7 @@ class CustomBuildpackPolicy
   end
 
   def validate
+    return unless @app.buildpack_changed?
     return if @custom_buildpacks_enabled
     if @app.buildpack.custom?
       @errors.add(:buildpack, ERROR_MSG)
