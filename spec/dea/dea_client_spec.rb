@@ -147,9 +147,15 @@ module VCAP::CloudController
       end
 
       it "should not log passwords" do
-        start_app_message = DeaClient.start_app_message(app)
-        scrubbed_message = DeaClient.send(:scrub_sensitive_fields, start_app_message)
-        scrubbed_message.should_not include(:services, :env, :executableUri)
+        logger = double(Steno)
+        allow(DeaClient).to receive(:logger).and_return(logger)
+
+        dea_pool.should_receive(:find_dea).once.and_return(nil)
+        logger.should_receive(:error) do |msg, data|
+          data[:message].should_not include(:services, :env, :executableUri)
+        end.once
+
+        DeaClient.start_instance_at_index(app, 1)
       end
     end
 
