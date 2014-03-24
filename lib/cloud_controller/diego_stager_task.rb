@@ -76,11 +76,8 @@ module VCAP::CloudController
        :environment => environment,
        :stack => app.stack.name,
        # All url generation should go to blobstore_url_generator
-       :download_uri => @blobstore_url_generator.app_package_download_url(app),
-       :upload_uri => @blobstore_url_generator.droplet_upload_url(app),
-       :buildpack_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(app),
-       :buildpack_cache_upload_uri => @blobstore_url_generator.buildpack_cache_upload_url(app),
-       :admin_buildpacks => admin_buildpacks
+       :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),
+       :buildpacks => buildpacks
       }
     end
 
@@ -107,13 +104,13 @@ module VCAP::CloudController
       return app.staging_task_id == task_id
     end
 
-    def admin_buildpacks
+    def buildpacks
       Buildpack.list_admin_buildpacks.
           select(&:enabled).
-          collect { |buildpack| admin_buildpack_entry(buildpack) }
+          collect { |buildpack| buildpack_entry(buildpack) }
     end
 
-    def admin_buildpack_entry(buildpack)
+    def buildpack_entry(buildpack)
       {
           key: buildpack.key,
           url: @blobstore_url_generator.admin_buildpack_download_url(buildpack)
