@@ -217,7 +217,7 @@ describe 'Sinatra::VCAP' do
 
   describe 'caller provided x-vcap-request-id' do
     before do
-      get '/request_id', {}, {'X_VCAP_REQUEST_ID' => 'abcdef'}
+      get '/request_id', {}, {'HTTP_X_VCAP_REQUEST_ID' => 'abcdef'}
     end
 
     it 'should set the X-VCAP-Request-ID to the caller specified value' do
@@ -233,7 +233,7 @@ describe 'Sinatra::VCAP' do
 
   describe 'caller provided x-request-id' do
     before do
-      get '/request_id', {}, {'X_REQUEST_ID' => 'abcdef'}
+      get '/request_id', {}, {'HTTP_X_REQUEST_ID' => 'abcdef'}
     end
 
     it 'should set the X-VCAP-Request-ID to the caller specified value' do
@@ -249,10 +249,10 @@ describe 'Sinatra::VCAP' do
 
   describe 'caller provided x-request-id and x-vcap-request-id' do
     before do
-      get '/request_id', {}, {'X_REQUEST_ID' => 'abc', 'X_VCAP_REQUEST_ID' => 'def'}
+      get '/request_id', {}, {'HTTP_X_REQUEST_ID' => 'abc', 'HTTP_X_VCAP_REQUEST_ID' => 'def'}
     end
 
-    it 'should set the X-VCAP-Request-ID to the caller specified value of X_VCAP_REQUEST_ID' do
+    it 'should set the X-VCAP-Request-ID to the caller specified value of X-VCAP-Request-ID' do
       last_response.status.should == 200
       last_response.headers['X-VCAP-Request-ID'].should match /def::.*/
     end
