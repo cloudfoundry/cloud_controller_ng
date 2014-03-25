@@ -4,7 +4,7 @@ require 'models/services/validation_errors'
 
 module VCAP::CloudController::ServiceBrokers::V2
   class ServiceDashboardClientManager
-    attr_reader :catalog,  :errors, :service_broker
+    attr_reader :catalog, :errors, :service_broker
 
     def initialize(catalog, service_broker)
       @catalog        = catalog
@@ -12,8 +12,8 @@ module VCAP::CloudController::ServiceBrokers::V2
       @errors         = VCAP::CloudController::ValidationErrors.new
 
       @services_using_dashboard_client = catalog.services.select(&:dashboard_client)
-      @client_manager                  = UaaClientManager.new
-      @differ                          = ServiceDashboardClientDiffer.new(service_broker, client_manager)
+      @client_manager = UaaClientManager.new
+      @differ = ServiceDashboardClientDiffer.new(service_broker, client_manager)
     end
 
     def synchronize_clients
@@ -22,8 +22,7 @@ module VCAP::CloudController::ServiceBrokers::V2
       validate_clients_are_available!
       return false unless errors.empty?
 
-      clients_claimed_by_broker = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
-      changeset = differ.create_changeset(services_using_dashboard_client, clients_claimed_by_broker)
+      changeset = differ.create_changeset(services_using_dashboard_client, eligible_clients)
       changeset.each(&:apply!)
 
       true
@@ -33,21 +32,45 @@ module VCAP::CloudController::ServiceBrokers::V2
 
     attr_reader :client_manager, :differ, :services_using_dashboard_client
 
-    def validate_clients_are_available!
-      existing_clients_in_uaa    = client_manager.get_clients(requested_client_ids)
-      ids_of_existing_clients_in_uaa = existing_clients_in_uaa.map { |client| client['client_id'] }
+    def eligible_clients
+      clients_already_claimed_by_broker = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).all
+      clients_that_can_be_claimed_by_broker = find_clients_for_services(services_with_existing_clients_in_uaa_available_to_broker)
+      (clients_already_claimed_by_broker + clients_that_can_be_claimed_by_broker).uniq
+    end
 
-      services_with_existing_clients_in_uaa = services_using_dashboard_client.select { |s|
-        ids_of_existing_clients_in_uaa.include?(s.dashboard_client['id'])
-      }
-
-      services_whose_clients_are_claimed_by_another_broker = services_with_existing_clients_in_uaa.reject do |service|
-        VCAP::CloudController::ServiceDashboardClient.client_claimed_by_broker?(
-          service.dashboard_client['id'],
-          service_broker
-        )
+    def find_clients_for_services(services)
+      services.map do |service|
+        VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(service.dashboard_client['id'])
       end
+    end
 
+    def services_with_existing_clients_in_uaa_available_to_broker
+      @services_with_existing_clients_in_uaa_available_to_broker ||=
+        services_with_existing_clients_in_uaa.select do |service|
+          VCAP::CloudController::ServiceDashboardClient.client_can_be_claimed_by_broker?(
+            service.dashboard_client['id'],
+            service_broker
+          )
+        end
+    end
+
+    def services_with_existing_clients_in_uaa
+      @services_with_existing_clients_in_uaa ||=
+        begin
+          existing_clients_in_uaa = client_manager.get_clients(requested_client_ids)
+          ids_of_existing_clients_in_uaa = existing_clients_in_uaa.map { |client| client['client_id'] }
+
+          services_using_dashboard_client.select { |s|
+            ids_of_existing_clients_in_uaa.include?(s.dashboard_client['id'])
+          }
+        end
+    end
+
+    def services_whose_clients_are_claimed_by_another_broker
+      services_with_existing_clients_in_uaa - services_with_existing_clients_in_uaa_available_to_broker
+    end
+
+    def validate_clients_are_available!
       services_whose_clients_are_claimed_by_another_broker.each do |catalog_service|
         errors.add_nested(catalog_service).add('Service dashboard client ids must be unique')
       end

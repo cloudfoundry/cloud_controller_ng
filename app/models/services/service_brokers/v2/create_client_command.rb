@@ -15,11 +15,7 @@ module VCAP::CloudController::ServiceBrokers::V2
         client_id,
         service_broker
       )
-      begin
-        client_manager.create(client_attrs)
-      rescue
-        VCAP::CloudController::ServiceDashboardClient.remove_claim_on_client(client_id)
-      end
+      client_manager.create(client_attrs)
     end
 
     private

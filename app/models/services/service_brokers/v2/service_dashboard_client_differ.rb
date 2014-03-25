@@ -21,6 +21,7 @@ module VCAP::CloudController::ServiceBrokers::V2
           UpdateClientCommand.new(
             client_attrs: requested_client,
             client_manager: client_manager,
+            service_broker: broker,
           )
         else
           CreateClientCommand.new(

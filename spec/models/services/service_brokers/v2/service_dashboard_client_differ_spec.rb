@@ -43,6 +43,7 @@ module VCAP::CloudController::ServiceBrokers::V2
           expect(changeset).to have(1).items
           expect(changeset.first).to be_a UpdateClientCommand
           expect(changeset.first.client_attrs).to eq(catalog_service.dashboard_client)
+          expect(changeset.first.service_broker).to eq(service_broker)
         end
       end
 

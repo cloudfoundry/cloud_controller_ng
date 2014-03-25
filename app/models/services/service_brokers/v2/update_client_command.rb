@@ -1,13 +1,20 @@
 module VCAP::CloudController::ServiceBrokers::V2
   class UpdateClientCommand
-    attr_reader :client_attrs
+    attr_reader :client_attrs, :service_broker
 
     def initialize(opts)
       @client_attrs = opts.fetch(:client_attrs)
       @client_manager = opts.fetch(:client_manager)
+      @service_broker = opts.fetch(:service_broker)
     end
 
     def apply!
+      client_id = client_attrs.fetch('id')
+
+      VCAP::CloudController::ServiceDashboardClient.claim_client_for_broker(
+        client_id,
+        service_broker
+      )
       client_manager.update(client_attrs)
     end
 

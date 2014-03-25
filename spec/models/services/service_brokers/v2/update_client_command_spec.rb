@@ -12,12 +12,15 @@ module VCAP::CloudController::ServiceBrokers::V2
         }
       end
 
+      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+
       let(:client_manager) { double(:client_manager, update: nil) }
 
       let(:command) do
         UpdateClientCommand.new(
           client_attrs: client_attrs,
           client_manager: client_manager,
+          service_broker: service_broker,
         )
       end
 
@@ -30,9 +33,9 @@ module VCAP::CloudController::ServiceBrokers::V2
         expect(client_manager).to have_received(:update).with(client_attrs)
       end
 
-      it 'does not claim the client in the DB' do
+      it 'claims the client in the DB' do
         command.apply!
-        expect(VCAP::CloudController::ServiceDashboardClient).not_to have_received(:claim_client_for_broker)
+        expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:claim_client_for_broker)
       end
     end
   end

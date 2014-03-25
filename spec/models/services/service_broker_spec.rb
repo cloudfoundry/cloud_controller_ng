@@ -111,6 +111,24 @@ module VCAP::CloudController
           }.by(-1)
         end
       end
+
+      context 'when associated with a dashboard client' do
+        before do
+          ServiceDashboardClient.claim_client_for_broker('some-uaa-id', service_broker)
+        end
+
+        it 'successfully destroys the broker' do
+          expect { service_broker.destroy(savepoint: true) }.
+            to change(ServiceBroker, :count).by(-1)
+        end
+
+        it 'sets the broker_id of the dashboard client to nil' do
+          client = ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).first
+          expect(client.service_broker_id).to eq(service_broker.id)
+          service_broker.destroy(savepoint: true)
+          expect(client.reload.service_broker_id).to be_nil
+        end
+      end
     end
   end
 end

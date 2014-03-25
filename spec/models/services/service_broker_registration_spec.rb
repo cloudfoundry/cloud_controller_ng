@@ -12,7 +12,7 @@ module VCAP::CloudController
           auth_password: 'auth1234',
         )
       end
-      let(:manager) { double(:service_dashboard_manager, :synchronize_clients => true) }
+      let(:client_manager) { double(:service_dashboard_manager, :synchronize_clients => true) }
       let(:catalog) { double(:catalog, :valid? => true) }
       let(:service_manager) { double(:service_manager, :sync_services_and_plans => true) }
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
 
       before do
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
-        allow(ServiceBrokers::V2::ServiceDashboardClientManager).to receive(:new).and_return(manager)
+        allow(ServiceBrokers::V2::ServiceDashboardClientManager).to receive(:new).and_return(client_manager)
         allow(ServiceBrokers::V2::Catalog).to receive(:new).and_return(catalog)
         allow(ServiceBrokers::V2::ServiceManager).to receive(:new).and_return(service_manager)
       end
@@ -67,7 +67,7 @@ module VCAP::CloudController
         registration.create
 
         expect(ServiceBrokers::V2::ServiceDashboardClientManager).to have_received(:new).with(catalog, broker)
-        expect(manager).to have_received(:synchronize_clients)
+        expect(client_manager).to have_received(:synchronize_clients)
       end
 
       context 'when invalid' do
@@ -100,7 +100,7 @@ module VCAP::CloudController
           it 'does not synchronize uaa clients' do
             registration.create
 
-            expect(manager).not_to have_received(:synchronize_clients)
+            expect(client_manager).not_to have_received(:synchronize_clients)
           end
 
           it 'does not synchronize the catalog' do
@@ -125,7 +125,7 @@ module VCAP::CloudController
             rescue VCAP::Errors::ApiError
             end
 
-            expect(manager).not_to have_received(:synchronize_clients)
+            expect(client_manager).not_to have_received(:synchronize_clients)
           end
 
           it 'does not synchronize the catalog' do
@@ -166,7 +166,7 @@ module VCAP::CloudController
             rescue ServiceBrokers::V2::ServiceBrokerBadResponse
             end
 
-            expect(manager).not_to have_received(:synchronize_clients)
+            expect(client_manager).not_to have_received(:synchronize_clients)
           end
 
           it 'does not synchronize the catalog' do
@@ -182,8 +182,8 @@ module VCAP::CloudController
 
         context 'because the dashboard client manager failed' do
           before do
-            allow(manager).to receive(:synchronize_clients).and_return(false)
-            allow(manager).to receive(:errors).and_return(validation_errors)
+            allow(client_manager).to receive(:synchronize_clients).and_return(false)
+            allow(client_manager).to receive(:errors).and_return(validation_errors)
             allow_any_instance_of(ServiceBrokers::V2::ValidationErrorsFormatter).to receive(:format).and_return(error_text)
           end
 
@@ -208,6 +208,9 @@ module VCAP::CloudController
       context 'when exception is raised during transaction' do
         before do
           catalog.stub(:valid?).and_return(true)
+          client_manager.stub(:synchronize_clients) {
+            ServiceDashboardClient.make(uaa_id: 'my-uaa-id', service_broker_id: broker.id)
+          }
           service_manager.stub(:sync_services_and_plans).and_raise(Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
         end
 
@@ -220,12 +223,24 @@ module VCAP::CloudController
             end
           }.to change { ServiceBroker.count }.by(0)
         end
+
+        it 'nullifies the service_broker_id field of the created dashboard clients' do
+          expect(ServiceDashboardClient.count).to eq(0)
+          expect {
+            begin
+              registration.create
+            rescue VCAP::Errors::ApiError
+            end
+          }.to change { ServiceDashboardClient.count }.by(1)
+
+          expect(ServiceDashboardClient.last.service_broker_id).to be_nil
+        end
       end
 
       context 'when exception is raised during dashboard client creation' do
         before do
           catalog.stub(:valid?).and_return(true)
-          manager.stub(:synchronize_clients).and_raise
+          client_manager.stub(:synchronize_clients).and_raise
         end
 
         it 'raises the error and does not create a new service broker' do
@@ -252,7 +267,7 @@ module VCAP::CloudController
           auth_password: 'auth1234',
         )
       end
-      let(:manager) { double(:service_dashboard_manager, :synchronize_clients => true) }
+      let(:client_manager) { double(:service_dashboard_manager, :synchronize_clients => true) }
       let(:catalog) { double(:catalog, :valid? => true) }
       let(:service_manager) { double(:service_manager, :sync_services_and_plans => true) }
 
@@ -260,7 +275,7 @@ module VCAP::CloudController
 
       before do
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
-        allow(ServiceBrokers::V2::ServiceDashboardClientManager).to receive(:new).and_return(manager)
+        allow(ServiceBrokers::V2::ServiceDashboardClientManager).to receive(:new).and_return(client_manager)
         allow(ServiceBrokers::V2::Catalog).to receive(:new).and_return(catalog)
         allow(ServiceBrokers::V2::ServiceManager).to receive(:new).and_return(service_manager)
       end
@@ -300,7 +315,7 @@ module VCAP::CloudController
         registration.update
 
         expect(ServiceBrokers::V2::ServiceDashboardClientManager).to have_received(:new).with(catalog, broker)
-        expect(manager).to have_received(:synchronize_clients)
+        expect(client_manager).to have_received(:synchronize_clients)
       end
 
       context 'when invalid' do
@@ -336,7 +351,7 @@ module VCAP::CloudController
           it 'does not synchronize uaa clients' do
             registration.update
 
-            expect(manager).not_to have_received(:synchronize_clients)
+            expect(client_manager).not_to have_received(:synchronize_clients)
           end
 
           it 'does not synchronize the catalog' do
@@ -361,7 +376,7 @@ module VCAP::CloudController
             rescue VCAP::Errors::ApiError
             end
 
-            expect(manager).not_to have_received(:synchronize_clients)
+            expect(client_manager).not_to have_received(:synchronize_clients)
           end
 
           it 'does not synchronize the catalog' do
@@ -403,7 +418,7 @@ module VCAP::CloudController
             rescue ServiceBrokers::V2::ServiceBrokerBadResponse
             end
 
-            expect(manager).not_to have_received(:synchronize_clients)
+            expect(client_manager).not_to have_received(:synchronize_clients)
           end
 
           it 'does not synchronize the catalog' do
@@ -419,8 +434,8 @@ module VCAP::CloudController
 
         context 'because the dashboard client manager failed' do
           before do
-            allow(manager).to receive(:synchronize_clients).and_return(false)
-            allow(manager).to receive(:errors).and_return(validation_errors)
+            allow(client_manager).to receive(:synchronize_clients).and_return(false)
+            allow(client_manager).to receive(:errors).and_return(validation_errors)
             allow_any_instance_of(ServiceBrokers::V2::ValidationErrorsFormatter).to receive(:format).and_return(error_text)
           end
 
@@ -469,7 +484,7 @@ module VCAP::CloudController
       context 'when exception is raised during dashboard client creation' do
         before do
           catalog.stub(:valid?).and_return(true)
-          manager.stub(:synchronize_clients).and_raise
+          client_manager.stub(:synchronize_clients).and_raise
         end
 
         it 'raises the error' do

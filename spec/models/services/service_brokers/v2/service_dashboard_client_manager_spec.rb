@@ -103,12 +103,12 @@ module VCAP::CloudController::ServiceBrokers::V2
           end
 
           before do
-            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:client_claimed_by_broker?).
+            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:client_can_be_claimed_by_broker?).
               with(catalog_service.dashboard_client['id'], service_broker).
               and_return(true)
-            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:find_clients_claimed_by_broker).
-              with(service_broker).
-              and_return([dashboard_client])
+            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:find_client_by_uaa_id).
+              with(dashboard_client_attrs_1['id']).
+              and_return(dashboard_client)
           end
 
           it "creates the clients that don't currently exist" do
@@ -129,11 +129,6 @@ module VCAP::CloudController::ServiceBrokers::V2
         end
 
         context 'when the service has not claimed the UAA client' do
-          before do
-            #allow(VCAP::CloudController::ServiceDashboardClient).to receive(:client_claimed_by_service?).
-            #  and_return(false)
-          end
-
           it 'does not create any uaa clients' do
             manager.synchronize_clients
 

@@ -53,9 +53,9 @@ module VCAP::CloudController::ServiceBrokers::V2
           allow(client_manager).to receive(:create).and_raise
         end
 
-        it 'removes the claim' do
+        it 'does not remove the claim' do
           command.apply! rescue nil
-          expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:remove_claim_on_client).
+          expect(VCAP::CloudController::ServiceDashboardClient).to_not have_received(:remove_claim_on_client).
             with('client-id-1')
         end
       end

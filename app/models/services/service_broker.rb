@@ -6,11 +6,13 @@ module VCAP::CloudController
 
   class ServiceBroker
     one_to_many :services
+    one_to_many :service_dashboard_client
 
     import_attributes :name, :broker_url, :auth_username, :auth_password
     export_attributes :name, :broker_url, :auth_username
 
     add_association_dependencies :services => :destroy
+    add_association_dependencies :service_dashboard_client => :nullify
 
     many_to_many :service_plans, :join_table => :services, :right_key => :id, :right_primary_key => :service_id
 
