@@ -4,6 +4,7 @@ require 'rspec_api_documentation/dsl'
 resource "App Usage Events (experimental)", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
+  let(:guid) { VCAP::CloudController::AppUsageEvent.first.guid }
   let!(:event1) { VCAP::CloudController::AppUsageEvent.make }
   let!(:event2) { VCAP::CloudController::AppUsageEvent.make }
   let!(:event3) { VCAP::CloudController::AppUsageEvent.make }
@@ -21,6 +22,7 @@ resource "App Usage Events (experimental)", :type => :api do
     field :created_at, "The timestamp when the event is recorded. It is possible that later events may have earlier created_at values.", required: false, readonly: true
 
     standard_list_parameters VCAP::CloudController::AppUsageEventsController
+    standard_model_get :app_usage_event
     request_parameter :after_guid, "Restrict results to App Usage Events after the one with the given guid"
 
     example "List app usage events" do

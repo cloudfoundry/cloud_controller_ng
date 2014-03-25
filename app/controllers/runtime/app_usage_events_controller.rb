@@ -4,6 +4,8 @@ module VCAP::CloudController
 
     get "/v2/app_usage_events", :enumerate
 
+    get "#{path_guid}", :read
+
     post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", :reset
 
     def reset
@@ -18,6 +20,10 @@ module VCAP::CloudController
       AppUsageEvent.insert([:guid, :app_guid, :app_name, :state, :instance_count, :memory_in_mb_per_instance, :space_guid, :space_name, :org_guid, :created_at], usage_query)
 
       [HTTP::NO_CONTENT, nil]
+    end
+
+    def self.not_found_exception_name
+      "EventNotFound"
     end
 
     private
