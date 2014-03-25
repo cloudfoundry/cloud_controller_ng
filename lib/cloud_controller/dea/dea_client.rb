@@ -168,7 +168,7 @@ module VCAP::CloudController
           dea_pool.reserve_app_memory(dea_id, app.memory)
           stager_pool.reserve_app_memory(dea_id, app.memory)
         else
-          logger.error "dea-client.no-resources-available", message: message
+          logger.error "dea-client.no-resources-available", message: scrub_sensitive_fields(message)
         end
       end
 
@@ -371,6 +371,14 @@ module VCAP::CloudController
       def dea_request_find_droplet(args, opts = {})
         logger.debug "sending dea.find.droplet with args: '#{args}' and opts: '#{opts}'"
         message_bus.synchronous_request("dea.find.droplet", args, opts)
+      end
+
+      def scrub_sensitive_fields(message)
+        scrubbed_message = message.dup
+        scrubbed_message.delete(:services)
+        scrubbed_message.delete(:executableUri)
+        scrubbed_message.delete(:env)
+        scrubbed_message
       end
 
       def logger
