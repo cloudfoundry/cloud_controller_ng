@@ -39,10 +39,25 @@ module VCAP::CloudController
           expect(decoded_response.fetch("prev_url")).to eql("/v2/app_usage_events?after_guid=#{@event1.guid}&page=1&results-per-page=1")
         end
 
-        it "returns 404 when guid does not exist" do
+        it "returns 400 when guid does not exist" do
           get "/v2/app_usage_events?after_guid=ABC", {}, admin_headers
           expect(last_response.status).to eql(400)
         end
+      end
+    end
+
+    describe "GET /v2/app_usage_events/:guid" do
+      it "retrieves an event by guid" do
+        url = "/v2/app_usage_events/#{@event1.guid}"
+        get url, {}, admin_headers
+        expect(last_response).to be_successful
+        expect(decoded_response["metadata"]["guid"]).to eq(@event1.guid)
+        expect(decoded_response["metadata"]["url"]).to eq(url)
+      end
+
+      it "returns 404 when he guid does nos exist" do
+        get "/v2/app_usage_events/bogus", {}, admin_headers
+        expect(last_response.status).to eql(404)
       end
     end
 
