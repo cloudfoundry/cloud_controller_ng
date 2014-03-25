@@ -5,20 +5,8 @@ describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.send(:new, config) }
 
   describe "#health_manager_client" do
-    context "when hm9000 is noop" do
-      let(:config) {{:hm9000_noop => true}}
-
-      it "should return the old hm client" do
-        expect(locator.health_manager_client).to be_an_instance_of(VCAP::CloudController::HealthManagerClient)
-      end
-    end
-
-    context "when hm9000 is not noop" do
-      let(:config) {{:hm9000_noop => false}}
-
-      it "should return the shiny new hm9000 client" do
-        expect(locator.health_manager_client).to be_an_instance_of(VCAP::CloudController::HM9000Client)
-      end
+    it "should return the hm9000 client" do
+      expect(locator.health_manager_client).to be_an_instance_of(VCAP::CloudController::HM9000Client)
     end
   end
 

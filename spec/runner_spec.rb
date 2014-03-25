@@ -92,7 +92,7 @@ module VCAP::CloudController
 
         it "starts handling hm9000 requests" do
           hm9000respondent = double(:hm9000respondent)
-          expect(HM9000Respondent).to receive(:new).with(DeaClient, message_bus, true).and_return(hm9000respondent)
+          expect(HM9000Respondent).to receive(:new).with(DeaClient, message_bus).and_return(hm9000respondent)
           expect(hm9000respondent).to receive(:handle_requests)
           subject.run!
         end

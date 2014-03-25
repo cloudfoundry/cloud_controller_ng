@@ -82,8 +82,6 @@ droplets:
 
 db_encryption_key: some-key
 
-hm9000_noop: true
-
 loggregator:
   router: "127.0.0.1:8080"
   shared_secret: "loggregator-secret"
