@@ -12,7 +12,7 @@ module VCAP::CloudController::Encryptor
 
     def encrypt(input, salt)
       return nil unless input
-      Base64.encode64(run_cipher(make_cipher.encrypt, input, salt))
+      Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt))
     end
 
     def decrypt(encrypted_input, salt)
