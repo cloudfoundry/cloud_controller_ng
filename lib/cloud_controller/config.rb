@@ -151,6 +151,17 @@ module VCAP::CloudController
 
         optional(:request_timeout_in_seconds) => Integer,
         optional(:skip_cert_verify) => bool,
+
+        optional(:install_buildpacks) => [
+          {
+            "name" => String,
+            optional("package") => String,
+            optional("file") => String,
+            optional("enabled") => bool,
+            optional("locked") => bool,
+            optional("position") => Integer,
+          }
+        ]
       }
     end
 

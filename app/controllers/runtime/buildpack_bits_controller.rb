@@ -16,43 +16,23 @@ module VCAP::CloudController
       uploaded_file = upload_handler.uploaded_file(params, "buildpack")
       uploaded_filename = upload_handler.uploaded_filename(params, "buildpack")
 
-      logger.info uploaded_file
-      logger.info uploaded_filename
-      logger.info buildpack
+      logger.info "Uploading bits for #{buildpack.name}, file: uploaded_filename"
 
       raise Errors::ApiError.new_from_details("BuildpackBitsUploadInvalid", "a filename must be specified") if uploaded_filename.to_s == ""
       raise Errors::ApiError.new_from_details("BuildpackBitsUploadInvalid", "only zip files allowed") unless File.extname(uploaded_filename) == ".zip"
       raise Errors::ApiError.new_from_details("BuildpackBitsUploadInvalid", "a file must be provided") if uploaded_file.to_s == ""
 
-      sha1 = File.new(uploaded_file).hexdigest
-      unique_buildpack_key = "#{buildpack.guid}_#{sha1}"
       uploaded_filename = File.basename(uploaded_filename)
 
-      if upload_bits(buildpack, unique_buildpack_key, uploaded_file, uploaded_filename)
+      upload_buildpack = UploadBuildpack.new(buildpack_blobstore)
+
+      if upload_buildpack.upload_bits(buildpack, uploaded_file, uploaded_filename)
         [HTTP::CREATED, object_renderer.render_json(self.class, buildpack, @opts)]
       else
          [HTTP::NO_CONTENT, nil]
       end
     ensure
       FileUtils.rm_f(uploaded_file) if uploaded_file
-    end
-
-    def upload_bits(buildpack, new_key, bits_file, new_filename)      
-      return false if !new_bits?(buildpack, new_key) && !new_filename?(buildpack, new_filename)
-
-      # replace blob if new
-      if new_bits?(buildpack, new_key)
-        buildpack_blobstore.cp_to_blobstore(bits_file, new_key)
-        old_buildpack_key = buildpack.key
-      end
-
-      model.db.transaction(savepoint: true) do
-        buildpack.lock!
-        buildpack.update_from_hash(key: new_key, filename: new_filename)
-      end
-
-      BuildpackBitsDelete.delete_when_safe(old_buildpack_key, :buildpack_blobstore, @config[:staging][:timeout_in_seconds])
-      return true
     end
 
     get "#{path_guid}/download", :download
@@ -90,14 +70,6 @@ module VCAP::CloudController
       else
         f.public_url
       end
-    end
-
-    def new_bits?(buildpack, sha)
-      return buildpack.key != sha
-    end
-
-    def new_filename?(buildpack, filename)
-      return buildpack.filename != filename
     end
   end
 end
