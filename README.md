@@ -69,12 +69,11 @@ The development team typically will run the specs to a single file as (e.g.)
 
 ### Running all the tests
 
-There are a very large number of tests in Cloud Controller, so the development team typically uses [parallel_rspec](https://github.com/grosser/parallel_tests):
+    bundle exec rake spec
 
-    bundle exec parallel_rspec spec -s 'integration|acceptance' -o "--require rspec/instafail --format RSpec::Instafail"
+Due to the large number of tests, the rake spec task is configured to run in parallel using [parallel_rspec](https://github.com/grosser/parallel_tests).
 
-It is important to remember to use `-s integration` to force all the integration specs to run in the same process.
-Without it, you will see failures due to two tests trying to start NATS on the same port at the same time, for instance.
+Integration and acceptance tests, however, do not support concurrent testing (e.g. starting NATS on the same port at the same time), and are thus run serially.
 
 ## API documentation
 
