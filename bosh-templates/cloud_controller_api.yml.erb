@@ -222,3 +222,5 @@ diego: <%= p("ccng.diego") %>
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>
 <% end %>
+
+install_buildpacks: <%= p("ccng.install_buildpacks", []).to_yaml.gsub("---", "") %>

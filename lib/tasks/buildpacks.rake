@@ -4,6 +4,6 @@ namespace :buildpacks do
   task :install do
     buildpacks = config[:install_buildpacks]
     BackgroundJobEnvironment.new(config).setup_environment
-    VCAP::CloudController::InstallBuildpacks.install(buildpacks)
+    VCAP::CloudController::InstallBuildpacks.new(config).install(buildpacks)
   end
 end
