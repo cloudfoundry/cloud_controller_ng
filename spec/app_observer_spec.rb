@@ -183,7 +183,7 @@ module VCAP::CloudController
                   app.buildpack = "git://example.com/foo/bar.git"
                   app.save
 
-                  App.stub(:custom_buildpacks_enabled?) { false }
+                  allow(app).to receive(:custom_buildpacks_enabled?).and_return(false)
                 end
 
                 it "raises" do
@@ -199,7 +199,7 @@ module VCAP::CloudController
                   app.buildpack = "some-admin-buildpack"
                   app.save
 
-                  App.stub(:custom_buildpacks_enabled?) { false }
+                  allow(app).to receive(:custom_buildpacks_enabled?).and_return(false)
                 end
 
                 it_stages
@@ -210,7 +210,7 @@ module VCAP::CloudController
                   app.buildpack = nil
                   app.save
 
-                  App.stub(:custom_buildpacks_enabled?) { false }
+                  allow(app).to receive(:custom_buildpacks_enabled?).and_return(false)
                 end
 
                 it_stages

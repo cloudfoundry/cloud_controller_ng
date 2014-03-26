@@ -143,16 +143,16 @@ module VCAP::CloudController
         expect {
           Config.configure_components(config)
         }.to change {
-          App.custom_buildpacks_enabled?
-        }.to(false)
+          VCAP::CloudController::Config.config[:disable_custom_buildpacks]
+        }.to(true)
 
         config = @test_config.merge(disable_custom_buildpacks: false)
 
         expect {
           Config.configure_components(config)
         }.to change {
-          App.custom_buildpacks_enabled?
-        }.to(true)
+          VCAP::CloudController::Config.config[:disable_custom_buildpacks]
+        }.to(false)
       end
     end
   end

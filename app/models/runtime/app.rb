@@ -23,16 +23,6 @@ module VCAP::CloudController
     class ApplicationMissing < RuntimeError
     end
 
-    class << self
-      def configure(custom_buildpacks_enabled)
-        @custom_buildpacks_enabled = custom_buildpacks_enabled
-      end
-
-      def custom_buildpacks_enabled?
-        @custom_buildpacks_enabled
-      end
-    end
-
     one_to_many :droplets
     one_to_many :service_bindings
     one_to_many :events, :class => VCAP::CloudController::AppEvent
@@ -104,7 +94,7 @@ module VCAP::CloudController
         MaxMemoryPolicy.new(self),
         InstancesPolicy.new(self),
         HealthCheckPolicy.new(self, health_check_timeout),
-        CustomBuildpackPolicy.new(self, self.class.custom_buildpacks_enabled?)
+        CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?)
       ]
     end
 
@@ -324,6 +314,10 @@ module VCAP::CloudController
       raise objection if route.space_id != space.id
 
       raise objection unless route.domain.usable_by_organization?(space.organization)
+    end
+
+    def custom_buildpacks_enabled?
+      !VCAP::CloudController::Config.config[:disable_custom_buildpacks]
     end
 
     def requested_instances

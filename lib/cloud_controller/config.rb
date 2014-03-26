@@ -181,7 +181,6 @@ module VCAP::CloudController
 
         QuotaDefinition.configure(config)
         Stack.configure(config[:stacks_file])
-        App.configure(!config[:disable_custom_buildpacks])
 
         run_initializers(config)
       end
