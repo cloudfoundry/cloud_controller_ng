@@ -26,19 +26,16 @@ describe AppBitsPackage do
   let(:packer) { AppBitsPackage.new(package_blobstore, global_app_bits_cache, max_package_size, local_tmp_dir) }
   let(:max_package_size) { 1_073_741_824 }
 
-  around do |example|
-    begin
-      Fog.unmock!
-      example.call
-    ensure
-      Fog.mock!
-      FileUtils.remove_entry_secure local_tmp_dir
-      FileUtils.remove_entry_secure blobstore_dir
-    end
-  end
 
   before do
+    Fog.unmock!
     FileUtils.stub(:rm_f).with(compressed_path)
+  end
+
+  after do
+    Fog.mock!
+    FileUtils.remove_entry_secure local_tmp_dir
+    FileUtils.remove_entry_secure blobstore_dir
   end
 
   describe "#create" do

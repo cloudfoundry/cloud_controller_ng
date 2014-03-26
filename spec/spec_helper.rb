@@ -98,11 +98,11 @@ module VCAP::CloudController
       @db_logger
     end
 
-    def config(config_override={})
+    def config
       config_file = File.expand_path("../../config/cloud_controller.yml", __FILE__)
       config_hash = VCAP::CloudController::Config.from_file(config_file)
 
-      config_hash.merge!(
+      config_hash.update(
         :nginx => {:use_nginx => true},
         :resource_pool => {
           :resource_directory_key => "spec-cc-resources",
@@ -135,12 +135,6 @@ module VCAP::CloudController
           :pool_timeout => 10
         }
       )
-
-      config_hash.merge!(config_override || {})
-
-      res_pool_connection_provider = config_hash[:resource_pool][:fog_connection][:provider].downcase
-      packages_connection_provider = config_hash[:packages][:fog_connection][:provider].downcase
-      Fog.mock! unless (res_pool_connection_provider == "local" || packages_connection_provider == "local")
 
       config_hash
     end
@@ -182,19 +176,23 @@ module VCAP::CloudController::SpecHelper
     $spec_env.db
   end
 
-  # Note that this method is mixed into each example, and so the instance
-  # variable we created here gets cleared automatically after each example
+  # Clears the config_override and sets config to the default
+  def config_reset
+    config_override({})
+  end
+
+  # Sets a hash of configurations to merge with the defaults
   def config_override(hash)
-    @config_override ||= {}
-    @config_override.update(hash)
+    @config_override = hash || {}
 
     @config = nil
     config
   end
 
+  # Lazy load the configuration (default + override)
   def config
     @config ||= begin
-      config = $spec_env.config(@config_override)
+      config = config_default.merge(@config_override || {})
       configure_components(config)
       config
     end
@@ -204,7 +202,19 @@ module VCAP::CloudController::SpecHelper
     config
   end
 
+  # Lazy load the default config
+  def config_default
+    @config_default ||= begin
+      $spec_env.config
+    end
+  end
+
   def configure_components(config)
+    # Always enable Fog mocking (except when using a local provider, which Fog can't mock).
+    res_pool_connection_provider = config[:resource_pool][:fog_connection][:provider].downcase
+    packages_connection_provider = config[:packages][:fog_connection][:provider].downcase
+    Fog.mock! unless (res_pool_connection_provider == "local" || packages_connection_provider == "local")
+
     # DO NOT override the message bus, use the same mock that's set the first time
     message_bus = VCAP::CloudController::Config.message_bus || CfMessageBus::MockMessageBus.new
 
@@ -563,7 +573,6 @@ RSpec.configure do |rspec_config|
 
   rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
-    @old_before_all_config = configure
     RspecApiDocumentation.configure do |c|
       c.format = [:html, :json]
       c.api_name = "Cloud Foundry API"
@@ -576,14 +585,12 @@ RSpec.configure do |rspec_config|
     end
   end
 
-  rspec_config.after :all do
-    config_override(@old_before_all_config)
-  end
-
   rspec_config.before :each do
     Fog::Mock.reset
     Sequel::Deprecation.output = StringIO.new
     Sequel::Deprecation.backtrace_filter = 5
+
+    config_reset
   end
 
   rspec_config.after :each do

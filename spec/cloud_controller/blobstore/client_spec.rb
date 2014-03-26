@@ -152,9 +152,11 @@ module CloudController
               Client.new({provider: "Local", local_root: "/tmp"}, directory_key)
             end
 
-            around do |instance|
+            before do
               Fog.unmock!
-              instance.run
+            end
+
+            after do
               Fog.mock!
             end
 
