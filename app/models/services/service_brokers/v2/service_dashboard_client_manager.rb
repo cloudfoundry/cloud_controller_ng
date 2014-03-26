@@ -72,7 +72,7 @@ module VCAP::CloudController::ServiceBrokers::V2
 
     def validate_clients_are_available!
       services_whose_clients_are_claimed_by_another_broker.each do |catalog_service|
-        errors.add_nested(catalog_service).add('Service dashboard client ids must be unique')
+        errors.add_nested(catalog_service).add('Service dashboard client id must be unique')
       end
     end
 
