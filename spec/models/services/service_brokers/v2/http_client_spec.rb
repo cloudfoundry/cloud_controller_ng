@@ -204,7 +204,7 @@ module VCAP::CloudController::ServiceBrokers::V2
         make_request
         a_request(http_method, full_url).
           with(:query => hash_including({})).
-          with(:headers => {'X-Broker-Api-Version' => '2.1'}).
+          with(:headers => {'X-Broker-Api-Version' => '2.2'}).
           should have_been_made
       end
 

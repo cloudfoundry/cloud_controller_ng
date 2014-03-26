@@ -25,18 +25,20 @@ plans = [
           {'content' => '100 MB storage'},
           {'content' => '40 concurrent connections'},
         ]
-    }
+    },
+    'free' => true
   },
   {
     'id' => 'custom-plan-2',
     'name' => 'also free',
-    'description' => 'Two for twice the price!'
+    'description' => 'Two for twice the price!',
+    'free' => true
   }
 ]
 
 before '/v2/*' do
   api_version = request.env['HTTP_X_BROKER_API_VERSION']
-  raise "Wrong broker api version.  Expected 2.1, got #{api_version}." unless api_version == '2.1'
+  raise "Wrong broker api version.  Expected 2.2, got #{api_version}." unless api_version == '2.2'
 end
 
 get '/v2/catalog' do
