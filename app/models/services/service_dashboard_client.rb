@@ -44,7 +44,7 @@ module VCAP::CloudController
     private
 
     def self.client_not_claimed_by_any_broker?(uaa_id)
-      ! unclaimed_client_with_uaa_id(uaa_id).nil?
+      !(unclaimed_client_with_uaa_id(uaa_id).nil?)
     end
 
     def self.unclaimed_client_with_uaa_id(uaa_id)
