@@ -14,6 +14,8 @@ module CloudController
           aws_secret_access_key: 'fake_secret_access_key',
         }
       end
+      let(:min_size) { 20 }
+      let(:max_size) { 50 }
 
       def upload_tmpfile(client, key="abcdef")
         Tempfile.open("") do |tmpfile|
@@ -242,6 +244,31 @@ module CloudController
             client.cp_to_blobstore(path, key)
             expect(client.file(key).public_url).to be
           end
+        end
+
+        describe "#cp_to_blobstore" do
+          subject(:client) do
+            Client.new(connection_config, directory_key, nil, nil, min_size, max_size)
+          end
+
+          it "does not copy files below the minimum size limit" do
+            path = File.join(local_dir, "file_with_little_content")
+            File.open(path, "w") { |file| file.write("a") }
+            key = "987654321"
+
+            client.cp_to_blobstore(path, key)
+            expect(client.exists?(key)).to be_false
+          end
+
+          it "does not copy files above the maximum size limit" do
+            path = File.join(local_dir, "file_with_more_content")
+            File.open(path, "w") { |file| file.write("an amount of content that is larger than the maximum limit") }
+            key = "777777777"
+
+            client.cp_to_blobstore(path, key)
+            expect(client.exists?(key)).to be_false
+          end
+
         end
 
         describe "#delete" do
