@@ -101,8 +101,8 @@ module Sinatra
         logger_name = opts[:logger_name] || 'vcap.api'
         env['rack.logger'] = Steno.logger(logger_name)
 
-        @request_guid = env['X_VCAP_REQUEST_ID']
-        @request_guid ||= env['X_REQUEST_ID']
+        @request_guid = env['HTTP_X_VCAP_REQUEST_ID']
+        @request_guid ||= env['HTTP_X_REQUEST_ID']
 
         # we append a new guid to the request because we have no idea if the
         # caller is really going to be giving us a unique guid, i.e. they might
