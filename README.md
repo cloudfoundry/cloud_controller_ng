@@ -75,6 +75,16 @@ Due to the large number of tests, the rake spec task is configured to run in par
 
 Integration and acceptance tests, however, do not support concurrent testing (e.g. starting NATS on the same port at the same time), and are thus run serially.
 
+## Static Analysis
+
+To help maintain code consistency, rubocop is used to enforce code conventions and best practices.
+
+### Running static analysis
+
+    bundle exec rubucop
+
+Travis currently runs rubocop as part of the CI process.
+
 ## API documentation
 
 To genenerate the API documentation
