@@ -47,7 +47,8 @@ case $1 in
     ;;
 
   stop)
-    kill_and_wait $PIDFILE
+    #force kill immediately; drain script should have already run
+    kill_and_wait $PIDFILE 0 1
 
     ;;
 
