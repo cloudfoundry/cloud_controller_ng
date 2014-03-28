@@ -13,7 +13,7 @@ rvm:
 
 script:
   - bundle exec parallel_rspec spec$SUB -s 'integration|acceptance' -n $THREADS -o "--format $FORMAT --order rand:$RANDOM"
-  - bundle exec rubocop
+  - bundle exec rake rubocop
 
 env:
   global:
