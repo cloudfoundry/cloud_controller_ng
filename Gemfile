@@ -40,15 +40,15 @@ group :operations do
 end
 
 group :test do
-  gem 'rspec-instafail'
-  gem 'rubocop'
   gem 'debugger'
-  gem 'rspec'
-  gem 'rspec_api_documentation'
-  gem 'machinist', '~> 1.0.6'
-  gem 'webmock'
-  gem 'timecop'
-  gem 'rack-test'
-  gem 'parallel_tests'
   gem 'fakefs', require: 'fakefs/safe'
+  gem 'machinist', '~> 1.0.6'
+  gem 'parallel_tests'
+  gem 'rack-test'
+  gem 'rspec'
+  gem 'rspec-instafail'
+  gem 'rspec_api_documentation'
+  gem 'rubocop'
+  gem 'timecop'
+  gem 'webmock'
 end
