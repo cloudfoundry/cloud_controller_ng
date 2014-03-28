@@ -21,7 +21,7 @@ begin
   logger.info("Sending signal QUIT to Nginx.")
   Process.kill("QUIT", nginx_pid)
   logger.info("Hey BOSH, call me back in 5s.")
-  puts -5
+  puts(-5)
 rescue Errno::ESRCH => e
   logger.info("Caught exception: #{e}")
   puts 0
