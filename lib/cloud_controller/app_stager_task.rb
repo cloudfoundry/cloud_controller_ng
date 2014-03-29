@@ -22,6 +22,10 @@ module VCAP::CloudController
       def droplet_hash
         @response["droplet_sha1"]
       end
+
+      def buildpack_key
+        @response["buildpack_key"]
+      end
     end
 
     attr_reader :config
@@ -194,7 +198,15 @@ module VCAP::CloudController
     def staging_completion(stager_response)
       instance_was_started_by_dea = !!stager_response.droplet_hash
 
-      @app.update(detected_buildpack: stager_response.detected_buildpack)
+      if @app.admin_buildpack.nil?
+        detected_admin_buildpack = Buildpack.find(key: stager_response.buildpack_key)
+        detected_buildpack_guid = detected_admin_buildpack && detected_admin_buildpack.guid
+      end
+
+      @app.update(
+        detected_buildpack: stager_response.detected_buildpack,
+        detected_buildpack_guid: detected_buildpack_guid
+      )
 
       @dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
 

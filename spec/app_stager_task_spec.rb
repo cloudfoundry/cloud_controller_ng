@@ -7,11 +7,13 @@ module VCAP::CloudController
     let(:dea_pool) { double(:stager_pool, :reserve_app_memory => nil) }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:app) do
-      AppFactory.make(:package_hash => "abc",
+      AppFactory.make(
+        :package_hash => "abc",
         :droplet_hash => nil,
         :package_state => "PENDING",
         :state => "STARTED",
-        :instances => 1)
+        :instances => 1
+      )
     end
     let(:stager_id) { "my_stager" }
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
@@ -19,27 +21,32 @@ module VCAP::CloudController
     let(:options) { {} }
     subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, dea_pool, stager_pool, blobstore_url_generator) }
 
-    let(:reply_json_error) { nil }
+    let(:first_reply_json_error) { nil }
     let(:task_streaming_log_url) { "task-streaming-log-url" }
-    let(:detected_buildpack) { nil }
 
     let(:first_reply_json) do
       {
         "task_id" => "task-id",
         "task_log" => "task-log",
-        "task_streaming_log_url" => "task-streaming-log-url",
-        "detected_buildpack" => "buildpack-name",
-        "error" => nil,
+        "task_streaming_log_url" => task_streaming_log_url,
+        "detected_buildpack" => nil,
+        "buildpack_key" => nil,
+        "error" => first_reply_json_error,
         "droplet_sha1" => nil
       }
     end
+
+    let(:reply_json_error) { nil }
+    let(:detected_buildpack) { nil }
+    let(:buildpack_key) { nil }
 
     let(:reply_json) do
       {
         "task_id" => "task-id",
         "task_log" => "task-log",
-        "task_streaming_log_url" => task_streaming_log_url,
+        "task_streaming_log_url" => nil,
         "detected_buildpack" => detected_buildpack,
+        "buildpack_key" => buildpack_key,
         "error" => reply_json_error,
         "droplet_sha1" => "droplet-sha1"
       }
@@ -86,7 +93,7 @@ module VCAP::CloudController
         def stage(&blk)
           stub_schedule_sync do
             @before_staging_completion.call if @before_staging_completion
-            message_bus.respond_to_request("staging.#{stager_id}.start", reply_json)
+            message_bus.respond_to_request("staging.#{stager_id}.start", first_reply_json)
           end
 
           response = staging_task.stage(&blk)
@@ -124,6 +131,10 @@ module VCAP::CloudController
             expect { stage }.to_not change { app.detected_buildpack }.from(nil)
           end
 
+          it "does not save the detected buildpack guid" do
+            expect { stage }.to_not change { app.detected_buildpack_guid }.from(nil)
+          end
+
           it "does not call provided callback (not yet)" do
             callback_called = false
             stage { callback_called = true }
@@ -132,7 +143,7 @@ module VCAP::CloudController
         end
 
         context "when staging setup fails without a reason" do
-          let(:reply_json) { 'invalid-json' }
+          let(:first_reply_json) { 'invalid-json' }
 
           it "raises a StagingError" do
             expect { stage }.to raise_error(Errors::ApiError, /failed to stage/)
@@ -150,6 +161,12 @@ module VCAP::CloudController
             }.to_not change { app.detected_buildpack }.from(nil)
           end
 
+          it "does not save the detected buildpack guid" do
+            expect {
+              ignore_staging_error {stage }
+            }.to_not change { app.detected_buildpack_guid }.from(nil)
+          end
+
           it "does not call provided callback (not yet)" do
             callback_called = false
             ignore_staging_error { stage { callback_called = true } }
@@ -162,7 +179,7 @@ module VCAP::CloudController
         end
 
         context "when staging setup returned an error response" do
-          let(:reply_json_error) { "staging failed" }
+          let(:first_reply_json_error) { "staging failed" }
 
           it "raises a StagingError" do
             expect { stage }.to raise_error(Errors::ApiError, /failed to stage/)
@@ -174,6 +191,12 @@ module VCAP::CloudController
 
           it "does not save the detected buildpack" do
             expect { ignore_staging_error { stage } }.to_not change { app.detected_buildpack }.from(nil)
+          end
+
+          it "does not save the detected buildpack guid" do
+            expect {
+              ignore_staging_error { stage }
+            }.to_not change { app.detected_buildpack_guid }.from(nil)
           end
 
           it "does not call provided callback (not yet)" do
@@ -215,9 +238,11 @@ module VCAP::CloudController
         end
 
         context "when app staging succeeds" do
-          context "and the app was staged and started by the DEA" do
-            let(:detected_buildpack) { "buildpack-name" }
+          let(:detected_buildpack) { "buildpack-name" }
+          let(:admin_buildpack) { Buildpack.make }
+          let(:buildpack_key) { admin_buildpack.key }
 
+          context "and the app was staged and started by the DEA" do
             context "when no other staging has happened" do
               before do
                 dea_pool.stub(:mark_app_started)
@@ -225,6 +250,10 @@ module VCAP::CloudController
 
               it "saves the detected buildpack" do
                 expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
+              end
+
+              it "saves the detected buildpack guid" do
+                expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
               end
 
               it "does not clobber other attributes that changed between staging" do
@@ -315,11 +344,16 @@ module VCAP::CloudController
             expect { stage }.to_not change { app.detected_buildpack }.from(nil)
           end
 
+          it "does not save the detected buidlpack guid" do
+            expect { stage }.to_not change { app.detected_buildpack_guid }.from(nil)
+          end
+
           it "does not call provided callback (not yet)" do
             callback_called = false
             stage { callback_called = true }
             callback_called.should be_false
           end
+
           it "marks the app as having failed to stage" do
             expect { stage }.to change { app.staging_failed? }.to(true)
           end
@@ -345,6 +379,10 @@ module VCAP::CloudController
 
           it "does not save the detected buildpack" do
             expect { stage }.to_not change { app.detected_buildpack }.from(nil)
+          end
+
+          it "does not save the detected buildpack guid" do
+            expect { stage }.to_not change { app.detected_buildpack_guid }.from(nil)
           end
 
           it "does not call provided callback (not yet)" do

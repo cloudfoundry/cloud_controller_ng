@@ -23,7 +23,8 @@ resource "Apps", :type => :api do
   field :health_check_timeout, "Timeout for health checking of an staged app when starting up", required: false
   field :environment_json, "Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.", required: false
 
-  field :detected_buildpack, "The autodetected buildpack that was run.", required: false, readonly: true
+  field :detected_buildpack, "The autodetected buildpack that staged the app.", required: false, readonly: true
+  field :detected_buildpack_guid, "The GUID of the autodetected admin buildpack that staged the app.", required: false, readonly: true
   field :space_url, "The url of the associated space.", required: false, readonly: true
   field :stack_url, "The url of the associated stack.", required: false, readonly: true
   field :service_bindings_url, "The url of all the associated service bindings.", required: false, readonly: true
