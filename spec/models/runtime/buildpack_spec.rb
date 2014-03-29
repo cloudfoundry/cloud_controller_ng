@@ -86,27 +86,6 @@ module VCAP::CloudController
         end
       end
 
-      context "when there unprioritized buildpacks (position=0)" do
-        let!(:unprioritized_buildpacks) do
-          Buildpack.make(:key => "Java", :position => 0)
-          Buildpack.make(:key => "Ruby", :position => 0)
-        end
-
-        it "returns the list in position order with unprioritized at the end" do
-          buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, "a key")
-          Buildpack.make(key: "a key", position: 1)
-
-          build_packs = all_buildpacks.map(&:key)
-          expect(build_packs[0..-3]).to eq ["a key"]
-          expect(build_packs[-2..-1]).to match_array ["Java", "Ruby"]
-        end
-
-        it "copes if there all zeros" do
-          build_packs = all_buildpacks.map(&:key)
-          expect(build_packs).to match_array ["Java", "Ruby"]
-        end
-      end
-
       context "when there are no buildpacks" do
         it "should cope with no buildpacks" do
           expect(all_buildpacks).to be_empty
@@ -143,7 +122,7 @@ module VCAP::CloudController
         context "no buildpacks in the database" do
           let(:buildpacks) { nil }
 
-          it "should return nul" do
+          it "should return nil" do
             expect(Buildpack.at_last_position).to be_nil
           end
         end
@@ -211,44 +190,41 @@ module VCAP::CloudController
             )
           end
 
+          it "shifting in the middle" do
+            expect {
+              buildpacks[2].shift_to_position(2)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_100", 1], ["name_98", 2], ["name_99", 3], ["name_97", 4]]
+            )
+          end
+
           context "and shifting to 0" do
             it "shifting from the middle" do
               expect {
-                buildpacks[2].shift_to_position(0)
+                buildpacks[2].shift_to_position(1)
               }.to change {
                 get_bp_ordered
               }.from(
                 [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
               ).to(
-                [["name_98", 0], ["name_100", 1], ["name_99", 2], ["name_97", 3]]
+                [["name_98", 1], ["name_100", 2], ["name_99", 3], ["name_97", 4]]
               )
             end
 
             it "shifting from the end" do
               expect {
-                buildpacks[3].shift_to_position(0)
+                buildpacks[3].shift_to_position(1)
               }.to change {
                 get_bp_ordered
               }.from(
                 [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
               ).to(
-                [["name_97", 0], ["name_100", 1], ["name_99", 2], ["name_98", 3]]
+                [["name_97", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4]]
               )
-            end
-
-            it "shifting two buildpacks" do
-              expect {
-                buildpacks[3].shift_to_position(0)
-                buildpacks[0].shift_to_position(0)
-              }.to change {
-                get_bp_ordered
-              }.from(
-                [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-              )
-
-              result = get_bp_ordered
-              expect(result[2..-1]).to eq([["name_99", 1], ["name_98", 2]])
-              expect(result[0..1]).to match_array([["name_100", 0], ["name_97", 0]])
             end
           end
 
@@ -303,7 +279,7 @@ module VCAP::CloudController
       context "with a specified position" do
         it "creates a buildpack entry at the lowest position" do
           expect {
-            Buildpack.create(name: "new_buildpack", key: "abcdef")
+            Buildpack.create(name: "new_buildpack", key: "abcdef", position: 5)
           }.to change {
             get_bp_ordered
           }.from([]).to([["new_buildpack", 1]])
@@ -318,13 +294,13 @@ module VCAP::CloudController
       context "without a specified position" do
         it "creates a buildpack entry at the lowest position" do
           expect {
-            Buildpack.create(name: "new_buildpack", key: "abcdef", position: 7)
+            Buildpack.create(name: "new_buildpack", key: "abcdef")
           }.to change {
             get_bp_ordered
           }.from([]).to([["new_buildpack", 1]])
         end
       end
-      
+
       it "also locks the last position so that the moves don't race condition it" do
         last = double(:last, position: 4)
         allow(Buildpack).to receive(:at_last_position) { last }
@@ -378,6 +354,18 @@ module VCAP::CloudController
               [["name_100", 1], ["new_buildpack", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
             )
           end
+
+          it "allows an insert at the current last position" do
+            expect {
+              Buildpack.create(name: "new_buildpack", key: "abcdef", position: 4)
+            }.to change {
+              get_bp_ordered
+            }.from(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+            ).to(
+              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["new_buildpack", 4], ["name_97", 5]]
+            )
+          end
         end
 
         context "without a specified position" do
@@ -424,7 +412,7 @@ module VCAP::CloudController
       it "locks the last position so that the moves don't race condition it" do
         allow(Buildpack).to receive(:at_last_position) { buildpack2 }
         expect(buildpack2).to receive(:lock!)
-        Buildpack.update(buildpack1, {'position' => 2})
+        Buildpack.update(buildpack1, {"position" => 2})
       end
 
       context "when other buildpacks exist" do
@@ -434,13 +422,13 @@ module VCAP::CloudController
 
         it "must be transactional so that shifting positions remains consistent" do
           expect(Buildpack.db).to receive(:transaction).exactly(4).times.and_yield
-          Buildpack.update(buildpack2, {'position' => 1})
+          Buildpack.update(buildpack2, {"position" => 1})
         end
 
         context "with a specified position" do
           it "updates the buildpack to position 1 when less than 1" do
             expect {
-              Buildpack.update(buildpack2, {'position' => 0})
+              Buildpack.update(buildpack2, {"position" => 1})
             }.to change {
               get_bp_ordered
             }.from(
@@ -452,7 +440,7 @@ module VCAP::CloudController
 
           it "updates a buildpack entry at the lowest position" do
             expect {
-              Buildpack.update(buildpack1, {'position' => 7})
+              Buildpack.update(buildpack1, {"position" => 7})
             }.to change {
               get_bp_ordered
             }.from(
@@ -464,7 +452,7 @@ module VCAP::CloudController
 
           it "updates the buildpack entry and moves all other buildpacks" do
             expect {
-              Buildpack.update(buildpack2, {'position' => 2})
+              Buildpack.update(buildpack2, {"position" => 2})
             }.to change {
               get_bp_ordered
             }.from(
@@ -484,6 +472,35 @@ module VCAP::CloudController
             }
           end
         end
+      end
+    end
+
+    describe ".delete" do
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
+
+      it "removes the specified buildpack" do
+        expect {
+          buildpack1.delete()
+        }.to change {
+          get_bp_ordered
+        }.from(
+          [["first_buildpack", 1], ["second_buildpack", 2]]
+        ).to(
+          [["second_buildpack", 2]]
+        )
+      end
+
+      it "doesn't shift when the last position is deleted" do
+        expect {
+          buildpack2.delete()
+        }.to change {
+          get_bp_ordered
+        }.from(
+          [["first_buildpack", 1], ["second_buildpack", 2]]
+        ).to(
+          [["first_buildpack", 1]]
+        )
       end
     end
 

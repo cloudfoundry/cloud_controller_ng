@@ -25,8 +25,7 @@ module VCAP::CloudController
         end
 
         it "sets the position correctly even if an invalid position is provided" do
-          should_have_been_1 = 10
-          post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", position: should_have_been_1}), admin_headers
+          post "/v2/buildpacks", Yajl::Encoder.encode({name: "dynamic_test_buildpack", position: 10}), admin_headers
           expect(decoded_response['entity']['position']).to eq(1)
         end
 
@@ -122,10 +121,10 @@ module VCAP::CloudController
             }.to change {
               Buildpack.order(:position).map { |bp| [bp.name, bp.position, bp.filename] }
             }.from(
-                   [["first_buildpack", 1, 'a'], ["second_buildpack", 2, 'b']]
-                 ).to(
-                   [["second_buildpack", 1, 'b'], ["first_buildpack", 2, 'a']]
-                 )
+              [["first_buildpack", 1, 'a'], ["second_buildpack", 2, 'b']]
+            ).to(
+              [["second_buildpack", 1, 'b'], ["first_buildpack", 2, 'a']]
+            )
           end
 
           it "updates current end to beyond end of list" do
@@ -144,18 +143,17 @@ module VCAP::CloudController
             }.to change {
               Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
             }.from(
-                   [["first_buildpack", 1], ["second_buildpack", 2]]
-                 ).to(
-                   [["second_buildpack", 1], ["first_buildpack", 2]]
-                 )
+              [["first_buildpack", 1], ["second_buildpack", 2]]
+            ).to(
+              [["second_buildpack", 1], ["first_buildpack", 2]]
+            )
           end
         end
       end
 
       context "DELETE" do
         let!(:buildpack1) do
-          should_have_been_1 = 5
-          VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: should_have_been_1})
+          VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 1})
         end
 
         before { Delayed::Worker.delay_jobs = false }
@@ -209,18 +207,32 @@ module VCAP::CloudController
             VCAP::CloudController::Buildpack.create({name: "third_buildpack", key: "xyz", position: should_have_been_3})
           end
 
-          it "shifts down" do
+          it "shifts all buildpacks down" do
             expect {
-            delete "/v2/buildpacks/#{buildpack1.guid}", {}, admin_headers
+              delete "/v2/buildpacks/#{buildpack1.guid}", {}, admin_headers
               expect(last_response.status).to eq(204)
             }.to change {
               Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
             }.from(
-                   [["first_buildpack", 1], ["second_buildpack", 2], ["third_buildpack", 3]]
-                 ).to(
-                   [["second_buildpack", 1], ["third_buildpack", 2]]
-                 )
+              [["first_buildpack", 1], ["second_buildpack", 2], ["third_buildpack", 3]]
+            ).to(
+              [["second_buildpack", 1], ["third_buildpack", 2]]
+            )
           end
+
+          it "shifts only ones greater than itself" do
+            expect {
+              delete "/v2/buildpacks/#{buildpack2.guid}", {}, admin_headers
+              expect(last_response.status).to eq(204)
+            }.to change {
+              Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
+            }.from(
+              [["first_buildpack", 1], ["second_buildpack", 2], ["third_buildpack", 3]]
+            ).to(
+              [["first_buildpack", 1], ["third_buildpack", 2]]
+            )
+          end
+
         end
       end
     end

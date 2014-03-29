@@ -26,30 +26,28 @@ module VCAP::CloudController
       if last
         db.transaction(savepoint: true) do
           last.lock!
-          last_position = last.position
 
           buildpack = new(values, &block)
 
-          if !buildpack.position || buildpack.position >= last_position
-            buildpack.position = last_position + 1
-          elsif buildpack.position < 1
-            buildpack.position = 1
+          target_position = determine_position(buildpack, last)
+
+          if target_position <= last.position
+            shift_positions_up(target_position)
           end
 
-          buildpack.shift_and_update_positions(last_position, buildpack.position)
-          buildpack
+          buildpack.update(position: target_position)
         end
       else
         super(values) do |instance|
           block.yield(instance) if block
-          instance.position = 1 
+          instance.position = 1
         end
       end
     end
 
     def self.update(obj, values = {})
       attrs = values.dup
-      target_position = attrs.delete('position')
+      target_position = attrs.delete("position")
       db.transaction(savepoint: true) do
         obj.lock!
         obj.update_from_hash(attrs)
@@ -62,24 +60,8 @@ module VCAP::CloudController
     end
 
     def after_destroy
-      Buildpack.shift_positions_up_from(position)
+      shift_positions_down()
       super
-    end
-
-    def shift_to_position(target_position)
-      return if target_position == position
-
-      db.transaction(savepoint: true) do
-        last = Buildpack.at_last_position
-        if last
-          last.lock!
-          last_position = last.position
-          target_position = last_position if target_position >= last_position
-          shift_and_update_positions(last_position, target_position) if target_position != position
-        else
-          update(position: 1)
-        end
-      end
     end
 
     def staging_message
@@ -99,17 +81,6 @@ module VCAP::CloudController
       Yajl::Encoder.encode name
     end
 
-    def shift_and_update_positions(last_position, target_position)
-      if target_position == 0
-        Buildpack.shift_positions_up_from(position)
-      elsif target_position < last_position
-        Buildpack.shift_positions_down_from(target_position)
-      elsif target_position >= position
-        Buildpack.shift_positions_up_from(position)
-      end
-
-      update(position: target_position)
-    end
 
     def custom?
       false
@@ -119,18 +90,60 @@ module VCAP::CloudController
       self.locked
     end
 
+    def shift_to_position(target_position)
+      return if target_position == position
+      target_position = 1 if target_position < 1
+
+      db.transaction(savepoint: true) do
+        last = Buildpack.at_last_position
+        if last
+          last.lock!
+          last_position = last.position
+          target_position = last_position if target_position > last_position
+          shift_and_update_positions(target_position) if target_position != position
+        else
+          update(position: 1)
+        end
+      end
+    end
+
     private
 
-    def self.for_update_lower_than(target_position)
-      for_update.where { position >= target_position }
+    def self.determine_position(buildpack, last)
+      position = buildpack.position
+      if !position || position > last.position
+        position = last.position + 1
+      elsif position < 1
+        position = 1
+      end
+      position
     end
 
-    def self.shift_positions_down_from(target_position)
-      for_update_lower_than(target_position).update(position: Sequel.+(:position, 1))
+    def shift_positions_down
+      Buildpack.for_update.where('position > ?', position).update(position: Sequel.-(:position, 1))
     end
 
-    def self.shift_positions_up_from(target_position)
-      for_update_lower_than(target_position).update(position: Sequel.-(:position, 1))
+    def self.shift_positions_up(position)
+      for_update.where('position >= ?', position).update(position: Sequel.+(:position, 1))
     end
+
+    def shift_and_update_positions(target_position)
+      if target_position > position
+        Buildpack.shift_positions_down_between(position, target_position)
+      elsif target_position < position
+        Buildpack.shift_positions_up_between(target_position, position)
+      end
+
+      update(position: target_position)
+    end
+
+    def self.shift_positions_up_between(low, high)
+      for_update.where {position >= low}.and{position < high}.update(position: Sequel.+(:position, 1))
+    end
+
+    def self.shift_positions_down_between(low, high)
+      for_update.where {position > low}.and{position <= high}.update(position: Sequel.-(:position, 1))
+    end
+
   end
 end

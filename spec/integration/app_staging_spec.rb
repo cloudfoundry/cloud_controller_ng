@@ -54,8 +54,9 @@ describe "Staging an app", type: :integration do
       )
 
       @expected_buildpack_shas = [
+        "#{@buildpack_response_2.json_body["metadata"]["guid"]}_#{valid_zip.hexdigest}",
         "#{@buildpack_response_1.json_body["metadata"]["guid"]}_#{valid_zip(4).hexdigest}",
-        "#{@buildpack_response_2.json_body["metadata"]["guid"]}_#{valid_zip.hexdigest}"]
+      ]
 
       org = make_post_request(
         "/v2/organizations",
@@ -177,10 +178,10 @@ describe "Staging an app", type: :integration do
             end
           end
         end
-        
+
         context "excludes disabled buildpacks" do
           before do
-            @enabled_buildpack_shas = @expected_buildpack_shas[0..0]
+            @enabled_buildpack_shas = @expected_buildpack_shas[1..1]
             @buildpack_response_2_disable = make_put_request(
               "/v2/buildpacks/#{@buildpack_response_2.json_body["metadata"]["guid"]}",
               { "enabled" => false }.to_json,
