@@ -91,6 +91,7 @@ renderer:
   default_results_per_page: 50
 
 stacks_file: "/tmp/foo"
+default_app_disk_in_mb: 512
 maximum_app_disk_in_mb: 3
 directories:
   some: "value"

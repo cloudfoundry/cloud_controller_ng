@@ -126,6 +126,7 @@ module VCAP::CloudController
 
       self.stack ||= Stack.default
       self.memory ||= Config.config[:default_app_memory]
+      self.disk_quota ||= Config.config[:default_app_disk_in_mb]
 
       set_new_version if version_needs_to_be_updated?
 

@@ -1612,4 +1612,30 @@ module VCAP::CloudController
       end
     end
   end
+
+  describe "default disk_quota" do
+    before do
+      config_override({ :default_app_disk_in_mb => 512 })
+    end
+  
+    it "should use the provided quota" do
+      app = AppFactory.make(disk_quota: 256)
+      expect(app.disk_quota).to eq(256)
+    end
+
+    it "should use the default quota" do
+      app = AppFactory.make
+      expect(app.disk_quota).to eq(512)
+    end
+
+    context "default is greater than maximum" do
+      before do
+        config_override({ :default_app_disk_in_mb => 4096 })
+      end
+
+      it "should fail" do
+        expect{AppFactory.make}.to raise_error(Sequel::ValidationFailed)
+      end
+    end
+  end
 end

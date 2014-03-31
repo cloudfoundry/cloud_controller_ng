@@ -47,6 +47,10 @@ module VCAP::CloudController
           expect(config[:stacks_file]).to eq("/tmp/foo")
         end
 
+        it "preserves the default_app_disk_in_mb value from the file" do
+          expect(config[:default_app_disk_in_mb]).to eq(512)
+        end
+        
         it "preserves the maximum_app_disk_in_mb value from the file" do
           expect(config[:maximum_app_disk_in_mb]).to eq(3)
         end

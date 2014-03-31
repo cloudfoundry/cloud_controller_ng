@@ -11,7 +11,7 @@ module VCAP::CloudController
       attribute  :system_env_json,     Hash,       :default => {}
       attribute  :memory,              Integer,    :default => nil
       attribute  :instances,           Integer,    :default => 1
-      attribute  :disk_quota,          Integer,    :default => 1024
+      attribute  :disk_quota,          Integer,    :default => nil
 
       attribute  :state,               String,     :default => "STOPPED"
       attribute  :command,             String,     :default => nil

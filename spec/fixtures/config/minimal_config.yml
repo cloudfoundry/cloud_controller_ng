@@ -21,6 +21,7 @@ app_usage_events:
   cutoff_age_in_days: 31
 
 default_app_memory: 1024 #mb
+default_app_disk_in_mb: 1024
 maximum_health_check_timeout: 180
 
 uaa:

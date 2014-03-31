@@ -27,6 +27,7 @@ module VCAP::CloudController
         },
         optional(:billing_event_writing_enabled) => bool,
         :default_app_memory => Fixnum,
+        :default_app_disk_in_mb => Fixnum,
         optional(:maximum_app_disk_in_mb) => Fixnum,
         :maximum_health_check_timeout => Fixnum,
 
