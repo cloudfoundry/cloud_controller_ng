@@ -475,25 +475,25 @@ module VCAP::CloudController
       end
     end
 
-    describe ".delete" do
+    describe "destroy" do
       let!(:buildpack1) { VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
 
       it "removes the specified buildpack" do
         expect {
-          buildpack1.delete()
+          buildpack1.destroy
         }.to change {
           get_bp_ordered
         }.from(
           [["first_buildpack", 1], ["second_buildpack", 2]]
         ).to(
-          [["second_buildpack", 2]]
+          [["second_buildpack", 1]]
         )
       end
 
       it "doesn't shift when the last position is deleted" do
         expect {
-          buildpack2.delete()
+          buildpack2.destroy
         }.to change {
           get_bp_ordered
         }.from(
