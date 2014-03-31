@@ -570,6 +570,13 @@ module VCAP::CloudController
           expect(last_response.status).to eq(401)
         end
       end
+
+      context 'when the service instance does not exist' do
+        it 'returns an error saying the instance was not found' do
+          get '/v2/service_instances/nonexistent_instance/permissions', {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql 404
+        end
+      end
     end
 
     describe "Quota enforcement" do

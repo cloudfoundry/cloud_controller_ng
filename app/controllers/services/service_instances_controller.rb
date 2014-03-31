@@ -128,6 +128,8 @@ module VCAP::CloudController
     rescue Errors::ApiError => e
       if e.name == "NotAuthorized"
         [HTTP::OK, {}, JSON.generate({ manage: false })]
+      else
+        raise e
       end
     end
 
