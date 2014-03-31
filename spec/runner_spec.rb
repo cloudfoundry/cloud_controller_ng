@@ -227,6 +227,7 @@ module VCAP::CloudController
         subject.should_receive(:trap).with("TERM")
         subject.should_receive(:trap).with("INT")
         subject.should_receive(:trap).with("QUIT")
+        subject.should_receive(:trap).with("USR2")
         subject.trap_signals
       end
 
@@ -245,9 +246,18 @@ module VCAP::CloudController
           callbacks << blk
         end
 
+        subject.should_receive(:trap).with("USR2") do |_, &blk|
+          callbacks << blk
+        end
+
         subject.trap_signals
 
         subject.should_receive(:stop!).exactly(3).times
+
+        registrar = double(:registrar)
+        subject.should_receive(:router_registrar).and_return(registrar)
+        expect(registrar).to receive(:shutdown)
+
         callbacks.each(&:call)
       end
     end

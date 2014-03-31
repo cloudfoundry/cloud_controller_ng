@@ -101,6 +101,11 @@ module VCAP::CloudController
           stop!
         end
       end
+
+      trap('USR2') do
+        logger.warn("Caught signal USR2")
+        router_registrar.shutdown
+      end
     end
 
     def stop!
