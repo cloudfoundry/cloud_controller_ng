@@ -81,7 +81,7 @@ To help maintain code consistency, rubocop is used to enforce code conventions a
 
 ### Running static analysis
 
-    bundle exec rubucop
+    bundle exec rubocop
 
 Travis currently runs rubocop as part of the CI process.
 
