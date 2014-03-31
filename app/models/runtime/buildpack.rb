@@ -6,14 +6,7 @@ module VCAP::CloudController
     import_attributes :name, :key, :position, :enabled, :locked, :filename
 
     def self.list_admin_buildpacks
-      results = exclude(:key => nil).exclude(:key => "").order(:position).all
-      index_of_first_prioritized_position = results.find_index { |result| result.position > 0 }
-
-      if index_of_first_prioritized_position
-        results = results[index_of_first_prioritized_position..-1] + results.take(index_of_first_prioritized_position)
-      end
-
-      results
+      exclude(:key => nil).exclude(:key => "").order(:position).all
     end
 
     def self.at_last_position
