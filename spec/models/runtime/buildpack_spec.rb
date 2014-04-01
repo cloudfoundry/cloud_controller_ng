@@ -265,25 +265,25 @@ module VCAP::CloudController
       it "locks the last position so that the moves don't race condition it" do
         allow(Buildpack).to receive(:at_last_position) { buildpacks.last }
         expect(buildpacks.last).to receive(:lock!)
-        Buildpack.update(buildpacks.first, {"position" => 2})
+        Buildpack.update(buildpacks.first, {position: 2})
       end
 
       it "must be transactional so that shifting positions remains consistent" do
         transactions_added_by_sequel = 1
         expect(Buildpack.db).to receive(:transaction).exactly(transactions_added_by_sequel + 1).times.and_yield
-        Buildpack.update(buildpacks[3], "position" => 2)
+        Buildpack.update(buildpacks[3], position: 2)
       end
 
       it "has to do a SELECT FOR UPDATE" do
         expect(Buildpack).to receive(:for_update).exactly(1).and_call_original
-        Buildpack.update(buildpacks[3], "position" => 2)
+        Buildpack.update(buildpacks[3], position: 2)
       end
 
       it "locks the last row" do
         last = double(:last, position: 4)
         allow(Buildpack).to receive(:at_last_position) { last }
         expect(last).to receive(:lock!)
-        Buildpack.update(buildpacks[3], "position" => 2)
+        Buildpack.update(buildpacks[3], position: 2)
       end
 
       it "does not update the position if it isn't specified" do
@@ -297,7 +297,7 @@ module VCAP::CloudController
       it "doesn't try to change the position needlessly" do
         expect(buildpacks[0]).to_not receive(:update)
         expect {
-          Buildpack.update(buildpacks[0], "position" => 1)
+          Buildpack.update(buildpacks[0], position: 1)
         }.to_not change {
           get_bp_ordered
         }
@@ -305,13 +305,13 @@ module VCAP::CloudController
 
       it "does not modify the frozen hash provided by Sequel" do
         expect {
-          Buildpack.update(buildpacks.first, {"position" => 2}.freeze)
+          Buildpack.update(buildpacks.first, {position: 2}.freeze)
         }.not_to raise_error
       end
 
       it "shifts from the end to the beginning" do
         expect {
-          Buildpack.update(buildpacks[3], "position" => 1)
+          Buildpack.update(buildpacks[3], position: 1)
         }.to change {
           get_bp_ordered
         }.from(
@@ -323,7 +323,7 @@ module VCAP::CloudController
 
       it "shifts in the middle" do
         expect {
-          Buildpack.update(buildpacks[3], "position" => 2)
+          Buildpack.update(buildpacks[3], position: 2)
         }.to change {
           get_bp_ordered
         }.from(
@@ -335,7 +335,7 @@ module VCAP::CloudController
 
       it "shifts from the beginning to the end" do
         expect {
-          Buildpack.update(buildpacks.first, {"position" => 4})
+          Buildpack.update(buildpacks.first, {position: 4})
         }.to change {
           get_bp_ordered
         }.from(
@@ -349,7 +349,7 @@ module VCAP::CloudController
         context "the beginning" do
           it "normalizes to the beginning of the list" do
             expect {
-              Buildpack.update(buildpacks[1], {"position" => 0})
+              Buildpack.update(buildpacks[1], {position: 0})
             }.to change {
               get_bp_ordered
             }.from(
@@ -362,7 +362,7 @@ module VCAP::CloudController
           it "doesn't change the position if there isn't a change after normalization" do
             expect(buildpacks[0]).to_not receive(:update)
             expect {
-              Buildpack.update(buildpacks[0], "position" => 0)
+              Buildpack.update(buildpacks[0], position: 0)
             }.to_not change {
               get_bp_ordered
             }
@@ -372,7 +372,7 @@ module VCAP::CloudController
         context "the end" do
           it "normalizes the position to a valid one" do
             expect {
-              Buildpack.update(buildpacks[2], "position" => 5)
+              Buildpack.update(buildpacks[2], position: 5)
             }.to change {
               get_bp_ordered
             }.from(
@@ -385,7 +385,7 @@ module VCAP::CloudController
           it "doesn't change the position if there isn't a change after normalization" do
             expect(buildpacks[3]).to_not receive(:update)
             expect {
-              Buildpack.update(buildpacks[3], "position" => 5)
+              Buildpack.update(buildpacks[3], position: 5)
             }.to_not change {
               get_bp_ordered
             }

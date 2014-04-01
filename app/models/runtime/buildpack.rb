@@ -19,14 +19,17 @@ module VCAP::CloudController
       last.position
     end
 
-    def self.create(values = {}, &block)
+    def self.create(new_attributes = {}, &block)
+      new_attributes = new_attributes.symbolize_keys # Unfortunately we aren't consistent with whether we use
+                                                     # strings or symbols for keys so we need to be defensive.
+
       last = Buildpack.at_last_position
 
       if last
         positioner = BuildpackPositioner.new
-        positioner.create(values, &block)
+        positioner.create(new_attributes, &block)
       else
-        super(values) do |instance|
+        super(new_attributes) do |instance|
           block.yield(instance) if block
           instance.position = 1
         end
@@ -34,13 +37,15 @@ module VCAP::CloudController
     end
 
     def self.update(buildpack, updated_attributes = {})
+      updated_attributes = updated_attributes.symbolize_keys # Unfortunately we aren't consistent with whether we use
+                                                             # strings or symbols for keys so we need to be defensive.
       @db.transaction(savepoint: true) do
         buildpack.lock!
 
-        normalized_attributes = if updated_attributes.has_key?("position")
+        normalized_attributes = if updated_attributes.has_key?(:position)
           positioner = BuildpackPositioner.new
-          normalized_position = positioner.normalize(buildpack, updated_attributes["position"])
-          updated_attributes.merge("position" => normalized_position)
+          normalized_position = positioner.normalize(buildpack, updated_attributes[:position])
+          updated_attributes.merge(position: normalized_position)
         else
           updated_attributes
         end
