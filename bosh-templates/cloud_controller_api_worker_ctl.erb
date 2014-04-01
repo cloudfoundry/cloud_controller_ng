@@ -50,6 +50,22 @@ case $1 in
     <% end %>
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
+    
+    # Run the buildpack install only on the first CC Worker launch
+    <% if spec.index.to_i == 0 %>
+    chpst -u vcap:vcap bundle exec rake buildpacks:install \<% if properties.syslog_aggregator && properties.syslog_aggregator.address %>
+      > >(tee -a >(logger -p user.info -t vcap.buildpacks.stdout) $LOG_DIR/buildpacks.stdout.log) \
+      2> >(tee -a >(logger -p user.error -t vcap.buildpacks.stderr) $LOG_DIR/buildpacks.stderr.log)<% else %>
+      >>$LOG_DIR/buildpacks.stdout.log \
+      2>>$LOG_DIR/buildpacks.stderr.log
+      <% end %>
+
+    if [ $? != 0 ]; then
+      echo "Buildpacks installation failed"
+      exit 1
+    fi
+    <% end %>
+
     <% task_name = "jobs:local"  %>
     exec chpst -u vcap:vcap bundle exec rake <%= task_name %> \<% if properties.syslog_aggregator && properties.syslog_aggregator.address %>
       > >(tee -a >(logger -p user.info -t vcap.jobs_work.stdout) $LOG_DIR/jobs_work.stdout.log) \
