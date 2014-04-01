@@ -1,28 +1,16 @@
 module VCAP::CloudController
   class BuildpackPositioner
-    def initialize
-      @db = Buildpack.db
-    end
+    def normalize_for_create(desired_position)
+      last_position = Buildpack.locked_last_position
+      normalized_position = normalize_position_for_add(desired_position, last_position)
 
-    def create(new_attributes, &block)
-      @db.transaction(savepoint: true) do
-        buildpack = Buildpack.new(new_attributes, &block)
-        desired_position = buildpack.position
-
-        last_position = Buildpack.locked_last_position
-        normalized_position = normalize_position_for_add(desired_position, last_position)
-
-        if normalized_position <= last_position
-          shift_positions_up(normalized_position)
-        end
-
-        buildpack.position = normalized_position
-        buildpack.save
+      if normalized_position <= last_position
+        shift_positions_up(normalized_position)
       end
+      normalized_position
     end
 
-    def normalize(buildpack, desired_position)
-      current_position = buildpack.position
+    def normalize_for_update(current_position, desired_position)
       last_position = Buildpack.locked_last_position
       normalized_position = normalize_position_for_move(desired_position, last_position)
 
