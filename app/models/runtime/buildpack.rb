@@ -1,4 +1,5 @@
 require "cloud_controller/buildpack_positioner"
+require "cloud_controller/buildpack_shifter"
 
 module VCAP::CloudController
   class Buildpack < Sequel::Model
@@ -32,7 +33,7 @@ module VCAP::CloudController
         db.transaction(savepoint: true) do
           buildpack = Buildpack.new(new_attributes, &block)
           positioner = BuildpackPositioner.new
-          normalized_position = positioner.normalize_for_create(buildpack.position)
+          normalized_position = positioner.position_for_create(buildpack.position)
 
           buildpack.position = normalized_position
           buildpack.save
@@ -48,7 +49,7 @@ module VCAP::CloudController
 
         normalized_attributes = if updated_attributes.has_key?(:position)
           positioner = BuildpackPositioner.new
-          normalized_position = positioner.normalize_for_update(buildpack.position, updated_attributes[:position])
+          normalized_position = positioner.position_for_update(buildpack.position, updated_attributes[:position])
           updated_attributes.merge(position: normalized_position)
         else
           updated_attributes
@@ -67,8 +68,8 @@ module VCAP::CloudController
     def after_destroy
       super
 
-      positioner = BuildpackPositioner.new
-      positioner.shift_positions_down(self)
+      shifter = BuildpackShifter.new
+      shifter.shift_positions_down(self)
     end
 
     def validate

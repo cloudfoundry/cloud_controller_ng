@@ -1,28 +1,33 @@
+require "cloud_controller/buildpack_positioner"
+
 module VCAP::CloudController
   class BuildpackPositioner
-    def normalize_for_create(desired_position)
+    def initialize
+      @shifter = BuildpackShifter.new
+    end
+
+    def position_for_create(desired_position)
       last_position = Buildpack.locked_last_position
       normalized_position = normalize_position_for_add(desired_position, last_position)
 
       if normalized_position <= last_position
-        shift_positions_up(normalized_position)
+        @shifter.shift_positions_up(normalized_position)
       end
       normalized_position
     end
 
-    def normalize_for_update(current_position, desired_position)
+    def position_for_update(current_position, desired_position)
       last_position = Buildpack.locked_last_position
       normalized_position = normalize_position_for_move(desired_position, last_position)
 
       unless normalized_position == current_position
-        shift_and_update_positions(current_position, normalized_position)
-      end
+        if normalized_position > current_position
+          @shifter.shift_positions_down_between(current_position, normalized_position)
+        elsif normalized_position < current_position
+          @shifter.shift_positions_up_between(normalized_position, current_position)
+        end      end
 
       normalized_position
-    end
-
-    def shift_positions_down(buildpack)
-      Buildpack.for_update.where('position > ?', buildpack.position).update(position: Sequel.-(:position, 1))
     end
 
     private
@@ -49,26 +54,6 @@ module VCAP::CloudController
         else
           target_position
       end
-    end
-
-    def shift_and_update_positions(buildpack_position, target_position)
-      if target_position > buildpack_position
-        shift_positions_down_between(buildpack_position, target_position)
-      elsif target_position < buildpack_position
-        shift_positions_up_between(target_position, buildpack_position)
-      end
-    end
-
-    def shift_positions_down_between(low, high)
-      Buildpack.for_update.where { position > low }.and { position <= high }.update(position: Sequel.-(:position, 1))
-    end
-
-    def shift_positions_up_between(low, high)
-      Buildpack.for_update.where { position >= low }.and { position < high }.update(position: Sequel.+(:position, 1))
-    end
-
-    def shift_positions_up(position)
-      Buildpack.for_update.where("position >= ?", position).update(position: Sequel.+(:position, 1))
     end
   end
 end
