@@ -104,15 +104,14 @@ module VCAP::CloudController
 
       trap('USR2') do
         logger.warn("Caught signal USR2")
-        router_registrar.shutdown
+        stop_router_registrar
       end
     end
 
     def stop!
-      logger.info("Unregistering routes.")
-
-      router_registrar.shutdown do
+      stop_router_registrar do
         stop_thin_server
+        logger.info("Stopping EventMachine")
         EM.stop
       end
     end
@@ -126,6 +125,11 @@ module VCAP::CloudController
     end
 
     private
+
+    def stop_router_registrar(&blk)
+      logger.info("Unregistering routes.")
+      router_registrar.shutdown(&blk)
+    end
 
     def start_cloud_controller(message_bus)
       create_pidfile
@@ -183,6 +187,7 @@ module VCAP::CloudController
     end
 
     def stop_thin_server
+      logger.info("Stopping Thin Server.")
       @thin_server.stop if @thin_server
     end
 
