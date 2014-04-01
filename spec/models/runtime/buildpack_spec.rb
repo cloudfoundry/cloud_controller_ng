@@ -109,168 +109,20 @@ module VCAP::CloudController
       end
     end
 
-    describe "positioning buildpacks" do
+    describe ".at_last_position" do
       let!(:buildpacks) do
         4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
       end
 
-      describe ".at_last_position" do
-        it "gets the last position" do
-          expect(Buildpack.at_last_position).to eq buildpacks[3]
-        end
-
-        context "no buildpacks in the database" do
-          let(:buildpacks) { nil }
-
-          it "should return nil" do
-            expect(Buildpack.at_last_position).to be_nil
-          end
-        end
+      it "gets the last position" do
+        expect(Buildpack.at_last_position).to eq buildpacks[3]
       end
 
-      describe "#shift_to_position" do
-        it "must be transactional so that shifting positions remains consistent" do
-          expect(Buildpack.db).to receive(:transaction).exactly(2).times.and_yield
-          buildpacks[3].shift_to_position(2)
-        end
+      context "no buildpacks in the database" do
+        let(:buildpacks) { nil }
 
-        it "has to do a SELECT FOR UPDATE" do
-          expect(Buildpack).to receive(:for_update).exactly(1).and_call_original
-          buildpacks[3].shift_to_position(2)
-        end
-
-        it "locks the last row" do
-          last = double(:last, position: 4)
-          allow(Buildpack).to receive(:at_last_position) { last }
-          expect(last).to receive(:lock!)
-          buildpacks[3].shift_to_position(2)
-        end
-
-        context "when an empty table" do
-          let(:buildpacks) { nil }
-
-          it "should only allow setting position to 1" do
-            bp = Buildpack.new(name: "name_1")
-            bp.shift_to_position(5)
-            bp.save
-            expect(bp.reload.position).to eq 1
-          end
-        end
-
-        context "shifting up" do
-          it "shifting up when already the first to the first" do
-            expect {
-              buildpacks[0].shift_to_position(1)
-            }.to_not change {
-              get_bp_ordered
-            }
-          end
-
-          it "shifting up when already the last to the first" do
-            expect {
-              buildpacks[3].shift_to_position(1)
-            }.to change {
-              get_bp_ordered
-            }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_97", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4]]
-            )
-          end
-
-          it "shifting up and not the first" do
-            expect {
-              buildpacks[3].shift_to_position(2)
-            }.to change {
-              get_bp_ordered
-            }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_100", 1], ["name_97", 2], ["name_99", 3], ["name_98", 4]]
-            )
-          end
-
-          it "shifting in the middle" do
-            expect {
-              buildpacks[2].shift_to_position(2)
-            }.to change {
-              get_bp_ordered
-            }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_100", 1], ["name_98", 2], ["name_99", 3], ["name_97", 4]]
-            )
-          end
-
-          context "and shifting to 0" do
-            it "shifting from the middle" do
-              expect {
-                buildpacks[2].shift_to_position(1)
-              }.to change {
-                get_bp_ordered
-              }.from(
-                [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-              ).to(
-                [["name_98", 1], ["name_100", 2], ["name_99", 3], ["name_97", 4]]
-              )
-            end
-
-            it "shifting from the end" do
-              expect {
-                buildpacks[3].shift_to_position(1)
-              }.to change {
-                get_bp_ordered
-              }.from(
-                [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-              ).to(
-                [["name_97", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4]]
-              )
-            end
-          end
-
-          it "doesn't try resetting the position" do
-            expect(buildpacks[0]).to_not receive(:update)
-            buildpacks[0].shift_to_position(1)
-          end
-        end
-
-        context "shifting down" do
-          it "shifting down when already the last and beyond last" do
-            expect {
-              buildpacks[3].shift_to_position(5)
-            }.to_not change {
-              get_bp_ordered
-            }
-          end
-
-          it "shifting down to last" do
-            expect {
-              buildpacks[2].shift_to_position(4)
-            }.to change {
-              get_bp_ordered
-            }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_100", 1], ["name_99", 2], ["name_97", 3], ["name_98", 4]]
-            )
-          end
-
-          it "shifting down beyond last" do
-            expect {
-              buildpacks[2].shift_to_position(5)
-            }.to change {
-              get_bp_ordered
-            }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_100", 1], ["name_99", 2], ["name_97", 3], ["name_98", 4]]
-            )
-          end
-
-          it "doesn't try resetting the position" do
-            expect(buildpacks[3]).to_not receive(:update)
-            buildpacks[3].shift_to_position(5)
-          end
+        it "should return nil" do
+          expect(Buildpack.at_last_position).to be_nil
         end
       end
     end
@@ -325,10 +177,10 @@ module VCAP::CloudController
             }.to change {
               get_bp_ordered
             }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["new_buildpack", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
-            )
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+                 ).to(
+                   [["new_buildpack", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
+                 )
           end
 
           it "creates a buildpack entry at the lowest position" do
@@ -337,10 +189,10 @@ module VCAP::CloudController
             }.to change {
               get_bp_ordered
             }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["new_buildpack", 5]]
-            )
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+                 ).to(
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["new_buildpack", 5]]
+                 )
           end
 
           it "creates a buildpack entry and moves all other buildpacks" do
@@ -349,10 +201,10 @@ module VCAP::CloudController
             }.to change {
               get_bp_ordered
             }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_100", 1], ["new_buildpack", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
-            )
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+                 ).to(
+                   [["name_100", 1], ["new_buildpack", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
+                 )
           end
 
           it "allows an insert at the current last position" do
@@ -361,10 +213,10 @@ module VCAP::CloudController
             }.to change {
               get_bp_ordered
             }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["new_buildpack", 4], ["name_97", 5]]
-            )
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+                 ).to(
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["new_buildpack", 4], ["name_97", 5]]
+                 )
           end
         end
 
@@ -375,10 +227,10 @@ module VCAP::CloudController
             }.to change {
               get_bp_ordered
             }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["new_buildpack", 5]]
-            )
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+                 ).to(
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["new_buildpack", 5]]
+                 )
           end
         end
 
@@ -391,82 +243,143 @@ module VCAP::CloudController
             }.to change {
               get_bp_ordered
             }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
-            ).to(
-              [["new_buildpack", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
-            )
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+                 ).to(
+                   [["new_buildpack", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5]]
+                 )
           end
         end
       end
     end
 
     describe ".update" do
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
+      let!(:buildpacks) do
+        4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
+      end
 
       it "locks the current object so that the moves don't race condition it" do
-        expect(buildpack1).to receive(:lock!)
-        Buildpack.update(buildpack1, {key: "abcdef"})
+        expect(buildpacks[0]).to receive(:lock!)
+        Buildpack.update(buildpacks[0], {key: "abcdef"})
       end
 
       it "locks the last position so that the moves don't race condition it" do
-        allow(Buildpack).to receive(:at_last_position) { buildpack2 }
-        expect(buildpack2).to receive(:lock!)
-        Buildpack.update(buildpack1, {"position" => 2})
+        allow(Buildpack).to receive(:at_last_position) { buildpacks.last }
+        expect(buildpacks.last).to receive(:lock!)
+        Buildpack.update(buildpacks.first, {"position" => 2})
       end
 
-      context "when other buildpacks exist" do
-        let!(:buildpacks) do
-          4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
-        end
+      it "must be transactional so that shifting positions remains consistent" do
+        transactions_added_by_sequel = 2
+        expect(Buildpack.db).to receive(:transaction).exactly(transactions_added_by_sequel + 1).times.and_yield
+        Buildpack.update(buildpacks[3], "position" => 2)
+      end
 
-        it "must be transactional so that shifting positions remains consistent" do
-          expect(Buildpack.db).to receive(:transaction).exactly(4).times.and_yield
-          Buildpack.update(buildpack2, {"position" => 1})
-        end
+      it "has to do a SELECT FOR UPDATE" do
+        expect(Buildpack).to receive(:for_update).exactly(1).and_call_original
+        Buildpack.update(buildpacks[3], "position" => 2)
+      end
 
-        context "with a specified position" do
-          it "updates the buildpack to position 1 when less than 1" do
+      it "locks the last row" do
+        last = double(:last, position: 4)
+        allow(Buildpack).to receive(:at_last_position) { last }
+        expect(last).to receive(:lock!)
+        Buildpack.update(buildpacks[3], "position" => 2)
+      end
+
+      it "does not update the position if it isn't specified" do
+        expect {
+          Buildpack.update(buildpacks.first, {key: "abcdef"})
+        }.to_not change {
+          get_bp_ordered
+        }
+      end
+
+      it "doesn't try to change the position needlessly" do
+        expect(buildpacks[0]).to_not receive(:update)
+        expect {
+          Buildpack.update(buildpacks[0], "position" => 1)
+        }.to_not change {
+          get_bp_ordered
+        }
+      end
+
+      it "shifts from the end to the beginning" do
+        expect {
+          Buildpack.update(buildpacks[3], "position" => 1)
+        }.to change {
+          get_bp_ordered
+        }.from(
+               [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+             ).to(
+               [["name_97", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4]]
+             )
+      end
+
+      it "shifts in the middle" do
+        expect {
+          Buildpack.update(buildpacks[3], "position" => 2)
+        }.to change {
+          get_bp_ordered
+        }.from(
+               [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+             ).to(
+               [["name_100", 1], ["name_97", 2], ["name_99", 3], ["name_98", 4]]
+             )
+      end
+
+      it "shifts from the beginning to the end" do
+        expect {
+          Buildpack.update(buildpacks.first, {"position" => 4})
+        }.to change {
+          get_bp_ordered
+        }.from(
+               [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+             ).to(
+               [["name_99", 1], ["name_98", 2], ["name_97", 3], ["name_100", 4]]
+             )
+      end
+
+      context "when updating past" do
+        context "the beginning" do
+          it "normalizes to the beginning of the list" do
             expect {
-              Buildpack.update(buildpack2, {"position" => 1})
+              Buildpack.update(buildpacks[1], {"position" => 0})
             }.to change {
               get_bp_ordered
             }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["first_buildpack", 5], ["second_buildpack", 6]]
-            ).to(
-              [["second_buildpack", 1], ["name_100", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5], ["first_buildpack", 6]]
-            )
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+                 ).to(
+                   [["name_99", 1], ["name_100", 2], ["name_98", 3], ["name_97", 4]]
+                 )
           end
 
-          it "updates a buildpack entry at the lowest position" do
+          it "doesn't change the position if there isn't a change after normalization" do
+            expect(buildpacks[0]).to_not receive(:update)
             expect {
-              Buildpack.update(buildpack1, {"position" => 7})
-            }.to change {
+              Buildpack.update(buildpacks[0], "position" => 0)
+            }.to_not change {
               get_bp_ordered
-            }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["first_buildpack", 5], ["second_buildpack", 6]]
-            ).to(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["second_buildpack", 5], ["first_buildpack", 6]]
-            )
-          end
-
-          it "updates the buildpack entry and moves all other buildpacks" do
-            expect {
-              Buildpack.update(buildpack2, {"position" => 2})
-            }.to change {
-              get_bp_ordered
-            }.from(
-              [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4], ["first_buildpack", 5], ["second_buildpack", 6]]
-            ).to(
-              [["name_100", 1], ["second_buildpack", 2], ["name_99", 3], ["name_98", 4], ["name_97", 5], ["first_buildpack", 6]]
-            )
+            }
           end
         end
 
-        context "without a specified position" do
-          it "does not update the position" do
+        context "the end" do
+          it "normalizes the position to a valid one" do
             expect {
-              Buildpack.update(buildpack1, {key: "abcdef"})
+              Buildpack.update(buildpacks[2], "position" => 5)
+            }.to change {
+              get_bp_ordered
+            }.from(
+                   [["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]]
+                 ).to(
+                   [["name_100", 1], ["name_99", 2], ["name_97", 3], ["name_98", 4]]
+                 )
+          end
+
+          it "doesn't change the position if there isn't a change after normalization" do
+            expect(buildpacks[3]).to_not receive(:update)
+            expect {
+              Buildpack.update(buildpacks[3], "position" => 5)
             }.to_not change {
               get_bp_ordered
             }
@@ -485,10 +398,10 @@ module VCAP::CloudController
         }.to change {
           get_bp_ordered
         }.from(
-          [["first_buildpack", 1], ["second_buildpack", 2]]
-        ).to(
-          [["second_buildpack", 1]]
-        )
+               [["first_buildpack", 1], ["second_buildpack", 2]]
+             ).to(
+               [["second_buildpack", 1]]
+             )
       end
 
       it "doesn't shift when the last position is deleted" do
@@ -497,10 +410,10 @@ module VCAP::CloudController
         }.to change {
           get_bp_ordered
         }.from(
-          [["first_buildpack", 1], ["second_buildpack", 2]]
-        ).to(
-          [["first_buildpack", 1]]
-        )
+               [["first_buildpack", 1], ["second_buildpack", 2]]
+             ).to(
+               [["first_buildpack", 1]]
+             )
       end
     end
 

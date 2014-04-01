@@ -37,29 +37,23 @@ module VCAP::CloudController
       obj
     end
 
-    def shift_to_position(buildpack, target_position)
-      return if target_position == buildpack.position
-      target_position = 1 if target_position < 1
-
-      @db.transaction(savepoint: true) do
-        last = Buildpack.at_last_position
-        if last
-          last.lock!
-
-          last_position = last.position
-          target_position = last_position if target_position > last_position
-          shift_and_update_positions(buildpack, target_position) if target_position != buildpack.position
-        else
-          buildpack.update(position: 1)
-        end
-      end
-    end
-
     def shift_positions_down(buildpack)
       Buildpack.for_update.where('position > ?', buildpack.position).update(position: Sequel.-(:position, 1))
     end
 
     private
+
+    def shift_to_position(buildpack, target_position)
+      return if target_position == buildpack.position
+
+      target_position = 1 if target_position < 1
+      last = Buildpack.at_last_position
+      last.lock!
+
+      last_position = last.position
+      target_position = last_position if target_position > last_position
+      shift_and_update_positions(buildpack, target_position) if target_position != buildpack.position
+    end
 
     def shift_and_update_positions(buildpack, target_position)
       if target_position > buildpack.position
@@ -82,11 +76,11 @@ module VCAP::CloudController
     end
 
     def shift_positions_down_between(low, high)
-      Buildpack.for_update.where {position > low}.and{position <= high}.update(position: Sequel.-(:position, 1))
+      Buildpack.for_update.where { position > low }.and { position <= high }.update(position: Sequel.-(:position, 1))
     end
 
     def shift_positions_up_between(low, high)
-      Buildpack.for_update.where {position >= low}.and{position < high}.update(position: Sequel.+(:position, 1))
+      Buildpack.for_update.where { position >= low }.and { position < high }.update(position: Sequel.+(:position, 1))
     end
 
     def shift_positions_up(position)

@@ -55,12 +55,6 @@ module VCAP::CloudController
       { buildpack_key: self.key }
     end
 
-
-    def shift_to_position(target_position)
-      positioner = BuildpackPositioner.new
-      positioner.shift_to_position(self, target_position)
-    end
-
     def to_json
       Yajl::Encoder.encode name
     end
