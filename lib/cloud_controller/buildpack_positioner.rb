@@ -4,37 +4,33 @@ module VCAP::CloudController
       @db = Buildpack.db
     end
 
-    def create(values, &block)
-      last = Buildpack.at_last_position
-
+    def create(new_attributes, &block)
       @db.transaction(savepoint: true) do
-        last.lock!
+        buildpack = Buildpack.new(new_attributes, &block)
+        desired_position = buildpack.position
 
-        buildpack = Buildpack.new(values, &block)
+        last_position = Buildpack.locked_last_position
+        normalized_position = normalize_position_for_add(desired_position, last_position)
 
-        target_position = determine_position(buildpack, last)
-
-        if target_position <= last.position
-          shift_positions_up(target_position)
+        if normalized_position <= last_position
+          shift_positions_up(normalized_position)
         end
 
-        buildpack.update(position: target_position)
+        buildpack.position = normalized_position
+        buildpack.save
       end
     end
 
-    def update(obj, values={})
-      attrs = values.dup
-      target_position = attrs.delete("position")
-      @db.transaction(savepoint: true) do
-        obj.lock!
+    def normalize(buildpack, desired_position)
+      current_position = buildpack.position
+      last_position = Buildpack.locked_last_position
+      normalized_position = normalize_position_for_move(desired_position, last_position)
 
-        obj.update_from_hash(attrs)
-        if target_position
-          target_position = 1 if target_position < 1
-          shift_to_position(obj, target_position)
-        end
+      unless normalized_position == current_position
+        shift_and_update_positions(current_position, normalized_position)
       end
-      obj
+
+      normalized_position
     end
 
     def shift_positions_down(buildpack)
@@ -43,36 +39,36 @@ module VCAP::CloudController
 
     private
 
-    def shift_to_position(buildpack, target_position)
-      return if target_position == buildpack.position
-
-      target_position = 1 if target_position < 1
-      last = Buildpack.at_last_position
-      last.lock!
-
-      last_position = last.position
-      target_position = last_position if target_position > last_position
-      shift_and_update_positions(buildpack, target_position) if target_position != buildpack.position
+    def normalize_position_for_add(target_position, last_position)
+      case
+        when target_position.nil?
+          last_position + 1
+        when target_position > last_position
+          last_position + 1
+        when target_position < 1
+          1
+        else
+          target_position
+      end
     end
 
-    def shift_and_update_positions(buildpack, target_position)
-      if target_position > buildpack.position
-        shift_positions_down_between(buildpack.position, target_position)
-      elsif target_position < buildpack.position
-        shift_positions_up_between(target_position, buildpack.position)
+    def normalize_position_for_move(target_position, last_position)
+      case
+        when target_position > last_position
+          last_position
+        when target_position < 1
+          1
+        else
+          target_position
       end
-
-      buildpack.update(position: target_position)
     end
 
-    def determine_position(buildpack, last)
-      position = buildpack.position
-      if !position || position > last.position
-        position = last.position + 1
-      elsif position < 1
-        position = 1
+    def shift_and_update_positions(buildpack_position, target_position)
+      if target_position > buildpack_position
+        shift_positions_down_between(buildpack_position, target_position)
+      elsif target_position < buildpack_position
+        shift_positions_up_between(target_position, buildpack_position)
       end
-      position
     end
 
     def shift_positions_down_between(low, high)

@@ -269,7 +269,7 @@ module VCAP::CloudController
       end
 
       it "must be transactional so that shifting positions remains consistent" do
-        transactions_added_by_sequel = 2
+        transactions_added_by_sequel = 1
         expect(Buildpack.db).to receive(:transaction).exactly(transactions_added_by_sequel + 1).times.and_yield
         Buildpack.update(buildpacks[3], "position" => 2)
       end
@@ -301,6 +301,12 @@ module VCAP::CloudController
         }.to_not change {
           get_bp_ordered
         }
+      end
+
+      it "does not modify the frozen hash provided by Sequel" do
+        expect {
+          Buildpack.update(buildpacks.first, {"position" => 2}.freeze)
+        }.not_to raise_error
       end
 
       it "shifts from the end to the beginning" do

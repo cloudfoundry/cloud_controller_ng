@@ -13,6 +13,12 @@ module VCAP::CloudController
       where(position: max(:position)).first
     end
 
+    def self.locked_last_position
+      last = at_last_position
+      last.lock!
+      last.position
+    end
+
     def self.create(values = {}, &block)
       last = Buildpack.at_last_position
 
@@ -27,9 +33,22 @@ module VCAP::CloudController
       end
     end
 
-    def self.update(obj, values = {})
-      positioner = BuildpackPositioner.new
-      positioner.update(obj, values)
+    def self.update(buildpack, updated_attributes = {})
+      @db.transaction(savepoint: true) do
+        buildpack.lock!
+
+        normalized_attributes = if updated_attributes.has_key?("position")
+          positioner = BuildpackPositioner.new
+          normalized_position = positioner.normalize(buildpack, updated_attributes["position"])
+          updated_attributes.merge("position" => normalized_position)
+        else
+          updated_attributes
+        end
+
+        buildpack.update_from_hash(normalized_attributes)
+      end
+
+      buildpack
     end
 
     def self.user_visibility_filter(user)
@@ -37,9 +56,10 @@ module VCAP::CloudController
     end
 
     def after_destroy
+      super
+
       positioner = BuildpackPositioner.new
       positioner.shift_positions_down(self)
-      super
     end
 
     def validate
@@ -52,7 +72,7 @@ module VCAP::CloudController
     end
 
     def staging_message
-      { buildpack_key: self.key }
+      {buildpack_key: self.key}
     end
 
     def to_json
