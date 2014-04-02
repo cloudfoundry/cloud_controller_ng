@@ -68,6 +68,7 @@ module VCAP::CloudController
     describe ".updated" do
       let(:package_hash) { "bar" }
       let(:needs_staging) { false }
+      let(:environment_json) { {} }
       let(:started_instances) { 1 }
       let(:stager_task) { double(:stager_task) }
 
@@ -80,6 +81,7 @@ module VCAP::CloudController
             name:                 "app-name"
         )
         app.stub(:needs_staging?) { needs_staging }
+        app.stub(:environment_json) { environment_json }
         app
       end
 
@@ -87,6 +89,7 @@ module VCAP::CloudController
 
       describe "when the 'diego' flag is set" do
         before { config_hash[:diego] = true }
+        let(:environment_json) { {"CF_DIEGO_BETA"=>"true"} }
 
         let(:needs_staging) { true }
 
