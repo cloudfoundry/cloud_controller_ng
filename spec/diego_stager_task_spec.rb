@@ -188,7 +188,10 @@ module VCAP::CloudController
       end
 
       let!(:service_binding_two) do
-        ServiceBinding.make(:app => app, :service_instance => service_instance_two, :credentials => {"uri" => "mysql://giraffes.rock"})
+        ServiceBinding.make(
+            :app => app,
+            :service_instance => service_instance_two,
+            :credentials => {"uri" => "mysql://giraffes.rock"})
       end
 
       before do
@@ -206,6 +209,7 @@ module VCAP::CloudController
           expect(diego_stager_task.staging_request[:file_descriptors]).to eq(1234)
         end
       end
+
       describe "environment" do
         it "contains user defined environment variables" do
           expect(diego_stager_task.staging_request[:environment].last).to eq(["USER_DEFINED","OK"])
@@ -254,6 +258,19 @@ module VCAP::CloudController
           expect(
             diego_stager_task.staging_request[:environment]
           ).to include(["MEMORY_LIMIT", "259m"])
+        end
+
+        it "contains app build artifact cache download uri" do
+          blobstore_url_generator.should_receive(:buildpack_cache_download_url).with(app).and_return("http://buildpack-cache-download.uri")
+          blobstore_url_generator.should_receive(:buildpack_cache_upload_url).with(app).and_return("http://buildpack-cache-upload.uri")
+          staging_request = diego_stager_task.staging_request
+          expect(staging_request[:build_artifacts_cache_download_uri]).to eq("http://buildpack-cache-download.uri")
+          expect(staging_request[:build_artifacts_cache_upload_uri]).to eq("http://buildpack-cache-upload.uri")
+        end
+
+        it "contains app bits download uri" do
+          blobstore_url_generator.should_receive(:app_package_download_url).with(app).and_return("http:/app-bits-download.uri")
+          expect(diego_stager_task.staging_request[:app_bits_download_uri]).to eq("http:/app-bits-download.uri")
         end
       end
     end
