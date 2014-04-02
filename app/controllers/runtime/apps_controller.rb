@@ -44,7 +44,7 @@ module VCAP::CloudController
           Errors::ApiError.new_from_details("AppMemoryInvalid")
         end
       elsif instance_number_errors
-        Errors::ApiError.new_from_details("AppInvalid", "Number of instances less than 0")
+        Errors::ApiError.new_from_details("AppInvalid", "Number of instances less than 1")
       else
         Errors::ApiError.new_from_details("AppInvalid", e.errors.full_messages)
       end

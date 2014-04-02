@@ -132,7 +132,7 @@ module VCAP::CloudController
     name              { Sham.name }
     space             { Space.make }
     stack             { Stack.make }
-    instances         { 0 }
+    instances         { 1 }
   end
 
   ServiceBinding.blueprint do

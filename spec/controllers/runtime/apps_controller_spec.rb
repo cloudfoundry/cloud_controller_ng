@@ -104,7 +104,7 @@ module VCAP::CloudController
         it "responds invalid arguments" do
           create_app
           last_response.status.should == 400
-          last_response.body.should match /instances less than 0/
+          last_response.body.should match /instances less than 1/
         end
       end
 
