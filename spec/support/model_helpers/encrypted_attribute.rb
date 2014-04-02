@@ -41,14 +41,19 @@ module VCAP::CloudController
         expect(saved_attribute).not_to be_nil
 
         Encryptor.stub(:db_encryption_key).and_return("a-totally-different-key")
-        expect {
+
+        decrypted_value = nil
+        errored = false
+
+        begin
           decrypted_value = Encryptor.decrypt(saved_attribute, model.salt)
-          #debug output because this test is flakey and we can't reproduce it easily
-          p db_encryption_key: Encryptor.db_encryption_key,
-            saved_attribute: saved_attribute,
-            decrypted_value: decrypted_value,
-            salt: model.salt
-        }.to raise_error(OpenSSL::Cipher::CipherError)
+        rescue OpenSSL::Cipher::CipherError
+          errored = true
+        end
+
+        failed_to_recover_plaintext = errored || (decrypted_value != value_to_encrypt)
+
+        expect(failed_to_recover_plaintext).to be_true
       end
 
       it "uses a salt, so that every row is encrypted with a different key" do
