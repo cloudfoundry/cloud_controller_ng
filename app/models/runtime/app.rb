@@ -1,5 +1,7 @@
 require "cloud_controller/app_observer"
 require "cloud_controller/database_uri_generator"
+require "cloud_controller/errors/application_missing"
+require "cloud_controller/errors/invalid_route_relation"
 require_relative "buildpack"
 
 module VCAP::CloudController
@@ -7,21 +9,6 @@ module VCAP::CloudController
     plugin :serialization
 
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
-
-    class InvalidRouteRelation < VCAP::Errors::InvalidRelation
-      def to_s
-        "The URL was not available [route ID #{super}]"
-      end
-    end
-
-    class InvalidBindingRelation < VCAP::Errors::InvalidRelation;
-    end
-
-    class AlreadyDeletedError < StandardError;
-    end
-
-    class ApplicationMissing < RuntimeError
-    end
 
     one_to_many :droplets
     one_to_many :service_bindings
@@ -310,7 +297,7 @@ module VCAP::CloudController
     end
 
     def validate_route(route)
-      objection = InvalidRouteRelation.new(route.guid)
+      objection = Errors::InvalidRouteRelation.new(route.guid)
 
       raise objection if route.nil?
       raise objection if space.nil?
@@ -503,7 +490,7 @@ module VCAP::CloudController
       app_from_db = self.class.find(guid: guid)
       if app_from_db.nil?
         self.class.logger.fatal("app.find.missing", guid: guid, self: inspect)
-        raise ApplicationMissing, error_message % guid
+        raise Errors::ApplicationMissing, error_message % guid
       end
       app_from_db
     end
