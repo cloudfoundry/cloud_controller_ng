@@ -3,6 +3,12 @@
 require "logger"
 require "fileutils"
 
+unregister_wait_timeout = 20 # because we don't know when/wheter the router has acted on the unregister message
+unregister_wait_interval = 5
+
+nginx_timeout = 30
+nginx_interval = 3
+
 # set up logging
 def logger
   return @logger if @logger
@@ -46,22 +52,15 @@ end
 # unregister CC from router
 ccng_pidfile = "/var/vcap/sys/run/cloud_controller_ng/cloud_controller_ng.pid"
 send_signal(ccng_pidfile, "USR2", "cc_ng")
-# wait for a while to make sure the routes are gone
-# we don't get any real feedback from the  routers, so we have to just
-# wait and assume the message made it.
-timeout = 20
-interval = 5
-while timeout > 0 do
-  log_info("Waiting for router unregister to have taken effect #{timeout} more seconds")
-  sleep interval
-  timeout -= interval
+while unregister_wait_timeout > 0 do
+  log_info("Waiting for router unregister to have taken effect #{unregister_wait_timeout} more seconds")
+  sleep unregister_wait_interval
+  unregister_wait_timeout -= unregister_wait_interval
 end
 
 # request nginx graceful shutdown
 nginx_pidfile = "/var/vcap/sys/run/nginx_ccng/nginx.pid"
 send_signal(nginx_pidfile, "QUIT", "Nginx")
-wait_for_pid(nginx_pidfile, 30, 3) # wait until nginx is shut down
+wait_for_pid(nginx_pidfile, nginx_timeout, nginx_interval) # wait until nginx is shut down
 
-# say drain script succeeded
-# if the process is still running, monit will kill it ungracefully
-puts 0
+puts 0 # tell bosh the drain script succeeded
