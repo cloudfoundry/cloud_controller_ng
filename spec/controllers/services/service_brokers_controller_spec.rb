@@ -39,7 +39,7 @@ module VCAP::CloudController
         })
       end
       let(:registration) do
-        reg = double(ServiceBrokerRegistration, {
+        reg = double(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration, {
           broker: broker,
           errors: errors,
         })
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
       before do
         ServiceBroker.stub(:new).and_return(broker)
-        ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
+        VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
         ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
       end
 
@@ -281,7 +281,7 @@ module VCAP::CloudController
         })
       end
       let(:registration) do
-        reg = double(ServiceBrokerRegistration, {
+        reg = double(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration, {
           broker: broker,
           errors: errors
         })
@@ -295,7 +295,7 @@ module VCAP::CloudController
       before do
         ServiceBroker.stub(:find)
         ServiceBroker.stub(:find).with(guid: broker.guid).and_return(broker)
-        ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
+        VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
         ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
       end
 

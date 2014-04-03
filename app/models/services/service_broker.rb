@@ -2,8 +2,6 @@ module VCAP::CloudController
   class ServiceBroker < Sequel::Model
   end
 
-  require 'models/services/service_brokers/v2/catalog'
-
   class ServiceBroker
     one_to_many :services
     one_to_many :service_dashboard_client
@@ -47,7 +45,7 @@ module VCAP::CloudController
     end
 
     def client
-      @client ||= ServiceBrokers::V2::Client.new(url: broker_url, auth_username: auth_username, auth_password: auth_password)
+      @client ||= VCAP::Services::ServiceBrokers::V2::Client.new(url: broker_url, auth_username: auth_username, auth_password: auth_password)
     end
   end
 end

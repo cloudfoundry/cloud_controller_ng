@@ -500,18 +500,13 @@ module VCAP::CloudController
         context 'when the service gateway returns a 409' do
           before do
             # Stub 409
-            VCAP::CloudController::ServiceBrokers::V1::HttpClient.unstub(:new)
+            VCAP::Services::ServiceBrokers::V1::HttpClient.unstub(:new)
 
             guid = service_instance.broker_provided_id
             path = "/gateway/v1/configurations/#{guid}"
             uri = URI(service.url + path)
-            #uri.user = service.service_broker.auth_username
-            #uri.password = service.service_broker.auth_password
 
             stub_request(:delete, uri.to_s).to_return(body: '{"description": "service gateway error"}', status: 409)
-
-            #fake_broker_client = VCAP::CloudController::Services::V1::HttpClient.new
-            #fake_broker_client.stub(:deprovision).and_raise
           end
 
           it 'forwards the error message from the service gateway' do

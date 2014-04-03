@@ -19,6 +19,6 @@ RSpec.configure do |config|
     fake.stub(:unbind)
     fake.stub(:deprovision)
 
-    VCAP::CloudController::ServiceBrokers::V1::HttpClient.stub(:new).and_return(fake)
+    VCAP::Services::ServiceBrokers::V1::HttpClient.stub(:new).and_return(fake)
   end
 end

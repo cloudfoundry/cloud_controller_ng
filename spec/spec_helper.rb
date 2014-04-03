@@ -23,6 +23,8 @@ require "posix/spawn"
 
 require "rspec_api_documentation"
 
+require "services"
+
 module VCAP::CloudController
   MAX_LOG_FILE_SIZE_IN_BYTES = 100_000_000
   class SpecEnvironment

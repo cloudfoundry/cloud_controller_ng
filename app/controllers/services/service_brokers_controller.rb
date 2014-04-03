@@ -31,7 +31,7 @@ module VCAP::CloudController
       params = ServiceBrokerMessage.extract(body)
       broker = ServiceBroker.new(params)
 
-      registration = ServiceBrokerRegistration.new(broker)
+      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker)
 
       unless registration.create
         raise get_exception_from_errors(registration)
@@ -49,7 +49,7 @@ module VCAP::CloudController
       return HTTP::NOT_FOUND unless broker
 
       broker.set(params)
-      registration = ServiceBrokerRegistration.new(broker)
+      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker)
 
       unless registration.update
         raise get_exception_from_errors(registration)
@@ -63,7 +63,7 @@ module VCAP::CloudController
     def delete(guid)
       broker = ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker
-      ServiceBrokerRemoval.new(broker).execute!
+      VCAP::Services::ServiceBrokers::ServiceBrokerRemoval.new(broker).execute!
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation
       raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerNotRemovable")

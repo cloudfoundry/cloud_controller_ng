@@ -1,5 +1,3 @@
-require 'models/services/service_brokers/null_client'
-
 module VCAP::CloudController
   class Service < Sequel::Model
     plugin :serialization
@@ -75,13 +73,13 @@ module VCAP::CloudController
 
     def client
       if purging
-        ServiceBrokers::NullClient.new
+        VCAP::Services::ServiceBrokers::NullClient.new
       elsif v2?
         service_broker.client
       else
         raise VCAP::Errors::ApiError.new_from_details("MissingServiceAuthToken", label) if service_auth_token.nil?
 
-        @v1_client ||= ServiceBrokers::V1::Client.new(
+        @v1_client ||= VCAP::Services::ServiceBrokers::V1::Client.new(
           url: url,
           auth_token: service_auth_token.token,
           timeout: timeout

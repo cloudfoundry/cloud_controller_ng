@@ -76,3 +76,5 @@ require "cloud_controller/http_response_error"
 
 require "cloud_controller/install_buildpacks"
 require "cloud_controller/upload_buildpack"
+
+require "services"

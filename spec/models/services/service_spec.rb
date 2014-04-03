@@ -235,7 +235,7 @@ module VCAP::CloudController
 
         it 'does not make any requests to the service broker' do
           service.purge
-          http_client_stub = VCAP::CloudController::ServiceBrokers::V1::HttpClient.new
+          http_client_stub = VCAP::Services::ServiceBrokers::V1::HttpClient.new
           expect(http_client_stub).not_to have_received(:unbind)
           expect(http_client_stub).not_to have_received(:deprovision)
         end
@@ -326,7 +326,7 @@ module VCAP::CloudController
         let(:service) { Service.make(purging: true) }
 
         it 'returns a null broker client' do
-          expect(service.client).to be_a(VCAP::CloudController::ServiceBrokers::NullClient)
+          expect(service.client).to be_a(VCAP::Services::ServiceBrokers::NullClient)
         end
       end
 
@@ -334,13 +334,13 @@ module VCAP::CloudController
         let(:service) { Service.make(service_broker: nil) }
 
         it 'returns a v1 broker client' do
-          v1_client = double(ServiceBrokers::V1::Client)
-          ServiceBrokers::V1::Client.stub(:new).and_return(v1_client)
+          v1_client = double(VCAP::Services::ServiceBrokers::V1::Client)
+          VCAP::Services::ServiceBrokers::V1::Client.stub(:new).and_return(v1_client)
 
           client = service.client
           client.should == v1_client
 
-          expect(ServiceBrokers::V1::Client).to have_received(:new).with(
+          expect(VCAP::Services::ServiceBrokers::V1::Client).to have_received(:new).with(
             hash_including(
               url: service.url,
               auth_token: service.service_auth_token.token,
@@ -354,7 +354,7 @@ module VCAP::CloudController
         let(:service) { Service.make(service_broker: ServiceBroker.make) }
 
         it 'returns a v2 broker client' do
-          v2_client = double(ServiceBrokers::V2::Client)
+          v2_client = double(VCAP::Services::ServiceBrokers::V2::Client)
           service.service_broker.stub(:client).and_return(v2_client)
 
           client = service.client
