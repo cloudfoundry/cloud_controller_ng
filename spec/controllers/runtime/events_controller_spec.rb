@@ -163,7 +163,7 @@ module VCAP::CloudController
         get "/v2/events", {}, admin_headers
         decoded_response["total_pages"].should == 2
         decoded_response["prev_url"].should be_nil
-        decoded_response["next_url"].should == "/v2/events?page=2&results-per-page=50"
+        decoded_response["next_url"].should == "/v2/events?order-direction=asc&page=2&results-per-page=50"
       end
     end
 
@@ -184,7 +184,7 @@ module VCAP::CloudController
 
         decoded_response["total_pages"].should == 2
         decoded_response["prev_url"].should be_nil
-        decoded_response["next_url"].should == "/v2/events?page=2&q=timestamp%3E=#{start_time.iso8601}%3Btimestamp%3C=#{end_time.iso8601}&results-per-page=50"
+        decoded_response["next_url"].should == "/v2/events?order-direction=asc&page=2&q=timestamp%3E=#{start_time.iso8601}%3Btimestamp%3C=#{end_time.iso8601}&results-per-page=50"
       end
     end
 

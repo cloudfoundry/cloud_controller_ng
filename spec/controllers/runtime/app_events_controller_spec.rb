@@ -96,7 +96,7 @@ module VCAP::CloudController
         get "/v2/apps/#{completely_unrelated_app.guid}/events", {}, admin_headers
         body[:total_pages].should == 2
         body[:prev_url].should be_nil
-        body[:next_url].should == "/v2/apps/#{completely_unrelated_app.guid}/events?page=2&results-per-page=50"
+        body[:next_url].should == "/v2/apps/#{completely_unrelated_app.guid}/events?order-direction=asc&page=2&results-per-page=50"
       end
     end
 

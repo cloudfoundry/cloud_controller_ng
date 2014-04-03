@@ -120,6 +120,60 @@ module VCAP::CloudController::RestController
           end
         end
       end
+
+      context 'order-direction' do
+        before do
+          Car.create(name: "car-1")
+          Car.create(name: "car-2")
+          Car.create(name: "car-3")
+        end
+
+        let(:opts) do
+          {
+            results_per_page: 1,
+            order_direction: order_direction,
+            page: 2
+          }
+        end
+
+        context 'when not specified' do
+          let(:opts) do
+            {
+              results_per_page: 1,
+              page: 2
+            }
+          end
+
+          it 'defaults to asc' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to include("order-direction=asc")
+            expect(next_url).to include("order-direction=asc")
+          end
+        end
+
+        context 'when ascending' do
+          let (:order_direction) { 'asc' }
+
+          it 'includes order-direction in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to include("order-direction=#{order_direction}")
+            expect(next_url).to include("order-direction=#{order_direction}")
+          end
+        end
+
+        context 'when descending' do
+          let (:order_direction) { 'desc' }
+
+          it 'includes order-direction in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to include("order-direction=#{order_direction}")
+            expect(next_url).to include("order-direction=#{order_direction}")
+          end
+        end
+      end
     end
   end
 end

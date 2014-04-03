@@ -37,6 +37,7 @@ module VCAP::CloudController::RestController
     def render_json(controller, ds, path, opts, request_params)
       page = opts[:page] || 1
       order_applicator = OrderApplicator.new(opts)
+      order_direction = opts[:order_direction] || 'asc'
 
       page_size = opts[:results_per_page] || @default_results_per_page
       if page_size > @max_results_per_page
@@ -59,11 +60,11 @@ module VCAP::CloudController::RestController
       )
 
       if paginated_dataset.prev_page
-        prev_url = url(controller, path, paginated_dataset.prev_page, page_size, opts, request_params)
+        prev_url = url(controller, path, paginated_dataset.prev_page, page_size, order_direction, opts, request_params)
       end
 
       if paginated_dataset.next_page
-        next_url = url(controller, path, paginated_dataset.next_page, page_size, opts, request_params)
+        next_url = url(controller, path, paginated_dataset.next_page, page_size, order_direction, opts, request_params)
       end
 
       opts[:max_inline] ||= PreloadedObjectSerializer::MAX_INLINE_DEFAULT
@@ -86,10 +87,11 @@ module VCAP::CloudController::RestController
       proc { |ds| ds.filter(ds.model.user_visibility(user, admin)) }
     end
 
-    def url(controller, path, page, page_size, opts, request_params)
+    def url(controller, path, page, page_size, order_direction, opts, request_params)
       params = {
           'page' => page,
           'results-per-page' => page_size,
+          'order-direction' => order_direction
       }
 
       depth = opts[:inline_relations_depth]

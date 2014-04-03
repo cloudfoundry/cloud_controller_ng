@@ -35,7 +35,7 @@ module ControllerHelpers
       prev_page = page > 1 ? (page - 1) : nil
       if prev_page
         it "should return a prev_url to page #{prev_page}" do
-          expected_qp = "page=#{prev_page}&results-per-page=#{page_size}"
+          expected_qp = "order-direction=asc&page=#{prev_page}&results-per-page=#{page_size}"
           expected_url = if base_path =~ /\?/
                            /#{base_path.sub("?", "\\?")}&#{expected_qp}/
                          else
@@ -54,7 +54,7 @@ module ControllerHelpers
       next_page = page < page_count ? (page + 1) : nil
       if next_page
         it "should return next_url to page #{next_page}" do
-          expected_qp = "page=#{next_page}&results-per-page=#{page_size}"
+          expected_qp = "order-direction=asc&page=#{next_page}&results-per-page=#{page_size}"
           expected_url = if base_path =~ /\?/
                            /#{base_path.sub("?", "\\?")}&#{expected_qp}/
                          else
