@@ -2,6 +2,8 @@ require "cloud_controller/app_observer"
 require "cloud_controller/database_uri_generator"
 require "cloud_controller/errors/application_missing"
 require "cloud_controller/errors/invalid_route_relation"
+require "repositories/runtime/app_usage_event_repository"
+
 require_relative "buildpack"
 
 module VCAP::CloudController
@@ -127,17 +129,9 @@ module VCAP::CloudController
 
     def create_app_usage_event
       return unless app_usage_changed?
-      AppUsageEvent.create(state: state,
-                           instance_count: instances,
-                           memory_in_mb_per_instance: memory,
-                           app_guid: guid,
-                           app_name: name,
-                           org_guid: space.organization_guid,
-                           space_guid: space_guid,
-                           space_name: space.name,
-                           buildpack_name: custom_buildpack_url || buildpack_name,
-                           buildpack_guid: buildpack_guid,
-      )
+
+      repository = Repositories::Runtime::AppUsageEventRepository.new
+      repository.create_from_app(self)
     end
     private :create_app_usage_event
 

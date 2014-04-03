@@ -1,3 +1,5 @@
+require "repositories/runtime/app_usage_event_repository"
+
 module VCAP::CloudController
   class AppUsageEventsController < RestController::ModelController
     preserve_query_parameters :after_guid
@@ -11,13 +13,8 @@ module VCAP::CloudController
     def reset
       validate_access(:reset, model, user, roles)
 
-      AppUsageEvent.db[:app_usage_events].truncate
-      usage_query = App.join(:spaces, id: :apps__space_id).
-        join(:organizations, id: :spaces__organization_id).
-        select(:apps__guid, :apps__guid, :apps__name, :apps__state, :apps__instances, :apps__memory, :spaces__guid, :spaces__name, :organizations__guid, Sequel.datetime_class.now).
-        where(:apps__state => 'STARTED').
-        order(:apps__id)
-      AppUsageEvent.insert([:guid, :app_guid, :app_name, :state, :instance_count, :memory_in_mb_per_instance, :space_guid, :space_name, :org_guid, :created_at], usage_query)
+      repository = Repositories::Runtime::AppUsageEventRepository.new
+      repository.purge_and_reseed_started_apps!
 
       [HTTP::NO_CONTENT, nil]
     end
@@ -27,10 +24,12 @@ module VCAP::CloudController
     end
 
     private
+
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       after_guid = params["after_guid"]
       if after_guid
-        previous_event = AppUsageEvent.find(guid: after_guid)
+        repository = Repositories::Runtime::AppUsageEventRepository.new
+        previous_event = repository.find(after_guid)
         raise Errors::ApiError.new_from_details("BadQueryParameter", after_guid) unless previous_event
         ds = ds.filter{ id > previous_event.id }
       end

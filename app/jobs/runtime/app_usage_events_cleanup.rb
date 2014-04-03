@@ -1,3 +1,5 @@
+require "repositories/runtime/app_usage_event_repository"
+
 module VCAP::CloudController
   module Jobs
     module Runtime
@@ -6,10 +8,11 @@ module VCAP::CloudController
           logger = Steno.logger("cc.background")
           logger.info("Cleaning up old AppUsageEvent rows")
 
-          old_app_usage_events = AppUsageEvent.dataset.where("created_at < ?", cutoff_time)
-          old_app_usage_events.delete
 
-          logger.info("Cleaned up #{old_app_usage_events.count} AppUsageEvent rows")
+          repository = Repositories::Runtime::AppUsageEventRepository.new
+          deleted_count = repository.delete_events_create_before(cutoff_time)
+
+          logger.info("Cleaned up #{deleted_count} AppUsageEvent rows")
         end
 
         def job_name_in_configuration
