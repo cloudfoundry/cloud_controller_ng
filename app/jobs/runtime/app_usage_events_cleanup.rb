@@ -10,7 +10,7 @@ module VCAP::CloudController
 
 
           repository = Repositories::Runtime::AppUsageEventRepository.new
-          deleted_count = repository.delete_events_create_before(cutoff_time)
+          deleted_count = repository.delete_events_created_before(cutoff_time)
 
           logger.info("Cleaned up #{deleted_count} AppUsageEvent rows")
         end
