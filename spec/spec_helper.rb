@@ -575,6 +575,7 @@ RSpec.configure do |rspec_config|
 
   rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
+
     RspecApiDocumentation.configure do |c|
       c.format = [:html, :json]
       c.api_name = "Cloud Foundry API"

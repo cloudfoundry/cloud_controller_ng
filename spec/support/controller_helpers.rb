@@ -42,7 +42,7 @@ module ControllerHelpers
       user_token = token_coder.encode(
         :user_id => user ? user.guid : (rand * 1_000_000_000).ceil,
         :email => opts[:email],
-        :scope => opts[:admin_scope] ? %w[cloud_controller.admin] : []
+        :scope => opts[:admin_scope] ? %w[cloud_controller.admin] : %w[cloud_controller.read cloud_controller.write]
       )
 
       headers["HTTP_AUTHORIZATION"] = "bearer #{user_token}"

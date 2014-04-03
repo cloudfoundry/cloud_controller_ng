@@ -30,6 +30,10 @@ module VCAP::CloudController
       Thread.current[:vcap_token]
     end
 
+    def self.scopes
+      token && token['scope'] || []
+    end
+
     def self.current_user_email
       token['email'] if token
     end

@@ -2,6 +2,11 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe OrganizationAccess, type: :access do
+    before do
+      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
+      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+    end
+
     subject(:access) { OrganizationAccess.new(double(:context, user: user, roles: roles)) }
     let(:object) { VCAP::CloudController::Organization.make }
     let(:user) { VCAP::CloudController::User.make }
@@ -61,6 +66,32 @@ module VCAP::CloudController
     context 'an auditor for the organization' do
       before { object.add_auditor(user) }
       it_behaves_like :read_only
+    end
+
+    context 'any user using client without cloud_controller.write' do
+      before do
+        token = { 'scope' => 'cloud_controller.read'}
+        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        object.add_user(user)
+        object.add_manager(user)
+        object.add_billing_manager(user)
+        object.add_auditor(user)
+      end
+
+      it_behaves_like :read_only
+    end
+
+    context 'any user using client without cloud_controller.read' do
+      before do
+        token = { 'scope' => ''}
+        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        object.add_user(user)
+        object.add_manager(user)
+        object.add_billing_manager(user)
+        object.add_auditor(user)
+      end
+
+      it_behaves_like :no_access
     end
   end
 end

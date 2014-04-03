@@ -128,6 +128,7 @@ module VCAP::CloudController
           org.billing_enabled.should == false
           req = Yajl::Encoder.encode(:billing_enabled => true)
           put "/v2/organizations/#{org.guid}", req, json_headers(org_admin_headers)
+
           last_response.status.should == 400
           org.refresh
           org.billing_enabled.should == false
@@ -204,6 +205,7 @@ module VCAP::CloudController
       it "does not return app_events with inline-relations-depth=0" do
         org = Organization.make
         get "/v2/organizations/#{org.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+        expect(last_response.status).to eq 200
         expect(entity).to have_key("app_events_url")
         expect(entity).to_not have_key("app_events")
       end

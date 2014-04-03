@@ -2,6 +2,11 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServicePlanVisibilityAccess, type: :access do
+    before do
+      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
+      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+    end
+
     subject(:access) { ServicePlanVisibilityAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
