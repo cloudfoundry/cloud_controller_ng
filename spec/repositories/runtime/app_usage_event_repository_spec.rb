@@ -88,8 +88,10 @@ module VCAP::CloudController
       end
 
       describe "#purge_and_reseed_started_apps!" do
+        let(:app) { App.make(package_hash: Sham.guid) }
+
         it "will purge all existing events" do
-          3.times{ repository.create_from_app(App.make) }
+          3.times{ repository.create_from_app(app) }
 
           expect {
             repository.purge_and_reseed_started_apps!
@@ -97,7 +99,10 @@ module VCAP::CloudController
         end
 
         context "when there are started apps" do
-          let(:app) { AppFactory.make(state: "STARTED", package_hash: Sham.guid) }
+          before do
+            app.state = "STARTED"
+            app.save
+          end
 
           it "creates new events for the started apps" do
             app.state = "STOPPED"
@@ -129,12 +134,15 @@ module VCAP::CloudController
           end
 
           it "should not create two events with the same guid" do
-            AppFactory.make(state: "STARTED", package_hash: Sham.guid)
-            AppFactory.make(state: "STARTED", package_hash: Sham.guid)
+            2.times do
+              another_app = AppFactory.make
+              another_app.state = "STARTED"
+              another_app.save
+            end
 
             repository.purge_and_reseed_started_apps!
 
-            expect(AppUsageEvent.all.map(&:guid).uniq).to have(2).guids
+            expect(AppUsageEvent.all.map(&:guid).uniq).to have(3).guids
           end
         end
       end
