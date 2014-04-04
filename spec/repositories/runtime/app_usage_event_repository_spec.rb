@@ -1,7 +1,6 @@
 require "spec_helper"
 require "repositories/runtime/app_usage_event_repository"
 
-
 module VCAP::CloudController
   module Repositories::Runtime
     describe AppUsageEventRepository do
@@ -98,7 +97,7 @@ module VCAP::CloudController
         end
 
         context "when there are started apps" do
-          let (:app) { AppFactory.make(state: "STARTED", package_hash: Sham.guid) }
+          let(:app) { AppFactory.make(state: "STARTED", package_hash: Sham.guid) }
 
           it "creates new events for the started apps" do
             app.state = "STOPPED"
@@ -130,16 +129,12 @@ module VCAP::CloudController
           end
 
           it "should not create two events with the same guid" do
-            app = AppFactory.make(state: "STARTED", package_hash: Sham.guid)
+            AppFactory.make(state: "STARTED", package_hash: Sham.guid)
+            AppFactory.make(state: "STARTED", package_hash: Sham.guid)
 
-            events = 2.times.map do |i|
-              Timecop.travel(Time.now + i.minutes) do
-                repository.purge_and_reseed_started_apps!
-                AppUsageEvent.last
-              end
-            end
+            repository.purge_and_reseed_started_apps!
 
-            expect(events.map(&:guid).uniq).to have(2).guids
+            expect(AppUsageEvent.all.map(&:guid).uniq).to have(2).guids
           end
         end
       end
