@@ -110,7 +110,36 @@ module VCAP::CloudController
               repository.purge_and_reseed_started_apps!
             }.to change { AppUsageEvent.count }.from(3).to(1)
 
-            expect(repository.find(app.guid)).to match_app(app)
+            expect(AppUsageEvent.last).to match_app(app)
+          end
+
+          context "with associated buidpack information" do
+            let (:buildpack) { Buildpack.make }
+
+            before do
+              app.buildpack = buildpack
+            end
+
+            pending "should preserve the buildpack info in the new event" do
+              repository.purge_and_reseed_started_apps!
+              event = AppUsageEvent.last
+
+              expect(event.buildpack_guid).to eq(buildpack.guid)
+              expect(event.buildpack_name).to eq(buildpack.name)
+            end
+          end
+
+          it "should not create two events with the same guid" do
+            app = AppFactory.make(state: "STARTED", package_hash: Sham.guid)
+
+            events = 2.times.map do |i|
+              Timecop.travel(Time.now + i.minutes) do
+                repository.purge_and_reseed_started_apps!
+                AppUsageEvent.last
+              end
+            end
+
+            expect(events.map(&:guid).uniq).to have(2).guids
           end
         end
       end

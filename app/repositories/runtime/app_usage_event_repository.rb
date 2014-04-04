@@ -22,9 +22,10 @@ module VCAP::CloudController
 
         def purge_and_reseed_started_apps!
           AppUsageEvent.db[:app_usage_events].truncate
+
           usage_query = App.join(:spaces, id: :apps__space_id).
               join(:organizations, id: :spaces__organization_id).
-              select(:apps__guid, :apps__guid, :apps__name, :apps__state, :apps__instances, :apps__memory, :spaces__guid, :spaces__name, :organizations__guid, Sequel.datetime_class.now).
+              select(SecureRandom.uuid, :apps__guid, :apps__name, :apps__state, :apps__instances, :apps__memory, :spaces__guid, :spaces__name, :organizations__guid, Sequel.datetime_class.now).
               where(:apps__state => 'STARTED').
               order(:apps__id)
 
