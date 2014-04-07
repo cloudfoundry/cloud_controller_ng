@@ -139,6 +139,7 @@ uaa:
 staging:
   timeout_in_seconds: <%= p("ccng.staging_timeout_in_seconds") %>
   minimum_staging_memory_mb: <%= p("dea_next.staging_memory_limit_mb") %>
+  minimum_staging_disk_mb: <%= p("dea_next.staging_disk_limit_mb") %>
   auth:
     user: <%= p("ccng.staging_upload_user") %>
     password: "<%= p("ccng.staging_upload_password") %>"
