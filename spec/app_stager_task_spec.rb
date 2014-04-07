@@ -80,11 +80,21 @@ module VCAP::CloudController
       end
     end
 
-    context 'when the app memory requirement exceeds the staging memory requirement (1024)' do
-      it 'should request a stager with the app memory requirement' do
-        app.memory = 1025
-        stager_pool.should_receive(:find_stager).with(app.stack.name, 1025).and_return(stager_id)
-        staging_task.stage
+    describe "staging memory requirements" do
+      context 'when the app memory requirement exceeds the staging memory requirement (1024)' do
+        it 'should request a stager with the app memory requirement' do
+          app.memory = 1025
+          stager_pool.should_receive(:find_stager).with(app.stack.name, 1025).and_return(stager_id)
+          staging_task.stage
+        end
+      end
+
+      context 'when the app memory requirement is less than the staging memory requirement' do
+        it "requests the staging memory requirement" do
+          config_hash[:staging][:minimum_staging_memory_mb] = 2048
+          stager_pool.should_receive(:find_stager).with(app.stack.name, 2048).and_return(stager_id)
+          staging_task.stage
+        end
       end
     end
 
@@ -397,6 +407,10 @@ module VCAP::CloudController
       end
 
       describe "reserve app memory" do
+        before do
+          stager_pool.stub(:find_stager).with(app.stack.name, 1025).and_return(stager_id)
+        end
+
         context "when app memory is less when configured minimum_staging_memory_mb" do
           before do
             config_hash[:staging][:minimum_staging_memory_mb] = 1025
