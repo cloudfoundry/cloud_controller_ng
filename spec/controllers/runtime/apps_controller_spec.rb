@@ -365,6 +365,12 @@ module VCAP::CloudController
         decoded_response["entity"]["detected_buildpack"].should eq("buildpack-name")
       end
 
+      it "should not return the detected buildpack guid" do
+        get_app
+        last_response.status.should == 200
+        decoded_response["entity"].should_not have_key("detected_buildpack_guid")
+      end
+
       it "should return the package state" do
         get_app
         last_response.status.should == 200

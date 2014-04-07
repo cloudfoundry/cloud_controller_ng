@@ -25,7 +25,7 @@ module VCAP::CloudController
     default_order_by :name
 
     export_attributes :name, :production,
-      :space_guid, :stack_guid, :buildpack, :detected_buildpack, :detected_buildpack_guid,
+      :space_guid, :stack_guid, :buildpack, :detected_buildpack,
       :environment_json, :memory, :instances, :disk_quota,
       :state, :version, :command, :console, :debug,
       :staging_task_id, :package_state, :health_check_timeout
