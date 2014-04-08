@@ -40,11 +40,15 @@ module VCAP::Services::ServiceBrokers
 
       context 'when the UAA request fails' do
         before do
-          allow(client_manager).to receive(:modify_transaction).and_raise
+          error = VCAP::Services::UAA::UaaError.new('error message')
+          allow(client_manager).to receive(:modify_transaction).and_raise(error)
         end
 
-        it 'reraises the error' do
-          expect { remover.execute! }.to raise_error
+        it 'raises a ServiceBrokerDashboardClientFailure error' do
+          expect{ remover.execute! }.to raise_error(VCAP::Errors::ApiError) do |err|
+            expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
+            expect(err.message).to eq('error message')
+          end
         end
 
         it 'does not delete the broker' do

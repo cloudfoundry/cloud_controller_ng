@@ -26,6 +26,8 @@ module VCAP::Services::ServiceBrokers
       end
 
       true
+    rescue VCAP::Services::UAA::UaaError => e
+      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
     end
 
     private

@@ -218,7 +218,7 @@ module VCAP::Services::ServiceBrokers
 
         before do
           allow(client_manager).to receive(:get_clients).and_return([{'client_id' => unused_id}])
-          allow(client_manager).to receive(:modify_transaction).and_raise
+          allow(client_manager).to receive(:modify_transaction).and_raise(VCAP::Services::UAA::UaaError.new('error message'))
         end
 
         it 'does not add new claims' do
@@ -250,6 +250,13 @@ module VCAP::Services::ServiceBrokers
 
           dashboard_client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])
           expect(dashboard_client.service_broker).to be_nil
+        end
+
+        it 'raises a ServiceBrokerDashboardClientFailure error' do
+          expect{ manager.synchronize_clients }.to raise_error(VCAP::Errors::ApiError) do |err|
+            expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
+            expect(err.message).to eq('error message')
+          end
         end
       end
 

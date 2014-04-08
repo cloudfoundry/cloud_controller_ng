@@ -2,12 +2,6 @@ require 'uaa'
 
 module VCAP::Services::UAA
 
-  class UaaResourceNotFound < StandardError; end
-  class UaaResourceAlreadyExists < StandardError; end
-  class UaaResourceInvalid < StandardError; end
-  class UaaUnavailable < StandardError; end
-  class UaaUnexpectedResponse < StandardError; end
-
   class UaaClientManager
 
     ROUTER_404_KEY   = 'X-Cf-Routererror'
