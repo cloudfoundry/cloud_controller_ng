@@ -52,6 +52,7 @@ module VCAP::Services::UAA
       return if changeset.empty?
 
       uri          = URI("#{uaa_target}/oauth/clients/tx/modify")
+      use_ssl      = uri.instance_of?(URI::HTTPS)
       request_body = batch_request(changeset)
 
       request                  = Net::HTTP::Post.new(uri.path)
@@ -59,10 +60,14 @@ module VCAP::Services::UAA
       request.content_type     = 'application/json'
       request['Authorization'] = token_info.auth_header
 
-      response = Net::HTTP.start(uri.host, uri.port) do |http|
-        logger.info("POST UAA transaction: #{uri.to_s} - #{scrub(request_body).to_json}")
-        http.request(request)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = use_ssl
+      if use_ssl
+        http.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
       end
+
+      logger.info("POST UAA transaction: #{uri.to_s} - #{scrub(request_body).to_json}")
+      response = http.request(request)
 
       case response.code.to_i
         when 200..299
@@ -87,6 +92,10 @@ module VCAP::Services::UAA
     end
 
     private
+
+    def verify_certs?
+      !VCAP::CloudController::Config.config[:skip_cert_verify]
+    end
 
     def log_bad_uaa_response(response)
       logger.info("UAA request failed with code: #{response.code} - #{response.inspect}")

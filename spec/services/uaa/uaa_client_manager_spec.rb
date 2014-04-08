@@ -142,7 +142,8 @@ module VCAP::Services::UAA
     end
 
     describe '#modify_transaction' do
-      let(:tx_url) { 'http://localhost:8080/uaa/oauth/clients/tx/modify' }
+      let(:uaa_uri) { VCAP::CloudController::Config.config[:uaa][:url] }
+      let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
       let (:auth_header) { 'bearer ACCESSTOKENSTUFF' }
 
       before do
@@ -150,7 +151,7 @@ module VCAP::Services::UAA
         token_info = double('info', auth_header: auth_header)
         token_issuer = double('issuer', client_credentials_grant: token_info)
 
-        CF::UAA::TokenIssuer.stub(:new).with('http://localhost:8080/uaa', 'cc_service_broker_client', 'some-sekret').
+        CF::UAA::TokenIssuer.stub(:new).with(uaa_uri, 'cc_service_broker_client', 'some-sekret').
           and_return(token_issuer)
       end
 
@@ -310,6 +311,87 @@ module VCAP::Services::UAA
           expect {
             client_manager.modify_transaction(changeset)
           }.to raise_error(UaaUnexpectedResponse)
+        end
+      end
+
+      describe 'ssl options' do
+        let(:mock_http) { double(:http) }
+
+        before do
+          allow(Net::HTTP).to receive(:new).and_return(mock_http)
+          allow(mock_http).to receive(:use_ssl=)
+          allow(mock_http).to receive(:verify_mode=)
+          allow(mock_http).to receive(:request).and_return(double(:response, code: '200'))
+
+          config_hash = { url: uaa_uri }
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything()).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa).and_return(config_hash)
+        end
+
+        context 'without ssl' do
+          let(:uaa_uri) { 'http://localhost:8080/uaa' }
+
+          it 'sets use_ssl to false and does not set verify_mode' do
+            changeset = [
+              double('command', uaa_command: {}, client_attrs: {}),
+            ]
+
+            client_manager = UaaClientManager.new
+            client_manager.modify_transaction(changeset)
+
+            expect(mock_http).to have_received(:use_ssl=).with(false)
+            expect(mock_http).to_not have_received(:verify_mode=)
+          end
+        end
+
+        context 'with ssl' do
+          let(:uaa_uri) { 'https://localhost:8080/uaa' }
+
+          it 'sets use_ssl to true' do
+            changeset = [
+              double('command', uaa_command: {}, client_attrs: {}),
+            ]
+
+            client_manager = UaaClientManager.new
+            client_manager.modify_transaction(changeset)
+
+            expect(mock_http).to have_received(:use_ssl=).with(true)
+            expect(mock_http).to have_received(:verify_mode=)
+          end
+
+          context 'and verifying ssl certs' do
+            before do
+              allow(VCAP::CloudController::Config.config).to receive(:[]).with(:skip_cert_verify).and_return(false)
+            end
+
+            it 'sets verify_mode to verify_peer' do
+              changeset = [
+                double('command', uaa_command: {}, client_attrs: {}),
+              ]
+
+              client_manager = UaaClientManager.new
+              client_manager.modify_transaction(changeset)
+
+              expect(mock_http).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
+            end
+          end
+
+          context 'and not verifying ssl certs' do
+            before do
+              allow(VCAP::CloudController::Config.config).to receive(:[]).with(:skip_cert_verify).and_return(true)
+            end
+
+            it 'sets verify_mode to verify_none' do
+              changeset = [
+                double('command', uaa_command: {}, client_attrs: {}),
+              ]
+
+              client_manager = UaaClientManager.new
+              client_manager.modify_transaction(changeset)
+
+              expect(mock_http).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+            end
+          end
         end
       end
     end
