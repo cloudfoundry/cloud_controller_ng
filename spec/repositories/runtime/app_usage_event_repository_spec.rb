@@ -112,9 +112,12 @@ module VCAP::CloudController
             app.state = "STARTED"
             repository.create_from_app(app)
 
+            started_app_count = App.where(:state => "STARTED").count
+
+            expect(AppUsageEvent.count > 1).to be_true
             expect {
               repository.purge_and_reseed_started_apps!
-            }.to change { AppUsageEvent.count }.from(3).to(1)
+            }.to change { AppUsageEvent.count }.to(started_app_count)
 
             expect(AppUsageEvent.last).to match_app(app)
           end
@@ -124,7 +127,7 @@ module VCAP::CloudController
 
             before do
               app.buildpack = buildpack.name
-              app.detected_buildpack = "Output"
+              app.detected_buildpack = "Detect script output"
               app.detected_buildpack_guid = buildpack.guid
               app.detected_buildpack_name = buildpack.name
               app.save
@@ -135,20 +138,7 @@ module VCAP::CloudController
               event = AppUsageEvent.last
 
               expect(event).to match_app(app)
-              #expect(event.buildpack_name).to eq(buildpack.name)
             end
-          end
-
-          it "should not create two events with the same guid" do
-            2.times do
-              another_app = AppFactory.make
-              another_app.state = "STARTED"
-              another_app.save
-            end
-
-            repository.purge_and_reseed_started_apps!
-
-            expect(AppUsageEvent.all.map(&:guid).uniq).to have(3).guids
           end
         end
       end
@@ -159,14 +149,15 @@ module VCAP::CloudController
         end
 
         it "will delete events created before the specified cutoff time" do
-          Timecop.travel(Time.now + 5.minutes) do
+          future_time = Time.now + 5.minutes
+          Timecop.travel(future_time) do
             app = App.make
             repository.create_from_app(app)
 
-            expect {
-              repository.delete_events_created_before(Time.now - 4.minutes)
-            }.to change { AppUsageEvent.count }.from(4).to(1)
+            cutoff_time = future_time - 1.minute
+            repository.delete_events_created_before(cutoff_time)
 
+            expect(AppUsageEvent.where("created_at < ?", cutoff_time).count).to equal(0)
             expect(AppUsageEvent.last).to match_app(app)
           end
         end

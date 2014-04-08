@@ -275,8 +275,8 @@ module VCAP::CloudController
         }.to have_queried_db_times(/domains/i, 1)
 
         expect {
-          expect(@eager_loaded_orgs[0].domains).to eql([private_domain1, shared_domain])
-          expect(@eager_loaded_orgs[1].domains).to eql([private_domain2, shared_domain])
+          expect(@eager_loaded_orgs[0].domains).to match_array([private_domain1, shared_domain])
+          expect(@eager_loaded_orgs[1].domains).to match_array([private_domain2, shared_domain])
         }.to have_queried_db_times(//, 0)
       end
 
