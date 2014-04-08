@@ -127,6 +127,18 @@ module VCAP::CloudController
       super
     end
 
+    def update_detected_buildpack(detected_buildpack_key, detect_output)
+      detected_admin_buildpack = Buildpack.find(key: detected_buildpack_key)
+      detected_buildpack_guid = detected_admin_buildpack && detected_admin_buildpack.guid
+      detected_buildpack_name = detected_admin_buildpack && detected_admin_buildpack.name
+
+      update(
+          detected_buildpack: detect_output,
+          detected_buildpack_guid: detected_buildpack_guid,
+          detected_buildpack_name: detected_buildpack_name || custom_buildpack_url
+      )
+    end
+
     def create_app_usage_event
       return unless app_usage_changed?
 
@@ -412,17 +424,6 @@ module VCAP::CloudController
 
     def custom_buildpack_url
       buildpack.url if buildpack.custom?
-    end
-
-    def buildpack_guid
-      return admin_buildpack.guid if admin_buildpack
-      detected_buildpack_guid
-    end
-
-    def buildpack_name
-      current_buildpack = Buildpack.find(guid: buildpack_guid)
-      return nil unless current_buildpack
-      current_buildpack.name
     end
 
     def package_hash=(hash)

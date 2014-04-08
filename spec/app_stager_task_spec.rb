@@ -238,9 +238,7 @@ module VCAP::CloudController
         end
 
         context "when app staging succeeds" do
-          let(:detected_buildpack) { "buildpack-name" }
-          let(:admin_buildpack) { Buildpack.make }
-          let(:buildpack_key) { admin_buildpack.key }
+          let(:detected_buildpack) { "buildpack detect output" }
 
           context "and the app was staged and started by the DEA" do
             context "when no other staging has happened" do
@@ -252,8 +250,16 @@ module VCAP::CloudController
                 expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
               end
 
-              it "saves the detected buildpack guid" do
-                expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
+              context "when an admin buildpack is used" do
+                let(:admin_buildpack) { Buildpack.make(name: "buildpack-name") }
+                let(:buildpack_key) { admin_buildpack.key }
+                before do
+                  app.buildpack = admin_buildpack.name
+                end
+
+                it "saves the detected buildpack guid" do
+                  expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
+                end
               end
 
               it "does not clobber other attributes that changed between staging" do
@@ -270,7 +276,7 @@ module VCAP::CloudController
               end
 
               it "marks app started in dea pool" do
-                dea_pool.should_receive(:mark_app_started).with({ :dea_id => stager_id, :app_id => app.guid })
+                dea_pool.should_receive(:mark_app_started).with({:dea_id => stager_id, :app_id => app.guid})
                 stage
               end
 
@@ -294,8 +300,8 @@ module VCAP::CloudController
               expect {
                 stage
               }.to raise_error(
-                     Errors::ApiError,
-                     /another staging request was initiated/
+                       Errors::ApiError,
+                       /another staging request was initiated/
                    )
             end
 

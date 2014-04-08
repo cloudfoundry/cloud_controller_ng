@@ -26,8 +26,8 @@ RSpec::Matchers.define :match_app do |app|
       state.org_guid == app.space.organization_guid &&
       state.space_guid == app.space_guid &&
       state.space_name == app.space.name &&
-      state.buildpack_guid == app.buildpack_guid &&
-      state.buildpack_name == (app.custom_buildpack_url || app.buildpack_name)
+      state.buildpack_guid == app.detected_buildpack_guid &&
+      state.buildpack_name == (app.custom_buildpack_url || app.detected_buildpack_name)
   end
 end
 
