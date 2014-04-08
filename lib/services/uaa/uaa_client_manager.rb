@@ -98,7 +98,7 @@ module VCAP::Services::UAA
     end
 
     def log_bad_uaa_response(response)
-      logger.info("UAA request failed with code: #{response.code} - #{response.inspect}")
+      logger.error("UAA request failed with code: #{response.code} - #{response.inspect}")
     end
 
     def scrub(transaction_body)
@@ -132,6 +132,9 @@ module VCAP::Services::UAA
 
     def token_info
       issuer.client_credentials_grant
+    rescue CF::UAA::NotFound => e
+      logger.error("UAA request for token failed: #{e.inspect}")
+      raise UaaUnavailable.new
     end
 
     def sso_client_info(client_attrs)

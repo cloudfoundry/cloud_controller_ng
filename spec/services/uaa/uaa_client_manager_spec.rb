@@ -144,12 +144,12 @@ module VCAP::Services::UAA
     describe '#modify_transaction' do
       let(:uaa_uri) { VCAP::CloudController::Config.config[:uaa][:url] }
       let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
-      let (:auth_header) { 'bearer ACCESSTOKENSTUFF' }
+      let(:auth_header) { 'bearer ACCESSTOKENSTUFF' }
+      let(:token_info) { double('info', auth_header: auth_header) }
+      let(:token_issuer) { double('issuer', client_credentials_grant: token_info) }
 
       before do
         stub_request(:post, tx_url)
-        token_info = double('info', auth_header: auth_header)
-        token_issuer = double('issuer', client_credentials_grant: token_info)
 
         CF::UAA::TokenIssuer.stub(:new).with(uaa_uri, 'cc_service_broker_client', 'some-sekret').
           and_return(token_issuer)
@@ -312,6 +312,26 @@ module VCAP::Services::UAA
             client_manager.modify_transaction(changeset)
           }.to raise_error(UaaUnexpectedResponse)
         end
+      end
+
+      context 'when the UAA is unavailable while requesting a token' do
+        before do
+          allow(token_issuer).to receive(:client_credentials_grant).and_raise(CF::UAA::NotFound)
+        end
+
+        it 'raises a UaaUnavailable error' do
+          changeset = [
+            DeleteClientCommand.new('delete-this-client')
+          ]
+
+          client_manager = UaaClientManager.new
+
+          expect {
+            client_manager.modify_transaction(changeset)
+          }.to raise_error(UaaUnavailable)
+
+        end
+
       end
 
       describe 'ssl options' do
