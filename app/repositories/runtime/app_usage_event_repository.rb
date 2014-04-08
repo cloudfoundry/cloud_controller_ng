@@ -23,13 +23,28 @@ module VCAP::CloudController
         def purge_and_reseed_started_apps!
           AppUsageEvent.db[:app_usage_events].truncate
 
+          column_map = {
+              :guid => :apps__guid,
+              :app_guid => :apps__guid,
+              :app_name => :apps__name,
+              :state => :apps__state,
+              :instance_count => :apps__instances,
+              :memory_in_mb_per_instance => :apps__memory,
+              :space_guid => :spaces__guid,
+              :space_name => :spaces__name,
+              :org_guid => :organizations__guid,
+              :buildpack_guid => :apps__detected_buildpack_guid,
+              :buildpack_name => :apps__detected_buildpack_name,
+              :created_at => Sequel.datetime_class.now,
+          }
+
           usage_query = App.join(:spaces, id: :apps__space_id).
               join(:organizations, id: :spaces__organization_id).
-              select(:apps__guid, :apps__guid, :apps__name, :apps__state, :apps__instances, :apps__memory, :spaces__guid, :spaces__name, :organizations__guid, Sequel.datetime_class.now).
+              select(*column_map.values).
               where(:apps__state => 'STARTED').
               order(:apps__id)
 
-          AppUsageEvent.insert([:guid, :app_guid, :app_name, :state, :instance_count, :memory_in_mb_per_instance, :space_guid, :space_name, :org_guid, :created_at], usage_query)
+          AppUsageEvent.insert(column_map.keys, usage_query)
         end
 
         def delete_events_created_before(cutoff_time)
