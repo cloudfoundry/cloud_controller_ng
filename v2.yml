@@ -468,6 +468,11 @@
   http_code: 502
   message: "Service broker catalog is invalid: %s"
 
+270013:
+  name: ServiceBrokerDashboardClientFailure
+  http_code: 502
+  message: "Service broker dashboard clients could not be modified: %s"
+
 280001:
   name: TaskNotFound
   http_code: 404
