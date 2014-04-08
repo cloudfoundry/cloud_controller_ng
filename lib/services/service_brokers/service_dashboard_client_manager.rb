@@ -9,7 +9,7 @@ module VCAP::Services::ServiceBrokers
 
       @services_using_dashboard_client = catalog.services.select(&:dashboard_client)
       @client_manager = VCAP::Services::UAA::UaaClientManager.new
-      @differ = ServiceDashboardClientDiffer.new(service_broker, client_manager)
+      @differ = ServiceDashboardClientDiffer.new(service_broker)
     end
 
     def synchronize_clients
@@ -19,7 +19,11 @@ module VCAP::Services::ServiceBrokers
       return false unless errors.empty?
 
       changeset = differ.create_changeset(services_using_dashboard_client, eligible_clients)
-      changeset.each(&:apply!)
+
+      service_broker.db.transaction(savepoint: true) do
+        changeset.each(&:db_command)
+        client_manager.modify_transaction(changeset)
+      end
 
       true
     end

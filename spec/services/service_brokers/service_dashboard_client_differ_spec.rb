@@ -3,7 +3,6 @@ require 'spec_helper'
 module VCAP::Services::ServiceBrokers
   describe ServiceDashboardClientDiffer do
     describe '.create_changeset' do
-      let(:uaa_client) { double(:uaa_client) }
       let(:service_broker) { double(:service_broker) }
       let(:catalog_service) do
         V2::CatalogService.new(service_broker, 'dashboard_client' => {
@@ -12,7 +11,7 @@ module VCAP::Services::ServiceBrokers
           'redirect_uri' => 'https://foo.com'
         })
       end
-      let(:differ) { ServiceDashboardClientDiffer.new(service_broker, uaa_client) }
+      let(:differ) { ServiceDashboardClientDiffer.new(service_broker) }
 
       subject(:changeset) { differ.create_changeset(services_requesting_clients, existing_clients) }
 

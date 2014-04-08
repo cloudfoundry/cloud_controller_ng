@@ -141,5 +141,177 @@ module VCAP::Services::UAA
       end
     end
 
+    describe '#modify_transaction' do
+      let(:tx_url) { 'http://localhost:8080/uaa/oauth/clients/tx/modify' }
+      let (:auth_header) { 'bearer ACCESSTOKENSTUFF' }
+
+      before do
+        stub_request(:post, tx_url)
+        token_info = double('info', auth_header: auth_header)
+        token_issuer = double('issuer', client_credentials_grant: token_info)
+
+        CF::UAA::TokenIssuer.stub(:new).with('http://localhost:8080/uaa', 'cc_service_broker_client', 'some-sekret').
+          and_return(token_issuer)
+      end
+
+      it 'makes a batch request to UAA with all changes in the changeset' do
+        changeset = [
+          double('create_command', uaa_command: { action: 'add' }, client_attrs: {}),
+          double('update_command', uaa_command: { action: 'update' }, client_attrs: {}),
+          DeleteClientCommand.new('delete-this-client')
+        ]
+
+        expected_json_body = [
+          {
+            client_id:              nil,
+            client_secret:          nil,
+            redirect_uri:           nil,
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            authorized_grant_types: ['authorization_code'],
+            action:                 'add'
+          },
+          {
+            client_id:              nil,
+            client_secret:          nil,
+            redirect_uri:           nil,
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            authorized_grant_types: ['authorization_code'],
+            action:                 'update' },
+          {
+            client_id:              'delete-this-client',
+            client_secret:          nil,
+            redirect_uri:           nil,
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            authorized_grant_types: ['authorization_code'],
+            action:                 'delete'
+          }
+        ].to_json
+
+        client_manager = UaaClientManager.new
+        client_manager.modify_transaction(changeset)
+
+        a_request(:post, tx_url).with(
+          body: expected_json_body,
+          headers: {'Authorization' => auth_header}).should have_been_made
+      end
+
+      it 'logs a sanitized version of the request' do
+        changeset = [
+          double('update_command', uaa_command: {client_id: 'id', client_secret: 'secret'}, client_attrs: {}),
+        ]
+
+        logger = double('logger')
+        allow(Steno).to receive(:logger).and_return(logger)
+        allow(logger).to receive(:info)
+
+        expect(logger).to receive(:info) do |arg|
+          expect(arg).to match /POST UAA transaction: #{tx_url}/
+          expect(arg).to_not match /client_secret/
+        end
+
+        client_manager = UaaClientManager.new
+        client_manager.modify_transaction(changeset)
+      end
+
+      context 'when the changeset is empty' do
+        it 'does not make any http requests' do
+          client_manager = UaaClientManager.new
+          client_manager.modify_transaction([])
+
+          a_request(:post, tx_url).should_not have_been_made
+        end
+      end
+
+      context 'when the UAA transaction returns a 404' do
+        before do
+          stub_request(:post, tx_url).to_return(status: 404)
+        end
+
+        it 'raises a UaaResourceNotFound error' do
+          changeset = [
+            DeleteClientCommand.new('delete-this-client')
+          ]
+
+          client_manager = UaaClientManager.new
+
+          expect {
+            client_manager.modify_transaction(changeset)
+          }.to raise_error(UaaResourceNotFound)
+        end
+      end
+
+      context 'when the CF router returns a 404' do
+        before do
+          stub_request(:post, tx_url).to_return(
+            status: 404, headers: {'X-Cf-Routererror' => 'unknown_route'})
+        end
+
+        it 'raises a UaaUnavailable error' do
+          changeset = [
+            DeleteClientCommand.new('delete-this-client')
+          ]
+
+          client_manager = UaaClientManager.new
+
+          expect {
+            client_manager.modify_transaction(changeset)
+          }.to raise_error(UaaUnavailable)
+        end
+      end
+
+      context 'when the UAA transaction returns a 409' do
+        before do
+          stub_request(:post, tx_url).to_return(status: 409)
+        end
+
+        it 'raises a UaaResourceAlreadyExists' do
+          changeset = [
+            DeleteClientCommand.new('delete-this-client')
+          ]
+
+          client_manager = UaaClientManager.new
+
+          expect {
+            client_manager.modify_transaction(changeset)
+          }.to raise_error(UaaResourceAlreadyExists)
+        end
+      end
+
+      context 'when the UAA transaction returns a 400' do
+        before do
+          stub_request(:post, tx_url).to_return(status: 400)
+        end
+
+        it 'raises a UaaResourceInvalid error' do
+          changeset = [
+            DeleteClientCommand.new('delete-this-client')
+          ]
+
+          client_manager = UaaClientManager.new
+
+          expect {
+            client_manager.modify_transaction(changeset)
+          }.to raise_error(UaaResourceInvalid)
+        end
+      end
+
+      context 'when the UAA transaction returns an unexpected response' do
+        before do
+          stub_request(:post, tx_url).to_return(status: 500)
+        end
+
+        it 'raises a UaaUnexpectedResponse' do
+          changeset = [
+            DeleteClientCommand.new('delete-this-client')
+          ]
+
+          client_manager = UaaClientManager.new
+
+          expect {
+            client_manager.modify_transaction(changeset)
+          }.to raise_error(UaaUnexpectedResponse)
+        end
+      end
+    end
   end
 end

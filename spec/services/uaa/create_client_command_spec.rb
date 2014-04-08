@@ -10,54 +10,30 @@ module VCAP::Services::UAA
       }
     end
 
-    let(:client_manager) { double(:client_manager, create: nil) }
     let(:broker) { double(:broker) }
-
-    before do
-      allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker)
-      allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client)
-    end
 
     let(:command) do
       CreateClientCommand.new(
         client_attrs: client_attrs,
-        client_manager: client_manager,
         service_broker: broker
       )
     end
 
-    describe '#apply!' do
-      it 'creates the client in the UAA' do
-        command.apply!
-        expect(client_manager).to have_received(:create).with(client_attrs)
+    describe '#uaa_command' do
+      it 'renders the correct hash request to create in a UAA transaction' do
+        uaa_command = command.uaa_command
+        expect(uaa_command).to eq({action: 'add'})
+      end
+    end
+
+    describe '#db_command' do
+      before do
+        allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker)
       end
 
       it 'claims the client in the DB' do
-        command.apply!
+        command.db_command
         expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:claim_client_for_broker)
-      end
-
-      context 'when claiming the client for the broker fails' do
-        before do
-          allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker).and_raise
-        end
-
-        it 'does not create the UAA client' do
-          command.apply! rescue nil
-          expect(client_manager).not_to have_received(:create)
-        end
-      end
-
-      context 'when creating the client in UAA fails' do
-        before do
-          allow(client_manager).to receive(:create).and_raise
-        end
-
-        it 'does not remove the claim' do
-          command.apply! rescue nil
-          expect(VCAP::CloudController::ServiceDashboardClient).to_not have_received(:remove_claim_on_client).
-            with('client-id-1')
-        end
       end
     end
   end

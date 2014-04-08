@@ -1,19 +1,18 @@
 module VCAP::Services::UAA
   class DeleteClientCommand
-    attr_reader :client_id
+    attr_reader :client_id, :client_attrs
 
-    def initialize(opts)
-      @client_id = opts.fetch(:client_id)
-      @client_manager = opts.fetch(:client_manager)
+    def initialize(client_id)
+      @client_id = client_id
+      @client_attrs = { 'id' => client_id }
     end
 
-    def apply!
-      client_manager.delete(client_id)
+    def db_command
       VCAP::CloudController::ServiceDashboardClient.remove_claim_on_client(client_id)
     end
 
-    private
-
-    attr_reader :client_manager
+    def uaa_command
+      { action: 'delete' }
+    end
   end
 end

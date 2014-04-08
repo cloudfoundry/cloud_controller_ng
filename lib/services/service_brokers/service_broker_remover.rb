@@ -1,5 +1,5 @@
 module VCAP::Services::ServiceBrokers
-  class ServiceBrokerRemoval
+  class ServiceBrokerRemover
     attr_reader :broker
 
     def initialize(broker)
@@ -14,9 +14,15 @@ module VCAP::Services::ServiceBrokers
     private
 
     def delete_dashboard_clients
-      differ = ServiceDashboardClientDiffer.new(broker, client_manager)
+      differ = ServiceDashboardClientDiffer.new(broker)
       changeset = differ.create_changeset([], clients_claimed_by_broker)
-      changeset.each(&:apply!)
+
+      return if changeset.empty?
+
+      broker.db.transaction(savepoint: true) do
+        changeset.each(&:db_command)
+        client_manager.modify_transaction(changeset)
+      end
     end
 
     def client_manager

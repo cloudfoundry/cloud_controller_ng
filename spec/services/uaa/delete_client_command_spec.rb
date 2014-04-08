@@ -2,50 +2,34 @@ require 'spec_helper'
 
 module VCAP::Services::UAA
   describe DeleteClientCommand do
-    describe '#apply!' do
-      let(:client_attrs) do
-        {
-          'id' => 'client-id-1',
-          'secret' => 'sekret',
-          'redirect_uri' => 'https://foo.com'
-        }
-      end
+    let(:client_id) { 'client-id-1' }
 
-      let(:client) { double('client', destroy: nil)}
+    let(:command) { DeleteClientCommand.new(client_id) }
 
-      let(:client_manager) { double(:client_manager, delete: nil) }
+    before do
+      allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client)
+    end
 
-      let(:command) do
-        DeleteClientCommand.new(
-          client_id: 'client-id-1',
-          client_manager: client_manager,
-        )
-      end
+    describe 'creating' do
+      subject { command }
 
-      before do
-        allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client)
-      end
+      its(:client_id) { should == 'client-id-1' }
+      its(:client_attrs) { should == { 'id' => 'client-id-1' } }
+    end
 
-      it 'deletes the client in the UAA' do
-        command.apply!
-        expect(client_manager).to have_received(:delete).with('client-id-1')
-      end
-
+    describe '#db_command' do
       it 'unclaims the client in the DB' do
-        command.apply!
+        command.db_command
         expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:remove_claim_on_client).
-          with('client-id-1')
+                                                                     with('client-id-1')
       end
+    end
 
-      context 'when deleting the UAA client fails' do
-        before do
-          allow(client_manager).to receive(:delete).and_raise
-        end
+    describe '#uaa_command' do
+      it 'renders the correct hash request to delete in a UAA transaction' do
+        uaa_command = command.uaa_command
 
-        it 'does not remove the claim on the client' do
-          command.apply! rescue nil
-          expect(VCAP::CloudController::ServiceDashboardClient).not_to have_received(:remove_claim_on_client)
-        end
+        expect(uaa_command).to eq({action: 'delete'})
       end
     end
   end

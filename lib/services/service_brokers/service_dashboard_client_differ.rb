@@ -1,8 +1,7 @@
 module VCAP::Services::ServiceBrokers
   class ServiceDashboardClientDiffer
-    def initialize(broker, client_manager)
+    def initialize(broker)
       @broker = broker
-      @client_manager = client_manager
     end
 
     def create_changeset(catalog_services, existing_clients)
@@ -16,13 +15,11 @@ module VCAP::Services::ServiceBrokers
         if existing_client
           VCAP::Services::UAA::UpdateClientCommand.new(
             client_attrs: requested_client,
-            client_manager: client_manager,
             service_broker: broker,
           )
         else
           VCAP::Services::UAA::CreateClientCommand.new(
             client_attrs: requested_client,
-            client_manager: client_manager,
             service_broker: broker,
           )
         end
@@ -31,10 +28,7 @@ module VCAP::Services::ServiceBrokers
       delete_commands = existing_clients.map do |client|
         client_id = client.uaa_id
         unless requested_ids.include?(client_id)
-          VCAP::Services::UAA::DeleteClientCommand.new(
-            client_id: client_id,
-            client_manager: client_manager
-          )
+          VCAP::Services::UAA::DeleteClientCommand.new(client_id)
         end
       end.compact
 
@@ -43,6 +37,6 @@ module VCAP::Services::ServiceBrokers
 
     private
 
-    attr_reader :broker, :client_manager
+    attr_reader :broker
   end
 end

@@ -14,7 +14,7 @@ module AcceptanceHelpers
     stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/dash-id').to_return(status: 404)
 
     # stub uaa client create request
-    stub_request(:post, 'http://localhost:8080/uaa/oauth/clients').to_return(
+    stub_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').to_return(
       status:  201,
       body:    { id: 'some-id', client_id: 'dash-id' }.to_json,
       headers: { 'content-type' => 'application/json' })

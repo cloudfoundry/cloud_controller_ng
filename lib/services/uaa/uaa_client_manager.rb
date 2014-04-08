@@ -1,7 +1,17 @@
 require 'uaa'
 
 module VCAP::Services::UAA
+
+  class UaaResourceNotFound < StandardError; end
+  class UaaResourceAlreadyExists < StandardError; end
+  class UaaResourceInvalid < StandardError; end
+  class UaaUnavailable < StandardError; end
+  class UaaUnexpectedResponse < StandardError; end
+
   class UaaClientManager
+
+    ROUTER_404_KEY   = 'X-Cf-Routererror'
+    ROUTER_404_VALUE = 'unknown_route'
 
     def initialize(opts = {})
       @opts = opts
@@ -38,7 +48,63 @@ module VCAP::Services::UAA
       end.compact
     end
 
+    def modify_transaction(changeset)
+      return if changeset.empty?
+
+      uri          = URI("#{uaa_target}/oauth/clients/tx/modify")
+      request_body = batch_request(changeset)
+
+      request                  = Net::HTTP::Post.new(uri.path)
+      request.body             = request_body.to_json
+      request.content_type     = 'application/json'
+      request['Authorization'] = token_info.auth_header
+
+      response = Net::HTTP.start(uri.host, uri.port) do |http|
+        logger.info("POST UAA transaction: #{uri.to_s} - #{scrub(request_body).to_json}")
+        http.request(request)
+      end
+
+      case response.code.to_i
+        when 200..299
+          return
+        when 400
+          log_bad_uaa_response(response)
+          raise UaaResourceInvalid.new
+        when 404
+          log_bad_uaa_response(response)
+          if response[ROUTER_404_KEY] == ROUTER_404_VALUE
+            raise UaaUnavailable.new
+          else
+            raise UaaResourceNotFound.new
+          end
+        when 409
+          log_bad_uaa_response(response)
+          raise UaaResourceAlreadyExists.new
+        else
+          log_bad_uaa_response(response)
+          raise UaaUnexpectedResponse.new
+      end
+    end
+
     private
+
+    def log_bad_uaa_response(response)
+      logger.info("UAA request failed with code: #{response.code} - #{response.inspect}")
+    end
+
+    def scrub(transaction_body)
+      transaction_body.map do |client_request|
+        client_request.delete(:client_secret)
+        client_request
+      end
+    end
+
+    def batch_request(changeset)
+      changeset.map do |change|
+        client_info = sso_client_info(change.client_attrs)
+        client_info.merge(change.uaa_command)
+      end
+    end
 
     def scim
       @opts.fetch(:scim) do
@@ -77,7 +143,7 @@ module VCAP::Services::UAA
     end
 
     def logger
-      @logger ||= Steno.logger('cc.service_dashboard_client_creator')
+      @logger ||= Steno.logger('cc.uaa_client_manager')
     end
   end
 end
