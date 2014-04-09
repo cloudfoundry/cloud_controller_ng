@@ -11,27 +11,6 @@ module VCAP::Services::UAA
       @opts = opts
     end
 
-    def create(client_attrs)
-      return unless issuer_client_config
-
-      client_info = sso_client_info(client_attrs)
-
-      scim.add(:client, client_info)
-    end
-
-    def update(client_attrs)
-      client_id   = client_attrs['id']
-      client_info = sso_client_info(client_attrs)
-
-      scim.delete(:client, client_id)
-      scim.add(:client, client_info)
-    end
-
-    def delete(client_id)
-      scim.delete(:client, client_id)
-    rescue CF::UAA::NotFound
-    end
-
     def get_clients(client_ids)
       client_ids.map do |id|
         begin
