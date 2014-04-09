@@ -4,8 +4,7 @@ module VCAP::Services::ServiceBrokers
       @broker = broker
     end
 
-    def create_changeset(catalog_services, existing_clients)
-      requested_clients = catalog_services.map(&:dashboard_client)
+    def create_changeset(requested_clients, existing_clients)
       requested_ids = requested_clients.map{|client| client.fetch('id')}
 
       create_and_update_commands = requested_clients.map do |requested_client|

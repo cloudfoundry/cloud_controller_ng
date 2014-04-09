@@ -105,21 +105,12 @@ module VCAP::Services::ServiceBrokers
           allow(client_manager).to receive(:get_clients).and_return([{'client_id' => catalog_service.dashboard_client['id']}])
         end
 
-        context 'when the service exists in CC and it has already claimed the requested UAA client' do
-          let(:dashboard_client) do
+        context 'when the broker has already claimed a requested UAA client' do
+          before do
             VCAP::CloudController::ServiceDashboardClient.new(
-              uaa_id: dashboard_client_attrs_1['id'],
+              uaa_id: catalog_service.dashboard_client['id'],
               service_broker: service_broker
             ).save
-          end
-
-          before do
-            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:client_can_be_claimed_by_broker?).
-              with(catalog_service.dashboard_client['id'], service_broker).
-              and_return(true)
-            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:find_client_by_uaa_id).
-              with(dashboard_client_attrs_1['id']).
-              and_return(dashboard_client)
           end
 
           it 'creates the clients that do not currently exist' do
@@ -156,7 +147,7 @@ module VCAP::Services::ServiceBrokers
           end
         end
 
-        context 'when the service has not claimed the existing UAA client' do
+        context 'when there is no claim but the requested client exists in UAA' do
           it 'does not create any uaa clients' do
             manager.synchronize_clients
 

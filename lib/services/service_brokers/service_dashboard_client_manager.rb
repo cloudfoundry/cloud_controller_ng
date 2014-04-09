@@ -7,7 +7,7 @@ module VCAP::Services::ServiceBrokers
       @service_broker = service_broker
       @errors         = VCAP::Services::ValidationErrors.new
 
-      @services_using_dashboard_client = catalog.services.select(&:dashboard_client)
+      @services_requesting_dashboard_client = catalog.services.select(&:dashboard_client)
       @client_manager = VCAP::Services::UAA::UaaClientManager.new
       @differ = ServiceDashboardClientDiffer.new(service_broker)
     end
@@ -18,7 +18,7 @@ module VCAP::Services::ServiceBrokers
       validate_clients_are_available!
       return false unless errors.empty?
 
-      changeset = differ.create_changeset(services_using_dashboard_client, eligible_clients)
+      changeset = differ.create_changeset(requested_clients, eligible_clients)
 
       service_broker.db.transaction(savepoint: true) do
         changeset.each(&:db_command)
@@ -32,7 +32,7 @@ module VCAP::Services::ServiceBrokers
 
     private
 
-    attr_reader :client_manager, :differ, :services_using_dashboard_client
+    attr_reader :client_manager, :differ, :services_requesting_dashboard_client
 
     def eligible_clients
       clients_already_claimed_by_broker = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).all
@@ -43,7 +43,7 @@ module VCAP::Services::ServiceBrokers
     def find_clients_for_services(services)
       services.map do |service|
         VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(service.dashboard_client['id'])
-      end
+      end.compact
     end
 
     def services_with_existing_clients_in_uaa_available_to_broker
@@ -62,7 +62,7 @@ module VCAP::Services::ServiceBrokers
           existing_clients_in_uaa = client_manager.get_clients(requested_client_ids)
           ids_of_existing_clients_in_uaa = existing_clients_in_uaa.map { |client| client['client_id'] }
 
-          services_using_dashboard_client.select { |s|
+          services_requesting_dashboard_client.select { |s|
             ids_of_existing_clients_in_uaa.include?(s.dashboard_client['id'])
           }
         end
@@ -79,13 +79,17 @@ module VCAP::Services::ServiceBrokers
     end
 
     def requested_client_ids
-      services_using_dashboard_client.map { |service| service.dashboard_client['id'] }
+      services_requesting_dashboard_client.map { |service| service.dashboard_client['id'] }
     end
 
     def cc_configured_to_modify_uaa_clients?
       uaa_client = VCAP::CloudController::Config.config[:uaa_client_name]
       uaa_client_secret = VCAP::CloudController::Config.config[:uaa_client_secret]
       uaa_client && uaa_client_secret
+    end
+
+    def requested_clients
+      services_requesting_dashboard_client.map { |service| service.dashboard_client }
     end
   end
 end
