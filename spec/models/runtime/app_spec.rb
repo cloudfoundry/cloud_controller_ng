@@ -560,52 +560,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "update_detected_buildpack" do
-      let (:app) { AppFactory.make }
-      let (:detect_output) { "buildpack detect script output" }
-
-      context "when detect output is available" do
-        it "sets detected_buildpack with the output of the detect script" do
-          app.update_detected_buildpack("abc_123", detect_output)
-          expect(app.detected_buildpack).to eq(detect_output)
-        end
-      end
-
-      context "when an admin buildpack is used for staging" do
-        let (:admin_buildpack) { Buildpack.make }
-        before do
-          app.buildpack = admin_buildpack.name
-        end
-
-        it "sets the buildpack guid of the buildpack used to stage when present" do
-          app.update_detected_buildpack(admin_buildpack.key, detect_output)
-          expect(app.detected_buildpack_guid).to eq(admin_buildpack.guid)
-        end
-
-        it "sets the buildpack name to the admin buildpack used to stage" do
-          app.update_detected_buildpack(admin_buildpack.key, detect_output)
-          expect(app.detected_buildpack_name).to eq(admin_buildpack.name)
-        end
-      end
-
-      context "when the buildpack key is missing (custom buildpack used)" do
-        let (:custom_buildpack_url) { "https://example.com/repo.git" }
-        before do
-          app.buildpack = custom_buildpack_url
-        end
-
-        it "sets the buildpack name to the custom buildpack url when a buildpack key is missing" do
-          app.update_detected_buildpack(nil, detect_output)
-          expect(app.detected_buildpack_name).to eq(custom_buildpack_url)
-        end
-
-        it "sets the buildpack guid to nil" do
-          app.update_detected_buildpack(nil, detect_output)
-          expect(app.detected_buildpack_guid).to be_nil
-        end
-      end
-    end
-
     describe "buildpack=" do
       let(:valid_git_url) do
         "git://user@github.com:repo"
@@ -1205,35 +1159,6 @@ module VCAP::CloudController
           expect {
             app.update(memory: 2)
           }.not_to change {AppUsageEvent.count}
-        end
-      end
-
-      context "when a custom buildpack was used for staging" do
-        it "creates an AppUsageEvent that contains the custom buildpack url" do
-          app = AppFactory.make(buildpack: "https://example.com/repo.git", state: "STOPPED")
-          expect {
-            app.update(state: "STARTED")
-          }.to change {AppUsageEvent.count}.by(1)
-          event = AppUsageEvent.last
-          expect(event.buildpack_name).to eq("https://example.com/repo.git")
-          expect(event).to match_app(app)
-        end
-      end
-
-      context "when a detected admin buildpack was used for staging" do
-        it "creates an AppUsageEvent that contains the detected buildpack guid" do
-          buildpack = Buildpack.make
-          app = AppFactory.make(
-            state: "STOPPED",
-            detected_buildpack: "Admin buildpack detect string",
-            detected_buildpack_guid: buildpack.guid
-          )
-          expect {
-            app.update(state: "STARTED")
-          }.to change {AppUsageEvent.count}.by(1)
-          event = AppUsageEvent.last
-          expect(event.buildpack_guid).to eq(buildpack.guid)
-          expect(event).to match_app(app)
         end
       end
     end

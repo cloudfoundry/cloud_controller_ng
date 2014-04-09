@@ -14,9 +14,7 @@ module VCAP::CloudController
                                app_name: app.name,
                                org_guid: app.space.organization_guid,
                                space_guid: app.space_guid,
-                               space_name: app.space.name,
-                               buildpack_guid: app.detected_buildpack_guid,
-                               buildpack_name: app.custom_buildpack_url || app.detected_buildpack_name,
+                               space_name: app.space.name
           )
         end
 
@@ -33,8 +31,6 @@ module VCAP::CloudController
               :space_guid => :spaces__guid,
               :space_name => :spaces__name,
               :org_guid => :organizations__guid,
-              :buildpack_guid => :apps__detected_buildpack_guid,
-              :buildpack_name => :apps__detected_buildpack_name,
               :created_at => Sequel.datetime_class.now,
           }
 
