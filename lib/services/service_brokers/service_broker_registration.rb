@@ -43,7 +43,7 @@ module VCAP::Services::ServiceBrokers
     private
 
     def synchronize_dashboard_clients!
-      unless client_manager.synchronize_clients
+      unless client_manager.synchronize_clients_with_catalog(catalog)
         raise_humanized_exception(client_manager.errors)
       end
     end
@@ -53,7 +53,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def client_manager
-      @client_manager ||= ServiceDashboardClientManager.new(catalog, broker)
+      @client_manager ||= ServiceDashboardClientManager.new(broker)
     end
 
     def service_manager

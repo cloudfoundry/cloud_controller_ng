@@ -1,95 +1,96 @@
 module VCAP::Services::ServiceBrokers
   class ServiceDashboardClientManager
-    attr_reader :catalog, :errors, :service_broker
+    attr_reader :errors, :service_broker
 
-    def initialize(catalog, service_broker)
-      @catalog        = catalog
+    def initialize(service_broker)
       @service_broker = service_broker
       @errors         = VCAP::Services::ValidationErrors.new
 
-      @services_requesting_dashboard_client = catalog.services.select(&:dashboard_client)
       @client_manager = VCAP::Services::UAA::UaaClientManager.new
-      @differ = ServiceDashboardClientDiffer.new(service_broker)
+      @differ         = ServiceDashboardClientDiffer.new(service_broker)
     end
 
-    def synchronize_clients
+    def synchronize_clients_with_catalog(catalog)
       return true unless cc_configured_to_modify_uaa_clients?
 
-      validate_clients_are_available!
-      return false unless errors.empty?
+      requested_clients         = catalog.services.map(&:dashboard_client).compact
+      client_ids_already_in_uaa = get_client_ids_already_in_uaa(requested_clients)
+      unclaimable_ids           = get_client_ids_that_cannot_be_claimed(client_ids_already_in_uaa)
 
-      changeset = differ.create_changeset(requested_clients, eligible_clients)
-
-      service_broker.db.transaction(savepoint: true) do
-        changeset.each(&:db_command)
-        client_manager.modify_transaction(changeset)
+      if !unclaimable_ids.empty?
+        populate_uniqueness_errors(catalog, unclaimable_ids)
+        return false
       end
 
+      available_clients = client_ids_already_in_uaa.map do |id|
+        VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(id)
+      end
+
+      broker_claimed_clients = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).all
+      existing_clients       = (broker_claimed_clients + available_clients).uniq
+
+      changeset = differ.create_changeset(requested_clients, existing_clients)
+
+      claim_clients_and_update_uaa(changeset)
+
       true
-    rescue VCAP::Services::UAA::UaaError => e
-      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
+    end
+
+    def remove_clients_for_broker
+      return unless cc_configured_to_modify_uaa_clients?
+
+      requested_clients = [] # request no clients
+      existing_clients  = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+      changeset         = differ.create_changeset(requested_clients, existing_clients)
+
+      claim_clients_and_update_uaa(changeset)
     end
 
     private
 
-    attr_reader :client_manager, :differ, :services_requesting_dashboard_client
+    attr_reader :client_manager, :differ
 
-    def eligible_clients
-      clients_already_claimed_by_broker = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).all
-      clients_that_can_be_claimed_by_broker = find_clients_for_services(services_with_existing_clients_in_uaa_available_to_broker)
-      (clients_already_claimed_by_broker + clients_that_can_be_claimed_by_broker).uniq
-    end
-
-    def find_clients_for_services(services)
-      services.map do |service|
-        VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(service.dashboard_client['id'])
-      end.compact
-    end
-
-    def services_with_existing_clients_in_uaa_available_to_broker
-      @services_with_existing_clients_in_uaa_available_to_broker ||=
-        services_with_existing_clients_in_uaa.select do |service|
-          VCAP::CloudController::ServiceDashboardClient.client_can_be_claimed_by_broker?(
-            service.dashboard_client['id'],
-            service_broker
-          )
+    def claim_clients_and_update_uaa(changeset)
+      begin
+        service_broker.db.transaction(savepoint: true) do
+          changeset.each(&:db_command)
+          client_manager.modify_transaction(changeset)
         end
-    end
-
-    def services_with_existing_clients_in_uaa
-      @services_with_existing_clients_in_uaa ||=
-        begin
-          existing_clients_in_uaa = client_manager.get_clients(requested_client_ids)
-          ids_of_existing_clients_in_uaa = existing_clients_in_uaa.map { |client| client['client_id'] }
-
-          services_requesting_dashboard_client.select { |s|
-            ids_of_existing_clients_in_uaa.include?(s.dashboard_client['id'])
-          }
-        end
-    end
-
-    def services_whose_clients_are_claimed_by_another_broker
-      services_with_existing_clients_in_uaa - services_with_existing_clients_in_uaa_available_to_broker
-    end
-
-    def validate_clients_are_available!
-      services_whose_clients_are_claimed_by_another_broker.each do |catalog_service|
-        errors.add_nested(catalog_service).add('Service dashboard client id must be unique')
+      rescue VCAP::Services::UAA::UaaError => e
+        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
       end
     end
 
-    def requested_client_ids
-      services_requesting_dashboard_client.map { |service| service.dashboard_client['id'] }
+    def get_client_ids_already_in_uaa(requested_clients)
+      requested_client_ids   = requested_clients.map { |c| c['id'] }
+      clients_already_in_uaa = client_manager.get_clients(requested_client_ids).map { |c| c['client_id'] }
+      clients_already_in_uaa
+    end
+
+    def get_client_ids_that_cannot_be_claimed(clients)
+      unclaimable_ids = []
+      clients.each do |id|
+        claimable = VCAP::CloudController::ServiceDashboardClient.client_can_be_claimed_by_broker?(id, service_broker)
+
+        if !claimable
+          unclaimable_ids << id
+        end
+      end
+      unclaimable_ids
+    end
+
+    def populate_uniqueness_errors(catalog, non_unique_ids)
+      catalog.services.each do |service|
+        if service.dashboard_client && non_unique_ids.include?(service.dashboard_client['id'])
+          errors.add_nested(service).add('Service dashboard client id must be unique')
+        end
+      end
     end
 
     def cc_configured_to_modify_uaa_clients?
       uaa_client = VCAP::CloudController::Config.config[:uaa_client_name]
       uaa_client_secret = VCAP::CloudController::Config.config[:uaa_client_secret]
       uaa_client && uaa_client_secret
-    end
-
-    def requested_clients
-      services_requesting_dashboard_client.map { |service| service.dashboard_client }
     end
   end
 end
