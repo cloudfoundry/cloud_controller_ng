@@ -23,6 +23,9 @@ module VCAP::CloudController
       double("blobstore_url_generator", :droplet_download_url => "app_uri")
     end
 
+    let(:default_app_memory) { 1024 }
+    let(:default_app_disk) { 2048 }
+
     before do
       DeaClient.configure(TestConfig.config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
     end
@@ -62,7 +65,9 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:find_dea).twice.and_return("dea_123")
         expect(dea_pool).to receive(:mark_app_started).twice.with(dea_id: "dea_123", app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).twice.with("dea_123", app.memory)
+        expect(dea_pool).to receive(:reserve_app_disk).twice.with("dea_123", app.disk_quota)
         expect(stager_pool).to receive(:reserve_app_memory).twice.with("dea_123", app.memory)
+        expect(stager_pool).to receive(:reserve_app_disk).twice.with("dea_123", app.disk_quota)
         expect(message_bus).to receive(:publish).with(
           "dea.dea_123.start",
           hash_including(
@@ -88,7 +93,9 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:find_dea).once.and_return("dea_123")
         expect(dea_pool).to receive(:mark_app_started).once.with(dea_id: "dea_123", app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).once.with("dea_123", app.memory)
+        expect(dea_pool).to receive(:reserve_app_disk).once.with("dea_123", app.disk_quota)
         expect(stager_pool).to receive(:reserve_app_memory).once.with("dea_123", app.memory)
+        expect(stager_pool).to receive(:reserve_app_disk).once.with("dea_123", app.disk_quota)
         expect(message_bus).to receive(:publish).with(
           "dea.dea_123.start",
           hash_including(
@@ -126,6 +133,7 @@ module VCAP::CloudController
 
     describe "start" do
       it "should send start messages to deas" do
+        allow(dea_pool).to receive(:clear_app_id_to_count_in_advertisement).and_return(nil)
         app.instances = 2
         expect(dea_pool).to receive(:find_dea).and_return("abc")
         expect(dea_pool).to receive(:find_dea).and_return("def")
@@ -133,8 +141,12 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:mark_app_started).with(dea_id: "def", app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).with("abc", app.memory)
         expect(dea_pool).to receive(:reserve_app_memory).with("def", app.memory)
+        expect(dea_pool).to receive(:reserve_app_disk).with("abc", app.disk_quota)
+        expect(dea_pool).to receive(:reserve_app_disk).with("def", app.disk_quota)
         expect(stager_pool).to receive(:reserve_app_memory).with("abc", app.memory)
         expect(stager_pool).to receive(:reserve_app_memory).with("def", app.memory)
+        expect(stager_pool).to receive(:reserve_app_disk).with("abc", app.disk_quota)
+        expect(stager_pool).to receive(:reserve_app_disk).with("def", app.disk_quota)
         expect(message_bus).to receive(:publish).with("dea.abc.start", kind_of(Hash))
         expect(message_bus).to receive(:publish).with("dea.def.start", kind_of(Hash))
 
@@ -149,13 +161,18 @@ module VCAP::CloudController
         expect(dea_pool).not_to receive(:mark_app_started).with(dea_id: "def", app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).with("abc", app.memory)
         expect(dea_pool).not_to receive(:reserve_app_memory).with("def", app.memory)
+        expect(dea_pool).to receive(:reserve_app_disk).with("abc", app.disk_quota)
+        expect(dea_pool).not_to receive(:reserve_app_disk).with("def", app.disk_quota)
         expect(stager_pool).to receive(:reserve_app_memory).with("abc", app.memory)
         expect(stager_pool).not_to receive(:reserve_app_memory).with("def", app.memory)
+        expect(stager_pool).to receive(:reserve_app_disk).with("abc", app.disk_quota)
+        expect(stager_pool).not_to receive(:reserve_app_disk).with("def", app.disk_quota)
 
         DeaClient.start(app, :instances_to_start => 1)
       end
 
       it "sends a dea start message that includes cc_partition" do
+        allow(dea_pool).to receive(:clear_app_id_to_count_in_advertisement).and_return(nil)
         TestConfig.override(:cc_partition => "ngFTW")
         DeaClient.configure(TestConfig.config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
@@ -163,13 +180,16 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:find_dea).and_return("abc")
         expect(dea_pool).to receive(:mark_app_started).with(dea_id: "abc", app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).with("abc", app.memory)
+        expect(dea_pool).to receive(:reserve_app_disk).with("abc", app.disk_quota)
         expect(stager_pool).to receive(:reserve_app_memory).with("abc", app.memory)
+        expect(stager_pool).to receive(:reserve_app_disk).with("abc", app.disk_quota)
         expect(message_bus).to receive(:publish).with("dea.abc.start", hash_including(:cc_partition => "ngFTW"))
 
         DeaClient.start(app)
       end
 
       it "includes memory in find_dea request" do
+        allow(dea_pool).to receive(:clear_app_id_to_count_in_advertisement).and_return(nil)
         app.instances = 1
         app.memory = 512
         expect(dea_pool).to receive(:find_dea).with(include(mem: 512))
@@ -177,6 +197,7 @@ module VCAP::CloudController
       end
 
       it "includes disk in find_dea request" do
+        allow(dea_pool).to receive(:clear_app_id_to_count_in_advertisement).and_return(nil)
         app.instances = 1
         app.disk_quota = 13
         expect(dea_pool).to receive(:find_dea).with(include(disk: 13))
@@ -818,12 +839,21 @@ module VCAP::CloudController
           expect(dea_pool).to receive(:reserve_app_memory).with("abc", app.memory)
           expect(dea_pool).to receive(:reserve_app_memory).with("def", app.memory)
           expect(dea_pool).to receive(:reserve_app_memory).with("efg", app.memory)
+          expect(dea_pool).to receive(:reserve_app_disk).with("abc", app.disk_quota)
+          expect(dea_pool).to receive(:reserve_app_disk).with("def", app.disk_quota)
+          expect(dea_pool).to receive(:reserve_app_disk).with("efg", app.disk_quota)
           expect(stager_pool).
               to receive(:reserve_app_memory).with("abc", app.memory)
           expect(stager_pool).
               to receive(:reserve_app_memory).with("def", app.memory)
           expect(stager_pool).
               to receive(:reserve_app_memory).with("efg", app.memory)
+          expect(stager_pool).
+              to receive(:reserve_app_disk).with("abc", app.disk_quota)
+          expect(stager_pool).
+              to receive(:reserve_app_disk).with("def", app.disk_quota)
+          expect(stager_pool).
+              to receive(:reserve_app_disk).with("efg", app.disk_quota)
 
           expect(message_bus).to receive(:publish).with("dea.abc.start", kind_of(Hash))
           expect(message_bus).to receive(:publish).with("dea.def.start", kind_of(Hash))

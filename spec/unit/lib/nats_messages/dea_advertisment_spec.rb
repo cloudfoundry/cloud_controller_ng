@@ -163,6 +163,16 @@ describe DeaAdvertisement do
     end
   end
 
+  describe "decrement_disk" do
+    it "decrement the dea's disk" do
+      expect {
+        ad.decrement_disk(512)
+      }.to change {
+        ad.available_disk
+      }.from(756).to(244)
+    end
+  end
+
   describe "#zone" do
     context "when the dea does not have the placement properties" do
       it "returns default zone" do

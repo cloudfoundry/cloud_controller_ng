@@ -145,6 +145,7 @@ module VCAP::CloudController
 
       # @param [Enumerable, #each] indices an Enumerable of indices / indexes
       def start_instances(app, indices)
+        @dea_pool.clear_app_id_to_count_in_advertisement(app.guid) if app.instances - indices.count == 0
         indices.each do |idx|
           start_instance_at_index(app, idx)
         end
@@ -158,12 +159,19 @@ module VCAP::CloudController
           raise Errors::ApiError.new_from_details("AppPackageNotFound", app.guid)
         end
 
-        dea_id = dea_pool.find_dea(mem: app.memory, disk: app.disk_quota, stack: app.stack.name, app_id: app.guid)
+        dea_id = dea_pool.find_dea(mem: app.memory,
+                                   disk: app.disk_quota,
+                                   stack: app.stack.name,
+                                   app_id: app.guid,
+                                   index: index,
+                                  )
         if dea_id
           dea_publish_start(dea_id, start_message)
           dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
           dea_pool.reserve_app_memory(dea_id, app.memory)
           stager_pool.reserve_app_memory(dea_id, app.memory)
+          dea_pool.reserve_app_disk(dea_id, app.disk_quota)
+          stager_pool.reserve_app_disk(dea_id, app.disk_quota)
         else
           logger.error "dea-client.no-resources-available", message: scrub_sensitive_fields(start_message)
         end

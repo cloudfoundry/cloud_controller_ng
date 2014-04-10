@@ -20,6 +20,9 @@ describe "Staging an app", type: :integration do
         "id" => stager_id,
         "stacks" => ["lucid64"],
         "available_memory" => 2048,
+        "available_disk" => 20480,
+        "app_id_to_count" => {},
+        "placement_properties" => {"zone" => "default"},
       }.to_json
     end
 

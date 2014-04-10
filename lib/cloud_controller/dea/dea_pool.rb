@@ -35,19 +35,32 @@ module VCAP::CloudController
       end
     end
 
+    def logger
+      @logger ||= Steno.logger("cc.dea.pool")
+    end
+
     def find_dea(criteria)
+      if logger.debug2?
+        @dea_advertisements.each do |ad|
+          logger.debug2 "#{ad.id} | #{ad.available_memory} | #{ad.available_disk} | #{ad.zone} | #{ad.stats["app_id_to_count"]}"
+        end
+      end
+
       mutex.synchronize do
         prune_stale_deas
 
-        best_dea_ad = EligibleDeaAdvertisementFilter.new(@dea_advertisements, criteria[:app_id]).
-                       only_with_disk(criteria[:disk] || 0).
-                       only_meets_needs(criteria[:mem], criteria[:stack]).
-                       only_in_zone_with_fewest_instances.
+        best_ad = EligibleDeaAdvertisementFilter.new(@dea_advertisements, criteria).
+                       only_specific_zone.
+                       only_with_disk.
+                       only_meets_needs.
                        only_fewest_instances_of_app.
-                       upper_half_by_memory.
+                       only_fewest_instances_of_all.
+                       upper_by_memory.
                        sample
 
-        best_dea_ad && best_dea_ad.dea_id
+        logger.debug2 "best dea  = #{best_ad.id}" if best_ad
+
+        best_ad && best_ad.id
       end
     end
 
@@ -58,8 +71,18 @@ module VCAP::CloudController
       @dea_advertisements.find { |ad| ad.dea_id == dea_id }.increment_instance_count(app_id)
     end
 
+    def clear_app_id_to_count_in_advertisement(app_id)
+      mutex.synchronize do
+        @dea_advertisements.each { |ad| ad.clear_app_id_to_count(app_id) }
+      end
+    end
+
     def reserve_app_memory(dea_id, app_memory)
       @dea_advertisements.find { |ad| ad.dea_id == dea_id }.decrement_memory(app_memory)
+    end
+
+    def reserve_app_disk(dea_id, app_disk_quota)
+      @dea_advertisements.find { |ad| ad.dea_id == dea_id }.decrement_disk(app_disk_quota)
     end
 
     private
