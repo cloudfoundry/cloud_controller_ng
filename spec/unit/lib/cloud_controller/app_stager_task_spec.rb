@@ -57,8 +57,9 @@ module VCAP::CloudController
 
     let(:default_staging_task_disk) { 4096 }
     let(:default_staging_task_memory) { 1024 }
-    let(:find_stager_criteria) { {app_id: app.guid, stack: app.stack.name, mem: default_staging_task_memory, disk: default_staging_task_disk} }
-    let(:find_stager_criteria_mem_plus_1) { {app_id: app.guid, stack: app.stack.name, mem: (default_staging_task_memory + 1), disk: default_staging_task_disk} }
+    let(:find_stager_criteria) { {app_id: app.guid, stack: app.stack.name, mem: default_staging_task_memory, disk: default_staging_task_disk, zone: nil} }
+    let(:find_stager_criteria_mem_plus_1) { {app_id: app.guid, stack: app.stack.name, mem: (default_staging_task_memory + 1), disk: default_staging_task_disk, zone: nil} }
+    let(:find_stager_criteria_with_zone) { {app_id: app.guid, stack: app.stack.name, mem: default_staging_task_memory, zone: "zone1" , disk: default_staging_task_disk} }
 
     before do
       expect(app.staged?).to be false
@@ -140,6 +141,14 @@ module VCAP::CloudController
       it 'should request a stager with the app memory requirement' do
         app.memory = default_staging_task_memory + 1
         stager_pool.should_receive(:find_stager).with(find_stager_criteria_mem_plus_1).and_return(stager_id)
+        staging_task.stage
+      end
+    end
+
+    context 'when the zone of app is set' do
+      it 'should request a stager with the app zone requirement' do
+        app.zone = "zone1"
+        stager_pool.should_receive(:find_stager).with(find_stager_criteria_with_zone).and_return(stager_id)
         staging_task.stage
       end
     end

@@ -92,7 +92,7 @@ class EligibleDeaAdvertisementFilter
   end
 
   def only_specific_zone
-    zone = find_zone
+    zone = @criteria[:zone].blank? && find_zone || @criteria[:zone]
     @filtered_advertisements.select! { |ad| ad.zone == zone }
     self
   end

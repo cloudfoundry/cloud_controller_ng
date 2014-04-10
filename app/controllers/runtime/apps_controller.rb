@@ -7,6 +7,7 @@ module VCAP::CloudController
       to_one     :space
       to_one     :stack,               :optional_in => :create
 
+      attribute  :zone,                String,     :default => nil
       attribute  :environment_json,    Hash,       :default => {}
       attribute  :memory,              Integer,    :default => nil
       attribute  :instances,           Integer,    :default => 1

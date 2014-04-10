@@ -24,6 +24,7 @@ module VCAP::CloudController
     let(:stack_name_and_1024m_memory) { {stack: "stack-name", mem: 1024, disk: 1024, index: 0,  app_id: 'app-id'} }
     let(:stack_name_and_1025m_memory) { {stack: "stack-name", mem: 1025, disk: 1024, index: 0, app_id: 'app-id'} }
     let(:unknown_stack_and_0m_memory) { {stack: "unknown-stack-name", mem: 0, disk: 1024, app_id: 'app-id'} }
+    let(:stack_name_and_0m_memory_and_zone3) { {stack: "stack-name", mem: 0, zone: "zone3", disk: 1024, app_id: 'app-id'} }
     let(:stack_name_and_256m_memory_512m_disk) { {stack: "stack-name", mem: 256, disk: 512, app_id: 'app-id'} }
     let(:stack_name_and_1024m_memory_1024m_disk) { stack_name_and_1024m_memory }
     let(:stack_name_and_1024m_memory_1025m_disk) { {stack: "stack-name", mem: 1024, disk: 1025, index: 0,  app_id: 'app-id'} }
@@ -50,6 +51,9 @@ module VCAP::CloudController
 
       let(:dea1_in_user_defined_zone1_with_256m_memory) do
         staging_advertisement :dea => "dea-id1", :memory => 256, :zone => "zone1", :disk => 1024
+      end
+      let(:dea2_in_user_defined_zone1_with_256m_memory) do
+        staging_advertisement :dea => "dea-id2", :memory => 256, :zone => "zone1", :disk => 1024
       end
       let(:dea3_in_user_defined_zone2_with_256m_memory) do
         staging_advertisement :dea => "dea-id3", :memory => 256, :zone => "zone2", :disk => 1024
@@ -134,6 +138,19 @@ module VCAP::CloudController
             end
 
             expect(["dea_id2"]).to include (subject.find_stager(stack_name_and_512m_memory))
+          end
+        end
+
+        context "when the user has specified the zone" do
+          it "finds the stager from the specific zone" do
+            subject.process_advertise_message(dea1_in_user_defined_zone1_with_256m_memory)
+            subject.process_advertise_message(dea2_in_user_defined_zone1_with_256m_memory)
+            subject.process_advertise_message(dea3_in_user_defined_zone2_with_256m_memory)
+            subject.process_advertise_message(dea4_in_user_defined_zone2_with_512m_memory)
+            subject.process_advertise_message(dea5_in_user_defined_zone3_with_256m_memory)
+            subject.process_advertise_message(dea6_in_user_defined_zone3_with_256m_memory)
+
+            expect(["dea-id5", "dea-id6"]).to include (subject.find_stager(stack_name_and_0m_memory_and_zone3))
           end
         end
       end

@@ -398,6 +398,27 @@ module VCAP::CloudController
         end
       end
 
+      describe "specific zone" do
+        context "when the user has specified the zone" do
+          it "finds DEAs from the specific zone" do
+            subject.process_advertise_message(dea9_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea10_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea11_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea12_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea13_in_user_defined_zone3_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea14_in_user_defined_zone3_with_0_instance_and_256m_memory)
+
+            found_dea_ids = []
+            20.times do
+              found_dea_ids << subject.find_dea(mem: 1, stack: "stack", app_id: "app-id", index: 0, zone: "zone3", disk: 1)
+              found_dea_ids << subject.find_dea(mem: 1, stack: "stack", app_id: "app-id", index: 1, zone: "zone3", disk: 1)
+            end
+
+            expect(found_dea_ids.uniq).to match_array(%w(dea-id13 dea-id14))
+          end
+        end
+      end
+
       describe "#only_in_zone_with_fewest_instances" do
         context "when all the DEAs are in the same zone" do
           it "finds the DEA within the default zone" do

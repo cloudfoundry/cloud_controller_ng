@@ -203,6 +203,14 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:find_dea).with(include(disk: 13))
         DeaClient.start(app)
       end
+
+      it "includes zone in find_dea request" do
+        dea_pool.stub(:clear_app_id_to_count_in_advertisement).and_return(nil)
+        app.instances = 1
+        app.zone = "zone1"
+        dea_pool.should_receive(:find_dea).with(include(zone: "zone1"))
+        DeaClient.start(app)
+      end
     end
 
     describe "stop_indices" do

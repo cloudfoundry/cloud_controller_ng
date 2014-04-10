@@ -164,6 +164,7 @@ module VCAP::CloudController
                                    stack: app.stack.name,
                                    app_id: app.guid,
                                    index: index,
+                                   zone: app.zone
                                   )
         if dea_id
           dea_publish_start(dea_id, start_message)

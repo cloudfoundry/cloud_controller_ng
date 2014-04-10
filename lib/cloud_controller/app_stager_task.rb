@@ -49,7 +49,8 @@ module VCAP::CloudController
                                             :app_id => @app.guid,
                                             :stack => @app.stack.name,
                                             :mem => staging_task_memory_mb,
-                                            :disk => staging_task_disk_mb
+                                            :disk => staging_task_disk_mb,
+                                            :zone => @app.zone
                                            )
       raise Errors::ApiError.new_from_details("StagingError", "no available stagers") unless @stager_id
 

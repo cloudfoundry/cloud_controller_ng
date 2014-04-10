@@ -260,12 +260,12 @@ module VCAP::CloudController
                                     :environment_json, :memory, :instances, :disk_quota,
                                     :state, :version, :command, :console, :debug,
                                     :staging_task_id, :package_state, :health_check_timeout,
-                                    :staging_failed_reason }
+                                    :staging_failed_reason, :zone }
       it { is_expected.to import_attributes :name, :production,
                                     :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                                     :environment_json, :memory, :instances, :disk_quota,
                                     :state, :command, :console, :debug,
-                                    :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout }
+                                    :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout, :zone }
     end
 
     describe "#in_suspended_org?" do
