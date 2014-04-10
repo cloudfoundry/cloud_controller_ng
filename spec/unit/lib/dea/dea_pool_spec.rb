@@ -187,6 +187,80 @@ module VCAP::CloudController
         end
       end
 
+      describe "main zone" do
+        context "when DEAs are in three zones, for the first instance of an application" do
+          it "finds the DEA from the main zone" do
+            subject.process_advertise_message(dea9_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea10_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea11_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea12_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea13_in_user_defined_zone3_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea14_in_user_defined_zone3_with_0_instance_and_256m_memory)
+
+            found_dea_ids = []
+            10.times do
+              found_dea_ids << subject.find_dea(mem: 1, stack: "stack", app_id: "app-id", index: 0, disk: 1)
+            end
+            expect(found_dea_ids.uniq).to match_array(%w(dea-id9 dea-id10))
+          end
+        end
+
+        context "When there was no advertisements in the zone of the No. 1 priority" do
+          it "finds a DEA in the zone of the next highest priority" do
+            subject.process_advertise_message(dea11_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea12_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea13_in_user_defined_zone3_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea14_in_user_defined_zone3_with_0_instance_and_256m_memory)
+
+            found_dea_ids = []
+            10.times do
+              found_dea_ids << subject.find_dea(mem: 1, stack: "stack", app_id: "app-id", index: 0, disk: 1)
+            end
+            expect(found_dea_ids.uniq).to match_array(%w(dea-id11 dea-id12))
+          end
+        end
+
+        context "When the capacity is not met in the dea of main zone" do
+          it "finds a DEA, in the zone of the next highest priority, and meeting the condition" do
+            subject.process_advertise_message(dea9_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea10_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea18_in_user_defined_zone2_with_0_instance_and_512m_memory)
+            subject.process_advertise_message(dea12_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea13_in_user_defined_zone3_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea14_in_user_defined_zone3_with_0_instance_and_256m_memory)
+
+            found_dea_ids = []
+            10.times do
+              found_dea_ids << subject.find_dea(mem: 257, stack: "stack", app_id: "app-id", index: 0,disk: 1)
+            end
+            expect(found_dea_ids.uniq).to match_array(%w(dea-id18))
+          end
+        end
+
+        context "When the capacity is not met in the dea of other zone" do
+          it "finds a DEA, in the zone of the second candidate, and meeting the condition" do
+            subject.process_advertise_message(dea9_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea10_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea11_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea12_in_user_defined_zone2_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea19_in_user_defined_zone3_with_0_instance_and_512m_memory)
+
+            found_dea_ids = []
+            10.times do
+              found_dea_ids << subject.find_dea(mem: 257, stack: "stack", app_id: "app-id", index: 1, disk: 1)
+            end
+            expect(found_dea_ids.uniq).to match_array(%w(dea-id19))
+          end
+        end
+
+        describe "Invalid zone" do
+          it "should not find best dea" do
+            subject.process_advertise_message(dea21_in_user_defined_dummy_zone_with_0_instance_and_1024m_memory)
+            expect(subject.find_dea(mem: 1, stack: "stack", app_id: "app-id", disk: 1)).to be nil
+          end
+        end
+      end
+
       describe "each zone" do
         context "when there are DEAs in three zones and an application with multiple instances" do
           it "finds the DEA from the zone with the most number of dea if the number of the instance is the same" do
@@ -219,6 +293,8 @@ module VCAP::CloudController
           end
 
           it "finds the DEA within the each zone" do
+            subject.process_advertise_message(dea9_in_user_defined_zone_with_0_instance_and_256m_memory)
+            subject.process_advertise_message(dea10_in_user_defined_zone_with_0_instance_and_256m_memory)
             subject.process_advertise_message(dea11_in_user_defined_zone2_with_0_instance_and_256m_memory)
             subject.process_advertise_message(dea12_in_user_defined_zone2_with_0_instance_and_256m_memory)
             subject.process_advertise_message(dea13_in_user_defined_zone3_with_0_instance_and_256m_memory)
@@ -232,9 +308,14 @@ module VCAP::CloudController
             subject.mark_app_started(dea_id: dea_id2, app_id: "app-id")
             subject.reserve_app_memory(dea_id2, 1)
             subject.reserve_app_disk(dea_id2, 1)
+            dea_id3 = subject.find_dea(mem: 1, disk: 1, stack: "stack", app_id: "app-id", index: 2)
+            subject.mark_app_started(dea_id: dea_id3, app_id: "app-id")
+            subject.reserve_app_memory(dea_id3, 1)
+            subject.reserve_app_disk(dea_id3, 1)
 
-            expect(["dea-id13", "dea-id14", "dea-id15"]).to include dea_id1
-            expect(["dea-id11", "dea-id12"]).to include dea_id2
+            expect(["dea-id9", "dea-id10"]).to include dea_id1
+            expect(["dea-id13", "dea-id14", "dea-id15"]).to include dea_id2
+            expect(["dea-id11", "dea-id12"]).to include dea_id3
           end
         end
       end
@@ -257,43 +338,47 @@ module VCAP::CloudController
           end
 
           context "when index[0]" do
-            it "finds the DEA with available_memory maximum in a zone of the maximum number of dea" do
-              expect(@dea0).to eq("dea-id20")
+            it "find the DEA with most available_memory in the main zone(zone1)" do
+              expect(@dea0).to eq("dea-id17")
             end
           end
 
           context "when index[1]" do
-            it "finds the DEA with maximum available memory in the zone with minimum number of instances of the app" do
-              expect(["dea-id17", "dea-id18"]).to include @dea1
+            it "finds the DEA with available_memory maximum in the zone(zone3) of the maximum number of dea and in the same application instance of minimum" do
+              expect(@dea1).to eq("dea-id20")
             end
           end
 
           context "when index[2]" do
-            it "finds the DEA with maximum available memory in the zone with minimum number of instances of the app" do
-              expect(["dea-id17", "dea-id18"]).to include @dea2
+            it "finds the DEA with available_memory maximum in the zone(zone2) of the maximum number of dea and in the same application instance of minimum" do
+              expect(@dea2).to eq("dea-id18")
             end
           end
 
           context "when index[3]" do
-            it "finds the DEA with available_memory maximum in a zone of the maximum number of dea" do
+            it "finds the DEA with available_memory maximum in the zone(zone3) of the maximum number of dea" do
               expect(@dea3).to eq("dea-id19")
             end
           end
 
           context "when index[4]" do
-            it "finds the DEA with maximum available memory in the zone with minimum number of instances of the app" do
-              expect(["dea-id9", "dea-id11"]).to include @dea4
+            it "finds the DEA with available_memory maximum in the zone(zone1 or zone2) of the maximum number of dea and in the same application instance of minimum" do
+              expected_dea_ids = ["dea-id9", "dea-id11"]
+              expected_dea_ids.delete(@dea5)
+              expect(expected_dea_ids).to include @dea4
             end
           end
 
           context "when index[5]" do
-            it "finds the DEA with maximum available memory in the zone with minimum number of instances of the app" do
-              expect(["dea-id9", "dea-id11"]).to include @dea5
+            it "finds the DEA with available_memory maximum in the zone(index[4] doesn't selected zone(zone1 and zone2)) of the maximum number of dea and in the same application instance of minimum" do
+              expected_dea_ids = ["dea-id9", "dea-id11"]
+              expected_dea_ids.delete(@dea4)
+              expect(expected_dea_ids).to include @dea5
             end
           end
 
           context "when index[6]" do
-            it "finds the DEA with available_memory maximum in a zone of the maximum number of dea" do
+            it "finds the DEA with available_memory maximum in the zone(zone3) of the maximum number of dea and in the same application instance of minimum" do
               expect(@dea6).to eq("dea-id13")
             end
           end
@@ -457,10 +542,10 @@ module VCAP::CloudController
         before do
           subject.process_advertise_message(dea_advertise_msg)
           subject.process_advertise_message(dea_advertise_msg.merge(
-            "id" => "other-dea-id",
-            "app_id_to_count" => {
-              "app-id" => 1
-            }
+              "id" => "other-dea-id",
+              "app_id_to_count" => {
+                "app-id" => 1
+              }
           ))
         end
 
@@ -476,8 +561,8 @@ module VCAP::CloudController
           # because it already has an instance of the app.
           subject.process_advertise_message(
             dea_advertise_msg.merge("id" => "dea-id-already-has-an-instance",
-                                    "available_memory" => 2048,
-                                    "app_id_to_count" => { "app-id" => 1 })
+              "available_memory" => 2048,
+              "app_id_to_count" => { "app-id" => 1 })
           )
         end
         context "when all DEAs have the same available memory" do
@@ -545,20 +630,20 @@ module VCAP::CloudController
       describe "multiple instances of an app" do
         before do
           subject.process_advertise_message({
-            "id" => "dea-id1",
-            "stacks" => ["stack"],
-            "available_memory" => 1024,
-            "available_disk" => available_disk,
-            "app_id_to_count" => {}
-          })
+              "id" => "dea-id1",
+              "stacks" => ["stack"],
+              "available_memory" => 1024,
+              "available_disk" => available_disk,
+              "app_id_to_count" => {}
+            })
 
           subject.process_advertise_message({
-            "id" => "dea-id2",
-            "stacks" => ["stack"],
-            "available_memory" => 1024,
-            "available_disk" => available_disk,
-            "app_id_to_count" => {}
-          })
+              "id" => "dea-id2",
+              "stacks" => ["stack"],
+              "available_memory" => 1024,
+              "available_disk" => available_disk,
+              "app_id_to_count" => {}
+            })
         end
 
         it "will use different DEAs when starting an app with multiple instances" do
@@ -595,21 +680,21 @@ module VCAP::CloudController
       let(:available_disk) { 1024 }
       let(:dea_advertise_msg) do
         {
-            "id" => "dea-id",
-            "stacks" => ["stack"],
-            "available_memory" => 1024,
-            "available_disk" => available_disk,
-            "app_id_to_count" => { "old_app" => 1 }
+          "id" => "dea-id",
+          "stacks" => ["stack"],
+          "available_memory" => 1024,
+          "available_disk" => available_disk,
+          "app_id_to_count" => { "old_app" => 1 }
         }
       end
 
       let(:new_dea_advertise_msg) do
         {
-            "id" => "dea-id",
-            "stacks" => ["stack"],
-            "available_memory" => 1024,
-            "available_disk" => available_disk,
-            "app_id_to_count" => { "foo" => 1 }
+          "id" => "dea-id",
+          "stacks" => ["stack"],
+          "available_memory" => 1024,
+          "available_disk" => available_disk,
+          "app_id_to_count" => { "foo" => 1 }
         }
       end
 
@@ -637,21 +722,21 @@ module VCAP::CloudController
       let(:available_disk) { 1024 }
       let(:dea_advertise_msg) do
         {
-            "id" => "dea-id",
-            "stacks" => ["stack"],
-            "available_memory" => 1024,
-            "available_disk" => available_disk,
-            "app_id_to_count" => { "old_app" => 1 }
+          "id" => "dea-id",
+          "stacks" => ["stack"],
+          "available_memory" => 1024,
+          "available_disk" => available_disk,
+          "app_id_to_count" => { "old_app" => 1 }
         }
       end
 
       let(:new_dea_advertise_msg) do
         {
-            "id" => "dea-id",
-            "stacks" => ["stack"],
-            "available_memory" => 1024,
-            "available_disk" => available_disk,
-            "app_id_to_count" => { "foo" => 1 }
+          "id" => "dea-id",
+          "stacks" => ["stack"],
+          "available_memory" => 1024,
+          "available_disk" => available_disk,
+          "app_id_to_count" => { "foo" => 1 }
         }
       end
 

@@ -51,8 +51,17 @@ module VCAP::CloudController
       let(:dea1_in_user_defined_zone1_with_256m_memory) do
         staging_advertisement :dea => "dea-id1", :memory => 256, :zone => "zone1", :disk => 1024
       end
+      let(:dea3_in_user_defined_zone2_with_256m_memory) do
+        staging_advertisement :dea => "dea-id3", :memory => 256, :zone => "zone2", :disk => 1024
+      end
       let(:dea4_in_user_defined_zone2_with_512m_memory) do
         staging_advertisement :dea => "dea-id4", :memory => 512, :zone => "zone2", :disk => 1024
+      end
+      let(:dea5_in_user_defined_zone3_with_256m_memory) do
+        staging_advertisement :dea => "dea-id5", :memory => 256, :zone => "zone3", :disk => 1024
+      end
+      let(:dea6_in_user_defined_zone3_with_256m_memory) do
+        staging_advertisement :dea => "dea-id6", :memory => 256, :zone => "zone3", :disk => 1024
       end
       let(:dea7_in_user_defined_zone1_with_256m_memory_511m_disk) do
         staging_advertisement :dea => "dea-id7", :memory => 256, :zone => "zone1", :disk => 511
@@ -81,6 +90,23 @@ module VCAP::CloudController
         end
 
         context "when the deas are in multiple zones" do
+          it "finds the stager within the main zone" do
+            subject.process_advertise_message(dea1_in_user_defined_zone1_with_256m_memory)
+            subject.process_advertise_message(dea4_in_user_defined_zone2_with_512m_memory)
+            subject.process_advertise_message(dea5_in_user_defined_zone3_with_256m_memory)
+            subject.process_advertise_message(dea6_in_user_defined_zone3_with_256m_memory)
+            expect(["dea-id1"]).to include (subject.find_stager(stack_name_and_0m_memory))
+          end
+
+          it "finds the stager within the next main zone" do
+            subject.process_advertise_message(dea3_in_user_defined_zone2_with_256m_memory)
+            subject.process_advertise_message(dea4_in_user_defined_zone2_with_512m_memory)
+            subject.process_advertise_message(dea5_in_user_defined_zone3_with_256m_memory)
+            subject.process_advertise_message(dea6_in_user_defined_zone3_with_256m_memory)
+
+            expect(["dea-id4"]).to include (subject.find_stager(stack_name_and_0m_memory))
+          end
+
           context "when a zone does not have sufficient memory" do
             it "finds another zone for staging" do
               subject.process_advertise_message(dea1_in_user_defined_zone1_with_256m_memory)

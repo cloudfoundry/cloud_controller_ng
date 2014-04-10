@@ -103,17 +103,36 @@ class EligibleDeaAdvertisementFilter
 
   private
 
+  def find_main_zone
+    main_zone = nil
+    if @filtered_advertisements
+      @zones.sort_by! { |zone|
+        - zone["priority"]
+      }.each { |zone|
+        if has_capacity?(zone["name"])
+          main_zone = zone["name"]
+          break
+        end
+      }
+    end
+    main_zone
+  end
+
   def find_zone
-    zone = nil
-    num_instances_and_deas_each_zone.sort { |a, b|
-      (a[1][:num_instances] <=> b[1][:num_instances]).nonzero? ||
-      (b[1][:num_dea] <=> a[1][:num_dea])
-    }.each { |num_instances_and_deas_in_zone|
-      if has_capacity?(num_instances_and_deas_in_zone[0])
-        return num_instances_and_deas_in_zone[0]
-      end
-    }
-    zone
+    if @criteria[:index] == 0
+      find_main_zone
+    else
+      zone = nil
+      num_instances_and_deas_each_zone.sort { |a, b|
+        (a[1][:num_instances] <=> b[1][:num_instances]).nonzero? ||
+        (b[1][:num_dea] <=> a[1][:num_dea])
+      }.each { |num_instances_and_deas_in_zone|
+        if has_capacity?(num_instances_and_deas_in_zone[0])
+          return num_instances_and_deas_in_zone[0]
+        end
+      }
+      zone
+    end
   end
 
   def has_capacity?(zone)
