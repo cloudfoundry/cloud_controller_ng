@@ -1,19 +1,26 @@
 module VCAP::Services::ServiceBrokers
   class ServiceDashboardClientManager
-    attr_reader :errors, :service_broker
+    attr_reader :errors, :service_broker, :warnings
+
+    REQUESTED_FEATURE_DISABLED_WARNING = 'Warning: This broker includes configuration for a dashboard client. Auto-creation of OAuth2 clients has been disabled in this Cloud Foundry instance. The broker catalog has been updated but its dashboard client configuration will be ignored.'
 
     def initialize(service_broker)
       @service_broker = service_broker
       @errors         = VCAP::Services::ValidationErrors.new
+      @warnings       = []
 
       @client_manager = VCAP::Services::UAA::UaaClientManager.new
       @differ         = ServiceDashboardClientDiffer.new(service_broker)
     end
 
     def synchronize_clients_with_catalog(catalog)
-      return true unless cc_configured_to_modify_uaa_clients?
+      requested_clients = catalog.services.map(&:dashboard_client).compact
 
-      requested_clients         = catalog.services.map(&:dashboard_client).compact
+      unless cc_configured_to_modify_uaa_clients?
+        warnings << REQUESTED_FEATURE_DISABLED_WARNING unless requested_clients.empty?
+        return true
+      end
+
       client_ids_already_in_uaa = get_client_ids_already_in_uaa(requested_clients)
       unclaimable_ids           = get_client_ids_that_cannot_be_claimed(client_ids_already_in_uaa)
 
@@ -44,6 +51,10 @@ module VCAP::Services::ServiceBrokers
       changeset         = differ.create_changeset(requested_clients, existing_clients)
 
       claim_clients_and_update_uaa(changeset)
+    end
+
+    def has_warnings?
+      warnings.empty? == false
     end
 
     private

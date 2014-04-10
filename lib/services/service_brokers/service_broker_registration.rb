@@ -4,6 +4,7 @@ module VCAP::Services::ServiceBrokers
 
     def initialize(broker)
       @broker = broker
+      @warnings = []
     end
 
     def create
@@ -40,11 +41,19 @@ module VCAP::Services::ServiceBrokers
       broker.errors
     end
 
+    def warnings
+      @warnings
+    end
+
     private
 
     def synchronize_dashboard_clients!
       unless client_manager.synchronize_clients_with_catalog(catalog)
         raise_humanized_exception(client_manager.errors)
+      end
+
+      if client_manager.has_warnings?
+        client_manager.warnings.each { |warning| warnings << warning }
       end
     end
 

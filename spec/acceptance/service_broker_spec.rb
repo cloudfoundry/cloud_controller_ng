@@ -189,6 +189,42 @@ describe 'Service Broker' do
         expect(not_free_plan['entity']['free']).to be_false
       end
     end
+
+    context 'when the CC dashboard_client feature is disabled and the catalog requests a client' do
+      let(:service) { build_service(dashboard_client: { id: 'client-id', secret: 'shhhhh', redirect_uri: 'http://example.com/client-id' })}
+
+      before do
+        allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+        allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_name).and_return nil
+        allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_secret).and_return nil
+
+        stub_catalog_fetch(200, services: [service])
+      end
+
+      it 'returns a warning' do
+        post('/v2/service_brokers', {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, json_headers(admin_headers))
+
+        warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+        expect(warning).to eq('Warning: This broker includes configuration for a dashboard client. Auto-creation of OAuth2 clients has been disabled in this Cloud Foundry instance. The broker catalog has been updated but its dashboard client configuration will be ignored.')
+      end
+
+      it 'does not create any dashboard clients' do
+        post('/v2/service_brokers', {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, json_headers(admin_headers))
+
+        expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
+      end
+
+    end
   end
 
   describe 'updating a service broker' do

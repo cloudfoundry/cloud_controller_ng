@@ -7,10 +7,15 @@ module VCAP::Services::ServiceBrokers
     let(:client_manager) { double('client_manager') }
 
     describe '#initialize' do
+      subject{ manager }
+
       it 'sets the service_broker' do
         manager = ServiceDashboardClientManager.new(service_broker)
         expect(manager.service_broker).to eql(service_broker)
       end
+
+      its(:warnings) { should == [] }
+      its(:has_warnings?) { should == false }
     end
 
     describe '#synchronize_clients_with_catalog' do
@@ -270,6 +275,25 @@ module VCAP::Services::ServiceBrokers
 
         it 'returns true' do
           expect(manager.synchronize_clients_with_catalog(catalog)).to be_true
+        end
+
+        context 'and the catalog requested dashboard clients' do
+          it 'adds a warning' do
+            manager.synchronize_clients_with_catalog(catalog)
+
+            expect(manager.has_warnings?).to be_true
+            expect(manager.warnings).to include('Warning: This broker includes configuration for a dashboard client. Auto-creation of OAuth2 clients has been disabled in this Cloud Foundry instance. The broker catalog has been updated but its dashboard client configuration will be ignored.')
+          end
+        end
+
+        context 'and the catalog did not request dashboard clients' do
+          let(:catalog) { double(:catalog, services: [catalog_service_without_dashboard_client]) }
+
+          it 'does not add a warning' do
+            manager.synchronize_clients_with_catalog(catalog)
+
+            expect(manager.has_warnings?).to be_false
+          end
         end
       end
     end

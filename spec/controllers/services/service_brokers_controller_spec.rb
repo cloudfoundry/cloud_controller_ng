@@ -44,6 +44,7 @@ module VCAP::CloudController
           errors: errors,
         })
         reg.stub(:create).and_return(reg)
+        reg.stub(:warnings).and_return([])
         reg
       end
       let(:presenter) { double(ServiceBrokerPresenter, {
@@ -129,7 +130,22 @@ module VCAP::CloudController
             decoded_response.fetch('description').should == 'Service broker catalog is invalid: A bunch of stuff was wrong'
           end
         end
-     end
+      end
+
+      context 'when the broker registration has warnings' do
+        before do
+          allow(registration).to receive(:warnings).and_return(['warning1','warning2'])
+        end
+
+        it 'adds the warnings' do
+          post('/v2/service_brokers', body, headers)
+
+          warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
+          expect(warnings.length).to eq(2)
+          expect(warnings[0]).to eq('warning1')
+          expect(warnings[1]).to eq('warning2')
+        end
+      end
 
       describe 'authentication' do
         it 'returns a forbidden status for non-admin users' do
@@ -286,6 +302,7 @@ module VCAP::CloudController
           errors: errors
         })
         reg.stub(:update).and_return(reg)
+        reg.stub(:warnings).and_return([])
         reg
       end
       let(:presenter) { double(ServiceBrokerPresenter, {
@@ -377,6 +394,21 @@ module VCAP::CloudController
             decoded_response.fetch('code').should == 270001
             decoded_response.fetch('description').should == 'Service broker is invalid: A bunch of stuff was wrong'
           end
+        end
+      end
+
+      context 'when the broker registration has warnings' do
+        before do
+          allow(registration).to receive(:warnings).and_return(['warning1','warning2'])
+        end
+
+        it 'adds the warnings' do
+          put("/v2/service_brokers/#{broker.guid}", body, headers)
+
+          warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
+          expect(warnings.length).to eq(2)
+          expect(warnings[0]).to eq('warning1')
+          expect(warnings[1]).to eq('warning2')
         end
       end
 

@@ -2,6 +2,16 @@ require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers
   describe ServiceBrokerRegistration do
+
+    describe 'initializing' do
+      let(:broker) { VCAP::CloudController::ServiceBroker.make }
+      subject { described_class.new(broker) }
+
+      its(:broker) { should == broker }
+      its(:warnings) { should == [] }
+      its(:errors) { should == broker.errors }
+    end
+
     describe '#create' do
       let(:broker) do
         VCAP::CloudController::ServiceBroker.new(
@@ -11,7 +21,7 @@ module VCAP::Services::ServiceBrokers
           auth_password: 'auth1234',
         )
       end
-      let(:client_manager) { double(:service_dashboard_manager, :synchronize_clients_with_catalog => true) }
+      let(:client_manager) { double(:service_dashboard_manager, synchronize_clients_with_catalog: true, warnings: []) }
       let(:catalog) { double(:catalog, :valid? => true) }
       let(:service_manager) { double(:service_manager, :sync_services_and_plans => true) }
 
@@ -22,6 +32,8 @@ module VCAP::Services::ServiceBrokers
         allow(ServiceDashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(ServiceManager).to receive(:new).and_return(service_manager)
+
+        allow(client_manager).to receive(:has_warnings?).and_return(false)
       end
 
       it 'returns itself' do
@@ -255,6 +267,19 @@ module VCAP::Services::ServiceBrokers
           expect(service_manager).not_to have_received(:sync_services_and_plans)
         end
       end
+
+      context 'when the client manager has warnings' do
+        before do
+          allow(client_manager).to receive(:warnings).and_return(['warning1', 'warning2'])
+          allow(client_manager).to receive(:has_warnings?).and_return(true)
+        end
+
+        it 'adds the warnings' do
+          registration.create
+
+          expect(registration.warnings).to eq(['warning1', 'warning2'])
+        end
+      end
     end
     
     describe '#update' do
@@ -268,7 +293,7 @@ module VCAP::Services::ServiceBrokers
       end
       let(:client_manager) { double(:service_dashboard_manager, :synchronize_clients_with_catalog => true) }
       let(:catalog) { double(:catalog, :valid? => true) }
-      let(:service_manager) { double(:service_manager, :sync_services_and_plans => true) }
+      let(:service_manager) { double(:service_manager, sync_services_and_plans: true, warnings: []) }
 
       subject(:registration) { ServiceBrokerRegistration.new(broker) }
 
@@ -277,6 +302,8 @@ module VCAP::Services::ServiceBrokers
         allow(ServiceDashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(ServiceManager).to receive(:new).and_return(service_manager)
+
+        allow(client_manager).to receive(:has_warnings?).and_return(false)
       end
 
       it 'returns itself' do
@@ -501,6 +528,19 @@ module VCAP::Services::ServiceBrokers
           registration.update rescue nil
 
           expect(service_manager).not_to have_received(:sync_services_and_plans)
+        end
+      end
+
+      context 'when the client manager has warnings' do
+        before do
+          allow(client_manager).to receive(:warnings).and_return(['warning1', 'warning2'])
+          allow(client_manager).to receive(:has_warnings?).and_return(true)
+        end
+
+        it 'adds the warnings' do
+          registration.update
+
+          expect(registration.warnings).to eq(['warning1', 'warning2'])
         end
       end
     end
