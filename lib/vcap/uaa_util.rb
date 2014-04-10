@@ -1,4 +1,4 @@
-require "uaa/misc"
+require "uaa/info"
 
 module VCAP
   class UaaTokenDecoder
@@ -49,13 +49,15 @@ module VCAP
     end
 
     def asymmetric_key
-      @asymmetric_key ||= UaaVerificationKey.new(config)
+      info = CF::UAA::Info.new(config[:url])
+      @asymmetric_key ||= UaaVerificationKey.new(config[:verification_key], info)
     end
   end
 
   class UaaVerificationKey
-    def initialize(config)
-      @config = config
+    def initialize(verification_key, info)
+      @verification_key = verification_key
+      @info = info
     end
 
     def value
@@ -69,7 +71,7 @@ module VCAP
     private
 
     def fetch
-      @config[:verification_key] || CF::UAA::Misc.validation_key(@config[:url])["value"]
+      @verification_key || @info.validation_key["value"]
     end
   end
 end

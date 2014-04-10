@@ -9,6 +9,12 @@ module VCAP
       { :resource_id => "resource-id",
         :symmetric_secret => nil }
     end
+    
+    let(:uaa_info) { double(CF::UAA::Info) }
+
+    before do
+      allow(CF::UAA::Info).to receive(:new).and_return(uaa_info)
+    end
 
     describe "#decode_token" do
       context "when symmetric key is used" do
@@ -46,7 +52,7 @@ module VCAP
         after { Timecop.return }
 
         let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
-        before { CF::UAA::Misc.stub(:validation_key => {"value" => rsa_key.public_key.to_pem}) }
+        before { uaa_info.stub(:validation_key => {"value" => rsa_key.public_key.to_pem}) }
 
         context "when token is valid" do
           let(:token_content) do
@@ -56,10 +62,10 @@ module VCAP
           it "successfully decodes token and caches key" do
             token = generate_token(rsa_key, token_content)
 
-            CF::UAA::Misc.should_receive(:validation_key)
+            uaa_info.should_receive(:validation_key)
             subject.decode_token("bearer #{token}").should == token_content
 
-            CF::UAA::Misc.should_not_receive(:validation_key)
+            uaa_info.should_not_receive(:validation_key)
             subject.decode_token("bearer #{token}").should == token_content
           end
 
@@ -67,7 +73,7 @@ module VCAP
             let(:old_rsa_key) { OpenSSL::PKey::RSA.new(2048) }
 
             it "retries to decode token with newly fetched asymmetric key" do
-              CF::UAA::Misc
+              uaa_info
                 .stub(:validation_key)
                 .and_return(
                   {"value" => old_rsa_key.public_key.to_pem},
@@ -77,7 +83,7 @@ module VCAP
             end
 
             it "stops retrying to decode token with newly fetched asymmetric key after 1 try" do
-              CF::UAA::Misc
+              uaa_info
                 .stub(:validation_key)
                 .and_return("value" => old_rsa_key.public_key.to_pem)
 
@@ -131,32 +137,34 @@ module VCAP
   end
 
   describe UaaVerificationKey do
-    subject { described_class.new(config_hash) }
+    subject { described_class.new(config_hash[:verification_key], uaa_info) }
 
     let(:config_hash) do
       { :url => "http://uaa-url" }
     end
 
+    let(:uaa_info) { double(CF::UAA::Info) }
+
     describe "#value" do
       context "when config does not specify verification key" do
         before { config_hash[:verification_key] = nil }
-        before { CF::UAA::Misc.stub(:validation_key => {"value" => "value-from-uaa"}) }
+        before { uaa_info.stub(:validation_key => {"value" => "value-from-uaa"}) }
 
         context "when key was never fetched" do
           it "is fetched" do
-            CF::UAA::Misc.should_receive(:validation_key).with("http://uaa-url")
-            subject.value.should == "value-from-uaa"
+            expect(uaa_info).to receive(:validation_key)
+            expect(subject.value).to eq "value-from-uaa"
           end
         end
 
         context "when key was fetched before" do
           before do
-            CF::UAA::Misc.should_receive(:validation_key) # sanity
+            uaa_info.should_receive(:validation_key) # sanity
             subject.value
           end
 
           it "is not fetched again" do
-            CF::UAA::Misc.should_not_receive(:validation_key)
+            uaa_info.should_not_receive(:validation_key)
             subject.value.should == "value-from-uaa"
           end
         end
@@ -170,7 +178,7 @@ module VCAP
         end
 
         it "is not fetched" do
-          CF::UAA::Misc.should_not_receive(:validation_key)
+          uaa_info.should_not_receive(:validation_key)
           subject.value
         end
       end
@@ -179,11 +187,11 @@ module VCAP
     describe "#refresh" do
       context "when config does not specify verification key" do
         before { config_hash[:verification_key] = nil }
-        before { CF::UAA::Misc.stub(:validation_key => {"value" => "value-from-uaa"}) }
+        before { uaa_info.stub(:validation_key => {"value" => "value-from-uaa"}) }
 
         context "when key was never fetched" do
           it "is fetched" do
-            CF::UAA::Misc.should_receive(:validation_key).with("http://uaa-url")
+            expect(uaa_info).to receive(:validation_key)
             subject.refresh
             subject.value.should == "value-from-uaa"
           end
@@ -191,12 +199,12 @@ module VCAP
 
         context "when key was fetched before" do
           before do
-            CF::UAA::Misc.should_receive(:validation_key) # sanity
+            uaa_info.should_receive(:validation_key) # sanity
             subject.value
           end
 
           it "is RE-fetched again" do
-            CF::UAA::Misc.should_receive(:validation_key).with("http://uaa-url")
+            expect(uaa_info).to receive(:validation_key)
             subject.refresh
             subject.value.should == "value-from-uaa"
           end
@@ -212,7 +220,7 @@ module VCAP
         end
 
         it "is not fetched" do
-          CF::UAA::Misc.should_not_receive(:validation_key)
+          uaa_info.should_not_receive(:validation_key)
           subject.refresh
           subject.value.should == "value-from-config"
         end
