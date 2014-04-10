@@ -104,6 +104,16 @@ module VCAP::CloudController::RestController
       @sinatra.headers[name] = value
     end
 
+    def add_warning(warning)
+      escaped_warning = CGI.escape(warning)
+      existing_warning = @sinatra.headers['X-Cf-Warnings']
+
+      new_warning = existing_warning.nil? ?
+          escaped_warning : "#{existing_warning},#{escaped_warning}"
+
+      set_header('X-Cf-Warnings', new_warning)
+    end
+
     def check_authentication(op)
       # The logic here is a bit oddly ordered, but it supports the
       # legacy calls setting a user, but not providing a token.
@@ -206,7 +216,7 @@ module VCAP::CloudController::RestController
 
       def deprecated_endpoint(path)
         controller.after "#{path}*" do
-          headers["X-Cf-Warning"] ||= "Endpoint deprecated"
+          headers["X-Cf-Warnings"] ||= CGI.escape("Endpoint deprecated")
         end
       end
 

@@ -225,7 +225,9 @@ module VCAP::CloudController
           expect{delete "/v2/organizations/#{org.guid}/domains/#{domain.guid}", {},
                         headers_for(@org_a_manager)}.not_to change{SharedDomain.count}
           last_response.status.should == 301
-          expect(last_response.headers).to include("X-Cf-Warning" => "Endpoint removed")
+
+          warning_header = CGI.unescape(last_response.headers["X-Cf-Warnings"])
+          expect(warning_header).to eq("Endpoint removed")
         end
       end
 

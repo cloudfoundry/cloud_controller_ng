@@ -37,8 +37,9 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
-    delete "#{path_guid}/domains/:domain_guid" do |_|
-      headers = {"X-Cf-Warning" => "Endpoint removed", "Location" => "/v2/private_domains/:domain_guid"}
+    delete "#{path_guid}/domains/:domain_guid" do |controller_instance|
+      controller_instance.add_warning("Endpoint removed")
+      headers = {"Location" => "/v2/private_domains/:domain_guid"}
       [HTTP::MOVED_PERMANENTLY, headers, "Use DELETE /v2/private_domains/:domain_guid"]
     end
 

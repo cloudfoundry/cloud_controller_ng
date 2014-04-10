@@ -8,9 +8,10 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
   let(:logger) { double(:logger, :debug => nil, :error => nil) }
   let(:env) { {} }
   let(:params) { {} }
+  let(:sinatra) { nil }
 
   subject do
-    VCAP::CloudController::RestController::Base.new(double(:config), logger, env, params, double(:body))
+    VCAP::CloudController::RestController::Base.new(double(:config), logger, env, params, double(:body), sinatra)
   end
 
   describe "#dispatch" do
@@ -212,6 +213,43 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
 
     context "when the async flag is not present" do
       it { should_not be_async }
+    end
+  end
+
+  describe "#add_warning" do
+    let(:expected_key) { 'X-Cf-Warnings' }
+    let(:sinatra) { double(:sinatra) }
+    let(:header_hash) { {} }
+
+    before do
+      allow(sinatra).to receive(:headers).and_return(header_hash)
+    end
+
+    it 'sets the X-Cf-Warnings header' do
+      subject.add_warning('warning')
+
+      expect(header_hash[expected_key]).to eq('warning')
+    end
+
+    it 'comma separates multiple warnings' do
+      subject.add_warning('warning1')
+      subject.add_warning('warning2')
+
+      expect(header_hash[expected_key]).to eq('warning1,warning2')
+    end
+
+    it 'rfc3986 escapes the warnings' do
+      special_chars_warning = '!@#$%^&*(),:|{}+=-<>'
+
+      subject.add_warning('first, warning')
+      subject.add_warning(special_chars_warning)
+      subject.add_warning('last: warning!')
+
+      warnings = header_hash[expected_key].split(',')
+
+      expect(CGI.unescape(warnings[0])).to eq('first, warning')
+      expect(CGI.unescape(warnings[1])).to eq(special_chars_warning)
+      expect(CGI.unescape(warnings[2])).to eq('last: warning!')
     end
   end
 end
