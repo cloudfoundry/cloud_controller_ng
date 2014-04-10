@@ -50,6 +50,7 @@ module VCAP::CloudController
         prune_stale_deas
 
         best_ad = EligibleDeaAdvertisementFilter.new(@dea_advertisements, criteria).
+                       only_valid_zone.
                        only_specific_zone.
                        only_with_disk.
                        only_meets_needs.

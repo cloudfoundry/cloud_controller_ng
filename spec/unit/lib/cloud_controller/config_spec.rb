@@ -235,5 +235,91 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe ".zones" do
+      context "with valid config" do
+        before do
+          config = Config.from_file(File.join(Paths::FIXTURES, "config/valid_zone_config.yml"))
+          Config.configure_components(config)
+        end
+
+        it "can load" do
+          expect(Config.zones).to eq([
+            {"name" => "zoneA", "description" => "zoneA", "priority" => 100},
+            {"name" => "zoneB", "description" => "zoneB", "priority" => 80}
+          ])
+        end
+      end
+
+      context "when description does not exists" do
+        before do
+          config = Config.from_file(File.join(Paths::FIXTURES, "config/non_description_zone_config.yml"))
+          Config.configure_components(config)
+        end
+
+        it "can load" do
+          expect(Config.zones).to eq([
+            {"name" => "zoneA", "priority" => 100}
+          ])
+        end
+      end
+
+      context "when name does not exists" do
+        it "requires name" do
+          expect {
+            Config.from_file(File.join(Paths::FIXTURES, "config/non_name_zone_config.yml"))
+          }.to raise_error(
+            Membrane::SchemaValidationError, /zones => At index 0: { name => Missing key }/
+          )
+        end
+      end
+
+      context "when priority does not exists" do
+        it "requires priority" do
+          expect {
+            Config.from_file(File.join(Paths::FIXTURES, "config/non_priority_zone_config.yml"))
+          }.to raise_error(
+            Membrane::SchemaValidationError, /zones => At index 0: { priority => Missing key }/
+          )
+        end
+      end
+
+      context "when zone does not exists" do
+        before do
+          config = Config.from_file(File.join(Paths::FIXTURES, "config/non_zone_config.yml"))
+          Config.configure_components(config)
+        end
+
+        it "should return the default zone" do
+          expect(Config.zones).to eq([
+            { "name" => "default", "priority" => 100, "description" => "default zone" }
+          ])
+        end
+      end
+
+      context "with duplicated zone names" do
+        before do
+          config = Config.from_file(File.join(Paths::FIXTURES, "config/name_dupulicate_zone_config.yml"))
+          Config.configure_components(config)
+        end
+
+        it "can load first set value" do
+          expect(Config.zones).to eq([
+            {"name" => "zoneA", "priority" => 100, "description" => "zoneA"},
+            {"name" => "zoneB", "priority" => 80, "description" => "zoneB"}
+          ])
+        end
+      end
+
+      context "when priority is set as String" do
+        it "requires priority" do
+          expect {
+            Config.from_file(File.join(Paths::FIXTURES, "config/string_priority_zone_config.yml"))
+          }.to raise_error(
+            Membrane::SchemaValidationError, /zones => At index 0: { priority => Expected instance of Integer, given an instance of String/
+          )
+        end
+      end
+    end
   end
 end

@@ -3,6 +3,19 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::DeaPool do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
+    let(:zone_hash) {
+      {:zones =>
+        [
+          {"name" => "zone1", "description" => "zone1", "priority" => 100},
+          {"name" => "zone2", "description" => "zone2", "priority" => 80},
+          {"name" => "zone3", "description" => "zone3", "priority" => 50},
+          {"name" => "default", "description" => "default", "priority" => 10}
+        ]
+      }
+    }
+    before do
+      VCAP::CloudController::Config.configure_components(TestConfig.config.merge(zone_hash))
+    end
     subject { DeaPool.new(message_bus) }
 
     describe "#register_subscriptions" do
@@ -153,6 +166,10 @@ module VCAP::CloudController
         dea_advertisement :dea => "dea-id20", :memory => 1024, :instance_count => 0, :zone => "zone3"
       end
 
+      let(:dea21_in_user_defined_dummy_zone_with_0_instance_and_1024m_memory) do
+        dea_advertisement :dea => "dea-id21", :memory => 1024, :instance_count => 0, :zone => "dummy"
+      end
+
       let(:available_disk) { 100 }
 
       describe "dea availability" do
@@ -163,8 +180,15 @@ module VCAP::CloudController
         end
       end
 
+      describe "Invalid zone" do
+        it "should not find best dea" do
+          subject.process_advertise_message(dea21_in_user_defined_dummy_zone_with_0_instance_and_1024m_memory)
+          expect(subject.find_dea(mem: 1, stack: "stack", app_id: "app-id", disk: 1)).to be nil
+        end
+      end
+
       describe "each zone" do
-        context "when the DEAs are in three zones and an application of multiple instances" do
+        context "when there are DEAs in three zones and an application with multiple instances" do
           it "finds the DEA from the zone with the most number of dea if the number of the instance is the same" do
             subject.process_advertise_message(dea11_in_user_defined_zone2_with_0_instance_and_256m_memory)
             subject.process_advertise_message(dea12_in_user_defined_zone2_with_0_instance_and_256m_memory)

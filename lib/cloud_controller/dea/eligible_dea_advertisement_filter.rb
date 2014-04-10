@@ -1,6 +1,7 @@
 class EligibleDeaAdvertisementFilter
   def initialize(advertisements, criteria)
     @filtered_advertisements = advertisements.dup
+    @zones = VCAP::CloudController::Config.zones
     @criteria = criteria
     @app_id = criteria[:app_id]
 
@@ -69,6 +70,22 @@ class EligibleDeaAdvertisementFilter
           max_memory_ads << ad
         end
         max_memory_ads
+      end
+    end
+    self
+  end
+
+  def only_valid_zone
+    valid_zones = []
+    @zones.each { |zone|
+      valid_zones << zone["name"]
+    }
+    @filtered_advertisements.select! do |ad|
+      if valid_zones.include?(ad.zone)
+        true
+      else
+        logger.info "Invalid zone_name: #{ad.zone}", dea_id: ad.id
+        false
       end
     end
     self

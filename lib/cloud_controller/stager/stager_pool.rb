@@ -45,6 +45,7 @@ module VCAP::CloudController
         clear_app_id_to_count_in_advertisement(criteria[:app_id])
 
         best_ad = EligibleDeaAdvertisementFilter.new(@stager_advertisements, criteria).
+                       only_valid_zone.
                        only_specific_zone.
                        only_with_disk.
                        only_meets_needs.

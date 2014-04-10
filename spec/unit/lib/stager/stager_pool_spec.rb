@@ -14,6 +14,9 @@ module VCAP::CloudController
       }
     end
 
+    before do
+      VCAP::CloudController::Config.configure_components(TestConfig.config)
+    end
     subject { StagerPool.new(TestConfig.config, message_bus) }
 
     let(:stack_name_and_0m_memory) { {stack: "stack-name", mem: 0, disk: 1024, app_id: 'app-id'} }
@@ -62,6 +65,21 @@ module VCAP::CloudController
       end
 
       describe "zone" do
+        let(:zone_hash) {
+          {:zones =>
+            [
+              {"name" => "zone1", "description" => "zone1", "priority" => 100},
+              {"name" => "zone2", "description" => "zone2", "priority" => 80},
+              {"name" => "zone3", "description" => "zone3", "priority" => 50},
+              {"name" => "default", "description" => "default", "priority" => 10}
+            ]
+          }
+        }
+
+        before do
+          VCAP::CloudController::Config.configure_components(TestConfig.config.merge(zone_hash))
+        end
+
         context "when the deas are in multiple zones" do
           context "when a zone does not have sufficient memory" do
             it "finds another zone for staging" do
@@ -117,6 +135,13 @@ module VCAP::CloudController
 
             Timecop.travel(1)
             expect(subject.find_stager(stack_name_and_1024m_memory)).to be_nil
+          end
+        end
+
+        describe "Invalid zone" do
+          it "should not find best stager" do
+            subject.process_advertise_message(dea9_in_user_defined_dummy_zone_with_1024m_memory_1024m_disk)
+            expect(subject.find_stager(stack_name_and_512m_memory)).to be_nil
           end
         end
       end
