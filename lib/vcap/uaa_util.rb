@@ -2,10 +2,14 @@ require "uaa/info"
 
 module VCAP
   class UaaTokenDecoder
+    class BadToken < StandardError;
+    end
+
     attr_reader :config
 
     def initialize(config)
       @config = config
+      @logger = Steno.logger('cc.uaa_token_decoder')
     end
 
     def decode_token(auth_token)
@@ -16,6 +20,12 @@ module VCAP
       else
         decode_token_with_asymmetric_key(auth_token)
       end
+    rescue CF::UAA::TokenExpired => e
+      @logger.warn("Token expired")
+      raise BadToken.new(e.message)
+    rescue CF::UAA::DecodeError, CF::UAA::AuthError => e
+      @logger.warn("Invalid bearer token: #{e.inspect} #{e.backtrace}")
+      raise BadToken.new(e.message)
     end
 
     private

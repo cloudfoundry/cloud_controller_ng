@@ -11,9 +11,11 @@ module VCAP
     end
     
     let(:uaa_info) { double(CF::UAA::Info) }
+    let(:logger) { double(Steno::Logger) }
 
     before do
       allow(CF::UAA::Info).to receive(:new).and_return(uaa_info)
+      allow(Steno).to receive(:logger).with('cc.uaa_token_decoder').and_return(logger)
     end
 
     describe "#decode_token" do
@@ -37,10 +39,12 @@ module VCAP
         end
 
         context "when token is invalid" do
-          it "raises UAAError exception" do
+          it "raises BadToken exception" do
+            expect(logger).to receive(:warn).with(/invalid bearer token/i)
+
             expect {
               subject.decode_token("bearer token")
-            }.to raise_error(CF::UAA::UAAError)
+            }.to raise_error(VCAP::UaaTokenDecoder::BadToken)
           end
         end
       end
@@ -87,9 +91,10 @@ module VCAP
                 .stub(:validation_key)
                 .and_return("value" => old_rsa_key.public_key.to_pem)
 
+              expect(logger).to receive(:warn).with(/invalid bearer token/i)
               expect {
                 subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")
-              }.to raise_error(CF::UAA::InvalidSignature)
+              }.to raise_error(VCAP::UaaTokenDecoder::BadToken)
             end
           end
         end
@@ -99,10 +104,11 @@ module VCAP
             {"aud" => "invalid-audience", "payload" => 123, "exp" => Time.now.to_i + 10_000}
           end
 
-          it "raises an InvalidAudience error" do
+          it "raises an BadToken error" do
+            expect(logger).to receive(:warn).with(/invalid bearer token/i)
             expect {
               subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")
-            }.to raise_error(CF::UAA::InvalidAudience)
+            }.to raise_error(VCAP::UaaTokenDecoder::BadToken)
           end
         end
 
@@ -111,18 +117,20 @@ module VCAP
             {"aud" => "resource-id", "payload" => 123, "exp" => Time.now.to_i}
           end
 
-          it "raises an error" do
+          it "raises a BadToken error" do
+            expect(logger).to receive(:warn).with(/token expired/i)
             expect {
               subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")
-            }.to raise_error(CF::UAA::TokenExpired)
+            }.to raise_error(VCAP::UaaTokenDecoder::BadToken)
           end
         end
 
         context "when token is invalid" do
-          it "raises error" do
+          it "raises BadToken error" do
+            expect(logger).to receive(:warn).with(/invalid bearer token/i)
             expect {
               subject.decode_token("bearer invalid-token")
-            }.to raise_error(CF::UAA::InvalidTokenFormat)
+            }.to raise_error(VCAP::UaaTokenDecoder::BadToken)
           end
         end
 

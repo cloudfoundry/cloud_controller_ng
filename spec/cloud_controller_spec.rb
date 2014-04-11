@@ -100,40 +100,6 @@ describe VCAP::CloudController::Controller do
     end
 
     def self.it_recognizes_admin_users
-      context "when email is present" do
-        before { token_info["email"] = email }
-
-        context "when email matches config's bootstrap_admin email" do
-          before { config[:bootstrap_admin_email] = email }
-
-          context "when there are 0 users in the ccdb" do
-            it_creates_and_sets_admin_user
-            it_sets_token_info
-          end
-
-          context "when there are >0 users" do
-            before { VCAP::CloudController::User.make }
-            it_creates_and_sets_non_admin_user
-            it_sets_token_info
-          end
-        end
-
-        context "when email doesn't match config bootstrap_admin email" do
-          before { config[:bootstrap_admin_email] = "some-other-bootstrap-email" }
-
-          context "when there are 0 users in the ccdb" do
-            it_creates_and_sets_non_admin_user
-            it_sets_token_info
-          end
-
-          context "when there are >0 users" do
-            before { VCAP::CloudController::User.make }
-            it_creates_and_sets_non_admin_user
-            it_sets_token_info
-          end
-        end
-      end
-
       context "when scope includes cc admin scope" do
         before do
           VCAP::CloudController::User.make
@@ -163,32 +129,6 @@ describe VCAP::CloudController::Controller do
       end
 
       it_sets_token_info
-    end
-
-    context "when the bearer token is invalid" do
-      before do
-        token_decoder.stub(:decode_token).and_raise(exception_class)
-        Steno.stub(:logger).and_return(mock_logger)
-      end
-      let(:mock_logger) { double(:mock_logger) }
-
-      %w[SignatureNotSupported SignatureNotAccepted InvalidSignature InvalidTokenFormat InvalidAudience].each do |exception|
-        context "when the auth token raises #{exception}" do
-          let(:exception_class) { "CF::UAA::#{exception}".constantize }
-          it "should log to warn" do
-            mock_logger.should_receive(:warn).with(/^Invalid bearer token: .+/)
-            make_request
-          end
-        end
-      end
-
-      context "when the auth token raises TokenExpired" do
-        let(:exception_class) { CF::UAA::TokenExpired }
-        it "should log to info" do
-          mock_logger.should_receive(:info).with(/^Token expired$/)
-          make_request
-        end
-      end
     end
 
     def user_count
