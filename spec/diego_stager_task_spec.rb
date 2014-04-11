@@ -260,14 +260,6 @@ module VCAP::CloudController
           ).to include(["MEMORY_LIMIT", "259m"])
         end
 
-        it "contains app build artifact cache download uri" do
-          blobstore_url_generator.should_receive(:buildpack_cache_download_url).with(app).and_return("http://buildpack-cache-download.uri")
-          blobstore_url_generator.should_receive(:buildpack_cache_upload_url).with(app).and_return("http://buildpack-cache-upload.uri")
-          staging_request = diego_stager_task.staging_request
-          expect(staging_request[:build_artifacts_cache_download_uri]).to eq("http://buildpack-cache-download.uri")
-          expect(staging_request[:build_artifacts_cache_upload_uri]).to eq("http://buildpack-cache-upload.uri")
-        end
-
         it "contains app bits download uri" do
           blobstore_url_generator.should_receive(:app_package_download_url).with(app).and_return("http:/app-bits-download.uri")
           expect(diego_stager_task.staging_request[:app_bits_download_uri]).to eq("http:/app-bits-download.uri")
