@@ -77,8 +77,6 @@ module VCAP::CloudController
        :stack => app.stack.name,
        # All url generation should go to blobstore_url_generator
        :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),
-       :build_artifacts_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(@app),
-       :build_artifacts_cache_upload_uri => @blobstore_url_generator.buildpack_cache_upload_url(@app),
        :buildpacks => buildpacks
       }
     end
