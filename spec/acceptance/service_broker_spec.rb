@@ -259,6 +259,18 @@ describe 'Service Broker' do
 
         setup_uaa_stubs_to_add_new_client
         stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
+        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-3}).to_return(
+          body:    { client_id: 'client-3' }.to_json,
+          status:  200,
+          headers: { 'content-type' => 'application/json' })
+        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-5}).to_return(
+          body:    { client_id: 'client-5' }.to_json,
+          status:  200,
+          headers: { 'content-type' => 'application/json' })
+        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-6}).to_return(
+          body:    { client_id: 'client-6' }.to_json,
+          status:  200,
+          headers: { 'content-type' => 'application/json' })
 
         # delete client
         service_1.delete(:dashboard_client)
@@ -335,7 +347,7 @@ describe 'Service Broker' do
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
-          { # client redirect_uri updated
+          { # no change
             'client_id'              => service_6[:dashboard_client][:id],
             'client_secret'          => service_6[:dashboard_client][:secret],
             'redirect_uri'           => service_6[:dashboard_client][:redirect_uri],

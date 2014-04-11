@@ -36,8 +36,7 @@ module VCAP::Services::ServiceBrokers
       broker_claimed_clients = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).all
       existing_clients       = (broker_claimed_clients + available_clients).uniq
 
-      changeset = differ.create_changeset(requested_clients, existing_clients)
-
+      changeset = differ.create_changeset(requested_clients, existing_clients, client_ids_already_in_uaa)
       claim_clients_and_update_uaa(changeset)
 
       true

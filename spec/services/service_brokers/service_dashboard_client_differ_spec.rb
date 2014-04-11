@@ -13,11 +13,13 @@ module VCAP::Services::ServiceBrokers
       end
       let(:differ) { ServiceDashboardClientDiffer.new(service_broker) }
 
-      subject(:changeset) { differ.create_changeset(requested_clients, existing_clients) }
+      subject(:changeset) { differ.create_changeset(requested_clients, existing_cc_clients, existing_uaa_clients) }
 
       context 'when there is a non-existing client requested' do
         let(:requested_clients) { [dashboard_client] }
-        let(:existing_clients) { [] }
+        let(:existing_cc_clients) { [] }
+        let(:existing_uaa_clients) { [] }
+
         it 'returns a create command' do
           expect(changeset).to have(1).items
           expect(changeset.first).to be_a VCAP::Services::UAA::CreateClientCommand
@@ -26,9 +28,9 @@ module VCAP::Services::ServiceBrokers
         end
       end
 
-      context 'when a requested client exists' do
+      context 'when a requested client exists in cc' do
         let(:requested_clients) { [dashboard_client] }
-        let(:existing_clients) do
+        let(:existing_cc_clients) do
           [
             double(:client,
               service_id_on_broker: service_broker.id,
@@ -37,17 +39,32 @@ module VCAP::Services::ServiceBrokers
           ]
         end
 
-        it 'returns update commands for the existing clients' do
-          expect(changeset).to have(1).items
-          expect(changeset.first).to be_a VCAP::Services::UAA::UpdateClientCommand
-          expect(changeset.first.client_attrs).to eq(dashboard_client)
-          expect(changeset.first.service_broker).to eq(service_broker)
+        context 'and it also exists in uaa' do
+          let(:existing_uaa_clients) { [dashboard_client['id']] }
+
+          it 'returns update commands for the existing clients' do
+            expect(changeset).to have(1).items
+            expect(changeset.first).to be_a VCAP::Services::UAA::UpdateClientCommand
+            expect(changeset.first.client_attrs).to eq(dashboard_client)
+            expect(changeset.first.service_broker).to eq(service_broker)
+          end
+        end
+
+        context 'and it does not exist in uaa' do
+          let(:existing_uaa_clients) { [] }
+
+          it 'returns a create command' do
+            expect(changeset).to have(1).items
+            expect(changeset.first).to be_a VCAP::Services::UAA::CreateClientCommand
+            expect(changeset.first.client_attrs).to eq(dashboard_client)
+            expect(changeset.first.service_broker).to eq(service_broker)
+          end
         end
       end
 
       context 'when a claimed client is removed from the catalog' do
         let(:requested_clients) { [] }
-        let(:existing_clients) do
+        let(:existing_cc_clients) do
           [
             double(:client,
               service_id_on_broker: service_broker.id,
@@ -55,6 +72,7 @@ module VCAP::Services::ServiceBrokers
             )
           ]
         end
+        let(:existing_uaa_clients) { [dashboard_client['id']] }
 
         it 'returns a delete command for the existing client' do
           expect(changeset).to have(1).items
@@ -92,7 +110,7 @@ module VCAP::Services::ServiceBrokers
           ]
         end
 
-        let(:existing_clients) do
+        let(:existing_cc_clients) do
           [
             double(:client,
               service_id_on_broker: service_broker.id,
@@ -110,6 +128,15 @@ module VCAP::Services::ServiceBrokers
               service_id_on_broker: service_broker.id,
               uaa_id: 'will-be-deleted-2'
             )
+          ]
+        end
+
+        let(:existing_uaa_clients) do
+          [
+            existing_client['id'],
+           'will-be-deleted',
+           existing_client_2['id'],
+           'will-be-deleted-2'
           ]
         end
 
