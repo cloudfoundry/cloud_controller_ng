@@ -7,9 +7,17 @@ module VCAP
 
     attr_reader :config
 
-    def initialize(config)
+    def initialize(config, grace_period_in_seconds = 0)
       @config = config
       @logger = Steno.logger('cc.uaa_token_decoder')
+
+      raise ArgumentError, "grace period should be an integer" unless grace_period_in_seconds.is_a? Integer
+
+      @grace_period_in_seconds = grace_period_in_seconds
+      if grace_period_in_seconds < 0
+        @grace_period_in_seconds = 0
+        @logger.warn("negative grace period interval '#{grace_period_in_seconds}' is invalid, changed to 0")
+      end
     end
 
     def decode_token(auth_token)
@@ -51,7 +59,12 @@ module VCAP
 
     def decode_token_with_key(auth_token, options)
       options = {:audience_ids => config[:resource_id]}.merge(options)
-      CF::UAA::TokenCoder.new(options).decode(auth_token)
+      token = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.now.to_i - @grace_period_in_seconds)
+      expiration_time = token['exp'] || token[:exp]
+      if expiration_time && expiration_time < Time.now.to_i
+        @logger.warn("token currently expired but accepted within grace period of #{@grace_period_in_seconds} seconds")
+      end
+      token
     end
 
     def symmetric_key

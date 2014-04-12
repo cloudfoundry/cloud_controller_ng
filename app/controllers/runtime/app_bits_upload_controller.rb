@@ -5,6 +5,14 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
+    def check_authentication(op)
+      auth = env["HTTP_AUTHORIZATION"]
+      grace_period = config.fetch(:app_bits_upload_grace_period_in_seconds, 0)
+      relaxed_token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa], grace_period)
+      VCAP::CloudController::Security::SecurityContextConfigurer.new(relaxed_token_decoder).configure(auth)
+      super
+    end
+
     put "#{path_guid}/bits", :upload
     def upload(guid)
       app = find_guid_and_validate_access(:update, guid)
