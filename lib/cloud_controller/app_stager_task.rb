@@ -45,7 +45,7 @@ module VCAP::CloudController
     end
 
     def stage(&completion_callback)
-      @stager_id = @stager_pool.find_stager(@app.stack.name, [1024, @app.memory].max)
+      @stager_id = @stager_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
       raise Errors::ApiError.new_from_details("StagingError", "no available stagers") unless @stager_id
 
       subject = "staging.#{@stager_id}.start"
@@ -226,6 +226,10 @@ module VCAP::CloudController
 
     def staging_timeout
       @config[:staging][:timeout_in_seconds]
+    end
+
+    def staging_task_disk_mb
+      [ @config[:staging][:minimum_staging_disk_mb] || 2048, @app.disk_quota ].max
     end
 
     def staging_task_memory_mb
