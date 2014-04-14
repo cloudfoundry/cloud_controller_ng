@@ -467,7 +467,6 @@ module VCAP::CloudController
 
     describe ".staging_request" do
       let(:app) { AppFactory.make :droplet_hash => nil, :package_state => "PENDING" }
-      let(:dea_start_message) { { :dea_client_message => "start app message" } }
 
       before do
         3.times do
@@ -475,8 +474,6 @@ module VCAP::CloudController
           binding = ServiceBinding.make(:app => app, :service_instance => instance)
           app.add_service_binding(binding)
         end
-
-        DeaClient.stub(:start_app_message).and_return(dea_start_message)
       end
 
       it "includes app guid, task id and download/upload uris" do
@@ -533,7 +530,7 @@ module VCAP::CloudController
 
       it "includes start app message" do
         request = staging_task.staging_request
-        request[:start_message].should include dea_start_message
+        request[:start_message].should_not be_nil
       end
 
       it "includes app index 0" do

@@ -26,14 +26,15 @@ module VCAP::CloudController
 
     #privatize?
     def file
-      if app.staged? && blobstore_key
-        blobstore.file(blobstore_key)
+      if app.staged?
+        blobstore_file
       end
     end
 
     def download_to(destination_path)
-      if blobstore_key
-        blobstore.download_from_blobstore(blobstore_key, destination_path)
+      key = blobstore_key
+      if key
+        blobstore.download_from_blobstore(key, destination_path)
       end
     end
 
@@ -60,6 +61,12 @@ module VCAP::CloudController
       elsif blobstore.exists?(old_blobstore_key)
         return old_blobstore_key
       end
+    end
+
+    def blobstore_file
+      f = blobstore.file(new_blobstore_key)
+      return f if f
+      return blobstore.file(old_blobstore_key)
     end
   end
 end

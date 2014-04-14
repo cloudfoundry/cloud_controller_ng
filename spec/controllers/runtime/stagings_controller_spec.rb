@@ -292,6 +292,14 @@ module VCAP::CloudController
             last_response.status.should == 200
             last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
           end
+
+          context "with a valid app but no droplet" do
+            it "raises an error" do
+              get "/staging/droplets/#{app_obj.guid}/download"
+              last_response.status.should == 400
+              decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+            end
+          end
         end
 
         context "without nginx" do
@@ -308,13 +316,14 @@ module VCAP::CloudController
               last_response.body.should == "droplet contents"
             end
           end
-        end
-      end
 
-      context "with a valid app but no droplet" do
-        it "should return an error" do
-          get "/staging/droplets/#{app_obj.guid}/download"
-          last_response.status.should == 400
+          context "with a valid app but no droplet" do
+            it "should return an error" do
+              get "/staging/droplets/#{app_obj.guid}/download"
+              last_response.status.should == 400
+              decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+            end
+          end
         end
       end
 

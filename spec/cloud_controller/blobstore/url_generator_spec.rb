@@ -39,7 +39,7 @@ module CloudController
         describe "app package" do
           context "when the packages are stored on local blobstore" do
             context "and the package exists" do
-              before { package_blobstore.stub(file: true) }
+              before { package_blobstore.stub(download_uri: "/a/b/c") }
 
               it "gives a local URI to the blobstore host/port" do
                 uri = URI.parse(url_generator.app_package_download_url(app))
@@ -52,7 +52,7 @@ module CloudController
             end
 
             context "and the package does not exist" do
-              before { package_blobstore.stub(file: false) }
+              before { package_blobstore.stub(download_uri: nil) }
 
               it "returns nil" do
                 expect(url_generator.app_package_download_url(app)).to be_nil
@@ -86,7 +86,7 @@ module CloudController
         describe "buildpack cache" do
           context "when the caches are stored on local blobstore" do
             context "and the package exists" do
-              before { buildpack_cache_blobstore.stub(file: true) }
+              before { buildpack_cache_blobstore.stub(download_uri: "/a/b/c") }
 
               it "gives a local URI to the blobstore host/port" do
                 uri = URI.parse(url_generator.buildpack_cache_download_url(app))
@@ -99,7 +99,7 @@ module CloudController
             end
 
             context "and the package does not exist" do
-              before { buildpack_cache_blobstore.stub(file: false) }
+              before { buildpack_cache_blobstore.stub(download_uri: nil) }
 
               it "returns nil" do
                 expect(url_generator.buildpack_cache_download_url(app)).to be_nil
@@ -125,7 +125,7 @@ module CloudController
 
           context "when the admin buildpacks are stored on local blobstore" do
             context "and the package exists" do
-              before { admin_buildpack_blobstore.stub(file: true) }
+              before { admin_buildpack_blobstore.stub(download_uri: "/a/b/c") }
 
               it "gives a local URI to the blobstore host/port" do
                 uri = URI.parse(url_generator.admin_buildpack_download_url(buildpack))
@@ -138,7 +138,7 @@ module CloudController
             end
 
             context "and the package does not exist" do
-              before { admin_buildpack_blobstore.stub(file: false) }
+              before { admin_buildpack_blobstore.stub(download_uri: nil) }
 
               it "returns nil" do
                 expect(url_generator.admin_buildpack_download_url(buildpack)).to be_nil
@@ -159,10 +159,18 @@ module CloudController
 
         context "droplets" do
           let(:app) { VCAP::CloudController::AppFactory.make }
+          let(:droplet_file) { double("file") }
+
+          before do
+            CloudController::DependencyLocator.instance.stub(:droplet_blobstore).
+              and_return(droplet_blobstore)
+          end
 
           context "when the droplets are stored on local blobstore" do
             context "and the package exists" do
-              before { droplet_blobstore.stub(exists?: true) }
+              let(:droplet_blobstore) do
+                double(local?: true, file: droplet_file, exists?: true, download_uri_for_file: "/a/b/c")
+              end
 
               it "gives a local URI to the blobstore host/port" do
                 uri = URI.parse(url_generator.droplet_download_url(app))
@@ -173,18 +181,21 @@ module CloudController
                 expect(uri.path).to eql "/staging/droplets/#{app.guid}/download"
               end
             end
+
+            context "and the droplet does not exist" do
+              let(:droplet_blobstore) do
+                double(local?: true, file: nil, exists?: false)
+              end
+
+              it "returns nil" do
+                expect(url_generator.droplet_download_url(app)).to be_nil
+              end
+            end
           end
 
           context "when the buildpack are stored remotely" do
-            let(:droplet_file) { double("file") }
-
             let(:droplet_blobstore) do
               double(local?: false, file: droplet_file, exists?: true)
-            end
-
-            before do
-              CloudController::DependencyLocator.instance.stub(:droplet_blobstore).
-                and_return(droplet_blobstore)
             end
 
             it "gives out signed url to remote blobstore for the droplet" do

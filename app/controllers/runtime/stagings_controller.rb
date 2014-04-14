@@ -125,9 +125,11 @@ module VCAP::CloudController
       logger.debug "guid: #{app.guid} #{name} #{blob_path} #{url}"
 
       if config[:nginx][:use_nginx]
+        log_and_raise_missing_blob(app.guid, name) unless url
         logger.debug "nginx redirect #{url}"
         [200, {"X-Accel-Redirect" => url}, ""]
       else
+        log_and_raise_missing_blob(app.guid, name) unless blob_path
         logger.debug "send_file #{blob_path}"
         send_file blob_path
       end
