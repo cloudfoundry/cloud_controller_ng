@@ -96,7 +96,8 @@ module VCAP::CloudController
         {
             "id" => "staging-id",
             "stacks" => ["stack-name"],
-            "available_memory" => 1024
+            "available_memory" => 1024,
+            "available_disk" => 512
         }
       end
 
@@ -104,7 +105,8 @@ module VCAP::CloudController
         {
             "id" => "staging-id",
             "stacks" => ["stack-name"],
-            "available_memory" => 1024
+            "available_memory" => 1024,
+            "available_disk" => 512
         }
       end
 
@@ -113,7 +115,7 @@ module VCAP::CloudController
         expect {
           subject.reserve_app_memory("staging-id", 1)
         }.to change {
-          subject.find_stager("stack-name", 1024, 0)
+          subject.find_stager("stack-name", 1024, 512)
         }.from("staging-id").to(nil)
       end
 
@@ -123,7 +125,7 @@ module VCAP::CloudController
         expect {
           subject.process_advertise_message(new_stager_advertise_msg)
         }.to change {
-          subject.find_stager("stack-name", 1024, 0)
+          subject.find_stager("stack-name", 1024, 512)
         }.from(nil).to("staging-id")
       end
     end
