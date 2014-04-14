@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-module VCAP::Services::ServiceBrokers
-  describe ServiceDashboardClientDiffer do
+module VCAP::Services::SSO
+  describe DashboardClientDiffer do
 
-    let(:differ) { ServiceDashboardClientDiffer.new(service_broker) }
+    let(:differ) { DashboardClientDiffer.new(service_broker) }
     let(:service_broker) { double(:service_broker, id: 'service-broker-1') }
     let(:dashboard_client) do
       {
@@ -22,7 +22,7 @@ module VCAP::Services::ServiceBrokers
 
         it 'returns a create command' do
           expect(changeset).to have(1).items
-          expect(changeset.first).to be_a VCAP::Services::UAA::CreateClientCommand
+          expect(changeset.first).to be_a Commands::CreateClientCommand
           expect(changeset.first.client_attrs).to eq(dashboard_client)
         end
       end
@@ -33,7 +33,7 @@ module VCAP::Services::ServiceBrokers
 
         it 'returns update commands for the existing clients' do
           expect(changeset).to have(1).items
-          expect(changeset.first).to be_a VCAP::Services::UAA::UpdateClientCommand
+          expect(changeset.first).to be_a Commands::UpdateClientCommand
           expect(changeset.first.client_attrs).to eq(dashboard_client)
          end
       end
@@ -44,7 +44,7 @@ module VCAP::Services::ServiceBrokers
 
         it 'returns a delete command for the existing client' do
           expect(changeset).to have(1).items
-          expect(changeset.first).to be_a VCAP::Services::UAA::DeleteClientCommand
+          expect(changeset.first).to be_a Commands::DeleteClientCommand
           expect(changeset.first.client_id).to eq(dashboard_client['id'])
         end
       end
@@ -89,12 +89,12 @@ module VCAP::Services::ServiceBrokers
 
         it 'succeeds to create all the necessary commands' do
           expect(changeset).to have(6).items
-          expect(changeset[0]).to be_a VCAP::Services::UAA::CreateClientCommand
-          expect(changeset[1]).to be_a VCAP::Services::UAA::UpdateClientCommand
-          expect(changeset[2]).to be_a VCAP::Services::UAA::CreateClientCommand
-          expect(changeset[3]).to be_a VCAP::Services::UAA::UpdateClientCommand
-          expect(changeset[4]).to be_a VCAP::Services::UAA::DeleteClientCommand
-          expect(changeset[5]).to be_a VCAP::Services::UAA::DeleteClientCommand
+          expect(changeset[0]).to be_a Commands::CreateClientCommand
+          expect(changeset[1]).to be_a Commands::UpdateClientCommand
+          expect(changeset[2]).to be_a Commands::CreateClientCommand
+          expect(changeset[3]).to be_a Commands::UpdateClientCommand
+          expect(changeset[4]).to be_a Commands::DeleteClientCommand
+          expect(changeset[5]).to be_a Commands::DeleteClientCommand
         end
       end
     end
@@ -108,7 +108,7 @@ module VCAP::Services::ServiceBrokers
 
         it 'returns a claim command' do
           expect(changeset).to have(1).items
-          expect(changeset.first).to be_a VCAP::Services::UAA::ClaimClientCommand
+          expect(changeset.first).to be_a Commands::ClaimClientCommand
           expect(changeset.first.client_id).to eq(dashboard_client['id'])
           expect(changeset.first.service_broker).to eq(service_broker)
         end
@@ -127,7 +127,7 @@ module VCAP::Services::ServiceBrokers
 
         it 'returns update commands for the existing clients' do
           expect(changeset).to have(1).items
-          expect(changeset.first).to be_a VCAP::Services::UAA::ClaimClientCommand
+          expect(changeset.first).to be_a Commands::ClaimClientCommand
           expect(changeset.first.client_id).to eq(dashboard_client['id'])
           expect(changeset.first.service_broker).to eq(service_broker)
         end
@@ -146,7 +146,7 @@ module VCAP::Services::ServiceBrokers
 
         it 'returns an unclaim command for the existing client' do
           expect(changeset).to have(1).items
-          expect(changeset.first).to be_a VCAP::Services::UAA::UnclaimClientCommand
+          expect(changeset.first).to be_a Commands::UnclaimClientCommand
           expect(changeset.first.client_id).to eq(dashboard_client['id'])
         end
       end
@@ -203,12 +203,12 @@ module VCAP::Services::ServiceBrokers
 
         it 'succeeds to create all the necessary commands' do
           expect(changeset).to have(6).items
-          expect(changeset[0]).to be_a VCAP::Services::UAA::ClaimClientCommand
-          expect(changeset[1]).to be_a VCAP::Services::UAA::ClaimClientCommand
-          expect(changeset[2]).to be_a VCAP::Services::UAA::ClaimClientCommand
-          expect(changeset[3]).to be_a VCAP::Services::UAA::ClaimClientCommand
-          expect(changeset[4]).to be_a VCAP::Services::UAA::UnclaimClientCommand
-          expect(changeset[5]).to be_a VCAP::Services::UAA::UnclaimClientCommand
+          expect(changeset[0]).to be_a Commands::ClaimClientCommand
+          expect(changeset[1]).to be_a Commands::ClaimClientCommand
+          expect(changeset[2]).to be_a Commands::ClaimClientCommand
+          expect(changeset[3]).to be_a Commands::ClaimClientCommand
+          expect(changeset[4]).to be_a Commands::UnclaimClientCommand
+          expect(changeset[5]).to be_a Commands::UnclaimClientCommand
         end
       end
     end

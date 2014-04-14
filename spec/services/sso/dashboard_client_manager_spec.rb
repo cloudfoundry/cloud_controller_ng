@@ -1,16 +1,16 @@
 require 'spec_helper'
 
-module VCAP::Services::ServiceBrokers
-  describe ServiceDashboardClientManager do
+module VCAP::Services::SSO
+  describe DashboardClientManager do
     let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-    let(:manager) { ServiceDashboardClientManager.new(service_broker) }
+    let(:manager) { DashboardClientManager.new(service_broker) }
     let(:client_manager) { double('client_manager') }
 
     describe '#initialize' do
       subject{ manager }
 
       it 'sets the service_broker' do
-        manager = ServiceDashboardClientManager.new(service_broker)
+        manager = DashboardClientManager.new(service_broker)
         expect(manager.service_broker).to eql(service_broker)
       end
 
@@ -34,21 +34,21 @@ module VCAP::Services::ServiceBrokers
         }
       end
       let(:catalog_service) {
-        V2::CatalogService.new(service_broker,
+        VCAP::Services::ServiceBrokers::V2::CatalogService.new(service_broker,
                                'id'               => 'f8ccf75f-4552-4143-97ea-24ccca5ad068',
                                'dashboard_client' => dashboard_client_attrs_1,
                                'name'             => 'service-1',
         )
       }
       let(:catalog_service_2) {
-        V2::CatalogService.new(service_broker,
+        VCAP::Services::ServiceBrokers::V2::CatalogService.new(service_broker,
                                'id'               => '0489055c-97b8-4754-8221-c69375ddb33b',
                                'dashboard_client' => dashboard_client_attrs_2,
                                'name'             => 'service-2',
         )
       }
       let(:catalog_service_without_dashboard_client) {
-        V2::CatalogService.new(service_broker,
+        VCAP::Services::ServiceBrokers::V2::CatalogService.new(service_broker,
                                'id'               => '4b6088af-cdc4-4ee2-8292-9fa93af32fc8',
                                'name'             => 'service-3',
         )
@@ -57,7 +57,7 @@ module VCAP::Services::ServiceBrokers
       let(:catalog) { double(:catalog, services: catalog_services) }
 
       before do
-        allow(VCAP::Services::UAA::UaaClientManager).to receive(:new).and_return(client_manager)
+        allow(VCAP::Services::SSO::UAA::UaaClientManager).to receive(:new).and_return(client_manager)
         allow(client_manager).to receive(:get_clients).and_return([])
         allow(client_manager).to receive(:modify_transaction)
       end
@@ -76,7 +76,7 @@ module VCAP::Services::ServiceBrokers
         it 'creates clients only for all services that specify dashboard_client' do
           expect(client_manager).to receive(:modify_transaction) do |changeset|
             expect(changeset.length).to eq 2
-            expect(changeset.all? {|change| change.is_a? VCAP::Services::UAA::CreateClientCommand}).to be_true
+            expect(changeset.all? {|change| change.is_a? Commands::CreateClientCommand}).to be_true
             expect(changeset[0].client_attrs).to eq dashboard_client_attrs_1
             expect(changeset[1].client_attrs).to eq dashboard_client_attrs_2
           end
@@ -113,7 +113,7 @@ module VCAP::Services::ServiceBrokers
 
           it 'creates the clients that do not currently exist' do
             expect(client_manager).to receive(:modify_transaction) do |changeset|
-              create_commands = changeset.select { |command| command.is_a? VCAP::Services::UAA::CreateClientCommand}
+              create_commands = changeset.select { |command| command.is_a? Commands::CreateClientCommand}
               expect(create_commands.length).to eq 1
               expect(create_commands[0].client_attrs).to eq dashboard_client_attrs_2
             end
@@ -123,7 +123,7 @@ module VCAP::Services::ServiceBrokers
 
           it 'updates the client that is already in uaa' do
             expect(client_manager).to receive(:modify_transaction) do |changeset|
-              update_commands = changeset.select { |command| command.is_a? VCAP::Services::UAA::UpdateClientCommand}
+              update_commands = changeset.select { |command| command.is_a? Commands::UpdateClientCommand}
               expect(update_commands.length).to eq 1
               expect(update_commands[0].client_attrs).to eq dashboard_client_attrs_1
             end
@@ -184,7 +184,7 @@ module VCAP::Services::ServiceBrokers
 
         it 'deletes the client from the uaa' do
           expect(client_manager).to receive(:modify_transaction) do |changeset|
-            delete_commands = changeset.select { |command| command.is_a? VCAP::Services::UAA::DeleteClientCommand}
+            delete_commands = changeset.select { |command| command.is_a? Commands::DeleteClientCommand}
             expect(delete_commands.length).to eq 1
             expect(delete_commands[0].client_id).to eq(unused_id)
           end
@@ -207,7 +207,7 @@ module VCAP::Services::ServiceBrokers
 
         before do
           allow(client_manager).to receive(:get_clients).and_return([{'client_id' => unused_id}])
-          allow(client_manager).to receive(:modify_transaction).and_raise(VCAP::Services::UAA::UaaError.new('error message'))
+          allow(client_manager).to receive(:modify_transaction).and_raise(VCAP::Services::SSO::UAA::UaaError.new('error message'))
 
           VCAP::CloudController::ServiceDashboardClient.new(
             uaa_id: unused_id,
@@ -303,7 +303,7 @@ module VCAP::Services::ServiceBrokers
       let(:client_to_delete_2) { 'client-to-delete-2' }
 
       before do
-        allow(VCAP::Services::UAA::UaaClientManager).to receive(:new).and_return(client_manager)
+        allow(VCAP::Services::SSO::UAA::UaaClientManager).to receive(:new).and_return(client_manager)
         allow(client_manager).to receive(:modify_transaction)
 
         VCAP::CloudController::ServiceDashboardClient.new(
@@ -325,7 +325,7 @@ module VCAP::Services::ServiceBrokers
 
       it 'deletes all clients for the service broker in UAA' do
         expect(client_manager).to receive(:modify_transaction) do |changeset|
-          delete_commands = changeset.select { |command| command.is_a? VCAP::Services::UAA::DeleteClientCommand}
+          delete_commands = changeset.select { |command| command.is_a? Commands::DeleteClientCommand}
           expect(changeset.length).to eq(2)
           expect(delete_commands.length).to eq(2)
           expect(delete_commands[0].client_attrs['id']).to eq(client_to_delete_1)
@@ -345,7 +345,7 @@ module VCAP::Services::ServiceBrokers
 
       context 'when deleting UAA clients fails' do
         before do
-          error = VCAP::Services::UAA::UaaError.new('error message')
+          error = VCAP::Services::SSO::UAA::UaaError.new('error message')
           allow(client_manager).to receive(:modify_transaction).and_raise(error)
         end
 

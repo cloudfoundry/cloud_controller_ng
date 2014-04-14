@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::Services::UAA
+module VCAP::Services::SSO::Commands
   describe CreateClientCommand do
     let(:client_attrs) do
       {

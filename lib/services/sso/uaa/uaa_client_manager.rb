@@ -1,6 +1,6 @@
 require 'uaa'
 
-module VCAP::Services::UAA
+module VCAP::Services::SSO::UAA
 
   class UaaClientManager
 

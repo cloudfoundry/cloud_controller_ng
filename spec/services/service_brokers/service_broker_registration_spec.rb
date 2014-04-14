@@ -21,7 +21,7 @@ module VCAP::Services::ServiceBrokers
           auth_password: 'auth1234',
         )
       end
-      let(:client_manager) { double(:service_dashboard_manager, synchronize_clients_with_catalog: true, warnings: []) }
+      let(:client_manager) { double(:dashboard_manager, synchronize_clients_with_catalog: true, warnings: []) }
       let(:catalog) { double(:catalog, :valid? => true) }
       let(:service_manager) { double(:service_manager, :sync_services_and_plans => true) }
 
@@ -29,7 +29,7 @@ module VCAP::Services::ServiceBrokers
 
       before do
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
-        allow(ServiceDashboardClientManager).to receive(:new).and_return(client_manager)
+        allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(ServiceManager).to receive(:new).and_return(service_manager)
 
@@ -77,7 +77,7 @@ module VCAP::Services::ServiceBrokers
       it 'creates dashboard clients' do
         registration.create
 
-        expect(ServiceDashboardClientManager).to have_received(:new).with(broker)
+        expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(broker)
         expect(client_manager).to have_received(:synchronize_clients_with_catalog).with(catalog)
       end
 
@@ -291,7 +291,7 @@ module VCAP::Services::ServiceBrokers
           auth_password: 'auth1234',
         )
       end
-      let(:client_manager) { double(:service_dashboard_manager, :synchronize_clients_with_catalog => true) }
+      let(:client_manager) { double(:dashboard_manager, :synchronize_clients_with_catalog => true) }
       let(:catalog) { double(:catalog, :valid? => true) }
       let(:service_manager) { double(:service_manager, sync_services_and_plans: true, warnings: []) }
 
@@ -299,7 +299,7 @@ module VCAP::Services::ServiceBrokers
 
       before do
         stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
-        allow(ServiceDashboardClientManager).to receive(:new).and_return(client_manager)
+        allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(ServiceManager).to receive(:new).and_return(service_manager)
 
@@ -340,7 +340,7 @@ module VCAP::Services::ServiceBrokers
       it 'updates dashboard clients' do
         registration.update
 
-        expect(ServiceDashboardClientManager).to have_received(:new).with(broker)
+        expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(broker)
         expect(client_manager).to have_received(:synchronize_clients_with_catalog).with(catalog)
       end
 

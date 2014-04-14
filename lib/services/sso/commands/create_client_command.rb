@@ -1,5 +1,5 @@
-module VCAP::Services::UAA
-  class UpdateClientCommand
+module VCAP::Services::SSO::Commands
+  class CreateClientCommand
     attr_reader :client_attrs
 
     def initialize(client_attrs)
@@ -7,7 +7,7 @@ module VCAP::Services::UAA
     end
 
     def uaa_command
-      { action: 'update,secret' }
+      { action: 'add' }
     end
   end
 end

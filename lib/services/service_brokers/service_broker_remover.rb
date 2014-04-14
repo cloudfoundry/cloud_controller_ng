@@ -4,7 +4,7 @@ module VCAP::Services::ServiceBrokers
 
     def initialize(broker)
       @broker = broker
-      @client_manager = ServiceDashboardClientManager.new(broker)
+      @client_manager = VCAP::Services::SSO::DashboardClientManager.new(broker)
     end
 
     def execute!

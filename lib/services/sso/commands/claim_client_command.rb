@@ -1,4 +1,4 @@
-module VCAP::Services::UAA
+module VCAP::Services::SSO::Commands
   class ClaimClientCommand
     attr_reader :client_id, :service_broker
 

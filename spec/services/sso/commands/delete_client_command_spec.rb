@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::Services::UAA
+module VCAP::Services::SSO::Commands
   describe DeleteClientCommand do
     let(:client_id) { 'client-id-1' }
 
