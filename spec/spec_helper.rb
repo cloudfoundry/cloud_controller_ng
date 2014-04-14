@@ -528,12 +528,6 @@ module VCAP::CloudController::SpecHelper
   end
 end
 
-class CF::UAA::Misc
-  def self.validation_key(*args)
-    raise CF::UAA::TargetError.new('error' => 'unauthorized')
-  end
-end
-
 Dir[File.expand_path("../support/**/*.rb", __FILE__)].each { |file| require file }
 
 RSpec.configure do |rspec_config|
