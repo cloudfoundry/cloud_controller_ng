@@ -109,11 +109,11 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app disk requirement is less than the default (2048) staging disk requirement, and it wasnt overridden' do
+      context 'when the app disk requirement is less than the default (4096) staging disk requirement, and it wasnt overridden' do
         it "should request a stager with enough disk" do
           app.disk_quota = 123
           config_hash[:staging][:minimum_staging_disk_mb] = nil
-          stager_pool.should_receive(:find_stager).with(app.stack.name, anything, 2048).and_return(stager_id)
+          stager_pool.should_receive(:find_stager).with(app.stack.name, anything, 4096).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -432,7 +432,7 @@ module VCAP::CloudController
 
       describe "reserve app memory" do
         before do
-          stager_pool.stub(:find_stager).with(app.stack.name, 1025, 2048).and_return(stager_id)
+          stager_pool.stub(:find_stager).with(app.stack.name, 1025, 4096).and_return(stager_id)
         end
 
         context "when app memory is less when configured minimum_staging_memory_mb" do
