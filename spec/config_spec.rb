@@ -38,6 +38,10 @@ module VCAP::CloudController
         it "sets a default value for skip_cert_verify" do
           expect(config[:skip_cert_verify]).to eq false
         end
+
+        it "sets a default value for app_bits_upload_grace_period_in_seconds" do
+          expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(0)
+        end
       end
 
       context "when config values are provided" do
@@ -65,6 +69,10 @@ module VCAP::CloudController
 
         it "preserves the value of skip_cert_verify from the file" do
           expect(config[:skip_cert_verify]).to eq true
+        end
+
+        it "preserves the value for app_bits_upload_grace_period_in_seconds" do
+          expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(600)
         end
       end
     end
