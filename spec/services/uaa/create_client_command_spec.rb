@@ -10,30 +10,14 @@ module VCAP::Services::UAA
       }
     end
 
-    let(:broker) { double(:broker) }
-
     let(:command) do
-      CreateClientCommand.new(
-        client_attrs: client_attrs,
-        service_broker: broker
-      )
+      CreateClientCommand.new(client_attrs)
     end
 
     describe '#uaa_command' do
       it 'renders the correct hash request to create in a UAA transaction' do
         uaa_command = command.uaa_command
         expect(uaa_command).to eq({action: 'add'})
-      end
-    end
-
-    describe '#db_command' do
-      before do
-        allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker)
-      end
-
-      it 'claims the client in the DB' do
-        command.db_command
-        expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:claim_client_for_broker)
       end
     end
   end

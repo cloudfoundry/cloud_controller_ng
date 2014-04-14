@@ -315,6 +315,12 @@ module VCAP::Services::ServiceBrokers
           uaa_id: client_to_delete_2,
           service_broker: service_broker
         ).save
+
+        allow(client_manager).to receive(:get_clients).and_return(
+          [
+            {'client_id' => client_to_delete_1},
+            {'client_id' => client_to_delete_2}
+          ])
       end
 
       it 'deletes all clients for the service broker in UAA' do

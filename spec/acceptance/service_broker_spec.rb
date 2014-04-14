@@ -259,6 +259,14 @@ describe 'Service Broker' do
 
         setup_uaa_stubs_to_add_new_client
         stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
+        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-1}).to_return(
+          body:    { client_id: 'client-1' }.to_json,
+          status:  200,
+          headers: { 'content-type' => 'application/json' })
+        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-2}).to_return(
+          body:    { client_id: 'client-2' }.to_json,
+          status:  200,
+          headers: { 'content-type' => 'application/json' })
         stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-3}).to_return(
           body:    { client_id: 'client-3' }.to_json,
           status:  200,
@@ -462,6 +470,15 @@ describe 'Service Broker' do
         )
         expect(last_response).to have_status_code(201)
         @service_broker_guid = decoded_response.fetch('metadata').fetch('guid')
+
+        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-1}).to_return(
+          body:    { client_id: 'client-1' }.to_json,
+          status:  200,
+          headers: { 'content-type' => 'application/json' })
+        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-2}).to_return(
+          body:    { client_id: 'client-2' }.to_json,
+          status:  200,
+          headers: { 'content-type' => 'application/json' })
 
         stub_request(:post, %r{http://localhost:8080/uaa/oauth/clients/tx/modify}).
           to_return(

@@ -21,7 +21,9 @@ module VCAP::Services::ServiceBrokers
         return true
       end
 
-      client_ids_already_in_uaa = get_client_ids_already_in_uaa(requested_clients)
+      existing_db_clients = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).all
+
+      client_ids_already_in_uaa = get_client_ids_already_in_uaa(existing_db_clients, requested_clients)
       unclaimable_ids           = get_client_ids_that_cannot_be_claimed(client_ids_already_in_uaa)
 
       if !unclaimable_ids.empty?
@@ -33,11 +35,9 @@ module VCAP::Services::ServiceBrokers
         VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(id)
       end
 
-      broker_claimed_clients = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).all
-      existing_clients       = (broker_claimed_clients + available_clients).uniq
+      existing_clients = (existing_db_clients + available_clients).uniq
 
-      changeset = differ.create_changeset(requested_clients, existing_clients, client_ids_already_in_uaa)
-      claim_clients_and_update_uaa(changeset)
+      claim_clients_and_update_uaa(requested_clients, existing_clients, client_ids_already_in_uaa)
 
       true
     end
@@ -45,11 +45,11 @@ module VCAP::Services::ServiceBrokers
     def remove_clients_for_broker
       return unless cc_configured_to_modify_uaa_clients?
 
-      requested_clients = [] # request no clients
-      existing_clients  = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
-      changeset         = differ.create_changeset(requested_clients, existing_clients)
+      requested_clients    = [] # request no clients
+      existing_db_clients  = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+      existing_uaa_clients = get_client_ids_already_in_uaa(existing_db_clients, requested_clients)
 
-      claim_clients_and_update_uaa(changeset)
+      claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_clients)
     end
 
     def has_warnings?
@@ -60,20 +60,25 @@ module VCAP::Services::ServiceBrokers
 
     attr_reader :client_manager, :differ
 
-    def claim_clients_and_update_uaa(changeset)
+    def claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_clients)
+      db_changeset  = differ.create_db_changeset(requested_clients, existing_db_clients)
+      uaa_changeset = differ.create_uaa_changeset(requested_clients, existing_uaa_clients)
+
       begin
         service_broker.db.transaction(savepoint: true) do
-          changeset.each(&:db_command)
-          client_manager.modify_transaction(changeset)
+          db_changeset.each(&:db_command)
+          client_manager.modify_transaction(uaa_changeset)
         end
       rescue VCAP::Services::UAA::UaaError => e
         raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
       end
     end
 
-    def get_client_ids_already_in_uaa(requested_clients)
-      requested_client_ids   = requested_clients.map { |c| c['id'] }
-      clients_already_in_uaa = client_manager.get_clients(requested_client_ids).map { |c| c['client_id'] }
+    def get_client_ids_already_in_uaa(existing_db_clients, requested_clients)
+      requested_client_ids    = requested_clients.map { |c| c['id'] }
+      existing_db_client_ids  = existing_db_clients.map(&:uaa_id)
+
+      clients_already_in_uaa = client_manager.get_clients(requested_client_ids + existing_db_client_ids).map { |c| c['client_id'] }
       clients_already_in_uaa
     end
 
