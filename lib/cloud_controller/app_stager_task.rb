@@ -229,7 +229,7 @@ module VCAP::CloudController
     end
 
     def staging_task_disk_mb
-      [ @config[:staging][:minimum_staging_disk_mb] || 2048, @app.disk_quota ].max
+      [ @config[:staging][:minimum_staging_disk_mb] || 4096, @app.disk_quota ].max
     end
 
     def staging_task_memory_mb
