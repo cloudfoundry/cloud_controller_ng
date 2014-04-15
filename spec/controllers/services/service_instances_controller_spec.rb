@@ -539,10 +539,19 @@ module VCAP::CloudController
       context 'when the user is a member of the space this instance exists in' do
         let(:instance)  { ServiceInstance.make(space: space) }
 
-        it 'returns a JSON payload indicating they have permission to manage this instance' do
-          get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
-          expect(last_response.status).to eql(200)
-          expect(JSON.parse(last_response.body)['manage']).to be_true
+        context 'when the user has only the cloud_controller.read scope' do
+          it 'returns a JSON payload indicating they have permission to manage this instance' do
+            get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+            expect(last_response.status).to eql(200)
+            expect(JSON.parse(last_response.body)['manage']).to be_true
+          end
+        end
+
+        context 'when the user does not have cloud_controller.read scope' do
+          it 'returns not authorized' do
+            get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.write']}))
+            expect(last_response.status).to eql(401)
+          end
         end
       end
 

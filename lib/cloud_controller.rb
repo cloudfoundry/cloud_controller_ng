@@ -25,6 +25,7 @@ require "active_support/json/encoding"
 module VCAP::CloudController; end
 
 require "vcap/errors/invalid_relation"
+require "vcap/errors/missing_required_scope_error"
 require "sequel_plugins/sequel_plugins"
 require "vcap/sequel_add_association_dependencies_monkeypatch"
 require "access/access"

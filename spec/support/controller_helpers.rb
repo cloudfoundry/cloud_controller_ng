@@ -38,11 +38,16 @@ module ControllerHelpers
                                           :skey => config[:uaa][:symmetric_secret],
                                           :pkey => nil)
 
+    scopes = opts[:scopes]
+    if scopes.nil?
+      scopes = opts[:admin_scope] ? %w[cloud_controller.admin] : %w[cloud_controller.read cloud_controller.write]
+    end
+
     if user || opts[:admin_scope]
       user_token = token_coder.encode(
         :user_id => user ? user.guid : (rand * 1_000_000_000).ceil,
         :email => opts[:email],
-        :scope => opts[:admin_scope] ? %w[cloud_controller.admin] : %w[cloud_controller.read cloud_controller.write]
+        :scope => scopes
       )
 
       headers["HTTP_AUTHORIZATION"] = "bearer #{user_token}"
