@@ -53,6 +53,7 @@ module ControllerHelpers
       context "for an admin" do
         it "should return 200" do
           get opts[:path], {}, headers_for(nil, :admin_scope => true)
+          puts "Bad response! #{last_response.inspect}" unless last_response.status == 200
           last_response.status.should == 200
         end
       end
