@@ -105,12 +105,20 @@ module VCAP::CloudController
     end
 
     def buildpacks
+      buildpack = app.buildpack
+
+      if buildpack.instance_of?(GitBasedBuildpack) && buildpack.to_s =~ /^http/
+        return [{key: "custom", url: buildpack.to_s}]
+      elsif buildpack.instance_of?(Buildpack)
+        return [admin_buildpack_entry(buildpack)]
+      end
+
       Buildpack.list_admin_buildpacks.
-          select(&:enabled).
-          collect { |buildpack| buildpack_entry(buildpack) }
+         select(&:enabled).
+         collect { |buildpack| admin_buildpack_entry(buildpack) }
     end
 
-    def buildpack_entry(buildpack)
+    def admin_buildpack_entry(buildpack)
       {
           key: buildpack.key,
           url: @blobstore_url_generator.admin_buildpack_download_url(buildpack)
