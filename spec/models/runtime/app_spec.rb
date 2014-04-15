@@ -566,7 +566,7 @@ module VCAP::CloudController
 
       context "when detect output is available" do
         it "sets detected_buildpack with the output of the detect script" do
-          app.update_detected_buildpack("abc_123", detect_output)
+          app.update_detected_buildpack(detect_output, nil)
           expect(app.detected_buildpack).to eq(detect_output)
         end
       end
@@ -578,12 +578,12 @@ module VCAP::CloudController
         end
 
         it "sets the buildpack guid of the buildpack used to stage when present" do
-          app.update_detected_buildpack(admin_buildpack.key, detect_output)
+          app.update_detected_buildpack(detect_output, admin_buildpack.key)
           expect(app.detected_buildpack_guid).to eq(admin_buildpack.guid)
         end
 
         it "sets the buildpack name to the admin buildpack used to stage" do
-          app.update_detected_buildpack(admin_buildpack.key, detect_output)
+          app.update_detected_buildpack(detect_output, admin_buildpack.key)
           expect(app.detected_buildpack_name).to eq(admin_buildpack.name)
         end
       end
@@ -595,13 +595,38 @@ module VCAP::CloudController
         end
 
         it "sets the buildpack name to the custom buildpack url when a buildpack key is missing" do
-          app.update_detected_buildpack(nil, detect_output)
+          app.update_detected_buildpack(detect_output, nil)
           expect(app.detected_buildpack_name).to eq(custom_buildpack_url)
         end
 
         it "sets the buildpack guid to nil" do
-          app.update_detected_buildpack(nil, detect_output)
+          app.update_detected_buildpack(detect_output, nil)
           expect(app.detected_buildpack_guid).to be_nil
+        end
+      end
+
+      context "when staging has completed" do
+        context "and the app state remains STARTED" do
+          it "creates an app usage event with BUILDPACK_SET as the state" do
+            app = AppFactory.make(package_hash: "abc", state: "STARTED")
+            expect {
+              app.update_detected_buildpack(detect_output, nil)
+            }.to change { AppUsageEvent.count }.by(1)
+            event = AppUsageEvent.last
+
+            expect(event.state).to eq("BUILDPACK_SET")
+            event.state = "STARTED"
+            expect(event).to match_app(app)
+          end
+        end
+
+        context "and the app state is no longer STARTED" do
+          it "does ont create an app usage event" do
+            app = AppFactory.make(package_hash: "abc", state: "STOPPED")
+            expect {
+              app.update_detected_buildpack(detect_output, nil)
+            }.to_not change { AppUsageEvent.count }
+          end
         end
       end
     end

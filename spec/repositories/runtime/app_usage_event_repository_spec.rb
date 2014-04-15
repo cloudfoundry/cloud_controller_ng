@@ -32,6 +32,18 @@ module VCAP::CloudController
           expect(event).to match_app(app)
         end
 
+        context "when a custom state is provided" do
+          let (:custom_state) { "CUSTOM" }
+
+          it "will populate the event with the custom state" do
+            event = repository.create_from_app(app, custom_state)
+            expect(event.state).to eq(custom_state)
+
+            event.state = app.state
+            expect(event).to match_app(app)
+          end
+        end
+
         context "when an admin buildpack is associated with the app" do
           let(:buildpack) { Buildpack.make }
           before do

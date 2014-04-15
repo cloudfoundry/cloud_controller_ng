@@ -6,8 +6,8 @@ module VCAP::CloudController
           AppUsageEvent.find(guid: guid)
         end
 
-        def create_from_app(app)
-          AppUsageEvent.create(state: app.state,
+        def create_from_app(app, state_name=nil)
+          AppUsageEvent.create(state: state_name || app.state,
                                instance_count: app.instances,
                                memory_in_mb_per_instance: app.memory,
                                app_guid: app.guid,
