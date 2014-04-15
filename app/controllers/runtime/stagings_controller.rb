@@ -59,7 +59,7 @@ module VCAP::CloudController
       if async?
         job = Jobs::Enqueuer.new(droplet_upload_job, queue: LocalQueue.new(config)).enqueue()
         external_domain = Array(config[:external_domain]).first
-        [HTTP::OK, JobPresenter.new(job, "http://#{external_domain}").to_json]
+        [HTTP::OK, JobPresenter.new(job, "#{config[:external_protocol]}://#{external_domain}").to_json]
       else
         droplet_upload_job.perform
         HTTP::OK

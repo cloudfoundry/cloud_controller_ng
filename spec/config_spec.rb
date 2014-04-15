@@ -51,6 +51,10 @@ module VCAP::CloudController
           expect(config[:maximum_app_disk_in_mb]).to eq(3)
         end
 
+        it "preserves the external_protocol value from the file" do
+          expect(config[:external_protocol]).to eq("http")
+        end
+
         it "preserves the directories value from the file" do
           expect(config[:directories]).to eq({ some: "value" })
         end
