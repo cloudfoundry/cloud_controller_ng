@@ -45,34 +45,58 @@ module VCAP::CloudController
       end
 
       context "when config values are provided" do
-        let (:config) { Config.from_file(File.join(fixture_path, "config/default_overriding_config.yml")) }
+        context "and the values are valid" do
+          let (:config) { Config.from_file(File.join(fixture_path, "config/default_overriding_config.yml")) }
 
-        it "preserves the stacks_file value from the file" do
-          expect(config[:stacks_file]).to eq("/tmp/foo")
+          it "preserves the stacks_file value from the file" do
+            expect(config[:stacks_file]).to eq("/tmp/foo")
+          end
+
+          it "preserves the maximum_app_disk_in_mb value from the file" do
+            expect(config[:maximum_app_disk_in_mb]).to eq(3)
+          end
+
+          it "preserves the directories value from the file" do
+            expect(config[:directories]).to eq({ some: "value" })
+          end
+
+          it "preserves the billing_event_writing_enabled value from the file" do
+            expect(config[:billing_event_writing_enabled]).to be_false
+          end
+
+          it "preserves the request_timeout_in_seconds value from the file" do
+            expect(config[:request_timeout_in_seconds]).to eq(600)
+          end
+
+          it "preserves the value of skip_cert_verify from the file" do
+            expect(config[:skip_cert_verify]).to eq true
+          end
+
+          it "preserves the value for app_bits_upload_grace_period_in_seconds" do
+            expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(600)
+          end
         end
 
-        it "preserves the maximum_app_disk_in_mb value from the file" do
-          expect(config[:maximum_app_disk_in_mb]).to eq(3)
-        end
+        context "and the values are invalid" do
+          let(:tmpdir) { Dir.mktmpdir }
+          let (:config_from_file) { Config.from_file(File.join(tmpdir, "incorrect_overridden_config.yml")) }
 
-        it "preserves the directories value from the file" do
-          expect(config[:directories]).to eq({ some: "value" })
-        end
+          before do
+            config_hash = YAML.load_file(File.join(fixture_path, "config/minimal_config.yml"))
+            config_hash["app_bits_upload_grace_period_in_seconds"] = -2345
 
-        it "preserves the billing_event_writing_enabled value from the file" do
-          expect(config[:billing_event_writing_enabled]).to be_false
-        end
+            File.open(File.join(tmpdir, "incorrect_overridden_config.yml"), "w") do |f|
+              YAML.dump(config_hash, f)
+            end
+          end
 
-        it "preserves the request_timeout_in_seconds value from the file" do
-          expect(config[:request_timeout_in_seconds]).to eq(600)
-        end
+          after do
+            FileUtils.rm_r(tmpdir)
+          end
 
-        it "preserves the value of skip_cert_verify from the file" do
-          expect(config[:skip_cert_verify]).to eq true
-        end
-
-        it "preserves the value for app_bits_upload_grace_period_in_seconds" do
-          expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(600)
+          it "reset the negative value of app_bits_upload_grace_period_in_seconds to 0" do
+            expect(config_from_file[:app_bits_upload_grace_period_in_seconds]).to eq(0)
+          end
         end
       end
     end

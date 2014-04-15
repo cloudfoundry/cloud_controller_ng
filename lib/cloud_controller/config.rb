@@ -223,6 +223,14 @@ module VCAP::CloudController
         config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
         config[:skip_cert_verify] = false if config[:skip_cert_verify].nil?
         config[:app_bits_upload_grace_period_in_seconds] ||= 0
+        sanitize(config)
+      end
+
+      private
+
+      def sanitize(config)
+        grace_period = config[:app_bits_upload_grace_period_in_seconds]
+        config[:app_bits_upload_grace_period_in_seconds] = 0 if grace_period < 0
         config
       end
     end
