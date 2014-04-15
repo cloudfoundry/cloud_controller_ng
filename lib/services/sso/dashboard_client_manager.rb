@@ -78,7 +78,12 @@ module VCAP::Services::SSO
       requested_client_ids    = requested_clients.map { |c| c['id'] }
       existing_db_client_ids  = existing_db_clients.map(&:uaa_id)
 
-      clients_already_in_uaa = client_manager.get_clients(requested_client_ids + existing_db_client_ids).map { |c| c['client_id'] }
+      begin
+        clients_already_in_uaa = client_manager.get_clients(requested_client_ids + existing_db_client_ids).map { |c| c['client_id'] }
+      rescue VCAP::Services::SSO::UAA::UaaError => e
+        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
+      end
+
       clients_already_in_uaa
     end
 

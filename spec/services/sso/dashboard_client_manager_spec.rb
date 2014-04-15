@@ -68,6 +68,20 @@ module VCAP::Services::SSO
         expect(client_manager).to have_received(:get_clients).with([dashboard_client_attrs_1['id'], dashboard_client_attrs_2['id']])
       end
 
+      context 'when getting UAA clients raises an error' do
+        before do
+          error = VCAP::Services::SSO::UAA::UaaError.new('my test error')
+          expect(client_manager).to receive(:get_clients).and_raise(error)
+        end
+
+        it 'raises a ServiceBrokerDashboardClientFailure error' do
+          expect{ manager.synchronize_clients_with_catalog(catalog) }.to raise_error(VCAP::Errors::ApiError) do |err|
+            expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
+            expect(err.message).to eq('my test error')
+          end
+        end
+      end
+
       context 'when no dashboard sso clients present in the catalog exist in UAA' do
         before do
           allow(client_manager).to receive(:get_clients).and_return([])
@@ -364,6 +378,20 @@ module VCAP::Services::SSO
           expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(2)
         end
 
+      end
+
+      context 'when getting UAA clients raises an error' do
+        before do
+          error = VCAP::Services::SSO::UAA::UaaError.new('my test error')
+          expect(client_manager).to receive(:get_clients).and_raise(error)
+        end
+
+        it 'raises a ServiceBrokerDashboardClientFailure error' do
+          expect{ manager.remove_clients_for_broker }.to raise_error(VCAP::Errors::ApiError) do |err|
+            expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
+            expect(err.message).to eq('my test error')
+          end
+        end
       end
 
       context 'when removing CC claims raises an exception' do
