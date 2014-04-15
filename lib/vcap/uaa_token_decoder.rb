@@ -76,25 +76,4 @@ module VCAP
       @asymmetric_key ||= UaaVerificationKey.new(config[:verification_key], info)
     end
   end
-
-  class UaaVerificationKey
-    def initialize(verification_key, info)
-      @verification_key = verification_key
-      @info = info
-    end
-
-    def value
-      @value ||= fetch
-    end
-
-    def refresh
-      @value = nil
-    end
-
-    private
-
-    def fetch
-      @verification_key || @info.validation_key["value"]
-    end
-  end
 end

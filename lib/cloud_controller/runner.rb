@@ -1,6 +1,7 @@
 require "steno"
 require "optparse"
-require "vcap/uaa_util"
+require "vcap/uaa_token_decoder"
+require "vcap/uaa_verification_key"
 require "cf_message_bus/message_bus"
 require "cf/registrar"
 require "loggregator_emitter"
