@@ -46,21 +46,17 @@ module VCAP
       after { Timecop.return }
 
       context "when symmetric key is used" do
+        let(:token_content) do
+          {"aud" => "resource-id", "payload" => 123, "exp" => Time.now.to_i + 10_000}
+        end
+
         before { config_hash[:symmetric_secret] = "symmetric-key" }
 
         context "when token is valid" do
           it "uses UAA::TokenCoder to decode the token with skey" do
-            coder = double(:token_coder)
-            coder.should_receive(:decode_at_reference_time)
-            .with("bearer token", Time.now.to_i)
-            .and_return({"foo" => "bar"})
+            token = CF::UAA::TokenCoder.encode(token_content, {:skey => "symmetric-key" })
 
-            CF::UAA::TokenCoder.should_receive(:new).with(
-                :audience_ids => "resource-id",
-                :skey => "symmetric-key",
-            ).and_return(coder)
-
-            subject.decode_token("bearer token").should == {"foo" => "bar"}
+            subject.decode_token("bearer #{token}").should == token_content
           end
         end
 
