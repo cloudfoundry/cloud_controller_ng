@@ -44,6 +44,12 @@ RSpec::Matchers.define :match_app do |expected_app|
     unless actual_event.space_name == expected_app.space.name
       problems << "event.buildpack_guid: #{actual_event.buildpack_guid}, app.space.name: #{expected_app.space.name}"
     end
+    unless actual_event.buildpack_guid == expected_app.detected_buildpack_guid
+      problems << "event.buildpack_guid: #{actual_event.buildpack_guid}, app.detected_buildpack_guid: #{expected_app.detected_buildpack_guid}"
+    end
+    unless actual_event.buildpack_name == (expected_app.custom_buildpack_url || expected_app.detected_buildpack_name)
+      problems << "event.buildpack_name: #{actual_event.buildpack_name}, app.buildpack_name: #{expected_app.custom_buildpack_url || expected_app.detected_buildpack_name}"
+    end
     problems.empty?
   end
 

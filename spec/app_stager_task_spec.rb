@@ -290,6 +290,18 @@ module VCAP::CloudController
                 expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
               end
 
+              context "when an admin buildpack is used" do
+                let(:admin_buildpack) { Buildpack.make(name: "buildpack-name") }
+                let(:buildpack_key) { admin_buildpack.key }
+                before do
+                  app.buildpack = admin_buildpack.name
+                end
+
+                it "saves the detected buildpack guid" do
+                  expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
+                end
+              end
+
               it "does not clobber other attributes that changed between staging" do
                 # fake out the app refresh as the race happens after it
                 app.stub(:refresh)
