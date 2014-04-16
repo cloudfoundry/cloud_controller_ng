@@ -126,9 +126,9 @@ module VCAP::CloudController
       find_guid_and_validate_access(:read, guid, ServiceInstance)
       [HTTP::OK, {}, JSON.generate({ manage: true })]
 
-      rescue Errors::ApiError, Errors::MissingRequiredScopeError => e
+    rescue Errors::ApiError, Errors::MissingRequiredScopeError => e
       if e.is_a? Errors::MissingRequiredScopeError
-        [HTTP::UNAUTHORIZED, {}, '']
+        raise VCAP::Errors::ApiError.new_from_details("InvalidAuthToken")
       elsif e.name == "NotAuthorized"
         [HTTP::OK, {}, JSON.generate({ manage: false })]
       else

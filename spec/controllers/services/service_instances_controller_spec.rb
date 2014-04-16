@@ -548,9 +548,10 @@ module VCAP::CloudController
         end
 
         context 'when the user does not have cloud_controller.read scope' do
-          it 'returns not authorized' do
+          it 'returns InvalidAuthToken' do
             get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.write']}))
             expect(last_response.status).to eql(401)
+            expect(JSON.parse(last_response.body)['description']).to eql("Invalid Auth Token")
           end
         end
       end
