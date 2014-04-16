@@ -65,6 +65,8 @@ resource "Service Brokers", :type => :api do
       expect(parsed_response["entity"]["name"]).to eq("service-broker-name")
       expect(parsed_response["entity"]["broker_url"]).to eq("https://broker.example.com")
       expect(parsed_response["entity"]["auth_username"]).to eq("admin")
+
+      document_warning_header(response_headers)
     end
   end
 
@@ -94,6 +96,12 @@ resource "Service Brokers", :type => :api do
       expect(parsed_response["entity"]["broker_url"]).to eq("https://broker.example.com")
       expect(parsed_response["entity"]["name"]).to eq("service-broker-name")
       expect(parsed_response["entity"]["auth_username"]).to eq("admin")
+
+      document_warning_header(response_headers)
     end
+  end
+
+  def document_warning_header(response_headers)
+    response_headers['X-Cf-Warnings']= 'Warning%3A+Warning+message+may+go+here.'
   end
 end
