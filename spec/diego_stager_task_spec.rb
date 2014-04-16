@@ -243,6 +243,19 @@ module VCAP::CloudController
               ])
             end
           end
+
+          context "when the GitBasedBuildpack uri ends with .git" do
+            before do
+              app.buildpack = "https://github.com/mybuildpack/bp.git"
+            end
+
+            it "should use the list of admin buildpacks" do
+              expect(diego_stager_task.staging_request[:buildpacks]).to eq([
+                                                                               {key: "java", url: admin_buildpack_download_url},
+                                                                               {key: "ruby", url: admin_buildpack_download_url},
+                                                                           ])
+            end
+          end
         end
 
         context "when the app has a named buildpack" do
