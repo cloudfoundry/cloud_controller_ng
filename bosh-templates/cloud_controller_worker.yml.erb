@@ -222,3 +222,5 @@ diego: <%= p("ccng.diego") %>
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>
 <% end %>
+
+app_bits_upload_grace_period_in_seconds: <%= p("ccng.app_bits_upload_grace_period_in_seconds") %>

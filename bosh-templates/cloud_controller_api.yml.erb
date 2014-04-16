@@ -224,3 +224,5 @@ skip_cert_verify: <%= skip_cert_verify %>
 <% end %>
 
 install_buildpacks: <%= p("ccng.install_buildpacks", []).to_yaml.gsub("---", "") %>
+
+app_bits_upload_grace_period_in_seconds: <%= p("ccng.app_bits_upload_grace_period_in_seconds") %>
