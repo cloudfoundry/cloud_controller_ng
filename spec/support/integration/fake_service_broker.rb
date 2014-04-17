@@ -38,7 +38,7 @@ plans = [
 
 before '/v2/*' do
   api_version = request.env['HTTP_X_BROKER_API_VERSION']
-  raise "Wrong broker api version.  Expected 2.2, got #{api_version}." unless api_version == '2.2'
+  raise "Wrong broker api version.  Expected 2.3, got #{api_version}." unless api_version == '2.3'
 end
 
 get '/v2/catalog' do

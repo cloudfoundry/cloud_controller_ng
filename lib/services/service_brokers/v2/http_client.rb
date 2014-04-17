@@ -161,7 +161,7 @@ module VCAP::Services
         req.basic_auth(auth_username, auth_password)
 
         req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
-        req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.2'
+        req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.3'
         req['Accept'] = 'application/json'
 
         req.body = body
