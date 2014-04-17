@@ -15,41 +15,34 @@ module VCAP::Services::SSO
 
     def synchronize_clients_with_catalog(catalog)
       requested_clients = catalog.services.map(&:dashboard_client).compact
+      requested_client_ids = requested_clients.map{|client| client['id']}
 
       unless cc_configured_to_modify_uaa_clients?
         warnings << REQUESTED_FEATURE_DISABLED_WARNING unless requested_clients.empty?
         return true
       end
 
-      existing_db_clients = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).all
+      return false unless all_clients_can_be_claimed_in_db?(catalog)
 
-      client_ids_already_in_uaa = get_client_ids_already_in_uaa(existing_db_clients, requested_clients)
-      unclaimable_ids           = get_client_ids_that_cannot_be_claimed(client_ids_already_in_uaa)
+      existing_ccdb_clients    = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+      existing_ccdb_client_ids = existing_ccdb_clients.map(&:uaa_id)
 
-      if !unclaimable_ids.empty?
-        populate_uniqueness_errors(catalog, unclaimable_ids)
-        return false
-      end
+      existing_uaa_client_ids  = fetch_clients_from_uaa(requested_client_ids | existing_ccdb_client_ids).map{ |c| c['client_id'] }
+      return false unless all_clients_can_be_claimed_in_uaa?(existing_uaa_client_ids, catalog)
 
-      available_clients = client_ids_already_in_uaa.map do |id|
-        VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(id)
-      end
-
-      existing_clients = (existing_db_clients + available_clients).uniq
-
-      claim_clients_and_update_uaa(requested_clients, existing_clients, client_ids_already_in_uaa)
-
-      true
+      claim_clients_and_update_uaa(requested_clients, existing_ccdb_clients, existing_uaa_client_ids)
+      return true
     end
 
     def remove_clients_for_broker
       return unless cc_configured_to_modify_uaa_clients?
 
-      requested_clients    = [] # request no clients
-      existing_db_clients  = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
-      existing_uaa_clients = get_client_ids_already_in_uaa(existing_db_clients, requested_clients)
+      requested_clients       = [] # request no clients
+      existing_db_clients     = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+      existing_db_client_ids  = existing_db_clients.map(&:uaa_id)
+      existing_uaa_client_ids = fetch_clients_from_uaa(existing_db_client_ids).map{ |client| client['client_id'] }
 
-      claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_clients)
+      claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_client_ids)
     end
 
     def has_warnings?
@@ -59,6 +52,49 @@ module VCAP::Services::SSO
     private
 
     attr_reader :client_manager, :differ
+
+    def all_clients_can_be_claimed_in_db?(catalog)
+      requested_clients = catalog.services.map(&:dashboard_client).compact
+
+      unclaimable_ids = []
+      requested_clients.each do |client|
+        existing_client_in_ccdb = VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(client['id'])
+        unclaimable_ids << existing_client_in_ccdb.uaa_id unless client_claimable_by_broker?(existing_client_in_ccdb)
+      end
+
+      if !unclaimable_ids.empty?
+        populate_uniqueness_errors(catalog, unclaimable_ids)
+        return false
+      end
+      true
+    end
+
+    def all_clients_can_be_claimed_in_uaa?(existing_uaa_client_ids, catalog)
+      unclaimable_ids = []
+      existing_uaa_client_ids.each do |id|
+        existing_client_in_ccdb = VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(id)
+        unclaimable_ids << id if existing_client_in_ccdb.nil?
+      end
+
+      if !unclaimable_ids.empty?
+        populate_uniqueness_errors(catalog, unclaimable_ids)
+        return false
+      end
+      true
+    end
+
+
+    def fetch_clients_from_uaa(requested_client_ids)
+      client_manager.get_clients(requested_client_ids)
+    rescue VCAP::Services::SSO::UAA::UaaError => e
+      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
+    end
+
+    def client_claimable_by_broker?(existing_client_in_ccdb)
+      existing_client_in_ccdb.nil? ||
+        existing_client_in_ccdb.service_broker.nil? ||
+        existing_client_in_ccdb.service_broker.id == service_broker.id
+    end
 
     def claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_clients)
       db_changeset  = differ.create_db_changeset(requested_clients, existing_db_clients)
@@ -72,31 +108,6 @@ module VCAP::Services::SSO
       rescue VCAP::Services::SSO::UAA::UaaError => e
         raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
       end
-    end
-
-    def get_client_ids_already_in_uaa(existing_db_clients, requested_clients)
-      requested_client_ids    = requested_clients.map { |c| c['id'] }
-      existing_db_client_ids  = existing_db_clients.map(&:uaa_id)
-
-      begin
-        clients_already_in_uaa = client_manager.get_clients(requested_client_ids + existing_db_client_ids).map { |c| c['client_id'] }
-      rescue VCAP::Services::SSO::UAA::UaaError => e
-        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
-      end
-
-      clients_already_in_uaa
-    end
-
-    def get_client_ids_that_cannot_be_claimed(clients)
-      unclaimable_ids = []
-      clients.each do |id|
-        claimable = VCAP::CloudController::ServiceDashboardClient.client_can_be_claimed_by_broker?(id, service_broker)
-
-        if !claimable
-          unclaimable_ids << id
-        end
-      end
-      unclaimable_ids
     end
 
     def populate_uniqueness_errors(catalog, non_unique_ids)

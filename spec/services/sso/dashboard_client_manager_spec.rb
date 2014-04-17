@@ -62,84 +62,18 @@ module VCAP::Services::SSO
         allow(client_manager).to receive(:modify_transaction)
       end
 
-      it 'checks if uaa clients exist for all services' do
-        manager.synchronize_clients_with_catalog(catalog)
-
-        expect(client_manager).to have_received(:get_clients).with([dashboard_client_attrs_1['id'], dashboard_client_attrs_2['id']])
-      end
-
-      context 'when getting UAA clients raises an error' do
-        before do
-          error = VCAP::Services::SSO::UAA::UaaError.new('my test error')
-          expect(client_manager).to receive(:get_clients).and_raise(error)
-        end
-
-        it 'raises a ServiceBrokerDashboardClientFailure error' do
-          expect{ manager.synchronize_clients_with_catalog(catalog) }.to raise_error(VCAP::Errors::ApiError) do |err|
-            expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
-            expect(err.message).to eq('my test error')
-          end
-        end
-      end
-
-      context 'when no dashboard sso clients present in the catalog exist in UAA' do
-        before do
-          allow(client_manager).to receive(:get_clients).and_return([])
-        end
-
-        it 'creates clients only for all services that specify dashboard_client' do
-          expect(client_manager).to receive(:modify_transaction) do |changeset|
-            expect(changeset.length).to eq 2
-            expect(changeset.all? {|change| change.is_a? Commands::CreateClientCommand}).to be_true
-            expect(changeset[0].client_attrs).to eq dashboard_client_attrs_1
-            expect(changeset[1].client_attrs).to eq dashboard_client_attrs_2
-          end
-
-          manager.synchronize_clients_with_catalog(catalog)
-        end
-
-        it 'claims the clients' do
-          expect {
-            manager.synchronize_clients_with_catalog(catalog)
-          }.to change { VCAP::CloudController::ServiceDashboardClient.count }.by 2
-
-          expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])).to_not be_nil
-          expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])).to_not be_nil
-        end
-
-        it 'returns true' do
-          expect(manager.synchronize_clients_with_catalog(catalog)).to eq(true)
-        end
-      end
-
-      context 'when some, but not all dashboard sso clients exist in UAA' do
-        before do
-          allow(client_manager).to receive(:get_clients).and_return([{'client_id' => catalog_service.dashboard_client['id']}])
-        end
-
-        context 'when the broker has already claimed a requested UAA client' do
+      describe 'modifying the UAA and CCDB' do
+        context 'when no dashboard sso clients present in the catalog exist in UAA' do
           before do
-            VCAP::CloudController::ServiceDashboardClient.new(
-              uaa_id: catalog_service.dashboard_client['id'],
-              service_broker: service_broker
-            ).save
+            allow(client_manager).to receive(:get_clients).and_return([])
           end
 
-          it 'creates the clients that do not currently exist' do
+          it 'creates clients only for all services that specify dashboard_client' do
             expect(client_manager).to receive(:modify_transaction) do |changeset|
-              create_commands = changeset.select { |command| command.is_a? Commands::CreateClientCommand}
-              expect(create_commands.length).to eq 1
-              expect(create_commands[0].client_attrs).to eq dashboard_client_attrs_2
-            end
-
-            manager.synchronize_clients_with_catalog(catalog)
-          end
-
-          it 'updates the client that is already in uaa' do
-            expect(client_manager).to receive(:modify_transaction) do |changeset|
-              update_commands = changeset.select { |command| command.is_a? Commands::UpdateClientCommand}
-              expect(update_commands.length).to eq 1
-              expect(update_commands[0].client_attrs).to eq dashboard_client_attrs_1
+              expect(changeset.length).to eq 2
+              expect(changeset.all? {|change| change.is_a? Commands::CreateClientCommand}).to be_true
+              expect(changeset[0].client_attrs).to eq dashboard_client_attrs_1
+              expect(changeset[1].client_attrs).to eq dashboard_client_attrs_2
             end
 
             manager.synchronize_clients_with_catalog(catalog)
@@ -148,7 +82,7 @@ module VCAP::Services::SSO
           it 'claims the clients' do
             expect {
               manager.synchronize_clients_with_catalog(catalog)
-            }.to change { VCAP::CloudController::ServiceDashboardClient.count }.by 1
+            }.to change { VCAP::CloudController::ServiceDashboardClient.count }.by 2
 
             expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])).to_not be_nil
             expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])).to_not be_nil
@@ -159,118 +93,222 @@ module VCAP::Services::SSO
           end
         end
 
-        context 'when there is no claim but the requested client exists in UAA' do
-          it 'does not create any uaa clients' do
-            manager.synchronize_clients_with_catalog(catalog)
-
-            expect(client_manager).to_not have_received(:modify_transaction)
+        context 'when some, but not all dashboard sso clients exist in UAA' do
+          before do
+            allow(client_manager).to receive(:get_clients).and_return([{'client_id' => catalog_service.dashboard_client['id']}])
           end
 
-          it 'does not claim any clients for CC' do
-            expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
-            expect { manager.synchronize_clients_with_catalog(catalog) }.not_to change{ VCAP::CloudController::ServiceDashboardClient.count }
+          context 'when the broker has already claimed a requested UAA client' do
+            before do
+              VCAP::CloudController::ServiceDashboardClient.new(
+                uaa_id: catalog_service.dashboard_client['id'],
+                service_broker: service_broker
+              ).save
+            end
+
+            it 'creates the clients that do not currently exist' do
+              expect(client_manager).to receive(:modify_transaction) do |changeset|
+                create_commands = changeset.select { |command| command.is_a? Commands::CreateClientCommand}
+                expect(create_commands.length).to eq 1
+                expect(create_commands[0].client_attrs).to eq dashboard_client_attrs_2
+              end
+
+              manager.synchronize_clients_with_catalog(catalog)
+            end
+
+            it 'updates the client that is already in uaa' do
+              expect(client_manager).to receive(:modify_transaction) do |changeset|
+                update_commands = changeset.select { |command| command.is_a? Commands::UpdateClientCommand}
+                expect(update_commands.length).to eq 1
+                expect(update_commands[0].client_attrs).to eq dashboard_client_attrs_1
+              end
+
+              manager.synchronize_clients_with_catalog(catalog)
+            end
+
+            it 'claims the clients' do
+              expect {
+                manager.synchronize_clients_with_catalog(catalog)
+              }.to change { VCAP::CloudController::ServiceDashboardClient.count }.by 1
+
+              expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])).to_not be_nil
+              expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])).to_not be_nil
+
+            end
+
+            it 'returns true' do
+              expect(manager.synchronize_clients_with_catalog(catalog)).to eq(true)
+            end
+          end
+
+          context 'when there is no claim but the requested client exists in UAA' do
+            it 'does not create any uaa clients' do
+              manager.synchronize_clients_with_catalog(catalog)
+
+              expect(client_manager).to_not have_received(:modify_transaction)
+            end
+
+            it 'does not claim any clients for CC' do
+              expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
+              expect { manager.synchronize_clients_with_catalog(catalog) }.not_to change{ VCAP::CloudController::ServiceDashboardClient.count }
+            end
+
+            it 'returns false' do
+              expect(manager.synchronize_clients_with_catalog(catalog)).to eq(false)
+            end
+
+            it 'has errors for the service' do
+              manager.synchronize_clients_with_catalog(catalog)
+
+              expect(manager.errors.for(catalog_service)).not_to be_empty
+            end
+          end
+        end
+
+        context 'when the UAA has clients claimed by CC that are no longer used by a service' do
+          let(:unused_id) { 'no-longer-used' }
+          let(:catalog) do
+            double(:catalog, services: [catalog_service, catalog_service_without_dashboard_client])
+          end
+
+          before do
+            allow(client_manager).to receive(:get_clients) do |ids|
+              ids.map do |id|
+                { 'client_id' => id }
+              end
+            end
+
+            VCAP::CloudController::ServiceDashboardClient.new(
+              uaa_id: unused_id,
+              service_broker: service_broker
+            ).save
+
+            VCAP::CloudController::ServiceDashboardClient.new(
+              uaa_id: dashboard_client_attrs_1['id'],
+              service_broker: service_broker
+            ).save
+          end
+
+          it 'deletes the client from the uaa' do
+            expect(client_manager).to receive(:modify_transaction) do |changeset|
+              delete_commands = changeset.select { |command| command.is_a? Commands::DeleteClientCommand}
+              expect(delete_commands.length).to eq 1
+              expect(delete_commands[0].client_id).to eq(unused_id)
+            end
+
+            manager.synchronize_clients_with_catalog(catalog)
+          end
+
+          it 'removes the claims for the deleted clients' do
+            manager.synchronize_clients_with_catalog(catalog)
+            expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: unused_id)).to be_nil
+          end
+
+          it 'returns true' do
+            expect(manager.synchronize_clients_with_catalog(catalog)).to be_true
+          end
+        end
+
+        context 'when a different broker has already claimed the requested UAA client' do
+          let(:other_broker) { double(:other_broker)}
+          let(:existing_client) do
+            double(:client,
+              uaa_id: dashboard_client_attrs_1['id'],
+              service_broker: other_broker)
+          end
+
+          before do
+            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:find_client_by_uaa_id).with(
+              dashboard_client_attrs_1['id']
+            ).and_return(existing_client)
+
+            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:find_client_by_uaa_id).with(
+              dashboard_client_attrs_2['id']
+            ).and_return(nil)
+          end
+
+          it 'populates errors on the manager' do
+            manager.synchronize_clients_with_catalog(catalog)
+            expect(manager.errors).not_to be_empty
           end
 
           it 'returns false' do
             expect(manager.synchronize_clients_with_catalog(catalog)).to eq(false)
           end
-
-          it 'has errors for the service' do
-            manager.synchronize_clients_with_catalog(catalog)
-
-            expect(manager.errors.for(catalog_service)).not_to be_empty
-          end
         end
       end
 
-      context 'when the UAA has clients claimed by CC that are no longer used by a service' do
-        let(:unused_id) { 'no-longer-used' }
-        let(:catalog) { double(:catalog, services: []) }
-
-        before do
-          allow(client_manager).to receive(:get_clients).and_return([{'client_id' => unused_id}])
-
-          VCAP::CloudController::ServiceDashboardClient.new(
-            uaa_id: unused_id,
-            service_broker: service_broker
-          ).save
-        end
-
-        it 'deletes the client from the uaa' do
-          expect(client_manager).to receive(:modify_transaction) do |changeset|
-            delete_commands = changeset.select { |command| command.is_a? Commands::DeleteClientCommand}
-            expect(delete_commands.length).to eq 1
-            expect(delete_commands[0].client_id).to eq(unused_id)
+      describe 'exception handling' do
+        context 'when getting UAA clients raises an error' do
+          before do
+            error = VCAP::Services::SSO::UAA::UaaError.new('my test error')
+            expect(client_manager).to receive(:get_clients).and_raise(error)
           end
 
-          manager.synchronize_clients_with_catalog(catalog)
-        end
-
-        it 'removes the claims for the deleted clients' do
-          manager.synchronize_clients_with_catalog(catalog)
-          expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: unused_id)).to be_nil
-        end
-
-        it 'returns true' do
-          expect(manager.synchronize_clients_with_catalog(catalog)).to be_true
-        end
-      end
-
-      context 'when modifying UAA clients fails' do
-        let(:unused_id) { 'no-longer-used' }
-
-        before do
-          allow(client_manager).to receive(:get_clients).and_return([{'client_id' => unused_id}])
-          allow(client_manager).to receive(:modify_transaction).and_raise(VCAP::Services::SSO::UAA::UaaError.new('error message'))
-
-          VCAP::CloudController::ServiceDashboardClient.new(
-            uaa_id: unused_id,
-            service_broker: service_broker
-          ).save
-        end
-
-        it 'does not add new claims' do
-          manager.synchronize_clients_with_catalog(catalog) rescue nil
-
-          dashboard_client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])
-          expect(dashboard_client).to be_nil
-        end
-
-        it 'does not delete existing claims' do
-          manager.synchronize_clients_with_catalog(catalog) rescue nil
-
-          dashboard_client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: unused_id)
-          expect(dashboard_client).to_not be_nil
-        end
-
-        it 'does not modify any of the claims' do
-          VCAP::CloudController::ServiceDashboardClient.new(
-            uaa_id: dashboard_client_attrs_2['id'],
-            service_broker: nil
-          ).save
-
-          manager.synchronize_clients_with_catalog(catalog) rescue nil
-
-          dashboard_client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])
-          expect(dashboard_client.service_broker).to be_nil
-        end
-
-        it 'raises a ServiceBrokerDashboardClientFailure error' do
-          expect{ manager.synchronize_clients_with_catalog(catalog) }.to raise_error(VCAP::Errors::ApiError) do |err|
-            expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
-            expect(err.message).to eq('error message')
+          it 'raises a ServiceBrokerDashboardClientFailure error' do
+            expect{ manager.synchronize_clients_with_catalog(catalog) }.to raise_error(VCAP::Errors::ApiError) do |err|
+              expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
+              expect(err.message).to eq('my test error')
+            end
           end
         end
-      end
 
-      context 'when claiming the client for the broker fails' do
-        before do
-          allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker).and_raise
+        context 'when modifying UAA clients fails' do
+          let(:unused_id) { 'no-longer-used' }
+
+          before do
+            allow(client_manager).to receive(:get_clients).and_return([{'client_id' => unused_id}])
+            allow(client_manager).to receive(:modify_transaction).and_raise(VCAP::Services::SSO::UAA::UaaError.new('error message'))
+
+            VCAP::CloudController::ServiceDashboardClient.new(
+              uaa_id: unused_id,
+              service_broker: service_broker
+            ).save
+          end
+
+          it 'does not add new claims' do
+            manager.synchronize_clients_with_catalog(catalog) rescue nil
+
+            dashboard_client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])
+            expect(dashboard_client).to be_nil
+          end
+
+          it 'does not delete existing claims' do
+            manager.synchronize_clients_with_catalog(catalog) rescue nil
+
+            dashboard_client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: unused_id)
+            expect(dashboard_client).to_not be_nil
+          end
+
+          it 'does not modify any of the claims' do
+            VCAP::CloudController::ServiceDashboardClient.new(
+              uaa_id: dashboard_client_attrs_2['id'],
+              service_broker: nil
+            ).save
+
+            manager.synchronize_clients_with_catalog(catalog) rescue nil
+
+            dashboard_client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])
+            expect(dashboard_client.service_broker).to be_nil
+          end
+
+          it 'raises a ServiceBrokerDashboardClientFailure error' do
+            expect{ manager.synchronize_clients_with_catalog(catalog) }.to raise_error(VCAP::Errors::ApiError) do |err|
+              expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
+              expect(err.message).to eq('error message')
+            end
+          end
         end
 
-        it 'does not modify the UAA client' do
-          manager.synchronize_clients_with_catalog(catalog) rescue nil
-          expect(client_manager).to_not have_received(:modify_transaction)
+        context 'when claiming the client for the broker fails' do
+          before do
+            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker).and_raise
+          end
+
+          it 'does not modify the UAA client' do
+            manager.synchronize_clients_with_catalog(catalog) rescue nil
+            expect(client_manager).to_not have_received(:modify_transaction)
+          end
         end
       end
 

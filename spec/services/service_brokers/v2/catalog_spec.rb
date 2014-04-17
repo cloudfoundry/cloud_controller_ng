@@ -101,7 +101,7 @@ module VCAP::Services::ServiceBrokers::V2
         it 'gives an error' do
           catalog = Catalog.new(broker, catalog_hash)
           expect(catalog.valid?).to eq false
-          expect(catalog.errors.messages).to include('Service dashboard_client ids must be unique')
+          expect(catalog.errors.messages).to include('Service dashboard_client id must be unique')
         end
       end
 
@@ -183,7 +183,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'has a validation error for duplicate dashboard_client ids' do
           catalog.valid?
-          expect(catalog.errors.messages).to include('Service dashboard_client ids must be unique')
+          expect(catalog.errors.messages).to include('Service dashboard_client id must be unique')
         end
       end
     end

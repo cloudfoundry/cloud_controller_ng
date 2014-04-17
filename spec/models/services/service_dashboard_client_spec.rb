@@ -20,34 +20,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '.client_can_be_claimed_by_broker?' do
-      context 'when broker has claimed the client' do
-        before do
-          ServiceDashboardClient.make(uaa_id: uaa_id, service_broker: service_broker)
-        end
-
-        it 'returns true' do
-          expect(ServiceDashboardClient.client_can_be_claimed_by_broker?(uaa_id, service_broker)).to be_true
-        end
-      end
-
-      context 'when a different broker has claimed the client' do
-        before do
-          ServiceDashboardClient.make(uaa_id: uaa_id, service_broker: other_broker)
-        end
-
-        it 'returns false' do
-          expect(ServiceDashboardClient.client_can_be_claimed_by_broker?(uaa_id, service_broker)).to be_false
-        end
-      end
-
-      context 'when no broker has claimed the client' do
-        it 'returns true' do
-          expect(ServiceDashboardClient.client_can_be_claimed_by_broker?(uaa_id, service_broker)).to be_false
-        end
-      end
-    end
-
     describe '.claim_client_for_broker' do
       context 'when the client is unclaimed' do
         it 'claims the client for the broker' do

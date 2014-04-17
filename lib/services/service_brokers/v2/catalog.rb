@@ -28,7 +28,7 @@ module VCAP::Services::ServiceBrokers::V2
       dashboard_clients = valid_dashboard_clients(services)
       dashboard_client_ids = valid_dashboard_client_ids(dashboard_clients)
       if has_duplicates?(dashboard_client_ids)
-        errors.add('Service dashboard_client ids must be unique')
+        errors.add('Service dashboard_client id must be unique')
       end
     end
 

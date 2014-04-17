@@ -129,7 +129,7 @@ describe 'Service Broker' do
         expect(decoded_response['description']).to eql(
           "Service broker catalog is invalid: \n" +
             "Service ids must be unique\n" +
-            "Service dashboard_client ids must be unique\n" +
+            "Service dashboard_client id must be unique\n" +
             "Service service-1\n" +
             "  Service id must be a string, but has value 12345\n" +
             "Service service-2\n" +

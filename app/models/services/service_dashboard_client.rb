@@ -24,10 +24,6 @@ module VCAP::CloudController
       where(service_broker_id: broker.id, uaa_id: uaa_id).any?
     end
 
-    def self.client_can_be_claimed_by_broker?(uaa_id, broker)
-      client_claimed_by_broker?(uaa_id, broker) || client_not_claimed_by_any_broker?(uaa_id)
-    end
-
     def self.remove_claim_on_client(uaa_id)
       where(uaa_id: uaa_id).delete
     end
@@ -42,10 +38,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def self.client_not_claimed_by_any_broker?(uaa_id)
-      !(unclaimed_client_with_uaa_id(uaa_id).nil?)
-    end
 
     def self.unclaimed_client_with_uaa_id(uaa_id)
       where(service_broker_id: nil, uaa_id: uaa_id).first
