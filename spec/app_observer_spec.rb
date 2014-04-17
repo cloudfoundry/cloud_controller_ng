@@ -333,6 +333,13 @@ module VCAP::CloudController
             end
           end
         end
+
+        context "when the pakcage state changes" do
+          let(:changes) { { :package_state => 'PENDING'} }
+
+          it_behaves_like :stages_if_needed
+          it_behaves_like :sends_droplet_updated
+        end
       end
     end
   end
