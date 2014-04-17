@@ -83,7 +83,8 @@ module VCAP::CloudController
         Varz.record_user_count
 
         VCAP::Component.varz.synchronize do
-          VCAP::Component.varz[:cc_user_count].should == 4
+          expected_user_count = User.count
+          expect(VCAP::Component.varz[:cc_user_count]).to eql expected_user_count
         end
       end
     end
