@@ -115,16 +115,42 @@ describe CloudController::DependencyLocator do
         resource_pool: {
           fog_connection: 'fog_connection',
           resource_directory_key: 'key',
-          cdn: cdn_settings
+          cdn: cdn_settings,
+          minimum_size: min_file_size,
+          maximum_size: max_file_size
         }
       }
     end
 
     context "when cdn is not configured" do
       let(:cdn_settings) { nil }
+      let(:min_file_size) { nil }
+      let(:max_file_size) { nil }
 
       it "creates blob stores without the CDN" do
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil)
+        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil, nil, nil, nil)
+        locator.global_app_bits_cache
+      end
+    end
+
+    context "when file size limits are not configured" do
+      let(:cdn_settings) { nil }
+      let(:min_file_size) { nil }
+      let(:max_file_size) { nil }
+
+      it "creates blob stores without file size limits" do
+        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil, nil, nil, nil)
+        locator.global_app_bits_cache
+      end
+    end
+
+    context "when file size limits are configured for package blobstore" do
+      let(:cdn_settings) { nil }
+      let(:min_file_size) { 1024 }
+      let(:max_file_size) { 512 * 1024 * 1024 }
+
+      it "creates the blob stores with file size limits if configured" do
+        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil, nil, min_file_size, max_file_size)
         locator.global_app_bits_cache
       end
     end
@@ -133,10 +159,12 @@ describe CloudController::DependencyLocator do
       let(:cdn_host) { 'http://crazy_cdn.com' }
       let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
       let(:cdn) { double(:cdn) }
+      let(:min_file_size) { nil }
+      let(:max_file_size) { nil }
 
       it "creates the blob stores with CDNs if configured" do
         CloudController::Blobstore::Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', cdn)
+        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', cdn, nil, nil, nil)
         locator.global_app_bits_cache
       end
     end
