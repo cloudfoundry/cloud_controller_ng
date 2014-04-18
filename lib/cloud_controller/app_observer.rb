@@ -30,8 +30,6 @@ module VCAP::CloudController
         elsif changes.has_key?(:instances)
           delta = changes[:instances][1] - changes[:instances][0]
           react_to_instances_change(app, delta)
-        elsif changes.has_key?(:package_state)
-          react_to_package_state_change(app)
         end
       end
 
@@ -98,12 +96,6 @@ module VCAP::CloudController
       def react_to_instances_change(app, delta)
         if app.started?
           DeaClient.change_running_instances(app, delta)
-          broadcast_app_updated(app)
-        end
-      end
-
-      def react_to_package_state_change(app)
-        stage_if_needed(app) do |_|
           broadcast_app_updated(app)
         end
       end
