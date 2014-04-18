@@ -27,8 +27,9 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { double("fake url generator") }
     let(:completion_callback) { lambda {|x| return x } }
 
-    let(:app_package_download_url) { "http://blah-app.com" }
-    let(:admin_buildpack_download_url) { "http://blah-admin.com" }
+    let(:app_package_download_url) { "http://app-package.com" }
+    let(:admin_buildpack_download_url) { "http://admin-buildpack.com" }
+    let(:build_artifacts_cache_download_uri) { "http://buildpack-artifacts-cache.com" }
 
     before do
       Buildpack.create(name: "the_java_buildpack", key: "java", position: 1)
@@ -36,6 +37,7 @@ module VCAP::CloudController
 
       allow(blobstore_url_generator).to receive(:app_package_download_url).and_return(app_package_download_url)
       allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return(admin_buildpack_download_url)
+      allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).and_return(build_artifacts_cache_download_uri)
 
       EM.stub(:add_timer)
       EM.stub(:defer).and_yield
@@ -331,9 +333,15 @@ module VCAP::CloudController
           ).to include(["MEMORY_LIMIT", "259m"])
         end
 
+        it "contains app build artifact cache download uri" do
+          expect(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app).and_return(build_artifacts_cache_download_uri)
+          staging_request = diego_stager_task.staging_request
+          expect(staging_request[:build_artifacts_cache_download_uri]).to eq(build_artifacts_cache_download_uri)
+        end
+
         it "contains app bits download uri" do
-          blobstore_url_generator.should_receive(:app_package_download_url).with(app).and_return("http:/app-bits-download.uri")
-          expect(diego_stager_task.staging_request[:app_bits_download_uri]).to eq("http:/app-bits-download.uri")
+          expect(blobstore_url_generator).to receive(:app_package_download_url).with(app).and_return(app_package_download_url)
+          expect(diego_stager_task.staging_request[:app_bits_download_uri]).to eq(app_package_download_url)
         end
       end
     end
