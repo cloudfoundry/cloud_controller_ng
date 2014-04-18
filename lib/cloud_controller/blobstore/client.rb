@@ -7,11 +7,13 @@ require "cloud_controller/blobstore/idempotent_directory"
 module CloudController
   module Blobstore
     class Client
-      def initialize(connection_config, directory_key, cdn=nil, root_dir=nil)
+      def initialize(connection_config, directory_key, cdn=nil, root_dir=nil, min_size=nil, max_size=nil)
         @root_dir = root_dir
         @connection_config = connection_config
         @directory_key = directory_key
         @cdn = cdn
+        @min_size = min_size || 0
+        @max_size = max_size
       end
 
       def local?
@@ -34,6 +36,7 @@ module CloudController
       def cp_r_to_blobstore(source_dir)
         Find.find(source_dir).each do |path|
           next unless File.file?(path)
+          next unless within_limits?(File.size(path))
 
           sha1 = Digest::SHA1.file(path).hexdigest
           next if exists?(sha1)
@@ -46,22 +49,27 @@ module CloudController
         start = Time.now
         logger.info("blobstore.cp-start", destination_key: destination_key, source_path: source_path, bucket: @directory_key)
         size = -1
+        log_entry = "blobstore.cp-skip"
 
         File.open(source_path) do |file|
           size = file.size
+          next unless within_limits?(size)
+
           files.create(
             :key => partitioned_key(destination_key),
             :body => file,
             :public => local?,
           )
+
+          log_entry = "blobstore.cp-finish"
         end
 
         duration = Time.now - start
-        logger.info("blobstore.cp-finish",
+        logger.info(log_entry,
                     destination_key: destination_key,
                     duration_seconds: duration,
                     size: size,
-        )
+                    )
       end
 
       def delete(key)
@@ -121,6 +129,10 @@ module CloudController
 
       def logger
         @logger ||= Steno.logger("cc.blobstore")
+      end
+
+      def within_limits?(size)
+        size>=@min_size && (@max_size.nil? || size<=@max_size)
       end
     end
   end

@@ -16,7 +16,7 @@ describe AppBitsPackage do
   let(:local_tmp_dir) { Dir.mktmpdir }
 
   let(:global_app_bits_cache) do
-    CloudController::Blobstore::Client.new({provider: "Local", local_root: blobstore_dir}, "global_app_bits_cache")
+    CloudController::Blobstore::Client.new({provider: "Local", local_root: blobstore_dir}, "global_app_bits_cache", nil, nil, 4, 8)
   end
 
   let(:package_blobstore) do
@@ -25,7 +25,6 @@ describe AppBitsPackage do
 
   let(:packer) { AppBitsPackage.new(package_blobstore, global_app_bits_cache, max_package_size, local_tmp_dir) }
   let(:max_package_size) { 1_073_741_824 }
-
 
   before do
     Fog.unmock!
@@ -45,6 +44,26 @@ describe AppBitsPackage do
       create
       sha_of_bye_file_in_good_zip = "ee9e51458f4642f48efe956962058245ee7127b1"
       expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
+    end
+
+    context "when one of the files exceeds the configured maximum_size" do
+      it "it is not uploaded to the cache but the others are" do
+        create
+        sha_of_greetings_file_in_good_zip = "82693f9b3a4857415aeffccd535c375891d96f74"
+        sha_of_bye_file_in_good_zip = "ee9e51458f4642f48efe956962058245ee7127b1"
+        expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
+        expect(global_app_bits_cache.exists?(sha_of_greetings_file_in_good_zip)).to be_false
+      end
+    end
+
+    context "when one of the files is less than the configured minimum_size" do
+      it "it is not uploaded to the cache but the others are" do
+        create
+        sha_of_hi_file_in_good_zip = "55ca6286e3e4f4fba5d0448333fa99fc5a404a73"
+        sha_of_bye_file_in_good_zip = "ee9e51458f4642f48efe956962058245ee7127b1"
+        expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
+        expect(global_app_bits_cache.exists?(sha_of_hi_file_in_good_zip)).to be_false
+      end
     end
 
     it "uploads the new app bits to the package blob store" do
