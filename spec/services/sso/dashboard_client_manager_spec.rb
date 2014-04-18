@@ -210,7 +210,7 @@ module VCAP::Services::SSO
         end
 
         context 'when a different broker has already claimed the requested UAA client' do
-          let(:other_broker) { double(:other_broker)}
+          let(:other_broker) { double(:other_broker, id: SecureRandom.uuid)}
           let(:existing_client) do
             double(:client,
               uaa_id: dashboard_client_attrs_1['id'],
