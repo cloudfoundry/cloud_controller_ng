@@ -285,14 +285,14 @@ module VCAP::CloudController
 
       describe "environment" do
         it "contains user defined environment variables" do
-          expect(diego_stager_task.staging_request[:environment].last).to eq(["USER_DEFINED","OK"])
+          expect(diego_stager_task.staging_request[:environment].last).to eq({key:"USER_DEFINED", value:"OK"})
         end
 
         it "contains VCAP_APPLICATION from application" do
           expect(app.vcap_application).to be
           expect(
             diego_stager_task.staging_request[:environment]
-          ).to include(["VCAP_APPLICATION", app.vcap_application.to_json])
+          ).to include({key:"VCAP_APPLICATION", value:app.vcap_application.to_json})
         end
 
         it "contains VCAP_SERVICES" do
@@ -318,19 +318,19 @@ module VCAP::CloudController
           }
           expect(
             diego_stager_task.staging_request[:environment]
-          ).to include(["VCAP_SERVICES", expected_hash.to_json])
+          ).to include({key:"VCAP_SERVICES", value:expected_hash.to_json})
         end
 
         it "contains DATABASE_URL" do
           expect(
             diego_stager_task.staging_request[:environment]
-          ).to include(["DATABASE_URL", "mysql2://giraffes.rock"])
+          ).to include({key:"DATABASE_URL", value:"mysql2://giraffes.rock"})
         end
 
         it "contains MEMORY_LIMIT" do
           expect(
             diego_stager_task.staging_request[:environment]
-          ).to include(["MEMORY_LIMIT", "259m"])
+          ).to include({key:"MEMORY_LIMIT", value:"259m"})
         end
 
         it "contains app build artifact cache download uri" do

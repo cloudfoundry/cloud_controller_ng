@@ -85,12 +85,12 @@ module VCAP::CloudController
 
     def environment
       env = []
-      env << ["VCAP_APPLICATION", app.vcap_application.to_json]
-      env << ["VCAP_SERVICES", app.system_env_json["VCAP_SERVICES"].to_json]
+      env << {key:"VCAP_APPLICATION", value:app.vcap_application.to_json}
+      env << {key:"VCAP_SERVICES", value: app.system_env_json["VCAP_SERVICES"].to_json}
       db_uri = app.database_uri
-      env << ["DATABASE_URL", db_uri] if db_uri
-      env << ["MEMORY_LIMIT", "#{app.memory}m"]
-      app.environment_json.each { |k, v| env << [k, v] }
+      env << {key:"DATABASE_URL", value:db_uri} if db_uri
+      env << {key:"MEMORY_LIMIT", value:"#{app.memory}m"}
+      app.environment_json.each { |k, v| env << {key:k, value:v} }
       env
     end
 
