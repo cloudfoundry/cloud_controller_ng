@@ -61,13 +61,32 @@ module VCAP::CloudController
         subject.should_not be_valid
       end
 
-      it "should not allow a domain with a single char top level domain" do
+      it "should allow a domain with a single char top level domain" do
         subject.name = "b.c.d"
+        subject.should be_valid
+      end
+
+      it "should allow a domain with a 6 char top level domain" do
+        subject.name = "b.c.abcefg"
+        subject.should be_valid
+      end
+
+      it "should not allow a domain with > 255 characters" do
+        subdomain = "a" * 63
+        subject.name = "#{subdomain}.#{subdomain}.#{subdomain}.#{subdomain}"
+        subject.should be_valid
+
+        subject.name = "#{subdomain}.#{subdomain}.#{subdomain}.#{subdomain}x"
         subject.should_not be_valid
       end
 
-      it "should not allow a domain with a 6 char top level domain" do
-        subject.name = "b.c.abcefg"
+      it "should not allow a subdomain with > 63 characters" do
+        subdomain = "a" * 63
+        subject.name = "#{subdomain}.#{subdomain}"
+        subject.should be_valid
+
+        subdomain = "a" * 63
+        subject.name = "#{subdomain}x.#{subdomain}"
         subject.should_not be_valid
       end
 
