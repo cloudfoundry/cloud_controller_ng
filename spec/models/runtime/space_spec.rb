@@ -230,7 +230,7 @@ module VCAP::CloudController
 
           domain_org = Organization.make
           private_domain = PrivateDomain.make(owning_organization: domain_org)
-          expect { space.add_domain(private_domain) }.to raise_error(Space::UnauthorizedAccessToPrivateDomain)
+          expect { space.add_domain(private_domain) }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
         end
       end
     end

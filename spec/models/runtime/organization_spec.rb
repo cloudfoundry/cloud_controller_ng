@@ -236,7 +236,7 @@ module VCAP::CloudController
       it "raises error if the private domain does not belongs to the organization" do
         org = Organization.make
         private_domain = PrivateDomain.make(owning_organization: Organization.make)
-        expect { org.add_domain(private_domain) }.to raise_error(Organization::UnauthorizedAccessToPrivateDomain)
+        expect { org.add_domain(private_domain) }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
       end
     end
 

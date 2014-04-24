@@ -91,5 +91,15 @@ module VCAP::CloudController
         end.to change { Route.where(:id => route.id).count }.by(-1)
       end
     end
+
+    describe "addable_to_organization!" do
+      it "raises error when the domain belongs to a different org" do
+        expect{subject.addable_to_organization!(Organization.new)}.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
+      end
+
+      it "does not raise error when the domain belongs to a different org" do
+        expect{subject.addable_to_organization!(subject.owning_organization)}.to_not raise_error
+      end
+    end
   end
 end

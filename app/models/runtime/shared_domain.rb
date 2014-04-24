@@ -37,5 +37,8 @@ module VCAP::CloudController
 
       domain
     end
+
+    def addable_to_organization!(organization)
+    end
   end
 end

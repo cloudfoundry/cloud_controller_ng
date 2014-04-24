@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class Domain < Sequel::Model
     DOMAIN_REGEX = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}$/ix.freeze
+    class UnauthorizedAccessToPrivateDomain < RuntimeError; end
 
     dataset.row_proc = proc do |row|
       if row[:owning_organization_id]
@@ -19,6 +20,10 @@ module VCAP::CloudController
 
       def private_domains
         filter(Sequel.~(SHARED_DOMAIN_CONDITION))
+      end
+
+      def shared_or_owned_by(organization_ids)
+        shared_domains.or(owning_organization_id: organization_ids)
       end
     end
 
@@ -91,7 +96,8 @@ module VCAP::CloudController
                                      spaces: Space.having_developers(user)))
 
       Sequel.or(
-          SHARED_DOMAIN_CONDITION.merge(owning_organization: allowed_organizations))
+        SHARED_DOMAIN_CONDITION.merge(owning_organization: allowed_organizations)
+      )
     end
 
     def usable_by_organization?(org)
@@ -102,12 +108,7 @@ module VCAP::CloudController
       owning_organization_id.nil?
     end
 
-    def owned_by?(org)
-      owning_organization_id == org.id
-    end
-
     private
-
     def intermediate_domains
       self.class.intermediate_domains(name)
     end
