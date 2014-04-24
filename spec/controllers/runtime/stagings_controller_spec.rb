@@ -179,6 +179,19 @@ module VCAP::CloudController
             FileUtils.should_receive(:rm_f).with(/ngx\.uploads/)
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
           end
+
+          context "when a content-md5 is specified" do
+            it "returns a 400 if the value does not match the md5 of the body" do
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req, "Content-MD5" => "the-wrong-md5"
+              expect(last_response.status).to eq(400)
+            end
+
+            it "succeeds if the value matches the md5 of the body" do
+              content_md5 = Digest::MD5.base64digest(file_content)
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req, "Content-MD5" => content_md5
+              expect(last_response.status).to eq(200)
+            end
+          end
         end
 
         context "with an invalid app" do
@@ -336,8 +349,10 @@ module VCAP::CloudController
     end
 
     describe "POST /staging/buildpack_cache/:guid/upload" do
+      let(:file_content) { "the-file-content" }
+
       let(:upload_req) do
-        { :upload => { :droplet => Rack::Test::UploadedFile.new(temp_file_with_content) } }
+        { :upload => { :droplet => Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
       end
 
       before do
@@ -365,6 +380,19 @@ module VCAP::CloudController
           expect(job.queue).to eq("cc-api_z1-99")
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 200
+        end
+
+        context "when a content-md5 is specified" do
+          it "returns a 400 if the value does not match the md5 of the body" do
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, "Content-MD5" => "the-wrong-md5"
+            expect(last_response.status).to eq(400)
+          end
+
+          it "succeeds if the value matches the md5 of the body" do
+            content_md5 = Digest::MD5.base64digest(file_content)
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, "Content-MD5" => content_md5
+            expect(last_response.status).to eq(200)
+          end
         end
       end
 
