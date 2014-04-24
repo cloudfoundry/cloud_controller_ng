@@ -530,7 +530,7 @@ module VCAP::CloudController
 
       it "includes start app message" do
         request = staging_task.staging_request
-        request[:start_message].should_not be_nil
+        request[:start_message].should be_a(StartAppMessage)
       end
 
       it "includes app index 0" do
