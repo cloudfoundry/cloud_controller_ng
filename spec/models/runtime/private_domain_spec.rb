@@ -24,7 +24,7 @@ module VCAP::CloudController
         end
       end
 
-      context "when in an unsuspended organization" do
+      context "when in an un-suspended organization" do
         before { allow(org).to receive(:suspended?).and_return(false) }
         it "is false" do
           expect(private_domain).not_to be_in_suspended_org

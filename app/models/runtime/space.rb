@@ -58,6 +58,13 @@ module VCAP::CloudController
 
     strip_attributes  :name
 
+    dataset_module do
+      def having_developers(*users)
+        join(:spaces_developers, spaces_developers__space_id: :spaces__id).
+        where(spaces_developers__user_id: users.map(&:id)).select_all(:spaces)
+      end
+    end
+
     def in_organization?(user)
       organization && organization.users.include?(user)
     end

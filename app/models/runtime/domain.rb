@@ -10,13 +10,15 @@ module VCAP::CloudController
       end
     end
 
+    SHARED_DOMAIN_CONDITION =  {owning_organization_id: nil}
+
     dataset_module do
       def shared_domains
-        filter(owning_organization_id: nil)
+        filter(SHARED_DOMAIN_CONDITION)
       end
 
       def private_domains
-        filter(Sequel.~(owning_organization_id: nil))
+        filter(Sequel.~(SHARED_DOMAIN_CONDITION))
       end
     end
 
@@ -83,15 +85,13 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      orgs = Organization.filter(Sequel.or(
-        managers: [user],
-        auditors: [user],
-      ))
+      allowed_organizations = Organization.filter(Sequel.or(
+                                     managers: [user],
+                                     auditors: [user],
+                                     spaces: Space.having_developers(user)))
 
       Sequel.or(
-        owning_organization: orgs,
-        owning_organization_id: nil,
-      )
+          SHARED_DOMAIN_CONDITION.merge(owning_organization: allowed_organizations))
     end
 
     def usable_by_organization?(org)

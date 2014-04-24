@@ -317,4 +317,17 @@ module VCAP::CloudController
       end
     end
   end
+
+  describe "#having_developer" do
+    it "returns only spaces with developers containing the specified user" do
+      space1 = Space.make
+      user = make_developer_for_space(space1)
+
+      space2 = Space.make
+      spaces = Space.having_developers(user).all
+
+      expect(spaces).to include(space1)
+      expect(spaces).to_not include(space2)
+    end
+  end
 end
