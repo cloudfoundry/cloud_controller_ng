@@ -48,7 +48,9 @@ module VCAP::CloudController
       service_plan_visibilities: :destroy
 
     define_user_group :users
-    define_user_group :managers, reciprocal: :managed_organizations
+    define_user_group :managers, 
+                      reciprocal: :managed_organizations,
+                      before_remove: proc { |org, user| org.manager_guids.count > 1 }
     define_user_group :billing_managers, reciprocal: :billing_managed_organizations
     define_user_group :auditors, reciprocal: :audited_organizations
 

@@ -19,11 +19,6 @@ module VCAP::CloudController
         },
         many_to_many_collection_ids: {
           organizations: lambda { |_| Organization.make },
-          managed_organizations: lambda { |user|
-            org = Organization.make
-            user.add_organization(org)
-            org
-          },
           billing_managed_organizations: lambda { |user|
             org = Organization.make
             user.add_organization(org)

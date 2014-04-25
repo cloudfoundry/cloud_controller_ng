@@ -32,7 +32,6 @@ module VCAP::CloudController
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {
         users: lambda { |org| User.make },
-        managers: lambda { |org| User.make },
         billing_managers: lambda { |org| User.make }
       }
 

@@ -110,6 +110,13 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
         }.to raise_error RuntimeError, "some new error"
       end
 
+      it "should log an error for a Sequel HookFailed error" do
+        subject.stub(:to_s).and_raise(Sequel::HookFailed.new("hello"))
+        expect {
+          subject.dispatch(:to_s)
+        }.to raise_error VCAP::Errors::ApiError
+      end
+
       it "should reraise any vcap error" do
         subject.stub(:to_s).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
         expect {
