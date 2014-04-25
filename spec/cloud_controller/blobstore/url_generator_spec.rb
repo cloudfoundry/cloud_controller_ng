@@ -159,7 +159,7 @@ module CloudController
 
         context "droplets" do
           let(:app) { VCAP::CloudController::AppFactory.make }
-          let(:droplet_file) { double("file") }
+          let(:blob) { double("blob", download_url: "http://example.com/blob") }
 
           before do
             CloudController::DependencyLocator.instance.stub(:droplet_blobstore).
@@ -169,7 +169,7 @@ module CloudController
           context "when the droplets are stored on local blobstore" do
             context "and the package exists" do
               let(:droplet_blobstore) do
-                double(local?: true, file: droplet_file, exists?: true, download_uri_for_file: "/a/b/c")
+                double(local?: true, blob: blob, exists?: true)
               end
 
               it "gives a local URI to the blobstore host/port" do
@@ -184,7 +184,7 @@ module CloudController
 
             context "and the droplet does not exist" do
               let(:droplet_blobstore) do
-                double(local?: true, file: nil, exists?: false)
+                double(local?: true, blob: nil, exists?: false)
               end
 
               it "returns nil" do
@@ -195,13 +195,11 @@ module CloudController
 
           context "when the buildpack are stored remotely" do
             let(:droplet_blobstore) do
-              double(local?: false, file: droplet_file, exists?: true)
+              double(local?: false, blob: blob, exists?: true)
             end
 
-            it "gives out signed url to remote blobstore for the droplet" do
-              remote_uri = "http://s3.example.com/signed"
-              droplet_blobstore.should_receive(:download_uri_for_file).with(droplet_file).and_return(remote_uri)
-              expect(url_generator.droplet_download_url(app)).to eql(remote_uri)
+            it "gives out signed url to remote blobstore from the blob" do
+              expect(url_generator.droplet_download_url(app)).to eql("http://example.com/blob")
             end
           end
         end

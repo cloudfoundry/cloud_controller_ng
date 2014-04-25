@@ -1,7 +1,6 @@
 require "cloudfront-signer"
 require "cloud_controller/blobstore/client"
 
-
 module VCAP::CloudController
   class StagingsController < RestController::Base
     include VCAP::Errors
@@ -27,14 +26,11 @@ module VCAP::CloudController
       app = App.find(guid: guid)
       check_app_exists(app, guid)
 
-      file = package_blobstore.file(guid)
-      package_path = file.send(:path) if file
-      logger.debug "guid: #{guid} package_path: #{package_path}"
-      unless package_path
+      blob = package_blobstore.blob(guid)
+      unless blob
         logger.error "could not find package for #{guid}"
         raise ApiError.new_from_details("AppPackageNotFound", guid)
       end
-      blob = OpenStruct.new(local_path: package_path, download_url: package_blobstore.download_uri(guid))
       @blob_sender.send_blob(app.guid, "AppPackage", blob, self)
     end
 
@@ -66,8 +62,8 @@ module VCAP::CloudController
       check_app_exists(app, guid)
       droplet = app.current_droplet
       blob_name = "droplet"
-      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet
-      @blob_sender.send_blob(app.guid, blob_name, droplet, self)
+      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet.blob
+      @blob_sender.send_blob(app.guid, blob_name, droplet.blob, self)
     end
 
     post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
@@ -88,14 +84,10 @@ module VCAP::CloudController
       app = App.find(:guid => guid)
       check_app_exists(app, guid)
 
-      file = buildpack_cache_blobstore.file(app.guid)
-      buildpack_cache_path = file.send(:path) if file
+      blob = buildpack_cache_blobstore.blob(app.guid)
       blob_name = "buildpack cache"
 
-      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless buildpack_cache_path
-
-      buildpack_cache_url = buildpack_cache_blobstore.download_uri(app.guid)
-      blob = OpenStruct.new(local_path: buildpack_cache_path, download_url: buildpack_cache_url)
+      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless blob
       @blob_sender.send_blob(app.guid, blob_name, blob, self)
     end
 

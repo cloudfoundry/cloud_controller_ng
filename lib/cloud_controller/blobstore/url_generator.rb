@@ -26,7 +26,9 @@ module CloudController
         droplet = app.current_droplet
         return nil unless droplet
 
-        url = droplet.download_url
+        blob = droplet.blob
+        url = blob.download_url if blob
+
         return nil unless url
         return @droplet_blobstore.local? ? staging_uri("/staging/droplets/#{app.guid}/download") : url
       end

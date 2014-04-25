@@ -45,10 +45,6 @@ module CloudController
           expect(client).to_not be_local
         end
 
-        it "returns a url to the cdn" do
-          expect(client.download_uri("abcdef")).to eql(url_from_cdn)
-        end
-
         it "downloads through the CDN" do
           cdn.should_receive(:get).
             with("ab/cd/abcdef").
@@ -106,7 +102,7 @@ module CloudController
               upload_tmpfile(client, sha_of_different_content)
 
               expect(client.exists?(sha_of_different_content)).to be_true
-              expect(client.file(sha_of_different_content)).to be
+              expect(client.blob(sha_of_different_content)).to be
             end
           end
         end
@@ -160,7 +156,7 @@ module CloudController
               Fog.mock!
             end
 
-            it "does have a public url" do
+            it "does have a url" do
               upload_tmpfile(client)
               expect(client.download_uri("abcdef")).to match(%r{/ab/cd/abcdef})
             end
@@ -176,11 +172,6 @@ module CloudController
               expect(@uri.scheme).to eql "https"
               expect(@uri.host).to eql "#{directory_key}.s3.amazonaws.com"
               expect(@uri.path).to eql "/ab/cd/abcdef"
-            end
-
-            it "is valid for an hour" do
-              match_data = (/Expires=(\d+)/).match @uri.query
-              expect(match_data[1].to_i).to be_within(100).of((Time.now + 3600).to_i)
             end
 
             it "returns nil for a non-existent key" do
@@ -230,7 +221,7 @@ module CloudController
             key = "abcdef12345"
 
             client.cp_to_blobstore(path, key)
-            expect(client.file(key).public_url).to be_nil
+            expect(client.blob(key).public_url).to be_nil
           end
 
           it "can copy as a public file" do
@@ -240,7 +231,7 @@ module CloudController
             key = "abcdef12345"
 
             client.cp_to_blobstore(path, key)
-            expect(client.file(key).public_url).to be
+            expect(client.blob(key).public_url).to be
           end
         end
 
@@ -272,7 +263,7 @@ module CloudController
         it "includes the directory in the partitioned key" do
           upload_tmpfile(client, "abcdef")
           expect(client.exists?("abcdef")).to be_true
-          expect(client.file("abcdef")).to be
+          expect(client.blob("abcdef")).to be
           expect(client.download_uri("abcdef")).to match(%r{my-root/ab/cd/abcdef})
         end
       end

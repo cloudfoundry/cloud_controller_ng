@@ -13,21 +13,10 @@ module VCAP::CloudController
       Jobs::Enqueuer.new(droplet_deletion_job, queue: "cc-generic").enqueue()
     end
 
-    def download_url
-      f = file
-      return nil unless f
-      return blobstore.download_uri_for_file(f)
-    end
-
-    def local_path
-      f = file
-      f.send(:path) if f
-    end
-
     #privatize?
     def file
       if app.staged?
-        blobstore_file
+        blob
       end
     end
 
@@ -50,6 +39,10 @@ module VCAP::CloudController
       app.guid
     end
 
+    def blob
+      blobstore.blob(new_blobstore_key) || blobstore.blob(old_blobstore_key)
+    end
+
     private
     def blobstore
       CloudController::DependencyLocator.instance.droplet_blobstore
@@ -61,12 +54,6 @@ module VCAP::CloudController
       elsif blobstore.exists?(old_blobstore_key)
         return old_blobstore_key
       end
-    end
-
-    def blobstore_file
-      f = blobstore.file(new_blobstore_key)
-      return f if f
-      return blobstore.file(old_blobstore_key)
     end
   end
 end

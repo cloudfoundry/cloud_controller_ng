@@ -60,16 +60,9 @@ module VCAP::CloudController
     end
 
     def bits_uri(key)
-      f = buildpack_blobstore.file(key)
-      return nil unless f
-
-      # unfortunately fog doesn't have a unified interface for non-public
-      # urls
-      if f.respond_to?(:url)
-        f.url(Time.now + 3600)
-      else
-        f.public_url
-      end
+      blob = buildpack_blobstore.blob(key)
+      return nil unless blob
+      blob.download_url
     end
   end
 end

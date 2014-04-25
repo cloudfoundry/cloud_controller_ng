@@ -2,6 +2,7 @@ require "fileutils"
 require "find"
 require "fog"
 require "cloud_controller/blobstore/directory"
+require "cloud_controller/blobstore/blob"
 require "cloud_controller/blobstore/idempotent_directory"
 
 module CloudController
@@ -70,23 +71,13 @@ module CloudController
       end
 
       def download_uri(key)
-        file = file(key)
-        return nil unless file
-        return download_uri_for_file(file)
+        b = blob(key)
+        b.download_url if b
       end
 
-      def download_uri_for_file(file)
-        if @cdn
-          return @cdn.download_uri(file.key)
-        end
-        if file.respond_to?(:url)
-          return file.url(Time.now + 3600)
-        end
-        return file.public_url
-      end
-
-      def file(key)
-        files.head(partitioned_key(key))
+      def blob(key)
+        f = file(key)
+        Blob.new(f, @cdn) if f
       end
 
       # Deprecated should not allow to access underlying files
@@ -95,6 +86,9 @@ module CloudController
       end
 
       private
+      def file(key)
+        files.head(partitioned_key(key))
+      end
 
       def partitioned_key(key)
         key = key.to_s.downcase
