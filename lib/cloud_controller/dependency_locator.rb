@@ -3,6 +3,9 @@ require "repositories/runtime/space_event_repository"
 require "cloud_controller/rest_controller/object_renderer"
 require "cloud_controller/rest_controller/paginated_collection_renderer"
 require "cloud_controller/upload_handler"
+require "cloud_controller/blob_sender/ngx_blob_sender"
+require "cloud_controller/blob_sender/default_blob_sender"
+require "cloud_controller/blob_sender/missing_blob_handler"
 
 module CloudController
   class DependencyLocator
@@ -137,8 +140,19 @@ module CloudController
       })
     end
 
-    private
+    def missing_blob_handler
+      CloudController::BlobSender::MissingBlobHandler.new
+    end
 
+    def blob_sender
+      if config[:nginx][:use_nginx]
+        CloudController::BlobSender::NginxLocalBlobSender.new(missing_blob_handler)
+      else
+        CloudController::BlobSender::DefaultLocalBlobSender.new(missing_blob_handler)
+      end
+    end
+
+    private
     attr_reader :config, :message_bus
   end
 end

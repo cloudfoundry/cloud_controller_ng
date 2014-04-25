@@ -2,13 +2,15 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe StartAppMessage do
+    let(:num_service_instances) { 3 }
+
     let(:app) do
       app = AppFactory.make.tap do |app|
-        NUM_SVC_INSTANCES.times do
+        num_service_instances.times do
           instance = ManagedServiceInstance.make(:space => app.space)
           binding = ServiceBinding.make(
-            :app => app,
-            :service_instance => instance
+              :app => app,
+              :service_instance => instance
           )
           app.add_service_binding(binding)
         end
@@ -20,8 +22,6 @@ module VCAP::CloudController
     end
 
     describe ".start_app_message" do
-      NUM_SVC_INSTANCES = 3
-
       it "should return a serialized dea message" do
         res = StartAppMessage.new(app, 1, config, blobstore_url_generator)
         expect(res[:executableUri]).to eq("app_uri")
@@ -29,7 +29,7 @@ module VCAP::CloudController
 
         expect(res[:droplet]).to eq(app.guid)
         expect(res[:services]).to be_kind_of(Array)
-        expect(res[:services].count).to eq NUM_SVC_INSTANCES
+        expect(res[:services].count).to eq num_service_instances
         expect(res[:services].first).to be_kind_of(Hash)
         expect(res[:limits]).to be_kind_of(Hash)
         expect(res[:env]).to be_kind_of(Array)

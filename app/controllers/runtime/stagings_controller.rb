@@ -1,6 +1,7 @@
 require "cloudfront-signer"
 require "cloud_controller/blobstore/client"
 
+
 module VCAP::CloudController
   class StagingsController < RestController::Base
     include VCAP::Errors
@@ -23,27 +24,18 @@ module VCAP::CloudController
     get "/staging/apps/:guid", :download_app
     def download_app(guid)
       raise InvalidRequest unless package_blobstore.local?
-
-      app = App.find(:guid => guid)
+      app = App.find(guid: guid)
       check_app_exists(app, guid)
 
       file = package_blobstore.file(guid)
       package_path = file.send(:path) if file
       logger.debug "guid: #{guid} package_path: #{package_path}"
-
       unless package_path
         logger.error "could not find package for #{guid}"
         raise ApiError.new_from_details("AppPackageNotFound", guid)
       end
-
-      if config[:nginx][:use_nginx]
-        url = package_blobstore.download_uri(guid)
-        logger.debug "nginx redirect #{url}"
-        [200, {"X-Accel-Redirect" => url}, ""]
-      else
-        logger.debug "send_file #{package_path}"
-        send_file package_path
-      end
+      blob = OpenStruct.new(local_path: package_path, download_url: package_blobstore.download_uri(guid))
+      @blob_sender.send_blob(app.guid, "AppPackage", blob, self)
     end
 
     post "#{DROPLET_PATH}/:guid/upload", :upload_droplet
@@ -72,11 +64,10 @@ module VCAP::CloudController
     def download_droplet(guid)
       app = App.find(:guid => guid)
       check_app_exists(app, guid)
-
       droplet = app.current_droplet
       blob_name = "droplet"
-      log_and_raise_missing_blob(app.guid, blob_name) unless droplet
-      download(app, droplet.local_path, droplet.download_url, blob_name)
+      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet
+      @blob_sender.send_blob(app.guid, blob_name, droplet, self)
     end
 
     post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
@@ -101,42 +92,22 @@ module VCAP::CloudController
       buildpack_cache_path = file.send(:path) if file
       blob_name = "buildpack cache"
 
-      log_and_raise_missing_blob(app.guid, blob_name) unless buildpack_cache_path
+      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless buildpack_cache_path
 
       buildpack_cache_url = buildpack_cache_blobstore.download_uri(app.guid)
-      download(app, buildpack_cache_path, buildpack_cache_url, blob_name)
+      blob = OpenStruct.new(local_path: buildpack_cache_path, download_url: buildpack_cache_url)
+      @blob_sender.send_blob(app.guid, blob_name, blob, self)
     end
 
     private
-
     def inject_dependencies(dependencies)
       super
       @blobstore = dependencies.fetch(:droplet_blobstore)
       @buildpack_cache_blobstore = dependencies.fetch(:buildpack_cache_blobstore)
       @package_blobstore = dependencies.fetch(:package_blobstore)
       @config = dependencies.fetch(:config)
-    end
-
-    def log_and_raise_missing_blob(app_guid, name)
-      Loggregator.emit_error(app_guid, "Did not find #{name} for app with guid: #{app_guid}")
-      logger.error "could not find #{name} for #{app_guid}"
-      raise ApiError.new_from_details("StagingError", "#{name} not found for #{app_guid}")
-    end
-
-    def download(app, blob_path, url, name)
-      raise ApiError.new_from_details("InvalidRequest") unless blobstore.local?
-
-      logger.debug "guid: #{app.guid} #{name} #{blob_path} #{url}"
-
-      if config[:nginx][:use_nginx]
-        log_and_raise_missing_blob(app.guid, name) unless url
-        logger.debug "nginx redirect #{url}"
-        [200, {"X-Accel-Redirect" => url}, ""]
-      else
-        log_and_raise_missing_blob(app.guid, name) unless blob_path
-        logger.debug "send_file #{blob_path}"
-        send_file blob_path
-      end
+      @missing_blob_handler = dependencies.fetch(:missing_blob_handler)
+      @blob_sender = dependencies.fetch(:blob_sender)
     end
 
     def upload_path
@@ -153,10 +124,6 @@ module VCAP::CloudController
         return unless here && here.is_a?(Hash)
         here[seg]
       end
-    end
-
-    def tmpdir
-      (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
     end
 
     def check_app_exists(app, guid)

@@ -2,14 +2,13 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DeaClient do
-    NUM_SVC_INSTANCES = 3
-    
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
     let(:dea_pool) { double(:dea_pool) }
+    let(:num_service_instances) { 3 }
     let(:app) do
       app = AppFactory.make.tap do |app|
-        NUM_SVC_INSTANCES.times do
+        num_service_instances.times do
           instance = ManagedServiceInstance.make(:space => app.space)
           binding = ServiceBinding.make(
             :app => app,

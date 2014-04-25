@@ -255,4 +255,27 @@ describe CloudController::DependencyLocator do
       expect(locator.entity_only_paginated_collection_renderer).to eq(renderer)
     end
   end
+
+  describe "#missing_blob_handler" do
+    it "returns the correct handler" do
+      handler = double("a missing blob handler")
+      expect(CloudController::BlobSender::MissingBlobHandler).to receive(:new).and_return(handler)
+      expect(locator.missing_blob_handler).to eq(handler)
+    end
+  end
+
+  describe "#blob_sender" do
+    let(:sender) { double("sender") }
+    it "returns the correct sender when using ngx" do
+      config[:nginx][:use_nginx] = true
+      expect(CloudController::BlobSender::NginxLocalBlobSender).to receive(:new).and_return(sender)
+      expect(locator.blob_sender).to eq(sender)
+    end
+
+    it "returns the correct sender when not using ngx" do
+      config[:nginx][:use_nginx] = false
+      expect(CloudController::BlobSender::DefaultLocalBlobSender).to receive(:new).and_return(sender)
+      expect(locator.blob_sender).to eq(sender)
+    end
+  end
 end
