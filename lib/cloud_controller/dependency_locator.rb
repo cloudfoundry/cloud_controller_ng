@@ -65,12 +65,17 @@ module CloudController
     def global_app_bits_cache
       resource_pool = config.fetch(:resource_pool)
       cdn_uri = resource_pool.fetch(:cdn, nil) && resource_pool.fetch(:cdn).fetch(:uri, nil)
+      min_file_size = resource_pool[:minimum_size]
+      max_file_size = resource_pool[:maximum_size]
       app_bit_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
 
       Blobstore::Client.new(
         resource_pool.fetch(:fog_connection),
         resource_pool.fetch(:resource_directory_key),
-        app_bit_cdn
+        app_bit_cdn,
+        nil,
+        min_file_size,
+        max_file_size
       )
     end
 
