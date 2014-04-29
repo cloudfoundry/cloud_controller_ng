@@ -194,6 +194,8 @@ module VCAP::CloudController
 
         AppObserver.configure(@config, message_bus, dea_pool, stager_pool)
 
+        StagingCompletionHandler.new(message_bus).subscribe!
+
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
         DeaClient.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 

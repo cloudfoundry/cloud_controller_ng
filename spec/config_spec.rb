@@ -149,6 +149,13 @@ module VCAP::CloudController
         DeaClient.dea_pool.register_subscriptions
       end
 
+      it "starts the staging task completion handler" do
+        StagingCompletionHandler.any_instance.should_receive(:subscribe!)
+
+        Config.configure_components(@test_config)
+        Config.configure_components_depending_on_message_bus(message_bus)
+      end
+
       it "sets the legacy bulk" do
         bulk_config = {bulk_api: {auth_user: "user", auth_password: "password"}}
         Config.configure_components(@test_config.merge(bulk_config))

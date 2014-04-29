@@ -2,12 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe DiegoStagerTask do
-    FakeLogger = Struct.new(:log_messages) do
-      def info(message, _)
-        log_messages << message
-      end
-    end
-
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:staging_timeout) { 360 }
     let(:environment_json) { {} }
@@ -79,101 +73,6 @@ module VCAP::CloudController
             to include(
                    stack: app.stack.name
                )
-      end
-
-      context 'when staging finishes' do
-        before do
-          message_bus.stub(:request).and_yield(response, 'I am an ignored inbox parameter')
-        end
-
-        context 'when the staging successfully completes' do
-          let(:response) { {'task_log' => double(:task_log), 'detected_buildpack' => 'INTERCAL'} }
-
-          it 'logs the staging result' do
-
-            perform_stage
-            logger.log_messages.include?("diego.staging.response")
-          end
-
-          it 'should update the app with the detected buildpack' do
-            perform_stage
-            app.detected_buildpack.should == 'INTERCAL'
-          end
-
-          it 'should call the completion callback' do
-            completion_callback.should_receive(:call)
-            perform_stage
-          end
-
-          context 'when another staging task has started' do
-            before do
-              app.stub(:staging_task_id).and_return('another-task-id')
-            end
-
-            it 'should not update the app with a detected buildpack' do
-              perform_stage
-              app.detected_buildpack.should_not == 'INTERCAL'
-            end
-
-            it 'should not call the completion callback' do
-              completion_callback.should_not_receive(:call)
-              perform_stage
-            end
-          end
-        end
-
-        context 'when the staging fails' do
-          let(:response) { {"error" => "Sumpin' bad happened"} }
-
-          before do
-            message_bus.stub(:request).and_yield(response, nil)
-          end
-
-          it 'should mark the app as "failed to stage"' do
-            app.should_receive(:mark_as_failed_to_stage)
-            perform_stage
-          end
-
-          it 'should emit a loggregator error' do
-            Loggregator.should_receive(:emit_error).with(app.guid, /bad/)
-            perform_stage
-          end
-
-          it 'should not update the app with the detected buildpack' do
-            perform_stage
-            app.detected_buildpack.should_not == 'INTERCAL'
-          end
-
-          it 'should not call the completion callback' do
-            completion_callback.should_not_receive(:call)
-            perform_stage
-          end
-
-        end
-
-        context 'when there is a message bus timeout' do
-          let(:response) { {"timeout" => true} }
-
-          it 'should mark the app as "failed to stage"' do
-            app.should_receive(:mark_as_failed_to_stage)
-            perform_stage
-          end
-
-          it 'should emit a loggregator error' do
-            Loggregator.should_receive(:emit_error).with(app.guid, /timed out/)
-            perform_stage
-          end
-
-          it 'should not update the app with the detected buildpack' do
-            perform_stage
-            app.detected_buildpack.should_not == 'INTERCAL'
-          end
-
-          it 'should not call the completion callback' do
-            completion_callback.should_not_receive(:call)
-            perform_stage
-          end
-        end
       end
     end
 
