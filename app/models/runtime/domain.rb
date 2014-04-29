@@ -1,7 +1,8 @@
 module VCAP::CloudController
   class Domain < Sequel::Model
-    DOMAIN_REGEX = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}$/ix.freeze
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
+
+    DOMAIN_REGEX = /^(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])$/ix.freeze
 
     dataset.row_proc = proc do |row|
       if row[:owning_organization_id]
@@ -60,6 +61,7 @@ module VCAP::CloudController
       validates_unique   :name
 
       validates_format DOMAIN_REGEX, :name
+      validates_length_range 3..255, :name
 
       errors.add(:name, :overlapping_domain) if overlaps_domain_in_other_org?
     end
