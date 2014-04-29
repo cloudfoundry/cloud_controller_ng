@@ -1104,6 +1104,28 @@ module VCAP::CloudController
         app.update(instances: app.instances + 1)
       end
 
+      context "when AppObserver.updated fails" do
+        it "should undo any change", non_transactional: true do
+          app = AppFactory.make
+          previous_state = app.state
+
+          AppObserver.should_receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
+          expect{app.update(state: "STARTED")}.to raise_error
+          expect(app.state).to eql(previous_state)
+        end
+
+        it "should undo multiple changes made", non_transactional: true do
+          app = AppFactory.make
+          previous_instances = app.instances
+          previous_memory = app.memory
+
+          AppObserver.should_receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
+          expect{app.update(instances: app.instances + 1, memory: 4096)}.to raise_error
+          expect(app.instances).to eql(previous_instances)
+          expect(app.memory).to eql(previous_memory)
+        end
+      end
+
       context "when app state changes from STOPPED to STARTED" do
         it "creates an AppUsageEvent" do
           app = AppFactory.make

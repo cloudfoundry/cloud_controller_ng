@@ -459,7 +459,13 @@ module VCAP::CloudController
 
     def after_commit
       super
-      AppObserver.updated(self)
+
+      begin
+        AppObserver.updated(self)
+      rescue Errors::ApiError => e
+        undo_changes(previous_changes)
+        raise e
+      end
     end
 
     private
@@ -518,6 +524,15 @@ module VCAP::CloudController
       return true if previously_started != started?
       return true if started? && footprint_changed?
       false
+    end
+
+    def undo_changes(changes)
+      attrs = changes.each_with_object({}) { |(key, change), hash| hash[key] = change[0] }
+      attrs.delete(:updated_at)
+      db.transaction(savepoint: true) do
+        lock!
+        update(attrs)
+      end
     end
 
     class << self
