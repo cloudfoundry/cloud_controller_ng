@@ -41,7 +41,7 @@ module VCAP::CloudController
       if @buildpack_blobstore.local?
         blob = buildpack_blobstore.blob(obj.key)
         raise self.class.not_found_exception.new(guid) unless blob
-        return send_file blob.loca_path
+        return send_file blob.local_path
       else
         bits_uri = "#{bits_uri(obj.key)}"
         return [HTTP::FOUND, {"Location" => bits_uri}, nil]
