@@ -1,4 +1,4 @@
-# ccng Guardfile
+# cc Guardfile
 # More info at https://github.com/guard/guard#readme
 
 guard 'rspec', :cli => '--color --format doc --fail-fast', :all_on_start => false, :all_after_pass => false do
