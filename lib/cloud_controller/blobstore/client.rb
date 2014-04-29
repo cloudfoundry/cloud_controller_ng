@@ -85,11 +85,11 @@ module CloudController
         dir.files
       end
 
+      private
+
       def file(key)
         files.head(partitioned_key(key))
       end
-
-      private
 
       def partitioned_key(key)
         key = key.to_s.downcase

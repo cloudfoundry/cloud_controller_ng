@@ -39,10 +39,9 @@ module VCAP::CloudController
     def download(guid)
       obj = Buildpack.find(guid: guid)
       if @buildpack_blobstore.local?
-        f = buildpack_blobstore.file(obj.key)
-        raise self.class.not_found_exception.new(guid) unless f
-        # hack to get the local path to the file
-        return send_file f.send(:path)
+        blob = buildpack_blobstore.blob(obj.key)
+        raise self.class.not_found_exception.new(guid) unless blob
+        return send_file blob.loca_path
       else
         bits_uri = "#{bits_uri(obj.key)}"
         return [HTTP::FOUND, {"Location" => bits_uri}, nil]

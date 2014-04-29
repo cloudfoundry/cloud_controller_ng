@@ -34,7 +34,7 @@ module CloudController
         when "BuildpacksController", "BuildpackBitsController"
           {
             buildpack_blobstore: dependency_locator.buildpack_blobstore,
-            upload_handler: dependency_locator.upload_handler
+            upload_handler: dependency_locator.upload_handler,
           }
         when "StagingsController"
           {
