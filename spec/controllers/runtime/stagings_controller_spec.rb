@@ -235,6 +235,13 @@ module VCAP::CloudController
           config = VCAP::CloudController::Config.config
           expect(decoded_response.fetch('metadata').fetch('url')).to eql("http://#{config.fetch(:external_domain)}/v2/jobs/#{job.guid}")
         end
+        
+        it "returns a JSON body with full url containing the correct external_protocol" do
+          config[:external_protocol] = "https"
+          post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
+          job = Delayed::Job.last
+          expect(decoded_response.fetch('metadata').fetch('url')).to start_with("https://")
+        end
 
         it "returns a JSON body with full url to query for job's status even Cloud Controller has multiple external domains" do
           config[:external_domain] = ["www.example.com", config[:external_domain]]

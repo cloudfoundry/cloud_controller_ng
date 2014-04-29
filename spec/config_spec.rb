@@ -60,6 +60,10 @@ module VCAP::CloudController
             expect(config[:directories]).to eq({ some: "value" })
           end
 
+          it "preserves the external_protocol value from the file" do
+            expect(config[:external_protocol]).to eq("http")
+          end
+
           it "preserves the billing_event_writing_enabled value from the file" do
             expect(config[:billing_event_writing_enabled]).to be_false
           end
