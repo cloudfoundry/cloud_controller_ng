@@ -4,6 +4,7 @@ module AccessHelpers
     it { should be_able_to :read, object }
     it { should be_able_to :update, object }
     it { should be_able_to :delete, object }
+    it { should be_able_to :index, object.class }
   end
 
   shared_examples :read_only do
@@ -11,6 +12,7 @@ module AccessHelpers
     it { should be_able_to :read, object }
     it { should_not be_able_to :update, object }
     it { should_not be_able_to :delete, object }
+    it { should be_able_to :index, object.class }
   end
 
   shared_examples :no_access do
@@ -18,6 +20,9 @@ module AccessHelpers
     it { should_not be_able_to :read, object }
     it { should_not be_able_to :update, object }
     it { should_not be_able_to :delete, object }
+    # backward compatibility:
+    # :index is not tested here because some subclasses of BaseAccess
+    # override the default behavior of always allowing access to :index
   end
 
   shared_examples :read_error do
