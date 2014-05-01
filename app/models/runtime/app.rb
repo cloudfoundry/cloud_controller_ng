@@ -7,6 +7,7 @@ require "repositories/runtime/app_usage_event_repository"
 require_relative "buildpack"
 
 module VCAP::CloudController
+  # rubocop:disable ClassLength
   class App < Sequel::Model
     plugin :serialization
 
@@ -25,16 +26,16 @@ module VCAP::CloudController
     default_order_by :name
 
     export_attributes :name, :production,
-      :space_guid, :stack_guid, :buildpack, :detected_buildpack,
-      :environment_json, :memory, :instances, :disk_quota,
-      :state, :version, :command, :console, :debug,
-      :staging_task_id, :package_state, :health_check_timeout
+                      :space_guid, :stack_guid, :buildpack, :detected_buildpack,
+                      :environment_json, :memory, :instances, :disk_quota,
+                      :state, :version, :command, :console, :debug,
+                      :staging_task_id, :package_state, :health_check_timeout
 
     import_attributes :name, :production,
-      :space_guid, :stack_guid, :buildpack, :detected_buildpack,
-      :environment_json, :memory, :instances, :disk_quota,
-      :state, :command, :console, :debug,
-      :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout
+                      :space_guid, :stack_guid, :buildpack, :detected_buildpack,
+                      :environment_json, :memory, :instances, :disk_quota,
+                      :state, :command, :console, :debug,
+                      :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout
 
     strip_attributes :name
 
@@ -76,14 +77,14 @@ module VCAP::CloudController
 
     def validation_policies
       [
-        AppEnvironmentPolicy.new(self),
-        DiskQuotaPolicy.new(self, max_app_disk_in_mb),
-        MetadataPolicy.new(self, metadata_deserialized),
-        MinMemoryPolicy.new(self),
-        MaxMemoryPolicy.new(self),
-        InstancesPolicy.new(self),
-        HealthCheckPolicy.new(self, health_check_timeout),
-        CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?)
+          AppEnvironmentPolicy.new(self),
+          DiskQuotaPolicy.new(self, max_app_disk_in_mb),
+          MetadataPolicy.new(self, metadata_deserialized),
+          MinMemoryPolicy.new(self),
+          MaxMemoryPolicy.new(self),
+          InstancesPolicy.new(self),
+          HealthCheckPolicy.new(self, health_check_timeout),
+          CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?)
       ]
     end
 
@@ -133,6 +134,7 @@ module VCAP::CloudController
       repository = Repositories::Runtime::AppUsageEventRepository.new
       repository.create_from_app(self)
     end
+
     private :create_app_usage_event
 
     def version_needs_to_be_updated?
@@ -164,8 +166,8 @@ module VCAP::CloudController
       # If app is not in started state and/or is new, then the changes
       # to the footprint shouldn't trigger a billing event.
       !new? &&
-        (being_stopped? || (footprint_changed? && started?)) &&
-        !has_stop_event_for_latest_run?
+          (being_stopped? || (footprint_changed? && started?)) &&
+          !has_stop_event_for_latest_run?
     end
 
     def in_suspended_org?
@@ -195,7 +197,7 @@ module VCAP::CloudController
 
     def footprint_changed?
       (column_changed?(:production) || column_changed?(:memory) ||
-        column_changed?(:instances))
+          column_changed?(:instances))
     end
 
     def before_destroy
@@ -251,15 +253,15 @@ module VCAP::CloudController
       json = Yajl::Encoder.encode(env)
       generate_salt
       self.encrypted_environment_json =
-        VCAP::CloudController::Encryptor.encrypt(json, salt)
+          VCAP::CloudController::Encryptor.encrypt(json, salt)
     end
 
     def environment_json
       return unless encrypted_environment_json
 
       Yajl::Parser.parse(
-        VCAP::CloudController::Encryptor.decrypt(
-          encrypted_environment_json, salt))
+          VCAP::CloudController::Encryptor.decrypt(
+              encrypted_environment_json, salt))
     end
 
     def system_env_json
@@ -268,25 +270,25 @@ module VCAP::CloudController
 
     def vcap_application
       {
-        limits: {
-          mem: memory,
-          disk: disk_quota,
-          fds: file_descriptors
-        },
-        application_version: version,
-        application_name: name,
-        application_uris: uris,
-        version: version,
-        name: name,
-        space_name: space.name,
-        space_id: space_guid,
-        uris: uris,
-        users: nil
+          limits: {
+              mem: memory,
+              disk: disk_quota,
+              fds: file_descriptors
+          },
+          application_version: version,
+          application_name: name,
+          application_uris: uris,
+          version: version,
+          name: name,
+          space_name: space.name,
+          space_id: space_guid,
+          uris: uris,
+          users: nil
       }
     end
 
     def database_uri
-      service_uris = service_bindings.map {|binding| binding.credentials["uri"]}.compact
+      service_uris = service_bindings.map { |binding| binding.credentials["uri"] }.compact
       DatabaseUriGenerator.new(service_uris).database_uri
     end
 
@@ -343,11 +345,11 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       Sequel.or([
-        [:space, user.spaces_dataset],
-        [:space, user.managed_spaces_dataset],
-        [:space, user.audited_spaces_dataset],
-        [:apps__space_id, user.managed_organizations_dataset.join(:spaces, :spaces__organization_id => :organizations__id).select(:spaces__id)]
-      ])
+                    [:space, user.spaces_dataset],
+                    [:space, user.managed_spaces_dataset],
+                    [:space, user.audited_spaces_dataset],
+                    [:apps__space_id, user.managed_organizations_dataset.join(:spaces, :spaces__organization_id => :organizations__id).select(:spaces__id)]
+                ])
     end
 
     def needs_staging?
@@ -439,12 +441,28 @@ module VCAP::CloudController
     def current_droplet
       return nil unless droplet_hash
       self.droplets_dataset.filter(droplet_hash: droplet_hash).first ||
-        Droplet.new(app: self, droplet_hash: self.droplet_hash)
+          Droplet.new(app: self, droplet_hash: self.droplet_hash)
     end
 
     def running_instances
       return 0 unless started?
       health_manager_client.healthy_instances(self)
+    end
+
+    def start!
+      self.state = "STARTED"
+      save
+    end
+
+    def stop!
+      self.state = "STOPPED"
+      save
+    end
+
+    def restage!
+      stop!
+      mark_for_restaging
+      start!
     end
 
     # returns True if we need to update the DEA's with
@@ -484,6 +502,7 @@ module VCAP::CloudController
     end
 
     WHITELIST_SERVICE_KEYS = %W[name label tags plan credentials syslog_drain_url].freeze
+
     def service_binding_json (binding)
       vcap_service = {}
       WHITELIST_SERVICE_KEYS.each do |key|
@@ -540,4 +559,5 @@ module VCAP::CloudController
       end
     end
   end
+  # rubocop:enable ClassLength
 end

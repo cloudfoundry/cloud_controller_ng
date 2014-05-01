@@ -100,6 +100,12 @@ module VCAP::CloudController
         end
       end
 
+      def react_to_package_state_change(app)
+        stage_if_needed(app) do |_|
+          broadcast_app_updated(app)
+        end
+      end
+
       def broadcast_app_updated(app)
         @message_bus.publish("droplet.updated", droplet: app.guid)
       end

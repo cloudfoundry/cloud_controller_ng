@@ -11,20 +11,20 @@ module VCAP::CloudController
     let(:route) { Route.make(:domain => domain, :space => space) }
 
     def enable_custom_buildpacks
-      config_override({ :disable_custom_buildpacks => nil })
+      config_override({:disable_custom_buildpacks => nil})
     end
 
     def disable_custom_buildpacks
-      config_override({ :disable_custom_buildpacks => true })
+      config_override({:disable_custom_buildpacks => true})
     end
 
     def expect_validator(validator_class)
-      matching_validitor = subject.validation_policies.select{|validator| validator.is_a?(validator_class)}
+      matching_validitor = subject.validation_policies.select { |validator| validator.is_a?(validator_class) }
       expect(matching_validitor).to be
     end
 
     def expect_no_validator(validator_class)
-      matching_validitor = subject.validation_policies.select{|validator| validator.is_a?(validator_class)}
+      matching_validitor = subject.validation_policies.select { |validator| validator.is_a?(validator_class) }
       expect(matching_validitor).to be_empty
     end
 
@@ -36,39 +36,39 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :required_attributes => [:name, :space],
-      :unique_attributes => [ [:space, :name] ],
-      :custom_attributes_for_uniqueness_tests => ->{ {stack: Stack.make} },
-      :stripped_string_attributes => :name,
-      :many_to_one => {
-        :space => {
-          :delete_ok => true,
-          :create_for => lambda { |app| Space.make },
+        :required_attributes => [:name, :space],
+        :unique_attributes => [[:space, :name]],
+        :custom_attributes_for_uniqueness_tests => -> { {stack: Stack.make} },
+        :stripped_string_attributes => :name,
+        :many_to_one => {
+            :space => {
+                :delete_ok => true,
+                :create_for => lambda { |app| Space.make },
+            },
+            :stack => {
+                :delete_ok => true,
+                :create_for => lambda { |app| Stack.make },
+            }
         },
-        :stack => {
-          :delete_ok => true,
-          :create_for => lambda { |app| Stack.make },
+        :one_to_zero_or_more => {
+            :service_bindings => lambda { |app|
+              service_binding = ServiceBinding.make
+              service_binding.service_instance.space = app.space
+              service_binding
+            },
+            :routes => lambda { |app|
+              domain = PrivateDomain.make(
+                  :owning_organization => app.space.organization
+              )
+              Route.make(
+                  :domain => domain,
+                  :space => app.space
+              )
+            },
+            :events => lambda { |app|
+              AppEvent.make(:app => app)
+            }
         }
-      },
-      :one_to_zero_or_more => {
-        :service_bindings => lambda { |app|
-          service_binding = ServiceBinding.make
-          service_binding.service_instance.space = app.space
-          service_binding
-        },
-        :routes => lambda { |app|
-          domain = PrivateDomain.make(
-            :owning_organization => app.space.organization
-          )
-          Route.make(
-            :domain => domain,
-            :space => app.space
-          )
-        },
-        :events => lambda { |app|
-          AppEvent.make(:app => app)
-        }
-      }
     }
 
     describe "#in_suspended_org?" do
@@ -92,13 +92,13 @@ module VCAP::CloudController
 
     describe "#audit_hash" do
       it "should return uncensored data unchanged" do
-        request_hash = { "key" => "value", "key2" => "value2" }
+        request_hash = {"key" => "value", "key2" => "value2"}
         expect(App.audit_hash(request_hash)).to eq(request_hash)
       end
 
       it "should obfuscate censored data" do
-        request_hash = { "command" => "PASSWORD=foo ./start" }
-        expect(App.audit_hash(request_hash)).to eq({ "command" => "PRIVATE DATA HIDDEN" })
+        request_hash = {"command" => "PASSWORD=foo ./start"}
+        expect(App.audit_hash(request_hash)).to eq({"command" => "PRIVATE DATA HIDDEN"})
       end
     end
 
@@ -132,8 +132,8 @@ module VCAP::CloudController
       context "when app is being created" do
         subject do
           App.new(
-            :name => Sham.name,
-            :space => space,
+              :name => Sham.name,
+              :space => space,
           )
         end
         it_always_sets_stack
@@ -160,10 +160,10 @@ module VCAP::CloudController
 
       context "app needs staging" do
         subject { AppFactory.make(
-          :package_hash => "package-hash",
-          :package_state => "PENDING",
-          :instances => 1,
-          :state => "STARTED"
+            :package_hash => "package-hash",
+            :package_state => "PENDING",
+            :instances => 1,
+            :state => "STARTED"
         ) }
 
         it "keeps app as needs staging" do
@@ -176,10 +176,10 @@ module VCAP::CloudController
       context "app is already staged" do
         subject do
           AppFactory.make(
-            package_hash: "package-hash",
-            instances: 1,
-            droplet_hash: "droplet-hash",
-            state: "STARTED")
+              package_hash: "package-hash",
+              instances: 1,
+              droplet_hash: "droplet-hash",
+              state: "STARTED")
         end
 
         it "marks the app for re-staging" do
@@ -200,9 +200,9 @@ module VCAP::CloudController
       context "app is already staged" do
         subject do
           AppFactory.make(
-            package_hash: "package-hash",
-            instances: 1,
-            droplet_hash: "droplet-hash")
+              package_hash: "package-hash",
+              instances: 1,
+              droplet_hash: "droplet-hash")
         end
 
         it "knows its current droplet" do
@@ -241,14 +241,14 @@ module VCAP::CloudController
         app = AppFactory.make
 
         domain = PrivateDomain.make(
-          :owning_organization => app.space.organization
+            :owning_organization => app.space.organization
         )
 
         other_space = Space.make(:organization => app.space.organization)
 
         route = Route.make(
-          :space => other_space,
-          :domain => domain,
+            :space => other_space,
+            :domain => domain,
         )
 
         expect {
@@ -262,9 +262,9 @@ module VCAP::CloudController
 
         other_space = Space.make(:organization => app.space.organization)
         route = Route.make(
-          :host => Sham.host,
-          :space => other_space,
-          :domain => shared_domain
+            :host => Sham.host,
+            :space => other_space,
+            :domain => shared_domain
         )
 
         expect {
@@ -277,20 +277,20 @@ module VCAP::CloudController
       it "has the expected values" do
         app = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: "app-name")
         expected_hash = {
-          limits: {
-            mem: 259,
-            disk: 799,
-            fds: 1234,
-          },
-          application_version: app.version,
-          application_name: "app-name",
-          application_uris: app.uris,
-          version: app.version,
-          name: "app-name",
-          space_name: app.space.name,
-          space_id: app.space.guid,
-          uris: app.uris,
-          users: nil
+            limits: {
+                mem: 259,
+                disk: 799,
+                fds: 1234,
+            },
+            application_version: app.version,
+            application_name: "app-name",
+            application_uris: app.uris,
+            version: app.version,
+            name: "app-name",
+            space_name: app.space.name,
+            space_id: app.space.guid,
+            uris: app.uris,
+            users: nil
         }
 
         app.vcap_application.should == expected_hash
@@ -299,16 +299,16 @@ module VCAP::CloudController
 
     describe "#environment_json" do
       it "deserializes the serialized value" do
-        app = AppFactory.make(:environment_json => { "jesse" => "awesome" })
+        app = AppFactory.make(:environment_json => {"jesse" => "awesome"})
         app.environment_json.should eq("jesse" => "awesome")
       end
 
       def self.it_does_not_mark_for_re_staging
         it "does not mark an app for restage" do
           app = AppFactory.make(
-            :package_hash => "deadbeef",
-            :package_state => "STAGED",
-            :environment_json => old_env_json,
+              :package_hash => "deadbeef",
+              :package_state => "STAGED",
+              :environment_json => old_env_json,
           )
 
           expect {
@@ -320,19 +320,19 @@ module VCAP::CloudController
 
       context "if env changes" do
         let(:old_env_json) { {} }
-        let(:new_env_json) { { "key" => "value" } }
+        let(:new_env_json) { {"key" => "value"} }
         it_does_not_mark_for_re_staging
       end
 
       context "if BUNDLE_WITHOUT in env changes" do
-        let(:old_env_json) { { "BUNDLE_WITHOUT" => "test" } }
-        let(:new_env_json) { { "BUNDLE_WITHOUT" => "development" } }
+        let(:old_env_json) { {"BUNDLE_WITHOUT" => "test"} }
+        let(:new_env_json) { {"BUNDLE_WITHOUT" => "development"} }
         it_does_not_mark_for_re_staging
       end
 
       describe "env is encrypted" do
-        let(:env) { { "jesse" => "awesome" } }
-        let(:long_env) { { "many_os" => "o" * 10_000 } }
+        let(:env) { {"jesse" => "awesome"} }
+        let(:long_env) { {"many_os" => "o" * 10_000} }
         let!(:app) { AppFactory.make(:environment_json => env) }
         let(:last_row) { VCAP::CloudController::App.dataset.naked.order_by(:id).last }
 
@@ -424,15 +424,15 @@ module VCAP::CloudController
       end
 
       context "when there are services" do
-        let(:space){Space.make}
-        let(:app ){App.make(:environment_json => {"jesse" => "awesome"}, :space => space)}
-        let(:service){Service.make(:label => "elephantsql-n/a")}
-        let(:service_alt){Service.make(:label => "giraffesql-n/a")}
-        let(:service_plan){ServicePlan.make(:service => service)}
-        let(:service_plan_alt){ServicePlan.make(:service => service_alt)}
-        let(:service_instance){ManagedServiceInstance.make(:space => space, :service_plan => service_plan, :name => "elephantsql-vip-uat")}
-        let(:service_instance_same_label){ManagedServiceInstance.make(:space => space, :service_plan => service_plan, :name => "elephantsql-2")}
-        let(:service_instance_diff_label){ManagedServiceInstance.make(:space => space, :service_plan => service_plan_alt, :name => "giraffesql-vip-uat")}
+        let(:space) { Space.make }
+        let(:app) { App.make(:environment_json => {"jesse" => "awesome"}, :space => space) }
+        let(:service) { Service.make(:label => "elephantsql-n/a") }
+        let(:service_alt) { Service.make(:label => "giraffesql-n/a") }
+        let(:service_plan) { ServicePlan.make(:service => service) }
+        let(:service_plan_alt) { ServicePlan.make(:service => service_alt) }
+        let(:service_instance) { ManagedServiceInstance.make(:space => space, :service_plan => service_plan, :name => "elephantsql-vip-uat") }
+        let(:service_instance_same_label) { ManagedServiceInstance.make(:space => space, :service_plan => service_plan, :name => "elephantsql-2") }
+        let(:service_instance_diff_label) { ManagedServiceInstance.make(:space => space, :service_plan => service_plan_alt, :name => "giraffesql-vip-uat") }
 
         before do
           ServiceBinding.make(:app => app, :service_instance => service_instance)
@@ -475,7 +475,7 @@ module VCAP::CloudController
     describe "metadata" do
       it "deserializes the serialized value" do
         app = AppFactory.make(
-          :metadata => { "jesse" => "super awesome" },
+            :metadata => {"jesse" => "super awesome"},
         )
         app.metadata.should eq("jesse" => "super awesome")
       end
@@ -730,14 +730,14 @@ module VCAP::CloudController
 
         it "allows any disk_quota below the maximum" do
           app.disk_quota = 1000
-          expect{
+          expect {
             app.save
           }.to_not raise_error
         end
 
         it "does not allow a disk_quota above the maximum" do
           app.disk_quota = 3000
-          expect{
+          expect {
             app.save
           }.to raise_error(Sequel::ValidationFailed, /too much disk/)
         end
@@ -757,35 +757,35 @@ module VCAP::CloudController
 
         it "should allow standard ascii characters" do
           app.name = "A -_- word 2!?()\'\"&+."
-          expect{
+          expect {
             app.save
           }.to_not raise_error
         end
 
         it "should allow backslash characters" do
           app.name = "a \\ word"
-          expect{
+          expect {
             app.save
           }.to_not raise_error
         end
 
         it "should allow unicode characters" do
           app.name = "防御力¡"
-          expect{
+          expect {
             app.save
           }.to_not raise_error
         end
 
         it "should not allow newline characters" do
           app.name = "a \n word"
-          expect{
+          expect {
             app.save
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it "should not allow escape characters" do
           app.name = "a \e word"
-          expect{
+          expect {
             app.save
           }.to raise_error(Sequel::ValidationFailed)
         end
@@ -821,7 +821,7 @@ module VCAP::CloudController
 
     describe "health_check_timeout" do
       before do
-        config_override({ :maximum_health_check_timeout => 512 })
+        config_override({:maximum_health_check_timeout => 512})
       end
 
       context "when the health_check_timeout was not specified" do
@@ -1047,6 +1047,77 @@ module VCAP::CloudController
       end
     end
 
+    describe "#start!" do
+      let!(:app) { AppFactory.make }
+
+      before do
+        allow(AppObserver).to receive(:updated)
+      end
+
+      it "should set the state to started" do
+        expect {
+          app.start!
+        }.to change { app.state }.to "STARTED"
+      end
+
+      it "saves the app to trigger the AppObserver", non_transactional: true do
+        expect(AppObserver).not_to have_received(:updated).with(app)
+        app.start!
+        expect(AppObserver).to have_received(:updated).with(app)
+      end
+    end
+
+    describe "#stop!" do
+      let!(:app) { AppFactory.make }
+
+      before do
+        allow(AppObserver).to receive(:updated)
+        app.state = "STARTED"
+      end
+
+      it "sets the state to stopped" do
+        expect {
+          app.stop!
+        }.to change { app.state }.to "STOPPED"
+      end
+
+      it "saves the app to trigger the AppObserver", non_transactional: true do
+        expect(AppObserver).not_to have_received(:updated).with(app)
+        app.stop!
+        expect(AppObserver).to have_received(:updated).with(app)
+      end
+    end
+
+    describe "#mark_for_restaging" do
+      let(:app) { AppFactory.make }
+
+      before do
+        app.package_state = "STAGED"
+      end
+
+      it "should set the package state pending" do
+        expect {
+          app.mark_for_restaging
+        }.to change { app.package_state }.to "PENDING"
+      end
+    end
+
+    describe "#restage!" do
+      let(:app) { AppFactory.make }
+
+      it "stops the app, marks the app for restaging, and starts the app", non_transactional: true do
+        @updated_apps = []
+        allow(AppObserver).to receive(:updated) do |app|
+          @updated_apps << app
+        end
+        expect(AppObserver).not_to have_received(:updated)
+        app.restage!
+        expect(@updated_apps.first.state).to eq('STOPPED')
+        expect(@updated_apps.last.package_state).to eq('PENDING')
+        expect(@updated_apps.last.state).to eq('STARTED')
+      end
+    end
+
     describe "droplet_hash=" do
       let(:app) { AppFactory.make }
 
@@ -1061,6 +1132,7 @@ module VCAP::CloudController
       end
     end
 
+
     describe "uris" do
       it "should return the uris on the app" do
         app = AppFactory.make(:space => space)
@@ -1072,8 +1144,8 @@ module VCAP::CloudController
     describe "adding routes to unsaved apps" do
       it "should set a route by guid on a new but unsaved app" do
         app = App.new(:name => Sham.name,
-          :space => space,
-          :stack => Stack.make)
+                      :space => space,
+                      :stack => Stack.make)
         app.add_route_by_guid(route.guid)
         app.save
         app.routes.should == [route]
@@ -1081,8 +1153,8 @@ module VCAP::CloudController
 
       it "should not allow a route on a domain from another org" do
         app = App.new(:name => Sham.name,
-          :space => space,
-          :stack => Stack.make)
+                      :space => space,
+                      :stack => Stack.make)
         app.add_route_by_guid(Route.make.guid)
         expect { app.save }.to raise_error(Errors::InvalidRouteRelation)
         app.routes.should be_empty
@@ -1092,8 +1164,8 @@ module VCAP::CloudController
     describe "creation" do
       it "does not create an AppUsageEvent" do
         expect {
-          App.create_from_hash(name: "awesome app" , space_guid: space.guid)
-        }.not_to change {AppUsageEvent.count}
+          App.create_from_hash(name: "awesome app", space_guid: space.guid)
+        }.not_to change { AppUsageEvent.count }
       end
     end
 
@@ -1110,7 +1182,7 @@ module VCAP::CloudController
           previous_state = app.state
 
           AppObserver.should_receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
-          expect{app.update(state: "STARTED")}.to raise_error
+          expect { app.update(state: "STARTED") }.to raise_error
           expect(app.state).to eql(previous_state)
         end
 
@@ -1120,7 +1192,7 @@ module VCAP::CloudController
           previous_memory = app.memory
 
           AppObserver.should_receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
-          expect{app.update(instances: app.instances + 1, memory: 4096)}.to raise_error
+          expect { app.update(instances: app.instances + 1, memory: 4096) }.to raise_error
           expect(app.instances).to eql(previous_instances)
           expect(app.memory).to eql(previous_memory)
         end
@@ -1131,7 +1203,7 @@ module VCAP::CloudController
           app = AppFactory.make
           expect {
             app.update(state: "STARTED")
-          }.to change {AppUsageEvent.count}.by(1)
+          }.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event).to match_app(app)
         end
@@ -1142,7 +1214,7 @@ module VCAP::CloudController
           app = AppFactory.make(package_hash: "abc", state: "STARTED")
           expect {
             app.update(state: "STOPPED")
-          }.to change {AppUsageEvent.count}.by(1)
+          }.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event).to match_app(app)
         end
@@ -1153,7 +1225,7 @@ module VCAP::CloudController
           app = AppFactory.make(package_hash: "abc", state: "STARTED")
           expect {
             app.update(instances: 2)
-          }.to change {AppUsageEvent.count}.by(1)
+          }.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event).to match_app(app)
         end
@@ -1162,7 +1234,7 @@ module VCAP::CloudController
           app = AppFactory.make(package_hash: "abc", state: "STOPPED")
           expect {
             app.update(instances: 2)
-          }.not_to change {AppUsageEvent.count}
+          }.not_to change { AppUsageEvent.count }
         end
       end
 
@@ -1171,7 +1243,7 @@ module VCAP::CloudController
           app = AppFactory.make(package_hash: "abc", state: "STARTED")
           expect {
             app.update(memory: 2)
-          }.to change {AppUsageEvent.count}.by(1)
+          }.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event).to match_app(app)
         end
@@ -1180,7 +1252,7 @@ module VCAP::CloudController
           app = AppFactory.make(package_hash: "abc", state: "STOPPED")
           expect {
             app.update(memory: 2)
-          }.not_to change {AppUsageEvent.count}
+          }.not_to change { AppUsageEvent.count }
         end
       end
     end
@@ -1202,8 +1274,8 @@ module VCAP::CloudController
 
       it "should destroy all dependent service bindings" do
         service_binding = ServiceBinding.make(
-          :app => app,
-          :service_instance => ManagedServiceInstance.make(:space => app.space)
+            :app => app,
+            :service_instance => ManagedServiceInstance.make(:space => app.space)
         )
         expect {
           app.destroy
@@ -1243,7 +1315,7 @@ module VCAP::CloudController
 
     describe "billing", deprecated_billing: true do
       before do
-        config_override({ :billing_event_writing_enabled => true })
+        config_override({:billing_event_writing_enabled => true})
       end
 
       context "app state changes" do
@@ -1380,12 +1452,12 @@ module VCAP::CloudController
               app.save
 
               AppStopEvent.filter(
-                :app_guid => app.guid,
-                :app_run_id => original_start_event.app_run_id
+                  :app_guid => app.guid,
+                  :app_run_id => original_start_event.app_run_id
               ).count.should == 1
 
               AppStartEvent.filter(
-                :app_guid => app.guid
+                  :app_guid => app.guid
               ).all.last.app_run_id.should_not == original_start_event.app_run_id
             end
           end
@@ -1473,7 +1545,7 @@ module VCAP::CloudController
 
         it "allows scaling down instances of an app from above quota to below quota" do
           org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
-          act_as_cf_admin {org.save}
+          act_as_cf_admin { org.save }
 
           app.reload
           app.instances = 1
@@ -1486,7 +1558,7 @@ module VCAP::CloudController
 
         it "raises when scaling down number of instances but remaining above quota" do
           org.quota_definition = QuotaDefinition.make(:memory_limit => 32)
-          act_as_cf_admin {org.save}
+          act_as_cf_admin { org.save }
 
           app.reload
           app.instances = 1
@@ -1498,12 +1570,12 @@ module VCAP::CloudController
 
         it "allows stopping an app that is above quota" do
           app.update(:state => "STARTED",
-            :package_hash => "abc",
-            :package_state => "STAGED",
-            :droplet_hash => "def")
+                     :package_hash => "abc",
+                     :package_state => "STAGED",
+                     :droplet_hash => "def")
 
           org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
-          act_as_cf_admin {org.save}
+          act_as_cf_admin { org.save }
 
           app.reload
           app.state = "STOPPED"
@@ -1516,7 +1588,7 @@ module VCAP::CloudController
 
         it "allows reducing memory from above quota to at/below quota" do
           org.quota_definition = QuotaDefinition.make(:memory_limit => 64)
-          act_as_cf_admin {org.save}
+          act_as_cf_admin { org.save }
 
           app.memory = 40
           expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
@@ -1538,7 +1610,7 @@ module VCAP::CloudController
 
       it "raises error if the app is deleted" do
         app.delete
-        expect{app.save}.to raise_error(Errors::ApplicationMissing)
+        expect { app.save }.to raise_error(Errors::ApplicationMissing)
       end
     end
   end
