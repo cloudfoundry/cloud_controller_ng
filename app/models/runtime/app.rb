@@ -383,9 +383,8 @@ module VCAP::CloudController
       save
     end
 
-    def mark_for_restaging(opts={})
+    def mark_for_restaging
       self.package_state = "PENDING"
-      save if opts[:save]
     end
 
     def buildpack
@@ -402,7 +401,7 @@ module VCAP::CloudController
       self.admin_buildpack = nil
       super(nil)
       admin_buildpack = Buildpack.find(name: buildpack_name.to_s)
-      
+
       if admin_buildpack
         self.admin_buildpack = admin_buildpack
       elsif buildpack_name != "" #git url case
