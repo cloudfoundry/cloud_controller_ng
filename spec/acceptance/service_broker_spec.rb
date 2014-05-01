@@ -2,6 +2,67 @@ require 'spec_helper'
 
 describe 'Service Broker' do
 
+  let(:catalog_with_no_plans) {{
+    services:
+      [{
+         id:          "service-guid-here",
+         name:        service_name,
+         description: "A MySQL-compatible relational database",
+         bindable:    true,
+         plans:       [{}]
+       }]
+  }}
+
+  let(:catalog_with_small_plan) {{
+    services:
+      [{
+         id:          "service-guid-here",
+         name:        service_name,
+         description: "A MySQL-compatible relational database",
+         bindable:    true,
+         plans:       [{
+                         id:          "plan1-guid-here",
+                         name:        "small",
+                         description: "A small shared database with 100mb storage quota and 10 connections"
+                       }]
+       }]
+  }}
+
+  let(:catalog_with_large_plan) {{
+    services:
+      [{
+         id:          "service-guid-here",
+         name:        service_name,
+         description: "A MySQL-compatible relational database",
+         bindable:    true,
+         plans:       [{
+                         id:          "plan2-guid-here",
+                         name:        "large",
+                         description: "A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections"
+                       }]
+       }]
+  }}
+
+  let(:catalog_with_two_plans)  {{
+    services:
+      [{
+          id:          "service-guid-here",
+          name:        service_name,
+          description: "A MySQL-compatible relational database",
+          bindable:    true,
+          plans:
+            [{
+               id:          "plan1-guid-here",
+               name:        "small",
+               description: "A small shared database with 100mb storage quota and 10 connections"
+             }, {
+               id:          "plan2-guid-here",
+               name:        "large",
+               description: "A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections"
+             }]
+      }]
+  }}
+
   before(:all) { setup_cc }
   after(:all) { $spec_env.reset_database_with_seeds }
 
@@ -371,6 +432,16 @@ describe 'Service Broker' do
         end.should have_been_made
 
       end
+
+      it 'can update the service broker name' do
+        put("/v2/service_brokers/#{@service_broker_guid}", "{\"name\":\"new_broker_name\"}",
+            json_headers(admin_headers))
+
+        expect(last_response).to have_status_code(200)
+
+        parsed_body = JSON.parse(last_response.body)
+        expect(parsed_body['entity']['name']).to eq("new_broker_name")
+      end
     end
 
     context 'when the free field for a plan has changed' do
@@ -441,6 +512,53 @@ describe 'Service Broker' do
 
         expect(no_longer_free_plan['entity']['free']).to be_false
         expect(no_longer_not_free_plan['entity']['free']).to be_true
+      end
+    end
+
+    context 'when a service plan disappears from the catalog' do
+      before do
+        setup_broker(catalog_with_two_plans)
+      end
+
+      context 'when it has an existing instance' do
+        before do
+          provision_service
+        end
+
+        it 'the plan should become inactive' do
+          update_broker(catalog_with_large_plan)
+          expect(last_response).to have_status_code(200)
+
+          expect(VCAP::CloudController::ServicePlan.where(id: "plan1-guid-here")['active']).to be_false
+        end
+      end
+
+      context 'when it has no existing instance' do
+
+        it 'the plan should become inactive' do
+          update_broker(catalog_with_large_plan)
+          expect(last_response).to have_status_code(200)
+
+          get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+          expect(last_response).to have_status_code(200)
+
+          parsed_body = JSON.parse(last_response.body)
+          expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(1)
+        end
+      end
+
+      context 'when the service is updated to have no plans' do
+
+        it 'returns an error and does not update the broker' do
+          update_broker(catalog_with_no_plans)
+          expect(last_response).to have_status_code(502)
+
+          get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+          expect(last_response).to have_status_code(200)
+
+          parsed_body = JSON.parse(last_response.body)
+          expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(2)
+        end
       end
     end
   end
@@ -514,6 +632,25 @@ describe 'Service Broker' do
         a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with(
           body:  expected_json_body
         ).should have_been_made
+      end
+    end
+
+    context 'when a service instance exists' do
+      before do
+        setup_broker(catalog_with_small_plan)
+        provision_service
+      end
+
+      it 'does not delete the broker' do
+        delete_broker
+        expect(last_response).to have_status_code(400)
+
+        get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+        expect(last_response).to have_status_code(200)
+
+        parsed_body = JSON.parse(last_response.body)
+        expect(parsed_body['resources'].first['entity']['label']).to eq(service_name)
+        expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(1)
       end
     end
   end
