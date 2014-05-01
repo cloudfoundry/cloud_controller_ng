@@ -680,20 +680,8 @@ module VCAP::CloudController
 
       include Errors
 
-      it "should raise an error if the app is in stopped state" do
-        app.should_receive(:stopped?).once.and_return(true)
-
-        expected_msg = "Instances error: Request failed for app: #{app.name}"
-        expected_msg << " as the app is in stopped state."
-
-        expect {
-          DeaClient.find_all_instances(app)
-        }.to raise_error(Errors::ApiError, expected_msg)
-      end
-
       it "should return starting or running instances" do
         app.instances = 3
-        app.should_receive(:stopped?).and_return(false)
 
         flapping_instances = [
             { "index" => 0, "since" => 1 },
@@ -758,7 +746,6 @@ module VCAP::CloudController
 
       it "should ignore out of range indices of starting or running instances" do
         app.instances = 2
-        app.should_receive(:stopped?).and_return(false)
 
         health_manager_client.should_receive(:find_flapping_indices).
           with(app).and_return([])
@@ -808,7 +795,6 @@ module VCAP::CloudController
 
       it "should return fillers for instances that have not responded" do
         app.instances = 2
-        app.should_receive(:stopped?).and_return(false)
 
         health_manager_client.should_receive(:find_flapping_indices).
           with(app).and_return([])

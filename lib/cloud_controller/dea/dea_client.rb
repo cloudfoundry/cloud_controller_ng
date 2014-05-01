@@ -81,16 +81,9 @@ module VCAP::CloudController
       end
 
       def find_all_instances(app)
-        if app.stopped?
-          msg = "Request failed for app: #{app.name}"
-          msg << " as the app is in stopped state."
-
-          raise VCAP::Errors::ApiError.new_from_details("InstancesError", msg)
-        end
-
+        num_instances = app.instances
         all_instances = {}
 
-        num_instances = app.instances
         flapping_indices = health_manager_client.find_flapping_indices(app)
 
         flapping_indices.each do |entry|

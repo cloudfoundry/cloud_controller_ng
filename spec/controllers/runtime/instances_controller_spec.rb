@@ -21,7 +21,10 @@ module VCAP::CloudController
           subject
 
           last_response.status.should == 400
-          Yajl::Parser.parse(last_response.body)["code"].should == 220001
+
+          parsed_response = Yajl::Parser.parse(last_response.body)
+          parsed_response["code"].should == 220001
+          parsed_response["description"].should == "Instances error: Request failed for app: #{@app.name} as the app is in stopped state."
         end
 
         it "returns '170001 StagingError' when the app is failed to stage" do
