@@ -1105,24 +1105,23 @@ module VCAP::CloudController
       end
 
       context "when AppObserver.updated fails" do
-        it "should undo any change", non_transactional: true do
+        let(:undo_app) {double(:undo_app_changes, :undo => true)}
+
+        it "calls UndoAppChanges.undo", non_transactional: true do
           app = AppFactory.make
-          previous_state = app.state
+          UndoAppChanges.stub(:new).with(app).and_return(undo_app)
 
           AppObserver.should_receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
+          undo_app.should_receive(:undo)
           expect{app.update(state: "STARTED")}.to raise_error
-          expect(app.state).to eql(previous_state)
         end
 
-        it "should undo multiple changes made", non_transactional: true do
+        it "does not call UndoAppChanges when its not an ApiError", non_transactional: true do
           app = AppFactory.make
-          previous_instances = app.instances
-          previous_memory = app.memory
 
-          AppObserver.should_receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
-          expect{app.update(instances: app.instances + 1, memory: 4096)}.to raise_error
-          expect(app.instances).to eql(previous_instances)
-          expect(app.memory).to eql(previous_memory)
+          AppObserver.should_receive(:updated).once.with(app).and_raise("boom")
+          UndoAppChanges.should_not_receive(:new)
+          expect{app.update(state: "STARTED")}.to raise_error
         end
       end
 
