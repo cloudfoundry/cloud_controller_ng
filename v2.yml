@@ -48,6 +48,11 @@
   http_code: 400
   message: "Please delete the %s associations for your %s."
 
+10007:
+  name: InsufficientScope
+  http_code: 403
+  message: "Your token lacks the necessary scopes to access this resource."
+
 20001:
   name: UserInvalid
   http_code: 400
