@@ -29,9 +29,7 @@ case $1 in
       chpst -u vcap:vcap mkdir -p $STAGED_UPLOADS_DIR
     fi
 
-    <% if_p("syslog_aggregator") do %>
     /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
-    <% end %>
 
 	<% if properties.syslog_aggregator && properties.syslog_aggregator.address %>
     exec /var/vcap/packages/nginx/sbin/nginx \
