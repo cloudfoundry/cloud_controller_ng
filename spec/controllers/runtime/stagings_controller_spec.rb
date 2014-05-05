@@ -182,13 +182,13 @@ module VCAP::CloudController
 
           context "when a content-md5 is specified" do
             it "returns a 400 if the value does not match the md5 of the body" do
-              post "/staging/droplets/#{app_obj.guid}/upload", upload_req, "Content-MD5" => "the-wrong-md5"
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req, "HTTP_CONTENT_MD5" => "the-wrong-md5"
               expect(last_response.status).to eq(400)
             end
 
             it "succeeds if the value matches the md5 of the body" do
               content_md5 = Digest::MD5.base64digest(file_content)
-              post "/staging/droplets/#{app_obj.guid}/upload", upload_req, "Content-MD5" => content_md5
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req, "HTTP_CONTENT_MD5" => content_md5
               expect(last_response.status).to eq(200)
             end
           end
@@ -391,13 +391,13 @@ module VCAP::CloudController
 
         context "when a content-md5 is specified" do
           it "returns a 400 if the value does not match the md5 of the body" do
-            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, "Content-MD5" => "the-wrong-md5"
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, "HTTP_CONTENT_MD5" => "the-wrong-md5"
             expect(last_response.status).to eq(400)
           end
 
           it "succeeds if the value matches the md5 of the body" do
             content_md5 = Digest::MD5.base64digest(file_content)
-            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, "Content-MD5" => content_md5
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, "HTTP_CONTENT_MD5" => content_md5
             expect(last_response.status).to eq(200)
           end
         end
