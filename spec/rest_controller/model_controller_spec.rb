@@ -129,8 +129,6 @@ module VCAP::CloudController
         result = controller.create
         expect(result[2]).to eq("serialized json")
       end
-
-
     end
 
     describe "#read" do
@@ -422,15 +420,6 @@ module VCAP::CloudController
           context "and access is authorized" do
             it "finds the model and grants access" do
               expect(controller.find_guid_and_validate_access(:read, model.guid)).to eq(model)
-            end
-          end
-
-          context "and the user is not authenticated" do
-            it "finds the model and does not grant access" do
-              VCAP::CloudController::SecurityContext.set(nil)
-              expect {
-                controller.find_guid_and_validate_access(:read, model.guid)
-              }.to raise_error Errors::ApiError, /Authentication error/
             end
           end
 

@@ -123,10 +123,14 @@ module VCAP::CloudController::RestController
       return if VCAP::CloudController::SecurityContext.current_user
       return if VCAP::CloudController::SecurityContext.admin?
 
-      if VCAP::CloudController::SecurityContext.token
-        raise VCAP::Errors::ApiError.new_from_details("NotAuthorized")
+      if VCAP::CloudController::SecurityContext.missing_token?
+        raise VCAP::Errors::ApiError.new_from_details('NotAuthenticated')
+      elsif VCAP::CloudController::SecurityContext.invalid_token?
+        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
       else
-        raise VCAP::Errors::ApiError.new_from_details("InvalidAuthToken")
+        logger.error "Unexpected condition: valid token with no user/client id " +
+                       "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
+        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
       end
     end
 
@@ -240,10 +244,10 @@ module VCAP::CloudController::RestController
       end
 
       def allow_unauthenticated_access?(op)
-        if @allow_unauthenticated_access_ops
-           @allow_unauthenticated_access_ops.include?(op)
-        else
+        if @allow_unauthenticated_access_to_all_ops
           @allow_unauthenticated_access_to_all_ops
+        elsif @allow_unauthenticated_access_ops
+          @allow_unauthenticated_access_ops.include?(op)
         end
       end
 
