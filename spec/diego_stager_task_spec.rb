@@ -26,8 +26,8 @@ module VCAP::CloudController
     let(:build_artifacts_cache_download_uri) { "http://buildpack-artifacts-cache.com" }
 
     before do
-      Buildpack.create(name: "the_java_buildpack", key: "java", position: 1)
-      Buildpack.create(name: "the_ruby_buildpack", key: "ruby", position: 2)
+      Buildpack.create(name: "java", key: "java-buildpack-guid", position: 1)
+      Buildpack.create(name: "ruby", key: "ruby-buildpack-guid", position: 2)
 
       allow(blobstore_url_generator).to receive(:app_package_download_url).and_return(app_package_download_url)
       allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return(admin_buildpack_download_url)
@@ -127,8 +127,8 @@ module VCAP::CloudController
               app.buildpack = "http://github.com/mybuildpack/bp.zip"
             end
 
-            it "should use the GitBasedBuildpack's uri and name it 'custom'" do
-              expect(diego_stager_task.staging_request[:buildpacks]).to eq([{key: "custom", url: "http://github.com/mybuildpack/bp.zip"}])
+            it "should use the GitBasedBuildpack's uri and name it 'custom', and use the url as the key" do
+              expect(diego_stager_task.staging_request[:buildpacks]).to eq([{name: "custom", key: "http://github.com/mybuildpack/bp.zip", url: "http://github.com/mybuildpack/bp.zip"}])
             end
           end
 
@@ -139,8 +139,8 @@ module VCAP::CloudController
 
             it "should use the list of admin buildpacks" do
               expect(diego_stager_task.staging_request[:buildpacks]).to eq([
-                    {key: "java", url: admin_buildpack_download_url},
-                    {key: "ruby", url: admin_buildpack_download_url},
+                    {name: "java", key: "java-buildpack-guid", url: admin_buildpack_download_url},
+                    {name: "ruby", key: "ruby-buildpack-guid", url: admin_buildpack_download_url},
               ])
             end
           end
@@ -152,8 +152,8 @@ module VCAP::CloudController
 
             it "should use the list of admin buildpacks" do
               expect(diego_stager_task.staging_request[:buildpacks]).to eq([
-                                                                               {key: "java", url: admin_buildpack_download_url},
-                                                                               {key: "ruby", url: admin_buildpack_download_url},
+                                                                               {name: "java", key: "java-buildpack-guid", url: admin_buildpack_download_url},
+                                                                               {name: "ruby", key: "ruby-buildpack-guid", url: admin_buildpack_download_url},
                                                                            ])
             end
           end
@@ -161,12 +161,12 @@ module VCAP::CloudController
 
         context "when the app has a named buildpack" do
           before do
-            app.buildpack = "the_java_buildpack"
+            app.buildpack = "java"
           end
 
           it "should use that buildpack" do
             expect(diego_stager_task.staging_request[:buildpacks]).to eq([
-                {key: "java", url: admin_buildpack_download_url},
+                {name: "java", key: "java-buildpack-guid", url: admin_buildpack_download_url},
             ])
 
           end
@@ -175,8 +175,8 @@ module VCAP::CloudController
         context "when the app has no buildpack specified" do
           it "should use the list of admin buildpacks" do
             expect(diego_stager_task.staging_request[:buildpacks]).to eq([
-              {key: "java", url: admin_buildpack_download_url},
-              {key: "ruby", url: admin_buildpack_download_url},
+                 {name: "java", key: "java-buildpack-guid", url: admin_buildpack_download_url},
+                 {name: "ruby", key: "ruby-buildpack-guid", url: admin_buildpack_download_url},
             ])
           end
         end

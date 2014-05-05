@@ -59,10 +59,10 @@ module VCAP::CloudController
       buildpack = app.buildpack
 
       if buildpack.instance_of?(GitBasedBuildpack)
-        buildpackIsHttp = buildpack.to_s =~ /^http/
-        buildPackIsNotGit =  !(buildpack.to_s =~ /\.git$/)
+        buildpackIsHttp = buildpack.url =~ /^http/
+        buildPackIsNotGit =  !(buildpack.url=~ /\.git$/)
         if buildpackIsHttp && buildPackIsNotGit
-          return [{key: "custom", url: buildpack.to_s}]
+          return [{name: "custom", key: buildpack.url, url: buildpack.url}]
         end
       elsif buildpack.instance_of?(Buildpack)
         return [admin_buildpack_entry(buildpack)]
@@ -73,8 +73,10 @@ module VCAP::CloudController
          collect { |buildpack| admin_buildpack_entry(buildpack) }
     end
 
+
     def admin_buildpack_entry(buildpack)
       {
+          name: buildpack.name,
           key: buildpack.key,
           url: @blobstore_url_generator.admin_buildpack_download_url(buildpack)
       }
