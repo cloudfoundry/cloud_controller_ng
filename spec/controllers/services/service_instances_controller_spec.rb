@@ -167,19 +167,23 @@ module VCAP::CloudController
       end
     end
 
-    describe 'POST', '/v2/service_instance' do
-      let(:space) { Space.make }
-      let(:developer) { make_developer_for_space(space) }
-      let(:plan) { ServicePlan.make(:service => service) }
-
-      context 'when provisioning without a service-auth-token' do
-        let(:service) { Service.make(:description => "blah blah foobar") }
+    describe 'POST', '/v2/service_instances' do
+      context 'with a v2 service' do
+        let(:space) { Space.make }
+        let(:plan) { ServicePlan.make }
+        let(:developer) { make_developer_for_space(space) }
+        let(:client) { double('client') }
 
         before do
-          service.stub(:v2?) { false }
+          client.stub(:provision) do |instance|
+            instance.credentials = '{}'
+            instance.dashboard_url = 'the dashboard_url'
+          end
+          client.stub(:deprovision)
+          Service.any_instance.stub(:client).and_return(client)
         end
 
-        it 'should throw a 500 and give you an error message saying "Missing service auth token"' do
+        it 'provisions a service instance' do
           req = Yajl::Encoder.encode(
             :name => 'foo',
             :space_guid => space.guid,
@@ -187,117 +191,85 @@ module VCAP::CloudController
           )
           headers = json_headers(headers_for(developer))
 
-          expect(plan.service.service_auth_token).to eq(nil)
-
           post "/v2/service_instances", req, headers
 
-          expect(last_response.status).to eq(500)
-        end
-      end
-    end
+          expect(last_response.status).to eq(201)
 
-    describe 'POST', '/v2/service_instance' do
-      let(:space) { Space.make }
-      let(:plan) { ServicePlan.make }
-      let(:developer) { make_developer_for_space(space) }
-      let(:client) { double('client') }
-
-      before do
-        client.stub(:provision) do |instance|
-          instance.credentials = '{}'
-          instance.dashboard_url = 'the dashboard_url'
-        end
-        client.stub(:deprovision)
-        Service.any_instance.stub(:client).and_return(client)
-      end
-
-      it 'provisions a service instance' do
-        req = Yajl::Encoder.encode(
-          :name => 'foo',
-          :space_guid => space.guid,
-          :service_plan_guid => plan.guid
-        )
-        headers = json_headers(headers_for(developer))
-
-        post "/v2/service_instances", req, headers
-
-        expect(last_response.status).to eq(201)
-
-        instance = ServiceInstance.last
-        expect(instance.credentials).to eq('{}')
-        expect(instance.dashboard_url).to eq('the dashboard_url')
-      end
-
-      context 'when name is blank' do
-        let(:body) do
-          Yajl::Encoder.encode(
-            :name => '',
-            :space_guid => space.guid,
-            :service_plan_guid => plan.guid
-          )
-        end
-        let(:headers) { json_headers(headers_for(developer)) }
-
-        it 'returns a name validation error' do
-          post '/v2/service_instances', body, headers
-
-          expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match(/name is invalid/)
+          instance = ServiceInstance.last
+          expect(instance.credentials).to eq('{}')
+          expect(instance.dashboard_url).to eq('the dashboard_url')
         end
 
-        it 'does not provision or deprovision an instance' do
-          post '/v2/service_instances', body, headers
+        context 'when name is blank' do
+          let(:body) do
+            Yajl::Encoder.encode(
+              :name => '',
+              :space_guid => space.guid,
+              :service_plan_guid => plan.guid
+            )
+          end
+          let(:headers) { json_headers(headers_for(developer)) }
 
-          expect(client).to_not have_received(:provision)
-          expect(client).to_not have_received(:deprovision)
-        end
-
-        it 'does not create a service instance' do
-          expect {
+          it 'returns a name validation error' do
             post '/v2/service_instances', body, headers
-          }.to_not change(ServiceInstance, :count)
-        end
-      end
 
-      it 'deprovisions the service instance when an exception is raised' do
-        req = Yajl::Encoder.encode(
-          :name => 'foo',
-          :space_guid => space.guid,
-          :service_plan_guid => plan.guid
-        )
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['description']).to match(/name is invalid/)
+          end
 
-        ManagedServiceInstance.any_instance.stub(:save).and_raise
+          it 'does not provision or deprovision an instance' do
+            post '/v2/service_instances', body, headers
 
-        post "/v2/service_instances", req, json_headers(headers_for(developer))
+            expect(client).to_not have_received(:provision)
+            expect(client).to_not have_received(:deprovision)
+          end
 
-        expect(last_response.status).to eq(500)
-        expect(client).to have_received(:deprovision).with(an_instance_of(ManagedServiceInstance))
-      end
-
-      context 'when the model save and the subsequent deprovision both raise errors' do
-        let(:save_error_text) { "InvalidRequest" }
-        let(:deprovision_error_text) { "NotAuthorized" }
-
-        before do
-          allow(client).to receive(:deprovision).and_raise(Errors::ApiError.new_from_details(deprovision_error_text))
-          allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise(Errors::ApiError.new_from_details(save_error_text))
+          it 'does not create a service instance' do
+            expect {
+              post '/v2/service_instances', body, headers
+            }.to_not change(ServiceInstance, :count)
+          end
         end
 
-        it 'raises the save error' do
+        it 'deprovisions the service instance when an exception is raised' do
           req = Yajl::Encoder.encode(
             :name => 'foo',
             :space_guid => space.guid,
             :service_plan_guid => plan.guid
           )
 
+          ManagedServiceInstance.any_instance.stub(:save).and_raise
+
           post "/v2/service_instances", req, json_headers(headers_for(developer))
 
-          expect(last_response.body).to_not match(deprovision_error_text)
-          expect(last_response.body).to match(save_error_text)
+          expect(last_response.status).to eq(500)
+          expect(client).to have_received(:deprovision).with(an_instance_of(ManagedServiceInstance))
         end
-      end
 
-      context 'creating a service instance with a name over 50 characters' do
+        context 'when the model save and the subsequent deprovision both raise errors' do
+          let(:save_error_text) { "InvalidRequest" }
+          let(:deprovision_error_text) { "NotAuthorized" }
+
+          before do
+            allow(client).to receive(:deprovision).and_raise(Errors::ApiError.new_from_details(deprovision_error_text))
+            allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise(Errors::ApiError.new_from_details(save_error_text))
+          end
+
+          it 'raises the save error' do
+            req = Yajl::Encoder.encode(
+              :name => 'foo',
+              :space_guid => space.guid,
+              :service_plan_guid => plan.guid
+            )
+
+            post "/v2/service_instances", req, json_headers(headers_for(developer))
+
+            expect(last_response.body).to_not match(deprovision_error_text)
+            expect(last_response.body).to match(save_error_text)
+          end
+        end
+
+        context 'creating a service instance with a name over 50 characters' do
         let(:very_long_name) { 's' * 51 }
 
         it "returns an error if the service instance name is over 50 characters" do
@@ -313,6 +285,36 @@ module VCAP::CloudController
           last_response.status.should == 400
           decoded_response["description"].should =~ /service instance name.*limited to 50 characters/
         end
+      end
+      end
+
+      context 'with a v1 service' do
+        let(:space) { Space.make }
+        let(:developer) { make_developer_for_space(space) }
+        let(:plan) { ServicePlan.make(:service => service) }
+        let(:service) { Service.make(:description => "blah blah foobar") }
+
+        before do
+          service.stub(:v2?) { false }
+        end
+
+        context 'when provisioning without a service-auth-token' do
+          it 'should throw a 500 and give you an error message' do
+            req = Yajl::Encoder.encode(
+              :name => 'foo',
+              :space_guid => space.guid,
+              :service_plan_guid => plan.guid
+            )
+            headers = json_headers(headers_for(developer))
+
+            expect(plan.service.service_auth_token).to eq(nil)
+
+            post "/v2/service_instances", req, headers
+
+            expect(last_response.status).to eq(500)
+          end
+        end
+
       end
     end
 
@@ -550,8 +552,8 @@ module VCAP::CloudController
         context 'when the user does not have cloud_controller.read scope' do
           it 'returns InvalidAuthToken' do
             get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.write']}))
-            expect(last_response.status).to eql(401)
-            expect(JSON.parse(last_response.body)['description']).to eql("Invalid Auth Token")
+            expect(last_response.status).to eql(403)
+            expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
           end
         end
       end

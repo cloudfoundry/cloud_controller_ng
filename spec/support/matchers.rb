@@ -65,3 +65,13 @@ RSpec::Matchers.define :have_status_code do |expected_code|
     (response.respond_to?(:code) ? response.code : response.status).to_i
   end
 end
+
+RSpec::Matchers.define :allow_op_on_object do |op, object|
+  match do |access|
+    access.can?("#{op}_with_token".to_sym, object) && access.can?(op, object)
+  end
+
+  failure_message_for_should do
+    "Expected to be able to perform operation #{op} on object #{object}"
+  end
+end

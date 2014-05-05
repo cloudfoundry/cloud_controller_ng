@@ -122,7 +122,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_error
+      it_behaves_like :no_access
     end
   end
 end

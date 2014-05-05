@@ -2,7 +2,6 @@ module VCAP::CloudController
   class RouteAccess < BaseAccess
     def create?(route)
       return true if admin_user?
-      return false unless has_write_scope?
       return false if route.in_suspended_org?
       route.space.organization.managers.include?(context.user) ||
         [:managers, :developers].any? do |type|
