@@ -53,14 +53,13 @@ module Sinatra
           logger.error(presenter.log_message)
         end
 
-        payload = Yajl::Encoder.encode(presenter.error_hash)
-
         ::VCAP::Component.varz.synchronize do
-          varz[:recent_errors] << payload
+          varz[:recent_errors] << presenter.error_hash
         end
 
         request.env['vcap_exception_body_set'] = true
 
+        payload = Yajl::Encoder.encode(presenter.error_hash)
         body payload.concat("\n")
       end
     end

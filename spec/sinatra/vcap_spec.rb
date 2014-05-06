@@ -148,7 +148,8 @@ describe 'Sinatra::VCAP' do
       VCAP::Component.varz.synchronize do
         recent_errors = VCAP::Component.varz[:vcap_sinatra][:recent_errors]
       end
-      recent_errors.size.should == 1
+      expect(recent_errors.size).to eq(1)
+      expect(recent_errors[0]).to be_an_instance_of(Hash)
     end
 
     include_examples 'vcap sinatra varz stats', 500
