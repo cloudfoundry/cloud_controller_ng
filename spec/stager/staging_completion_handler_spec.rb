@@ -8,9 +8,11 @@ module VCAP::CloudController
 
     let(:logger) { FakeLogger.new([]) }
 
+    let(:app_id) { staged_app.guid }
+
     let(:response) do
       {
-        "app_id" => staged_app.guid,
+        "app_id" => app_id,
         "task_id" => staged_app.staging_task_id,
         "task_log" => double(:task_log),
         "detected_buildpack" => 'INTERCAL'
@@ -38,20 +40,25 @@ module VCAP::CloudController
         message_bus.publish("diego.staging.finished", response)
       end
 
-      describe "when staging completes" do
-        it "starts the app instances" do
-          DeaClient.should_receive(:start).with(staged_app, :instances_to_start => 3)
-          publish_staging_result
-        end
+      describe "when staging completes succesfully" do
+        context "and no other staging task has started" do
+          it "starts the app instances" do
+            DeaClient.should_receive(:start) do |received_app, received_hash|
+              received_app.guid.should ==  app_id
+              received_hash.should  == {:instances_to_start => 3}
+            end
+            publish_staging_result
+          end
 
-        it 'logs the staging result' do
-          publish_staging_result
-          logger.log_messages.should include("diego.staging.finished")
-        end
+          it 'logs the staging result' do
+            publish_staging_result
+            logger.log_messages.should include("diego.staging.finished")
+          end
 
-        it 'should update the app with the detected buildpack' do
-          publish_staging_result
-          staged_app.reload.detected_buildpack.should == 'INTERCAL'
+          it 'should update the app with the detected buildpack' do
+            publish_staging_result
+            staged_app.reload.detected_buildpack.should == 'INTERCAL'
+          end
         end
 
         context 'when another staging task has started' do
@@ -86,9 +93,23 @@ module VCAP::CloudController
           publish_staging_result
         end
 
+        it "should not start the app instance" do
+          DeaClient.should_not_receive(:start)
+          publish_staging_result
+        end
+
         it 'should not update the app with the detected buildpack' do
           publish_staging_result
           staged_app.reload.detected_buildpack.should_not == 'INTERCAL'
+        end
+      end
+
+      context "when staging references an unkown app" do
+        let(:app_id) { "ooh ooh ah ah" }
+
+        it "should not attempt to start anything" do
+          DeaClient.should_not_receive(:start)
+          publish_staging_result
         end
       end
     end

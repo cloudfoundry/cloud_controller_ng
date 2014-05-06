@@ -34,8 +34,19 @@ module VCAP::CloudController
 
     def subscribe!
       @message_bus.subscribe("diego.staging.finished", queue: "cc") do |payload|
+        logger.info("diego.staging.finished", :response => payload)
+
         message = Message.new(payload)
         app = App.find(guid: message.app_id)
+
+        if app == nil
+          logger.info(
+              "diego.staging.unkown-app",
+              :response => payload,
+          )
+          
+          next
+        end
 
         if message.task_id != app.staging_task_id
           logger.info(
@@ -47,16 +58,14 @@ module VCAP::CloudController
           next
         end
 
-        DeaClient.start(app, instances_to_start: app.instances)
-
-        logger.info("diego.staging.finished", :response => payload)
-
         if message.error
           app.mark_as_failed_to_stage
           Loggregator.emit_error(app.guid, "Failed to stage application: #{message.error}")
         else
           app.detected_buildpack = message.detected_buildpack
           app.save
+
+          DeaClient.start(app, instances_to_start: app.instances)
         end
       end
     end
