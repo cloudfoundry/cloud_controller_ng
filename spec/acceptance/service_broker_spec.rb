@@ -529,7 +529,7 @@ describe 'Service Broker' do
           update_broker(catalog_with_large_plan)
           expect(last_response).to have_status_code(200)
 
-          expect(VCAP::CloudController::ServicePlan.where(id: "plan1-guid-here")['active']).to be_false
+          expect(VCAP::CloudController::ServicePlan.find(unique_id: 'plan1-guid-here')[:active]).to be_false
         end
       end
 
