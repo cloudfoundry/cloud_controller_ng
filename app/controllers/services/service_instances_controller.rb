@@ -117,7 +117,7 @@ module VCAP::CloudController
 
     get '/v2/service_instances/:guid/permissions', :permissions
     def permissions(guid)
-      find_guid_and_validate_access(:read, guid, ServiceInstance)
+      find_guid_and_validate_access(:read_permissions, guid, ServiceInstance)
       [HTTP::OK, {}, JSON.generate({ manage: true })]
     rescue Errors::ApiError => e
       if e.name == "NotAuthorized"

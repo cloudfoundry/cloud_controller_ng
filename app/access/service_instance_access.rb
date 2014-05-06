@@ -13,6 +13,20 @@ module VCAP::CloudController
     def delete?(service_instance)
       create?(service_instance)
     end
+
+    def read_permissions?(service_instance)
+      read?(service_instance)
+    end
+
+    def read_permissions_with_token?(service_instance)
+      read_with_token?(service_instance) || has_read_permissions_scope?
+    end
+
+    private
+
+    def has_read_permissions_scope?
+      VCAP::CloudController::SecurityContext.scopes.include?('cloud_controller_service_permissions.read')
+    end
   end
 
   class ManagedServiceInstanceAccess < ServiceInstanceAccess

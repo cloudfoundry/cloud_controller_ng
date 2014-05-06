@@ -93,7 +93,7 @@ module VCAP::CloudController
       it_behaves_like :no_access
     end
 
-    context 'any user using client without cloud_controller.write' do
+    context 'any user using a client with only cloud_controller.read' do
       before do
         token = { 'scope' => 'cloud_controller.read'}
         VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
@@ -107,9 +107,31 @@ module VCAP::CloudController
       end
 
       it_behaves_like :read_only
+      it { should allow_op_on_object(:read_permissions, object) }
     end
 
-    context 'any user using client without cloud_controller.read' do
+    context 'any user using a client with only cloud_controller_service_permissions.read' do
+      before do
+        token = { 'scope' => 'cloud_controller_service_permissions.read'}
+        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        org.add_user(user)
+        org.add_manager(user)
+        org.add_billing_manager(user)
+        org.add_auditor(user)
+        space.add_manager(user)
+        space.add_developer(user)
+        space.add_auditor(user)
+      end
+
+      it 'allows the user to read the permissions of the service instance' do
+        expect(subject).to allow_op_on_object(:read_permissions, object)
+      end
+
+      # All other actions are disallowed
+      it_behaves_like :no_access
+    end
+
+    context 'any user using a client with no cloud_controller permissions' do
       before do
         token = { 'scope' => ''}
         VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
@@ -123,6 +145,7 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
+      it { should_not allow_op_on_object(:read_permissions, object) }
     end
   end
 end

@@ -549,7 +549,15 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the user does not have cloud_controller.read scope' do
+        context 'when the user has only the cloud_controller_service_permissions.read scope' do
+          it 'returns a JSON payload indicating they have permission to manage this instance' do
+            get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller_service_permissions.read']}))
+            expect(last_response.status).to eql(200)
+            expect(JSON.parse(last_response.body)['manage']).to be_true
+          end
+        end
+
+        context 'when the user does not have either necessary scope' do
           it 'returns InvalidAuthToken' do
             get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.write']}))
             expect(last_response.status).to eql(403)
