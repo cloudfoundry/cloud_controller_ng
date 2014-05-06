@@ -1,19 +1,29 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class BlobstoreDelete < Struct.new(:key, :blobstore_name)
+      class BlobstoreDelete < Struct.new(:key, :blobstore_name, :attributes)
         def perform
           logger = Steno.logger("cc.background")
           logger.info("Deleting '#{key}' from blobstore '#{blobstore_name}'")
+
           blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
-          blobstore.delete(key)
+          blob = blobstore.blob(key)
+          if blob && same_blob(blob)
+            blob.delete
+          end
         end
 
         def job_name_in_configuration
           :blobstore_delete
         end
+
+        private
+
+        def same_blob(blob)
+          return true if attributes.nil?
+          blob.attributes(*attributes.keys) == attributes
+        end
       end
     end
   end
 end
-

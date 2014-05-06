@@ -6,7 +6,8 @@ module CloudController
       subject(:blob) do
         Blob.new(file, cdn)
       end
-      let(:file) { double("file", key: "abcdef") }
+      let(:attrs) {{'a' => 'b', 'c' => 'd'}}
+      let(:file) { double("file", key: "abcdef", attributes: attrs, destroy: nil) }
       let(:cdn) { double(:cdn) }
 
       context "it is backed by a CDN" do
@@ -64,6 +65,23 @@ module CloudController
         it "comes path of the file" do
           expect(file).to receive(:path).and_return("path")
           expect(blob.local_path).to eql("path")
+        end
+      end
+
+      describe "attributes" do
+        it "returns the blob's attributes" do
+          expect(blob.attributes).to eq(attrs)
+        end
+
+        it "returns attributes for a set of keys" do
+          expect(blob.attributes("c")).to eq({'c'=>'d'})
+        end
+      end
+
+      describe "delete" do
+        it "destroys the file" do
+          file.should_receive(:destroy)
+          blob.delete
         end
       end
     end

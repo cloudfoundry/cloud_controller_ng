@@ -2,6 +2,9 @@ module CloudController
   module Blobstore
     # Central place to get download urls for a blob object stored in a blobstore
     class Blob
+
+      CACHE_ATTRIBUTES = [:etag, :last_modified, :created_at]
+
       def initialize(file, cdn)
         @file = file
         @cdn = cdn
@@ -17,6 +20,15 @@ module CloudController
 
       def public_url
         @file.public_url
+      end
+
+      def attributes(*keys)
+        return @file.attributes if keys.empty?
+        @file.attributes.select {|key,_| keys.include? key}
+      end
+
+      def delete
+        @file.destroy
       end
 
       private
