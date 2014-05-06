@@ -2,8 +2,9 @@ module VCAP::CloudController
   class StagingCompletionHandler
     attr_reader :message_bus
 
-    def initialize(message_bus)
+    def initialize(message_bus, diego_client)
       @message_bus = message_bus
+      @diego_client = diego_client
     end
 
     class Message
@@ -65,7 +66,11 @@ module VCAP::CloudController
           app.detected_buildpack = message.detected_buildpack
           app.save
 
-          DeaClient.start(app, instances_to_start: app.instances)
+          if (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
+            @diego_client.desire(app)
+          else
+            DeaClient.start(app, instances_to_start: app.instances)
+          end
         end
       end
     end

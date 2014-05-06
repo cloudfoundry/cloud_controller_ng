@@ -4,7 +4,9 @@ module VCAP::CloudController
   describe StagingCompletionHandler do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
-    let!(:staged_app) { App.make(instances: 3, staging_task_id: "the-staging-task-id") }
+    let(:environment) { {} }
+
+    let!(:staged_app) { App.make(instances: 3, staging_task_id: "the-staging-task-id", environment_json: environment) }
 
     let(:logger) { FakeLogger.new([]) }
 
@@ -19,7 +21,9 @@ module VCAP::CloudController
       }
     end
 
-    subject { StagingCompletionHandler.new(message_bus) }
+    let(:diego_client) { double(:diego_client) }
+
+    subject { StagingCompletionHandler.new(message_bus, diego_client) }
 
     before do
       Steno.stub(:logger).and_return(logger)
@@ -40,13 +44,14 @@ module VCAP::CloudController
         message_bus.publish("diego.staging.finished", response)
       end
 
-      describe "when staging completes succesfully" do
-        context "and no other staging task has started" do
+      describe "success cases" do
+        context "without the DIEGO_RUN_BETA flag" do
           it "starts the app instances" do
             DeaClient.should_receive(:start) do |received_app, received_hash|
               received_app.guid.should ==  app_id
               received_hash.should  == {:instances_to_start => 3}
             end
+            diego_client.should_not_receive(:desire)
             publish_staging_result
           end
 
@@ -61,6 +66,20 @@ module VCAP::CloudController
           end
         end
 
+        context "with the CF_DIEGO_RUN_BETA flag" do
+          let(:environment) { {"CF_DIEGO_RUN_BETA" => "true"} }
+
+          it "desires the app using the diego client" do
+            DeaClient.should_not_receive(:start)
+            diego_client.should_receive(:desire) do |received_app|
+              received_app.guid.should ==  app_id
+            end
+            publish_staging_result
+          end
+        end
+      end
+
+      describe "failure cases" do
         context 'when another staging task has started' do
           before do
             response["task_id"] = 'another-task-id'
@@ -76,40 +95,40 @@ module VCAP::CloudController
             staged_app.reload.detected_buildpack.should_not == 'INTERCAL'
           end
         end
-      end
 
-      context 'when the staging fails' do
-        before do
-          response["error"] = "Sumpin' bad happened"
+        context 'when the staging fails' do
+          before do
+            response["error"] = "Sumpin' bad happened"
+          end
+
+          it 'should mark the app as "failed to stage"' do
+            publish_staging_result
+            expect(staged_app.reload.package_state).to eq("FAILED")
+          end
+
+          it 'should emit a loggregator error' do
+            Loggregator.should_receive(:emit_error).with(staged_app.guid, /bad/)
+            publish_staging_result
+          end
+
+          it "should not start the app instance" do
+            DeaClient.should_not_receive(:start)
+            publish_staging_result
+          end
+
+          it 'should not update the app with the detected buildpack' do
+            publish_staging_result
+            staged_app.reload.detected_buildpack.should_not == 'INTERCAL'
+          end
         end
 
-        it 'should mark the app as "failed to stage"' do
-          publish_staging_result
-          expect(staged_app.reload.package_state).to eq("FAILED")
-        end
+        context "when staging references an unkown app" do
+          let(:app_id) { "ooh ooh ah ah" }
 
-        it 'should emit a loggregator error' do
-          Loggregator.should_receive(:emit_error).with(staged_app.guid, /bad/)
-          publish_staging_result
-        end
-
-        it "should not start the app instance" do
-          DeaClient.should_not_receive(:start)
-          publish_staging_result
-        end
-
-        it 'should not update the app with the detected buildpack' do
-          publish_staging_result
-          staged_app.reload.detected_buildpack.should_not == 'INTERCAL'
-        end
-      end
-
-      context "when staging references an unkown app" do
-        let(:app_id) { "ooh ooh ah ah" }
-
-        it "should not attempt to start anything" do
-          DeaClient.should_not_receive(:start)
-          publish_staging_result
+          it "should not attempt to start anything" do
+            DeaClient.should_not_receive(:start)
+            publish_staging_result
+          end
         end
       end
     end
