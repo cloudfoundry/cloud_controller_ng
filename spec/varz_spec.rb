@@ -71,7 +71,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#bump_user_count' do
+    describe '#record_user_count' do
       it 'should include the number of users in varz' do
         # We have to use stubbing here because when we run in parallel mode,
         # there might other tests running and create/delete users concurrently.
@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#bump_cc_job_queue_length' do
+    describe '#update_job_queue_length' do
       it 'should include the length of the delayed job queue' do
         VCAP::Component.varz.synchronize do
           VCAP::Component.varz[:cc_job_queue_length] = 0
@@ -131,7 +131,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#record_thread_info' do
+    describe '#update_thread_info' do
       before do
         Varz.update_thread_info
       end
@@ -160,6 +160,15 @@ module VCAP::CloudController
           VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:size].should == 0
           VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:num_waiting].should == 1
         end
+      end
+    end
+
+    describe '#update!' do
+      it 'calls all update methods' do
+        expect(VCAP::CloudController::Varz).to receive(:record_user_count).once
+        expect(VCAP::CloudController::Varz).to receive(:update_job_queue_length).once
+        expect(VCAP::CloudController::Varz).to receive(:update_thread_info).once
+        Varz.update!
       end
     end
   end

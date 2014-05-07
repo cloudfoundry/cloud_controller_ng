@@ -223,10 +223,11 @@ module VCAP::CloudController
     end
 
     describe "#trap_signals" do
-      it "registers TERM, INT, and QUIT handlers" do
+      it "registers TERM, INT, QUIT, USR1, and USR2 handlers" do
         subject.should_receive(:trap).with("TERM")
         subject.should_receive(:trap).with("INT")
         subject.should_receive(:trap).with("QUIT")
+        subject.should_receive(:trap).with("USR1")
         subject.should_receive(:trap).with("USR2")
         subject.trap_signals
       end
@@ -243,6 +244,10 @@ module VCAP::CloudController
         end
 
         subject.should_receive(:trap).with("QUIT") do |_, &blk|
+          callbacks << blk
+        end
+
+        subject.should_receive(:trap).with("USR1") do |_, &blk|
           callbacks << blk
         end
 
@@ -346,6 +351,61 @@ module VCAP::CloudController
         start_thin_server
 
         expect(thin_server).to have_received(:start!)
+      end
+    end
+
+    describe "#collect_diagnostics" do
+      callback = nil
+
+      before do
+        callback = nil
+        subject.should_receive(:trap).with("TERM")
+        subject.should_receive(:trap).with("INT")
+        subject.should_receive(:trap).with("QUIT")
+        subject.should_receive(:trap).with("USR2")
+        subject.should_receive(:trap).with("USR1") do |_, &blk|
+          callback = blk
+        end
+        subject.trap_signals
+      end
+
+      context "when the diagnostics directory is not configured" do
+        it "uses a temporary directory" do
+          Dir.should_receive(:mktmpdir).and_return("some/tmp/dir")
+          subject.should_receive(:collect_diagnostics).and_call_original
+          ::VCAP::CloudController::Diagnostics.should_receive(:collect).with("some/tmp/dir")
+
+          callback.call
+        end
+
+        it "memoizes the temporary directory" do
+          Dir.should_receive(:mktmpdir).and_return("some/tmp/dir")
+          subject.should_receive(:collect_diagnostics).twice.and_call_original
+          ::VCAP::CloudController::Diagnostics.should_receive(:collect).with("some/tmp/dir").twice
+
+          callback.call
+          callback.call
+        end
+      end
+
+      context "when the diagnostics directory is not configured" do
+        let(:config_file) do
+          config = YAML.load_file(valid_config_file_path)
+          config[:directories] ||= {}
+          config[:directories][:diagnostics] = "diagnostics/dir"
+          file = Tempfile.new("config")
+          file.write(YAML.dump(config))
+          file.rewind
+          file
+        end
+
+        it "uses the configured directory" do
+          Dir.should_not_receive(:mktmpdir)
+          subject.should_receive(:collect_diagnostics).and_call_original
+          ::VCAP::CloudController::Diagnostics.should_receive(:collect).with("diagnostics/dir")
+
+          callback.call
+        end
       end
     end
   end

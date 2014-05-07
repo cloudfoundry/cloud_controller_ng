@@ -35,6 +35,12 @@ module VCAP
         expect(described_class.current_id).to be_nil
         expect(Steno.config.context.data.has_key?('request_guid')).to be_false
       end
+
+      it "uses the :vcap_request_id thread local" do
+        described_class.current_id = request_id
+
+        expect(Thread.current[:vcap_request_id]).to eq(request_id)
+      end
     end
   end
 end

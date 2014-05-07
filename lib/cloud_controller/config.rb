@@ -53,6 +53,7 @@ module VCAP::CloudController
 
         optional(:directories) => {
           optional(:tmpdir)    => String,
+          optional(:diagnostics) => String,
         },
 
         optional(:stacks_file) => String,
