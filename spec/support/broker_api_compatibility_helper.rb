@@ -124,4 +124,11 @@ module VCAP::CloudController::BrokerApiHelper
 
     @binding_id = JSON.parse(last_response.body)["metadata"]["guid"]
   end
+
+  def deprovision_service
+    stub_request(:delete, %r(broker-url/v2/service_instances/[[:alnum:]-]+)).
+      to_return(status: 200, body: '{}')
+
+    delete("/v2/service_instances/#{@service_instance_guid}", '{}', json_headers(admin_headers))
+  end
 end
