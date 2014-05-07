@@ -2,11 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe BuildpackAccess, type: :access do
-    before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
-    end
-
     subject(:access) { BuildpackAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
@@ -19,6 +14,11 @@ module VCAP::CloudController
     end
 
     context 'for a logged in user' do
+      before do
+        token = {'scope' => 'cloud_controller.read cloud_controller.write'}
+        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      end
+
       it_behaves_like :read_only
       it { should_not allow_op_on_object :upload, object }
 
