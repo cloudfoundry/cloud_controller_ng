@@ -92,4 +92,17 @@ resource "Apps", :type => :api do
       audited_event VCAP::CloudController::Event.find(:type => "audit.app.create", :actee => app_guid)
     end
   end
+
+  context "App is staged" do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:app_obj) { VCAP::CloudController::AppFactory.make :space => space, :package_state => "STAGED" }
+    let(:user) { make_developer_for_space(app_obj.space) }
+
+    post "/v2/apps/:guid/restage" do
+      example "Restage an app" do
+        client.post "/v2/apps/#{app_obj.guid}/restage", {},  headers
+        status.should == 201
+      end
+    end
+  end
 end
