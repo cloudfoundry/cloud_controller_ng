@@ -132,6 +132,23 @@ module VCAP::CloudController
             end
           end
         end
+
+        describe "custom fields" do
+          context "without custom fields in config" do
+            it "should not have custom fields in the hash" do
+              get "/v2/info"
+              hash = Yajl::Parser.parse(last_response.body)
+              hash.should_not have_key("custom")
+            end
+          end
+          context "with custom fields in config" do
+            include_examples "info endpoint verification" do
+              before { config_override(:info => { :custom => {:foo => "bar", :baz => "foobar"}}) }
+              let(:endpoint) { "custom" }
+              let(:endpoint_value) { {"foo" => "bar", "baz" => "foobar"} }
+            end
+          end
+        end
       end
     end
   end
