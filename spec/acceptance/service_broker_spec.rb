@@ -372,7 +372,7 @@ describe 'Service Broker', non_transactional: true do
             'client_id'              => 'client-1',
             'client_secret'          => nil,
             'redirect_uri'           => nil,
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'delete'
           },
@@ -380,7 +380,7 @@ describe 'Service Broker', non_transactional: true do
             'client_id'              => 'client-2',
             'client_secret'          => nil,
             'redirect_uri'           => nil,
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'delete'
           },
@@ -388,7 +388,7 @@ describe 'Service Broker', non_transactional: true do
             'client_id'              => 'different-client',
             'client_secret'          => service_2[:dashboard_client][:secret],
             'redirect_uri'           => service_2[:dashboard_client][:redirect_uri],
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'add'
           },
@@ -396,7 +396,7 @@ describe 'Service Broker', non_transactional: true do
             'client_id'              => service_3[:dashboard_client][:id],
             'client_secret'          => 'SUPERsecret',
             'redirect_uri'           => service_3[:dashboard_client][:redirect_uri],
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
@@ -404,7 +404,7 @@ describe 'Service Broker', non_transactional: true do
             'client_id'              => service_4[:dashboard_client][:id],
             'client_secret'          => service_4[:dashboard_client][:secret],
             'redirect_uri'           => service_4[:dashboard_client][:redirect_uri],
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'add'
           },
@@ -412,7 +412,7 @@ describe 'Service Broker', non_transactional: true do
             'client_id'              => service_5[:dashboard_client][:id],
             'client_secret'          => service_5[:dashboard_client][:secret],
             'redirect_uri'           => 'http://nowhere.net',
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
@@ -420,7 +420,7 @@ describe 'Service Broker', non_transactional: true do
             'client_id'              => service_6[:dashboard_client][:id],
             'client_secret'          => service_6[:dashboard_client][:secret],
             'redirect_uri'           => service_6[:dashboard_client][:redirect_uri],
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           }
@@ -615,7 +615,7 @@ describe 'Service Broker', non_transactional: true do
             client_id:              service_1[:dashboard_client][:id],
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           },
@@ -623,7 +623,7 @@ describe 'Service Broker', non_transactional: true do
             client_id:              service_2[:dashboard_client][:id],
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read' ],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           }
