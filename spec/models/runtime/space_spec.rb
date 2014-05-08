@@ -268,15 +268,19 @@ module VCAP::CloudController
 
         private_domain1 = PrivateDomain.make(owning_organization: org1)
         private_domain2 = PrivateDomain.make(owning_organization: org2)
+
         shared_domain = SharedDomain.make
 
         expect {
           @eager_loaded_spaces = Space.eager(:domains).where(id: [space1.id, space2.id]).limit(2).all
         }.to have_queried_db_times(/domains/i, 1)
 
+        domains = [[private_domain1, shared_domain], [private_domain2, shared_domain]]
+
         expect {
-          expect(@eager_loaded_spaces[0].domains).to eql([private_domain1, shared_domain])
-          expect(@eager_loaded_spaces[1].domains).to eql([private_domain2, shared_domain])
+          expect(@eager_loaded_spaces).to have(2).items
+          expect(domains).to include(@eager_loaded_spaces[0].domains)
+          expect(domains).to include(@eager_loaded_spaces[1].domains)
         }.to have_queried_db_times(//, 0)
       end
 
