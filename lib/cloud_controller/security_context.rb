@@ -30,12 +30,24 @@ module VCAP::CloudController
       Thread.current[:vcap_token]
     end
 
+    def self.missing_token?
+      token.nil?
+    end
+
+    def self.valid_token?
+      token && !(token == :invalid_token)
+    end
+
+    def self.invalid_token?
+      !valid_token?
+    end
+
     def self.scopes
-      token && token['scope'] || []
+      valid_token? && token['scope'] || []
     end
 
     def self.current_user_email
-      token['email'] if token
+      token['email'] if valid_token?
     end
 
     def self.current_user_has_email?(email)

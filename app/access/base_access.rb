@@ -2,6 +2,8 @@ module VCAP::CloudController
   class BaseAccess
     include Allowy::AccessControl
 
+    # Only if the token has the appropriate scope, use these methods to check if the user is authorized to access the resource
+
     def create?(object)
       admin_user?
     end
@@ -20,14 +22,38 @@ module VCAP::CloudController
     end
 
     def index?(object_class)
+      # This can return true because the index endpoints filter objects based on user visibilities
       true
     end
+
+    # These methods should be called first to determine if the user's token has the appropriate scope for the operation
+
+    def read_with_token?(_)
+      admin_user? || has_read_scope?
+    end
+
+    def create_with_token?(_)
+      admin_user? || has_write_scope?
+    end
+
+    def update_with_token?(_)
+      admin_user? || has_write_scope?
+    end
+
+    def delete_with_token?(_)
+      admin_user? || has_write_scope?
+    end
+
+    def index_with_token?(_)
+      # This can return true because the index endpoints filter objects based on user visibilities
+      true
+    end
+
+    private
 
     def logged_in?
       !context.user.nil? || context.roles.present?
     end
-
-    private
 
     def has_write_scope?
       VCAP::CloudController::SecurityContext.scopes.include?('cloud_controller.write')
@@ -38,7 +64,7 @@ module VCAP::CloudController
     end
 
     def object_is_visible_to_user?(object, user)
-      has_read_scope? && object.class.user_visible(user, false).where(:guid => object.guid).count > 0
+      object.class.user_visible(user, false).where(:guid => object.guid).count > 0
     end
 
     def admin_user?

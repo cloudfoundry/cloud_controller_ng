@@ -68,13 +68,6 @@ describe VCAP::CloudController::Controller do
       end
     end
 
-    def self.it_sets_token_info
-      it "sets token info" do
-        make_request
-        expect(VCAP::CloudController::SecurityContext.token).to eq token_info
-      end
-    end
-
     def self.it_does_not_create_user
       it "does not create user" do
         expect { make_request }.to_not change { user_count }
@@ -101,12 +94,19 @@ describe VCAP::CloudController::Controller do
 
     def self.it_recognizes_admin_users
       context "when scope includes cc admin scope" do
+        let(:expected_token_info) { token_info }
+
         before do
           VCAP::CloudController::User.make
           token_info["scope"] = [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE]
         end
+
         it_creates_and_sets_admin_user
-        it_sets_token_info
+
+        it "sets token info" do
+          make_request
+          expect(VCAP::CloudController::SecurityContext.token).to eq expected_token_info
+        end
       end
     end
 
@@ -121,6 +121,8 @@ describe VCAP::CloudController::Controller do
     end
 
     context "when there is no user_id or client_id" do
+      let(:expected_token_info) { nil }
+
       it_does_not_create_user
 
       it "sets current user to be nil because user cannot be found" do
@@ -128,7 +130,10 @@ describe VCAP::CloudController::Controller do
         expect(VCAP::CloudController::SecurityContext.current_user).to be_nil
       end
 
-      it_sets_token_info
+      it "sets token info" do
+        make_request
+        expect(VCAP::CloudController::SecurityContext.token).to eq expected_token_info
+      end
     end
 
     def user_count

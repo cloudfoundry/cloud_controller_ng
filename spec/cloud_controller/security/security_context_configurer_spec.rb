@@ -9,11 +9,11 @@ module VCAP::CloudController
 
       describe "#configure" do
         let(:auth_token) { "auth-token" }
-        let(:token) { {"user_id" => user_guid} }
+        let(:token_information) { {"user_id" => user_guid} }
         let(:user_guid) { "user-id-1" }
 
         before do
-          allow(token_decoder).to receive(:decode_token).with(auth_token).and_return(token)
+          allow(token_decoder).to receive(:decode_token).with(auth_token).and_return(token_information)
         end
 
         it 'initially clears the security context token' do
@@ -28,11 +28,11 @@ module VCAP::CloudController
 
         it 'sets the security context token' do
           configurer.configure(auth_token)
-          expect(SecurityContext.token).to eq(token)
+          expect(SecurityContext.token).to eq(token_information)
         end
 
         context 'when a user_id is present' do
-          let(:token) { {"user_id" => user_guid, "client_id" => "foobar"} }
+          let(:token_information) { {"user_id" => user_guid, "client_id" => "foobar"} }
 
           context 'when the specified user already exists' do
             let!(:user) { User.make(:guid => user_guid) }
@@ -46,7 +46,7 @@ module VCAP::CloudController
           context 'when the specified user does not exist' do
             context 'and the token has admin scope' do
               before do
-                token['scope'] = ['cloud_controller.admin']
+                token_information['scope'] = ['cloud_controller.admin']
               end
 
               it 'creates a user with that id' do
@@ -72,21 +72,22 @@ module VCAP::CloudController
         end
 
         context 'when only a client_id is present' do
-          let(:token) { {"client_id" => user_guid} }
+          let(:token_information) { {"client_id" => user_guid} }
           let!(:user) { User.make(:guid => user_guid) }
 
-          it 'sets the client user on security context' do
+          it 'uses the client_id to set the user_id' do
             configurer.configure(auth_token)
             expect(SecurityContext.current_user).to eq(user)
           end
         end
 
-        context 'when neither a user_id or a client_id is present' do
-          let(:token) { {} }
+        context 'when neither a user_id nor a client_id is present' do
+          let(:token_information) { {} }
 
-          it 'sets the SecurityContext user to nil' do
+          it 'sets the SecurityContext user and token to nil' do
             configurer.configure(auth_token)
             expect(SecurityContext.current_user).to be_nil
+            expect(SecurityContext.token).to be_nil
           end
         end
 
@@ -96,10 +97,10 @@ module VCAP::CloudController
             SecurityContext.set("value", "another")
           end
 
-          it 'sets the SecurityContext user and token to nil' do
+          it 'sets the SecurityContext user and token to error values' do
             expect { configurer.configure(auth_token) }.not_to raise_error
             expect(SecurityContext.current_user).to be_nil
-            expect(SecurityContext.token).to be_nil
+            expect(SecurityContext.token).to eq :invalid_token
           end
         end
 

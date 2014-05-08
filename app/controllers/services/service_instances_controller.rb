@@ -117,13 +117,10 @@ module VCAP::CloudController
 
     get '/v2/service_instances/:guid/permissions', :permissions
     def permissions(guid)
-      find_guid_and_validate_access(:read, guid, ServiceInstance)
+      find_guid_and_validate_access(:read_permissions, guid, ServiceInstance)
       [HTTP::OK, {}, JSON.generate({ manage: true })]
-
-    rescue Errors::ApiError, Errors::MissingRequiredScopeError => e
-      if e.is_a? Errors::MissingRequiredScopeError
-        raise VCAP::Errors::ApiError.new_from_details("InvalidAuthToken")
-      elsif e.name == "NotAuthorized"
+    rescue Errors::ApiError => e
+      if e.name == "NotAuthorized"
         [HTTP::OK, {}, JSON.generate({ manage: false })]
       else
         raise e

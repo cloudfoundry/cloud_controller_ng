@@ -2,14 +2,8 @@ module VCAP::CloudController
   class ServiceInstanceAccess < BaseAccess
     def create?(service_instance)
       return true if admin_user?
-      return false unless has_write_scope?
       return false if service_instance.in_suspended_org?
       service_instance.space.developers.include?(context.user)
-    end
-
-    def read?(service_instance)
-      return @ok_read if instance_variable_defined?(:@ok_read)
-      @ok_read = (admin_user? || (ensure_has_read_scope && object_is_visible_to_user?(service_instance, context.user)))
     end
 
     def update?(service_instance)
@@ -20,11 +14,18 @@ module VCAP::CloudController
       create?(service_instance)
     end
 
+    def read_permissions?(service_instance)
+      read?(service_instance)
+    end
+
+    def read_permissions_with_token?(service_instance)
+      read_with_token?(service_instance) || has_read_permissions_scope?
+    end
+
     private
 
-    def ensure_has_read_scope
-      raise Errors::MissingRequiredScopeError unless VCAP::CloudController::SecurityContext.scopes.include?('cloud_controller.read')
-      true
+    def has_read_permissions_scope?
+      VCAP::CloudController::SecurityContext.scopes.include?('cloud_controller_service_permissions.read')
     end
   end
 

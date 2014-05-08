@@ -13,13 +13,18 @@ module VCAP::CloudController
 
         VCAP::CloudController::SecurityContext.set(user, token_information)
       rescue VCAP::UaaTokenDecoder::BadToken
+        VCAP::CloudController::SecurityContext.set(nil, :invalid_token)
       end
 
       private
 
       def decode_token(header_token)
         token_information = @token_decoder.decode_token(header_token)
-        token_information['user_id'] ||= token_information['client_id'] if token_information
+        return nil if token_information.nil? || token_information.empty?
+
+        if !token_information['user_id'] && token_information['client_id']
+          token_information['user_id'] = token_information['client_id']
+        end
         token_information
       end
 
