@@ -9,7 +9,7 @@ language: ruby
 bundler_args: --deployment --without development
 
 rvm:
-  - 1.9.3-p484
+  - 1.9.3-p545
 
 script:
   - bundle exec parallel_rspec spec$SUB -s 'integration|acceptance' -n $THREADS -o "--format $FORMAT --order rand:$RANDOM"
