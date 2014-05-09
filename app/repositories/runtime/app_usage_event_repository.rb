@@ -6,15 +6,17 @@ module VCAP::CloudController
           AppUsageEvent.find(guid: guid)
         end
 
-        def create_from_app(app)
-          AppUsageEvent.create(state: app.state,
+        def create_from_app(app, state_name=nil)
+          AppUsageEvent.create(state: state_name || app.state,
                                instance_count: app.instances,
                                memory_in_mb_per_instance: app.memory,
                                app_guid: app.guid,
                                app_name: app.name,
                                org_guid: app.space.organization_guid,
                                space_guid: app.space_guid,
-                               space_name: app.space.name
+                               space_name: app.space.name,
+                               buildpack_guid: app.detected_buildpack_guid,
+                               buildpack_name: app.custom_buildpack_url || app.detected_buildpack_name,
           )
         end
 
@@ -31,6 +33,8 @@ module VCAP::CloudController
               :space_guid => :spaces__guid,
               :space_name => :spaces__name,
               :org_guid => :organizations__guid,
+              :buildpack_guid => :apps__detected_buildpack_guid,
+              :buildpack_name => :apps__detected_buildpack_name,
               :created_at => Sequel.datetime_class.now,
           }
 

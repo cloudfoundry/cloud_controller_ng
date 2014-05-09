@@ -128,15 +128,6 @@ module VCAP::CloudController
       super
     end
 
-    def create_app_usage_event
-      return unless app_usage_changed?
-
-      repository = Repositories::Runtime::AppUsageEventRepository.new
-      repository.create_from_app(self)
-    end
-
-    private :create_app_usage_event
-
     def version_needs_to_be_updated?
       # change version if:
       #
@@ -151,6 +142,22 @@ module VCAP::CloudController
 
     def set_new_version
       self.version = SecureRandom.uuid
+    end
+
+    def update_detected_buildpack(detect_output, detected_buildpack_key)
+      detected_admin_buildpack = Buildpack.find(key: detected_buildpack_key)
+      if detected_admin_buildpack
+        detected_buildpack_guid = detected_admin_buildpack.guid
+        detected_buildpack_name = detected_admin_buildpack.name
+      end
+
+      update(
+        detected_buildpack: detect_output,
+        detected_buildpack_guid: detected_buildpack_guid,
+        detected_buildpack_name: detected_buildpack_name || custom_buildpack_url
+      )
+
+      create_app_usage_buildpack_event
     end
 
     def generate_start_event?
@@ -193,11 +200,6 @@ module VCAP::CloudController
     def has_stop_event_for_latest_run?
       latest_run_id = AppStartEvent.filter(:app_guid => guid).order(Sequel.desc(:id)).select_map(:app_run_id).first
       !!AppStopEvent.find(:app_run_id => latest_run_id)
-    end
-
-    def footprint_changed?
-      (column_changed?(:production) || column_changed?(:memory) ||
-          column_changed?(:instances))
     end
 
     def before_destroy
@@ -537,6 +539,20 @@ module VCAP::CloudController
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt.freeze
     end
 
+    def app_usage_event_repository
+      @repository ||= Repositories::Runtime::AppUsageEventRepository.new
+    end
+
+    def create_app_usage_buildpack_event
+      return unless staged? && started?
+      app_usage_event_repository.create_from_app(self, "BUILDPACK_SET")
+    end
+
+    def create_app_usage_event
+      return unless app_usage_changed?
+      app_usage_event_repository.create_from_app(self)
+    end
+
     def app_usage_changed?
       previously_started = initial_value(:state) == 'STARTED'
       return true if previously_started != started?
@@ -551,6 +567,11 @@ module VCAP::CloudController
         lock!
         update(attrs)
       end
+    end
+
+    def footprint_changed?
+      (column_changed?(:production) || column_changed?(:memory) ||
+        column_changed?(:instances))
     end
 
     class << self
