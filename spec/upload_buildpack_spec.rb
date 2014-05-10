@@ -75,31 +75,67 @@ module VCAP::CloudController
       end
 
       context "same bits (same sha)" do
-        it "returns false if both bits and filename are not changed" do
+        before do
           buildpack.key = expected_sha_valid_zip
           buildpack.filename = filename
-
-          expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be_false
         end
 
-        it "does not copy the same bits to the blobstore" do
-          upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+        context "when bits are in the blobstore" do
+          before do
+            buildpack_blobstore.stub(:exists?).with(expected_sha_valid_zip).and_return(true)
+          end
 
-          buildpack_blobstore.should_not_receive(:cp_to_blobstore)
-          upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+          it "returns false if both bits and filename are not changed" do
+            expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be_false
+          end
+
+          it "does not copy the same bits to the blobstore" do
+            upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+
+            buildpack_blobstore.should_not_receive(:cp_to_blobstore)
+            upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+          end
+
+          it "does not remove the bits if the same one is provided" do
+            upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+            allow(VCAP::CloudController::BuildpackBitsDelete).to receive(:delete_when_safe)
+
+            upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+            expect(VCAP::CloudController::BuildpackBitsDelete).not_to have_received(:delete_when_safe)
+          end
+
+          it "does not allow upload if the buildpack is locked" do
+            locked_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "locked_buildpack", locked: true, position: 0 })
+            expect(upload_buildpack.upload_bits(locked_buildpack, valid_zip2, filename)).to be_false
+          end
         end
 
-        it "does not remove the bits if the same one is provided" do
-          upload_buildpack.upload_bits(buildpack, valid_zip, filename)
-          allow(VCAP::CloudController::BuildpackBitsDelete).to receive(:delete_when_safe)
+        context "when the bit are missing from the blobstore" do
+          before do
+            buildpack_blobstore.stub(:exists?).with(expected_sha_valid_zip).and_return(false)
+          end
 
-          upload_buildpack.upload_bits(buildpack, valid_zip, filename)
-          expect(VCAP::CloudController::BuildpackBitsDelete).not_to have_received(:delete_when_safe)
-        end
+          it "returns true if the bits are uploaded" do
+            expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be_true
+          end
 
-        it "does not allow upload if the buildpack is locked" do
-          locked_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "locked_buildpack", locked: true, position: 0 })
-          expect(upload_buildpack.upload_bits(locked_buildpack, valid_zip2, filename)).to be_false
+          it "does copy the bits to the blobstore" do
+            upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+
+            buildpack_blobstore.should_receive(:cp_to_blobstore)
+            upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+          end
+
+          it "does not remove the bits if the same one is provided" do
+            expect(VCAP::CloudController::BuildpackBitsDelete).not_to receive(:delete_when_safe)
+            upload_buildpack.upload_bits(buildpack, valid_zip, filename)
+          end
+
+          it "does not allow upload if the buildpack is locked" do
+            locked_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "locked_buildpack", locked: true, position: 0 })
+            expect(upload_buildpack.upload_bits(locked_buildpack, valid_zip2, filename)).to be_false
+          end
+
         end
       end
 
