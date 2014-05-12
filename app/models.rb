@@ -47,5 +47,6 @@ require "models/services/service_plan_visibility"
 require "models/services/service_base_event"
 require "models/services/service_create_event"
 require "models/services/service_delete_event"
+require "models/services/service_usage_event"
 
 require "models/job"
