@@ -494,6 +494,16 @@ module VCAP::CloudController
       end
     end
 
+    describe "read an app's env" do
+      let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
+      it "returns system_env_json" do
+        get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(admin_headers)
+        last_response.status.should == 200
+        expect(parse(last_response.body)).to have_key("system_env_json")
+        expect(parse(last_response.body)).to have_key("environment_json")
+      end
+    end
+
     describe "validations" do
       let(:app_obj)   { AppFactory.make }
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
