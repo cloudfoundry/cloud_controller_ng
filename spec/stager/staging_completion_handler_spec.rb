@@ -6,18 +6,21 @@ module VCAP::CloudController
 
     let(:environment) { {} }
 
-    let!(:staged_app) { App.make(instances: 3, staging_task_id: "the-staging-task-id", environment_json: environment) }
+    let(:staged_app) { App.make(instances: 3, staging_task_id: "the-staging-task-id", environment_json: environment) }
 
     let(:logger) { FakeLogger.new([]) }
 
     let(:app_id) { staged_app.guid }
+
+    let(:buildpack) { Buildpack.make }
 
     let(:response) do
       {
         "app_id" => app_id,
         "task_id" => staged_app.staging_task_id,
         "task_log" => double(:task_log),
-        "detected_buildpack" => 'INTERCAL'
+        "detected_buildpack" => 'INTERCAL',
+        "buildpack_key" => buildpack.key
       }
     end
 
@@ -62,7 +65,9 @@ module VCAP::CloudController
 
           it 'should update the app with the detected buildpack' do
             publish_staging_result
-            staged_app.reload.detected_buildpack.should == 'INTERCAL'
+            staged_app.reload
+            staged_app.detected_buildpack.should == 'INTERCAL'
+            staged_app.detected_buildpack_guid.should == buildpack.guid
           end
         end
 
@@ -92,7 +97,9 @@ module VCAP::CloudController
 
           it 'should not update the app with a detected buildpack' do
             publish_staging_result
-            staged_app.reload.detected_buildpack.should_not == 'INTERCAL'
+            staged_app.reload
+            staged_app.detected_buildpack.should_not == 'INTERCAL'
+            staged_app.detected_buildpack_guid.should_not == buildpack.guid
           end
         end
 
@@ -118,7 +125,9 @@ module VCAP::CloudController
 
           it 'should not update the app with the detected buildpack' do
             publish_staging_result
-            staged_app.reload.detected_buildpack.should_not == 'INTERCAL'
+            staged_app.reload
+            staged_app.detected_buildpack.should_not == 'INTERCAL'
+            staged_app.detected_buildpack_guid.should_not == buildpack.guid
           end
         end
 
