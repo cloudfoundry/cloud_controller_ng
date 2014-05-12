@@ -1,4 +1,5 @@
 require 'vcap/request'
+require 'repositories/services/service_usage_event_repository'
 
 module VCAP::CloudController
   class ManagedServiceInstance < ServiceInstance
@@ -77,6 +78,7 @@ module VCAP::CloudController
     def after_create
       super
       ServiceCreateEvent.create_from_service_instance(self)
+      build_service_instance_usage_event('CREATED')
     end
 
     def after_destroy
@@ -156,6 +158,16 @@ module VCAP::CloudController
 
     def tags
       service.tags
+    end
+
+    private
+
+    def build_service_instance_usage_event(state)
+      service_instance_usage_event_repository.create_from_service_instance(self, state)
+    end
+
+    def service_instance_usage_event_repository
+      @repository ||= Repositories::Services::ServiceUsageEventRepository.new
     end
   end
 end

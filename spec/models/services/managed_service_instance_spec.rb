@@ -50,6 +50,14 @@ module VCAP::CloudController
         instance = described_class.make
         instance.refresh.is_gateway_service.should == true
       end
+
+      it "creates a service usage event" do
+        instance = described_class.make
+
+        event = ServiceUsageEvent.last
+        expect(ServiceUsageEvent.count).to eq(1)
+        expect(event).to match_service_instance(instance)
+      end
     end
 
     describe "serialization" do
