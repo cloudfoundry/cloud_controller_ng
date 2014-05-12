@@ -39,10 +39,10 @@ RSpec::Matchers.define :match_app do |expected_app|
       problems << "event.org_guid: #{actual_event.org_guid}, app.space.organization_guid: #{expected_app.organization.guid}"
     end
     unless actual_event.space_guid == expected_app.space_guid
-      problems << "event.space_name: #{actual_event.space_name}, app.space_guid: #{expected_app.space_guid}"
+      problems << "event.space_guid: #{actual_event.space_guid}, app.space_guid: #{expected_app.space_guid}"
     end
     unless actual_event.space_name == expected_app.space.name
-      problems << "event.buildpack_guid: #{actual_event.buildpack_guid}, app.space.name: #{expected_app.space.name}"
+      problems << "event.space_name: #{actual_event.space_name}, app.space.name: #{expected_app.space.name}"
     end
     unless actual_event.buildpack_guid == expected_app.detected_buildpack_guid
       problems << "event.buildpack_guid: #{actual_event.buildpack_guid}, app.detected_buildpack_guid: #{expected_app.detected_buildpack_guid}"
