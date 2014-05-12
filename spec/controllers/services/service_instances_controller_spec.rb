@@ -184,20 +184,20 @@ module VCAP::CloudController
         end
 
         it 'provisions a service instance' do
-          req = Yajl::Encoder.encode(
-            :name => 'foo',
-            :space_guid => space.guid,
-            :service_plan_guid => plan.guid
-          )
-          headers = json_headers(headers_for(developer))
-
-          post "/v2/service_instances", req, headers
+          instance = create_service_instance
 
           expect(last_response.status).to eq(201)
 
-          instance = ServiceInstance.last
           expect(instance.credentials).to eq('{}')
           expect(instance.dashboard_url).to eq('the dashboard_url')
+        end
+
+        it 'creates a service usage event' do
+          instance = create_service_instance
+
+          event = ServiceUsageEvent.last
+          expect(ServiceUsageEvent.count).to eq(1)
+          expect(event).to match_service_instance(instance)
         end
 
         context 'when name is blank' do
@@ -665,5 +665,19 @@ module VCAP::CloudController
         end
       end
     end
+
+    def create_service_instance
+      req = Yajl::Encoder.encode(
+        :name => 'foo',
+        :space_guid => space.guid,
+        :service_plan_guid => plan.guid
+      )
+      headers = json_headers(headers_for(developer))
+
+      post "/v2/service_instances", req, headers
+
+      ServiceInstance.last
+    end
+
   end
 end
