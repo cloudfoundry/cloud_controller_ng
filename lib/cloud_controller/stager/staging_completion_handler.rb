@@ -20,6 +20,10 @@ module VCAP::CloudController
         @response["detected_buildpack"]
       end
 
+      def buildpack_key
+        @response["buildpack_key"]
+      end
+
       def task_id
         @response["task_id"]
       end
@@ -63,8 +67,7 @@ module VCAP::CloudController
           app.mark_as_failed_to_stage
           Loggregator.emit_error(app.guid, "Failed to stage application: #{message.error}")
         else
-          app.detected_buildpack = message.detected_buildpack
-          app.save
+          app.update_detected_buildpack(message.detected_buildpack, message.buildpack_key)
 
           if (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
             @diego_client.desire(app)
