@@ -280,6 +280,7 @@ module VCAP::CloudController
     space_name { Sham.name }
     service_instance_guid { Sham.guid }
     service_instance_name { Sham.name }
+    service_instance_type { Sham.name }
     service_plan_guid { Sham.guid }
     service_plan_name { Sham.name }
     service_guid { Sham.guid }
