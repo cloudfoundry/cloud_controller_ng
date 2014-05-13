@@ -33,8 +33,8 @@ module VCAP::CloudController
           get "/v2/service_usage_events?after_guid=#{@event1.guid}", {}, admin_headers
           expect(last_response).to be_successful
 
-          second_guid = decoded_response.fetch('resources').first.fetch('metadata').fetch('guid');
-          third_guid = decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid');
+          second_guid = decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')
+          third_guid = decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')
 
           second_event = ServiceUsageEvent.find(guid: second_guid)
           third_event = ServiceUsageEvent.find(guid: third_guid)
