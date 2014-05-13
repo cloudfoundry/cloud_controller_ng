@@ -77,6 +77,13 @@ module VCAP::CloudController
       }
     end
 
+    def to_hash(opts={})
+      if !VCAP::CloudController::SecurityContext.admin? && !space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+        opts.merge!({redact: ['credentials']})
+      end
+      super(opts)
+    end
+
     def credentials=(val)
       if val
         json = Yajl::Encoder.encode(val)

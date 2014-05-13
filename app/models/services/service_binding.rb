@@ -19,7 +19,7 @@ module VCAP::CloudController
     delegate :client, :service, :service_plan,
       to: :service_instance
 
-    plugin :after_initialize, :serialization
+    plugin :after_initialize
 
     def validate
       validates_presence :app

@@ -99,4 +99,32 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
       end
     end
   end
+
+  describe "#to_hash" do
+    let(:opts)      { {attrs: [:credentials]}}
+    let(:developer) { make_developer_for_space(service_instance.space) }
+    let(:auditor)   { make_auditor_for_space(service_instance.space) }
+    let(:user)      { make_user_for_space(service_instance.space) }
+
+    it "does not redact creds for an admin" do
+      allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
+      expect(service_instance.to_hash['credentials']).not_to eq('[PRIVATE DATA HIDDEN]')
+    end
+
+    it "does not redact creds for a space developer" do
+      allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+      expect(service_instance.to_hash['credentials']).not_to eq('[PRIVATE DATA HIDDEN]')
+    end
+
+    it "redacts creds for a space auditor" do
+      allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(auditor)
+      expect(service_instance.to_hash(opts)['credentials']).to eq('[PRIVATE DATA HIDDEN]')
+    end
+
+    it "redacts creds for a space user" do
+      allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
+      expect(service_instance.to_hash(opts)['credentials']).to eq('[PRIVATE DATA HIDDEN]')
+    end
+  end
+
 end
