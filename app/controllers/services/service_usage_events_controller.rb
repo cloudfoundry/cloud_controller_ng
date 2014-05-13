@@ -4,6 +4,8 @@ module VCAP::CloudController
   class ServiceUsageEventsController < RestController::ModelController
     model_class_name :ServiceUsageEvent
 
+    query_parameters :service_instance_type
+
     preserve_query_parameters :after_guid
 
     get '/v2/service_usage_events', :enumerate
