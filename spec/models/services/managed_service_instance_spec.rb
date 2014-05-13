@@ -51,7 +51,7 @@ module VCAP::CloudController
         instance.refresh.is_gateway_service.should == true
       end
 
-      it "creates a service usage event" do
+      it 'creates a service usage event' do
         instance = described_class.make
 
         event = ServiceUsageEvent.last
