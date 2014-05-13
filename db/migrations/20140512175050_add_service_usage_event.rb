@@ -11,10 +11,11 @@ Sequel.migration do
       String :space_name, null: false
       String :service_instance_guid, null: false
       String :service_instance_name, null: false
-      String :service_plan_guid, null: false
-      String :service_plan_name, null: false
-      String :service_guid, null: false
-      String :service_label, null: false
+      String :service_instance_type, null: false
+      String :service_plan_guid, null: true
+      String :service_plan_name, null: true
+      String :service_guid, null: true
+      String :service_label, null: true
     end
   end
 end

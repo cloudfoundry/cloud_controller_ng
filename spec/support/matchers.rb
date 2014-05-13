@@ -61,10 +61,7 @@ end
 RSpec::Matchers.define :match_service_instance do |expected_service_instance|
   problems = []
 
-  service_plan = expected_service_instance.service_plan
-  service = service_plan.service
   space = expected_service_instance.space
-
   match do |actual_event|
     unless actual_event.org_guid == space.organization_guid
       problems << "event.org_guid: #{actual_event.org_guid}, service_instance.space.organization_guid: #{space.organization_guid}"
@@ -81,20 +78,27 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
     unless actual_event.service_instance_name == expected_service_instance.name
       problems << "event.service_instance_name: #{actual_event.service_instance_name}, service_instance.name: #{expected_service_instance.name}"
     end
-    unless actual_event.service_plan_guid == service_plan.guid
-      problems << "event.service_plan_guid: #{actual_event.service_plan_guid}, service_instance.service_plan.guid: #{service_plan.guid}"
-    end
-    unless actual_event.service_plan_name == service_plan.name
-      problems << "event.service_plan_name: #{actual_event.service_plan_name}, service_instance.service_plan.name: #{service_plan.name}"
-    end
-    unless actual_event.service_guid == service.guid
-      problems << "event.service_guid: #{actual_event.service_guid}, service_instance.service.guid: #{service.guid}"
-    end
-    unless actual_event.service_label == service.label
-      problems << "event.service_label: #{actual_event.service_label}, service_instance.service.label: #{service.label}"
-    end
-
     problems.empty?
+  end
+
+  if 'managed_service_instance' == expected_service_instance.type
+    service_plan = expected_service_instance.service_plan
+    service = service_plan.service
+    match do |actual_event|
+      unless actual_event.service_plan_guid == service_plan.guid
+        problems << "event.service_plan_guid: #{actual_event.service_plan_guid}, service_instance.service_plan.guid: #{service_plan.guid}"
+      end
+      unless actual_event.service_plan_name == service_plan.name
+        problems << "event.service_plan_name: #{actual_event.service_plan_name}, service_instance.service_plan.name: #{service_plan.name}"
+      end
+      unless actual_event.service_guid == service.guid
+        problems << "event.service_guid: #{actual_event.service_guid}, service_instance.service.guid: #{service.guid}"
+      end
+      unless actual_event.service_label == service.label
+        problems << "event.service_label: #{actual_event.service_label}, service_instance.service.label: #{service.label}"
+      end
+      problems.empty?
+    end
   end
 
   failure_message_for_should do |actual_event|

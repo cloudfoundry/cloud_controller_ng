@@ -25,53 +25,55 @@ module VCAP::CloudController
       end
 
       describe '#create_from_service_instance' do
-        let(:service_instance) { ManagedServiceInstance.make }
         let(:custom_state) { 'CUSTOM' }
 
-        it 'will create an event which matches the service instance and custom state' do
-          event = repository.create_from_service_instance(service_instance, custom_state)
+        context 'with managed service instance' do
+          let(:service_instance) { ManagedServiceInstance.make }
 
-          expect(event.state).to eq(custom_state)
-          expect(event).to match_service_instance(service_instance)
-        end
+          it 'will create an event which matches the service instance and custom state' do
+            event = repository.create_from_service_instance(service_instance, custom_state)
 
-        context 'fails to create the event if no custom state provided' do
-          it 'will raise an error' do
-            expect {
-              repository.create_from_service_instance(service_instance, nil)
-            }.to raise_error
+            expect(event.state).to eq(custom_state)
+            expect(event).to match_service_instance(service_instance)
           end
-        end
 
-        context 'fails to create the event' do
-
-          context 'if service instance does not have a service plan' do
-            before do
-              service_instance.service_plan = nil
-            end
-
+          context 'fails to create the event if no custom state provided' do
             it 'will raise an error' do
               expect {
-                repository.create_from_service_instance(service_instance, custom_state)
+                repository.create_from_service_instance(service_instance, nil)
               }.to raise_error
             end
           end
 
-          context 'if service instance does not have a space' do
-            before do
-              service_instance.space = nil
+          context 'fails to create the event' do
+
+            context 'if service instance does not have a space' do
+              before do
+                service_instance.space = nil
+              end
+
+              it 'will raise an error' do
+                expect {
+                  repository.create_from_service_instance(service_instance, custom_state)
+                }.to raise_error
+              end
             end
 
-            it 'will raise an error' do
-              expect {
-                repository.create_from_service_instance(service_instance, custom_state)
-              }.to raise_error
-            end
           end
-
         end
+
+        context 'with user provided service instance' do
+          let(:service_instance) { UserProvidedServiceInstance.make }
+
+          it 'will create an event if service instance does not have a service plan' do
+            event = repository.create_from_service_instance(service_instance, custom_state)
+
+            expect(event.state).to eq(custom_state)
+            expect(event).to match_service_instance(service_instance)
+          end
+        end
+
       end
-
     end
   end
 end
