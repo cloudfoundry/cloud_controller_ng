@@ -286,4 +286,5 @@ module VCAP::CloudController
     service_guid { Sham.guid }
     service_label { Sham.name }
   end
+
 end

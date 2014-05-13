@@ -3,7 +3,9 @@ require 'spec_helper'
 module VCAP::CloudController
   describe ServiceUsageEventsController, type: :controller do
     before do
-      @event1 = ServiceUsageEvent.make
+      @event1 = ServiceUsageEvent.make({
+                                         service_instance_type: 'managed_service_instance'
+                                       })
     end
 
     describe 'GET /v2/service_usage_events' do
@@ -55,6 +57,32 @@ module VCAP::CloudController
         it 'returns 400 when guid does not exist' do
           get '/v2/service_usage_events?after_guid=ABC', {}, admin_headers
           expect(last_response.status).to eql(400)
+        end
+      end
+
+      context 'when filtering by service instance type' do
+        before do
+          @event2 = ServiceUsageEvent.make({
+                                             service_instance_type: 'user_provided_service_instance',
+                                             service_plan_guid: nil,
+                                             service_plan_name: nil,
+                                             service_guid: nil,
+                                             service_label: nil
+                                           })
+        end
+
+        it 'returns a list of service usage events of managed_service_instance type only' do
+          get '/v2/service_usage_events?q=service_instance_type:managed_service_instance', {}, admin_headers
+          expect(last_response).to be_successful
+          expect(decoded_response.fetch('resources')).to have(1).item
+          expect(decoded_response.fetch('resources').first.fetch('entity')).to have_at_least(1).item
+        end
+
+        it 'returns a list of service usage events of user_provided_service_instance type only' do
+          get '/v2/service_usage_events?q=service_instance_type:user_provided_service_instance', {}, admin_headers
+          expect(last_response).to be_successful
+          expect(decoded_response.fetch('resources')).to have(1).item
+          expect(decoded_response.fetch('resources').first.fetch('entity')).to have_at_least(1).item
         end
       end
 
