@@ -54,7 +54,7 @@ module VCAP::CloudController
               received_app.guid.should ==  app_id
               received_hash.should  == {:instances_to_start => 3}
             end
-            diego_client.should_not_receive(:desire)
+            diego_client.should_not_receive(:send_desire_request)
             publish_staging_result
           end
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
           it "desires the app using the diego client" do
             DeaClient.should_not_receive(:start)
-            diego_client.should_receive(:desire) do |received_app|
+            diego_client.should_receive(:send_desire_request) do |received_app|
               received_app.guid.should ==  app_id
             end
             publish_staging_result

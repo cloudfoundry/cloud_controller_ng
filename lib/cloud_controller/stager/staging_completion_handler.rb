@@ -70,7 +70,7 @@ module VCAP::CloudController
           app.update_detected_buildpack(message.detected_buildpack, message.buildpack_key)
 
           if (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
-            @diego_client.desire(app)
+            @diego_client.send_desire_request(app)
           else
             DeaClient.start(app, instances_to_start: app.instances)
           end

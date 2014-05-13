@@ -34,6 +34,7 @@ describe BackgroundJobEnvironment do
         bg_config,
         message_bus,
         instance_of(Object),
+        instance_of(Object),
         instance_of(Object))
       background_job_environment.setup_environment
     end

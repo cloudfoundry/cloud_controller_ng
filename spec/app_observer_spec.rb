@@ -9,10 +9,11 @@ module VCAP::CloudController
     let(:staging_timeout) { 320 }
     let(:config_hash) { { staging: { timeout_in_seconds: staging_timeout } } }
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
+    let(:diego_client) { DiegoClient.new(message_bus, blobstore_url_generator)}
 
     before do
       DeaClient.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
-      AppObserver.configure(config_hash, message_bus, dea_pool, stager_pool)
+      AppObserver.configure(config_hash, message_bus, dea_pool, stager_pool, diego_client)
     end
 
     describe ".run" do
@@ -88,28 +89,21 @@ module VCAP::CloudController
       subject { AppObserver.updated(app) }
 
       describe "when the 'diego' flag is set" do
-        before { config_hash[:diego] = true }
+        before do
+          config_hash[:diego] = true
+          allow(VCAP).to receive(:secure_uuid).and_return("foo-bar")
+          app.stub(previous_changes: { :state => "anything" })
+          app.stub(:started?).and_return(true)
+          allow(diego_client).to receive(:send_stage_request).with(app, "foo-bar").and_return(nil)
+        end
+
         let(:environment_json) { {"CF_DIEGO_BETA"=>"true"} }
 
         let(:needs_staging) { true }
 
         it 'uses the diego stager to do staging' do
-          DiegoStagerTask.should_receive(:new).
-              with(staging_timeout,
-                   message_bus,
-                   app,
-                   instance_of(CloudController::Blobstore::UrlGenerator),
-          ).and_return(stager_task)
-
-          stager_task.stub(:stage) do |&callback|
-            app.stub(:droplet_hash) { "staged-droplet-hash" }
-            callback.call(:started_instances => started_instances)
-          end
-
-          app.stub(previous_changes: { :state => "anything" })
-          app.stub(:started?).and_return(true)
-
           subject
+          expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
         end
       end
 
