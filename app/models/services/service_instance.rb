@@ -106,6 +106,11 @@ module VCAP::CloudController
       space.in_suspended_org?
     end
 
+    def after_create
+      super
+      build_service_instance_usage_event('CREATED')
+    end
+
     private
 
     def generate_salt
@@ -116,6 +121,14 @@ module VCAP::CloudController
       if service_binding && service_binding.app.space != space
         raise InvalidServiceBinding.new(service_binding.id)
       end
+    end
+
+    def build_service_instance_usage_event(state)
+      service_instance_usage_event_repository.create_from_service_instance(self, state)
+    end
+
+    def service_instance_usage_event_repository
+      @repository ||= Repositories::Services::ServiceUsageEventRepository.new
     end
   end
 end
