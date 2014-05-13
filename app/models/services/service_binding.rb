@@ -19,7 +19,7 @@ module VCAP::CloudController
     delegate :client, :service, :service_plan,
       to: :service_instance
 
-    plugin :after_initialize
+    plugin :after_initialize, :serialization
 
     def validate
       validates_presence :app
@@ -47,6 +47,13 @@ module VCAP::CloudController
             "'#{app.space.name}' '#{service_instance.space.name}'")
         end
       end
+    end
+
+    def to_hash(opts={})
+      if !VCAP::CloudController::SecurityContext.admin? && !app.space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+        opts.merge!({redact: ['credentials']})
+      end
+      super(opts)
     end
 
     def bind!

@@ -16,14 +16,20 @@ module Sequel::Plugins::VcapSerialization
     # parameter.
     def to_hash(opts = {})
       hash = {}
+      redact_vals = opts[:redact]
       attrs = opts[:attrs] || self.class.export_attrs || []
+
       attrs.each do |k|
         if opts[:only].nil? || opts[:only].include?(k)
           value = send(k)
           if value.respond_to?(:nil_object?) && value.nil_object?
             hash[k.to_s] = nil
           else
-            hash[k.to_s] = value
+            if !redact_vals.nil? && redact_vals.include?(k.to_s)
+              hash[k.to_s] = '[PRIVATE DATA HIDDEN]'
+            else
+              hash[k.to_s] = value
+            end
           end
         end
       end
