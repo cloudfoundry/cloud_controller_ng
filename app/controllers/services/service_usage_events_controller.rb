@@ -10,6 +10,12 @@ module VCAP::CloudController
 
     get '/v2/service_usage_events', :enumerate
 
+    get "#{path_guid}", :read
+
+    def self.not_found_exception_name
+      "EventNotFound"
+    end
+
     private
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
