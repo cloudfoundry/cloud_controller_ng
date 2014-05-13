@@ -27,7 +27,7 @@ resource "Buildpacks (experimental)", :type => :api do
     end
   end
 
-  put "/v2/buildpacks" do
+  put "/v2/buildpacks/:guid" do
     example "Change the position of a buildpack" do
       first = <<-DOC
         Buildpacks are maintained in an ordered list.  If the target position is already occupied,
