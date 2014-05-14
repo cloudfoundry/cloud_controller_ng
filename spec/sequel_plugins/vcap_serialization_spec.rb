@@ -98,6 +98,13 @@ describe "Sequel::Plugins::VcapSerialization", non_transactional: true do
       expected_json = Yajl::Encoder.encode :val1 => '[PRIVATE DATA HIDDEN]',:val2 => 10
       r.to_json({redact: ['val1']}).should == expected_json
     end
+
+    it "should redact nil values marked for redaction" do
+      @c.export_attributes :val1, :val2
+      r = @c.create :val1 => nil, :val2 => 10
+      expected_json = Yajl::Encoder.encode :val1 => '[PRIVATE DATA HIDDEN]',:val2 => 10
+      r.to_json({redact: ['val1']}).should == expected_json
+    end
   end
 
   describe "#update_from_json" do

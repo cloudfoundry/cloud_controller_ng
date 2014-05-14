@@ -529,6 +529,33 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the user reads environment variables from the app endpoint using inline-relations-depth=2' do
+        let!(:test_environment_json) { {'environ_key' => 'value' } }
+        let!(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name",
+                                         space:              space,
+                                         environment_json:   test_environment_json) }
+        let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+
+        context 'when the user is a space developer' do
+          it 'returns non-redacted environment values' do
+            get '/v2/apps?inline-relations-depth=2', {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+            expect(last_response.status).to eql(200)
+
+            expect(decoded_response["resources"].first["entity"]["environment_json"]).to eq(test_environment_json)
+          end
+        end
+
+        context 'when the user is not a space developer' do
+          it 'returns redacted values' do
+            get '/v2/apps?inline-relations-depth=2', {}, json_headers(headers_for(auditor, {scopes: ['cloud_controller.read']}))
+            expect(last_response.status).to eql(200)
+
+            expect(decoded_response["resources"].first["entity"]["environment_json"]).to eq('[PRIVATE DATA HIDDEN]')
+          end
+        end
+
+      end
+
       context 'when the user is NOT a member of the space this instance exists in' do
         let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
 

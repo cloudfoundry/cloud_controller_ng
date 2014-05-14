@@ -104,7 +104,7 @@ resource "Apps", :type => :api do
 
     example "Get the env for an Application" do
       explanation <<-EOD
-        Get the environment variables for an Application using the guid
+        Get the environment variables for an Application using the app guid. Restricted to SpaceDeveloper role.
       EOD
 
       client.get "/v2/apps/#{app_obj.guid}/env", {}, headers

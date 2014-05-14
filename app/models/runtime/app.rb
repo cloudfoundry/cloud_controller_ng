@@ -487,6 +487,13 @@ module VCAP::CloudController
       end
     end
 
+    def to_hash(opts={})
+      if !VCAP::CloudController::SecurityContext.admin? && !space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+        opts.merge!({redact: ['environment_json', 'system_env_json']})
+      end
+      super(opts)
+    end
+
     private
 
     def metadata_deserialized
