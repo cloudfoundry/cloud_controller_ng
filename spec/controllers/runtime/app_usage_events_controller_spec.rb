@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "POST /v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", non_transactional: true do
+    describe "POST /v2/app_usage_events/destructively_purge_all_and_reseed_started_apps" do
       it "purge all existing events" do
         expect(AppUsageEvent.count).not_to eq(0)
         post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, admin_headers

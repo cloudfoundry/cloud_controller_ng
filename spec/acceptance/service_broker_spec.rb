@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Service Broker', non_transactional: true do
+describe 'Service Broker' do
 
   let(:catalog_with_no_plans) {{
     services:
@@ -64,7 +64,6 @@ describe 'Service Broker', non_transactional: true do
   }}
 
   before(:each) { setup_cc }
-  after(:each) { $spec_env.reset_database_with_seeds }
 
   def build_service(attrs={})
     @index ||= 0
