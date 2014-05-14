@@ -1176,16 +1176,21 @@ module VCAP::CloudController
     describe "#restage!" do
       let(:app) { AppFactory.make }
 
-      it "stops the app, marks the app for restaging, and starts the app", non_transactional: true do
-        @updated_apps = []
-        allow(AppObserver).to receive(:updated) do |app|
-          @updated_apps << app
+      it "stops the app, marks the app for restaging, and starts the app" do
+        states = []
+        allow(app).to receive(:state=) do |state|
+          states << state
         end
-        expect(AppObserver).not_to have_received(:updated)
+
+        package_states = []
+        allow(app).to receive(:package_state=) do |package_state|
+          package_states << package_state
+        end
+
         app.restage!
-        expect(@updated_apps.first.state).to eq('STOPPED')
-        expect(@updated_apps.last.package_state).to eq('PENDING')
-        expect(@updated_apps.last.state).to eq('STARTED')
+
+        expect(states).to eq(['STOPPED', 'STARTED'])
+        expect(package_states).to eq(['PENDING'])
       end
     end
 
