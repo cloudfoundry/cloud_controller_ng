@@ -495,12 +495,64 @@ module VCAP::CloudController
     end
 
     describe "read an app's env" do
+      let(:space)     { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:auditor) { make_auditor_for_space(space) }
       let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
-      it "returns system_env_json" do
-        get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(admin_headers)
-        last_response.status.should == 200
-        expect(parse(last_response.body)).to have_key("system_env_json")
-        expect(parse(last_response.body)).to have_key("environment_json")
+
+      context 'when the user is a member of the space this app exists in' do
+        let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name", space: space) }
+
+        context 'when the user is not a space developer' do
+          it 'returns a JSON payload indicating they have permission to manage this instance' do
+            get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(auditor, {scopes: ['cloud_controller.read']}))
+            expect(last_response.status).to eql(403)
+            expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
+          end
+        end
+
+        context 'when the user has only the cloud_controller.read scope' do
+          it 'returns a JSON payload indicating they have permission to manage this instance' do
+            get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+            expect(last_response.status).to eql(200)
+            expect(parse(last_response.body)).to have_key("system_env_json")
+            expect(parse(last_response.body)).to have_key("environment_json")
+          end
+        end
+
+        context 'when the user does not have the necessary scope' do
+          it 'returns InvalidAuthToken' do
+            get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.write']}))
+            expect(last_response.status).to eql(403)
+            expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
+          end
+        end
+      end
+
+      context 'when the user is NOT a member of the space this instance exists in' do
+        let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
+
+        it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
+          get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(403)
+        end
+      end
+
+      context 'when the user has not authenticated with Cloud Controller' do
+        let(:instance)  { ServiceInstance.make }
+        let(:developer) { nil }
+
+        it 'returns an error saying that the user is not authenticated' do
+          get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eq(401)
+        end
+      end
+
+      context 'when the app does not exist' do
+        it 'returns an error saying the app was not found' do
+          get "/v2/apps/nonexistentappguid/env", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql 404
+        end
       end
     end
 

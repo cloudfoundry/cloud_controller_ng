@@ -31,7 +31,7 @@ module VCAP::CloudController
 
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)
-      app = find_guid_and_validate_access(:read, guid, App)
+      app = find_guid_and_validate_access(:read_env, guid, App)
       [HTTP::OK, {}, { system_env_json: app.system_env_json, environment_json: app.environment_json}.to_json]
     end
 
