@@ -78,6 +78,9 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
     unless actual_event.service_instance_name == expected_service_instance.name
       problems << "event.service_instance_name: #{actual_event.service_instance_name}, service_instance.name: #{expected_service_instance.name}"
     end
+    unless actual_event.service_instance_type == expected_service_instance.type
+      problems << "event.service_instance_type: #{actual_event.service_instance_type}, service_instance.type: #{expected_service_instance.type}"
+    end
     problems.empty?
   end
 

@@ -11,7 +11,7 @@ resource "Service Usage Events (experimental)", :type => :api do
 
   get "/v2/service_usage_events" do
     field :guid, "The guid of the event.", required: false
-    field :state, "The desired state of the service.", required: false, readonly: true, valid_values: ["CREATED"]
+    field :state, "The desired state of the service.", required: false, readonly: true, valid_values: ["CREATED", "DELETED"]
     field :org_guid, "The GUID of the organization.", required: false, readonly: true
     field :space_guid, "The GUID of the space.", required: false, readonly: true
     field :space_name, "The name of the space.", required: false, readonly: true
