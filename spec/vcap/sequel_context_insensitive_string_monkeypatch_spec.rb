@@ -82,7 +82,7 @@ describe "String :name" do
       }.to raise_error(Sequel::ValidationFailed)
     end
 
-    it "should not allow create with different case due to db constraints" do
+    it "should not allow create with different case due to db constraints", non_transactional: true do
       expect {
         @c.new(:str => "ABC").save(:validate => false)
       }.to raise_error(Sequel::DatabaseError)
