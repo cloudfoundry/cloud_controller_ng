@@ -24,6 +24,7 @@ module VCAP::CloudController
           app_id: app.guid,
           app_version: app.version,
           droplet_uri: @blobstore_url_generator.droplet_download_url(app),
+          stack: app.stack.name,
           start_command: app.command,
           environment: environment(app),
       }

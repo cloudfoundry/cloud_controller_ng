@@ -26,6 +26,7 @@ module VCAP::CloudController
             app_id: app.guid,
             app_version: app.version,
             droplet_uri: "app_uri",
+            stack: app.stack.name,
             start_command: "/a/custom/command",
             environment: client.environment(app)
         }
