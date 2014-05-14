@@ -74,6 +74,67 @@ module VCAP::CloudController
         end
 
       end
+
+      describe '#purge_and_reseed_started_apps!' do
+        before do
+          3.times do
+            ManagedServiceInstance.make
+          end
+
+          3.times do
+            UserProvidedServiceInstance.make
+          end
+        end
+
+        it 'will purge all existing events' do
+          ServiceInstance.each { |instance| instance.destroy }
+
+          expect {
+            repository.purge_and_reseed_service_instances!
+          }.to change { ServiceUsageEvent.count }.to(0)
+        end
+
+        context 'when there are existing service instances' do
+          before do
+            ManagedServiceInstance.first.destroy
+            UserProvidedServiceInstance.first.destroy
+          end
+
+          it 'reseeds only existing instances with CREATED events' do
+            repository.purge_and_reseed_service_instances!
+
+            service_instance_count    = ServiceInstance.count
+            service_usage_event_count = ServiceUsageEvent.count
+            created_event_count       = ServiceUsageEvent.where(state: ServiceUsageEventRepository::CREATED_EVENT_STATE).count
+
+            expect(service_instance_count).to eq(service_usage_event_count)
+            expect(service_usage_event_count).to eq(created_event_count)
+          end
+
+          it 'reseeds events with the current time' do
+            reseed_time = Sequel.datetime_class.now
+
+            repository.purge_and_reseed_service_instances!
+
+            ServiceUsageEvent.each do |event|
+              expect(event.created_at.to_i).to be >= reseed_time.to_i
+            end
+          end
+
+          it 'reseeds using the correct service instance type' do
+            repository.purge_and_reseed_service_instances!
+
+            managed_instance_count       = ManagedServiceInstance.count
+            user_provided_instance_count = UserProvidedServiceInstance.count
+
+            managed_event_count       = ServiceUsageEvent.where(service_instance_type: 'managed_service_instance').count
+            user_provided_event_count = ServiceUsageEvent.where(service_instance_type: 'user_provided_service_instance').count
+
+            expect(managed_instance_count).to eq(managed_event_count)
+            expect(user_provided_instance_count).to eq(user_provided_event_count)
+          end
+        end
+      end
     end
   end
 end

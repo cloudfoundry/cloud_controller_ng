@@ -11,6 +11,10 @@ module VCAP::CloudController
       )
     end
 
+    after do
+      ServiceUsageEvent.each { |event| event.delete }
+    end
+
     describe 'GET /v2/service_usage_events' do
       it 'returns a list of service usage events' do
         get '/v2/service_usage_events', {}, admin_headers
@@ -148,6 +152,47 @@ module VCAP::CloudController
       it 'returns 404 when he guid does nos exist' do
         get '/v2/service_usage_events/bogus', {}, admin_headers
         expect(last_response.status).to eql(404)
+      end
+    end
+
+    describe 'POST /v2/service_usage_events/destructively_purge_all_and_reseed_existing_instance' do
+      let(:user) { User.make }
+      let(:instance) { ManagedServiceInstance.make}
+
+      after do
+        ServiceInstance.each { |instance| instance.delete }
+        User.each { |user| user.delete }
+      end
+
+      it 'purge all existing events' do
+        expect(ServiceUsageEvent.count).not_to eq(0)
+
+        post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances', {}, admin_headers
+
+        expect(last_response.status).to eql(204)
+        expect(ServiceUsageEvent.count).to eq(0)
+      end
+
+      it 'creates events for existing service instances' do
+        reseed_time = Sequel.datetime_class.now
+        instance.save
+
+        post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances', {}, admin_headers
+
+        expect(last_response).to be_successful
+        expect(ServiceUsageEvent.count).to eq(1)
+        expect(ServiceUsageEvent.last).to match_service_instance(instance)
+        expect(ServiceUsageEvent.last.created_at.to_i).to be >= reseed_time.to_i
+      end
+
+      it 'returns 403 as a non-admin' do
+        expect {
+          post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances', {}, headers_for(user)
+        }.to_not change {
+          ServiceUsageEvent.count
+        }
+
+        expect(last_response.status).to eq(403)
       end
     end
   end

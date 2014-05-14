@@ -53,4 +53,20 @@ resource "Service Usage Events (experimental)", :type => :api do
 
     end
   end
+
+  post "/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances" do
+    example "Purge and reseed service usage events" do
+      explanation <<-DOC
+        Destroys all existing events. Populates new usage events, one for each existing service instance.
+        All populated events will have a created_at value of current time.
+
+        There is the potential race condition if service instances are currently being created or deleted.
+
+        The seeded usage events will have the same guid as the service instance.
+      DOC
+
+      client.post "/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances", {}, headers
+      status.should == 204
+    end
+  end
 end
