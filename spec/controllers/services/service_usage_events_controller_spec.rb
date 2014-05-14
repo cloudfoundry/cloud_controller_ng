@@ -2,10 +2,13 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceUsageEventsController, type: :controller do
+    let(:event_guid1) { SecureRandom.uuid }
+
     before do
-      @event1 = ServiceUsageEvent.make({
-                                         service_instance_type: 'managed_service_instance'
-                                       })
+      ServiceUsageEvent.make(
+        service_instance_type: 'managed_service_instance',
+        guid: event_guid1
+      )
     end
 
     describe 'GET /v2/service_usage_events' do
@@ -17,20 +20,22 @@ module VCAP::CloudController
       end
 
       context 'when filtering by after_guid' do
+        let(:event_guid2) { SecureRandom.uuid }
+
         before do
-          @event2 = ServiceUsageEvent.make
-          @event3 = ServiceUsageEvent.make
+          ServiceUsageEvent.make(guid: event_guid2)
+          ServiceUsageEvent.make
         end
 
         it 'can filter by after_guid' do
-          get "/v2/service_usage_events?after_guid=#{@event1.guid}", {}, admin_headers
+          get "/v2/service_usage_events?after_guid=#{event_guid1}", {}, admin_headers
           expect(last_response).to be_successful
           expect(decoded_response.fetch('resources')).to have(2).item
-          expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eql(@event2.guid)
+          expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eql(event_guid2)
         end
 
         it 'orders the events by event id' do
-          get "/v2/service_usage_events?after_guid=#{@event1.guid}", {}, admin_headers
+          get "/v2/service_usage_events?after_guid=#{event_guid1}", {}, admin_headers
           expect(last_response).to be_successful
 
           second_guid = decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')
@@ -43,15 +48,15 @@ module VCAP::CloudController
         end
 
         it 'maintains the after_guid in the next_url' do
-          get "/v2/service_usage_events?after_guid=#{@event1.guid}&results-per-page=1", {}, admin_headers
+          get "/v2/service_usage_events?after_guid=#{event_guid1}&results-per-page=1", {}, admin_headers
           expect(last_response).to be_successful
-          expect(decoded_response.fetch('next_url')).to eql("/v2/service_usage_events?after_guid=#{@event1.guid}&order-direction=asc&page=2&results-per-page=1")
+          expect(decoded_response.fetch('next_url')).to eql("/v2/service_usage_events?after_guid=#{event_guid1}&order-direction=asc&page=2&results-per-page=1")
         end
 
         it 'maintains the after_guid in the prev_url' do
-          get "/v2/service_usage_events?after_guid=#{@event1.guid}&results-per-page=1&page=2", {}, admin_headers
+          get "/v2/service_usage_events?after_guid=#{event_guid1}&results-per-page=1&page=2", {}, admin_headers
           expect(last_response).to be_successful
-          expect(decoded_response.fetch('prev_url')).to eql("/v2/service_usage_events?after_guid=#{@event1.guid}&order-direction=asc&page=1&results-per-page=1")
+          expect(decoded_response.fetch('prev_url')).to eql("/v2/service_usage_events?after_guid=#{event_guid1}&order-direction=asc&page=1&results-per-page=1")
         end
 
         it 'returns 400 when guid does not exist' do
@@ -62,13 +67,13 @@ module VCAP::CloudController
 
       context 'when filtering by service instance type' do
         before do
-          @event2 = ServiceUsageEvent.make({
-                                             service_instance_type: 'user_provided_service_instance',
-                                             service_plan_guid: nil,
-                                             service_plan_name: nil,
-                                             service_guid: nil,
-                                             service_label: nil
-                                           })
+          ServiceUsageEvent.make(
+            service_instance_type: 'user_provided_service_instance',
+            service_plan_guid: nil,
+            service_plan_name: nil,
+            service_guid: nil,
+            service_label: nil
+          )
         end
 
         it 'returns a list of service usage events of managed_service_instance type only' do
@@ -83,6 +88,32 @@ module VCAP::CloudController
           expect(last_response).to be_successful
           expect(decoded_response.fetch('resources')).to have(1).item
           expect(decoded_response.fetch('resources').first.fetch('entity')).to have_at_least(1).item
+        end
+
+        context 'and the response is multiple pages' do
+          before do
+            ServiceUsageEvent.make(service_instance_type: 'managed_service_instance')
+            ServiceUsageEvent.make(service_instance_type: 'managed_service_instance')
+            ServiceUsageEvent.make(service_instance_type: 'managed_service_instance')
+          end
+
+          it 'maintains the service_instance_type in the next_url' do
+            get "/v2/service_usage_events?service_instance_type=managed_service_instance&results-per-page=1", {}, admin_headers
+            expect(last_response).to be_successful
+            expect(decoded_response.fetch('next_url')).to include("/v2/service_usage_events")
+            expect(decoded_response.fetch('next_url')).to include("service_instance_type=managed_service_instance")
+            expect(decoded_response.fetch('next_url')).to include("order-direction=asc")
+            expect(decoded_response.fetch('next_url')).to include("results-per-page=1")
+          end
+
+          it 'maintains the service_instance_type in the prev_url' do
+            get "/v2/service_usage_events?service_instance_type=managed_service_instance&results-per-page=1&page=2", {}, admin_headers
+            expect(last_response).to be_successful
+            expect(decoded_response.fetch('prev_url')).to include("/v2/service_usage_events")
+            expect(decoded_response.fetch('prev_url')).to include("service_instance_type=managed_service_instance")
+            expect(decoded_response.fetch('prev_url')).to include("order-direction=asc")
+            expect(decoded_response.fetch('prev_url')).to include("results-per-page=1")
+          end
         end
       end
 
@@ -107,10 +138,10 @@ module VCAP::CloudController
 
     describe 'GET /v2/service_usage_events/:guid' do
       it 'retrieves an event by guid' do
-        url = "/v2/service_usage_events/#{@event1.guid}"
+        url = "/v2/service_usage_events/#{event_guid1}"
         get url, {}, admin_headers
         expect(last_response).to be_successful
-        expect(decoded_response['metadata']['guid']).to eq(@event1.guid)
+        expect(decoded_response['metadata']['guid']).to eq(event_guid1)
         expect(decoded_response['metadata']['url']).to eq(url)
       end
 
