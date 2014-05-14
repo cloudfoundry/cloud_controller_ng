@@ -48,7 +48,7 @@ module VCAP::CloudController
       before { org.add_manager(user) }
       it_behaves_like :read_only
 
-      it 'allows user to :read_env' do
+      it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
     end
@@ -57,7 +57,7 @@ module VCAP::CloudController
       before { org.add_user(user) }
       it_behaves_like :no_access
 
-      it 'allows user to :read_env' do
+      it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
     end
@@ -66,7 +66,7 @@ module VCAP::CloudController
       before { org.add_auditor(user) }
       it_behaves_like :no_access
 
-      it 'allows user to :read_env' do
+      it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
     end
@@ -75,7 +75,7 @@ module VCAP::CloudController
       before { org.add_billing_manager(user) }
       it_behaves_like :no_access
 
-      it 'allows user to :read_env' do
+      it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
     end
@@ -87,7 +87,7 @@ module VCAP::CloudController
       end
       it_behaves_like :read_only
 
-      it 'allows user to :read_env' do
+      it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
     end
@@ -99,7 +99,7 @@ module VCAP::CloudController
       end
       it_behaves_like :read_only
 
-      it 'allows user to :read_env' do
+      it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
     end
