@@ -29,6 +29,11 @@ module VCAP::CloudController
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
         it_behaves_like :read_only
       end
+
+      it 'allows the user to read the permissions of the service instance' do
+        expect(subject).to allow_op_on_object(:read_permissions, object)
+      end
+
     end
 
     context 'space auditor' do
@@ -38,21 +43,37 @@ module VCAP::CloudController
       end
 
       it_behaves_like :read_only
+
+      it 'allows the user to read the permissions of the service instance' do
+        expect(subject).to allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
       it_behaves_like :no_access
+
+      it 'does not allow the user to read the permissions of the service instance' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'organization billing manager (defensive)' do
       before { org.add_billing_manager(user) }
       it_behaves_like :no_access
+
+      it 'does not allow the user to read the permissions of the service instance' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
       it_behaves_like :no_access
+
+      it 'does not allow the user to read the permissions of the service instance' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'space manager (defensive)' do
@@ -67,6 +88,10 @@ module VCAP::CloudController
     context 'organization user (defensive)' do
       before { org.add_user(user) }
       it_behaves_like :no_access
+
+      it 'does not allow the user to read the permissions of the service instance' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'user in a different organization (defensive)' do
@@ -76,6 +101,10 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
+
+      it 'does not allow the user to read the permissions of the service instance' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'manager in a different organization (defensive)' do
@@ -91,6 +120,10 @@ module VCAP::CloudController
       let(:user) { nil }
       let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
+
+      it 'does not allow the user to read the permissions of the service instance' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     describe 'a user with full org and space permissions using a client with limited scope' do
