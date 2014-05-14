@@ -192,11 +192,12 @@ module VCAP::CloudController
           expect(instance.dashboard_url).to eq('the dashboard_url')
         end
 
-        it 'creates a service usage event' do
+        it 'creates a CREATED service usage event' do
           instance = create_service_instance
 
           event = ServiceUsageEvent.last
           expect(ServiceUsageEvent.count).to eq(1)
+          expect(event.state).to eq('CREATED')
           expect(event).to match_service_instance(instance)
         end
 
@@ -479,6 +480,16 @@ module VCAP::CloudController
           }.to change(ServiceInstance, :count).by(-1)
           last_response.status.should == 204
           ServiceInstance.find(:guid => service_instance.guid).should be_nil
+        end
+
+        it 'creates a DELETED service usage event' do
+          delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+
+          event = ServiceUsageEvent.last
+          # expect 2 events: CREATED and DELETED
+          expect(ServiceUsageEvent.count).to eq(2)
+          expect(event.state).to eq('DELETED')
+          expect(event).to match_service_instance(service_instance)
         end
 
         context 'when the service broker returns a 409' do

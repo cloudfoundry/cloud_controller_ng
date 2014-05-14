@@ -111,6 +111,11 @@ module VCAP::CloudController
       build_service_instance_usage_event('CREATED')
     end
 
+    def after_destroy
+      super
+      build_service_instance_usage_event('DELETED')
+    end
+
     private
 
     def generate_salt
