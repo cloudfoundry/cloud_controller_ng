@@ -236,14 +236,25 @@ module VCAP::CloudController
     end
 
     describe "#domains (eager loading)" do
-      before { SharedDomain.dataset.delete }
+      before do
+        @model_manger = VCAP::CloudController::ModelManager.new(
+            Space, PrivateDomain, SharedDomain
+        )
+        @model_manger.record
+      end
+
+      after do
+        @model_manger.destroy
+      end
 
       it "is able to eager load domains" do
         space = Space.make
+
         org = space.organization
 
         private_domain1 = PrivateDomain.make(owning_organization: org)
         private_domain2 = PrivateDomain.make(owning_organization: org)
+
         shared_domain = SharedDomain.make
 
         expect {
@@ -261,6 +272,7 @@ module VCAP::CloudController
 
       it "has correct domains for each space" do
         space1 = Space.make
+
         space2 = Space.make
 
         org1 = space1.organization

@@ -617,3 +617,32 @@ end
 class VCAP::CloudController::App
   set_dataset dataset.order(:guid)
 end
+
+class VCAP::CloudController::ModelManager
+  def initialize(*models)
+    @models = models
+    @instances = []
+  end
+
+  def record
+    raise StandardError "Recording already enabled" if @models.nil?
+
+    @models.each do |model|
+      original_make = model.method(:make)
+      model.stub(:make) do |*args, &block|
+        result = original_make.call(*args, &block)
+        @instances << result unless result.nil?
+        result
+      end
+    end
+    @models = nil
+  end
+
+  def destroy
+    raise StandardError "Model instances already destroyed" if @instances.nil?
+    @instances.each do |instance|
+      instance.destroy
+    end
+    @instances = nil
+  end
+end
