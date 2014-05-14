@@ -1,3 +1,5 @@
+require 'repositories/services/service_usage_event_repository'
+
 module VCAP::CloudController
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
@@ -108,12 +110,12 @@ module VCAP::CloudController
 
     def after_create
       super
-      build_service_instance_usage_event('CREATED')
+      service_instance_usage_event_repository.created_event_from_service_instance(self)
     end
 
     def after_destroy
       super
-      build_service_instance_usage_event('DELETED')
+      service_instance_usage_event_repository.deleted_event_from_service_instance(self)
     end
 
     private
@@ -126,10 +128,6 @@ module VCAP::CloudController
       if service_binding && service_binding.app.space != space
         raise InvalidServiceBinding.new(service_binding.id)
       end
-    end
-
-    def build_service_instance_usage_event(state)
-      service_instance_usage_event_repository.create_from_service_instance(self, state)
     end
 
     def service_instance_usage_event_repository

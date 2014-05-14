@@ -56,7 +56,7 @@ module VCAP::CloudController
 
         event = ServiceUsageEvent.last
         expect(ServiceUsageEvent.count).to eq(1)
-        expect(event.state).to eq('CREATED')
+        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
       end
     end
@@ -69,7 +69,7 @@ module VCAP::CloudController
         event = VCAP::CloudController::ServiceUsageEvent.last
 
         expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
-        expect(event.state).to eq('DELETED')
+        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
       end
     end

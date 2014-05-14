@@ -1,5 +1,4 @@
 require 'vcap/request'
-require 'repositories/services/service_usage_event_repository'
 
 module VCAP::CloudController
   class ManagedServiceInstance < ServiceInstance
