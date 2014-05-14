@@ -28,7 +28,7 @@ module VCAP::CloudController
           :file_descriptors => app.file_descriptors,
           droplet_uri: @blobstore_url_generator.droplet_download_url(app),
           stack: app.stack.name,
-          start_command: app.command,
+          start_command: app.command || app.current_droplet.detected_start_command,
           environment: environment(app),
       }
     end

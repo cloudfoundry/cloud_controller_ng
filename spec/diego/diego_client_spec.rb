@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::DiegoClient do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:app) do
-      app = AppFactory.make(command: "/a/custom/command")
+      app = AppFactory.make
       app.environment_json = {APP_KEY: "APP_VAL"}
       app
     end
@@ -20,8 +20,14 @@ module VCAP::CloudController
     subject(:client) { DiegoClient.new(message_bus, blobstore_url_generator) }
 
     describe "desiring an app" do
+      before do
+        app.add_new_droplet("lol")
+        app.current_droplet.update_staging_complete("./some-detected-command")
+      end
+
       it "sends a nats message with the appropriate subject and payload" do
         client.send_desire_request(app)
+
         expected_message = {
             app_id: app.guid,
             app_version: app.version,
@@ -30,7 +36,7 @@ module VCAP::CloudController
             :file_descriptors => app.file_descriptors,
             droplet_uri: "app_uri",
             stack: app.stack.name,
-            start_command: "/a/custom/command",
+            start_command: "./some-detected-command",
             environment: client.environment(app)
         }
 
@@ -38,6 +44,28 @@ module VCAP::CloudController
         nats_message = message_bus.published_messages.first
         expect(nats_message[:subject]).to eq("diego.desire.app")
         expect(nats_message[:message]).to eq(expected_message)
+      end
+
+      context "with a custom start command" do
+        before { app.command = "/a/custom/command"; app.save }
+
+        it "sends a message with the custom start command" do
+          client.send_desire_request(app)
+
+          expected_message = {
+              app_id: app.guid,
+              app_version: app.version,
+              droplet_uri: "app_uri",
+              stack: app.stack.name,
+              start_command: "/a/custom/command",
+              environment: client.environment(app)
+          }
+
+          expect(message_bus.published_messages).to have(1).messages
+          nats_message = message_bus.published_messages.first
+          expect(nats_message[:subject]).to eq("diego.desire.app")
+          expect(nats_message[:message]).to eq(expected_message)
+        end
       end
     end
 
