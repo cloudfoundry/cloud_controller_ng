@@ -40,8 +40,11 @@ module VCAP::CloudController
 
     let(:app) do
       AppFactory.make :instances => 2, :state => app_state, :droplet_hash => droplet_hash,
-        :package_hash => "abcd", :package_state => package_state
+        :package_hash => "abcd", :package_state => package_state,
+        :environment_json => environment
     end
+
+    let(:environment) { {} }
 
     let(:app_state) { "STARTED" }
     let(:droplet_hash) { "present-hash" }
@@ -76,18 +79,30 @@ module VCAP::CloudController
 
       context "if the app does exit" do
         let(:start_droplet) { app.guid }
+
         context "if the version matches" do
           let(:start_version) { app.version }
           context "if the desired index is within the desired number of instances" do
             let(:start_instance_index) {1}
             context "if app is in STARTED state" do
-              it "should send the start message" do
-                dea_client.should_receive(:start_instance_at_index) do |app_to_start, index_to_start|
-                  expect(app_to_start).to eq(app)
-                  expect(index_to_start).to eq(1)
-                end
+              context "and the CF_DIEGO_RUN_BETA flag is set" do
+                let(:environment) { {"CF_DIEGO_RUN_BETA" => "true"} }
 
-                subject.process_hm9000_start(hm9000_start_message)
+                it "should not send the start message" do
+                  dea_client.should_not_receive(:start_instance_at_index)
+                  subject.process_hm9000_start(hm9000_start_message)
+                end
+              end
+              
+              context "and the CF_DIEGO_RUN_BETA flag is not set" do
+                it "should send the start message" do
+                  dea_client.should_receive(:start_instance_at_index) do |app_to_start, index_to_start|
+                    expect(app_to_start).to eq(app)
+                    expect(index_to_start).to eq(1)
+                  end
+
+                  subject.process_hm9000_start(hm9000_start_message)
+                end
               end
             end
 

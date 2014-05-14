@@ -64,9 +64,11 @@ module VCAP::CloudController
       should_start, reason = instance_needs_to_start?(app, version, instance_index)
       if should_start
         dea_client.start_instance_at_index(app, instance_index)
-        logger.info "cloudcontroller.hm9000.will-start", :reason => reason, :payload => message
+        logger.info "cloudcontroller.hm9000.will-start", 
+          :reason => reason, :payload => message
       else
-        logger.info "cloudcontroller.hm9000.will-not-start", :payload => message
+        logger.info "cloudcontroller.hm9000.will-not-start", 
+          :reason => reason, :payload => message
       end
     end
 
@@ -103,6 +105,10 @@ module VCAP::CloudController
     def instance_needs_to_start?(app, version, instance_index)
       if !app
         return false, "App not found"
+      end
+
+      if app.environment_json && app.environment_json["CF_DIEGO_RUN_BETA"] == "true"
+        return false, "App is participating in DIEGO BETA"
       end
 
       if app.version != version
