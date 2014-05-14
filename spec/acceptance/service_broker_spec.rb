@@ -645,7 +645,7 @@ describe 'Service Broker' do
         delete_broker
       end
 
-      it 'does not delete the broker' do
+      it 'does not delete the broker', non_transactional: true do
         delete_broker
         expect(last_response).to have_status_code(400)
 
