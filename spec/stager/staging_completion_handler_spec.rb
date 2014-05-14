@@ -18,9 +18,9 @@ module VCAP::CloudController
       {
         "app_id" => app_id,
         "task_id" => staged_app.staging_task_id,
-        "task_log" => double(:task_log),
         "detected_buildpack" => 'INTERCAL',
-        "buildpack_key" => buildpack.key
+        "buildpack_key" => buildpack.key,
+        "detected_start_command" => "./some-start-command",
       }
     end
 
@@ -31,6 +31,8 @@ module VCAP::CloudController
     before do
       Steno.stub(:logger).and_return(logger)
       DeaClient.stub(:start)
+
+      staged_app.add_new_droplet("lol")
     end
 
     describe "#subscribe!" do
@@ -48,6 +50,12 @@ module VCAP::CloudController
       end
 
       describe "success cases" do
+        it "saves the start command on the app's current droplet" do
+          publish_staging_result
+
+          staged_app.current_droplet.detected_start_command.should == "./some-start-command"
+        end
+
         context "without the DIEGO_RUN_BETA flag" do
           it "starts the app instances" do
             DeaClient.should_receive(:start) do |received_app, received_hash|
