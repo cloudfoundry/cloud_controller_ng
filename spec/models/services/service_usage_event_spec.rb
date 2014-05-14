@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe ServiceUsageEvent, type: :model do
     let(:valid_attributes) do
       {
-        state: 'CREATED',
+        state: Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE,
         org_guid: 'org-guid',
         space_guid: 'space-guid',
         space_name: 'space-name',
@@ -50,6 +50,7 @@ module VCAP::CloudController
         expect(json_hash.fetch('space_name')).to eq(event.space_name)
         expect(json_hash.fetch('service_instance_guid')).to eq(event.service_instance_guid)
         expect(json_hash.fetch('service_instance_name')).to eq(event.service_instance_name)
+        expect(json_hash.fetch('service_instance_type')).to eq(event.service_instance_type)
         expect(json_hash.fetch('service_plan_guid')).to eq(event.service_plan_guid)
         expect(json_hash.fetch('service_plan_name')).to eq(event.service_plan_name)
         expect(json_hash.fetch('service_guid')).to eq(event.service_guid)
