@@ -20,7 +20,6 @@ module VCAP::CloudController
         "task_id" => staged_app.staging_task_id,
         "detected_buildpack" => 'INTERCAL',
         "buildpack_key" => buildpack.key,
-        "detected_start_command" => "./some-start-command",
       }
     end
 
@@ -50,10 +49,14 @@ module VCAP::CloudController
       end
 
       describe "success cases" do
-        it "saves the start command on the app's current droplet" do
-          publish_staging_result
+        context "when a detected start command is returned" do
+          before { response["detected_start_command"] = "./some-start-command" }
 
-          staged_app.current_droplet.detected_start_command.should == "./some-start-command"
+          it "saves it on the app's current droplet" do
+            publish_staging_result
+
+            staged_app.current_droplet.detected_start_command.should == "./some-start-command"
+          end
         end
 
         context "without the DIEGO_RUN_BETA flag" do

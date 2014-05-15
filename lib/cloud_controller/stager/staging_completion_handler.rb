@@ -13,7 +13,7 @@ module VCAP::CloudController
         "task_id" => String,
         "buildpack_key" => String,
         "detected_buildpack" => String,
-        "detected_start_command" => String
+        optional("detected_start_command") => String,
       }
     end
 
