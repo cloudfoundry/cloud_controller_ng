@@ -25,6 +25,9 @@ module VCAP::CloudController
         expected_message = {
             app_id: app.guid,
             app_version: app.version,
+            :memory_mb => app.memory,
+            :disk_mb => app.disk_quota,
+            :file_descriptors => app.file_descriptors,
             droplet_uri: "app_uri",
             stack: app.stack.name,
             start_command: "/a/custom/command",
