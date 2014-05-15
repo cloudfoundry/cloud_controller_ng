@@ -60,6 +60,10 @@ module VCAP::CloudController
             expect(config[:directories]).to eq({ some: "value" })
           end
 
+          it "preserves the external_protocol value from the file" do
+            expect(config[:external_protocol]).to eq("http")
+          end
+
           it "preserves the billing_event_writing_enabled value from the file" do
             expect(config[:billing_event_writing_enabled]).to be_false
           end
@@ -133,7 +137,8 @@ module VCAP::CloudController
           @test_config,
           message_bus,
           instance_of(DeaPool),
-          instance_of(StagerPool))
+          instance_of(StagerPool),
+          instance_of(DiegoClient))
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
@@ -147,6 +152,13 @@ module VCAP::CloudController
 
         message_bus.should_receive(:subscribe).at_least(:once)
         DeaClient.dea_pool.register_subscriptions
+      end
+
+      it "starts the staging task completion handler" do
+        StagingCompletionHandler.any_instance.should_receive(:subscribe!)
+
+        Config.configure_components(@test_config)
+        Config.configure_components_depending_on_message_bus(message_bus)
       end
 
       it "sets the legacy bulk" do

@@ -1,7 +1,6 @@
 module VCAP::CloudController
   class Organization < Sequel::Model
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
-    class UnauthorizedAccessToPrivateDomain < RuntimeError; end
 
     one_to_many :spaces
 
@@ -19,10 +18,10 @@ module VCAP::CloudController
     many_to_one :quota_definition
 
     one_to_many :domains,
-                dataset: -> { VCAP::CloudController::Domain.filter(owning_organization_id: id).or(owning_organization_id: nil) },
+                dataset: -> { VCAP::CloudController::Domain.shared_or_owned_by(id) },
                 remover: ->(legacy_domain) { legacy_domain.destroy if legacy_domain.owning_organization_id == id },
                 clearer: -> { remove_all_private_domains },
-                adder: ->(legacy_domain) { check_addable!(legacy_domain) },
+                adder: ->(legacy_domain) { legacy_domain.addable_to_organization!(self) },
                 eager_loader: proc { |eo|
                   id_map = {}
                   eo[:rows].each do |org|
@@ -30,7 +29,7 @@ module VCAP::CloudController
                     id_map[org.id] = org
                   end
 
-                  ds = Domain.filter(owning_organization_id: id_map.keys).or(owning_organization_id: nil)
+                  ds = Domain.shared_or_owned_by(id_map.keys)
                   ds = ds.eager(eo[:associations]) if eo[:associations]
                   ds = eo[:eager_block].call(ds) if eo[:eager_block]
 
@@ -49,7 +48,9 @@ module VCAP::CloudController
       service_plan_visibilities: :destroy
 
     define_user_group :users
-    define_user_group :managers, reciprocal: :managed_organizations
+    define_user_group :managers, 
+                      reciprocal: :managed_organizations,
+                      before_remove: proc { |org, user| org.manager_guids.count > 1 }
     define_user_group :billing_managers, reciprocal: :billing_managed_organizations
     define_user_group :auditors, reciprocal: :audited_organizations
 
@@ -143,13 +144,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def check_addable!(legacy_domain)
-      if legacy_domain.owning_organization_id && legacy_domain.owning_organization_id != id
-        raise UnauthorizedAccessToPrivateDomain
-      end
-    end
-
     def require_admin_for(field_name)
       unless VCAP::CloudController::SecurityContext.admin?
         errors.add(field_name, :not_authorized)

@@ -78,7 +78,7 @@ module VCAP::Services::SSO::UAA
             client_id:              nil,
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             authorized_grant_types: ['authorization_code'],
             action:                 'add'
           },
@@ -86,14 +86,14 @@ module VCAP::Services::SSO::UAA
             client_id:              nil,
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             authorized_grant_types: ['authorization_code'],
             action:                 'update' },
           {
             client_id:              'delete-this-client',
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           }

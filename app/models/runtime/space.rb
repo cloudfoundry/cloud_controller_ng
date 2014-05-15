@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     one_to_many :domains,
                 dataset: -> { organization.domains_dataset },
-                adder: ->(domain) { check_addable!(domain) },
+                adder: ->(domain) { domain.addable_to_organization!(organization) },
                 eager_loader: proc { |eo|
                   id_map = {}
                   eo[:rows].each do |space|
@@ -34,7 +34,7 @@ module VCAP::CloudController
                     id_map[space.organization_id] << space
                   end
 
-                  ds = Domain.filter(owning_organization_id: id_map.keys).or(owning_organization_id: nil)
+                  ds = Domain.shared_or_owned_by(id_map.keys)
                   ds = ds.eager(eo[:associations]) if eo[:associations]
                   ds = eo[:eager_block].call(ds) if eo[:eager_block]
 
@@ -57,6 +57,13 @@ module VCAP::CloudController
                       :manager_guids, :auditor_guids
 
     strip_attributes  :name
+
+    dataset_module do
+      def having_developers(*users)
+        join(:spaces_developers, spaces_developers__space_id: :spaces__id).
+        where(spaces_developers__user_id: users.map(&:id)).select_all(:spaces)
+      end
+    end
 
     def in_organization?(user)
       organization && organization.users.include?(user)
@@ -92,13 +99,6 @@ module VCAP::CloudController
 
     def in_suspended_org?
       organization.suspended?
-    end
-
-    private
-    def check_addable!(domain)
-      if domain.owning_organization_id && domain.owning_organization_id != organization.id
-        raise UnauthorizedAccessToPrivateDomain
-      end
     end
   end
 end

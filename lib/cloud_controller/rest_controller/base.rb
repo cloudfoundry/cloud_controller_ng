@@ -72,6 +72,8 @@ module VCAP::CloudController::RestController
       send(op, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, request_attrs)
+    rescue Sequel::HookFailed => e
+      raise VCAP::Errors::ApiError.new_from_details("InvalidRequest", e.message)
     rescue Sequel::DatabaseError => e
       raise self.class.translate_and_log_exception(logger, e)
     rescue JsonMessage::Error => e
@@ -121,10 +123,14 @@ module VCAP::CloudController::RestController
       return if VCAP::CloudController::SecurityContext.current_user
       return if VCAP::CloudController::SecurityContext.admin?
 
-      if VCAP::CloudController::SecurityContext.token
-        raise VCAP::Errors::ApiError.new_from_details("NotAuthorized")
+      if VCAP::CloudController::SecurityContext.missing_token?
+        raise VCAP::Errors::ApiError.new_from_details('NotAuthenticated')
+      elsif VCAP::CloudController::SecurityContext.invalid_token?
+        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
       else
-        raise VCAP::Errors::ApiError.new_from_details("InvalidAuthToken")
+        logger.error "Unexpected condition: valid token with no user/client id " +
+                       "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
+        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
       end
     end
 
@@ -238,10 +244,10 @@ module VCAP::CloudController::RestController
       end
 
       def allow_unauthenticated_access?(op)
-        if @allow_unauthenticated_access_ops
-           @allow_unauthenticated_access_ops.include?(op)
-        else
+        if @allow_unauthenticated_access_to_all_ops
           @allow_unauthenticated_access_to_all_ops
+        elsif @allow_unauthenticated_access_ops
+          @allow_unauthenticated_access_ops.include?(op)
         end
       end
 

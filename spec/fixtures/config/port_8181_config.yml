@@ -10,6 +10,8 @@ info:
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
 
+external_protocol: http
+
 system_domain_organization: the-system-domain-org-name
 system_domain: the-system-domain.com
 app_domains:

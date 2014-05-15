@@ -6,6 +6,10 @@ module VCAP::CloudController::BrokerApiHelper
       should have_been_made
   end
 
+  def service_name
+    "MySQL"
+  end
+
   def stubbed_broker_url
     "http://#{stubbed_broker_host}"
   end
@@ -26,7 +30,7 @@ module VCAP::CloudController::BrokerApiHelper
     catalog ||= {
       services: [{
         id:          "service-guid-here",
-        name:        "MySQL",
+        name:        service_name,
         description: "A MySQL-compatible relational database",
         bindable:    true,
         plans:       [{
@@ -54,11 +58,7 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def setup_broker(catalog = nil)
-    if (catalog)
-      stub_catalog_fetch(200, catalog)
-    else
-      stub_catalog_fetch
-    end
+    stub_catalog_fetch(200, catalog)
 
     post('/v2/service_brokers',
       { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
@@ -72,6 +72,12 @@ module VCAP::CloudController::BrokerApiHelper
     make_all_plans_public
 
     WebMock.reset!
+  end
+
+  def update_broker(catalog)
+    stub_catalog_fetch(200, catalog)
+
+    put("/v2/service_brokers/#{@broker_guid}", '{}', json_headers(admin_headers))
   end
 
   def make_all_plans_public
@@ -117,5 +123,12 @@ module VCAP::CloudController::BrokerApiHelper
       json_headers(admin_headers))
 
     @binding_id = JSON.parse(last_response.body)["metadata"]["guid"]
+  end
+
+  def deprovision_service
+    stub_request(:delete, %r(broker-url/v2/service_instances/[[:alnum:]-]+)).
+      to_return(status: 200, body: '{}')
+
+    delete("/v2/service_instances/#{@service_instance_guid}", '{}', json_headers(admin_headers))
   end
 end

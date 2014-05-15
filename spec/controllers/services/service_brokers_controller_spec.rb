@@ -210,7 +210,7 @@ module VCAP::CloudController
           get '/v2/service_brokers'
           expect(last_response.status).to eq(401)
           expect(decoded_response).to include({
-            'error_code' => 'CF-InvalidAuthToken'
+            'error_code' => 'CF-NotAuthenticated'
           })
         end
       end

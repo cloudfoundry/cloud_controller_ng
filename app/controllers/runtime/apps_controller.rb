@@ -8,7 +8,6 @@ module VCAP::CloudController
       to_one     :stack,               :optional_in => :create
 
       attribute  :environment_json,    Hash,       :default => {}
-      attribute  :system_env_json,     Hash,       :default => {}
       attribute  :memory,              Integer,    :default => nil
       attribute  :instances,           Integer,    :default => 1
       attribute  :disk_quota,          Integer,    :default => 1024
@@ -29,6 +28,12 @@ module VCAP::CloudController
     end
 
     query_parameters :name, :space_guid, :organization_guid
+
+    get '/v2/apps/:guid/env', :read_env
+    def read_env(guid)
+      app = find_guid_and_validate_access(:read, guid, App)
+      [HTTP::OK, {}, { system_env_json: app.system_env_json, environment_json: app.environment_json}.to_json]
+    end
 
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])

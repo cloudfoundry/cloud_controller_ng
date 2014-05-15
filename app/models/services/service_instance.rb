@@ -1,3 +1,5 @@
+require 'repositories/services/service_usage_event_repository'
+
 module VCAP::CloudController
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
@@ -77,6 +79,13 @@ module VCAP::CloudController
       }
     end
 
+    def to_hash(opts={})
+      if !VCAP::CloudController::SecurityContext.admin? && !space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+        opts.merge!({redact: ['credentials']})
+      end
+      super(opts)
+    end
+
     def credentials=(val)
       if val
         json = Yajl::Encoder.encode(val)
@@ -99,6 +108,16 @@ module VCAP::CloudController
       space.in_suspended_org?
     end
 
+    def after_create
+      super
+      service_instance_usage_event_repository.created_event_from_service_instance(self)
+    end
+
+    def after_destroy
+      super
+      service_instance_usage_event_repository.deleted_event_from_service_instance(self)
+    end
+
     private
 
     def generate_salt
@@ -109,6 +128,10 @@ module VCAP::CloudController
       if service_binding && service_binding.app.space != space
         raise InvalidServiceBinding.new(service_binding.id)
       end
+    end
+
+    def service_instance_usage_event_repository
+      @repository ||= Repositories::Services::ServiceUsageEventRepository.new
     end
   end
 end

@@ -1,7 +1,7 @@
 require "spec_helper"
 require "securerandom"
 
-describe "Sequel::Plugins::VcapSerialization", non_transactional: true do
+describe "Sequel::Plugins::VcapSerialization" do
   before do
     db.create_table :test do
       primary_key :id
@@ -14,6 +14,10 @@ describe "Sequel::Plugins::VcapSerialization", non_transactional: true do
     @c = Class.new(Sequel::Model)
     @c.plugin :vcap_serialization
     @c.set_dataset(db[:test])
+  end
+
+  after do
+    db.drop_table :test
   end
 
   describe "#default_order_by" do
@@ -90,6 +94,13 @@ describe "Sequel::Plugins::VcapSerialization", non_transactional: true do
       r.stub(:val2).and_return(a_nil_object)
       expected_json = Yajl::Encoder.encode :val1 => 1, :val2 => nil
       r.to_json.should == expected_json
+    end
+
+    it "should redact values marked for redaction" do
+      @c.export_attributes :val1, :val2
+      r = @c.create :val1 => 1, :val2 => 10
+      expected_json = Yajl::Encoder.encode :val1 => '[PRIVATE DATA HIDDEN]',:val2 => 10
+      r.to_json({redact: ['val1']}).should == expected_json
     end
   end
 

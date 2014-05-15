@@ -81,16 +81,9 @@ module VCAP::CloudController
       end
 
       def find_all_instances(app)
-        if app.stopped?
-          msg = "Request failed for app: #{app.name}"
-          msg << " as the app is in stopped state."
-
-          raise VCAP::Errors::ApiError.new_from_details("InstancesError", msg)
-        end
-
+        num_instances = app.instances
         all_instances = {}
 
-        num_instances = app.instances
         flapping_indices = health_manager_client.find_flapping_indices(app)
 
         flapping_indices.each do |entry|
@@ -158,17 +151,21 @@ module VCAP::CloudController
       end
 
       def start_instance_at_index(app, index)
-        message = start_app_message(app)
-        message[:index] = index
+        start_message = StartAppMessage.new(app, index, config, @blobstore_url_generator)
+
+        if !start_message.has_app_package?
+          logger.error "dea-client.no-package-found", guid: app.guid
+          raise Errors::ApiError.new_from_details("AppPackageNotFound", app.guid)
+        end
 
         dea_id = dea_pool.find_dea(mem: app.memory, disk: app.disk_quota, stack: app.stack.name, app_id: app.guid)
         if dea_id
-          dea_publish_start(dea_id, message)
+          dea_publish_start(dea_id, start_message)
           dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
           dea_pool.reserve_app_memory(dea_id, app.memory)
           stager_pool.reserve_app_memory(dea_id, app.memory)
         else
-          logger.error "dea-client.no-resources-available", message: scrub_sensitive_fields(message)
+          logger.error "dea-client.no-resources-available", message: scrub_sensitive_fields(start_message)
         end
       end
 
@@ -279,34 +276,6 @@ module VCAP::CloudController
         end
 
         stats
-      end
-
-      def start_app_message(app)
-        {
-          droplet: app.guid,
-          name: app.name,
-          uris: app.uris,
-          prod: app.production,
-          sha1: app.droplet_hash,
-          executableFile: "deprecated",
-          executableUri: @blobstore_url_generator.droplet_download_url(app),
-          version: app.version,
-          services: app.service_bindings.map do |sb|
-            ServiceBindingPresenter.new(sb).to_hash
-          end,
-          limits: {
-            mem: app.memory,
-            disk: app.disk_quota,
-            fds: app.file_descriptors
-          },
-          cc_partition: config[:cc_partition],
-          env: (app.environment_json || {}).map { |k, v| "#{k}=#{v}" },
-          console: app.console,
-          debug: app.debug,
-          start_command: app.command,
-          health_check_timeout: app.health_check_timeout,
-          vcap_application: app.vcap_application,
-        }
       end
 
       private

@@ -32,7 +32,6 @@ module VCAP::CloudController
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {
         users: lambda { |org| User.make },
-        managers: lambda { |org| User.make },
         billing_managers: lambda { |org| User.make }
       }
 
@@ -162,6 +161,25 @@ module VCAP::CloudController
         expect(resources).to have(2).items
         guids = resources.map { |x| x["metadata"]["guid"] }
         expect(guids).to match_array([@shared_domain.guid, @private_domain.guid])
+      end
+
+      context "space roles" do
+        let(:organization) { Organization.make }
+        let(:space) { Space.make(organization: organization) }
+
+        context "space developers without org role" do
+          let(:space_developer) do
+            make_developer_for_space(space)
+          end
+
+          it "returns private domains" do
+            private_domain = PrivateDomain.make(owning_organization: organization)
+            get "/v2/organizations/#{organization.guid}/domains", {}, headers_for(space_developer)
+            expect(last_response.status).to eq(200)
+            guids = decoded_response.fetch("resources").map { |x| x["metadata"]["guid"] }
+            expect(guids).to include(private_domain.guid)
+          end
+        end
       end
     end
 

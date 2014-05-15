@@ -25,9 +25,7 @@ case $1 in
 
     cd $NGINX_NEWRELIC_PLUGIN_DIR
 
-    <% if_p("syslog_aggregator") do %>
     /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
-    <% end %>
 
     <% if properties.syslog_aggregator && properties.syslog_aggregator.address %>
       exec $NGINX_NEWRELIC_PLUGIN_DIR/newrelic_nginx_agent \

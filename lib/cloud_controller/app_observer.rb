@@ -1,17 +1,17 @@
 require "cloud_controller/multi_response_message_bus_request"
 require "models/runtime/droplet_uploader"
-require "cloud_controller/diego_stager_task"
 
 module VCAP::CloudController
   module AppObserver
     class << self
       extend Forwardable
 
-      def configure(config, message_bus, dea_pool, stager_pool)
+      def configure(config, message_bus, dea_pool, stager_pool, diego_client)
         @config = config
         @message_bus = message_bus
         @dea_pool = dea_pool
         @stager_pool = stager_pool
+        @diego_client = diego_client
       end
 
       def deleted(app)
@@ -64,12 +64,11 @@ module VCAP::CloudController
 
 
         if @config[:diego] && (app.environment_json || {})["CF_DIEGO_BETA"] == "true"
-          task = DiegoStagerTask.new(@config[:staging][:timeout_in_seconds], @message_bus, app, dependency_locator.blobstore_url_generator)
+          @diego_client.send_stage_request(app, VCAP.secure_uuid)
         else
           task = AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
+          task.stage(&completion_callback)
         end
-
-        task.stage(&completion_callback)
       end
 
       def stage_if_needed(app, &success_callback)
@@ -96,6 +95,12 @@ module VCAP::CloudController
       def react_to_instances_change(app, delta)
         if app.started?
           DeaClient.change_running_instances(app, delta)
+          broadcast_app_updated(app)
+        end
+      end
+
+      def react_to_package_state_change(app)
+        stage_if_needed(app) do |_|
           broadcast_app_updated(app)
         end
       end

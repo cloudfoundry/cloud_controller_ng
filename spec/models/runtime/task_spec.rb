@@ -96,14 +96,15 @@ module VCAP::CloudController
     end
 
     describe "#after_commit" do
-      it "sends task.start with the URI for the app's droplet", non_transactional: true do
+      it "sends task.start with the URI for the app's droplet" do
         CloudController::DependencyLocator.instance.task_client.should_receive(:start_task).with(instance_of(Task))
         @task = Task.make :app => app
         @task.stub(:secure_token => "42")
+        @task.after_commit
       end
     end
 
-    describe "#after_destroy_commit", non_transactional: true do
+    describe "#after_destroy_commit" do
       it "sends task.stop with the public key, the URI for the app's droplet" do
         task = Task.make :app => app
 

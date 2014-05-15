@@ -109,7 +109,7 @@ module VCAP::CloudController
           end
         end
       end
-    end
+ end
 
     describe "GET /v2/domains/:id" do
       let(:user) { User.make }

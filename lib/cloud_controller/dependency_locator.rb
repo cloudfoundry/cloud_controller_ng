@@ -3,6 +3,9 @@ require "repositories/runtime/space_event_repository"
 require "cloud_controller/rest_controller/object_renderer"
 require "cloud_controller/rest_controller/paginated_collection_renderer"
 require "cloud_controller/upload_handler"
+require "cloud_controller/blob_sender/ngx_blob_sender"
+require "cloud_controller/blob_sender/default_blob_sender"
+require "cloud_controller/blob_sender/missing_blob_handler"
 
 module CloudController
   class DependencyLocator
@@ -62,12 +65,17 @@ module CloudController
     def global_app_bits_cache
       resource_pool = config.fetch(:resource_pool)
       cdn_uri = resource_pool.fetch(:cdn, nil) && resource_pool.fetch(:cdn).fetch(:uri, nil)
+      min_file_size = resource_pool[:minimum_size]
+      max_file_size = resource_pool[:maximum_size]
       app_bit_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
 
       Blobstore::Client.new(
         resource_pool.fetch(:fog_connection),
         resource_pool.fetch(:resource_directory_key),
-        app_bit_cdn
+        app_bit_cdn,
+        nil,
+        min_file_size,
+        max_file_size
       )
     end
 
@@ -137,8 +145,19 @@ module CloudController
       })
     end
 
-    private
+    def missing_blob_handler
+      CloudController::BlobSender::MissingBlobHandler.new
+    end
 
+    def blob_sender
+      if config[:nginx][:use_nginx]
+        CloudController::BlobSender::NginxLocalBlobSender.new(missing_blob_handler)
+      else
+        CloudController::BlobSender::DefaultLocalBlobSender.new(missing_blob_handler)
+      end
+    end
+
+    private
     attr_reader :config, :message_bus
   end
 end

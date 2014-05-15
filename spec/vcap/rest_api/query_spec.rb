@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::RestAPI
-  describe VCAP::RestAPI::Query, non_transactional: true do
+  describe VCAP::RestAPI::Query do
     include VCAP::RestAPI
 
     let(:num_authors) { 10 }
@@ -52,6 +52,11 @@ module VCAP::RestAPI
 
       @owner_nil_num = Author.create(:str_val => "no num", :published => false, :published_at => Time.at(0) + num_authors)
       @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published published_at))
+    end
+
+    after do
+      db.drop_table :books
+      db.drop_table :authors
     end
 
     describe "#filtered_dataset_from_query_params" do

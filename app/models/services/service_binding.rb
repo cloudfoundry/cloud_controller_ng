@@ -49,6 +49,13 @@ module VCAP::CloudController
       end
     end
 
+    def to_hash(opts={})
+      if !VCAP::CloudController::SecurityContext.admin? && !app.space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+        opts.merge!({redact: ['credentials']})
+      end
+      super(opts)
+    end
+
     def bind!
       client.bind(self)
 

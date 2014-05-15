@@ -14,6 +14,8 @@ module CloudController
           aws_secret_access_key: 'fake_secret_access_key',
         }
       end
+      let(:min_size) { 20 }
+      let(:max_size) { 50 }
 
       def upload_tmpfile(client, key="abcdef")
         Tempfile.open("") do |tmpfile|
@@ -43,10 +45,6 @@ module CloudController
 
         it "is not local" do
           expect(client).to_not be_local
-        end
-
-        it "returns a url to the cdn" do
-          expect(client.download_uri("abcdef")).to eql(url_from_cdn)
         end
 
         it "downloads through the CDN" do
@@ -106,7 +104,7 @@ module CloudController
               upload_tmpfile(client, sha_of_different_content)
 
               expect(client.exists?(sha_of_different_content)).to be_true
-              expect(client.file(sha_of_different_content)).to be
+              expect(client.blob(sha_of_different_content)).to be
             end
           end
         end
@@ -139,11 +137,39 @@ module CloudController
             end
 
             it "does not re-upload it" do
-              expect(client.exists?(sha_of_content)).to be_false
               client.cp_r_to_blobstore(local_dir)
+
+              client.should_not_receive(:cp_to_blobstore)
               client.cp_r_to_blobstore(local_dir)
             end
           end
+
+          context "limit the file size" do
+            let(:client) do
+              Client.new(connection_config, directory_key, nil, nil, min_size, max_size)
+            end
+
+            it "does not copy files below the minimum size limit" do
+              path = File.join(local_dir, "file_with_little_content")
+              File.open(path, "w") { |file| file.write("a") }
+              key = "987654321"
+
+              client.should_not_receive(:exists)
+              client.should_not_receive(:cp_to_blobstore)
+              client.cp_r_to_blobstore(path)
+            end
+
+            it "does not copy files above the maximum size limit" do
+              path = File.join(local_dir, "file_with_more_content")
+              File.open(path, "w") { |file| file.write("an amount of content that is larger than the maximum limit") }
+              key = "777777777"
+
+              client.should_not_receive(:exists)
+              client.should_not_receive(:cp_to_blobstore)
+              client.cp_r_to_blobstore(path)
+            end
+          end
+
         end
 
         describe "returns a download uri" do
@@ -160,7 +186,7 @@ module CloudController
               Fog.mock!
             end
 
-            it "does have a public url" do
+            it "does have a url" do
               upload_tmpfile(client)
               expect(client.download_uri("abcdef")).to match(%r{/ab/cd/abcdef})
             end
@@ -176,11 +202,6 @@ module CloudController
               expect(@uri.scheme).to eql "https"
               expect(@uri.host).to eql "#{directory_key}.s3.amazonaws.com"
               expect(@uri.path).to eql "/ab/cd/abcdef"
-            end
-
-            it "is valid for an hour" do
-              match_data = (/Expires=(\d+)/).match @uri.query
-              expect(match_data[1].to_i).to be_within(100).of((Time.now + 3600).to_i)
             end
 
             it "returns nil for a non-existent key" do
@@ -208,11 +229,11 @@ module CloudController
           end
         end
 
-        describe "#cp_r_to_blobstore" do
+        describe "#cp_to_blobstore" do
           it "calls the fog with public false" do
             FileUtils.touch(File.join(local_dir, "empty_file"))
             client.files.should_receive(:create).with(hash_including(public: false))
-            client.cp_r_to_blobstore(local_dir)
+            client.cp_to_blobstore(local_dir, "empty_file")
           end
 
           it "uploads the files with the specified key" do
@@ -230,7 +251,7 @@ module CloudController
             key = "abcdef12345"
 
             client.cp_to_blobstore(path, key)
-            expect(client.file(key).public_url).to be_nil
+            expect(client.blob(key).public_url).to be_nil
           end
 
           it "can copy as a public file" do
@@ -240,7 +261,31 @@ module CloudController
             key = "abcdef12345"
 
             client.cp_to_blobstore(path, key)
-            expect(client.file(key).public_url).to be
+            expect(client.blob(key).public_url).to be
+          end
+
+          context "limit the file size" do
+            let(:client) do
+              Client.new(connection_config, directory_key, nil, nil, min_size, max_size)
+            end
+
+            it "does not copy files below the minimum size limit" do
+              path = File.join(local_dir, "file_with_little_content")
+              File.open(path, "w") { |file| file.write("a") }
+              key = "987654321"
+
+              client.cp_to_blobstore(path, key)
+              expect(client.exists?(key)).to be_false
+            end
+
+            it "does not copy files above the maximum size limit" do
+              path = File.join(local_dir, "file_with_more_content")
+              File.open(path, "w") { |file| file.write("an amount of content that is larger than the maximum limit") }
+              key = "777777777"
+
+              client.cp_to_blobstore(path, key)
+              expect(client.exists?(key)).to be_false
+            end
           end
         end
 
@@ -272,7 +317,7 @@ module CloudController
         it "includes the directory in the partitioned key" do
           upload_tmpfile(client, "abcdef")
           expect(client.exists?("abcdef")).to be_true
-          expect(client.file("abcdef")).to be
+          expect(client.blob("abcdef")).to be
           expect(client.download_uri("abcdef")).to match(%r{my-root/ab/cd/abcdef})
         end
       end

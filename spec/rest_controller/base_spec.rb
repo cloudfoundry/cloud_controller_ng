@@ -1,10 +1,6 @@
 require "spec_helper"
 
 describe VCAP::CloudController::RestController::Base, type: :controller do
-  before do
-    VCAP::CloudController::SecurityContext.stub(:current_user) { true }
-  end
-
   let(:logger) { double(:logger, :debug => nil, :error => nil) }
   let(:env) { {} }
   let(:params) { {} }
@@ -16,6 +12,16 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
 
   describe "#dispatch" do
     context "when the dispatch is succesful" do
+      let(:token_decoder) { double(:decoder) }
+      let(:header_token) { 'some token' }
+      let(:token_info) { {'user_id' => 'some user'} }
+
+      before do
+        configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
+        allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
+        configurer.configure(header_token)
+      end
+
       it "should dispatch the request" do
         subject.should_receive(:to_s).with([:a, :b])
         subject.dispatch(:to_s, [:a, :b])
@@ -27,8 +33,9 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
       end
 
       context "when there is no current user" do
+        let(:token_info) { nil }
+
         it "should not dispatch the request" do
-          VCAP::CloudController::SecurityContext.stub(:current_user) { false }
           subject.should_not_receive(:to_s)
           logger.should_not_receive(:error)
           subject.dispatch(:to_s) rescue nil
@@ -36,78 +43,30 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
       end
     end
 
-    context "when operation is allowed to skip authentication" do
-      before do
-        VCAP::CloudController::SecurityContext.stub(:current_user) { false }
-        subject.stub(:download)
-      end
-
-      context "skipping an operation" do
-        before do
-          subject.class.allow_unauthenticated_access(:only => :download)
-        end
-
-        it "does not raise error" do
-          expect { subject.dispatch(:download) }.to_not raise_error
-        end
-
-        it "raise error when dispatching a operation not allowed" do
-          expect { subject.dispatch(:not_allowed_download) }.to raise_error
-        end
-      end
-
-      context "when configured to skip all operations" do
-        before do
-          subject.class.allow_unauthenticated_access
-        end
-
-        it "does not raise error" do
-          expect { subject.dispatch(:download) }.to_not raise_error
-        end
-      end
-    end
-
-    describe "authenticate_basic_auth" do
-      it "returns NotAuthorized without if username and password was not provided" do
-        subject.class.authenticate_basic_auth("/my_path") do
-          ["username", "password"]
-        end
-
-        get "/my_path"
-        expect(last_response.status).to eq(403)
-        expect(last_response.body).to match /You are not authorized/
-      end
-
-      it "returns NotAuthorized without if username and password was wrong" do
-        authorize "username", "letmein"
-        subject.class.authenticate_basic_auth("/my_path") do
-          ["username", "password"]
-        end
-
-        get "/my_path"
-        expect(last_response.status).to eq(403)
-        expect(last_response.body).to match /You are not authorized/
-      end
-
-      it "does not raise NotAuthorized if username and password is correct" do
-        authorize "username", "password"
-
-        subject.class.authenticate_basic_auth("/my_path") do
-          ["username", "password"]
-        end
-
-        get "/my_path"
-        expect(last_response.status).to_not eq 403
-      end
-    end
-
     context "when the dispatch raises an error" do
+      let(:token_decoder) { double(:decoder) }
+      let(:header_token) { 'some token' }
+      let(:token_info) { {'user_id' => 'some user'} }
+
+      before do
+        configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
+        allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
+        configurer.configure(header_token)
+      end
+
       it "should log an error for a Sequel Validation error" do
         subject.stub(:to_s).and_raise(Sequel::ValidationFailed.new("hello"))
         VCAP::CloudController::RestController::Base.should_receive(:translate_validation_exception) { RuntimeError.new("some new error") }
         expect {
           subject.dispatch(:to_s)
         }.to raise_error RuntimeError, "some new error"
+      end
+
+      it "should log an error for a Sequel HookFailed error" do
+        subject.stub(:to_s).and_raise(Sequel::HookFailed.new("hello"))
+        expect {
+          subject.dispatch(:to_s)
+        }.to raise_error VCAP::Errors::ApiError
       end
 
       it "should reraise any vcap error" do
@@ -153,6 +112,173 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
         it 'delegates #redirect to the injected sinatra' do
           sinatra.should_receive(:redirect).with('redirect_url')
           app.redirect('redirect_url')
+        end
+      end
+    end
+
+    describe 'authentication' do
+      let(:token_decoder) { double(:decoder) }
+      let(:header_token) { 'some token' }
+
+      context 'when the token contains a valid user' do
+        let(:token_info) { {'user_id' => 'some user'} }
+
+        before do
+          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
+          allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
+          configurer.configure(header_token)
+        end
+
+        it 'allows the operation' do
+          subject.stub(:download)
+
+          subject.dispatch(:download)
+          expect(subject).to have_received(:download)
+        end
+      end
+
+      context 'when the token has no user but contains an admin scope' do
+        let(:token_info) { { 'scope' => ['cloud_controller.admin'] } }
+
+        before do
+          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
+          allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
+          configurer.configure(header_token)
+        end
+
+        it 'allows the operation' do
+          subject.stub(:download)
+
+          subject.dispatch(:download)
+          expect(subject).to have_received(:download)
+        end
+      end
+
+      context 'when there is no token' do
+        let(:token_info) { nil }
+
+        before do
+          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
+          allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
+          configurer.configure(header_token)
+        end
+
+        it 'raises a NotAuthenticated error' do
+          subject.stub(:download)
+
+          expect {
+            subject.dispatch(:download)
+          }.to raise_error VCAP::Errors::ApiError, /Authentication error/
+        end
+
+        context 'when a particular operation is allowed to skip authentication' do
+          before do
+            subject.stub(:unauthed_download)
+            subject.class.allow_unauthenticated_access(:only => :unauthed_download)
+          end
+
+          it 'does not raise error' do
+            expect { subject.dispatch(:unauthed_download) }.to_not raise_error
+          end
+
+          it 'raise error when dispatching a operation not allowed' do
+            expect { subject.dispatch(:download) }.to raise_error(VCAP::Errors::ApiError)
+          end
+        end
+
+        context 'when all operations on the controller are allowed to skip authentication' do
+          before do
+            subject.stub(:download)
+            subject.class.allow_unauthenticated_access
+          end
+
+          after do
+            subject.class.instance_variable_set(:@allow_unauthenticated_access_to_all_ops, nil)
+          end
+
+          it 'does not raise error' do
+            expect { subject.dispatch(:download) }.to_not raise_error
+          end
+        end
+      end
+
+      context 'when the token cannot be parsed' do
+        before do
+          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
+          allow(token_decoder).to receive(:decode_token).with(header_token).and_raise(VCAP::UaaTokenDecoder::BadToken)
+          configurer.configure(header_token)
+        end
+
+        it 'raises InvalidAuthToken' do
+          subject.stub(:download)
+
+          expect {
+            subject.dispatch(:download)
+          }.to raise_error VCAP::Errors::ApiError, /Invalid Auth Token/
+        end
+      end
+
+      context 'when the endpoint requires basic auth' do
+        it "returns NotAuthorized without if username and password was not provided" do
+          subject.class.authenticate_basic_auth("/my_path") do
+            ["username", "password"]
+          end
+
+          get "/my_path"
+          expect(last_response.status).to eq(403)
+          expect(last_response.body).to match /You are not authorized/
+        end
+
+        it "returns NotAuthorized without if username and password was wrong" do
+          authorize "username", "letmein"
+          subject.class.authenticate_basic_auth("/my_path") do
+            ["username", "password"]
+          end
+
+          get "/my_path"
+          expect(last_response.status).to eq(403)
+          expect(last_response.body).to match /You are not authorized/
+        end
+
+        it "does not raise NotAuthorized if username and password is correct" do
+          authorize "username", "password"
+
+          subject.class.authenticate_basic_auth("/my_path") do
+            ["username", "password"]
+          end
+
+          get "/my_path"
+          expect(last_response.status).to_not eq 403
+        end
+      end
+
+      context 'when there is no user, no admin scope, with a token that is not invalid' do
+        # With a properly functioning UAA, we expect this case to be impossible. Nevertheless,
+        # we wan to be defensive because failing to handle this case would allow unauthenticated
+        # access to CC resources.
+        let(:token_info) { {'scope' => ['some-non-admin-scope'] } }
+
+        before do
+          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
+          allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
+          configurer.configure(header_token)
+        end
+
+        it 'logs an error message because this error is unexpected' do
+          logger = double(:logger, error: nil, debug: nil)
+          allow(subject).to receive(:logger).and_return(logger)
+
+          subject.dispatch(:download) rescue nil
+
+          expect(logger).to have_received(:error).with('Unexpected condition: valid token with no user/client id or admin scope. Token hash: {"scope"=>["some-non-admin-scope"]}')
+        end
+
+        it 'raises an InvalidAuthToken error' do
+          subject.stub(:download)
+
+          expect {
+            subject.dispatch(:download)
+          }.to raise_error VCAP::Errors::ApiError, /Invalid Auth Token/
         end
       end
     end

@@ -290,6 +290,18 @@ module VCAP::CloudController
                 expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
               end
 
+              context "when an admin buildpack is used" do
+                let(:admin_buildpack) { Buildpack.make(name: "buildpack-name") }
+                let(:buildpack_key) { admin_buildpack.key }
+                before do
+                  app.buildpack = admin_buildpack.name
+                end
+
+                it "saves the detected buildpack guid" do
+                  expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
+                end
+              end
+
               it "does not clobber other attributes that changed between staging" do
                 # fake out the app refresh as the race happens after it
                 app.stub(:refresh)
@@ -467,7 +479,6 @@ module VCAP::CloudController
 
     describe ".staging_request" do
       let(:app) { AppFactory.make :droplet_hash => nil, :package_state => "PENDING" }
-      let(:dea_start_message) { { :dea_client_message => "start app message" } }
 
       before do
         3.times do
@@ -475,8 +486,6 @@ module VCAP::CloudController
           binding = ServiceBinding.make(:app => app, :service_instance => instance)
           app.add_service_binding(binding)
         end
-
-        DeaClient.stub(:start_app_message).and_return(dea_start_message)
       end
 
       it "includes app guid, task id and download/upload uris" do
@@ -533,7 +542,7 @@ module VCAP::CloudController
 
       it "includes start app message" do
         request = staging_task.staging_request
-        request[:start_message].should include dea_start_message
+        request[:start_message].should be_a(StartAppMessage)
       end
 
       it "includes app index 0" do

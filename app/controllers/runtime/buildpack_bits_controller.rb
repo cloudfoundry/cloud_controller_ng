@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     put "#{path_guid}/bits", :upload
     def upload(guid)
-      buildpack = find_guid_and_validate_access(:read_bits, guid)
+      buildpack = find_guid_and_validate_access(:upload, guid)
       raise Errors::ApiError.new_from_details("BuildpackLocked") if buildpack.locked?
 
       uploaded_file = upload_handler.uploaded_file(params, "buildpack")
@@ -39,10 +39,9 @@ module VCAP::CloudController
     def download(guid)
       obj = Buildpack.find(guid: guid)
       if @buildpack_blobstore.local?
-        f = buildpack_blobstore.file(obj.key)
-        raise self.class.not_found_exception.new(guid) unless f
-        # hack to get the local path to the file
-        return send_file f.send(:path)
+        blob = buildpack_blobstore.blob(obj.key)
+        raise self.class.not_found_exception.new(guid) unless blob
+        return send_file blob.local_path
       else
         bits_uri = "#{bits_uri(obj.key)}"
         return [HTTP::FOUND, {"Location" => bits_uri}, nil]
@@ -60,16 +59,9 @@ module VCAP::CloudController
     end
 
     def bits_uri(key)
-      f = buildpack_blobstore.file(key)
-      return nil unless f
-
-      # unfortunately fog doesn't have a unified interface for non-public
-      # urls
-      if f.respond_to?(:url)
-        f.url(Time.now + 3600)
-      else
-        f.public_url
-      end
+      blob = buildpack_blobstore.blob(key)
+      return nil unless blob
+      blob.download_url
     end
   end
 end

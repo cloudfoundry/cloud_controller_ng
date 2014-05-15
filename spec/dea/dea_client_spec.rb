@@ -2,13 +2,13 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DeaClient do
-
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool) }
     let(:dea_pool) { double(:dea_pool) }
+    let(:num_service_instances) { 3 }
     let(:app) do
       app = AppFactory.make.tap do |app|
-        NUM_SVC_INSTANCES.times do
+        num_service_instances.times do
           instance = ManagedServiceInstance.make(:space => app.space)
           binding = ServiceBinding.make(
             :app => app,
@@ -31,61 +31,6 @@ module VCAP::CloudController
       it "registers subscriptions for dea_pool" do
         dea_pool.should_receive(:register_subscriptions)
         described_class.run
-      end
-    end
-
-    describe ".start_app_message" do
-      NUM_SVC_INSTANCES = 3
-
-      it "should return a serialized dea message" do
-        res = DeaClient.start_app_message(app)
-        expect(res[:executableUri]).to eq("app_uri")
-        res.should be_kind_of(Hash)
-
-        expect(res[:droplet]).to eq(app.guid)
-        expect(res[:services]).to be_kind_of(Array)
-        expect(res[:services].count).to eq NUM_SVC_INSTANCES
-        expect(res[:services].first).to be_kind_of(Hash)
-        expect(res[:limits]).to be_kind_of(Hash)
-        expect(res[:env]).to be_kind_of(Array)
-        expect(res[:console]).to eq false
-        expect(res[:start_command]).to be_nil
-        expect(res[:health_check_timeout]).to be_nil
-
-        expect(app.vcap_application).to be
-        expect(res[:vcap_application]).to eql(app.vcap_application)
-      end
-
-      context "with an app enabled for console support" do
-        it "should enable console in the start message" do
-          app.update(:console => true)
-          res = DeaClient.start_app_message(app)
-          res[:console].should == true
-        end
-      end
-
-      context "with an app enabled for debug support" do
-        it "should pass debug mode in the start message" do
-          app.update(:debug => "run")
-          res = DeaClient.start_app_message(app)
-          res[:debug].should == "run"
-        end
-      end
-
-      context "with an app with custom start command" do
-        it "should pass command in the start message" do
-          app.update(:command => "custom start command")
-          res = DeaClient.start_app_message(app)
-          res[:start_command].should == "custom start command"
-        end
-      end
-      
-      context "with an app enabled for custom health check timeout value" do
-        it "should enable health check timeout in the start message" do
-          app.update(:health_check_timeout => 82)
-          res = DeaClient.start_app_message(app)
-          expect(res[:health_check_timeout]).to eq(82)
-        end
       end
     end
 
@@ -164,6 +109,18 @@ module VCAP::CloudController
         end.once
 
         DeaClient.start_instance_at_index(app, 1)
+      end
+
+      context "when droplet is missing" do
+        let(:blobstore_url_generator) do
+          double("blobstore_url_generator", :droplet_download_url => nil)
+        end
+
+        it "should raise an error if the droplet is missing" do
+          expect {
+            DeaClient.start_instance_at_index(app, 1)
+          }.to raise_error Errors::ApiError, "The app package could not be found: #{app.guid}"
+        end
       end
     end
 
@@ -723,20 +680,8 @@ module VCAP::CloudController
 
       include Errors
 
-      it "should raise an error if the app is in stopped state" do
-        app.should_receive(:stopped?).once.and_return(true)
-
-        expected_msg = "Instances error: Request failed for app: #{app.name}"
-        expected_msg << " as the app is in stopped state."
-
-        expect {
-          DeaClient.find_all_instances(app)
-        }.to raise_error(Errors::ApiError, expected_msg)
-      end
-
       it "should return starting or running instances" do
         app.instances = 3
-        app.should_receive(:stopped?).and_return(false)
 
         flapping_instances = [
             { "index" => 0, "since" => 1 },
@@ -801,7 +746,6 @@ module VCAP::CloudController
 
       it "should ignore out of range indices of starting or running instances" do
         app.instances = 2
-        app.should_receive(:stopped?).and_return(false)
 
         health_manager_client.should_receive(:find_flapping_indices).
           with(app).and_return([])
@@ -851,7 +795,6 @@ module VCAP::CloudController
 
       it "should return fillers for instances that have not responded" do
         app.instances = 2
-        app.should_receive(:stopped?).and_return(false)
 
         health_manager_client.should_receive(:find_flapping_indices).
           with(app).and_return([])

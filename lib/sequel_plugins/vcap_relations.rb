@@ -153,8 +153,8 @@ module Sequel::Plugins::VcapRelations
         return unless guids
         current_guids = send(name).map { |o| o.guid }
         (added, removed) = diff_collections.call(current_guids, guids)
-        removed.each { |g| send("remove_#{singular_name}_by_guid", g) }
         added.each { |g| send("add_#{singular_name}_by_guid", g) }
+        removed.each { |g| send("remove_#{singular_name}_by_guid", g) }
       end
 
       define_method("remove_#{singular_name}_by_guid") do |guid|

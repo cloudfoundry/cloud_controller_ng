@@ -1,6 +1,8 @@
 module VCAP::CloudController
   class Domain < Sequel::Model
-    DOMAIN_REGEX = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}$/ix.freeze
+    class UnauthorizedAccessToPrivateDomain < RuntimeError; end
+
+    DOMAIN_REGEX = /^(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])$/ix.freeze
 
     dataset.row_proc = proc do |row|
       if row[:owning_organization_id]
@@ -10,13 +12,19 @@ module VCAP::CloudController
       end
     end
 
+    SHARED_DOMAIN_CONDITION =  {owning_organization_id: nil}
+
     dataset_module do
       def shared_domains
-        filter(owning_organization_id: nil)
+        filter(SHARED_DOMAIN_CONDITION)
       end
 
       def private_domains
-        filter(Sequel.~(owning_organization_id: nil))
+        filter(Sequel.~(SHARED_DOMAIN_CONDITION))
+      end
+
+      def shared_or_owned_by(organization_ids)
+        shared_domains.or(owning_organization_id: organization_ids)
       end
     end
 
@@ -53,6 +61,7 @@ module VCAP::CloudController
       validates_unique   :name
 
       validates_format DOMAIN_REGEX, :name
+      validates_length_range 3..255, :name
 
       errors.add(:name, :overlapping_domain) if overlaps_domain_in_other_org?
     end
@@ -83,14 +92,13 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      orgs = Organization.filter(Sequel.or(
-        managers: [user],
-        auditors: [user],
-      ))
+      allowed_organizations = Organization.filter(Sequel.or(
+                                     managers: [user],
+                                     auditors: [user],
+                                     spaces: Space.having_developers(user)))
 
       Sequel.or(
-        owning_organization: orgs,
-        owning_organization_id: nil,
+        SHARED_DOMAIN_CONDITION.merge(owning_organization: allowed_organizations)
       )
     end
 
@@ -102,12 +110,7 @@ module VCAP::CloudController
       owning_organization_id.nil?
     end
 
-    def owned_by?(org)
-      owning_organization_id == org.id
-    end
-
     private
-
     def intermediate_domains
       self.class.intermediate_domains(name)
     end

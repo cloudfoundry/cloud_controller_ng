@@ -365,6 +365,18 @@ module VCAP::CloudController
         decoded_response["entity"]["detected_buildpack"].should eq("buildpack-name")
       end
 
+      it "should not return the detected buildpack guid" do
+        get_app
+        last_response.status.should == 200
+        decoded_response["entity"].should_not have_key("detected_buildpack_guid")
+      end
+
+      it "should not return the detected buildpack name" do
+        get_app
+        last_response.status.should == 200
+        decoded_response["entity"].should_not have_key("detected_buildpack_name")
+      end
+
       it "should return the package state" do
         get_app
         last_response.status.should == 200
@@ -479,6 +491,16 @@ module VCAP::CloudController
 
           expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, admin_user, SecurityContext.current_user_email, true)
         end
+      end
+    end
+
+    describe "read an app's env" do
+      let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
+      it "returns system_env_json" do
+        get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(admin_headers)
+        last_response.status.should == 200
+        expect(parse(last_response.body)).to have_key("system_env_json")
+        expect(parse(last_response.body)).to have_key("environment_json")
       end
     end
 

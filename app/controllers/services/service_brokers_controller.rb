@@ -5,7 +5,7 @@ module VCAP::CloudController
   # This controller is an experiment breaking away from the old
   # cloudcontroller metaprogramming. We manually generate the JSON
   # expected by CFoundry and CF.
-  class ServiceBrokersController < RestController::Base
+  class ServiceBrokersController < RestController::ModelController
     class ServiceBrokerMessage < VCAP::RestAPI::Message
       optional :name,       String
       optional :broker_url, String
@@ -19,6 +19,7 @@ module VCAP::CloudController
 
     get '/v2/service_brokers', :enumerate
     def enumerate
+      validate_access(:index, ServiceBroker, user, roles)
       headers = {}
       brokers = ServiceBroker.filter(build_filter)
 
@@ -28,6 +29,7 @@ module VCAP::CloudController
 
     post '/v2/service_brokers', :create
     def create
+      validate_access(:create, ServiceBroker, user, roles)
       params = ServiceBrokerMessage.extract(body)
       broker = ServiceBroker.new(params)
 
@@ -48,6 +50,7 @@ module VCAP::CloudController
 
     put '/v2/service_brokers/:guid', :update
     def update(guid)
+      validate_access(:update, ServiceBroker, user, roles)
       params = ServiceBrokerMessage.extract(body)
       broker = ServiceBroker.find(guid: guid)
       return HTTP::NOT_FOUND unless broker
@@ -69,6 +72,7 @@ module VCAP::CloudController
 
     delete '/v2/service_brokers/:guid', :delete
     def delete(guid)
+      validate_access(:delete, ServiceBroker, user, roles)
       broker = ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker
       VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker).execute!
@@ -88,11 +92,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def check_authentication(op)
-      super
-      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
-    end
 
     def build_filter
       q = params['q']
@@ -116,8 +115,6 @@ module VCAP::CloudController
     def url_of(broker)
       "#{self.class.path}/#{broker.guid}"
     end
-
-    private
 
     def get_exception_from_errors(registration)
       errors = registration.errors

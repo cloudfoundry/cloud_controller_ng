@@ -26,11 +26,11 @@ module CloudController
         droplet = app.current_droplet
         return nil unless droplet
 
-        if @droplet_blobstore.local?
-          staging_uri("/staging/droplets/#{app.guid}/download")
-        else
-          droplet.download_url
-        end
+        blob = droplet.blob
+        url = blob.download_url if blob
+
+        return nil unless url
+        return @droplet_blobstore.local? ? staging_uri("/staging/droplets/#{app.guid}/download") : url
       end
 
       # Uploads
@@ -44,16 +44,14 @@ module CloudController
 
       private
       def generate_download_url(store, path, blobstore_key)
-        if store.local?
-          if store.file(blobstore_key)
-            staging_uri(path)
-          end
-        else
-          store.download_uri(blobstore_key)
-        end
+        uri = store.download_uri(blobstore_key)
+        return nil unless uri
+        return store.local? ? staging_uri(path) : uri
       end
 
       def staging_uri(path)
+        return nil unless path
+
         URI::HTTP.build(
           host: @blobstore_options[:blobstore_host],
           port: @blobstore_options[:blobstore_port],

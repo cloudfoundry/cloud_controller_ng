@@ -85,6 +85,19 @@ module VCAP::CloudController
         expect { controller.create }.to change { model_klass.count }.by(1)
       end
 
+      context "when the user's token is missing the required scope" do
+        let(:mock_access) { double(:access) }
+
+        before do
+          allow(BaseAccess).to receive(:new).and_return(mock_access)
+          allow(mock_access).to receive(:cannot?).with(:create_with_token, anything).and_return(true)
+        end
+
+        it 'responds with a 403 Insufficient Scope' do
+          expect { controller.create }.to raise_error(VCAP::Errors::ApiError, /lacks the necessary scopes/)
+        end
+      end
+
       context "when validate access fails" do
         before do
           controller.stub(:validate_access).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
@@ -129,8 +142,6 @@ module VCAP::CloudController
         result = controller.create
         expect(result[2]).to eq("serialized json")
       end
-
-
     end
 
     describe "#read" do
@@ -425,22 +436,29 @@ module VCAP::CloudController
             end
           end
 
-          context "and the user is not authenticated" do
-            it "finds the model and does not grant access" do
-              VCAP::CloudController::SecurityContext.set(nil)
-              expect {
-                controller.find_guid_and_validate_access(:read, model.guid)
-              }.to raise_error Errors::ApiError, /Authentication error/
-            end
-          end
+          context "and the user does not have the authorization" do
+            let(:scope) { {'scope' => ['cloud_controller.read', 'cloud_controller.write']} }
 
-          context "and the user is not allowed access" do
-            let(:scope) { {'scope' => []} }
+            before do
+              dataset = double(:dataset)
+              allow(dataset).to receive(:where).with(:guid => model.guid).and_return([])
+              allow(model.class).to receive(:user_visible).with(user, false).and_return(dataset)
+            end
 
             it "finds the model and does not grant access" do
               expect {
                 controller.find_guid_and_validate_access(:read, model.guid)
               }.to raise_error Errors::ApiError, /not authorized/
+            end
+          end
+
+          context "and the user does not have the necessary scopes" do
+            let(:scope) { {'scope' => []} }
+
+            it "finds the model and does not grant access" do
+              expect {
+                controller.find_guid_and_validate_access(:read, model.guid)
+              }.to raise_error Errors::ApiError, /lacks the necessary scopes/
             end
           end
         end

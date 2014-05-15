@@ -32,6 +32,62 @@ module VCAP::CloudController
           expect(event).to match_app(app)
         end
 
+        context "when a custom state is provided" do
+          let (:custom_state) { "CUSTOM" }
+
+          it "will populate the event with the custom state" do
+            event = repository.create_from_app(app, custom_state)
+            expect(event.state).to eq(custom_state)
+
+            event.state = app.state
+            expect(event).to match_app(app)
+          end
+        end
+
+        context "when an admin buildpack is associated with the app" do
+          let(:buildpack) { Buildpack.make }
+          before do
+            app.admin_buildpack = buildpack
+            app.detected_buildpack_guid = buildpack.guid
+            app.detected_buildpack_name = buildpack.name
+          end
+
+          it "will create an event that contains the detected buildpack guid and name" do
+            event = repository.create_from_app(app)
+            expect(event).to match_app(app)
+          end
+        end
+
+        context "when a custom buildpack is associated with the app" do
+          let (:buildpack_url) { "https://git.example.com/repo.git" }
+
+          before do
+            app.buildpack = buildpack_url
+          end
+
+          it "will create an event with the buildpack url as the name" do
+            event = repository.create_from_app(app)
+            expect(event.buildpack_name).to eq(buildpack_url)
+          end
+
+          it "will create an event without a buildpack guid" do
+            event = repository.create_from_app(app)
+            expect(event.buildpack_guid).to be_nil
+          end
+        end
+
+        context "when the DEA doesn't provide optional buildpack information" do
+          before do
+            app.buildpack = nil
+          end
+
+          it "will create an event that does not contain buildpack name or guid" do
+            event = repository.create_from_app(app)
+            expect(event.buildpack_guid).to be_nil
+            expect(event.buildpack_name).to be_nil
+          end
+        end
+
         context "fails to create the event" do
           before do
             app.state = nil
@@ -76,6 +132,25 @@ module VCAP::CloudController
             }.to change { AppUsageEvent.count }.to(started_app_count)
 
             expect(AppUsageEvent.last).to match_app(app)
+          end
+
+          context "with associated buidpack information" do
+            let (:buildpack) { Buildpack.make }
+
+            before do
+              app.buildpack = buildpack.name
+              app.detected_buildpack = "Detect script output"
+              app.detected_buildpack_guid = buildpack.guid
+              app.detected_buildpack_name = buildpack.name
+              app.save
+            end
+
+            it "should preserve the buildpack info in the new event" do
+              repository.purge_and_reseed_started_apps!
+              event = AppUsageEvent.last
+
+              expect(event).to match_app(app)
+            end
           end
         end
       end

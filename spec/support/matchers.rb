@@ -39,16 +39,73 @@ RSpec::Matchers.define :match_app do |expected_app|
       problems << "event.org_guid: #{actual_event.org_guid}, app.space.organization_guid: #{expected_app.organization.guid}"
     end
     unless actual_event.space_guid == expected_app.space_guid
-      problems << "event.space_name: #{actual_event.space_name}, app.space_guid: #{expected_app.space_guid}"
+      problems << "event.space_guid: #{actual_event.space_guid}, app.space_guid: #{expected_app.space_guid}"
     end
     unless actual_event.space_name == expected_app.space.name
-      problems << "event.buildpack_guid: #{actual_event.buildpack_guid}, app.space.name: #{expected_app.space.name}"
+      problems << "event.space_name: #{actual_event.space_name}, app.space.name: #{expected_app.space.name}"
+    end
+    unless actual_event.buildpack_guid == expected_app.detected_buildpack_guid
+      problems << "event.buildpack_guid: #{actual_event.buildpack_guid}, app.detected_buildpack_guid: #{expected_app.detected_buildpack_guid}"
+    end
+    unless actual_event.buildpack_name == (expected_app.custom_buildpack_url || expected_app.detected_buildpack_name)
+      problems << "event.buildpack_name: #{actual_event.buildpack_name}, app.buildpack_name: #{expected_app.custom_buildpack_url || expected_app.detected_buildpack_name}"
     end
     problems.empty?
   end
 
   failure_message_for_should do |actual_event|
     "Expect event to match app, but did not. Problems were:\n" + problems.join("\n")
+  end
+end
+
+RSpec::Matchers.define :match_service_instance do |expected_service_instance|
+  problems = []
+
+  space = expected_service_instance.space
+  match do |actual_event|
+    unless actual_event.org_guid == space.organization_guid
+      problems << "event.org_guid: #{actual_event.org_guid}, service_instance.space.organization_guid: #{space.organization_guid}"
+    end
+    unless actual_event.space_guid == space.guid
+      problems << "event.space_guid: #{actual_event.space_guid}, service_instance.space.guid: #{space.guid}"
+    end
+    unless actual_event.space_name == space.name
+      problems << "event.space_name: #{actual_event.space_name}, service_instance.space.name: #{space.name}"
+    end
+    unless actual_event.service_instance_guid == expected_service_instance.guid
+      problems << "event.service_instance_guid: #{actual_event.service_instance_guid}, service_instance.guid: #{expected_service_instance.guid}"
+    end
+    unless actual_event.service_instance_name == expected_service_instance.name
+      problems << "event.service_instance_name: #{actual_event.service_instance_name}, service_instance.name: #{expected_service_instance.name}"
+    end
+    unless actual_event.service_instance_type == expected_service_instance.type
+      problems << "event.service_instance_type: #{actual_event.service_instance_type}, service_instance.type: #{expected_service_instance.type}"
+    end
+    problems.empty?
+  end
+
+  if 'managed_service_instance' == expected_service_instance.type
+    service_plan = expected_service_instance.service_plan
+    service = service_plan.service
+    match do |actual_event|
+      unless actual_event.service_plan_guid == service_plan.guid
+        problems << "event.service_plan_guid: #{actual_event.service_plan_guid}, service_instance.service_plan.guid: #{service_plan.guid}"
+      end
+      unless actual_event.service_plan_name == service_plan.name
+        problems << "event.service_plan_name: #{actual_event.service_plan_name}, service_instance.service_plan.name: #{service_plan.name}"
+      end
+      unless actual_event.service_guid == service.guid
+        problems << "event.service_guid: #{actual_event.service_guid}, service_instance.service.guid: #{service.guid}"
+      end
+      unless actual_event.service_label == service.label
+        problems << "event.service_label: #{actual_event.service_label}, service_instance.service.label: #{service.label}"
+      end
+      problems.empty?
+    end
+  end
+
+  failure_message_for_should do |actual_event|
+    "Expect event to match service_instance, but did not. Problems were:\n" + problems.join("\n")
   end
 end
 
@@ -63,5 +120,15 @@ RSpec::Matchers.define :have_status_code do |expected_code|
 
   def status_code_for(response)
     (response.respond_to?(:code) ? response.code : response.status).to_i
+  end
+end
+
+RSpec::Matchers.define :allow_op_on_object do |op, object|
+  match do |access|
+    access.can?("#{op}_with_token".to_sym, object) && access.can?(op, object)
+  end
+
+  failure_message_for_should do
+    "Expected to be able to perform operation #{op} on object #{object}"
   end
 end

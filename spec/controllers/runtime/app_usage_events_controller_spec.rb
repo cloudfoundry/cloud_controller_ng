@@ -4,36 +4,27 @@ module VCAP::CloudController
   describe AppUsageEventsController, type: :controller do
     before do
       @event1 = AppUsageEvent.make
-      @event2 = AppUsageEvent.make
     end
 
     describe "GET /v2/app_usage_events" do
-      it "returns a list of app usage events in correct order" do
+      it "returns a list of app usage events" do
         get "/v2/app_usage_events", {}, admin_headers
         expect(last_response).to be_successful
-        expect(decoded_response.fetch("resources")).to have_at_least(1).item
+        expect(decoded_response.fetch("resources")).to have(1).item
         expect(decoded_response.fetch("resources").first.fetch("entity")).to have_at_least(1).item
-        guids = decoded_response.fetch("resources").collect do |item|
-          item["metadata"]["guid"]
-        end
-        expect(guids.find_index(@event1.guid)).to be < guids.find_index(@event2.guid)
       end
 
       context "when filtering by after_guid" do
         before do
-          Timecop.travel(Time.now + 5.minutes) do
-            @event3 = AppUsageEvent.make
-            @event4 = AppUsageEvent.make
-          end
+          @event2 = AppUsageEvent.make
+          @event3 = AppUsageEvent.make
         end
 
-        it "can filter by after_guid to return events happended after the specified event" do
-          get "/v2/app_usage_events?after_guid=#{@event2.guid}", {}, admin_headers
+        it "can filter by after_guid" do
+          get "/v2/app_usage_events?after_guid=#{@event1.guid}", {}, admin_headers
           expect(last_response).to be_successful
-          event_timestamps = decoded_response.fetch("resources").collect{ |resource| resource.fetch("metadata").fetch("created_at") }
-          event_timestamps.each do |timestamp|
-            expect(Time.parse(timestamp)).to be > (@event2.created_at)
-          end
+          expect(decoded_response.fetch("resources")).to have(2).item
+          expect(decoded_response.fetch("resources").first.fetch("metadata").fetch("guid")).to eql(@event2.guid)
         end
 
         it "maintains the after_guid in the next_url" do
@@ -90,7 +81,11 @@ module VCAP::CloudController
 
       it "returns 403 as a non-admin" do
         user = User.make
-        post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, headers_for(user)
+        expect {
+          post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, headers_for(user)
+        }.to_not change {
+          AppUsageEvent.count
+        }
         expect(last_response.status).to eq(403)
       end
     end

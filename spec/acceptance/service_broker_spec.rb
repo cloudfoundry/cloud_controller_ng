@@ -2,8 +2,68 @@ require 'spec_helper'
 
 describe 'Service Broker' do
 
-  before(:all) { setup_cc }
-  after(:all) { $spec_env.reset_database_with_seeds }
+  let(:catalog_with_no_plans) {{
+    services:
+      [{
+         id:          "service-guid-here",
+         name:        service_name,
+         description: "A MySQL-compatible relational database",
+         bindable:    true,
+         plans:       [{}]
+       }]
+  }}
+
+  let(:catalog_with_small_plan) {{
+    services:
+      [{
+         id:          "service-guid-here",
+         name:        service_name,
+         description: "A MySQL-compatible relational database",
+         bindable:    true,
+         plans:       [{
+                         id:          "plan1-guid-here",
+                         name:        "small",
+                         description: "A small shared database with 100mb storage quota and 10 connections"
+                       }]
+       }]
+  }}
+
+  let(:catalog_with_large_plan) {{
+    services:
+      [{
+         id:          "service-guid-here",
+         name:        service_name,
+         description: "A MySQL-compatible relational database",
+         bindable:    true,
+         plans:       [{
+                         id:          "plan2-guid-here",
+                         name:        "large",
+                         description: "A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections"
+                       }]
+       }]
+  }}
+
+  let(:catalog_with_two_plans)  {{
+    services:
+      [{
+          id:          "service-guid-here",
+          name:        service_name,
+          description: "A MySQL-compatible relational database",
+          bindable:    true,
+          plans:
+            [{
+               id:          "plan1-guid-here",
+               name:        "small",
+               description: "A small shared database with 100mb storage quota and 10 connections"
+             }, {
+               id:          "plan2-guid-here",
+               name:        "large",
+               description: "A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections"
+             }]
+      }]
+  }}
+
+  before(:each) { setup_cc }
 
   def build_service(attrs={})
     @index ||= 0
@@ -311,7 +371,7 @@ describe 'Service Broker' do
             'client_id'              => 'client-1',
             'client_secret'          => nil,
             'redirect_uri'           => nil,
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'delete'
           },
@@ -319,7 +379,7 @@ describe 'Service Broker' do
             'client_id'              => 'client-2',
             'client_secret'          => nil,
             'redirect_uri'           => nil,
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'delete'
           },
@@ -327,7 +387,7 @@ describe 'Service Broker' do
             'client_id'              => 'different-client',
             'client_secret'          => service_2[:dashboard_client][:secret],
             'redirect_uri'           => service_2[:dashboard_client][:redirect_uri],
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'add'
           },
@@ -335,7 +395,7 @@ describe 'Service Broker' do
             'client_id'              => service_3[:dashboard_client][:id],
             'client_secret'          => 'SUPERsecret',
             'redirect_uri'           => service_3[:dashboard_client][:redirect_uri],
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
@@ -343,7 +403,7 @@ describe 'Service Broker' do
             'client_id'              => service_4[:dashboard_client][:id],
             'client_secret'          => service_4[:dashboard_client][:secret],
             'redirect_uri'           => service_4[:dashboard_client][:redirect_uri],
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'add'
           },
@@ -351,7 +411,7 @@ describe 'Service Broker' do
             'client_id'              => service_5[:dashboard_client][:id],
             'client_secret'          => service_5[:dashboard_client][:secret],
             'redirect_uri'           => 'http://nowhere.net',
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
@@ -359,7 +419,7 @@ describe 'Service Broker' do
             'client_id'              => service_6[:dashboard_client][:id],
             'client_secret'          => service_6[:dashboard_client][:secret],
             'redirect_uri'           => service_6[:dashboard_client][:redirect_uri],
-            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            'scope'                  => ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           }
@@ -370,6 +430,16 @@ describe 'Service Broker' do
           expect(client_modifications).to match_array(expected_client_modifications)
         end.should have_been_made
 
+      end
+
+      it 'can update the service broker name' do
+        put("/v2/service_brokers/#{@service_broker_guid}", "{\"name\":\"new_broker_name\"}",
+            json_headers(admin_headers))
+
+        expect(last_response).to have_status_code(200)
+
+        parsed_body = JSON.parse(last_response.body)
+        expect(parsed_body['entity']['name']).to eq("new_broker_name")
       end
     end
 
@@ -443,6 +513,53 @@ describe 'Service Broker' do
         expect(no_longer_not_free_plan['entity']['free']).to be_true
       end
     end
+
+    context 'when a service plan disappears from the catalog' do
+      before do
+        setup_broker(catalog_with_two_plans)
+      end
+
+      context 'when it has an existing instance' do
+        before do
+          provision_service
+        end
+
+        it 'the plan should become inactive' do
+          update_broker(catalog_with_large_plan)
+          expect(last_response).to have_status_code(200)
+
+          expect(VCAP::CloudController::ServicePlan.find(unique_id: 'plan1-guid-here')[:active]).to be_false
+        end
+      end
+
+      context 'when it has no existing instance' do
+
+        it 'the plan should become inactive' do
+          update_broker(catalog_with_large_plan)
+          expect(last_response).to have_status_code(200)
+
+          get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+          expect(last_response).to have_status_code(200)
+
+          parsed_body = JSON.parse(last_response.body)
+          expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(1)
+        end
+      end
+
+      context 'when the service is updated to have no plans' do
+
+        it 'returns an error and does not update the broker' do
+          update_broker(catalog_with_no_plans)
+          expect(last_response).to have_status_code(502)
+
+          get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+          expect(last_response).to have_status_code(200)
+
+          parsed_body = JSON.parse(last_response.body)
+          expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(2)
+        end
+      end
+    end
   end
 
   describe 'deleting a service broker' do
@@ -497,7 +614,7 @@ describe 'Service Broker' do
             client_id:              service_1[:dashboard_client][:id],
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           },
@@ -505,7 +622,7 @@ describe 'Service Broker' do
             client_id:              service_2[:dashboard_client][:id],
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read' ],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           }
@@ -514,6 +631,30 @@ describe 'Service Broker' do
         a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with(
           body:  expected_json_body
         ).should have_been_made
+      end
+    end
+
+    context 'when a service instance exists' do
+      before do
+        setup_broker(catalog_with_small_plan)
+        provision_service
+      end
+
+      after do
+        deprovision_service
+        delete_broker
+      end
+
+      it 'does not delete the broker', non_transactional: true do
+        delete_broker
+        expect(last_response).to have_status_code(400)
+
+        get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+        expect(last_response).to have_status_code(200)
+
+        parsed_body = JSON.parse(last_response.body)
+        expect(parsed_body['resources'].first['entity']['label']).to eq(service_name)
+        expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(1)
       end
     end
   end

@@ -9,6 +9,7 @@ info:
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
 
+external_protocol: http
 external_domain: api2.vcap.me
 
 system_domain_organization: the-system-domain-org-name

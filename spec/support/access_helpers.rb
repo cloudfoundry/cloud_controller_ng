@@ -1,38 +1,31 @@
 module AccessHelpers
   shared_examples :full_access do
-    it { should be_able_to :create, object }
-    it { should be_able_to :read, object }
-    it { should be_able_to :update, object }
-    it { should be_able_to :delete, object }
+    it { should allow_op_on_object :create, object }
+    it { should allow_op_on_object :read, object }
+    it { should allow_op_on_object :update, object }
+    it { should allow_op_on_object :delete, object }
+    it { should allow_op_on_object :index, object.class }
   end
 
   shared_examples :read_only do
-    it { should_not be_able_to :create, object }
-    it { should be_able_to :read, object }
-    it { should_not be_able_to :update, object }
-    it { should_not be_able_to :delete, object }
+    it { should_not allow_op_on_object :create, object }
+    it { should allow_op_on_object :read, object }
+    it { should_not allow_op_on_object :update, object }
+    it { should_not allow_op_on_object :delete, object }
+    it { should allow_op_on_object :index, object.class }
   end
 
   shared_examples :no_access do
-    it { should_not be_able_to :create, object }
-    it { should_not be_able_to :read, object }
-    it { should_not be_able_to :update, object }
-    it { should_not be_able_to :delete, object }
+    it { should_not allow_op_on_object :create, object }
+    it { should_not allow_op_on_object :read, object }
+    it { should_not allow_op_on_object :update, object }
+    it { should_not allow_op_on_object :delete, object }
+    #it { should_not allow_op_on_object :index, object.class }
+    # backward compatibility:
+    # :index is not tested here because some subclasses of BaseAccess
+    # override the default behavior of always allowing access to :index
   end
 
-  shared_examples :read_error do
-    it { should_not be_able_to :create, object }
-    it { should_not be_able_to :update, object }
-    it { should_not be_able_to :delete, object }
-    it 'raises missing required scope error' do
-      begin
-        should_not be_able_to :read, object
-      rescue VCAP::Errors::MissingRequiredScopeError => e
-        expect(e.is_a? VCAP::Errors::MissingRequiredScopeError).to eq(true)
-      end
-    end
-
-  end
 
   shared_examples :admin_full_access do
     include_context :admin_setup

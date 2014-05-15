@@ -230,20 +230,31 @@ module VCAP::CloudController
 
           domain_org = Organization.make
           private_domain = PrivateDomain.make(owning_organization: domain_org)
-          expect { space.add_domain(private_domain) }.to raise_error(Space::UnauthorizedAccessToPrivateDomain)
+          expect { space.add_domain(private_domain) }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
         end
       end
     end
 
     describe "#domains (eager loading)" do
-      before { SharedDomain.dataset.delete }
+      before do
+        @model_manger = VCAP::CloudController::ModelManager.new(
+            Space, PrivateDomain, SharedDomain
+        )
+        @model_manger.record
+      end
+
+      after do
+        @model_manger.destroy
+      end
 
       it "is able to eager load domains" do
         space = Space.make
+
         org = space.organization
 
         private_domain1 = PrivateDomain.make(owning_organization: org)
         private_domain2 = PrivateDomain.make(owning_organization: org)
+
         shared_domain = SharedDomain.make
 
         expect {
@@ -261,6 +272,7 @@ module VCAP::CloudController
 
       it "has correct domains for each space" do
         space1 = Space.make
+
         space2 = Space.make
 
         org1 = space1.organization
@@ -268,15 +280,19 @@ module VCAP::CloudController
 
         private_domain1 = PrivateDomain.make(owning_organization: org1)
         private_domain2 = PrivateDomain.make(owning_organization: org2)
+
         shared_domain = SharedDomain.make
 
         expect {
           @eager_loaded_spaces = Space.eager(:domains).where(id: [space1.id, space2.id]).limit(2).all
         }.to have_queried_db_times(/domains/i, 1)
 
+        domains = [[private_domain1, shared_domain], [private_domain2, shared_domain]]
+
         expect {
-          expect(@eager_loaded_spaces[0].domains).to eql([private_domain1, shared_domain])
-          expect(@eager_loaded_spaces[1].domains).to eql([private_domain2, shared_domain])
+          expect(@eager_loaded_spaces).to have(2).items
+          expect(domains).to include(@eager_loaded_spaces[0].domains)
+          expect(domains).to include(@eager_loaded_spaces[1].domains)
         }.to have_queried_db_times(//, 0)
       end
 
@@ -315,6 +331,19 @@ module VCAP::CloudController
           expect(@eager_loaded_space.domains[1].routes).to eql([route2])
         }.to have_queried_db_times(//, 0)
       end
+    end
+  end
+
+  describe "#having_developer" do
+    it "returns only spaces with developers containing the specified user" do
+      space1 = Space.make
+      user = make_developer_for_space(space1)
+
+      space2 = Space.make
+      spaces = Space.having_developers(user).all
+
+      expect(spaces).to include(space1)
+      expect(spaces).to_not include(space2)
     end
   end
 end

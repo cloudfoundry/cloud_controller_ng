@@ -95,6 +95,14 @@ module VCAP::CloudController
             user.remove_organization(org)
           }.to raise_error User::InvalidOrganizationRelation
         end
+
+        context "and they are the only manager of an org" do
+          it "should not allow them to remove the managed_organization" do
+            expect {
+              user.remove_managed_organization(org)
+            }.to raise_error(Sequel::HookFailed)
+          end
+        end
       end
 
       context "when a user is a billing manager" do

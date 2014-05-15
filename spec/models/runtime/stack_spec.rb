@@ -63,7 +63,7 @@ module VCAP::CloudController
         before { described_class.configure(file) }
 
         context "when there are no stacks" do
-          before { Stack.dataset.delete }
+          before { Stack.dataset.destroy }
 
           it "creates them all" do
             described_class.populate
@@ -76,10 +76,7 @@ module VCAP::CloudController
           end
 
           context "when there are existing stacks" do
-            before do
-              Stack.dataset.delete
-              Stack.populate
-            end
+            before { Stack.populate }
 
             it "should not create duplicates" do
               expect { Stack.populate }.not_to change { Stack.count }

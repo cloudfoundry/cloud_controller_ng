@@ -50,16 +50,11 @@ module VCAP::CloudController
 
       subject = "staging.#{@stager_id}.start"
       @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
-      # The creation of upload handle only guarantees that this cloud controller
-      # is disallowed from trying to stage this app again. It does NOT guarantee that a different
-      # cloud controller will NOT start staging the app in parallel. Therefore, we need to
-      # cache the current droplet hash here, and later check it was NOT changed by a
-      # different cloud controller completing staging request for the same app before
-      # this cloud controller completes the staging.
-      @current_droplet_hash = @app.droplet_hash
 
+      # Save the current staging task
       @app.update(staging_task_id: task_id)
 
+      # Attempt to stop any in-flight staging for this app
       @message_bus.publish("staging.stop", :app_id => @app.guid)
 
       @completion_callback = completion_callback
@@ -122,10 +117,8 @@ module VCAP::CloudController
     end
 
     def start_app_message
-      msg = DeaClient.start_app_message(@app)
-      msg[:index] = 0
+      msg = StartAppMessage.new(@app, 0, @config, @blobstore_url_generator)
       msg[:sha1] = nil
-      msg[:executableUri] = nil
       msg
     end
 
@@ -197,8 +190,9 @@ module VCAP::CloudController
 
     def staging_completion(stager_response)
       instance_was_started_by_dea = !!stager_response.droplet_hash
-      @app.update(detected_buildpack: stager_response.detected_buildpack)
+      @app.update_detected_buildpack(stager_response.detected_buildpack, stager_response.buildpack_key)
       @dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
+
       @completion_callback.call(:started_instances => instance_was_started_by_dea ? 1 : 0) if @completion_callback
     end
 

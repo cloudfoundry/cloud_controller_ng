@@ -115,7 +115,7 @@ module VCAP::Services::SSO::UAA
         client_id:              client_attrs['id'],
         client_secret:          client_attrs['secret'],
         redirect_uri:           client_attrs['redirect_uri'],
-        scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write'],
+        scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
         authorized_grant_types: ['authorization_code']
       }
     end

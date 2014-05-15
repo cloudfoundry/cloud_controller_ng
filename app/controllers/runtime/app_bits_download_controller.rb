@@ -6,26 +6,26 @@ module VCAP::CloudController
     get "#{path_guid}/download", :download
     def download(guid)
       find_guid_and_validate_access(:read, guid)
-      blobstore = CloudController::DependencyLocator.instance.package_blobstore
-      package_uri = blobstore.download_uri(guid)
 
-      logger.debug "guid: #{guid} package_uri: #{package_uri}"
+      blob = @blobstore.blob(guid)
 
-      if package_uri.nil?
+      if blob.nil?
         Loggregator.emit_error(guid, "Could not find package for #{guid}")
         logger.error "could not find package for #{guid}"
         raise Errors::ApiError.new_from_details("AppPackageNotFound", guid)
       end
 
-      if blobstore.local?
-        if config[:nginx][:use_nginx]
-          return [HTTP::OK, { "X-Accel-Redirect" => "#{package_uri}" }, ""]
-        else
-          return send_file package_path, :filename => File.basename("#{path}.zip")
-        end
+      if @blobstore.local?
+        @blob_sender.send_blob(guid, "AppPackage", blob, self)
       else
-        return [HTTP::FOUND, {"Location" => package_uri}, nil]
+        return [HTTP::FOUND, {"Location" => blob.download_url}, nil]
       end
+    end
+
+    private
+    def inject_dependencies(dependencies)
+      @blob_sender = dependencies.fetch(:blob_sender)
+      @blobstore = dependencies.fetch(:package_blobstore)
     end
   end
 end

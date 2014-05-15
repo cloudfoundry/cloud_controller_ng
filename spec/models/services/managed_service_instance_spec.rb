@@ -50,6 +50,28 @@ module VCAP::CloudController
         instance = described_class.make
         instance.refresh.is_gateway_service.should == true
       end
+
+      it 'creates a CREATED service usage event' do
+        instance = described_class.make
+
+        event = ServiceUsageEvent.last
+        expect(ServiceUsageEvent.count).to eq(1)
+        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
+        expect(event).to match_service_instance(instance)
+      end
+    end
+
+    describe '#delete' do
+      it 'creates a DELETED service usage event' do
+        instance = described_class.make
+        instance.destroy
+
+        event = VCAP::CloudController::ServiceUsageEvent.last
+
+        expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
+        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
+        expect(event).to match_service_instance(instance)
+      end
     end
 
     describe "serialization" do

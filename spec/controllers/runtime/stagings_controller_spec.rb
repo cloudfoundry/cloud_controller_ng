@@ -179,6 +179,19 @@ module VCAP::CloudController
             FileUtils.should_receive(:rm_f).with(/ngx\.uploads/)
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
           end
+
+          context "when a content-md5 is specified" do
+            it "returns a 400 if the value does not match the md5 of the body" do
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req, "HTTP_CONTENT_MD5" => "the-wrong-md5"
+              expect(last_response.status).to eq(400)
+            end
+
+            it "succeeds if the value matches the md5 of the body" do
+              content_md5 = Digest::MD5.base64digest(file_content)
+              post "/staging/droplets/#{app_obj.guid}/upload", upload_req, "HTTP_CONTENT_MD5" => content_md5
+              expect(last_response.status).to eq(200)
+            end
+          end
         end
 
         context "with an invalid app" do
@@ -221,6 +234,13 @@ module VCAP::CloudController
           job = Delayed::Job.last
           config = VCAP::CloudController::Config.config
           expect(decoded_response.fetch('metadata').fetch('url')).to eql("http://#{config.fetch(:external_domain)}/v2/jobs/#{job.guid}")
+        end
+        
+        it "returns a JSON body with full url containing the correct external_protocol" do
+          config[:external_protocol] = "https"
+          post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
+          job = Delayed::Job.last
+          expect(decoded_response.fetch('metadata').fetch('url')).to start_with("https://")
         end
 
         it "returns a JSON body with full url to query for job's status even Cloud Controller has multiple external domains" do
@@ -292,6 +312,14 @@ module VCAP::CloudController
             last_response.status.should == 200
             last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
           end
+
+          context "with a valid app but no droplet" do
+            it "raises an error" do
+              get "/staging/droplets/#{app_obj.guid}/download"
+              last_response.status.should == 400
+              decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+            end
+          end
         end
 
         context "without nginx" do
@@ -308,13 +336,14 @@ module VCAP::CloudController
               last_response.body.should == "droplet contents"
             end
           end
-        end
-      end
 
-      context "with a valid app but no droplet" do
-        it "should return an error" do
-          get "/staging/droplets/#{app_obj.guid}/download"
-          last_response.status.should == 400
+          context "with a valid app but no droplet" do
+            it "should return an error" do
+              get "/staging/droplets/#{app_obj.guid}/download"
+              last_response.status.should == 400
+              decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+            end
+          end
         end
       end
 
@@ -327,8 +356,10 @@ module VCAP::CloudController
     end
 
     describe "POST /staging/buildpack_cache/:guid/upload" do
+      let(:file_content) { "the-file-content" }
+
       let(:upload_req) do
-        { :upload => { :droplet => Rack::Test::UploadedFile.new(temp_file_with_content) } }
+        { :upload => { :droplet => Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
       end
 
       before do
@@ -356,6 +387,19 @@ module VCAP::CloudController
           expect(job.queue).to eq("cc-api_z1-99")
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 200
+        end
+
+        context "when a content-md5 is specified" do
+          it "returns a 400 if the value does not match the md5 of the body" do
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, "HTTP_CONTENT_MD5" => "the-wrong-md5"
+            expect(last_response.status).to eq(400)
+          end
+
+          it "succeeds if the value matches the md5 of the body" do
+            content_md5 = Digest::MD5.base64digest(file_content)
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, "HTTP_CONTENT_MD5" => content_md5
+            expect(last_response.status).to eq(200)
+          end
         end
       end
 

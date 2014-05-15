@@ -23,34 +23,24 @@ module VCAP::CloudController
     get "/staging/apps/:guid", :download_app
     def download_app(guid)
       raise InvalidRequest unless package_blobstore.local?
+      app = App.find(guid: guid)
+      check_app_exists(app, guid)
 
-      app = App.find(:guid => guid)
-      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
-
-      file = package_blobstore.file(guid)
-      package_path = file.send(:path) if file
-      logger.debug "guid: #{guid} package_path: #{package_path}"
-
-      unless package_path
+      blob = package_blobstore.blob(guid)
+      unless blob
         logger.error "could not find package for #{guid}"
         raise ApiError.new_from_details("AppPackageNotFound", guid)
       end
-
-      if config[:nginx][:use_nginx]
-        url = package_blobstore.download_uri(guid)
-        logger.debug "nginx redirect #{url}"
-        [200, {"X-Accel-Redirect" => url}, ""]
-      else
-        logger.debug "send_file #{package_path}"
-        send_file package_path
-      end
+      @blob_sender.send_blob(app.guid, "AppPackage", blob, self)
     end
 
     post "#{DROPLET_PATH}/:guid/upload", :upload_droplet
     def upload_droplet(guid)
       app = App.find(:guid => guid)
-      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
-      raise ApiError.new_from_details("StagingError", "malformed droplet upload request for #{app.guid}") unless upload_path
+
+      check_app_exists(app, guid)
+      check_file_was_uploaded(app)
+      check_file_md5
 
       logger.info "droplet.begin-upload", :app_guid => app.guid
 
@@ -59,7 +49,7 @@ module VCAP::CloudController
       if async?
         job = Jobs::Enqueuer.new(droplet_upload_job, queue: LocalQueue.new(config)).enqueue()
         external_domain = Array(config[:external_domain]).first
-        [HTTP::OK, JobPresenter.new(job, "http://#{external_domain}").to_json]
+        [HTTP::OK, JobPresenter.new(job, "#{config[:external_protocol]}://#{external_domain}").to_json]
       else
         droplet_upload_job.perform
         HTTP::OK
@@ -69,19 +59,20 @@ module VCAP::CloudController
     get "#{DROPLET_PATH}/:guid/download", :download_droplet
     def download_droplet(guid)
       app = App.find(:guid => guid)
-      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
-
+      check_app_exists(app, guid)
       droplet = app.current_droplet
       blob_name = "droplet"
-      log_and_raise_missing_blob(app.guid, blob_name) unless droplet
-      download(app, droplet.local_path, droplet.download_url, blob_name)
+      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet.blob
+      @blob_sender.send_blob(app.guid, blob_name, droplet.blob, self)
     end
 
     post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
     def upload_buildpack_cache(guid)
       app = App.find(:guid => guid)
-      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
-      raise ApiError.new_from_details("StagingError", "malformed buildpack cache upload request for #{app.guid}") unless upload_path
+
+      check_app_exists(app, guid)
+      check_file_was_uploaded(app)
+      check_file_md5
 
       blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: LocalQueue.new(config)).enqueue()
@@ -91,46 +82,24 @@ module VCAP::CloudController
     get "#{BUILDPACK_CACHE_PATH}/:guid/download", :download_buildpack_cache
     def download_buildpack_cache(guid)
       app = App.find(:guid => guid)
-      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
+      check_app_exists(app, guid)
 
-      file = buildpack_cache_blobstore.file(app.guid)
-      buildpack_cache_path = file.send(:path) if file
+      blob = buildpack_cache_blobstore.blob(app.guid)
       blob_name = "buildpack cache"
 
-      log_and_raise_missing_blob(app.guid, blob_name) unless buildpack_cache_path
-
-      buildpack_cache_url = buildpack_cache_blobstore.download_uri(app.guid)
-      download(app, buildpack_cache_path, buildpack_cache_url, blob_name)
+      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless blob
+      @blob_sender.send_blob(app.guid, blob_name, blob, self)
     end
 
     private
-
     def inject_dependencies(dependencies)
       super
       @blobstore = dependencies.fetch(:droplet_blobstore)
       @buildpack_cache_blobstore = dependencies.fetch(:buildpack_cache_blobstore)
       @package_blobstore = dependencies.fetch(:package_blobstore)
       @config = dependencies.fetch(:config)
-    end
-
-    def log_and_raise_missing_blob(app_guid, name)
-      Loggregator.emit_error(app_guid, "Did not find #{name} for app with guid: #{app_guid}")
-      logger.error "could not find #{name} for #{app_guid}"
-      raise ApiError.new_from_details("StagingError", "#{name} not found for #{app_guid}")
-    end
-
-    def download(app, blob_path, url, name)
-      raise ApiError.new_from_details("InvalidRequest") unless blobstore.local?
-
-      logger.debug "guid: #{app.guid} #{name} #{blob_path} #{url}"
-
-      if config[:nginx][:use_nginx]
-        logger.debug "nginx redirect #{url}"
-        [200, {"X-Accel-Redirect" => url}, ""]
-      else
-        logger.debug "send_file #{blob_path}"
-        send_file blob_path
-      end
+      @missing_blob_handler = dependencies.fetch(:missing_blob_handler)
+      @blob_sender = dependencies.fetch(:blob_sender)
     end
 
     def upload_path
@@ -149,8 +118,20 @@ module VCAP::CloudController
       end
     end
 
-    def tmpdir
-      (config[:directories] && config[:directories][:tmpdir]) || Dir.tmpdir
+    def check_app_exists(app, guid)
+      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
+    end
+
+    def check_file_was_uploaded(app)
+      raise ApiError.new_from_details("StagingError", "malformed droplet upload request for #{app.guid}") unless upload_path
+    end
+
+    def check_file_md5
+      file_md5 = Digest::MD5.base64digest(File.read(upload_path))
+      header_md5 = env["HTTP_CONTENT_MD5"]
+      if header_md5.present? && file_md5 != header_md5
+        raise ApiError.new_from_details("StagingError", "content md5 did not match")
+      end
     end
   end
 end
