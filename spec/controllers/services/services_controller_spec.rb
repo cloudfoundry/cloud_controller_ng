@@ -2,7 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServicesController, :services, type: :controller do
-    include_examples "uaa authenticated api", path: "/v2/services"
     include_examples "enumerating objects", path: "/v2/services", model: Service
     include_examples "reading a valid object", path: "/v2/services", model: Service,
                      basic_attributes:               %w(label provider url description version bindable tags requires)
@@ -108,21 +107,65 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/services' do
+      let(:organization) do
+        Organization.make.tap do |org|
+          org.add_user(user)
+          org.add_manager(user)
+          org.add_billing_manager(user)
+          org.add_auditor(user)
+        end
+      end
+
       let(:user) { VCAP::CloudController::User.make }
       let(:headers) { headers_for(user) }
+      let(:service_broker) { ServiceBroker.make(name: 'FreeWidgets') }
 
-      before do
-        @service_broker = ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', auth_password: 'secret')
-        @active        = 3.times.map do
-          Service.make(active: true, long_description: Sham.long_description, service_broker: @service_broker).tap do |svc|
-            ServicePlan.make(service: svc)
-          end
+      let!(:public_and_active) do
+        opts = { active: true, long_description: Sham.long_description, service_broker: service_broker}
+        Service.make(opts).tap do |svc|
+          ServicePlan.make(public: true, active: true, service: svc)
         end
-        @inactive      = 2.times.map do
-          Service.make(active: false).tap do |svc|
-            ServicePlan.make(service: svc)
-          end
+      end
+
+      let!(:public_and_inactive) do
+        opts = { active: false, long_description: Sham.long_description, service_broker: service_broker}
+        Service.make(opts).tap do |svc|
+          ServicePlan.make(public: true, active: false, service: svc)
         end
+      end
+
+      let!(:private_and_active) do
+        opts = { active: true, long_description: Sham.long_description, service_broker: service_broker}
+        Service.make(opts).tap do |svc|
+          ServicePlan.make(public: false, active: true, service: svc)
+        end
+      end
+
+      let!(:private_and_inactive) do
+        opts = { active: false, long_description: Sham.long_description, service_broker: service_broker}
+        Service.make(opts).tap do |svc|
+          ServicePlan.make(public: false, active: false, service: svc)
+        end
+      end
+
+      let!(:private_with_visibility_to_user) do
+        opts = { active: true, long_description: Sham.long_description, service_broker: service_broker}
+        Service.make(opts).tap do |svc|
+          plan = ServicePlan.make(public: false, active: true, service: svc)
+          ServicePlanVisibility.make(service_plan: plan, organization: organization)
+        end
+      end
+
+      def visible_services
+        [public_and_active, private_with_visibility_to_user]
+      end
+
+      def active_services
+        [public_and_active, private_and_active, private_with_visibility_to_user]
+      end
+
+      def inactive_services
+        [public_and_inactive, private_and_inactive]
       end
 
       def decoded_guids
@@ -133,42 +176,54 @@ module VCAP::CloudController
         decoded_response["resources"].map { |r| r["entity"]["long_description"] }
       end
 
-      it "should get all services" do
+      it "returns plans visible to the user" do
         get "/v2/services", {}, headers
-        last_response.should be_ok
-        decoded_guids.should =~ (@active + @inactive).map(&:guid)
+        expect(last_response.status).to eq 200
+        expect(decoded_guids).to eq(visible_services.map(&:guid))
       end
 
       it "has a documentation URL field" do
         get "/v2/services", {}, headers
-        decoded_response["resources"].first["entity"].keys.should include "documentation_url"
+        expect(decoded_response["resources"].first["entity"].keys).to include "documentation_url"
       end
 
       it "has a long description field" do
         get "/v2/services", {}, headers
-        decoded_long_descriptions.should =~ (@active + @inactive).map(&:long_description)
+        expect(decoded_long_descriptions).to eq visible_services.map(&:long_description)
+      end
+
+      context 'when the user is not authenticated' do
+        let(:headers) { {} }
+
+        it 'shows services that have at least one public and active plan' do
+          get "/v2/services", {}, headers
+          expect(last_response.status).to eq 200
+          expect(decoded_guids).to eq([public_and_active.guid])
+        end
+
+        it 'does not allow the unauthed user to use inline-relations-depth' do
+          get "/v2/services?inline-relations-depth=1", {}, headers
+          services = decoded_response.fetch('resources').map{ |services| services['entity'] }
+          services.each do |service|
+            expect(service['service_plans']).to be_nil
+          end
+        end
       end
 
       context "with an offering that has private plans" do
-        before(:each) do
-          @svc_all_private = @active.first
-          @svc_all_private.service_plans.each { |plan| plan.update(:public => false) }
-          @svc_one_public = @active.last
-          ServicePlan.make(service: @svc_one_public, public: false)
-        end
-
-        it "should remove the offering when I cannot see any of the plans" do
+        it "removes the offering when I cannot see any of the plans" do
           get "/v2/services", {}, headers
-          last_response.should be_ok
-          decoded_guids.should include(@svc_one_public.guid)
-          decoded_guids.should_not include(@svc_all_private.guid)
+          expect(last_response.status).to eq 200
+          expect(decoded_guids).not_to include(private_and_active.guid)
+          expect(decoded_guids).not_to include(private_and_inactive.guid)
+          expect(decoded_guids).not_to include(public_and_inactive.guid)
         end
 
         it "should return the offering when I can see at least one of the plans" do
-          get "/v2/services", {}, admin_headers
-          last_response.should be_ok
-          decoded_guids.should include(@svc_one_public.guid)
-          decoded_guids.should include(@svc_all_private.guid)
+          get "/v2/services", {}, headers
+          expect(last_response.status).to eq 200
+          expect(decoded_guids).to include(public_and_active.guid)
+          expect(decoded_guids).to include(private_with_visibility_to_user.guid)
         end
       end
 
@@ -177,66 +232,66 @@ module VCAP::CloudController
           # Sequel stores 'true' and 'false' as 't' and 'f' in sqlite, so with
           # sqlite, instead of 'true' or 'false', the parameter must be specified
           # as 't' or 'f'. But in postgresql, either way is ok.
-          get "/v2/services?q=active:t", {}, headers
-          last_response.should be_ok
-          decoded_guids.should =~ @active.map(&:guid)
+
+          get "/v2/services?q=active:t", {}, admin_headers
+          expect(last_response.status).to eq 200
+          expect(decoded_guids).to eq active_services.map(&:guid)
         end
 
         it "can only get inactive services" do
-          get "/v2/services?q=active:f", {}, headers
-          last_response.should be_ok
-          decoded_guids.should =~ @inactive.map(&:guid)
+          get "/v2/services?q=active:f", {}, admin_headers
+          expect(last_response.status).to eq 200
+          expect(decoded_guids).to eq inactive_services.map(&:guid)
         end
       end
 
       describe 'filtering by service_broker_guid' do
-        before do
-          other_service_broker = ServiceBroker.make(name: 'ExpensiveWidgets', broker_url: 'http://example2.com/', auth_password: 'secret')
-
-          svc = Service.make(active: true, long_description: Sham.long_description, service_broker: other_service_broker)
-          svc = ServicePlan.make(service: svc)
-        end
+        let(:other_service_broker) { ServiceBroker.make(name: 'ExpensiveWidgets') }
+        let(:other_service) { Service.make(active: true, service_broker: other_service_broker) }
+        let(:other_service_plan) { ServicePlan.make(service: other_service) }
 
         it 'includes only services with the requested service_broker_guid' do
-          get "/v2/services?q=service_broker_guid:#{@service_broker.guid}", {}, headers
-          last_response.should be_ok
-          decoded_guids.should =~ @active.map(&:guid)
+
+          get "/v2/services?q=service_broker_guid:#{service_broker.guid}", {}, headers
+          expect(last_response.status).to eq 200
+          expect(decoded_guids).to eq visible_services.map(&:guid)
+          expect(decoded_guids).not_to include other_service.guid
         end
       end
 
       describe 'filtering by label' do
-        let(:my_service) { @active.fetch(0) }
-
-        before do
-          my_service.label = 'my-service'
-          my_service.save
+       let!(:other_public_and_active_service) do
+          Service.make(active: true) do |svc|
+            ServicePlan.make(service: svc, public: true, active: true)
+          end
         end
 
+        let(:label) { other_public_and_active_service.label }
+
         it 'includes only matching services in the response' do
-          get '/v2/services?q=label:my-service', {}, headers
-          last_response.should be_ok
-          decoded_guids.should == [my_service.guid]
+          get "/v2/services?q=label:#{label}", {}, headers
+          expect(last_response.status).to eq 200
+          expect(decoded_guids).to eq [other_public_and_active_service.guid]
         end
       end
 
       describe 'filtering by provider' do
         context 'for a v1 service' do
-          let(:my_service) { @active.fetch(0) }
-
-          before do
-            my_service.provider = 'my-provider'
-            my_service.save
+          let!(:v1_service) do
+            Service.make(active: true, provider: 'some-provider') do |svc|
+              ServicePlan.make(service: svc, public: true, active: true)
+            end
           end
 
           it 'includes only matching services in the response' do
-            get '/v2/services?q=provider:my-provider', {}, headers
-            last_response.should be_ok
-            decoded_guids.should == [my_service.guid]
+            get '/v2/services?q=provider:some-provider', {}, headers
+            expect(last_response.status).to eq 200
+            expect(decoded_guids).to eq [v1_service.guid]
           end
         end
 
         context 'for a v2 service' do
-          let!(:my_service) do
+          let!(:v2_service) do
             Service.make(:v2).tap do |service|
               ServicePlan.make(service: service)
             end
@@ -244,14 +299,19 @@ module VCAP::CloudController
 
           it 'matches when provider is blank' do
             get '/v2/services?q=provider:', {}, headers
-            last_response.should be_ok
-            decoded_guids.should == [my_service.guid]
+            expect(last_response.status).to eq 200
+            expect(decoded_guids).to eq [v2_service.guid]
           end
         end
       end
     end
 
     describe 'POST /v2/services' do
+      it 'requires authentication' do
+        post '/v2/services', '{}', headers_for(nil)
+        expect(last_response.status).to eq 401
+      end
+
       it 'creates a service' do
         unique_id         = Sham.unique_id
         url               = Sham.url
@@ -369,6 +429,11 @@ module VCAP::CloudController
     describe 'PUT /v2/services/:guid' do
       let!(:service) { Service.make }
 
+      it 'requires authentication' do
+        put "/v2/services/#{service.guid}", '{}', headers_for(nil)
+        expect(last_response.status).to eq 401
+      end
+
       context "when updating the unique_id attribute" do
         it "is successful" do
           new_unique_id = service.unique_id.reverse
@@ -425,6 +490,11 @@ module VCAP::CloudController
 
       before do
         stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: {}, code: 200)
+      end
+
+      it 'requires authentication' do
+        delete "/v2/services/#{service.guid}", '{}', headers_for(nil)
+        expect(last_response.status).to eq 401
       end
 
       it 'deletes the service and its dependent models' do
