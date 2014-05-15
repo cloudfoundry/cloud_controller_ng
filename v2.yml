@@ -343,6 +343,21 @@
   http_code: 400
   message: "App has not finished staging"
 
+170003:
+  name: NoAppDetectedError
+  http_code: 400
+  message: "An app was not successfully detected by any available buildpack"
+
+170004:
+  name: BuildpackCompileFailed
+  http_code: 400
+  message: "App staging failed in the buildpack compile phase"
+
+170005:
+  name: BuildpackReleaseFailed
+  http_code: 400
+  message: "App staging failed in the buildpack release phase"
+
 180001:
   name: SnapshotNotFound
   http_code: 404
