@@ -49,6 +49,12 @@ module VCAP::CloudController
       dataset.filter(id: service_ids)
     end
 
+    def self.public_visible
+      public_active_plans = ServicePlan.where(active: true, public: true).all
+      service_ids = public_active_plans.map {|plan| plan.service_id }.uniq
+      dataset.filter(id: service_ids)
+    end
+
     def self.user_visibility_filter(current_user)
       plans_I_can_see = ServicePlan.user_visible(current_user)
       {id: plans_I_can_see.map(&:service_id).uniq}

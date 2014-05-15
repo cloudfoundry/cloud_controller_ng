@@ -321,6 +321,25 @@ module VCAP::CloudController
       end
     end
 
+    describe '.public_visible' do
+      it 'returns services that have a plan that is public and active' do
+        public_active_service = Service.make(active: true)
+        public_active_plan = ServicePlan.make(active: true, public: true, service: public_active_service)
+
+        private_active_service = Service.make(active: true)
+        private_active_plan = ServicePlan.make(active: true, public: false, service: private_active_service)
+
+        public_inactive_service = Service.make(active: false)
+        public_inactive_plan = ServicePlan.make(active: false, public: true, service: public_inactive_service)
+
+        private_inactive_service = Service.make(active: false)
+        private_inactive_plan = ServicePlan.make(active: false, public: false, service: private_inactive_service)
+
+        public_visible = Service.public_visible.all
+        expect(public_visible).to eq [public_active_service]
+      end
+    end
+
     describe '#client' do
       context 'when the purging field is true' do
         let(:service) { Service.make(purging: true) }

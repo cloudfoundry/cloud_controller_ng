@@ -9,9 +9,25 @@ module VCAP::CloudController
       to_one    :service
       to_many   :service_instances
       attribute :public, Message::Boolean, default: true
+      #attribute :active, Message::Boolean, default: true
     end
 
     query_parameters :service_guid, :service_instance_guid
+
+    allow_unauthenticated_access only: :enumerate
+    def enumerate
+      return super if SecurityContext.valid_token?
+      plans = ServicePlan.where(active: true, public: true)
+
+      @opts.delete(:inline_relations_depth)
+      collection_renderer.render_json(
+        self.class,
+        plans,
+        self.class.path,
+        @opts,
+        {}
+      )
+    end
 
     # Override this method because we want to enable the concept of
     # deleted apps. This is necessary because we have an app events table
