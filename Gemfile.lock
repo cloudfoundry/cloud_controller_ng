@@ -104,7 +104,7 @@ GEM
     membrane (1.0.0)
     method_source (0.8.2)
     mime-types (2.1)
-    mini_portile (0.5.2)
+    mini_portile (0.6.0)
     msgpack (0.5.8)
     multi_json (1.9.2)
     multipart-post (2.0.0)
@@ -119,8 +119,8 @@ GEM
       net-ssh (>= 2.6.5)
     net-ssh (2.7.0)
     newrelic_rpm (3.7.3.204)
-    nokogiri (1.6.1)
-      mini_portile (~> 0.5.0)
+    nokogiri (1.6.2.1)
+      mini_portile (= 0.6.0)
     parallel (1.0.0)
     parallel_tests (0.16.10)
       parallel
@@ -248,6 +248,7 @@ DEPENDENCIES
   membrane (~> 1.0)
   mysql2
   newrelic_rpm
+  nokogiri (~> 1.6.2)
   parallel_tests
   pg
   pry
