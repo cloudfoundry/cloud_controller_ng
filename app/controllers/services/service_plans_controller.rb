@@ -12,7 +12,7 @@ module VCAP::CloudController
       #attribute :active, Message::Boolean, default: true
     end
 
-    query_parameters :service_guid, :service_instance_guid
+    query_parameters :active, :service_guid, :service_instance_guid
 
     allow_unauthenticated_access only: :enumerate
     def enumerate

@@ -129,12 +129,28 @@ module VCAP::CloudController
          Yajl::Parser.parse(service_plan.to_json)["extra"].should == "extra"
       end
 
-      it "allows massignment of public" do
+      it "allows mass assignment of public" do
         service_plan.public.should == false
       end
 
       it "allows mass assignment of unique_id" do
         service_plan.unique_id.should == "unique-id"
+      end
+
+      context "when a user attempts to assign active flag from hash" do
+        let(:service_plan) { ServicePlan.new_from_hash(extra: "extra", public: false, unique_id: "unique-id", active: false) }
+
+        it "does not allow assignment" do
+          service_plan.active == true
+        end
+      end
+
+      context "when a plan is inactive" do
+        let(:inactive_plan) { ServicePlan.make(extra: "extra", public: false, unique_id: "unique-id", active: false) }
+
+        it "allows an export of the plan's active flag" do
+          inactive_plan.active.should == false
+        end
       end
     end
 

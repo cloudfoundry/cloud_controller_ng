@@ -161,6 +161,36 @@ module VCAP::CloudController
         expect(parse(last_response.body)["entity"]).to include("public" => true)
       end
     end
+
+    describe 'service plans active flag' do
+      let!(:active_plan) { ServicePlan.make(public: true, active: true) }
+      let!(:inactive_plan) { ServicePlan.make(public: true, active: false) }
+
+      context 'when the user is admin' do
+        it 'returns both active and inactive plans' do
+          get '/v2/service_plans', {}, admin_headers
+          last_response.status.should eq(200)
+          expect(parse(last_response.body)['total_results']).to eq(2)
+        end
+
+        it 'returns just the inactive plans when filtered for active:false' do
+          # Sequel stores 'true' and 'false' as 't' and 'f' in sqlite, so with
+          # sqlite, instead of 'true' or 'false', the parameter must be specified
+          # as 't' or 'f'. But in postgresql, either way is ok.
+          get '/v2/service_plans?q=active:f', {}, admin_headers
+          last_response.status.should eq(200)
+          expect(parse(last_response.body)['total_results']).to eq(1)
+          expect(parse(last_response.body)['resources'].first['entity']['active']).to eq(false)
+        end
+      end
+
+      it 'returns just the active plans when the user is not admin' do
+        get '/v2/service_plans', {}, headers_for(developer)
+        last_response.status.should eq(200)
+        expect(parse(last_response.body)['total_results']).to eq(1)
+        expect(parse(last_response.body)['resources'].first['entity']['active']).to eq(true)
+      end
+    end
   end
 
   describe "GET", "/v2/service_plans" do
