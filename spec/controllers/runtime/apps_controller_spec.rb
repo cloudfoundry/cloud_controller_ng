@@ -499,6 +499,7 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
+      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
       context 'when the user is a member of the space this app exists in' do
         let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name", space: space) }
@@ -520,6 +521,19 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the user is space dev and has service instance bound to application' do
+          let!(:service_instance) { ManagedServiceInstance.make(space: app_obj.space) }
+          let!(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+
+          it 'returns system environment with VCAP_SERVICES'do
+            get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+            expect(last_response.status).to eql(200)
+
+            expect(decoded_response["system_env_json"].size).to eq(1)
+            expect(decoded_response["system_env_json"]).to have_key("VCAP_SERVICES")
+          end
+        end
+
         context 'when the user does not have the necessary scope' do
           it 'returns InvalidAuthToken' do
             get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.write']}))
@@ -534,7 +548,8 @@ module VCAP::CloudController
         let!(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name",
                                          space:              space,
                                          environment_json:   test_environment_json) }
-        let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+        let!(:service_instance) { ManagedServiceInstance.make(space: app_obj.space) }
+        let!(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: service_instance) }
 
         context 'when the user is a space developer' do
           it 'returns non-redacted environment values' do
@@ -542,6 +557,7 @@ module VCAP::CloudController
             expect(last_response.status).to eql(200)
 
             expect(decoded_response["resources"].first["entity"]["environment_json"]).to eq(test_environment_json)
+            expect(decoded_response).not_to have_key("system_env_json")
           end
         end
 
@@ -551,9 +567,9 @@ module VCAP::CloudController
             expect(last_response.status).to eql(200)
 
             expect(decoded_response["resources"].first["entity"]["environment_json"]).to eq('[PRIVATE DATA HIDDEN]')
+            expect(decoded_response).not_to have_key("system_env_json")
           end
         end
-
       end
 
       context 'when the user is NOT a member of the space this instance exists in' do
