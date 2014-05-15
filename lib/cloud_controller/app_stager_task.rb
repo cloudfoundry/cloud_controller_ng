@@ -156,17 +156,32 @@ module VCAP::CloudController
     end
 
     def check_staging_error!(response, error)
-      if (msg = error_message(response))
-        @app.mark_as_failed_to_stage
-        raise Errors::ApiError.new_from_details("StagingError", msg)
+      type = error_type(response)
+      message = error_message(response)
+
+      if type && message
+        @app.mark_as_failed_to_stage(type)
+        raise Errors::ApiError.new_from_details(type, message)
       end
     end
 
     def error_message(response)
       if response.is_a?(String) || response.nil?
         "failed to stage application:\n#{response}"
+      elsif response["error_info"]
+        response["error_info"]["message"]
       elsif response["error"]
         "failed to stage application:\n#{response["error"]}\n#{response["task_log"]}"
+      end
+    end
+
+    def error_type(response)
+      if response.is_a?(String) || response.nil?
+        "StagingError"
+      elsif response["error_info"]
+        response["error_info"]["type"]
+      elsif response["error"]
+        "StagingError"
       end
     end
 

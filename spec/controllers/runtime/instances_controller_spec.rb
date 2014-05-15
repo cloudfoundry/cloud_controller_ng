@@ -47,6 +47,36 @@ module VCAP::CloudController
           Yajl::Parser.parse(last_response.body)["code"].should == 170002
         end
 
+        it "returns '170003 NoAppDetectedError' when the app was not detected by a buildpack" do
+          @app.mark_as_failed_to_stage("NoAppDetectedError")
+          @app.save
+
+          subject
+
+          last_response.status.should == 400
+          Yajl::Parser.parse(last_response.body)["code"].should == 170003
+        end
+
+        it "returns '170004 BuildpackCompileFailed' when the app fails due in the buildpack compile phase" do
+          @app.mark_as_failed_to_stage("BuildpackCompileFailed")
+          @app.save
+
+          subject
+
+          last_response.status.should == 400
+          Yajl::Parser.parse(last_response.body)["code"].should == 170004
+        end
+
+        it "returns '170005 BuildpackReleaseFailed' when the app fails due in the buildpack compile phase" do
+          @app.mark_as_failed_to_stage("BuildpackReleaseFailed")
+          @app.save
+
+          subject
+
+          last_response.status.should == 400
+          Yajl::Parser.parse(last_response.body)["code"].should == 170005
+        end
+
         it "returns the instances" do
           @app.state = "STARTED"
           @app.instances = 1

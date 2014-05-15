@@ -29,7 +29,8 @@ module VCAP::CloudController
                       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                       :environment_json, :memory, :instances, :disk_quota,
                       :state, :version, :command, :console, :debug,
-                      :staging_task_id, :package_state, :health_check_timeout
+                      :staging_task_id, :package_state, :health_check_timeout,
+                      :staging_failed_reason
 
     import_attributes :name, :production,
                       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
@@ -43,6 +44,7 @@ module VCAP::CloudController
 
     APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
     PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
+    STAGING_FAILED_REASONS = %w[StagingError NoAppDetectedError BuildpackCompileFailed BuildpackReleaseFailed].map(&:freeze).freeze
 
     CENSORED_FIELDS = [:encrypted_environment_json, :command, :environment_json]
 
@@ -98,6 +100,7 @@ module VCAP::CloudController
 
       validates_includes PACKAGE_STATES, :package_state, :allow_missing => true
       validates_includes APP_STATES, :state, :allow_missing => true
+      validates_includes STAGING_FAILED_REASONS, :staging_failed_reason, :allow_nil => true
 
       validation_policies.map(&:validate)
     end
@@ -382,13 +385,15 @@ module VCAP::CloudController
       routes.map(&:fqdn)
     end
 
-    def mark_as_failed_to_stage
+    def mark_as_failed_to_stage(reason="StagingError")
       self.package_state = "FAILED"
+      self.staging_failed_reason = reason
       save
     end
 
     def mark_for_restaging
       self.package_state = "PENDING"
+      self.staging_failed_reason = nil
     end
 
     def buildpack
