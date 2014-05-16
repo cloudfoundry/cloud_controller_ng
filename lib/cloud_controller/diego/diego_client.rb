@@ -1,9 +1,27 @@
 module VCAP::CloudController
   class DiegoClient
-    def initialize(message_bus, blobstore_url_generator)
+    def initialize(config, message_bus, blobstore_url_generator)
+      @config = config
       @message_bus = message_bus
       @blobstore_url_generator = blobstore_url_generator
       @buildpack_entry_generator = DiegoBuildpackEntryGenerator.new(@blobstore_url_generator)
+    end
+
+    def config=(config)
+      @config = config
+    end
+
+    def running_enabled(app)
+      @config[:diego] && (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
+    end
+
+    def staging_enabled(app)
+      return false unless @config[:diego]
+      running_enabled(app) ||  ((app.environment_json || {})["CF_DIEGO_BETA"] == "true")
+    end
+
+    def staging_needed(app)
+      staging_enabled(app) && app.needs_staging?
     end
 
     def send_desire_request(app)
@@ -28,7 +46,7 @@ module VCAP::CloudController
           file_descriptors: app.file_descriptors,
           droplet_uri: @blobstore_url_generator.droplet_download_url(app),
           stack: app.stack.name,
-          start_command: app.command || app.current_droplet.detected_start_command,
+          start_command: app.detected_start_command,
           environment: environment(app),
           num_instances: app.instances,
           routes: app.uris,

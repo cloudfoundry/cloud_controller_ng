@@ -53,7 +53,7 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance
       end
 
-      def stage_app(app, &completion_callback)
+      def validate_app_for_staging(app)
         if app.package_hash.nil? || app.package_hash.empty?
           raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
         end
@@ -61,14 +61,19 @@ module VCAP::CloudController
         if app.buildpack.custom? && !app.custom_buildpacks_enabled?
           raise Errors::ApiError.new_from_details("CustomBuildpacksDisabled")
         end
+      end
+
+      def stage_app(app, &completion_callback)
+        validate_app_for_staging(app)
+
+        task = AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
+        task.stage(&completion_callback)
+      end
 
 
-        if @config[:diego] && (app.environment_json || {})["CF_DIEGO_BETA"] == "true"
-          @diego_client.send_stage_request(app, VCAP.secure_uuid)
-        else
-          task = AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
-          task.stage(&completion_callback)
-        end
+      def stage_app_on_diego(app)
+        validate_app_for_staging(app)
+        @diego_client.send_stage_request(app, VCAP.secure_uuid)
       end
 
       def stage_if_needed(app, &success_callback)
@@ -80,14 +85,25 @@ module VCAP::CloudController
       end
 
       def react_to_state_change(app)
-        if app.started?
-          stage_if_needed(app) do |staging_result|
-            started_instances = staging_result[:started_instances] || 0
-            DeaClient.start(app, :instances_to_start => app.instances - started_instances)
-            broadcast_app_updated(app)
-          end
-        else
+        if !app.started?
           DeaClient.stop(app)
+          broadcast_app_updated(app)
+          return
+        end
+
+        if @diego_client.staging_needed(app)
+          stage_app_on_diego(app)
+          return
+        end
+
+        if @diego_client.running_enabled(app)
+          @diego_client.send_desire_request(app)
+          return
+        end
+
+        stage_if_needed(app) do |staging_result|
+          started_instances = staging_result[:started_instances] || 0
+          DeaClient.start(app, :instances_to_start => app.instances - started_instances)
           broadcast_app_updated(app)
         end
       end
@@ -100,6 +116,11 @@ module VCAP::CloudController
       end
 
       def react_to_package_state_change(app)
+        if @diego_client.staging_needed(app)
+          stage_app_on_diego(app)
+          return
+        end
+
         stage_if_needed(app) do |_|
           broadcast_app_updated(app)
         end

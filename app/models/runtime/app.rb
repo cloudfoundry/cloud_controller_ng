@@ -230,6 +230,10 @@ module VCAP::CloudController
       self.metadata && self.metadata["command"]
     end
 
+    def detected_start_command
+      command || current_droplet.detected_start_command
+    end
+
     def console=(c)
       self.metadata ||= {}
       self.metadata["console"] = c

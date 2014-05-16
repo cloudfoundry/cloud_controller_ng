@@ -194,7 +194,7 @@ module VCAP::CloudController
         stager_pool = StagerPool.new(@config, message_bus)
         dea_pool = DeaPool.new(message_bus)
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
-        diego_client = DiegoClient.new(message_bus, blobstore_url_generator)
+        diego_client = DiegoClient.new(@config,message_bus, blobstore_url_generator)
 
         DeaClient.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 

@@ -2,6 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DiegoClient do
+    let(:config_hash) { { diego: true} }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
     let(:domain) { SharedDomain.make(name: "some-domain.com") }
@@ -29,7 +30,7 @@ module VCAP::CloudController
       )
     end
 
-    subject(:client) { DiegoClient.new(message_bus, blobstore_url_generator) }
+    subject(:client) { DiegoClient.new(config_hash,message_bus, blobstore_url_generator) }
 
     describe "desiring an app" do
       let(:expected_message) do

@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:staging_timeout) { 320 }
     let(:config_hash) { { staging: { timeout_in_seconds: staging_timeout } } }
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
-    let(:diego_client) { DiegoClient.new(message_bus, blobstore_url_generator)}
+    let(:diego_client) {DiegoClient.new(config_hash,message_bus, blobstore_url_generator)}
 
     before do
       DeaClient.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
@@ -89,8 +89,9 @@ module VCAP::CloudController
       subject { AppObserver.updated(app) }
 
       describe "when the 'diego' flag is set" do
+        let(:config_hash) { { :diego => true} }
+
         before do
-          config_hash[:diego] = true
           allow(VCAP).to receive(:secure_uuid).and_return("foo-bar")
           app.stub(previous_changes: { :state => "anything" })
           app.stub(:started?).and_return(true)
@@ -109,6 +110,7 @@ module VCAP::CloudController
 
       describe "when the 'diego' flag is not set" do
         let(:config_hash) { { :diego => false } }
+
         before do
          AppStagerTask.stub(:new).
             with(config_hash,
