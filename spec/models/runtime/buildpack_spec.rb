@@ -10,8 +10,7 @@ module VCAP::CloudController
     end
 
     before do
-      @model_manager = ModelManager.new(Buildpack)
-      @model_manager.record
+      @model_manager = ModelManager.manage(Buildpack)
     end
 
     after do
@@ -303,8 +302,11 @@ module VCAP::CloudController
       end
 
       it "has to do a SELECT FOR UPDATE" do
-        expect(Buildpack).to receive(:for_update).exactly(1).and_call_original
+        allow(Buildpack).to receive(:for_update).and_call_original
+
         Buildpack.update(buildpacks[3], position: 2)
+
+        expect(Buildpack).to have_received(:for_update).exactly(1)
       end
 
       it "locks the last row" do

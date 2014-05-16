@@ -567,6 +567,10 @@ RSpec.configure do |rspec_config|
     :file_path => rspec_config.escaped_path(%w[spec api])
   }
 
+  rspec_config.before :suite do
+    $spec_env.reset_database_with_seeds
+  end
+
   rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
 
@@ -618,31 +622,65 @@ class VCAP::CloudController::App
   set_dataset dataset.order(:guid)
 end
 
+# ModelManager manages created Sequel::Model instances
+# Manage each of the model classes you expect to use
+# The `make` method will be hooked and the created instances will be remembered
+# When `destroy` is called on the Manager, all managed instances will be destroyed.
 class VCAP::CloudController::ModelManager
-  def initialize(*models)
-    @models = models
+
+  def self.manage(*models)
+    return self.new.manage(*models)
+  end
+
+  def self.destroy(instances)
+    instances.each do |instance|
+      if instance.exists?
+        instance.destroy
+      end
+    end
+  end
+
+  def initialize
+    @models = Set.new
     @instances = []
   end
 
-  def record
-    raise StandardError "Recording already enabled" if @models.nil?
+  def manage(*models)
+    models.each do |model|
+      #hook new model classes
+      if @models.add? model
 
-    @models.each do |model|
-      original_make = model.method(:make)
-      model.stub(:make) do |*args, &block|
-        result = original_make.call(*args, &block)
-        @instances << result unless result.nil?
-        result
+        # hook make
+        original_make = model.method(:make)
+        model.stub(:make) do |*args, &block|
+          result = original_make.call(*args, &block)
+          @instances << result unless result.nil?
+          result
+        end
+
+        #TODO: make creation of Buildpacks consistent
+        # Buildpacks are currently being created with `make` OR `create`
+        if model == VCAP::CloudController::Buildpack
+          # hook create
+          original_create = model.method(:create)
+          model.stub(:create) do |*args, &block|
+            result = original_create.call(*args, &block)
+            @instances << result unless result.nil?
+            result
+          end
+        end
+
       end
     end
-    @models = nil
+    return self
   end
 
   def destroy
-    raise StandardError "Model instances already destroyed" if @instances.nil?
     @instances.each do |instance|
-      instance.destroy
+      if instance.exists?
+        instance.destroy
+      end
     end
-    @instances = nil
+    @instances = []
   end
 end

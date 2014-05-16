@@ -2,6 +2,17 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Runner do
+
+    before :all do
+      # Clear the default quotas created by the test_helper
+      QuotaDefinition.dataset.destroy
+    end
+
+    after :all do
+      # Restore default quotas
+      VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+    end
+
     let(:valid_config_file_path) { File.join(fixture_path, "config/minimal_config.yml") }
     let(:config_file) { File.new(valid_config_file_path) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
@@ -119,7 +130,6 @@ module VCAP::CloudController
         context "when the insert seed flag is passed in" do
           let(:argv) { ["-s"] }
           before do
-            QuotaDefinition.dataset.destroy
             Stack.stub(:configure)
           end
 

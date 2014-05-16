@@ -2,6 +2,22 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::BuildpacksController, type: :controller do
+
+    before :all do
+      # TODO: find what's making a ["name-319", 0] buildpack and make it clean it up after its test
+      Buildpack.dataset.destroy
+    end
+
+    before do
+      @model_manger = ModelManager.manage(
+          Buildpack
+      )
+    end
+
+    after do
+      @model_manger.destroy
+    end
+
     describe "/v2/buildpacks" do
       let(:user) { make_user }
       let(:req_body) { Yajl::Encoder.encode({:name => "dynamic_test_buildpack"}) }
@@ -55,7 +71,7 @@ module VCAP::CloudController
       context "GET" do
         let!(:buildpack) do
           should_have_been_1 = 0
-          VCAP::CloudController::Buildpack.create_from_hash(name: "get_buildpack", key: "xyz", position: should_have_been_1)
+          Buildpack.create_from_hash(name: "get_buildpack", key: "xyz", position: should_have_been_1)
         end
 
         describe "/v2/buildpacks/:guid" do
@@ -100,12 +116,12 @@ module VCAP::CloudController
       context "UPDATE" do
         let!(:buildpack1) do
           should_have_been_1 = 5
-          VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", filename: "a", position: should_have_been_1})
+          Buildpack.create({name: "first_buildpack", key: "xyz", filename: "a", position: should_have_been_1})
         end
 
         let!(:buildpack2) do
           should_have_been_2 = 10
-          VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", filename: "b", position: should_have_been_2})
+          Buildpack.create({name: "second_buildpack", key: "xyz", filename: "b", position: should_have_been_2})
         end
 
         it "returns NOT AUTHORIZED (403) for non admins" do
@@ -153,7 +169,7 @@ module VCAP::CloudController
 
       context "DELETE" do
         let!(:buildpack1) do
-          VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 1})
+          Buildpack.create({name: "first_buildpack", key: "xyz", position: 1})
         end
 
         before { Delayed::Worker.delay_jobs = false }
@@ -199,12 +215,12 @@ module VCAP::CloudController
         context "positions are adjusted" do
           let!(:buildpack2) do
             should_have_been_2 = 10
-            VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: should_have_been_2})
+            Buildpack.create({name: "second_buildpack", key: "xyz", position: should_have_been_2})
           end
 
           let!(:buildpack3) do
             should_have_been_3 = 15
-            VCAP::CloudController::Buildpack.create({name: "third_buildpack", key: "xyz", position: should_have_been_3})
+            Buildpack.create({name: "third_buildpack", key: "xyz", position: should_have_been_3})
           end
 
           it "shifts all buildpacks down" do

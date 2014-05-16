@@ -3,6 +3,17 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::Space, type: :model do
+
+    before do
+      @model_manger = ModelManager.manage(
+          Organization, Space, PrivateDomain, SharedDomain, AppFactory, ManagedServiceInstance, Route
+      )
+    end
+
+    after do
+      @model_manger.destroy
+    end
+
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :organization],
       :unique_attributes   => [ [:organization, :name] ],
@@ -236,16 +247,6 @@ module VCAP::CloudController
     end
 
     describe "#domains (eager loading)" do
-      before do
-        @model_manger = VCAP::CloudController::ModelManager.new(
-            Space, PrivateDomain, SharedDomain
-        )
-        @model_manger.record
-      end
-
-      after do
-        @model_manger.destroy
-      end
 
       it "is able to eager load domains" do
         space = Space.make
