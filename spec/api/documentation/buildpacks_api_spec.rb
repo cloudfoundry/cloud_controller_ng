@@ -27,20 +27,13 @@ resource "Buildpacks (experimental)", :type => :api do
     end
   end
 
-  put "/v2/buildpacks" do
+  put "/v2/buildpacks/:guid" do
     example "Change the position of a buildpack" do
-      first = <<-DOC
+      explanation <<-DOC
         Buildpacks are maintained in an ordered list.  If the target position is already occupied,
         the entries will be shifted down the list to make room.  If the target position is beyond
         the end of the current list, the buildpack will be positioned at the end of the list.
       DOC
-
-      second = <<-DOC
-        Position 0 indicates an unpriorized buildpack.  Unprioritized buildpacks will be treated
-        as if the are at the end of the list.  No ordering is implied across unprioritized buildpacks.
-      DOC
-
-      explanation [{explanation: first}, {explanation: second}]
 
       expect {
         client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(position: 3), headers
