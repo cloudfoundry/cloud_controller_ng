@@ -13,16 +13,6 @@ module VCAP::CloudController
       VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
     end
 
-    before do
-      @model_manger = ModelManager.manage(
-          PrivateDomain, SharedDomain, Organization, QuotaDefinition, Route
-      )
-    end
-
-    after do
-      @model_manger.destroy
-    end
-
     describe ".create_seed_stacks" do
       it "populates stacks" do
         Stack.should_receive(:populate)

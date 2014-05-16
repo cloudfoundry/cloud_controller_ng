@@ -4,16 +4,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::Space, type: :model do
 
-    before do
-      @model_manger = ModelManager.manage(
-          Organization, Space, PrivateDomain, SharedDomain, AppFactory, ManagedServiceInstance, Route
-      )
-    end
-
-    after do
-      @model_manger.destroy
-    end
-
     it_behaves_like "a CloudController model", {
       :required_attributes => [:name, :organization],
       :unique_attributes   => [ [:organization, :name] ],

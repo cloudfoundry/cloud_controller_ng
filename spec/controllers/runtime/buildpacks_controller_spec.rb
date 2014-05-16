@@ -8,16 +8,6 @@ module VCAP::CloudController
       Buildpack.dataset.destroy
     end
 
-    before do
-      @model_manger = ModelManager.manage(
-          Buildpack
-      )
-    end
-
-    after do
-      @model_manger.destroy
-    end
-
     describe "/v2/buildpacks" do
       let(:user) { make_user }
       let(:req_body) { Yajl::Encoder.encode({:name => "dynamic_test_buildpack"}) }

@@ -2,6 +2,10 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "Quota Definitions", type: :api do
+  before do
+    VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+  end
+
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
 

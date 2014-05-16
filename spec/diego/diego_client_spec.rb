@@ -14,7 +14,8 @@ module VCAP::CloudController
       double("blobstore_url_generator",
              :droplet_download_url => "app_uri",
              :buildpack_cache_download_url => "http://buildpack-artifacts-cache.com",
-             :app_package_download_url => "http://app-package.com"
+             :app_package_download_url => "http://app-package.com",
+             :admin_buildpack_download_url => "https://google.com"
       )
     end
 

@@ -86,7 +86,6 @@ module ControllerHelpers
 
         before do
           model_class = opts[:model]
-          @model_manager = ModelManager.manage(model_class)
 
           # force creation of the admin user used in the headers
           admin_headers
@@ -94,10 +93,6 @@ module ControllerHelpers
           num_to_create.times do
             model_class.make
           end
-        end
-
-        after do
-          @model_manager.destroy
         end
 
         context "without inlined relations" do

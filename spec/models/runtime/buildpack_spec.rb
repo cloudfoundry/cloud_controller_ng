@@ -9,14 +9,6 @@ module VCAP::CloudController
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end
 
-    before do
-      @model_manager = ModelManager.manage(Buildpack)
-    end
-
-    after do
-      @model_manager.destroy
-    end
-
     describe "validations" do
       it "enforces unique names" do
         Buildpack.make(name: "my_custom_buildpack")

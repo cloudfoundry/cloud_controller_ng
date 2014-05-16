@@ -4,16 +4,6 @@ module VCAP::CloudController
   describe Domain do
     describe "#spaces_sti_eager_load (eager loading)" do
 
-      before do
-        @model_manger = ModelManager.manage(
-            PrivateDomain, SharedDomain, Space
-        )
-      end
-
-      after do
-        @model_manger.destroy
-      end
-
       it "is able to eager load spaces" do
         domain = PrivateDomain.make
         org = domain.owning_organization

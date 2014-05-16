@@ -4,16 +4,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe Organization, type: :model do
 
-    before do
-      @model_manger = ModelManager.manage(
-          QuotaDefinition, PrivateDomain, SharedDomain, Organization, Space, User, ManagedServiceInstance, ServicePlanVisibility
-      )
-    end
-
-    after do
-      @model_manger.destroy
-    end
-
     it_behaves_like "a CloudController model", {
       required_attributes: :name,
       unique_attributes: :name,

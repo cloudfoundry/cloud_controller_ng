@@ -607,9 +607,7 @@ RSpec.configure do |rspec_config|
         $spec_env.reset_database_with_seeds
       end
     else
-      Sequel::Model.db.transaction(rollback: :always) do
-        example.run
-      end
+      db.transaction(:rollback=>:always, :auto_savepoint=>true){example.run}
     end
   end
 end
@@ -620,66 +618,4 @@ end
 # is de facto by id. In postgres the order is random unless specified.
 class VCAP::CloudController::App
   set_dataset dataset.order(:guid)
-end
-
-# ModelManager manages created Sequel::Model instances
-# Manage each of the model classes you expect to use
-# The `make` method will be hooked and the created instances will be remembered
-# When `destroy` is called on the Manager, all managed instances will be destroyed.
-class VCAP::CloudController::ModelManager
-
-  def self.manage(*models)
-    return self.new.manage(*models)
-  end
-
-  def self.destroy(instances)
-    instances.each do |instance|
-      if instance.exists?
-        instance.destroy
-      end
-    end
-  end
-
-  def initialize
-    @models = Set.new
-    @instances = []
-  end
-
-  def manage(*models)
-    models.each do |model|
-      #hook new model classes
-      if @models.add? model
-
-        # hook make
-        original_make = model.method(:make)
-        model.stub(:make) do |*args, &block|
-          result = original_make.call(*args, &block)
-          @instances << result unless result.nil?
-          result
-        end
-
-        # hook create, if it exists
-        if model.respond_to?(:create)
-          original_create = model.method(:create)
-          model.stub(:create) do |*args, &block|
-            result = original_create.call(*args, &block)
-            @instances << result unless result.nil?
-            result
-          end
-        end
-
-      end
-    end
-    return self
-  end
-
-  def destroy
-    # destroy instances in the reverse order they were created to handle dependencies / foreign-key constraints
-    @instances.reverse.each do |instance|
-      if instance.exists?
-        instance.destroy
-      end
-    end
-    @instances = []
-  end
 end
