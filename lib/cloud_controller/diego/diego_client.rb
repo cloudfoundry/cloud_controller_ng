@@ -30,6 +30,7 @@ module VCAP::CloudController
           stack: app.stack.name,
           start_command: app.command || app.current_droplet.detected_start_command,
           environment: environment(app),
+          num_instances: app.instances,
       }
     end
 

@@ -5,6 +5,7 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:app) do
       app = AppFactory.make
+      app.instances = 3
       app.environment_json = {APP_KEY: "APP_VAL"}
       app
     end
@@ -37,7 +38,8 @@ module VCAP::CloudController
             droplet_uri: "app_uri",
             stack: app.stack.name,
             start_command: "./some-detected-command",
-            environment: client.environment(app)
+            environment: client.environment(app),
+            num_instances: 3
         }
 
         expect(message_bus.published_messages).to have(1).messages
@@ -61,7 +63,8 @@ module VCAP::CloudController
               droplet_uri: "app_uri",
               stack: app.stack.name,
               start_command: "/a/custom/command",
-              environment: client.environment(app)
+              environment: client.environment(app),
+              num_instances: 3
           }
 
           expect(message_bus.published_messages).to have(1).messages
