@@ -658,10 +658,8 @@ class VCAP::CloudController::ModelManager
           result
         end
 
-        #TODO: make creation of Buildpacks consistent
-        # Buildpacks are currently being created with `make` OR `create`
-        if model == VCAP::CloudController::Buildpack
-          # hook create
+        # hook create, if it exists
+        if model.respond_to?(:create)
           original_create = model.method(:create)
           model.stub(:create) do |*args, &block|
             result = original_create.call(*args, &block)
@@ -676,7 +674,8 @@ class VCAP::CloudController::ModelManager
   end
 
   def destroy
-    @instances.each do |instance|
+    # destroy instances in the reverse order they were created to handle dependencies / foreign-key constraints
+    @instances.reverse.each do |instance|
       if instance.exists?
         instance.destroy
       end
