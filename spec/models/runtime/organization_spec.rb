@@ -356,5 +356,39 @@ module VCAP::CloudController
         }.to have_queried_db_times(//, 0)
       end
     end
+
+    describe "#remove_user" do
+      let(:user) { User.make }
+      let(:org)  { Organization.make(:user_guids => [user.guid]) }
+
+      it "raises an error if the user developer spaces are associated with an organization space" do
+        space = Space.make(organization: org, :developer_guids => [user.guid])
+        user.spaces.should == [space]
+        expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+      end
+
+      it "raises an error if the user manged spaces are associated with an organization space" do
+        space = Space.make(organization: org, :manager_guids => [user.guid])
+        user.managed_spaces.should == [space]
+        expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+      end
+
+      it "raises an error if the user audited spaces are associated with an organization space" do
+        space = Space.make(organization: org, :auditor_guids => [user.guid])
+        user.audited_spaces.should == [space]
+        expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+      end
+
+      it "raises an error if any user space is associated with any organization space" do
+        space1 = Space.make(organization: org)
+        space2 = Space.make(organization: org, :manager_guids => [user.guid])
+        expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+      end
+
+      it "removes the user if they are not associated with any space associated with the organization spaces" do
+        space = Space.make(organization: org)
+        expect { org.remove_user(user) }.to change{ org.user_guids }.from([user.guid]).to([])
+      end
+    end
   end
 end
