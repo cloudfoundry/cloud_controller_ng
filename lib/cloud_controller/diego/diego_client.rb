@@ -21,7 +21,7 @@ module VCAP::CloudController
     end
 
     def staging_needed(app)
-      staging_enabled(app) && app.needs_staging?
+      staging_enabled(app) && (app.needs_staging? || app.detected_start_command.empty?)
     end
 
     def send_desire_request(app)
