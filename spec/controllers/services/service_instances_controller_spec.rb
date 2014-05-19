@@ -193,10 +193,12 @@ module VCAP::CloudController
         end
 
         it 'creates a CREATED service usage event' do
-          instance = create_service_instance
+          instance = nil
+          expect {
+            instance = create_service_instance
+          }.to change{ServiceUsageEvent.count}.by(1)
 
           event = ServiceUsageEvent.last
-          expect(ServiceUsageEvent.count).to eq(1)
           expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
           expect(event).to match_service_instance(instance)
         end
@@ -483,11 +485,11 @@ module VCAP::CloudController
         end
 
         it 'creates a DELETED service usage event' do
-          delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
-
+          expect {
+            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+          }.to change{ServiceUsageEvent.count}.by(1)
           event = ServiceUsageEvent.last
           # expect 2 events: CREATED and DELETED
-          expect(ServiceUsageEvent.count).to eq(2)
           expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
           expect(event).to match_service_instance(service_instance)
         end
