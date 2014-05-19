@@ -11,7 +11,10 @@ module VCAP::CloudController
       attribute :dashboard_url, String, exclude_in: [:create, :update]
     end
 
-    query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name
+    query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name, :organization_guid
+    # added :organization_guid here for readability, it is actually implemented as a search filter
+    # in the #get_filtered_dataset_for_enumeration method because ModelControl does not support
+    # searching on parameters that are not directly associated with the model
 
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
@@ -130,6 +133,23 @@ module VCAP::CloudController
     delete "/v2/service_instances/:guid", :delete
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
+    end
+
+    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+      single_filter = opts[:q]
+
+      if single_filter && single_filter.start_with?('organization_guid')
+        org_guid = single_filter.split(':')[1]
+
+        Query.
+          filtered_dataset_from_query_params(model, ds, qp, { q: '' }).
+          select_all(:service_instances).
+          left_join(:spaces, id: :service_instances__space_id).
+          left_join(:organizations, id: :spaces__organization_id).
+          where(:organizations__guid => org_guid)
+      else
+        super(model, ds, qp, opts)
+      end
     end
 
     define_messages

@@ -3,9 +3,11 @@ require 'rspec_api_documentation/dsl'
 
 resource "Service Instances", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+  let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
   authenticated_request
+
+  standard_model_list :service_instance, VCAP::CloudController::ServiceInstancesController
 
   get "/v2/service_instances/:guid/permissions" do
     field :guid, "The guid of the service instance", required: true, example_values: %w(6c4bd80f-4593-41d1-a2c9-b20cb65ec76e)

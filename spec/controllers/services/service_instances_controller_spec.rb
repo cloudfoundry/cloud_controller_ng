@@ -322,8 +322,6 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_instances' do
-      let(:space) { Space.make }
-      let(:developer) { make_developer_for_space(space) }
       let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
 
       it "shows the dashboard_url if there is" do
@@ -347,6 +345,17 @@ module VCAP::CloudController
           get "v2/service_instances?q=name:#{service_instance.name}", {}, admin_headers
           last_response.status.should == 200
           first_found_instance.fetch('entity').fetch('name').should == service_instance.name
+        end
+
+        it 'allows filtering by organization_guid' do
+          ManagedServiceInstance.make(name: 'other')
+          org_guid = service_instance.space.organization.guid
+
+          get "v2/service_instances?q=organization_guid:#{org_guid}", {}, admin_headers
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
         end
 
         it 'allows filtering by space_guid' do
