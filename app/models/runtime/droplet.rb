@@ -43,7 +43,7 @@ module VCAP::CloudController
       blobstore.blob(new_blobstore_key) || blobstore.blob(old_blobstore_key)
     end
 
-    def update_staging_complete(detected_start_command)
+    def update_start_command(detected_start_command)
       update(detected_start_command: detected_start_command)
     end
 
