@@ -1,7 +1,7 @@
 require "spec_helper"
 require "securerandom"
 
-describe "Sequel::Plugins::VcapSerialization" do
+describe "Sequel::Plugins::VcapSerialization", non_transactional: true do
   before do
     db.create_table :test do
       primary_key :id
@@ -14,10 +14,6 @@ describe "Sequel::Plugins::VcapSerialization" do
     @c = Class.new(Sequel::Model)
     @c.plugin :vcap_serialization
     @c.set_dataset(db[:test])
-  end
-
-  after do
-    db.drop_table :test
   end
 
   describe "#default_order_by" do

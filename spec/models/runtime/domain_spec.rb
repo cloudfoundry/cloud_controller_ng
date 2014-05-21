@@ -3,6 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe Domain do
     describe "#spaces_sti_eager_load (eager loading)" do
+      before { SharedDomain.dataset.delete }
 
       it "is able to eager load spaces" do
         domain = PrivateDomain.make

@@ -2,9 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Buildpack, type: :model do
-
-    class TestError < StandardError; end
-
     def get_bp_ordered
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end
@@ -169,15 +166,8 @@ module VCAP::CloudController
         end
 
         it "must be transactional so that shifting positions remains consistent" do
-          expect {
-            expect{
-              Buildpack.create(name: "new_buildpack", key: "abcdef", position: 2) do
-                  raise TestError.new "intentional error during Buildpack.create"
-              end
-            }.to raise_error(TestError)
-          }.not_to change {
-            get_bp_ordered
-          }.from([["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]])
+          expect(Buildpack.db).to receive(:transaction).exactly(2).times.and_yield
+          Buildpack.create(name: "new_buildpack", key: "abcdef", position: 2)
         end
 
         context "with a specified position" do
@@ -279,26 +269,14 @@ module VCAP::CloudController
       end
 
       it "must be transactional so that shifting positions remains consistent" do
-        buildpack = buildpacks[3]
-        allow(buildpack).to receive(:update_from_hash) do
-          raise TestError.new "intentional error during Buildpack.update"
-        end
-
-        expect {
-          expect{
-            Buildpack.update(buildpack, position: 2)
-          }.to raise_error(TestError)
-        }.not_to change {
-          get_bp_ordered
-        }.from([["name_100", 1], ["name_99", 2], ["name_98", 3], ["name_97", 4]])
+        transactions_added_by_sequel = 1
+        expect(Buildpack.db).to receive(:transaction).exactly(transactions_added_by_sequel + 1).times.and_yield
+        Buildpack.update(buildpacks[3], position: 2)
       end
 
       it "has to do a SELECT FOR UPDATE" do
-        allow(Buildpack).to receive(:for_update).and_call_original
-
+        expect(Buildpack).to receive(:for_update).exactly(1).and_call_original
         Buildpack.update(buildpacks[3], position: 2)
-
-        expect(Buildpack).to have_received(:for_update).exactly(1)
       end
 
       it "locks the last row" do
@@ -417,8 +395,8 @@ module VCAP::CloudController
     end
 
     describe "destroy" do
-      let!(:buildpack1) { Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
-      let!(:buildpack2) { Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({name: "first_buildpack", key: "xyz", position: 5}) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", position: 10}) }
 
       it "removes the specified buildpack" do
         expect {

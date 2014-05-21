@@ -12,7 +12,7 @@ rvm:
   - 1.9.3-p545
 
 script:
-  - bundle exec rake ci:$TASK[$SEED]
+  - bundle exec parallel_rspec spec$SUB -s 'integration|acceptance' -n $THREADS -o "--format $FORMAT --order rand:$RANDOM"
   - bundle exec rake rubocop
 
 env:
@@ -21,6 +21,7 @@ env:
     - secure: "qUgIq/nxPuqWLPu4szGAq6qX9X32nu0OVeDHeBxihtgYJTy4EkY7F/CWFVbk\njOB9QA5kM48cj1K2QTNLskqaI6zDIfkFQNHN8rqQRcaZsF4TuoeaH1q9b6LD\nSmQ6zJ6WVbI/5OODyQWKTrZrKEIqXrf7CETjIUsaHCeCX4LEaxQ=" # CLIENT_BASIC
     - secure: "e5ipMUQt3JU3irnu3aCWUUi9v+F/GBRsyO8H05h4kNBmAgOt6kWJ9qnqV3xs\n/ElTiO2QO4a2PAyBeYdvnxgMFW4JmuKQ+PnFFqFerL6yK79UIcgKTkyZB1EJ\n8eY2j2dlfCI6dbG5Y+nW/aERk04Y51C5/1tveX0QEDv8dSfOLFk=" # CLIENT_SDK
     - secure: "Rz6G1Iwf4wkiUM9C/v2dzza9ZO5iyrIC9971VAF5vQxGHvm4YdDZali/vvsH\nsoYfMmZPabQIjPBVKKVMPDgQAjCcLaBn96hDYHeT5Ueh93cbcS/Xr8Bd/cBu\n1ZohrzIjth6/a0EX9urv8UeB6oIrqD3SaXRoGAOb8eiSoviPXHI=" # CLIENT_SQLPLUS
+#   - secure: "P5OhdFmceSPln40trVus+haLWq+3prl4+26zXtHPOMrPTmUAssYpzNxCn/fh\nnxzez9Y4D+NV98+BpM2PwBlGpcmVZd2MmcdcRgIPZCN0y+t7QQ9qjTYjMEKM\nsoUUa5W/kKD0JCTINtdqWMzPu3gcEuwmF3hIpCj0m0W7TsZCyS4=" # DB URL
 
     # API Docs
     - "ARTIFACTS_S3_BUCKET=cc-travis-api-doc"
@@ -28,9 +29,11 @@ env:
     - secure: "E3wLDMLQxIIVxpXA4IPV/pPf/AiHUlcJTvOa1o4Nm5o/c6TDrO/6dR0i183ahhjBzRWAE6no2YGjSGDY6ALZnkVc8DL6UGyAPwy1AMYBSptReOVmZBwbKYWiQOm89Crn7qSUo6tsEvp7CPckTbV9qA1SxGF/gxvvRGoKdYtDBIA=" # ARTIFACTS_AWS_ACCESS_KEY_ID
     - secure: "C+wpbEL7q16vH/V2WmHnw6ZPmVMF74B5RLBYrz0F1WiXOPWh84PGlBjLaNB+/X8X1Aw3AUHaTOtUaf8Exb/FQjzL8bUxgwFRJUOztwfsg+aU1ddGc2MsL8oXamnjSkJZMvEONSHKUG3DpkGctI8sl2gitSwJe6vNQDEjf1xq5ro=" # ARTIFACTS_AWS_SECRET_ACCESS_KEY
   matrix:
-    - SEED=31316   TASK="spec"     DB=mysql    DB_CONNECTION="mysql2://root@localhost:3306"
-    - SEED=18604   TASK="spec"     DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432"
-    - SEED=$RANDOM TASK="api_docs" DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432"
+    - DB=mysql DB_CONNECTION="mysql2://root@localhost:3306" FORMAT=progress THREADS=3
+    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" FORMAT=progress THREADS=3
+    - DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432" SUB="/api" FORMAT=RspecApiDocumentation::ApiFormatter THREADS=1
+#   - DB=sqlite FORMATTER=progress
+#   - DB=oracle ORACLE_BASE=/opt/oracle ORACLE_HOME=$ORACLE_BASE/instantclient_11_2 LD_LIBRARY_PATH=${ORACLE_HOME}:${LD_LIBRARY_PATH} FORMATTER=progress
 
 before_install:
   - sh -c "if [ '$DB' = 'oracle' ];   then spec/bin/install_oracle_travis.sh; fi"

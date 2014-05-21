@@ -78,20 +78,12 @@ module ControllerHelpers
   shared_examples "enumerating objects" do |opts|
     describe "enumerating objects" do
       describe "with 8 objects" do
-
-        before :all do
-          #TODO why do we have to flush these? Find who leaks them and add cleanup!
-          opts[:model].dataset.destroy
-        end
-
         before do
-          model_class = opts[:model]
-
           # force creation of the admin user used in the headers
           admin_headers
-          num_to_create = 8 - model_class.count
+          num_to_create = 8 - opts[:model].count
           num_to_create.times do
-            model_class.make
+            opts[:model].make
           end
         end
 

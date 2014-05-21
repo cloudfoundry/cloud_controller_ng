@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe "Sequel::Plugins::VcapRelations" do
+describe "Sequel::Plugins::VcapRelations", non_transactional: true do
   before do
     db.create_table :owners do
       primary_key :id
@@ -63,12 +63,6 @@ describe "Sequel::Plugins::VcapRelations" do
     define_model :Top, db
     define_model :Middle, db
     define_model :Bottom, db
-  end
-
-  after do
-    [:dogs_names, :dogs, :names, :owners, :bottoms, :middles, :tops].each do |table_name|
-      db.drop_table table_name
-    end
   end
 
   let(:owner_klass) { self.class.const_get(:Owner) }

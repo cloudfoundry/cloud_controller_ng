@@ -567,10 +567,6 @@ RSpec.configure do |rspec_config|
     :file_path => rspec_config.escaped_path(%w[spec api])
   }
 
-  rspec_config.before :suite do
-    $spec_env.reset_database_with_seeds
-  end
-
   rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
 
@@ -607,7 +603,9 @@ RSpec.configure do |rspec_config|
         $spec_env.reset_database_with_seeds
       end
     else
-      db.transaction(:rollback=>:always, :auto_savepoint=>true){example.run}
+      Sequel::Model.db.transaction(rollback: :always, savepoint: true) do
+        example.run
+      end
     end
   end
 end

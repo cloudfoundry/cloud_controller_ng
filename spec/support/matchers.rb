@@ -131,8 +131,4 @@ RSpec::Matchers.define :allow_op_on_object do |op, object|
   failure_message_for_should do
     "Expected to be able to perform operation #{op} on object #{object}"
   end
-
-  description do
-    "should allow #{op}_with_token and #{op} on #{object}"
-  end
 end

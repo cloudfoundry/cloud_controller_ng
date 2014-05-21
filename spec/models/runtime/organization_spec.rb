@@ -3,7 +3,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Organization, type: :model do
-
     it_behaves_like "a CloudController model", {
       required_attributes: :name,
       unique_attributes: :name,
@@ -283,6 +282,8 @@ module VCAP::CloudController
     end
 
     describe "#domains (eager loading)" do
+      before { SharedDomain.dataset.delete }
+
       it "is able to eager load domains" do
         org = Organization.make
         private_domain1 = PrivateDomain.make(owning_organization: org)

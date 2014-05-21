@@ -1,7 +1,7 @@
 require "spec_helper"
 require "vcap/sequel_case_insensitive_string_monkeypatch"
 
-describe "String :name" do
+describe "String :name", non_transactional: true do
   let(:table_name) { :test }
 
   context "with default options" do
@@ -14,10 +14,6 @@ describe "String :name" do
       @c = Class.new(Sequel::Model)
       @c.set_dataset(db[table_name])
       @c.create(:str => "abc")
-    end
-
-    after do
-      db.drop_table table_name
     end
 
     it "should allow create with different case" do
@@ -40,10 +36,6 @@ describe "String :name" do
       @c = Class.new(Sequel::Model)
       @c.set_dataset(db[table_name])
       @c.create(:str => "abc")
-    end
-
-    after do
-      db.drop_table table_name
     end
 
     it "should allow create with different case" do
@@ -72,17 +64,13 @@ describe "String :name" do
       @c.create(:str => "abc")
     end
 
-    after do
-      db.drop_table table_name
-    end
-
     it "should not allow create with different case due to sequel validations" do
       expect {
         @c.create(:str => "ABC")
       }.to raise_error(Sequel::ValidationFailed)
     end
 
-    it "should not allow create with different case due to db constraints", non_transactional: true do
+    it "should not allow create with different case due to db constraints" do
       expect {
         @c.new(:str => "ABC").save(:validate => false)
       }.to raise_error(Sequel::DatabaseError)
@@ -100,10 +88,6 @@ describe "String :name" do
         primary_key :id
         String :str, :unique => true
       end
-    end
-
-    after do
-      db.drop_table table_name
     end
 
     context "with defaults" do
