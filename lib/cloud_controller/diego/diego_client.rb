@@ -32,6 +32,7 @@ module VCAP::CloudController
           environment: environment(app),
           num_instances: app.instances,
           routes: app.uris,
+          health_check_timeout_in_seconds: app.health_check_timeout,
       }
     end
 

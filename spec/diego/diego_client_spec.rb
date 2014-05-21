@@ -16,6 +16,7 @@ module VCAP::CloudController
       app.space.add_route(route2)
       app.add_route(route1)
       app.add_route(route2)
+      app.health_check_timeout = 120
       app
     end
 
@@ -31,6 +32,23 @@ module VCAP::CloudController
     subject(:client) { DiegoClient.new(message_bus, blobstore_url_generator) }
 
     describe "desiring an app" do
+      let(:expected_message) do
+        {
+          app_id: app.guid,
+          app_version: app.version,
+          memory_mb: app.memory,
+          disk_mb: app.disk_quota,
+          file_descriptors: app.file_descriptors,
+          droplet_uri: "app_uri",
+          stack: app.stack.name,
+          start_command: "./some-detected-command",
+          environment: client.environment(app),
+          num_instances: 3,
+          routes: ["some-route.some-domain.com", "some-other-route.some-domain.com"],
+          health_check_timeout_in_seconds: 120,
+        }
+      end
+
       before do
         app.add_new_droplet("lol")
         app.current_droplet.update_staging_complete("./some-detected-command")
@@ -38,20 +56,6 @@ module VCAP::CloudController
 
       it "sends a nats message with the appropriate subject and payload" do
         client.send_desire_request(app)
-
-        expected_message = {
-            app_id: app.guid,
-            app_version: app.version,
-            memory_mb: app.memory,
-            disk_mb: app.disk_quota,
-            file_descriptors: app.file_descriptors,
-            droplet_uri: "app_uri",
-            stack: app.stack.name,
-            start_command: "./some-detected-command",
-            environment: client.environment(app),
-            num_instances: 3,
-            routes: ["some-route.some-domain.com", "some-other-route.some-domain.com"],
-        }
 
         expect(message_bus.published_messages).to have(1).messages
         nats_message = message_bus.published_messages.first
@@ -61,25 +65,11 @@ module VCAP::CloudController
 
       context "with a custom start command" do
         before { app.command = "/a/custom/command"; app.save }
+        before { expected_message[:start_command] = "/a/custom/command" }
 
         it "sends a message with the custom start command" do
           client.send_desire_request(app)
 
-          expected_message = {
-              app_id: app.guid,
-              app_version: app.version,
-              memory_mb: app.memory,
-              disk_mb: app.disk_quota,
-              file_descriptors: app.file_descriptors,
-              droplet_uri: "app_uri",
-              stack: app.stack.name,
-              start_command: "/a/custom/command",
-              environment: client.environment(app),
-              num_instances: 3,
-              routes: ["some-route.some-domain.com", "some-other-route.some-domain.com"],
-          }
-
-          expect(message_bus.published_messages).to have(1).messages
           nats_message = message_bus.published_messages.first
           expect(nats_message[:subject]).to eq("diego.desire.app")
           expect(nats_message[:message]).to eq(expected_message)
