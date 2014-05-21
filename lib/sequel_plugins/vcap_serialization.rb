@@ -26,7 +26,7 @@ module Sequel::Plugins::VcapSerialization
             hash[k.to_s] = nil
           else
             if !redact_vals.nil? && redact_vals.include?(k.to_s)
-              hash[k.to_s] = '[PRIVATE DATA HIDDEN]'
+              hash[k.to_s] = {redacted_message: '[PRIVATE DATA HIDDEN]'}
             else
               hash[k.to_s] = value
             end

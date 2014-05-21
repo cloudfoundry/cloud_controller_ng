@@ -108,22 +108,22 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
 
     it "does not redact creds for an admin" do
       allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
-      expect(service_instance.to_hash['credentials']).not_to eq('[PRIVATE DATA HIDDEN]')
+      expect(service_instance.to_hash['credentials']).not_to eq({ :redacted_message => '[PRIVATE DATA HIDDEN]' })
     end
 
     it "does not redact creds for a space developer" do
       allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
-      expect(service_instance.to_hash['credentials']).not_to eq('[PRIVATE DATA HIDDEN]')
+      expect(service_instance.to_hash['credentials']).not_to eq({ :redacted_message => '[PRIVATE DATA HIDDEN]' })
     end
 
     it "redacts creds for a space auditor" do
       allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(auditor)
-      expect(service_instance.to_hash(opts)['credentials']).to eq('[PRIVATE DATA HIDDEN]')
+      expect(service_instance.to_hash(opts)['credentials']).to eq({ :redacted_message => '[PRIVATE DATA HIDDEN]' })
     end
 
     it "redacts creds for a space user" do
       allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
-      expect(service_instance.to_hash(opts)['credentials']).to eq('[PRIVATE DATA HIDDEN]')
+      expect(service_instance.to_hash(opts)['credentials']).to eq({ :redacted_message => '[PRIVATE DATA HIDDEN]' })
     end
   end
 

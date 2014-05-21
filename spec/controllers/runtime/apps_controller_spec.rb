@@ -566,7 +566,7 @@ module VCAP::CloudController
             get '/v2/apps?inline-relations-depth=2', {}, json_headers(headers_for(auditor, {scopes: ['cloud_controller.read']}))
             expect(last_response.status).to eql(200)
 
-            expect(decoded_response["resources"].first["entity"]["environment_json"]).to eq('[PRIVATE DATA HIDDEN]')
+            expect(decoded_response["resources"].first["entity"]["environment_json"]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
             expect(decoded_response).not_to have_key("system_env_json")
           end
         end
