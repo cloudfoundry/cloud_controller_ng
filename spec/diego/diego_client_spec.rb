@@ -3,10 +3,19 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::DiegoClient do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
+
+    let(:domain) { SharedDomain.make(name: "some-domain.com") }
+    let(:route1) { Route.make(host: "some-route", domain: domain) }
+    let(:route2) { Route.make(host: "some-other-route", domain: domain) }
+
     let(:app) do
       app = AppFactory.make
       app.instances = 3
       app.environment_json = {APP_KEY: "APP_VAL"}
+      app.space.add_route(route1)
+      app.space.add_route(route2)
+      app.add_route(route1)
+      app.add_route(route2)
       app
     end
 
@@ -40,7 +49,8 @@ module VCAP::CloudController
             stack: app.stack.name,
             start_command: "./some-detected-command",
             environment: client.environment(app),
-            num_instances: 3
+            num_instances: 3,
+            routes: ["some-route.some-domain.com", "some-other-route.some-domain.com"],
         }
 
         expect(message_bus.published_messages).to have(1).messages
@@ -65,7 +75,8 @@ module VCAP::CloudController
               stack: app.stack.name,
               start_command: "/a/custom/command",
               environment: client.environment(app),
-              num_instances: 3
+              num_instances: 3,
+              routes: ["some-route.some-domain.com", "some-other-route.some-domain.com"],
           }
 
           expect(message_bus.published_messages).to have(1).messages

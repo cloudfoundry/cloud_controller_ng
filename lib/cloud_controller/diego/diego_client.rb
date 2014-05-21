@@ -31,6 +31,7 @@ module VCAP::CloudController
           start_command: app.command || app.current_droplet.detected_start_command,
           environment: environment(app),
           num_instances: app.instances,
+          routes: app.uris,
       }
     end
 
