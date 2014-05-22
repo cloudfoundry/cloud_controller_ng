@@ -38,6 +38,7 @@ module VCAP::CloudController
     end
 
     let(:reply_json_error) { nil }
+    let(:reply_error_info) { nil }
     let(:detected_buildpack) { nil }
     let(:buildpack_key) { nil }
 
@@ -49,6 +50,7 @@ module VCAP::CloudController
         "detected_buildpack" => detected_buildpack,
         "buildpack_key" => buildpack_key,
         "error" => reply_json_error,
+        "error_info" => reply_error_info,
         "droplet_sha1" => "droplet-sha1"
       }
     end
@@ -403,6 +405,10 @@ module VCAP::CloudController
           it "marks the app as having failed to stage" do
             expect { stage }.to change { app.staging_failed? }.to(true)
           end
+
+          it "leaves the app with a generic staging failed reason" do
+            expect { stage }.to change { app.staging_failed_reason }.to("StagingError")
+          end
         end
 
         context "when app staging returned an error response" do
@@ -436,8 +442,25 @@ module VCAP::CloudController
             stage { callback_called = true }
             callback_called.should be_false
           end
+
           it "marks the app as having failed to stage" do
             expect { stage }.to change { app.staging_failed? }.to(true)
+          end
+
+          context "when a staging error is present" do
+            let(:reply_error_info) {{ "type" => "NoAppDetectedError", "message" => "uh oh" }}
+
+            it "sets the staging failed reason to the specified value" do
+              expect { stage }.to change { app.staging_failed_reason }.to("NoAppDetectedError")
+            end
+          end
+
+          context "when a staging error is not present" do
+            let(:reply_error_info) { nil }
+
+            it "sets a generic staging failed reason" do
+              expect { stage }.to change { app.staging_failed_reason }.to("StagingError")
+            end
           end
         end
       end

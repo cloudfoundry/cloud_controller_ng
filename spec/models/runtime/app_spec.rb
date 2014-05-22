@@ -1159,17 +1159,65 @@ module VCAP::CloudController
       end
     end
 
+    describe "#mark_as_failed_to_stage" do
+      let (:app) { AppFactory.make }
+
+      before do
+        app.package_state = "PENDING"
+        app.staging_failed_reason = nil
+      end
+
+      it "should set the package state to failed" do
+        expect {
+          app.mark_as_failed_to_stage
+        }.to change { app.package_state }.to "FAILED"
+      end
+
+      context "when a valid reason is specified" do
+        App::STAGING_FAILED_REASONS.each do |reason|
+          it "sets the requested staging failed reason" do
+            expect {
+              app.mark_as_failed_to_stage(reason)
+            }.to change { app.staging_failed_reason }.to(reason)
+          end
+        end
+      end
+
+      context "when an unexpected reason is specifed" do
+        it "should fail validation" do
+          expect {
+            app.mark_as_failed_to_stage("MyReason")
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+      end
+
+      context "when a reason is not specified" do
+        it "should use the default, generic reason" do
+          expect {
+            app.mark_as_failed_to_stage
+          }.to change { app.staging_failed_reason }. to "StagingError"
+        end
+      end
+    end
+
     describe "#mark_for_restaging" do
       let(:app) { AppFactory.make }
 
       before do
-        app.package_state = "STAGED"
+        app.package_state = "FAILED"
+        app.staging_failed_reason = "StagingError"
       end
 
       it "should set the package state pending" do
         expect {
           app.mark_for_restaging
         }.to change { app.package_state }.to "PENDING"
+      end
+
+      it "should clear the staging failed reason" do
+        expect {
+          app.mark_for_restaging
+        }.to change { app.staging_failed_reason }.to nil
       end
     end
 
