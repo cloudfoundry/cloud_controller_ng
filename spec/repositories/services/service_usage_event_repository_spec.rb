@@ -86,6 +86,12 @@ module VCAP::CloudController
           end
         end
 
+        after do
+          ServiceUsageEvent.dataset.destroy
+          ServiceInstance.dataset.destroy
+          Service.dataset.destroy
+        end
+
         it 'will purge all existing events' do
           ServiceInstance.each { |instance| instance.destroy }
 

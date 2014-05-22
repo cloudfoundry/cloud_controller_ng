@@ -160,8 +160,10 @@ module VCAP::CloudController
       let(:instance) { ManagedServiceInstance.make}
 
       after do
-        ServiceInstance.each { |instance| instance.delete }
-        User.each { |user| user.delete }
+        ServiceUsageEvent.dataset.destroy
+        ServiceInstance.dataset.destroy
+        Service.dataset.destroy
+        User.dataset.destroy
       end
 
       it 'purge all existing events' do
