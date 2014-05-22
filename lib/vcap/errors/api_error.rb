@@ -16,7 +16,12 @@ module VCAP
         formatted_args = args.map do |arg|
           (arg.is_a? Array) ? arg.map(&:to_s).join(', ') : arg.to_s
         end
-        sprintf(details.message_format, *formatted_args)
+
+        begin
+          sprintf(I18n.translate(details.name, raise: true, :locale => I18n.locale), *formatted_args)
+        rescue I18n::MissingTranslationData => e
+          sprintf(details.message_format, *formatted_args)
+        end
       end
 
       def code

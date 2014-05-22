@@ -15,6 +15,7 @@ describe VCAP::CloudController::RestController::BaseController do
       let(:token_decoder) { double(:decoder) }
       let(:header_token) { 'some token' }
       let(:token_info) { {'user_id' => 'some user'} }
+      let(:env) { {'HTTP_ACCEPT_LANGUAGE' => 'en_US'} }
 
       before do
         configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
@@ -25,6 +26,12 @@ describe VCAP::CloudController::RestController::BaseController do
       it "should dispatch the request" do
         expect(subject).to receive(:to_s).with([:a, :b])
         subject.dispatch(:to_s, [:a, :b])
+      end
+
+      it "should record the locale during dispatching the request" do
+        expect(subject).to receive(:to_s).with([:a, :b])
+        subject.dispatch(:to_s, [:a, :b])
+        expect(I18n.locale).to eq(:en_US)
       end
 
       it "should log a debug message" do

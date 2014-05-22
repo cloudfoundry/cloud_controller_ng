@@ -42,6 +42,10 @@ module VCAP::CloudController
         it "sets a default value for app_bits_upload_grace_period_in_seconds" do
           expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(0)
         end
+
+        it "sets a default value for default_loacle" do
+          expect(config[:default_locale]).to eq("en_US")
+        end
       end
 
       context "when config values are provided" do

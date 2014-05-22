@@ -168,6 +168,8 @@ module VCAP::CloudController
         ],
 
         optional(:app_bits_upload_grace_period_in_seconds) => Integer,
+
+        optional(:default_locale) => String
       }
     end
 
@@ -235,6 +237,7 @@ module VCAP::CloudController
         config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
         config[:skip_cert_verify] = false if config[:skip_cert_verify].nil?
         config[:app_bits_upload_grace_period_in_seconds] ||= 0
+        config[:default_locale] ||= "en_US"
         sanitize(config)
       end
 

@@ -1,0 +1,4 @@
+---
+en_US:
+  ServiceInvalid: "This is a translated message of %s %s."
+  MessagePartialTranslated: "This is a translated message of %s %s only in default locale"
