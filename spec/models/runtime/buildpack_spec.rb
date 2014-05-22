@@ -27,7 +27,7 @@ module VCAP::CloudController
 
       before do
         Timecop.freeze # The expiration time of the blobstore uri
-        Buildpack.dataset.delete
+        Buildpack.dataset.destroy
       end
 
       subject(:all_buildpacks) { Buildpack.list_admin_buildpacks }

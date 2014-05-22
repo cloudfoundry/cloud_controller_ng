@@ -282,7 +282,7 @@ module VCAP::CloudController
     end
 
     describe "#domains (eager loading)" do
-      before { SharedDomain.dataset.delete }
+      before { SharedDomain.dataset.destroy }
 
       it "is able to eager load domains" do
         org = Organization.make

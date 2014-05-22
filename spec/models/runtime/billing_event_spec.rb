@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::BillingEvent, type: :model do
     before do
-      BillingEvent.dataset.delete
+      BillingEvent.dataset.destroy
     end
 
     describe ".create" do

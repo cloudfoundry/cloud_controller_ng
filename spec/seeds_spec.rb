@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
       context "when there are no quota definitions" do
         before do
-          QuotaDefinition.dataset.delete
+          QuotaDefinition.dataset.destroy
         end
 
         it "makes them all" do
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
       context "when all the quota definitions exist already" do
         before do
-          QuotaDefinition.dataset.delete
+          QuotaDefinition.dataset.destroy
           Seeds.create_seed_quota_definitions(config)
         end
 
@@ -108,7 +108,7 @@ module VCAP::CloudController
 
       context "when system domain organization exists in the configuration" do
         context "when default quota definition is missing in configuraition" do
-          before { QuotaDefinition.dataset.delete }
+          before { QuotaDefinition.dataset.destroy }
 
           it "raises error" do
             expect do
@@ -119,9 +119,9 @@ module VCAP::CloudController
 
         context "when default quota definition exists" do
           before do
-            QuotaDefinition.dataset.delete
+            QuotaDefinition.dataset.destroy
             QuotaDefinition.make(:name => "default")
-            Organization.dataset.delete
+            Organization.dataset.destroy
           end
 
           it "creates the system organization when the organization does not already exist" do
@@ -173,8 +173,8 @@ module VCAP::CloudController
       end
 
       before do
-        Domain.dataset.delete
-        QuotaDefinition.dataset.delete
+        Domain.dataset.destroy
+        QuotaDefinition.dataset.destroy
         QuotaDefinition.make(:name => "default")
         Seeds.create_seed_organizations(config)
       end
