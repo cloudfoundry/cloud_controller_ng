@@ -89,7 +89,7 @@ Travis currently runs rubocop as part of the CI process.
 
 To genenerate the API documentation
 
-    bundle exec rspec spec/api/documentation --format RspecApiDocumentation::ApiFormatter
+    bundle exec rspec spec/api --format RspecApiDocumentation::ApiFormatter
     open doc/api/index.html
 
 ## Logs
