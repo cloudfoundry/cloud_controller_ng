@@ -19,10 +19,10 @@ module VCAP::CloudController
       it_behaves_like :read_only
     end
 
-    context 'a user that isnt logged in (defensive)' do
+    context 'a user that is not logged in' do
       let(:user) { nil }
       let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
-      it_behaves_like :no_access
+      it_behaves_like :read_only
     end
 
     context 'any user using client without cloud_controller.read' do

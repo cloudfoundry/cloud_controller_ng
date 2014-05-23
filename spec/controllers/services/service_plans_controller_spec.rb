@@ -198,6 +198,26 @@ module VCAP::CloudController
       ServicePlan.make(active: false, public: false)
     end
 
+    it 'displays all service plans' do
+      get "/v2/service_plans", {}, admin_headers
+      expect(last_response.status).to eq 200
+
+      plans = ServicePlan.all
+      expected_plan_guids = plans.map(&:guid)
+      expected_service_guids = plans.map(&:service).map(&:guid).uniq
+
+      returned_plan_guids = decoded_response.fetch('resources').map do |res|
+        res['metadata']['guid']
+      end
+
+      returned_service_guids = decoded_response.fetch('resources').map do |res|
+        res['entity']['service_guid']
+      end
+
+      expect(returned_plan_guids).to eq expected_plan_guids
+      expect(returned_service_guids).to eq expected_service_guids
+    end
+
     context 'when the user is not logged in' do
       let(:headers) { headers_for(nil) }
 
@@ -206,13 +226,19 @@ module VCAP::CloudController
         expect(last_response.status).to eq 200
 
         public_and_active_plans = ServicePlan.where(active: true, public: true).all
-        expected_guids = public_and_active_plans.map(&:guid)
+        expected_plan_guids = public_and_active_plans.map(&:guid)
+        expected_service_guids = public_and_active_plans.map(&:service).map(&:guid).uniq
 
-        returned_guids = decoded_response.fetch('resources').map do |res|
+        returned_plan_guids = decoded_response.fetch('resources').map do |res|
           res['metadata']['guid']
         end
 
-        expect(returned_guids).to eq expected_guids
+        returned_service_guids = decoded_response.fetch('resources').map do |res|
+          res['entity']['service_guid']
+        end
+
+        expect(returned_plan_guids).to eq expected_plan_guids
+        expect(returned_service_guids).to eq expected_service_guids
       end
 
       it 'does not allow the unauthed user to use inline-relations-depth' do

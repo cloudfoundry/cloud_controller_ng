@@ -9,7 +9,6 @@ module VCAP::CloudController
       to_one    :service
       to_many   :service_instances
       attribute :public, Message::Boolean, default: true
-      #attribute :active, Message::Boolean, default: true
     end
 
     query_parameters :active, :service_guid, :service_instance_guid

@@ -60,6 +60,10 @@ module VCAP::CloudController
       {id: plans_I_can_see.map(&:service_id).uniq}
     end
 
+    def self.unauthenticated_visibility_filter
+      {id: self.public_visible.map(&:id)}
+    end
+
     def provider
       provider = self[:provider]
       provider.blank? ? nil : provider

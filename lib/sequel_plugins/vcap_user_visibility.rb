@@ -18,12 +18,16 @@ module Sequel::Plugins::VcapUserVisibility
       elsif user
         user_visibility_filter(user)
       else
-        {:id => nil}
+        unauthenticated_visibility_filter
       end
     end
 
     # this is overridden by models to determine which objects a user can see
     def user_visibility_filter(_)
+      {:id => nil}
+    end
+
+    def unauthenticated_visibility_filter
       {:id => nil}
     end
 
