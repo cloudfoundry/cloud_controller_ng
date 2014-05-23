@@ -174,10 +174,7 @@ module VCAP::CloudController
           expect(parse(last_response.body)['total_results']).to eq(2)
         end
 
-        it 'returns just the inactive plans when filtered for active:false' do
-          # Sequel stores 'true' and 'false' as 't' and 'f' in sqlite, so with
-          # sqlite, instead of 'true' or 'false', the parameter must be specified
-          # as 't' or 'f'. But in postgresql, either way is ok.
+        it 'returns just the inactive plans when filtered for active:f' do
           get '/v2/service_plans?q=active:f', {}, admin_headers
           last_response.status.should eq(200)
           expect(parse(last_response.body)['total_results']).to eq(1)

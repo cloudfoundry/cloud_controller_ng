@@ -20,6 +20,7 @@ resource "Services Plans", type: :api do
   field :unique_id, "A guid for the service plan in the service broker (not the same as the cloud controller guid)", required: false, default: nil
   field :public, "A boolean describing that the plan is visible to the all users", required: false, default: true
   field :service_guid, "The guid of the related service", required: true, example_values: ["deadbeef"]
+  field :active, "A boolean that determines whether plans can be used to create new instances.", required: false, readonly: true, valid_values: [true, false]
 
   standard_model_list(:service_plans, VCAP::CloudController::ServicePlansController)
   standard_model_get(:service_plans)
