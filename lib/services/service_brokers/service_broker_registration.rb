@@ -16,7 +16,7 @@ module VCAP::Services::ServiceBrokers
         synchronize_dashboard_clients!
 
         broker.db.transaction(savepoint: true) do
-          service_manager.sync_services_and_plans
+          synchronize_services_and_plans!
         end
       rescue => e
         broker.destroy
@@ -32,7 +32,7 @@ module VCAP::Services::ServiceBrokers
 
       broker.db.transaction(savepoint: true) do
         broker.save
-        service_manager.sync_services_and_plans
+        synchronize_services_and_plans!
       end
       return self
     end
@@ -54,6 +54,14 @@ module VCAP::Services::ServiceBrokers
 
       if client_manager.has_warnings?
         client_manager.warnings.each { |warning| warnings << warning }
+      end
+    end
+
+    def synchronize_services_and_plans!
+      service_manager.sync_services_and_plans
+
+      if service_manager.has_warnings?
+        service_manager.warnings.each { |warning| warnings << warning }
       end
     end
 

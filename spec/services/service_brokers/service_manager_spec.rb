@@ -53,6 +53,14 @@ module VCAP::Services::ServiceBrokers
     let(:catalog) { V2::Catalog.new(broker, catalog_hash) }
     let(:service_manager) { ServiceManager.new(catalog) }
 
+    describe 'initializing' do
+      subject { described_class.new(catalog) }
+
+      its(:catalog) { should eq catalog }
+      its(:has_warnings?) { should eq false }
+      its(:warnings) { should eq []}
+    end
+
     describe '#sync_services_and_plans' do
       it 'creates services from the catalog' do
         expect {
@@ -232,14 +240,41 @@ module VCAP::Services::ServiceBrokers
           end
 
           context 'when an instance for the plan exists' do
-            it 'marks the existing plan as inactive' do
+            let(:plan2_name) { Sham.name }
+            let(:service2_name) { Sham.name }
+            let(:service2_plan_name) { Sham.name }
+
+            before do
               VCAP::CloudController::ManagedServiceInstance.make(service_plan: plan)
+
+              plan2 = VCAP::CloudController::ServicePlan.make(service: service, unique_id: 'plan2_nolongerexists', name: plan2_name)
+              VCAP::CloudController::ManagedServiceInstance.make(service_plan: plan2)
+
+              service2 = VCAP::CloudController::Service.make(service_broker: broker, label: service2_name)
+              service2_plan = VCAP::CloudController::ServicePlan.make(service: service2, unique_id: 'i_be_gone', name: service2_plan_name)
+              VCAP::CloudController::ManagedServiceInstance.make(service_plan: service2_plan)
+            end
+
+            it 'marks the existing plan as inactive' do
               expect(plan).to be_active
 
               service_manager.sync_services_and_plans
               plan.reload
 
               expect(plan).not_to be_active
+            end
+
+            it 'adds a formatted warning' do
+              service_manager.sync_services_and_plans
+
+              expect(service_manager.warnings).to include(<<HEREDOC)
+Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
+#{service_name}
+  #{plan.name}
+  #{plan2_name}
+#{service2_name}
+  #{service2_plan_name}
+HEREDOC
             end
           end
         end
@@ -304,6 +339,28 @@ module VCAP::Services::ServiceBrokers
 
             expect(service_owned_by_other_broker).to be_active
           end
+        end
+      end
+    end
+
+    describe '#has_warnings?' do
+      context 'when there are no warnings' do
+        before do
+          allow(service_manager).to receive(:warnings).and_return([])
+        end
+
+        it 'returns false' do
+          expect(service_manager.has_warnings?).to be_false
+        end
+      end
+
+      context 'when there are warnings' do
+        before do
+          allow(service_manager).to receive(:warnings).and_return(['a warning'])
+        end
+
+        it 'returns true' do
+          expect(service_manager.has_warnings?).to be_true
         end
       end
     end

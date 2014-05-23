@@ -531,6 +531,18 @@ describe 'Service Broker', non_transactional: true do
 
           expect(VCAP::CloudController::ServicePlan.find(unique_id: 'plan1-guid-here')[:active]).to be_false
         end
+
+        it 'returns a warning to the operator' do
+          update_broker(catalog_with_large_plan)
+          expect(last_response).to have_status_code(200)
+
+          warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+          expect(warning).to eq(<<HEREDOC)
+Warning: Service plans are missing from the broker's catalog (http://#{stubbed_broker_host}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
+#{service_name}
+  small
+HEREDOC
+        end
       end
 
       context 'when it has no existing instance' do

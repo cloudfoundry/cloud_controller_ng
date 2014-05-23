@@ -1,9 +1,10 @@
 module VCAP::Services::ServiceBrokers
   class ServiceManager
-    attr_reader :catalog
+    attr_reader :catalog, :warnings
 
     def initialize(catalog)
       @catalog = catalog
+      @warnings = []
     end
 
     def sync_services_and_plans
@@ -13,6 +14,10 @@ module VCAP::Services::ServiceBrokers
       deactivate_plans
       delete_plans
       delete_services
+    end
+
+    def has_warnings?
+      warnings.length > 0
     end
 
     private
@@ -71,10 +76,16 @@ module VCAP::Services::ServiceBrokers
     def deactivate_plans
       plan_ids_in_broker_catalog = catalog.plans.map(&:broker_provided_id)
       plans_in_db_not_in_catalog = catalog.service_broker.service_plans.reject { |p| plan_ids_in_broker_catalog.include?(p.broker_provided_id) }
+      deactivated_plans_warning  = DeactivatedPlansWarning.new
+
       plans_in_db_not_in_catalog.each do |plan_to_deactivate|
         plan_to_deactivate.active = false
         plan_to_deactivate.save
+
+        deactivated_plans_warning.add(plan_to_deactivate)
       end
+
+      @warnings << deactivated_plans_warning.message if deactivated_plans_warning.message
     end
 
     def delete_plans
@@ -93,6 +104,42 @@ module VCAP::Services::ServiceBrokers
         if service.service_plans.count < 1
           service.destroy
         end
+      end
+    end
+
+    class DeactivatedPlansWarning
+      WARNING = "Warning: Service plans are missing from the broker's catalog (%s/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.\n".freeze
+      INDENT = '  '.freeze
+
+      def initialize
+        @nested_warnings = {}
+      end
+
+      def message
+        return nil if @nested_warnings.length == 0
+
+        sprintf(WARNING, @broker_url) + format_message
+      end
+
+      def add(plan)
+        @nested_warnings[plan.service.label] ||= []
+        @broker_url                          ||= plan.service.service_broker.broker_url
+        @nested_warnings[plan.service.label] << plan.name
+      end
+
+      def format_message
+        warning_msg = ''
+
+        @nested_warnings.each_pair do |service, plans|
+          warning_msg += "#{service}\n"
+          plans.each do |plan|
+            warning_msg += "#{INDENT}#{plan}\n"
+          end
+        end
+
+        warning_msg.chop
+
+        warning_msg
       end
     end
   end
