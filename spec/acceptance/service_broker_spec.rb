@@ -537,11 +537,14 @@ describe 'Service Broker', non_transactional: true do
           expect(last_response).to have_status_code(200)
 
           warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+
+# rubocop:disable LineLength
           expect(warning).to eq(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (http://#{stubbed_broker_host}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
   small
 HEREDOC
+# rubocop:enable LineLength
         end
       end
 

@@ -108,7 +108,9 @@ module VCAP::Services::ServiceBrokers
     end
 
     class DeactivatedPlansWarning
+      # rubocop:disable LineLength
       WARNING = "Warning: Service plans are missing from the broker's catalog (%s/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.\n".freeze
+      # rubocop:enable LineLength
       INDENT = '  '.freeze
 
       def initialize
