@@ -3,6 +3,13 @@ require 'rspec_api_documentation/dsl'
 
 resource "App Usage Events (experimental)", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
+
+  around do |example|
+    admin_user
+    example.run
+    admin_user.destroy
+  end
+
   authenticated_request
   let(:guid) { VCAP::CloudController::AppUsageEvent.first.guid }
   let!(:event1) { VCAP::CloudController::AppUsageEvent.make }

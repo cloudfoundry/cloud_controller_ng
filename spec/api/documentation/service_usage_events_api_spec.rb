@@ -9,6 +9,12 @@ resource "Service Usage Events (experimental)", :type => :api do
   let!(:event2) { VCAP::CloudController::ServiceUsageEvent.make }
   let!(:event3) { VCAP::CloudController::ServiceUsageEvent.make }
 
+  around do |example|
+    admin_user
+    example.run
+    admin_user.destroy
+  end
+
   get "/v2/service_usage_events" do
     field :guid, "The guid of the event.", required: false
     field :state, "The desired state of the service.", required: false, readonly: true, valid_values: ["CREATED", "DELETED"]
