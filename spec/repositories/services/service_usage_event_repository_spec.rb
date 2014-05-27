@@ -75,7 +75,7 @@ module VCAP::CloudController
 
       end
 
-      describe '#purge_and_reseed_started_apps!' do
+      describe '#purge_and_reseed_started_apps!', non_transactional: true do
         before do
           3.times do
             ManagedServiceInstance.make
@@ -84,12 +84,6 @@ module VCAP::CloudController
           3.times do
             UserProvidedServiceInstance.make
           end
-        end
-
-        after do
-          ServiceUsageEvent.dataset.destroy
-          ServiceInstance.dataset.destroy
-          Service.dataset.destroy
         end
 
         it 'will purge all existing events' do

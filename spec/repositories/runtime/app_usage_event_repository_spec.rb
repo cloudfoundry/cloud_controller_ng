@@ -101,12 +101,11 @@ module VCAP::CloudController
         end
       end
 
-      describe "#purge_and_reseed_started_apps!" do
-        let(:app) { App.make(package_hash: Sham.guid) }
+      describe "#purge_and_reseed_started_apps!", non_transactional: false do
+        let(:app) { AppFactory.make}
 
-        after do
-          Buildpack.dataset.destroy
-          App.dataset.destroy
+        before do
+          AppObserver.stub(:updated)
         end
 
         it "will purge all existing events" do
