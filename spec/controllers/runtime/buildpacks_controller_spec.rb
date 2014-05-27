@@ -74,22 +74,35 @@ module VCAP::CloudController
             get "/v2/buildpacks?name=#{buildpack[:name]}", {}, headers_for(user)
             expect(last_response.status).to eq(200)
             expect(decoded_response['total_results']).to eq(1)
-            resource = decoded_response['resources'][0]
-            entity = resource['entity']
-            metadata = resource['metadata']
-            expect(metadata['guid']).to eq(buildpack[:guid])
-            expect(entity['name']).to eq(buildpack[:name])
-            expect(entity['filename']).to be_nil
+            resources = decoded_response['resources']
+            entity = resources[0]['entity']
+            metadata = resources[0]['metadata']
+
+            expect(metadata).to include({'guid' => buildpack[:guid]})
+            expect(entity).to eq({'name' => buildpack[:name],
+                                      'position' => buildpack[:position],
+                                      'enabled' => buildpack[:enabled],
+                                      'locked' => buildpack[:locked],
+                                      'filename' => buildpack[:filename]})
           end
         end
 
         describe "/v2/buildpacks" do
-          it "lets you retrieve a list of available buildpacks" do
+          let!(:buildpack2) do
+            VCAP::CloudController::Buildpack.create({name: "second_buildpack", key: "xyz", filename: "b", position: 1})
+          end
+
+          it "lets you retrieve a list of available buildpacks ordered by position" do
             get "/v2/buildpacks", {}, headers_for(user)
             expect(last_response.status).to eq(200)
-            expect(decoded_response["total_results"]).to eq(1)
-            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'get_buildpack',
+            expect(decoded_response["total_results"]).to eq(2)
+            expect(decoded_response["resources"][0]["entity"]).to eq({'name' => 'second_buildpack',
                                                                       'position' => 1,
+                                                                      'enabled' => true,
+                                                                      'locked' => false,
+                                                                      'filename' => 'b'})
+            expect(decoded_response["resources"][1]["entity"]).to eq({'name' => 'get_buildpack',
+                                                                      'position' => 2,
                                                                       'enabled' => true,
                                                                       'locked' => false,
                                                                       'filename' => nil})
