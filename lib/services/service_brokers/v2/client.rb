@@ -39,6 +39,9 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response = parse_response(:put, path, response)
 
       binding.credentials = parsed_response['credentials']
+      if parsed_response.has_key?('syslog_drain_url')
+        binding.syslog_drain_url = parsed_response['syslog_drain_url']
+      end
     end
 
     def unbind(binding)
