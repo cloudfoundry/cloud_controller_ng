@@ -101,10 +101,15 @@ module VCAP::CloudController
         end
       end
 
-      describe "#purge_and_reseed_started_apps!", non_transactional: false do
+      describe "#purge_and_reseed_started_apps!" do
         let(:app) { AppFactory.make}
 
         before do
+          # Truncate in mysql causes an implicit commit.
+          # This stub will cause the same behavior, but not commit.
+          allow(AppUsageEvent.dataset).to receive(:truncate) do
+            AppUsageEvent.dataset.delete 
+          end
           AppObserver.stub(:updated)
         end
 

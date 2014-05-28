@@ -21,7 +21,7 @@ module VCAP::CloudController
         end
 
         def purge_and_reseed_started_apps!
-          AppUsageEvent.db[:app_usage_events].truncate
+          AppUsageEvent.dataset.truncate
 
           column_map = {
               :guid => :apps__guid,

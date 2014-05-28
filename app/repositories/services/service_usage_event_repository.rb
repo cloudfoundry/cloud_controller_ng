@@ -45,7 +45,7 @@ module VCAP::CloudController
         end
 
         def purge_and_reseed_service_instances!
-          ServiceUsageEvent.db[:service_usage_events].truncate
+          ServiceUsageEvent.dataset.truncate
 
           column_map = {
             # using service_instance guid because we need a unique guid for the service_usage_event.  the database will not generate these for us.
