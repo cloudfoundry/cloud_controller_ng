@@ -7,17 +7,17 @@ module VCAP::CloudController::RestController
     end
 
     describe "#apply" do
-      let(:db) do
-        db = Sequel.sqlite(':memory:')
-        db.create_table :examples do
+      let(:database) do
+        database = Sequel.sqlite(':memory:')
+        database.create_table :examples do
           primary_key :id
           String :field
         end
-        db
+        database
       end
 
       let(:dataset) do
-        db[:examples]
+        database[:examples]
       end
 
       subject(:sql) do

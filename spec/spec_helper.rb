@@ -535,6 +535,59 @@ RSpec.configure do |rspec_config|
     Regexp.compile(parts.join('[\\\/]'))
   end
 
+  def tables_to_verify
+    %w(
+      app_events
+      app_usage_events
+      apps
+      apps_routes
+      billing_events
+      buildpacks
+      delayed_jobs
+      domains
+      droplets
+      events
+      organizations
+      organizations_auditors
+      organizations_billing_managers
+      organizations_managers
+      organizations_users
+      quota_definitions
+      routes
+      service_auth_tokens
+      service_bindings
+      service_brokers
+      service_dashboard_clients
+      service_instances
+      service_plan_visibilities
+      service_plans
+      service_usage_events
+      services
+      spaces
+      spaces_auditors
+      spaces_developers
+      spaces_managers
+      stacks
+      tasks
+      users
+    )
+  end
+
+  def with_row_count_verification(&blk)
+    counts = {}
+
+    tables_to_verify.each do |table|
+      counts[table] = db["select count(*) from #{table}"].first['count(*)'.to_sym]
+    end
+
+    blk.call
+
+    tables_to_verify.each do |table|
+      cnt = db["select count(*) from #{table}"].first['count(*)'.to_sym]
+      expect(cnt).to eq(counts[table]), "Possible test pollution: table #{table} has #{cnt} rows after test."
+    end
+  end
+
   rspec_config.treat_symbols_as_metadata_keys_with_true_values = true
 
   rspec_config.include Rack::Test::Methods
@@ -596,16 +649,24 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.around :each do |example|
-    if example.metadata.to_s.include? "non_transactional"
-      begin
-        example.run
-      ensure
-        $spec_env.reset_database_with_seeds
+    test_run_lambda = lambda {
+      if example.metadata.to_s.include? "non_transactional"
+        begin
+          example.run
+        ensure
+          $spec_env.reset_database_with_seeds
+        end
+      else
+        Sequel::Model.db.transaction(rollback: :always, auto_savepoint: true) do
+          example.run
+        end
       end
+    }
+
+    if "true" == ENV["DETECT_POLLUTING_SPECS"]
+      with_row_count_verification(&test_run_lambda)
     else
-      Sequel::Model.db.transaction(rollback: :always, auto_savepoint: true) do
-        example.run
-      end
+      test_run_lambda.call
     end
   end
 end
