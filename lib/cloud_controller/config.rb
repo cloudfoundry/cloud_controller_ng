@@ -139,6 +139,7 @@ module VCAP::CloudController
         optional(:broker_client_timeout_seconds) => Integer,
         optional(:uaa_client_name) => String,
         optional(:uaa_client_secret) => String,
+        optional(:uaa_client_scope) => String,
 
         :renderer => {
           :max_results_per_page => Integer,
