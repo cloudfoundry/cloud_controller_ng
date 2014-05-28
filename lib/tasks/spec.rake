@@ -12,5 +12,13 @@ task :spec_postgresql do
 end
 
 def spec_command
-  "bundle exec parallel_rspec spec -s 'integration|acceptance' -o \"--require rspec/instafail --format RSpec::Instafail\""
+  transactional_spec_command + "&&" + non_transactional_spec_command
+end
+
+def transactional_spec_command
+  "bundle exec rspec --tag ~non_transactional --require rspec/instafail --format RSpec::Instafail"
+end
+
+def non_transactional_spec_command
+  "bundle exec rspec --tag non_transactional --require rspec/instafail --format RSpec::Instafail"
 end

@@ -577,14 +577,14 @@ RSpec.configure do |rspec_config|
     counts = {}
 
     tables_to_verify.each do |table|
-      counts[table] = db["select count(*) from #{table}"].first['count(*)'.to_sym]
+      counts[table] = db[table.to_sym].count
     end
 
     blk.call
 
     tables_to_verify.each do |table|
-      cnt = db["select count(*) from #{table}"].first['count(*)'.to_sym]
-      expect(cnt).to eq(counts[table]), "Possible test pollution: table #{table} has #{cnt} rows after test."
+      cnt = db[table.to_sym].count
+      expect(cnt).to eq(counts[table]), "Test Pollution: #{table} has #{cnt} entries when we expected #{counts[table]}"
     end
   end
 
@@ -663,7 +663,7 @@ RSpec.configure do |rspec_config|
       end
     }
 
-    if "true" == ENV["DETECT_POLLUTING_SPECS"]
+    if ENV["DETECT_POLLUTING_SPECS"] == "true"
       with_row_count_verification(&test_run_lambda)
     else
       test_run_lambda.call
