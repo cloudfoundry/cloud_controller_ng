@@ -76,6 +76,7 @@ module VCAP::CloudController
     def reset_database_with_seeds
       reset_database
       VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+      VCAP::CloudController::Seeds.create_seed_stacks(nil)
     end
 
     def db_connection_string
