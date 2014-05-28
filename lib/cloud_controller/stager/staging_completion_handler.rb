@@ -36,8 +36,9 @@ module VCAP::CloudController
     private
 
     def handle_failure(logger, payload)
-      return unless app = get_app(logger, payload)
-      
+      app = get_app(logger, payload)
+      return if app.nil?
+
       app.mark_as_failed_to_stage
       Loggregator.emit_error(app.guid, "Failed to stage application: #{payload["error"]}")
     end
@@ -50,7 +51,8 @@ module VCAP::CloudController
         return
       end
 
-      return unless app = get_app(logger, payload)
+      app = get_app(logger, payload)
+      return if app.nil?
 
       app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
       app.current_droplet.update_staging_complete(payload["detected_start_command"])
