@@ -21,54 +21,70 @@ module VCAP::CloudController
       @message_bus.subscribe("diego.staging.finished", queue: "cc") do |payload|
         logger.info("diego.staging.finished", :response => payload)
 
-        begin
-          StagingResponseSchema.validate(payload)
-        rescue Membrane::SchemaValidationError => e
-          logger.error("diego.staging.invalid-message", payload: payload, error: e.to_s)
-          next
-        end
-
-        app = App.find(guid: payload["app_id"])
-
-        if app == nil
-          logger.info(
-              "diego.staging.unknown-app",
-              :response => payload,
-          )
-
-          next
-        end
-
-        if payload["task_id"] != app.staging_task_id
-          logger.info(
-            "diego.staging.not-current",
-            :response => payload,
-            :current => app.staging_task_id,
-          )
-
-          next
-        end
-
         if payload["error"]
-          app.mark_as_failed_to_stage
-          Loggregator.emit_error(app.guid, "Failed to stage application: #{payload["error"]}")
-
-          next
-        end
-
-        app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
-        app.current_droplet.update_staging_complete(payload["detected_start_command"])
-
-        if (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
-          @diego_client.send_desire_request(app)
+          handle_failure(logger, payload)
         else
-          DeaClient.start(app, instances_to_start: app.instances)
+          handle_success(logger, payload)
         end
       end
     end
 
     def logger
       @logger ||= Steno.logger("cc.stager")
+    end
+
+    private
+
+    def handle_failure(logger, payload)
+      return unless app = get_app(logger, payload)
+      
+      app.mark_as_failed_to_stage
+      Loggregator.emit_error(app.guid, "Failed to stage application: #{payload["error"]}")
+    end
+
+    def handle_success(logger, payload)
+      begin
+        StagingResponseSchema.validate(payload)
+      rescue Membrane::SchemaValidationError => e
+        logger.error("diego.staging.invalid-message", payload: payload, error: e.to_s)
+        return
+      end
+
+      return unless app = get_app(logger, payload)
+
+      app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
+      app.current_droplet.update_staging_complete(payload["detected_start_command"])
+
+      if (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
+        @diego_client.send_desire_request(app)
+      else
+        DeaClient.start(app, instances_to_start: app.instances)
+      end
+    end
+
+    def get_app(logger, payload)
+      app = App.find(guid: payload["app_id"])
+
+      if app == nil
+        logger.info(
+            "diego.staging.unknown-app",
+            :response => payload,
+        )
+
+        return
+      end
+
+      if payload["task_id"] != app.staging_task_id
+        logger.info(
+            "diego.staging.not-current",
+            :response => payload,
+            :current => app.staging_task_id,
+        )
+
+        return
+      end
+
+      app
     end
   end
 end
