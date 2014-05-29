@@ -664,11 +664,7 @@ RSpec.configure do |rspec_config|
       end
     }
 
-    if ENV["DETECT_POLLUTING_SPECS"] == "true"
-      with_row_count_verification(&test_run_lambda)
-    else
-      test_run_lambda.call
-    end
+    with_row_count_verification(&test_run_lambda)
   end
 end
 
