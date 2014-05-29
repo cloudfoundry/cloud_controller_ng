@@ -31,8 +31,7 @@ module VCAP::CloudController
     before do
       client = double('broker client', unbind: nil, deprovision: nil)
       Service.any_instance.stub(:client).and_return(client)
-      VCAP::CloudController::Seeds.create_seed_stacks(config)
-
+      VCAP::CloudController::Seeds.create_seed_stacks
     end
 
     it_behaves_like "a CloudController model", {

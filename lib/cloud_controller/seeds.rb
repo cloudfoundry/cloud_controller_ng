@@ -3,7 +3,7 @@ module VCAP::CloudController
     class << self
       def write_seed_data(config)
         create_seed_quota_definitions(config)
-        create_seed_stacks(config)
+        create_seed_stacks
         system_org = create_seed_organizations(config)
         create_seed_domains(config, system_org)
       end
@@ -23,7 +23,7 @@ module VCAP::CloudController
         end
       end
 
-      def create_seed_stacks(_)
+      def create_seed_stacks
         Stack.populate
       end
 

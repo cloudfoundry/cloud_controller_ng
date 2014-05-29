@@ -5,7 +5,7 @@ module VCAP::CloudController
     describe ".create_seed_stacks" do
       it "populates stacks" do
         Stack.should_receive(:populate)
-        Seeds.create_seed_stacks(config)
+        Seeds.create_seed_stacks
       end
     end
 
