@@ -30,4 +30,34 @@ namespace :ci do
       end
     end
   end
+
+  namespace :db do
+    task :create do
+      case ENV["DB"]
+        when "postgres"
+          sh "psql -U postgres -c 'create database cc_test_;'"
+        when "mysql"
+          if ENV["TRAVIS"] == "true"
+            sh "mysql -e 'create database cc_test_;'"
+          else
+            sh "mysql -e 'create database cc_test_;' -u root --password=password"
+          end
+      end
+    end
+
+    task :drop do
+      case ENV["DB"]
+        when "postgres"
+          sh "psql -U postgres -c 'drop database cc_test_;'"
+        when "mysql"
+          if ENV["TRAVIS"] == "true"
+            sh "mysql -e 'drop database cc_test_;'"
+          else
+            sh "mysql -e 'drop database cc_test_;' -u root --password=password"
+          end
+      end
+    end
+
+    task recreate: %w[drop create]
+  end
 end
