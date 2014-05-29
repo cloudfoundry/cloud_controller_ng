@@ -38,7 +38,6 @@ env:
 
 before_script:
   - bundle exec rake ci:db:create
-  - gem install --version 0.8.9 faraday
   - gem install travis-artifacts
 
 after_script: # and this only on success, fail the whole build if it fails
