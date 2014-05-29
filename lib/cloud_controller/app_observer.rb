@@ -110,6 +110,11 @@ module VCAP::CloudController
 
       def react_to_instances_change(app, delta)
         if app.started?
+          if @diego_client.running_enabled(app)
+            @diego_client.send_desire_request(app)
+            return
+          end
+
           DeaClient.change_running_instances(app, delta)
           broadcast_app_updated(app)
         end

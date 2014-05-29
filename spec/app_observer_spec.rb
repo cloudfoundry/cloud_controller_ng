@@ -93,18 +93,79 @@ module VCAP::CloudController
 
         before do
           allow(VCAP).to receive(:secure_uuid).and_return("foo-bar")
-          app.stub(previous_changes: { :state => "anything" })
+          app.stub(previous_changes: changes)
+
           app.stub(:started?).and_return(true)
           allow(diego_client).to receive(:send_stage_request).with(app, "foo-bar").and_return(nil)
         end
 
-        let(:environment_json) { {"CF_DIEGO_BETA"=>"true"} }
+        let(:environment_json) { {"CF_DIEGO_BETA"=>"true", "CF_DIEGO_RUN_BETA"=>"true"} }
 
         let(:needs_staging) { true }
 
-        it 'uses the diego stager to do staging' do
-          subject
-          expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
+        context "when something is anything" do
+          let(:changes) { {:state => "anything"} }
+          it 'uses the diego stager to do staging' do
+            subject
+            expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
+          end
+        end
+
+        context "when the desired instance count change" do
+          context "when the app is started" do
+            context "when the instance count change increases the number of instances" do
+              let(:changes) { { :instances => [5, 8] } }
+
+              before do
+                allow(app).to receive(:started?).and_return(true)
+              end
+
+              it "should redesire the app" do
+                DeaClient.should_not_receive(:change_running_instances)
+                expect(diego_client).to receive(:send_desire_request).with(app)
+                subject
+              end
+
+              context "when the app bits were changed as well" do
+                let(:needs_staging) { true }
+                let(:package_hash) { "something new" }
+
+                it "should start more instances of the old version" do
+                  DeaClient.should_not_receive(:change_running_instances)
+                  expect(diego_client).to receive(:send_desire_request).with(app)
+                  subject
+                end
+              end
+            end
+
+            context "when the instance count change decreases the number of instances" do
+              let(:changes) { { :instances => [5, 2] } }
+
+              before do
+                app.stub(:started?) { true }
+              end
+
+              it "should redesire the app" do
+                DeaClient.should_not_receive(:change_running_instances)
+                expect(diego_client).to receive(:send_desire_request).with(app)
+                subject
+              end
+            end
+          end
+
+          context "when the app is not started" do
+            let(:changes) { { :instances => [1, 2] } }
+
+            before do
+              app.stub(:started?) { false }
+            end
+
+            it "should not redesire the app" do
+              DeaClient.should_not_receive(:change_running_instances)
+              expect(diego_client).not_to receive(:send_desire_request)
+              subject
+            end
+          end
         end
       end
 
