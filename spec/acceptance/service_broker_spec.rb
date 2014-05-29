@@ -660,7 +660,8 @@ HEREDOC
         delete_broker
       end
 
-      it 'does not delete the broker', non_transactional: true do
+      it 'does not delete the broker', non_transactional: true do # Needs to be non_transaction because we're testing
+                                                                  # that a transaction in prod code was rolled back
         delete_broker
         expect(last_response).to have_status_code(400)
 
