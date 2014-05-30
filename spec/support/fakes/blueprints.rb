@@ -287,4 +287,7 @@ module VCAP::CloudController
     service_label { Sham.label }
   end
 
+  AppSecurityGroup.blueprint do
+    name { Sham.name }
+  end
 end
