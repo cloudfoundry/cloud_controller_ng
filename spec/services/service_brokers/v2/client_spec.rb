@@ -239,8 +239,7 @@ module VCAP::Services::ServiceBrokers::V2
           'credentials' => {
             'username' => 'admin',
             'password' => 'secret'
-          },
-          'syslog_drain_url' => 'syslog://example.com:514'
+          }
         }
       end
 
@@ -287,9 +286,35 @@ module VCAP::Services::ServiceBrokers::V2
         })
       end
 
-      it 'sets the syslog_drain_url on the binding' do
-        client.bind(binding)
-        expect(binding.syslog_drain_url).to eq('syslog://example.com:514')
+      context 'with a syslog drain url' do
+
+        let(:response_data) do
+          {
+              'credentials' => { },
+              'syslog_drain_url' => 'syslog://example.com:514'
+          }
+        end
+
+        it 'sets the syslog_drain_url on the binding' do
+          client.bind(binding)
+          expect(binding.syslog_drain_url).to eq('syslog://example.com:514')
+        end
+
+      end
+
+      context 'without a syslog drain url' do
+
+        let(:response_data) do
+          {
+              'credentials' => { }
+          }
+        end
+
+        it 'does not set the syslog_drain_url on the binding' do
+          client.bind(binding)
+          expect(binding.syslog_drain_url).to_not be
+        end
+
       end
 
       describe 'error handling' do
