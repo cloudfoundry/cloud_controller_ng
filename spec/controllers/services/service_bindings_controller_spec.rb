@@ -31,11 +31,6 @@ module VCAP::CloudController
     include_examples "operations on an invalid object",
       path: "/v2/service_bindings"
 
-    include_examples "deleting a valid object",
-      path: "/v2/service_bindings",
-      model: ServiceBinding,
-      one_to_many_collection_ids: {}
-
     include_examples "creating and updating",
       path: "/v2/service_bindings",
       model: ServiceBinding,
@@ -233,6 +228,8 @@ module VCAP::CloudController
         post "/v2/service_bindings", req, json_headers(headers_for(developer))
         expect(last_response.status).to eq(201)
 
+        expect(broker_client).to have_received(:bind)
+
         binding = ServiceBinding.last
         expect(binding.credentials).to eq(CREDENTIALS)
       end
@@ -275,94 +272,173 @@ module VCAP::CloudController
 
       end
 
-      context 'when app_guid is invalid' do
-        let(:req) do
-          {
-            app_guid: 'THISISWRONG',
+      context 'when the app is invalid' do
+        context 'because app_guid is invalid' do
+          let(:req) do
+            {
+              app_guid: 'THISISWRONG',
+              service_instance_guid: instance.guid
+            }.to_json
+          end
+
+          before do
+            service.save
+          end
+
+          it 'returns CF-AppNotFound' do
+            post '/v2/service_bindings', req, json_headers(headers_for(developer))
+
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-AppNotFound')
+            expect(last_response.status).to eq(404)
+          end
+        end
+
+        context 'because the app is destroyed after controller validation and before binding save' do
+          let(:req) do
+            {
+              app_guid: 'THISISWRONG',
+              service_instance_guid: instance.guid
+            }.to_json
+          end
+
+          before do
+            service.save
+            allow_any_instance_of(ServiceBindingsController).to receive(:validate_access).and_return(true)
+            allow_any_instance_of(ServiceBindingsController).to receive(:validate_app).and_return(true)
+          end
+
+          it 'returns CF-AppNotFound' do
+            post '/v2/service_bindings', req, json_headers(headers_for(developer))
+
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-AppNotFound')
+            expect(last_response.status).to eq(404)
+          end
+        end
+      end
+
+      context 'when the service instance is invalid' do
+        context 'because service_instance_guid is invalid' do
+          let(:req) do
+            {
+              app_guid: app_obj.guid,
+              service_instance_guid: 'THISISWRONG'
+            }.to_json
+          end
+
+          before do
+            service.save
+          end
+
+          it 'returns CF-ServiceInstanceNotFound error' do
+            post '/v2/service_bindings', req, json_headers(headers_for(developer))
+
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
+            expect(last_response.status).to eq(404)
+          end
+        end
+
+        context 'because the service instance is destroyed after controller validation and before binding save' do
+          let(:req) do
+            {
+              app_guid: app_obj.guid,
+              service_instance_guid: 'THISISWRONG'
+            }.to_json
+          end
+
+          before do
+            service.save
+
+            allow(broker_client).to receive(:bind).and_return(true)
+            allow_any_instance_of(ServiceBinding).to receive(:client).and_return(broker_client)
+            allow_any_instance_of(ServiceBindingsController).to receive(:validate_access).and_return(true)
+            allow_any_instance_of(ServiceBindingsController).to receive(:validate_service_instance).and_return(true)
+          end
+
+          it 'returns CF-ServiceInstanceNotFound error' do
+            post '/v2/service_bindings', req, json_headers(headers_for(developer))
+
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
+            expect(last_response.status).to eq(404)
+          end
+        end
+      end
+
+      describe 'binding errors' do
+        subject(:make_request) do
+          req = {
+            app_guid: app_obj.guid,
             service_instance_guid: instance.guid
           }.to_json
+          post "/v2/service_bindings", req, json_headers(headers_for(developer))
         end
 
-        before do
-          service.save
+        context 'when attempting to bind and the service binding already exists' do
+          before do
+            ServiceBinding.make(:app => app_obj, :service_instance => instance)
+          end
+
+          it 'returns a 400' do
+            make_request
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'returns a ServiceBindingAppServiceTaken error' do
+            make_request
+            expect(decoded_response['error_code']).to eq('CF-ServiceBindingAppServiceTaken')
+          end
+
+          it 'does not send a bind request to broker' do
+            make_request
+            expect(broker_client).not_to have_received(:bind)
+          end
         end
 
-        it 'returns CF-AppNotFound' do
-          post '/v2/service_bindings', req, json_headers(headers_for(developer))
+        context 'when the v2 broker returns a 409' do
+          before do
+            service.service_broker = ServiceBroker.make
+            broker_client.stub(:bind) do
+              uri = 'http://broker.url.com'
+              method = 'PUT'
+              response = double(:response, code: 409, body: '{}')
+              raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri, method, response)
+            end
+          end
 
-          hash_body = JSON.parse(last_response.body)
-          expect(hash_body['error_code']).to eq('CF-AppNotFound')
-          expect(last_response.status).to eq(404)
-        end
-      end
+          it 'returns a 409' do
+            make_request
+            expect(last_response.status).to eq 409
+          end
 
-      context 'when the app is destroyed after controller validation and before binding save' do
-        let(:req) do
-          {
-            app_guid: 'THISISWRONG',
-            service_instance_guid: instance.guid
-          }.to_json
-        end
-
-        before do
-          service.save
-          allow_any_instance_of(ServiceBindingsController).to receive(:validate_access).and_return(true)
-          allow_any_instance_of(ServiceBindingsController).to receive(:validate_app).and_return(true)
-        end
-
-        it 'returns CF-AppNotFound' do
-          post '/v2/service_bindings', req, json_headers(headers_for(developer))
-
-          hash_body = JSON.parse(last_response.body)
-          expect(hash_body['error_code']).to eq('CF-AppNotFound')
-          expect(last_response.status).to eq(404)
-        end
-      end
-
-      context 'when service_instance_guid is invalid' do
-        let(:req) do
-          {
-            app_guid: app_obj.guid,
-            service_instance_guid: 'THISISWRONG'
-          }.to_json
+          it 'returns a ServiceBindingAppServiceTaken error' do
+            make_request
+            expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerConflict'
+          end
         end
 
-        before do
-          service.save
-        end
+        context 'when the v2 broker returns any other error' do
+          before do
+            service.service_broker = ServiceBroker.make
+            broker_client.stub(:bind) do
+              uri = 'http://broker.url.com'
+              method = 'PUT'
+              response = double(:response, code: 500, body: '{"description": "ERROR MESSAGE HERE"}')
+              raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new(uri, method, response)
+            end
+          end
 
-        it 'returns CF-ServiceInstanceNotFound error' do
-          post '/v2/service_bindings', req, json_headers(headers_for(developer))
+          it 'returns a 500' do
+            make_request
+            expect(last_response.status).to eq 500
+          end
 
-          hash_body = JSON.parse(last_response.body)
-          expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
-          expect(last_response.status).to eq(404)
-        end
-      end
-
-      context 'when the service instance is destroyed after controller validation and before binding save' do
-        let(:req) do
-          {
-            app_guid: app_obj.guid,
-            service_instance_guid: 'THISISWRONG'
-          }.to_json
-        end
-
-        before do
-          service.save
-
-          allow(broker_client).to receive(:bind).and_return(true)
-          allow_any_instance_of(ServiceBinding).to receive(:client).and_return(broker_client)
-          allow_any_instance_of(ServiceBindingsController).to receive(:validate_access).and_return(true)
-          allow_any_instance_of(ServiceBindingsController).to receive(:validate_service_instance).and_return(true)
-        end
-
-        it 'returns CF-ServiceInstanceNotFound error' do
-          post '/v2/service_bindings', req, json_headers(headers_for(developer))
-
-          hash_body = JSON.parse(last_response.body)
-          expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
-          expect(last_response.status).to eq(404)
+          it 'passes through the error message' do
+            make_request
+            expect(decoded_response['description']).to match /ERROR MESSAGE HERE/
+          end
         end
       end
     end
@@ -371,12 +447,19 @@ module VCAP::CloudController
       let(:binding) { ServiceBinding.make }
       let(:developer) { make_developer_for_space(binding.service_instance.space) }
 
+      it 'returns 204' do
+        delete "/v2/service_bindings/#{binding.guid}", '', json_headers(headers_for(developer))
+        expect(last_response.status).to eq 204
+      end
+
+      it 'returns an empty response body' do
+        delete "/v2/service_bindings/#{binding.guid}", '', json_headers(headers_for(developer))
+        expect(last_response.body).to be_empty
+      end
+
       it 'unbinds a service instance from an app' do
         delete "/v2/service_bindings/#{binding.guid}", '', json_headers(headers_for(developer))
-        expect(last_response.status).to eq(204)
-
         expect(ServiceBinding.find(guid: binding.guid)).to be_nil
-
         expect(broker_client).to have_received(:unbind).with(binding)
       end
     end
