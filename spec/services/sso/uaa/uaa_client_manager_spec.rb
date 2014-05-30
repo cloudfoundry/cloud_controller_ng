@@ -78,7 +78,7 @@ module VCAP::Services::SSO::UAA
             client_id:              nil,
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
+            scope:                  ['openid', 'cloud_controller_service_permissions.read'],
             authorized_grant_types: ['authorization_code'],
             action:                 'add'
           },
@@ -86,14 +86,14 @@ module VCAP::Services::SSO::UAA
             client_id:              nil,
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
+            scope:                  ['openid', 'cloud_controller_service_permissions.read'],
             authorized_grant_types: ['authorization_code'],
             action:                 'update' },
           {
             client_id:              'delete-this-client',
             client_secret:          nil,
             redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
+            scope:                  ['openid', 'cloud_controller_service_permissions.read'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           }
@@ -322,6 +322,63 @@ module VCAP::Services::SSO::UAA
 
               expect(mock_http).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
             end
+          end
+        end
+      end
+
+      describe 'scope options' do
+        let(:changeset) { [
+          double('create_command', uaa_command: { action: 'add' }, client_attrs: {})
+        ] }
+        let(:expected_json_body) { [
+          {
+            client_id:              nil,
+            client_secret:          nil,
+            redirect_uri:           nil,
+            scope:                  expected_scope,
+            authorized_grant_types: ['authorization_code'],
+            action:                 'add'
+          }
+        ].to_json }
+        let(:client_manager) { UaaClientManager.new }
+
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything()).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_scope).and_return(configured_scope)
+
+          client_manager.modify_transaction(changeset)
+        end
+
+        context 'and the uaa_client_scope has been configured with minimal options' do
+          let(:configured_scope) { 'openid,cloud_controller_service_permissions.read' }
+          let(:expected_scope) { ['openid', 'cloud_controller_service_permissions.read'] }
+
+          it 'makes a request to UAA with minimal scope' do
+            a_request(:post, tx_url).with(
+              body: expected_json_body,
+              headers: {'Authorization' => auth_header}).should have_been_made
+          end
+        end
+
+        context 'and the uaa_client_scope has been configured with extended options' do
+          let(:configured_scope) { 'cloud_controller.write,openid,cloud_controller.read,cloud_controller_service_permissions.read' }
+          let(:expected_scope) { ['cloud_controller.write', 'openid', 'cloud_controller.read', 'cloud_controller_service_permissions.read'] }
+
+          it 'makes a request to UAA with extended scope' do
+            a_request(:post, tx_url).with(
+              body: expected_json_body,
+              headers: {'Authorization' => auth_header}).should have_been_made
+          end
+        end
+
+        context 'and the uaa_client_scope has been configured with options not in the whitelist' do
+          let(:configured_scope) { 'openid,some_other_scope,openid_another_scope' }
+          let(:expected_scope) { ['openid'] }
+
+          it 'makes a request to UAA with extended scope' do
+            a_request(:post, tx_url).with(
+              body: expected_json_body,
+              headers: {'Authorization' => auth_header}).should have_been_made
           end
         end
       end

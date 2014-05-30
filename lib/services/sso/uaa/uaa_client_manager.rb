@@ -115,7 +115,7 @@ module VCAP::Services::SSO::UAA
         client_id:              client_attrs['id'],
         client_secret:          client_attrs['secret'],
         redirect_uri:           client_attrs['redirect_uri'],
-        scope:                  ['openid', 'cloud_controller.read', 'cloud_controller.write', 'cloud_controller_service_permissions.read'],
+        scope:                  filter_uaa_client_scope,
         authorized_grant_types: ['authorization_code']
       }
     end
@@ -129,6 +129,15 @@ module VCAP::Services::SSO::UAA
 
     def logger
       @logger ||= Steno.logger('cc.uaa_client_manager')
+    end
+
+    def filter_uaa_client_scope
+      configured_scope = VCAP::CloudController::Config.config[:uaa_client_scope].split(',')
+      filtered_scope = configured_scope.select do |val|
+        ['cloud_controller.write', 'openid', 'cloud_controller.read', 'cloud_controller_service_permissions.read'].include?(val)
+      end
+
+      filtered_scope
     end
   end
 end
