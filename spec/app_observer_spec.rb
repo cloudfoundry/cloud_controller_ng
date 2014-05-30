@@ -101,14 +101,52 @@ module VCAP::CloudController
 
         let(:environment_json) { {"CF_DIEGO_BETA"=>"true", "CF_DIEGO_RUN_BETA"=>"true"} }
 
-        let(:needs_staging) { true }
+        context "when the app needs staging" do
+          let(:needs_staging) { true }
 
-        context "when something is anything" do
-          let(:changes) { {:state => "anything"} }
-          it 'uses the diego stager to do staging' do
-            subject
-            expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
+          context "when its state has changed" do
+            let(:changes) { {:state => "anything"} }
+            it 'uses the diego stager to do staging' do
+              subject
+              expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
+            end
           end
+        end
+
+        context "when the app is already staged" do
+          let(:needs_staging) { false }
+          before do
+            app.stub(:detected_start_command) { "/run" }
+          end
+
+          context "when the state changes" do
+            let(:changes) { { :state => "anything" } }
+
+            context "when the app is started" do
+              before do
+                app.stub(:started?) { true }
+              end
+
+              it "should start the app with specified number of instances" do
+                DeaClient.should_not_receive(:start)
+                expect(diego_client).to receive(:send_desire_request).with(app)
+                subject
+              end
+            end
+
+            context "when the app is not started" do
+              before do
+                app.stub(:started?) { false }
+              end
+
+              it "should stop the app" do
+                DeaClient.should_not_receive(:start)
+                expect(diego_client).to receive(:send_desire_request).with(app)
+                subject
+              end
+            end
+          end
+
         end
 
         context "when the desired instance count change" do

@@ -86,6 +86,11 @@ module VCAP::CloudController
 
       def react_to_state_change(app)
         if !app.started?
+          if @diego_client.running_enabled(app)
+            @diego_client.send_desire_request(app)
+            return
+          end
+
           DeaClient.stop(app)
           broadcast_app_updated(app)
           return

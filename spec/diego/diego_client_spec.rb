@@ -44,15 +44,18 @@ module VCAP::CloudController
           stack: app.stack.name,
           start_command: "./some-detected-command",
           environment: client.environment(app),
-          num_instances: 3,
+          num_instances: expected_instances,
           routes: ["some-route.some-domain.com", "some-other-route.some-domain.com"],
           health_check_timeout_in_seconds: 120,
         }
       end
 
+      let(:expected_instances) { 3 }
+
       before do
         app.add_new_droplet("lol")
         app.current_droplet.update_start_command("./some-detected-command")
+        app.state = "STARTED"
       end
 
       it "sends a nats message with the appropriate subject and payload" do
@@ -69,6 +72,22 @@ module VCAP::CloudController
         before { expected_message[:start_command] = "/a/custom/command" }
 
         it "sends a message with the custom start command" do
+          client.send_desire_request(app)
+
+          nats_message = message_bus.published_messages.first
+          expect(nats_message[:subject]).to eq("diego.desire.app")
+          expect(nats_message[:message]).to eq(expected_message)
+        end
+      end
+
+      context "when the app is not started" do
+        let(:expected_instances) { 0 }
+
+        before do
+          app.state = "STOPPED"
+        end
+
+        it "should desire 0 instances" do
           client.send_desire_request(app)
 
           nats_message = message_bus.published_messages.first

@@ -48,10 +48,14 @@ module VCAP::CloudController
           stack: app.stack.name,
           start_command: app.detected_start_command,
           environment: environment(app),
-          num_instances: app.instances,
+          num_instances: desired_instances(app),
           routes: app.uris,
           health_check_timeout_in_seconds: app.health_check_timeout,
       }
+    end
+
+    def desired_instances(app)
+      app.started? ? app.instances : 0
     end
 
     def staging_request(app)
