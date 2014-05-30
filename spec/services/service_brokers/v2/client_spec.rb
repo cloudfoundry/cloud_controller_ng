@@ -239,7 +239,8 @@ module VCAP::Services::ServiceBrokers::V2
           'credentials' => {
             'username' => 'admin',
             'password' => 'secret'
-          }
+          },
+          'syslog_drain_url' => 'syslog://example.com:514'
         }
       end
 
@@ -284,6 +285,11 @@ module VCAP::Services::ServiceBrokers::V2
           'username' => 'admin',
           'password' => 'secret'
         })
+      end
+
+      it 'sets the syslog_drain_url on the binding' do
+        client.bind(binding)
+        expect(binding.syslog_drain_url).to eq('syslog://example.com:514')
       end
 
       describe 'error handling' do
