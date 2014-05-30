@@ -7,27 +7,40 @@ namespace :ci do
 
   namespace :spec do
     task :api do
-      sh "bundle exec rspec spec/api --tag ~non_transactional --order rand:$RANDOM --format RspecApiDocumentation::ApiFormatter"
+      sh "bundle exec rspec spec/api --order rand:$RANDOM --format RspecApiDocumentation::ApiFormatter"
+    end
+
+    task :integration do
+      run_specs(include: %w[type:integration])
     end
 
     namespace :services do
       task :transactional do
-        sh "bundle exec rspec spec --tag team:services --tag ~non_transactional --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
+        run_specs(include: %w[team:services], exclude: %w[non_transactional type:integration])
       end
 
       task :non_transactional do
-        sh "bundle exec rspec spec --tag team:services --tag non_transactional  --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
+        run_specs(include: %w[non_transactional team:services], exclude: %w[type:integration])
       end
     end
 
     namespace :non_services do
       task :transactional do
-        sh "bundle exec rspec spec --tag ~team:services --tag ~non_transactional --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
+        run_specs(exclude: %w[non_transactional team:services type:integration])
       end
 
       task :non_transactional do
-        sh "bundle exec rspec spec --tag ~team:services --tag non_transactional  --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
+        run_specs(include: %w[non_transactional], exclude: %w[team:services type:integration])
       end
+    end
+
+    def run_specs(options)
+      options = {exclude: [], include: []}.merge(options)
+
+      tags = options[:include].map { |tag| "--tag #{tag}" } +
+          options[:exclude].map { |tag| "--tag ~#{tag}" }
+
+      sh "bundle exec rspec spec #{tags.join(" ")} --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
     end
   end
 

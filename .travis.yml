@@ -32,6 +32,9 @@ env:
   matrix:
     - TASK=basics DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432"
 
+    - TASK=spec:integration DB=mysql    DB_CONNECTION="mysql2://root@localhost:3306"
+    - TASK=spec:integration DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432"
+
     - TASK=spec:services:transactional DB=mysql    DB_CONNECTION="mysql2://root@localhost:3306"
     - TASK=spec:services:transactional DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432"
 
