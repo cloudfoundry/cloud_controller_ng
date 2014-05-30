@@ -6,30 +6,30 @@ namespace :ci do
   end
 
   namespace :spec do
-    task :api do
+    task api: "db:pick" do
       sh "bundle exec rspec spec/api --order rand:$RANDOM --format RspecApiDocumentation::ApiFormatter"
     end
 
-    task :integration do
+    task integration: "db:pick" do
       run_specs(include: %w[type:integration])
     end
 
     namespace :services do
-      task :transactional do
+      task transactional: "db:pick" do
         run_specs(include: %w[team:services], exclude: %w[non_transactional type:integration])
       end
 
-      task :non_transactional do
+      task non_transactional: "db:pick" do
         run_specs(include: %w[non_transactional team:services], exclude: %w[type:integration])
       end
     end
 
     namespace :non_services do
-      task :transactional do
+      task transactional: "db:pick"  do
         run_specs(exclude: %w[non_transactional team:services type:integration])
       end
 
-      task :non_transactional do
+      task non_transactional: "db:pick" do
         run_specs(include: %w[non_transactional], exclude: %w[team:services type:integration])
       end
     end
@@ -45,7 +45,12 @@ namespace :ci do
   end
 
   namespace :db do
-    task :create do
+    task :pick do
+      ENV["DB"] ||= %w[sqlite mysql postgres].sample
+      puts "Using #{ENV["DB"]}"
+    end
+
+    task create: :pick do
       case ENV["DB"]
         when "postgres"
           sh "psql -U postgres -c 'create database cc_test_;'"
@@ -58,15 +63,15 @@ namespace :ci do
       end
     end
 
-    task :drop do
+    task drop: :pick do
       case ENV["DB"]
         when "postgres"
-          sh "psql -U postgres -c 'drop database cc_test_;'"
+          sh "psql -U postgres -c 'drop database if exists cc_test_;'"
         when "mysql"
           if ENV["TRAVIS"] == "true"
-            sh "mysql -e 'drop database cc_test_;'"
+            sh "mysql -e 'drop database if exists cc_test_;'"
           else
-            sh "mysql -e 'drop database cc_test_;' -u root --password=password"
+            sh "mysql -e 'drop database if exists cc_test_;' -u root --password=password"
           end
       end
     end

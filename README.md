@@ -49,6 +49,8 @@ platform using the NATS message bus. For example, it performs the following usin
 
 ## Testing
 
+**TLDR:** Always run `bundle exec rake` before committing
+
 To maintain a consistent and effective approach to testing, please refer to `spec/README.md` and
 keep it up to date, documenting the purpose of the various types of tests.
 
