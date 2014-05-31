@@ -1,3 +1,5 @@
+require File.expand_path("escaped_path.rb", File.dirname(__FILE__))
+
 module ServicesExampleGroup
   def self.included(klass)
     klass.metadata[:team] = "services"
