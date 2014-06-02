@@ -41,10 +41,6 @@ RSpec.configure do |rspec_config|
   rspec_config.include ModelHelpers
   rspec_config.include TempFileCreator
 
-  rspec_config.after do |example|
-    example.delete_created_temp_files
-  end
-
   rspec_config.include ControllerHelpers, type: :controller, :example_group => {
     :file_path => EscapedPath.join(%w[spec controllers])
   }
@@ -84,11 +80,6 @@ RSpec.configure do |rspec_config|
     config_reset
   end
 
-  rspec_config.after :each do
-    expect(Sequel::Deprecation.output.string).to eq ''
-    Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
-  end
-
   rspec_config.around :each do |example|
     tables = Tables.new(db)
     expect {
@@ -104,5 +95,11 @@ RSpec.configure do |rspec_config|
         end
       end
     }.not_to change { tables.counts }
+  end
+
+  rspec_config.after :each do |example|
+    example.delete_created_temp_files
+    expect(Sequel::Deprecation.output.string).to eq ''
+    Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
   end
 end
