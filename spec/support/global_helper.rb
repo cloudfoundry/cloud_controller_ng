@@ -1,3 +1,5 @@
+require "bootstrap/default_config"
+
 module VCAP::CloudController::GlobalHelper
   def db
     $spec_env.db
@@ -29,11 +31,8 @@ module VCAP::CloudController::GlobalHelper
     config
   end
 
-  # Lazy load the default config
   def config_default
-    @config_default ||= begin
-      $spec_env.config
-    end
+    @config_default ||= DefaultConfig.for_specs
   end
 
   def configure_components(config)

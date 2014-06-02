@@ -24,7 +24,7 @@ require "posix/spawn"
 require "rspec_api_documentation"
 require "services"
 
-require "spec_environment"
+require "bootstrap/spec_environment"
 
 Dir[File.expand_path("support/**/*.rb", File.dirname(__FILE__))].each { |file| require file }
 
