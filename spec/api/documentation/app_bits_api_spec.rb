@@ -65,7 +65,7 @@ resource 'Apps', :type => :api do
 
     field :application, 'A binary zip file containing the application bits.', required: true
 
-    example 'Uploads the bits for an app' do
+    example 'Uploads the bits for an app' do |example|
       explanation <<-eos
         Defines and uploads the bits (artifacts and dependencies) that this application needs to run, using a multipart PUT request.
         Bits that have already been uploaded can be referenced by their resource fingerprint(s).

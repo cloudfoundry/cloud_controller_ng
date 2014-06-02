@@ -108,7 +108,7 @@ module VCAP::CloudController
             end
           }.to_not change {
             Service.where(:id => service.id).count
-          }.by(-1)
+          }
         end
       end
 

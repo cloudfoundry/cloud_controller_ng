@@ -62,8 +62,8 @@ module ApiDsl
       end
     end
 
-    example.metadata[:audit_records] ||= []
-    example.metadata[:audit_records] << {type: event[:type], attributes: attributes}
+    RSpec.current_example.metadata[:audit_records] ||= []
+    RSpec.current_example.metadata[:audit_records] << {type: event[:type], attributes: attributes}
   end
 
   def fields_json(overrides = {})

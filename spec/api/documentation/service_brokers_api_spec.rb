@@ -42,7 +42,7 @@ resource "Service Brokers", :type => :api do
 
       status.should == 200
       validate_response VCAP::RestAPI::PaginatedResponse, parsed_response
-      expect(service_brokers).to have(3).entries
+      expect(service_brokers.size).to eq(3)
       service_brokers.each do |broker|
         validate_response VCAP::RestAPI::MetadataMessage, broker["metadata"]
         expect(broker["entity"].keys).to include("name", "broker_url", "auth_username")

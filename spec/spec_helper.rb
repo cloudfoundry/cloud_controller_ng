@@ -57,6 +57,8 @@ RSpec.configure do |rspec_config|
     :file_path => EscapedPath.join(%w[spec api])
   }
 
+  rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to
+                                                          # rspec & rspec_api_documentation 3
   rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
 
@@ -97,8 +99,9 @@ RSpec.configure do |rspec_config|
     }.not_to change { tables.counts }
   end
 
-  rspec_config.after :each do |example|
-    example.delete_created_temp_files
+  rspec_config.after :each do
+    delete_created_temp_files
+
     expect(Sequel::Deprecation.output.string).to eq ''
     Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
   end

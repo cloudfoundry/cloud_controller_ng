@@ -47,7 +47,7 @@ group :test do
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'
   gem 'rack-test'
-  gem 'rspec'
+  gem 'rspec', '~> 2.99.0'
   gem 'rspec-instafail'
   gem 'rspec_api_documentation'
   gem 'rubocop'
