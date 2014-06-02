@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource "App Security Groups", :type => :api do
+resource "App Security Groups (experimental)", :type => :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   let(:guid) { VCAP::CloudController::AppSecurityGroup.first.guid }
   let!(:app_sec_groups) { 3.times { VCAP::CloudController::AppSecurityGroup.make } }
@@ -26,11 +26,11 @@ resource "App Security Groups", :type => :api do
 
   put "/v2/app_security_groups/:guid" do
     example "Updating an app security group" do
-      new_security_group = {name: 'new_name', rules: 'new rules'}
+      new_security_group = {name: 'new_name', rules: '[]'}
 
       client.put "/v2/app_security_groups/#{guid}", Yajl::Encoder.encode(new_security_group), headers
       status.should == 201
-      standard_entity_response parsed_response, :app, name: 'new_name', rules: 'new rules'
+      standard_entity_response parsed_response, :app, name: 'new_name', rules: '[]'
     end
   end
 end

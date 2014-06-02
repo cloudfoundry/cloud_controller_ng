@@ -2,7 +2,7 @@ module VCAP::CloudController
   class AppSecurityGroupsController < RestController::ModelController
     define_attributes do
       attribute :name, String
-      attribute :rules, String, default: ''
+      attribute :rules, String, default: nil
     end
 
     query_parameters :name

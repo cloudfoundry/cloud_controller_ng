@@ -118,6 +118,7 @@ GEM
     net-scp (1.1.2)
       net-ssh (>= 2.6.5)
     net-ssh (2.7.0)
+    netaddr (1.5.0)
     newrelic_rpm (3.7.3.204)
     nokogiri (1.6.2.1)
       mini_portile (= 0.6.0)
@@ -247,6 +248,7 @@ DEPENDENCIES
   machinist (~> 1.0.6)
   membrane (~> 1.0)
   mysql2
+  netaddr
   newrelic_rpm
   nokogiri (~> 1.6.2)
   parallel_tests

@@ -289,5 +289,6 @@ module VCAP::CloudController
 
   AppSecurityGroup.blueprint do
     name { Sham.name }
+    rules { "[{\"protocol\":\"udp\",\"port\":\"8080-9090\",\"destination\":\"198.41.191.47/1\"}]" }
   end
 end
