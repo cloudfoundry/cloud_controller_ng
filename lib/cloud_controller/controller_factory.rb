@@ -29,8 +29,6 @@ module CloudController
       }
 
       custom_dependencies = case klass.name.demodulize
-                              when 'CrashesController'
-                                { health_manager_client: dependency_locator.health_manager_client }
                               when 'BuildpacksController', 'BuildpackBitsController'
                                 {
                                   buildpack_blobstore: dependency_locator.buildpack_blobstore,
@@ -54,7 +52,8 @@ module CloudController
                                   object_renderer:     nil, # no object rendering
                                   collection_renderer: dependency_locator.entity_only_paginated_collection_renderer,
                                 }
-                              when 'InstancesController', 'SpaceSummariesController', 'AppSummariesController'
+                              when 'InstancesController', 'SpaceSummariesController', 'AppSummariesController',
+                                   'CrashesController'
                                 {
                                   instances_reporter: dependency_locator.instances_reporter,
                                 }

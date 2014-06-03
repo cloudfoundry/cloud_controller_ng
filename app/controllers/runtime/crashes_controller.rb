@@ -6,16 +6,17 @@ module VCAP::CloudController
     get  "#{path_guid}/crashes", :crashes
     def crashes(guid)
       app = find_guid_and_validate_access(:read, guid)
-      Yajl::Encoder.encode(health_manager_client.find_crashes(app))
+      crashed_instances = instances_reporter.crashed_instances_for_app(app)
+      Yajl::Encoder.encode(crashed_instances)
     end
 
     protected
 
-    attr_reader :health_manager_client
+    attr_reader :instances_reporter
 
     def inject_dependencies(dependencies)
       super
-      @health_manager_client = dependencies[:health_manager_client]
+      @instances_reporter = dependencies[:instances_reporter]
     end
   end
 end

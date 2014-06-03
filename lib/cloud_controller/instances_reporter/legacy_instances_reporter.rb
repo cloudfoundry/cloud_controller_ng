@@ -14,5 +14,9 @@ module VCAP::CloudController::InstancesReporter
       return 0 unless app.started?
       health_manager_client.healthy_instances(app)
     end
+
+    def crashed_instances_for_app(app)
+      health_manager_client.find_crashes(app)
+    end
   end
 end

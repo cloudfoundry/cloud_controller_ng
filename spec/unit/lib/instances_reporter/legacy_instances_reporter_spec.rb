@@ -57,5 +57,20 @@ module VCAP::CloudController::InstancesReporter
       end
 
     end
+
+    describe '#crashed_instances_for_app' do
+      before do
+        app.state = 'CRASHED'
+        allow(health_manager_client).to receive(:find_crashes).and_return('some return value')
+      end
+
+      it 'asks the health manager for the crashed instances and returns that' do
+        result = subject.crashed_instances_for_app(app)
+
+        expect(health_manager_client).to have_received(:find_crashes).with(app)
+        expect(result).to eq('some return value')
+      end
+
+    end
   end
 end
