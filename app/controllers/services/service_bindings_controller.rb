@@ -30,7 +30,11 @@ module VCAP::CloudController
       binding = ServiceBinding.new(@request_attrs)
       validate_access(:create, binding, user, roles)
 
-      binding.bind!
+      if binding.valid?
+        binding.bind!
+      else
+        raise Sequel::ValidationFailed.new(binding)
+      end
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{binding.guid}" },

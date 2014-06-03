@@ -18,6 +18,7 @@ module VCAP::Services
 
         super(message, uri, method, response)
       end
+
     end
 
     class ServiceBrokerApiUnreachable < HttpRequestError
