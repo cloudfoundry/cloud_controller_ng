@@ -36,7 +36,7 @@ env:
     - TASKS=spec:unit:controllers:services DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432"
     - TASKS=spec:unit:controllers:runtime  DB=postgres DB_CONNECTION="postgres://postgres@localhost:5432"
 
-    - TASKS='rubocop ci:spec:outer'           DB=mysql    DB_CONNECTION="mysql2://root@localhost:3306"
+    - TASKS='rubocop spec:outer'           DB=mysql    DB_CONNECTION="mysql2://root@localhost:3306"
     - TASKS=spec:unit:fast                 DB=mysql    DB_CONNECTION="mysql2://root@localhost:3306"
     - TASKS=spec:unit:lib                  DB=mysql    DB_CONNECTION="mysql2://root@localhost:3306"
     - TASKS=spec:unit:controllers:services DB=mysql    DB_CONNECTION="mysql2://root@localhost:3306"
