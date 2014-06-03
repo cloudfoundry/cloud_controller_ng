@@ -306,4 +306,10 @@ describe CloudController::DependencyLocator do
       expect(locator.blob_sender).to eq(sender)
     end
   end
+
+  describe "#instances_reporter" do
+    it "returns the legacy instances reporter" do
+      expect(locator.instances_reporter).to be_an_instance_of(VCAP::CloudController::InstancesReporter::LegacyInstancesReporter)
+    end
+  end
 end

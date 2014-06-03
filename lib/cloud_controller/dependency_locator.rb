@@ -157,6 +157,10 @@ module CloudController
       end
     end
 
+    def instances_reporter
+      @instances_reporter ||= VCAP::CloudController::InstancesReporter::LegacyInstancesReporter.new
+    end
+
     private
     attr_reader :config, :message_bus
   end

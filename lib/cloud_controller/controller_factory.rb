@@ -54,6 +54,10 @@ module CloudController
             object_renderer: nil, # no object rendering
             collection_renderer: dependency_locator.entity_only_paginated_collection_renderer,
           }
+        when "InstancesController"
+          {
+            instances_reporter: dependency_locator.instances_reporter,
+          }
         when "AppBitsDownloadController"
           {
               blob_sender: dependency_locator.blob_sender,
