@@ -10,11 +10,12 @@ module VCAP::CloudController
     free_mem_size = 1024
     num_apps = num_prod_apps + num_free_apps
 
+    let(:org) { Organization.make }
+
     before do
-      @org = Organization.make
       @spaces = []
       num_spaces.times do
-        @spaces << Space.make(:organization => @org)
+        @spaces << Space.make(:organization => org)
       end
 
       num_services.times do
@@ -47,39 +48,77 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/organizations/:id/summary" do
-      before do
-        get "/v2/organizations/#{@org.guid}/summary", {}, admin_headers
+      context "admin users" do
+        before do
+          get "/v2/organizations/#{org.guid}/summary", {}, admin_headers
+        end
+
+        it "should return 200" do
+          last_response.status.should == 200
+        end
+
+        it "should return the org guid" do
+          decoded_response["guid"].should == org.guid
+        end
+
+        it "should return the org name" do
+          decoded_response["name"].should == org.name
+        end
+
+        it "returns the org's status" do
+          decoded_response["status"].should == "active"
+        end
+
+        it "should return num_spaces spaces" do
+          decoded_response["spaces"].size.should == num_spaces
+        end
+
+        it "should return the correct info for all spaces" do
+          expect(decoded_response["spaces"]).to include(
+            "guid" => @spaces.first.guid,
+            "name" => @spaces.first.name,
+            "app_count" => num_apps,
+            "service_count" => num_services,
+            "mem_dev_total" => free_mem_size * num_free_apps,
+            "mem_prod_total" => prod_mem_size * num_prod_apps,
+          )
+        end
       end
 
-      it "should return 200" do
-        last_response.status.should == 200
-      end
+      context "non-admin users" do
+        before do
+          org.add_user member
+          org.add_user non_member
+          num_visible_spaces.times do
+            Space.make(:organization => org).tap do |s|
+              s.add_developer member
+            end
+          end
+        end
 
-      it "should return the org guid" do
-        decoded_response["guid"].should == @org.guid
-      end
+        let(:num_visible_spaces) { 4 }
 
-      it "should return the org name" do
-        decoded_response["name"].should == @org.name
-      end
+        let(:member) do
+          VCAP::CloudController::User.make(admin: false)
+        end
 
-      it "returns the org's status" do
-        decoded_response["status"].should == "active"
-      end
+        let(:non_member) do
+          VCAP::CloudController::User.make(admin: false)
+        end
 
-      it "should return num_spaces spaces" do
-        decoded_response["spaces"].size.should == num_spaces
-      end
+        context "when the user is a member of the space" do
+          it "should only return spaces a user has access to" do
+            get "/v2/organizations/#{org.guid}/summary", {}, json_headers(headers_for(member))
+            decoded_response["spaces"].size.should == num_visible_spaces
+          end
+        end
 
-      it "should return the correct info for all spaces" do
-        expect(decoded_response["spaces"]).to include(
-          "guid" => @spaces.first.guid,
-          "name" => @spaces.first.name,
-          "app_count" => num_apps,
-          "service_count" => num_services,
-          "mem_dev_total" => free_mem_size * num_free_apps,
-          "mem_prod_total" => prod_mem_size * num_prod_apps,
-        )
+        context "when the user is not a member of the space (but is a member of the org)" do
+          it "should only return spaces a user has access to" do
+            get "/v2/organizations/#{org.guid}/summary", {}, json_headers(headers_for(non_member))
+            decoded_response["spaces"].size.should == 0
+          end
+        end
       end
     end
   end
