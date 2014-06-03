@@ -14,11 +14,11 @@ namespace :spec do
   end
 
   task acceptance: "db:pick" do
-    run_specs(path: "spec/acceptance")
+    run_specs("spec/acceptance")
   end
 
   task integration: "db:pick" do
-    run_specs(path: "spec/integration")
+    run_specs("spec/integration")
   end
 
   task outer: %w[api acceptance integration]
@@ -34,33 +34,28 @@ namespace :spec do
 
     fast_suites.each do |layer_name|
       task layer_name => "db:pick" do
-        run_specs(path: "spec/unit/#{layer_name}")
+        run_specs("spec/unit/#{layer_name}")
       end
     end
 
     task fast: fast_suites
 
     task :lib do
-      run_specs(path: "spec/unit/lib")
+      run_specs("spec/unit/lib")
     end
 
     namespace :controllers do
       task :services do
-        run_specs(path: "spec/unit/controllers/services")
+        run_specs("spec/unit/controllers/services")
       end
 
       task :runtime do
-        run_specs(path: "spec/unit/controllers/runtime")
+        run_specs("spec/unit/controllers/runtime")
       end
     end
   end
 
-  def run_specs(options)
-    options = {exclude: [], include: [], path: "spec"}.merge(options)
-
-    tags = options[:include].map { |tag| "--tag #{tag}" } +
-        options[:exclude].map { |tag| "--tag ~#{tag}" }
-
-    sh "bundle exec rspec #{options[:path]} #{tags.join(" ")} --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
+  def run_specs(path)
+    sh "bundle exec rspec #{path} --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
   end
 end
