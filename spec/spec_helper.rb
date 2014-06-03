@@ -39,7 +39,6 @@ RSpec.configure do |rspec_config|
   rspec_config.extend ModelCreation
   rspec_config.include ServicesHelpers, services: true
   rspec_config.include ModelHelpers
-  rspec_config.include TempFileCreator
 
   rspec_config.include ControllerHelpers, type: :controller, :example_group => {
     :file_path => EscapedPath.join(%w[spec unit controllers])
@@ -100,8 +99,6 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.after :each do
-    delete_created_temp_files
-
     expect(Sequel::Deprecation.output.string).to eq ''
     Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
   end

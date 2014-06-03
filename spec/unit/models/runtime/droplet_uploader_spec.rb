@@ -13,6 +13,8 @@ describe CloudController::DropletUploader do
   subject { described_class.new(app, blobstore) }
 
   describe "#execute" do
+    include TempFileCreator
+
     it "add a new app droplet" do
       old_size = app.droplets.size
       expect { subject.upload(temp_file_with_content.path) }.to change {

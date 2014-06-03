@@ -123,6 +123,8 @@ module VCAP::CloudController
     end
 
     describe "POST /staging/droplets/:guid/upload" do
+      include TempFileCreator
+
       let(:file_content) { "droplet content" }
 
       let(:upload_req) do
@@ -356,6 +358,8 @@ module VCAP::CloudController
     end
 
     describe "POST /staging/buildpack_cache/:guid/upload" do
+      include TempFileCreator
+
       let(:file_content) { "the-file-content" }
 
       let(:upload_req) do

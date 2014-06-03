@@ -1,4 +1,10 @@
 module TempFileCreator
+  def self.included(spec)
+    spec.after do
+      delete_created_temp_files
+    end
+  end
+
   def temp_file_with_content(content = Sham.guid)
     file = Tempfile.new("a_file")
     file.write(content)
