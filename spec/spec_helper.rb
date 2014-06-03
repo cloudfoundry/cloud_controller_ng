@@ -42,7 +42,7 @@ RSpec.configure do |rspec_config|
   rspec_config.include TempFileCreator
 
   rspec_config.include ControllerHelpers, type: :controller, :example_group => {
-    :file_path => EscapedPath.join(%w[spec controllers])
+    :file_path => EscapedPath.join(%w[spec unit controllers])
   }
 
   rspec_config.include ControllerHelpers, type: :api, :example_group => {

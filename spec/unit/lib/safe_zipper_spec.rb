@@ -10,7 +10,7 @@ describe SafeZipper do
   end
 
   describe ".unzip" do
-    let(:zip_path) { File.expand_path("../fixtures/good.zip", __FILE__) }
+    let(:zip_path) { File.expand_path("../../fixtures/good.zip", File.dirname(__FILE__)) }
     let(:zip_destination) { @tmpdir }
 
     subject(:unzip) { SafeZipper.unzip(zip_path, zip_destination) }
@@ -45,7 +45,7 @@ describe SafeZipper do
     end
 
     context "when the underlying unzip fails" do
-      let(:zip_path) { File.expand_path("../fixtures/corrupt.zip")}
+      let(:zip_path) { File.expand_path("../../fixtures/missing.zip", File.dirname(__FILE__))}
 
       it "raises an exception" do
         expect { unzip }.to raise_exception VCAP::Errors::ApiError, /unzipping had errors\n STDOUT: ""\n STDERR: "unzip:\s+cannot find or open/im
@@ -53,7 +53,7 @@ describe SafeZipper do
     end
 
     context "when the zip is empty" do
-      let(:zip_path) { File.expand_path("../fixtures/empty.zip", __FILE__) }
+      let(:zip_path) { File.expand_path("../../fixtures/empty.zip", File.dirname(__FILE__)) }
 
       it "raises an exception" do
         expect { unzip }.to raise_exception VCAP::Errors::ApiError, /unzipping had errors/i
@@ -62,7 +62,7 @@ describe SafeZipper do
 
     describe "symlinks" do
       context "when they are inside the root directory" do
-        let(:zip_path) { File.expand_path("../fixtures/good_symlinks.zip", __FILE__) }
+        let(:zip_path) { File.expand_path("../../fixtures/good_symlinks.zip", File.dirname(__FILE__)) }
 
         it "unzips them archive correctly without errors" do
           unzip
@@ -71,7 +71,7 @@ describe SafeZipper do
       end
 
       context "when the are outside the root directory" do
-        let(:zip_path) { File.expand_path("../fixtures/bad_symlinks.zip", __FILE__) }
+        let(:zip_path) { File.expand_path("../../fixtures/bad_symlinks.zip", File.dirname(__FILE__)) }
 
         it "raises an exception" do
           expect { unzip }.to raise_exception VCAP::Errors::ApiError, /symlink.+outside/i
@@ -81,7 +81,7 @@ describe SafeZipper do
 
     describe "relative paths" do
       context "when the are inside the root directory" do
-        let(:zip_path) { File.expand_path("../fixtures/good_relative_paths.zip", __FILE__) }
+        let(:zip_path) { File.expand_path("../../fixtures/good_relative_paths.zip", File.dirname(__FILE__)) }
 
         it "unzips them archive correctly without errors" do
           unzip
@@ -90,7 +90,7 @@ describe SafeZipper do
       end
 
       context "when the are outside the root directory" do
-        let(:zip_path) { File.expand_path("../fixtures/bad_relative_paths.zip", __FILE__) }
+        let(:zip_path) { File.expand_path("../../fixtures/bad_relative_paths.zip", File.dirname(__FILE__)) }
 
         it "raises an exception" do
           expect { unzip }.to raise_exception VCAP::Errors::ApiError, /relative path.+outside/i
@@ -100,7 +100,7 @@ describe SafeZipper do
   end
 
   describe ".zip" do
-    let(:root_path) { File.expand_path("../fixtures/fake_package/", __FILE__) }
+    let(:root_path) { File.expand_path("../../fixtures/fake_package/", File.dirname(__FILE__)) }
     let(:tmp_zip) { File.join(@tmpdir, "tmp.zip") }
 
     it "zips the file" do
@@ -115,7 +115,7 @@ describe SafeZipper do
     end
 
     context "when the root path is empty" do
-      let(:root_path) { File.expand_path("../fixtures/no_exist", __FILE__) }
+      let(:root_path) { File.expand_path("../../fixtures/no_exist", File.dirname(__FILE__)) }
 
       it "will raise an error" do
         expect {

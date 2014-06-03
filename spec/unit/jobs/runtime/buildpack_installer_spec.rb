@@ -5,8 +5,8 @@ module VCAP::CloudController
     describe BuildpackInstaller do
       let(:buildpack_name) { "mybuildpack" }
 
-      let(:zipfile) { File.expand_path("../../../fixtures/good.zip", __FILE__) }
-      let(:zipfile2) { File.expand_path("../../../fixtures/good_relative_paths.zip", __FILE__) }
+      let(:zipfile) { File.expand_path("../../../fixtures/good.zip", File.dirname(__FILE__)) }
+      let(:zipfile2) { File.expand_path("../../../fixtures/good_relative_paths.zip", File.dirname(__FILE__)) }
 
       let(:options) { {} }
 

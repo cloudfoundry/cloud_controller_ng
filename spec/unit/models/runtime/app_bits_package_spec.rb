@@ -10,7 +10,7 @@ describe AppBitsPackage do
     CloudController::Blobstore::FingerprintsCollection.new([{"fn" => "path/to/content.txt", "size" => 123, "sha1" => sha}])
   end
 
-  let(:compressed_path) { File.expand_path("../../../fixtures/good.zip", __FILE__) }
+  let(:compressed_path) { File.expand_path("../../../fixtures/good.zip", File.dirname(__FILE__)) }
   let(:app) { VCAP::CloudController::AppFactory.make }
   let(:blobstore_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
