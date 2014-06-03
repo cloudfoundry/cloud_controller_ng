@@ -7,18 +7,21 @@ module VCAP::CloudController
       @config = config
     end
 
-    def healthy_instances(app_or_apps)
-      if app_or_apps.kind_of?(Array)
-        apps = app_or_apps
-        result = {}
-        apps.each do |app|
-          result[app.guid] = healthy_instance(app)
-        end
-        return result
-      else
-        app = app_or_apps
-        return healthy_instance(app)
+    def healthy_instances(app)
+      response = make_request(app)
+
+      if response.nil? || response["instance_heartbeats"].nil?
+        return 0
       end
+
+      running_indices = Set.new
+      response["instance_heartbeats"].each do |instance|
+        if instance["index"] < app.instances && (instance["state"] == "RUNNING" || instance["state"] == "STARTING")
+          running_indices.add(instance["index"])
+        end
+      end
+
+      return running_indices.length
     end
 
     def find_crashes(app)
@@ -55,23 +58,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def healthy_instance(app)
-      response = make_request(app)
-
-      if response.nil? || response["instance_heartbeats"].nil?
-        return 0
-      end
-
-      running_indices = Set.new
-      response["instance_heartbeats"].each do |instance|
-        if instance["index"] < app.instances && (instance["state"] == "RUNNING" || instance["state"] == "STARTING")
-          running_indices.add(instance["index"])
-        end
-      end
-
-      return running_indices.length
-    end
 
     def make_request(app)
       message = { droplet: app.guid, version: app.version }

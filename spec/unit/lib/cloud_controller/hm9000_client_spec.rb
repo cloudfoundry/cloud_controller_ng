@@ -150,20 +150,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context "multiple apps" do
-        it "should return a mapping of app-guid to # health instances" do
-          expect(hm9000_client.healthy_instances([app0, app1, app2])).to eq({ app0.guid => 1, app1.guid => 0, app2.guid => 1 })
-        end
-
-        context "when one of the request fails" do
-          let(:app0_request_should_fail) { true }
-
-          it "should return 0 for that app, but be ok for the others" do
-            expect(hm9000_client.healthy_instances([app0, app1, app2])).to eq({ app0.guid => 0, app1.guid => 0, app2.guid => 1 })
-          end
-        end
-      end
     end
 
     describe "find_crashes" do

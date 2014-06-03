@@ -158,7 +158,7 @@ module CloudController
     end
 
     def instances_reporter
-      @instances_reporter ||= VCAP::CloudController::InstancesReporter::LegacyInstancesReporter.new
+      @instances_reporter ||= VCAP::CloudController::InstancesReporter::LegacyInstancesReporter.new(health_manager_client)
     end
 
     private

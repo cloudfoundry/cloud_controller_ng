@@ -7,42 +7,48 @@ module VCAP::CloudController
     let(:routes) { 2.times.map { Route.make(:space => space) } }
     let(:services) { 2.times.map { ManagedServiceInstance.make(:space => space) } }
 
-    let!(:apps) do
-      started_apps = 2.times.map do |i|
-        AppFactory.make(
-          space: space,
-          instances: i+1,
-          memory: mem_size,
-          state: "STARTED",
-          package_hash: "abc",
-          package_state: "STAGED",
-        )
+    let(:started_app) do
+      AppFactory.make(
+        space: space,
+        instances: 2,
+        memory: mem_size,
+        state: "STARTED",
+        package_hash: "abc",
+        package_state: "STAGED",
+      )
+    end
+
+    let(:stopped_app) do
+      AppFactory.make(
+        :space => space,
+        :instances => 3,
+        :memory => mem_size,
+        :state => "STOPPED",
+      )
+    end
+
+    let(:apps) { [started_app, stopped_app]}
+
+    before do
+      routes.each do |route|
+        started_app.add_route(route)
+        stopped_app.add_route(route)
       end
 
-      stopped_apps = 2.times.map do |i|
-        AppFactory.make(
-          :space => space,
-          :instances => i+1,
-          :memory => mem_size,
-          :state => "STOPPED",
-        )
-      end
-
-      (started_apps + stopped_apps).map do |app|
-        routes.each { |route| app.add_route(route) }
-        services.each { |service| ServiceBinding.make(:app => app, :service_instance => service) }
-        app
+      services.each do |service|
+        ServiceBinding.make(:app => started_app, :service_instance => service)
+        ServiceBinding.make(:app => stopped_app, :service_instance => service)
       end
     end
 
     subject(:request) { get "/v2/spaces/#{space.guid}/summary", {}, admin_headers }
 
     describe "GET /v2/spaces/:id/summary" do
-      let(:health_response) { Hash[apps.select { |app| app.started? }.map { |app| [app.guid, app.instances] }] }
-
       before do
-        health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
-        health_manager_client.stub(:healthy_instances) { health_response }
+        instances_reporter = CloudController::DependencyLocator.instance.instances_reporter
+
+        allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(started_app).and_return(2)
+        allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(stopped_app).and_return(0)
       end
 
       its(:status) { should eq 200 }
@@ -111,41 +117,6 @@ module VCAP::CloudController
               }
             }
           )
-        end
-      end
-
-      context "when the health manager does not return the healthy instances for an app" do
-        let(:missing_apps) do
-          missing = []
-
-          apps.each_with_index do |app, i|
-            if app.started? && i.even?
-              missing << app.guid
-            end
-          end
-
-          missing
-        end
-
-        let(:health_response) do
-          apps.inject({}) do |response, app|
-            unless missing_apps.include?(app.guid)
-              response[app.guid] = app.instances
-            end
-
-            response
-          end
-        end
-
-        it "has nil for its running_instances" do
-          request
-          response_apps = decoded_response["apps"]
-
-          expect(missing_apps).not_to be_empty
-          missing_apps.each do |guid|
-            responded = response_apps.find { |a| a["guid"] == guid }
-            expect(responded["running_instances"]).to be_nil
-          end
         end
       end
     end
