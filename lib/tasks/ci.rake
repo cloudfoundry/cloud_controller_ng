@@ -1,46 +1,60 @@
 namespace :ci do
-  task basics: %w[rubocop spec:api]
-
-  task :rubocop do
-    Rake::Task["rubocop"].invoke
-  end
+  task basics: %w[spec:api spec:acceptance spec:integration]
 
   namespace :spec do
     task api: "db:pick" do
       sh "bundle exec rspec spec/api --order rand:$RANDOM --format RspecApiDocumentation::ApiFormatter"
     end
 
+    task acceptance: "db:pick" do
+      run_specs(path: "spec/acceptance")
+    end
+
     task integration: "db:pick" do
       run_specs(include: %w[type:integration])
     end
 
-    namespace :services do
-      task transactional: "db:pick" do
-        run_specs(include: %w[team:services], exclude: %w[non_transactional type:integration])
+    task outer: %w[api acceptance integration]
+
+    namespace :unit do
+      fast_suites = %w[
+        access
+        jobs
+        models
+        presenters
+        repositories
+      ]
+
+      fast_suites.each do |layer_name|
+        task layer_name => "db:pick" do
+          run_specs(path: "spec/unit/#{layer_name}")
+        end
       end
 
-      task non_transactional: "db:pick" do
-        run_specs(include: %w[non_transactional team:services], exclude: %w[type:integration])
-      end
-    end
+      task fast: fast_suites
 
-    namespace :non_services do
-      task transactional: "db:pick"  do
-        run_specs(exclude: %w[non_transactional team:services type:integration])
+      task :lib do
+        run_specs(path: "spec/unit/lib")
       end
 
-      task non_transactional: "db:pick" do
-        run_specs(include: %w[non_transactional], exclude: %w[team:services type:integration])
+      namespace :controllers do
+        task :services do
+          run_specs(path: "spec/unit/controllers/services")
+        end
+
+        task :runtime do
+          run_specs(path: "spec/unit/controllers/runtime")
+        end
       end
     end
 
     def run_specs(options)
-      options = {exclude: [], include: []}.merge(options)
+      options = {exclude: [], include: [], path: "spec"}.merge(options)
 
       tags = options[:include].map { |tag| "--tag #{tag}" } +
           options[:exclude].map { |tag| "--tag ~#{tag}" }
 
-      sh "bundle exec rspec spec #{tags.join(" ")} --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
+      sh "bundle exec rspec #{options[:path]} #{tags.join(" ")} --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
     end
   end
 
