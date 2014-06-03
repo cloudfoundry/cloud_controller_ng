@@ -1,11 +1,7 @@
+require "bootstrap/db_config"
+
 module DefaultConfig
   def self.for_specs
-    db_connection_string = if ENV["DB_CONNECTION"]
-      "#{ENV["DB_CONNECTION"]}/cc_test_#{ENV["TEST_ENV_NUMBER"]}"
-    else
-      "sqlite:///tmp/cc_test#{ENV["TEST_ENV_NUMBER"]}.db"
-    end
-
     config_file = File.expand_path("../../config/cloud_controller.yml", File.dirname(__FILE__))
     config_hash = VCAP::CloudController::Config.from_file(config_file)
 
@@ -38,7 +34,7 @@ module DefaultConfig
 
         :db => {
             :log_level => "debug",
-            :database => db_connection_string,
+            :database => DbConfig.connection_string,
             :pool_timeout => 10
         }
     )

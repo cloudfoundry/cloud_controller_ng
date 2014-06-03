@@ -45,27 +45,31 @@ end
   end
 
   task create: :pick do
+    require_relative "../../spec/bootstrap/db_config"
+
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -c 'create database cc_test_;'"
+        sh "psql -U postgres -c 'create database #{DbConfig.name};'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
-          sh "mysql -e 'create database cc_test_;'"
+          sh "mysql -e 'create database #{DbConfig.name};' -u root"
         else
-          sh "mysql -e 'create database cc_test_;' -u root --password=password"
+          sh "mysql -e 'create database #{DbConfig.name};' -u root --password=password"
         end
     end
   end
 
   task drop: :pick do
+    require_relative "../../spec/bootstrap/db_config"
+
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -c 'drop database if exists cc_test_;'"
+        sh "psql -U postgres -c 'drop database if exists #{DbConfig.name};'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
-          sh "mysql -e 'drop database if exists cc_test_;'"
+          sh "mysql -e 'drop database if exists #{DbConfig.name};' -u root"
         else
-          sh "mysql -e 'drop database if exists cc_test_;' -u root --password=password"
+          sh "mysql -e 'drop database if exists #{DbConfig.name};' -u root --password=password"
         end
     end
   end
