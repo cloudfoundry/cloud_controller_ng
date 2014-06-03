@@ -3,6 +3,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :rules, String, default: nil
+      to_many :spaces
     end
 
     query_parameters :name

@@ -2,7 +2,7 @@ require "spec_helper"
 require "digest/sha1"
 
 describe "Stable API warning system", api_version_check: true do
-  API_FOLDER_CHECKSUM = "a8f84098e8a20c3f439e943289b5b05634e2b688"
+  API_FOLDER_CHECKSUM = "93151386fc155775d3eae2155404f7d6cd5dba78"
 
   it "double-checks the version" do
     expect(VCAP::CloudController::Constants::API_VERSION).to eq("2.6.0")

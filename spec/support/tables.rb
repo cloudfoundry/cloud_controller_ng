@@ -7,6 +7,8 @@ class Tables
     tables_to_verify = %w(
         app_events
         app_usage_events
+        app_security_groups
+        app_security_groups_spaces
         apps
         apps_routes
         billing_events

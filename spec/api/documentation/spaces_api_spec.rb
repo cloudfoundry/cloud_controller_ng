@@ -16,6 +16,7 @@ resource "Spaces", :type => :api do
   field :manager_guids, "The list of the associated managers", required: false
   field :auditor_guids, "The list of the associated auditors", required: false
   field :domain_guids, "The list of the associated domains", required: false
+  field :app_security_group_guids, "The list of the associated app security groups", required: false
 
   standard_model_list :space, VCAP::CloudController::SpacesController
   standard_model_get :space

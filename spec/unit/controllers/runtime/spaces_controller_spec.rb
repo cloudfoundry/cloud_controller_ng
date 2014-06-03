@@ -31,9 +31,10 @@ module VCAP::CloudController
       },
       many_to_one_collection_ids: {},
       many_to_many_collection_ids: {
-        developers: lambda { |space| make_user_for_space(space) },
-        managers: lambda { |space| make_user_for_space(space) },
-        auditors: lambda { |space| make_user_for_space(space) }
+        developers:          lambda { |space| make_user_for_space(space) },
+        managers:            lambda { |space| make_user_for_space(space) },
+        auditors:            lambda { |space| make_user_for_space(space) },
+        app_security_groups: lambda { |space| AppSecurityGroup.make }
       }
 
 

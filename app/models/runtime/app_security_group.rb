@@ -6,8 +6,12 @@ module VCAP::CloudController
     TRANSPORT_RULE_FIELDS = ["protocol", "port", "destination"].map(&:freeze).freeze
     ICMP_RULE_FIELDS = ["protocol", "code", "type", "destination"].map(&:freeze).freeze
 
-    import_attributes :name, :rules
+    import_attributes :name, :rules, :space_guids
     export_attributes :name, :rules
+
+    many_to_many :spaces
+
+    add_association_dependencies spaces: :nullify
 
     def validate
       validates_presence :name

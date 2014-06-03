@@ -10,6 +10,7 @@ resource "App Security Groups (experimental)", :type => :api do
 
   field :name, "The name of the app security group.", required: true, example_values: ["my_super_app_sec_group"]
   field :rules, "The egress rules for apps that belong to this app security group.", required: false
+  field :space_guids, "The list of associated spaces.", required: false
 
   standard_model_list :app_security_group, VCAP::CloudController::AppSecurityGroupsController
   standard_model_get :app_security_group

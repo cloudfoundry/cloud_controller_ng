@@ -28,9 +28,10 @@ module VCAP::CloudController
         },
       },
       :many_to_zero_or_more => {
-        :developers        => lambda { |space| make_user_for_space(space) },
-        :managers          => lambda { |space| make_user_for_space(space) },
-        :auditors          => lambda { |space| make_user_for_space(space) },
+        :developers          => lambda { |space| make_user_for_space(space) },
+        :managers            => lambda { |space| make_user_for_space(space) },
+        :auditors            => lambda { |space| make_user_for_space(space) },
+        :app_security_groups => lambda { |space| AppSecurityGroup.make }
       }
     }
 

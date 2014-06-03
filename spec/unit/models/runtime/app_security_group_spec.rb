@@ -185,7 +185,10 @@ module VCAP::CloudController
     end
 
     it_behaves_like 'a CloudController model', {
-      required_attributes: [:name]
+      required_attributes: [:name],
+      many_to_zero_or_more: {
+        spaces: ->(app_security_group) { Space.make }
+      }
     }
 
     describe 'validations' do
