@@ -53,7 +53,7 @@ module CloudController
                                   collection_renderer: dependency_locator.entity_only_paginated_collection_renderer,
                                 }
                               when 'InstancesController', 'SpaceSummariesController', 'AppSummariesController',
-                                   'CrashesController'
+                                   'CrashesController', 'StatsController'
                                 {
                                   instances_reporter: dependency_locator.instances_reporter,
                                 }

@@ -60,7 +60,6 @@ module VCAP::CloudController::InstancesReporter
 
     describe '#crashed_instances_for_app' do
       before do
-        app.state = 'CRASHED'
         allow(health_manager_client).to receive(:find_crashes).and_return('some return value')
       end
 
@@ -70,7 +69,21 @@ module VCAP::CloudController::InstancesReporter
         expect(health_manager_client).to have_received(:find_crashes).with(app)
         expect(result).to eq('some return value')
       end
+    end
 
+    describe '#stats_for_app' do
+      let(:opts) { {} }
+
+      before do
+        allow(VCAP::CloudController::DeaClient).to receive(:find_stats).and_return('some return value')
+      end
+
+      it 'uses DeaClient to return stats' do
+        result = subject.stats_for_app(app, opts)
+
+        expect(VCAP::CloudController::DeaClient).to have_received(:find_stats).with(app, opts)
+        expect(result).to eq('some return value')
+      end
     end
   end
 end
