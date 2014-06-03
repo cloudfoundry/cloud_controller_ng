@@ -38,4 +38,37 @@ end
     desc "Rollback the most recent migration and remigrate to current"
     task :redo => [:rollback, :migrate]
   end
+
+  task :pick do
+    ENV["DB"] ||= %w[sqlite mysql postgres].sample
+    puts "Using #{ENV["DB"]}"
+  end
+
+  task create: :pick do
+    case ENV["DB"]
+      when "postgres"
+        sh "psql -U postgres -c 'create database cc_test_;'"
+      when "mysql"
+        if ENV["TRAVIS"] == "true"
+          sh "mysql -e 'create database cc_test_;'"
+        else
+          sh "mysql -e 'create database cc_test_;' -u root --password=password"
+        end
+    end
+  end
+
+  task drop: :pick do
+    case ENV["DB"]
+      when "postgres"
+        sh "psql -U postgres -c 'drop database if exists cc_test_;'"
+      when "mysql"
+        if ENV["TRAVIS"] == "true"
+          sh "mysql -e 'drop database if exists cc_test_;'"
+        else
+          sh "mysql -e 'drop database if exists cc_test_;' -u root --password=password"
+        end
+    end
+  end
+
+  task recreate: %w[drop create]
 end
