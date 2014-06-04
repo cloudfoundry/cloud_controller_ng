@@ -38,7 +38,9 @@ RSpec.configure do |rspec_config|
   rspec_config.include ModelCreation
   rspec_config.extend ModelCreation
   rspec_config.include ServicesHelpers, services: true
-  rspec_config.include ModelHelpers
+  rspec_config.include ModelHelpers, :example_group => {
+      :file_path => EscapedPath.join(%w[spec unit models])
+  }
 
   rspec_config.include ControllerHelpers, type: :controller, :example_group => {
     :file_path => EscapedPath.join(%w[spec unit controllers])

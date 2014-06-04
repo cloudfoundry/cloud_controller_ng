@@ -9,7 +9,7 @@ module ControllerHelpers
           opts[:create_attribute_reset].call if opts[:create_attribute_reset]
 
           initial_obj = opts[:model].make
-          attrs = creation_opts_from_obj(initial_obj, opts)
+          attrs = CreationOptionsFromObject.options(initial_obj, opts)
           initial_obj.destroy
 
           opts[:extra_attributes].each do |attr, val|
