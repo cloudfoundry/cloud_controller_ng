@@ -34,7 +34,6 @@ RSpec.configure do |rspec_config|
   rspec_config.include Rack::Test::Methods
   rspec_config.include VCAP::CloudController
   rspec_config.include VCAP::CloudController::GlobalHelper
-  rspec_config.include VCAP::CloudController::BrokerApiHelper
   rspec_config.include ModelCreation
   rspec_config.extend ModelCreation
   rspec_config.include ServicesHelpers, services: true

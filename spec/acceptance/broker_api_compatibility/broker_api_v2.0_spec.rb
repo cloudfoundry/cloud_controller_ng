@@ -2,6 +2,7 @@ require 'spec_helper'
 
 describe 'Service Broker API integration' do
   describe 'v2.0' do
+    include VCAP::CloudController::BrokerApiHelper
 
     before(:all) { setup_cc }
     after(:all) { $spec_env.reset_database_with_seeds }
@@ -18,6 +19,12 @@ describe 'Service Broker API integration' do
     let(:broker_response_status) { 200 }
 
     let(:guid_pattern) { '[[:alnum:]-]+' }
+
+    def request_has_version_header(method, url)
+      a_request(method, url).
+          with { |request| request.headers[api_header].should match(api_accepted_version) }.
+          should have_been_made
+    end
 
     shared_examples 'broker errors' do
       context 'when broker returns 400' do
