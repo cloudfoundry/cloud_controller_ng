@@ -20,18 +20,13 @@ resource "Service Instances", :type => :api do
       space_guid = VCAP::CloudController::Space.make.guid
       service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
       request_hash = {space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid }
-      client.post '/v2/service_instances', Yajl::Encoder.encode(request_hash), headers
+
+      client.post '/v2/service_instances', Yajl::Encoder.encode(request_hash, pretty: true), headers
       expect(status).to eq(201)
-
-      standard_entity_response parsed_response, :service_instance
-
-      #instance_guid = parsed_response['metadata']['guid']
-      #audited_event VCAP::CloudController::Event.find(:type => "audit.app.create", :actee => app_guid)
     end
   end
 
   describe 'Deleting a service instance' do
-    field :guid, "The guid of the service instance", required: true
     let(:guid) { VCAP::CloudController::ServiceInstance.make.guid }
 
     standard_model_delete_without_async :service_instance
@@ -39,15 +34,12 @@ resource "Service Instances", :type => :api do
 
   describe 'Getting a service instance' do
     standard_list_parameters VCAP::CloudController::ServiceInstancesController
-    field :guid, "The guid of the service instance", required: true
     let(:guid) { VCAP::CloudController::ServiceInstance.make.guid }
 
     standard_model_get :service_instance
   end
 
   get "/v2/service_instances/:guid/permissions" do
-    field :guid, "The guid of the service instance", required: true, example_values: %w(6c4bd80f-4593-41d1-a2c9-b20cb65ec76e)
-
     example "Retrieving permissions on a service instance" do
       client.get "/v2/service_instances/#{service_instance.guid}/permissions", {}, headers
       expect(status).to eq(200)
