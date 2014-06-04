@@ -53,8 +53,8 @@ module VCAP::CloudController
             }
           }
 
-          DeaClient.should_receive(:find_stats).with(@app, {}).
-            and_return(stats)
+          instances_reporter = CloudController::DependencyLocator.instance.instances_reporter
+          instances_reporter.should_receive(:stats_for_app).with(@app, {}).and_return(stats)
 
           get("/v2/apps/#{@app.guid}/stats",
               {},
@@ -106,8 +106,8 @@ module VCAP::CloudController
             }
           }
 
-          DeaClient.should_receive(:find_stats).with(@app, {}).
-            and_return(stats)
+          instances_reporter = CloudController::DependencyLocator.instance.instances_reporter
+          instances_reporter.should_receive(:stats_for_app).with(@app, {}).and_return(stats)
 
           get("/v2/apps/#{@app.guid}/stats",
               {},

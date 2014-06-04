@@ -22,8 +22,8 @@ module VCAP::CloudController
 
                      ]
 
-          health_manager_client = CloudController::DependencyLocator.instance.health_manager_client
-          health_manager_client.should_receive(:find_crashes).with(@app).and_return(crashed_instances)
+          instances_reporter = CloudController::DependencyLocator.instance.instances_reporter
+          instances_reporter.should_receive(:crashed_instances_for_app).with(@app).and_return(crashed_instances)
 
           get("/v2/apps/#{@app.guid}/crashes", {}, headers_for(@developer))
 

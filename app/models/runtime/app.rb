@@ -457,11 +457,6 @@ module VCAP::CloudController
           Droplet.new(app: self, droplet_hash: self.droplet_hash)
     end
 
-    def running_instances
-      return 0 unless started?
-      health_manager_client.healthy_instances(self)
-    end
-
     def start!
       self.state = "STARTED"
       save

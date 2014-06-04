@@ -12,19 +12,6 @@ module VCAP::CloudController
         apps[app.guid] = app_summary(app)
       end
 
-      started_apps = space.apps.select(&:started?)
-      unless started_apps.empty?
-        health_manager_client.healthy_instances(started_apps).each do |app_guid, num|
-          apps[app_guid][:running_instances] = num
-        end
-      end
-
-      space.apps.each do |app|
-        if app.stopped?
-          apps[app.guid][:running_instances] = 0
-        end
-      end
-
       services_summary = space.service_instances.map do |instance|
         instance.as_summary_json
       end
@@ -39,11 +26,9 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :health_manager_client
-
     def inject_dependencies(dependencies)
       super
-      @health_manager_client = dependencies[:health_manager_client]
+      @instances_reporter = dependencies[:instances_reporter]
     end
 
     def app_summary(app)
@@ -53,7 +38,7 @@ module VCAP::CloudController
         routes: app.routes.map(&:as_summary_json),
         service_count: app.service_bindings_dataset.count,
         service_names: app.service_bindings_dataset.map(&:service_instance).map(&:name),
-        running_instances: nil,
+        running_instances: @instances_reporter.number_of_starting_and_running_instances_for_app(app),
       }.merge(app.to_hash)
     end
   end
