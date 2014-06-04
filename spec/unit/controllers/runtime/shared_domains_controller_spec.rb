@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe SharedDomainsController, type: :controller do
+  describe SharedDomainsController do
     describe "POST /v2/shared_domains" do
       context "when a name is given" do
         it "returns 201 Created" do

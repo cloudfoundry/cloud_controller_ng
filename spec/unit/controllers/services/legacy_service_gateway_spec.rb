@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::LegacyServiceGateway, :services, type: :controller do
+  describe VCAP::CloudController::LegacyServiceGateway, :services do
     describe "Gateway facing apis" do
       def build_offering(attrs={})
         defaults = {

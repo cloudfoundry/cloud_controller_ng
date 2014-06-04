@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::LegacyService, :services, type: :controller do
+  describe VCAP::CloudController::LegacyService, :services do
     describe "User facing apis" do
       let(:user) { make_user_with_default_space(:admin => true) }
 

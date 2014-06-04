@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::SpaceSummariesController, type: :controller do
+  describe VCAP::CloudController::SpaceSummariesController do
     let(:mem_size) { 128 }
     let(:space) { Space.make }
     let(:routes) { 2.times.map { Route.make(:space => space) } }

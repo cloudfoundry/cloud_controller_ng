@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::FilesController, type: :controller do
+  describe VCAP::CloudController::FilesController do
     describe "GET /v2/apps/:id/instances/:instance/files/(:path)" do
       before :each do
         @app = AppFactory.make(:package_hash => "abc", :package_state => "STAGED")

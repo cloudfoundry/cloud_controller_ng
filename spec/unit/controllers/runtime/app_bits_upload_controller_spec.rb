@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe AppBitsUploadController, type: :controller do
+  describe AppBitsUploadController do
     describe "PUT /v2/app/:id/bits" do
       let(:app_obj) do
         AppFactory.make droplet_hash: nil, package_state: "PENDING"

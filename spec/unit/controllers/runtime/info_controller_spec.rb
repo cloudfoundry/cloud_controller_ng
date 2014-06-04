@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::InfoController, type: :controller do
+  describe VCAP::CloudController::InfoController do
     shared_examples "info response" do |expected_status, expect_user|
       it "should return #{expected_status}" do
         last_response.status.should == expected_status

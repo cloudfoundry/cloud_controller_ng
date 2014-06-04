@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::AppsController, type: :controller do
+  describe VCAP::CloudController::AppsController do
     before { configure_stacks }
     include_examples "uaa authenticated api", path: "/v2/apps"
     include_examples "querying objects", path: "/v2/apps", model: App, queryable_attributes: %w(name)

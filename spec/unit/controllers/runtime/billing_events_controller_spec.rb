@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::BillingEventsController, type: :controller do
+  describe VCAP::CloudController::BillingEventsController do
     describe "permissions" do
       context "with 5 event records" do
         let(:org) do

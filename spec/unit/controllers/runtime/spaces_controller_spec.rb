@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::SpacesController, type: :controller do
+  describe VCAP::CloudController::SpacesController do
     include_examples "uaa authenticated api", path: "/v2/spaces"
     include_examples "querying objects", path: "/v2/spaces", model: Space, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/spaces", model: Space

@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe AppSecurityGroupsController, type: :controller do
+  describe AppSecurityGroupsController do
     let(:group) { AppSecurityGroup.make }
 
     include_examples "uaa authenticated api", path: "/v2/app_security_groups"

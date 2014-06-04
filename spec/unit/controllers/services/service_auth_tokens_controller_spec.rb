@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ServiceAuthTokensController, :services, type: :controller do
+  describe VCAP::CloudController::ServiceAuthTokensController, :services do
     include_examples "uaa authenticated api", path: "/v2/service_auth_tokens"
     include_examples "enumerating objects", path: "/v2/service_auth_tokens", model: ServiceAuthToken
     include_examples "reading a valid object", path: "/v2/service_auth_tokens", model: ServiceAuthToken, basic_attributes: %w(label provider)

@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe ServicesController, :services, type: :controller do
+  describe ServicesController, :services do
     include_examples "enumerating objects", path: "/v2/services", model: Service
     include_examples "reading a valid object", path: "/v2/services", model: Service,
                      basic_attributes:               %w(label provider url description version bindable tags requires)

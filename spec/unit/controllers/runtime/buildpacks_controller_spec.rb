@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::BuildpacksController, type: :controller do
+  describe VCAP::CloudController::BuildpacksController do
     describe "/v2/buildpacks" do
       let(:user) { make_user }
       let(:req_body) { Yajl::Encoder.encode({:name => "dynamic_test_buildpack"}) }

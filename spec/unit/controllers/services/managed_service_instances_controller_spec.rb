@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe ManagedServiceInstancesController, :services, type: :controller do
+  describe ManagedServiceInstancesController, :services do
     describe 'GET', '/v2/managed_service_instances/:guid' do
       it 'redirects to /v2/service_instances/:guid' do
         get "/v2/managed_service_instances/abcd"

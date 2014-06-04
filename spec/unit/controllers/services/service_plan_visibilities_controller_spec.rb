@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe ServicePlanVisibilitiesController, :services, type: :controller do
+  describe ServicePlanVisibilitiesController, :services do
     service_plan_visibility_path = "/v2/service_plan_visibilities"
     include_examples "creating", path: service_plan_visibility_path,
                      model: ServicePlanVisibility,

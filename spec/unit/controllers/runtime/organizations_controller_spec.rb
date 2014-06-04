@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::OrganizationsController, type: :controller do
+  describe VCAP::CloudController::OrganizationsController do
     let(:org) { Organization.make }
     include_examples "uaa authenticated api", path: "/v2/organizations"
     include_examples "querying objects", path: "/v2/organizations", model: Organization, queryable_attributes: %w(name status)

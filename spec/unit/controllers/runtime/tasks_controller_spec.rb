@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe TasksController, type: :controller do
+  describe TasksController do
     describe "POST /v2/tasks" do
       context "when an app is given" do
         let!(:some_app) { AppFactory.make :guid => "some-app-guid" }

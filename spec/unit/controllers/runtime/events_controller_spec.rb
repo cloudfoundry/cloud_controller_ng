@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe EventsController, type: :controller do
+  describe EventsController do
     let(:admin_user) { User.make :admin => true }
 
     describe "GET /v2/events" do

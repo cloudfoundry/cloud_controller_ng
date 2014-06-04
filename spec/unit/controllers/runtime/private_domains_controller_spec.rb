@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe PrivateDomainsController, type: :controller do
+  describe PrivateDomainsController do
     describe "POST /v2/private_domains" do
       context "when owning_organization and name are both given" do
         it "returns 201 Created" do

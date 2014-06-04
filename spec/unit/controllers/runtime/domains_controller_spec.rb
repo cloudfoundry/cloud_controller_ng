@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::DomainsController, type: :controller do
+  describe VCAP::CloudController::DomainsController do
     include_examples "uaa authenticated api", path: "/v2/domains"
     include_examples "enumerating objects", path: "/v2/domains", model: PrivateDomain
     include_examples "enumerating objects", path: "/v2/domains", model: SharedDomain

@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe StacksController, type: :controller do
+  describe StacksController do
     include_examples "uaa authenticated api", path: "/v2/stacks"
     include_examples "querying objects", path: "/v2/stacks", model: Stack, queryable_attributes: [:name]
     include_examples "enumerating objects", path: "/v2/stacks", model: Stack

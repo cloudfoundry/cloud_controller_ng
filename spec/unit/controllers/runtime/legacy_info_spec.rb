@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   # port of the legacy cc info spec, minus legacy token support. i.e. this is jwt
   # tokens only.
-  describe VCAP::CloudController::LegacyInfo, type: :controller do
+  describe VCAP::CloudController::LegacyInfo do
     it "can have allow_debug set to false" do
       controller = described_class.new({ :info => {}, :uaa => {}, :allow_debug => false }, Logger.new(nil), :why, :why, :why)
       info = YAML.load(controller.info)

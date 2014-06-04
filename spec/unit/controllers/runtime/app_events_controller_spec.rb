@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::AppEventsController, type: :controller do
+  describe VCAP::CloudController::AppEventsController do
     def get_obj_guid(obj_name)
       send(obj_name).guid
     end

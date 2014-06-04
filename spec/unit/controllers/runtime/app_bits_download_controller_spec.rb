@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe AppBitsDownloadController, type: :controller do
+  describe AppBitsDownloadController do
     describe "GET /v2/app/:id/download" do
       let(:tmpdir) { Dir.mktmpdir }
       let(:app_obj) { AppFactory.make }

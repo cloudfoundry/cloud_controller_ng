@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::UsersController, type: :controller do
+  describe VCAP::CloudController::UsersController do
     context 'logged in as an admin' do
       include_examples "uaa authenticated api", path: "/v2/users"
       include_examples "enumerating objects", path: "/v2/users", model: User

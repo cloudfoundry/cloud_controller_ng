@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::SnapshotsController, type: :controller do
+  describe VCAP::CloudController::SnapshotsController do
     let(:service_instance) do
       service = Service.make(
         :url => "http://horsemeat.com",

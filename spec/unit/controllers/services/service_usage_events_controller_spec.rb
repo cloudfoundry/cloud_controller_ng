@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceUsageEventsController, type: :controller do
+  describe ServiceUsageEventsController do
     let(:event_guid1) { SecureRandom.uuid }
 
     before do

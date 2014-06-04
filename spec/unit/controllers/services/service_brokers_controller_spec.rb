@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceBrokersController, :services, type: :controller do
+  describe ServiceBrokersController, :services do
     let(:headers) { json_headers(admin_headers) }
 
     let(:non_admin_headers) do

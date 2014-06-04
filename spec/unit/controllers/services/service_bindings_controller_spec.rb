@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe ServiceBindingsController, :services, type: :controller do
+  describe ServiceBindingsController, :services do
     # The create_attribute block can't "see" lets and instance variables
     CREDENTIALS = {'foo' => 'bar'}
 

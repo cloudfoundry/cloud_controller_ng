@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe RestagesController, type: :controller do
+  describe RestagesController do
     describe "POST /v2/apps/:id/restage" do
       let(:package_state) { "STAGED" }
       let!(:application) { AppFactory.make(:package_hash => "abc", :package_state => package_state) }

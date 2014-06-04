@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe UserProvidedServiceInstancesController, :services, type: :controller do
+  describe UserProvidedServiceInstancesController, :services do
     include_examples "creating", path: "/v2/user_provided_service_instances",
                      model: UserProvidedServiceInstance,
                      required_attributes: %w(name space_guid),
