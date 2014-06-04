@@ -1,5 +1,3 @@
-require File.expand_path("fake_nginx_reverse_proxy.rb", File.dirname(__FILE__))
-
 module ControllerHelpers
   include VCAP::CloudController
 
@@ -23,10 +21,7 @@ module ControllerHelpers
   ]
 
   def app
-    token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
-    klass = Class.new(VCAP::CloudController::Controller)
-    klass.use(FakeNginxReverseProxy)
-    klass.new(config, token_decoder)
+    FakeApp.new(config)
   end
 
   def headers_for(user, opts = {})
