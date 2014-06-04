@@ -1,4 +1,4 @@
-require File.expand_path("../controller_helpers/nginx_upload", __FILE__)
+require File.expand_path("fake_nginx_reverse_proxy.rb", File.dirname(__FILE__))
 
 module ControllerHelpers
   include VCAP::CloudController
@@ -25,7 +25,7 @@ module ControllerHelpers
   def app
     token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
     klass = Class.new(VCAP::CloudController::Controller)
-    klass.use(NginxUpload)
+    klass.use(FakeNginxReverseProxy)
     klass.new(config, token_decoder)
   end
 

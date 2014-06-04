@@ -1,7 +1,7 @@
 require "rack/test"
 require "tmpdir"
 
-class NginxUpload
+class FakeNginxReverseProxy
   def initialize(app)
     @app = app
   end
