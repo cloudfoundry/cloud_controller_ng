@@ -42,6 +42,12 @@ module VCAP::CloudController
       ]
     end
 
+    def delete(guid)
+      do_delete(find_guid_and_validate_access(:delete, guid))
+    end
+
+    private
+
     def validate_app(app_guid)
       app = App.find(guid: app_guid)
       raise VCAP::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless app
@@ -53,12 +59,6 @@ module VCAP::CloudController
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid) unless service_instance
       raise VCAP::Errors::ApiError.new_from_details('UnbindableService') unless service_instance.bindable?
     end
-
-    def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
-    end
-
-    private
 
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])
