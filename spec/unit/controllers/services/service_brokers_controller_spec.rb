@@ -186,9 +186,38 @@ module VCAP::CloudController
         }
       end
 
-      it "enumerates the things" do
+      it 'enumerates the things' do
         get '/v2/service_brokers', {}, headers
         expect(decoded_response).to eq(single_broker_response)
+      end
+
+      it 'returns a formatted message' do
+        formatted_message = <<-JSON
+{
+  "total_results": 1,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": null,
+  "resources": [
+    {
+      "metadata": {
+        "guid": "#{broker.guid}",
+        "url": "/v2/service_brokers/#{broker.guid}",
+        "created_at": "#{broker.created_at.iso8601}",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "#{broker.name}",
+        "broker_url": "#{broker.broker_url}",
+        "auth_username": "#{broker.auth_username}"
+      }
+    }
+  ]
+}
+JSON
+
+        get '/v2/service_brokers', {}, headers
+        expect(last_response.body).to eq formatted_message.strip
       end
 
       context "with a second service broker" do
