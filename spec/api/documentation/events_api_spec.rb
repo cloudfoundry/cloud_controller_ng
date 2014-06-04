@@ -1,7 +1,7 @@
 require "spec_helper"
 require "rspec_api_documentation/dsl"
 
-resource "Events (experimental)", :type => :api do
+resource "Events", :type => :api do
   DOCUMENTED_EVENT_TYPES = %w[app.crash audit.app.update audit.app.create audit.app.delete-request audit.space.create audit.space.update audit.space.delete-request]
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
