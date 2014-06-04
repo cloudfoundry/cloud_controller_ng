@@ -21,13 +21,8 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details("InstancesError", msg)
       end
 
-      instances = @instances_reporter.all_instances_for_app(app)
+      instances = DeaClient.find_all_instances(app)
       Yajl::Encoder.encode(instances)
-    end
-
-    def inject_dependencies(dependencies)
-      super
-      @instances_reporter = dependencies.fetch(:instances_reporter)
     end
   end
 end

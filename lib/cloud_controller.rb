@@ -82,6 +82,4 @@ require "cloud_controller/http_response_error"
 require "cloud_controller/install_buildpacks"
 require "cloud_controller/upload_buildpack"
 
-require "cloud_controller/instances_reporter/legacy_instances_reporter"
-
 require "services"

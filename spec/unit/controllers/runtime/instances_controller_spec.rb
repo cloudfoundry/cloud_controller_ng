@@ -12,8 +12,6 @@ module VCAP::CloudController
       context "as a developer" do
         subject { get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer)) }
 
-        let(:instances_reporter) { CloudController::DependencyLocator.instance.instances_reporter }
-
         it "returns 400 when there is an error finding the instances" do
           instance_id = 5
 
@@ -91,6 +89,22 @@ module VCAP::CloudController
               :state => "FLAPPING",
               :since => 1,
             },
+            1 => {
+              :state => "STARTING",
+              :since => 2,
+              :debug_ip => "1.2.3.4",
+              :debug_port => 1001,
+              :console_ip => "1.2.3.5",
+              :console_port => 1002,
+            },
+            2 => {
+              :state => "RUNNING",
+              :since => 3,
+              :debug_ip => "2.3.4.5",
+              :debug_port => 2001,
+              :console_ip => "2.3.4.6",
+              :console_port => 2002,
+            },
           }
 
           expected = {
@@ -98,9 +112,25 @@ module VCAP::CloudController
               "state" => "FLAPPING",
               "since" => 1,
             },
+            "1" => {
+              "state" => "STARTING",
+              "since" => 2,
+              "debug_ip" => "1.2.3.4",
+              "debug_port" => 1001,
+              "console_ip" => "1.2.3.5",
+              "console_port" => 1002,
+            },
+            "2" => {
+              "state" => "RUNNING",
+              "since" => 3,
+              "debug_ip" => "2.3.4.5",
+              "debug_port" => 2001,
+              "console_ip" => "2.3.4.6",
+              "console_port" => 2002,
+            },
           }
 
-          instances_reporter.should_receive(:all_instances_for_app).with(@app).
+          DeaClient.should_receive(:find_all_instances).with(@app).
             and_return(instances)
 
           subject

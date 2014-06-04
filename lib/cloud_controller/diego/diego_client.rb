@@ -1,20 +1,23 @@
 module VCAP::CloudController
   class DiegoClient
-    def initialize(enabled, message_bus, tps_reporter, blobstore_url_generator)
-      @enabled = enabled
+    def initialize(config, message_bus, blobstore_url_generator)
+      @config = config
       @message_bus = message_bus
-      @tps_reporter = tps_reporter
       @blobstore_url_generator = blobstore_url_generator
       @buildpack_entry_generator = DiegoBuildpackEntryGenerator.new(@blobstore_url_generator)
     end
 
+    def config=(config)
+      @config = config
+    end
+
     def running_enabled(app)
-      @enabled && (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
+      @config[:diego] && (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
     end
 
     def staging_enabled(app)
-      return false unless @enabled
-      running_enabled(app) || ((app.environment_json || {})["CF_DIEGO_BETA"] == "true")
+      return false unless @config[:diego]
+      running_enabled(app) ||  ((app.environment_json || {})["CF_DIEGO_BETA"] == "true")
     end
 
     def staging_needed(app)
@@ -68,24 +71,6 @@ module VCAP::CloudController
           :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),
           :buildpacks => @buildpack_entry_generator.buildpack_entries(app)
       }
-    end
-
-    def lrp_instances(app)
-      body = Net::HTTP.get(URI("#{@tps_reporter}/lrps/#{app.guid}-#{app.version}"))
-
-      result = {}
-
-      tps_instances = JSON.parse(body)
-      tps_instances.each do |instance|
-        # in principal there can be *multiple* instances at a given index.
-        # this will arbitrarily pick out one of them...
-        result[instance['index']] = {
-          state: instance['state'].upcase,
-          since: instance['since_in_ns'].to_i / 1_000_000_000,
-        }
-      end
-
-      result
     end
 
     def environment(app)

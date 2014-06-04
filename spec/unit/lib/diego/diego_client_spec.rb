@@ -2,8 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DiegoClient do
-    let(:enabled) { true }
-    let(:tps_reporter) { "http://some-tps-addr" }
+    let(:config_hash) { { diego: true} }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
     let(:domain) { SharedDomain.make(name: "some-domain.com") }
@@ -31,7 +30,7 @@ module VCAP::CloudController
       )
     end
 
-    subject(:client) { DiegoClient.new(enabled, message_bus, tps_reporter, blobstore_url_generator) }
+    subject(:client) { DiegoClient.new(config_hash,message_bus, blobstore_url_generator) }
 
     describe "desiring an app" do
       let(:expected_message) do
@@ -131,24 +130,7 @@ module VCAP::CloudController
             {key: "MEMORY_LIMIT", value: "#{app.memory}m"},
             {key: "APP_KEY", value: "APP_VAL"},
         ]
-
         expect(client.environment(app)).to eq(expected_environment)
-      end
-    end
-
-    describe "getting app instance information" do
-      before do
-        stub_request(:get, "http://some-tps-addr/lrps/#{app.guid}-#{app.version}").to_return(
-          status: 200,
-          body: [{ index: 0, state: 'running', since_in_ns: '1257894000000000001' },
-                 { index: 1, state: 'starting', since_in_ns: '1257895000000000001' } ].to_json)
-      end
-
-      it "reports each instance's index, state, and since" do
-        expect(client.lrp_instances(app)).to eq({
-          0 => { state: "RUNNING", since: 1257894000 },
-          1 => { state: "STARTING", since: 1257895000 },
-        })
       end
     end
   end
