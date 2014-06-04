@@ -27,15 +27,7 @@ case $1 in
 
     /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
 
-    <% if properties.syslog_aggregator && properties.syslog_aggregator.address %>
-      exec $NGINX_NEWRELIC_PLUGIN_DIR/newrelic_nginx_agent \
-        > >(tee -a >(logger -p user.info -t vcap.nginx_newrelic_plugin.stdout) $LOG_DIR/nginx_newrelic_plugin.stdout.log) \
-        2> >(tee -a >(logger -p user.error -t vcap.nginx_newrelic_plugin.stderr) $LOG_DIR/nginx_newrelic_plugin.stderr.log)
-    <% else %>
-      exec $NGINX_NEWRELIC_PLUGIN_DIR/newrelic_nginx_agent \
-        >> $LOG_DIR/nginx_newrelic_plugin.stdout.log \
-        2>> $LOG_DIR/nginx_newrelic_plugin.stderr.log
-    <% end %>
+    exec $NGINX_NEWRELIC_PLUGIN_DIR/newrelic_nginx_agent
     ;;
 
   stop)
