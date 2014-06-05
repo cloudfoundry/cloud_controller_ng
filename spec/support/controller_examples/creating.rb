@@ -66,14 +66,6 @@ module ControllerExamples
               obj.send(k).should == creation_opts[k]
             end
           end
-
-          it "should have a recent created_at timestamp" do
-            Time.parse(metadata["created_at"]).should be_recent
-          end
-
-          it "should not have an updated_at timestamp" do
-            metadata["updated_at"].should be_nil
-          end
         end
       end
 
@@ -97,15 +89,9 @@ module ControllerExamples
             post opts[:path], Yajl::Encoder.encode(filtered_opts), json_headers(admin_headers)
           end
 
-          it "should return a 400" do
+          it "should return a 400, with a request guid, but without a location header" do
             last_response.status.should == 400
-          end
-
-          it "should not return a location header" do
             last_response.location.should be_nil
-          end
-
-          it "should return the request guid in the header" do
             last_response.headers["X-VCAP-Request-ID"].should_not be_nil
           end
 
