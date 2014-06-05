@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class LegacyApiBase < RestController::Base
+  class LegacyApiBase < RestController::BaseController
     include VCAP::Errors
 
     def default_space

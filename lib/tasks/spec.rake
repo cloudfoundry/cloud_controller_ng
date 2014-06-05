@@ -50,7 +50,7 @@ namespace :spec do
       end
 
       task :runtime do
-        run_specs("spec/unit/controllers/runtime")
+        run_specs("spec/unit/controllers/base spec/unit/controllers/runtime")
       end
     end
   end

@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ResourceMatchesController < RestController::Base
+  class ResourceMatchesController < RestController::BaseController
     put "/v2/resource_match", :match
     def match
       return ApiError.new_from_details("NotAuthorized") unless user

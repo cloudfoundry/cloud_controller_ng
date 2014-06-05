@@ -1,9 +1,11 @@
 require "cloud_controller/rest_controller/common_params"
+require "cloud_controller/rest_controller/messages"
+require "cloud_controller/rest_controller/routes"
 
 module VCAP::CloudController::RestController
 
   # The base class for all api endpoints.
-  class Base
+  class BaseController
     ROUTE_PREFIX = "/v2"
 
     include VCAP::CloudController

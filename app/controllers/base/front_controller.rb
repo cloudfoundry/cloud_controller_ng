@@ -5,7 +5,7 @@ module VCAP::CloudController
 
   Errors = VCAP::Errors
 
-  class Controller < Sinatra::Base
+  class FrontController < Sinatra::Base
     register Sinatra::VCAP
 
     attr_reader :config

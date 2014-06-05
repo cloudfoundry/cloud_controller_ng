@@ -2,7 +2,7 @@ require "cloudfront-signer"
 require "cloud_controller/blobstore/client"
 
 module VCAP::CloudController
-  class StagingsController < RestController::Base
+  class StagingsController < RestController::BaseController
     include VCAP::Errors
 
     STAGING_PATH = "/staging"

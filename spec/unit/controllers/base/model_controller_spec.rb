@@ -261,7 +261,7 @@ module VCAP::CloudController
 
         let(:test_model_nullify_dep) { VCAP::CloudController::TestModelNullifyDep.create() }
 
-        let(:env) { {"PATH_INFO" => VCAP::CloudController::RestController::Base::ROUTE_PREFIX} }
+        let(:env) { {"PATH_INFO" => VCAP::CloudController::RestController::BaseController::ROUTE_PREFIX} }
 
         def create_dependency_class(table_name, class_name)
           db.create_table table_name do

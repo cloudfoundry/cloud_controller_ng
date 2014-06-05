@@ -37,7 +37,7 @@ require "cloud_controller/db_migrator"
 require "cloud_controller/steno_configurer"
 require "cloud_controller/constants"
 
-require "cloud_controller/controller"
+require "controllers/base/front_controller"
 
 require "cloud_controller/config"
 require "cloud_controller/db"

@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class InfoController < RestController::Base
+  class InfoController < RestController::BaseController
     allow_unauthenticated_access
 
     get "/v2/info", :read

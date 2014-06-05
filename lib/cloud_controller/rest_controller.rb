@@ -1,12 +1,10 @@
+require "controllers/base/base_controller"
+require "controllers/base/model_controller"
 require "cloud_controller/rest_controller/controller_dsl"
-require "cloud_controller/rest_controller/messages"
 require "cloud_controller/rest_controller/secure_eager_loader"
 require "cloud_controller/rest_controller/preloaded_object_serializer"
 require "cloud_controller/rest_controller/object_renderer"
 require "cloud_controller/rest_controller/paginated_collection_renderer"
-require "cloud_controller/rest_controller/routes"
-require "cloud_controller/rest_controller/base"
-require "cloud_controller/rest_controller/model_controller"
 
 module VCAP::CloudController
   def self.controller_from_model(model)

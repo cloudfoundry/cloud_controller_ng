@@ -11,7 +11,7 @@ module VCAP::CloudController
         end
 
         map "/" do
-          run Controller.new(config, token_decoder)
+          run FrontController.new(config, token_decoder)
         end
       end
     end

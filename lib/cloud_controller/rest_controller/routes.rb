@@ -63,7 +63,7 @@ module VCAP::CloudController::RestController
       end
 
       def controller
-        VCAP::CloudController::Controller
+        VCAP::CloudController::FrontController
       end
     end
   end

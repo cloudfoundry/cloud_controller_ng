@@ -1,13 +1,13 @@
 require "spec_helper"
 
-describe VCAP::CloudController::RestController::Base, type: :controller do
+describe VCAP::CloudController::RestController::BaseController do
   let(:logger) { double(:logger, :debug => nil, :error => nil) }
   let(:env) { {} }
   let(:params) { {} }
   let(:sinatra) { nil }
 
   subject do
-    VCAP::CloudController::RestController::Base.new(double(:config), logger, env, params, double(:body), sinatra)
+    VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), sinatra)
   end
 
   describe "#dispatch" do
@@ -56,7 +56,7 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
 
       it "should log an error for a Sequel Validation error" do
         subject.stub(:to_s).and_raise(Sequel::ValidationFailed.new("hello"))
-        VCAP::CloudController::RestController::Base.should_receive(:translate_validation_exception) { RuntimeError.new("some new error") }
+        VCAP::CloudController::RestController::BaseController.should_receive(:translate_validation_exception) { RuntimeError.new("some new error") }
         expect {
           subject.dispatch(:to_s)
         }.to raise_error RuntimeError, "some new error"
@@ -78,7 +78,7 @@ describe VCAP::CloudController::RestController::Base, type: :controller do
 
       it "should log an error for a Sequel Database Error error" do
         subject.stub(:to_s).and_raise(Sequel::DatabaseError)
-        VCAP::CloudController::RestController::Base.should_receive(:translate_and_log_exception) { RuntimeError.new("some new error") }
+        VCAP::CloudController::RestController::BaseController.should_receive(:translate_and_log_exception) { RuntimeError.new("some new error") }
         expect {
           subject.dispatch(:to_s)
         }.to raise_error RuntimeError, "some new error"

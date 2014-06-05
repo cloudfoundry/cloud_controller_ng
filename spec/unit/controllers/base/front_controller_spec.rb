@@ -1,7 +1,7 @@
 require "spec_helper"
 
-describe VCAP::CloudController::Controller do
-  describe "validating the auth token", type: :controller do
+describe VCAP::CloudController::FrontController do
+  describe "validating the auth token" do
     let(:email) { Sham.email }
     let(:user_id) { Sham.guid }
     let(:token_info) { {} }

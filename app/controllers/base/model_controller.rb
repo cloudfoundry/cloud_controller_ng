@@ -1,7 +1,7 @@
 module VCAP::CloudController::RestController
 
   # Wraps models and presents collection and per object rest end points
-  class ModelController < Base
+  class ModelController < BaseController
     include Routes
     include ::Allowy::Context
 

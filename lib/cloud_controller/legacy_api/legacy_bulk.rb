@@ -1,5 +1,5 @@
 require "sinatra"
-require "cloud_controller/rest_controller/base"
+require "controllers/base/base_controller"
 
 module VCAP::CloudController
   class BulkResponse < JsonMessage
@@ -28,7 +28,7 @@ module VCAP::CloudController
     end
   end
 
-  class LegacyBulk < RestController::Base
+  class LegacyBulk < RestController::BaseController
     # Endpoint does its own (non-standard) auth
     allow_unauthenticated_access
 
