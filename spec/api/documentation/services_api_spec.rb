@@ -8,9 +8,9 @@ resource "Services", type: :api do
   field :guid, "The guid of the service", required: false
   field :label, "The name of the service", required: true, example_values: ["SomeMysqlService"]
   field :description, "A short blurb describing the service", required: true, example_values: ["Mysql stores things for you"]
-  field :long_description, "A longer description of the service", required: false, example_values: ["Mysql is a database. It stores things. Use it in your apps..."], default: nil
-  field :info_url, "A url that points to an info page for the service", required: false, example_values: ["http://info.somemysqlservice.com"], default: nil
-  field :documentation_url, "A url that points to a documentation page for the service", required: false, example_values: ["http://docs.somemysqlservice.com"], default: nil
+  field :long_description, "A longer description of the service", required: false, deprecated: true, example_values: ["Mysql is a database. It stores things. Use it in your apps..."], default: nil
+  field :info_url, "A url that points to an info page for the service", required: false, deprecated: true, example_values: ["http://info.somemysqlservice.com"], default: nil
+  field :documentation_url, "A url that points to a documentation page for the service", required: false, deprecated: true, example_values: ["http://docs.somemysqlservice.com"], default: nil
 
   field :timeout, "A timeout used by the v1 service gateway client", required: false, deprecated: true, default: nil
   field :active, "A boolean describing that the service can be provisioned by users", required: false, default: false

@@ -23,8 +23,13 @@ module VCAP::CloudController
       headers = {}
       brokers = ServiceBroker.filter(build_filter)
 
-      body = paginate( brokers.map { |broker| ServiceBrokerPresenter.new(broker).to_hash } )
-      [HTTP::OK, headers, body.to_json]
+      collection_renderer.render_json(
+        self.class,
+        brokers,
+        self.class.path,
+        @opts,
+        {}
+      )
     end
 
     post '/v2/service_brokers', :create

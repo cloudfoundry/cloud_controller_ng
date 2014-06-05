@@ -23,5 +23,7 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    deprecated_endpoint '/v2/service_auth_tokens'
   end
 end
