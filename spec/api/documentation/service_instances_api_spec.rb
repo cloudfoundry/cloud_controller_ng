@@ -11,7 +11,7 @@ resource "Service Instances", :type => :api do
   end
 
   post '/v2/service_instances/' do
-    field :name, 'A name for the service instance', required: true
+    field :name, 'A name for the service instance', required: true, example_values: [ 'my-service-instance' ]
     field :service_plan_guid, 'The guid of the service plan to associate with the instance', required: true
     field :space_guid, 'The guid of the space in which the instance will be created', required: true
     field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
@@ -64,6 +64,26 @@ resource "Service Instances", :type => :api do
 
       expect(status).to eq(200)
       expect(parsed_response['changed_count']).to eq(1)
+    end
+  end
+
+  post '/v2/user_provided_service_instances/' do
+    field :name, 'A name for the service instance', required: true, example_values: [ 'my-user-provided-instance' ]
+    field :space_guid, 'The guid of the space in which the instance will be created', required: true
+    field :syslog_drain_url, 'The url for the syslog_drain to direct to', required: false, example_values: [ 'syslog://example.com' ]
+    field :credentials, 'A hash that can be used to store credentials', required: false, example_values: [ { somekey: 'somevalue' }.to_s ]
+
+    example 'Creating a user provided service instance' do
+      space_guid = VCAP::CloudController::Space.make.guid
+      request_hash = {
+        space_guid: space_guid,
+        name: 'my-user-provided-instance',
+        credentials: {somekey: 'somevalue'},
+        syslog_drain_url: 'syslog://example.com'
+      }
+
+      client.post '/v2/user_provided_service_instances', Yajl::Encoder.encode(request_hash, pretty: true), headers
+      expect(status).to eq(201)
     end
   end
 end
