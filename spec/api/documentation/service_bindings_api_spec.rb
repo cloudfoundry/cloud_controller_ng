@@ -23,7 +23,7 @@ resource "Service Binding", :type => :api do
   post '/v2/service_bindings' do
     field :service_instance_guid, 'The guid of the service instance to bind', required: true
     field :app_guid, 'The guid of the app to bind', required: true
-    field :binding_options, 'A hash of options that are passed to v1 brokers', required: false, optional: true
+    field :binding_options, 'A hash of options that are passed to v1 brokers', required: false, deprecated: true, optional: true
 
     example "Create a service binding" do
       space = VCAP::CloudController::Space.make
