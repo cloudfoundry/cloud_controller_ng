@@ -23,12 +23,15 @@ module VCAP::CloudController
                      ]
 
           instances_reporter = CloudController::DependencyLocator.instance.instances_reporter
-          instances_reporter.should_receive(:crashed_instances_for_app).with(@app).and_return(crashed_instances)
+          allow(instances_reporter).to receive(:crashed_instances_for_app).and_return(crashed_instances)
 
           get("/v2/apps/#{@app.guid}/crashes", {}, headers_for(@developer))
 
           last_response.status.should == 200
           Yajl::Parser.parse(last_response.body).should == expected
+          expect(instances_reporter).to have_received(:crashed_instances_for_app) do |requested_app|
+            expect(requested_app.guid).to eq(@app.guid)
+          end
         end
       end
 
