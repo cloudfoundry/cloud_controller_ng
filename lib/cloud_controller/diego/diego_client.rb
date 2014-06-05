@@ -71,7 +71,13 @@ module VCAP::CloudController
     end
 
     def lrp_instances(app)
-      body = Net::HTTP.get(URI("#{@tps_reporter}/lrps/#{app.guid}-#{app.version}"))
+      uri = URI("#{@tps_reporter}/lrps/#{app.guid}-#{app.version}")
+
+      http = Net::HTTP.new(uri.host)
+      http.read_timeout = 10
+      http.open_timeout = 10
+
+      body = http.get(uri.path).body
 
       result = []
 

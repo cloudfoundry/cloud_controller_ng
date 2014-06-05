@@ -152,6 +152,28 @@ module VCAP::CloudController
           { process_guid: "abc", instance_guid: "789", index: 1, state: "CRASHED", since: 1257896000 }
         ])
       end
+
+      describe "timing out" do
+        let(:http) { double(:http) }
+        let(:expected_timeout) { 10 }
+
+        before do
+          allow(Net::HTTP).to receive(:new).and_return(http)
+          allow(http).to receive(:get).and_return(double(:http_response, body: '{}'))
+          allow(http).to receive(:read_timeout=)
+          allow(http).to receive(:open_timeout=)
+        end
+
+        it "sets the read_timeout" do
+          client.lrp_instances(app)
+          expect(http).to have_received(:read_timeout=).with(expected_timeout)
+        end
+
+        it "sets the open_timeout" do
+          client.lrp_instances(app)
+          expect(http).to have_received(:open_timeout=).with(expected_timeout)
+        end
+      end
     end
   end
 
