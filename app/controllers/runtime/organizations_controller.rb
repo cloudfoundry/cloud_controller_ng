@@ -16,8 +16,8 @@ module VCAP::CloudController
     end
 
     query_parameters :name, :space_guid, :user_guid,
-                    :manager_guid, :billing_manager_guid,
-                    :auditor_guid, :status
+      :manager_guid, :billing_manager_guid,
+      :auditor_guid, :status
 
     deprecated_endpoint "#{path_guid}/domains/*"
 
@@ -35,6 +35,19 @@ module VCAP::CloudController
 
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
+    end
+
+    def remove_related(guid, name, other_guid)
+      model.db.transaction(savepoint: true) do
+        if recursive? && name.to_s.eql?("users")
+          org = find_guid_and_validate_access(:update, guid)
+          user = User.find(:guid => other_guid)
+
+          org.remove_user_recursive(user)
+        end
+
+        super(guid, name, other_guid)
+      end
     end
 
     delete "#{path_guid}/domains/:domain_guid" do |controller_instance|

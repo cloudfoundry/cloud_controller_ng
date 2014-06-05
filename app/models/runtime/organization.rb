@@ -69,6 +69,12 @@ module VCAP::CloudController
       super(user)
     end
 
+    def remove_user_recursive(user)
+      ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).each do |space|
+        user.remove_spaces space
+      end
+    end
+
     def self.user_visibility_filter(user)
       Sequel.or(
         managers: [user],

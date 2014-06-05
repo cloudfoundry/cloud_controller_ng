@@ -36,6 +36,84 @@ module VCAP::CloudController
       }
     }
 
+
+    describe "#remove_spaces" do
+      let(:org) { Organization.make }
+      let(:user) { User.make }
+      let(:space) { Space.make }
+
+      before do
+        org.add_user(user)
+        org.add_space(space)
+      end
+
+      context "when a user is not assigned to any space" do
+        it "should not alter a user's developer space" do
+          expect {
+            user.remove_spaces space
+          }.to_not change{ user.spaces }
+        end
+
+        it "should not alter a user's managed space" do
+          expect {
+            user.remove_spaces space
+          }.to_not change{ user.managed_spaces }
+        end
+
+        it "should not alter a user's audited spaces" do
+          expect {
+            user.remove_spaces space
+          }.to_not change{ user.audited_spaces }
+        end
+      end
+
+      context "when a user is assigned to a single space" do
+        before do
+          space.add_developer(user)
+          space.add_manager(user)
+          space.add_auditor(user)
+          user.refresh
+          space.refresh
+        end
+
+        it "should remove the space from the user's developer spaces" do
+          expect {
+            user.remove_spaces space
+          }.to change{ user.spaces }.from([space]).to([])
+        end
+
+        it "should remove the space from the user's managed spaces" do
+          expect {
+            user.remove_spaces space
+          }.to change{ user.managed_spaces }.from([space]).to([])
+        end
+
+        it "should remove the space form the user's auditor spaces" do
+          expect {
+            user.remove_spaces space
+          }.to change{ user.audited_spaces }.from([space]).to([])
+        end
+
+        it "should remove the user from the space's developers role" do
+          expect {
+            user.remove_spaces space
+          }.to change{ space.developers }.from([user]).to([])
+        end
+
+        it "should remove the user from the space's managers role" do
+          expect {
+            user.remove_spaces space
+          }.to change{ space.managers }.from([user]).to([])
+        end
+
+        it "should remove the user from the space's auditors role" do
+          expect {
+            user.remove_spaces space
+          }.to change{ space.auditors }.from([user]).to([])
+        end
+      end
+    end
+
     describe "relationships" do
       let(:org) { Organization.make }
       let(:user) { User.make }

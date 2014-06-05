@@ -357,37 +357,93 @@ module VCAP::CloudController
       end
     end
 
-    describe "#remove_user" do
-      let(:user) { User.make }
-      let(:org)  { Organization.make(:user_guids => [user.guid]) }
+    describe "removing a user" do
+      let(:org)     { Organization.make }
+      let(:user)    { User.make }
+      let(:space_1) { Space.make }
+      let(:space_2) { Space.make }
 
-      it "raises an error if the user developer spaces are associated with an organization space" do
-        space = Space.make(organization: org, :developer_guids => [user.guid])
-        user.spaces.should == [space]
-        expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+      before do
+        org.add_user(user)
+        org.add_space(space_1)
       end
 
-      it "raises an error if the user manged spaces are associated with an organization space" do
-        space = Space.make(organization: org, :manager_guids => [user.guid])
-        user.managed_spaces.should == [space]
-        expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+      context "without the recursive flag (#remove_user)" do
+        it "should raise an error if the user's developer space is associated with an organization's space" do
+          space_1.add_developer(user)
+          space_1.refresh
+          user.spaces.should include(space_1)
+          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+        end
+
+        it "should raise an error if the user's managed space is associated with an organization's space" do
+          space_1.add_manager(user)
+          space_1.refresh
+          user.managed_spaces.should include(space_1)
+          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+        end
+
+        it "should raise an error if the user's audited space is associated with an organization's space" do
+          space_1.add_auditor(user)
+          space_1.refresh
+          user.audited_spaces.should include(space_1)
+          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+        end
+
+        it "should raise an error if any of the user's spaces are associated with any of the organization's spaces" do
+          org.add_space(space_2)
+          space_2.add_manager(user)
+          space_2.refresh
+          user.managed_spaces.should include(space_2)
+          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+        end
+
+        it "should remove the user from an organization if they are not associated with any spaces" do
+          expect { org.remove_user(user) }.to change{ org.reload.user_guids }.from([user.guid]).to([])
+        end
       end
 
-      it "raises an error if the user audited spaces are associated with an organization space" do
-        space = Space.make(organization: org, :auditor_guids => [user.guid])
-        user.audited_spaces.should == [space]
-        expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
-      end
+      context "with the recursive flag (#remove_user_recursive)" do
+        before do
+          org.add_space(space_2)
+          [space_1, space_2].each { |space| space.add_developer(user) }
+          [space_1, space_2].each { |space| space.add_manager(user) }
+          [space_1, space_2].each { |space| space.add_auditor(user) }
+          [space_1, space_2].each { |space| space.refresh }
+        end
 
-      it "raises an error if any user space is associated with any organization space" do
-        space1 = Space.make(organization: org)
-        space2 = Space.make(organization: org, :manager_guids => [user.guid])
-        expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
-      end
+        it "should remove the space developer roles from the user" do
+          expect { org.remove_user_recursive(user) }.to change{ user.spaces }.from([space_1, space_2]).to([])
+        end
 
-      it "removes the user if they are not associated with any space associated with the organization spaces" do
-        space = Space.make(organization: org)
-        expect { org.remove_user(user) }.to change{ org.user_guids }.from([user.guid]).to([])
+        it "should remove the space manager roles from the user" do
+          expect { org.remove_user_recursive(user) }.to change{ user.managed_spaces }.from([space_1, space_2]).to([])
+        end
+
+        it "should remove the space audited roles from the user" do
+          expect { org.remove_user_recursive(user) }.to change{ user.audited_spaces }.from([space_1, space_2]).to([])
+        end
+
+        it "should remove the user from each spaces developer role" do
+          [space_1, space_2].each { |space| space.developers.should include(user) }
+          org.remove_user_recursive(user)
+          [space_1, space_2].each { |space| space.refresh }
+          [space_1, space_2].each { |space| space.developers.should_not include(user) }
+        end
+
+        it "should remove the user from each spaces manager role" do
+          [space_1, space_2].each { |space| space.managers.should include(user) }
+          org.remove_user_recursive(user)
+          [space_1, space_2].each { |space| space.refresh }
+          [space_1, space_2].each { |space| space.managers.should_not include(user) }
+        end
+
+        it "should remove the user from each spaces auditor role" do
+          [space_1, space_2].each { |space| space.auditors.should include(user) }
+          org.remove_user_recursive(user)
+          [space_1, space_2].each { |space| space.refresh }
+          [space_1, space_2].each { |space| space.auditors.should_not include(user) }
+        end
       end
     end
   end
