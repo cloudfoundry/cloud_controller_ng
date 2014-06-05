@@ -96,6 +96,31 @@ module VCAP::CloudController
         end
       end
 
+      context "disk quota" do
+         let (:default_disk) { 512 }
+
+        before do
+          config_override({ :default_app_disk_in_mb => default_disk })
+        end
+
+        it "uses the configured default when no quota is specified" do
+          create_app
+          decoded_response["entity"]["disk_quota"].should == default_disk
+        end
+        context "when disk quota provided" do
+           let(:provided_disk) { 256 }
+             
+           before do
+             initial_hash[:disk_quota] = provided_disk
+           end
+ 
+           it "uses the provided disk quota" do
+             create_app
+             decoded_response["entity"]["disk_quota"].should == provided_disk
+           end
+         end
+      end
+
       context "when instances is less than 0" do
         before do
           initial_hash[:instances] = -1

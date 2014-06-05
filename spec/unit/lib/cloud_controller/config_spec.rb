@@ -52,6 +52,10 @@ module VCAP::CloudController
             expect(config[:stacks_file]).to eq("/tmp/foo")
           end
 
+          it "preserves the default_app_disk_in_mb value from the file" do
+            expect(config[:default_app_disk_in_mb]).to eq(512)
+          end
+
           it "preserves the maximum_app_disk_in_mb value from the file" do
             expect(config[:maximum_app_disk_in_mb]).to eq(3)
           end
@@ -138,7 +142,7 @@ module VCAP::CloudController
           message_bus,
           instance_of(DeaPool),
           instance_of(StagerPool),
-          instance_of(DiegoClient))
+        instance_of(DiegoClient))
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)

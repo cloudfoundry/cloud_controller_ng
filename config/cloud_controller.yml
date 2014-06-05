@@ -30,6 +30,7 @@ audit_events:
 billing_event_writing_enabled: true
 
 default_app_memory: 1024 #mb
+default_app_disk_in_mb: 1024
 maximum_app_disk_in_mb: 2048
 
 info:
