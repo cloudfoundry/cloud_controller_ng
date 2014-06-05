@@ -10,28 +10,9 @@ module VCAP::CloudController
         @auditor = make_auditor_for_space(@app.space)
       end
 
-      context "as a developer" do
-        it "should return 400 when there is an error finding the instances" do
-          instance_id = 5
-
-          @app.state = "STOPPED"
-          @app.save
-
-          get("/v2/apps/#{@app.guid}/stats",
-              {},
-              headers_for(@developer))
-
-              last_response.status.should == 400
-        end
-
-        it "should return the stats" do
-          @app.state = "STARTED"
-          @app.instances = 1
-          @app.save
-
-          @app.refresh
-
-          stats = {
+      context 'when the client can see stats' do
+        let(:stats) do
+          {
             0 => {
               :state => "RUNNING",
               :stats => "mock stats",
@@ -41,80 +22,102 @@ module VCAP::CloudController
               :since => 1,
             }
           }
+        end
+        let(:instances_reporter) { double(:instances_reporter) }
 
-          expected = {
-            "0" => {
-              "state" => "RUNNING",
-              "stats" => "mock stats",
-            },
-            "1" => {
-              "state" => "DOWN",
-              "since" => 1,
+        before do
+          instances_reporter_factory = CloudController::DependencyLocator.instance.instances_reporter_factory
+          allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
+
+          allow(instances_reporter).to receive(:stats_for_app).and_return(stats)
+        end
+
+        context 'because they are a developer' do
+          it "should return the stats" do
+            @app.state = "STARTED"
+            @app.instances = 1
+            @app.save
+
+            @app.refresh
+
+            expected = {
+              "0" => {
+                "state" => "RUNNING",
+                "stats" => "mock stats",
+              },
+              "1" => {
+                "state" => "DOWN",
+                "since" => 1,
+              }
             }
-          }
 
-          instances_reporter = CloudController::DependencyLocator.instance.instances_reporter
-          instances_reporter.should_receive(:stats_for_app).with(@app, {}).and_return(stats)
+            get("/v2/apps/#{@app.guid}/stats",
+                {},
+                headers_for(@developer))
 
-          get("/v2/apps/#{@app.guid}/stats",
-              {},
-              headers_for(@developer))
+            last_response.status.should == 200
+            Yajl::Parser.parse(last_response.body).should == expected
+            expect(instances_reporter).to have_received(:stats_for_app).with(
+                                            satisfy { |requested_app| requested_app.guid == @app.guid },
+                                            {})
+          end
+        end
 
-          last_response.status.should == 200
-          Yajl::Parser.parse(last_response.body).should == expected
+        context 'because they are an auditor' do
+          it "should return the stats" do
+            @app.state = "STARTED"
+            @app.instances = 1
+            @app.save
+
+            @app.refresh
+
+            expected = {
+              "0" => {
+                "state" => "RUNNING",
+                "stats" => "mock stats",
+              },
+              "1" => {
+                "state" => "DOWN",
+                "since" => 1,
+              }
+            }
+
+            get("/v2/apps/#{@app.guid}/stats",
+                {},
+                headers_for(@auditor))
+
+            last_response.status.should == 200
+            Yajl::Parser.parse(last_response.body).should == expected
+            expect(instances_reporter).to have_received(:stats_for_app).with(
+                                            satisfy { |requested_app| requested_app.guid == @app.guid },
+                                            {})
+          end
+        end
+
+        context 'when there is an error finding instances' do
+          before do
+            allow(instances_reporter).to receive(:stats_for_app).and_raise(VCAP::Errors::ApiError.new_from_details('StatsError', 'msg'))
+          end
+
+          it 'returns 400' do
+            get("/v2/apps/#{@app.guid}/stats",
+                {},
+                headers_for(@developer))
+
+            last_response.status.should == 400
+          end
         end
       end
 
-      context "as a user" do
-        it "should return 403" do
-          get("/v2/apps/#{@app.guid}/stats",
-              {},
-              headers_for(@user))
+      context 'when the client cannot see stats' do
+        context 'because they are a user' do
+          it "should return 403" do
+            get("/v2/apps/#{@app.guid}/stats",
+                {},
+                headers_for(@user))
 
-              last_response.status.should == 403
-        end
-      end
-
-      context "as an auditor" do
-
-        it "should return the stats" do
-          @app.state = "STARTED"
-          @app.instances = 1
-          @app.save
-
-          @app.refresh
-
-          stats = {
-            0 => {
-              :state => "RUNNING",
-              :stats => "mock stats",
-            },
-            1 => {
-              :state => "DOWN",
-              :since => 1,
-            }
-          }
-
-          expected = {
-            "0" => {
-              "state" => "RUNNING",
-              "stats" => "mock stats",
-            },
-            "1" => {
-              "state" => "DOWN",
-              "since" => 1,
-            }
-          }
-
-          instances_reporter = CloudController::DependencyLocator.instance.instances_reporter
-          instances_reporter.should_receive(:stats_for_app).with(@app, {}).and_return(stats)
-
-          get("/v2/apps/#{@app.guid}/stats",
-              {},
-              headers_for(@auditor))
-
-          last_response.status.should == 200
-          Yajl::Parser.parse(last_response.body).should == expected
+            last_response.status.should == 403
+          end
         end
       end
     end

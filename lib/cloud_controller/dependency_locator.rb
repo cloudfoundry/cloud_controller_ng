@@ -157,8 +157,12 @@ module CloudController
       end
     end
 
-    def instances_reporter
-      @instances_reporter ||= VCAP::CloudController::InstancesReporter::LegacyInstancesReporter.new(health_manager_client)
+    def diego_client
+      @diego_client ||= DiegoClient.new(config[:diego], config[:tps_url], message_bus, blobstore_url_generator)
+    end
+
+    def instances_reporter_factory
+      @instances_reporter_factory ||=  VCAP::CloudController::InstancesReporter::InstancesReporterFactory.new(diego_client, health_manager_client)
     end
 
     private

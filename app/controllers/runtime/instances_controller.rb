@@ -21,13 +21,18 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details("InstancesError", msg)
       end
 
-      instances = @instances_reporter.all_instances_for_app(app)
+      instance_reporter = instances_reporter_factory.instances_reporter_for_app(app)
+      instances = instance_reporter.all_instances_for_app(app)
       Yajl::Encoder.encode(instances)
     end
 
+    protected
+
+    attr_reader :instances_reporter_factory
+
     def inject_dependencies(dependencies)
       super
-      @instances_reporter = dependencies.fetch(:instances_reporter)
+      @instances_reporter_factory = dependencies.fetch(:instances_reporter_factory)
     end
   end
 end

@@ -73,13 +73,14 @@ module VCAP::CloudController
     def lrp_instances(app)
       body = Net::HTTP.get(URI("#{@tps_reporter}/lrps/#{app.guid}-#{app.version}"))
 
-      result = {}
+      result = []
 
       tps_instances = JSON.parse(body)
       tps_instances.each do |instance|
-        # in principal there can be *multiple* instances at a given index.
-        # this will arbitrarily pick out one of them...
-        result[instance['index']] = {
+        result << {
+          process_guid: instance['process_guid'],
+          instance_guid: instance['instance_guid'],
+          index: instance['index'],
           state: instance['state'].upcase,
           since: instance['since_in_ns'].to_i / 1_000_000_000,
         }

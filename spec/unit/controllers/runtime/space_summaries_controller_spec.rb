@@ -33,10 +33,9 @@ module VCAP::CloudController
       it 'properly constructs SpaceSummarizer' do
         make_request
 
-        expect(SpaceSummarizer).to have_received(:new) do |requested_space, instance_reporter|
-          expect(requested_space.guid).to eq(space.guid)
-          expect(instance_reporter).to be_kind_of(VCAP::CloudController::InstancesReporter::LegacyInstancesReporter)
-        end
+        expect(SpaceSummarizer).to have_received(:new).with(
+          satisfy { |requested_space| requested_space.guid == space.guid },
+          satisfy { |instance_reporter| instance_reporter.is_a?(VCAP::CloudController::InstancesReporter::InstancesReporterFactory) })
       end
     end
   end
@@ -49,10 +48,11 @@ module VCAP::CloudController
     let(:second_service) {  ManagedServiceInstance.make(space: space) }
     let(:app) { AppFactory.make(space: space) }
 
+    let(:instances_reporter_factory) { double(:instances_reporter_factory) }
     let(:instances_reporter) { double(:instances_reporter) }
     let(:running_instances) { 5 }
 
-    subject { described_class.new(space, instances_reporter) }
+    subject { described_class.new(space, instances_reporter_factory) }
 
     before do
       app.add_route(first_route)
@@ -61,6 +61,7 @@ module VCAP::CloudController
       ServiceBinding.make(app: app, service_instance: first_service)
       ServiceBinding.make(app: app, service_instance: second_service)
 
+      allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
       allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_app).
                                      and_return(running_instances)
     end
@@ -121,9 +122,8 @@ module VCAP::CloudController
 
         it 'includes instance summary information' do
           expect(summary).to include(running_instances: running_instances)
-          expect(instances_reporter).to have_received(:number_of_starting_and_running_instances_for_app) do |requested_app|
-            expect(requested_app.guid).to eq(app.guid)
-          end
+          expect(instances_reporter).to have_received(:number_of_starting_and_running_instances_for_app).with(
+                                          satisfy { |requested_app| requested_app.guid == app.guid })
         end
       end
     end

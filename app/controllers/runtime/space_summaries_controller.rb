@@ -6,27 +6,27 @@ module VCAP::CloudController
     get "#{path_guid}/summary", :summary
     def summary(guid)
       space      = find_guid_and_validate_access(:read, guid)
-      summarizer = SpaceSummarizer.new(space, instances_reporter)
+      summarizer = SpaceSummarizer.new(space, instances_reporter_factory)
 
       Yajl::Encoder.encode(summarizer.space_summary, pretty: true)
     end
 
     protected
 
-    attr_reader :instances_reporter
+    attr_reader :instances_reporter_factory
 
     def inject_dependencies(dependencies)
       super
-      @instances_reporter = dependencies[:instances_reporter]
+      @instances_reporter_factory = dependencies[:instances_reporter_factory]
     end
   end
 
   class SpaceSummarizer
-    attr_reader :space, :instances_reporter
+    attr_reader :space, :instances_reporter_factory
 
-    def initialize(space, instances_reporter)
-      @instances_reporter = instances_reporter
-      @space              = space
+    def initialize(space, instances_reporter_factory)
+      @instances_reporter_factory = instances_reporter_factory
+      @space                      = space
     end
 
     def space_summary
@@ -40,6 +40,7 @@ module VCAP::CloudController
 
     def app_summary
       space.apps.collect do |app|
+        instances_reporter = instances_reporter_factory.instances_reporter_for_app(app)
         {
           guid:              app.guid,
           urls:              app.routes.map(&:fqdn),
