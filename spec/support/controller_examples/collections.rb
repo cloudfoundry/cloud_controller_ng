@@ -1,24 +1,22 @@
 shared_context "collections" do |opts, attr, make|
-  define_method(:obj) do
-    @obj ||= opts[:model].make
+  let(:obj) do
+    opts[:model].make
   end
 
-  define_method(:child_name) do
+  let(:child_name) do
     attr.to_s.singularize
   end
 
-  def add_method
+  let(:add_method) do
     "add_#{child_name}"
   end
 
-  def get_method
+  let(:get_method) do
     "#{child_name}s"
   end
 
-  def headers
-    @header ||= begin
-      json_headers(admin_headers)
-    end
+  let(:headers) do
+    json_headers(admin_headers)
   end
 
   before do
@@ -71,24 +69,17 @@ shared_examples "get to_many attr url" do |opts, attr, make|
         get @uri, {}, headers
       end
 
-      it "should return 200" do
+      it "returns empty collection response" do
         last_response.status.should == 200
-      end
 
-      it "should return total_results => 0" do
         decoded_response["total_results"].should == 0
-      end
 
-      it "should return prev_url => nil" do
         decoded_response.should have_key("prev_url")
         decoded_response["prev_url"].should be_nil
-      end
 
-      it "should return next_url => nil" do
+        decoded_response.should have_key("next_url")
         decoded_response["next_url"].should be_nil
-      end
 
-      it "should return resources => []" do
         decoded_response["resources"].should == []
       end
     end
@@ -106,24 +97,17 @@ shared_examples "get to_many attr url" do |opts, attr, make|
         get @uri, {}, headers
       end
 
-      it "should return 200" do
+      it "returns collection response with two results" do
         last_response.status.should == 200
-      end
 
-      it "should return total_results => 2" do
         decoded_response["total_results"].should == 2
-      end
 
-      it "should return prev_url => nil" do
         decoded_response.should have_key("prev_url")
         decoded_response["prev_url"].should be_nil
-      end
 
-      it "should return next_url => nil" do
+        decoded_response.should have_key("next_url")
         decoded_response["next_url"].should be_nil
-      end
 
-      it "should return resources => [child1, child2]" do
         os = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
         ar = opts[:model].association_reflection(attr)
         child_controller = VCAP::CloudController.controller_from_model_name(ar.associated_class.name)
@@ -220,9 +204,6 @@ shared_examples "collection operations" do |opts|
 
     describe "reading collections" do
       describe "many_to_many, one_to_many" do
-        # this is basically the read api, so we'll do most of the
-        # detailed read testing there
-
         to_many_attrs = opts[:many_to_many_collection_ids].merge(opts[:one_to_many_collection_ids])
         to_many_attrs.each do |attr, make|
           path = "#{opts[:path]}/:guid"
@@ -277,27 +258,19 @@ shared_examples "collection operations" do |opts|
                   end.map { |o| o.guid }
                 end
 
-                it "should return 200" do
+                it "returns the collection response" do
                   last_response.status.should == 200
-                end
 
-                it "should return total_results => 3" do
                   decoded_response["total_results"].should == 3
-                end
 
-                it "should return prev_url => nil" do
                   decoded_response.should have_key("prev_url")
                   decoded_response["prev_url"].should be_nil
-                end
 
-                it "should return next_url" do
                   decoded_response.should have_key("next_url")
                   next_url = decoded_response["next_url"]
                   next_url.should match /#{@uri}\?/
                   next_url.should include("page=2&results-per-page=2")
-                end
 
-                it "should return the first page of resources" do
                   decoded_response["resources"].count.should == 2
                   api_guids = decoded_response["resources"].map do |v|
                     v["metadata"]["guid"]
