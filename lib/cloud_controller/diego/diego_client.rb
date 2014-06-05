@@ -36,8 +36,7 @@ module VCAP::CloudController
 
     def desire_request(app)
       {
-          app_id: app.guid,
-          app_version: app.version,
+          process_guid: lrp_guid(app),
           memory_mb: app.memory,
           disk_mb: app.disk_quota,
           file_descriptors: app.file_descriptors,
@@ -48,6 +47,7 @@ module VCAP::CloudController
           num_instances: desired_instances(app),
           routes: app.uris,
           health_check_timeout_in_seconds: app.health_check_timeout,
+          log_guid: app.guid,
       }
     end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
     end
 
     def lrp_instances(app)
-      uri = URI("#{@tps_reporter}/lrps/#{app.guid}-#{app.version}")
+      uri = URI("#{@tps_reporter}/lrps/#{lrp_guid(app)}")
 
       http = Net::HTTP.new(uri.host)
       http.read_timeout = 10
@@ -107,9 +107,12 @@ module VCAP::CloudController
       env
     end
 
-
     def logger
       @logger ||= Steno.logger("cc.diego_client")
+    end
+
+    def lrp_guid(app)
+      "#{app.guid}-#{app.version}"
     end
   end
 end

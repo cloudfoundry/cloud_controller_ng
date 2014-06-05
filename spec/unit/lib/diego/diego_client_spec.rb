@@ -36,8 +36,7 @@ module VCAP::CloudController
     describe "desiring an app" do
       let(:expected_message) do
         {
-          app_id: app.guid,
-          app_version: app.version,
+          process_guid: "#{app.guid}-#{app.version}",
           memory_mb: app.memory,
           disk_mb: app.disk_quota,
           file_descriptors: app.file_descriptors,
@@ -48,6 +47,7 @@ module VCAP::CloudController
           num_instances: expected_instances,
           routes: ["some-route.some-domain.com", "some-other-route.some-domain.com"],
           health_check_timeout_in_seconds: 120,
+          log_guid: app.guid,
         }
       end
 
