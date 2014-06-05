@@ -1,17 +1,4 @@
 module ModelHelpers
-  shared_context "model template" do |opts|
-    # we use the template object to automatically get values
-    # to use during creation from sham
-    # template_obj = ModelHelpers::TemplateObj.new(described_class, opts[:required_attributes])
-
-    let(:creation_opts) do
-      template_obj = described_class.make
-      o = CreationOptionsFromObject.options(template_obj, opts)
-      template_obj.destroy(savepoint: true)
-      o
-    end
-  end
-
   shared_examples "model instance" do |opts|
     ([:required_attributes, :unique_attributes, :stripped_string_attributes,
       :sensitive_attributes, :extra_json_attributes, :disable_examples]).each do |k|
@@ -19,7 +6,12 @@ module ModelHelpers
       opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
     end
 
-    include_context "model template", opts
+    let(:creation_opts) do
+      template_obj = described_class.make
+      o = CreationOptionsFromObject.options(template_obj, opts)
+      template_obj.destroy(savepoint: true)
+      o
+    end
 
     unless opts[:disable_examples].include? :creation
       describe "creation" do

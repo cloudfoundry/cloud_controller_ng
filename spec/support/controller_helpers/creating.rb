@@ -3,30 +3,18 @@ module ControllerHelpers
     opts[:extra_attributes] ||= {}
 
     describe "creating" do
-      define_method(:creation_opts) do
-        @creation_opts ||= begin
-                             # if the caller has supplied their own creation lambda, use it
-          opts[:create_attribute_reset].call if opts[:create_attribute_reset]
+      let(:creation_opts) do
+        opts[:create_attribute_reset].call if opts[:create_attribute_reset]
 
-          initial_obj = opts[:model].make
-          attrs = CreationOptionsFromObject.options(initial_obj, opts)
-          initial_obj.destroy
+        initial_obj = opts[:model].make
+        attrs = CreationOptionsFromObject.options(initial_obj, opts)
+        initial_obj.destroy
 
-          #create_attribute = opts[:create_attribute]
-          #if create_attribute
-          #  opts[:create_attribute_reset].call
-          #  attrs.keys.each do |k|
-          #    v = create_attribute.call k
-          #    attrs[k] = v if v
-          #  end
-          #end
-
-          opts[:extra_attributes].each do |attr, val|
-            attrs[attr.to_s] = val.respond_to?(:call) ? val.call : val
-          end
-
-          attrs
+        opts[:extra_attributes].each do |attr, val|
+          attrs[attr.to_s] = val.respond_to?(:call) ? val.call : val
         end
+
+        attrs
       end
 
       let(:non_extra_creation_opts) do
