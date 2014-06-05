@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   shared_examples "creation of unique attributes" do |example_opts|
     if example_opts[:unique_attributes]
       example_opts[:unique_attributes].map{|keys| Array(keys)}.each do |unique_key|

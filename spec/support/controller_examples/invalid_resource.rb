@@ -1,4 +1,4 @@
-module ControllerHelpers
+module ControllerExamples
   shared_examples "operations on an invalid object" do |opts|
     describe "operations on an invalid object" do
       def self.it_responds_to(verb, path, expected_status, expected_error)

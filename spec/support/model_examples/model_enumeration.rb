@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   shared_examples "model enumeration" do |opts|
     it "should return all the instances" do
       initial_count = described_class.count

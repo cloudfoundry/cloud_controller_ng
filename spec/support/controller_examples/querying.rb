@@ -1,4 +1,4 @@
-module ControllerHelpers
+module ControllerExamples
   shared_examples "querying objects" do |opts|
     describe "querying objects" do
       before do

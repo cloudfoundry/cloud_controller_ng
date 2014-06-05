@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   shared_examples "deserialization" do |opts|
     context "with all required attributes" do
       let(:json_data) do

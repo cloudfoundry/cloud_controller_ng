@@ -1,8 +1,8 @@
-module ControllerHelpers
+module ControllerExamples
   shared_examples "uaa authenticated api" do |opts|
     context "with invalid auth header" do
       subject do
-        headers = headers_for(User.make)
+        headers = headers_for(VCAP::CloudController::User.make)
         headers["HTTP_AUTHORIZATION"] += "EXTRA STUFF"
         get opts[:path], {}, headers
       end
@@ -27,21 +27,21 @@ module ControllerHelpers
       unless opts[:path] == "/v2/users"
         context "for an existing user" do
           it "returns 200" do
-            get opts[:path], {}, headers_for(User.make)
+            get opts[:path], {}, headers_for(VCAP::CloudController::User.make)
             last_response.status.should == 200
           end
         end
 
         context "for a new user" do
           it "returns 200" do
-            get opts[:path], {}, headers_for(Machinist.with_save_nerfed { User.make })
+            get opts[:path], {}, headers_for(Machinist.with_save_nerfed { VCAP::CloudController::User.make })
             last_response.status.should == 200
           end
         end
 
         context "for a deleted user" do
           it "returns 200 by recreating the user" do
-            user = User.make
+            user = VCAP::CloudController::User.make
             headers = headers_for(user)
             user.delete
             get opts[:path], {}, headers

@@ -1,4 +1,4 @@
-module ControllerHelpers
+module ControllerExamples
   shared_examples "updating" do |opts|
     opts[:extra_attributes] ||= {}
 
@@ -136,7 +136,7 @@ module ControllerHelpers
               end
 
               if val.nil?
-                another_obj = ModelHelpers::TemplateObj.new(opts[:model], opts[:required_attributes])
+                another_obj = TemplateObj.new(opts[:model], opts[:required_attributes])
                 another_obj.refresh
                 val = another_obj.attributes[new_attr]
               end

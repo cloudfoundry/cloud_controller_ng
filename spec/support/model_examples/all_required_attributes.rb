@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   shared_examples "creation with all required attributes" do
     describe "with all required attributes" do
       before do

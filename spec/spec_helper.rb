@@ -36,16 +36,32 @@ RSpec.configure do |rspec_config|
   rspec_config.include ModelCreation
   rspec_config.extend ModelCreation
   rspec_config.include ServicesHelpers, services: true
-  rspec_config.include ModelHelpers, :example_group => {
+  rspec_config.include ModelExamples, :example_group => {
       :file_path => EscapedPath.join(%w[spec unit models])
+  }
+
+  rspec_config.include ControllerExamples, type: :controller, :example_group => {
+    :file_path => EscapedPath.join(%w[spec unit controllers])
   }
 
   rspec_config.include ControllerHelpers, type: :controller, :example_group => {
     :file_path => EscapedPath.join(%w[spec unit controllers])
   }
 
+  rspec_config.include ControllerExamples, type: :api, :example_group => {
+    :file_path => EscapedPath.join(%w[spec api])
+  }
+
   rspec_config.include ControllerHelpers, type: :api, :example_group => {
     :file_path => EscapedPath.join(%w[spec api])
+  }
+
+  rspec_config.include ControllerExamples, type: :acceptance, :example_group => {
+      :file_path => EscapedPath.join(%w[spec acceptance])
+  }
+
+  rspec_config.include ControllerHelpers, type: :acceptance, :example_group => {
+      :file_path => EscapedPath.join(%w[spec acceptance])
   }
 
   rspec_config.include AcceptanceHelpers, type: :acceptance, :example_group => {

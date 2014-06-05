@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   shared_examples "attribute normalization" do |opts|
     let(:obj) { described_class.make }
 

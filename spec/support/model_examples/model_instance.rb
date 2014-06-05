@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   shared_examples "model instance" do |opts|
     ([:required_attributes, :unique_attributes, :stripped_string_attributes,
       :sensitive_attributes, :extra_json_attributes, :disable_examples]).each do |k|

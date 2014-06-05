@@ -1,4 +1,4 @@
-module ControllerHelpers
+module ControllerExamples
   shared_examples "reading a valid object" do |opts|
     describe "reading a valid object" do
       describe "GET #{opts[:path]}/:id" do

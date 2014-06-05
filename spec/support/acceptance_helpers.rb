@@ -1,8 +1,6 @@
 require 'support/controller_helpers'
 
 module AcceptanceHelpers
-  include ControllerHelpers
-
   def setup_uaa_stubs_to_add_new_client
     # stub uaa token request
     stub_request(:post, 'http://cc_service_broker_client:some-sekret@localhost:8080/uaa/oauth/token').to_return(

@@ -1,4 +1,4 @@
-module ControllerHelpers
+module ControllerExamples
   def self.description_for_inline_depth(depth, pagination = 50)
     if depth
       "?inline-relations-depth=#{depth}&results-per-page=#{pagination}"
@@ -266,7 +266,7 @@ module ControllerHelpers
             path = "#{opts[:path]}/:guid"
 
             [nil, 0, 1].each do |inline_relations_depth|
-              desc = ControllerHelpers::description_for_inline_depth(inline_relations_depth)
+              desc = ControllerExamples::description_for_inline_depth(inline_relations_depth)
               describe "GET #{path}#{desc}" do
                 include_context "collections", opts, attr, make
                 include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
@@ -278,7 +278,7 @@ module ControllerHelpers
             describe "with 3 associated #{attr}" do
               depth = 1
               pagination = 2
-              desc = ControllerHelpers::description_for_inline_depth(depth, pagination)
+              desc = ControllerExamples::description_for_inline_depth(depth, pagination)
               describe "GET #{path}#{desc}" do
                 include_context "collections", opts, attr, make
 
@@ -363,7 +363,7 @@ module ControllerHelpers
             path = "#{opts[:path]}/:guid"
 
             [nil, 0, 1].each do |inline_relations_depth|
-              desc = ControllerHelpers::description_for_inline_depth(inline_relations_depth)
+              desc = ControllerExamples::description_for_inline_depth(inline_relations_depth)
               describe "GET #{path}#{desc}" do
                 include_context "collections", opts, attr, make
 
@@ -381,7 +381,7 @@ module ControllerHelpers
 
                 # this is basically the read api, so we'll do most of the
                 # detailed read testing there
-                desc = ControllerHelpers::description_for_inline_depth(inline_relations_depth)
+                desc = ControllerExamples::description_for_inline_depth(inline_relations_depth)
                 describe "GET on the #{attr}_url" do
                   before do
                     get @uri, {}, headers

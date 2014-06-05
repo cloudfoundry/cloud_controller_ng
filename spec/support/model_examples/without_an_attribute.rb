@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   shared_examples "creation without an attribute" do |opts|
     opts[:required_attributes].each do |without_attr|
       context "without the :#{without_attr.to_s} attribute" do

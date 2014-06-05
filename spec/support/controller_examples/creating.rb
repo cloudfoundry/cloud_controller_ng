@@ -1,4 +1,4 @@
-module ControllerHelpers
+module ControllerExamples
   shared_examples "creating" do |opts|
     opts[:extra_attributes] ||= {}
 

@@ -1,7 +1,7 @@
 require File.expand_path("../cloud_controller_model", __FILE__)
 
-module ModelHelpers
-  relation_types = ModelHelpers.relation_types
+module ModelExamples
+  relation_types = ModelExamples.relation_types
 
   shared_examples "model relationships" do |opts|
     # make array of [assocation, test_opts, relation_type]

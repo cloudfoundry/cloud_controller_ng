@@ -1,4 +1,4 @@
-module ControllerHelpers
+module ControllerExamples
   shared_examples "paginated enumeration request" do |base_path, page, page_size, total_results, page_results|
     page_count = (total_results / page_size.to_f).ceil
     path = base_path =~ /\?/ ? "#{base_path}&" : "#{base_path}?"

@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   def self.relation_types
     relations = []
     %w[one many].each do |cardinality_left|
@@ -12,7 +12,7 @@ module ModelHelpers
   shared_examples "a CloudController model" do |opts|
     # the later code is simplified if we can assume that these are always
     # arrays
-    relation_types = ModelHelpers.relation_types
+    relation_types = ModelExamples.relation_types
     ([:required_attributes, :unique_attributes, :stripped_string_attributes,
      :sensitive_attributes, :extra_json_attributes, :disable_examples] +
      relation_types).each do |k|

@@ -1,4 +1,4 @@
-module ModelHelpers
+module ModelExamples
   shared_examples "serialization" do |opts|
     before do
       @obj = described_class.make

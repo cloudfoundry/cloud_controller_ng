@@ -1,14 +1,14 @@
-module ControllerHelpers
+module ControllerExamples
   shared_context "permissions" do
     let(:headers_a) { headers_for(member_a) }
     let(:headers_b) { headers_for(member_b) }
 
     before do
-      @org_a = Organization.make
-      @org_a_manager = User.make
-      @org_a_member = User.make
-      @org_a_billing_manager = User.make
-      @org_a_auditor = User.make
+      @org_a = VCAP::CloudController::Organization.make
+      @org_a_manager = VCAP::CloudController::User.make
+      @org_a_member = VCAP::CloudController::User.make
+      @org_a_billing_manager = VCAP::CloudController::User.make
+      @org_a_auditor = VCAP::CloudController::User.make
       @org_a.add_user(@org_a_manager)
       @org_a.add_user(@org_a_member)
       @org_a.add_user(@org_a_billing_manager)
@@ -17,7 +17,7 @@ module ControllerHelpers
       @org_a.add_billing_manager(@org_a_billing_manager)
       @org_a.add_auditor(@org_a_auditor)
 
-      @space_a = Space.make(:organization => @org_a)
+      @space_a = VCAP::CloudController::Space.make(:organization => @org_a)
       @space_a_manager = make_user_for_space(@space_a)
       @space_a_developer = make_user_for_space(@space_a)
       @space_a_auditor = make_user_for_space(@space_a)
@@ -25,11 +25,11 @@ module ControllerHelpers
       @space_a.add_developer(@space_a_developer)
       @space_a.add_auditor(@space_a_auditor)
 
-      @org_b = Organization.make
-      @org_b_manager = User.make
-      @org_b_member = User.make
-      @org_b_billing_manager = User.make
-      @org_b_auditor = User.make
+      @org_b = VCAP::CloudController::Organization.make
+      @org_b_manager = VCAP::CloudController::User.make
+      @org_b_member = VCAP::CloudController::User.make
+      @org_b_billing_manager = VCAP::CloudController::User.make
+      @org_b_auditor = VCAP::CloudController::User.make
       @org_b.add_user(@org_b_manager)
       @org_b.add_user(@org_b_member)
       @org_b.add_user(@org_b_billing_manager)
@@ -38,7 +38,7 @@ module ControllerHelpers
       @org_b.add_billing_manager(@org_b_billing_manager)
       @org_b.add_auditor(@org_b_auditor)
 
-      @space_b = Space.make(:organization => @org_b)
+      @space_b = VCAP::CloudController::Space.make(:organization => @org_b)
       @space_b_manager = make_user_for_space(@space_b)
       @space_b_developer = make_user_for_space(@space_b)
       @space_b_auditor = make_user_for_space(@space_b)
@@ -46,7 +46,7 @@ module ControllerHelpers
       @space_b.add_developer(@space_b_developer)
       @space_b.add_auditor(@space_b_auditor)
 
-      @cf_admin = User.make(:admin => true)
+      @cf_admin = VCAP::CloudController::User.make(:admin => true)
     end
   end
 

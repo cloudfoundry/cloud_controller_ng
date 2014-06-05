@@ -1,4 +1,4 @@
-module ControllerHelpers
+module ControllerExamples
   shared_examples "deleting a valid object" do |opts|
     describe "deleting a valid object" do
       describe "DELETE #{opts[:path]}/:id" do
