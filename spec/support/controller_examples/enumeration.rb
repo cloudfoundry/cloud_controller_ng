@@ -15,19 +15,12 @@ shared_examples "paginated enumeration request" do |base_path, page, page_size, 
   describe "GET #{path}" do
     before { get path, {}, json_headers(admin_headers) }
 
-    it "should return 200" do
+    it "returns a collection response" do
       last_response.status.should == 200
-    end
 
-    it "should return total_results => #{total_results}" do
       decoded_response["total_results"].should == total_results
-    end
 
-    it "should return a prev_url entry" do
       decoded_response.should have_key("prev_url")
-    end
-
-    it "should return a next_url entry" do
       decoded_response.should have_key("prev_url")
     end
 
