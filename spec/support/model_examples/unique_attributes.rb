@@ -1,32 +1,30 @@
-module ModelExamples
-  shared_examples "creation of unique attributes" do |example_opts|
-    if example_opts[:unique_attributes]
-      example_opts[:unique_attributes].map{|keys| Array(keys)}.each do |unique_key|
-        column_list = unique_key.flatten.map do |v|
-          if described_class.associations.include?(v.to_sym)
-            v = v.to_s.concat("_id")
-          end
-          v
+shared_examples "creation of unique attributes" do |example_opts|
+  if example_opts[:unique_attributes]
+    example_opts[:unique_attributes].map { |keys| Array(keys) }.each do |unique_key|
+      column_list = unique_key.flatten.map do |v|
+        if described_class.associations.include?(v.to_sym)
+          v = v.to_s.concat("_id")
+        end
+        v
+      end
+
+      factory = ->(attrs={}, opts={save: true}) do
+        if example_opts[:custom_attributes_for_uniqueness_tests]
+          actual_attrs = example_opts[:custom_attributes_for_uniqueness_tests].call.merge(attrs)
+        else
+          actual_attrs = attrs
         end
 
-        factory = ->(attrs={}, opts={save: true}) do
-          if example_opts[:custom_attributes_for_uniqueness_tests]
-            actual_attrs = example_opts[:custom_attributes_for_uniqueness_tests].call.merge(attrs)
-          else
-            actual_attrs = attrs
-          end
-
-          if opts[:save]
-            described_class.make(actual_attrs)
-          else
-            described_class.make_unsaved(actual_attrs)
-          end
+        if opts[:save]
+          described_class.make(actual_attrs)
+        else
+          described_class.make_unsaved(actual_attrs)
         end
+      end
 
-        it_validates_the_uniqueness_of_attrs_in_model(*column_list, factory: factory)
-        unless example_opts[:skip_database_constraints]
-          it_validates_the_uniqueness_of_columns_in_database(*column_list, factory: factory)
-        end
+      it_validates_the_uniqueness_of_attrs_in_model(*column_list, factory: factory)
+      unless example_opts[:skip_database_constraints]
+        it_validates_the_uniqueness_of_columns_in_database(*column_list, factory: factory)
       end
     end
   end
@@ -50,9 +48,9 @@ def it_validates_the_uniqueness_of_attrs_in_model(*unique_keys)
         fail "There was no uniqueness error"
       elsif number_of_uniqueness_errors > 1
         fail "Received multiple uniqueness validation errors." +
-             " You may be enforcing uniqueness on multiple columns individually instead of as a group." +
-             " For example, you may think that [:name, :email] are unique as a pair, but instead" +
-             " :name is globally unique and :email is globally unique"
+                 " You may be enforcing uniqueness on multiple columns individually instead of as a group." +
+                 " For example, you may think that [:name, :email] are unique as a pair, but instead" +
+                 " :name is globally unique and :email is globally unique"
       end
       columns_in_error = error.message[/^(.*) unique/, 1].split(" and ")
       columns_in_error.should =~ column_list.map(&:to_s)
@@ -82,11 +80,11 @@ def it_validates_the_uniqueness_of_columns_in_database(*unique_keys)
 
     def ensure_uniqueness_required_for_columns!(column_list, error)
       case described_class.db.database_type
-      when :mysql
-        error.message.should == "Duplicate entry"
-      when :sqlite
-        columns_in_error = error.message[/columns? (.*?) (is|are) not unique/, 1]
-        columns_in_error.split(', ').should =~ column_list
+        when :mysql
+          error.message.should == "Duplicate entry"
+        when :sqlite
+          columns_in_error = error.message[/columns? (.*?) (is|are) not unique/, 1]
+          columns_in_error.split(', ').should =~ column_list
       end
     end
 

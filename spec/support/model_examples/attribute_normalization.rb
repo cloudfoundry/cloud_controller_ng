@@ -1,35 +1,33 @@
-module ModelExamples
-  shared_examples "attribute normalization" do |opts|
-    let(:obj) { described_class.make }
+shared_examples "attribute normalization" do |opts|
+  let(:obj) { described_class.make }
 
-    opts[:stripped_string_attributes].each do |attr|
-      describe "#{attr}" do
-        it "should trim leading whitespace" do
-          val          = obj.send(attr)
-          new_val      = " #{val}_changed"
-          expected_val = "#{val}_changed"
+  opts[:stripped_string_attributes].each do |attr|
+    describe "#{attr}" do
+      it "should trim leading whitespace" do
+        val = obj.send(attr)
+        new_val = " #{val}_changed"
+        expected_val = "#{val}_changed"
 
-          obj.send("#{attr}=", new_val)
-          obj.send(attr).should == expected_val
-        end
+        obj.send("#{attr}=", new_val)
+        obj.send(attr).should == expected_val
+      end
 
-        it "should trim trailing whitespace" do
-          val          = obj.send(attr)
-          new_val      = "#{val}_changed "
-          expected_val = "#{val}_changed"
+      it "should trim trailing whitespace" do
+        val = obj.send(attr)
+        new_val = "#{val}_changed "
+        expected_val = "#{val}_changed"
 
-          obj.send("#{attr}=", new_val)
-          obj.send(attr).should == expected_val
-        end
+        obj.send("#{attr}=", new_val)
+        obj.send(attr).should == expected_val
+      end
 
-        it "should trim leading and trailing whitespace" do
-          val          = obj.send(attr)
-          new_val      = "  #{val}_changed  "
-          expected_val = "#{val}_changed"
+      it "should trim leading and trailing whitespace" do
+        val = obj.send(attr)
+        new_val = "  #{val}_changed  "
+        expected_val = "#{val}_changed"
 
-          obj.send("#{attr}=", new_val)
-          obj.send(attr).should == expected_val
-        end
+        obj.send("#{attr}=", new_val)
+        obj.send(attr).should == expected_val
       end
     end
   end
