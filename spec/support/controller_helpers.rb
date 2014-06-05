@@ -20,6 +20,43 @@ module ControllerHelpers
     {:protocol => "https", :config_setting => :https_required_for_admins, :user => "admin", :success => true}
   ]
 
+  def self.description_for_inline_depth(depth, pagination = 50)
+    if depth
+      "?inline-relations-depth=#{depth}&results-per-page=#{pagination}"
+    else
+      ""
+    end
+  end
+
+  def query_params_for_inline_depth(depth, pagination = 50)
+    if depth
+      {"inline-relations-depth" => depth, "results-per-page" => pagination}
+    else
+      {"results-per-page" => pagination}
+    end
+  end
+
+  def normalize_attributes(value)
+    case value
+      when Hash
+        stringified = {}
+
+        value.each do |k, v|
+          stringified[k] = normalize_attributes(v)
+        end
+
+        stringified
+      when Array
+        value.collect { |x| normalize_attributes(x) }
+      when Numeric, nil, true, false
+        value
+      when Time
+        value.iso8601
+      else
+        value.to_s
+    end
+  end
+
   def app
     FakeApp.new(config)
   end
