@@ -10,30 +10,30 @@ module VCAP::CloudController
     include_examples "operations on an invalid object", path: "/v2/organizations"
     include_examples "creating and updating", path: "/v2/organizations", model: Organization, required_attributes: %w(name), unique_attributes: %w(name)
     include_examples "deleting a valid object", path: "/v2/organizations", model: Organization,
-      one_to_many_collection_ids: {
-        :spaces => lambda { |org| Space.make(:organization => org) },
-        :service_instances => lambda { |org|
-          space = Space.make(:organization => org)
-          ManagedServiceInstance.make(:space => space)
-        },
-        :apps => lambda { |org|
-          space = Space.make(:organization => org)
-          AppFactory.make(:space => space)
-        },
-        :private_domains => lambda { |org|
-          PrivateDomain.make(:owning_organization => org)
-        }
-      }
-    include_examples "collection operations", path: "/v2/organizations", model: Organization,
-      one_to_many_collection_ids: {
-        spaces: lambda { |org| Space.make(organization: org) },
-        private_domains: lambda { |org| PrivateDomain.make(owning_organization: org) },
+    one_to_many_collection_ids: {
+      :spaces => lambda { |org| Space.make(:organization => org) },
+      :service_instances => lambda { |org|
+        space = Space.make(:organization => org)
+        ManagedServiceInstance.make(:space => space)
       },
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {
-        users: lambda { |org| User.make },
-        billing_managers: lambda { |org| User.make }
+      :apps => lambda { |org|
+        space = Space.make(:organization => org)
+        AppFactory.make(:space => space)
+      },
+      :private_domains => lambda { |org|
+        PrivateDomain.make(:owning_organization => org)
       }
+    }
+    include_examples "collection operations", path: "/v2/organizations", model: Organization,
+    one_to_many_collection_ids: {
+      spaces: lambda { |org| Space.make(organization: org) },
+      private_domains: lambda { |org| PrivateDomain.make(owning_organization: org) },
+    },
+      many_to_one_collection_ids: {},
+    many_to_many_collection_ids: {
+      users: lambda { |org| User.make },
+      billing_managers: lambda { |org| User.make }
+    }
 
     describe "Permissions" do
       include_context "permissions"
@@ -241,7 +241,7 @@ module VCAP::CloudController
       describe "DELETE /v2/organizations/:guid/domains/:shared_domain_guid" do
         it "should pretends that it deleted a domain" do
           expect{delete "/v2/organizations/#{org.guid}/domains/#{domain.guid}", {},
-                        headers_for(@org_a_manager)}.not_to change{SharedDomain.count}
+                 headers_for(@org_a_manager)}.not_to change{SharedDomain.count}
           last_response.status.should == 301
 
           warning_header = CGI.unescape(last_response.headers["X-Cf-Warnings"])
@@ -275,11 +275,11 @@ module VCAP::CloudController
       end
     end
 
-    describe "Removeing a user from the organization" do
+    describe "Removing a user from the organization" do
       let(:user) { User.make }
       let(:org) { Organization.make(:user_guids => [user.guid]) }
-      let(:space_empty_user) { Space.make(organization: org) }
-      let(:space_full_user)  { Space.make(organization: org, :manager_guids => [user.guid], :developer_guids => [user.guid], :auditor_guids => [user.guid]) }
+      let(:org_space_empty) { Space.make(organization: org) }
+      let(:org_space_full)  { Space.make(organization: org, :manager_guids => [user.guid], :developer_guids => [user.guid], :auditor_guids => [user.guid]) }
 
       def update_org_user user_guid
         put "/v2/organizations/#{org.guid}", Yajl::Encoder.encode(user_guid), admin_headers
@@ -289,39 +289,99 @@ module VCAP::CloudController
         delete "/v2/organizations/#{org.guid}/users/#{user_guid}", {}, admin_headers
       end
 
-      describe "through a delete" do
+      def remove_org_user_recursive user_guid
+        delete "/v2/organizations/#{org.guid}/users/#{user_guid}?recursive=true", {}, admin_headers
+      end
+
+      context "DELETE /v2/organizations/org_guid/users/user_guid" do
         context "without the recursive flag" do
-          it "should remove the user from the organization if that user does not belong to any space" do
-            org.add_space(space_empty_user)
-            org.user_guids.should == [user.guid]
-            remove_org_user(user.guid)
-            org.refresh
-            org.user_guids.should == []
+          context "a single organization" do
+            it "should remove the user from the organization if that user does not belong to any space" do
+              org.add_space(org_space_empty)
+              org.users.should include(user)
+              remove_org_user(user.guid)
+              org.refresh
+
+              org.user_guids.should_not include(user)
+            end
+
+            it "should not remove the user from the organization if that user belongs to a space associated with the organization" do
+              org.add_space(org_space_full)
+              remove_org_user(user.guid)
+
+              expect(last_response.status).to eql(400)
+              org.refresh
+              org.users.should include(user)
+            end
+          end
+        end
+
+        context "with recursive flag" do
+          context "a single organization" do
+            it "should remove the user from each space that is associated with the organization" do
+              org.add_space(org_space_full)
+              ["developers", "auditors", "managers"].each { |type| org_space_full.send(type).should include(user) }
+              remove_org_user_recursive(user.guid)
+              org_space_full.refresh
+
+              ["developers", "auditors", "managers"].each { |type| org_space_full.send(type).should_not include(user) }
+            end
+
+            it "should remove the user from the organization" do
+              org.add_space(org_space_full)
+              org.users.should include(user)
+              remove_org_user_recursive(user.guid)
+              org.refresh
+
+              org.users.should_not include(user)
+            end
           end
 
-          it "should not remove the user from the organization if that user belongs to a space associated with the organization" do
-            org.add_space(space_full_user)
-            remove_org_user(user.guid)
-            expect(last_response.status).to eql(400)
-            org.user_guids.should == [user.guid]
+          context "multiple organizations" do
+            let(:org_2) { Organization.make(:user_guids => [user.guid]) }
+            let(:org2_space) { Space.make(organization: org_2, :developer_guids => [user.guid]) }
+
+            it "should remove a user from one organization, but no the other" do
+              org.add_space(org_space_full)
+              org_2.add_space(org2_space)
+              [org, org_2].each { |organization| organization.users.should include(user) }
+              remove_org_user_recursive(user.guid)
+
+              [org, org_2].each { |organization| organization.refresh }
+              org.users.should_not include(user)
+              org_2.users.should include(user)
+            end
+
+            it "should remove a user from each space associated with the organization being removed, but not the other" do
+              org.add_space(org_space_full)
+              org_2.add_space(org2_space)
+              ["developers", "auditors", "managers"].each { |type| org_space_full.send(type).should include(user) }
+              org2_space.developers.should include(user)
+              remove_org_user_recursive(user.guid)
+
+              [org_space_full, org2_space].each { |space| space.refresh }
+              ["developers", "auditors", "managers"].each { |type| org_space_full.send(type).should_not include(user) }
+              org2_space.developers.should include(user)
+            end
           end
         end
       end
 
-      describe "through an update" do
-        it "should remove the user on an update if that user does not belong to any space associated with the organization" do
-          org.add_space(space_empty_user)
-          org.user_guids.should == [user.guid]
+      context "PUT /v2/organizations/org_guid" do
+        it "should remove the user if that user does not belong to any space associated with the organization" do
+          org.add_space(org_space_empty)
+          org.users.should include(user)
           update_org_user("user_guids" => [])
           org.refresh
-          org.user_guids.should == []
+          org.users.should_not include(user)
         end
 
-        it "should not remove the user on an update if that user belongs to a space associated with the organization" do
-          org.add_space(space_full_user)
+        it "should not remove the user if they attempt to delete the user through an update" do
+          org.add_space(org_space_full)
           update_org_user("user_guids" => [])
           expect(last_response.status).to eql(400)
-          org.user_guids.should == [user.guid]
+          org.refresh
+          org.users.should include(user)
         end
       end
     end
