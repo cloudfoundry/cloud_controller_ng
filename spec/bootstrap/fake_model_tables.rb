@@ -15,13 +15,15 @@ class FakeModelTables
     db.create_table :test_model_destroy_deps do
       primary_key :id
       String :guid
-      foreign_key :test_model_id, :test_models
+      Integer :test_model_id
+      foreign_key [:test_model_id], :test_models, :name => :fk_test_model_id_destroy_deps
     end
 
     db.create_table :test_model_nullify_deps do
       primary_key :id
       String :guid
-      foreign_key :test_model_id, :test_models
+      Integer :test_model_id
+      foreign_key [:test_model_id], :test_models, :name => :fk_test_model_id_nullify_deps
     end
   end
 
