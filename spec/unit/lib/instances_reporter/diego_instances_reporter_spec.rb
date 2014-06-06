@@ -145,8 +145,72 @@ module VCAP::CloudController::InstancesReporter
 
     describe '#stats_for_app' do
       let(:opts) { {} }
-      it 'raises an error - diego does not support stats yet' do
-        expect { subject.stats_for_app(app, opts) }.to raise_error('not supported in Diego')
+      it 'stubs out stuff for now' do
+        result = subject.stats_for_app(app, opts)
+
+        expect(result).to eq(
+                            {
+                              0 => {
+                                'state' => 'RUNNING',
+                                'stats' => {
+                                  'mem_quota'  => 0,
+                                  'disk_quota' => 0,
+                                  'usage'      => {
+                                    'cpu'  => 0,
+                                    'mem'  => 0,
+                                    'disk' => 0,
+                                  }
+                                }
+                              },
+                              1 => {
+                                'state' => 'CRASHED',
+                                'stats' => {
+                                  'mem_quota'  => 0,
+                                  'disk_quota' => 0,
+                                  'usage'      => {
+                                    'cpu'  => 0,
+                                    'mem'  => 0,
+                                    'disk' => 0,
+                                  }
+                                }
+                              },
+                              2 => {
+                                'state' => 'STARTING',
+                                'stats' => {
+                                  'mem_quota'  => 0,
+                                  'disk_quota' => 0,
+                                  'usage'      => {
+                                    'cpu'  => 0,
+                                    'mem'  => 0,
+                                    'disk' => 0,
+                                  }
+                                }
+                              },
+                              3 => {
+                                'state' => 'STARTING',
+                                'stats' => {
+                                  'mem_quota'  => 0,
+                                  'disk_quota' => 0,
+                                  'usage'      => {
+                                    'cpu'  => 0,
+                                    'mem'  => 0,
+                                    'disk' => 0,
+                                  }
+                                }
+                              },
+                              4 => {
+                                'state' => 'CRASHED',
+                                'stats' => {
+                                  'mem_quota'  => 0,
+                                  'disk_quota' => 0,
+                                  'usage'      => {
+                                    'cpu'  => 0,
+                                    'mem'  => 0,
+                                    'disk' => 0,
+                                  }
+                                }
+                              },
+                            })
       end
     end
   end

@@ -51,8 +51,26 @@ module VCAP::CloudController::InstancesReporter
       result
     end
 
+    #TODO: this is only a stub. stats are not yet available from diego.
     def stats_for_app(app, opts)
-      raise 'not supported in Diego'
+      result    = {}
+      instances = diego_client.lrp_instances(app)
+      instances.each do |instance|
+        result[instance[:index]] = {
+          'state' => instance[:state],
+          'stats' => {
+            'mem_quota'  => 0,
+            'disk_quota' => 0,
+            'usage'      => {
+              'cpu'  => 0,
+              'mem'  => 0,
+              'disk' => 0,
+            }
+          }
+        }
+      end
+
+      result
     end
 
     private
