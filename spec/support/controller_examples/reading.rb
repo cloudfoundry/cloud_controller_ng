@@ -6,13 +6,11 @@ shared_examples "reading a valid object" do |opts|
         get "#{opts[:path]}/#{@obj.guid}", {}, json_headers(admin_headers)
       end
 
-      it "should return 200" do
-        last_response.status.should == 200
-      end
-
       include_examples "return a vcap rest encoded object"
 
       it "should return the json encoded object in the response body" do
+        last_response.status.should == 200
+
         expected = @obj.to_hash
         expected.each { |k, v| expected[k] = v.to_s if v.kind_of?(Time) }
 

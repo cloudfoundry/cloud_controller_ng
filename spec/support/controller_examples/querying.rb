@@ -17,11 +17,8 @@ shared_examples "querying objects" do |opts|
             get "#{opts[:path]}?q=#{attr}:#{@val}", {}, json_headers(admin_headers)
           end
 
-          it "should return 200" do
-            last_response.status.should == 200
-          end
-
           it "should return total_results => 1" do
+            last_response.status.should == 200
             decoded_response["total_results"].should == 1
           end
         end
@@ -32,11 +29,8 @@ shared_examples "querying objects" do |opts|
             get "#{opts[:path]}?q=#{attr}:#{@non_existent_value}", {}, json_headers(admin_headers)
           end
 
-          it "should return 200" do
-            last_response.status.should == 200
-          end
-
           it "should return total_results => 0" do
+            last_response.status.should == 200
             decoded_response["total_results"].should == 0
           end
         end
