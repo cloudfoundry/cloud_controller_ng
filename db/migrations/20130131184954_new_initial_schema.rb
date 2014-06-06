@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 
-# This is a squash of all previous migrations for ccng.  This needed to be done
-# to support mysql as a database option for ccng.
+# This is a squash of all previous migrations for cc.  This needed to be done
+# to support mysql as a database option for cc.
 #
 # As the previous set of migrations evolved, they ended up droping columns
 # as the schema was changed  to support new/changing feature sets. However,

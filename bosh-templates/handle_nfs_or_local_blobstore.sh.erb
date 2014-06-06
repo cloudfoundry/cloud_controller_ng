@@ -40,19 +40,19 @@ fi
 <% else %>
 
 echo "Preparing local droplet directory"
-<% if p("ccng.packages.fog_connection.provider", "local").downcase == "local" %>
-mkdir -p <%= p(["ccng.packages.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>
-chown vcap:vcap <%= p(["ccng.packages.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>
+<% if p("cc.packages.fog_connection.provider", "local").downcase == "local" %>
+mkdir -p <%= p(["cc.packages.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
+chown vcap:vcap <%= p(["cc.packages.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
 <% end %>
 
-<% if p("ccng.resource_pool.fog_connection.provider", "local").downcase == "local" %>
-mkdir -p <%= p(["ccng.resource_pool.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>
-chown vcap:vcap <%= p(["ccng.resource_pool.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>
+<% if p("cc.resource_pool.fog_connection.provider", "local").downcase == "local" %>
+mkdir -p <%= p(["cc.resource_pool.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
+chown vcap:vcap <%= p(["cc.resource_pool.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
 <% end %>
 
-<% if p("ccng.droplets.fog_connection.provider", "local").downcase == "local" %>
-mkdir -p <%= p(["ccng.droplets.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>
-chown vcap:vcap <%= p(["ccng.droplets.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>
+<% if p("cc.droplets.fog_connection.provider", "local").downcase == "local" %>
+mkdir -p <%= p(["cc.droplets.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
+chown vcap:vcap <%= p(["cc.droplets.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
 <% end %>
 
 <% end %>

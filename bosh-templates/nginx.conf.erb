@@ -1,8 +1,8 @@
 # deployment cloudcontroller nginx.conf
 user  vcap vcap;
 
-error_log /var/vcap/sys/log/nginx_ccng/nginx.error.log;
-pid       /var/vcap/sys/run/nginx_ccng/nginx.pid;
+error_log /var/vcap/sys/log/nginx_cc/nginx.error.log;
+pid       /var/vcap/sys/run/nginx_cc/nginx.pid;
 
 events {
   worker_connections  8192;
@@ -20,7 +20,7 @@ http {
                    '$proxy_add_x_forwarded_for vcap_request_id:$upstream_http_x_vcap_request_id '
                    'response_time:$upstream_response_time';
 
-  access_log  /var/vcap/sys/log/nginx_ccng/nginx.access.log  main;
+  access_log  /var/vcap/sys/log/nginx_cc/nginx.access.log  main;
 
   sendfile             on;  #enable use of sendfile()
   tcp_nopush           on;
@@ -28,14 +28,14 @@ http {
 
   keepalive_timeout  75 20; #inherited from router
 
-  client_max_body_size <%= p("ccng.client_max_body_size") %>; #already enforced upstream/but doesn't hurt.
+  client_max_body_size <%= p("cc.client_max_body_size") %>; #already enforced upstream/but doesn't hurt.
 
   upstream cloud_controller {
     server unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock;
   }
 
   server {
-    listen    <%= p("ccng.external_port") %>;
+    listen    <%= p("cc.external_port") %>;
     server_name  _;
     server_name_in_redirect off;
     proxy_send_timeout          <%= p("request_timeout_in_seconds") %>;
@@ -43,7 +43,7 @@ http {
 
     # proxy and log all CC traffic
     location / {
-      access_log /var/vcap/sys/log/nginx_ccng/nginx.access.log  main;
+      access_log /var/vcap/sys/log/nginx_cc/nginx.access.log  main;
       proxy_buffering             off;
       proxy_set_header            Host $host;
       proxy_set_header            X-Real_IP $remote_addr;
@@ -53,30 +53,30 @@ http {
       proxy_pass                 http://cloud_controller;
     }
 
-<% if p("ccng.droplets.fog_connection.provider", "local").downcase == "local" %>
+<% if p("cc.droplets.fog_connection.provider", "local").downcase == "local" %>
     # used for x-accel-redirect uri://location/foo.txt
     # nginx will serve the file root || location || foo.txt
     location /droplets/ {
       internal;
-      root   <%= p(["ccng.droplets.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>;
+      root   <%= p(["cc.droplets.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>;
     }
 <% end %>
 
-<% if p("ccng.packages.fog_connection.provider", "local").downcase == "local" %>
+<% if p("cc.packages.fog_connection.provider", "local").downcase == "local" %>
     # used for x-accel-redirect uri://location/foo.txt
     # nginx will serve the file root || location || foo.txt
-    location <%= "/#{p('ccng.packages.app_package_directory_key')}/" %> {
+    location <%= "/#{p('cc.packages.app_package_directory_key')}/" %> {
       internal;
-      root   <%= p(["ccng.packages.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>;
+      root   <%= p(["cc.packages.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>;
     }
 <% end %>
 
-<% if p("ccng.droplets.fog_connection.provider", "local").downcase == "local" %>
+<% if p("cc.droplets.fog_connection.provider", "local").downcase == "local" %>
     # used for x-accel-redirect uri://location/foo.txt
     # nginx will serve the file root || location || foo.txt
-    location <%= "/#{p('ccng.droplets.droplet_directory_key')}/" %> {
+    location <%= "/#{p('cc.droplets.droplet_directory_key')}/" %> {
       internal;
-      root   <%= p(["ccng.droplets.fog_connection.local_root", "ccng.default_fog_connection.local_root"]) %>;
+      root   <%= p(["cc.droplets.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>;
     }
 <% end %>
 
@@ -152,7 +152,7 @@ http {
       proxy_pass $download_url;
     }
 
-    <% if_p("ccng.newrelic.license_key") do %>
+    <% if_p("cc.newrelic.license_key") do %>
     location /nginx_status {
       stub_status on;
       access_log  /var/vcap/sys/log/nginx_newrelic_plugin/nginx_newrelic_plugin.access.log main;

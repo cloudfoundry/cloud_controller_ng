@@ -59,7 +59,7 @@ however, you can specify connection string via `DB_CONNECTION` environment
 variable to test against postgres and mysql. Examples:
 
     DB_CONNECTION="postgres://postgres@localhost:5432" rspec
-    DB_CONNECTION="mysql2://root:password@localhost:3306/ccng" rspec
+    DB_CONNECTION="mysql2://root:password@localhost:3306/cc" rspec
 
 Travis currently runs 3 build jobs against sqlite, postgres, and mysql.
 

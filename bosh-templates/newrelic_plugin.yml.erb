@@ -2,7 +2,7 @@ newrelic:
   #
   # Update with your New Relic account license key:
   #
-  license_key: '<%= properties.ccng.newrelic.license_key %>'
+  license_key: '<%= properties.cc.newrelic.license_key %>'
   #
   # Set to '1' for verbose output, remove for normal output.
   # All output goes to stdout/stderr.
@@ -15,5 +15,5 @@ newrelic:
 agents:
   nginx_status_agent:
     -
-      instance_name: 'CC Nginx (<%= properties.ccng.newrelic.environment_name %>)'
-      status_url: http://localhost:<%= p("ccng.external_port") %>/nginx_status
+      instance_name: 'CC Nginx (<%= properties.cc.newrelic.environment_name %>)'
+      status_url: http://localhost:<%= p("cc.external_port") %>/nginx_status
