@@ -5,7 +5,10 @@ resource "Service Plan Visibilities", type: :api do
   let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
   authenticated_request
 
-  standard_model_list(:service_plan_visibilities, VCAP::CloudController::ServicePlanVisibilitiesController)
+  describe 'Listing Service Plan Visibilities' do
+    let!(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
+    standard_model_list(:service_plan_visibilities, VCAP::CloudController::ServicePlanVisibilitiesController)
+  end
 
   describe 'Getting a Service Plan Visibility' do
     let(:guid) { VCAP::CloudController::ServicePlanVisibility.make.guid }
