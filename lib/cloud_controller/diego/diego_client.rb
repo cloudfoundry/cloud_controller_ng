@@ -73,7 +73,7 @@ module VCAP::CloudController::Diego
     def lrp_instances(app)
       uri = URI("#{@tps_reporter}/lrps/#{lrp_guid(app)}")
 
-      http = Net::HTTP.new(uri.host)
+      http = Net::HTTP.new(uri.host, uri.port)
       http.read_timeout = 10
       http.open_timeout = 10
 

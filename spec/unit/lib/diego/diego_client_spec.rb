@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController::Diego
   describe DiegoClient do
     let(:enabled) { true }
-    let(:tps_reporter) { "http://some-tps-addr" }
+    let(:tps_reporter) { "http://some-tps-addr:5151" }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
     let(:domain) { VCAP::CloudController::SharedDomain.make(name: "some-domain.com") }
@@ -138,7 +138,7 @@ module VCAP::CloudController::Diego
 
     describe "getting app instance information" do
       before do
-        stub_request(:get, "http://some-tps-addr/lrps/#{app.guid}-#{app.version}").to_return(
+        stub_request(:get, "http://some-tps-addr:5151/lrps/#{app.guid}-#{app.version}").to_return(
           status: 200,
           body: [{ process_guid: "abc", instance_guid: "123", index: 0, state: 'running', since_in_ns: '1257894000000000001' },
                  { process_guid: "abc", instance_guid: "456", index: 1, state: 'starting', since_in_ns: '1257895000000000001' },
