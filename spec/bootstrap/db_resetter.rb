@@ -1,3 +1,5 @@
+require "bootstrap/fake_model_tables"
+
 class DbResetter
   def initialize(db)
     @db = db
@@ -11,6 +13,9 @@ class DbResetter
     end
 
     DBMigrator.new(db).apply_migrations
+
+    fake_model_tables = FakeModelTables.new(db)
+    fake_model_tables.create_tables
   end
 
   private

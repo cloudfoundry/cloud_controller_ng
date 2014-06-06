@@ -3,14 +3,14 @@ require "spec_helper"
 module VCAP::CloudController
   describe RestController::PreloadedObjectSerializer do
     describe '#serialize' do
-      module TestModel
+      module PreloadTestModel
         def checked_transaction(*args, &blk); true; end
         def save(*args, &blk);   true; end
         def update(*args, &blk); true; end
       end
 
       class Wheel < Sequel::Model
-        include TestModel
+        include PreloadTestModel
         attr_accessor :id, :car_id
 
         one_to_many :bolts, clearer: ->(*args){  }
@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       class Engine < Sequel::Model
-        include TestModel
+        include PreloadTestModel
         attr_accessor :id, :car_id
 
         def guid;       "engine-guid";       end
@@ -34,7 +34,7 @@ module VCAP::CloudController
       end
 
       class Keycode < Sequel::Model
-        include TestModel
+        include PreloadTestModel
         attr_accessor :id, :car_id
 
         def guid;       "keycode-guid";       end
@@ -44,7 +44,7 @@ module VCAP::CloudController
       end
 
       class Bolt < Sequel::Model
-        include TestModel
+        include PreloadTestModel
         attr_accessor :id, :car_id, :wheel_id
 
         export_attributes :attr
@@ -56,7 +56,7 @@ module VCAP::CloudController
       end
 
       class Car < Sequel::Model
-        include TestModel
+        include PreloadTestModel
         attr_accessor :id
 
         # Clearers are defined to avoid db access
