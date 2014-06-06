@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::QuotaDefinitionsController do
-    include_examples "uaa authenticated api", path: "/v2/quota_definitions"
+    it_behaves_like "an authenticated endpoint", path: "/v2/quota_definitions"
     include_examples "enumerating objects", path: "/v2/quota_definitions", model: QuotaDefinition
     include_examples "reading a valid object", path: "/v2/quota_definitions", model: QuotaDefinition, basic_attributes: %w(name non_basic_services_allowed total_routes total_services memory_limit trial_db_allowed)
     include_examples "operations on an invalid object", path: "/v2/quota_definitions"

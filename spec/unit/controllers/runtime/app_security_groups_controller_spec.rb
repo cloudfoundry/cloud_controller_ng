@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe AppSecurityGroupsController do
     let(:group) { AppSecurityGroup.make }
 
-    include_examples "uaa authenticated api", path: "/v2/app_security_groups"
+    it_behaves_like "an authenticated endpoint", path: "/v2/app_security_groups"
     include_examples "enumerating objects", path: "/v2/app_security_groups", model: AppSecurityGroup
     include_examples "reading a valid object", path: "/v2/app_security_groups", model: AppSecurityGroup, basic_attributes: %w(name rules)
     include_examples "operations on an invalid object", path: "/v2/app_security_groups"

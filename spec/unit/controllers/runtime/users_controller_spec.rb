@@ -2,47 +2,45 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::UsersController do
-    context 'logged in as an admin' do
-      include_examples "uaa authenticated api", path: "/v2/users"
-      include_examples "enumerating objects", path: "/v2/users", model: User
-      include_examples "reading a valid object", path: "/v2/users", model: User, basic_attributes: []
-      include_examples "operations on an invalid object", path: "/v2/users"
-      include_examples "creating and updating", path: "/v2/users", model: User, required_attributes: %w(guid), unique_attributes: %w(guid)
-      include_examples "deleting a valid object", path: "/v2/users", model: User, one_to_many_collection_ids: {}
-      include_examples "collection operations", path: "/v2/users", model: User,
-        one_to_many_collection_ids: {},
-        many_to_one_collection_ids: {
-          :default_space => lambda { |user|
-            org = user.organizations.first || Organization.make
-            Space.make(:organization => org)
-          }
-        },
-        many_to_many_collection_ids: {
-          organizations: lambda { |_| Organization.make },
-          billing_managed_organizations: lambda { |user|
-            org = Organization.make
-            user.add_organization(org)
-            org
-          },
-          audited_organizations: lambda { |user|
-            org = Organization.make
-            user.add_organization(org)
-            org
-          },
-          spaces: lambda { |user|
-            org = user.organizations.first || Organization.make
-            Space.make(organization: org)
-          },
-          managed_spaces: lambda { |user|
-            org = user.organizations.first || Organization.make
-            Space.make(organization: org)
-          },
-          audited_spaces: lambda { |user|
-            org = user.organizations.first || Organization.make
-            Space.make(organization: org)
-          }
-        }
-    end
+    it_behaves_like "an admin only endpoint", path: "/v2/users"
+    include_examples "enumerating objects", path: "/v2/users", model: User
+    include_examples "reading a valid object", path: "/v2/users", model: User, basic_attributes: []
+    include_examples "operations on an invalid object", path: "/v2/users"
+    include_examples "creating and updating", path: "/v2/users", model: User, required_attributes: %w(guid), unique_attributes: %w(guid)
+    include_examples "deleting a valid object", path: "/v2/users", model: User, one_to_many_collection_ids: {}
+    include_examples "collection operations", path: "/v2/users", model: User,
+                     one_to_many_collection_ids: {},
+                     many_to_one_collection_ids: {
+                         :default_space => lambda { |user|
+                           org = user.organizations.first || Organization.make
+                           Space.make(:organization => org)
+                         }
+                     },
+                     many_to_many_collection_ids: {
+                         organizations: lambda { |_| Organization.make },
+                         billing_managed_organizations: lambda { |user|
+                           org = Organization.make
+                           user.add_organization(org)
+                           org
+                         },
+                         audited_organizations: lambda { |user|
+                           org = Organization.make
+                           user.add_organization(org)
+                           org
+                         },
+                         spaces: lambda { |user|
+                           org = user.organizations.first || Organization.make
+                           Space.make(organization: org)
+                         },
+                         managed_spaces: lambda { |user|
+                           org = user.organizations.first || Organization.make
+                           Space.make(organization: org)
+                         },
+                         audited_spaces: lambda { |user|
+                           org = user.organizations.first || Organization.make
+                           Space.make(organization: org)
+                         }
+                     }
 
     describe 'permissions' do
       include_context "permissions"

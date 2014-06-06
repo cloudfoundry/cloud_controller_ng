@@ -2,11 +2,12 @@ require "spec_helper"
 require "stringio"
 
 module VCAP::CloudController
-  describe RestController::ModelController do
-    class TestModelController < RestController::ModelController
-      define_messages
-    end
+  class TestModelsController < RestController::ModelController
+    define_messages
+    define_routes
+  end
 
+  describe RestController::ModelController do
     let(:user) { User.make(admin: true, active: true) }
     let(:scope) { {'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE]} }
     let(:logger) { double('logger').as_null_object }
@@ -16,7 +17,7 @@ module VCAP::CloudController
     let!(:model_table_name) { :test_models }
     let!(:model_klass_name) { "TestModel" }
 
-    subject(:controller) {TestModelController.new({}, logger, env, params, request_body, sinatra, dependencies) }
+    subject(:controller) { TestModelsController.new({}, logger, env, params, request_body, sinatra, dependencies) }
 
     let(:sinatra) { double('sinatra') }
     let(:dependencies) { {object_renderer: object_renderer, collection_renderer: collection_renderer} }
@@ -34,14 +35,88 @@ module VCAP::CloudController
 
     before { SecurityContext.set(user, scope) }
 
+    describe "common model controller behavior" do
+      before do
+        get "/v2/test_models", {}, headers
+      end
+
+      context "with invalid auth header" do
+        let(:headers) do
+          headers = headers_for(VCAP::CloudController::User.make)
+          headers["HTTP_AUTHORIZATION"] += "EXTRA STUFF"
+          headers
+        end
+
+        it "returns an error" do
+          expect(last_response.status).to eq 401
+          expect(decoded_response["code"]).to eq 1000
+        end
+
+        it_behaves_like "a vcap rest error response", /Invalid Auth Token/
+      end
+
+      context "for an existing user" do
+        let(:headers) do
+          headers_for(VCAP::CloudController::User.make)
+        end
+
+        it "succeeds" do
+          last_response.status.should == 200
+        end
+      end
+
+      context "for a new user" do
+        let(:headers) do
+          headers_for(Machinist.with_save_nerfed { VCAP::CloudController::User.make })
+        end
+
+        it "succeeds" do
+          last_response.status.should == 200
+        end
+      end
+
+      context "for a deleted user" do
+        let(:headers) do
+          user = VCAP::CloudController::User.make
+          headers = headers_for(user)
+          user.delete
+          headers
+        end
+
+        it "returns 200 by recreating the user" do
+          last_response.status.should == 200
+        end
+      end
+
+      context "for an admin" do
+        let(:headers) do
+          headers_for(nil, admin_scope: true)
+        end
+
+        it "succeeds" do
+          last_response.status.should == 200
+        end
+      end
+
+      context "for no user" do
+        let(:headers) do
+          headers_for(nil)
+        end
+
+        it "should return 401" do
+          last_response.status.should == 401
+        end
+      end
+    end
+
     describe "#create" do
       it "raises InvalidRequest when a CreateMessage cannot be extracted from the request body" do
-        TestModelController::CreateMessage.any_instance.stub(:extract).and_return(nil)
+        TestModelsController::CreateMessage.any_instance.stub(:extract).and_return(nil)
         expect { controller.create }.to raise_error(VCAP::Errors::ApiError, /The request is invalid/)
       end
 
       it "calls the hooks in the right order" do
-        TestModelController::CreateMessage.any_instance.stub(:extract).and_return({extracted: "json"})
+        TestModelsController::CreateMessage.any_instance.stub(:extract).and_return({extracted: "json"})
 
         controller.should_receive(:before_create).with(no_args).ordered
         TestModel.should_receive(:create_from_hash).with({extracted: "json"}).ordered.and_call_original
@@ -92,7 +167,7 @@ module VCAP::CloudController
         model_instance = TestModel.first
         expect(model_instance.guid).not_to be_nil
 
-        url = "/v2/test_model/#{model_instance.guid}"
+        url = "/v2/test_models/#{model_instance.guid}"
 
         expect(result[0]).to eq(201)
         expect(result[1]).to eq({"Location" => url})
@@ -100,9 +175,9 @@ module VCAP::CloudController
 
       it "should call the serialization instance asssociated with controller to generate response data" do
         object_renderer.
-          should_receive(:render_json).
-          with(TestModelController, instance_of(TestModel), {}).
-          and_return("serialized json")
+            should_receive(:render_json).
+            with(TestModelsController, instance_of(TestModel), {}).
+            and_return("serialized json")
 
         result = controller.create
         expect(result[2]).to eq("serialized json")
@@ -124,9 +199,9 @@ module VCAP::CloudController
 
         it "returns the serialized object if access is validated" do
           object_renderer.
-            should_receive(:render_json).
-            with(TestModelController, model, {}).
-            and_return("serialized json")
+              should_receive(:render_json).
+              with(TestModelsController, model, {}).
+              and_return("serialized json")
 
           expect(controller.read(model.guid)).to eq("serialized json")
         end
@@ -170,9 +245,9 @@ module VCAP::CloudController
 
         it "returns the serialized updated object if access is validated" do
           object_renderer.
-            should_receive(:render_json).
-            with(TestModelController, instance_of(TestModel), {}).
-            and_return("serialized json")
+              should_receive(:render_json).
+              with(TestModelsController, instance_of(TestModel), {}).
+              and_return("serialized json")
 
           result = controller.update(model.guid)
           expect(result[0]).to eq(201)
@@ -219,7 +294,7 @@ module VCAP::CloudController
           TestModel.one_to_many :test_model_nullify_deps
 
           TestModel.add_association_dependencies(:test_model_destroy_deps => :destroy,
-                                                   :test_model_nullify_deps => :nullify)
+                                                 :test_model_nullify_deps => :nullify)
 
           model.add_test_model_destroy_dep TestModelDestroyDep.create
           model.add_test_model_nullify_dep test_model_nullify_dep
@@ -341,14 +416,14 @@ module VCAP::CloudController
 
         Query.stub(filtered_dataset_from_query_params: filtered_dataset)
 
-        TestModelController.stub(path: fake_class_path)
+        TestModelsController.stub(path: fake_class_path)
 
         collection_renderer.should_receive(:render_json).with(
-          TestModelController,
-          filtered_dataset,
-          fake_class_path,
-          anything,
-          params,
+            TestModelsController,
+            filtered_dataset,
+            fake_class_path,
+            anything,
+            params,
         )
 
         controller.enumerate

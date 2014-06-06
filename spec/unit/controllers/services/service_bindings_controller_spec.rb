@@ -16,7 +16,7 @@ module VCAP::CloudController
       Service.any_instance.stub(:client).and_return(broker_client)
     end
 
-    include_examples "uaa authenticated api",
+    it_behaves_like "an authenticated endpoint",
       path: "/v2/service_bindings"
 
     include_examples "enumerating objects",

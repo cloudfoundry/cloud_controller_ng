@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::RoutesController do
-    include_examples "uaa authenticated api", path: "/v2/routes"
+    it_behaves_like "an authenticated endpoint", path: "/v2/routes"
     include_examples "enumerating objects", path: "/v2/routes", model: Route
     include_examples "reading a valid object", path: "/v2/routes", model: Route, basic_attributes: %w(host domain_guid space_guid)
     include_examples "operations on an invalid object", path: "/v2/routes"
