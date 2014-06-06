@@ -58,7 +58,7 @@ module ControllerHelpers
   end
 
   def app
-    FakeApp.new(config)
+    FakeFrontController.new(config)
   end
 
   def headers_for(user, opts = {})

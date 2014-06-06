@@ -67,7 +67,7 @@ RSpec.configure do |rspec_config|
       c.api_name = "Cloud Foundry API"
       c.template_path = "spec/api/documentation/templates"
       c.curl_host = "https://api.[your-domain.com]"
-      c.app = FakeApp.new(config)
+      c.app = FakeFrontController.new(config)
     end
   end
 
