@@ -158,7 +158,7 @@ module CloudController
     end
 
     def diego_client
-      @diego_client ||= DiegoClient.new(config[:diego], config[:tps_url], message_bus, blobstore_url_generator)
+      @diego_client ||= Diego::DiegoClient.new(config[:diego], config[:tps_url], message_bus, blobstore_url_generator)
     end
 
     def instances_reporter_factory
