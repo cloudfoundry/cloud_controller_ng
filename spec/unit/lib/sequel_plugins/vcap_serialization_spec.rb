@@ -1,8 +1,9 @@
 require "spec_helper"
 require "securerandom"
 
-describe "Sequel::Plugins::VcapSerialization", non_transactional: true do
+describe "Sequel::Plugins::VcapSerialization" do
   before do
+    db = Sequel.sqlite(':memory:')
     db.create_table :test do
       primary_key :id
 

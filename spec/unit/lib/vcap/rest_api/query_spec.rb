@@ -1,11 +1,8 @@
 require "spec_helper"
 
 module VCAP::RestAPI
-  describe VCAP::RestAPI::Query, non_transactional: true do
+  describe VCAP::RestAPI::Query do
     include VCAP::RestAPI
-
-    let(:num_authors) { 10 }
-    let(:books_per_author) { 2 }
 
     class Author < Sequel::Model
       one_to_many :books
@@ -15,42 +12,21 @@ module VCAP::RestAPI
       many_to_one :author
     end
 
-    before do
-      db.create_table :authors do
-        primary_key :id
-
-        Integer :num_val
-        String  :str_val
-        Integer :protected
-        Boolean :published
-        DateTime :published_at
-      end
-
-      db.create_table :books do
-        primary_key :id
-
-        Integer :num_val
-        String  :str_val
-
-        foreign_key :author_id, :authors
-      end
-
-      Author.set_dataset(db[:authors])
-      Book.set_dataset(db[:books])
-
-      (num_authors - 1).times do |i|
+    before :all do
+      @num_authors = 10
+      (@num_authors - 1).times do |i|
         # mysql does typecasting of strings to ints, so start values at 0
         # so that the query using string tests don't find the 0 values.
         a = Author.create(:num_val => i + 1,
                           :str_val => "str #{i}",
                           :published => (i == 0),
                           :published_at => (i == 0) ? nil : Time.at(0) + i)
-        books_per_author.times do |j|
+        2.times do |j|
           a.add_book(Book.create(:num_val => j + 1, :str_val => "str #{i} #{j}"))
         end
       end
 
-      @owner_nil_num = Author.create(:str_val => "no num", :published => false, :published_at => Time.at(0) + num_authors)
+      @owner_nil_num = Author.create(:str_val => "no num", :published => false, :published_at => Time.at(0) + @num_authors)
       @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published published_at))
     end
 
@@ -59,7 +35,7 @@ module VCAP::RestAPI
         it "should return the full dataset" do
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, {})
-          ds.count.should == num_authors
+          ds.count.should == @num_authors
         end
       end
 
@@ -74,12 +50,12 @@ module VCAP::RestAPI
 
       describe "greater-than comparison query on an integer within the range" do
         it "should return no results" do
-          q = "num_val>#{num_authors - 5}"
+          q = "num_val>#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
 
           expected = Author.all.select do |a|
-            a.num_val && a.num_val > num_authors - 5
+            a.num_val && a.num_val > @num_authors - 5
           end
 
           ds.all.should =~ expected
@@ -88,12 +64,12 @@ module VCAP::RestAPI
 
       describe "greater-than equals comparison query on an integer within the range" do
         it "should return no results" do
-          q = "num_val>=#{num_authors - 5}"
+          q = "num_val>=#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
 
           expected = Author.all.select do |a|
-            a.num_val && a.num_val >= num_authors - 5
+            a.num_val && a.num_val >= @num_authors - 5
           end
 
           ds.all.should =~ expected
@@ -102,12 +78,12 @@ module VCAP::RestAPI
 
       describe "less-than comparison query on an integer within the range" do
         it "should return no results" do
-          q = "num_val<#{num_authors - 5}"
+          q = "num_val<#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
 
           expected = Author.all.select do |a|
-            a.num_val && a.num_val < num_authors - 5
+            a.num_val && a.num_val < @num_authors - 5
           end
 
           ds.all.should =~ expected
@@ -116,12 +92,12 @@ module VCAP::RestAPI
 
       describe "less-than equals comparison query on an integer within the range" do
         it "should return no results" do
-          q = "num_val<=#{num_authors - 5}"
+          q = "num_val<=#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
 
           expected = Author.all.select do |a|
-            a.num_val && a.num_val <= num_authors - 5
+            a.num_val && a.num_val <= @num_authors - 5
           end
 
           ds.all.should =~ expected
@@ -130,7 +106,7 @@ module VCAP::RestAPI
 
       describe "exact query on a nonexistent integer" do
         it "should return no results" do
-          q = "num_val:#{num_authors + 10}"
+          q = "num_val:#{@num_authors + 10}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
           ds.count.should == 0

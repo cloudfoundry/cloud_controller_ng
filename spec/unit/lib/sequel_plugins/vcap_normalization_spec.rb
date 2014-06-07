@@ -1,22 +1,21 @@
 require "spec_helper"
 
-describe "Sequel::Plugins::VcapNormalization", non_transactional: true do
-  let!(:model_class) do
-    db.create_table :test do
-      primary_key :id
+describe "Sequel::Plugins::VcapNormalization" do
+  db = Sequel.sqlite(':memory:')
+  db.create_table :foo_bars do
+    primary_key :id
 
-      String :val1
-      String :val2
-      String :val3
-    end
-
-    Class.new(Sequel::Model) do
-      plugin :vcap_normalization
-      set_dataset(db[:test])
-    end
+    String :val1
+    String :val2
+    String :val3
   end
 
-  let(:model_object) { model_class.new }
+  FooBar = Class.new(Sequel::Model) do
+    plugin :vcap_normalization
+    set_dataset(db[:foo_bars])
+  end
+
+  let(:model_object) { FooBar.new }
 
   describe ".strip_attributes" do
     it "should not cause anything to be normalized if not called" do
@@ -27,7 +26,7 @@ describe "Sequel::Plugins::VcapNormalization", non_transactional: true do
     end
 
     it "should only result in provided strings being normalized" do
-      model_class.strip_attributes :val2, :val3
+      FooBar.strip_attributes :val2, :val3
       model_object.val1 = "hi "
       model_object.val2 = " bye"
       model_object.val3 = " with spaces "

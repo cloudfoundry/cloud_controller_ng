@@ -1,61 +1,17 @@
 require "spec_helper"
 
-describe "Sequel::Plugins::VcapRelations", non_transactional: true do
+describe "Sequel::Plugins::VcapRelations" do
+  def define_model(name, db) # we need new classes each time to reset the class level state
+    model_klass = Class.new(Sequel::Model) do
+      plugin :vcap_relations
+      plugin :vcap_guid
+    end
+    self.class.send(:remove_const, name) if self.class.const_defined?(name)
+    self.class.const_set(name, model_klass)
+    model_klass.set_dataset(db["#{name.downcase.to_s}s".to_sym])
+  end
+
   before do
-    db.create_table :owners do
-      primary_key :id
-      String :guid, :null => false, :index => true
-    end
-
-    db.create_table :dogs do
-      primary_key :id
-      String :guid, :null => false, :index => true
-
-      # a dog has an owner, (but allowing null, it may be a stray)
-      foreign_key :owner_id, :owners
-    end
-
-    db.create_table :names do
-      primary_key :id
-      String :guid, :null => false, :index => true
-    end
-
-    # contrived example.. there is a many-to-many relationship between a dog
-    # and a name, i.e. the main name plus all the nick names a dog can go by
-    db.create_table :dogs_names do
-      foreign_key :dog_id,  :dogs,  :null => false
-      foreign_key :name_id, :names, :null => false
-
-      # needed to expose the many_to_many add flaw in native Sequel
-      index [:dog_id, :name_id], :unique => true
-    end
-
-    db.create_table :tops do
-      primary_key :id
-    end
-
-    db.create_table :middles do
-      primary_key :id
-      String :guid, :null => false, :index => true
-      foreign_key :top_id, :tops
-    end
-
-    db.create_table :bottoms do
-      primary_key :id
-      foreign_key :middle_id, :middles
-    end
-
-    # we need new classes each time to reset the class level state
-    def define_model(name, db)
-      c = Class.new(Sequel::Model) do
-        plugin :vcap_relations
-        plugin :vcap_guid
-      end
-      self.class.send(:remove_const, name) if self.class.const_defined?(name)
-      self.class.const_set(name, c)
-      c.set_dataset(db["#{name.downcase.to_s}s".to_sym])
-    end
-
     define_model :Owner, db
     define_model :Dog, db
     define_model :Name, db
@@ -65,12 +21,12 @@ describe "Sequel::Plugins::VcapRelations", non_transactional: true do
     define_model :Bottom, db
   end
 
-  let(:owner_klass) { self.class.const_get(:Owner) }
-  let(:dog_klass) { self.class.const_get(:Dog) }
-  let(:name_klass) { self.class.const_get(:Name) }
-  let(:top_klass) { self.class.const_get(:Top) }
-  let(:middle_klass) { self.class.const_get(:Middle) }
-  let(:bottom_klass) { self.class.const_get(:Bottom) }
+  let!(:owner_klass) { define_model(:Owner, db) }
+  let!(:dog_klass) { define_model(:Dog, db) }
+  let!(:name_klass) { define_model(:Name, db) }
+  let!(:top_klass) { define_model(:Top, db) }
+  let!(:middle_klass) { define_model(:Middle, db) }
+  let!(:bottom_klass) { define_model(:Bottom, db) }
 
   describe ".one_to_many" do
     before do

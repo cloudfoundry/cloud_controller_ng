@@ -1,16 +1,11 @@
 require "spec_helper"
 require "vcap/sequel_case_insensitive_string_monkeypatch"
 
-describe "String :name", non_transactional: true do
-  let(:table_name) { :test }
+describe "String :name" do
+  let(:table_name) { :unique_str_defaults }
 
   context "with default options" do
     before do
-      db.create_table table_name do
-        primary_key :id
-        String :str, :unique => true
-      end
-
       @c = Class.new(Sequel::Model)
       @c.set_dataset(db[table_name])
       @c.create(:str => "abc")
@@ -26,13 +21,10 @@ describe "String :name", non_transactional: true do
     end
   end
 
-  context "with :context_insensitive => false" do
-    before do
-      db.create_table table_name do
-        primary_key :id
-        String :str, :unique => true, :case_insensitive => false
-      end
+  context "with :case_insensitive => false" do
+    let(:table_name) { :unique_str_case_sensitive }
 
+    before do
       @c = Class.new(Sequel::Model)
       @c.set_dataset(db[table_name])
       @c.create(:str => "abc")
@@ -48,13 +40,10 @@ describe "String :name", non_transactional: true do
     end
   end
 
-  context "with :context_insensitive => true" do
-    before do
-      db.create_table table_name do
-        primary_key :id
-        String :str, :unique => true, :case_insensitive => true
-      end
+  context "with :case_insensitive => true" do
+    let(:table_name) { :unique_str_case_insensitive }
 
+    before do
       @c = Class.new(Sequel::Model) do
         def validate
           validates_unique :str
@@ -83,55 +72,35 @@ describe "String :name", non_transactional: true do
   end
 
   context "alter table set_column_type" do
-    before do
-      db.create_table table_name do
-        primary_key :id
-        String :str, :unique => true
-      end
-    end
+    let(:table_name) { :unique_str_altered }
 
     context "with defaults" do
       it "should not result in a case sensitive column" do
-        db.alter_table table_name do
-          set_column_type :str, String
-        end
-
-        @c = Class.new(Sequel::Model) do
-        end
+        @c = Class.new(Sequel::Model)
         @c.set_dataset(db[table_name])
-        @c.create(:str => "abc")
-        @c.dataset[:str => "abc"].should_not be_nil
-        @c.dataset[:str => "ABC"].should be_nil
+        @c.create(:altered_to_default => "abc")
+        @c.dataset[:altered_to_default => "abc"].should_not be_nil
+        @c.dataset[:altered_to_default => "ABC"].should be_nil
       end
     end
 
-    context "with :context_insensitive => false" do
+    context "with :case_insensitive => false" do
       it "should not result in a case sensitive column" do
-        db.alter_table table_name do
-          set_column_type :str, String
-        end
-
-        @c = Class.new(Sequel::Model) do
-        end
+        @c = Class.new(Sequel::Model)
         @c.set_dataset(db[table_name])
-        @c.create(:str => "abc")
-        @c.dataset[:str => "abc"].should_not be_nil
-        @c.dataset[:str => "ABC"].should be_nil
+        @c.create(:altered_to_case_sensitive => "abc")
+        @c.dataset[:altered_to_case_sensitive => "abc"].should_not be_nil
+        @c.dataset[:altered_to_case_sensitive => "ABC"].should be_nil
       end
     end
 
-    context "with :context_insensitive => true" do
+    context "with :case_insensitive => true" do
       it "should change the column" do
-        db.alter_table table_name do
-          set_column_type :str, String, :case_insensitive => true
-        end
-
-        @c = Class.new(Sequel::Model) do
-        end
+        @c = Class.new(Sequel::Model)
         @c.set_dataset(db[table_name])
-        @c.create(:str => "abc")
-        @c.dataset[:str => "abc"].should_not be_nil
-        @c.dataset[:str => "ABC"].should_not be_nil
+        @c.create(:altered_to_case_insensitive => "abc")
+        @c.dataset[:altered_to_case_insensitive => "abc"].should_not be_nil
+        @c.dataset[:altered_to_case_insensitive => "ABC"].should_not be_nil
       end
     end
   end
