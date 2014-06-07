@@ -32,8 +32,6 @@ module VCAP::CloudController::InstancesReporter
                               0 => { state: 'RUNNING', since: 1 },
                               1 => { state: 'CRASHED', since: 3 },
                               2 => { state: 'STARTING', since: 5 },
-                              3 => { state: 'STARTING', since: 6 },
-                              4 => { state: 'CRASHED', since: 7 },
                             })
       end
     end
@@ -138,7 +136,6 @@ module VCAP::CloudController::InstancesReporter
         expect(diego_client).to have_received(:lrp_instances).with(app)
         expect(result).to eq([
                                { 'instance' => 'instance-C', 'since' => 3 },
-                               { 'instance' => 'instance-G', 'since' => 7 },
                              ])
       end
     end
@@ -185,31 +182,7 @@ module VCAP::CloudController::InstancesReporter
                                     'disk' => 0,
                                   }
                                 }
-                              },
-                              3 => {
-                                'state' => 'STARTING',
-                                'stats' => {
-                                  'mem_quota'  => 0,
-                                  'disk_quota' => 0,
-                                  'usage'      => {
-                                    'cpu'  => 0,
-                                    'mem'  => 0,
-                                    'disk' => 0,
-                                  }
-                                }
-                              },
-                              4 => {
-                                'state' => 'CRASHED',
-                                'stats' => {
-                                  'mem_quota'  => 0,
-                                  'disk_quota' => 0,
-                                  'usage'      => {
-                                    'cpu'  => 0,
-                                    'mem'  => 0,
-                                    'disk' => 0,
-                                  }
-                                }
-                              },
+                              }
                             })
       end
     end

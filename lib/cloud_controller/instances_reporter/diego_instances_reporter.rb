@@ -10,7 +10,7 @@ module VCAP::CloudController::InstancesReporter
       result    = {}
       instances = diego_client.lrp_instances(app)
 
-      instances.each do |instance|
+      for_each_desired_instance(instances, app) do |instance|
         result[instance[:index]] = {
           state: instance[:state],
           since: instance[:since],
@@ -26,10 +26,9 @@ module VCAP::CloudController::InstancesReporter
 
       running_indices = Set.new
 
-      instances.each do |instance|
-        if instance_is_desired(instance, app) && (instance[:state] == 'RUNNING' || instance[:state] == 'STARTING')
-          running_indices.add(instance[:index])
-        end
+      for_each_desired_instance(instances, app) do |instance|
+        next unless (instance[:state] == 'RUNNING' || instance[:state] == 'STARTING')
+        running_indices.add(instance[:index])
       end
 
       running_indices.length
@@ -39,7 +38,7 @@ module VCAP::CloudController::InstancesReporter
       result    = []
       instances = diego_client.lrp_instances(app)
 
-      instances.each do |instance|
+      for_each_desired_instance(instances, app) do |instance|
         if instance[:state] == 'CRASHED'
           result << {
             'instance' => instance[:instance_guid],
@@ -55,7 +54,8 @@ module VCAP::CloudController::InstancesReporter
     def stats_for_app(app, opts)
       result    = {}
       instances = diego_client.lrp_instances(app)
-      instances.each do |instance|
+
+      for_each_desired_instance(instances, app) do |instance|
         result[instance[:index]] = {
           'state' => instance[:state],
           'stats' => {
@@ -74,6 +74,13 @@ module VCAP::CloudController::InstancesReporter
     end
 
     private
+
+    def for_each_desired_instance(instances,app,&blk)
+      instances.each do |instance|
+        next unless instance_is_desired(instance,app)
+        blk.call(instance)
+      end
+    end
 
     def instance_is_desired(instance, app)
       instance[:index] < app.instances
