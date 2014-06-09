@@ -92,9 +92,9 @@ info:
   support_address: <%= p("support_address") %>
   description: <%= p("description") %>
 
-<% if_p("cc.directories.tmpdir") do |tmpdir| %>
-directories:
- tmpdir: <%= tmpdir %>
+<% if_p("cc.directories") do %>
+directories:<% p("cc.directories").each do |key, value| %>
+  <%= key %>: <%= value %><% end %>
 <% end %>
 
 logging:
