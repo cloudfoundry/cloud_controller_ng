@@ -23,6 +23,7 @@ module DbConfig
       default_connection_prefix["mysql"] = "mysql2://root:password@localhost:3306"
     end
 
-    ENV["DB_CONNECTION"] ||= default_connection_prefix[ENV["DB"]]
+    db = ENV["DB"] || "sqlite"
+    ENV["DB_CONNECTION"] ||= default_connection_prefix[db]
   end
 end
