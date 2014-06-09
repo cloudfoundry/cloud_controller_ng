@@ -537,3 +537,8 @@
   name: AppSecurityGroupNotFound
   http_code: 404
   message: "The app security group could not be found: %s"
+
+300003:
+  name: AppSecurityGroupStagingDefaultInvalid
+  http_code: 400
+  message: "The app security group could not be found: %s"
