@@ -254,7 +254,12 @@ module VCAP::CloudController::RestController
     def enumerate_dataset
       qp = self.class.query_parameters
       visible_objects = model.user_visible(VCAP::CloudController::SecurityContext.current_user, SecurityContext.admin?)
-      get_filtered_dataset_for_enumeration(model, visible_objects, qp, @opts)
+      filtered_objects = filter_dataset(visible_objects)
+      get_filtered_dataset_for_enumeration(model, filtered_objects, qp, @opts)
+    end
+
+    def filter_dataset(dataset)
+      dataset
     end
 
     def raise_if_has_associations!(obj)
