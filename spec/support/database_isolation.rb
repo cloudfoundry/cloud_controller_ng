@@ -10,6 +10,10 @@ module DatabaseIsolation
     end
   end
 
+  def self.isolated_tables(db)
+    db.tables - [:schema_migrations]
+  end
+
   class TruncateTables
     def cleanly
       yield

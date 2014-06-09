@@ -34,8 +34,9 @@ module VCAP::CloudController
     end
 
     def truncate_and_reseed_all_tables
-      table_trucator = TableTruncator.new(db)
-      table_trucator.truncate_tables
+      tables = DatabaseIsolation.isolated_tables(db)
+      table_truncator = TableTruncator.new(db, tables)
+      table_truncator.truncate_tables
 
       Seeds.create_seed_quota_definitions(config)
       Seeds.create_seed_stacks

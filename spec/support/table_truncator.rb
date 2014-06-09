@@ -1,6 +1,7 @@
 class TableTruncator
-  def initialize(db)
+  def initialize(db, tables)
     @db = db
+    @tables = tables
   end
 
   def truncate_tables
@@ -8,15 +9,15 @@ class TableTruncator
     referential_integrity.without do
       case db.database_type
         when :postgres
-          db.tables.each do |table|
+          tables.each do |table|
             db.run("TRUNCATE TABLE #{table} RESTART IDENTITY CASCADE;")
           end
         when :mysql
-          db.tables.each do |table|
+          tables.each do |table|
             db.run("TRUNCATE TABLE #{table};")
           end
         when :sqlite
-          db.tables.each do |table|
+          tables.each do |table|
             db.run("DELETE FROM #{table}; DELETE FROM sqlite_sequence WHERE name = '#{table}';")
           end
       end
@@ -25,5 +26,5 @@ class TableTruncator
 
   private
 
-  attr_reader :db
+  attr_reader :db, :tables
 end
