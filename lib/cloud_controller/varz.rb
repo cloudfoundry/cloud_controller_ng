@@ -3,13 +3,9 @@ require 'vcap/component'
 module VCAP::CloudController
   class Varz
     def self.setup_updates
-      record_user_count
+      update!
       EM.add_periodic_timer(600) { record_user_count }
-
-      update_job_queue_length
       EM.add_periodic_timer(30) { update_job_queue_length }
-
-      update_thread_info
       EM.add_periodic_timer(30) { update_thread_info }
     end
 
@@ -29,6 +25,12 @@ module VCAP::CloudController
       thread_info = get_thread_info
 
       ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:thread_info] = thread_info }
+    end
+
+    def self.update!
+      record_user_count
+      update_job_queue_length
+      update_thread_info
     end
 
     private

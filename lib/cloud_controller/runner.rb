@@ -103,6 +103,11 @@ module VCAP::CloudController
         end
       end
 
+      trap('USR1') do
+        logger.warn("Collecting diagnostics")
+        collect_diagnostics
+      end
+
       trap('USR2') do
         logger.warn("Caught signal USR2")
         stop_router_registrar
@@ -215,6 +220,15 @@ module VCAP::CloudController
           :logger => logger,
           :log_counter => @log_counter
       )
+    end
+
+    def collect_diagnostics
+      @diagnostics_dir ||= @config[:directories][:diagnostics]
+      @diagnostics_dir ||= Dir.mktmpdir
+      file = VCAP::CloudController::Diagnostics.collect(@diagnostics_dir)
+      logger.warn("Diagnostics written to #{file}")
+    rescue => e
+      logger.warn("Failed to capture diagnostics: #{e}")
     end
   end
 end

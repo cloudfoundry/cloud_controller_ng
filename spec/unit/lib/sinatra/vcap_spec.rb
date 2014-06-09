@@ -37,6 +37,10 @@ describe 'Sinatra::VCAP' do
       VCAP::Request.current_id
     end
 
+    get '/current_request' do
+      Thread.current[:current_request].to_json
+    end
+
     get '/structured_error' do
       e = StructuredErrorWithResponseCode.new
       e.set_backtrace(['/foo:1', '/bar:2'])
@@ -260,6 +264,25 @@ describe 'Sinatra::VCAP' do
     it 'should access the request id via Thread.current[:request_id]' do
       last_response.status.should == 200
       last_response.body.should match /def::.*/
+    end
+  end
+
+  describe 'current request information for diagnostics' do
+    before do
+      get '/current_request'
+    end
+
+    def request_info
+      Yajl::Parser.parse(last_response.body)
+    end
+
+    it 'populates the correct request id' do
+      expect(request_info['request_id']).to eq(last_response.headers['X-VCAP-Request-ID'])
+    end
+
+    it 'populates the request uri and method' do
+      expect(request_info['request_method']).to eq('GET')
+      expect(request_info['request_uri']).to eq('/current_request')
     end
   end
 end

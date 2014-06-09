@@ -114,6 +114,7 @@ module Sinatra
         end
 
         ::VCAP::Request.current_id = @request_guid
+        ::VCAP::CloudController::Diagnostics.request_received(request)
       end
 
       after do
@@ -124,6 +125,7 @@ module Sinatra
         end
         headers['Content-Type'] = 'application/json;charset=utf-8'
         headers[::VCAP::Request::HEADER_NAME] = @request_guid
+        ::VCAP::CloudController::Diagnostics.request_complete
         ::VCAP::Request.current_id = nil
         nil
       end
