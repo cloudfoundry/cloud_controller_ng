@@ -38,11 +38,11 @@ RSpec.configure do |rspec_config|
   rspec_config.include ServicesHelpers, services: true
 
   rspec_config.include ControllerHelpers, type: :controller, :example_group => {
-    :file_path => EscapedPath.join(%w[spec unit controllers])
+      :file_path => EscapedPath.join(%w[spec unit controllers])
   }
 
   rspec_config.include ControllerHelpers, type: :api, :example_group => {
-    :file_path => EscapedPath.join(%w[spec api])
+      :file_path => EscapedPath.join(%w[spec api])
   }
 
   rspec_config.include ControllerHelpers, type: :acceptance, :example_group => {
@@ -50,15 +50,15 @@ RSpec.configure do |rspec_config|
   }
 
   rspec_config.include AcceptanceHelpers, type: :acceptance, :example_group => {
-    :file_path => EscapedPath.join(%w[spec acceptance])
+      :file_path => EscapedPath.join(%w[spec acceptance])
   }
 
   rspec_config.include ApiDsl, type: :api, :example_group => {
-    :file_path => EscapedPath.join(%w[spec api])
+      :file_path => EscapedPath.join(%w[spec api])
   }
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to
-                                                          # rspec & rspec_api_documentation 3
+  # rspec & rspec_api_documentation 3
   rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
 
@@ -82,17 +82,8 @@ RSpec.configure do |rspec_config|
   rspec_config.around :each do |example|
     tables = Tables.new(db)
     expect {
-      if example.metadata.to_s.include? "non_transactional"
-        begin
-          example.run
-        ensure
-          $spec_env.reset_database_with_seeds
-        end
-      else
-        Sequel::Model.db.transaction(rollback: :always, auto_savepoint: true) do
-          example.run
-        end
-      end
+      isolation = DatabaseIsolation.choose(example.metadata[:isolation])
+      isolation.cleanly { example.run }
     }.not_to change { tables.counts }
   end
 

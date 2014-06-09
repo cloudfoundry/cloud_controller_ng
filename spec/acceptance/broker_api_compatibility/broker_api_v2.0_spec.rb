@@ -5,7 +5,7 @@ describe 'Service Broker API integration' do
     include VCAP::CloudController::BrokerApiHelper
 
     before(:all) { setup_cc }
-    after(:all) { $spec_env.reset_database_with_seeds }
+    after(:all) { $spec_env.recreate_and_reseed_all_tables }
     let(:space_guid) { @space_guid}
     let(:org_guid) { @org_guid }
 

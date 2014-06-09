@@ -17,16 +17,16 @@ module VCAP::CloudController
       end
 
       db_resetter = DbResetter.new(db)
-      db_resetter.reset
+      db_resetter.recreate_tables
 
       DB.load_models(config.fetch(:db), db_logger)
       Config.run_initializers(config)
       Seeds.create_seed_quota_definitions(config)
     end
 
-    def reset_database_with_seeds
+    def recreate_and_reseed_all_tables
       db_resetter = DbResetter.new(db)
-      db_resetter.reset
+      db_resetter.recreate_tables
 
       Seeds.create_seed_quota_definitions(config)
       Seeds.create_seed_stacks

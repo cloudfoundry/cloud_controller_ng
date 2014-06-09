@@ -4,10 +4,10 @@ describe 'Broker API Versions' do
 
   let(:spec_sha) do
     {
-      'broker_api_v2.0_spec.rb' => '91b6ae0b65904497e256d5e8e9e6cd2e',
-      'broker_api_v2.1_spec.rb' => '5c602d2de2fbed65e70c59ace3b282ac',
-      'broker_api_v2.2_spec.rb' => 'feccf18486a72d6ef80230197ce206ca',
-      'broker_api_v2.3_spec.rb' => '1f8346b886868031842e5ca410fd5a84',
+      'broker_api_v2.0_spec.rb' => 'cbecb1edcab6f0ac74708ad547e6cb1d',
+      'broker_api_v2.1_spec.rb' => 'dbce1a1ebccf6a52d1b554edd6262baa',
+      'broker_api_v2.2_spec.rb' => 'd800f0afeed64dba54ad767d2ec69e44',
+      'broker_api_v2.3_spec.rb' => '93c6167d5cb749608169c2b1b83bedd6',
       'broker_api_v2.4_spec.rb' => 'asdf',
     }
   end
@@ -46,4 +46,3 @@ describe 'Broker API Versions' do
     end
   end
 end
-

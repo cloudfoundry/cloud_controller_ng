@@ -661,8 +661,8 @@ HEREDOC
         delete_broker
       end
 
-      it 'does not delete the broker', non_transactional: true do # Needs to be non_transaction because we're testing
-                                                                  # that a transaction in prod code was rolled back
+      it 'does not delete the broker', isolation: :recreation do # Can't use transactions for isolation because we're
+                                                                 # testing a rollback
         delete_broker
         expect(last_response).to have_status_code(400)
 

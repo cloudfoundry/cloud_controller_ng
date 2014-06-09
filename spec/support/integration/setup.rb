@@ -141,6 +141,6 @@ RSpec.configure do |rspec_config|
 
   rspec_config.after(:all, :type => :integration) do
     WebMock.disable_net_connect!
-    $spec_env.reset_database_with_seeds
+    $spec_env.recreate_and_reseed_all_tables
   end
 end

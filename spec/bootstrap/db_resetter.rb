@@ -5,7 +5,7 @@ class DbResetter
     @db = db
   end
 
-  def reset
+  def recreate_tables
     prepare_database
 
     db.tables.each do |table|
