@@ -58,8 +58,7 @@ module VCAP::CloudController
             last_response.status.should == 200
             Yajl::Parser.parse(last_response.body).should == expected
             expect(instances_reporter).to have_received(:stats_for_app).with(
-                                            satisfy { |requested_app| requested_app.guid == @app.guid },
-                                            {})
+                                            satisfy { |requested_app| requested_app.guid == @app.guid })
           end
         end
 
@@ -89,8 +88,7 @@ module VCAP::CloudController
             last_response.status.should == 200
             Yajl::Parser.parse(last_response.body).should == expected
             expect(instances_reporter).to have_received(:stats_for_app).with(
-                                            satisfy { |requested_app| requested_app.guid == @app.guid },
-                                            {})
+                                            satisfy { |requested_app| requested_app.guid == @app.guid })
           end
         end
 
@@ -105,6 +103,19 @@ module VCAP::CloudController
                 headers_for(@developer))
 
             last_response.status.should == 400
+          end
+        end
+
+        context 'when the app is stopped' do
+          before do
+            @app.stop!
+          end
+
+          it 'raises an error' do
+            get("/v2/apps/#{@app.guid}/stats", {}, headers_for(@developer))
+
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to match("Stats error: Request failed for app: #{@app.name} as the app is in stopped state.")
           end
         end
       end

@@ -23,7 +23,7 @@ module VCAP::CloudController::InstancesReporter
     end
 
     describe '#all_instances_for_app' do
-      it 'should return all instances reporting for the specified app' do
+      it 'should return all instances reporting for the specified app within range of app.instances' do
         result = subject.all_instances_for_app(app)
 
         expect(diego_client).to have_received(:lrp_instances).with(app)
@@ -33,6 +33,17 @@ module VCAP::CloudController::InstancesReporter
                               1 => { state: 'CRASHED', since: 3 },
                               2 => { state: 'STARTING', since: 5 },
                             })
+      end
+
+      it 'returns DOWN instances for instances that tps does not report within range of app.instances' do
+        app.instances = 7
+
+        result = subject.all_instances_for_app(app)
+
+        expect(diego_client).to have_received(:lrp_instances).with(app)
+        expect(result.length).to eq(app.instances)
+        expect(result[5][:state]).to eq('DOWN')
+        expect(result[6][:state]).to eq('DOWN')
       end
     end
 
@@ -141,9 +152,8 @@ module VCAP::CloudController::InstancesReporter
     end
 
     describe '#stats_for_app' do
-      let(:opts) { {} }
       it 'stubs out stuff for now' do
-        result = subject.stats_for_app(app, opts)
+        result = subject.stats_for_app(app)
 
         expect(result).to eq(
                             {
@@ -184,6 +194,17 @@ module VCAP::CloudController::InstancesReporter
                                 }
                               }
                             })
+      end
+
+      it 'returns DOWN instances for instances that tps does not report within range of app.instances' do
+        app.instances = 7
+
+        result = subject.stats_for_app(app)
+
+        expect(diego_client).to have_received(:lrp_instances).with(app)
+        expect(result.length).to eq(app.instances)
+        expect(result[5][:state]).to eq('DOWN')
+        expect(result[6][:state]).to eq('DOWN')
       end
     end
   end

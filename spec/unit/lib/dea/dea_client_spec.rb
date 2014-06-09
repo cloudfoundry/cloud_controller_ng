@@ -535,25 +535,8 @@ module VCAP::CloudController
     end
 
     describe "find_stats" do
-      include Errors
-
-      it "should raise an error if the app is not allowed to be in stopped state" do
-        app.should_receive(:stopped?).once.and_return(true)
-
-        expect {
-          DeaClient.find_stats(app)
-        }.to raise_error Errors::ApiError, "Stats error: Request failed for app: #{app.name} as the app is in stopped state."
-      end
-
-      it "should return an empty hash if the app is allowed to be in stopped state" do
-        app.should_receive(:stopped?).once.and_return(true)
-
-        DeaClient.find_stats(app, :allow_stopped_state => true).should == {}
-      end
-
       it "should return the stats for all instances" do
         app.instances = 2
-        app.should_receive(:stopped?).once.and_return(false)
 
         stats = double("mock stats")
         instance_0 = {
@@ -585,7 +568,6 @@ module VCAP::CloudController
 
       it "should return filler stats for instances that have not responded" do
         app.instances = 2
-        app.should_receive(:stopped?).once.and_return(false)
 
         search_options = {
           include_stats: true,
@@ -623,7 +605,6 @@ module VCAP::CloudController
 
       it "should return filler stats for instances with out of range indices" do
         app.instances = 2
-        app.should_receive(:stopped?).once.and_return(false)
 
         search_options = {
           :include_stats => true,

@@ -19,8 +19,8 @@ module VCAP::CloudController::InstancesReporter
       health_manager_client.find_crashes(app)
     end
 
-    def stats_for_app(app, opts)
-      VCAP::CloudController::DeaClient.find_stats(app, opts)
+    def stats_for_app(app)
+      VCAP::CloudController::DeaClient.find_stats(app)
     end
   end
 end

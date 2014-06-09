@@ -232,20 +232,7 @@ module VCAP::CloudController
         app.routes_changed = false
       end
 
-      def find_stats(app, opts = {})
-        opts = {:allow_stopped_state => false}.merge(opts)
-
-        if app.stopped?
-          unless opts[:allow_stopped_state]
-            msg = "Request failed for app: #{app.name}"
-            msg << " as the app is in stopped state."
-
-            raise ApiError.new_from_details("StatsError", msg)
-          end
-
-          return {}
-        end
-
+      def find_stats(app)
         search_options = {
           include_stats: true,
           states: [:RUNNING],

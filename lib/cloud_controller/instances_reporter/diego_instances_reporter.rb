@@ -17,7 +17,7 @@ module VCAP::CloudController::InstancesReporter
         }
       end
 
-      result
+      fill_unreported_instances_with_down_instances(result, app)
     end
 
     def number_of_starting_and_running_instances_for_app(app)
@@ -51,7 +51,7 @@ module VCAP::CloudController::InstancesReporter
     end
 
     #TODO: this is only a stub. stats are not yet available from diego.
-    def stats_for_app(app, opts)
+    def stats_for_app(app)
       result    = {}
       instances = diego_client.lrp_instances(app)
 
@@ -70,7 +70,7 @@ module VCAP::CloudController::InstancesReporter
         }
       end
 
-      result
+      fill_unreported_instances_with_down_instances(result, app)
     end
 
     private
@@ -84,6 +84,19 @@ module VCAP::CloudController::InstancesReporter
 
     def instance_is_desired(instance, app)
       instance[:index] < app.instances
+    end
+
+    def fill_unreported_instances_with_down_instances(reported_instances, app)
+      app.instances.times do |i|
+        unless reported_instances[i]
+          reported_instances[i] = {
+            state: 'DOWN',
+            since: Time.now.to_i,
+          }
+        end
+      end
+
+      reported_instances
     end
   end
 end
