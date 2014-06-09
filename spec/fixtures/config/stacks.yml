@@ -1,6 +1,8 @@
 default: "default-stack-name"
 
 stacks:
+  - name: "lucid64" # Duplicate stack in 20130219194917_create_stacks_table.rb
+    description: "Ubuntu 10.04 on x86-64"
   - name: "default-stack-name"
     description: "default-stack-description"
   - name: "cider"

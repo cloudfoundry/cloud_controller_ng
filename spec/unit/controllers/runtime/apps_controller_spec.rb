@@ -704,7 +704,7 @@ module VCAP::CloudController
     end
 
     describe "staging" do
-      context "when app will be staged", isolation: :recreation do
+      context "when app will be staged", isolation: :truncation do
         let(:app_obj) do
           AppFactory.make(:package_hash => "abc", :state => "STOPPED",
                            :droplet_hash => nil, :package_state => "PENDING",

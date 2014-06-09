@@ -262,7 +262,7 @@ JSON
         expect(last_response.status).to eq(404)
       end
 
-      context "when a service instance exists", isolation: :recreation do
+      context "when a service instance exists", isolation: :truncation do
         it "returns a 400 and an appropriate error message" do
           service = Service.make(:service_broker => broker)
           service_plan = ServicePlan.make(:service => service)

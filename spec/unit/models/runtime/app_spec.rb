@@ -1130,7 +1130,7 @@ module VCAP::CloudController
         }.to change { app.state }.to "STARTED"
       end
 
-      it "saves the app to trigger the AppObserver", isolation: :recreation do
+      it "saves the app to trigger the AppObserver", isolation: :truncation do
         expect(AppObserver).not_to have_received(:updated).with(app)
         app.start!
         expect(AppObserver).to have_received(:updated).with(app)
@@ -1151,7 +1151,7 @@ module VCAP::CloudController
         }.to change { app.state }.to "STOPPED"
       end
 
-      it "saves the app to trigger the AppObserver", isolation: :recreation do
+      it "saves the app to trigger the AppObserver", isolation: :truncation do
         expect(AppObserver).not_to have_received(:updated).with(app)
         app.stop!
         expect(AppObserver).to have_received(:updated).with(app)
@@ -1223,7 +1223,7 @@ module VCAP::CloudController
     describe "#restage!" do
       let(:app) { AppFactory.make }
 
-      it "stops the app, marks the app for restaging, and starts the app", isolation: :recreation do
+      it "stops the app, marks the app for restaging, and starts the app", isolation: :truncation do
         @updated_apps = []
         allow(AppObserver).to receive(:updated) do |app|
           @updated_apps << app
@@ -1288,14 +1288,14 @@ module VCAP::CloudController
     end
 
     describe "saving" do
-      it "calls AppObserver.updated", isolation: :recreation do
+      it "calls AppObserver.updated", isolation: :truncation do
         app = AppFactory.make
         AppObserver.should_receive(:updated).with(app)
         app.update(instances: app.instances + 1)
       end
 
       context "when AppObserver.updated fails" do
-        it "should undo any change", isolation: :recreation do
+        it "should undo any change", isolation: :truncation do
           app = AppFactory.make
           previous_state = app.state
 
@@ -1304,7 +1304,7 @@ module VCAP::CloudController
           expect(app.state).to eql(previous_state)
         end
 
-        it "should undo multiple changes made", isolation: :recreation do
+        it "should undo multiple changes made", isolation: :truncation do
           app = AppFactory.make
           previous_instances = app.instances
           previous_memory = app.memory
@@ -1407,7 +1407,7 @@ module VCAP::CloudController
     describe "destroy" do
       let(:app) { AppFactory.make(package_hash: "abc", package_state: "STAGED", space: space) }
 
-      it "notifies the app observer", isolation: :recreation do
+      it "notifies the app observer", isolation: :truncation do
         AppObserver.should_receive(:deleted).with(app)
         app.destroy
       end

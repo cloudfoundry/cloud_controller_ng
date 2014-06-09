@@ -41,7 +41,6 @@ class Tables
         tasks
         users
       ).map(&:to_sym)
-
     tables_to_verify.inject({}) do |counts, table|
       counts.merge(table => @db[table].count)
     end

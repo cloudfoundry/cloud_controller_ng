@@ -1,10 +1,20 @@
 module DatabaseIsolation
   def self.choose(isolation)
     case isolation
+      when :truncation
+        TruncateTables.new
       when :recreation
         RecreateTables.new
       else
         RollbackTransaction.new
+    end
+  end
+
+  class TruncateTables
+    def cleanly
+      yield
+    ensure
+      $spec_env.truncate_and_reseed_all_tables
     end
   end
 

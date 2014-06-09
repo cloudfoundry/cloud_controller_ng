@@ -96,14 +96,14 @@ module VCAP::CloudController
     end
 
     describe "#after_commit" do
-      it "sends task.start with the URI for the app's droplet", isolation: :recreation do
+      it "sends task.start with the URI for the app's droplet", isolation: :truncation do
         CloudController::DependencyLocator.instance.task_client.should_receive(:start_task).with(instance_of(Task))
         @task = Task.make :app => app
         @task.stub(:secure_token => "42")
       end
     end
 
-    describe "#after_destroy_commit", isolation: :recreation do
+    describe "#after_destroy_commit", isolation: :truncation do
       it "sends task.stop with the public key, the URI for the app's droplet" do
         task = Task.make :app => app
 

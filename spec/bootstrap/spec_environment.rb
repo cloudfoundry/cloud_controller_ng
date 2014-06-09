@@ -1,5 +1,5 @@
 require "bootstrap/default_config"
-require "bootstrap/db_resetter"
+require "bootstrap/table_recreator"
 
 module VCAP::CloudController
   class SpecEnvironment
@@ -16,17 +16,26 @@ module VCAP::CloudController
         steno_config_hash[:sinks] = [Steno::Sink::IO.for_file(log_filename)]
       end
 
-      db_resetter = DbResetter.new(db)
+      db_resetter = TableRecreator.new(db)
       db_resetter.recreate_tables
 
       DB.load_models(config.fetch(:db), db_logger)
       Config.run_initializers(config)
+
       Seeds.create_seed_quota_definitions(config)
     end
 
     def recreate_and_reseed_all_tables
-      db_resetter = DbResetter.new(db)
-      db_resetter.recreate_tables
+      table_recreator = TableRecreator.new(db)
+      table_recreator.recreate_tables
+
+      Seeds.create_seed_quota_definitions(config)
+      Seeds.create_seed_stacks
+    end
+
+    def truncate_and_reseed_all_tables
+      table_trucator = TableTruncator.new(db)
+      table_trucator.truncate_tables
 
       Seeds.create_seed_quota_definitions(config)
       Seeds.create_seed_stacks

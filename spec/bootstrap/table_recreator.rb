@@ -1,6 +1,6 @@
 require "bootstrap/fake_model_tables"
 
-class DbResetter
+class TableRecreator
   def initialize(db)
     @db = db
   end
@@ -40,10 +40,7 @@ class DbResetter
         db.drop_table(table)
         db.execute("SET foreign_key_checks = 1")
 
-      # Postgres uses CASCADE directive in DROP TABLE
-      # to remove foreign key contstraints.
-      # http://www.postgresql.org/docs/9.2/static/sql-droptable.html
-      else
+      when :postgres
         db.drop_table(table, :cascade => true)
     end
   end
