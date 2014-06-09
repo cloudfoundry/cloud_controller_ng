@@ -33,11 +33,9 @@ env:
     - DB=postgres TASKS='rubocop spec:outer'
     - DB=postgres TASKS=spec:unit:fast
     - DB=postgres TASKS=spec:unit:lib
-    - DB=postgres TASKS=spec:unit:controllers:services
-    - DB=postgres TASKS=spec:unit:controllers:runtime
+    - DB=postgres TASKS=spec:unit:controllers
 
     - DB=mysql TASKS='rubocop spec:outer'
     - DB=mysql TASKS=spec:unit:fast
     - DB=mysql TASKS=spec:unit:lib
-    - DB=mysql TASKS=spec:unit:controllers:services
-    - DB=mysql TASKS=spec:unit:controllers:runtime
+    - DB=mysql TASKS=spec:unit:controllers

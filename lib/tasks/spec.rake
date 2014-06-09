@@ -4,13 +4,12 @@ task spec: %w[
               spec:outer
               spec:unit:fast
               spec:unit:lib
-              spec:unit:controllers:services
-              spec:unit:controllers:runtime
+              spec:unit:controllers
             ]
 
 namespace :spec do
   task api: "db:pick" do
-    sh "bundle exec rspec spec/api --order rand:$RANDOM --format RspecApiDocumentation::ApiFormatter"
+    sh "bundle exec rspec spec/api --format RspecApiDocumentation::ApiFormatter"
   end
 
   task acceptance: "db:pick" do
@@ -44,18 +43,12 @@ namespace :spec do
       run_specs("spec/unit/lib")
     end
 
-    namespace :controllers do
-      task :services do
-        run_specs("spec/unit/controllers/services")
-      end
-
-      task :runtime do
-        run_specs("spec/unit/controllers/base spec/unit/controllers/runtime")
-      end
+    task :controllers do
+      run_specs("spec/unit/controllers")
     end
   end
 
   def run_specs(path)
-    sh "bundle exec rspec #{path} --order rand:1234 --require rspec/instafail --format RSpec::Instafail"
+    sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail"
   end
 end
