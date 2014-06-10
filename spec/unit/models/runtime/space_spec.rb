@@ -321,6 +321,23 @@ module VCAP::CloudController
         }.to have_queried_db_times(//, 0)
       end
     end
+
+    describe "app_security_groups" do
+      let!(:associated_asg) { AppSecurityGroup.make }
+      let!(:unassociated_asg) { AppSecurityGroup.make }
+      let!(:default_asg) { AppSecurityGroup.make(running_default: true) }
+      let!(:another_default_asg) { AppSecurityGroup.make(running_default: true) }
+      let!(:space) { Space.make(app_security_group_guids: [associated_asg.guid, default_asg.guid]) }
+
+      it "returns app security groups associated with the space, and the defaults" do
+        expect(space.app_security_groups).to match_array [associated_asg, default_asg, another_default_asg]
+      end
+
+      it "works when eager loading" do
+        eager_space = Space.eager(:app_security_groups).all.first
+        expect(eager_space.app_security_groups).to match_array [associated_asg, default_asg, another_default_asg]
+      end
+    end
   end
 
   describe "#having_developer" do

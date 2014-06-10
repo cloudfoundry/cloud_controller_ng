@@ -17,7 +17,29 @@ module VCAP::CloudController
     one_to_many  :service_instances
     one_to_many  :managed_service_instances
     one_to_many  :routes
-    many_to_many :app_security_groups
+    many_to_many :app_security_groups,
+      dataset: -> {
+        AppSecurityGroup.left_join(:app_security_groups_spaces, app_security_group_id: :id)
+          .where(Sequel.or(app_security_groups_spaces__space_id: id, app_security_groups__running_default: true))
+      },
+      eager_loader: ->(spaces_map) {
+        space_ids = spaces_map[:id_map].keys
+        # Set all associations to nil so if no records are found, we don't do another query when somebody tries to load the association
+        spaces_map[:rows].each { |space| space.associations[:app_security_groups] = [] }
+
+        default_app_security_groups = AppSecurityGroup.where(running_default: true).all
+
+        AppSecurityGroupsSpace.where(space_id: space_ids).eager(:app_security_group).all do |app_security_group_space|
+          space = spaces_map[:id_map][app_security_group_space.space_id].first
+          space.associations[:app_security_groups] << app_security_group_space.app_security_group
+        end
+
+        spaces_map[:rows].each do |space|
+          space.associations[:app_security_groups] += default_app_security_groups
+          space.associations[:app_security_groups].uniq!
+        end
+      }
+
 
     one_to_many :app_events,
                 dataset: -> { AppEvent.filter(app: apps) }
