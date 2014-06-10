@@ -4,8 +4,7 @@ describe 'Service Broker API integration' do
   describe 'v2.3' do
     include VCAP::CloudController::BrokerApiHelper
 
-    before(:all) { setup_cc }
-    after(:all) { $spec_env.recreate_and_reseed_all_tables }
+    before { setup_cc }
 
     let(:broker_url) { stubbed_broker_url }
     let(:broker_name) { 'broker-name' }

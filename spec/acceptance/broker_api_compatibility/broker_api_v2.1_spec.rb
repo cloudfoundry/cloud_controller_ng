@@ -4,8 +4,7 @@ describe 'Service Broker API integration' do
   describe 'v2.1' do
     include VCAP::CloudController::BrokerApiHelper
 
-    before(:all) { setup_cc }
-    after(:all) { $spec_env.recreate_and_reseed_all_tables }
+    before { setup_cc }
 
     describe 'Binding' do
       let(:space_guid) { @space_guid }
