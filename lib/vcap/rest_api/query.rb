@@ -73,7 +73,26 @@ module VCAP::RestAPI
     end
 
     def parse
-      segments = query.split(";")
+      # Queries with embedded ';'s need to double-escape the ; characters.
+      # This parser treats pairs of ';'s as a single, and splits on lone ';'s
+      segments = []
+      current_segments = []
+      query.split(/((?:;;)+)/).each do |q|
+        if q =~ /\A(?:;;)+\z/
+          current_segments << ';' * (q.size / 2)
+        elsif ! q[';']
+          current_segments << q
+        else
+          sub_queries = q.split(';')
+          current_segments << sub_queries.shift
+          segments << current_segments.join("")
+          current_segments = [sub_queries.pop]
+          segments += sub_queries
+        end
+      end
+      if current_segments.size > 0
+        segments << current_segments.join("")
+      end
 
       segments.collect do |segment|
         key, comparison, value = segment.split(/(:|>=|<=|<|>| IN )/, 2)
