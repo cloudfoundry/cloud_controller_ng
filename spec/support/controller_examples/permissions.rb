@@ -53,7 +53,6 @@ end
 shared_examples "permission enumeration" do |perm_name, opts|
   name = opts[:name]
   path = opts[:path]
-  path_suffix = opts[:path_suffix]
   expected = opts[:enumerate]
   perms_overlap = opts[:permissions_overlap]
   describe "GET #{path}" do
@@ -89,7 +88,7 @@ shared_examples "permission enumeration" do |perm_name, opts|
 
     unless perms_overlap
       it "should not return a #{name} to a user with the #{perm_name} permission on a different #{name}" do
-        get "#{path}/#{@obj_a.guid}#{path_suffix}", {}, headers_b
+        get "#{path}/#{@obj_a.guid}", {}, headers_b
         last_response.should_not be_ok
       end
     end

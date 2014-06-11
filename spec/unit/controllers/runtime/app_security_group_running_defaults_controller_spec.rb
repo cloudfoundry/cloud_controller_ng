@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe AppSecurityGroupRunningDefaultsController do
-    it_behaves_like "an authenticated endpoint", path: "/v2/config/running_security_groups"
+    it_behaves_like "an admin only endpoint", path: "/v2/config/running_security_groups"
     context "with app security groups that are running defaults" do
       before do
         8.times { AppSecurityGroup.make(running_default: true) }

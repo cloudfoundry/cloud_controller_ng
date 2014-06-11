@@ -14,6 +14,12 @@ module ModelCreation
     make_user_for_org space.organization
   end
 
+  def make_manager_for_space(space)
+    user = make_user_for_org space.organization
+    space.add_manager user
+    user
+  end
+
   def make_developer_for_space(space)
     user = make_user_for_org space.organization
     space.add_developer user
@@ -35,6 +41,18 @@ module ModelCreation
   def make_manager_for_org(org)
     user = make_user_for_org(org)
     org.add_manager(user)
+    user
+  end
+
+  def make_billing_manager_for_org(org)
+    user = make_user_for_org(org)
+    org.add_billing_manager(user)
+    user
+  end
+
+  def make_auditor_for_org(org)
+    user = make_user_for_org(org)
+    org.add_auditor(user)
     user
   end
 

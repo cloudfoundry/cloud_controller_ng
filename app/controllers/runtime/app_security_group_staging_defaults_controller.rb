@@ -49,6 +49,16 @@ module VCAP::CloudController
       ]
     end
 
+    def read(_)
+      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
+      super
+    end
+
+    def enumerate
+      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
+      super
+    end
+
     private
 
     def filter_dataset(dataset)

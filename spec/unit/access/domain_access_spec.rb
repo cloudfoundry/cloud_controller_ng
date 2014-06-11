@@ -4,13 +4,13 @@ module VCAP::CloudController
   describe DomainAccess, type: :access do
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      SecurityContext.stub(:token).and_return(token)
     end
 
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { User.make }
     let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(:organization => org) }
+    let(:org) { Organization.make }
+    let(:space) { Space.make(:organization => org) }
 
     subject(:access) { DomainAccess.new(double(:context, user: user, roles: roles)) }
 
