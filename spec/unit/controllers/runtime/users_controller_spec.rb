@@ -49,9 +49,6 @@ module VCAP::CloudController
         @obj_b = member_b
       end
 
-      let(:creation_req_for_a) { Yajl::Encoder.encode(:guid => 'hi') }
-      let(:update_req_for_a) { Yajl::Encoder.encode(:guid => @obj_a.guid) }
-
       context 'normal user' do
         let(:member_a) { @org_a_manager }
         let(:member_b) { @space_a_manager }

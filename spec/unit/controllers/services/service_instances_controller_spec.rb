@@ -33,18 +33,6 @@ module VCAP::CloudController
         @obj_b = ManagedServiceInstance.make(:space => @space_b)
       end
 
-      let(:creation_req_for_a) do
-        Yajl::Encoder.encode(
-          :name => Sham.name,
-          :space_guid => @space_a.guid,
-          :service_plan_guid => ServicePlan.make.guid
-        )
-      end
-
-      let(:update_req_for_a) do
-        Yajl::Encoder.encode(:name => "#{@obj_a.name}_renamed")
-      end
-
       def self.user_sees_empty_enumerate(user_role, member_a_ivar, member_b_ivar)
         describe user_role do
           let(:member_a) { instance_variable_get(member_a_ivar) }

@@ -100,17 +100,6 @@ module VCAP::CloudController
                                              :service_instance => @service_instance_b)
       end
 
-      let(:creation_req_for_a) do
-        Yajl::Encoder.encode(
-          :app_guid => AppFactory.make(:space => @space_a).guid,
-          :service_instance_guid => ManagedServiceInstance.make(:space => @space_a).guid
-        )
-      end
-
-      let(:update_req_for_a) do
-        Yajl::Encoder.encode({})
-      end
-
       describe "Org Level Permissions" do
         describe "OrgManager" do
           let(:member_a) { @org_a_manager }

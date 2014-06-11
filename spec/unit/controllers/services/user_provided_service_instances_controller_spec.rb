@@ -27,15 +27,6 @@ module VCAP::CloudController
         @obj_b = UserProvidedServiceInstance.make(:space => @space_b)
       end
 
-      let(:creation_req_for_a) do
-        Yajl::Encoder.encode(
-          :name => Sham.name,
-          :space_guid => @space_a.guid,
-          :credentials => {"foopass" => "barpass"}
-        )
-      end
-      let(:update_req_for_a) {"{}"} # update is not implemented
-
       def self.user_sees_empty_enumerate(user_role, member_a_ivar, member_b_ivar)
         describe user_role do
           let(:member_a) { instance_variable_get(member_a_ivar) }

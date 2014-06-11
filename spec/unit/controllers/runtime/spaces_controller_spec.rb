@@ -57,14 +57,6 @@ module VCAP::CloudController
         @obj_b = @space_b
       end
 
-      let(:creation_req_for_a) do
-        Yajl::Encoder.encode(:name => Sham.name, :organization_guid => @org_a.guid)
-      end
-
-      let(:update_req_for_a) do
-        Yajl::Encoder.encode(:name => Sham.name)
-      end
-
       describe "Org Level Permissions" do
         describe "OrgManager" do
           let(:member_a) { @org_a_manager }

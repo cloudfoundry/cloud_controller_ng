@@ -23,14 +23,6 @@ module VCAP::CloudController
         @obj_b = ServicePlanVisibility.make
       end
 
-      let(:creation_req_for_a) do
-        Yajl::Encoder.encode(
-          :service_plan_guid => ServicePlan.make.guid,
-          :organization_guid => @org_a.guid,
-        )
-      end
-      let(:update_req_for_a) {"{}"} # update is not implemented
-
       def self.user_sees_empty_enumerate(user_role, member_a_ivar, member_b_ivar)
         describe user_role do
           let(:member_a) { instance_variable_get(member_a_ivar) }

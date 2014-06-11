@@ -33,18 +33,6 @@ module VCAP::CloudController
         @obj_b = ServicePlan.make
       end
 
-      let(:creation_req_for_a) do
-        Yajl::Encoder.encode(
-          :service_guid => Service.make.guid,
-          :name => Sham.name,
-          :free => false,
-          :description => Sham.description)
-      end
-
-      let(:update_req_for_a) do
-        Yajl::Encoder.encode(:description => Sham.description)
-      end
-
       describe "Org Level Permissions" do
         describe "OrgManager" do
           let(:member_a) { @org_a_manager }

@@ -39,16 +39,6 @@ module VCAP::CloudController
         @obj_b = PrivateDomain.make(owning_organization: @org_b)
       end
 
-      let(:creation_req_for_a) do
-        Yajl::Encoder.encode(:name => Sham.domain,
-                             :wildcard => true,
-                             :owning_organization_guid => @org_a.guid)
-      end
-
-      let(:update_req_for_a) do
-        Yajl::Encoder.encode(:name => Sham.domain)
-      end
-
       describe "Org Level Permissions" do
         describe "OrgManager" do
           let(:member_a) { @org_a_manager }

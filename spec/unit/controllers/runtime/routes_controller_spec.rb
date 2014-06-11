@@ -104,16 +104,6 @@ module VCAP::CloudController
       context "with a custom domain" do
         include_context "permissions"
 
-        let(:creation_req_for_a) do
-          Yajl::Encoder.encode(:host => Sham.host,
-                               :domain_guid => @domain_a.guid,
-                               :space_guid => @space_a.guid)
-        end
-
-        let(:update_req_for_a) do
-          Yajl::Encoder.encode(:host => Sham.host)
-        end
-
         before do
           @domain_a = PrivateDomain.make(:owning_organization => @org_a)
           @obj_a = Route.make(:domain => @domain_a, :space => @space_a)
