@@ -16,7 +16,7 @@ module VCAP::CloudController
 
     describe ".configure" do
       context "with valid config" do
-        let(:file) { File.join(fixture_path, "config/stacks.yml") }
+        let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
 
         it "can load" do
           described_class.configure(file)
@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       context "with invalid config" do
-        let(:file) { File.join(fixture_path, "config/invalid_stacks.yml") }
+        let(:file) { File.join(Paths::FIXTURES, "config/invalid_stacks.yml") }
 
         {:default => "default => Missing key",
          :stacks => "name => Missing key"
@@ -38,7 +38,7 @@ module VCAP::CloudController
       end
 
       describe "config/stacks.yml" do
-        let(:file) { File.join(fixture_path, "config/stacks.yml") }
+        let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
 
         it "can load" do
           described_class.configure(file)
@@ -58,7 +58,7 @@ module VCAP::CloudController
       end
 
       context "when config was set" do
-        let(:file) { File.join(fixture_path, "config/stacks.yml") }
+        let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
 
         before { described_class.configure(file) }
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
     end
 
     describe ".default" do
-      let(:file) { File.join(fixture_path, "config/stacks.yml") }
+      let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
       before { described_class.configure(file) }
 
       context "when config was not set" do

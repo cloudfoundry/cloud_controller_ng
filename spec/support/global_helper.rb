@@ -53,7 +53,7 @@ module VCAP::CloudController::GlobalHelper
   end
 
   def configure_stacks
-    stacks_file = File.join(fixture_path, "config/stacks.yml")
+    stacks_file = File.join(Paths::FIXTURES, "config/stacks.yml")
     VCAP::CloudController::Stack.configure(stacks_file)
     VCAP::CloudController::Stack.populate
   end
@@ -175,9 +175,5 @@ module VCAP::CloudController::GlobalHelper
 
   def em_inspect_timers
     puts EM.instance_variable_get("@timers").inspect
-  end
-
-  def fixture_path
-    File.expand_path("../../fixtures", __FILE__)
   end
 end

@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Runner do
-    let(:valid_config_file_path) { File.join(fixture_path, "config/minimal_config.yml") }
+    let(:valid_config_file_path) { File.join(Paths::FIXTURES, "config/minimal_config.yml") }
     let(:config_file) { File.new(valid_config_file_path) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:registrar) { Cf::Registrar.new({}) }
@@ -323,7 +323,7 @@ module VCAP::CloudController
     describe "#start_thin_server" do
       let(:app) { double(:app) }
       let(:thin_server) { OpenStruct.new }
-      let(:valid_config_file_path) { File.join(fixture_path, "config/default_overriding_config.yml") }
+      let(:valid_config_file_path) { File.join(Paths::FIXTURES, "config/default_overriding_config.yml") }
 
       subject(:start_thin_server) do
         runner = Runner.new(argv + ["-c", config_file.path])

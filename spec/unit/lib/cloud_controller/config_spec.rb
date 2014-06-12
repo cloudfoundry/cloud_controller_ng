@@ -14,7 +14,7 @@ module VCAP::CloudController
 
     describe ".merge_defaults" do
       context "when no config values are provided" do
-        let (:config) { Config.from_file(File.join(fixture_path, "config/minimal_config.yml")) }
+        let (:config) { Config.from_file(File.join(Paths::FIXTURES, "config/minimal_config.yml")) }
         it "sets default stacks_file" do
           expect(config[:stacks_file]).to eq(File.join(Config.config_dir, "stacks.yml"))
         end
@@ -46,7 +46,7 @@ module VCAP::CloudController
 
       context "when config values are provided" do
         context "and the values are valid" do
-          let (:config) { Config.from_file(File.join(fixture_path, "config/default_overriding_config.yml")) }
+          let (:config) { Config.from_file(File.join(Paths::FIXTURES, "config/default_overriding_config.yml")) }
 
           it "preserves the stacks_file value from the file" do
             expect(config[:stacks_file]).to eq("/tmp/foo")
@@ -90,7 +90,7 @@ module VCAP::CloudController
           let (:config_from_file) { Config.from_file(File.join(tmpdir, "incorrect_overridden_config.yml")) }
 
           before do
-            config_hash = YAML.load_file(File.join(fixture_path, "config/minimal_config.yml"))
+            config_hash = YAML.load_file(File.join(Paths::FIXTURES, "config/minimal_config.yml"))
             config_hash["app_bits_upload_grace_period_in_seconds"] = -2345
 
             File.open(File.join(tmpdir, "incorrect_overridden_config.yml"), "w") do |f|
