@@ -2,37 +2,44 @@ require "spec_helper"
 
 describe "Sequel::Plugins::VcapNormalization" do
   db = Sequel.sqlite(':memory:')
-  db.create_table :foo_bars do
+  db.create_table :foos do
     primary_key :id
 
-    String :val1
-    String :val2
-    String :val3
+    String :val
+    String :val_stripped
   end
 
-  FooBar = Class.new(Sequel::Model) do
+  db.create_table :bars do
+    primary_key :id
+
+    String :val
+  end
+
+  Foo = Class.new(Sequel::Model) do
     plugin :vcap_normalization
-    set_dataset(db[:foo_bars])
+    strip_attributes :val_stripped
+
+    set_dataset(db[:foos])
   end
 
-  let(:model_object) { FooBar.new }
+  Bar = Class.new(Sequel::Model) do
+    plugin :vcap_normalization
+    set_dataset(db[:bars])
+  end
 
   describe ".strip_attributes" do
-    it "should not cause anything to be normalized if not called" do
-      model_object.val1 = "hi "
-      model_object.val2 = " bye"
-      model_object.val1.should == "hi "
-      model_object.val2.should == " bye"
+    it "should only result in provided strings being normalized" do
+      model_object = Foo.new
+      model_object.val = " hi "
+      model_object.val_stripped = " bye "
+      expect(model_object.val).to eq " hi "
+      expect(model_object.val_stripped).to eq "bye"
     end
 
-    it "should only result in provided strings being normalized" do
-      FooBar.strip_attributes :val2, :val3
-      model_object.val1 = "hi "
-      model_object.val2 = " bye"
-      model_object.val3 = " with spaces "
-      model_object.val1.should == "hi "
-      model_object.val2.should == "bye"
-      model_object.val3.should == "with spaces"
+    it "should not cause anything to be normalized if not called" do
+      model_object = Bar.new
+      model_object.val = " hi "
+      expect(model_object.val).to eq " hi "
     end
   end
 end
