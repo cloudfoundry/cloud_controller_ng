@@ -15,16 +15,13 @@ describe "Sequel::Plugins::VcapNormalization" do
     String :val
   end
 
-  Foo = Class.new(Sequel::Model) do
+  class Foo < Sequel::Model(db)
     plugin :vcap_normalization
     strip_attributes :val_stripped
-
-    set_dataset(db[:foos])
   end
 
-  Bar = Class.new(Sequel::Model) do
+  class Bar < Sequel::Model(db)
     plugin :vcap_normalization
-    set_dataset(db[:bars])
   end
 
   describe ".strip_attributes" do
