@@ -1656,6 +1656,13 @@ module VCAP::CloudController
       end
 
       context "app update" do
+        def act_as_cf_admin(&block)
+          VCAP::CloudController::SecurityContext.stub(:admin? => true)
+          block.call
+        ensure
+          VCAP::CloudController::SecurityContext.unstub(:admin?)
+        end
+
         let(:org) { Organization.make(:quota_definition => quota) }
         let(:space) { Space.make(:organization => org) }
         subject!(:app) { AppFactory.make(space: space, memory: 64, instances: 2, state: "STARTED", package_hash: "a-hash") }
