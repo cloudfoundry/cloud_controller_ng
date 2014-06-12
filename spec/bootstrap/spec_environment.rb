@@ -25,14 +25,6 @@ module VCAP::CloudController
       Seeds.create_seed_quota_definitions(config)
     end
 
-    def recreate_and_reseed_all_tables
-      table_recreator = TableRecreator.new(db)
-      table_recreator.recreate_tables
-
-      Seeds.create_seed_quota_definitions(config)
-      Seeds.create_seed_stacks
-    end
-
     def truncate_and_reseed_all_tables
       tables = DatabaseIsolation.isolated_tables(db)
       table_truncator = TableTruncator.new(db, tables)

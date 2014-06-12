@@ -3,8 +3,6 @@ module DatabaseIsolation
     case isolation
       when :truncation
         TruncateTables.new
-      when :recreation
-        RecreateTables.new
       else
         RollbackTransaction.new
     end
@@ -19,14 +17,6 @@ module DatabaseIsolation
       yield
     ensure
       $spec_env.truncate_and_reseed_all_tables
-    end
-  end
-
-  class RecreateTables
-    def cleanly
-      yield
-    ensure
-      $spec_env.recreate_and_reseed_all_tables
     end
   end
 
