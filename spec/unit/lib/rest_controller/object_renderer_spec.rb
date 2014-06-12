@@ -9,7 +9,6 @@ module VCAP::CloudController::RestController
 
     describe '#render_json' do
       let(:controller) { BicyclesController }
-      let(:obj) { Bicycle.create { |c| c.id = 1; c.name = 'bicycle-1' } }
       let(:opts) { {} }
 
       db = Sequel.sqlite(':memory:')
@@ -31,13 +30,17 @@ module VCAP::CloudController::RestController
         define_attributes {}
       end
 
+      before :all do
+        @bicycle = Bicycle.create { |c| c.id = 1 }
+      end
+
       context 'when asked inline_relations_depth is more than max inline_relations_depth' do
         before { renderer_opts.merge!(max_inline_relations_depth: 10) }
         before { opts.merge!(inline_relations_depth: 11) }
 
         it 'raises BadQueryParameter error' do
           expect {
-            subject.render_json(controller, obj, opts)
+            subject.render_json(controller, @bicycle, opts)
           }.to raise_error(VCAP::Errors::ApiError, /inline_relations_depth/)
         end
       end
@@ -47,7 +50,7 @@ module VCAP::CloudController::RestController
         before { opts.merge!(inline_relations_depth: 10) }
 
         it 'renders json response' do
-          result = subject.render_json(controller, obj, opts)
+          result = subject.render_json(controller, @bicycle, opts)
           expect(result).to be_instance_of(String)
         end
       end
@@ -57,7 +60,7 @@ module VCAP::CloudController::RestController
         before { opts.merge!(inline_relations_depth: 9) }
 
         it 'renders json response' do
-          result = subject.render_json(controller, obj, opts)
+          result = subject.render_json(controller, @bicycle, opts)
           expect(result).to be_instance_of(String)
         end
       end
