@@ -11,10 +11,10 @@ module VCAP::CloudController
       let(:developer2) { make_developer_for_space(app_obj_without_pkg.space) }
 
       before do
-        config
+        TestConfig.config
         tmpdir = Dir.mktmpdir
         zipname = File.join(tmpdir, "test.zip")
-        create_zip(zipname, 10, 1024)
+        TestZip.create(zipname, 10, 1024)
         Jobs::Runtime::AppBitsPacker.new(app_obj.guid, zipname, []).perform
         FileUtils.rm_rf(tmpdir)
       end
@@ -42,17 +42,12 @@ module VCAP::CloudController
 
         before do
           Fog.unmock!
-          @old_config = config
-          config_override(blobstore_config)
+          TestConfig.override(blobstore_config)
           guid = app_obj.guid
           tmpdir = Dir.mktmpdir
           zipname = File.join(tmpdir, "test.zip")
-          create_zip(zipname, 10, 1024)
+          TestZip.create(zipname, 10, 1024)
           Jobs::Runtime::AppBitsPacker.new(guid, zipname, []).perform
-        end
-
-        after do
-          config_override(@old_config)
         end
 
         context "when using nginx" do

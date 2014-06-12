@@ -1,32 +1,22 @@
 require "spec_helper"
 
 describe "Sequel::Plugins::VcapRelations" do
-  def define_model(name, db) # we need new classes each time to reset the class level state
+  def define_model(name) # we need new classes each time to reset the class level state
     model_klass = Class.new(Sequel::Model) do
       plugin :vcap_relations
       plugin :vcap_guid
     end
     self.class.send(:remove_const, name) if self.class.const_defined?(name)
     self.class.const_set(name, model_klass)
-    model_klass.set_dataset(db["#{name.downcase.to_s}s".to_sym])
+    model_klass.set_dataset($spec_env.db["#{name.downcase.to_s}s".to_sym])
   end
 
-  before do
-    define_model :Owner, db
-    define_model :Dog, db
-    define_model :Name, db
-
-    define_model :Top, db
-    define_model :Middle, db
-    define_model :Bottom, db
-  end
-
-  let!(:owner_klass) { define_model(:Owner, db) }
-  let!(:dog_klass) { define_model(:Dog, db) }
-  let!(:name_klass) { define_model(:Name, db) }
-  let!(:top_klass) { define_model(:Top, db) }
-  let!(:middle_klass) { define_model(:Middle, db) }
-  let!(:bottom_klass) { define_model(:Bottom, db) }
+  let!(:owner_klass)  { define_model(:Owner) }
+  let!(:dog_klass)    { define_model(:Dog) }
+  let!(:name_klass)   { define_model(:Name) }
+  let!(:top_klass)    { define_model(:Top) }
+  let!(:middle_klass) { define_model(:Middle) }
+  let!(:bottom_klass) { define_model(:Bottom) }
 
   describe ".one_to_many" do
     before do

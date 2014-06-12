@@ -35,7 +35,7 @@ describe "Staging an app", type: :integration do
       @valid_zip ||= {}
       @valid_zip[size.to_s] ||= begin
         zip_name = File.join(@tmpdir, "file_#{size}.zip")
-        create_zip(zip_name, size)
+        TestZip.create(zip_name, size, 1024)
         File.new(zip_name)
       end
     end

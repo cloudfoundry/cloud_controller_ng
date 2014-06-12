@@ -61,7 +61,7 @@ module VCAP::CloudController
 
     before do
       Fog.unmock!
-      config_override(staging_config)
+      TestConfig.override(staging_config)
     end
 
     after { FileUtils.rm_rf(workspace) }
@@ -82,7 +82,7 @@ module VCAP::CloudController
           guid = app_obj.guid
           tmpdir = Dir.mktmpdir
           zipname = File.join(tmpdir, "test.zip")
-          create_zip(zipname, 10, 1024)
+          TestZip.create(zipname, 10, 1024)
           Jobs::Runtime::AppBitsPacker.new(guid, zipname, []).perform
           FileUtils.rm_rf(tmpdir)
 
@@ -103,7 +103,7 @@ module VCAP::CloudController
 
       context "when using with nginx" do
         before do
-          config_override(staging_config)
+          TestConfig.override(staging_config)
           authorize(staging_user, staging_password)
         end
 
@@ -113,7 +113,7 @@ module VCAP::CloudController
 
       context "when not using with nginx" do
         before do
-          config_override(staging_config.merge(:nginx => {:use_nginx => false}))
+          TestConfig.override(staging_config.merge(:nginx => {:use_nginx => false}))
           authorize(staging_user, staging_password)
         end
 
@@ -132,7 +132,7 @@ module VCAP::CloudController
       end
 
       before do
-        config_override(staging_config)
+        TestConfig.override(staging_config)
         authorize staging_user, staging_password
       end
 
@@ -239,14 +239,14 @@ module VCAP::CloudController
         end
         
         it "returns a JSON body with full url containing the correct external_protocol" do
-          config[:external_protocol] = "https"
+          TestConfig.config[:external_protocol] = "https"
           post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
           job = Delayed::Job.last
           expect(decoded_response.fetch('metadata').fetch('url')).to start_with("https://")
         end
 
         it "returns a JSON body with full url to query for job's status even Cloud Controller has multiple external domains" do
-          config[:external_domain] = ["www.example.com", config[:external_domain]]
+          TestConfig.config[:external_domain] = ["www.example.com", TestConfig.config[:external_domain]]
           config = VCAP::CloudController::Config.config
           post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
           job = Delayed::Job.last
@@ -289,7 +289,7 @@ module VCAP::CloudController
 
     describe "GET /staging/droplets/:guid/download" do
       before do
-        config_override(staging_config)
+        TestConfig.override(staging_config)
         authorize staging_user, staging_password
       end
 
@@ -300,7 +300,7 @@ module VCAP::CloudController
         end
 
         context "with nginx" do
-          before { config[:nginx][:use_nginx] = true }
+          before { TestConfig.config[:nginx][:use_nginx] = true }
 
           it "redirects nginx to serve staged droplet" do
             droplet_file = Tempfile.new(app_obj.guid)
@@ -325,7 +325,7 @@ module VCAP::CloudController
         end
 
         context "without nginx" do
-          before { config[:nginx][:use_nginx] = false }
+          before { TestConfig.config[:nginx][:use_nginx] = false }
 
           it "should return the droplet" do
             Tempfile.new(app_obj.guid) do |f|
@@ -367,7 +367,7 @@ module VCAP::CloudController
       end
 
       before do
-        config_override(staging_config)
+        TestConfig.override(staging_config)
         authorize staging_user, staging_password
       end
 

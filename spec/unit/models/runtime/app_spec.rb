@@ -11,11 +11,11 @@ module VCAP::CloudController
     let(:route) { Route.make(:domain => domain, :space => space) }
 
     def enable_custom_buildpacks
-      config_override({:disable_custom_buildpacks => nil})
+      TestConfig.override({:disable_custom_buildpacks => nil})
     end
 
     def disable_custom_buildpacks
-      config_override({:disable_custom_buildpacks => true})
+      TestConfig.override({:disable_custom_buildpacks => true})
     end
 
     def expect_validator(validator_class)
@@ -891,7 +891,7 @@ module VCAP::CloudController
 
     describe "health_check_timeout" do
       before do
-        config_override({:maximum_health_check_timeout => 512})
+        TestConfig.override({:maximum_health_check_timeout => 512})
       end
 
       context "when the health_check_timeout was not specified" do
@@ -1462,7 +1462,7 @@ module VCAP::CloudController
 
     describe "billing", deprecated_billing: true do
       before do
-        config_override({:billing_event_writing_enabled => true})
+        TestConfig.override({:billing_event_writing_enabled => true})
       end
 
       context "app state changes" do
@@ -1771,7 +1771,7 @@ module VCAP::CloudController
 
   describe "default disk_quota" do
     before do
-      config_override({ :default_app_disk_in_mb => 512 })
+      TestConfig.override({ :default_app_disk_in_mb => 512 })
     end
   
     it "should use the provided quota" do
@@ -1786,7 +1786,7 @@ module VCAP::CloudController
 
     context "default is greater than maximum" do
       before do
-        config_override({ :default_app_disk_in_mb => 4096 })
+        TestConfig.override({ :default_app_disk_in_mb => 4096 })
       end
 
       it "should fail" do

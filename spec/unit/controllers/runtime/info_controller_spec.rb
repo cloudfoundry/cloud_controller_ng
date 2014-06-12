@@ -51,7 +51,7 @@ module VCAP::CloudController
           end
 
           before do
-            config_override(config_setting => true)
+            TestConfig.override(config_setting => true)
           end
 
           context "with no authorization header for #{scenario_vars[:user]}" do
@@ -98,7 +98,7 @@ module VCAP::CloudController
         describe "authorization" do
           context "with login url in config" do
             include_examples "info endpoint verification" do
-              before { config_override(:login => {:url => "login_url"}) }
+              before { TestConfig.override(:login => {:url => "login_url"}) }
               let(:endpoint) { "authorization_endpoint" }
               let(:endpoint_value) { "login_url" }
             end
@@ -107,7 +107,7 @@ module VCAP::CloudController
           context "without login url in config" do
             include_examples "info endpoint verification" do
               let(:endpoint) { "authorization_endpoint" }
-              let(:endpoint_value) { config[:uaa][:url] }
+              let(:endpoint_value) { TestConfig.config[:uaa][:url] }
             end
           end
         end
@@ -115,7 +115,7 @@ module VCAP::CloudController
         describe "logging" do
           context "with loggregator endpoint_url in config" do
             include_examples "info endpoint verification" do
-              before { config_override(:loggregator => {:url => "loggregator_url"}) }
+              before { TestConfig.override(:loggregator => {:url => "loggregator_url"}) }
               let(:endpoint) { "logging_endpoint" }
               let(:endpoint_value) { "loggregator_url" }
             end
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
           context "without loggregator endpoint url in config" do
             it "should not have the endpoint in the hash" do
-              config[:loggregator].delete(:url)
+              TestConfig.config[:loggregator].delete(:url)
 
               get "/v2/info"
 

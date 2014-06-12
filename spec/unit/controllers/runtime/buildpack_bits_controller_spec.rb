@@ -13,21 +13,21 @@ module VCAP::CloudController
 
     let(:valid_zip) do
       zip_name = File.join(tmpdir, filename)
-      create_zip(zip_name, 1)
+      TestZip.create(zip_name, 1, 1024)
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
 
     let(:valid_zip2) do
       zip_name = File.join(tmpdir, filename)
-      create_zip(zip_name, 3)
+      TestZip.create(zip_name, 3, 1024)
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
 
     let(:valid_tar_gz) do
       tar_gz_name = File.join(tmpdir, "file.tar.gz")
-      create_zip(tar_gz_name, 1)
+      TestZip.create(tar_gz_name, 1, 1024)
       tar_gz_name = File.new(tar_gz_name)
       Rack::Test::UploadedFile.new(tar_gz_name)
     end
@@ -194,16 +194,15 @@ module VCAP::CloudController
         let(:staging_user) { "user" }
         let(:staging_password) { "password" }
         before do
-          config_override(
-            {
-              :staging => {
-                :timeout_in_seconds => 240,
-                :auth => {
-                  :user => staging_user,
-                  :password => staging_password
-                }
-              },
-          })
+          TestConfig.override({
+            :staging => {
+              :timeout_in_seconds => 240,
+              :auth => {
+                :user => staging_user,
+                :password => staging_password
+              }
+            },
+        })
         end
 
         before { test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "get_binary_buildpack", key: 'xyz', position: 0 }) }

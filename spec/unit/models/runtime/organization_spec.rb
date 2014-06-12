@@ -130,7 +130,7 @@ module VCAP::CloudController
 
       context "enabling billing" do
         before do
-          config_override({ :billing_event_writing_enabled => true })
+          TestConfig.override({ :billing_event_writing_enabled => true })
         end
 
         let (:org) do

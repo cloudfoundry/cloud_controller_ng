@@ -4,6 +4,8 @@ require "cloud_controller/dependency_locator"
 describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.send(:new, config) }
 
+  let(:config) { TestConfig.config }
+
   describe "#health_manager_client" do
     it "should return the hm9000 client" do
       expect(locator.health_manager_client).to be_an_instance_of(VCAP::CloudController::HM9000Client)
@@ -185,7 +187,7 @@ describe CloudController::DependencyLocator do
     end
 
     before do
-      config_override(my_config)
+      TestConfig.override(my_config)
     end
 
     it "creates blobstore_url_generator with the host, port, and blobstores" do
@@ -228,7 +230,7 @@ describe CloudController::DependencyLocator do
       serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
       opts = {max_inline_relations_depth: 100_002}
 
-      config_override(renderer: opts)
+      TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
       VCAP::CloudController::RestController::ObjectRenderer.
@@ -250,7 +252,7 @@ describe CloudController::DependencyLocator do
         max_inline_relations_depth: 100_002,
       }
 
-      config_override(renderer: opts)
+      TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.
@@ -272,7 +274,7 @@ describe CloudController::DependencyLocator do
         max_inline_relations_depth: 100_002,
       }
 
-      config_override(renderer: opts)
+      TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.

@@ -23,7 +23,7 @@ module VCAP::CloudController
 
     describe ".start_app_message" do
       it "should return a serialized dea message" do
-        res = StartAppMessage.new(app, 1, config, blobstore_url_generator)
+        res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
         expect(res[:executableUri]).to eq("app_uri")
         res.should be_kind_of(Hash)
 
@@ -44,7 +44,7 @@ module VCAP::CloudController
       end
 
       it "should have an app package" do
-        res = StartAppMessage.new(app, 1, config, blobstore_url_generator)
+        res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
 
         expect(res[:executableUri]).to eq("app_uri")
         expect(res.has_app_package?).to be_true
@@ -56,7 +56,7 @@ module VCAP::CloudController
         end
 
         it "should have no app package" do
-          res = StartAppMessage.new(app, 1, config, blobstore_url_generator)
+          res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
 
           expect(res[:executableUri]).to be_nil
           expect(res.has_app_package?).to be_false
@@ -66,7 +66,7 @@ module VCAP::CloudController
       context "with an app enabled for console support" do
         it "should enable console in the start message" do
           app.update(:console => true)
-          res = StartAppMessage.new(app, 1, config, blobstore_url_generator)
+          res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
           res[:console].should == true
         end
       end
@@ -74,7 +74,7 @@ module VCAP::CloudController
       context "with an app enabled for debug support" do
         it "should pass debug mode in the start message" do
           app.update(:debug => "run")
-          res = StartAppMessage.new(app, 1, config, blobstore_url_generator)
+          res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
           res[:debug].should == "run"
         end
       end
@@ -82,7 +82,7 @@ module VCAP::CloudController
       context "with an app with custom start command" do
         it "should pass command in the start message" do
           app.update(:command => "custom start command")
-          res = StartAppMessage.new(app, 1, config, blobstore_url_generator)
+          res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
           res[:start_command].should == "custom start command"
         end
       end
@@ -90,7 +90,7 @@ module VCAP::CloudController
       context "with an app enabled for custom health check timeout value" do
         it "should enable health check timeout in the start message" do
           app.update(:health_check_timeout => 82)
-          res = StartAppMessage.new(app, 1, config, blobstore_url_generator)
+          res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
           expect(res[:health_check_timeout]).to eq(82)
         end
       end

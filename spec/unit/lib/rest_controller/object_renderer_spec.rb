@@ -11,16 +11,15 @@ module VCAP::CloudController::RestController
       let(:controller) { BicyclesController }
       let(:opts) { {} }
 
-      db = Sequel.sqlite(':memory:')
-
-      db.create_table :bicycles do
+      in_memory_db = Sequel.sqlite(':memory:')
+      in_memory_db.create_table :bicycles do
         primary_key :id
         String :guid
         String :name
         Time :created_at
       end
 
-      class Bicycle < Sequel::Model(db)
+      class Bicycle < Sequel::Model(in_memory_db)
         attr_accessor :id, :created_at
         export_attributes :name
         alias_method :model, :class

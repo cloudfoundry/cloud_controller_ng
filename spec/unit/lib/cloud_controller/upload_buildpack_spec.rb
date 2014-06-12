@@ -18,19 +18,19 @@ module VCAP::CloudController
 
     let(:valid_zip) do
       zip_name = File.join(tmpdir, filename)
-      create_zip(zip_name, 1)
+      TestZip.create(zip_name, 1, 1024)
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
 
     let(:valid_zip2) do
       zip_name = File.join(tmpdir, filename)
-      create_zip(zip_name, 3)
+      TestZip.create(zip_name, 3, 1024)
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
 
-    let (:staging_timeout) { config[:staging][:timeout_in_seconds] }
+    let (:staging_timeout) { TestConfig.config[:staging][:timeout_in_seconds] }
 
     let(:expected_sha_valid_zip) { "#{buildpack.guid}_#{sha_valid_zip}" }
 

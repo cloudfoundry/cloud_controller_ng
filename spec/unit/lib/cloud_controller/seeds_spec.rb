@@ -2,6 +2,8 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::Seeds do
+    let(:config) { TestConfig.config.clone }
+
     describe ".create_seed_stacks" do
       it "populates stacks" do
         Stack.should_receive(:populate)

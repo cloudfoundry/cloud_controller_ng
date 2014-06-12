@@ -33,7 +33,7 @@ module VCAP::CloudController
 
           context "when tasks endpoint is disabled" do
             before do
-              config_override(:tasks_disabled => true)
+              TestConfig.override(:tasks_disabled => true)
             end
             it "returns 404" do
               post "/v2/tasks",
@@ -125,7 +125,7 @@ module VCAP::CloudController
 
             context "when tasks endpoint is disabled" do
               before do
-                config_override(:tasks_disabled => true)
+                TestConfig.override(:tasks_disabled => true)
               end
               it "returns 404" do
                 get "/v2/tasks/#{@task_a.guid}", {},
@@ -225,7 +225,7 @@ module VCAP::CloudController
       context "when tasks endpoint is disabled" do
         let(:headers) { admin_headers }
         before do
-          config_override(:tasks_disabled => true)
+          TestConfig.override(:tasks_disabled => true)
         end
         it_returns_status_code 404
         it_does_not_delete_the_task
@@ -258,7 +258,7 @@ module VCAP::CloudController
 
     describe "PUT /v2/tasks/:guid" do
       context "when tasks endpoint is disabled" do
-        before { config_override(:tasks_disabled => true) }
+        before { TestConfig.override(:tasks_disabled => true) }
 
         it "returns 404" do
           put "/v2/tasks/some-app-guid", '{"app_guid":"some-app-guid"}', json_headers(admin_headers)

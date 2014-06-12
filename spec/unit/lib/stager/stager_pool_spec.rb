@@ -12,7 +12,7 @@ module VCAP::CloudController
       }
     end
 
-    subject { StagerPool.new(config, message_bus) }
+    subject { StagerPool.new(TestConfig.config, message_bus) }
 
     describe "#register_subscriptions" do
       it "finds advertised stagers" do

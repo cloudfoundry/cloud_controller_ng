@@ -58,7 +58,7 @@ module ControllerHelpers
   end
 
   def app
-    FakeFrontController.new(config)
+    FakeFrontController.new(TestConfig.config)
   end
 
   def headers_for(user, opts = {})
@@ -66,8 +66,8 @@ module ControllerHelpers
              :https => false}.merge(opts)
 
     headers = {}
-    token_coder = CF::UAA::TokenCoder.new(:audience_ids => config[:uaa][:resource_id],
-                                          :skey => config[:uaa][:symmetric_secret],
+    token_coder = CF::UAA::TokenCoder.new(:audience_ids => TestConfig.config[:uaa][:resource_id],
+                                          :skey => TestConfig.config[:uaa][:symmetric_secret],
                                           :pkey => nil)
 
     scopes = opts[:scopes]

@@ -51,7 +51,7 @@ module VCAP::CloudController
         end
 
         before do
-          config_override(config_setting => true)
+          TestConfig.override(config_setting => true)
         end
 
         context "with no authorization header for #{scenario_vars[:user]}" do

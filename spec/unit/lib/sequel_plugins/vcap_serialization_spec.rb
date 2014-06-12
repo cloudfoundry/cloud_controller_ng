@@ -3,8 +3,8 @@ require "securerandom"
 
 describe "Sequel::Plugins::VcapSerialization" do
   before do
-    db = Sequel.sqlite(':memory:')
-    db.create_table :test do
+    in_memory_db = Sequel.sqlite(':memory:')
+    in_memory_db.create_table :test do
       primary_key :id
 
       Integer :val1
@@ -14,7 +14,7 @@ describe "Sequel::Plugins::VcapSerialization" do
 
     @c = Class.new(Sequel::Model)
     @c.plugin :vcap_serialization
-    @c.set_dataset(db[:test])
+    @c.set_dataset(in_memory_db[:test])
   end
 
   describe "#default_order_by" do

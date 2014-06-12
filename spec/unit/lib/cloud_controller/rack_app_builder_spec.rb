@@ -12,12 +12,12 @@ module VCAP::CloudController
       end
 
       it "returns a Rack application" do
-        expect(builder.build(config)).to be_a(Rack::Builder)
-        expect(builder.build(config)).to respond_to(:call)
+        expect(builder.build(TestConfig.config)).to be_a(Rack::Builder)
+        expect(builder.build(TestConfig.config)).to respond_to(:call)
       end
 
       it "uses Rack::CommonLogger" do
-        builder.build(config).to_app
+        builder.build(TestConfig.config).to_app
 
         expect(Rack::CommonLogger).to have_received(:new)
       end

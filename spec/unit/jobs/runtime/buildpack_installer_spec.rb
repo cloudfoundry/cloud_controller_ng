@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       let(:options) { {} }
 
-      let(:job) { BuildpackInstaller.new(buildpack_name, zipfile, options, config) }
+      let(:job) { BuildpackInstaller.new(buildpack_name, zipfile, options, TestConfig.config) }
 
       describe "#perform" do
         context "default options" do
@@ -28,7 +28,7 @@ module VCAP::CloudController
             job.perform
             buildpack1 = Buildpack.find(name: buildpack_name)
 
-            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false }, config)
+            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false }, TestConfig.config)
             update_job.perform
 
             buildpack2 = Buildpack.find(name: buildpack_name)
@@ -53,7 +53,7 @@ module VCAP::CloudController
             job.perform
             buildpack = Buildpack.find(name: buildpack_name)
 
-            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false, locked: false }, config)
+            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false, locked: false }, TestConfig.config)
             update_job.perform
 
             buildpack2 = Buildpack.find(name: buildpack_name)
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
             buildpack = Buildpack.find(name: buildpack_name)
 
-            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: true }, config)
+            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: true }, TestConfig.config)
             update_job.perform
 
             buildpack2 = Buildpack.find(name: buildpack_name)

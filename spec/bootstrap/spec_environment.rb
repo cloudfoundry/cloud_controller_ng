@@ -1,4 +1,4 @@
-require "bootstrap/default_config"
+require "bootstrap/test_config"
 require "bootstrap/table_recreator"
 
 module VCAP::CloudController
@@ -32,7 +32,7 @@ module VCAP::CloudController
     private
 
     def config
-      @config ||= DefaultConfig.for_specs
+      @config ||= TestConfig.defaults
     end
 
     def db_logger

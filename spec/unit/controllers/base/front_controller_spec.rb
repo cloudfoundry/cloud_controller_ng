@@ -19,7 +19,7 @@ describe VCAP::CloudController::FrontController do
     end
 
     def app
-      described_class.new(config, token_decoder)
+      described_class.new(TestConfig.config, token_decoder)
     end
 
     def make_request

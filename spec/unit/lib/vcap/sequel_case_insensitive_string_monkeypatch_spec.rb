@@ -7,7 +7,7 @@ describe "String :name" do
   context "with default options" do
     before do
       @c = Class.new(Sequel::Model)
-      @c.set_dataset(db[table_name])
+      @c.set_dataset($spec_env.db[table_name])
       @c.create(:str => "abc")
     end
 
@@ -26,7 +26,7 @@ describe "String :name" do
 
     before do
       @c = Class.new(Sequel::Model)
-      @c.set_dataset(db[table_name])
+      @c.set_dataset($spec_env.db[table_name])
       @c.create(:str => "abc")
     end
 
@@ -49,7 +49,7 @@ describe "String :name" do
           validates_unique :str
         end
       end
-      @c.set_dataset(db[table_name])
+      @c.set_dataset($spec_env.db[table_name])
       @c.create(:str => "abc")
     end
 
@@ -77,7 +77,7 @@ describe "String :name" do
     context "with defaults" do
       it "should not result in a case sensitive column" do
         @c = Class.new(Sequel::Model)
-        @c.set_dataset(db[table_name])
+        @c.set_dataset($spec_env.db[table_name])
         @c.create(:altered_to_default => "abc")
         @c.dataset[:altered_to_default => "abc"].should_not be_nil
         @c.dataset[:altered_to_default => "ABC"].should be_nil
@@ -87,7 +87,7 @@ describe "String :name" do
     context "with :case_insensitive => false" do
       it "should not result in a case sensitive column" do
         @c = Class.new(Sequel::Model)
-        @c.set_dataset(db[table_name])
+        @c.set_dataset($spec_env.db[table_name])
         @c.create(:altered_to_case_sensitive => "abc")
         @c.dataset[:altered_to_case_sensitive => "abc"].should_not be_nil
         @c.dataset[:altered_to_case_sensitive => "ABC"].should be_nil
@@ -97,7 +97,7 @@ describe "String :name" do
     context "with :case_insensitive => true" do
       it "should change the column" do
         @c = Class.new(Sequel::Model)
-        @c.set_dataset(db[table_name])
+        @c.set_dataset($spec_env.db[table_name])
         @c.create(:altered_to_case_insensitive => "abc")
         @c.dataset[:altered_to_case_insensitive => "abc"].should_not be_nil
         @c.dataset[:altered_to_case_insensitive => "ABC"].should_not be_nil

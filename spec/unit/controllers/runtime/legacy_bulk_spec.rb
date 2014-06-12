@@ -14,7 +14,7 @@ module VCAP::CloudController
 
     describe ".register_subscription" do
       it "should be able to discover credentials through message bus" do
-        LegacyBulk.configure(config, mbus)
+        LegacyBulk.configure(TestConfig.config, mbus)
 
         mbus.should_receive(:subscribe)
           .with("cloudcontroller.bulk.credentials.ng")

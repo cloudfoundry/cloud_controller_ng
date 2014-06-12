@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppsController do
-    before { configure_stacks }
+    # before { configure_stacks }
     it_behaves_like "an authenticated endpoint", path: "/v2/apps"
     include_examples "querying objects", path: "/v2/apps", model: App, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/apps", model: App
@@ -87,7 +87,7 @@ module VCAP::CloudController
         let (:default_memory) { 200 }
 
         before do
-          config_override({ :default_app_memory => default_memory })
+          TestConfig.override({ :default_app_memory => default_memory })
         end
 
         it "uses the configured default when no memory is specified" do
@@ -100,7 +100,7 @@ module VCAP::CloudController
          let (:default_disk) { 512 }
 
         before do
-          config_override({ :default_app_disk_in_mb => default_disk })
+          TestConfig.override({ :default_app_disk_in_mb => default_disk })
         end
 
         it "uses the configured default when no quota is specified" do

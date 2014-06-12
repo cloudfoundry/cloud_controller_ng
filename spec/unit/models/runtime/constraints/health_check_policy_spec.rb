@@ -12,7 +12,7 @@ describe HealthCheckPolicy do
 
   describe "health_check_timeout" do
     before do
-      config_override({ :maximum_health_check_timeout => 512 })
+      TestConfig.override({ :maximum_health_check_timeout => 512 })
     end
 
     context "when a health_check_timeout exceeds the maximum" do

@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       let(:valid_zip) do
         zip_name = File.join(tmpdir, "file.zip")
-        create_zip(zip_name, 1)
+        TestZip.create(zip_name, 1, 1024)
         zip_file = File.new(zip_name)
         Rack::Test::UploadedFile.new(zip_file)
       end
@@ -116,7 +116,7 @@ module VCAP::CloudController
 
           context "when the upload will finish after the auth token expires" do
             before do
-              config_override(app_bits_upload_grace_period_in_seconds: 200)
+              TestConfig.override(app_bits_upload_grace_period_in_seconds: 200)
             end
 
             context "but the upload will finish inside the grace period" do
@@ -159,7 +159,7 @@ module VCAP::CloudController
         end
 
         before do
-          config_override(:index => 99, :name => "api_z1")
+          TestConfig.override(index: 99, name: "api_z1")
         end
 
         it "creates a delayed job" do

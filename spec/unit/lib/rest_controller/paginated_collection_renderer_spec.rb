@@ -2,16 +2,15 @@ require 'spec_helper'
 
 module VCAP::CloudController::RestController
   describe PaginatedCollectionRenderer do
-    db = Sequel.sqlite(':memory:')
-
-    db.create_table :cars do
+    in_memory_db = Sequel.sqlite(':memory:')
+    in_memory_db.create_table :cars do
       primary_key :id
       String :guid
       String :name
       Time :created_at
     end
 
-    class Car < Sequel::Model(db)
+    class Car < Sequel::Model(in_memory_db)
       attr_accessor :id, :created_at
       export_attributes :name
     end

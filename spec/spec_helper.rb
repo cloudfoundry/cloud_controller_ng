@@ -32,7 +32,6 @@ RSpec.configure do |rspec_config|
   rspec_config.treat_symbols_as_metadata_keys_with_true_values = true
 
   rspec_config.include Rack::Test::Methods
-  rspec_config.include VCAP::CloudController::GlobalHelper
   rspec_config.include ModelCreation
   rspec_config.extend ModelCreation
   rspec_config.include ServicesHelpers, services: true
@@ -67,7 +66,7 @@ RSpec.configure do |rspec_config|
       c.api_name = "Cloud Foundry API"
       c.template_path = "spec/api/documentation/templates"
       c.curl_host = "https://api.[your-domain.com]"
-      c.app = FakeFrontController.new(config)
+      c.app = FakeFrontController.new(TestConfig.config)
     end
   end
 
@@ -76,12 +75,12 @@ RSpec.configure do |rspec_config|
     Sequel::Deprecation.output = StringIO.new
     Sequel::Deprecation.backtrace_filter = 5
 
-    config_reset
+    TestConfig.reset
   end
 
   rspec_config.around :each do |example|
-    isolation = DatabaseIsolation.choose(example.metadata[:isolation], config, db)
-    tables = Tables.new(db, DatabaseIsolation.isolated_tables(db))
+    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, $spec_env.db)
+    tables = Tables.new($spec_env.db, DatabaseIsolation.isolated_tables($spec_env.db))
     expect {
       isolation.cleanly { example.run }
     }.not_to change { tables.counts }

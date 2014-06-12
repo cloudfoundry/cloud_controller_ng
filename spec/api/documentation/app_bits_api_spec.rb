@@ -6,7 +6,7 @@ resource 'Apps', :type => :api do
   let(:tmpdir) { Dir.mktmpdir }
   let(:valid_zip) {
     zip_name = File.join(tmpdir, 'file.zip')
-    create_zip(zip_name, 1)
+    TestZip.create(zip_name, 1, 1024)
     zip_file = File.new(zip_name)
     Rack::Test::UploadedFile.new(zip_file)
   }

@@ -1,26 +1,26 @@
 require "spec_helper"
 
 describe "Sequel::Plugins::VcapNormalization" do
-  db = Sequel.sqlite(':memory:')
-  db.create_table :foos do
+  in_memory_db = Sequel.sqlite(':memory:')
+  in_memory_db.create_table :foos do
     primary_key :id
 
     String :val
     String :val_stripped
   end
 
-  db.create_table :bars do
+  in_memory_db.create_table :bars do
     primary_key :id
 
     String :val
   end
 
-  class Foo < Sequel::Model(db)
+  class Foo < Sequel::Model(in_memory_db)
     plugin :vcap_normalization
     strip_attributes :val_stripped
   end
 
-  class Bar < Sequel::Model(db)
+  class Bar < Sequel::Model(in_memory_db)
     plugin :vcap_normalization
   end
 

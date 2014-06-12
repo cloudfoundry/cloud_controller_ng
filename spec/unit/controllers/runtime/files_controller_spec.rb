@@ -10,7 +10,7 @@ module VCAP::CloudController
       end
 
       before :each, :use_nginx => false do
-        config_override(:nginx => { :use_nginx => false })
+        TestConfig.override(:nginx => { :use_nginx => false })
       end
 
       context "as a developer" do

@@ -24,7 +24,7 @@ module VCAP::CloudController
     end
 
     before do
-      DeaClient.configure(config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+      DeaClient.configure(TestConfig.config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
     end
 
     describe ".run" do
@@ -156,8 +156,8 @@ module VCAP::CloudController
       end
 
       it "sends a dea start message that includes cc_partition" do
-        config_override(:cc_partition => "ngFTW")
-        DeaClient.configure(config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+        TestConfig.override(:cc_partition => "ngFTW")
+        DeaClient.configure(TestConfig.config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
         app.instances = 1
         dea_pool.should_receive(:find_dea).and_return("abc")

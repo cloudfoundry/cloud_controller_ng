@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::AppStartEvent, type: :model do
     before do
-      config_override({ :billing_event_writing_enabled => true })
+      TestConfig.override({ :billing_event_writing_enabled => true })
     end
 
     it_behaves_like "a CloudController model", {

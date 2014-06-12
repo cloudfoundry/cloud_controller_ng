@@ -2,9 +2,9 @@ require "spec_helper"
 require "rspec_api_documentation/dsl"
 
 module VCAP::CloudController
-  db = Sequel.sqlite(':memory:')
+  in_memory_db = Sequel.sqlite(':memory:')
   # db.logger = Logger.new($stdout) # <-- Uncomment to see SQL queries being made by Sequel
-  db.create_table :fakes do
+  in_memory_db.create_table :fakes do
     primary_key :id
     String :guid
     String :name
@@ -14,7 +14,7 @@ module VCAP::CloudController
   class FakeAccess < BaseAccess
   end
 
-  class Fake < Sequel::Model(db)
+  class Fake < Sequel::Model(in_memory_db)
     attr_accessor :id, :created_at
     export_attributes :name
   end
