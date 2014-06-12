@@ -20,7 +20,12 @@ module VCAP::CloudController::RestController
       define_attributes {}
     end
 
+    after do
+      Car.dataset.truncate
+    end
+
     subject(:paginated_collection_renderer) { PaginatedCollectionRenderer.new(eager_loader, serializer, renderer_opts) }
+
     let(:eager_loader) { SecureEagerLoader.new }
     let(:serializer) { PreloadedObjectSerializer.new }
     let(:renderer_opts) do
