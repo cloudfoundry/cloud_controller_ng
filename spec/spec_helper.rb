@@ -80,7 +80,7 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.around :each do |example|
-    isolation = DatabaseIsolation.choose(example.metadata[:isolation])
+    isolation = DatabaseIsolation.choose(example.metadata[:isolation], config, db)
     tables = Tables.new(db, DatabaseIsolation.isolated_tables(db))
     expect {
       isolation.cleanly { example.run }

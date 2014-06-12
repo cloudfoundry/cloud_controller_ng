@@ -132,15 +132,14 @@ module IntegrationSetupHelpers
 end
 
 RSpec.configure do |rspec_config|
-  rspec_config.include(IntegrationSetupHelpers, :type => :integration)
-  rspec_config.include(IntegrationSetup, :type => :integration)
+  rspec_config.include(IntegrationSetupHelpers, type: :integration)
+  rspec_config.include(IntegrationSetup, type: :integration)
 
-  rspec_config.before(:all, :type => :integration) do
+  rspec_config.before(:all, type: :integration) do
     WebMock.allow_net_connect!
   end
 
-  rspec_config.after(:all, :type => :integration) do
+  rspec_config.after(:all, type: :integration) do
     WebMock.disable_net_connect!
-    $spec_env.truncate_and_reseed_all_tables
   end
 end

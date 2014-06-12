@@ -1,8 +1,8 @@
 module DatabaseIsolation
-  def self.choose(isolation)
+  def self.choose(isolation, config, db)
     case isolation
       when :truncation
-        TruncateTables.new
+        TruncateTables.new(config, db)
       else
         RollbackTransaction.new
     end
@@ -13,11 +13,25 @@ module DatabaseIsolation
   end
 
   class TruncateTables
+    def initialize(config, db)
+      @config = config
+      @db = db
+    end
+
     def cleanly
       yield
     ensure
-      $spec_env.truncate_and_reseed_all_tables
+      tables = DatabaseIsolation.isolated_tables(db)
+      table_truncator = TableTruncator.new(db, tables)
+      table_truncator.truncate_tables
+
+      VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
+      VCAP::CloudController::Seeds.create_seed_stacks
     end
+
+    private
+
+    attr_reader :config, :db
   end
 
   class RollbackTransaction
