@@ -68,6 +68,7 @@ require "cloud_controller/dea/dea_respondent"
 
 require "cloud_controller/diego/diego_client"
 require "cloud_controller/diego/buildpack_entry_generator"
+require "cloud_controller/diego/service_registry"
 
 require "cloud_controller/stager/stager_pool"
 require "cloud_controller/stager/staging_completion_handler"

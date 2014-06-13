@@ -1,11 +1,15 @@
 module VCAP::CloudController::Diego
   class DiegoClient
-    def initialize(enabled, message_bus, tps_reporter, blobstore_url_generator)
+    def initialize(enabled, message_bus, service_registry, blobstore_url_generator)
       @enabled = enabled
       @message_bus = message_bus
-      @tps_reporter = tps_reporter
+      @service_registry = service_registry
       @blobstore_url_generator = blobstore_url_generator
       @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
+    end
+
+    def connect!
+      @service_registry.run!
     end
 
     def running_enabled(app)
@@ -71,7 +75,10 @@ module VCAP::CloudController::Diego
     end
 
     def lrp_instances(app)
-      uri = URI("#{@tps_reporter}/lrps/#{lrp_guid(app)}")
+      address = @service_registry.tps_addrs.first
+
+      uri = URI("#{address}/lrps/#{lrp_guid(app)}")
+      logger.info "Requesting lrp information from #{address}"
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.read_timeout = 10

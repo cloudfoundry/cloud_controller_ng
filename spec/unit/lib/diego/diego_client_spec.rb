@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController::Diego
   describe DiegoClient do
     let(:enabled) { true }
-    let(:tps_reporter) { "http://some-tps-addr:5151" }
+    let(:service_registry) { double(:service_registry) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
     let(:domain) { VCAP::CloudController::SharedDomain.make(name: "some-domain.com") }
@@ -31,7 +31,18 @@ module VCAP::CloudController::Diego
       )
     end
 
-    subject(:client) { DiegoClient.new(enabled, message_bus, tps_reporter, blobstore_url_generator) }
+    subject(:client) { DiegoClient.new(enabled, message_bus, service_registry, blobstore_url_generator) }
+
+    describe '#connect!' do
+      before do
+        allow(service_registry).to receive(:run!)
+      end
+
+      it 'runs the service_registry' do
+        client.connect!
+        expect(service_registry).to have_received(:run!)
+      end
+    end
 
     describe "desiring an app" do
       let(:expected_message) do
@@ -143,6 +154,8 @@ module VCAP::CloudController::Diego
           body: [{ process_guid: "abc", instance_guid: "123", index: 0, state: 'running', since_in_ns: '1257894000000000001' },
                  { process_guid: "abc", instance_guid: "456", index: 1, state: 'starting', since_in_ns: '1257895000000000001' },
                  { process_guid: "abc", instance_guid: "789", index: 1, state: 'crashed', since_in_ns: '1257896000000000001' }].to_json)
+
+        allow(service_registry).to receive(:tps_addrs).and_return(['http://some-tps-addr:5151'])
       end
 
       it "reports each instance's index, state, since, process_guid, instance_guid" do
