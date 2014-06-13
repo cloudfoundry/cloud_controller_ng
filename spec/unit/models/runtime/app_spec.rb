@@ -817,7 +817,9 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:app) { AppFactory.make }
 
-        it "does not allow the same name in a different case", :skip_sqlite => true do
+        it "does not allow the same name in a different case" do
+          pending "This test is not valid for SQLite" if $spec_env.db.database_type == :sqlite
+
           AppFactory.make(:name => "lowercase", :space => space)
 
           expect {

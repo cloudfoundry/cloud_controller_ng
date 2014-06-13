@@ -34,7 +34,6 @@ RSpec.configure do |rspec_config|
   rspec_config.include Rack::Test::Methods
   rspec_config.include ModelCreation
   rspec_config.extend ModelCreation
-  rspec_config.include ServicesHelpers, services: true
 
   rspec_config.include ControllerHelpers, type: :controller, :example_group => {
       :file_path => EscapedPath.join(%w[spec unit controllers])
@@ -48,16 +47,11 @@ RSpec.configure do |rspec_config|
       :file_path => EscapedPath.join(%w[spec acceptance])
   }
 
-  rspec_config.include AcceptanceHelpers, type: :acceptance, :example_group => {
-      :file_path => EscapedPath.join(%w[spec acceptance])
-  }
-
   rspec_config.include ApiDsl, type: :api, :example_group => {
       :file_path => EscapedPath.join(%w[spec api])
   }
 
-  rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to
-  # rspec & rspec_api_documentation 3
+  rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
   rspec_config.before :all do
     VCAP::CloudController::SecurityContext.clear
 
@@ -89,5 +83,9 @@ RSpec.configure do |rspec_config|
   rspec_config.after :each do
     expect(Sequel::Deprecation.output.string).to eq ''
     Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
+  end
+
+  rspec_config.after :all do
+    TmpdirCleaner.clean
   end
 end

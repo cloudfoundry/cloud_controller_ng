@@ -45,7 +45,7 @@ describe 'Service Broker API integration' do
         context 'when create-service-broker' do
           after { delete_broker }
           before do
-            setup_uaa_stubs_to_add_new_client
+            UAARequests.stub_all
 
             stub_catalog_fetch(broker_response_status, catalog)
 
@@ -91,7 +91,7 @@ describe 'Service Broker API integration' do
 
           after { delete_broker }
           before do
-            setup_uaa_stubs_to_add_new_client
+            UAARequests.stub_all
             setup_broker(catalog)
 
             # stub uaa token request

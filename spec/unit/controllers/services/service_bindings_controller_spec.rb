@@ -1,9 +1,16 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe ServiceBindingsController, :services do
+  describe ServiceBindingsController do
     # The create_attribute block can't "see" lets and instance variables
     CREDENTIALS = {'foo' => 'bar'}
+
+    def fake_app_staging(app)
+      app.package_hash = "abc"
+      app.droplet_hash = "def"
+      app.save
+      expect(app.needs_staging?).to eq(false)
+    end
 
     let(:broker_client) { double('broker client') }
 

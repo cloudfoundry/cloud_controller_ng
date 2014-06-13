@@ -25,9 +25,3 @@ class TmpdirCleaner
     dir_path
   end
 end
-
-RSpec.configure do |rspec_config|
-  rspec_config.after(:all) do
-    TmpdirCleaner.clean
-  end
-end

@@ -300,7 +300,7 @@ describe 'Service Broker' do
       before do
         # set up a fake broker catalog that includes dashboard_client for services
         stub_catalog_fetch(200, services: [service_1, service_2, service_3, service_4, service_5, service_6])
-        setup_uaa_stubs_to_add_new_client
+        UAARequests.stub_all
         stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
 
         # add that broker to the CC
@@ -318,7 +318,7 @@ describe 'Service Broker' do
 
         WebMock.reset!
 
-        setup_uaa_stubs_to_add_new_client
+        UAARequests.stub_all
         stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
         stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-1}).to_return(
           body:    { client_id: 'client-1' }.to_json,
@@ -588,7 +588,7 @@ HEREDOC
 
         # set up a fake broker catalog that includes dashboard_client for services
         stub_catalog_fetch(200, services: [service_1, service_2, service_3])
-        setup_uaa_stubs_to_add_new_client
+        UAARequests.stub_all
         stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
 
         # add that broker to the CC
