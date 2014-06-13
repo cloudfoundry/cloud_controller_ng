@@ -76,28 +76,32 @@ module VCAP::CloudController::Diego
 
     def lrp_instances(app)
       address = @service_registry.tps_addrs.first
+      guid    = lrp_guid(app)
 
-      uri = URI("#{address}/lrps/#{lrp_guid(app)}")
-      logger.info "Requesting lrp information from #{address}"
+      uri = URI("#{address}/lrps/#{guid}")
+      logger.info "Requesting lrp information for #{guid} from #{address}"
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.read_timeout = 10
       http.open_timeout = 10
 
       body = http.get(uri.path).body
+      logger.info "Received lrp response for #{guid}: #{body}"
 
       result = []
 
       tps_instances = JSON.parse(body)
       tps_instances.each do |instance|
         result << {
-          process_guid: instance['process_guid'],
+          process_guid:  instance['process_guid'],
           instance_guid: instance['instance_guid'],
-          index: instance['index'],
-          state: instance['state'].upcase,
-          since: instance['since_in_ns'].to_i / 1_000_000_000,
+          index:         instance['index'],
+          state:         instance['state'].upcase,
+          since:         instance['since_in_ns'].to_i / 1_000_000_000,
         }
       end
+
+      logger.info "Returning lrp instances for #{guid}: #{result.inspect}"
 
       result
     end
