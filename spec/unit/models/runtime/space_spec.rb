@@ -197,18 +197,16 @@ module VCAP::CloudController
     end
 
     describe "domains" do
-      subject(:space) { Space.make() }
+      subject(:space) { Space.make(organization: organization) }
+      let(:organization) { Organization.make }
 
       context "listing domains" do
-        let!(:domains) do
-          [
-            PrivateDomain.make(owning_organization: space.organization),
-            SharedDomain.make
-          ]
+        before do
+          PrivateDomain.make(owning_organization: space.organization)
         end
 
         it "should list the owning organization's domains and shared domains" do
-          expect(space.domains).to match_array(domains)
+          expect(space.domains).to match_array(organization.domains)
         end
       end
 

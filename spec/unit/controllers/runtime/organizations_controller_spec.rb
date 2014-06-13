@@ -142,17 +142,15 @@ module VCAP::CloudController
       let(:manager) { make_manager_for_org(organization) }
 
       before do
-        @private_domain = PrivateDomain.make(owning_organization: organization)
-        @shared_domain = SharedDomain.make
+        PrivateDomain.make(owning_organization: organization)
       end
 
       it "should return the private domains associated with the organization and all shared domains" do
         get "/v2/organizations/#{organization.guid}/domains", {}, headers_for(manager)
         expect(last_response.status).to eq(200)
         resources = decoded_response.fetch("resources")
-        expect(resources).to have(2).items
         guids = resources.map { |x| x["metadata"]["guid"] }
-        expect(guids).to match_array([@shared_domain.guid, @private_domain.guid])
+        expect(guids).to match_array(organization.domains.map(&:guid))
       end
 
       context "space roles" do

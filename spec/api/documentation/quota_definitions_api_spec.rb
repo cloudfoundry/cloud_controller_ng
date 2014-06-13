@@ -13,7 +13,7 @@ resource "Quota Definitions", type: :api do
   field :memory_limit, "How much memory in megabyte an organization can have.", required: true, example_values: [5_120, 10_024]
   field :trial_db_allowed, "If an organization can have a trial db.", required: false, deprecated: true
 
-  let(:guid) { VCAP::CloudController::QuotaDefinition.first.guid }
+  let(:guid) { VCAP::CloudController::QuotaDefinition.make.guid }
 
   standard_model_list(:quota_definition, VCAP::CloudController::QuotaDefinitionsController)
   standard_model_get(:quota_definition)

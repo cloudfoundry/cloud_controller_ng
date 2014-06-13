@@ -22,7 +22,8 @@ module VCAP::CloudController
       DB.load_models(config.fetch(:db), db_logger)
       Config.run_initializers(config)
 
-      Seeds.create_seed_quota_definitions(config)
+      TestConfig.reset
+      Seeds.write_seed_data(config)
     end
 
     def db

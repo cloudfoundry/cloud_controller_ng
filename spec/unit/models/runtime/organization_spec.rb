@@ -3,23 +3,29 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Organization, type: :model do
-    it_behaves_like "a CloudController model", {
-      required_attributes: :name,
-      unique_attributes: :name,
-      custom_attributes_for_uniqueness_tests: -> { { quota_definition: QuotaDefinition.make } },
-      stripped_string_attributes: :name,
-      many_to_zero_or_more: {
-        users: ->(_) { User.make },
-        managers: ->(_) { User.make },
-        billing_managers: ->(_) { User.make },
-        auditors: ->(_) { User.make },
-      },
-      one_to_zero_or_more: {
-        spaces: ->(_) { Space.make },
-        domains: ->(org) { PrivateDomain.make(owning_organization: org) },
-        private_domains: ->(org) { PrivateDomain.make(owning_organization: org) }
+    context "without any seeded domains" do
+      before do
+        Domain.dataset.destroy
+      end
+
+      it_behaves_like "a CloudController model", {
+          required_attributes: :name,
+          unique_attributes: :name,
+          custom_attributes_for_uniqueness_tests: -> { { quota_definition: QuotaDefinition.make } },
+          stripped_string_attributes: :name,
+          many_to_zero_or_more: {
+              users: ->(_) { User.make },
+              managers: ->(_) { User.make },
+              billing_managers: ->(_) { User.make },
+              auditors: ->(_) { User.make },
+          },
+          one_to_zero_or_more: {
+              spaces: ->(_) { Space.make },
+              domains: ->(org) { PrivateDomain.make(owning_organization: org) },
+              private_domains: ->(org) { PrivateDomain.make(owning_organization: org) }
+          }
       }
-    }
+    end
 
     context "statuses" do
       describe "when status == active" do

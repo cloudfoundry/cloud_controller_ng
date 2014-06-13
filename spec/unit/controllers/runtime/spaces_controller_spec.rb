@@ -215,22 +215,21 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/spaces/:guid/domains' do
-      let(:space) { Space.make }
+      let(:space) { Space.make(organization: organization) }
       let(:manager) { make_manager_for_org(space.organization) }
+      let(:organization) { Organization.make }
 
       before do
-        @private_domain = PrivateDomain.make(owning_organization: space.organization)
-        @shared_domain = SharedDomain.make
+        PrivateDomain.make(owning_organization: space.organization)
       end
 
       it "should return the domains associated with the owning organization for allowed users" do
         get "/v2/spaces/#{space.guid}/domains", {}, headers_for(manager)
         expect(last_response.status).to eq(200)
         resources = decoded_response.fetch("resources")
-        expect(resources).to have(2).items
 
         guids = resources.map { |x| x["metadata"]["guid"] }
-        expect(guids).to match_array([@shared_domain.guid, @private_domain.guid])
+        expect(guids).to match_array(organization.domains.map(&:guid))
       end
     end
 

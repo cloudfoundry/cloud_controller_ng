@@ -1,4 +1,5 @@
 require "bootstrap/db_config"
+require "support/paths"
 
 module TestConfig
   def self.override(overrides)

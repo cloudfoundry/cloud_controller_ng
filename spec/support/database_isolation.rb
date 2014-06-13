@@ -25,8 +25,7 @@ module DatabaseIsolation
       table_truncator = TableTruncator.new(db, tables)
       table_truncator.truncate_tables
 
-      VCAP::CloudController::Seeds.create_seed_quota_definitions(config)
-      VCAP::CloudController::Seeds.create_seed_stacks
+      VCAP::CloudController::Seeds.write_seed_data(config)
     end
 
     private

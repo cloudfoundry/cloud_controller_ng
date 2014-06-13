@@ -42,6 +42,8 @@ module VCAP::CloudController
 
     describe "GET /v2/shared_domains" do
       before do
+        SharedDomain.dataset.destroy # Seeded domains get in the way
+
         @shared_domain_a = SharedDomain.make
         @shared_domain_b = SharedDomain.make
       end

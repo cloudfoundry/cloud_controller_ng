@@ -65,6 +65,8 @@ module VCAP::CloudController
 
     describe "GET /v2/private_domains" do
       before do
+        PrivateDomain.dataset.destroy # Seeded domains get in the way
+
         @private_domain_a = PrivateDomain.make
         @private_domain_b = PrivateDomain.make
       end

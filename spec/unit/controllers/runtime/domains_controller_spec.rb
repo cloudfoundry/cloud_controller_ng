@@ -3,8 +3,15 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::DomainsController do
     it_behaves_like "an authenticated endpoint", path: "/v2/domains"
-    include_examples "enumerating objects", path: "/v2/domains", model: PrivateDomain
-    include_examples "enumerating objects", path: "/v2/domains", model: SharedDomain
+    context "without seeded domains" do
+      before do
+        Domain.dataset.destroy # Seeded domains get in the way
+      end
+
+      include_examples "enumerating objects", path: "/v2/domains", model: PrivateDomain
+      include_examples "enumerating objects", path: "/v2/domains", model: SharedDomain
+    end
+
     include_examples "reading a valid object", path: "/v2/domains", model: PrivateDomain, basic_attributes: %w(name owning_organization_guid)
     include_examples "reading a valid object", path: "/v2/domains", model: SharedDomain, basic_attributes: %w(name)
     include_examples "operations on an invalid object", path: "/v2/domains"
@@ -32,6 +39,8 @@ module VCAP::CloudController
       include_context "permissions"
 
       before do
+        Domain.dataset.destroy # Seeded domains get in the way
+
         @shared_domain = SharedDomain.make
 
         @obj_a = PrivateDomain.make(owning_organization: @org_a)
