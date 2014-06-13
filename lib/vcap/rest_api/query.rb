@@ -80,7 +80,7 @@ module VCAP::RestAPI
       query.split(/((?:;;)+)/).each do |q|
         if q =~ /\A(?:;;)+\z/
           current_segments << ';' * (q.size / 2)
-        elsif ! q[';']
+        elsif !q[';']
           current_segments << q
         else
           sub_queries = q.split(';')
