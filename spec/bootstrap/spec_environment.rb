@@ -5,8 +5,9 @@ module VCAP::CloudController
   class SpecEnvironment
     def initialize
       ENV["CC_TEST"] = "true"
-      FileUtils.mkdir_p(artifacts_dir)
+      FileUtils.mkdir_p(Paths::ARTIFACTS)
 
+      log_filename = File.join(Paths::ARTIFACTS, "spec.log")
       max_log_file_size_in_bytes = 100_000_000
       if File.exist?(log_filename) && File.size(log_filename) > max_log_file_size_in_bytes
         FileUtils.rm_f(log_filename)
@@ -44,22 +45,6 @@ module VCAP::CloudController
         @db_logger.level = level if Steno::Logger::LEVELS.include? level
       end
       @db_logger
-    end
-
-    def spec_dir
-      File.expand_path("..", File.dirname(__FILE__))
-    end
-
-    def artifacts_dir
-      File.join(spec_dir, "artifacts")
-    end
-
-    def artifact_filename(name)
-      File.join(artifacts_dir, name)
-    end
-
-    def log_filename
-      artifact_filename("spec.log")
     end
   end
 end
