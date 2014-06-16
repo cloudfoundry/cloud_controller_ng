@@ -26,4 +26,26 @@ module DbConfig
     db_type = ENV["DB"] || "sqlite"
     ENV["DB_CONNECTION"] ||= default_connection_prefix[db_type]
   end
+
+  def self.config
+    {
+      :log_level => "debug",
+      :database => DbConfig.connection_string,
+      :pool_timeout => 10
+    }
+  end
+
+  def self.connection
+    Thread.current[:db] ||= VCAP::CloudController::DB.connect(config, db_logger)
+  end
+
+  def self.db_logger
+    return @db_logger if @db_logger
+    @db_logger = Steno.logger("cc.db")
+    if ENV["DB_LOG_LEVEL"]
+      level = ENV["DB_LOG_LEVEL"].downcase.to_sym
+      @db_logger.level = level if Steno::Logger::LEVELS.include? level
+    end
+    @db_logger
+  end
 end

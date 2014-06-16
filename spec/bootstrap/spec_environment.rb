@@ -2,8 +2,8 @@ require "bootstrap/test_config"
 require "bootstrap/table_recreator"
 
 module VCAP::CloudController
-  class SpecEnvironment
-    def initialize
+  module SpecEnvironment
+    def self.init
       ENV["CC_TEST"] = "true"
       FileUtils.mkdir_p(Paths::ARTIFACTS)
 
@@ -17,36 +17,13 @@ module VCAP::CloudController
         steno_config_hash[:sinks] = [Steno::Sink::IO.for_file(log_filename)]
       end
 
-      db_resetter = TableRecreator.new(db)
+      db_resetter = TableRecreator.new(DbConfig.connection)
       db_resetter.recreate_tables
 
-      DB.load_models(config.fetch(:db), db_logger)
-      Config.run_initializers(config)
+      DB.load_models(DbConfig.config, DbConfig.db_logger)
+      Config.run_initializers(TestConfig.config)
 
-      TestConfig.reset
-      Seeds.write_seed_data(config)
-    end
-
-    def db
-      Thread.current[:db] ||= DB.connect(config.fetch(:db), db_logger)
-    end
-
-    private
-
-    def config
-      @config ||= TestConfig.defaults
-    end
-
-    def db_logger
-      return @db_logger if @db_logger
-      @db_logger = Steno.logger("cc.db")
-      if ENV["DB_LOG_LEVEL"]
-        level = ENV["DB_LOG_LEVEL"].downcase.to_sym
-        @db_logger.level = level if Steno::Logger::LEVELS.include? level
-      end
-      @db_logger
+      Seeds.write_seed_data(TestConfig.config)
     end
   end
 end
-
-$spec_env = VCAP::CloudController::SpecEnvironment.new

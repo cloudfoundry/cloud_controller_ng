@@ -26,6 +26,8 @@ require "services"
 
 require "bootstrap/spec_environment"
 
+VCAP::CloudController::SpecEnvironment.init
+
 Dir[File.expand_path("support/**/*.rb", File.dirname(__FILE__))].each { |file| require file }
 
 RSpec.configure do |rspec_config|
@@ -73,8 +75,8 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.around :each do |example|
-    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, $spec_env.db)
-    tables = Tables.new($spec_env.db, DatabaseIsolation.isolated_tables($spec_env.db))
+    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, DbConfig.connection)
+    tables = Tables.new(DbConfig.connection, DatabaseIsolation.isolated_tables(DbConfig.connection))
     expect {
       isolation.cleanly { example.run }
     }.not_to change { tables.counts }

@@ -36,7 +36,6 @@ module TestConfig
 
     stacks_file = File.join(Paths::FIXTURES, "config/stacks.yml")
     VCAP::CloudController::Stack.configure(stacks_file)
-    VCAP::CloudController::Stack.populate
   end
 
   def self.defaults
@@ -70,11 +69,7 @@ module TestConfig
             },
         },
 
-        :db => {
-            :log_level => "debug",
-            :database => DbConfig.connection_string,
-            :pool_timeout => 10
-        }
+        :db => DbConfig.config
     )
 
     config_hash

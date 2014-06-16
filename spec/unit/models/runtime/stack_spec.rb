@@ -2,6 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Stack, type: :model do
+    let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
     it_behaves_like "a CloudController model", {
       :required_attributes        => [:name, :description],
       :unique_attributes          => :name,
@@ -16,10 +17,8 @@ module VCAP::CloudController
 
     describe ".configure" do
       context "with valid config" do
-        let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
-
         it "can load" do
-          described_class.configure(file)
+          Stack.configure(file)
         end
       end
 
@@ -31,47 +30,37 @@ module VCAP::CloudController
         }.each do |key, expected_error|
           it "requires #{key} (validates via '#{expected_error}')" do
             expect {
-              described_class.configure(file)
+              Stack.configure(file)
             }.to raise_error(Membrane::SchemaValidationError, /#{expected_error}/)
           end
-        end
-      end
-
-      describe "config/stacks.yml" do
-        let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
-
-        it "can load" do
-          described_class.configure(file)
         end
       end
     end
 
     describe ".populate" do
       context "when config was not set" do
-        before { described_class.configure(nil) }
+        before { Stack.configure(nil) }
 
         it "raises config not specified error" do
           expect {
-            described_class.default
-          }.to raise_error(described_class::MissingConfigFileError)
+            Stack.default
+          }.to raise_error(Stack::MissingConfigFileError)
         end
       end
 
       context "when config was set" do
-        let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
-
-        before { described_class.configure(file) }
+        before { Stack.configure(file) }
 
         context "when there are no stacks" do
           before { Stack.dataset.destroy }
 
           it "creates them all" do
-            described_class.populate
+            Stack.populate
 
-            cider = described_class.find(:name => "cider")
+            cider = Stack.find(:name => "cider")
             expect(cider.description).to eq("cider-description")
 
-            default_stack = described_class.find(:name => "default-stack-name")
+            default_stack = Stack.find(:name => "default-stack-name")
             expect(default_stack.description).to eq("default-stack-description")
           end
 
@@ -106,16 +95,15 @@ module VCAP::CloudController
     end
 
     describe ".default" do
-      let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
-      before { described_class.configure(file) }
+      before { Stack.configure(file) }
 
       context "when config was not set" do
-        before { described_class.configure(nil) }
+        before { Stack.configure(nil) }
 
         it "raises config not specified error" do
           expect {
-            described_class.default
-          }.to raise_error(described_class::MissingConfigFileError)
+            Stack.default
+          }.to raise_error(Stack::MissingConfigFileError)
         end
       end
 
@@ -126,15 +114,15 @@ module VCAP::CloudController
           before { Stack.make(:name => "default-stack-name") }
 
           it "returns found stack" do
-            described_class.default.name.should == "default-stack-name"
+            Stack.default.name.should == "default-stack-name"
           end
         end
 
         context "when stack is not found with default name" do
           it "raises MissingDefaultStack" do
             expect {
-              described_class.default
-            }.to raise_error(described_class::MissingDefaultStackError, /default-stack-name/)
+              Stack.default
+            }.to raise_error(Stack::MissingDefaultStackError, /default-stack-name/)
           end
         end
       end
