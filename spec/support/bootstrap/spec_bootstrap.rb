@@ -1,8 +1,8 @@
-require "bootstrap/test_config"
-require "bootstrap/table_recreator"
+require "support/bootstrap/test_config"
+require "support/bootstrap/table_recreator"
 
 module VCAP::CloudController
-  module SpecEnvironment
+  module SpecBootstrap
     def self.init
       ENV["CC_TEST"] = "true"
       FileUtils.mkdir_p(Paths::ARTIFACTS)

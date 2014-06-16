@@ -1,4 +1,4 @@
-require "bootstrap/fake_model_tables"
+require "support/bootstrap/fake_model_tables"
 
 class TableRecreator
   def initialize(db)

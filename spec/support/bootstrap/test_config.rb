@@ -1,4 +1,4 @@
-require "bootstrap/db_config"
+require "support/bootstrap/db_config"
 require "support/paths"
 
 module TestConfig
@@ -39,7 +39,7 @@ module TestConfig
   end
 
   def self.defaults
-    config_file = File.expand_path("../../config/cloud_controller.yml", File.dirname(__FILE__))
+    config_file = File.join(Paths::CONFIG, "cloud_controller.yml")
     config_hash = VCAP::CloudController::Config.from_file(config_file)
 
     config_hash.update(

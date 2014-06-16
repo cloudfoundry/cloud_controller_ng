@@ -24,9 +24,9 @@ require "posix/spawn"
 require "rspec_api_documentation"
 require "services"
 
-require "bootstrap/spec_environment"
+require "support/bootstrap/spec_bootstrap"
 
-VCAP::CloudController::SpecEnvironment.init
+VCAP::CloudController::SpecBootstrap.init
 
 Dir[File.expand_path("support/**/*.rb", File.dirname(__FILE__))].each { |file| require file }
 

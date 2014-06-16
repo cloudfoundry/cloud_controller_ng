@@ -45,7 +45,7 @@ end
   end
 
   task create: :pick do
-    require_relative "../../spec/bootstrap/db_config"
+    require_relative "../../spec/support/bootstrap/db_config"
 
     case ENV["DB"]
       when "postgres"
@@ -60,7 +60,7 @@ end
   end
 
   task drop: :pick do
-    require_relative "../../spec/bootstrap/db_config"
+    require_relative "../../spec/support/bootstrap/db_config"
 
     case ENV["DB"]
       when "postgres"
