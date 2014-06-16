@@ -7,7 +7,7 @@ resource "Services Plans", type: :api do
     VCAP::CloudController::ServicePlan.make(service_guid: service_guid)
   end
 
-  let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
+  let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let(:guid) { VCAP::CloudController::ServicePlan.first.guid }
   let(:service_guid) { VCAP::CloudController::Service.first.guid }
   authenticated_request

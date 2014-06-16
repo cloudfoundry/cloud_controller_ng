@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 resource "Service Instances", :type => :api do
   authenticated_request
-  let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
+  let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
   describe 'Listing all service instances' do

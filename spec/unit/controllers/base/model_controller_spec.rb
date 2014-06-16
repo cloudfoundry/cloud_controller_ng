@@ -90,7 +90,7 @@ module VCAP::CloudController
 
       context "for an admin" do
         let(:headers) do
-          headers_for(nil, admin_scope: true)
+          admin_headers
         end
 
         it "succeeds" do

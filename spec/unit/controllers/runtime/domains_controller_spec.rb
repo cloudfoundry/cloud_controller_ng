@@ -53,7 +53,6 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
           let(:enumeration_expectation_a) { [@obj_a, @shared_domain] }
-          let(:enumeration_expectation_b) { [@obj_b, @shared_domain] }
 
           include_examples "permission enumeration", "OrgManager",
             :name => 'domain',
@@ -65,7 +64,6 @@ module VCAP::CloudController
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
           let(:enumeration_expectation_a) { [@shared_domain] }
-          let(:enumeration_expectation_b) { [@shared_domain] }
 
           include_examples "permission enumeration", "OrgUser",
             :name => 'domain',
@@ -77,7 +75,6 @@ module VCAP::CloudController
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
           let(:enumeration_expectation_a) { [@shared_domain] }
-          let(:enumeration_expectation_b) { [@shared_domain] }
 
           include_examples "permission enumeration", "BillingManager",
             :name => 'domain',
@@ -89,7 +86,6 @@ module VCAP::CloudController
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
           let(:enumeration_expectation_a) { [@obj_a, @shared_domain] }
-          let(:enumeration_expectation_b) { [@obj_b, @shared_domain] }
 
           include_examples "permission enumeration", "Auditor",
             :name => 'domain',

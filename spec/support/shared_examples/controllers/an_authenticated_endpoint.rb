@@ -32,7 +32,7 @@ shared_examples "an admin only endpoint" do |opts|
   end
 
   it "succeeds for an admin" do
-    get opts[:path], {}, headers_for(nil, admin_scope: true)
+    get opts[:path], {}, admin_headers
     last_response.status.should == 200
   end
 end

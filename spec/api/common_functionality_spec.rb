@@ -25,7 +25,7 @@ module VCAP::CloudController
 end
 
 resource "Common Functionality", :type => :api do
-  let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)['HTTP_AUTHORIZATION'] }
+  let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
 
   authenticated_request
 

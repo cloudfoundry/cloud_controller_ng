@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "Users", type: :api do
-  let(:admin_auth_header) { headers_for(admin_user, admin_scope: true)["HTTP_AUTHORIZATION"] }
+  let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let!(:users) { 3.times { VCAP::CloudController::User.make } }
   let(:guid) { VCAP::CloudController::User.first.guid }
   let(:space) { VCAP::CloudController::Space.make }

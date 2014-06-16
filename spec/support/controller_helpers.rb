@@ -71,11 +71,11 @@ module ControllerHelpers
                                           :pkey => nil)
 
     scopes = opts[:scopes]
-    if scopes.nil?
-      scopes = opts[:admin_scope] ? %w[cloud_controller.admin] : %w[cloud_controller.read cloud_controller.write]
+    if scopes.nil? && user
+      scopes = user.admin? ? %w[cloud_controller.admin] : %w[cloud_controller.read cloud_controller.write]
     end
 
-    if user || opts[:admin_scope]
+    if user
       user_token = token_coder.encode(
         :user_id => user ? user.guid : (rand * 1_000_000_000).ceil,
         :email => opts[:email],
@@ -114,7 +114,7 @@ module ControllerHelpers
   end
 
   def admin_headers
-    @admin_headers ||= headers_for(admin_user, :admin_scope => true)
+    @admin_headers ||= headers_for(admin_user)
   end
 
   def resource_match_request(verb, path, matches, non_matches)

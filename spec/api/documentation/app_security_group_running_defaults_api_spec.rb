@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "App Security Group Running Defaults (experimental)", :type => :api do
-  let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
+  let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let!(:app_sec_group) { VCAP::CloudController::AppSecurityGroup.make }
   let!(:running_default_app_sec_group) { VCAP::CloudController::AppSecurityGroup.make(running_default: true) }
 

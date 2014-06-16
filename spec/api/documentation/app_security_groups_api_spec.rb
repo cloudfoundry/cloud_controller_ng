@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "App Security Groups (experimental)", :type => :api do
-  let(:admin_auth_header) { headers_for(admin_user, :admin_scope => true)["HTTP_AUTHORIZATION"] }
+  let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let(:guid) { VCAP::CloudController::AppSecurityGroup.first.guid }
   let!(:app_sec_groups) { 3.times { VCAP::CloudController::AppSecurityGroup.make } }
 

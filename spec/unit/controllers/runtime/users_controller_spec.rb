@@ -46,10 +46,10 @@ module VCAP::CloudController
       include_context "permissions"
       before do
         @obj_a = member_a
-        @obj_b = member_b
       end
 
       context 'normal user' do
+        before { @obj_b = member_b }
         let(:member_a) { @org_a_manager }
         let(:member_b) { @space_a_manager }
         include_examples "permission enumeration", "User",
@@ -59,14 +59,8 @@ module VCAP::CloudController
       end
 
       context 'admin user' do
-        let(:member_a) { @org_a_manager }
-        let(:member_b) { @space_a_manager }
+        let(:member_a) { @cf_admin }
         let(:enumeration_expectation_a) { User.order(:id).limit(50) }
-        let(:enumeration_expectation_b) { enumeration_expectation_a }
-
-        before do
-          VCAP::CloudController::SecurityContext.stub(:token).and_return({'scope' => ['cloud_controller.admin']})
-        end
 
         include_examples "permission enumeration", "Admin",
                          :name => 'user',
