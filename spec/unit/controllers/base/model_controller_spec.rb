@@ -173,65 +173,64 @@ module VCAP::CloudController
     end
 
     describe "#update" do
-      context "when the guid matches a record" do
-        let!(:model) { TestModel.make }
+      let!(:model) { TestModel.make }
 
-        it "returns not authorized if the user does not have access " do
-          put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "something"}), headers_for(user)
+      it "updates the data" do
+        expect(model.updated_at).to be_nil
 
-          expect(model.reload.unique_value).not_to eq("something")
-          expect(decoded_response["code"]).to eq(10003)
-          expect(decoded_response["description"]).to match(/not authorized/)
+        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "new value"}), admin_headers
+
+        expect(last_response.status).to eq(201)
+        model.reload
+        expect(model.updated_at).not_to be_nil
+        expect(model.unique_value).to eq("new value")
+        expect(decoded_response["entity"]["unique_value"]).to eq("new value")
+      end
+
+      it "returns the serialized updated object on success" do
+        RestController::ObjectRenderer.any_instance.
+          should_receive(:render_json).
+          with(TestModelsController, instance_of(TestModel), {}).
+          and_return("serialized json")
+
+        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({}), admin_headers
+
+        expect(last_response.body).to eq("serialized json")
+      end
+
+      it "returns not authorized if the user does not have access " do
+        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "something"}), headers_for(user)
+
+        expect(model.reload.unique_value).not_to eq("something")
+        expect(decoded_response["code"]).to eq(10003)
+        expect(decoded_response["description"]).to match(/not authorized/)
+      end
+
+      it "prevents other processes from updating the same row until the transaction finishes" do
+        TestModel.stub(:find).with(:guid => model.guid).and_return(model)
+        model.should_receive(:lock!).ordered
+        model.should_receive(:update_from_hash).ordered.and_call_original
+
+        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "something"}), admin_headers
+      end
+
+      it "calls the hooks in the right order" do
+        calls = []
+
+        TestModelsController.any_instance.should_receive(:before_update).with(model) do
+          calls << :before_update
+        end
+        TestModel.any_instance.should_receive(:update_from_hash) do
+          calls << :update_from_hash
+          model
+        end
+        TestModelsController.any_instance.should_receive(:after_update).with(instance_of(TestModel)) do
+          calls << :after_update
         end
 
-        it "prevents other processes from updating the same row until the transaction finishes" do
-          TestModel.stub(:find).with(:guid => model.guid).and_return(model)
-          model.should_receive(:lock!).ordered
-          model.should_receive(:update_from_hash).ordered.and_call_original
+        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "new value"}), admin_headers
 
-          put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "something"}), admin_headers
-        end
-
-        it "returns the serialized updated object if access is validated" do
-          RestController::ObjectRenderer.any_instance.
-            should_receive(:render_json).
-            with(TestModelsController, instance_of(TestModel), {}).
-            and_return("serialized json")
-
-          put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({}), admin_headers
-
-          expect(last_response.status).to eq(201)
-          expect(last_response.body).to eq("serialized json")
-        end
-
-        it "updates the data" do
-          expect(model.updated_at).to be_nil
-
-          put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "new value"}), admin_headers
-
-          model.reload
-          expect(model.updated_at).not_to be_nil
-          expect(model.unique_value).to eq("new value")
-        end
-
-        it "calls the hooks in the right order" do
-          calls = []
-
-          TestModelsController.any_instance.should_receive(:before_update).with(model) do
-            calls << :before_update
-          end
-          TestModel.any_instance.should_receive(:update_from_hash) do
-            calls << :update_from_hash
-            model
-          end
-          TestModelsController.any_instance.should_receive(:after_update).with(instance_of(TestModel)) do
-            calls << :after_update
-          end
-
-          put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "new value"}), admin_headers
-
-          expect(calls).to eq([:before_update, :update_from_hash, :after_update])
-        end
+        expect(calls).to eq([:before_update, :update_from_hash, :after_update])
       end
     end
 

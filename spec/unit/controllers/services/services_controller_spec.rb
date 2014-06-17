@@ -5,11 +5,6 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/services", model: Service
     include_examples "reading a valid object", path: "/v2/services", model: Service,
                      basic_attributes:               %w(label provider url description version bindable tags requires)
-    include_examples "creating and updating", path: "/v2/services",
-                     model:                         Service,
-                     required_attributes:           %w(label provider url description version),
-                     unique_attributes:             %w(label provider),
-                     extra_attributes:              { extra: -> { Sham.extra }, bindable: false, tags: ["relational"], requires: ["loggyness"] }
     include_examples "deleting a valid object", path: "/v2/services", model: Service,
                      one_to_many_collection_ids:      {
                        :service_plans => lambda { |service| ServicePlan.make(:service => service) },

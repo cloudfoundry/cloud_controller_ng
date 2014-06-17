@@ -5,11 +5,6 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/service_auth_tokens", model: ServiceAuthToken
     include_examples "reading a valid object", path: "/v2/service_auth_tokens", model: ServiceAuthToken, basic_attributes: %w(label provider)
     include_examples "deleting a valid object", path: "/v2/service_auth_tokens", model: ServiceAuthToken, one_to_many_collection_ids: {}
-    include_examples "creating and updating", path: "/v2/service_auth_tokens",
-                     model: ServiceAuthToken,
-                     required_attributes: %w(label provider token),
-                     unique_attributes: %w(label provider),
-                     extra_attributes: {token: ->{Sham.token}}
   end
 
   describe 'deprecation warning' do

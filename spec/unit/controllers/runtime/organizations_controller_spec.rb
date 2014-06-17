@@ -6,7 +6,6 @@ module VCAP::CloudController
     include_examples "querying objects", path: "/v2/organizations", model: Organization, queryable_attributes: %w(name status)
     include_examples "enumerating objects", path: "/v2/organizations", model: Organization
     include_examples "reading a valid object", path: "/v2/organizations", model: Organization, basic_attributes: %w(name)
-    include_examples "creating and updating", path: "/v2/organizations", model: Organization, required_attributes: %w(name), unique_attributes: %w(name)
     include_examples "deleting a valid object", path: "/v2/organizations", model: Organization,
     one_to_many_collection_ids: {
       :spaces => lambda { |org| Space.make(:organization => org) },

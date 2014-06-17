@@ -5,22 +5,6 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/routes", model: Route
     include_examples "reading a valid object", path: "/v2/routes", model: Route, basic_attributes: %w(host domain_guid space_guid)
     include_examples "deleting a valid object", path: "/v2/routes", model: Route, one_to_many_collection_ids: {}
-    include_examples "creating and updating", path: "/v2/routes", model: Route,
-                     required_attributes: %w(domain_guid space_guid),
-                     unique_attributes: %w(host domain_guid),
-                     extra_attributes: {host: -> { Sham.host }},
-                     create_attribute: lambda { |name, route|
-                       case name.to_sym
-                         when :space_guid
-                           route.space.guid
-                         when :domain_guid
-                           domain = PrivateDomain.make(owning_organization: route.space.organization,)
-                           domain.guid
-                         when :host
-                           Sham.host
-                       end
-                     },
-                     create_attribute_reset: lambda { @space = nil }
 
     describe "Permissions" do
       shared_examples "route permissions" do
