@@ -2,7 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServicePlansController, :services do
-    include_examples "enumerating objects", path: "/v2/service_plans", model: ServicePlan
     include_examples "reading a valid object", path: "/v2/service_plans", model: ServicePlan,
                      basic_attributes: %w(name free description service_guid extra unique_id)
 

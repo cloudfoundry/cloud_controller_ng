@@ -2,7 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceInstancesController, :services do
-    include_examples "enumerating objects", path: "/v2/service_instances", model: ManagedServiceInstance
     include_examples "reading a valid object", path: "/v2/service_instances", model: ManagedServiceInstance, basic_attributes: %w(name)
 
     describe "Permissions" do

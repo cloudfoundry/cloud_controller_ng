@@ -6,9 +6,6 @@ module VCAP::CloudController
       before do
         Domain.dataset.destroy # Seeded domains get in the way
       end
-
-      include_examples "enumerating objects", path: "/v2/domains", model: PrivateDomain
-      include_examples "enumerating objects", path: "/v2/domains", model: SharedDomain
     end
 
     include_examples "reading a valid object", path: "/v2/domains", model: PrivateDomain, basic_attributes: %w(name owning_organization_guid)

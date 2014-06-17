@@ -334,9 +334,9 @@ module VCAP::CloudController
     end
 
     describe "#enumerate" do
-      before do
-        TestModel.make
-      end
+      let!(:model1) { TestModel.make }
+      let!(:model2) { TestModel.make }
+      let!(:model3) { TestModel.make }
 
       it "paginates the dataset with query params" do
         RestController::PaginatedCollectionRenderer.any_instance
@@ -350,7 +350,31 @@ module VCAP::CloudController
 
         get "/v2/test_models", "", admin_headers
         expect(last_response.status).to eq(200)
-        expect(decoded_response["total_results"]).to eq(1)
+        expect(decoded_response["total_results"]).to eq(3)
+      end
+
+      it "returns the first page" do
+        get "/v2/test_models?results-per-page=2", "", admin_headers
+
+        expect(last_response.status).to eq(200)
+        expect(decoded_response["total_results"]).to eq(3)
+        expect(decoded_response).to have_key("prev_url")
+        expect(decoded_response["prev_url"]).to be_nil
+        expect(decoded_response["next_url"]).to include("page=2&results-per-page=2")
+        found_guids = decoded_response["resources"].collect {|resource| resource["metadata"]["guid"]}
+        expect(found_guids).to match_array([model1.guid, model2.guid])
+      end
+
+      it "returns other pages when requested" do
+        get "/v2/test_models?page=2&results-per-page=2", "", admin_headers
+
+        expect(last_response.status).to eq(200)
+        expect(decoded_response["total_results"]).to eq(3)
+        expect(decoded_response["prev_url"]).to include("page=1&results-per-page=2")
+        expect(decoded_response).to have_key("next_url")
+        expect(decoded_response["next_url"]).to be_nil
+        found_guids = decoded_response["resources"].collect {|resource| resource["metadata"]["guid"]}
+        expect(found_guids).to match_array([model3.guid])
       end
     end
 
@@ -445,7 +469,6 @@ module VCAP::CloudController
         let(:model) { TestModel.make }
         let(:associated_model1) { TestModelManyToMany.make }
         let(:associated_model2) { TestModelManyToMany.make }
-        let(:associated_model3) { TestModelManyToMany.make }
 
         describe "update" do
           it "allows associating nested models" do
@@ -503,31 +526,15 @@ module VCAP::CloudController
             before do
               model.add_test_model_many_to_many associated_model1
               model.add_test_model_many_to_many associated_model2
-              model.add_test_model_many_to_many associated_model3
             end
 
             it "returns collection response" do
-              get "/v2/test_models/#{model.guid}/test_model_many_to_manies?results-per-page=2", "", admin_headers
+              get "/v2/test_models/#{model.guid}/test_model_many_to_manies", "", admin_headers
 
               expect(last_response.status).to eq(200)
-              expect(decoded_response["total_results"]).to eq(3)
-              expect(decoded_response).to have_key("prev_url")
-              expect(decoded_response["prev_url"]).to be_nil
-              expect(decoded_response["next_url"]).to include("page=2&results-per-page=2")
+              expect(decoded_response["total_results"]).to eq(2)
               found_guids = decoded_response["resources"].collect {|resource| resource["metadata"]["guid"]}
               expect(found_guids).to match_array([associated_model1.guid, associated_model2.guid])
-            end
-
-            it "returns other pages when requested" do
-              get "/v2/test_models/#{model.guid}/test_model_many_to_manies?page=2&results-per-page=2", "", admin_headers
-
-              expect(last_response.status).to eq(200)
-              expect(decoded_response["total_results"]).to eq(3)
-              expect(decoded_response["prev_url"]).to include("page=1&results-per-page=2")
-              expect(decoded_response).to have_key("next_url")
-              expect(decoded_response["next_url"]).to be_nil
-              found_guids = decoded_response["resources"].collect {|resource| resource["metadata"]["guid"]}
-              expect(found_guids).to match_array([associated_model3.guid])
             end
           end
 

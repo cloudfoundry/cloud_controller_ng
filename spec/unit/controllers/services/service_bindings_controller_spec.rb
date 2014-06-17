@@ -23,10 +23,6 @@ module VCAP::CloudController
       Service.any_instance.stub(:client).and_return(broker_client)
     end
 
-    include_examples "enumerating objects",
-      path: "/v2/service_bindings",
-      model: ServiceBinding
-
     include_examples "reading a valid object",
       path: "/v2/service_bindings",
       model: ServiceBinding,
