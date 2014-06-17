@@ -297,4 +297,7 @@ module VCAP::CloudController
   TestModel.blueprint do
     required_attr true
   end
+
+  TestModelMany.blueprint do
+  end
 end

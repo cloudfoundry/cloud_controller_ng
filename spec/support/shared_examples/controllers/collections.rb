@@ -1,4 +1,4 @@
-shared_context "collections" do |opts, attr, make|
+shared_context "collections" do |opts, attr|
   let(:obj) do
     opts[:model].make
   end
@@ -22,16 +22,6 @@ shared_context "collections" do |opts, attr, make|
   before do
     @opts = opts
     @attr = attr
-  end
-
-  def do_write(verb, children, expected_result, expected_children)
-    body = Yajl::Encoder.encode({"#{child_name}_guids" => children.map { |c| c[:guid] }})
-    send(verb, "#{@opts[:path]}/#{obj.guid}", body, headers)
-    last_response.status.should == expected_result
-
-    obj.refresh
-    obj.send(get_method).length.should == expected_children.length
-    expected_children.each { |c| obj.send(get_method).should include(c.refresh) }
   end
 end
 
@@ -124,72 +114,6 @@ end
 
 shared_examples "collection operations" do |opts|
   describe "collections" do
-    describe "modifying collections" do
-      describe "one_to_many" do
-        opts[:one_to_many_collection_ids].each do |attr, make|
-          describe "#{attr}" do
-            include_context "collections", opts, attr, make
-            before do
-              @child1 = make.call(obj)
-            end
-
-            describe "PUT #{opts[:path]}/:guid with #{attr} in the request body" do
-              it "should return 200" do
-                do_write(:put, [@child1], 201, [@child1])
-              end
-            end
-          end
-        end
-      end
-
-      describe "many_to_many" do
-        opts[:many_to_many_collection_ids].each do |attr, make|
-          describe "#{attr}" do
-            include_context "collections", opts, attr, make
-            child_name = attr.to_s.chomp("_guids")
-            path = "#{opts[:path]}/:guid"
-
-            before do
-              @child1 = make.call(obj)
-              @child2 = make.call(obj)
-              @child3 = make.call(obj)
-            end
-
-            describe "PUT #{path} with only #{attr} in body" do
-              it "[:valid_id] should add a #{attr.to_s.singularize}" do
-                do_write(:put, [@child1], 201, [@child1])
-              end
-
-              it "[:valid_id1, :valid_id2] should add multiple #{attr}" do
-                do_write(:put, [@child1, @child2], 201, [@child1, @child2])
-              end
-
-              it "[:valid_id1, :valid_id2] should replace existing #{attr}" do
-                obj.send(add_method, @child1)
-                obj.send(get_method).should include(@child1)
-                do_write(:put, [@child2, @child3], 201, [@child2, @child3])
-                obj.send(get_method).should_not include(@child1)
-              end
-
-              it "[] should remove all #{child_name}s" do
-                obj.send(add_method, @child1)
-                obj.send(get_method).should include(@child1)
-                do_write(:put, [], 201, [])
-                obj.send(get_method).should_not include(@child1)
-              end
-
-              it "[:invalid_id] should return 400" do
-                obj.send(add_method, @child1)
-                obj.send(get_method).should include(@child1)
-                do_write(:put, [], 201, [])
-                obj.send(get_method).should_not include(@child1)
-              end
-            end
-          end
-        end
-      end
-    end
-
     describe "reading collections" do
       describe "many_to_many, one_to_many" do
         to_many_attrs = opts[:many_to_many_collection_ids].merge(opts[:one_to_many_collection_ids])
@@ -199,7 +123,7 @@ shared_examples "collection operations" do |opts|
           [nil, 0, 1].each do |inline_relations_depth|
             desc = ControllerHelpers.description_for_inline_depth(inline_relations_depth)
             describe "GET #{path}#{desc}" do
-              include_context "collections", opts, attr, make
+              include_context "collections", opts, attr
               include_context "inlined_relations_context", opts, attr, make, inline_relations_depth
               include_examples "inlined_relations", attr, inline_relations_depth
               include_examples "get to_many attr url", opts, attr, make
@@ -211,7 +135,7 @@ shared_examples "collection operations" do |opts|
             pagination = 2
             desc = ControllerHelpers.description_for_inline_depth(depth, pagination)
             describe "GET #{path}#{desc}" do
-              include_context "collections", opts, attr, make
+              include_context "collections", opts, attr
 
               let(:query_params) { query_params_for_inline_depth(depth, pagination) }
 
@@ -288,7 +212,7 @@ shared_examples "collection operations" do |opts|
           [nil, 0, 1].each do |inline_relations_depth|
             desc = ControllerHelpers.description_for_inline_depth(inline_relations_depth)
             describe "GET #{path}#{desc}" do
-              include_context "collections", opts, attr, make
+              include_context "collections", opts, attr
 
               before do
                 obj.send("#{attr}=", make.call(obj)) unless obj.send(attr)

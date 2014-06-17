@@ -6,6 +6,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :required_attr, TrueClass
       attribute :unique_value, String
+      to_many :test_model_manies
     end
     define_messages
     define_routes
@@ -17,6 +18,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       Errors::ApiError.new_from_details("TestModelValidation", attributes["unique_value"])
     end
+  end
+
+  class TestModelManiesController < RestController::ModelController
   end
 
   describe RestController::ModelController do
@@ -419,6 +423,51 @@ module VCAP::CloudController
             expect(last_response.status).to eq 401
             expect(decoded_response["code"]).to eq 1000
             decoded_response["description"].should match(/Invalid Auth Token/)
+          end
+        end
+      end
+    end
+
+    describe "associated collections" do
+      let(:model) { TestModel.make }
+      describe "to_many" do
+        let(:associated_model1) { TestModelMany.make }
+        let(:associated_model2) { TestModelMany.make }
+
+        describe "update" do
+          it "allows associating nested models" do
+            put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_guids: [associated_model1.guid, associated_model2.guid]}), admin_headers
+            expect(last_response.status).to eq(201)
+            model.reload
+            expect(model.test_model_manies).to include(associated_model1)
+            expect(model.test_model_manies).to include(associated_model2)
+          end
+
+          context "with existing models in the association" do
+            before { model.add_test_model_many associated_model1 }
+
+            it "replaces existing associated models" do
+              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_guids: [associated_model2.guid]}), admin_headers
+              expect(last_response.status).to eq(201)
+              model.reload
+              expect(model.test_model_manies).not_to include(associated_model1)
+              expect(model.test_model_manies).to include(associated_model2)
+            end
+
+            it "removes associated models when empty array is provided" do
+              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_guids: []}), admin_headers
+              expect(last_response.status).to eq(201)
+              model.reload
+              expect(model.test_model_manies).not_to include(associated_model1)
+            end
+
+            it "ignores invalid guids" do
+              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_guids: [associated_model2.guid, 'abcd']}), admin_headers
+              expect(last_response.status).to eq(201)
+              model.reload
+              expect(model.test_model_manies.length).to eq(1)
+              expect(model.test_model_manies).to include(associated_model2)
+            end
           end
         end
       end

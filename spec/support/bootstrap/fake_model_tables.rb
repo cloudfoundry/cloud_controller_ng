@@ -33,6 +33,20 @@ class FakeModelTables
       Integer :test_model_id
       foreign_key [:test_model_id], :test_models, :name => :fk_test_model_id_nullify_deps
     end
+
+    db.create_table :test_model_manies do
+      primary_key :id
+      String :guid
+      String :value
+    end
+
+    db.create_table :test_model_manies_test_models do
+      primary_key :id
+      Integer :test_model_id
+      Integer :test_model_many_id
+      foreign_key [:test_model_id], :test_models, :name => :fk_tmmtm_tmi
+      foreign_key [:test_model_many_id], :test_model_manies, :name => :fk_tmmtm_tmmi
+    end
   end
 
   def tables_for_vcap_relations_spec
