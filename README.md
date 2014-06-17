@@ -89,10 +89,7 @@ Travis currently runs rubocop as part of the CI process.
 
 ## API documentation
 
-To genenerate the API documentation
-
-    bundle exec rake ci:spec:api
-    open doc/api/index.html
+API documentation for the latest build of master can be found here: http://apidocs.cloudfoundry.org
 
 ## Logs
 
