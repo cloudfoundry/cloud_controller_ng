@@ -9,6 +9,9 @@ module VCAP::CloudController
       to_many :test_model_many_to_ones
       to_many :test_model_many_to_manies
     end
+
+    query_parameters :unique_value
+
     define_messages
     define_routes
 
@@ -375,6 +378,18 @@ module VCAP::CloudController
         expect(decoded_response["next_url"]).to be_nil
         found_guids = decoded_response["resources"].collect {|resource| resource["metadata"]["guid"]}
         expect(found_guids).to match_array([model3.guid])
+      end
+
+      describe "using query parameters" do
+        it "returns matching results" do
+          found_model = TestModel.make(unique_value: 'value1')
+          TestModel.make(unique_value: 'value2')
+
+          get "/v2/test_models?q=unique_value:value1", "", admin_headers
+
+          expect(decoded_response["total_results"]).to eq(1)
+          expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(found_model.guid)
+        end
       end
     end
 
