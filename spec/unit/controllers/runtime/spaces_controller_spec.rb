@@ -2,7 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::SpacesController do
-    it_behaves_like "an authenticated endpoint", path: "/v2/spaces"
     include_examples "querying objects", path: "/v2/spaces", model: Space, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/spaces", model: Space
     include_examples "reading a valid object", path: "/v2/spaces", model: Space, basic_attributes: %w(name organization_guid)

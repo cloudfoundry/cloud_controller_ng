@@ -2,7 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DomainsController do
-    it_behaves_like "an authenticated endpoint", path: "/v2/domains"
     context "without seeded domains" do
       before do
         Domain.dataset.destroy # Seeded domains get in the way

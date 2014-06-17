@@ -23,9 +23,6 @@ module VCAP::CloudController
       Service.any_instance.stub(:client).and_return(broker_client)
     end
 
-    it_behaves_like "an authenticated endpoint",
-      path: "/v2/service_bindings"
-
     include_examples "enumerating objects",
       path: "/v2/service_bindings",
       model: ServiceBinding
