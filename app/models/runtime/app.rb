@@ -1,5 +1,6 @@
 require "cloud_controller/app_observer"
 require "cloud_controller/database_uri_generator"
+require "cloud_controller/undo_app_changes"
 require "cloud_controller/errors/application_missing"
 require "cloud_controller/errors/invalid_route_relation"
 require "repositories/runtime/app_usage_event_repository"
@@ -488,7 +489,7 @@ module VCAP::CloudController
       begin
         AppObserver.updated(self)
       rescue Errors::ApiError => e
-        undo_changes(previous_changes)
+        UndoAppChanges.new(self).undo(previous_changes)
         raise e
       end
     end
@@ -571,15 +572,6 @@ module VCAP::CloudController
       return true if previously_started != started?
       return true if started? && footprint_changed?
       false
-    end
-
-    def undo_changes(changes)
-      attrs = changes.each_with_object({}) { |(key, change), hash| hash[key] = change[0] }
-      attrs.delete(:updated_at)
-      db.transaction(savepoint: true) do
-        lock!
-        update(attrs)
-      end
     end
 
     def footprint_changed?
