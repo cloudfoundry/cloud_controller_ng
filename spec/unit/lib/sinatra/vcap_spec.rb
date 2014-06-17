@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Sinatra::VCAP' do
+describe 'Sinatra::VCAP', type: :controller do
   class StructuredErrorWithResponseCode < StructuredError
     def initialize
       super('boring message', 'the source')
@@ -129,12 +129,13 @@ describe 'Sinatra::VCAP' do
 
     it 'should return a 404' do
       last_response.status.should == 404
+      expect(decoded_response["code"]).to eq(10000)
+      expect(decoded_response["description"]).to match(/Unknown request/)
     end
 
     include_examples 'vcap sinatra varz stats', 404
     include_examples 'vcap request id'
     include_examples 'http header content type'
-    it_behaves_like 'a vcap rest error response', /Unknown request/
   end
 
   describe 'accessing a route that throws a low level exception' do
@@ -145,6 +146,11 @@ describe 'Sinatra::VCAP' do
 
     it 'should return 500' do
       last_response.status.should == 500
+      expect(decoded_response).to eq({
+                                       'code' => 10001,
+                                       'error_code' => 'UnknownError',
+                                       'description' => 'An unknown error occurred.'
+                                     })
     end
 
     it 'should add an entry to varz recent errors' do
@@ -158,16 +164,6 @@ describe 'Sinatra::VCAP' do
     include_examples 'vcap sinatra varz stats', 500
     include_examples 'vcap request id'
     include_examples 'http header content type'
-    it_behaves_like 'a vcap rest error response'
-
-    it 'returns an error structure' do
-      decoded_response = Yajl::Parser.parse(last_response.body)
-      expect(decoded_response).to eq({
-                                       'code' => 10001,
-                                       'error_code' => 'UnknownError',
-                                       'description' => 'An unknown error occurred.'
-                                     })
-    end
   end
 
   describe 'accessing a route that throws a vcap error' do

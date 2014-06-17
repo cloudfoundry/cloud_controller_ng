@@ -115,56 +115,39 @@ module VCAP::CloudController
         end
 
         context "with an invalid vendor" do
-          before do
-            @req[:vendor] = "invalid"
-
-            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
-          end
-
           it "should return bad request" do
+            @req[:vendor] = "invalid"
+            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
+
             last_response.status.should == 400
-          end
-
-          it "should not add a service instance " do
             ManagedServiceInstance.count.should == @num_instances_before
+            expect(decoded_response["code"]).to eq(120001)
+            expect(decoded_response["description"]).to match(/service is invalid: invalid-9.0/)
           end
-
-          it_behaves_like "a vcap rest error response", /service is invalid: invalid-9.0/
         end
 
         context "with an invalid version" do
-          before do
-            @req[:version] = "invalid"
-
-            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
-          end
-
           it "should return bad request" do
+            @req[:version] = "invalid"
+            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
+
             last_response.status.should == 400
-          end
-
-          it "should not add a service instance " do
             ManagedServiceInstance.count.should == @num_instances_before
+            expect(decoded_response["code"]).to eq(120001)
+            expect(decoded_response["description"]).to match(/service is invalid: postgres-invalid/)
           end
-
-          it_behaves_like "a vcap rest error response", /service is invalid: postgres-invalid/
         end
 
         context "with a duplicate name" do
-          before do
+          it "should return bad request" do
             @req[:name] = "duplicate"
             post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
-          end
 
-          it "should return bad request" do
             last_response.status.should == 400
-          end
-
-          it "should not add a service instance " do
             ManagedServiceInstance.count.should == @num_instances_before
+            expect(decoded_response["code"]).to eq(60002)
+            expect(decoded_response["description"]).to match(/service instance name is taken: duplicate/)
           end
-
-          it_behaves_like "a vcap rest error response", /service instance name is taken: duplicate/
         end
       end
 
@@ -174,18 +157,13 @@ module VCAP::CloudController
         end
 
         describe "with a valid name" do
-          before do
-            get "/services/#{@svc.name}", {}, headers_for(user)
-          end
-
-          it "should return success" do
-            last_response.status.should == 200
-          end
-
           it "should return the service info" do
+            get "/services/#{@svc.name}", {}, headers_for(user)
+
             plan = @svc.service_plan
             service = plan.service
 
+            last_response.status.should == 200
             decoded_response["name"].should == @svc.name
             decoded_response["vendor"].should == service.label
             decoded_response["provider"].should == service.provider
@@ -195,15 +173,13 @@ module VCAP::CloudController
         end
 
         describe "with an invalid name" do
-          before do
-            delete "/services/invalid_name", {}, headers_for(user)
-          end
-
           it "should return not found" do
-            last_response.status.should == 404
-          end
+            get "/services/invalid_name", {}, headers_for(user)
 
-          it_behaves_like "a vcap rest error response", /service instance could not be found: invalid_name/
+            last_response.status.should == 404
+            expect(decoded_response["code"]).to eq(60004)
+            expect(decoded_response["description"]).to match(/service instance could not be found: invalid_name/)
+          end
         end
       end
 
@@ -215,29 +191,22 @@ module VCAP::CloudController
         end
 
         describe "with a valid name" do
-          before do
-            delete "/services/#{@svc.name}", {}, headers_for(user)
-          end
-
-          it "should return success" do
-            last_response.status.should == 200
-          end
-
           it "should reduce the services count by 1" do
+            delete "/services/#{@svc.name}", {}, headers_for(user)
+
+            last_response.status.should == 200
             ManagedServiceInstance.count.should == @num_instances_before - 1
           end
         end
 
         describe "with an invalid name" do
-          before do
-            delete "/services/invalid_name", {}, headers_for(user)
-          end
-
           it "should return not found" do
-            last_response.status.should == 404
-          end
+            delete "/services/invalid_name", {}, headers_for(user)
 
-          it_behaves_like "a vcap rest error response", /service instance could not be found: invalid_name/
+            last_response.status.should == 404
+            expect(decoded_response["code"]).to eq(60004)
+            expect(decoded_response["description"]).to match(/service instance could not be found: invalid_name/)
+          end
         end
       end
     end

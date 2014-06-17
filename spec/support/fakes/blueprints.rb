@@ -1,5 +1,6 @@
 require "securerandom"
 require_relative "app_factory"
+require_relative "../test_models"
 
 Sham.define do
   email               { |index| "email-#{index}@somedomain.com" }
@@ -291,5 +292,9 @@ module VCAP::CloudController
     name { Sham.name }
     rules { "[{\"protocol\":\"udp\",\"port\":\"8080-9090\",\"destination\":\"198.41.191.47/1\"}]" }
     staging_default { false }
+  end
+
+  TestModel.blueprint do
+    required_attr true
   end
 end

@@ -5,7 +5,6 @@ module VCAP::CloudController
     it_behaves_like "an authenticated endpoint", path: "/v2/service_instances"
     include_examples "enumerating objects", path: "/v2/service_instances", model: ManagedServiceInstance
     include_examples "reading a valid object", path: "/v2/service_instances", model: ManagedServiceInstance, basic_attributes: %w(name)
-    include_examples "operations on an invalid object", path: "/v2/service_instances"
     include_examples "creating and updating",
       path: "/v2/service_instances",
       model: ManagedServiceInstance,

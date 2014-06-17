@@ -35,9 +35,6 @@ module VCAP::CloudController
       model: ServiceBinding,
       basic_attributes: %w(app_guid service_instance_guid)
 
-    include_examples "operations on an invalid object",
-      path: "/v2/service_bindings"
-
     include_examples "creating and updating",
       path: "/v2/service_bindings",
       model: ServiceBinding,

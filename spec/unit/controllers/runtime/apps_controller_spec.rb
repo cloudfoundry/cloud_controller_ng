@@ -7,7 +7,6 @@ module VCAP::CloudController
     include_examples "querying objects", path: "/v2/apps", model: App, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/apps", model: App
     include_examples "reading a valid object", path: "/v2/apps", model: App, basic_attributes: %w(name space_guid stack_guid)
-    include_examples "operations on an invalid object", path: "/v2/apps"
     include_examples "creating and updating", path: "/v2/apps", model: App,
                      required_attributes: %w(name space_guid),
                      unique_attributes: %w(name space_guid)

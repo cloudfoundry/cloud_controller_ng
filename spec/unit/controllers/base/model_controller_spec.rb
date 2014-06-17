@@ -3,8 +3,20 @@ require "stringio"
 
 module VCAP::CloudController
   class TestModelsController < RestController::ModelController
+    define_attributes do
+      attribute :required_attr, TrueClass
+      attribute :unique_value, String
+    end
     define_messages
     define_routes
+
+    def delete(guid)
+      do_delete(find_guid_and_validate_access(:delete, guid))
+    end
+
+    def self.translate_validation_exception(e, attributes)
+      Errors::ApiError.new_from_details("TestModelValidation", attributes["unique_value"])
+    end
   end
 
   describe RestController::ModelController do
@@ -38,21 +50,6 @@ module VCAP::CloudController
     describe "common model controller behavior" do
       before do
         get "/v2/test_models", {}, headers
-      end
-
-      context "with invalid auth header" do
-        let(:headers) do
-          headers = headers_for(VCAP::CloudController::User.make)
-          headers["HTTP_AUTHORIZATION"] += "EXTRA STUFF"
-          headers
-        end
-
-        it "returns an error" do
-          expect(last_response.status).to eq 401
-          expect(decoded_response["code"]).to eq 1000
-        end
-
-        it_behaves_like "a vcap rest error response", /Invalid Auth Token/
       end
 
       context "for an existing user" do
@@ -112,17 +109,29 @@ module VCAP::CloudController
     describe "#create" do
       it "raises InvalidRequest when a CreateMessage cannot be extracted from the request body" do
         TestModelsController::CreateMessage.any_instance.stub(:extract).and_return(nil)
-        expect { controller.create }.to raise_error(VCAP::Errors::ApiError, /The request is invalid/)
+        post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), headers_for(user)
+        expect(decoded_response['code']).to eq(10004)
+        expect(decoded_response['description']).to match(/request is invalid/)
       end
 
       it "calls the hooks in the right order" do
         TestModelsController::CreateMessage.any_instance.stub(:extract).and_return({extracted: "json"})
+        step = 0
 
-        controller.should_receive(:before_create).with(no_args).ordered
-        TestModel.should_receive(:create_from_hash).with({extracted: "json"}).ordered.and_call_original
-        controller.should_receive(:after_create).with(instance_of(TestModel)).ordered
+        TestModelsController.any_instance.should_receive(:before_create).with(no_args) do
+          expect(step).to eq(0)
+          step += 1
+        end
+        TestModel.should_receive(:create_from_hash).with({extracted: "json"}) {
+          expect(step).to eq(1)
+          step += 1
+          TestModel.make
+        }
+        TestModelsController.any_instance.should_receive(:after_create).with(instance_of(TestModel)) do
+          expect(step).to eq(2)
+        end
 
-        expect { controller.create }.to change { TestModel.count }.by(1)
+        post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), headers_for(user)
       end
 
       context "when the user's token is missing the required scope" do
@@ -134,63 +143,40 @@ module VCAP::CloudController
         end
 
         it 'responds with a 403 Insufficient Scope' do
-          expect { controller.create }.to raise_error(VCAP::Errors::ApiError, /lacks the necessary scopes/)
+          post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), headers_for(user)
+          expect(decoded_response["code"]).to eq(10007)
+          expect(decoded_response["description"]).to match(/lacks the necessary scopes/)
         end
       end
 
       context "when validate access fails" do
         before do
-          controller.stub(:validate_access).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
-
-          controller.should_receive(:before_create).with(no_args).ordered
-          TestModel.should_receive(:create_from_hash).ordered.and_call_original
-          controller.should_not_receive(:after_create)
-        end
-
-        it "raises the validation failure" do
-          expect { controller.create }.to raise_error(VCAP::Errors::ApiError, /not authorized/)
+          TestModelsController.any_instance.stub(:validate_access).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
         end
 
         it "does not persist the model" do
-          before_count = TestModel.count
-          begin
-            controller.create
-          rescue VCAP::Errors::ApiError
-          end
-          after_count = TestModel.count
-          expect(after_count).to eq(before_count)
+          expect {
+            post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), headers_for(user)
+          }.to_not change { TestModel.count }
+
+          expect(decoded_response["code"]).to eq(10003)
+          expect(decoded_response["description"]).to match(/not authorized/)
         end
       end
 
       it "returns the right values on a successful create" do
-        result = controller.create
+        post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), headers_for(user)
         model_instance = TestModel.first
-        expect(model_instance.guid).not_to be_nil
-
         url = "/v2/test_models/#{model_instance.guid}"
 
-        expect(result[0]).to eq(201)
-        expect(result[1]).to eq({"Location" => url})
-      end
-
-      it "should call the serialization instance asssociated with controller to generate response data" do
-        object_renderer.
-            should_receive(:render_json).
-            with(TestModelsController, instance_of(TestModel), {}).
-            and_return("serialized json")
-
-        result = controller.create
-        expect(result[2]).to eq("serialized json")
+        expect(last_response.status).to eq(201)
+        expect(decoded_response["metadata"]["url"]).to eq(url)
       end
     end
 
     describe "#read" do
       context "when the guid matches a record" do
-        let!(:model) do
-          instance = TestModel.new
-          instance.save
-          instance
-        end
+        let!(:model) { TestModel.make }
 
         it "raises if validate_access fails" do
           controller.stub(:validate_access).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
@@ -220,11 +206,7 @@ module VCAP::CloudController
 
     describe "#update" do
       context "when the guid matches a record" do
-        let!(:model) do
-          instance = TestModel.new
-          instance.save
-          instance
-        end
+        let!(:model) { TestModel.make }
 
         let(:request_body) do
           StringIO.new({:state => "STOPPED"}.to_json)
@@ -286,16 +268,10 @@ module VCAP::CloudController
     end
 
     describe "#do_delete" do
-      let!(:model) { TestModel.create }
+      let!(:model) { TestModel.make }
 
       shared_examples "tests with associations" do
         before do
-          TestModel.one_to_many :test_model_destroy_deps
-          TestModel.one_to_many :test_model_nullify_deps
-
-          TestModel.add_association_dependencies(:test_model_destroy_deps => :destroy,
-                                                 :test_model_nullify_deps => :nullify)
-
           model.add_test_model_destroy_dep TestModelDestroyDep.create
           model.add_test_model_nullify_dep test_model_nullify_dep
         end
@@ -431,7 +407,7 @@ module VCAP::CloudController
     end
 
     describe "#find_guid_and_validate_access" do
-      let!(:model) { TestModel.create }
+      let!(:model) { TestModel.make }
 
       context "when a model exists" do
         context "and a find_model is supplied" do
@@ -493,6 +469,92 @@ module VCAP::CloudController
             expect {
               controller.find_guid_and_validate_access(:read, "bogus_guid")
             }.to raise_error(Errors::ApiError, /could not be found/)
+          end
+        end
+      end
+    end
+
+    describe "error handling" do
+      describe "404" do
+        before do
+          VCAP::Errors::Details::HARD_CODED_DETAILS["TestModelNotFound"] = {
+            'code' => 999999999,
+            'http_code' => 404,
+            'message' => "Test Model Not Found",
+          }
+        end
+
+        it "returns not found for reads" do
+          get "/v2/test_models/99999", {}, headers_for(user)
+          expect(last_response.status).to eq(404)
+          decoded_response["code"].should eq 999999999
+          decoded_response["description"].should match(/Test Model Not Found/)
+        end
+
+        it "returns not found for updates" do
+          put "/v2/test_models/99999", {}, headers_for(user)
+          expect(last_response.status).to eq(404)
+          decoded_response["code"].should eq 999999999
+          decoded_response["description"].should match(/Test Model Not Found/)
+        end
+
+        it "returns not found for deletes" do
+          delete "/v2/test_models/99999", {}, headers_for(user)
+          expect(last_response.status).to eq(404)
+          decoded_response["code"].should eq 999999999
+          decoded_response["description"].should match(/Test Model Not Found/)
+        end
+      end
+
+      describe "model errors" do
+        before do
+          VCAP::Errors::Details::HARD_CODED_DETAILS["TestModelValidation"] = {
+            'code' => 999999998,
+            'http_code' => 400,
+            'message' => "Validation Error",
+          }
+        end
+
+        it "returns 400 error for missing attributes; returns a request-id and no location" do
+          post "/v2/test_models", "{}", headers_for(user)
+          expect(last_response.status).to eq(400)
+          decoded_response["code"].should eq 1001
+          decoded_response["description"].should match(/invalid/)
+          last_response.location.should be_nil
+          last_response.headers["X-VCAP-Request-ID"].should_not be_nil
+        end
+
+        it "returns 400 error when validation fails on create" do
+          TestModel.make(unique_value: 'unique')
+          post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: 'unique'}), headers_for(user)
+          expect(last_response.status).to eq(400)
+          decoded_response["code"].should eq 999999998
+          decoded_response["description"].should match(/Validation Error/)
+        end
+
+        it "returns 400 error when validation fails on update" do
+          TestModel.make(unique_value: 'unique')
+          test_model = TestModel.make(unique_value: 'not-unique')
+          put "/v2/test_models/#{test_model.guid}", Yajl::Encoder.encode({unique_value: 'unique'}), headers_for(user)
+          expect(last_response.status).to eq(400)
+          decoded_response["code"].should eq 999999998
+          decoded_response["description"].should match(/Validation Error/)
+        end
+      end
+
+      describe "auth errors" do
+        context "with invalid auth header" do
+          let(:headers) do
+            headers = headers_for(VCAP::CloudController::User.make)
+            headers["HTTP_AUTHORIZATION"] += "EXTRA STUFF"
+            headers
+          end
+
+          it "returns an error" do
+            get "/v2/test_models", {}, headers
+            expect(last_response.status).to eq 401
+            expect(decoded_response["code"]).to eq 1000
+            decoded_response["description"].should match(/Invalid Auth Token/)
           end
         end
       end

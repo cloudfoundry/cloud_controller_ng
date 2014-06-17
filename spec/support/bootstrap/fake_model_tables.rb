@@ -14,7 +14,8 @@ class FakeModelTables
     db.create_table :test_models do
       primary_key :id
       String :guid
-      String :value
+      String :unique_value
+      TrueClass :required_attr, null: false
       Date :created_at
       Date :updated_at
     end

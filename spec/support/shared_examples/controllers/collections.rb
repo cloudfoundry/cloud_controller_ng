@@ -155,18 +155,6 @@ shared_examples "collection operations" do |opts|
               @child3 = make.call(obj)
             end
 
-            describe "POST #{path} with only #{attr} in the request body" do
-              before do
-                do_write(:post, [@child1], 404, [])
-              end
-
-              it "should return 404" do
-                last_response.status.should == 404
-              end
-
-              it_behaves_like "a vcap rest error response"
-            end
-
             describe "PUT #{path} with only #{attr} in body" do
               it "[:valid_id] should add a #{attr.to_s.singularize}" do
                 do_write(:put, [@child1], 201, [@child1])

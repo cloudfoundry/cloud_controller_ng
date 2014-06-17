@@ -5,7 +5,6 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: "/v2/services", model: Service
     include_examples "reading a valid object", path: "/v2/services", model: Service,
                      basic_attributes:               %w(label provider url description version bindable tags requires)
-    include_examples "operations on an invalid object", path: "/v2/services"
     include_examples "creating and updating", path: "/v2/services",
                      model:                         Service,
                      required_attributes:           %w(label provider url description version),
@@ -445,26 +444,6 @@ module VCAP::CloudController
             expect(decoded_response.fetch('description')).to eql('The service is invalid: Service ids must be unique')
           end
         end
-      end
-
-      context 'when providing an invalid url attribute' do
-        before do
-          put "/v2/services/#{service.guid}", Yajl::Encoder.encode({ url: 'banana' }), json_headers(admin_headers)
-        end
-
-        it "should return a 400" do
-          last_response.status.should == 400
-        end
-
-        it "should not return a location header" do
-          last_response.location.should be_nil
-        end
-
-        it "should return the request guid in the header" do
-          last_response.headers["X-VCAP-Request-ID"].should_not be_nil
-        end
-
-        it_behaves_like "a vcap rest error response", /must be a valid URL/
       end
     end
 

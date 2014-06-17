@@ -50,32 +50,6 @@ shared_examples "updating" do |opts|
           end
         end
       end
-
-      #
-      # make sure we get failures if all of the unique attributes are the
-      # same
-      #
-      dup_attrs = opts.fetch(:unique_attributes, []).dup
-      dup_attrs = dup_attrs - ["id"]
-      unless dup_attrs.empty?
-        desc = dup_attrs.map { |v| ":#{v}" }.join(", ")
-        desc = "[#{desc}]" if opts[:unique_attributes].length > 1
-        context "with duplicate #{desc}" do
-          before do
-            obj = opts[:model].make creation_opts
-            obj.should be_valid
-
-            dup_obj = opts[:model].make
-            put "#{opts[:path]}/#{dup_obj.guid}", Yajl::Encoder.encode(creation_opts), json_headers(admin_headers)
-          end
-
-          it "should return 400" do
-            last_response.status.should == 400
-          end
-
-          it_behaves_like "a vcap rest error response", /taken/
-        end
-      end
     end
   end
 end
