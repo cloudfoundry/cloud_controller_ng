@@ -3,10 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe ServicePlanVisibilitiesController, :services do
     service_plan_visibility_path = "/v2/service_plan_visibilities"
-    include_examples "creating", path: service_plan_visibility_path,
-                     model: ServicePlanVisibility,
-                     required_attributes: %w(organization_guid service_plan_guid),
-                     unique_attributes: %w(organization_guid service_plan_guid)
 
     include_examples "enumerating objects", path: service_plan_visibility_path,
                      model: ServicePlanVisibility

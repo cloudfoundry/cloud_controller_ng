@@ -142,7 +142,9 @@ module VCAP::CloudController
         url = "/v2/test_models/#{model_instance.guid}"
 
         expect(last_response.status).to eq(201)
+        expect(last_response.location).to eq(url)
         expect(decoded_response["metadata"]["url"]).to eq(url)
+        expect(decoded_response["entity"]["unique_value"]).to eq("foobar")
       end
     end
 

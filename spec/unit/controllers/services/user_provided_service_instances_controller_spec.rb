@@ -2,10 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe UserProvidedServiceInstancesController, :services do
-    include_examples "creating", path: "/v2/user_provided_service_instances",
-                     model: UserProvidedServiceInstance,
-                     required_attributes: %w(name space_guid),
-                     unique_attributes: %w(space_guid name)
     include_examples "deleting a valid object", path: "/v2/user_provided_service_instances", model: UserProvidedServiceInstance,
       one_to_many_collection_ids: {
         :service_bindings => lambda { |service_instance|
