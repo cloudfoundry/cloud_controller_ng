@@ -53,6 +53,7 @@ require "cloud_controller/blobstore/url_generator"
 require "cloud_controller/dependency_locator"
 require "cloud_controller/controller_factory"
 require "cloud_controller/start_app_message"
+require "cloud_controller/egress_network_rules_presenter"
 
 require "cloud_controller/legacy_api/legacy_api_base"
 require "cloud_controller/legacy_api/legacy_info"

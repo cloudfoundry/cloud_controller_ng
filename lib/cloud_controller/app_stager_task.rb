@@ -87,20 +87,26 @@ module VCAP::CloudController
     # We never stage if there is not a start request
     def staging_request
       {
-        :app_id => @app.guid,
-        :task_id => task_id,
-        :properties => staging_task_properties(@app),
+        app_id:                       @app.guid,
+        task_id:                      task_id,
+        properties:                   staging_task_properties(@app),
         # All url generation should go to blobstore_url_generator
-        :download_uri => @blobstore_url_generator.app_package_download_url(@app),
-        :upload_uri => @blobstore_url_generator.droplet_upload_url(@app),
-        :buildpack_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(@app),
-        :buildpack_cache_upload_uri => @blobstore_url_generator.buildpack_cache_upload_url(@app),
-        :start_message => start_app_message,
-        :admin_buildpacks => admin_buildpacks
+        download_uri:                 @blobstore_url_generator.app_package_download_url(@app),
+        upload_uri:                   @blobstore_url_generator.droplet_upload_url(@app),
+        buildpack_cache_download_uri: @blobstore_url_generator.buildpack_cache_download_url(@app),
+        buildpack_cache_upload_uri:   @blobstore_url_generator.buildpack_cache_upload_url(@app),
+        start_message:                start_app_message,
+        admin_buildpacks:             admin_buildpacks,
+        egress_network_rules:         staging_egress_rules,
       }
     end
 
     private
+
+    def staging_egress_rules
+      staging_security_groups = AppSecurityGroup.where(staging_default: true).all
+      EgressNetworkRulesPresenter.new(staging_security_groups).to_array
+    end
 
     def admin_buildpacks
       Buildpack.list_admin_buildpacks.

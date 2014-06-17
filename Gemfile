@@ -50,6 +50,7 @@ group :test do
   gem 'rspec', '~> 2.99.0'
   gem 'rspec-instafail'
   gem 'rspec_api_documentation'
+  gem 'rspec-collection_matchers'
   gem 'rubocop'
   gem 'timecop'
   gem 'webmock'
