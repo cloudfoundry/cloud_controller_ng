@@ -5,7 +5,6 @@ module VCAP::CloudController
     it_behaves_like "an admin only endpoint", path: "/v2/users"
     include_examples "enumerating objects", path: "/v2/users", model: User
     include_examples "reading a valid object", path: "/v2/users", model: User, basic_attributes: []
-    include_examples "deleting a valid object", path: "/v2/users", model: User, one_to_many_collection_ids: {}
 
     describe 'permissions' do
       include_context "permissions"

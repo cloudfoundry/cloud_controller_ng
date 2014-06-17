@@ -6,20 +6,6 @@ module VCAP::CloudController
     include_examples "querying objects", path: "/v2/apps", model: App, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/apps", model: App
     include_examples "reading a valid object", path: "/v2/apps", model: App, basic_attributes: %w(name space_guid stack_guid)
-    include_examples "deleting a valid object", path: "/v2/apps", model: App, one_to_many_collection_ids: {
-      :service_bindings => lambda { |app|
-        service_instance = ManagedServiceInstance.make(
-          :space => app.space
-        )
-        ServiceBinding.make(
-          :app => app,
-          :service_instance => service_instance
-        )
-      },
-      :events => lambda { |app|
-        AppEvent.make(:app => app)
-      }
-    }, :excluded => [ :events ]
 
     let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
 

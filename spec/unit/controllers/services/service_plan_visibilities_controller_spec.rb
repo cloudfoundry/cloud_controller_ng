@@ -7,10 +7,6 @@ module VCAP::CloudController
     include_examples "enumerating objects", path: service_plan_visibility_path,
                      model: ServicePlanVisibility
 
-    include_examples "deleting a valid object", path: service_plan_visibility_path,
-                     model: ServicePlanVisibility
-
-
     describe "Permissions" do
       include_context "permissions"
 

@@ -234,7 +234,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "#do_delete" do
+    describe "#delete" do
       let!(:model) { TestModel.make }
       let(:params) { {} }
 
@@ -304,10 +304,6 @@ module VCAP::CloudController
           }.to change {
             TestModel.count
           }.by(-1)
-        end
-
-        it "returns a 204" do
-          delete "/v2/test_models/#{model.guid}?#{query_params}", "", admin_headers
 
           expect(last_response.status).to eq(204)
           expect(last_response.body).to eq("")

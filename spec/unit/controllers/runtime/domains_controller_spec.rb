@@ -13,14 +13,6 @@ module VCAP::CloudController
 
     include_examples "reading a valid object", path: "/v2/domains", model: PrivateDomain, basic_attributes: %w(name owning_organization_guid)
     include_examples "reading a valid object", path: "/v2/domains", model: SharedDomain, basic_attributes: %w(name)
-    include_examples "deleting a valid object", path: "/v2/domains", model: PrivateDomain,
-      one_to_many_collection_ids: {
-        routes: lambda { |domain|
-          space = Space.make(organization: domain.owning_organization)
-          Route.make(domain: domain, space: space)
-        }
-      }
-    include_examples "deleting a valid object", path: "/v2/domains", model: SharedDomain, one_to_many_collection_ids: {routes: lambda { |domain| Route.make(domain: domain) }}
 
     describe "Permissions" do
       include_context "permissions"

@@ -5,21 +5,6 @@ module VCAP::CloudController
     include_examples "querying objects", path: "/v2/spaces", model: Space, queryable_attributes: %w(name)
     include_examples "enumerating objects", path: "/v2/spaces", model: Space
     include_examples "reading a valid object", path: "/v2/spaces", model: Space, basic_attributes: %w(name organization_guid)
-    include_examples "deleting a valid object", path: "/v2/spaces", model: Space,
-      one_to_many_collection_ids: {
-        apps: lambda { |space| AppFactory.make(:space => space) },
-        service_instances: lambda { |space| ManagedServiceInstance.make(:space => space) },
-        routes: lambda { |space| Route.make(:space => space) },
-        default_users: lambda { |space|
-          user = VCAP::CloudController::User.make
-          space.organization.add_user(user)
-          space.add_developer(user)
-          space.save
-          user.default_space = space
-          user.save
-          user
-        }
-      }, excluded: [:default_users]
 
     describe "data integrity" do
       let(:space) { Space.make }
