@@ -22,16 +22,6 @@ module VCAP::CloudController
         PrivateDomain.make(:owning_organization => org)
       }
     }
-    include_examples "collection operations", path: "/v2/organizations", model: Organization,
-    one_to_many_collection_ids: {
-      spaces: lambda { |org| Space.make(organization: org) },
-      private_domains: lambda { |org| PrivateDomain.make(owning_organization: org) },
-    },
-      many_to_one_collection_ids: {},
-    many_to_many_collection_ids: {
-      users: lambda { |org| User.make },
-      billing_managers: lambda { |org| User.make }
-    }
 
     describe "Permissions" do
       include_context "permissions"

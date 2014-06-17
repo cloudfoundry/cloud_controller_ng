@@ -14,12 +14,6 @@ module VCAP::CloudController
                      one_to_many_collection_ids:      {
                        :service_plans => lambda { |service| ServicePlan.make(:service => service) },
                      }
-    include_examples "collection operations", path: "/v2/services", model: Service,
-                     one_to_many_collection_ids:    {
-                       service_plans: lambda { |service| ServicePlan.make(service: service) }
-                     },
-                     many_to_one_collection_ids:    {},
-                     many_to_many_collection_ids:   {}
 
     shared_examples "enumerate and read service only" do |perm_name|
       include_examples "permission enumeration", perm_name,

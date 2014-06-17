@@ -11,10 +11,6 @@ module VCAP::CloudController
           Organization.make(:quota_definition => quota_definition)
         }
       }
-    include_examples "collection operations", path: "/v2/quota_definitions", model: QuotaDefinition,
-      one_to_many_collection_ids: {},
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {}
   end
 
   describe "permissions" do

@@ -24,24 +24,6 @@ module VCAP::CloudController
       }
     }, :excluded => [ :events ]
 
-    include_examples "collection operations", path: "/v2/apps", model: App,
-      one_to_many_collection_ids: {
-        service_bindings: lambda { |app|
-          service_instance = ManagedServiceInstance.make(space: app.space)
-          ServiceBinding.make(app: app, service_instance: service_instance)
-        }
-      },
-      many_to_one_collection_ids: {
-        space: lambda { |app| Space.make },
-        stack: lambda { |app| Stack.make },
-      },
-      many_to_many_collection_ids: {
-        routes: lambda { |app|
-          domain = PrivateDomain.make(owning_organization: app.space.organization)
-          Route.make(domain: domain, space: app.space)
-        }
-      }
-
     let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
 
     describe "create app" do

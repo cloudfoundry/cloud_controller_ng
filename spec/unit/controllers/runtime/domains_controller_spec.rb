@@ -23,16 +23,6 @@ module VCAP::CloudController
       }
     include_examples "deleting a valid object", path: "/v2/domains", model: SharedDomain, one_to_many_collection_ids: {routes: lambda { |domain| Route.make(domain: domain) }}
 
-    include_examples "collection operations", path: "/v2/domains", model: PrivateDomain,
-      one_to_many_collection_ids: {},
-      many_to_one_collection_ids: {owning_organization: lambda { |user| user.organizations.first || Organization.make }},
-      many_to_many_collection_ids: {}
-
-    include_examples "collection operations", path: "/v2/domains", model: SharedDomain,
-      one_to_many_collection_ids: {},
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {}
-
     describe "Permissions" do
       include_context "permissions"
 

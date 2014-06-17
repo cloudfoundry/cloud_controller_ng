@@ -8,12 +8,6 @@ module VCAP::CloudController
     include_examples "creating and updating", path: "/v2/service_plans", model: ServicePlan,
                      required_attributes: %w(name free description service_guid),
                      extra_attributes: {extra: ->{Sham.extra}}
-    include_examples "collection operations", path: "/v2/service_plans", model: ServicePlan,
-      one_to_many_collection_ids: {
-        service_instances: lambda { |service_plan| ManagedServiceInstance.make(service_plan: service_plan) }
-      },
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {}
 
     shared_examples "enumerate and read plan only" do |perm_name|
       include_examples "permission enumeration", perm_name,

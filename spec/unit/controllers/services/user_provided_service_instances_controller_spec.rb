@@ -6,12 +6,6 @@ module VCAP::CloudController
                      model: UserProvidedServiceInstance,
                      required_attributes: %w(name space_guid),
                      unique_attributes: %w(space_guid name)
-    include_examples "collection operations", path: "/v2/user_provided_service_instances", model: UserProvidedServiceInstance,
-      one_to_many_collection_ids: {
-        service_bindings: lambda { |service_instance| make_service_binding_for_service_instance(service_instance) }
-      },
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {}
     include_examples "deleting a valid object", path: "/v2/user_provided_service_instances", model: UserProvidedServiceInstance,
       one_to_many_collection_ids: {
         :service_bindings => lambda { |service_instance|

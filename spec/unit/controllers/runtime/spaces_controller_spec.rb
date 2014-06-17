@@ -21,20 +21,6 @@ module VCAP::CloudController
           user
         }
       }, excluded: [:default_users]
-    include_examples "collection operations", path: "/v2/spaces", model: Space,
-      one_to_many_collection_ids: {
-        apps: lambda { |space| AppFactory.make(space: space) },
-        routes: lambda { |space| Route.make(space: space) },
-        service_instances: lambda { |space| ManagedServiceInstance.make(space: space) }
-      },
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {
-        developers:          lambda { |space| make_user_for_space(space) },
-        managers:            lambda { |space| make_user_for_space(space) },
-        auditors:            lambda { |space| make_user_for_space(space) },
-        app_security_groups: lambda { |space| AppSecurityGroup.make }
-      }
-
 
     describe "data integrity" do
       let(:space) { Space.make }

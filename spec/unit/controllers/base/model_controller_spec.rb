@@ -6,7 +6,8 @@ module VCAP::CloudController
     define_attributes do
       attribute :required_attr, TrueClass
       attribute :unique_value, String
-      to_many :test_model_manies
+      to_many :test_model_many_to_ones
+      to_many :test_model_many_to_manies
     end
     define_messages
     define_routes
@@ -20,7 +21,21 @@ module VCAP::CloudController
     end
   end
 
-  class TestModelManiesController < RestController::ModelController
+  class TestModelManyToOnesController < RestController::ModelController
+    define_attributes do
+      to_one :test_model
+    end
+
+    define_messages
+    define_routes
+  end
+
+  class TestModelManyToManiesController < RestController::ModelController
+    define_attributes do
+    end
+
+    define_messages
+    define_routes
   end
 
   describe RestController::ModelController do
@@ -429,44 +444,162 @@ module VCAP::CloudController
     end
 
     describe "associated collections" do
-      let(:model) { TestModel.make }
       describe "to_many" do
-        let(:associated_model1) { TestModelMany.make }
-        let(:associated_model2) { TestModelMany.make }
+        let(:model) { TestModel.make }
+        let(:associated_model1) { TestModelManyToMany.make }
+        let(:associated_model2) { TestModelManyToMany.make }
+        let(:associated_model3) { TestModelManyToMany.make }
 
         describe "update" do
           it "allows associating nested models" do
-            put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_guids: [associated_model1.guid, associated_model2.guid]}), admin_headers
+            put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_to_many_guids: [associated_model1.guid, associated_model2.guid]}), admin_headers
             expect(last_response.status).to eq(201)
             model.reload
-            expect(model.test_model_manies).to include(associated_model1)
-            expect(model.test_model_manies).to include(associated_model2)
+            expect(model.test_model_many_to_manies).to include(associated_model1)
+            expect(model.test_model_many_to_manies).to include(associated_model2)
           end
 
           context "with existing models in the association" do
-            before { model.add_test_model_many associated_model1 }
+            before { model.add_test_model_many_to_many associated_model1 }
 
             it "replaces existing associated models" do
-              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_guids: [associated_model2.guid]}), admin_headers
+              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_to_many_guids: [associated_model2.guid]}), admin_headers
               expect(last_response.status).to eq(201)
               model.reload
-              expect(model.test_model_manies).not_to include(associated_model1)
-              expect(model.test_model_manies).to include(associated_model2)
+              expect(model.test_model_many_to_manies).not_to include(associated_model1)
+              expect(model.test_model_many_to_manies).to include(associated_model2)
             end
 
             it "removes associated models when empty array is provided" do
-              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_guids: []}), admin_headers
+              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_to_many_guids: []}), admin_headers
               expect(last_response.status).to eq(201)
               model.reload
-              expect(model.test_model_manies).not_to include(associated_model1)
+              expect(model.test_model_many_to_manies).not_to include(associated_model1)
             end
 
             it "ignores invalid guids" do
-              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_guids: [associated_model2.guid, 'abcd']}), admin_headers
+              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_to_many_guids: [associated_model2.guid, 'abcd']}), admin_headers
               expect(last_response.status).to eq(201)
               model.reload
-              expect(model.test_model_manies.length).to eq(1)
-              expect(model.test_model_manies).to include(associated_model2)
+              expect(model.test_model_many_to_manies.length).to eq(1)
+              expect(model.test_model_many_to_manies).to include(associated_model2)
+            end
+          end
+        end
+
+        describe "reading" do
+          context "with no associated records" do
+            it "returns an empty collection" do
+              get "/v2/test_models/#{model.guid}/test_model_many_to_manies", "", admin_headers
+
+              expect(last_response.status).to eq(200)
+              expect(decoded_response["total_results"]).to eq(0)
+              expect(decoded_response).to have_key("prev_url")
+              expect(decoded_response["prev_url"]).to be_nil
+              expect(decoded_response).to have_key("next_url")
+              expect(decoded_response["next_url"]).to be_nil
+              expect(decoded_response["resources"]).to eq []
+            end
+          end
+
+          context "with associated records" do
+            before do
+              model.add_test_model_many_to_many associated_model1
+              model.add_test_model_many_to_many associated_model2
+              model.add_test_model_many_to_many associated_model3
+            end
+
+            it "returns collection response" do
+              get "/v2/test_models/#{model.guid}/test_model_many_to_manies?results-per-page=2", "", admin_headers
+
+              expect(last_response.status).to eq(200)
+              expect(decoded_response["total_results"]).to eq(3)
+              expect(decoded_response).to have_key("prev_url")
+              expect(decoded_response["prev_url"]).to be_nil
+              expect(decoded_response["next_url"]).to include("page=2&results-per-page=2")
+              found_guids = decoded_response["resources"].collect {|resource| resource["metadata"]["guid"]}
+              expect(found_guids).to match_array([associated_model1.guid, associated_model2.guid])
+            end
+
+            it "returns other pages when requested" do
+              get "/v2/test_models/#{model.guid}/test_model_many_to_manies?page=2&results-per-page=2", "", admin_headers
+
+              expect(last_response.status).to eq(200)
+              expect(decoded_response["total_results"]).to eq(3)
+              expect(decoded_response["prev_url"]).to include("page=1&results-per-page=2")
+              expect(decoded_response).to have_key("next_url")
+              expect(decoded_response["next_url"]).to be_nil
+              found_guids = decoded_response["resources"].collect {|resource| resource["metadata"]["guid"]}
+              expect(found_guids).to match_array([associated_model3.guid])
+            end
+          end
+
+          describe "inline-relations-depth" do
+            before { model.add_test_model_many_to_many associated_model1 }
+
+            context "when depth is not set" do
+              it "does not return relations inline" do
+                get "/v2/test_models/#{model.guid}", "", admin_headers
+                expect(entity).to have_key "test_model_many_to_manies_url"
+                expect(entity).to_not have_key "test_model_many_to_manies"
+              end
+            end
+
+            context "when depth is 0" do
+              it "does not return relations inline" do
+                get "/v2/test_models/#{model.guid}?inline-relations-depth=0", "", admin_headers
+                expect(entity).to have_key "test_model_many_to_manies_url"
+                expect(entity).to_not have_key "test_model_many_to_manies"
+              end
+            end
+
+            context "when depth is 1" do
+              it "returns nested relations" do
+                get "/v2/test_models/#{model.guid}?inline-relations-depth=1", "", admin_headers
+                expect(entity).to have_key "test_model_many_to_manies_url"
+                expect(entity).to have_key "test_model_many_to_manies"
+              end
+            end
+          end
+        end
+      end
+
+      describe "to_one" do
+        let(:model) { TestModelManyToOne.make }
+        let(:associated_model) { TestModel.make }
+
+        before do
+          model.test_model = associated_model
+          model.save
+        end
+
+        describe "reading" do
+          describe "inline-relations-depth" do
+            context "when depth is not set" do
+              it "does not return relations inline" do
+                get "/v2/test_model_many_to_ones/#{model.guid}", "", admin_headers
+                expect(entity).to have_key "test_model_url"
+                expect(entity).to have_key "test_model_guid"
+                expect(entity).to_not have_key "test_model"
+              end
+            end
+
+            context "when depth is 0" do
+              it "does not return relations inline" do
+                get "/v2/test_model_many_to_ones/#{model.guid}?inline-relations-depth=0", "", admin_headers
+                expect(entity).to have_key "test_model_url"
+                expect(entity).to have_key "test_model_guid"
+                expect(entity).to_not have_key "test_model"
+              end
+            end
+
+            context "when depth is 1" do
+              it "returns nested relations" do
+                get "/v2/test_model_many_to_ones/#{model.guid}?inline-relations-depth=1", "", admin_headers
+                expect(entity).to have_key "test_model_url"
+                expect(entity).to have_key "test_model_guid"
+                expect(entity).to have_key "test_model"
+              end
             end
           end
         end
