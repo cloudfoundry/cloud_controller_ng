@@ -16,24 +16,24 @@ module VCAP::CloudController
     let(:undo_changes) {UndoAppChanges.new(app)}
 
     describe "#undo" do
-
       context "state has changed" do
-        it "should stop an app that has started", non_transactional: true do
+        it "should stop an app that has started" do
           changes[:state] = ["STOPPED", "STARTED"]
           undo_changes.undo(changes)
           expect(app.state).to eq("STOPPED")
         end
 
-        it "does not undo when the states do not match" do
+        it "does not undo when the final app state does not match the desired app state" do
+          app.state = "CRASHED"
           changes[:state] = ["STARTED", "STOPPED"]
           undo_changes.undo(changes)
-          expect(app.state).to eq("STARTED")
+          expect(app.state).to eq("CRASHED")
         end
 
         context("when the app is stopped") do
           let(:state) {"STOPPED"}
 
-          it "should not undo any stop", non_transactional: true do
+          it "should not undo any stop" do
             changes[:state] = ["STARTED", "STOPPED"]
             undo_changes.undo(changes)
             expect(app.state).to eq("STOPPED")
@@ -42,13 +42,13 @@ module VCAP::CloudController
       end
 
       context "instances have changed" do
-        it "should undo any increase", non_transactional: true do
+        it "should undo any increase" do
           changes[:instances] = [1, 2]
           undo_changes.undo(changes)
           expect(app.instances).to eq(1)
         end
 
-        it "should not undo any decrease", non_transactional: true do
+        it "should not undo any decrease" do
           changes[:instances] = [3, 2]
           undo_changes.undo(changes)
           expect(app.instances).to eq(2)
@@ -61,8 +61,18 @@ module VCAP::CloudController
         end
       end
 
+      context "state and instances changed" do
+        it "should stop an app that has started, and undo any increase" do
+          changes[:state] = ["STOPPED", "STARTED"]
+          changes[:instances] = [1, 2]
+          undo_changes.undo(changes)
+          expect(app.instances).to eq(1)
+          expect(app.state).to eq("STOPPED")
+        end
+      end
+
       context "no undo if already updated" do
-        it "should not stop an app that has started", non_transactional: true do
+        it "should not stop an app that has started" do
           changes[:state] = ["STOPPED", "STARTED"]
           changes[:updated_at][1] = changes[:updated_at][1] + 1
           undo_changes.undo(changes)

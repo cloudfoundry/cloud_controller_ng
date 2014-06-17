@@ -7,9 +7,8 @@ module VCAP::CloudController
     end
 
     def undo(changes)
-      if !undo_start(changes)
-        undo_scale(changes)
-      end
+      undo_start(changes)
+      undo_scale(changes)
     end
 
     private
