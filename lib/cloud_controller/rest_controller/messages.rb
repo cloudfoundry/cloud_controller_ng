@@ -2,9 +2,7 @@ module VCAP::CloudController::RestController
   # Auto generation of Message classes based on the attributes
   # exposed by a rest endpoint.
   module Messages
-    def self.included(base)
-      base.extend(ClassMethods)
-    end
+    extend ActiveSupport::Concern
 
     module ClassMethods
       # Define the messages exposed by a rest endpoint.

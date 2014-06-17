@@ -19,8 +19,6 @@ module VCAP::CloudController::RestController
 
       logger.debug "cc.create", model: self.class.model_class_name, attributes: request_attrs
 
-      raise VCAP::Errors::ApiError.new_from_details("InvalidRequest") unless request_attrs
-
       before_create
 
       obj = nil
@@ -197,25 +195,6 @@ module VCAP::CloudController::RestController
       [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
     end
 
-    # Find an object and validate that the current user has rights to
-    # perform the given operation on that instance.
-    #
-    # Raises an exception if the object can't be found or if the current user
-    # doesn't have access to it.
-    #
-    # @param [Symbol] op The type of operation to check for access
-    #
-    # @param [String] guid The GUID of the object to find.
-    #
-    # @return [Sequel::Model] The sequel model for the object, only if
-    # the use has access.
-    def find_guid_and_validate_access(op, guid, find_model = model)
-      obj = find_model.find(guid: guid)
-      raise self.class.not_found_exception(guid) if obj.nil?
-      validate_access(op, obj, user, roles)
-      obj
-    end
-
     # Validate that the current logged in user can have access to the target object.
     #
     # Raises an exception if the user does not have rights to perform
@@ -274,6 +253,25 @@ module VCAP::CloudController::RestController
       if associations.any?
         raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", associations.join(", "), obj.class.table_name)
       end
+    end
+
+    # Find an object and validate that the current user has rights to
+    # perform the given operation on that instance.
+    #
+    # Raises an exception if the object can't be found or if the current user
+    # doesn't have access to it.
+    #
+    # @param [Symbol] op The type of operation to check for access
+    #
+    # @param [String] guid The GUID of the object to find.
+    #
+    # @return [Sequel::Model] The sequel model for the object, only if
+    # the use has access.
+    def find_guid_and_validate_access(op, guid, find_model = model)
+      obj = find_model.find(guid: guid)
+      raise self.class.not_found_exception(guid) if obj.nil?
+      validate_access(op, obj, user, roles)
+      obj
     end
 
     class << self
