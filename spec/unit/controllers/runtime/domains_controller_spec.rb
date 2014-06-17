@@ -8,9 +8,6 @@ module VCAP::CloudController
       end
     end
 
-    include_examples "reading a valid object", path: "/v2/domains", model: PrivateDomain, basic_attributes: %w(name owning_organization_guid)
-    include_examples "reading a valid object", path: "/v2/domains", model: SharedDomain, basic_attributes: %w(name)
-
     describe "Permissions" do
       include_context "permissions"
 

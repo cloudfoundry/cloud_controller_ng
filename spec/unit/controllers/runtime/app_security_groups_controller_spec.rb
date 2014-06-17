@@ -5,7 +5,6 @@ module VCAP::CloudController
     let(:group) { AppSecurityGroup.make }
 
     it_behaves_like "an admin only endpoint", path: "/v2/app_security_groups"
-    include_examples "reading a valid object", path: "/v2/app_security_groups", model: AppSecurityGroup, basic_attributes: %w(name rules)
 
     describe "errors" do
       it "returns AppSecurityGroupInvalid" do

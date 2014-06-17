@@ -3,7 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::OrganizationsController do
     let(:org) { Organization.make }
-    include_examples "reading a valid object", path: "/v2/organizations", model: Organization, basic_attributes: %w(name)
 
     describe "Permissions" do
       include_context "permissions"

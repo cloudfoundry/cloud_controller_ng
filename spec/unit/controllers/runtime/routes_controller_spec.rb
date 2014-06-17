@@ -2,8 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::RoutesController do
-    include_examples "reading a valid object", path: "/v2/routes", model: Route, basic_attributes: %w(host domain_guid space_guid)
-
     describe "Permissions" do
       shared_examples "route permissions" do
         describe "Org Level Permissions" do

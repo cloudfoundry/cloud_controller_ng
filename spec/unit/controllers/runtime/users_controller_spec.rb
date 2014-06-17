@@ -3,7 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::UsersController do
     it_behaves_like "an admin only endpoint", path: "/v2/users"
-    include_examples "reading a valid object", path: "/v2/users", model: User, basic_attributes: []
 
     describe 'permissions' do
       include_context "permissions"

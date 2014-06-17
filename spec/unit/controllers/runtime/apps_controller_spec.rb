@@ -2,9 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppsController do
-    # before { configure_stacks }
-    include_examples "reading a valid object", path: "/v2/apps", model: App, basic_attributes: %w(name space_guid stack_guid)
-
     let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
 
     describe "create app" do
