@@ -111,6 +111,11 @@ module ApiDsl
       get "#{root(path)}/:guid" do
         example_request "Retrieve a Particular #{path.to_s.capitalize}" do
           standard_entity_response parsed_response, model
+          if options[:nested_associations]
+            options[:nested_associations].each do |association_name|
+              expect(parsed_response['entity'].keys).to include("#{association_name}_url")
+            end
+          end
         end
       end
     end

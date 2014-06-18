@@ -30,9 +30,9 @@ resource "App Security Groups (experimental)", :type => :api do
 
   put "/v2/app_security_groups/:guid" do
     example "Updating an App Security Group" do
-      new_security_group = {name: 'new_name', rules: '[]'}
+      new_attributes = {name: 'new_name', rules: '[]'}
 
-      client.put "/v2/app_security_groups/#{guid}", Yajl::Encoder.encode(new_security_group), headers
+      client.put "/v2/app_security_groups/#{guid}", Yajl::Encoder.encode(new_attributes), headers
       status.should == 201
       standard_entity_response parsed_response, :app_security_group, name: 'new_name', rules: '[]'
     end

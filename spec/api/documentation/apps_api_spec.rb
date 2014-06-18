@@ -4,8 +4,9 @@ require 'rspec_api_documentation/dsl'
 resource "Apps", :type => :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
-  let(:guid) { VCAP::CloudController::App.first.guid }
   let!(:apps) { 3.times { VCAP::CloudController::AppFactory.make } }
+  let(:app_obj) { VCAP::CloudController::App.first }
+  let(:guid) { app_obj.guid }
 
   authenticated_request
 
@@ -39,7 +40,7 @@ resource "Apps", :type => :api do
     field :system_env_json, "environment_json for system variables, contains vcap_services by default, a hash containing key/value pairs of the names and information of the services associated with your app.", required: false, readonly: true
 
     standard_model_list :app, VCAP::CloudController::AppsController
-    standard_model_get :app
+    standard_model_get :app, nested_associations: [:stack, :space]
     standard_model_delete_without_async :app
 
     def after_standard_model_delete(guid)
@@ -47,11 +48,33 @@ resource "Apps", :type => :api do
       audited_event event
     end
 
+    post "/v2/apps/" do
+      example "Creating an app" do
+        space_guid = VCAP::CloudController::Space.make.guid
+        client.post "/v2/apps", Yajl::Encoder.encode(required_fields.merge(space_guid: space_guid)), headers
+        expect(status).to eq(201)
+
+        standard_entity_response parsed_response, :app
+
+        app_guid = parsed_response['metadata']['guid']
+        audited_event VCAP::CloudController::Event.find(:type => "audit.app.create", :actee => app_guid)
+      end
+    end
+
+    put "/v2/apps/:guid" do
+      example "Updating an App" do
+        new_attributes = {name: 'new_name'}
+
+        client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(new_attributes), headers
+        status.should == 201
+        standard_entity_response parsed_response, :app, name: "new_name"
+      end
+    end
+
     put "/v2/apps/:guid" do
       let(:buildpack) { "http://github.com/a-buildpack" }
 
       example "Set a custom buildpack URL for an Application" do
-
         explanation <<-EOD
         PUT with the buildpack attribute set to the URL of a git repository to set a custom buildpack.
         EOD
@@ -68,7 +91,6 @@ resource "Apps", :type => :api do
       let(:buildpack) { admin_buildpack.name }
 
       example "Set a admin buildpack for an Application (by sending the name of an existing buildpack)" do
-
         explanation <<-EOD
         When the buildpack name matches the name of an admin buildpack, an admin buildpack is used rather
         than a custom buildpack. The 'buildpack' column returns the name of the configured admin buildpack
@@ -81,17 +103,30 @@ resource "Apps", :type => :api do
         audited_event VCAP::CloudController::Event.find(:type => "audit.app.update", :actee => guid)
       end
     end
+  end
 
-    post "/v2/apps/" do
-      example "Creating an app" do
-        space_guid = VCAP::CloudController::Space.make.guid
-        client.post "/v2/apps", Yajl::Encoder.encode(required_fields.merge(space_guid: space_guid)), headers
-        expect(status).to eq(201)
+  describe "Nested app endpoints" do
+    field :guid, "The guid of the app.", required: true
 
-        standard_entity_response parsed_response, :app
+    get "/v2/apps/:guid/service_bindings" do
+      example "List all Service Bindings associated with an App" do
+        service_instance = VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space)
+        VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance)
 
-        app_guid = parsed_response['metadata']['guid']
-        audited_event VCAP::CloudController::Event.find(:type => "audit.app.create", :actee => app_guid)
+        client.get "/v2/apps/#{guid}/service_bindings", {}, headers
+        expect(status).to eq(200)
+        standard_list_response parsed_response, :service_binding
+      end
+    end
+
+    get "/v2/apps/:guid/routes" do
+      example "List all Routes associated with an App" do
+        route = VCAP::CloudController::Route.make(space: app_obj.space)
+        app_obj.add_route(route)
+
+        client.get "/v2/apps/#{guid}/routes", {}, headers
+        expect(status).to eq(200)
+        standard_list_response parsed_response, :route
       end
     end
   end
