@@ -20,13 +20,6 @@ class FakeModelTables
       Date :updated_at
     end
 
-    db.create_table :test_model_associateds do
-      primary_key :id
-      String :guid
-      Integer :test_model_id
-      foreign_key [:test_model_id], :test_models, :name => :fk_test_model_id_destroy_deps
-    end
-
     db.create_table :test_model_destroy_deps do
       primary_key :id
       String :guid
@@ -56,7 +49,7 @@ class FakeModelTables
       Date :created_at
     end
 
-    db.create_table :test_model_many_to_manies_test_models do
+    db.create_table :test_model_m_to_m_test_models do
       primary_key :id
       Integer :test_model_id
       Integer :test_model_many_to_many_id
