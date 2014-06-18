@@ -305,8 +305,8 @@ module VCAP::CloudController
         }.to have_queried_db_times(//, 0)
 
         expect(@eager_loaded_org).to eql(org)
-        expect(@eager_loaded_domains).to eql([private_domain1, private_domain2, shared_domain])
-        expect(@eager_loaded_domains).to eql(org.domains)
+        expect(@eager_loaded_domains).to match_array([private_domain1, private_domain2, shared_domain])
+        expect(@eager_loaded_domains).to match_array(org.domains)
       end
 
       it "has correct domains for each org" do
