@@ -64,6 +64,7 @@ module VCAP::CloudController
       validates_length_range 3..255, :name
 
       errors.add(:name, :overlapping_domain) if overlaps_domain_in_other_org?
+      errors.add(:name, :overlapping_domain) if overlaps_with_shared_domains?
     end
 
     def overlaps_domain_in_other_org?
@@ -81,6 +82,15 @@ module VCAP::CloudController
       end
 
       overlapping_domains.count != 0
+    end
+    
+    def overlaps_with_shared_domains?
+      if owning_organization
+        return true if Domain.dataset.filter(
+          Sequel.like(:name,"%.#{name}"),
+          owning_organization_id: nil
+        ).count > 0
+      end
     end
 
     def self.intermediate_domains(name)

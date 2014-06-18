@@ -136,17 +136,6 @@ module VCAP::CloudController
         it { should_not be_valid }
       end
 
-      context "when the name is foo.com and bar.foo.com is a shared domain" do
-        before do
-          SharedDomain.make name: "bar.foo.com"
-          subject.name = "foo.com"
-        end
-
-        # this is kind of wonky behavior but it's pending further
-        # simplification (i.e. only allowing top-level domains)
-        it { should be_valid }
-      end
-
       context "when the name is bar.foo.com and foo.com is a shared domain" do
         before do
           SharedDomain.make name: "foo.com"

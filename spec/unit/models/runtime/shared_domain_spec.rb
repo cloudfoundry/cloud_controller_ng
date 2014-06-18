@@ -14,6 +14,15 @@ module VCAP::CloudController
 
     describe "#validate" do
       include_examples "domain validation"
+
+      context "when the name is foo.com and bar.foo.com is a shared domain" do
+        before do
+          SharedDomain.make name: "bar.foo.com"
+          subject.name = "foo.com"
+        end
+
+        it { should be_valid }
+      end          
     end
 
     describe "#destroy" do

@@ -78,6 +78,23 @@ module VCAP::CloudController
 
         it { should be_valid }
       end
+      
+      context "when the name is foo.com and shared domains has bar.foo.com" do
+        before do
+          SharedDomain.make name: "bar.foo.com"
+        end
+
+        it { expect { PrivateDomain.make name: "foo.com" }.to raise_error Sequel::ValidationFailed }
+      end  
+
+      context "when the name is pans.com and shared domains has my.potsandpans.com" do
+        before do
+          SharedDomain.make name: "my.potsandpans.com"
+          subject.name = "pans.com"
+        end
+
+        it { should be_valid } 
+      end  
     end
 
     describe "#destroy" do
