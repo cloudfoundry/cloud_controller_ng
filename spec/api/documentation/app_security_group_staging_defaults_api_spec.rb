@@ -28,7 +28,7 @@ resource "App Security Group Staging Defaults (experimental)", :type => :api do
     example "Return the app security groups used for staging" do
       client.get "/v2/config/staging_security_groups", {}, headers
       status.should == 200
-      standard_list_response parsed_response, VCAP::CloudController::AppSecurityGroup
+      standard_list_response parsed_response, :app_security_group
     end
   end
 end

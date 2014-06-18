@@ -56,7 +56,7 @@ module VCAP::CloudController
     end
 
     before do
-      app.staged?.should be_false
+      app.staged?.should be false
 
       VCAP.stub(:secure_uuid) { "some_task_id" }
       stager_pool.stub(:find_stager).with(app.stack.name, 1024, anything).and_return(stager_id)
@@ -180,7 +180,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             stage { callback_called = true }
-            callback_called.should be_false
+            callback_called.should be false
           end
         end
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             ignore_staging_error { stage { callback_called = true } }
-            callback_called.should be_false
+            callback_called.should be false
           end
 
           it "marks the app as having failed to stage" do
@@ -244,7 +244,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             ignore_staging_error { stage { callback_called = true } }
-            callback_called.should be_false
+            callback_called.should be false
           end
 
           it "marks the app as having failed to stage" do
@@ -353,7 +353,7 @@ module VCAP::CloudController
               }.to_not change {
                 app.refresh
                 app.droplet_hash
-              }.from("droplet-hash")
+              }.from(nil)
             end
 
             it "does not save the detected buildpack" do
@@ -367,7 +367,7 @@ module VCAP::CloudController
               ignore_staging_error do
                 stage { callback_called = true }
               end
-              callback_called.should be_false
+              callback_called.should be false
             end
           end
         end
@@ -399,7 +399,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             stage { callback_called = true }
-            callback_called.should be_false
+            callback_called.should be false
           end
 
           it "marks the app as having failed to stage" do
@@ -440,7 +440,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             stage { callback_called = true }
-            callback_called.should be_false
+            callback_called.should be false
           end
 
           it "marks the app as having failed to stage" do
@@ -509,6 +509,10 @@ module VCAP::CloudController
           binding = ServiceBinding.make(:app => app, :service_instance => instance)
           app.add_service_binding(binding)
         end
+
+        AppSecurityGroup.make(rules: "[{\"protocol\":\"udp\",\"port\":\"8080-9090\",\"destination\":\"198.41.191.47/1\"}]", staging_default: true)
+        AppSecurityGroup.make(rules: "[{\"protocol\":\"tcp\",\"port\":\"8080-9090\",\"destination\":\"198.41.191.48/1\"}]", staging_default: true)
+        AppSecurityGroup.make(rules: "[{\"protocol\":\"tcp\",\"port\":\"80\",\"destination\":\"0.0.0.0/0\"}]", staging_default: false)
       end
 
       it "includes app guid, task id and download/upload uris" do
@@ -683,6 +687,13 @@ module VCAP::CloudController
         expect(request[:properties]).to_not have_key(:buildpack_git_url)
       end
 
+      it "includes egress security group staging information by aggregating all asg with staging_default=true" do
+        request = staging_task.staging_request
+        expect(request[:egress_network_rules]).to match_array([
+          {"protocol"=>"udp","port"=>"8080-9090","destination"=>"198.41.191.47/1"},
+          {"protocol"=>"tcp","port"=>"8080-9090","destination"=>"198.41.191.48/1"}
+        ])
+      end
     end
   end
 end

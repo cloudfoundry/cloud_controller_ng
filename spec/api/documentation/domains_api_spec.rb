@@ -6,7 +6,6 @@ resource "Domains (deprecated)", :type => :api do
   let(:guid) { VCAP::CloudController::Domain.first.guid }
   let!(:domains) do
     2.times do
-      VCAP::CloudController::PrivateDomain.make
       VCAP::CloudController::SharedDomain.make
     end
   end
@@ -18,8 +17,8 @@ resource "Domains (deprecated)", :type => :api do
   field :wildcard, "Allow routes with non-empty hosts", required: true, valid_values: [true, false]
   field :owning_organization_guid, "The organization that owns the domain. If not specified, the domain is shared.", required: false
 
-  standard_model_list(:domain, VCAP::CloudController::DomainsController)
-  standard_model_get(:domain)
+  standard_model_list(:shared_domain, VCAP::CloudController::DomainsController, path: :domain)
+  standard_model_get(:shared_domain, path: :domain)
   standard_model_delete(:domain)
 
   post "/v2/domains" do

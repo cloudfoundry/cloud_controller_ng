@@ -7,7 +7,7 @@ module VCAP::CloudController::RestController
     module ClassMethods
       # Define the messages exposed by a rest endpoint.
       def define_messages
-        [:response, :create, :update].each do |type|
+        [:create, :update].each do |type|
           define_message(type)
         end
       end

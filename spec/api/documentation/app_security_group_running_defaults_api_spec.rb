@@ -28,7 +28,7 @@ resource "App Security Group Running Defaults (experimental)", :type => :api do
     example "Return the app security groups used for running apps" do
       client.get "/v2/config/running_security_groups", {}, headers
       status.should == 200
-      standard_list_response parsed_response, VCAP::CloudController::AppSecurityGroup
+      standard_list_response parsed_response, :app_security_group
     end
   end
 end

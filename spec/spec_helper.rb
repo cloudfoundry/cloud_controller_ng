@@ -25,6 +25,7 @@ require "rspec_api_documentation"
 require "services"
 
 require "support/bootstrap/spec_bootstrap"
+require "rspec/collection_matchers"
 
 VCAP::CloudController::SpecBootstrap.init
 

@@ -3,8 +3,11 @@ require 'rspec_api_documentation/dsl'
 
 resource "App Security Groups (experimental)", :type => :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
-  let(:guid) { VCAP::CloudController::AppSecurityGroup.first.guid }
-  let!(:app_sec_groups) { 3.times { VCAP::CloudController::AppSecurityGroup.make } }
+  let(:app_security_group) { VCAP::CloudController::AppSecurityGroup.first }
+  let(:guid) { app_security_group.guid }
+  before do
+    3.times { VCAP::CloudController::AppSecurityGroup.make }
+  end
 
   authenticated_request
 
@@ -17,7 +20,7 @@ resource "App Security Groups (experimental)", :type => :api do
   standard_model_delete :app_security_group
 
   post "/v2/app_security_groups/" do
-    example "Creating an app security group" do
+    example "Creating an App Security Group" do
       client.post "/v2/app_security_groups", Yajl::Encoder.encode(required_fields), headers
       expect(status).to eq(201)
 
@@ -26,12 +29,23 @@ resource "App Security Groups (experimental)", :type => :api do
   end
 
   put "/v2/app_security_groups/:guid" do
-    example "Updating an app security group" do
+    example "Updating an App Security Group" do
       new_security_group = {name: 'new_name', rules: '[]'}
 
       client.put "/v2/app_security_groups/#{guid}", Yajl::Encoder.encode(new_security_group), headers
       status.should == 201
-      standard_entity_response parsed_response, :app, name: 'new_name', rules: '[]'
+      standard_entity_response parsed_response, :app_security_group, name: 'new_name', rules: '[]'
+    end
+  end
+
+  get "/v2/app_security_groups/:guid/spaces" do
+    example "List all Spaces associated with an App Security Group" do
+      space = VCAP::CloudController::Space.make
+      app_security_group.add_space space
+
+      client.get "/v2/app_security_groups/#{guid}/spaces", "", headers
+      status.should == 200
+      standard_list_response parsed_response, :space
     end
   end
 end

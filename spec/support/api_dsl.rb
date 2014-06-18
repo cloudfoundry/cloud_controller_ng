@@ -3,44 +3,48 @@ require 'active_support/concern'
 module ApiDsl
   extend ActiveSupport::Concern
 
-  def validate_response(model, json, expect={})
-    expect.each do |name, expected_value|
+  def validate_response(model, json, expected_values = {}, ignored_attributes = [])
+    ignored_attributes.push :guid
+    expected_attributes_for_model(model).each do |expected_attribute|
       # refactor: pass exclusions, and figure out which are valid to not be there
-      next if name.to_s == "guid"
+      next if ignored_attributes.include? expected_attribute
 
       # if a relationship is not present, its url should not be present
-      next if field_is_url_and_relationship_not_present?(json, name)
+      next if field_is_url_and_relationship_not_present?(json, expected_attribute)
 
-      json.should have_key name.to_s
-      json[name.to_s].should == expect[name.to_sym]
+      json.should have_key expected_attribute.to_s
+      if expected_values.has_key? expected_attribute.to_sym
+        json[expected_attribute.to_s].should == expected_values[expected_attribute.to_sym]
+      end
     end
   end
 
-  def standard_list_response json, model
-    standard_paginated_response_format? parsed_response
-    parsed_response["resources"].each do |resource|
-      standard_entity_response resource, model
-    end
+  def standard_list_response response_json, model
+    standard_paginated_response_format? response_json
+    resource = response_json["resources"].first
+    standard_entity_response resource, model
   end
 
-  def standard_entity_response json, model, expect={}
+  def standard_entity_response json, model, expected_values={}
     json.should include("metadata")
     json.should include("entity")
-    standard_metadata_response_format? json["metadata"]
-    validate_response model, json["entity"], expect
+    standard_metadata_response_format? json["metadata"], model
+    validate_response model, json["entity"], expected_values
   end
 
   def standard_paginated_response_format? json
     validate_response VCAP::RestAPI::PaginatedResponse, json
   end
 
-  def standard_metadata_response_format? json
-    validate_response VCAP::RestAPI::MetadataMessage, json
+  def standard_metadata_response_format? json, model
+    ignored_attributes = []
+    ignored_attributes = [:updated_at] unless model_has_updated_at?(model)
+    validate_response VCAP::RestAPI::MetadataMessage, json, {}, ignored_attributes
   end
 
-  def message_table model
-    return model if model.respond_to? :fields
-    "VCAP::CloudController::#{model.to_s.classify.pluralize}Controller::ResponseMessage".constantize
+  def expected_attributes_for_model model
+    return model.fields.keys if model.respond_to? :fields
+    "VCAP::CloudController::#{model.to_s.classify}".constantize.export_attrs
   end
 
   def parsed_response
@@ -77,6 +81,12 @@ module ApiDsl
     end
   end
 
+  private
+
+  def model_has_updated_at?(model)
+    "VCAP::CloudController::#{model.to_s.classify}".constantize.columns.include?(:updated_at)
+  end
+
   module ClassMethods
     def api_version
       "/v2"
@@ -86,18 +96,20 @@ module ApiDsl
       "#{api_version}/#{model.to_s.pluralize}"
     end
 
-    def standard_model_list(model, controller)
-      get root(model) do
+    def standard_model_list(model, controller, options = {})
+      path = options[:path] || model
+      get root(path) do
         standard_list_parameters controller
-        example_request "List all #{model.to_s.pluralize.titleize}" do
+        example_request "List all #{path.to_s.pluralize.titleize}" do
           standard_list_response parsed_response, model
         end
       end
     end
 
-    def standard_model_get(model)
-      get "#{root(model)}/:guid" do
-        example_request "Retrieve a Particular #{model.to_s.capitalize}" do
+    def standard_model_get(model, options = {})
+      path = options[:path] || model
+      get "#{root(path)}/:guid" do
+        example_request "Retrieve a Particular #{path.to_s.capitalize}" do
           standard_entity_response parsed_response, model
         end
       end
