@@ -27,7 +27,7 @@ resource "Private Domains", :type => :api do
       client.post "/v2/private_domains", payload, headers
 
       expect(status).to eq 201
-      standard_entity_response parsed_response, :domain,
+      standard_entity_response parsed_response, :private_domain,
                                name: "exmaple.com",
                                owning_organization_guid: org_guid
     end

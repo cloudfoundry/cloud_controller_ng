@@ -49,10 +49,11 @@ resource 'Apps', :type => :api do
       client.get "/v2/apps/#{app_obj.guid}/summary", {},  headers
 
       expect(status).to eq 200
-  
-      validate_response nil, parsed_response, {:guid => app_obj.guid, 
-                               :name => app_obj.name,
-                               :memory => app_obj.memory }
+
+      expect(parsed_response["guid"]).to eq(app_obj.guid)
+      expect(parsed_response["name"]).to eq(app_obj.name)
+      expect(parsed_response["memory"]).to eq(app_obj.memory)
+
       expect(parsed_response["routes"][0]["host"]).to eq(route1.host)
       expect(parsed_response["services"][0]["name"]).to eq(service_instance.name)
     end
@@ -83,8 +84,9 @@ resource 'Spaces', :type => :api do
       client.get "/v2/spaces/#{space.guid}/summary", {} , headers
       
       expect(status).to eq 200
-      validate_response nil, parsed_response, {:guid => space.guid, 
-                               :name => space.name }
+      expect(parsed_response["guid"]).to eq(space.guid)
+      expect(parsed_response["name"]).to eq(space.name)
+
       expect(parsed_response["apps"][0]["name"]).to eq(app_obj.name)
       expect(parsed_response["services"][0]["name"]).to eq(service_instance.name)
     end

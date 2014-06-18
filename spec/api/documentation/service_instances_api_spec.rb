@@ -6,9 +6,7 @@ resource "Service Instances", :type => :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
-  describe 'Listing all service instances' do
-    standard_model_list :service_instance, VCAP::CloudController::ServiceInstancesController
-  end
+  standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
 
   post '/v2/service_instances/' do
     field :name, 'A name for the service instance', required: true, example_values: [ 'my-service-instance' ]
@@ -34,9 +32,9 @@ resource "Service Instances", :type => :api do
 
   describe 'Getting a service instance' do
     standard_list_parameters VCAP::CloudController::ServiceInstancesController
-    let(:guid) { VCAP::CloudController::ServiceInstance.make.guid }
+    let(:guid) { VCAP::CloudController::ManagedServiceInstance.make.guid }
 
-    standard_model_get :service_instance
+    standard_model_get :managed_service_instance, path: :service_instance
   end
 
   get "/v2/service_instances/:guid/permissions" do

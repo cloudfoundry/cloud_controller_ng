@@ -3,6 +3,8 @@ require 'rspec_api_documentation/dsl'
 
 resource "Service Bindings", :type => :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
+  let!(:service_binding) { VCAP::CloudController::ServiceBinding.make }
+  let(:guid) { service_binding.guid }
   authenticated_request
 
   get '/v2/service_bindings' do
@@ -13,8 +15,6 @@ resource "Service Bindings", :type => :api do
     standard_list_parameters VCAP::CloudController::ServiceBindingsController
 
     example 'Getting a service binding' do
-      guid = VCAP::CloudController::ServiceBinding.make.guid
-
       client.get "/v2/service_bindings/#{guid}", {}, headers
       expect(status).to eq 200
     end
@@ -38,7 +38,6 @@ resource "Service Bindings", :type => :api do
 
   delete '/v2/service_bindings/:guid' do
     example 'Delete a service binding' do
-      guid = VCAP::CloudController::ServiceBinding.make.guid
       client.delete "/v2/service_bindings/#{guid}", {}, headers
       expect(status).to eq 204
     end
