@@ -7,8 +7,6 @@ module VCAP::CloudController
       before do
         8.times { AppSecurityGroup.make(staging_default: true) }
       end
-
-      include_examples "enumerating objects", path: "/v2/config/staging_security_groups", model: AppSecurityGroup
     end
 
     it "only returns AppSecurityGroups that are staging defaults" do

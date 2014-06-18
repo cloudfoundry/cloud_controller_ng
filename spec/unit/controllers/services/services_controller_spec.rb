@@ -2,25 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServicesController, :services do
-    include_examples "enumerating objects", path: "/v2/services", model: Service
-    include_examples "reading a valid object", path: "/v2/services", model: Service,
-                     basic_attributes:               %w(label provider url description version bindable tags requires)
-    include_examples "creating and updating", path: "/v2/services",
-                     model:                         Service,
-                     required_attributes:           %w(label provider url description version),
-                     unique_attributes:             %w(label provider),
-                     extra_attributes:              { extra: -> { Sham.extra }, bindable: false, tags: ["relational"], requires: ["loggyness"] }
-    include_examples "deleting a valid object", path: "/v2/services", model: Service,
-                     one_to_many_collection_ids:      {
-                       :service_plans => lambda { |service| ServicePlan.make(:service => service) },
-                     }
-    include_examples "collection operations", path: "/v2/services", model: Service,
-                     one_to_many_collection_ids:    {
-                       service_plans: lambda { |service| ServicePlan.make(service: service) }
-                     },
-                     many_to_one_collection_ids:    {},
-                     many_to_many_collection_ids:   {}
-
     shared_examples "enumerate and read service only" do |perm_name|
       include_examples "permission enumeration", perm_name,
                        :name                => 'service',

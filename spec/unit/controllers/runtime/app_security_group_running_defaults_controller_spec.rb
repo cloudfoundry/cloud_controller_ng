@@ -7,8 +7,6 @@ module VCAP::CloudController
       before do
         8.times { AppSecurityGroup.make(running_default: true) }
       end
-
-      include_examples "enumerating objects", path: "/v2/config/running_security_groups", model: AppSecurityGroup
     end
 
     it "only returns AppSecurityGroups that are running defaults" do

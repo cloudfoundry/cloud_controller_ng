@@ -298,6 +298,9 @@ module VCAP::CloudController
     required_attr true
   end
 
-  TestModelMany.blueprint do
+  TestModelManyToOne.blueprint do
+  end
+
+  TestModelManyToMany.blueprint do
   end
 end

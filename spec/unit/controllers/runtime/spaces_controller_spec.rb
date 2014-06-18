@@ -2,40 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::SpacesController do
-    include_examples "querying objects", path: "/v2/spaces", model: Space, queryable_attributes: %w(name)
-    include_examples "enumerating objects", path: "/v2/spaces", model: Space
-    include_examples "reading a valid object", path: "/v2/spaces", model: Space, basic_attributes: %w(name organization_guid)
-    include_examples "creating and updating", path: "/v2/spaces", model: Space, required_attributes: %w(name organization_guid), unique_attributes: %w(name organization_guid)
-    include_examples "deleting a valid object", path: "/v2/spaces", model: Space,
-      one_to_many_collection_ids: {
-        apps: lambda { |space| AppFactory.make(:space => space) },
-        service_instances: lambda { |space| ManagedServiceInstance.make(:space => space) },
-        routes: lambda { |space| Route.make(:space => space) },
-        default_users: lambda { |space|
-          user = VCAP::CloudController::User.make
-          space.organization.add_user(user)
-          space.add_developer(user)
-          space.save
-          user.default_space = space
-          user.save
-          user
-        }
-      }, excluded: [:default_users]
-    include_examples "collection operations", path: "/v2/spaces", model: Space,
-      one_to_many_collection_ids: {
-        apps: lambda { |space| AppFactory.make(space: space) },
-        routes: lambda { |space| Route.make(space: space) },
-        service_instances: lambda { |space| ManagedServiceInstance.make(space: space) }
-      },
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {
-        developers:          lambda { |space| make_user_for_space(space) },
-        managers:            lambda { |space| make_user_for_space(space) },
-        auditors:            lambda { |space| make_user_for_space(space) },
-        app_security_groups: lambda { |space| AppSecurityGroup.make }
-      }
-
-
     describe "data integrity" do
       let(:space) { Space.make }
 

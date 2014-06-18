@@ -6,32 +6,7 @@ module VCAP::CloudController
       before do
         Domain.dataset.destroy # Seeded domains get in the way
       end
-
-      include_examples "enumerating objects", path: "/v2/domains", model: PrivateDomain
-      include_examples "enumerating objects", path: "/v2/domains", model: SharedDomain
     end
-
-    include_examples "reading a valid object", path: "/v2/domains", model: PrivateDomain, basic_attributes: %w(name owning_organization_guid)
-    include_examples "reading a valid object", path: "/v2/domains", model: SharedDomain, basic_attributes: %w(name)
-    include_examples "creating and updating", path: "/v2/domains", model: SharedDomain, required_attributes: %w(name), unique_attributes: %w(name)
-    include_examples "deleting a valid object", path: "/v2/domains", model: PrivateDomain,
-      one_to_many_collection_ids: {
-        routes: lambda { |domain|
-          space = Space.make(organization: domain.owning_organization)
-          Route.make(domain: domain, space: space)
-        }
-      }
-    include_examples "deleting a valid object", path: "/v2/domains", model: SharedDomain, one_to_many_collection_ids: {routes: lambda { |domain| Route.make(domain: domain) }}
-
-    include_examples "collection operations", path: "/v2/domains", model: PrivateDomain,
-      one_to_many_collection_ids: {},
-      many_to_one_collection_ids: {owning_organization: lambda { |user| user.organizations.first || Organization.make }},
-      many_to_many_collection_ids: {}
-
-    include_examples "collection operations", path: "/v2/domains", model: SharedDomain,
-      one_to_many_collection_ids: {},
-      many_to_one_collection_ids: {},
-      many_to_many_collection_ids: {}
 
     describe "Permissions" do
       include_context "permissions"
