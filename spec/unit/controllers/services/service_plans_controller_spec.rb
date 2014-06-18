@@ -188,8 +188,8 @@ module VCAP::CloudController
         res['entity']['service_guid']
       end
 
-      expect(returned_plan_guids).to eq expected_plan_guids
-      expect(returned_service_guids).to eq expected_service_guids
+      expect(returned_plan_guids).to match_array expected_plan_guids
+      expect(returned_service_guids).to match_array expected_service_guids
     end
 
     context 'when the user is not logged in' do
@@ -211,8 +211,8 @@ module VCAP::CloudController
           res['entity']['service_guid']
         end
 
-        expect(returned_plan_guids).to eq expected_plan_guids
-        expect(returned_service_guids).to eq expected_service_guids
+        expect(returned_plan_guids).to match_array expected_plan_guids
+        expect(returned_service_guids).to match_array expected_service_guids
       end
 
       it 'does not allow the unauthed user to use inline-relations-depth' do
