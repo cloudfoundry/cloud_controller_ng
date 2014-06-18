@@ -77,13 +77,6 @@ module CloudController
           expect(blob.attributes("c")).to eq({'c'=>'d'})
         end
       end
-
-      describe "delete" do
-        it "destroys the file" do
-          file.should_receive(:destroy)
-          blob.delete
-        end
-      end
     end
   end
 end

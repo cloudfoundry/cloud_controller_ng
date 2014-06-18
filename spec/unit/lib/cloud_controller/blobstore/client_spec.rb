@@ -307,6 +307,28 @@ module CloudController
             }.to_not raise_error
           end
         end
+
+        describe "#delete_blob" do
+          it "deletes the blob's file" do
+            path = File.join(local_dir, "empty_file")
+            FileUtils.touch(path)
+
+            client.cp_to_blobstore(path, "abcdef123456")
+            expect(client.exists?("abcdef123456")).to eq(true)
+
+            blob = client.blob("abcdef123456")
+
+            client.delete_blob(blob)
+            expect(client.exists?("abcdef123456")).to eq(false)
+          end
+
+          it "should be ok if the file doesn't exist" do
+            blob = Blob.new(nil, nil)
+            expect {
+              client.delete_blob(blob)
+            }.to_not raise_error
+          end
+        end
       end
 
       context "with root directory specified" do

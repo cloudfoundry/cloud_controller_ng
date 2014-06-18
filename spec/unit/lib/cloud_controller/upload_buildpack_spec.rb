@@ -70,7 +70,7 @@ module VCAP::CloudController
 
           upload_buildpack.upload_bits(buildpack, valid_zip2, filename)
 
-          expect(VCAP::CloudController::BuildpackBitsDelete).to have_received(:delete_when_safe).with(expected_sha_valid_zip, :buildpack_blobstore, staging_timeout)
+          expect(VCAP::CloudController::BuildpackBitsDelete).to have_received(:delete_when_safe).with(expected_sha_valid_zip, staging_timeout)
         end
       end
 

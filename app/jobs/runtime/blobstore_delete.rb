@@ -9,7 +9,7 @@ module VCAP::CloudController
           blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
           blob = blobstore.blob(key)
           if blob && same_blob(blob)
-            blob.delete
+            blobstore.delete_blob(blob)
           end
         end
 

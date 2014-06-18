@@ -4,7 +4,6 @@ module VCAP::CloudController
   describe BuildpackBitsDelete do
     let(:staging_timeout) { 144 }
     let(:key) { "key" }
-    let(:blobstore_name) {"buildpack_blobstore"}
     let!(:blobstore) do
       CloudController::DependencyLocator.instance.buildpack_blobstore
     end
@@ -24,14 +23,14 @@ module VCAP::CloudController
         Timecop.freeze do
           Delayed::Job.should_receive(:enqueue).with(an_instance_of(BlobstoreDelete),
                                                      hash_including(run_at: 144.seconds.from_now))
-          BuildpackBitsDelete.delete_when_safe(key, blobstore_name, staging_timeout)
+          BuildpackBitsDelete.delete_when_safe(key, staging_timeout)
         end
       end
     end
 
     it 'does nothing if the key is nil' do
       Delayed::Job.should_not_receive(:enqueue)
-      BuildpackBitsDelete.delete_when_safe(nil, blobstore_name, staging_timeout)
+      BuildpackBitsDelete.delete_when_safe(nil,staging_timeout)
     end
 
     context "when the blob exists" do
@@ -40,8 +39,8 @@ module VCAP::CloudController
         job_attrs = {:last_modified => attrs[:last_modified],
                      :etag => attrs[:etag]}
 
-        Jobs::Runtime::BlobstoreDelete.should_receive(:new).with(key, blobstore_name, job_attrs).and_call_original
-        BuildpackBitsDelete.delete_when_safe(key, blobstore_name, staging_timeout)
+        Jobs::Runtime::BlobstoreDelete.should_receive(:new).with(key, :buildpack_blobstore, job_attrs).and_call_original
+        BuildpackBitsDelete.delete_when_safe(key, staging_timeout)
       end
     end
 
@@ -50,7 +49,7 @@ module VCAP::CloudController
         blobstore.delete(key)
 
         Jobs::Runtime::BlobstoreDelete.should_not_receive(:new)
-        BuildpackBitsDelete.delete_when_safe(key, blobstore_name, staging_timeout)
+        BuildpackBitsDelete.delete_when_safe(key, staging_timeout)
       end
     end
   end

@@ -75,7 +75,11 @@ module CloudController
 
       def delete(key)
         blob_file = file(key)
-        blob_file.destroy if blob_file
+        delete_file(blob_file) if blob_file
+      end
+
+      def delete_blob(blob)
+        delete_file(blob.file) if blob.file
       end
 
       def download_uri(key)
@@ -94,6 +98,10 @@ module CloudController
       end
 
       private
+
+      def delete_file(file)
+        file.destroy
+      end
 
       def file(key)
         files.head(partitioned_key(key))
