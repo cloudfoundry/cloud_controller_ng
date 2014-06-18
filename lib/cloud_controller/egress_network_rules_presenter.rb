@@ -5,9 +5,7 @@ module VCAP::CloudController
     end
 
     def to_array
-      @app_security_groups.map do |asg|
-        JSON.parse(asg.rules)
-      end.flatten
+      @app_security_groups.map(&:rules).flatten
     end
   end
 end

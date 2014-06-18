@@ -98,9 +98,9 @@ module VCAP::CloudController
       end
 
       context "when app security groups are configured" do
-        let(:asg_default_rules_1) { '[{"protocol":"udp","port":"8080","destination":"198.41.191.47/1"}]' }
-        let(:asg_default_rules_2) { '[{"protocol":"tcp","port":"9090","destination":"198.41.191.48/1"}]' }
-        let(:asg_for_space_rules) { '[{"protocol":"udp","port":"1010","destination":"198.41.191.49/1"}]' }
+        let(:asg_default_rules_1) { [{"protocol" => "udp", "port" => "8080", "destination" => "198.41.191.47/1"}] }
+        let(:asg_default_rules_2) { [{"protocol" => "tcp", "port" => "9090", "destination" => "198.41.191.48/1"}] }
+        let(:asg_for_space_rules) { [{"protocol" => "udp", "port" => "1010", "destination" => "198.41.191.49/1"}] }
 
         before do
           AppSecurityGroup.make(rules: asg_default_rules_1, running_default: true)
@@ -110,11 +110,9 @@ module VCAP::CloudController
 
         it "should provide the egress rules in the start message" do
           res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          expect(res[:egress_network_rules]).to match_array(JSON.parse('[
-            {"protocol":"udp","port":"8080","destination":"198.41.191.47/1"},
-            {"protocol":"tcp","port":"9090","destination":"198.41.191.48/1"},
-            {"protocol":"udp","port":"1010","destination":"198.41.191.49/1"}
-          ]'))
+          expect(res[:egress_network_rules]).to match_array(
+            [ asg_default_rules_1, asg_default_rules_2, asg_for_space_rules ].flatten
+          )
         end
       end
     end

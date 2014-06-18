@@ -6,8 +6,12 @@ module VCAP::CloudController
     TRANSPORT_RULE_FIELDS = ["protocol", "port", "destination"].map(&:freeze).freeze
     ICMP_RULE_FIELDS = ["protocol", "code", "type", "destination"].map(&:freeze).freeze
 
+    plugin :serialization
+
     import_attributes :name, :rules, :running_default, :staging_default, :space_guids
     export_attributes :name, :rules
+
+    serialize_attributes :json, :rules
 
     many_to_many :spaces
 
@@ -34,14 +38,12 @@ module VCAP::CloudController
     def validate_rules
       return true unless rules
 
-      parsed_rules = JSON.parse(rules)
-
-      unless parsed_rules.is_a?(Array) && parsed_rules.all? { |r| r.is_a?(Hash) }
-        errors.add(:rules, 'must be a JSON array of objects')
+      unless rules.is_a?(Array) && rules.all? { |r| r.is_a?(Hash) }
+        errors.add(:rules, "value must be an array of hashes. rules: '#{rules}'")
         return false
       end
 
-      parsed_rules.each_with_index do |rule, index|
+      rules.each_with_index do |rule, index|
         protocol = rule['protocol']
 
         validation_errors = case protocol
@@ -58,9 +60,6 @@ module VCAP::CloudController
         end
         errors.empty?
       end
-
-    rescue JSON::ParserError => e
-      errors.add(:rules, "contains invalid JSON: #{e.message}")
     end
 
     def validate_transport_rule(rule, index)
@@ -103,7 +102,8 @@ module VCAP::CloudController
     end
 
     def validate_fields(rule, fields)
-      (rule.keys - fields).map { |key| "contains the invalid field '#{key}'" }
+      errs = (fields - rule.keys).map { |field| "missing required field '#{field}'" }
+      errs += (rule.keys - fields).map { |key| "contains the invalid field '#{key}'" }
     end
 
     def validate_port(port)

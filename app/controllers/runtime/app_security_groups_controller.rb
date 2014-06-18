@@ -2,7 +2,8 @@ module VCAP::CloudController
   class AppSecurityGroupsController < RestController::ModelController
     define_attributes do
       attribute :name, String
-      attribute :rules, String, default: nil
+      attribute :rules, [Hash], default: []
+
       to_many :spaces
     end
 
