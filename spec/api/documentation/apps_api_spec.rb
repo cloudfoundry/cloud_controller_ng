@@ -154,7 +154,7 @@ resource "Apps", :type => :api do
 
     let(:app_obj) { VCAP::CloudController::AppFactory.make(state: "STARTED", package_hash: "abc") }
 
-    example "Get the instance information for an Application" do
+    example "Get the instance information for a STARTED Application" do
       explanation <<-EOD
         Get status for each instance of an Application using the app guid.
       EOD
@@ -176,6 +176,50 @@ resource "Apps", :type => :api do
       allow(instances_reporter).to receive(:all_instances_for_app).and_return(instances)
 
       client.get "/v2/apps/#{app_obj.guid}/instances", {}, headers
+      expect(status).to eq(200)
+    end
+  end
+
+  get "/v2/apps/:guid/stats" do
+    field :guid, "The guid of the app.", required: true
+
+    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: "STARTED", package_hash: "abc") }
+
+    example "Get detailed stats for a STARTED Application" do
+      explanation <<-EOD
+        Get status for each instance of an Application using the app guid.
+      EOD
+
+      stats = {
+        0 => {
+          state: "RUNNING",
+          stats: {
+            usage: {
+              disk: 66392064,
+              mem: 29880320,
+              cpu: 0.13511219703079957,
+              time: "2014-06-19 22:37:58 +0000"
+            },
+            name: "app_name",
+            uris: [
+              "app_name.example.com"
+            ],
+            host: "10.0.0.1",
+            port: 61035,
+            uptime: 65007,
+            mem_quota: 536870912,
+            disk_quota: 1073741824,
+            fds_quota: 16384
+          }
+        }
+      }
+
+      instances_reporter = double(:instances_reporter)
+      instances_reporter_factory = CloudController::DependencyLocator.instance.instances_reporter_factory
+      allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
+      allow(instances_reporter).to receive(:stats_for_app).and_return(stats)
+
+      client.get "/v2/apps/#{app_obj.guid}/stats", {}, headers
       expect(status).to eq(200)
     end
   end
