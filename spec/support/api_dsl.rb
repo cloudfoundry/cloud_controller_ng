@@ -102,7 +102,7 @@ module ApiDsl
       if options[:outer_model]
         model_name = options[:path] if options[:path]
         path = "#{options[:outer_model].to_s.pluralize}/:guid/#{model_name}"
-        outer_model_description = " in #{options[:outer_model]}"
+        outer_model_description = " for a #{options[:outer_model]}"
       else
         path = options[:path] || model
       end
