@@ -14,12 +14,12 @@ resource 'Apps', :type => :api do
   authenticated_request
 
   get "/v2/apps/:guid/summary" do
-    field :guid, "The guid of the app for which summary is requested", required: true, example_values: ["cd60d82b-931e-40b6-b5a9-ffee84d2695a"]
-    field :name, "The name of the app.", required: false, readonly: true, example_values: ["my_super_app"]
-    field :memory, "The amount of memory each instance should have. In megabytes.", required: false, readonly: true, example_values: [1_024, 512]
-    field :instances, "The number of instances of the app to run.", required: false, readonly: true, example_values: [2, 6, 10]
-    field :disk_quota, "The maximum amount of disk available to an instance of an app. In megabytes.", required: false, readonly: true, example_values: [1_204, 2_048]
-    field :space_guid, "The guid of the associated space.", required: false, readonly: true, example_values: [Sham.guid]
+    field :guid, "The guid of the app for which summary is requested", required: true
+    field :name, "The name of the app.", required: false, readonly: true
+    field :memory, "The amount of memory each instance should have. In megabytes.", required: false, readonly: true
+    field :instances, "The number of instances of the app to run.", required: false, readonly: true
+    field :disk_quota, "The maximum amount of disk available to an instance of an app. In megabytes.", required: false, readonly: true
+    field :space_guid, "The guid of the associated space.", required: false, readonly: true
 
     field :stack_guid, "The guid of the associated stack.", required: false, readonly: true, default: "Uses the default system stack."
     field :state, "The current state of the app. One of STOPPED or STARTED.", required: false, readonly: true, default: "STOPPED", valid_values: %w[STOPPED STARTED] # nice to validate this eventually..
@@ -37,7 +37,7 @@ resource 'Apps', :type => :api do
   
     field :system_env_json, "environment_json for system variables, contains vcap_services by default, a hash containing key/value pairs of the names and information of the services associated with your app.", required: false, readonly: true
     field :staging_task_id, "Staging task id",required: false, readonly: true
-    field :running_instances, "The number of instances of the app that are currently running.", required: false, readonly: true, example_values: [2, 6, 10]
+    field :running_instances, "The number of instances of the app that are currently running.", required: false, readonly: true
     field :available_domain, "List of available domains configured for the app", required: false, readonly: true 
     field :routes, "List of routes configured for the app",required: false, readonly: true
     field :version, "Version guid of the app", required: false, readonly: true
@@ -73,8 +73,8 @@ resource 'Spaces', :type => :api do
   authenticated_request
 
   get "/v2/spaces/:guid/summary" do
-    field :guid, "The guid of the space for which summary is requested", required: true, example_values: ["d4029744-bc5d-4ec4-8e19-11162c9c7d28"]
-    field :name, "The name of the space.", required: false, readonly: true, example_values: ["my_super_app"]
+    field :guid, "The guid of the space for which summary is requested", required: true
+    field :name, "The name of the space.", required: false, readonly: true
     field :apps, "List of apps that are running in the space", required: false, readonly: true
     field :services, "List of services that are associated with the space", required: false, readonly: true
 
@@ -89,6 +89,30 @@ resource 'Spaces', :type => :api do
 
       expect(parsed_response["apps"][0]["name"]).to eq(app_obj.name)
       expect(parsed_response["services"][0]["name"]).to eq(service_instance.name)
+    end
+  end
+end
+
+resource 'Organizations', :type => :api do
+  let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
+  let(:organization) { VCAP::CloudController::Organization.make }
+  let!(:space) { VCAP::CloudController::Space.make(organization: organization) }
+
+  authenticated_request
+
+  get "/v2/organizations/:guid/summary" do
+    field :guid, "The guid of the organization for which summary is requested", required: true
+    field :name, "The name of the organization.", required: false, readonly: true
+    field :spaces, "List of spaces that are in the organization", required: false, readonly: true
+    field :status, "Status of the organization", required: false, readonly: true
+
+    example "Get organization summary" do
+      client.get "/v2/organizations/#{organization.guid}/summary", {} , headers
+
+      expect(status).to eq 200
+      expect(parsed_response["guid"]).to eq(organization.guid)
+      expect(parsed_response["name"]).to eq(organization.name)
+      expect(parsed_response["spaces"][0]["name"]).to eq(space.name)
     end
   end
 end
