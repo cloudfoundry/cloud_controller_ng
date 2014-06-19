@@ -8,6 +8,15 @@ module VCAP::CloudController
       @resource_pool.add_directory(@tmpdir)
     end
 
+    def resource_match_request(verb, path, matches, non_matches)
+      user = User.make(:admin => true, :active => true)
+      req = Yajl::Encoder.encode(matches + non_matches)
+      send(verb, path, req, json_headers(headers_for(user)))
+      last_response.status.should == 200
+      resp = Yajl::Parser.parse(last_response.body)
+      resp.should == matches
+    end
+
     describe "PUT /v2/resource_match" do
       it "should return an empty list when no resources match" do
         resource_match_request(:put, "/v2/resource_match", [], [@dummy_descriptor])

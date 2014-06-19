@@ -13,7 +13,7 @@ resource "Private Domains", :type => :api do
   field :owning_organization_guid, "The organization that owns the domain. If not specified, the domain is shared.", required: false
 
   standard_model_list :private_domain, VCAP::CloudController::PrivateDomainsController
-  standard_model_get :private_domain
+  standard_model_get :private_domain, nested_associations: [:owning_organization]
   standard_model_delete :private_domain
 
   post "/v2/private_domains" do
