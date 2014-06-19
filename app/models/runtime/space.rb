@@ -5,7 +5,7 @@ module VCAP::CloudController
     class InvalidManagerRelation < VCAP::Errors::InvalidRelation; end
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
 
-    SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    SPACE_NAME_REGEX = /\A[[[:alnum:][:punct:][:print:]]&&[^;]]+\Z/.freeze
 
     define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager

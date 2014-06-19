@@ -452,5 +452,9 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "#validate" do
+      it_should_behave_like "name with semicolon is not valid", described_class
+    end
   end
 end
