@@ -8,7 +8,7 @@ resource "Organizations", :type => :api do
 
   authenticated_request
 
-  describe "Standard app endpoints" do
+  describe "Standard endpoints" do
     field :guid, "The guid of the organization.", required: false
     field :name, "The name of the organization", required: true, example_values: ["my-org-name"]
     field :status, "Status of the organization"
@@ -20,7 +20,6 @@ resource "Organizations", :type => :api do
 
     post "/v2/organizations/" do
       example "Creating an organization" do
-        organization_guid = VCAP::CloudController::Organization.make.guid
         client.post "/v2/organizations", Yajl::Encoder.encode(required_fields), headers
         expect(status).to eq(201)
 
@@ -39,7 +38,7 @@ resource "Organizations", :type => :api do
     end
   end
 
-  describe "Nested app endpoints" do
+  describe "Nested endpoints" do
     field :guid, "The guid of the organization.", required: true
 
     get "/v2/organizations/:guid/spaces" do

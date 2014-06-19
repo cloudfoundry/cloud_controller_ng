@@ -10,7 +10,7 @@ resource "Apps", :type => :api do
 
   authenticated_request
 
-  describe "Standard app endpoints" do
+  describe "Standard endpoints" do
     field :guid, "The guid of the app.", required: false
     field :name, "The name of the app.", required: true, example_values: ["my_super_app"]
     field :memory, "The amount of memory each instance should have. In megabytes.", required: true, example_values: [1_024, 512]
@@ -105,7 +105,7 @@ resource "Apps", :type => :api do
     end
   end
 
-  describe "Nested app endpoints" do
+  describe "Nested endpoints" do
     field :guid, "The guid of the app.", required: true
 
     get "/v2/apps/:guid/service_bindings" do
