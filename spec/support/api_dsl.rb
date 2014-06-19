@@ -97,10 +97,19 @@ module ApiDsl
     end
 
     def standard_model_list(model, controller, options = {})
-      path = options[:path] || model
+      outer_model_description = ''
+      model_name = options[:path] || model
+      if options[:outer_model]
+        model_name = options[:path] if options[:path]
+        path = "#{options[:outer_model].to_s.pluralize}/:guid/#{model_name}"
+        outer_model_description = " in #{options[:outer_model]}"
+      else
+        path = options[:path] || model
+      end
+
       get root(path) do
         standard_list_parameters controller
-        example_request "List all #{path.to_s.pluralize.titleize}" do
+        example_request "List all #{model_name.to_s.pluralize.titleize}#{outer_model_description}" do
           standard_list_response parsed_response, model
         end
       end
