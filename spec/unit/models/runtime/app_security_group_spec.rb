@@ -55,7 +55,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
             end
           end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
             end
           end
 
@@ -75,7 +75,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
             end
           end
 
@@ -85,7 +85,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
             end
           end
 
@@ -95,7 +95,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
             end
           end
 
@@ -105,7 +105,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
             end
           end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
             end
           end
 
@@ -137,7 +137,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).not_to be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 missing required field \'port\''
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'port\''
             end
           end
         end
@@ -161,7 +161,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).not_to be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid destination'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
             end
           end
 
@@ -171,7 +171,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).not_to be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid destination'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
             end
           end
 
@@ -181,7 +181,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).not_to be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid destination'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
             end
           end
 
@@ -195,7 +195,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).not_to be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'number 1 missing required field \'destination\''
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'destination\''
             end
           end
         end
@@ -207,7 +207,7 @@ module VCAP::CloudController
         it 'is not valid' do
           expect(subject).to_not be_valid
           expect(subject.errors[:rules].length).to eq 1
-          expect(subject.errors[:rules][0]).to start_with 'number 1 contains the invalid field \'foobar\''
+          expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains the invalid field \'foobar\''
         end
       end
     end
@@ -295,7 +295,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).to_not be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid type'
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid type'
                   end
                 end
 
@@ -305,7 +305,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).to_not be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid type'
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid type'
                   end
                 end
 
@@ -319,7 +319,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 missing required field \'type\''
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'type\''
                   end
                 end
               end
@@ -351,7 +351,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).to_not be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid code'
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid code'
                   end
                 end
 
@@ -361,7 +361,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).to_not be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid code'
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid code'
                   end
                 end
 
@@ -375,7 +375,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 missing required field \'code\''
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'code\''
                   end
                 end
               end
@@ -399,7 +399,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid destination'
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
                   end
                 end
 
@@ -409,7 +409,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid destination'
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
                   end
                 end
 
@@ -419,7 +419,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 contains invalid destination'
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
                   end
                 end
 
@@ -433,7 +433,7 @@ module VCAP::CloudController
                   it 'is not valid' do
                     expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
-                    expect(subject.errors[:rules][0]).to start_with 'number 1 missing required field \'destination\''
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'destination\''
                   end
                 end
               end
@@ -445,7 +445,7 @@ module VCAP::CloudController
               it 'is not valid' do
                 expect(subject).to_not be_valid
                 expect(subject.errors[:rules].length).to eq 1
-                expect(subject.errors[:rules][0]).to start_with 'number 1 contains the invalid field \'foobar\''
+                expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains the invalid field \'foobar\''
               end
             end
           end
@@ -469,7 +469,7 @@ module VCAP::CloudController
               it 'is not valid' do
                 expect(subject).not_to be_valid
                 expect(subject.errors[:rules].length).to eq 1
-                expect(subject.errors[:rules][0]).to start_with 'number 1 contains an unsupported protocol'
+                expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains an unsupported protocol'
               end
             end
 
@@ -479,7 +479,7 @@ module VCAP::CloudController
               it 'is not valid' do
                 expect(subject).not_to be_valid
                 expect(subject.errors[:rules].length).to eq 1
-                expect(subject.errors[:rules][0]).to start_with 'number 1 contains an unsupported protocol'
+                expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains an unsupported protocol'
               end
             end
           end

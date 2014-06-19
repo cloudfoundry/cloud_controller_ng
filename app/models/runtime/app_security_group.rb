@@ -56,7 +56,7 @@ module VCAP::CloudController
         end
 
         validation_errors.each do |error_text|
-          errors.add(:rules, "number #{index + 1} #{error_text}")
+          errors.add(:rules, "rule number #{index + 1} #{error_text}")
         end
         errors.empty?
       end
