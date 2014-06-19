@@ -24,38 +24,10 @@ resource "Jobs", type: :api do
       end
     end
 
-    describe "When a legacy job has failed without storing the failure" do
-      before { VCAP::CloudController::Jobs::Enqueuer.new(KnownFailingJob.new).enqueue }
-
-      example "Retrieve Job Error message" do
-        explanation "This is an unauthenticated access to get the job's error status with specified guid."
-
-        Delayed::Worker.new.work_off
-
-        last_job = Delayed::Job.last
-        last_job.cf_api_error = nil
-        expect(last_job.save).to be_true
-
-        guid = last_job.guid
-
-        client.get "/v2/jobs/#{guid}"
-        expect(status).to eq 200
-        expect(parsed_response).to include("entity")
-        expect(parsed_response["entity"]).to include("error")
-        expect(parsed_response["entity"]["error"]).to match(/deprecated/i)
-
-        expect(parsed_response["entity"]).to include("error_details")
-        expect(parsed_response["entity"]["error_details"]).to eq("error_code" => "UnknownError",
-                                                                 "description" => "An unknown error occurred.",
-                                                                 "code" => 10001)
-      end
-    end
-
-
     describe "When a job has failed with a known failure from v2.yml" do
       before { VCAP::CloudController::Jobs::Enqueuer.new(KnownFailingJob.new).enqueue }
 
-      example "Retrieve Job Error message" do
+      example "Retrieve Job with known failure" do
         explanation "This is an unauthenticated access to get the job's error status with specified guid."
 
         guid = Delayed::Job.last.guid
@@ -87,7 +59,7 @@ resource "Jobs", type: :api do
 
       before { VCAP::CloudController::Jobs::Enqueuer.new(UnknownFailingJob.new).enqueue }
 
-      example "Retrieve Job Error message" do
+      example "Retrieve Job with unknown failure" do
         explanation "This is an unauthenticated access to get the job's error status with specified guid."
 
         job_last = Delayed::Job.last
@@ -117,7 +89,7 @@ resource "Jobs", type: :api do
 
       before { VCAP::CloudController::Jobs::Enqueuer.new(SuccessfulJob.new).enqueue }
 
-      example "Retrieve the Job " do
+      example "Retrieve Job that is queued" do
         explanation "This is an unauthenticated access to get the job's status with specified guid."
 
         guid = Delayed::Job.last.guid
@@ -135,7 +107,7 @@ resource "Jobs", type: :api do
 
       before { VCAP::CloudController::Jobs::Enqueuer.new(SuccessfulJob.new).enqueue }
 
-      example "Retrieve the Job" do
+      example "Retrieve Job that was successful" do
         explanation "This is an unauthenticated access to get the job's status with specified guid."
 
         guid = Delayed::Job.last.guid
