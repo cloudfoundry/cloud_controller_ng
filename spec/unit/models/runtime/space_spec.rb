@@ -336,6 +336,10 @@ module VCAP::CloudController
         expect(eager_space.app_security_groups).to match_array [associated_asg, default_asg, another_default_asg]
       end
     end
+
+    describe "#validate" do
+      it_should_behave_like "name with semicolon is not valid", described_class
+    end
   end
 
   describe "#having_developer" do

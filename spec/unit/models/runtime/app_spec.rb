@@ -1768,6 +1768,10 @@ module VCAP::CloudController
         expect { app.save }.to raise_error(Errors::ApplicationMissing)
       end
     end
+
+    describe "#validate" do
+      it_should_behave_like "name with semicolon is not valid", described_class
+    end
   end
 
   describe "default disk_quota" do

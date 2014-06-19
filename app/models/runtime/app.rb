@@ -12,7 +12,7 @@ module VCAP::CloudController
   class App < Sequel::Model
     plugin :serialization
 
-    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    APP_NAME_REGEX = /\A[[[:alnum:][:punct:][:print:]]&&[^;]]+\Z/.freeze
 
     one_to_many :droplets
     one_to_many :service_bindings
