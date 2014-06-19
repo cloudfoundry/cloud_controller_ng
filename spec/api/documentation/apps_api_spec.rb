@@ -148,4 +148,35 @@ resource "Apps", :type => :api do
       expect(parsed_response).to have_key('environment_json')
     end
   end
+
+  get "/v2/apps/:guid/instances" do
+    field :guid, "The guid of the app.", required: true
+
+    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: "STARTED", package_hash: "abc") }
+
+    example "Get the instance information for an Application" do
+      explanation <<-EOD
+        Get status for each instance of an Application using the app guid.
+      EOD
+
+      instances = {
+        0 => {
+          state: "RUNNING",
+          since: 1403140717.984577,
+          debug_ip: nil,
+          debug_port: nil,
+          console_ip: nil,
+          console_port: nil
+        },
+      }
+
+      instances_reporter = double(:instances_reporter)
+      instances_reporter_factory = CloudController::DependencyLocator.instance.instances_reporter_factory
+      allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
+      allow(instances_reporter).to receive(:all_instances_for_app).and_return(instances)
+
+      client.get "/v2/apps/#{app_obj.guid}/instances", {}, headers
+      expect(status).to eq(200)
+    end
+  end
 end
