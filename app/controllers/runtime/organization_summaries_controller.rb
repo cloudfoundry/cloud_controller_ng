@@ -11,7 +11,7 @@ module VCAP::CloudController
         :guid => org.guid,
         :name => org.name,
         :status => org.status,
-        :spaces => org.spaces.map do |space|
+        :spaces => visible_spaces(org).map do |space|
           # when we do the quota work, this and the service counts will be kept
           # as a running total so that we don't have to compute them on the
           # fly.
@@ -36,6 +36,12 @@ module VCAP::CloudController
           }.merge(space_summary)
         end
       )
+    end
+
+    private
+
+    def visible_spaces(org)
+      org.user_visible_relationship_dataset(:spaces, SecurityContext.current_user, SecurityContext.admin?)
     end
   end
 end
