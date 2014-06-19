@@ -7,8 +7,7 @@ module VCAP::CloudController
     model_class_name :App
 
     get "#{path_guid}/instances/:instance_id/files", :files
-    def files(guid, search_param, path = nil, opts = {})
-      opts = { :allow_redirect => true }.merge(opts)
+    def files(guid, search_param, path = nil)
       app = find_guid_and_validate_access(:read, guid)
 
       info = get_file_uri_for_search_param(app, path, search_param)
@@ -19,37 +18,9 @@ module VCAP::CloudController
         headers["Range"] = range
       end
 
-      http_response = nil
-      # new VMC and new DEA, let's hand out the directory server url.
-      # We sadly still have to serve the files through CC otherwise
-      if info.file_uri_v2 && opts[:allow_redirect]
-        uri = info.file_uri_v2
-        uri = add_tail(uri) if params.include?("tail")
-        return [HTTP::FOUND, {"Location" => uri}, nil]
-      else
-        # We either have an old VMC that doesn't know the tail capability, or
-        # that we're serving a file from an old DEA that isn't capable of tail
-        # queries
-        if config[:nginx][:use_nginx]
-          basic_auth = {
-            "X-Auth" => "Basic #{[info.credentials.join(":")].pack("m0")}",
-          }
-          # use the v1 dir server to avoid resolving domain names in nginx
-          x_accel = {"X-Accel-Redirect" => "/internal_redirect/#{info.file_uri_v1}"}
-          return [200, x_accel.merge(basic_auth), ""]
-        end
-
-        http_response = http_get(info.file_uri_v1, headers, info.credentials[0], info.credentials[1])
-      end
-
-      unless [200, 206, 416].include? http_response.status
-        msg = "Request failed for app: #{app.name}, search_param: #{search_param}"
-        msg << " as there was an error retrieving the files."
-
-        raise Errors::ApiError.new_from_details("FileError", msg)
-      end
-
-      [http_response.status, http_response.body]
+      uri = info.file_uri_v2
+      uri = add_tail(uri) if params.include?("tail")
+      [HTTP::FOUND, {"Location" => uri}, nil]
     end
 
     get "#{path_guid}/instances/:instance_id/files/*", :files
