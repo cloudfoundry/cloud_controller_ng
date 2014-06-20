@@ -7,18 +7,9 @@ resource "Service Bindings", :type => :api do
   let(:guid) { service_binding.guid }
   authenticated_request
 
-  get '/v2/service_bindings' do
-    standard_model_list :service_bindings, VCAP::CloudController::ServiceBindingsController
-  end
-
-  get '/v2/service_bindings/:guid' do
-    standard_list_parameters VCAP::CloudController::ServiceBindingsController
-
-    example 'Getting a service binding' do
-      client.get "/v2/service_bindings/#{guid}", {}, headers
-      expect(status).to eq 200
-    end
-  end
+  standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController
+  standard_model_get :service_binding, nested_associations: [:app, :service_instance]
+  standard_model_delete :service_binding
 
   post '/v2/service_bindings' do
     field :service_instance_guid, 'The guid of the service instance to bind', required: true
@@ -33,13 +24,6 @@ resource "Service Bindings", :type => :api do
 
       client.post "/v2/service_bindings", request_json, headers
       expect(status).to eq 201
-    end
-  end
-
-  delete '/v2/service_bindings/:guid' do
-    example 'Delete a service binding' do
-      client.delete "/v2/service_bindings/#{guid}", {}, headers
-      expect(status).to eq 204
     end
   end
 end

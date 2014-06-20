@@ -48,7 +48,6 @@ module VCAP::CloudController
       Errors::ApiError.new_from_details("ServiceInstanceNotFound", guid)
     end
 
-    post "/v2/service_instances", :create
     def create
       json_msg = self.class::CreateMessage.decode(body)
 
@@ -110,7 +109,6 @@ module VCAP::CloudController
       end
     end
 
-    get "/v2/service_instances/:guid", :read
     def read(guid)
       logger.debug "cc.read", model: :ServiceInstance, guid: guid
 

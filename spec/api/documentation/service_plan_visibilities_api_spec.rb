@@ -3,22 +3,13 @@ require 'rspec_api_documentation/dsl'
 
 resource "Service Plan Visibilities", type: :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
+  let!(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
+  let(:guid) { service_plan_visibility.guid }
   authenticated_request
 
-  describe 'Listing Service Plan Visibilities' do
-    let!(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
-    standard_model_list(:service_plan_visibilities, VCAP::CloudController::ServicePlanVisibilitiesController)
-  end
-
-  describe 'Getting a Service Plan Visibility' do
-    let(:guid) { VCAP::CloudController::ServicePlanVisibility.make.guid }
-    standard_model_get(:service_plan_visibilities)
-  end
-
-  describe 'Deleting a Service Plan Visibility' do
-    let(:guid) { VCAP::CloudController::ServicePlanVisibility.make.guid }
-    standard_model_delete(:service_plan_visibilities)
-  end
+  standard_model_list(:service_plan_visibilities, VCAP::CloudController::ServicePlanVisibilitiesController)
+  standard_model_get(:service_plan_visibilities, nested_attributes: [:service_plan, :organization])
+  standard_model_delete(:service_plan_visibilities)
 
   post '/v2/service_plan_visibilities' do
     field :service_plan_guid, 'The guid of the plan that will be made visible', required: true

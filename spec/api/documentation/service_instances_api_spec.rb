@@ -2,39 +2,44 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "Service Instances", :type => :api do
-  authenticated_request
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+  let(:guid) { service_instance.guid }
 
-  standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
+  authenticated_request
 
-  post '/v2/service_instances/' do
-    field :name, 'A name for the service instance', required: true, example_values: [ 'my-service-instance' ]
-    field :service_plan_guid, 'The guid of the service plan to associate with the instance', required: true
-    field :space_guid, 'The guid of the space in which the instance will be created', required: true
-    field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
+  describe "Standard endpoints" do
+    standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
+    standard_model_get :managed_service_instance, path: :service_instance, nested_attributes: [:space, :service_plan]
+    standard_model_delete_without_async :service_instance
 
-    example 'Creating a service instance' do
-      space_guid = VCAP::CloudController::Space.make.guid
-      service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
-      request_hash = {space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid }
+    post '/v2/service_instances/' do
+      field :name, 'A name for the service instance', required: true, example_values: ['my-service-instance']
+      field :service_plan_guid, 'The guid of the service plan to associate with the instance', required: true
+      field :space_guid, 'The guid of the space in which the instance will be created', required: true
+      field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
 
-      client.post '/v2/service_instances', Yajl::Encoder.encode(request_hash, pretty: true), headers
-      expect(status).to eq(201)
+      example 'Creating a service instance' do
+        space_guid = VCAP::CloudController::Space.make.guid
+        service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
+        request_hash = {space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid}
+
+        client.post '/v2/service_instances', Yajl::Encoder.encode(request_hash, pretty: true), headers
+        expect(status).to eq(201)
+      end
     end
   end
 
-  describe 'Deleting a service instance' do
-    let(:guid) { VCAP::CloudController::ServiceInstance.make.guid }
+  describe "Nested endpoints" do
+    field :guid, "The guid of the Service Instance.", required: true
 
-    standard_model_delete_without_async :service_instance
-  end
+    describe "Service Bindings" do
+      before do
+        VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
+      end
 
-  describe 'Getting a service instance' do
-    standard_list_parameters VCAP::CloudController::ServiceInstancesController
-    let(:guid) { VCAP::CloudController::ManagedServiceInstance.make.guid }
-
-    standard_model_get :managed_service_instance, path: :service_instance
+      standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :service_instance
+    end
   end
 
   get "/v2/service_instances/:guid/permissions" do
@@ -62,26 +67,6 @@ resource "Service Instances", :type => :api do
 
       expect(status).to eq(200)
       expect(parsed_response['changed_count']).to eq(1)
-    end
-  end
-
-  post '/v2/user_provided_service_instances/' do
-    field :name, 'A name for the service instance', required: true, example_values: [ 'my-user-provided-instance' ]
-    field :space_guid, 'The guid of the space in which the instance will be created', required: true
-    field :syslog_drain_url, 'The url for the syslog_drain to direct to', required: false, example_values: [ 'syslog://example.com' ]
-    field :credentials, 'A hash that can be used to store credentials', required: false, example_values: [ { somekey: 'somevalue' }.to_s ]
-
-    example 'Creating a user provided service instance' do
-      space_guid = VCAP::CloudController::Space.make.guid
-      request_hash = {
-        space_guid: space_guid,
-        name: 'my-user-provided-instance',
-        credentials: {somekey: 'somevalue'},
-        syslog_drain_url: 'syslog://example.com'
-      }
-
-      client.post '/v2/user_provided_service_instances', Yajl::Encoder.encode(request_hash, pretty: true), headers
-      expect(status).to eq(201)
     end
   end
 end

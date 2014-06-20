@@ -10,7 +10,6 @@ module VCAP::CloudController
 
     query_parameters :app_guid, :service_instance_guid
 
-    post '/v2/service_bindings', :create
     def create
       json_msg = self.class::CreateMessage.decode(body)
 
