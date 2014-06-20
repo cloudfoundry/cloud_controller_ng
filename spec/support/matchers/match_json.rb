@@ -1,15 +1,15 @@
-RSpec::Matchers.define :json_match do |matcher|
+RSpec::Matchers.define :match_json do |expected|
   # RSpect matcher?
-  if matcher.respond_to?(:matches?)
+  if expected.respond_to?(:matches?)
     match do |json|
       actual = Yajl::Parser.parse(json)
-      matcher.matches?(actual)
+      expected.matches?(actual)
     end
     # regular values or RSpec Mocks argument matchers
   else
     match do |json|
       actual = Yajl::Parser.parse(json)
-      matcher == actual
+      expected == actual
     end
   end
 end

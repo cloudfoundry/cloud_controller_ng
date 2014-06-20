@@ -71,11 +71,11 @@ module VCAP::CloudController
 
     describe "#to_json" do
       it "serializes with app_guid entry" do
-        expect(subject.to_json).to json_match hash_including("app_guid" => app.guid)
+        expect(subject.to_json).to match_json hash_including("app_guid" => app.guid)
       end
 
       it "serializes with secure_token entry" do
-        expect(subject.to_json).to json_match hash_including("secure_token" => secure_token)
+        expect(subject.to_json).to match_json hash_including("secure_token" => secure_token)
       end
     end
 
