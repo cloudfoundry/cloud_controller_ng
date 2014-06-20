@@ -27,9 +27,26 @@ module VCAP::CloudController
     describe ".deleted" do
       let(:app) { AppFactory.make droplet_hash: nil, package_hash: nil }
 
-      it "stops the application" do
-        AppObserver.deleted(app)
-        expect(message_bus).to have_published_with_message("dea.stop", droplet: app.guid)
+      describe "stopping the application" do
+        context "when diego enabled" do
+          let(:config_hash) { { :diego => true} }
+          let(:environment_json) { {"CF_DIEGO_BETA"=>"true", "CF_DIEGO_RUN_BETA"=>"true"} }
+
+          before { app.environment_json = environment_json }
+
+          it "stops the application" do
+            expect(diego_client).to receive(:send_desire_request).with(app)
+            AppObserver.deleted(app)
+            expect(message_bus.published_messages).to be_empty
+          end
+        end
+
+        context "when diego not enabled" do
+          it "stops the application" do
+            AppObserver.deleted(app)
+            expect(message_bus).to have_published_with_message("dea.stop", droplet: app.guid)
+          end
+        end
       end
 
       context "when the app has a droplet" do

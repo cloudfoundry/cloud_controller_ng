@@ -15,7 +15,11 @@ module VCAP::CloudController
       end
 
       def deleted(app)
-        AppStopper.new(@message_bus).stop(app)
+        if @diego_client.running_enabled(app)
+          @diego_client.send_desire_request(app)
+        else
+          AppStopper.new(@message_bus).stop(app)
+        end
 
         delete_package(app) if app.package_hash
         delete_buildpack_cache(app) if app.staged?
