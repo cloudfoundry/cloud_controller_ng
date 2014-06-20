@@ -158,11 +158,11 @@ module CloudController
     end
 
     def diego_client
-      @diego_client ||= Diego::DiegoClient.new(config[:diego], message_bus, Diego::ServiceRegistry.new(message_bus),  blobstore_url_generator)
+      @diego_client ||= Diego::DiegoClient.new(config[:diego], message_bus, Diego::ServiceRegistry.new(message_bus), blobstore_url_generator)
     end
 
     def instances_reporter_factory
-      @instances_reporter_factory ||=  VCAP::CloudController::InstancesReporter::InstancesReporterFactory.new(diego_client, health_manager_client)
+      @instances_reporter_factory ||= VCAP::CloudController::InstancesReporter::InstancesReporterFactory.new(diego_client, health_manager_client)
     end
 
     private
