@@ -208,6 +208,8 @@ module VCAP::CloudController
         AppObserver.configure(@config, message_bus, dea_pool, stager_pool,diego_client)
 
         LegacyBulk.configure(@config, message_bus)
+
+        BulkApps.configure(@config)
       end
 
       def config_dir

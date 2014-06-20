@@ -47,18 +47,18 @@ module VCAP::CloudController::Diego
     describe "desiring an app" do
       let(:expected_message) do
         {
-          process_guid: "#{app.guid}-#{app.version}",
-          memory_mb: app.memory,
-          disk_mb: app.disk_quota,
-          file_descriptors: app.file_descriptors,
-          droplet_uri: "app_uri",
-          stack: app.stack.name,
-          start_command: "./some-detected-command",
-          environment: client.environment(app),
-          num_instances: expected_instances,
-          routes: ["some-route.some-domain.com", "some-other-route.some-domain.com"],
-          health_check_timeout_in_seconds: 120,
-          log_guid: app.guid,
+          "process_guid" => "#{app.guid}-#{app.version}",
+          "memory_mb" => app.memory,
+          "disk_mb" => app.disk_quota,
+          "file_descriptors" => app.file_descriptors,
+          "droplet_uri" => "app_uri",
+          "stack" => app.stack.name,
+          "start_command" => "./some-detected-command",
+          "environment" => Yajl::Parser.parse(Yajl::Encoder.encode(client.environment(app))),
+          "num_instances" => expected_instances,
+          "routes" => ["some-route.some-domain.com", "some-other-route.some-domain.com"],
+          "health_check_timeout_in_seconds" => 120,
+          "log_guid" => app.guid,
         }
       end
 
@@ -73,22 +73,22 @@ module VCAP::CloudController::Diego
       it "sends a nats message with the appropriate subject and payload" do
         client.send_desire_request(app)
 
-        expect(message_bus.published_messages).to have(1).messages
+        expect(message_bus.published_messages.size).to eq(1)
         nats_message = message_bus.published_messages.first
         expect(nats_message[:subject]).to eq("diego.desire.app")
-        expect(nats_message[:message]).to eq(expected_message)
+        expect(nats_message[:message]).to match_json(expected_message)
       end
 
       context "with a custom start command" do
         before { app.command = "/a/custom/command"; app.save }
-        before { expected_message[:start_command] = "/a/custom/command" }
+        before { expected_message['start_command'] = "/a/custom/command" }
 
         it "sends a message with the custom start command" do
           client.send_desire_request(app)
 
           nats_message = message_bus.published_messages.first
           expect(nats_message[:subject]).to eq("diego.desire.app")
-          expect(nats_message[:message]).to eq(expected_message)
+          expect(nats_message[:message]).to match_json(expected_message)
         end
       end
 
@@ -104,7 +104,7 @@ module VCAP::CloudController::Diego
 
           nats_message = message_bus.published_messages.first
           expect(nats_message[:subject]).to eq("diego.desire.app")
-          expect(nats_message[:message]).to eq(expected_message)
+          expect(nats_message[:message]).to match_json(expected_message)
         end
       end
     end
@@ -127,7 +127,7 @@ module VCAP::CloudController::Diego
             :buildpacks => BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app)
         }
 
-        expect(message_bus.published_messages).to have(1).messages
+        expect(message_bus.published_messages.size).to eq(1)
         nats_message = message_bus.published_messages.first
         expect(nats_message[:subject]).to eq("diego.staging.start")
         expect(nats_message[:message]).to eq(expected_message)
@@ -137,13 +137,13 @@ module VCAP::CloudController::Diego
     describe "#environment" do
       it "should return the correct environment hash for an application" do
         expected_environment = [
-            {key: "VCAP_APPLICATION", value: app.vcap_application.to_json},
-            {key: "VCAP_SERVICES", value: app.system_env_json["VCAP_SERVICES"].to_json},
-            {key: "MEMORY_LIMIT", value: "#{app.memory}m"},
-            {key: "APP_KEY", value: "APP_VAL"},
+            {name: "VCAP_APPLICATION", value: app.vcap_application.to_json},
+            {name: "VCAP_SERVICES", value: app.system_env_json["VCAP_SERVICES"].to_json},
+            {name: "MEMORY_LIMIT", value: "#{app.memory}m"},
+            {name: "APP_KEY", value: "APP_VAL"},
         ]
 
-        expect(client.environment(app)).to eq(expected_environment)
+        expect(client.environment(app)).to match_object(expected_environment)
       end
     end
 

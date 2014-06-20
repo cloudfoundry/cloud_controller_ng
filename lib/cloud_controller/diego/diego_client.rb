@@ -1,4 +1,22 @@
 module VCAP::CloudController::Diego
+  class DesireAppMessage < JsonMessage
+    required :process_guid, String
+    required :memory_mb, Integer
+    required :disk_mb, Integer
+    required :file_descriptors, Integer
+    required :droplet_uri, String
+    required :stack, String
+    required :start_command, String
+    required :environment, [{
+      name: String,
+      value: String,
+    }]
+    required :num_instances, Integer
+    required :routes, [String]
+    optional :health_check_timeout_in_seconds, Integer
+    required :log_guid, String
+  end
+
   class DiegoClient
     def initialize(enabled, message_bus, service_registry, blobstore_url_generator)
       @enabled = enabled
@@ -27,7 +45,7 @@ module VCAP::CloudController::Diego
 
     def send_desire_request(app)
       logger.info("desire.app.begin", :app_guid => app.guid)
-      @message_bus.publish("diego.desire.app", desire_request(app))
+      @message_bus.publish("diego.desire.app", desire_request(app).encode)
     end
 
     def send_stage_request(app, staging_task_id)
@@ -39,7 +57,7 @@ module VCAP::CloudController::Diego
     end
 
     def desire_request(app)
-      {
+      request = {
           process_guid: lrp_guid(app),
           memory_mb: app.memory,
           disk_mb: app.disk_quota,
@@ -50,9 +68,15 @@ module VCAP::CloudController::Diego
           environment: environment(app),
           num_instances: desired_instances(app),
           routes: app.uris,
-          health_check_timeout_in_seconds: app.health_check_timeout,
           log_guid: app.guid,
       }
+
+      if app.health_check_timeout
+        request[:health_check_timeout_in_seconds] =
+            app.health_check_timeout
+      end
+
+      DesireAppMessage.new(request)
     end
 
     def desired_instances(app)
@@ -61,16 +85,16 @@ module VCAP::CloudController::Diego
 
     def staging_request(app)
       {
-          :app_id => app.guid,
-          :task_id => app.staging_task_id,
-          :memory_mb => app.memory,
-          :disk_mb => app.disk_quota,
-          :file_descriptors => app.file_descriptors,
-          :environment => environment(app),
-          :stack => app.stack.name,
-          :build_artifacts_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(app),
-          :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),
-          :buildpacks => @buildpack_entry_generator.buildpack_entries(app)
+        :app_id => app.guid,
+        :task_id => app.staging_task_id,
+        :memory_mb => app.memory,
+        :disk_mb => app.disk_quota,
+        :file_descriptors => app.file_descriptors,
+        :environment => environment(app),
+        :stack => app.stack.name,
+        :build_artifacts_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(app),
+        :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),
+        :buildpacks => @buildpack_entry_generator.buildpack_entries(app)
       }
     end
 
@@ -108,13 +132,13 @@ module VCAP::CloudController::Diego
 
     def environment(app)
       env = []
-      env << {key: "VCAP_APPLICATION", value: app.vcap_application.to_json}
-      env << {key: "VCAP_SERVICES", value: app.system_env_json["VCAP_SERVICES"].to_json}
+      env << {name: "VCAP_APPLICATION", value: app.vcap_application.to_json}
+      env << {name: "VCAP_SERVICES", value: app.system_env_json["VCAP_SERVICES"].to_json}
       db_uri = app.database_uri
-      env << {key: "DATABASE_URL", value: db_uri} if db_uri
-      env << {key: "MEMORY_LIMIT", value: "#{app.memory}m"}
+      env << {name: "DATABASE_URL", value: db_uri} if db_uri
+      env << {name: "MEMORY_LIMIT", value: "#{app.memory}m"}
       app_env_json = app.environment_json || {}
-      app_env_json.each { |k, v| env << {key: k, value: v} }
+      app_env_json.each { |k, v| env << {name: k, value: v} }
       env
     end
 
