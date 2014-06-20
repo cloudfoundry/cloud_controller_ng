@@ -44,71 +44,124 @@ resource "Users", type: :api do
 
     describe "Developer Spaces" do
       before do
-        space = VCAP::CloudController::Space.make
-        user.add_organization space.organization
-        space.add_developer user
+        associated_space.organization.add_user(user)
+        associated_space.add_developer(user)
+
+        space.organization.add_user(user)
       end
 
+      let!(:associated_space) { VCAP::CloudController::Space.make }
+      let(:associated_space_guid) { associated_space.guid }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:space_guid) { space.guid }
+
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user
+      nested_model_associate :space, :user
+      nested_model_remove :space, :user
     end
 
     describe "Managed Spaces" do
       before do
-        space = VCAP::CloudController::Space.make
-        user.add_organization space.organization
-        space.add_manager user
+        associated_managed_space.organization.add_user(user)
+        associated_managed_space.add_manager(user)
+
+        managed_space.organization.add_user(user)
       end
 
+      let!(:associated_managed_space) { VCAP::CloudController::Space.make }
+      let(:associated_managed_space_guid) { associated_managed_space.guid }
+      let(:managed_space) { VCAP::CloudController::Space.make }
+      let(:managed_space_guid) { managed_space.guid }
+
+
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user, path: :managed_spaces
+      nested_model_associate :managed_space, :user
+      nested_model_remove :managed_space, :user
     end
 
     describe "Audited Spaces" do
       before do
-        space = VCAP::CloudController::Space.make
-        user.add_organization space.organization
-        space.add_auditor user
+        associated_audited_space.organization.add_user(user)
+        associated_audited_space.add_auditor(user)
+
+        audited_space.organization.add_user(user)
       end
 
+      let!(:associated_audited_space) { VCAP::CloudController::Space.make }
+      let(:associated_audited_space_guid) { associated_audited_space.guid }
+      let(:audited_space) { VCAP::CloudController::Space.make }
+      let(:audited_space_guid) { audited_space.guid }
+
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user, path: :audited_spaces
+      nested_model_associate :audited_space, :user
+      nested_model_remove :audited_space, :user
     end
 
     describe "Organizations" do
       before do
-        organization = VCAP::CloudController::Organization.make
-        user.add_organization organization
+        associated_organization.add_user(user)
       end
 
+      let!(:associated_organization) { VCAP::CloudController::Organization.make }
+      let(:associated_organization_guid) { associated_organization.guid }
+      let(:organization) { VCAP::CloudController::Organization.make }
+      let(:organization_guid) { organization.guid }
+
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user
+      nested_model_associate :organization, :user
+      nested_model_remove :organization, :user
     end
 
     describe "Managed Organizations" do
       before do
-        organization = VCAP::CloudController::Organization.make
-        user.add_organization organization
-        organization.add_manager(user)
+        managed_organization.add_user(user)
+
+        make_manager_for_org(associated_managed_organization)
+        associated_managed_organization.add_manager(user)
       end
 
+      let!(:associated_managed_organization) { VCAP::CloudController::Organization.make }
+      let(:associated_managed_organization_guid) { associated_managed_organization.guid }
+      let(:managed_organization) { VCAP::CloudController::Organization.make }
+      let(:managed_organization_guid) { managed_organization.guid }
+      
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :managed_organizations
+      nested_model_associate :managed_organization, :user
+      nested_model_remove :managed_organization, :user
     end
 
     describe "Billing Managed Organizations" do
       before do
-        organization = VCAP::CloudController::Organization.make
-        user.add_organization organization
-        organization.add_billing_manager(user)
+        billing_managed_organization.add_user(user)
+
+        associated_billing_managed_organization.add_billing_manager(user)
       end
 
+      let!(:associated_billing_managed_organization) { VCAP::CloudController::Organization.make }
+      let(:associated_billing_managed_organization_guid) { associated_billing_managed_organization.guid }
+      let(:billing_managed_organization) { VCAP::CloudController::Organization.make }
+      let(:billing_managed_organization_guid) { billing_managed_organization.guid }
+
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :billing_managed_organizations
+      nested_model_associate :billing_managed_organization, :user
+      nested_model_remove :billing_managed_organization, :user
     end
 
     describe "Audited Organizations" do
       before do
-        organization = VCAP::CloudController::Organization.make
-        user.add_organization organization
-        organization.add_auditor(user)
+        audited_organization.add_user(user)
+
+        associated_audited_organization.add_auditor(user)
       end
 
+      let!(:associated_audited_organization) { VCAP::CloudController::Organization.make }
+      let(:associated_audited_organization_guid) { associated_audited_organization.guid }
+      let(:audited_organization) { VCAP::CloudController::Organization.make }
+      let(:audited_organization_guid) { audited_organization.guid }
+
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :audited_organizations
+      nested_model_associate :audited_organization, :user
+      nested_model_remove :audited_organization, :user
     end
   end
 end

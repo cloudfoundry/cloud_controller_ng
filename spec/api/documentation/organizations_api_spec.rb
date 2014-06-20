@@ -63,34 +63,63 @@ resource "Organizations", :type => :api do
 
     describe "Users" do
       before do
-        make_user_for_org(organization)
+        organization.add_user(associated_user)
       end
 
+      let!(:associated_user) { VCAP::CloudController::User.make }
+      let(:associated_user_guid) { associated_user.guid }
+      let(:user) { VCAP::CloudController::User.make }
+      let(:user_guid) { user.guid }
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization
+      nested_model_associate :user, :organization
+      nested_model_remove :user, :organization
     end
 
     describe "Managers" do
       before do
+        organization.add_manager(associated_manager)
         make_manager_for_org(organization)
       end
 
+      let!(:associated_manager) { VCAP::CloudController::User.make }
+      let(:associated_manager_guid) { associated_manager.guid }
+      let(:manager) { VCAP::CloudController::User.make }
+      let(:manager_guid) { manager.guid }
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :managers
+      nested_model_associate :manager, :organization
+      nested_model_remove :manager, :organization
     end
 
     describe "Billing Managers" do
       before do
-        make_billing_manager_for_org(organization)
+        organization.add_billing_manager(associated_billing_manager)
       end
 
+      let!(:associated_billing_manager) { VCAP::CloudController::User.make }
+      let(:associated_billing_manager_guid) { associated_billing_manager.guid }
+      let(:billing_manager) { VCAP::CloudController::User.make }
+      let(:billing_manager_guid) { billing_manager.guid }
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :billing_managers
+      nested_model_associate :billing_manager, :organization
+      nested_model_remove :billing_manager, :organization
     end
 
     describe "Auditors" do
       before do
-        make_auditor_for_org(organization)
+        organization.add_auditor(associated_auditor)
       end
 
+      let!(:associated_auditor) { VCAP::CloudController::User.make }
+      let(:associated_auditor_guid) { associated_auditor.guid }
+      let(:auditor) { VCAP::CloudController::User.make }
+      let(:auditor_guid) { auditor.guid }
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :auditors
+      nested_model_associate :auditor, :organization
+      nested_model_remove :auditor, :organization
     end
   end
 end

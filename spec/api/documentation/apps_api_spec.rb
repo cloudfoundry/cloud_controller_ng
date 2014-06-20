@@ -110,20 +110,30 @@ resource "Apps", :type => :api do
 
     describe "Service Bindings" do
       before do
-        service_instance = VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space)
-        VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance)
+        VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance)
       end
+      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space) }
+      let(:service_instance_guid) { service_instance.guid }
+      let(:associated_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space) }
+      let(:associated_service_instance_guid) { associated_service_instance.guid }
 
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :app
+      nested_model_associate :service_binding, :app
+      nested_model_remove :service_binding, :app
     end
 
     describe "Routes" do
       before do
-        route = VCAP::CloudController::Route.make(space: app_obj.space)
-        app_obj.add_route(route)
+        app_obj.add_route(associated_route)
       end
+      let!(:route) { VCAP::CloudController::Route.make(space: app_obj.space) }
+      let(:route_guid) { route.guid }
+      let(:associated_route) { VCAP::CloudController::Route.make(space: app_obj.space) }
+      let(:associated_route_guid) { associated_route.guid }
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app
+      nested_model_associate :route, :app
+      nested_model_remove :route, :app
     end
   end
 

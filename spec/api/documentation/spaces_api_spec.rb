@@ -67,26 +67,53 @@ resource "Spaces", :type => :api do
 
     describe "Developers" do
       before do
-        make_developer_for_space(space)
+        space.organization.add_user(associated_developer)
+        space.organization.add_user(developer)
+        space.add_developer(associated_developer)
       end
 
+      let!(:associated_developer) { VCAP::CloudController::User.make }
+      let(:associated_developer_guid) { associated_developer.guid }
+      let(:developer) { VCAP::CloudController::User.make }
+      let(:developer_guid) { developer.guid }
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :developers
+      nested_model_associate :developer, :space
+      nested_model_remove :developer, :space
     end
 
     describe "Managers" do
       before do
-        make_manager_for_space(space)
+        space.organization.add_user(associated_manager)
+        space.organization.add_user(manager)
+        space.add_manager(associated_manager)
       end
 
+      let!(:associated_manager) { VCAP::CloudController::User.make }
+      let(:associated_manager_guid) { associated_manager.guid }
+      let(:manager) { VCAP::CloudController::User.make }
+      let(:manager_guid) { manager.guid }
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :managers
+      nested_model_associate :manager, :space
+      nested_model_remove :manager, :space
     end
 
     describe "Auditors" do
       before do
-        make_auditor_for_space(space)
+        space.organization.add_user(associated_auditor)
+        space.organization.add_user(auditor)
+        space.add_auditor(associated_auditor)
       end
 
+      let!(:associated_auditor) { VCAP::CloudController::User.make }
+      let(:associated_auditor_guid) { associated_auditor.guid }
+      let(:auditor) { VCAP::CloudController::User.make }
+      let(:auditor_guid) { auditor.guid }
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :auditors
+      nested_model_associate :auditor, :space
+      nested_model_remove :auditor, :space
     end
 
     describe "Apps" do
@@ -120,11 +147,14 @@ resource "Spaces", :type => :api do
     end
 
     describe "App Security Groups" do
-      before do
-        VCAP::CloudController::AppSecurityGroup.make(running_default: true)
-      end
+      let!(:associated_app_security_group) { VCAP::CloudController::AppSecurityGroup.make(space_guids: [space.guid]) }
+      let(:associated_app_security_group_guid) { associated_app_security_group.guid }
+      let(:app_security_group) { VCAP::CloudController::AppSecurityGroup.make }
+      let(:app_security_group_guid) { app_security_group.guid }
 
       standard_model_list :app_security_group, VCAP::CloudController::AppSecurityGroupsController, outer_model: :space
+      nested_model_associate :app_security_group, :space
+      nested_model_remove :app_security_group, :space
     end
   end
 end

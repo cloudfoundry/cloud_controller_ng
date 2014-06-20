@@ -41,13 +41,19 @@ resource "App Security Groups (experimental)", :type => :api do
   end
 
   describe "Nested endpoints" do
+    field :guid, "The guid of the App Security Group", required: false
     describe "Spaces" do
       before do
-        space = VCAP::CloudController::Space.make
-        app_security_group.add_space space
+        app_security_group.add_space associated_space
       end
+      let!(:associated_space) { VCAP::CloudController::Space.make }
+      let(:associated_space_guid) { associated_space.guid }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:space_guid) { space.guid }
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :app_security_group
+      nested_model_associate :space, :app_security_group
+      nested_model_remove :space, :app_security_group
     end
   end
 end

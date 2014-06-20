@@ -115,6 +115,28 @@ module ApiDsl
       end
     end
 
+    def nested_model_associate(model, outer_model)
+      path = "#{api_version}/#{outer_model.to_s.pluralize}/:guid/#{model.to_s.pluralize}/:#{model}_guid"
+
+      put path do
+        example_request "Associate #{model.to_s.titleize} with the #{outer_model.to_s.titleize}" do
+          expect(status).to eq 201
+          standard_entity_response parsed_response, outer_model
+        end
+      end
+    end
+
+    def nested_model_remove(model, outer_model)
+      path = "#{api_version}/#{outer_model.to_s.pluralize}/:guid/#{model.to_s.pluralize}/:associated_#{model}_guid"
+
+      delete path do
+        example_request "Remove #{model.to_s.titleize} from the #{outer_model.to_s.titleize}" do
+          expect(status).to eq 201
+          standard_entity_response parsed_response, outer_model
+        end
+      end
+    end
+
     def standard_model_get(model, options = {})
       path = options[:path] || model
       get "#{root(path)}/:guid" do

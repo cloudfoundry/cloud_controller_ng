@@ -45,11 +45,14 @@ resource "Routes", :type => :api do
     field :guid, "The guid of the route.", required: true
 
     describe "Apps" do
-      before do
-        VCAP::CloudController::AppFactory.make(space: space, route_guids: [route.guid])
-      end
+      let!(:associated_app) { VCAP::CloudController::AppFactory.make(space: space, route_guids: [route.guid]) }
+      let(:associated_app_guid) { associated_app.guid }
+      let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space) }
+      let(:app_guid) { app_obj.guid }
 
       standard_model_list :app, VCAP::CloudController::AppsController, outer_model: :route
+      nested_model_associate :app, :route
+      nested_model_remove :app, :route
     end
   end
 end
