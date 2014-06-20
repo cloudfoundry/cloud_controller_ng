@@ -41,84 +41,56 @@ resource "Organizations", :type => :api do
   describe "Nested endpoints" do
     field :guid, "The guid of the organization.", required: true
 
-    get "/v2/organizations/:guid/spaces" do
+    describe "Spaces" do
       before do
         VCAP::CloudController::Space.make(organization: organization)
       end
 
-      example "List all spaces for an organization" do
-        client.get "/v2/organizations/#{guid}/spaces", {}, headers
-        expect(status).to eq 200
-        standard_list_response parsed_response, :space
-      end
+      standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :organization
     end
 
-    get "/v2/organizations/:guid/domains" do
-      example "List all domains for an organization" do
-        client.get "/v2/organizations/#{guid}/domains", {}, headers
-        expect(status).to eq 200
-        standard_list_response parsed_response, :shared_domain
-      end
+    describe "Domains" do
+      standard_model_list :shared_domain, VCAP::CloudController::DomainsController, outer_model: :organization, path: :domains
     end
 
-    get "/v2/organizations/:guid/private_domains" do
+    describe "Private Domains" do
       before do
         VCAP::CloudController::PrivateDomain.make(owning_organization: organization)
       end
 
-      example "List all private domains for an organization" do
-        client.get "/v2/organizations/#{guid}/private_domains", {}, headers
-        expect(status).to eq 200
-        standard_list_response parsed_response, :private_domain
-      end
+      standard_model_list :private_domain, VCAP::CloudController::PrivateDomainsController, outer_model: :organization
     end
 
-    get "/v2/organizations/:guid/users" do
+    describe "Users" do
       before do
         make_user_for_org(organization)
       end
 
-      example "List all users for an organization" do
-        client.get "/v2/organizations/#{guid}/users", {}, headers
-        expect(status).to eq 200
-        standard_list_response parsed_response, :user
-      end
+      standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization
     end
 
-    get "/v2/organizations/:guid/managers" do
+    describe "Managers" do
       before do
         make_manager_for_org(organization)
       end
 
-      example "List all managers for an organization" do
-        client.get "/v2/organizations/#{guid}/managers", {}, headers
-        expect(status).to eq 200
-        standard_list_response parsed_response, :user
-      end
+      standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :managers
     end
 
-    get "/v2/organizations/:guid/billing_managers" do
+    describe "Billing Managers" do
       before do
         make_billing_manager_for_org(organization)
       end
 
-      example "List all billing managers for an organization" do
-        client.get "/v2/organizations/#{guid}/billing_managers", {}, headers
-        expect(status).to eq 200
-        standard_list_response parsed_response, :user
-      end
+      standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :billing_managers
     end
 
-    get "/v2/organizations/:guid/auditors" do
+    describe "Auditors" do
       before do
         make_auditor_for_org(organization)
       end
 
-      example "List all auditors for an organization" do
-        client.get "/v2/organizations/#{guid}/auditors", {}, headers
-        expect(status).to eq 200
-        standard_list_response parsed_response, :user
-      end
+      standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :auditors
     end
   end
 end

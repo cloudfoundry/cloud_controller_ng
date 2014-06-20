@@ -108,26 +108,22 @@ resource "Apps", :type => :api do
   describe "Nested endpoints" do
     field :guid, "The guid of the app.", required: true
 
-    get "/v2/apps/:guid/service_bindings" do
-      example "List all Service Bindings associated with an App" do
+    describe "Service Bindings" do
+      before do
         service_instance = VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space)
         VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance)
-
-        client.get "/v2/apps/#{guid}/service_bindings", {}, headers
-        expect(status).to eq(200)
-        standard_list_response parsed_response, :service_binding
       end
+
+      standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :app
     end
 
-    get "/v2/apps/:guid/routes" do
-      example "List all Routes associated with an App" do
+    describe "Routes" do
+      before do
         route = VCAP::CloudController::Route.make(space: app_obj.space)
         app_obj.add_route(route)
-
-        client.get "/v2/apps/#{guid}/routes", {}, headers
-        expect(status).to eq(200)
-        standard_list_response parsed_response, :route
       end
+
+      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app
     end
   end
 

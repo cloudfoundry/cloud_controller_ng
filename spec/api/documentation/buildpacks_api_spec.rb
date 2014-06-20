@@ -8,82 +8,83 @@ resource "Buildpacks", :type => :api do
 
   authenticated_request
 
-  field :guid, "The guid of the buildpack.", required: false
-  field :name, "The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)", required: true, example_values: ["Golang_buildpack"]
-  field :position, "The order in which the buildpacks are checked during buildpack auto-detection.", required: false
-  field :enabled, "Whether or not the buildpack will be used for staging", required: false, default: true
-  field :locked, "Whether or not the buildpack is locked to prevent updates", required: false, default: false
-  field :filename, "The name of the uploaded buildpack file", required: false
+  describe "Standard endpoints" do
+    field :guid, "The guid of the buildpack.", required: false
+    field :name, "The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)", required: true, example_values: ["Golang_buildpack"]
+    field :position, "The order in which the buildpacks are checked during buildpack auto-detection.", required: false
+    field :enabled, "Whether or not the buildpack will be used for staging", required: false, default: true
+    field :locked, "Whether or not the buildpack is locked to prevent updates", required: false, default: false
+    field :filename, "The name of the uploaded buildpack file", required: false
 
-  standard_model_list(:buildpack, VCAP::CloudController::BuildpacksController)
-  standard_model_get(:buildpack)
-  standard_model_delete(:buildpack)
+    standard_model_list(:buildpack, VCAP::CloudController::BuildpacksController)
+    standard_model_get(:buildpack)
+    standard_model_delete(:buildpack)
 
-  post "/v2/buildpacks" do
-    example "Creates an admin buildpack" do
-      client.post "/v2/buildpacks", fields_json, headers
-      expect(status).to eq 201
-      standard_entity_response parsed_response, :buildpack, name: "Golang_buildpack"
-    end
-  end
-
-  put "/v2/buildpacks/:guid" do
-    example "Change the position of a buildpack" do
-      explanation <<-DOC
-        Buildpacks are maintained in an ordered list.  If the target position is already occupied,
-        the entries will be shifted down the list to make room.  If the target position is beyond
-        the end of the current list, the buildpack will be positioned at the end of the list.
-      DOC
-
-      expect {
-        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(position: 3), headers
-        status.should == 201
-        standard_entity_response parsed_response, :buildpack, position: 3
-      }.to change {
-        VCAP::CloudController::Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
-      }.from(
-        [["name_1", 1], ["name_2", 2], ["name_3", 3]]
-      ).to(
-        [["name_2", 1], ["name_3", 2], ["name_1", 3]]
-      )
+    post "/v2/buildpacks" do
+      example "Creates an admin buildpack" do
+        client.post "/v2/buildpacks", fields_json, headers
+        expect(status).to eq 201
+        standard_entity_response parsed_response, :buildpack, name: "Golang_buildpack"
+      end
     end
 
-    example "Enable or disable a buildpack" do
-      expect {
-        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: false), headers
-        expect(status).to eq 201
-        standard_entity_response parsed_response, :buildpack, enabled: false
-      }.to change {
-        VCAP::CloudController::Buildpack.find(guid: guid).enabled
-      }.from(true).to(false)
+    put "/v2/buildpacks/:guid" do
+      example "Change the position of a buildpack" do
+        explanation <<-DOC
+          Buildpacks are maintained in an ordered list.  If the target position is already occupied,
+          the entries will be shifted down the list to make room.  If the target position is beyond
+          the end of the current list, the buildpack will be positioned at the end of the list.
+        DOC
 
-      expect {
-        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: true), headers
-        expect(status).to eq 201
-        standard_entity_response parsed_response, :buildpack, enabled: true
-      }.to change {
-        VCAP::CloudController::Buildpack.find(guid: guid).enabled
-      }.from(false).to(true)
-    end
-    
-    example "Lock or unlock a buildpack" do
-      expect {
-        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(locked: true), headers
-        expect(status).to eq 201
-        standard_entity_response parsed_response, :buildpack, locked: true
-      }.to change {
-        VCAP::CloudController::Buildpack.find(guid: guid).locked
-      }.from(false).to(true)
+        expect {
+          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(position: 3), headers
+          status.should == 201
+          standard_entity_response parsed_response, :buildpack, position: 3
+        }.to change {
+          VCAP::CloudController::Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
+        }.from(
+          [["name_1", 1], ["name_2", 2], ["name_3", 3]]
+        ).to(
+          [["name_2", 1], ["name_3", 2], ["name_1", 3]]
+        )
+      end
 
-      expect {
-        client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(locked: false), headers
-        expect(status).to eq 201
-        standard_entity_response parsed_response, :buildpack, locked: false
-      }.to change {
-        VCAP::CloudController::Buildpack.find(guid: guid).locked
-      }.from(true).to(false)
+      example "Enable or disable a buildpack" do
+        expect {
+          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: false), headers
+          expect(status).to eq 201
+          standard_entity_response parsed_response, :buildpack, enabled: false
+        }.to change {
+          VCAP::CloudController::Buildpack.find(guid: guid).enabled
+        }.from(true).to(false)
+
+        expect {
+          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: true), headers
+          expect(status).to eq 201
+          standard_entity_response parsed_response, :buildpack, enabled: true
+        }.to change {
+          VCAP::CloudController::Buildpack.find(guid: guid).enabled
+        }.from(false).to(true)
+      end
+
+      example "Lock or unlock a buildpack" do
+        expect {
+          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(locked: true), headers
+          expect(status).to eq 201
+          standard_entity_response parsed_response, :buildpack, locked: true
+        }.to change {
+          VCAP::CloudController::Buildpack.find(guid: guid).locked
+        }.from(false).to(true)
+
+        expect {
+          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(locked: false), headers
+          expect(status).to eq 201
+          standard_entity_response parsed_response, :buildpack, locked: false
+        }.to change {
+          VCAP::CloudController::Buildpack.find(guid: guid).locked
+        }.from(true).to(false)
+      end
     end
-    
   end
 
   put "/v2/buildpacks/:guid/bits" do

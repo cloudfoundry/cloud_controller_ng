@@ -44,16 +44,12 @@ resource "Routes", :type => :api do
   describe "Nested endpoints" do
     field :guid, "The guid of the route.", required: true
 
-    get "/v2/routes/:guid/apps" do
+    describe "Apps" do
       before do
         VCAP::CloudController::AppFactory.make(space: space, route_guids: [route.guid])
       end
 
-      example "List all apps for a route" do
-        client.get "/v2/routes/#{guid}/apps", {}, headers
-        expect(status).to eq 200
-        standard_list_response parsed_response, :app
-      end
+      standard_model_list :app, VCAP::CloudController::AppsController, outer_model: :route
     end
   end
 end

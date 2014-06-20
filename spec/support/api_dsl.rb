@@ -102,7 +102,7 @@ module ApiDsl
       if options[:outer_model]
         model_name = options[:path] if options[:path]
         path = "#{options[:outer_model].to_s.pluralize}/:guid/#{model_name}"
-        outer_model_description = " for a #{options[:outer_model]}"
+        outer_model_description = " for the #{options[:outer_model].to_s.singularize.titleize}"
       else
         path = options[:path] || model
       end
@@ -118,7 +118,7 @@ module ApiDsl
     def standard_model_get(model, options = {})
       path = options[:path] || model
       get "#{root(path)}/:guid" do
-        example_request "Retrieve a Particular #{path.to_s.capitalize}" do
+        example_request "Retrieve a Particular #{path.to_s.singularize.titleize}" do
           standard_entity_response parsed_response, model
           if options[:nested_associations]
             options[:nested_associations].each do |association_name|
