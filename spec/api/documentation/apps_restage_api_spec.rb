@@ -10,7 +10,7 @@ resource "Apps", :type => :api do
   authenticated_request
 
   post "/v2/apps/:guid/restage" do
-    example "Restage an app" do
+    example "Restage an App" do
       client.post "/v2/apps/#{app_obj.guid}/restage", {},  headers
       status.should == 201
     end

@@ -15,7 +15,7 @@ resource "Service Plan Visibilities", type: :api do
     field :service_plan_guid, 'The guid of the plan that will be made visible', required: true
     field :organization_guid, 'The guid of the organization the plan will be visible to', required: true
 
-    example 'Creating a service plan visibility' do
+    example 'Creating a Service Plan Visibility' do
       org_guid = VCAP::CloudController::Organization.make.guid
       service_plan_guid = VCAP::CloudController::ServicePlan.make.guid
       request_json = Yajl::Encoder.encode({ service_plan_guid: service_plan_guid, organization_guid: org_guid }, pretty: true)
@@ -29,7 +29,7 @@ resource "Service Plan Visibilities", type: :api do
     field :service_plan_guid, 'The guid of the plan that will be made visible', required: true
     field :organization_guid, 'The guid of the organization the plan will be visible to', required: true
 
-    example 'Updating a service plan visibility' do
+    example 'Updating a Service Plan Visibility' do
       service_plan_visibility_guid = VCAP::CloudController::ServicePlanVisibility.make.guid
       org_guid = VCAP::CloudController::Organization.make.guid
       service_plan_guid = VCAP::CloudController::ServicePlan.make.guid

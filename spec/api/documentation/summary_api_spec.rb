@@ -43,7 +43,7 @@ resource 'Apps', :type => :api do
     field :version, "Version guid of the app"
     field :services, "List of services that are bound to the app"
 
-    example "Get app summary" do
+    example "Get App summary" do
       app_obj.add_route(route1)
       service_binding.save
       client.get "/v2/apps/#{app_obj.guid}/summary", {},  headers
@@ -78,7 +78,7 @@ resource 'Spaces', :type => :api do
     field :apps, "List of apps that are running in the space"
     field :services, "List of services that are associated with the space"
 
-    example "Get space summary" do
+    example "Get Space summary" do
       app_obj.add_route(route1)
       service_binding.save
       client.get "/v2/spaces/#{space.guid}/summary", {} , headers
@@ -106,7 +106,7 @@ resource 'Organizations', :type => :api do
     field :spaces, "List of spaces that are in the organization"
     field :status, "Status of the organization"
 
-    example "Get organization summary" do
+    example "Get Organization summary" do
       client.get "/v2/organizations/#{organization.guid}/summary", {} , headers
 
       expect(status).to eq 200
@@ -133,7 +133,7 @@ resource 'Users', :type => :api do
     field :managed_organizations, "List of organizations that the user is a manager for."
     field :organizations, "List of organizations that the user is a member of."
 
-    example "Get user summary" do
+    example "Get User summary" do
       organization = VCAP::CloudController::Organization.make
       space = VCAP::CloudController::Space.make(organization: organization)
       user.add_organization organization

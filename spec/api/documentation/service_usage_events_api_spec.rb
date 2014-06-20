@@ -21,7 +21,7 @@ resource "Service Usage Events (experimental)", :type => :api do
     standard_list_parameters VCAP::CloudController::ServiceUsageEventsController
     request_parameter :after_guid, "Restrict results to Service Usage Events after the one with the given guid"
 
-    example "List service usage events" do
+    example "List Service Usage Events" do
       explanation <<-DOC
         Events are sorted by internal database IDs. This order may differ from created_at.
 
@@ -36,7 +36,7 @@ resource "Service Usage Events (experimental)", :type => :api do
   end
 
   post "/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances" do
-    example "Purge and reseed service usage events" do
+    example "Purge and reseed Service Usage Events" do
       explanation <<-DOC
         Destroys all existing events. Populates new usage events, one for each existing service instance.
         All populated events will have a created_at value of current time.

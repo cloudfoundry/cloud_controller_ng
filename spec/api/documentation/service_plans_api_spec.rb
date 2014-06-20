@@ -25,7 +25,7 @@ resource "Services Plans", type: :api do
     standard_model_delete(:service_plans)
 
     post "/v2/service_plans" do
-      example "Creating a service plan (deprecated)" do
+      example "Creating a Service Plan (deprecated)" do
         client.post "/v2/service_plans", fields_json(service_guid: service_guid), headers
         expect(status).to eq(201)
 
@@ -34,7 +34,7 @@ resource "Services Plans", type: :api do
     end
 
     put "/v2/service_plans" do
-      example "Updating a service plan (deprecated)" do
+      example "Updating a Service Plan (deprecated)" do
         client.put "/v2/service_plans/#{guid}", fields_json, headers
         expect(status).to eq(201)
 

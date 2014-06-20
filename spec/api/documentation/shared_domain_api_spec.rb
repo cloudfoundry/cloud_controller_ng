@@ -16,7 +16,7 @@ resource "Shared Domains", :type => :api do
   standard_model_delete :shared_domain
 
   post "/v2/shared_domains" do
-    example "Create a shared domain" do
+    example "Create a Shared Domain" do
       client.post "/v2/shared_domains", fields_json, headers
       expect(status).to eq 201
       standard_entity_response parsed_response, :shared_domain,
@@ -27,14 +27,14 @@ resource "Shared Domains", :type => :api do
   get "/v2/shared_domains" do
     standard_list_parameters VCAP::CloudController::SharedDomainsController
 
-    describe "querying by name" do
+    describe "Querying Shared Domains by name" do
       let(:q) { "name:shared-domain.com" }
 
       before do
         VCAP::CloudController::SharedDomain.make :name => "shared-domain.com"
       end
 
-      example "Filtering the result set by name" do
+      example "Filtering Shared Domains by name" do
         client.get "/v2/shared_domains", params, headers
 
         status.should == 200

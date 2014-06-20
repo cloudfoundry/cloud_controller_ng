@@ -49,7 +49,7 @@ resource "Apps", :type => :api do
     end
 
     post "/v2/apps/" do
-      example "Creating an app" do
+      example "Creating an App" do
         space_guid = VCAP::CloudController::Space.make.guid
         client.post "/v2/apps", Yajl::Encoder.encode(required_fields.merge(space_guid: space_guid)), headers
         expect(status).to eq(201)
@@ -74,7 +74,7 @@ resource "Apps", :type => :api do
     put "/v2/apps/:guid" do
       let(:buildpack) { "http://github.com/a-buildpack" }
 
-      example "Set a custom buildpack URL for an Application" do
+      example "Set a custom Buildpack URL for an App" do
         explanation <<-EOD
         PUT with the buildpack attribute set to the URL of a git repository to set a custom buildpack.
         EOD
@@ -90,7 +90,7 @@ resource "Apps", :type => :api do
     put "/v2/apps/:guid" do
       let(:buildpack) { admin_buildpack.name }
 
-      example "Set a admin buildpack for an Application (by sending the name of an existing buildpack)" do
+      example "Set a admin Buildpack for an App (by sending the name of an existing Buildpack)" do
         explanation <<-EOD
         When the buildpack name matches the name of an admin buildpack, an admin buildpack is used rather
         than a custom buildpack. The 'buildpack' column returns the name of the configured admin buildpack
@@ -143,9 +143,9 @@ resource "Apps", :type => :api do
 
     let(:app_obj) { VCAP::CloudController::AppFactory.make(detected_buildpack: "buildpack-name", environment_json: {env_var: "env_val"})}
 
-    example "Get the env for an Application" do
+    example "Get the env for an App" do
       explanation <<-EOD
-        Get the environment variables for an Application using the app guid. Restricted to SpaceDeveloper role.
+        Get the environment variables for an App using the app guid. Restricted to SpaceDeveloper role.
       EOD
 
       client.get "/v2/apps/#{app_obj.guid}/env", {}, headers
@@ -160,9 +160,9 @@ resource "Apps", :type => :api do
 
     let(:app_obj) { VCAP::CloudController::AppFactory.make(state: "STARTED", package_hash: "abc") }
 
-    example "Get the instance information for a STARTED Application" do
+    example "Get the instance information for a STARTED App" do
       explanation <<-EOD
-        Get status for each instance of an Application using the app guid.
+        Get status for each instance of an App using the app guid.
       EOD
 
       instances = {
@@ -191,9 +191,9 @@ resource "Apps", :type => :api do
 
     let(:app_obj) { VCAP::CloudController::AppFactory.make(state: "STARTED", package_hash: "abc") }
 
-    example "Get detailed stats for a STARTED Application" do
+    example "Get detailed stats for a STARTED App" do
       explanation <<-EOD
-        Get status for each instance of an Application using the app guid.
+        Get status for each instance of an App using the app guid.
       EOD
 
       stats = {

@@ -21,7 +21,7 @@ resource "Buildpacks", :type => :api do
     standard_model_delete(:buildpack)
 
     post "/v2/buildpacks" do
-      example "Creates an admin buildpack" do
+      example "Creates an admin Buildpack" do
         client.post "/v2/buildpacks", fields_json, headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :buildpack, name: "Golang_buildpack"
@@ -29,7 +29,7 @@ resource "Buildpacks", :type => :api do
     end
 
     put "/v2/buildpacks/:guid" do
-      example "Change the position of a buildpack" do
+      example "Change the position of a Buildpack" do
         explanation <<-DOC
           Buildpacks are maintained in an ordered list.  If the target position is already occupied,
           the entries will be shifted down the list to make room.  If the target position is beyond
@@ -49,7 +49,7 @@ resource "Buildpacks", :type => :api do
         )
       end
 
-      example "Enable or disable a buildpack" do
+      example "Enable or disable a Buildpack" do
         expect {
           client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: false), headers
           expect(status).to eq 201
@@ -67,7 +67,7 @@ resource "Buildpacks", :type => :api do
         }.from(false).to(true)
       end
 
-      example "Lock or unlock a buildpack" do
+      example "Lock or unlock a Buildpack" do
         expect {
           client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(locked: true), headers
           expect(status).to eq 201
@@ -101,7 +101,7 @@ resource "Buildpacks", :type => :api do
       Rack::Test::UploadedFile.new(zip_file)
     end
 
-    example "Upload the bits for an admin buildpack" do
+    example "Upload the bits for an admin Buildpack" do
 
       explanation "PUT not shown because it involves putting a large zip file. Right now only zipped admin buildpacks are accepted"
 

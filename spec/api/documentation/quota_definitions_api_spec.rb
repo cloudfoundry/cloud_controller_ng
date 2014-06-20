@@ -20,7 +20,7 @@ resource "Quota Definitions", type: :api do
   standard_model_delete(:quota_definition)
 
   post "/v2/quota_definitions" do
-    example "Creating a quota definition" do
+    example "Creating a Quota Definition" do
       client.post "/v2/quota_definitions", fields_json, headers
       expect(status).to eq(201)
 
@@ -29,7 +29,7 @@ resource "Quota Definitions", type: :api do
   end
 
   put "/v2/quota_definitions/:guid" do
-    example "Updating a quota definition" do
+    example "Updating a Quota Definition" do
       client.put "/v2/quota_definitions/#{guid}", fields_json, headers
       expect(status).to eq(201)
 

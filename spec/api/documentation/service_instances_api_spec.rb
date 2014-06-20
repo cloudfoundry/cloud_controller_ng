@@ -19,7 +19,7 @@ resource "Service Instances", :type => :api do
       field :space_guid, 'The guid of the space in which the instance will be created', required: true
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
 
-      example 'Creating a service instance' do
+      example 'Creating a Service Instance' do
         space_guid = VCAP::CloudController::Space.make.guid
         service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
         request_hash = {space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid}
@@ -43,7 +43,7 @@ resource "Service Instances", :type => :api do
   end
 
   get "/v2/service_instances/:guid/permissions" do
-    example "Retrieving permissions on a service instance" do
+    example "Retrieving permissions on a Service Instance" do
       client.get "/v2/service_instances/#{service_instance.guid}/permissions", {}, headers
       expect(status).to eq(200)
 
@@ -58,9 +58,9 @@ resource "Service Instances", :type => :api do
 
     field :service_plan_guid, "The guid of the plan to move the existing instances to", required: true, example_values: %w(6c4bd80f-4593-41d1-a2c9-b20cb65ec76e)
 
-    example 'Migrate instances from one plan to another plan (experimental)' do
+    example 'Migrate Service Instances from one Service Plan to another Service Plan (experimental)' do
       explanation <<-EOD
-          Move all service instances for the service plan from the URL to the service plan in the request body
+          Move all Service Instances for the service plan from the URL to the service plan in the request body
       EOD
 
       client.put "/v2/service_plans/#{old_plan.guid}/service_instances", request_json, headers

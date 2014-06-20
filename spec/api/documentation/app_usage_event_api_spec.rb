@@ -36,7 +36,7 @@ resource "App Usage Events", :type => :api do
 
       request_parameter :after_guid, "Restrict results to App Usage Events after the one with the given guid"
 
-      example "List app usage events" do
+      example "List all App Usage Events" do
         explanation <<-DOC
         Events are sorted by internal database IDs. This order may differ from created_at.
 
@@ -60,7 +60,7 @@ resource "App Usage Events", :type => :api do
   end
 
   post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps" do
-    example "Purge and reseed app usage events" do
+    example "Purge and reseed App Usage Events" do
       explanation <<-DOC
         Destroys all existing events. Populates new usage events, one for each started app.
         All populated events will have a created_at value of current time.

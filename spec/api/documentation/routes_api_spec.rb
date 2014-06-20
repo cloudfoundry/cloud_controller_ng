@@ -22,7 +22,7 @@ resource "Routes", :type => :api do
     standard_model_delete :route
 
     post "/v2/routes/" do
-      example "Creating a route" do
+      example "Creating a Route" do
         client.post "/v2/routes", Yajl::Encoder.encode(required_fields.merge(domain_guid: domain.guid, space_guid: space.guid)), headers
         expect(status).to eq(201)
 
@@ -33,7 +33,7 @@ resource "Routes", :type => :api do
     put "/v2/routes/:guid" do
       let(:new_host) { "new_host" }
 
-      example "Update a route" do
+      example "Update a Route" do
         client.put "/v2/routes/#{guid}", Yajl::Encoder.encode(host: new_host), headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :route, host: new_host

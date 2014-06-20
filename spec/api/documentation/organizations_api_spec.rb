@@ -19,7 +19,7 @@ resource "Organizations", :type => :api do
     standard_model_delete :organization
 
     post "/v2/organizations/" do
-      example "Creating an organization" do
+      example "Creating an Organization" do
         client.post "/v2/organizations", Yajl::Encoder.encode(required_fields), headers
         expect(status).to eq(201)
 
@@ -30,7 +30,7 @@ resource "Organizations", :type => :api do
     put "/v2/organizations/:guid" do
       let(:new_name) { "New Organization Name" }
 
-      example "Update an organization" do
+      example "Update an Organization" do
         client.put "/v2/organizations/#{guid}", Yajl::Encoder.encode(name: new_name), headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :organization, name: new_name

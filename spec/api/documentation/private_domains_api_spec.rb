@@ -17,7 +17,7 @@ resource "Private Domains", :type => :api do
   standard_model_delete :private_domain
 
   post "/v2/private_domains" do
-    example "Create a domain owned by the given organization" do
+    example "Create a Private Domain owned by the given Organization" do
       org_guid = VCAP::CloudController::Organization.make.guid
       payload = Yajl::Encoder.encode(
         name: "exmaple.com",
@@ -43,7 +43,7 @@ resource "Private Domains", :type => :api do
         VCAP::CloudController::PrivateDomain.make :name => "my-domain.com"
       end
 
-      example "Filtering the result set by name" do
+      example "Filtering Private Domains by name" do
         client.get "/v2/private_domains", params, headers
 
         status.should == 200

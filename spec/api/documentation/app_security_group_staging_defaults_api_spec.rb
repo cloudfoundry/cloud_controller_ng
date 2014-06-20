@@ -9,7 +9,7 @@ resource "App Security Group Staging Defaults (experimental)", :type => :api do
   authenticated_request
 
   post "/v2/config/staging_security_groups/:guid" do
-    example "Set an app security group as a default for staging" do
+    example "Set an App Security Group as a default for staging" do
       client.post "/v2/config/staging_security_groups/#{app_sec_group.guid}", {}, headers
       expect(status).to eq(201)
 
@@ -18,14 +18,14 @@ resource "App Security Group Staging Defaults (experimental)", :type => :api do
   end
 
   delete "/v2/config/staging_security_groups/:guid" do
-    example "Removing an app security group as a default for staging" do
+    example "Removing an App Security Group as a default for staging" do
       client.delete "/v2/config/staging_security_groups/#{staging_default_app_sec_group.guid}", {}, headers
       status.should == 204
     end
   end
 
   get "/v2/config/staging_security_groups" do
-    example "Return the app security groups used for staging" do
+    example "Return the App Security Groups used for staging" do
       client.get "/v2/config/staging_security_groups", {}, headers
       status.should == 200
       standard_list_response parsed_response, :app_security_group

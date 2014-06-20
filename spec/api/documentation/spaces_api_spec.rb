@@ -28,7 +28,7 @@ resource "Spaces", :type => :api do
     end
 
     post "/v2/spaces/" do
-      example "Creating a space" do
+      example "Creating a Space" do
         organization_guid = VCAP::CloudController::Organization.make.guid
         client.post "/v2/spaces", Yajl::Encoder.encode(required_fields.merge(organization_guid: organization_guid)), headers
         expect(status).to eq(201)
@@ -43,7 +43,7 @@ resource "Spaces", :type => :api do
     put "/v2/spaces/:guid" do
       let(:new_name) { "New Space Name" }
 
-      example "Update a space" do
+      example "Update a Space" do
         client.put "/v2/spaces/#{guid}", Yajl::Encoder.encode(name: new_name), headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :space, name: new_name

@@ -29,7 +29,7 @@ resource "Users", type: :api do
     put "/v2/users/:guid" do
       request_parameter :guid, "The guid for the user to alter"
 
-      example "Update a User's default space" do
+      example "Update a User's default Space" do
         new_space = VCAP::CloudController::Space.make
         client.put "/v2/users/#{guid}", Yajl::Encoder.encode(default_space_guid: new_space.guid), headers
 

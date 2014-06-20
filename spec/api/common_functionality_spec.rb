@@ -32,7 +32,7 @@ resource "Common Functionality", :type => :api do
   describe "Enumeration" do
     get "/v2/fakes" do
       context "when there are no records" do
-        example_request "always includes metadata about pagination" do
+        example_request "Always includes metadata about pagination" do
           expect(status).to eq(200)
           expect(parsed_response).to eq({
                                             "total_results" => 0,
@@ -55,7 +55,7 @@ resource "Common Functionality", :type => :api do
 
         context "when order-direction" do
           context "is unspecified" do
-            example_request "enumerates in ascending order" do
+            example_request "Enumerates in ascending order" do
               expect(status).to eq(200)
 
               fakes_that_came_back = parsed_response["resources"].map { |resource| resource["entity"]["name"] }

@@ -44,7 +44,7 @@ resource "Services", type: :api do
     end
 
     post "/v2/services", deprecated: true do
-      example "Creating a service (deprecated)" do
+      example "Creating a Service (deprecated)" do
         client.post "/v2/services", fields_json, headers
         expect(status).to eq(201)
 
@@ -53,7 +53,7 @@ resource "Services", type: :api do
     end
 
     put "/v2/services" do
-      example "Updating a service (deprecated)" do
+      example "Updating a Service (deprecated)" do
         client.put "/v2/services/#{guid}", fields_json, headers
         expect(status).to eq(201)
 

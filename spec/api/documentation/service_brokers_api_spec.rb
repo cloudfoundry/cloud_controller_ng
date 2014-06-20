@@ -36,7 +36,7 @@ resource "Service Brokers", :type => :api do
   get "/v2/service_brokers" do
     request_parameter :q, "Parameters used to filter the result set. Valid filters: 'name'"
 
-    example "List all service brokers" do
+    example "List all Service Brokers" do
       client.get "/v2/service_brokers", {}, headers
       service_brokers = parsed_response["resources"]
 
@@ -57,7 +57,7 @@ resource "Service Brokers", :type => :api do
         to_return(status: 200, body: broker_catalog, headers: {})
     end
 
-    example "Create a service broker" do
+    example "Create a Service Broker" do
       client.post "/v2/service_brokers", fields_json, headers
 
       expect(status).to eq 201
@@ -73,7 +73,7 @@ resource "Service Brokers", :type => :api do
   delete "/v2/service_brokers/:guid" do
     request_parameter :guid, "The guid of the service broker being deleted."
 
-    example "Delete a service broker" do
+    example "Delete a Service Broker" do
       client.delete "/v2/service_brokers/#{guid}", {}, headers
       expect(status).to eq 204
     end
@@ -88,7 +88,7 @@ resource "Service Brokers", :type => :api do
 
     request_parameter :guid, "The guid of the service broker being updated."
 
-    example "Update a service broker" do
+    example "Update a Service Broker" do
       client.put "/v2/service_brokers/#{guid}", fields_json, headers
 
       expect(status).to eq 200
