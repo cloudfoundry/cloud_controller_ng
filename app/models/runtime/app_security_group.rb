@@ -2,7 +2,7 @@ require 'netaddr'
 
 module VCAP::CloudController
   class AppSecurityGroup < Sequel::Model
-    APP_SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    APP_SECURITY_GROUP_NAME_REGEX = /\A[[[:alnum:][:punct:][:print:]]&&[^;]]+\Z/.freeze
     TRANSPORT_RULE_FIELDS = ["protocol", "port", "destination"].map(&:freeze).freeze
     ICMP_RULE_FIELDS = ["protocol", "code", "type", "destination"].map(&:freeze).freeze
 
