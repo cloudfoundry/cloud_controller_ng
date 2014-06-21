@@ -41,7 +41,7 @@ shared_examples "model relationships" do |opts|
       end
 
       it "should get associated with a #{association}" do
-        related = create_for.call(obj)
+        related = instance_exec obj, &create_for
         obj.send(add_attribute, related)
         obj.save
         # Reload the record to reconcile potential difference in time
@@ -59,7 +59,7 @@ shared_examples "model relationships" do |opts|
       if cardinality_other =~ /or_more/
         it "should get associated with many #{association}" do
           2.times do
-            related = create_for.call(obj)
+            related = instance_exec obj, &create_for
             obj.send(add_attribute, related)
             obj.save
           end
@@ -69,7 +69,7 @@ shared_examples "model relationships" do |opts|
       end
 
       it "should get associated with a #{singular_association} only once" do
-        related = create_for.call(obj)
+        related = instance_exec obj, &create_for
         2.times do
           obj.send(add_attribute, related)
           obj.save
@@ -84,7 +84,7 @@ shared_examples "model relationships" do |opts|
           (described_class != VCAP::CloudController::User) &&
           (cardinality_other =~ /one/ && (cardinality_self == :many || cardinality_other =~ /or_more/))
         it "should fail to destroy #{singular_association} due to database integrity checks" do
-          related = create_for.call(obj)
+          related = instance_exec obj, &create_for
           obj.send(add_attribute, related)
           obj.save
 
@@ -94,7 +94,7 @@ shared_examples "model relationships" do |opts|
         end
       else
         it "should destroy #{singular_association} successfully" do
-          related = create_for.call(obj)
+          related = instance_exec obj, &create_for
           obj.send(add_attribute, related)
           obj.save
           related.destroy(savepoint: true)
