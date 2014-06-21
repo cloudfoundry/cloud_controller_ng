@@ -103,7 +103,7 @@
           </tbody>
         </table>
 
-        {{# request_parameters.any? }}
+        {{# has_parameters? }}
           <h3>Parameters</h3>
           <table class="parameters table table-striped table-bordered table-condensed">
             <thead>
@@ -113,19 +113,24 @@
               </tr>
             </thead>
             <tbody>
-              {{# request_parameters }}
-              <tr class="{{# deprecated }}deprecated{{/ deprecated }}">
-                <td{{# required }} class="required"{{/ required }}>
+              {{# parameters }}
+            <tr>
+              <td{{# required }} class="required"{{/ required }}>
+                {{# scope }}
+                  <span class="name">{{ scope }}[{{ name }}]</span>
+                {{/ scope }}
+                {{^ scope }}
                   <span class="name">{{ name }}</span>
+                {{/ scope }}
                 </td>
                 <td>
                   <span class="description">{{ description }}</span>
                 </td>
               </tr>
-              {{/ request_parameters }}
+              {{/ parameters }}
             </tbody>
           </table>
-        {{/ request_parameters.any? }}
+        {{/ has_parameters? }}
 
 
         {{# requests }}
@@ -149,7 +154,7 @@
 
           {{# curl }}
             <h4>cURL</h4>
-            <pre class="request">{{ curl }}</pre>
+          <pre class="request curl">{{ curl }}</pre>
           {{/ curl }}
 
           {{# response_status }}

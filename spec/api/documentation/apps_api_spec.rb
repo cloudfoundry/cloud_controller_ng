@@ -109,13 +109,13 @@ resource "Apps", :type => :api do
     field :guid, "The guid of the app.", required: true
 
     describe "Service Bindings" do
-      before do
-        VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance)
-      end
       let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space) }
-      let(:service_instance_guid) { service_instance.guid }
       let(:associated_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space) }
-      let(:associated_service_instance_guid) { associated_service_instance.guid }
+
+      let(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
+      let(:service_binding_guid) { service_binding.guid }
+      let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance) }
+      let(:associated_service_binding_guid) { associated_service_binding.guid }
 
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :app
       nested_model_associate :service_binding, :app

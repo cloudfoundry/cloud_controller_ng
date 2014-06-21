@@ -127,10 +127,12 @@ module ApiDsl
     end
 
     def nested_model_remove(model, outer_model)
-      path = "#{api_version}/#{outer_model.to_s.pluralize}/:guid/#{model.to_s.pluralize}/:associated_#{model}_guid"
+      path_name = "#{api_version}/#{outer_model.to_s.pluralize}/:guid/#{model.to_s.pluralize}/:#{model}_guid"
 
-      delete path do
-        example_request "Remove #{model.to_s.titleize} from the #{outer_model.to_s.titleize}" do
+      delete path_name do
+        example "Remove #{model.to_s.titleize} from the #{outer_model.to_s.titleize}" do
+          path = "#{self.class.api_version}/#{outer_model.to_s.pluralize}/#{send(:guid)}/#{model.to_s.pluralize}/#{send("associated_#{model}_guid")}"
+          client.delete path, "", headers
           expect(status).to eq 201
           standard_entity_response parsed_response, outer_model
         end
@@ -140,6 +142,7 @@ module ApiDsl
     def standard_model_get(model, options = {})
       path = options[:path] || model
       get "#{root(path)}/:guid" do
+        parameter :guid, "The guid of the #{model.to_s.titleize}"
         example_request "Retrieve a Particular #{path.to_s.singularize.titleize}" do
           standard_entity_response parsed_response, model
           if options[:nested_associations]
@@ -153,6 +156,7 @@ module ApiDsl
 
     def standard_model_delete(model)
       delete "#{root(model)}/:guid" do
+        parameter :guid, "The guid of the #{model.to_s.titleize}"
         request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'."
 
         example_request "Delete a Particular #{model.to_s.titleize}" do
@@ -191,6 +195,14 @@ module ApiDsl
     def field(name, description = "", options = {})
       metadata[:fields] = metadata[:fields] ? metadata[:fields].dup : []
       metadata[:fields].push(options.merge(:name => name.to_s, :description => description))
+    end
+
+    def modify_fields_for_update
+      metadata[:fields] = metadata[:fields].collect do |field|
+        field.delete(:required)
+        field.delete(:default)
+        field
+      end
     end
 
     def authenticated_request

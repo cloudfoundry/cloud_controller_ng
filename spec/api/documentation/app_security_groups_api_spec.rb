@@ -11,16 +11,23 @@ resource "App Security Groups (experimental)", :type => :api do
 
   authenticated_request
 
-  describe "Standard endpoints" do
-    field :name, "The name of the app security group.", required: true, example_values: ["my_super_app_sec_group"]
-    field :rules, "The egress rules for apps that belong to this app security group.", required: false
-    field :space_guids, "The list of associated spaces.", required: false
+  shared_context "guid_parameter" do
+    parameter :guid, "The guid of the App Security Group"
+  end
 
+  shared_context "updatable_fields" do
+    field :name, "The name of the app security group.", required: true, example_values: ["my_super_app_sec_group"]
+    field :rules, "The egress rules for apps that belong to this app security group.", default: []
+    field :space_guids, "The list of associated spaces.", default: []
+  end
+
+  describe "Standard endpoints" do
     standard_model_list :app_security_group, VCAP::CloudController::AppSecurityGroupsController
     standard_model_get :app_security_group
     standard_model_delete :app_security_group
 
     post "/v2/app_security_groups/" do
+      include_context "updatable_fields"
       example "Creating an App Security Group" do
         client.post "/v2/app_security_groups", Yajl::Encoder.encode(required_fields), headers
         expect(status).to eq(201)
@@ -30,6 +37,9 @@ resource "App Security Groups (experimental)", :type => :api do
     end
 
     put "/v2/app_security_groups/:guid" do
+      include_context "guid_parameter"
+      include_context "updatable_fields"
+      modify_fields_for_update
       example "Updating an App Security Group" do
         new_security_group = {name: 'new_name', rules: []}
 
@@ -41,7 +51,7 @@ resource "App Security Groups (experimental)", :type => :api do
   end
 
   describe "Nested endpoints" do
-    field :guid, "The guid of the App Security Group", required: false
+    include_context "guid_parameter"
     describe "Spaces" do
       before do
         app_security_group.add_space associated_space
@@ -52,8 +62,11 @@ resource "App Security Groups (experimental)", :type => :api do
       let(:space_guid) { space.guid }
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :app_security_group
-      nested_model_associate :space, :app_security_group
-      nested_model_remove :space, :app_security_group
+      describe "with space_guid" do
+        parameter :space_guid, "The guid of the Space"
+        nested_model_associate :space, :app_security_group
+        nested_model_remove :space, :app_security_group
+      end
     end
   end
 end
