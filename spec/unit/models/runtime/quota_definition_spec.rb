@@ -5,15 +5,16 @@ module VCAP::CloudController
     let(:quota_definition) { QuotaDefinition.make }
 
     it_behaves_like "a CloudController model", {
-        required_attributes: [
-            :name,
-            :non_basic_services_allowed,
-            :total_services,
-            :total_routes,
-            :memory_limit,
-        ],
         unique_attributes: [:name],
     }
+
+    describe "Validations" do
+      it { should validate_presence :name }
+      it { should validate_presence :non_basic_services_allowed }
+      it { should validate_presence :total_services }
+      it { should validate_presence :total_routes }
+      it { should validate_presence :memory_limit }
+    end
 
     describe ".default" do
       it "returns the default quota" do

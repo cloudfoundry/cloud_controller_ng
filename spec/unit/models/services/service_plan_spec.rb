@@ -3,7 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe ServicePlan, type: :model do
     it_behaves_like "a CloudController model", {
-      :required_attributes => [:name, :free, :description, :service],
       :stripped_string_attributes => :name,
       :many_to_one => {
         :service => {
@@ -16,7 +15,12 @@ module VCAP::CloudController
       },
     }
 
-    describe "validation" do
+    describe "Validations" do
+      it { should validate_presence :name, message: "is required" }
+      it { should validate_presence :free, message: "is required" }
+      it { should validate_presence :description, message: "is required" }
+      it { should validate_presence :service, message: "is required" }
+
       context 'when the unique_id is not unique' do
         let(:existing_service_plan) { ServicePlan.make }
         let(:service_plan) { ServicePlan.make_unsaved(unique_id: existing_service_plan.unique_id, service: Service.make) }

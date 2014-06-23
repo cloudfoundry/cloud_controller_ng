@@ -35,7 +35,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-        :required_attributes => [:name, :space],
         :unique_attributes => [[:space, :name]],
         :custom_attributes_for_uniqueness_tests => -> { {stack: Stack.make} },
         :stripped_string_attributes => :name,
@@ -69,6 +68,207 @@ module VCAP::CloudController
             }
         }
     }
+
+    describe "Validations" do
+      it { should validate_presence :name }
+      it { should validate_presence :space }
+
+      describe "buildpack" do
+        it "does allow nil value" do
+          expect {
+            AppFactory.make(buildpack: nil)
+          }.to_not raise_error
+        end
+
+        context "when custom buildpacks are enabled" do
+          it "does allow a public git url" do
+            expect {
+              AppFactory.make(buildpack: "git://user@github.com:repo")
+            }.to_not raise_error
+          end
+
+          it "allows a public http url" do
+            expect {
+              AppFactory.make(buildpack: "http://example.com/foo")
+            }.to_not raise_error
+          end
+
+          it "does allow a buildpack name" do
+            admin_buildpack = VCAP::CloudController::Buildpack.make
+            app = nil
+            expect {
+              app = AppFactory.make(buildpack: admin_buildpack.name)
+            }.to_not raise_error
+
+            expect(app.admin_buildpack).to eql(admin_buildpack)
+          end
+
+          it "does not allow a private git url" do
+            expect {
+              app = AppFactory.make(buildpack: "git@example.com:foo.git")
+            }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
+          end
+
+          it "does not allow a private git url with ssh schema" do
+            expect {
+              app = AppFactory.make(buildpack: "ssh://git@example.com:foo.git")
+            }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
+          end
+        end
+
+        context "when custom buildpacks are disabled and the buildpack attribute is being changed" do
+          before { disable_custom_buildpacks }
+
+          it "does NOT allow a public git url" do
+            expect {
+              AppFactory.make(buildpack: "git://user@github.com:repo")
+            }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
+          end
+
+          it "does NOT allow a public http url" do
+            expect {
+              AppFactory.make(buildpack: "http://example.com/foo")
+            }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
+          end
+
+          it "does allow a buildpack name" do
+            admin_buildpack = VCAP::CloudController::Buildpack.make
+            app = nil
+            expect {
+              app = AppFactory.make(buildpack: admin_buildpack.name)
+            }.to_not raise_error
+
+            expect(app.admin_buildpack).to eql(admin_buildpack)
+          end
+
+          it "does not allow a private git url" do
+            expect {
+              app = AppFactory.make(buildpack: "git@example.com:foo.git")
+            }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
+          end
+
+          it "does not allow a private git url with ssh schema" do
+            expect {
+              app = AppFactory.make(buildpack: "ssh://git@example.com:foo.git")
+            }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
+          end
+        end
+
+        context "when custom buildpacks are disabled after app creation" do
+          it "permits the change even though the buildpack is still custom" do
+            app = AppFactory.make(buildpack: "git://user@github.com:repo")
+
+            disable_custom_buildpacks
+
+            expect {
+              app.instances = 2
+              app.save
+            }.to_not raise_error
+          end
+        end
+
+        it "does not allow a non-url string" do
+          expect {
+            app = AppFactory.make(buildpack: "Hello, world!")
+          }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
+        end
+      end
+
+      describe "disk_quota" do
+        let(:app) { AppFactory.make }
+
+        it "allows any disk_quota below the maximum" do
+          app.disk_quota = 1000
+          expect {
+            app.save
+          }.to_not raise_error
+        end
+
+        it "does not allow a disk_quota above the maximum" do
+          app.disk_quota = 3000
+          expect {
+            app.save
+          }.to raise_error(Sequel::ValidationFailed, /too much disk/)
+        end
+      end
+
+      describe "name" do
+        let(:space) { Space.make }
+        let(:app) { AppFactory.make }
+
+        it "does not allow the same name in a different case" do
+          pending "This test is not valid for SQLite" if DbConfig.connection.database_type == :sqlite
+
+          AppFactory.make(:name => "lowercase", :space => space)
+
+          expect {
+            AppFactory.make(:name => "lowerCase", :space => space)
+          }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
+        end
+
+        it "should allow standard ascii characters" do
+          app.name = "A -_- word 2!?()\'\"&+."
+          expect {
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should allow backslash characters" do
+          app.name = "a \\ word"
+          expect {
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should allow unicode characters" do
+          app.name = "防御力¡"
+          expect {
+            app.save
+          }.to_not raise_error
+        end
+
+        it "should not allow newline characters" do
+          app.name = "a \n word"
+          expect {
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it "should not allow escape characters" do
+          app.name = "a \e word"
+          expect {
+            app.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+      end
+
+      describe "env" do
+        subject(:app) { AppFactory.make }
+
+        it "validates app environment" do
+          expect_validator(AppEnvironmentPolicy)
+        end
+      end
+
+      describe "metadata" do
+        let(:app) { AppFactory.make }
+
+        it "can be set and retrieved" do
+          app.metadata = {}
+          expect(app.metadata).to eql({})
+        end
+
+        it "should save direct updates to the metadata" do
+          app.metadata.should == {}
+          app.metadata["some_key"] = "some val"
+          app.metadata["some_key"].should == "some val"
+          app.save
+          app.metadata["some_key"].should == "some val"
+          app.refresh
+          app.metadata["some_key"].should == "some val"
+        end
+      end
+    end
 
     describe "#in_suspended_org?" do
       let(:space) { Space.make }
@@ -689,204 +889,6 @@ module VCAP::CloudController
       context "when no buildpack is associated with the app" do
         it "should be nil" do
           expect(App.make.custom_buildpack_url).to be_nil
-        end
-      end
-    end
-
-    describe "validations" do
-      describe "buildpack" do
-        it "does allow nil value" do
-          expect {
-            AppFactory.make(buildpack: nil)
-          }.to_not raise_error
-        end
-
-        context "when custom buildpacks are enabled" do
-          it "does allow a public git url" do
-            expect {
-              AppFactory.make(buildpack: "git://user@github.com:repo")
-            }.to_not raise_error
-          end
-
-          it "allows a public http url" do
-            expect {
-              AppFactory.make(buildpack: "http://example.com/foo")
-            }.to_not raise_error
-          end
-
-          it "does allow a buildpack name" do
-            admin_buildpack = VCAP::CloudController::Buildpack.make
-            app = nil
-            expect {
-              app = AppFactory.make(buildpack: admin_buildpack.name)
-            }.to_not raise_error
-
-            expect(app.admin_buildpack).to eql(admin_buildpack)
-          end
-
-          it "does not allow a private git url" do
-            expect {
-              app = AppFactory.make(buildpack: "git@example.com:foo.git")
-            }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
-          end
-
-          it "does not allow a private git url with ssh schema" do
-            expect {
-              app = AppFactory.make(buildpack: "ssh://git@example.com:foo.git")
-            }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
-          end
-        end
-
-        context "when custom buildpacks are disabled and the buildpack attribute is being changed" do
-          before { disable_custom_buildpacks }
-
-          it "does NOT allow a public git url" do
-            expect {
-              AppFactory.make(buildpack: "git://user@github.com:repo")
-            }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
-          end
-
-          it "does NOT allow a public http url" do
-            expect {
-              AppFactory.make(buildpack: "http://example.com/foo")
-            }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
-          end
-
-          it "does allow a buildpack name" do
-            admin_buildpack = VCAP::CloudController::Buildpack.make
-            app = nil
-            expect {
-              app = AppFactory.make(buildpack: admin_buildpack.name)
-            }.to_not raise_error
-
-            expect(app.admin_buildpack).to eql(admin_buildpack)
-          end
-
-          it "does not allow a private git url" do
-            expect {
-              app = AppFactory.make(buildpack: "git@example.com:foo.git")
-            }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
-          end
-
-          it "does not allow a private git url with ssh schema" do
-            expect {
-              app = AppFactory.make(buildpack: "ssh://git@example.com:foo.git")
-            }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
-          end
-        end
-
-        context "when custom buildpacks are disabled after app creation" do
-          it "permits the change even though the buildpack is still custom" do
-            app = AppFactory.make(buildpack: "git://user@github.com:repo")
-
-            disable_custom_buildpacks
-
-            expect {
-              app.instances = 2
-              app.save
-            }.to_not raise_error
-          end
-        end
-
-        it "does not allow a non-url string" do
-          expect {
-            app = AppFactory.make(buildpack: "Hello, world!")
-          }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
-        end
-      end
-
-      describe "disk_quota" do
-        let(:app) { AppFactory.make }
-
-        it "allows any disk_quota below the maximum" do
-          app.disk_quota = 1000
-          expect {
-            app.save
-          }.to_not raise_error
-        end
-
-        it "does not allow a disk_quota above the maximum" do
-          app.disk_quota = 3000
-          expect {
-            app.save
-          }.to raise_error(Sequel::ValidationFailed, /too much disk/)
-        end
-      end
-
-      describe "name" do
-        let(:space) { Space.make }
-        let(:app) { AppFactory.make }
-
-        it "does not allow the same name in a different case" do
-          pending "This test is not valid for SQLite" if DbConfig.connection.database_type == :sqlite
-
-          AppFactory.make(:name => "lowercase", :space => space)
-
-          expect {
-            AppFactory.make(:name => "lowerCase", :space => space)
-          }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
-        end
-
-        it "should allow standard ascii characters" do
-          app.name = "A -_- word 2!?()\'\"&+."
-          expect {
-            app.save
-          }.to_not raise_error
-        end
-
-        it "should allow backslash characters" do
-          app.name = "a \\ word"
-          expect {
-            app.save
-          }.to_not raise_error
-        end
-
-        it "should allow unicode characters" do
-          app.name = "防御力¡"
-          expect {
-            app.save
-          }.to_not raise_error
-        end
-
-        it "should not allow newline characters" do
-          app.name = "a \n word"
-          expect {
-            app.save
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-
-        it "should not allow escape characters" do
-          app.name = "a \e word"
-          expect {
-            app.save
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-      end
-
-      describe "env" do
-        subject(:app) { AppFactory.make }
-
-        it "validates app environment" do
-          expect_validator(AppEnvironmentPolicy)
-        end
-      end
-
-      describe "metadata" do
-        let(:app) { AppFactory.make }
-
-        it "can be set and retrieved" do
-          app.metadata = {}
-          expect(app.metadata).to eql({})
-        end
-
-        it "should save direct updates to the metadata" do
-          app.metadata.should == {}
-          app.metadata["some_key"] = "some val"
-          app.metadata["some_key"].should == "some val"
-          app.save
-          app.metadata["some_key"].should == "some val"
-          app.refresh
-          app.metadata["some_key"].should == "some val"
         end
       end
     end

@@ -16,7 +16,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      required_attributes: [:name, :service_plan, :space],
       db_required_attributes: [:name],
       unique_attributes: [[:space, :name]],
       custom_attributes_for_uniqueness_tests: -> { {service_plan: ServicePlan.make} },
@@ -39,6 +38,20 @@ module VCAP::CloudController
         }
       }
     }
+
+    describe "validations" do
+      it { should validate_presence :name }
+      it { should validate_presence :service_plan }
+      it { should validate_presence :space }
+
+      it "should not bind an app and a service instance from different app spaces" do
+        AppFactory.make(:space => service_instance.space)
+        service_binding = ServiceBinding.make
+        expect {
+          service_instance.add_service_binding(service_binding)
+        }.to raise_error ServiceInstance::InvalidServiceBinding
+      end
+    end
 
     describe "#create" do
       it 'has a guid when constructed' do
@@ -266,16 +279,6 @@ module VCAP::CloudController
           :service_instance => service_instance
         )
         expect { subject }.to change { ServiceBinding.where(:id => service_binding.id).count }.by(-1)
-      end
-    end
-
-    describe "validations" do
-      it "should not bind an app and a service instance from different app spaces" do
-        AppFactory.make(:space => service_instance.space)
-        service_binding = ServiceBinding.make
-        expect {
-          service_instance.add_service_binding(service_binding)
-        }.to raise_error ServiceInstance::InvalidServiceBinding
       end
     end
 

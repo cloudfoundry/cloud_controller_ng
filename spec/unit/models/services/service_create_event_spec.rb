@@ -7,19 +7,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :required_attributes => [
-        :timestamp,
-        :organization_guid,
-        :organization_name,
-        :space_guid,
-        :space_name,
-        :service_instance_guid,
-        :service_instance_name,
-        :service_guid,
-        :service_label,
-        :service_plan_guid,
-        :service_plan_name,
-      ],
       :db_required_attributes => [
         :timestamp,
         :organization_guid,
@@ -27,6 +14,20 @@ module VCAP::CloudController
       ],
       :disable_examples => :deserialization
     }
+    
+    describe "Validations" do
+      it { should validate_presence :timestamp }
+      it { should validate_presence :organization_guid }
+      it { should validate_presence :organization_name }
+      it { should validate_presence :space_guid }
+      it { should validate_presence :space_name }
+      it { should validate_presence :service_instance_guid }
+      it { should validate_presence :service_instance_name }
+      it { should validate_presence :service_guid }
+      it { should validate_presence :service_label }
+      it { should validate_presence :service_plan_guid }
+      it { should validate_presence :service_plan_name }
+    end
 
     describe "create_from_service_instance" do
       context "on an org without billing enabled" do

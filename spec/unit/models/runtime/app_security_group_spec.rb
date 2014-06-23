@@ -213,14 +213,15 @@ module VCAP::CloudController
     end
 
     it_behaves_like 'a CloudController model', {
-      required_attributes: [:name],
       unique_attributes: [:name],
       many_to_zero_or_more: {
         spaces: ->(app_security_group) { Space.make }
       }
     }
 
-    describe 'validations' do
+    describe "Validations" do
+      it { should validate_presence :name }
+
       context 'name' do
         subject(:app_sec_group) { AppSecurityGroup.make }
 

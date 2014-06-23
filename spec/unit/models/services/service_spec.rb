@@ -3,7 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe Service, type: :model do
     it_behaves_like "a CloudController model", {
-      :required_attributes  => [:label, :description, :bindable],
       :required_attribute_error_message => {
         :label => 'name is required'
       },
@@ -17,7 +16,11 @@ module VCAP::CloudController
       }
     }
 
-    describe "validation" do
+    describe "Validations" do
+      it { should validate_presence :label, message: 'Service name is required' }
+      it { should validate_presence :description, message: 'is required' }
+      it { should validate_presence :bindable, message: 'is required' }
+
       context 'when the unique_id is not unique' do
         let(:existing_service) { Service.make }
         let(:service) { Service.make_unsaved(unique_id: existing_service.unique_id) }

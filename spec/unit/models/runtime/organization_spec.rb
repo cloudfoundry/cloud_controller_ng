@@ -9,7 +9,6 @@ module VCAP::CloudController
       end
 
       it_behaves_like "a CloudController model", {
-          required_attributes: :name,
           unique_attributes: :name,
           custom_attributes_for_uniqueness_tests: -> { { quota_definition: QuotaDefinition.make } },
           stripped_string_attributes: :name,
@@ -27,27 +26,9 @@ module VCAP::CloudController
       }
     end
 
-    context "statuses" do
-      describe "when status == active" do
-        subject(:org) { Organization.make(status: "active") }
-        it("is active") { expect(org).to be_active }
-        it("is not suspended") { expect(org).not_to be_suspended }
-      end
+    describe "Validations" do
+      it { should validate_presence :name }
 
-      describe "when status == suspended" do
-        subject(:org) { Organization.make(status: "suspended") }
-        it("is not active") { expect(org).not_to be_active }
-        it("is suspended") { expect(org).to be_suspended }
-      end
-
-      describe "when status == unknown" do
-        subject(:org) { Organization.make(status: "unknown") }
-        it("is not active") { expect(org).not_to be_active }
-        it("is not suspended") { expect(org).not_to be_suspended }
-      end
-    end
-
-    describe "validations" do
       context "name" do
         subject(:org) { Organization.make }
 
@@ -126,6 +107,26 @@ module VCAP::CloudController
             org.manager_guids = []
           }.to raise_error(Sequel::HookFailed)
         end
+      end
+    end
+
+    context "statuses" do
+      describe "when status == active" do
+        subject(:org) { Organization.make(status: "active") }
+        it("is active") { expect(org).to be_active }
+        it("is not suspended") { expect(org).not_to be_suspended }
+      end
+
+      describe "when status == suspended" do
+        subject(:org) { Organization.make(status: "suspended") }
+        it("is not active") { expect(org).not_to be_active }
+        it("is suspended") { expect(org).to be_suspended }
+      end
+
+      describe "when status == unknown" do
+        subject(:org) { Organization.make(status: "unknown") }
+        it("is not active") { expect(org).not_to be_active }
+        it("is not suspended") { expect(org).not_to be_suspended }
       end
     end
 

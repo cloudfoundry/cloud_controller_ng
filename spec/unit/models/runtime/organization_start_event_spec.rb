@@ -7,13 +7,14 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :required_attributes => [
-        :timestamp,
-        :organization_guid,
-        :organization_name,
-      ],
       :disable_examples => :deserialization
     }
+
+    describe "Validations" do
+      it { should validate_presence :timestamp }
+      it { should validate_presence :organization_guid }
+      it { should validate_presence :organization_name }
+    end
 
     describe "create_from_org" do
       context "on an org without billing enabled" do

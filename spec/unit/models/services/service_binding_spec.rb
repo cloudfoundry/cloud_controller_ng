@@ -16,7 +16,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :required_attributes => [:service_instance, :app],
       :db_required_attributes => [:service_instance_id, :app_id, :credentials],
       :unique_attributes => [ [:app, :service_instance] ],
       :create_attribute => lambda { |name, service_binding|
@@ -43,6 +42,11 @@ module VCAP::CloudController
         }
       }
     }
+
+    describe "Validations" do
+      it { should validate_presence :service_instance }
+      it { should validate_presence :app }
+    end
 
     describe "#create" do
       it 'has a guid when constructed' do

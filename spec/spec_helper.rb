@@ -83,7 +83,9 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.after :each do
-    expect(Sequel::Deprecation.output.string).to eq ''
+    unless Sequel::Deprecation.output.string == ''
+      raise "Sequel Deprecation String found: #{Sequel::Deprecation.output.string}"
+    end
     Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
   end
 

@@ -4,7 +4,6 @@ module VCAP::CloudController
   describe Stack, type: :model do
     let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
     it_behaves_like "a CloudController model", {
-      :required_attributes        => [:name, :description],
       :unique_attributes          => :name,
       :stripped_string_attributes => :name,
       :one_to_zero_or_more => {
@@ -14,6 +13,11 @@ module VCAP::CloudController
         },
       },
     }
+
+    describe "Validations" do
+      it { should validate_presence :name }
+      it { should validate_presence :description }
+    end
 
     describe ".configure" do
       context "with valid config" do

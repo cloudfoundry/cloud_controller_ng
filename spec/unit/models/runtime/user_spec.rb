@@ -3,8 +3,8 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::User, type: :model do
     it_behaves_like "a CloudController model", {
-      :required_attributes          => :guid,
       :unique_attributes            => :guid,
+      :extra_json_attributes => [:guid],
       :many_to_zero_or_one => {
         :default_space => lambda { |user|
           org = user.organizations.first || Organization.make
@@ -35,6 +35,10 @@ module VCAP::CloudController
         }
       }
     }
+
+    describe "Validations" do
+      it { should validate_presence :guid }
+    end
 
 
     describe "#remove_spaces" do

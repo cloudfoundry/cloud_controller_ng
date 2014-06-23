@@ -3,8 +3,13 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::Space, type: :model do
+
+    describe "Validations" do
+      it { should validate_presence :name }
+      it { should validate_presence :organization }
+    end
+
     it_behaves_like "a CloudController model", {
-      :required_attributes => [:name, :organization],
       :unique_attributes   => [ [:organization, :name] ],
       :stripped_string_attributes => :name,
       :many_to_one => {
