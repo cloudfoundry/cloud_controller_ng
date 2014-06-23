@@ -16,13 +16,12 @@ class BackgroundJobEnvironment
           :servers => @config[:message_bus_servers],
           :logger => Steno.logger("cc.message_bus")).go
 
-        # The worker should not interact with DEA
-        # so we using null object for stager and dea pool
-        # The AppObserver should be refactored and don't depend on stager and dea pools
+        # The AppObserver need no knowledge of the DEA or stager pools
+        # so we are passing in no-op objects for these arguments
         no_op_staging_pool = Object.new
         no_op_dea_pool = Object.new
-        no_op_diego_client = Object.new
-        VCAP::CloudController::AppObserver.configure(@config, message_bus, no_op_dea_pool, no_op_staging_pool, no_op_diego_client)
+        diego_client = CloudController::DependencyLocator.instance.diego_client
+        VCAP::CloudController::AppObserver.configure(@config, message_bus, no_op_dea_pool, no_op_staging_pool, diego_client)
 
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
         VCAP::CloudController::DeaClient.configure(@config, message_bus, no_op_dea_pool, no_op_staging_pool, blobstore_url_generator)

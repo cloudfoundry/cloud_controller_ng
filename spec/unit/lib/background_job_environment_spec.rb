@@ -35,7 +35,7 @@ describe BackgroundJobEnvironment do
         message_bus,
         instance_of(Object),
         instance_of(Object),
-        instance_of(Object))
+        instance_of(VCAP::CloudController::Diego::DiegoClient))
       background_job_environment.setup_environment
     end
   end
