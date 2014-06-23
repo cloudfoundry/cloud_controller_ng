@@ -214,6 +214,7 @@ module VCAP::CloudController
 
     it_behaves_like 'a CloudController model', {
       required_attributes: [:name],
+      unique_attributes: [:name],
       many_to_zero_or_more: {
         spaces: ->(app_security_group) { Space.make }
       }

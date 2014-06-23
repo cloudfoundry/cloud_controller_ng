@@ -19,6 +19,7 @@ module VCAP::CloudController
 
     def validate
       validates_presence :name
+      validates_unique :name
       validates_format APP_SECURITY_GROUP_NAME_REGEX, :name
       validate_rules
     end

@@ -27,7 +27,12 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      Errors::ApiError.new_from_details("AppSecurityGroupInvalid", e.errors.full_messages)
+      name_errors = e.errors.on(:name)
+      if name_errors && name_errors.include?(:unique)
+        Errors::ApiError.new_from_details("AppSecurityGroupNameTaken", attributes["name"])
+      else
+        Errors::ApiError.new_from_details("AppSecurityGroupInvalid", e.errors.full_messages)
+      end
     end
   end
 end
