@@ -547,3 +547,8 @@
   name: AppSecurityGroupRunningDefaultInvalid
   http_code: 400
   message: "The app security group could not be found: %s"
+
+300005:
+    name: AppSecurityGroupNameTaken
+    http_code: 400
+    message: "The app security group name is taken: %s"
