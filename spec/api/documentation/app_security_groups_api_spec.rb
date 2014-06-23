@@ -17,7 +17,12 @@ resource "App Security Groups (experimental)", :type => :api do
 
   shared_context "updatable_fields" do
     field :name, "The name of the app security group.", required: true, example_values: ["my_super_app_sec_group"]
-    field :rules, "The egress rules for apps that belong to this app security group.", default: []
+    field :rules, "The egress rules for apps that belong to this app security group.", default: [],
+      example_values: [[
+        {protocol: "icmp", destination: "0.0.0.0/0", type: 0, code: 1},
+        {protocol: "tcp", destination: "0.0.0.0/0", ports: "2048-3000"},
+        {protocol: "udp", destination: "0.0.0.0/0", ports: "53, 5353"},
+        ]]
     field :space_guids, "The list of associated spaces.", default: []
   end
 
@@ -29,7 +34,7 @@ resource "App Security Groups (experimental)", :type => :api do
     post "/v2/app_security_groups/" do
       include_context "updatable_fields"
       example "Creating an App Security Group" do
-        client.post "/v2/app_security_groups", Yajl::Encoder.encode(required_fields), headers
+        client.post "/v2/app_security_groups", fields_json({rules: field_data("rules")[:example_values].first}), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app_security_group

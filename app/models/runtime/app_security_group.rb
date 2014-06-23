@@ -3,7 +3,7 @@ require 'netaddr'
 module VCAP::CloudController
   class AppSecurityGroup < Sequel::Model
     APP_SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
-    TRANSPORT_RULE_FIELDS = ["protocol", "port", "destination"].map(&:freeze).freeze
+    TRANSPORT_RULE_FIELDS = ["protocol", "ports", "destination"].map(&:freeze).freeze
     ICMP_RULE_FIELDS = ["protocol", "code", "type", "destination"].map(&:freeze).freeze
 
     plugin :serialization
@@ -66,9 +66,9 @@ module VCAP::CloudController
       errs = validate_fields(rule, TRANSPORT_RULE_FIELDS)
       return errs unless errs.empty?
 
-      port = rule['port']
+      port = rule['ports']
       unless validate_port(port)
-        errs << "contains invalid port"
+        errs << "contains invalid ports"
       end
 
       destination = rule['destination']
@@ -143,7 +143,7 @@ module VCAP::CloudController
     end
 
     def validate_icmp_control_message(value)
-      !!(/^\-?\s*\d+\s*$/.match(value)) && value.to_i >= -1 && value.to_i < 256
+      value.is_a?(Integer) && value >= -1 && value < 256
     end
   end
 end

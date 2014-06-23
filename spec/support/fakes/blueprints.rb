@@ -294,7 +294,7 @@ module VCAP::CloudController
       [
         {
           "protocol" => "udp",
-          "port" => "8080",
+          "ports" => "8080",
           "destination" => "198.41.191.47/1",
         }
       ]

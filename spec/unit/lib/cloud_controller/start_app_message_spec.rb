@@ -98,9 +98,9 @@ module VCAP::CloudController
       end
 
       context "when app security groups are configured" do
-        let(:asg_default_rules_1) { [{"protocol" => "udp", "port" => "8080", "destination" => "198.41.191.47/1"}] }
-        let(:asg_default_rules_2) { [{"protocol" => "tcp", "port" => "9090", "destination" => "198.41.191.48/1"}] }
-        let(:asg_for_space_rules) { [{"protocol" => "udp", "port" => "1010", "destination" => "198.41.191.49/1"}] }
+        let(:asg_default_rules_1) { [{"protocol" => "udp", "ports" => "8080", "destination" => "198.41.191.47/1"}] }
+        let(:asg_default_rules_2) { [{"protocol" => "tcp", "ports" => "9090", "destination" => "198.41.191.48/1"}] }
+        let(:asg_for_space_rules) { [{"protocol" => "udp", "ports" => "1010", "destination" => "198.41.191.49/1"}] }
 
         before do
           AppSecurityGroup.make(rules: asg_default_rules_1, running_default: true)

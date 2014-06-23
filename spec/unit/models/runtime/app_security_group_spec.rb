@@ -6,7 +6,7 @@ module VCAP::CloudController
     def build_transport_rule(attrs={})
       {
         'protocol'    => 'udp',
-        'port'        => '8080-9090',
+        'ports'        => '8080-9090',
         'destination' => '198.41.191.47/1'
       }.merge(attrs)
     end
@@ -14,33 +14,33 @@ module VCAP::CloudController
     def build_icmp_rule(attrs={})
       {
         'protocol' => 'icmp',
-        'type' => '0',
-        'code' => '0',
+        'type' => 0,
+        'code' => 0,
         'destination' => '0.0.0.0/0'
       }.merge(attrs)
     end
 
     shared_examples 'a transport rule' do
-      context 'validates port' do
+      context 'validates ports' do
         describe 'good' do
-          context 'when port is a range' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => '8080-8081') }
+          context 'when ports is a range' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '8080-8081') }
 
             it 'is valid' do
               expect(subject).to be_valid
             end
           end
 
-          context 'when port is a comma separated list' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => '8080, 8081') }
+          context 'when ports is a comma separated list' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '8080, 8081') }
 
             it 'is valid' do
               expect(subject).to be_valid
             end
           end
 
-          context 'when port is a single value' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => ' 8080 ') }
+          context 'when ports is a single value' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => ' 8080 ') }
 
             it 'is valid' do
               expect(subject).to be_valid
@@ -49,78 +49,78 @@ module VCAP::CloudController
         end
 
         describe 'bad' do
-          context 'when the port contains non-integers' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => 'asdf') }
+          context 'when the ports contains non-integers' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => 'asdf') }
 
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
             end
           end
 
           context 'when the range is degenerate' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => '1-1') }
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '1-1') }
 
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
             end
           end
 
           context 'when the range is not increasing' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => '8-1') }
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '8-1') }
 
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
             end
           end
 
           context 'when the range is not valid' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => '-1') }
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '-1') }
 
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
             end
           end
 
           context 'when the range contains invalid ports' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => '0-7') }
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '0-7') }
 
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
             end
           end
 
-          context 'when the port field contains two different formats' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => '1-7,1') }
+          context 'when the ports field contains two different formats' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '1-7,1') }
 
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
             end
           end
 
-          context 'when the port list contains an invalid port' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => '1,5,65536') }
+          context 'when the ports list contains an invalid port' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '1,5,65536') }
 
             it 'is not valid' do
               expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid port'
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
             end
           end
 
-          context 'when the port range contains space padding' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'port' => ' 1 - 4 ') }
+          context 'when the ports range contains space padding' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => ' 1 - 4 ') }
 
             it 'is valid' do
               expect(subject).to be_valid
@@ -130,14 +130,14 @@ module VCAP::CloudController
           context 'when it is missing' do
             let(:rule) do
               default_rule = build_transport_rule()
-              default_rule.delete('port')
+              default_rule.delete('ports')
               default_rule
             end
 
             it 'is not valid' do
               expect(subject).not_to be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'port\''
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'ports\''
             end
           end
         end
@@ -272,7 +272,7 @@ module VCAP::CloudController
             context 'validates type' do
               context 'good' do
                 context 'when the type is a valid 8 bit number' do
-                  let (:rule) { build_icmp_rule('type' => '5') }
+                  let (:rule) { build_icmp_rule('type' => 5) }
 
                   it 'is valid' do
                     expect(subject).to be_valid
@@ -280,7 +280,7 @@ module VCAP::CloudController
                 end
 
                 context 'when the type is -1' do
-                  let (:rule) { build_icmp_rule('type' => '-1') }
+                  let (:rule) { build_icmp_rule('type' => -1) }
 
                   it 'is valid' do
                     expect(subject).to be_valid
@@ -300,7 +300,7 @@ module VCAP::CloudController
                 end
 
                 context 'when type cannot be represented in 8 bits' do
-                  let(:rule) { build_icmp_rule('type' => '256') }
+                  let(:rule) { build_icmp_rule('type' => 256) }
 
                   it 'is not valid' do
                     expect(subject).to_not be_valid
@@ -328,7 +328,7 @@ module VCAP::CloudController
             context 'validates code' do
               context 'good' do
                 context 'when the type is a valid 8 bit number' do
-                  let (:rule) { build_icmp_rule('code' => '5') }
+                  let (:rule) { build_icmp_rule('code' => 5) }
 
                   it 'is valid' do
                     expect(subject).to be_valid
@@ -336,7 +336,7 @@ module VCAP::CloudController
                 end
 
                 context 'when the type is -1' do
-                  let (:rule) { build_icmp_rule('code' => '-1') }
+                  let (:rule) { build_icmp_rule('code' => -1) }
 
                   it 'is valid' do
                     expect(subject).to be_valid
@@ -356,7 +356,7 @@ module VCAP::CloudController
                 end
 
                 context 'when type cannot be represented in 8 bits' do
-                  let(:rule) { build_icmp_rule('code' => '256') }
+                  let(:rule) { build_icmp_rule('code' => 256) }
 
                   it 'is not valid' do
                     expect(subject).to_not be_valid

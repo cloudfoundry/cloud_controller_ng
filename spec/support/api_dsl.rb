@@ -70,6 +70,12 @@ module ApiDsl
     RSpec.current_example.metadata[:audit_records] << {type: event[:type], attributes: attributes}
   end
 
+  def field_data(name)
+    self.class.metadata[:fields].detect do |field|
+      name == field[:name]
+    end
+  end
+
   def fields_json(overrides = {})
     Yajl::Encoder.encode(required_fields.merge(overrides), pretty: true)
   end

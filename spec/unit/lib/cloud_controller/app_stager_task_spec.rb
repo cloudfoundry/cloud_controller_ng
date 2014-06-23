@@ -510,9 +510,9 @@ module VCAP::CloudController
           app.add_service_binding(binding)
         end
 
-        AppSecurityGroup.make(rules: [{"protocol" => "udp", "port" => "8080-9090", "destination" => "198.41.191.47/1"}], staging_default: true)
-        AppSecurityGroup.make(rules: [{"protocol" => "tcp", "port" => "8080-9090", "destination" => "198.41.191.48/1"}], staging_default: true)
-        AppSecurityGroup.make(rules: [{"protocol" => "tcp", "port" => "80",        "destination" => "0.0.0.0/0"}], staging_default: false)
+        AppSecurityGroup.make(rules: [{"protocol" => "udp", "ports" => "8080-9090", "destination" => "198.41.191.47/1"}], staging_default: true)
+        AppSecurityGroup.make(rules: [{"protocol" => "tcp", "ports" => "8080-9090", "destination" => "198.41.191.48/1"}], staging_default: true)
+        AppSecurityGroup.make(rules: [{"protocol" => "tcp", "ports" => "80",        "destination" => "0.0.0.0/0"}], staging_default: false)
       end
 
       it "includes app guid, task id and download/upload uris" do
@@ -690,8 +690,8 @@ module VCAP::CloudController
       it "includes egress security group staging information by aggregating all asg with staging_default=true" do
         request = staging_task.staging_request
         expect(request[:egress_network_rules]).to match_array([
-          {"protocol"=>"udp","port"=>"8080-9090","destination"=>"198.41.191.47/1"},
-          {"protocol"=>"tcp","port"=>"8080-9090","destination"=>"198.41.191.48/1"}
+          {"protocol"=>"udp","ports"=>"8080-9090","destination"=>"198.41.191.47/1"},
+          {"protocol"=>"tcp","ports"=>"8080-9090","destination"=>"198.41.191.48/1"}
         ])
       end
     end
