@@ -16,7 +16,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      db_required_attributes: [:name],
       unique_attributes: [[:space, :name]],
       custom_attributes_for_uniqueness_tests: -> { {service_plan: ServicePlan.make} },
       stripped_string_attributes: :name,

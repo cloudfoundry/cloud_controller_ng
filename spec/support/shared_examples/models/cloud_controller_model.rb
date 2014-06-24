@@ -4,7 +4,7 @@ shared_examples "a CloudController model" do |opts|
   # the later code is simplified if we can assume that these are always
   # arrays
   relation_types = RelationTypes.all
-  ([:required_attributes, :unique_attributes, :stripped_string_attributes,
+  ([:unique_attributes, :stripped_string_attributes,
    :sensitive_attributes, :extra_json_attributes, :disable_examples] +
    relation_types).each do |k|
      opts[k] ||= []

@@ -7,11 +7,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :db_required_attributes => [
-        :timestamp,
-        :organization_guid,
-        :organization_name,
-      ],
       :disable_examples => :deserialization
     }
     
