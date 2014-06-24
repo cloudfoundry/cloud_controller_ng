@@ -62,7 +62,7 @@ module VCAP::CloudController::Diego
           memory_mb: app.memory,
           disk_mb: app.disk_quota,
           file_descriptors: app.file_descriptors,
-          droplet_uri: @blobstore_url_generator.droplet_download_url(app),
+          droplet_uri: @blobstore_url_generator.perma_droplet_download_url(app.guid),
           stack: app.stack.name,
           start_command: app.detected_start_command,
           environment: environment(app),

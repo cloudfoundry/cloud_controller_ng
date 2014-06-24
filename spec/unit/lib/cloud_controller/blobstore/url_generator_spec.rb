@@ -157,7 +157,7 @@ module CloudController
           end
         end
 
-        context "droplets" do
+        context "download droplets" do
           let(:app) { VCAP::CloudController::AppFactory.make }
           let(:blob) { double("blob", download_url: "http://example.com/blob") }
 
@@ -201,6 +201,12 @@ module CloudController
             it "gives out signed url to remote blobstore from the blob" do
               expect(url_generator.droplet_download_url(app)).to eql("http://example.com/blob")
             end
+          end
+        end
+
+        context "download droplets permalink" do
+          it "gives out a url to the cloud controller" do
+            expect(url_generator.perma_droplet_download_url("guid-1")).to eql("http://username:password@api.example.com:9292/staging/droplets/guid-1/download")
           end
         end
       end

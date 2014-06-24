@@ -293,68 +293,95 @@ module VCAP::CloudController
         authorize staging_user, staging_password
       end
 
-      context "with a valid droplet" do
-        before do
-          app_obj.droplet_hash = "abcdef"
-          app_obj.save
-        end
-
-        context "with nginx" do
-          before { TestConfig.config[:nginx][:use_nginx] = true }
-
-          it "redirects nginx to serve staged droplet" do
-            droplet_file = Tempfile.new(app_obj.guid)
-            droplet_file.write("droplet contents")
-            droplet_file.close
-
-            droplet = CloudController::DropletUploader.new(app_obj, blobstore)
-            droplet.upload(droplet_file.path)
-
-            get "/staging/droplets/#{app_obj.guid}/download"
-            last_response.status.should == 200
-            last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
+      context "with a local blobstore" do
+        context "with a valid droplet" do
+          before do
+            app_obj.droplet_hash = "abcdef"
+            app_obj.save
           end
 
-          context "with a valid app but no droplet" do
-            it "raises an error" do
-              get "/staging/droplets/#{app_obj.guid}/download"
-              last_response.status.should == 400
-              decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
-            end
-          end
-        end
+          context "with nginx" do
+            before { TestConfig.config[:nginx][:use_nginx] = true }
 
-        context "without nginx" do
-          before { TestConfig.config[:nginx][:use_nginx] = false }
+            it "redirects nginx to serve staged droplet" do
+              droplet_file = Tempfile.new(app_obj.guid)
+              droplet_file.write("droplet contents")
+              droplet_file.close
 
-          it "should return the droplet" do
-            Tempfile.new(app_obj.guid) do |f|
-              f.write("droplet contents")
-              f.close
-              CloudController::DropletUploader.new(app_obj, blobstore).upload(f.path)
+              droplet = CloudController::DropletUploader.new(app_obj, blobstore)
+              droplet.upload(droplet_file.path)
 
               get "/staging/droplets/#{app_obj.guid}/download"
               last_response.status.should == 200
-              last_response.body.should == "droplet contents"
+              last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
+            end
+
+            context "with a valid app but no droplet" do
+              it "raises an error" do
+                get "/staging/droplets/#{app_obj.guid}/download"
+                last_response.status.should == 400
+                decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+              end
             end
           end
 
-          context "with a valid app but no droplet" do
-            it "should return an error" do
-              get "/staging/droplets/#{app_obj.guid}/download"
-              last_response.status.should == 400
-              decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+          context "without nginx" do
+            before { TestConfig.config[:nginx][:use_nginx] = false }
+
+            it "should return the droplet" do
+              Tempfile.new(app_obj.guid) do |f|
+                f.write("droplet contents")
+                f.close
+                CloudController::DropletUploader.new(app_obj, blobstore).upload(f.path)
+
+                get "/staging/droplets/#{app_obj.guid}/download"
+                last_response.status.should == 200
+                last_response.body.should == "droplet contents"
+              end
             end
+
+            context "with a valid app but no droplet" do
+              it "should return an error" do
+                get "/staging/droplets/#{app_obj.guid}/download"
+                last_response.status.should == 400
+                decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+              end
+            end
+          end
+        end
+
+        context "with an invalid app" do
+          it "should return an error" do
+            get "/staging/droplets/bad/download"
+            last_response.status.should == 404
           end
         end
       end
 
-      context "with an invalid app" do
-        it "should return an error" do
-          get "/staging/droplets/bad/download"
-          last_response.status.should == 404
+        context "when the blobstore is not local" do
+          before do
+            CloudController::Blobstore::Client.any_instance.stub(:local?).and_return(false)
+            authorize(staging_user, staging_password)
+          end
+
+          it "should redirect to the url provided by the blobstore_url_generator" do
+            CloudController::Blobstore::UrlGenerator.any_instance.stub(:droplet_download_url).and_return("http://example.com/somewhere/else")
+            get "/staging/droplets/#{app_obj.guid}/download"
+            last_response.should be_redirect()
+            last_response.header["Location"].should eq("http://example.com/somewhere/else")
+          end
+
+          it "should return an error for non-existent apps" do
+            get "/staging/droplets/not-a-thing-app/download"
+            last_response.status.should == 404
+          end
+
+          it "should return an error for an app without a package" do
+            CloudController::Blobstore::UrlGenerator.any_instance.stub(:droplet_download_url).and_return(nil)
+            get "/staging/droplets/app-guid-without-droplet/download"
+            last_response.status.should == 404
+          end
         end
-      end
     end
 
     describe "POST /staging/buildpack_cache/:guid/upload" do

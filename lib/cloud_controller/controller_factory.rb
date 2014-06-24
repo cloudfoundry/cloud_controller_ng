@@ -39,6 +39,7 @@ module CloudController
                                   droplet_blobstore:         dependency_locator.droplet_blobstore,
                                   buildpack_cache_blobstore: dependency_locator.buildpack_cache_blobstore,
                                   package_blobstore:         dependency_locator.package_blobstore,
+                                  blobstore_url_generator:   dependency_locator.blobstore_url_generator,
                                   missing_blob_handler:      dependency_locator.missing_blob_handler,
                                   blob_sender:               dependency_locator.blob_sender,
                                   config:                    @config,

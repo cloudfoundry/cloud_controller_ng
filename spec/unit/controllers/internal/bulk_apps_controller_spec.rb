@@ -6,7 +6,7 @@ module VCAP::CloudController
   describe BulkApps do
     before do
       allow_any_instance_of(::CloudController::Blobstore::UrlGenerator)
-      .to receive(:droplet_download_url)
+      .to receive(:perma_droplet_download_url)
       .and_return("http://blobsto.re/droplet")
     end
 

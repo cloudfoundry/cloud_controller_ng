@@ -60,10 +60,17 @@ module VCAP::CloudController
     def download_droplet(guid)
       app = App.find(:guid => guid)
       check_app_exists(app, guid)
-      droplet = app.current_droplet
       blob_name = "droplet"
-      @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet.blob
-      @blob_sender.send_blob(app.guid, blob_name, droplet.blob, self)
+
+      if @blobstore.local?
+        droplet = app.current_droplet
+        @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet.blob
+        @blob_sender.send_blob(app.guid, blob_name, droplet.blob, self)
+      else
+        url = @blobstore_url_generator.droplet_download_url(app)
+        @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless url
+        redirect url
+      end
     end
 
     post "#{BUILDPACK_CACHE_PATH}/:guid/upload", :upload_buildpack_cache
@@ -97,6 +104,7 @@ module VCAP::CloudController
       @blobstore = dependencies.fetch(:droplet_blobstore)
       @buildpack_cache_blobstore = dependencies.fetch(:buildpack_cache_blobstore)
       @package_blobstore = dependencies.fetch(:package_blobstore)
+      @blobstore_url_generator = dependencies.fetch(:blobstore_url_generator)
       @config = dependencies.fetch(:config)
       @missing_blob_handler = dependencies.fetch(:missing_blob_handler)
       @blob_sender = dependencies.fetch(:blob_sender)
