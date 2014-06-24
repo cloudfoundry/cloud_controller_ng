@@ -7,7 +7,6 @@ shared_examples "model instance" do |opts|
   unless opts[:disable_examples].include? :creation
     describe "creation" do
       include_examples "creation with all required attributes"
-      include_examples "creation of unique attributes", opts
     end
   end
 
