@@ -4,8 +4,6 @@ module VCAP::CloudController
   class SharedDomain < Domain
     set_dataset(shared_domains)
 
-    default_order_by  :name
-
     add_association_dependencies routes: :destroy
 
     export_attributes :name

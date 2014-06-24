@@ -36,6 +36,11 @@ module VCAP::CloudController
       end
     end
 
+    describe "Serialization" do
+      it { should export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :active }
+      it { should import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public }
+    end
+
     describe '#save' do
       context 'on create' do
         context 'when no unique_id is set' do
@@ -117,44 +122,6 @@ module VCAP::CloudController
         visible.should include(visible_private_plan)
         visible.should_not include(hidden_private_plan)
         visible.should_not include(inactive_public_plan)
-      end
-    end
-
-    describe "serialization" do
-      let(:service_plan) {
-        ServicePlan.new_from_hash(extra: "extra", public: false, unique_id: "unique-id")
-      }
-
-      it "allows mass assignment of extra" do
-         service_plan.extra.should == "extra"
-      end
-
-      it "allows export of extra"  do
-         Yajl::Parser.parse(service_plan.to_json)["extra"].should == "extra"
-      end
-
-      it "allows mass assignment of public" do
-        service_plan.public.should == false
-      end
-
-      it "allows mass assignment of unique_id" do
-        service_plan.unique_id.should == "unique-id"
-      end
-
-      context "when a user attempts to assign active flag from hash" do
-        let(:service_plan) { ServicePlan.new_from_hash(extra: "extra", public: false, unique_id: "unique-id", active: false) }
-
-        it "does not allow assignment" do
-          service_plan.active == true
-        end
-      end
-
-      context "when a plan is inactive" do
-        let(:inactive_plan) { ServicePlan.make(extra: "extra", public: false, unique_id: "unique-id", active: false) }
-
-        it "allows an export of the plan's active flag" do
-          inactive_plan.active.should == false
-        end
       end
     end
 

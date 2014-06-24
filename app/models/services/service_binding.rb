@@ -6,8 +6,6 @@ module VCAP::CloudController
     many_to_one :app
     many_to_one :service_instance
 
-    default_order_by  :id
-
     export_attributes :app_guid, :service_instance_guid, :credentials,
                       :binding_options, :gateway_data, :gateway_name, :syslog_drain_url
 

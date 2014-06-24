@@ -524,5 +524,10 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "Serialization" do
+      it { should export_attributes :name, :rules }
+      it { should import_attributes :name, :rules, :running_default, :staging_default, :space_guids }
+    end
   end
 end

@@ -8,8 +8,6 @@ module VCAP::CloudController
 
     add_association_dependencies :service_plans => :destroy
 
-    default_order_by  :label
-
     export_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
                       :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid

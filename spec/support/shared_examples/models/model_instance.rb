@@ -10,24 +10,6 @@ shared_examples "model instance" do |opts|
     end
   end
 
-  unless opts[:disable_examples].include? :updates
-    describe "updates" do
-      include_examples "timestamps", opts
-    end
-  end
-
-  unless opts[:disable_examples].include? :seralization
-    describe "serialization" do
-      include_examples "serialization", opts
-    end
-  end
-
-  unless opts[:disable_examples].include? :deserialization
-    describe "deserialization" do
-      include_examples "deserialization", opts
-    end
-  end
-
   unless opts[:disable_examples].include? :deletion
     describe "deletion" do
       let(:obj) { described_class.make }

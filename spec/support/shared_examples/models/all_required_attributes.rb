@@ -4,10 +4,6 @@ shared_examples "creation with all required attributes" do
       @obj = described_class.make
     end
 
-    it "should succeed" do
-      @obj.should be_valid
-    end
-
     it "should have a recent created_at timestamp" do
       @obj.created_at.should be_recent
     end

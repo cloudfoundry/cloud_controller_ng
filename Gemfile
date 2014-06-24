@@ -51,6 +51,7 @@ group :test do
   gem 'rspec-instafail'
   gem 'rspec_api_documentation'
   gem 'rspec-collection_matchers'
+  gem 'rspec-its'
   gem 'rubocop'
   gem 'timecop'
   gem 'webmock'

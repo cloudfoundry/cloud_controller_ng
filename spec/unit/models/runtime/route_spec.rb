@@ -3,11 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::Route, type: :model do
     it_behaves_like "a CloudController model", {
-        custom_attributes_for_uniqueness_tests: -> do
-          space = Space.make
-          domain = PrivateDomain.make(owning_organization: space.organization)
-          {space: space, domain: domain}
-        end,
         create_attribute: ->(name, route) {
           case name.to_sym
             when :space
@@ -120,6 +115,11 @@ module VCAP::CloudController
           end
         end
       end
+    end
+
+    describe "Serialization" do
+      it { should export_attributes :host, :domain_guid, :space_guid }
+      it { should import_attributes :host, :domain_guid, :space_guid, :app_guids }
     end
 
     describe "instance methods" do

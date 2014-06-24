@@ -19,6 +19,11 @@ module VCAP::CloudController
       it { should strip_whitespace :name }
     end
 
+    describe "Serialization" do
+      it { should export_attributes :name, :description }
+      it { should import_attributes :name, :description }
+    end
+
     describe ".configure" do
       context "with valid config" do
         it "can load" do

@@ -36,19 +36,6 @@ module Sequel::Plugins::VcapSerialization
       hash
     end
 
-    # Return a json serialization of the model instance containing only
-    # the parameters specified by export_attributes.
-    #
-    # @option opts [Array<String>] :only Only export an attribute if it is both
-    # included in export_attributes and in the :only option.
-    #
-    # @return [String] The json serialization of the instance only containing
-    # the attributes specified by export_attributes and the optional :only
-    # parameter.
-    def to_json(opts = {})
-      Yajl::Encoder.encode(to_hash(opts))
-    end
-
     # Update the model instance from the supplied json string.  Only update
     # attributes specified by import_attributes.
     #
@@ -80,22 +67,6 @@ module Sequel::Plugins::VcapSerialization
   end
 
   module ClassMethods
-    # Return a json serialization of data set containing only
-    # the parameters specified by export_attributes.
-    #
-    # @option opts [Array<String>] :only Only export an attribute if it is both
-    # included in export_attributes and in the :only option.
-    #
-    # @return [String] The json serialization of the data set only containing
-    # the attributes specified by export_attributes and the optional :only
-    # parameter.  The resulting data set is sorted by :id unless an order
-    # is set via default_order_by.
-    def to_json(opts = {})
-      order_attr = @default_order_by || :id
-      elements = order_by(Sequel.asc(order_attr)).map { |e| e.to_hash(opts) }
-      Yajl::Encoder.encode(elements)
-    end
-
     # Create a new model instance from the supplied json string.  Only include
     # attributes specified by import_attributes.
     #
@@ -122,28 +93,6 @@ module Sequel::Plugins::VcapSerialization
     def create_from_hash(hash, opts = {})
       create_opts = update_or_create_options(hash, opts)
       create {|instance| instance.set_all(create_opts) }
-    end
-
-    # Instantiates, but does not save, a new model instance from the
-    # supplied json string.  Only include # attributes specified by
-    # import_attributes.
-    #
-    # @param [Hash] Hash of the attributes.
-    #
-    # @option opts [Array<String>] :only Only include an attribute if it is
-    # both included in import_attributes and in the :only option.
-    #
-    # @return [Sequel::Model] The created model.
-    def new_from_hash(hash, opts = {})
-      create_opts = update_or_create_options(hash, opts)
-      new(create_opts)
-    end
-
-    # Set the default order during a to_json on the model class.
-    #
-    # @param [Symbol] Name of the attribute to order by.
-    def default_order_by(attribute)
-      @default_order_by = attribute
     end
 
     # Set the default order during a to_json on the model class.

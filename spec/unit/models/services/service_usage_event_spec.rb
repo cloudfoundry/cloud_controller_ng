@@ -18,6 +18,12 @@ module VCAP::CloudController
       }
     end
 
+    describe "Serialization" do
+      it { should export_attributes :state, :org_guid, :space_guid, :space_name, :service_instance_guid, :service_instance_name,
+                                    :service_instance_type, :service_plan_guid, :service_plan_name, :service_guid, :service_label }
+      it { should import_attributes }
+    end
+
     describe "required attributes" do
       let(:required_attributes) { [:state, :org_guid, :space_guid, :space_name, :service_instance_guid, :service_instance_name, :service_instance_type] }
 
@@ -37,24 +43,6 @@ module VCAP::CloudController
         expect {
           ServiceUsageEvent.create(valid_attributes.except(optional_attributes))
         }.to_not raise_error
-      end
-    end
-
-    describe "serialization" do
-      it "has the relevant fields" do
-        event = ServiceUsageEvent.make
-        json_hash = Yajl::Parser.parse(event.to_json)
-        expect(json_hash.fetch('state')).to eq(event.state)
-        expect(json_hash.fetch('org_guid')).to eq(event.org_guid)
-        expect(json_hash.fetch('space_guid')).to eq(event.space_guid)
-        expect(json_hash.fetch('space_name')).to eq(event.space_name)
-        expect(json_hash.fetch('service_instance_guid')).to eq(event.service_instance_guid)
-        expect(json_hash.fetch('service_instance_name')).to eq(event.service_instance_name)
-        expect(json_hash.fetch('service_instance_type')).to eq(event.service_instance_type)
-        expect(json_hash.fetch('service_plan_guid')).to eq(event.service_plan_guid)
-        expect(json_hash.fetch('service_plan_name')).to eq(event.service_plan_name)
-        expect(json_hash.fetch('service_guid')).to eq(event.service_guid)
-        expect(json_hash.fetch('service_label')).to eq(event.service_label)
       end
     end
   end

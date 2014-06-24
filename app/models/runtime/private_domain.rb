@@ -4,8 +4,6 @@ module VCAP::CloudController
   class PrivateDomain < Domain
     set_dataset(private_domains)
 
-    default_order_by  :name
-
     add_association_dependencies routes: :destroy
 
     export_attributes :name, :owning_organization_guid

@@ -40,6 +40,12 @@ module VCAP::CloudController
       it { should strip_whitespace :name }
     end
 
+    describe "Serialization" do
+      it { should export_attributes :name, :organization_guid }
+      it { should import_attributes :name, :organization_guid, :developer_guids,
+                                    :manager_guids, :auditor_guids, :app_security_group_guids }
+    end
+
     describe "#in_suspended_org?" do
       let(:org) { Organization.make }
       subject(:space) { Space.new(organization: org) }

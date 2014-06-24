@@ -10,6 +10,11 @@ module VCAP::CloudController
       it { should validate_uniqueness [:organization_id, :service_plan_id] }
     end
 
+    describe "Serialization" do
+      it { should export_attributes :service_plan_guid, :organization_guid }
+      it { should import_attributes :service_plan_guid, :organization_guid }
+    end
+
     describe ".visible_private_plan_ids_for_user(user)" do
       let!(:user) { User.make }
       let!(:org1) { Organization.make }

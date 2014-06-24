@@ -74,6 +74,13 @@ module VCAP::CloudController
       end
     end
 
+    describe "Serialization" do
+      it { should export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
+                                    :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid }
+      it { should import_attributes :label, :provider, :url, :description, :long_description, :version, :info_url,
+                                    :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url }
+    end
+
     it 'ensures that blank provider values will be treated as nil' do
       service = Service.make_unsaved(provider: '').save
       expect(service.provider).to be_nil
@@ -90,32 +97,6 @@ module VCAP::CloudController
         }.to_not change {
           ServiceAuthToken.count(:label => service.label, :provider => service.provider)
         }
-      end
-    end
-
-    describe "serialization" do
-      let(:extra) { 'extra' }
-      let(:unique_id) { 'glue-factory' }
-      let(:service) { Service.new_from_hash(extra: extra, unique_id: unique_id, bindable: true) }
-
-      it "allows mass assignment of extra" do
-        service.extra.should == extra
-      end
-
-      it "allows export of extra"  do
-        Yajl::Parser.parse(service.to_json)["extra"].should == extra
-      end
-
-      it "allows mass assignment of unique_id" do
-        service.unique_id.should == unique_id
-      end
-
-      it "allows export of unique_id" do
-        Yajl::Parser.parse(service.to_json)["unique_id"].should == unique_id
-      end
-
-      it "allows export of bindable" do
-        Yajl::Parser.parse(service.to_json)["bindable"].should == true
       end
     end
 

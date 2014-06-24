@@ -11,5 +11,10 @@ module VCAP::CloudController
       it { should validate_presence :exit_status }
       it { should validate_presence :timestamp }
     end
+
+    describe "Serialization" do
+      it { should export_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp }
+      it { should import_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp }
+    end
   end
 end

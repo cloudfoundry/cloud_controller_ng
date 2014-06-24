@@ -47,8 +47,6 @@ module VCAP::CloudController
       end
     end
 
-    default_order_by  :id
-
     many_to_one :service_plan
 
     export_attributes :name, :credentials, :service_plan_guid,

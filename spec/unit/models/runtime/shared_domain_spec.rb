@@ -2,13 +2,18 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe SharedDomain, type: :model do
-    subject { described_class.make name: "example.com" }
+    subject { described_class.make name: "test.example.com" }
+
+    describe "Serialization" do
+      it { should export_attributes :name }
+      it { should import_attributes :name }
+    end
 
     describe "#as_summary_json" do
       it "returns a hash containing the guid and name" do
         expect(subject.as_summary_json).to eq(
                                              guid: subject.guid,
-                                             name: "example.com")
+                                             name: "test.example.com")
       end
     end
 

@@ -24,8 +24,6 @@ module VCAP::CloudController
 
     add_association_dependencies routes: :nullify, service_bindings: :destroy, events: :delete, droplets: :destroy
 
-    default_order_by :name
-
     export_attributes :name, :production,
                       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                       :environment_json, :memory, :instances, :disk_quota,

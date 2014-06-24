@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe Event, type: :model do
     let(:space) { Space.make }
 
-    subject(:event) do
+    let(:event) do
       Event.make type: "audit.movie.premiere",
         actor: "ncage",
         actor_type: "One True God",
@@ -17,32 +17,20 @@ module VCAP::CloudController
         space: space
     end
 
-    it "has an actor" do
-      expect(event.actor).to eq("ncage")
+    describe "Validations" do
+      it { should validate_presence :type }
+      it { should validate_presence :timestamp }
+      it { should validate_presence :actor }
+      it { should validate_presence :actor_type }
+      it { should validate_presence :actee }
+      it { should validate_presence :actee_type }
+      it { should validate_presence :actee_name }
     end
 
-    it "has an actor type" do
-      expect(event.actor_type).to eq("One True God")
-    end
-
-    it "has an actor name" do
-      expect(event.actor_name).to eq("Nicolas Cage")
-    end
-
-    it "has an actee" do
-      expect(event.actee).to eq("jtravolta")
-    end
-
-    it "has an actee type" do
-      expect(event.actee_type).to eq("Scientologist")
-    end
-
-    it "has an actee name" do
-      expect(event.actee_name).to eq("John Travolta")
-    end
-
-    it "has a timestamp" do
-      expect(event.timestamp).to eq(Time.new(1997, 6, 27))
+    describe "Serialization" do
+      it { should export_attributes :type, :actor, :actor_type, :actor_name, :actee, :actee_type, :actee_name,
+                                    :timestamp, :metadata, :space_guid, :organization_guid }
+      it { should import_attributes }
     end
 
     it "has a data bag" do
@@ -88,46 +76,6 @@ module VCAP::CloudController
         it "has an denormalized organization guid" do
           expect(new_event.organization_guid).to eq(new_org.guid)
         end
-
-        describe "#to_json" do
-          it "serializes with type, actor, actee, timestamp, metadata, space_guid, organization_guid" do
-            json = Yajl::Parser.parse(new_event.to_json)
-
-            expect(json).to eq(
-              "type" => new_event.type,
-              "actor" => new_event.actor,
-              "actor_type" => new_event.actor_type,
-              "actor_name" => new_event.actor_name,
-              "actee" => new_event.actee,
-              "actee_type" => new_event.actee_type,
-              "actee_name" => new_event.actee_name,
-              "space_guid" => space_guid,
-              "organization_guid" => new_org.guid,
-              "timestamp" => new_event.timestamp.iso8601,
-              "metadata" => {},
-            )
-          end
-        end
-      end
-    end
-
-    describe "#to_json" do
-      it "serializes with type, actor, actee, timestamp, metadata, space_guid, organization_guid" do
-        json = Yajl::Parser.parse(event.to_json)
-
-        expect(json).to eq(
-          "type" => "audit.movie.premiere",
-          "actor" => "ncage",
-          "actor_type" => "One True God",
-          "actor_name" => "Nicolas Cage",
-          "actee" => "jtravolta",
-          "actee_type" => "Scientologist",
-          "actee_name" => "John Travolta",
-          "space_guid" => space.guid,
-          "organization_guid" => space.organization.guid,
-          "timestamp" => Time.new(1997, 6, 27).iso8601,
-          "metadata" => {"popcorn_price" => "$(arm + leg)"},
-        )
       end
     end
   end

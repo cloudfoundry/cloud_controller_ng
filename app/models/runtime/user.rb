@@ -53,8 +53,6 @@ module VCAP::CloudController
     add_association_dependencies spaces: :nullify
     add_association_dependencies managed_spaces: :nullify
 
-    default_order_by  :id
-
     export_attributes :admin, :active, :default_space_guid
 
     import_attributes :guid, :admin, :active,

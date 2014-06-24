@@ -7,7 +7,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :disable_examples => :deserialization,
       :skip_database_constraints => true
     }
 
@@ -24,6 +23,12 @@ module VCAP::CloudController
       it { should validate_presence :app_memory }
       it { should validate_presence :app_instance_count }
       it { should validate_uniqueness :app_run_id}
+    end
+
+    describe "Serialization" do
+      it { should export_attributes :timestamp, :event_type, :organization_guid, :organization_name, :space_guid, :space_name,
+                                    :app_guid, :app_name, :app_run_id, :app_plan_name, :app_memory, :app_instance_count }
+      it { should import_attributes }
     end
 
     describe "create_from_app" do

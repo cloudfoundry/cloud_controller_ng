@@ -2,13 +2,18 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe PrivateDomain, type: :model do
-    subject { described_class.make name: "example.com" }
+    subject { described_class.make name: "test.example.com" }
+
+    describe "Serialization" do
+      it { should export_attributes :name, :owning_organization_guid }
+      it { should import_attributes :name, :owning_organization_guid }
+    end
 
     describe "#as_summary_json" do
       it "returns a hash containing the guid, name, and owning organization guid" do
         expect(subject.as_summary_json).to eq(
           guid: subject.guid,
-          name: "example.com",
+          name: "test.example.com",
           owning_organization_guid: subject.owning_organization.guid)
       end
     end

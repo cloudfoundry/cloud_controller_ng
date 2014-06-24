@@ -16,25 +16,14 @@ module VCAP::CloudController
       it { should validate_uniqueness :name }
     end
 
+    describe "Serialization" do
+      it { should export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit, :trial_db_allowed }
+      it { should import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit, :trial_db_allowed }
+    end
+
     describe ".default" do
       it "returns the default quota" do
         QuotaDefinition.default.name.should == "default"
-      end
-    end
-
-    describe "serialization" do
-      {
-          name: "foo",
-          non_basic_services_allowed: true,
-          total_services: 3,
-          total_routes: 1000,
-          memory_limit: 20,
-          trial_db_allowed: false,
-      }.each do |field, value|
-        it "allows export of #{field}" do
-          quota_definition.public_send(:"#{field}=", value)
-          expect(Yajl::Parser.parse(quota_definition.to_json).fetch(field.to_s)).to eql value
-        end
       end
     end
 

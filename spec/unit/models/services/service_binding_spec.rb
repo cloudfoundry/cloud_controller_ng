@@ -48,6 +48,13 @@ module VCAP::CloudController
       it { should validate_uniqueness [:app_id, :service_instance_id] }
     end
 
+    describe "Serialization" do
+      it { should export_attributes :app_guid, :service_instance_guid, :credentials, :binding_options,
+                                    :gateway_data, :gateway_name, :syslog_drain_url }
+      it { should import_attributes :app_guid, :service_instance_guid, :credentials,
+                                    :binding_options, :gateway_data, :syslog_drain_url }
+    end
+
     describe "#create" do
       it 'has a guid when constructed' do
         binding = described_class.new

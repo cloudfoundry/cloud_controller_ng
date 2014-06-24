@@ -7,54 +7,19 @@ module VCAP::CloudController
     let(:auth_username) { 'me' }
     let(:auth_password) { 'abc123' }
 
-    subject(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, auth_username: auth_username, auth_password: auth_password) }
+    let(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, auth_username: auth_username, auth_password: auth_password) }
 
     it_behaves_like 'a model with an encrypted attribute' do
       let(:encrypted_attr) { :auth_password }
     end
 
-    describe '#valid?' do
-      it 'validates the name is present' do
-        expect(broker).to be_valid
-        broker.name = ''
-        expect(broker).to_not be_valid
-        expect(broker.errors.on(:name)).to include(:presence)
-      end
-
-      it 'validates the url is present' do
-        expect(broker).to be_valid
-        broker.broker_url = ''
-        expect(broker).to_not be_valid
-        expect(broker.errors.on(:broker_url)).to include(:presence)
-      end
-
-      it 'validates the auth_username is present' do
-        expect(broker).to be_valid
-        broker.auth_username = ''
-        expect(broker).to_not be_valid
-        expect(broker.errors.on(:auth_username)).to include(:presence)
-      end
-
-      it 'validates the auth_password is present' do
-        expect(broker).to be_valid
-        broker.auth_password = ''
-        expect(broker).to_not be_valid
-        expect(broker.errors.on(:auth_password)).to include(:presence)
-      end
-
-      it 'validates the name is unique' do
-        expect(broker).to be_valid
-        ServiceBroker.make(name: broker.name)
-        expect(broker).to_not be_valid
-        expect(broker.errors.on(:name)).to include(:unique)
-      end
-
-      it 'validates the url is unique' do
-        expect(broker).to be_valid
-        ServiceBroker.make(broker_url: broker.broker_url)
-        expect(broker).to_not be_valid
-        expect(broker.errors.on(:broker_url)).to include(:unique)
-      end
+    describe 'Validations' do
+      it { should validate_presence :name }
+      it { should validate_presence :broker_url }
+      it { should validate_presence :auth_username }
+      it { should validate_presence :auth_password }
+      it { should validate_uniqueness :name }
+      it { should validate_uniqueness :broker_url }
 
       it 'validates the url is a valid http/https url' do
         expect(broker).to be_valid
@@ -71,6 +36,11 @@ module VCAP::CloudController
         broker.broker_url = 'https://127.0.0.1/api'
         expect(broker).to be_valid
       end
+    end
+
+    describe "Serialization" do
+      it { should export_attributes :name, :broker_url, :auth_username }
+      it { should import_attributes :name, :broker_url, :auth_username, :auth_password }
     end
 
     describe '#client' do

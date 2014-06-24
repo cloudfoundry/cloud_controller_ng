@@ -20,5 +20,10 @@ module VCAP::CloudController
       it { should strip_whitespace :label }
       it { should strip_whitespace :provider }
     end
+
+    describe "Serialization" do
+      it { should export_attributes :label, :provider }
+      it { should import_attributes :label, :provider, :token }
+    end
   end
 end

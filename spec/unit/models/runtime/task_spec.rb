@@ -12,6 +12,11 @@ module VCAP::CloudController
 
     subject { Task.make :app => app }
 
+    describe "Serialization" do
+      it { should export_attributes :app_guid, :secure_token }
+      it { should import_attributes :app_guid }
+    end
+
     it "belongs to an application" do
       expect(subject.app.name).to eq("my app")
     end
@@ -66,16 +71,6 @@ module VCAP::CloudController
         long_secure_token_task = Task.make(:app => app)
         long_secure_token_task.reload
         expect(long_secure_token_task.secure_token).to eq(maddeningly_long_secure_token)
-      end
-    end
-
-    describe "#to_json" do
-      it "serializes with app_guid entry" do
-        expect(subject.to_json).to match_json hash_including("app_guid" => app.guid)
-      end
-
-      it "serializes with secure_token entry" do
-        expect(subject.to_json).to match_json hash_including("secure_token" => secure_token)
       end
     end
 

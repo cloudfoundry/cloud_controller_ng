@@ -40,6 +40,12 @@ module VCAP::CloudController
       it { should validate_uniqueness :guid }
     end
 
+    describe "Serialization" do
+      it { should export_attributes :admin, :active, :default_space_guid }
+      it { should import_attributes :guid, :admin, :active, :organization_guids, :managed_organization_guids,
+                                    :billing_managed_organization_guids, :audited_organization_guids, :space_guids,
+                                    :managed_space_guids, :audited_space_guids, :default_space_guid }
+    end
 
     describe "#remove_spaces" do
       let(:org) { Organization.make }

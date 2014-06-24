@@ -56,8 +56,6 @@ module VCAP::CloudController
 
     strip_attributes  :name
 
-    default_order_by  :name
-
     export_attributes :name, :billing_enabled, :quota_definition_guid, :status
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,

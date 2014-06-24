@@ -16,7 +16,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      custom_attributes_for_uniqueness_tests: -> { {service_plan: ServicePlan.make} },
       many_to_one: {
         service_plan: {
           create_for: lambda { |service_instance| ServicePlan.make },
@@ -36,7 +35,7 @@ module VCAP::CloudController
       }
     }
 
-    describe "validations" do
+    describe "Validations" do
       it { should validate_presence :name }
       it { should validate_presence :service_plan }
       it { should validate_presence :space }
@@ -50,6 +49,11 @@ module VCAP::CloudController
           service_instance.add_service_binding(service_binding)
         }.to raise_error ServiceInstance::InvalidServiceBinding
       end
+    end
+
+    describe "Serialization" do
+      it { should export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type }
+      it { should import_attributes :name, :service_plan_guid, :space_guid, :gateway_data }
     end
 
     describe "#create" do
@@ -83,19 +87,6 @@ module VCAP::CloudController
         expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
         expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
-      end
-    end
-
-    describe "serialization" do
-      let(:dashboard_url) { 'http://dashboard.io' }
-
-      it "allows export of dashboard_url" do
-        service_instance.dashboard_url = dashboard_url
-        Yajl::Parser.parse(service_instance.to_json).fetch("dashboard_url").should == dashboard_url
-      end
-
-      it "includes its type" do
-        expect(Yajl::Parser.parse(service_instance.to_json).fetch("type")).to eq "managed_service_instance"
       end
     end
 

@@ -38,6 +38,10 @@ module VCAP::CloudController
     status            { "active" }
   end
 
+  Domain.blueprint do
+    name                { Sham.domain }
+  end
+
   PrivateDomain.blueprint do
     name                { Sham.domain }
     owning_organization { Organization.make }

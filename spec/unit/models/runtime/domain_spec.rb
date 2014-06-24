@@ -2,6 +2,12 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Domain do
+
+    describe "Serialization" do
+      it { should export_attributes :name, :owning_organization_guid }
+      it { should import_attributes :name, :owning_organization_guid }
+    end
+
     describe "#spaces_sti_eager_load (eager loading)" do
       before { SharedDomain.dataset.destroy }
 

@@ -6,8 +6,6 @@ module VCAP::CloudController
 
     add_association_dependencies service_plan_visibilities: :destroy
 
-    default_order_by  :name
-
     export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :active
 
     import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public

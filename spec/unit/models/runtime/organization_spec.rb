@@ -9,7 +9,6 @@ module VCAP::CloudController
       end
 
       it_behaves_like "a CloudController model", {
-          custom_attributes_for_uniqueness_tests: -> { { quota_definition: QuotaDefinition.make } },
           many_to_zero_or_more: {
               users: ->(_) { User.make },
               managers: ->(_) { User.make },
@@ -108,6 +107,12 @@ module VCAP::CloudController
           }.to raise_error(Sequel::HookFailed)
         end
       end
+    end
+
+    describe "Serialization" do
+      it { should export_attributes :name, :billing_enabled, :quota_definition_guid, :status }
+      it { should import_attributes :name, :billing_enabled, :user_guids, :manager_guids, :billing_manager_guids,
+                                    :auditor_guids, :private_domain_guids, :quota_definition_guid, :status, :domain_guids }
     end
 
     context "statuses" do

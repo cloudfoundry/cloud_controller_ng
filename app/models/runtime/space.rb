@@ -74,8 +74,6 @@ module VCAP::CloudController
                                  service_instances: :destroy, routes: :destroy,
                                  events: :nullify, app_security_groups: :nullify
 
-    default_order_by  :name
-
     export_attributes :name, :organization_guid
 
     import_attributes :name, :organization_guid, :developer_guids,

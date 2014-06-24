@@ -6,13 +6,16 @@ module VCAP::CloudController
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end
 
-    describe "validations" do
-      it "enforces unique names" do
-        Buildpack.make(name: "my_custom_buildpack")
+    describe "Validations" do
+      it { should validate_uniqueness :name }
+    end
 
-        expect {
-          Buildpack.make(name: "my_custom_buildpack")
-        }.to raise_error(Sequel::ValidationFailed, /name unique/)
+    describe "Serialization" do
+      it { should export_attributes :name, :position, :enabled, :locked, :filename }
+      it { should import_attributes :name, :position, :enabled, :locked, :filename, :key }
+
+      it "does not string mung(e)?" do
+        expect(Buildpack.new(name: "my_custom_buildpack\r\n").to_json).to eq '"my_custom_buildpack\r\n"'
       end
     end
 
@@ -420,12 +423,6 @@ module VCAP::CloudController
              ).to(
                [["first_buildpack", 1]]
              )
-      end
-    end
-
-    describe "to_json" do
-      it "does not string mung(e)?" do
-        expect(Buildpack.new(name: "my_custom_buildpack\r\n").to_json).to eq '"my_custom_buildpack\r\n"'
       end
     end
 

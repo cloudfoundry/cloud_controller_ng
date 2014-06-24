@@ -35,7 +35,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-        :custom_attributes_for_uniqueness_tests => -> { {stack: Stack.make} },
         :many_to_one => {
             :space => {
                 :delete_ok => true,
@@ -268,6 +267,20 @@ module VCAP::CloudController
           app.metadata["some_key"].should == "some val"
         end
       end
+    end
+
+    describe "Serialization" do
+      it { should export_attributes :name, :production,
+                                    :space_guid, :stack_guid, :buildpack, :detected_buildpack,
+                                    :environment_json, :memory, :instances, :disk_quota,
+                                    :state, :version, :command, :console, :debug,
+                                    :staging_task_id, :package_state, :health_check_timeout,
+                                    :staging_failed_reason }
+      it { should import_attributes :name, :production,
+                                    :space_guid, :stack_guid, :buildpack, :detected_buildpack,
+                                    :environment_json, :memory, :instances, :disk_quota,
+                                    :state, :command, :console, :debug,
+                                    :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout }
     end
 
     describe "#in_suspended_org?" do

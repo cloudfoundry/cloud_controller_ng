@@ -41,6 +41,11 @@ module VCAP::CloudController
       end
     end
 
+    describe "Serialization" do
+      it { should export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url }
+      it { should import_attributes :name, :credentials, :space_guid, :syslog_drain_url }
+    end
+
     describe "#create" do
       it "saves with is_gateway_service false" do
         instance = described_class.create(
@@ -71,12 +76,6 @@ module VCAP::CloudController
         expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
         expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
-      end
-    end
-
-    describe "serialization" do
-      it "includes its type" do
-        expect(Yajl::Parser.parse(service_instance.to_json).fetch("type")).to eq "user_provided_service_instance"
       end
     end
 
