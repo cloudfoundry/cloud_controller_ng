@@ -20,3 +20,24 @@ RSpec::Matchers.define :validate_db_presence do |attribute|
     Hash[db_schema].fetch(attribute).fetch(:allow_null) == false
   end
 end
+
+RSpec::Matchers.define :validate_uniqueness do |*attributes|
+  options = attributes.extract_options!
+  attributes.flatten!
+  description do
+    "validate uniqueness of #{Array.wrap(attributes).join(" and ")}"
+  end
+  match do |_|
+    source_obj = described_class.make
+    duplicate_object = described_class.make
+    Array.wrap(attributes).each do |attr|
+      duplicate_object[attr] = source_obj[attr]
+    end
+    unless duplicate_object.valid?
+      errors_key = attributes.length > 1 ? attributes : attributes.first
+      errors = duplicate_object.errors.on(errors_key)
+      expected_error = options[:message] || :unique
+      errors && errors.include?(expected_error)
+    end
+  end
+end

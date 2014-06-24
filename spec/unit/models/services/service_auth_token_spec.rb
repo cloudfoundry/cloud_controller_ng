@@ -8,7 +8,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :unique_attributes    => [ [:label, :provider] ],
       :sensitive_attributes => :token,
       :extra_json_attributes => :token,
       :stripped_string_attributes => [:label, :provider]
@@ -18,6 +17,7 @@ module VCAP::CloudController
       it { should validate_presence :label }
       it { should validate_presence :provider }
       it { should validate_presence :token }
+      it { should validate_uniqueness [:label, :provider] }
     end
   end
 end

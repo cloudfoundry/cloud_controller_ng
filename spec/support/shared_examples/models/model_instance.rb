@@ -1,6 +1,5 @@
 shared_examples "model instance" do |opts|
-  ([:unique_attributes, :stripped_string_attributes,
-    :sensitive_attributes, :extra_json_attributes, :disable_examples]).each do |k|
+  ([:stripped_string_attributes, :sensitive_attributes, :extra_json_attributes, :disable_examples]).each do |k|
     opts[k] ||= []
     opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
   end

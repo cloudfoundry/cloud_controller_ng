@@ -5,7 +5,6 @@ module VCAP::CloudController
     let(:quota_definition) { QuotaDefinition.make }
 
     it_behaves_like "a CloudController model", {
-        unique_attributes: [:name],
     }
 
     describe "Validations" do
@@ -14,6 +13,7 @@ module VCAP::CloudController
       it { should validate_presence :total_services }
       it { should validate_presence :total_routes }
       it { should validate_presence :memory_limit }
+      it { should validate_uniqueness :name }
     end
 
     describe ".default" do

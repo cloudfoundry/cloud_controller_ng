@@ -9,7 +9,6 @@ module VCAP::CloudController
       end
 
       it_behaves_like "a CloudController model", {
-          unique_attributes: :name,
           custom_attributes_for_uniqueness_tests: -> { { quota_definition: QuotaDefinition.make } },
           stripped_string_attributes: :name,
           many_to_zero_or_more: {
@@ -28,6 +27,7 @@ module VCAP::CloudController
 
     describe "Validations" do
       it { should validate_presence :name }
+      it { should validate_uniqueness :name }
 
       context "name" do
         subject(:org) { Organization.make }

@@ -35,7 +35,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-        :unique_attributes => [[:space, :name]],
         :custom_attributes_for_uniqueness_tests => -> { {stack: Stack.make} },
         :stripped_string_attributes => :name,
         :many_to_one => {
@@ -72,6 +71,7 @@ module VCAP::CloudController
     describe "Validations" do
       it { should validate_presence :name }
       it { should validate_presence :space }
+      it { should validate_uniqueness [:space_id, :name] }
 
       describe "buildpack" do
         it "does allow nil value" do

@@ -16,7 +16,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :unique_attributes => [ [:app, :service_instance] ],
       :create_attribute => lambda { |name, service_binding|
         case name.to_sym
           when :app
@@ -46,6 +45,7 @@ module VCAP::CloudController
       it { should validate_presence :app }
       it { should validate_presence :service_instance }
       it { should validate_db_presence :credentials }
+      it { should validate_uniqueness [:app_id, :service_instance_id] }
     end
 
     describe "#create" do

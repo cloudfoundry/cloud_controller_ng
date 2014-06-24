@@ -7,9 +7,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :unique_attributes => [
-        :app_run_id
-      ],
       :disable_examples => :deserialization,
       :skip_database_constraints => true
     }
@@ -22,6 +19,7 @@ module VCAP::CloudController
       it { should validate_presence :space_name }
       it { should validate_presence :app_guid }
       it { should validate_presence :app_name }
+      it { should validate_uniqueness :app_run_id }
     end
 
     describe "create_from_app" do

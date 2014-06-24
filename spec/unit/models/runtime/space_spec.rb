@@ -4,13 +4,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::Space, type: :model do
 
-    describe "Validations" do
-      it { should validate_presence :name }
-      it { should validate_presence :organization }
-    end
-
     it_behaves_like "a CloudController model", {
-      :unique_attributes   => [ [:organization, :name] ],
       :stripped_string_attributes => :name,
       :many_to_one => {
         :organization      => {
@@ -39,6 +33,12 @@ module VCAP::CloudController
         :app_security_groups => lambda { |space| AppSecurityGroup.make }
       }
     }
+
+    describe "Validations" do
+      it { should validate_presence :name }
+      it { should validate_presence :organization }
+      it { should validate_uniqueness [:organization_id, :name] }
+    end
 
     describe "#in_suspended_org?" do
       let(:org) { Organization.make }

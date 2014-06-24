@@ -2,13 +2,12 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServicePlanVisibility, type: :model do
-    it_behaves_like "a CloudController model", {
-      :unique_attributes   => [[:service_plan, :organization]],
-    }
+    it_behaves_like "a CloudController model", {}
 
     describe "Validations" do
       it { should validate_presence :service_plan }
       it { should validate_presence :organization }
+      it { should validate_uniqueness [:organization_id, :service_plan_id] }
     end
 
     describe ".visible_private_plan_ids_for_user(user)" do

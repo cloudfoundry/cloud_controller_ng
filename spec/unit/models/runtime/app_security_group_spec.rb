@@ -213,7 +213,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like 'a CloudController model', {
-      unique_attributes: [:name],
       many_to_zero_or_more: {
         spaces: ->(app_security_group) { Space.make }
       }
@@ -221,6 +220,7 @@ module VCAP::CloudController
 
     describe "Validations" do
       it { should validate_presence :name }
+      it { should validate_uniqueness :name }
 
       context 'name' do
         subject(:app_sec_group) { AppSecurityGroup.make }

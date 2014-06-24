@@ -3,7 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::Route, type: :model do
     it_behaves_like "a CloudController model", {
-        unique_attributes: [[:host, :domain]],
         custom_attributes_for_uniqueness_tests: -> do
           space = Space.make
           domain = PrivateDomain.make(owning_organization: space.organization)
@@ -41,6 +40,7 @@ module VCAP::CloudController
       it { should validate_presence :domain }
       it { should validate_presence :space }
       it { should validate_presence :host }
+      it { should validate_uniqueness [:host, :domain_id] }
 
       describe "host" do
         let(:space) { Space.make }
