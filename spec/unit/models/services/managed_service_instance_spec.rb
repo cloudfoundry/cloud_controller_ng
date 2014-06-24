@@ -17,7 +17,6 @@ module VCAP::CloudController
 
     it_behaves_like "a CloudController model", {
       custom_attributes_for_uniqueness_tests: -> { {service_plan: ServicePlan.make} },
-      stripped_string_attributes: :name,
       many_to_one: {
         service_plan: {
           create_for: lambda { |service_instance| ServicePlan.make },
@@ -42,6 +41,7 @@ module VCAP::CloudController
       it { should validate_presence :service_plan }
       it { should validate_presence :space }
       it { should validate_uniqueness [:space_id, :name] }
+      it { should strip_whitespace :name }
 
       it "should not bind an app and a service instance from different app spaces" do
         AppFactory.make(:space => service_instance.space)

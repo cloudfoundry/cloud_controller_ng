@@ -1,5 +1,5 @@
 shared_examples "model instance" do |opts|
-  ([:stripped_string_attributes, :sensitive_attributes, :extra_json_attributes, :disable_examples]).each do |k|
+  ([:sensitive_attributes, :extra_json_attributes, :disable_examples]).each do |k|
     opts[k] ||= []
     opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
   end
@@ -13,12 +13,6 @@ shared_examples "model instance" do |opts|
   unless opts[:disable_examples].include? :updates
     describe "updates" do
       include_examples "timestamps", opts
-    end
-  end
-
-  unless opts[:disable_examples].include? :attribute_normalization
-    describe "attribute normalization" do
-      include_examples "attribute normalization", opts
     end
   end
 

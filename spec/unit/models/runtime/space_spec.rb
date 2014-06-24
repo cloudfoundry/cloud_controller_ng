@@ -5,7 +5,6 @@ module VCAP::CloudController
   describe VCAP::CloudController::Space, type: :model do
 
     it_behaves_like "a CloudController model", {
-      :stripped_string_attributes => :name,
       :many_to_one => {
         :organization      => {
           :delete_ok => true,
@@ -38,6 +37,7 @@ module VCAP::CloudController
       it { should validate_presence :name }
       it { should validate_presence :organization }
       it { should validate_uniqueness [:organization_id, :name] }
+      it { should strip_whitespace :name }
     end
 
     describe "#in_suspended_org?" do

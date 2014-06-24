@@ -4,7 +4,6 @@ module VCAP::CloudController
   describe Stack, type: :model do
     let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
     it_behaves_like "a CloudController model", {
-      :stripped_string_attributes => :name,
       :one_to_zero_or_more => {
         :apps              => {
           :delete_ok => true,
@@ -17,6 +16,7 @@ module VCAP::CloudController
       it { should validate_presence :name }
       it { should validate_presence :description }
       it { should validate_uniqueness :name }
+      it { should strip_whitespace :name }
     end
 
     describe ".configure" do

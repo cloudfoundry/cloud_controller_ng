@@ -17,7 +17,6 @@ module VCAP::CloudController
     end
 
     it_behaves_like "a CloudController model", {
-      :stripped_string_attributes => [:name, :syslog_drain_url],
       many_to_one: {
         space: {
           delete_ok: true,
@@ -29,6 +28,8 @@ module VCAP::CloudController
     describe "Validations" do
       it { should validate_presence :name }
       it { should validate_presence :space }
+      it { should strip_whitespace :name }
+      it { should strip_whitespace :syslog_drain_url }
 
       it "should not bind an app and a service instance from different app spaces" do
         service_instance = described_class.make

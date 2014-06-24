@@ -6,7 +6,6 @@ module VCAP::CloudController
       :required_attribute_error_message => {
         :label => 'name is required'
       },
-      :stripped_string_attributes => [:label, :provider],
       :one_to_zero_or_more   => {
         :service_plans      => {
           :delete_ok => true,
@@ -21,6 +20,8 @@ module VCAP::CloudController
       it { should validate_presence :bindable, message: 'is required' }
       it { should validate_uniqueness [:label, :provider], message: 'is taken' }
       it { should validate_uniqueness :unique_id, message: 'Service ids must be unique' }
+      it { should strip_whitespace :label }
+      it { should strip_whitespace :provider }
 
       context 'when the unique_id is not unique' do
         let(:existing_service) { Service.make }
