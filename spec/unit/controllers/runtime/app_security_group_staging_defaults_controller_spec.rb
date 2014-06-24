@@ -22,15 +22,16 @@ module VCAP::CloudController
       it "should set staging_default to true on the asg and return the asg" do
         app_sec_group = AppSecurityGroup.make(staging_default: false)
 
-        post "/v2/config/staging_security_groups/#{app_sec_group.guid}", {}, admin_headers
+        put "/v2/config/staging_security_groups/#{app_sec_group.guid}", {}, admin_headers
 
-        expect(last_response.status).to eq(201)
+        expect(last_response.status).to eq(200)
         expect(app_sec_group.reload.staging_default).to be true
         expect(decoded_response["metadata"]["guid"]).to eq(app_sec_group.guid)
       end
 
       it "should return a 400 when the asg does not exist" do
-        post "/v2/config/staging_security_groups/bogus", {}, admin_headers
+        put "/v2/config/staging_security_groups/bogus", {}, admin_headers
+
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/app security group could not be found/)
         expect(decoded_response['error_code']).to match(/AppSecurityGroupStagingDefaultInvalid/)

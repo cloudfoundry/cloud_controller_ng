@@ -20,8 +20,8 @@ module VCAP::CloudController
 
     get path, :enumerate
 
-    post path_guid, :create
-    def create(guid)
+    put path_guid, :update
+    def update(guid)
       obj = find_guid_and_validate_access(:update, guid)
 
       model.db.transaction(savepoint: true) do
@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
 
       [
-          HTTP::CREATED,
+          HTTP::OK,
           object_renderer.render_json(self.class, obj, @opts)
       ]
     end

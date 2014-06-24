@@ -8,10 +8,10 @@ resource "App Security Group Staging Defaults (experimental)", :type => :api do
 
   authenticated_request
 
-  post "/v2/config/staging_security_groups/:guid" do
+  put "/v2/config/staging_security_groups/:guid" do
     example "Set an App Security Group as a default for staging" do
-      client.post "/v2/config/staging_security_groups/#{app_sec_group.guid}", {}, headers
-      expect(status).to eq(201)
+      client.put "/v2/config/staging_security_groups/#{app_sec_group.guid}", {}, headers
+      expect(status).to eq(200)
 
       standard_entity_response parsed_response, :app_security_group
     end
