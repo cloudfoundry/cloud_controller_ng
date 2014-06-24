@@ -9,6 +9,8 @@ require "httpclient"
 require "steno"
 
 class VCAP::CloudController::ResourcePool
+  VALID_SHA_LENGTH = 40
+
   attr_accessor :minimum_size, :maximum_size
   attr_reader :blobstore
 
@@ -94,8 +96,9 @@ class VCAP::CloudController::ResourcePool
 
   def resource_known?(descriptor)
     size = descriptor["size"]
-    if size_allowed?(size)
-      key = key_from_sha1(descriptor["sha1"])
+    sha1 = descriptor["sha1"]
+    if size_allowed?(size) and valid_sha?(sha1)
+      key = key_from_sha1(sha1)
       blobstore.files.head(key)
     end
   end
@@ -107,6 +110,10 @@ class VCAP::CloudController::ResourcePool
 
   def size_allowed?(size)
     size && size > minimum_size && size < maximum_size
+  end
+
+  def valid_sha?(sha1)
+    sha1 && sha1.to_s.length == VALID_SHA_LENGTH
   end
 
   # Called after we sanity-check the input.

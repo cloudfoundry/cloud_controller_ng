@@ -23,6 +23,13 @@ module VCAP::CloudController
         res = @resource_pool.match_resources(@descriptors + [@dummy_descriptor])
         res.should == @descriptors
       end
+
+      it "does not break when the sha1 is not long enough to generate a key" do
+        expect do
+          @resource_pool.match_resources(["sha1" => 0, "size" => 123])
+          @resource_pool.match_resources(["sha1" => "abc", "size" => 234])
+        end.not_to raise_error
+      end
     end
 
     describe "#resource_sizes" do
