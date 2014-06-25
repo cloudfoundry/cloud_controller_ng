@@ -28,6 +28,7 @@ namespace :jobs do
     def start_working
       BackgroundJobEnvironment.new(config).setup_environment
       Delayed::Worker.destroy_failed_jobs = false
+      Delayed::Worker.max_attempts = 3
       logger = Steno.logger("cc-worker")
       logger.info("Starting job with options #{@queue_options}")
       Delayed::Worker.new(@queue_options).start

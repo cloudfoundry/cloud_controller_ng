@@ -19,6 +19,10 @@ module VCAP::CloudController
           :app_usage_events_cleanup
         end
 
+        def max_attempts
+          1
+        end
+
         private
 
         def cutoff_time

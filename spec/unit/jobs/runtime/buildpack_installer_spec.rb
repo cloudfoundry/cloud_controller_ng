@@ -12,6 +12,8 @@ module VCAP::CloudController
 
       let(:job) { BuildpackInstaller.new(buildpack_name, zipfile, options, TestConfig.config) }
 
+      it { should be_a_valid_job }
+
       describe "#perform" do
         context "default options" do
           it "creates a new buildpack" do

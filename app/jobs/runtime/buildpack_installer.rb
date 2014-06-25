@@ -34,6 +34,10 @@ module VCAP::CloudController
           logger.info "Buildpack #{name} installed or updated"
         end
 
+        def max_attempts
+          1
+        end
+
         def job_name_in_configuration
           :buildpack_installer
         end

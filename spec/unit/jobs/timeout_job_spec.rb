@@ -2,12 +2,18 @@ require "spec_helper"
 
 module VCAP::CloudController::Jobs
   describe TimeoutJob do
-    let(:job) { double( :job_name_in_configuration => "my-job") }
+    let(:job) { double( :job_name_in_configuration => "my-job", max_attempts: 2) }
     let(:timeout_job) { TimeoutJob.new(job) }
 
     it "runs the provided job" do
       expect(job).to receive(:perform)
       timeout_job.perform
+    end
+
+    context "#max_attempts" do
+      it "delegates to the handler" do
+        expect(timeout_job.max_attempts).to eq(2)
+      end
     end
 
     context "when the job takes longer than its timeout" do
@@ -52,7 +58,7 @@ module VCAP::CloudController::Jobs
 
         before do
           config[:jobs].merge!(app_bits_packer: {
-            timeout_in_seconds: overridden_timeout
+                                 timeout_in_seconds: overridden_timeout
           })
         end
 

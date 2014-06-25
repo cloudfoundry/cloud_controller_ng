@@ -7,6 +7,8 @@ module VCAP::CloudController
       let(:new_droplet_key) { "zyxwvy" }
       subject(:job) { DropletDeletion.new(new_droplet_key, old_droplet_key) }
 
+      it { should be_a_valid_job }
+
       describe "#perform" do
         let!(:droplet_blobstore) {
           CloudController::DependencyLocator.instance.droplet_blobstore

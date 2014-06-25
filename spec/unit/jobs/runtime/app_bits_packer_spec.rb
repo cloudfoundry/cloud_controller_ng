@@ -10,6 +10,8 @@ module VCAP::CloudController
         AppBitsPacker.new(app_guid, uploaded_path, [:fingerprints])
       end
 
+      it { should be_a_valid_job }
+
       describe "#perform" do
         let(:app) { double(:app) }
         let(:fingerprints) { double(:fingerprints) }

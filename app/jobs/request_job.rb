@@ -11,6 +11,10 @@ module VCAP::CloudController
           ::VCAP::Request.current_id = current_request_id
         end
       end
+
+      def max_attempts
+        job.max_attempts
+      end
     end
   end
 end

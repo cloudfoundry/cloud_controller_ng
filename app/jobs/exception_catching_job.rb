@@ -11,6 +11,10 @@ module VCAP::CloudController
         save_error(error_presenter, job)
       end
 
+      def max_attempts
+        handler.max_attempts
+      end
+
       private
 
       def save_error(error_presenter, job)

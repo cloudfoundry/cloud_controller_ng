@@ -11,6 +11,10 @@ resource "Jobs", type: :api do
       def job_name_in_configuration
         :fake_job
       end
+
+      def max_attempts
+        2
+      end
     end
 
     before { Delayed::Job.delete_all }

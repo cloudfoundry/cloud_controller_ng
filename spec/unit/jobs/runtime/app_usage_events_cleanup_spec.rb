@@ -14,6 +14,8 @@ module VCAP::CloudController
         allow(Steno).to receive(:logger).and_return(logger)
       end
 
+      it { should be_a_valid_job }
+
       it "can be enqueued" do
         expect(job).to respond_to(:perform)
       end

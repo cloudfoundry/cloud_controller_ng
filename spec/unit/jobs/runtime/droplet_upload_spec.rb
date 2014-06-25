@@ -22,6 +22,13 @@ module VCAP::CloudController
 
       subject(:job) { DropletUpload.new(local_file.path, app.id) }
 
+      it { should be_a_valid_job }
+
+      it "succeeds if the file is missing" do
+        FileUtils.rm_f(local_file)
+        expect{ job.perform }.to_not raise_exception
+      end
+
       it "updates the app's droplet hash" do
         expect {
           job.perform

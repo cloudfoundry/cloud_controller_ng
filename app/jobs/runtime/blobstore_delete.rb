@@ -17,6 +17,10 @@ module VCAP::CloudController
           :blobstore_delete
         end
 
+        def max_attempts
+          3
+        end
+
         private
 
         def same_blob(blob)

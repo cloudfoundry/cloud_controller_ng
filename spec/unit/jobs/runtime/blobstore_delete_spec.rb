@@ -23,6 +23,8 @@ module VCAP::CloudController
         tmpfile.delete
       end
 
+      it { should be_a_valid_job }
+
       context "when no attributes defined" do
         it "deletes the blob" do
           expect {

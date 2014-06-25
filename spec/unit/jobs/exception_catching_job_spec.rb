@@ -7,11 +7,17 @@ module VCAP::CloudController
         ExceptionCatchingJob.new(handler)
       end
 
-      let(:handler) { double("Handler", perform: "fake-perform") }
+      let(:handler) { double("Handler", perform: "fake-perform", max_attempts: 1) }
 
       context "#perform" do
         it "delegates to the handler" do
           expect(exception_catching_job.perform).to eq("fake-perform")
+        end
+      end
+
+      context "#max_attempts" do
+        it "delegates to the handler" do
+          expect(exception_catching_job.max_attempts).to eq(1)
         end
       end
 

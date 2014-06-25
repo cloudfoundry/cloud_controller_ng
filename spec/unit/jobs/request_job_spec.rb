@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController::Jobs
   describe RequestJob do
-    let(:wrapped_job) { double("InnerJob") }
+    let(:wrapped_job) { double("InnerJob", max_attempts: 2) }
     let(:request_id) { "abc123" }
     subject(:request_job) { RequestJob.new(wrapped_job, request_id) }
 
@@ -44,6 +44,12 @@ module VCAP::CloudController::Jobs
         expect { request_job.perform }.to raise_error, "runtime test exception"
 
         expect(::VCAP::Request.current_id).to eq random_request_id
+      end
+    end
+
+    context "#max_attempts" do
+      it "delegates to the handler" do
+        expect(subject.max_attempts).to eq(2)
       end
     end
   end
