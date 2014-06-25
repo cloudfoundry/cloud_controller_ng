@@ -3,6 +3,8 @@ require "spec_helper"
 module VCAP::CloudController
   describe Domain do
 
+    it { should have_timestamp_columns }
+
     describe "Serialization" do
       it { should export_attributes :name, :owning_organization_guid }
       it { should import_attributes :name, :owning_organization_guid }

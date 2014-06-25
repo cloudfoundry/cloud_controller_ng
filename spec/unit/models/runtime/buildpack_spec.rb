@@ -6,6 +6,8 @@ module VCAP::CloudController
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       it { should validate_uniqueness :name }
     end

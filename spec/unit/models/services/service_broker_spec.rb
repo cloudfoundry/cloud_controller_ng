@@ -13,6 +13,8 @@ module VCAP::CloudController
       let(:encrypted_attr) { :auth_password }
     end
 
+    it { should have_timestamp_columns }
+
     describe 'Validations' do
       it { should validate_presence :name }
       it { should validate_presence :broker_url }

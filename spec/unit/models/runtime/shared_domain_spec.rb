@@ -4,6 +4,8 @@ module VCAP::CloudController
   describe SharedDomain, type: :model do
     subject { described_class.make name: "test.example.com" }
 
+    it { should have_timestamp_columns }
+
     describe "Serialization" do
       it { should export_attributes :name }
       it { should import_attributes :name }

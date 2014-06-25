@@ -29,6 +29,8 @@ module VCAP::CloudController
         }
     }
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       let(:route) { Route.make }
 

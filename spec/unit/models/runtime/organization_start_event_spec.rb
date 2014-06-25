@@ -8,6 +8,8 @@ module VCAP::CloudController
 
     it_behaves_like "a CloudController model", {}
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       it { should validate_presence :timestamp }
       it { should validate_presence :organization_guid }

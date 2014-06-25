@@ -10,6 +10,8 @@ module VCAP::CloudController
       :skip_database_constraints => true
     }
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       it { should validate_presence :timestamp }
       it { should validate_presence :organization_guid }

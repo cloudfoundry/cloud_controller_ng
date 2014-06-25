@@ -14,6 +14,8 @@ module VCAP::CloudController
       }
     }
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       it { should validate_presence :label, message: 'Service name is required' }
       it { should validate_presence :description, message: 'is required' }

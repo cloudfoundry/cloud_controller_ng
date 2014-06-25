@@ -23,6 +23,8 @@ module VCAP::CloudController
       }
     end
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       it { should validate_presence :name }
       it { should validate_uniqueness :name }

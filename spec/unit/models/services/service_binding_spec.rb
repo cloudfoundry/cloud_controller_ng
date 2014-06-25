@@ -41,6 +41,8 @@ module VCAP::CloudController
       }
     }
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       it { should validate_presence :app }
       it { should validate_presence :service_instance }

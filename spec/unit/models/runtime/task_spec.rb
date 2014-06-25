@@ -12,6 +12,8 @@ module VCAP::CloudController
 
     subject { Task.make :app => app }
 
+    it { should have_timestamp_columns }
+
     describe "Serialization" do
       it { should export_attributes :app_guid, :secure_token }
       it { should import_attributes :app_guid }

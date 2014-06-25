@@ -12,6 +12,8 @@ module VCAP::CloudController
       :extra_json_attributes => :token
     }
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       it { should validate_presence :label }
       it { should validate_presence :provider }

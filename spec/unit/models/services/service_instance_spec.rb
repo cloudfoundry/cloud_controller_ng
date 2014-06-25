@@ -10,6 +10,8 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
 
   let(:service_instance) { described_class.create(service_instance_attrs) }
 
+  it { should have_timestamp_columns }
+
   describe "#create" do
     context "when the name is longer than 50 characters" do
       let(:very_long_name){ 's' * 51 }

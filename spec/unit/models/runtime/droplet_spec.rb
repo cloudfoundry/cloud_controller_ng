@@ -17,6 +17,8 @@ module VCAP::CloudController
         and_return(blobstore)
     end
 
+    it { should have_timestamp_columns }
+
     it "creates successfully with an app and a droplet hash" do
       app = AppFactory.make
       expect(Droplet.new(app: app, droplet_hash: Sham.guid).save).to be

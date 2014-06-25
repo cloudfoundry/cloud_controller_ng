@@ -10,6 +10,5 @@ shared_examples "a CloudController model" do |opts|
      opts[k] = Array[opts[k]] unless opts[k].respond_to?(:each)
    end
 
-  include_examples "creation with all required attributes"
   include_examples "model relationships", opts
 end

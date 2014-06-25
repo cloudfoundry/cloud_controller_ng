@@ -6,6 +6,21 @@ module VCAP::CloudController
     let(:other_broker) { ServiceBroker.make }
     let(:uaa_id) { 'claimed_client_id' }
 
+    it { should have_timestamp_columns }
+
+    describe 'Validations' do
+      it { should validate_presence :uaa_id }
+      it { should validate_uniqueness :uaa_id }
+
+      context 'when all fields are valid' do
+        let(:client) { ServiceDashboardClient.make_unsaved(service_broker: service_broker) }
+
+        it 'is valid' do
+          expect(client).to be_valid
+        end
+      end
+    end
+
     describe '.find_clients_claimed_by_broker' do
       before do
         ServiceDashboardClient.claim_client_for_broker('client-1', service_broker)
@@ -98,47 +113,6 @@ module VCAP::CloudController
 
         it 'returns the client' do
           expect(ServiceDashboardClient.find_client_by_uaa_id('some-uaa-id')).to eq(client)
-        end
-      end
-    end
-
-    describe 'validation' do
-      def build_service_dashboard_client(attrs={})
-        if attrs.has_key?(:service_broker)
-          ServiceDashboardClient.make_unsaved(attrs)
-        else
-          ServiceDashboardClient.make_unsaved(attrs.merge(service_broker: service_broker))
-        end
-      end
-
-      context 'when all fields are valid' do
-        let(:client) { build_service_dashboard_client }
-
-        it 'is valid' do
-          expect(client).to be_valid
-        end
-      end
-
-      context 'when the uaa id is nil' do
-        let(:client_without_uaa_id) { build_service_dashboard_client(uaa_id: nil) }
-        it 'is not valid' do
-          expect(client_without_uaa_id).not_to be_valid
-        end
-      end
-
-      context 'when the uaa id is blank' do
-        let(:client_without_uaa_id) { build_service_dashboard_client(uaa_id: '') }
-        it 'is not valid' do
-          expect(client_without_uaa_id).not_to be_valid
-        end
-      end
-
-      context 'when the uaa id is not unique' do
-        before { ServiceDashboardClient.make(uaa_id: 'already_taken') }
-        let(:client_with_duplicate_uaa_id) { build_service_dashboard_client(uaa_id: 'already_taken') }
-
-        it 'is not valid' do
-          expect(client_with_duplicate_uaa_id).not_to be_valid
         end
       end
     end

@@ -4,6 +4,8 @@ module VCAP::CloudController
   describe ServicePlanVisibility, type: :model do
     it_behaves_like "a CloudController model", {}
 
+    it { should have_timestamp_columns }
+
     describe "Validations" do
       it { should validate_presence :service_plan }
       it { should validate_presence :organization }

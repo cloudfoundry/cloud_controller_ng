@@ -6,6 +6,8 @@ module VCAP::CloudController
       BillingEvent.dataset.destroy
     end
 
+    it { should have_timestamp_columns }
+
     describe ".create" do
       let(:values) { {
           timestamp: Time.now,
