@@ -1,8 +1,8 @@
 require 'netaddr'
 
 module VCAP::CloudController
-  class AppSecurityGroup < Sequel::Model
-    APP_SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+  class SecurityGroup < Sequel::Model
+    SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
     TRANSPORT_RULE_FIELDS = ["protocol", "ports", "destination"].map(&:freeze).freeze
     ICMP_RULE_FIELDS = ["protocol", "code", "type", "destination"].map(&:freeze).freeze
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_unique :name
-      validates_format APP_SECURITY_GROUP_NAME_REGEX, :name
+      validates_format SECURITY_GROUP_NAME_REGEX, :name
       validate_rules
     end
 
@@ -30,7 +30,7 @@ module VCAP::CloudController
                     [:spaces, user.managed_spaces_dataset],
                     [:spaces, user.audited_spaces_dataset],
                     [:running_default, true],
-                    [:app_security_groups_spaces__space_id, user.managed_organizations_dataset.join(:spaces, :spaces__organization_id => :organizations__id).select(:spaces__id)]
+                    [:security_groups_spaces__space_id, user.managed_organizations_dataset.join(:spaces, :spaces__organization_id => :organizations__id).select(:spaces__id)]
                 ])
     end
 

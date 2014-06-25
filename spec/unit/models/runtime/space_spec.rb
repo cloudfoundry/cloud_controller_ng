@@ -29,7 +29,7 @@ module VCAP::CloudController
         :developers          => lambda { |space| make_user_for_space(space) },
         :managers            => lambda { |space| make_user_for_space(space) },
         :auditors            => lambda { |space| make_user_for_space(space) },
-        :app_security_groups => lambda { |space| AppSecurityGroup.make }
+        :security_groups => lambda { |space| SecurityGroup.make }
       }
     }
 
@@ -43,7 +43,7 @@ module VCAP::CloudController
     describe "Serialization" do
       it { should export_attributes :name, :organization_guid }
       it { should import_attributes :name, :organization_guid, :developer_guids,
-                                    :manager_guids, :auditor_guids, :app_security_group_guids }
+                                    :manager_guids, :auditor_guids, :security_group_guids }
     end
 
     describe "#in_suspended_org?" do
@@ -331,20 +331,20 @@ module VCAP::CloudController
       end
     end
 
-    describe "app_security_groups" do
-      let!(:associated_asg) { AppSecurityGroup.make }
-      let!(:unassociated_asg) { AppSecurityGroup.make }
-      let!(:default_asg) { AppSecurityGroup.make(running_default: true) }
-      let!(:another_default_asg) { AppSecurityGroup.make(running_default: true) }
-      let!(:space) { Space.make(app_security_group_guids: [associated_asg.guid, default_asg.guid]) }
+    describe "security_groups" do
+      let!(:associated_sg) { SecurityGroup.make }
+      let!(:unassociated_sg) { SecurityGroup.make }
+      let!(:default_sg) { SecurityGroup.make(running_default: true) }
+      let!(:another_default_sg) { SecurityGroup.make(running_default: true) }
+      let!(:space) { Space.make(security_group_guids: [associated_sg.guid, default_sg.guid]) }
 
-      it "returns app security groups associated with the space, and the defaults" do
-        expect(space.app_security_groups).to match_array [associated_asg, default_asg, another_default_asg]
+      it "returns security groups associated with the space, and the defaults" do
+        expect(space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
       end
 
       it "works when eager loading" do
-        eager_space = Space.eager(:app_security_groups).all.first
-        expect(eager_space.app_security_groups).to match_array [associated_asg, default_asg, another_default_asg]
+        eager_space = Space.eager(:security_groups).all.first
+        expect(eager_space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
       end
     end
   end

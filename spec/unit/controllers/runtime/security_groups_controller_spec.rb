@@ -1,0 +1,28 @@
+require "spec_helper"
+
+module VCAP::CloudController
+  describe SecurityGroupsController do
+    let(:group) { SecurityGroup.make }
+
+    it_behaves_like "an admin only endpoint", path: "/v2/security_groups"
+
+    describe "errors" do
+      it "returns SecurityGroupInvalid" do
+        post '/v2/security_groups', '{"name":"one\ntwo"}', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['description']).to match(/security group is invalid/)
+        expect(decoded_response['error_code']).to match(/SecurityGroupInvalid/)
+      end
+
+      it "returns SecurityGroupNameTaken errors on unique name errors" do
+        SecurityGroup.make(name: 'foo')
+        post '/v2/security_groups', '{"name":"foo"}', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['description']).to match(/name is taken/)
+        expect(decoded_response['error_code']).to match(/SecurityGroupNameTaken/)
+      end
+    end
+  end
+end

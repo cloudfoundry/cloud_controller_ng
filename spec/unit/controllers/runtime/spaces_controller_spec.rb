@@ -96,57 +96,57 @@ module VCAP::CloudController
       end
     end
 
-    describe "GET /v2/space/:guid/app_security_groups" do
+    describe "GET /v2/space/:guid/security_groups" do
       let(:space) { Space.make }
-      let!(:default_app_security_group) { AppSecurityGroup.make(running_default: true) }
-      let!(:app_security_group1) { AppSecurityGroup.make(space_guids: [space.guid]) }
-      let!(:app_security_group2) { AppSecurityGroup.make }
+      let!(:default_security_group) { SecurityGroup.make(running_default: true) }
+      let!(:security_group1) { SecurityGroup.make(space_guids: [space.guid]) }
+      let!(:security_group2) { SecurityGroup.make }
 
       context "as a space developer" do
         let(:user) { make_developer_for_space(space) }
 
-        it "returns associated app security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/app_security_groups", {}, headers_for(user)
+        it "returns associated security groups and defaults" do
+          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
           found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_app_security_group.guid, app_security_group1.guid])
+          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
         end
       end
 
       context "as a space auditor" do
         let(:user) { make_auditor_for_space(space) }
 
-        it "returns associated app security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/app_security_groups", {}, headers_for(user)
+        it "returns associated security groups and defaults" do
+          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
           found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_app_security_group.guid, app_security_group1.guid])
+          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
         end
       end
 
       context "as a space manager" do
         let(:user) { make_manager_for_space(space) }
 
-        it "returns associated app security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/app_security_groups", {}, headers_for(user)
+        it "returns associated security groups and defaults" do
+          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
           found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_app_security_group.guid, app_security_group1.guid])
+          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
         end
       end
 
       context "as an org manager" do
         let(:user) { make_manager_for_org(space.organization) }
 
-        it "returns associated app security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/app_security_groups", {}, headers_for(user)
+        it "returns associated security groups and defaults" do
+          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
           found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_app_security_group.guid, app_security_group1.guid])
+          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
         end
       end
 
       context "as an org auditor" do
         let(:user) { make_auditor_for_org(space.organization) }
 
-        it "returns associated app security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/app_security_groups", {}, headers_for(user)
+        it "returns associated security groups and defaults" do
+          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
           expect(last_response.status).to eq(403)
         end
       end
@@ -154,25 +154,25 @@ module VCAP::CloudController
       context "as an org billing manager" do
         let(:user) { make_billing_manager_for_org(space.organization) }
 
-        it "returns associated app security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/app_security_groups", {}, headers_for(user)
+        it "returns associated security groups and defaults" do
+          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
           expect(last_response.status).to eq(403)
         end
       end
 
       context "as an admin" do
-        it "returns associated app security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/app_security_groups", {}, admin_headers
+        it "returns associated security groups and defaults" do
+          get "/v2/spaces/#{space.guid}/security_groups", {}, admin_headers
           found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_app_security_group.guid, app_security_group1.guid])
+          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
         end
       end
 
       context "as a user with no permissions" do
         let(:user) { User.make }
 
-        it "returns associated app security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/app_security_groups", {}, headers_for(user)
+        it "returns associated security groups and defaults" do
+          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
           expect(last_response.status).to eq(403)
         end
       end

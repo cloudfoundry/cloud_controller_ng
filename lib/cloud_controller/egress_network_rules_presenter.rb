@@ -1,11 +1,11 @@
 module VCAP::CloudController
   class EgressNetworkRulesPresenter
-    def initialize(app_security_groups)
-      @app_security_groups = app_security_groups
+    def initialize(security_groups)
+      @security_groups = security_groups
     end
 
     def to_array
-      @app_security_groups.map(&:rules).flatten
+      @security_groups.map(&:rules).flatten
     end
   end
 end

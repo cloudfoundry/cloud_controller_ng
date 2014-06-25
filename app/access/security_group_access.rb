@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class AppSecurityGroupAccess < BaseAccess
+  class SecurityGroupAccess < BaseAccess
     def read?(_)
       admin_user?
     end

@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class AppSecurityGroupsController < RestController::ModelController
+  class SecurityGroupsController < RestController::ModelController
     define_attributes do
       attribute :name, String
       attribute :rules, [Hash], default: []
@@ -29,9 +29,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
       if name_errors && name_errors.include?(:unique)
-        Errors::ApiError.new_from_details("AppSecurityGroupNameTaken", attributes["name"])
+        Errors::ApiError.new_from_details("SecurityGroupNameTaken", attributes["name"])
       else
-        Errors::ApiError.new_from_details("AppSecurityGroupInvalid", e.errors.full_messages)
+        Errors::ApiError.new_from_details("SecurityGroupInvalid", e.errors.full_messages)
       end
     end
   end

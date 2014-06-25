@@ -13,7 +13,7 @@ module VCAP::CloudController
       to_many    :service_instances
       to_many    :app_events,        :link_only => true
       to_many    :events,            :link_only => true
-      to_many    :app_security_groups
+      to_many    :security_groups
     end
 
     query_parameters :name, :organization_guid, :developer_guid, :app_guid

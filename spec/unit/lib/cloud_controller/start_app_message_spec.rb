@@ -97,21 +97,21 @@ module VCAP::CloudController
         end
       end
 
-      context "when app security groups are configured" do
-        let(:asg_default_rules_1) { [{"protocol" => "udp", "ports" => "8080", "destination" => "198.41.191.47/1"}] }
-        let(:asg_default_rules_2) { [{"protocol" => "tcp", "ports" => "9090", "destination" => "198.41.191.48/1"}] }
-        let(:asg_for_space_rules) { [{"protocol" => "udp", "ports" => "1010", "destination" => "198.41.191.49/1"}] }
+      context "when security groups are configured" do
+        let(:sg_default_rules_1) { [{"protocol" => "udp", "ports" => "8080", "destination" => "198.41.191.47/1"}] }
+        let(:sg_default_rules_2) { [{"protocol" => "tcp", "ports" => "9090", "destination" => "198.41.191.48/1"}] }
+        let(:sg_for_space_rules) { [{"protocol" => "udp", "ports" => "1010", "destination" => "198.41.191.49/1"}] }
 
         before do
-          AppSecurityGroup.make(rules: asg_default_rules_1, running_default: true)
-          AppSecurityGroup.make(rules: asg_default_rules_2, running_default: true)
-          app.space.add_app_security_group(AppSecurityGroup.make(rules: asg_for_space_rules))
+          SecurityGroup.make(rules: sg_default_rules_1, running_default: true)
+          SecurityGroup.make(rules: sg_default_rules_2, running_default: true)
+          app.space.add_security_group(SecurityGroup.make(rules: sg_for_space_rules))
         end
 
         it "should provide the egress rules in the start message" do
           res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
           expect(res[:egress_network_rules]).to match_array(
-            [ asg_default_rules_1, asg_default_rules_2, asg_for_space_rules ].flatten
+            [ sg_default_rules_1, sg_default_rules_2, sg_for_space_rules ].flatten
           )
         end
       end

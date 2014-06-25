@@ -104,7 +104,7 @@ module VCAP::CloudController
     private
 
     def staging_egress_rules
-      staging_security_groups = AppSecurityGroup.where(staging_default: true).all
+      staging_security_groups = SecurityGroup.where(staging_default: true).all
       EgressNetworkRulesPresenter.new(staging_security_groups).to_array
     end
 

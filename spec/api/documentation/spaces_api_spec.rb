@@ -16,7 +16,7 @@ resource "Spaces", :type => :api do
     field :manager_guids, "The list of the associated managers", required: false
     field :auditor_guids, "The list of the associated auditors", required: false
     field :domain_guids, "The list of the associated domains", required: false
-    field :app_security_group_guids, "The list of the associated app security groups", required: false
+    field :security_group_guids, "The list of the associated security groups", required: false
 
     standard_model_list :space, VCAP::CloudController::SpacesController
     standard_model_get :space, nested_associations: [:organization]
@@ -146,15 +146,15 @@ resource "Spaces", :type => :api do
       standard_model_list :event, VCAP::CloudController::EventsController, outer_model: :space
     end
 
-    describe "App Security Groups" do
-      let!(:associated_app_security_group) { VCAP::CloudController::AppSecurityGroup.make(space_guids: [space.guid]) }
-      let(:associated_app_security_group_guid) { associated_app_security_group.guid }
-      let(:app_security_group) { VCAP::CloudController::AppSecurityGroup.make }
-      let(:app_security_group_guid) { app_security_group.guid }
+    describe "Security Groups" do
+      let!(:associated_security_group) { VCAP::CloudController::SecurityGroup.make(space_guids: [space.guid]) }
+      let(:associated_security_group_guid) { associated_security_group.guid }
+      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:security_group_guid) { security_group.guid }
 
-      standard_model_list :app_security_group, VCAP::CloudController::AppSecurityGroupsController, outer_model: :space
-      nested_model_associate :app_security_group, :space
-      nested_model_remove :app_security_group, :space
+      standard_model_list :security_group, VCAP::CloudController::SecurityGroupsController, outer_model: :space
+      nested_model_associate :security_group, :space
+      nested_model_remove :security_group, :space
     end
   end
 end

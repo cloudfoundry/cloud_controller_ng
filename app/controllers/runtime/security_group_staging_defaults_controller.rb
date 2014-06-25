@@ -1,7 +1,7 @@
 module VCAP::CloudController
-  class AppSecurityGroupStagingDefaultsController < RestController::ModelController
+  class SecurityGroupStagingDefaultsController < RestController::ModelController
     def self.model
-      AppSecurityGroup
+      SecurityGroup
     end
 
     def self.path
@@ -9,11 +9,11 @@ module VCAP::CloudController
     end
 
     def self.not_found_exception(guid)
-      Errors::ApiError.new_from_details("AppSecurityGroupStagingDefaultInvalid", guid)
+      Errors::ApiError.new_from_details("SecurityGroupStagingDefaultInvalid", guid)
     end
 
     define_attributes do
-      attribute :app_security_group_guid, String
+      attribute :security_group_guid, String
     end
 
     define_messages

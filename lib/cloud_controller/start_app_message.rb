@@ -30,7 +30,7 @@ module VCAP::CloudController
       self[:health_check_timeout] = app.health_check_timeout
       self[:vcap_application]     = app.vcap_application
       self[:index]                = index
-      self[:egress_network_rules] = EgressNetworkRulesPresenter.new(app.space.app_security_groups).to_array
+      self[:egress_network_rules] = EgressNetworkRulesPresenter.new(app.space.security_groups).to_array
     end
 
     def has_app_package?

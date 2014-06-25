@@ -17,26 +17,26 @@ module VCAP::CloudController
     one_to_many  :service_instances
     one_to_many  :managed_service_instances
     one_to_many  :routes
-    many_to_many :app_security_groups,
+    many_to_many :security_groups,
       dataset: -> {
-        AppSecurityGroup.left_join(:app_security_groups_spaces, app_security_group_id: :id)
-          .where(Sequel.or(app_security_groups_spaces__space_id: id, app_security_groups__running_default: true))
+        SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id)
+          .where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true))
       },
       eager_loader: ->(spaces_map) {
         space_ids = spaces_map[:id_map].keys
         # Set all associations to nil so if no records are found, we don't do another query when somebody tries to load the association
-        spaces_map[:rows].each { |space| space.associations[:app_security_groups] = [] }
+        spaces_map[:rows].each { |space| space.associations[:security_groups] = [] }
 
-        default_app_security_groups = AppSecurityGroup.where(running_default: true).all
+        default_security_groups = SecurityGroup.where(running_default: true).all
 
-        AppSecurityGroupsSpace.where(space_id: space_ids).eager(:app_security_group).all do |app_security_group_space|
-          space = spaces_map[:id_map][app_security_group_space.space_id].first
-          space.associations[:app_security_groups] << app_security_group_space.app_security_group
+        SecurityGroupsSpace.where(space_id: space_ids).eager(:security_group).all do |security_group_space|
+          space = spaces_map[:id_map][security_group_space.space_id].first
+          space.associations[:security_groups] << security_group_space.security_group
         end
 
         spaces_map[:rows].each do |space|
-          space.associations[:app_security_groups] += default_app_security_groups
-          space.associations[:app_security_groups].uniq!
+          space.associations[:security_groups] += default_security_groups
+          space.associations[:security_groups].uniq!
         end
       }
 
@@ -72,12 +72,12 @@ module VCAP::CloudController
 
     add_association_dependencies default_users: :nullify, apps: :destroy,
                                  service_instances: :destroy, routes: :destroy,
-                                 events: :nullify, app_security_groups: :nullify
+                                 events: :nullify, security_groups: :nullify
 
     export_attributes :name, :organization_guid
 
     import_attributes :name, :organization_guid, :developer_guids,
-                      :manager_guids, :auditor_guids, :app_security_group_guids
+                      :manager_guids, :auditor_guids, :security_group_guids
 
     strip_attributes  :name
 

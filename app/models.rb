@@ -1,6 +1,6 @@
 require "models/runtime/app_bits_package"
-require "models/runtime/app_security_group"
-require "models/runtime/app_security_groups_space"
+require "models/runtime/security_group"
+require "models/runtime/security_groups_space"
 require "models/runtime/app_usage_event"
 require "models/runtime/auto_detection_buildpack"
 require "models/runtime/billing_event"
