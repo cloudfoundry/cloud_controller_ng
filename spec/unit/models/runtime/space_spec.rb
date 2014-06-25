@@ -3,36 +3,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::Space, type: :model do
-
-    it_behaves_like "a CloudController model", {
-      :many_to_one => {
-        :organization      => {
-          :delete_ok => true,
-          :create_for => lambda { |space| Organization.make }
-        }
-      },
-      :one_to_zero_or_more => {
-        :apps              => {
-          :delete_ok => true,
-          :create_for => lambda { |space| AppFactory.make }
-        },
-        :service_instances => {
-          :delete_ok => true,
-          :create_for => lambda { |space| ManagedServiceInstance.make }
-        },
-        :routes            => {
-          :delete_ok => true,
-          :create_for => lambda { |space| Route.make(:space => space) }
-        },
-      },
-      :many_to_zero_or_more => {
-        :developers          => lambda { |space| make_user_for_space(space) },
-        :managers            => lambda { |space| make_user_for_space(space) },
-        :auditors            => lambda { |space| make_user_for_space(space) },
-        :security_groups => lambda { |space| SecurityGroup.make }
-      }
-    }
-
     it { should have_timestamp_columns }
 
     describe "Validations" do
@@ -40,34 +10,7 @@ module VCAP::CloudController
       it { should validate_presence :organization }
       it { should validate_uniqueness [:organization_id, :name] }
       it { should strip_whitespace :name }
-    end
 
-    describe "Serialization" do
-      it { should export_attributes :name, :organization_guid }
-      it { should import_attributes :name, :organization_guid, :developer_guids,
-                                    :manager_guids, :auditor_guids, :security_group_guids }
-    end
-
-    describe "#in_suspended_org?" do
-      let(:org) { Organization.make }
-      subject(:space) { Space.new(organization: org) }
-
-      context "when in a suspended organization" do
-        before { allow(org).to receive(:suspended?).and_return(true) }
-        it "is true" do
-          expect(space).to be_in_suspended_org
-        end
-      end
-      
-      context "when in an unsuspended organization" do
-        before { allow(org).to receive(:suspended?).and_return(false) }
-        it "is false" do
-          expect(space).not_to be_in_suspended_org
-        end
-      end
-    end
-
-    describe "validations" do
       context "name" do
         subject(:space) { Space.make }
 
@@ -108,25 +51,203 @@ module VCAP::CloudController
       end
     end
 
-    context "bad relationships" do
-      subject(:space) { Space.make }
+    describe "Associations" do
+      it { should have_associated :organization }
+      it { should have_associated :apps }
+      it { should have_associated :events }
+      it { should have_associated :service_instances, class: UserProvidedServiceInstance }
+      it { should have_associated :managed_service_instances }
+      it { should have_associated :routes, associated_instance: ->(space) { Route.make(space: space) } }
+      it { should have_associated :security_groups }
+      it { should have_associated :default_users, class: User }
+      it { should have_associated :domains, class: SharedDomain }
 
-      shared_examples "bad app space permission" do |perm|
-        context perm do
-          it "should not get associated with a #{perm.singularize} that isn't a member of the org" do
-            exception = Space.const_get("Invalid#{perm.camelize}Relation")
-            wrong_org = Organization.make
-            user = make_user_for_org(wrong_org)
+      describe "domains" do
+        subject(:space) { Space.make(organization: organization) }
+        let(:organization) { Organization.make }
 
-            expect {
-              space.send("add_#{perm.singularize}", user)
-            }.to raise_error exception
+        context "listing domains" do
+          before do
+            PrivateDomain.make(owning_organization: space.organization)
+          end
+
+          it "should list the owning organization's domains and shared domains" do
+            expect(space.domains).to match_array(organization.domains)
+          end
+        end
+
+        context "adding domains" do
+          it "does not add the domain to the space if it is a shared domain" do
+            shared_domain = SharedDomain.make
+            expect { space.add_domain(shared_domain) }.not_to change { space.domains }
+          end
+
+          it "does nothing if the private domain already belongs to the space's org" do
+            org = Organization.make
+            private_domain = PrivateDomain.make(owning_organization: org)
+            space = Space.make(organization: org)
+            expect { space.add_domain(private_domain) }.not_to change { space.domains }
+          end
+
+          it "reports an error if the private domain belongs to another org" do
+            space_org = Organization.make
+            space = Space.make(organization: space_org)
+
+            domain_org = Organization.make
+            private_domain = PrivateDomain.make(owning_organization: domain_org)
+            expect { space.add_domain(private_domain) }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
           end
         end
       end
 
-      %w[developer manager auditor].each do |perm|
-        include_examples "bad app space permission", perm
+      describe "#domains (eager loading)" do
+        before { SharedDomain.dataset.destroy }
+
+        it "is able to eager load domains" do
+          space = Space.make
+          org = space.organization
+
+          private_domain1 = PrivateDomain.make(owning_organization: org)
+          private_domain2 = PrivateDomain.make(owning_organization: org)
+          shared_domain = SharedDomain.make
+
+          expect {
+            @eager_loaded_space = Space.eager(:domains).where(id: space.id).all.first
+          }.to have_queried_db_times(/domains/i, 1)
+
+          expect {
+            @eager_loaded_domains = @eager_loaded_space.domains.to_a
+          }.to have_queried_db_times(//, 0)
+
+          expect(@eager_loaded_space).to eql(space)
+          expect(@eager_loaded_domains).to eql([private_domain1, private_domain2, shared_domain])
+          expect(@eager_loaded_domains).to eql(org.domains)
+        end
+
+        it "has correct domains for each space" do
+          space1 = Space.make
+          space2 = Space.make
+
+          org1 = space1.organization
+          org2 = space2.organization
+
+          private_domain1 = PrivateDomain.make(owning_organization: org1)
+          private_domain2 = PrivateDomain.make(owning_organization: org2)
+
+          shared_domain = SharedDomain.make
+
+          expect {
+            @eager_loaded_spaces = Space.eager(:domains).where(id: [space1.id, space2.id]).limit(2).all
+          }.to have_queried_db_times(/domains/i, 1)
+
+          expected_domains = [private_domain1, shared_domain, private_domain2, shared_domain]
+
+          expect {
+            expect(@eager_loaded_spaces).to have(2).items
+            actual_domains = @eager_loaded_spaces[0].domains + @eager_loaded_spaces[1].domains
+            actual_domains.should =~ expected_domains
+          }.to have_queried_db_times(//, 0)
+        end
+
+        it "passes in dataset to be loaded to eager_block option" do
+          space = Space.make
+          org = space.organization
+
+          private_domain1 = PrivateDomain.make(owning_organization: org)
+          private_domain2 = PrivateDomain.make(owning_organization: org)
+
+          eager_block = proc { |ds| ds.where(id: private_domain1.id) }
+
+          expect {
+            @eager_loaded_space = Space.eager(domains: eager_block).where(id: space.id).all.first
+          }.to have_queried_db_times(/domains/i, 1)
+
+          expect(@eager_loaded_space.domains).to eql([private_domain1])
+        end
+
+        it "allow nested eager_load" do
+          space = Space.make
+          org = space.organization
+
+          domain1 = PrivateDomain.make(owning_organization: org)
+          domain2 = PrivateDomain.make(owning_organization: org)
+
+          route1 = Route.make(domain: domain1, space: space)
+          route2 = Route.make(domain: domain2, space: space)
+
+          expect {
+            @eager_loaded_space = Space.eager(domains: :routes).where(id: space.id).all.first
+          }.to have_queried_db_times(/domains/i, 1)
+
+          expect {
+            expect(@eager_loaded_space.domains[0].routes).to eql([route1])
+            expect(@eager_loaded_space.domains[1].routes).to eql([route2])
+          }.to have_queried_db_times(//, 0)
+        end
+      end
+
+      describe "security_groups" do
+        let!(:associated_sg) { SecurityGroup.make }
+        let!(:unassociated_sg) { SecurityGroup.make }
+        let!(:default_sg) { SecurityGroup.make(running_default: true) }
+        let!(:another_default_sg) { SecurityGroup.make(running_default: true) }
+        let!(:space) { Space.make(security_group_guids: [associated_sg.guid, default_sg.guid]) }
+
+        it "returns security groups associated with the space, and the defaults" do
+          expect(space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+
+        it "works when eager loading" do
+          eager_space = Space.eager(:security_groups).all.first
+          expect(eager_space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+      end
+
+      context "bad relationships" do
+        subject(:space) { Space.make }
+
+        shared_examples "bad app space permission" do |perm|
+          context perm do
+            it "should not get associated with a #{perm.singularize} that isn't a member of the org" do
+              exception = Space.const_get("Invalid#{perm.camelize}Relation")
+              wrong_org = Organization.make
+              user = make_user_for_org(wrong_org)
+
+              expect {
+                space.send("add_#{perm.singularize}", user)
+              }.to raise_error exception
+            end
+          end
+        end
+
+        %w[developer manager auditor].each do |perm|
+          include_examples "bad app space permission", perm
+        end
+      end
+    end
+
+    describe "Serialization" do
+      it { should export_attributes :name, :organization_guid }
+      it { should import_attributes :name, :organization_guid, :developer_guids,
+                                    :manager_guids, :auditor_guids, :security_group_guids }
+    end
+
+    describe "#in_suspended_org?" do
+      let(:org) { Organization.make }
+      subject(:space) { Space.new(organization: org) }
+
+      context "when in a suspended organization" do
+        before { allow(org).to receive(:suspended?).and_return(true) }
+        it "is true" do
+          expect(space).to be_in_suspended_org
+        end
+      end
+      
+      context "when in an unsuspended organization" do
+        before { allow(org).to receive(:suspended?).and_return(false) }
+        it "is false" do
+          expect(space).not_to be_in_suspended_org
+        end
       end
     end
 
@@ -209,158 +330,17 @@ module VCAP::CloudController
       end
     end
 
-    describe "domains" do
-      subject(:space) { Space.make(organization: organization) }
-      let(:organization) { Organization.make }
-
-      context "listing domains" do
-        before do
-          PrivateDomain.make(owning_organization: space.organization)
-        end
-
-        it "should list the owning organization's domains and shared domains" do
-          expect(space.domains).to match_array(organization.domains)
-        end
-      end
-
-      context "adding domains" do
-        it "does not add the domain to the space if it is a shared domain" do
-          shared_domain = SharedDomain.make
-          expect { space.add_domain(shared_domain) }.not_to change { space.domains }
-        end
-
-        it "does nothing if the private domain already belongs to the space's org" do
-          org = Organization.make
-          private_domain = PrivateDomain.make(owning_organization: org)
-          space = Space.make(organization: org)
-          expect { space.add_domain(private_domain) }.not_to change { space.domains }
-        end
-
-        it "reports an error if the private domain belongs to another org" do
-          space_org = Organization.make
-          space = Space.make(organization: space_org)
-
-          domain_org = Organization.make
-          private_domain = PrivateDomain.make(owning_organization: domain_org)
-          expect { space.add_domain(private_domain) }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
-        end
-      end
-    end
-
-    describe "#domains (eager loading)" do
-      before { SharedDomain.dataset.destroy }
-
-      it "is able to eager load domains" do
-        space = Space.make
-        org = space.organization
-
-        private_domain1 = PrivateDomain.make(owning_organization: org)
-        private_domain2 = PrivateDomain.make(owning_organization: org)
-        shared_domain = SharedDomain.make
-
-        expect {
-          @eager_loaded_space = Space.eager(:domains).where(id: space.id).all.first
-        }.to have_queried_db_times(/domains/i, 1)
-
-        expect {
-          @eager_loaded_domains = @eager_loaded_space.domains.to_a
-        }.to have_queried_db_times(//, 0)
-
-        expect(@eager_loaded_space).to eql(space)
-        expect(@eager_loaded_domains).to eql([private_domain1, private_domain2, shared_domain])
-        expect(@eager_loaded_domains).to eql(org.domains)
-      end
-
-      it "has correct domains for each space" do
+    describe "#having_developer" do
+      it "returns only spaces with developers containing the specified user" do
         space1 = Space.make
+        user = make_developer_for_space(space1)
+
         space2 = Space.make
+        spaces = Space.having_developers(user).all
 
-        org1 = space1.organization
-        org2 = space2.organization
-
-        private_domain1 = PrivateDomain.make(owning_organization: org1)
-        private_domain2 = PrivateDomain.make(owning_organization: org2)
-
-        shared_domain = SharedDomain.make
-
-        expect {
-          @eager_loaded_spaces = Space.eager(:domains).where(id: [space1.id, space2.id]).limit(2).all
-        }.to have_queried_db_times(/domains/i, 1)
-
-        expected_domains = [private_domain1, shared_domain, private_domain2, shared_domain]
-
-        expect {
-          expect(@eager_loaded_spaces).to have(2).items
-          actual_domains = @eager_loaded_spaces[0].domains + @eager_loaded_spaces[1].domains
-          actual_domains.should =~ expected_domains
-        }.to have_queried_db_times(//, 0)
+        expect(spaces).to include(space1)
+        expect(spaces).to_not include(space2)
       end
-
-      it "passes in dataset to be loaded to eager_block option" do
-        space = Space.make
-        org = space.organization
-
-        private_domain1 = PrivateDomain.make(owning_organization: org)
-        private_domain2 = PrivateDomain.make(owning_organization: org)
-
-        eager_block = proc { |ds| ds.where(id: private_domain1.id) }
-
-        expect {
-          @eager_loaded_space = Space.eager(domains: eager_block).where(id: space.id).all.first
-        }.to have_queried_db_times(/domains/i, 1)
-
-        expect(@eager_loaded_space.domains).to eql([private_domain1])
-      end
-
-      it "allow nested eager_load" do
-        space = Space.make
-        org = space.organization
-
-        domain1 = PrivateDomain.make(owning_organization: org)
-        domain2 = PrivateDomain.make(owning_organization: org)
-
-        route1 = Route.make(domain: domain1, space: space)
-        route2 = Route.make(domain: domain2, space: space)
-
-        expect {
-          @eager_loaded_space = Space.eager(domains: :routes).where(id: space.id).all.first
-        }.to have_queried_db_times(/domains/i, 1)
-
-        expect {
-          expect(@eager_loaded_space.domains[0].routes).to eql([route1])
-          expect(@eager_loaded_space.domains[1].routes).to eql([route2])
-        }.to have_queried_db_times(//, 0)
-      end
-    end
-
-    describe "security_groups" do
-      let!(:associated_sg) { SecurityGroup.make }
-      let!(:unassociated_sg) { SecurityGroup.make }
-      let!(:default_sg) { SecurityGroup.make(running_default: true) }
-      let!(:another_default_sg) { SecurityGroup.make(running_default: true) }
-      let!(:space) { Space.make(security_group_guids: [associated_sg.guid, default_sg.guid]) }
-
-      it "returns security groups associated with the space, and the defaults" do
-        expect(space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
-      end
-
-      it "works when eager loading" do
-        eager_space = Space.eager(:security_groups).all.first
-        expect(eager_space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
-      end
-    end
-  end
-
-  describe "#having_developer" do
-    it "returns only spaces with developers containing the specified user" do
-      space1 = Space.make
-      user = make_developer_for_space(space1)
-
-      space2 = Space.make
-      spaces = Space.having_developers(user).all
-
-      expect(spaces).to include(space1)
-      expect(spaces).to_not include(space2)
     end
   end
 end
