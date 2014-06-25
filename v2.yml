@@ -529,26 +529,26 @@
   message: "The job execution has timed out."
 
 300001:
-  name: AppSecurityGroupInvalid
+  name: SecurityGroupInvalid
   http_code: 400
-  message: "The app security group is invalid: %s"
+  message: "The security group is invalid: %s"
 
 300002:
-  name: AppSecurityGroupNotFound
+  name: SecurityGroupNotFound
   http_code: 404
-  message: "The app security group could not be found: %s"
+  message: "The security group could not be found: %s"
 
 300003:
-  name: AppSecurityGroupStagingDefaultInvalid
+  name: SecurityGroupStagingDefaultInvalid
   http_code: 400
-  message: "The app security group could not be found: %s"
+  message: "The security group could not be found: %s"
 
 300004:
-  name: AppSecurityGroupRunningDefaultInvalid
+  name: SecurityGroupRunningDefaultInvalid
   http_code: 400
-  message: "The app security group could not be found: %s"
+  message: "The security group could not be found: %s"
 
 300005:
-    name: AppSecurityGroupNameTaken
-    http_code: 400
-    message: "The app security group name is taken: %s"
+  name: SecurityGroupNameTaken
+  http_code: 400
+  message: "The security group name is taken: %s"
