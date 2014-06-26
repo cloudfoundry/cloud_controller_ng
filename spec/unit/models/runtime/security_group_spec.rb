@@ -5,8 +5,8 @@ module VCAP::CloudController
   describe SecurityGroup, type: :model do
     def build_transport_rule(attrs={})
       {
-        'protocol'    => 'udp',
-        'ports'        => '8080-9090',
+        'protocol' => 'udp',
+        'ports' => '8080-9090',
         'destination' => '198.41.191.47/1'
       }.merge(attrs)
     end
@@ -152,6 +152,14 @@ module VCAP::CloudController
               expect(subject).to be_valid
             end
           end
+
+          context 'when it is a valid range' do
+            let (:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1.-2.2.2.2') }
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
         end
 
         context 'bad' do
@@ -198,6 +206,36 @@ module VCAP::CloudController
               expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'destination\''
             end
           end
+
+          context 'when the range has more than 2 endpoints' do
+            let (:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1-2.2.2.2-3.3.3.3') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when the range is backwards' do
+            let (:rule) { build_transport_rule('protocol' => protocol, 'destination' => '2.2.2.2-1.1.1.1') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when the range has CIDR blocks' do
+            let (:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1-2.2.2.2/30') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
         end
       end
 
@@ -225,7 +263,7 @@ module VCAP::CloudController
       context 'name' do
         subject(:sec_group) { SecurityGroup.make }
 
-        it 'shoud allow standard ascii characters' do
+        it 'should allow standard ascii characters' do
           sec_group.name = "A -_- word 2!?()\'\"&+."
           expect {
             sec_group.save
@@ -266,7 +304,7 @@ module VCAP::CloudController
 
         before do
           subject.name = 'foobar'
-          subject.rules = [ rule ]
+          subject.rules = [rule]
         end
 
         context 'is an array of hashes' do
@@ -392,6 +430,13 @@ module VCAP::CloudController
                     expect(subject).to be_valid
                   end
                 end
+                context 'when it is a valid range' do
+                  let (:rule) { build_icmp_rule('destination' => '1.1.1.1.-2.2.2.2') }
+
+                  it 'is valid' do
+                    expect(subject).to be_valid
+                  end
+                end
               end
 
               context 'bad' do
@@ -436,6 +481,36 @@ module VCAP::CloudController
                     expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
                     expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'destination\''
+                  end
+                end
+
+                context 'when the range has more than 2 endpoints' do
+                  let (:rule) { build_icmp_rule('destination' => '1.1.1.1-2.2.2.2-3.3.3.3') }
+
+                  it 'is not valid' do
+                    expect(subject).not_to be_valid
+                    expect(subject.errors[:rules].length).to eq 1
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+                  end
+                end
+
+                context 'when the range is backwards' do
+                  let (:rule) { build_icmp_rule('destination' => '2.2.2.2-1.1.1.1') }
+
+                  it 'is not valid' do
+                    expect(subject).not_to be_valid
+                    expect(subject.errors[:rules].length).to eq 1
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+                  end
+                end
+
+                context 'when the range has CIDR blocks' do
+                  let (:rule) { build_icmp_rule('destination' => '1.1.1.1-2.2.2.2/30') }
+
+                  it 'is not valid' do
+                    expect(subject).not_to be_valid
+                    expect(subject.errors[:rules].length).to eq 1
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
                   end
                 end
               end
@@ -501,7 +576,7 @@ module VCAP::CloudController
 
         context 'when rules is not an array' do
           before do
-            subject.rules = { "valid" => "json" }
+            subject.rules = {"valid" => "json"}
           end
 
           it 'is not valid' do

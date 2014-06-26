@@ -1,0 +1,75 @@
+module CloudController
+  class TransportRuleValidator
+    TRANSPORT_RULE_FIELDS = ["protocol", "ports", "destination"].map(&:freeze).freeze
+
+    def self.validate(rule)
+      errs = validate_fields(rule, TRANSPORT_RULE_FIELDS)
+      return errs unless errs.empty?
+
+      port = rule['ports']
+      unless validate_port(port)
+        errs << "contains invalid ports"
+      end
+
+      destination = rule['destination']
+      unless validate_destination(destination)
+        errs << "contains invalid destination"
+      end
+
+      errs
+    end
+
+    private
+
+    def self.validate_fields(rule, fields)
+      errs = (fields - rule.keys).map { |field| "missing required field '#{field}'" }
+      errs += (rule.keys - fields).map { |key| "contains the invalid field '#{key}'" }
+    end
+
+    def self.validate_port(port)
+      return false if /[^\d\s\-,]/.match(port)
+
+      port_range = /^\s*(\d+)\s*-\s*(\d+)\s*$/.match(port)
+      if port_range
+        left = port_range.captures[0].to_i
+        right = port_range.captures[1].to_i
+
+        return false if left >= right
+        return false unless port_in_valid_range?(left) && port_in_valid_range?(right)
+
+        return true
+      end
+
+      port_list = port.split(',')
+      if port_list.length > 0
+        return false unless port_list.all? { |p| /^\s*\d+\s*$/.match(p) }
+        return false unless port_list.all? { |p| port_in_valid_range?(p.to_i) }
+
+        return true
+      end
+
+      false
+    end
+
+    def self.port_in_valid_range?(port)
+      port > 0 && port < 65536
+    end
+
+    def self.validate_destination(destination)
+      address_list = destination.split('-')
+
+      return false if address_list.length > 2
+      address_list.each do |address|
+        NetAddr::CIDR.create(address)
+      end
+
+      if address_list.length > 1
+        return false if NetAddr.ip_to_i(address_list[0]) > NetAddr.ip_to_i(address_list[1])
+      end
+
+      return true
+    rescue NetAddr::ValidationError
+      return false
+    end
+  end
+end
