@@ -4,6 +4,7 @@ local_route: <%= spec.networks.send(properties.networks.apps).ip %>
 external_port: <%= p("cc.external_port") %>
 
 pid_filename: /this/isnt/used/by/the/worker
+newrelic_enabled: <%= !!properties.cc.newrelic.license_key %>
 development_mode: <%= p("cc.development_mode") %>
 
 message_bus_servers:

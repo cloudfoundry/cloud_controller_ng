@@ -202,6 +202,38 @@ module VCAP::CloudController
           VCAP::CloudController::Config.config[:disable_custom_buildpacks]
         }.to(false)
       end
+
+      context "when newrelic is disabled" do
+        let(:config) do
+          @test_config.merge(newrelic_enabled: false)
+        end
+
+        before do
+          GC::Profiler.disable
+          Config.instance_eval("@initialized = false")
+        end
+
+        it "does not enable GC profiling" do
+          Config.configure_components(config)
+          expect(GC::Profiler.enabled?).to eq(false)
+        end
+      end
+
+      context "when newrelic is enabled" do
+        let(:config) do
+          @test_config.merge(newrelic_enabled: true)
+        end
+
+        before do
+          GC::Profiler.disable
+          Config.instance_eval("@initialized = false")
+        end
+
+        it "enables GC profiling" do
+          Config.configure_components(config)
+          expect(GC::Profiler.enabled?).to eq(true)
+        end
+      end
     end
   end
 end

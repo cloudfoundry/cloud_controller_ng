@@ -4,6 +4,7 @@ local_route: <%= spec.networks.send(properties.networks.apps).ip %>
 external_port: <%= p("cc.external_port") %>
 
 pid_filename: /var/vcap/sys/run/cloud_controller_ng/cloud_controller_ng.pid
+newrelic_enabled: <%= !!properties.cc.newrelic.license_key || p("cc.development_mode") %>
 development_mode: <%= p("cc.development_mode") %>
 
 message_bus_servers:

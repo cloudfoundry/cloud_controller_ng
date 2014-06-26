@@ -59,6 +59,7 @@ module VCAP::CloudController
         },
 
         optional(:stacks_file) => String,
+        optional(:newrelic_enabled) => bool,
 
         :db => {
           :database                   => String,     # db connection string for sequel
@@ -218,13 +219,20 @@ module VCAP::CloudController
 
       def run_initializers(config)
         return if @initialized
+        run_initializers_in_directory(config, '../../../config/initializers/*.rb')
+        if config[:newrelic_enabled]
+          require "newrelic_rpm"
+          run_initializers_in_directory(config, '../../../config/newrelic/initializers/*.rb')
+        end
+        @initialized = true
+      end
 
-        Dir.glob(File.expand_path('../../../config/initializers/*.rb', __FILE__)).each do |file|
+      def run_initializers_in_directory(config, path)
+        Dir.glob(File.expand_path(path, __FILE__)).each do |file|
           require file
           method = File.basename(file).sub(".rb", "").gsub("-", "_")
           CCInitializers.send(method, config)
         end
-        @initialized = true
       end
 
       def merge_defaults(config)

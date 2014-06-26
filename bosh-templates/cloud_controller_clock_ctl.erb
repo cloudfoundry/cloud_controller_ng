@@ -17,6 +17,8 @@ export C_INCLUDE_PATH=/var/vcap/packages/libpq/include:$C_INCLUDE_PATH
 export LIBRARY_PATH=/var/vcap/packages/libpq/lib:$LIBRARY_PATH
 export LANG=en_US.UTF-8
 
+export NEWRELIC_ENABLE=false
+
 source /var/vcap/packages/common/utils.sh
 
 case $1 in

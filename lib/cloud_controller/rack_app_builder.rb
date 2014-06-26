@@ -5,7 +5,7 @@ module VCAP::CloudController
       Rack::Builder.new do
         use Rack::CommonLogger
 
-        if config[:development_mode]
+        if config[:development_mode] && config[:newrelic_enabled]
           require 'new_relic/rack/developer_mode'
           use NewRelic::Rack::DeveloperMode
         end

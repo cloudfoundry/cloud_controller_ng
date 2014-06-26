@@ -1,5 +1,5 @@
 <%= properties.cc.newrelic.environment_name %>: &common_settings
-  license_key: '<%= properties.cc.newrelic.license_key %>'
+  license_key: <%= properties.cc.newrelic.license_key ? "'#{properties.cc.newrelic.license_key}'" : "~" %>
   app_name: 'Cloud Controller (<%= properties.cc.newrelic.environment_name %>)'
   developer_mode: <%= properties.cc.newrelic.developer_mode %>
   monitor_mode: <%= properties.cc.newrelic.monitor_mode %>
