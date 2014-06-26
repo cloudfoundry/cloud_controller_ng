@@ -33,26 +33,13 @@ VCAP::CloudController::SpecBootstrap.init
 Dir[File.expand_path("support/**/*.rb", File.dirname(__FILE__))].each { |file| require file }
 
 RSpec.configure do |rspec_config|
-  rspec_config.treat_symbols_as_metadata_keys_with_true_values = true
-
   rspec_config.include Rack::Test::Methods
   rspec_config.include ModelCreation
 
-  rspec_config.include ControllerHelpers, type: :controller, :example_group => {
-      :file_path => EscapedPath.join(%w[spec unit controllers])
-  }
-
-  rspec_config.include ControllerHelpers, type: :api, :example_group => {
-      :file_path => EscapedPath.join(%w[spec api])
-  }
-
-  rspec_config.include ControllerHelpers, type: :acceptance, :example_group => {
-      :file_path => EscapedPath.join(%w[spec acceptance])
-  }
-
-  rspec_config.include ApiDsl, type: :api, :example_group => {
-      :file_path => EscapedPath.join(%w[spec api])
-  }
+  rspec_config.include ControllerHelpers, type: :controller, :file_path => EscapedPath.join(%w[spec unit controllers])
+  rspec_config.include ControllerHelpers, type: :api
+  rspec_config.include ControllerHelpers, :file_path => EscapedPath.join(%w[spec acceptance])
+  rspec_config.include ApiDsl, type: :api
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
   rspec_config.before :all do

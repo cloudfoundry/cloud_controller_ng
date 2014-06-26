@@ -353,7 +353,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "GET", "/info/services", "unauthenticated" do
+    describe "GET /info/services unauthenticated" do
       before(:each) do
         # poor man's reset_db
         Service.filter(:provider => "core").each do |svc|

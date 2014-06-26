@@ -246,10 +246,10 @@ module VCAP::Services::SSO
           end
 
           it 'raises a ServiceBrokerDashboardClientFailure error' do
-            expect{ manager.synchronize_clients_with_catalog(catalog) }.to raise_error(VCAP::Errors::ApiError) do |err|
+            expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(VCAP::Errors::ApiError)) { |err|
               expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
-              expect(err.message).to eq('my test error')
-            end
+              expect(err.message).to match('my test error')
+            }
           end
         end
 
@@ -293,10 +293,10 @@ module VCAP::Services::SSO
           end
 
           it 'raises a ServiceBrokerDashboardClientFailure error' do
-            expect{ manager.synchronize_clients_with_catalog(catalog) }.to raise_error(VCAP::Errors::ApiError) do |err|
+            expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(VCAP::Errors::ApiError)) { |err|
               expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
-              expect(err.message).to eq('error message')
-            end
+              expect(err.message).to match('error message')
+            }
           end
         end
 
@@ -402,10 +402,10 @@ module VCAP::Services::SSO
         end
 
         it 'raises a ServiceBrokerDashboardClientFailure error' do
-          expect{ manager.remove_clients_for_broker }.to raise_error(VCAP::Errors::ApiError) do |err|
+          expect { manager.remove_clients_for_broker }.to(raise_error(VCAP::Errors::ApiError)) { |err|
             expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
-            expect(err.message).to eq('error message')
-          end
+            expect(err.message).to match('error message')
+          }
         end
 
         it 'does not delete any clients claimed in CC' do
@@ -425,10 +425,10 @@ module VCAP::Services::SSO
         end
 
         it 'raises a ServiceBrokerDashboardClientFailure error' do
-          expect{ manager.remove_clients_for_broker }.to raise_error(VCAP::Errors::ApiError) do |err|
+          expect { manager.remove_clients_for_broker }.to(raise_error(VCAP::Errors::ApiError)) { |err|
             expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
-            expect(err.message).to eq('my test error')
-          end
+            expect(err.message).to match('my test error')
+          }
         end
       end
 

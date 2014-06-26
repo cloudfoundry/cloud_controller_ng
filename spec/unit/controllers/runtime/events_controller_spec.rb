@@ -279,7 +279,7 @@ module VCAP::CloudController
       end
 
       it "returns events after (>) the timestamp" do
-        pending "This actually is a bug in Sequel as far as we can tell.  timestamp>X actually behaves like timestamp>=X"
+        skip "This actually is a bug in Sequel as far as we can tell.  timestamp>X actually behaves like timestamp>=X"
         get "/v2/events?q=timestamp#{gt}#{(timestamp_one).utc.iso8601}", {}, admin_headers
         decoded_response["total_results"].should == 1
         decoded_response["resources"][0]["metadata"]["guid"].should == event2.guid
@@ -298,7 +298,7 @@ module VCAP::CloudController
       end
 
       it "returns events on or before (<=) the timestamp" do
-        pending "This actually is a bug in Sequel as far as we can tell.  timestamp<=X actually behaves like timestamp<X"
+        skip "This actually is a bug in Sequel as far as we can tell.  timestamp<=X actually behaves like timestamp<X"
         get "/v2/events?q=timestamp#{lte}#{timestamp_two.utc.iso8601}", {}, admin_headers
         decoded_response["total_results"].should == 2
         decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
