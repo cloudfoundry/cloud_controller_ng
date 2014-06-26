@@ -32,11 +32,6 @@ module VCAP::CloudController
           job.perform
           expect(File.exists?(local_file.path)).to be false
         end
-
-        it "succeeds if the file is missing" do
-          FileUtils.rm_f(local_file)
-          expect{ job.perform }.to_not raise_exception
-        end
       end
 
       describe "#error" do
@@ -53,28 +48,49 @@ module VCAP::CloudController
 
         before do
           Delayed::Worker.destroy_failed_jobs = false
-          allow(blobstore).to receive(:cp_to_blobstore) { raise "UPLOAD FAILED" }
           Delayed::Job.enqueue(blobstore_upload_job, queue: worker.name)
-          worker.work_off 1
         end
 
-        context "retrying" do
-          it "does not delete the file" do
+        context "copying to the blobstore fails" do
+          before do
+            allow(blobstore).to receive(:cp_to_blobstore) { raise "UPLOAD FAILED" }
             worker.work_off 1
-            expect(File.exists?(local_file.path)).to be true
+          end
+
+          context "retrying" do
+            it "does not delete the file" do
+              expect(File.exists?(local_file.path)).to be true
+            end
+          end
+
+
+          context "when its the final attempt" do
+            it "it deletes the file" do
+              worker.work_off 1
+
+              expect {
+                worker.work_off 1
+              }.to change{
+                File.exists?(local_file.path)
+              }.from(true).to(false)
+            end
           end
         end
 
-
-        context "when its the final attempt" do
-          it "it deletes the file" do
+        context "if the file is missing" do
+          before do
+            FileUtils.rm_f(local_file)
+            allow(blobstore).to receive(:cp_to_blobstore) { raise "File not found" }
             worker.work_off 1
+          end
 
-            expect {
-              worker.work_off 1
-            }.to change{
-              File.exists?(local_file.path)
-            }.from(true).to(false)
+          it "receives an error" do
+            expect(Delayed::Job.last.last_error).to match /File not found/
+          end
+
+          it "does not retry" do
+            worker.work_off 1
+            expect(Delayed::Job.last.attempts).to eq 1
           end
         end
       end

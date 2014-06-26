@@ -24,11 +24,6 @@ module VCAP::CloudController
 
       it { should be_a_valid_job }
 
-      it "succeeds if the file is missing" do
-        FileUtils.rm_f(local_file)
-        expect{ job.perform }.to_not raise_exception
-      end
-
       it "updates the app's droplet hash" do
         expect {
           job.perform
@@ -95,29 +90,53 @@ module VCAP::CloudController
 
         before do
           Delayed::Worker.destroy_failed_jobs = false
-          allow(CloudController::DropletUploader).to receive(:new).and_raise(RuntimeError, "Something Terrible Happened")
+          Delayed::Job.enqueue(droplet_upload_job, queue: worker.name)
         end
 
-        subject(:run_job_all_3_times) do
-          Delayed::Job.enqueue(droplet_upload_job, queue: worker.name)
-          3.times do
-            worker.work_off
-            sleep 0.2
+        context "copying to the blobstore fails" do
+          before do
+            allow(CloudController::DropletUploader).to receive(:new).and_raise(RuntimeError, "Something Terrible Happened")
+            worker.work_off 1
+          end
+
+          it "records the failure" do
+            expect(Delayed::Job.last.last_error).to match /Something Terrible Happened/
+          end
+
+          context "retrying" do
+            it "does not delete the file" do
+              expect(File.exists?(local_file.path)).to be true
+            end
+          end
+
+
+          context "when its the final attempt" do
+            it "it deletes the file" do
+              worker.work_off 1
+
+              expect {
+                worker.work_off 1
+              }.to change{
+                File.exists?(local_file.path)
+              }.from(true).to(false)
+            end
           end
         end
 
-        context "and it retries and the retries also fail" do
-          it "we see the correct number of retries and it deletes the file" do
-            expect(FileUtils).to receive(:rm_f).with(local_file.path)
+        context "if the file is missing" do
+          before do
+            FileUtils.rm_f(local_file)
+            allow(CloudController::DropletUploader).to receive(:new).and_raise(RuntimeError, "File not found")
+            worker.work_off 1
+          end
 
-            expect {
-              run_job_all_3_times
-            }.to change {
-              Delayed::Job.count
-            }.by(1)
+          it "receives an error" do
+            expect(Delayed::Job.last.last_error).to match /File not found/
+          end
 
-            expect(Delayed::Job.last.attempts).to eq 3
-            expect(Delayed::Job.last.last_error).to match /Something Terrible Happened/
+          it "does not retry" do
+            worker.work_off 1
+            expect(Delayed::Job.last.attempts).to eq 1
           end
         end
       end

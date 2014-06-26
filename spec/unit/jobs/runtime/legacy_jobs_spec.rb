@@ -10,6 +10,7 @@ describe "Legacy Jobs" do
   end
 
   describe ::BlobstoreUpload do
+    subject {::BlobstoreUpload.new('/a/b', 'blobstore_key', 'blobstore_name')}
     it { should be_a(VCAP::CloudController::Jobs::Runtime::BlobstoreUpload) }
   end
 
@@ -18,6 +19,7 @@ describe "Legacy Jobs" do
   end
 
   describe ::DropletUploadJob do
+    subject {::DropletUploadJob.new('/a/b', 'app_id')}
     it { should be_a(VCAP::CloudController::Jobs::Runtime::DropletUpload) }
   end
 

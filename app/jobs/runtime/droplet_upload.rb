@@ -1,10 +1,17 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class DropletUpload < Struct.new(:local_path, :app_id)
-        def perform
-          return unless File.exists?(local_path)
+      class DropletUpload
+        attr_reader :local_path, :app_id
+        attr_reader :max_attempts
 
+        def initialize(local_path, app_id)
+          @local_path = local_path
+          @app_id = app_id
+          @max_attempts = 3
+        end
+
+        def perform
           logger = Steno.logger("cc.background")
           logger.info("Uploading droplet for '#{app_id}' to droplet blobstore")
 
@@ -23,13 +30,13 @@ module VCAP::CloudController
         end
 
         def error(job, _)
-          if job.attempts == max_attempts - 1
+          if !File.exists?(local_path)
+            @max_attempts = 1
+          end
+
+          if job.attempts >= max_attempts - 1
             FileUtils.rm_f(local_path)
           end
-        end
-
-        def max_attempts
-          3
         end
       end
     end
