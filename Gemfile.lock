@@ -164,7 +164,8 @@ GEM
     rspec-expectations (3.0.2)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.0.0)
-    rspec-instafail (0.2.4)
+    rspec-instafail (0.2.5)
+      rspec
     rspec-its (1.0.1)
       rspec-core (>= 2.99.0.beta1)
       rspec-expectations (>= 2.99.0.beta1)

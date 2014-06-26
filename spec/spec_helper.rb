@@ -33,6 +33,7 @@ VCAP::CloudController::SpecBootstrap.init
 Dir[File.expand_path("support/**/*.rb", File.dirname(__FILE__))].each { |file| require file }
 
 RSpec.configure do |rspec_config|
+  rspec_config.expect_with(:rspec) { |config| config.syntax = :expect }
   rspec_config.include Rack::Test::Methods
   rspec_config.include ModelCreation
 
