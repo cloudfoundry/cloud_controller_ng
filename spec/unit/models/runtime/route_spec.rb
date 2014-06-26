@@ -2,34 +2,13 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::Route, type: :model do
-    it_behaves_like "a CloudController model", {
-        create_attribute: ->(name, route) {
-          case name.to_sym
-            when :space
-              route.space
-            when :domain
-              PrivateDomain.make(owning_organization: route.space.organization)
-            when :host
-              Sham.host
-          end
-        },
-        create_attribute_reset: -> { @space = nil },
-        many_to_one: {
-            domain: {
-                delete_ok: true,
-                create_for: ->(route) {
-                  PrivateDomain.make(
-                      owning_organization: route.domain.owning_organization,
-                  )
-                }
-            }
-        },
-        many_to_zero_or_more: {
-            apps: ->(route) { AppFactory.make(:space => route.space) }
-        }
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :domain }
+      it { should have_associated :space }
+      it { should have_associated :apps, associated_instance: ->(route) { App.make(space: route.space) } }
+    end
 
     describe "Validations" do
       let(:route) { Route.make }

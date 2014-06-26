@@ -2,10 +2,11 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppEvent, type: :model do
-    it_behaves_like "a CloudController model", {
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :app }
+    end
 
     describe "Validations" do
       it { should validate_presence :app }

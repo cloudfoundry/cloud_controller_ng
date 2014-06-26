@@ -6,6 +6,14 @@ module VCAP::CloudController
 
     it { should have_timestamp_columns }
 
+    describe "Associations" do
+      it "has associated spaces" do
+        private_domain = PrivateDomain.make
+        space = Space.make(organization: private_domain.owning_organization)
+        expect(private_domain.spaces).to include(space.reload)
+      end
+    end
+
     describe "Serialization" do
       it { should export_attributes :name, :owning_organization_guid }
       it { should import_attributes :name, :owning_organization_guid }

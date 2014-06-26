@@ -5,6 +5,11 @@ module VCAP::CloudController
 
     it { should have_timestamp_columns }
 
+    describe "Associations" do
+      it { should have_associated :owning_organization, class: Organization }
+      it { should have_associated :routes }
+    end
+
     describe "Serialization" do
       it { should export_attributes :name, :owning_organization_guid }
       it { should import_attributes :name, :owning_organization_guid }

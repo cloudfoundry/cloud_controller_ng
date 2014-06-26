@@ -19,6 +19,10 @@ module VCAP::CloudController
 
     it { should have_timestamp_columns }
 
+    describe "Associations" do
+      it { should have_associated :space }
+    end
+
     describe "Validations" do
       it { should validate_presence :type }
       it { should validate_presence :timestamp }

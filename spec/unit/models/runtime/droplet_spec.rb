@@ -19,19 +19,18 @@ module VCAP::CloudController
 
     it { should have_timestamp_columns }
 
+    describe "Associations" do
+      it { should have_associated :app }
+    end
+
+    describe "Validations" do
+      it { should validate_presence :app }
+      it { should validate_presence :droplet_hash }
+    end
+
     it "creates successfully with an app and a droplet hash" do
       app = AppFactory.make
       expect(Droplet.new(app: app, droplet_hash: Sham.guid).save).to be
-    end
-
-    describe "validation" do
-      it "requires an app" do
-        expect { Droplet.new(app: nil).save }.to raise_error Sequel::ValidationFailed, /app presence/
-      end
-
-      it "requires an droplet_hash" do
-        expect { Droplet.new(droplet_hash: nil, app: app).save }.to raise_error Sequel::ValidationFailed, /droplet_hash presence/
-      end
     end
 
     it "has a create_at timestamp used in ordering droplets for an app" do

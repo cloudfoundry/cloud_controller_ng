@@ -3,27 +3,31 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Organization, type: :model do
-    context "without any seeded domains" do
-      before do
-        Domain.dataset.destroy
+    it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :spaces }
+      it { should have_associated :private_domains }
+      it { should have_associated :service_plan_visibilities }
+      it { should have_associated :quota_definition }
+      it { should have_associated :domains, class: SharedDomain }
+      it { should have_associated :users }
+      it { should have_associated :managers, class: User }
+      it { should have_associated :billing_managers, class: User }
+      it { should have_associated :auditors, class: User }
+
+      it "has associated apps" do
+        app = App.make
+        organization = app.space.organization
+        expect(organization.apps).to include(app.reload)
       end
 
-      it_behaves_like "a CloudController model", {
-          many_to_zero_or_more: {
-              users: ->(_) { User.make },
-              managers: ->(_) { User.make },
-              billing_managers: ->(_) { User.make },
-              auditors: ->(_) { User.make },
-          },
-          one_to_zero_or_more: {
-              spaces: ->(_) { Space.make },
-              domains: ->(org) { PrivateDomain.make(owning_organization: org) },
-              private_domains: ->(org) { PrivateDomain.make(owning_organization: org) }
-          }
-      }
+      it "has associated service_instances" do
+        service_instance = ManagedServiceInstance.make
+        organization = service_instance.space.organization
+        expect(organization.service_instances).to include(service_instance.reload)
+      end
     end
-
-    it { should have_timestamp_columns }
 
     describe "Validations" do
       it { should validate_presence :name }

@@ -2,40 +2,36 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::User, type: :model do
-    it_behaves_like "a CloudController model", {
-      :extra_json_attributes => [:guid],
-      :many_to_zero_or_one => {
-        :default_space => lambda { |user|
-          org = user.organizations.first || Organization.make
-          Space.make(:organization => org)
-        }
-      },
-      :many_to_zero_or_more => {
-        :organizations => lambda { |user| Organization.make },
-        :managed_organizations => lambda { |user|
-          org = Organization.make
-          user.add_organization(org)
-          org
-        },
-        :billing_managed_organizations => lambda { |user|
-          org = Organization.make
-          user.add_organization(org)
-          org
-        },
-        :audited_organizations => lambda { |user|
-          org = Organization.make
-          user.add_organization(org)
-          org
-        },
-        :spaces => lambda { |user|
-          org = Organization.make
-          user.add_organization(org)
-          Space.make(:organization => org)
-        }
-      }
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :organizations }
+      it { should have_associated :default_space, class: Space }
+      it do
+        should have_associated :managed_organizations, associated_instance: ->(user) {
+          org = Organization.make
+          user.add_organization(org)
+          org
+        }
+      end
+      it do
+        should have_associated :billing_managed_organizations, associated_instance: ->(user) {
+          org = Organization.make
+          user.add_organization(org)
+          org
+        }
+      end
+      it do
+        should have_associated :audited_organizations, associated_instance: ->(user) {
+          org = Organization.make
+          user.add_organization(org)
+          org
+        }
+      end
+      it { should have_associated :spaces }
+      it { should have_associated :managed_spaces, class: Space }
+      it { should have_associated :audited_spaces, class: Space }
+    end
 
     describe "Validations" do
       it { should validate_presence :guid }

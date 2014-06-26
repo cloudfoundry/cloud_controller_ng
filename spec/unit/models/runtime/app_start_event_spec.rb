@@ -6,10 +6,6 @@ module VCAP::CloudController
       TestConfig.override({ :billing_event_writing_enabled => true })
     end
 
-    it_behaves_like "a CloudController model", {
-      :skip_database_constraints => true
-    }
-
     it { should have_timestamp_columns }
 
     describe "Validations" do

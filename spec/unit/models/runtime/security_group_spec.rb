@@ -212,13 +212,11 @@ module VCAP::CloudController
       end
     end
 
-    it_behaves_like 'a CloudController model', {
-      many_to_zero_or_more: {
-        spaces: ->(security_group) { Space.make }
-      }
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :spaces }
+    end
 
     describe "Validations" do
       it { should validate_presence :name }

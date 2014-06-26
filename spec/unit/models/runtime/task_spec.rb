@@ -14,6 +14,10 @@ module VCAP::CloudController
 
     it { should have_timestamp_columns }
 
+    describe "Associations" do
+      it { should have_associated :app }
+    end
+
     describe "Serialization" do
       it { should export_attributes :app_guid, :secure_token }
       it { should import_attributes :app_guid }

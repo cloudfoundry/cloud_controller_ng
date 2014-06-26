@@ -34,39 +34,22 @@ module VCAP::CloudController
       VCAP::CloudController::Seeds.create_seed_stacks
     end
 
-    it_behaves_like "a CloudController model", {
-        :many_to_one => {
-            :space => {
-                :delete_ok => true,
-                :create_for => lambda { |app| Space.make },
-            },
-            :stack => {
-                :delete_ok => true,
-                :create_for => lambda { |app| Stack.make },
-            }
-        },
-        :one_to_zero_or_more => {
-            :service_bindings => lambda { |app|
-              service_binding = ServiceBinding.make
-              service_binding.service_instance.space = app.space
-              service_binding
-            },
-            :routes => lambda { |app|
-              domain = PrivateDomain.make(
-                  :owning_organization => app.space.organization
-              )
-              Route.make(
-                  :domain => domain,
-                  :space => app.space
-              )
-            },
-            :events => lambda { |app|
-              AppEvent.make(:app => app)
-            }
+    describe "Associations" do
+      it { should have_timestamp_columns }
+      it { should have_associated :droplets }
+      it do
+        should have_associated :service_bindings, associated_instance: ->(app) {
+          service_binding = ServiceBinding.make
+          service_binding.service_instance.space = app.space
+          service_binding
         }
-    }
-
-    it { should have_timestamp_columns }
+      end
+      it { should have_associated :events, class: AppEvent }
+      it { should have_associated :admin_buildpack, class: Buildpack }
+      it { should have_associated :space }
+      it { should have_associated :stack }
+      it { should have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
+    end
 
     describe "Validations" do
       it { should validate_presence :name }

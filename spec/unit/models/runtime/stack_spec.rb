@@ -3,16 +3,12 @@ require "spec_helper"
 module VCAP::CloudController
   describe Stack, type: :model do
     let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
-    it_behaves_like "a CloudController model", {
-      :one_to_zero_or_more => {
-        :apps              => {
-          :delete_ok => true,
-          :create_for => lambda { |stack| AppFactory.make(:stack => stack) }
-        },
-      },
-    }
 
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :apps }
+    end
 
     describe "Validations" do
       it { should validate_presence :name }

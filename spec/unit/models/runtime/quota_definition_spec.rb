@@ -4,10 +4,15 @@ module VCAP::CloudController
   describe VCAP::CloudController::QuotaDefinition, type: :model do
     let(:quota_definition) { QuotaDefinition.make }
 
-    it_behaves_like "a CloudController model", {
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      before do
+        SecurityContext.stub(:admin?).and_return(true)
+      end
+
+      it { should have_associated :organizations }
+    end
 
     describe "Validations" do
       it { should validate_presence :name }
