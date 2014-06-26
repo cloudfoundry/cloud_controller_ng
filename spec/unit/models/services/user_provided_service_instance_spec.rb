@@ -16,16 +16,17 @@ module VCAP::CloudController
       let(:encrypted_attr) { :credentials }
     end
 
-    it_behaves_like "a CloudController model", {
-      many_to_one: {
-        space: {
-          delete_ok: true,
-          create_for: proc { VCAP::CloudController::Space.make },
-        },
-      },
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :space }
+      it do
+        should have_associated :service_bindings, associated_instance: ->(service_instance) {
+          app = VCAP::CloudController::App.make(:space => service_instance.space)
+          ServiceBinding.make(:app => app, :service_instance => service_instance, :credentials => Sham.service_credentials)
+        }
+      end
+    end
 
     describe "Validations" do
       it { should validate_presence :name }

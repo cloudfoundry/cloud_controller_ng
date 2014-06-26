@@ -2,19 +2,17 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Service, type: :model do
-    it_behaves_like "a CloudController model", {
-      :required_attribute_error_message => {
-        :label => 'name is required'
-      },
-      :one_to_zero_or_more   => {
-        :service_plans      => {
-          :delete_ok => true,
-          :create_for => lambda { |_| ServicePlan.make }
-        }
-      }
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :service_broker }
+      it { should have_associated :service_plans }
+
+      it "has associated service_auth_token" do
+        service = Service.make
+        expect(service.reload.service_auth_token).to be_a ServiceAuthToken
+      end
+    end
 
     describe "Validations" do
       it { should validate_presence :label, message: 'Service name is required' }

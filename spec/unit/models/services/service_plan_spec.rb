@@ -2,19 +2,14 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServicePlan, type: :model do
-    it_behaves_like "a CloudController model", {
-      :many_to_one => {
-        :service => {
-          :delete_ok => true,
-          :create_for => lambda { |service_plan| Service.make },
-        },
-      },
-      :one_to_zero_or_more => {
-        :service_instances => lambda { |service_plan| ManagedServiceInstance.make }
-      },
-    }
 
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :service }
+      it { should have_associated :service_instances, class: ManagedServiceInstance }
+      it { should have_associated :service_plan_visibilities }
+    end
 
     describe "Validations" do
       it { should validate_presence :name, message: "is required" }
@@ -106,6 +101,14 @@ module VCAP::CloudController
         expect { service_plan.destroy(savepoint: true) }.to change {
           ServicePlanVisibility.where(:id => service_plan_visibility.id).any?
         }.to(false)
+      end
+
+      it "cannot be destroyed if associated service_instances exist" do
+        service_plan = ServicePlan.make
+        ManagedServiceInstance.make(service_plan: service_plan)
+        expect {
+          service_plan.destroy
+        }.to raise_error Sequel::DatabaseError, /foreign key/
       end
     end
 

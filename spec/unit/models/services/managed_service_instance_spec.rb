@@ -15,27 +15,18 @@ module VCAP::CloudController
       Service.any_instance.stub(:client).and_return(client)
     end
 
-    it_behaves_like "a CloudController model", {
-      many_to_one: {
-        service_plan: {
-          create_for: lambda { |service_instance| ServicePlan.make },
-        },
-        space: {
-          delete_ok: true,
-          create_for: lambda { |service_instance| Space.make },
-        }
-      },
-      one_to_zero_or_more: {
-        service_bindings: {
-          delete_ok: true,
-          create_for: lambda { |service_instance|
-            make_service_binding_for_service_instance(service_instance)
-          }
-        }
-      }
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :service_plan }
+      it { should have_associated :space }
+      it do
+        should have_associated :service_bindings, associated_instance: ->(service_instance) {
+          app = VCAP::CloudController::App.make(:space => service_instance.space)
+          ServiceBinding.make(:app => app, :service_instance => service_instance, :credentials => Sham.service_credentials)
+        }
+      end
+    end
 
     describe "Validations" do
       it { should validate_presence :name }

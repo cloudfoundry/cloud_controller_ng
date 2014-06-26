@@ -8,6 +8,10 @@ module VCAP::CloudController
 
     it { should have_timestamp_columns }
 
+    describe "Associations" do
+      it { should have_associated :service_broker }
+    end
+
     describe 'Validations' do
       it { should validate_presence :uaa_id }
       it { should validate_uniqueness :uaa_id }

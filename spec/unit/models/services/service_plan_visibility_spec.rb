@@ -2,9 +2,12 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServicePlanVisibility, type: :model do
-    it_behaves_like "a CloudController model", {}
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :service_plan }
+      it { should have_associated :organization }
+    end
 
     describe "Validations" do
       it { should validate_presence :service_plan }

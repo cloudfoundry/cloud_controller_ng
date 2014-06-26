@@ -7,12 +7,11 @@ module VCAP::CloudController
       let(:encrypted_attr) { :token }
     end
 
-    it_behaves_like "a CloudController model", {
-      :sensitive_attributes => :token,
-      :extra_json_attributes => :token
-    }
-
     it { should have_timestamp_columns }
+
+    describe "Associations" do
+      it { should have_associated :service }
+    end
 
     describe "Validations" do
       it { should validate_presence :label }

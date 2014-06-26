@@ -15,6 +15,17 @@ module VCAP::CloudController
 
     it { should have_timestamp_columns }
 
+    describe 'Associations' do
+      it { should have_associated :services }
+
+      it "has associated service_plans" do
+        service = Service.make(:v2)
+        service_plan = ServicePlan.make(service: service)
+        service_broker = service.service_broker
+        expect(service_broker.service_plans).to include(service_plan)
+      end
+    end
+
     describe 'Validations' do
       it { should validate_presence :name }
       it { should validate_presence :broker_url }
