@@ -64,12 +64,12 @@ describe DeaAdvertisement do
 
       context "and it has the stack" do
         let(:stack) { "stack-name" }
-        it { expect(ad.meets_needs?(mem, stack)).to be_true }
+        it { expect(ad.meets_needs?(mem, stack)).to be true }
       end
 
       context "and it does not have the stack" do
         let(:stack) { "not-a-stack-name" }
-        it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        it { expect(ad.meets_needs?(mem, stack)).to be false }
       end
     end
 
@@ -78,12 +78,12 @@ describe DeaAdvertisement do
 
       context "and it has the stack" do
         let(:stack) { "stack-name" }
-        it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        it { expect(ad.meets_needs?(mem, stack)).to be false }
       end
 
       context "and it does not have the stack" do
         let(:stack) { "not-a-stack-name" }
-        it { expect(ad.meets_needs?(mem, stack)).to be_false }
+        it { expect(ad.meets_needs?(mem, stack)).to be false }
       end
     end
   end
@@ -91,13 +91,13 @@ describe DeaAdvertisement do
   describe "#has_sufficient_memory?" do
     context "when the dea does not have enough memory" do
       it "returns false" do
-        expect(ad.has_sufficient_memory?(2048)).to be_false
+        expect(ad.has_sufficient_memory?(2048)).to be false
       end
     end
 
     context "when the dea has enough memory" do
       it "returns false" do
-        expect(ad.has_sufficient_memory?(512)).to be_true
+        expect(ad.has_sufficient_memory?(512)).to be true
       end
     end
   end
@@ -105,13 +105,13 @@ describe DeaAdvertisement do
   describe "#has_sufficient_disk?" do
     context "when the dea does not have enough disk" do
       it "returns false" do
-        expect(ad.has_sufficient_disk?(2048)).to be_false
+        expect(ad.has_sufficient_disk?(2048)).to be false
       end
     end
 
     context "when the dea does have enough disk" do
       it "returns false" do
-        expect(ad.has_sufficient_disk?(512)).to be_true
+        expect(ad.has_sufficient_disk?(512)).to be true
       end
     end
 
@@ -119,7 +119,7 @@ describe DeaAdvertisement do
       before { message.delete "available_disk" }
 
       it "always returns true" do
-        expect(ad.has_sufficient_disk?(4096 * 10)).to be_true
+        expect(ad.has_sufficient_disk?(4096 * 10)).to be true
       end
     end
   end
@@ -127,13 +127,13 @@ describe DeaAdvertisement do
   describe "#has_stack?" do
     context "when the dea has the stack" do
       it "returns false" do
-        expect(ad.has_stack?("stack-name")).to be_true
+        expect(ad.has_stack?("stack-name")).to be true
       end
     end
 
     context "when the dea does not have the stack" do
       it "returns false" do
-        expect(ad.has_stack?("not-a-stack-name")).to be_false
+        expect(ad.has_stack?("not-a-stack-name")).to be false
       end
     end
   end

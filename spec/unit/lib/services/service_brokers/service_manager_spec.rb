@@ -71,7 +71,7 @@ module VCAP::Services::ServiceBrokers
         expect(service.service_broker).to eq(broker)
         expect(service.label).to eq(service_name)
         expect(service.description).to eq(service_description)
-        expect(service.bindable).to be_true
+        expect(service.bindable).to be true
         expect(service.tags).to match_array(['mysql', 'relational'])
         expect(JSON.parse(service.extra)).to eq( {'foo' => 'bar'} )
         expect(service.requires).to eq(['ultimate', 'power'])
@@ -109,13 +109,13 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
 
-          expect(plan.free).to be_false
+          expect(plan.free).to be false
         end
 
         it 'marks the plan as private' do
           service_manager.sync_services_and_plans
           plan = VCAP::CloudController::ServicePlan.last
-          expect(plan.public).to be_false
+          expect(plan.public).to be false
         end
       end
 
@@ -186,7 +186,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.name).to eq(plan_name)
           expect(plan.description).to eq(plan_description)
 
-          expect(plan.free).to be_false
+          expect(plan.free).to be false
         end
 
         context 'and a plan already exists' do
@@ -201,7 +201,7 @@ module VCAP::Services::ServiceBrokers
           it 'updates the existing plan' do
             expect(plan.name).to_not eq(plan_name)
             expect(plan.description).to_not eq(plan_description)
-            expect(plan.free).to be_true
+            expect(plan.free).to be true
 
             expect {
               service_manager.sync_services_and_plans
@@ -210,7 +210,7 @@ module VCAP::Services::ServiceBrokers
             plan.reload
             expect(plan.name).to eq(plan_name)
             expect(plan.description).to eq(plan_description)
-            expect(plan.free).to be_false
+            expect(plan.free).to be false
           end
 
           context 'when the plan is public' do
@@ -221,7 +221,7 @@ module VCAP::Services::ServiceBrokers
             it 'does not make it public' do
               service_manager.sync_services_and_plans
               plan.reload
-              expect(plan.public).to be_true
+              expect(plan.public).to be true
             end
           end
         end
@@ -352,7 +352,7 @@ HEREDOC
         end
 
         it 'returns false' do
-          expect(service_manager.has_warnings?).to be_false
+          expect(service_manager.has_warnings?).to be false
         end
       end
 
@@ -362,7 +362,7 @@ HEREDOC
         end
 
         it 'returns true' do
-          expect(service_manager.has_warnings?).to be_true
+          expect(service_manager.has_warnings?).to be true
         end
       end
     end

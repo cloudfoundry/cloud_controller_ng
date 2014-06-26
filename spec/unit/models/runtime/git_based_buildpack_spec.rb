@@ -18,7 +18,7 @@ module VCAP::CloudController
     end
 
     it "is custom" do
-      expect(subject.custom?).to be_true
+      expect(subject.custom?).to be true
     end
 
     describe "validations" do

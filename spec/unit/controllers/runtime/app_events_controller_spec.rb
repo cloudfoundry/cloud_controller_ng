@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     def no_resource_has
       body[:resources].each do |r|
-        yield(r).should be_false
+        yield(r).should be false
       end
     end
 

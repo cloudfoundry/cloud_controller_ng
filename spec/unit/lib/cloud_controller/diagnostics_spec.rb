@@ -85,15 +85,15 @@ module VCAP::CloudController
       end
 
       it "creates the destination directory if needed" do
-        expect(File.exists?(output_dir)).to be_false
+        expect(File.exists?(output_dir)).to be false
         Diagnostics.collect(output_dir)
-        expect(File.exists?(output_dir)).to be_true
+        expect(File.exists?(output_dir)).to be true
       end
 
       it "returns the name of the output file" do
         filename = Diagnostics.collect(output_dir)
         expect(filename).to_not be_nil
-        expect(File.exists?(filename)).to be_true
+        expect(File.exists?(filename)).to be true
       end
 
       describe "file name" do
@@ -125,12 +125,12 @@ module VCAP::CloudController
 
         it "captures thread information" do
           expect(data[:threads]).to_not be_nil
-          expect(data[:threads].empty?).to be_false
+          expect(data[:threads].empty?).to be false
         end
 
         it "captures varz information" do
           expect(data[:varz]).to_not be_nil
-          expect(data[:varz].empty?).to be_false
+          expect(data[:varz].empty?).to be false
         end
       end
     end

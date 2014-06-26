@@ -246,8 +246,8 @@ describe 'Service Broker' do
         not_free_plan = resources.find { |plan| plan['entity']['name'] == 'not-free-plan' }
         free_plan     = resources.find { |plan| plan['entity']['name'] == 'free-plan' }
 
-        expect(free_plan['entity']['free']).to be_true
-        expect(not_free_plan['entity']['free']).to be_false
+        expect(free_plan['entity']['free']).to be true
+        expect(not_free_plan['entity']['free']).to be false
       end
     end
 
@@ -510,8 +510,8 @@ describe 'Service Broker' do
         no_longer_not_free_plan = resources.find { |plan| plan['entity']['name'] == 'not-free-plan' }
         no_longer_free_plan     = resources.find { |plan| plan['entity']['name'] == 'free-plan' }
 
-        expect(no_longer_free_plan['entity']['free']).to be_false
-        expect(no_longer_not_free_plan['entity']['free']).to be_true
+        expect(no_longer_free_plan['entity']['free']).to be false
+        expect(no_longer_not_free_plan['entity']['free']).to be true
       end
     end
 
@@ -529,7 +529,7 @@ describe 'Service Broker' do
           update_broker(catalog_with_large_plan)
           expect(last_response).to have_status_code(200)
 
-          expect(VCAP::CloudController::ServicePlan.find(unique_id: 'plan1-guid-here')[:active]).to be_false
+          expect(VCAP::CloudController::ServicePlan.find(unique_id: 'plan1-guid-here')[:active]).to be false
         end
 
         it 'returns a warning to the operator' do

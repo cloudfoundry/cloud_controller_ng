@@ -63,7 +63,7 @@ module VCAP::CloudController
       it "always returns false (deprecated)" do
         [false, true].each do |allowed|
           quota_definition.trial_db_allowed = allowed
-          expect(quota_definition.trial_db_allowed).to be_false
+          expect(quota_definition.trial_db_allowed).to be false
         end
       end
     end

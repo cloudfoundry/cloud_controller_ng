@@ -22,7 +22,7 @@ module VCAP::CloudController
       it "leaves the events that are younger than the specifed cutoff age" do
         expect {
           job.perform
-        }.not_to change { Event.find(id: @event.id) }.to(nil)
+        }.not_to change { Event.find(id: @event.id) }
       end
 
       it "knows its job name" do

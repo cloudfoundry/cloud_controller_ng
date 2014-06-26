@@ -83,7 +83,7 @@ module VCAP::CloudController
         it "can modify service plans" do
           put "/v2/service_plans/#{plan.guid}", body, json_headers(admin_headers)
           last_response.status.should == 201
-          plan.reload.public.should be_false
+          plan.reload.public.should be false
         end
       end
 
@@ -91,7 +91,7 @@ module VCAP::CloudController
         it "cannot modify service plans" do
           put "/v2/service_plans/#{plan.guid}", body, json_headers(headers_for(developer))
           last_response.status.should == 403
-          plan.reload.public.should be_true
+          plan.reload.public.should be true
         end
       end
     end
@@ -257,7 +257,7 @@ module VCAP::CloudController
       post '/v2/service_plans', payload_without_public, json_headers(admin_headers)
       last_response.status.should eq(201)
       plan_guid = decoded_response.fetch('metadata').fetch('guid')
-      ServicePlan.first(:guid => plan_guid).public.should be_true
+      ServicePlan.first(:guid => plan_guid).public.should be true
     end
   end
 

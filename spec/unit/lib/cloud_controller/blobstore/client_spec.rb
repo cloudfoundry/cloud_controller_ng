@@ -85,7 +85,7 @@ module CloudController
           describe "#files" do
             it "returns a file saved in the blob store" do
               expect(client.files).to have(1).item
-              expect(client.exists?(sha_of_content)).to be_true
+              expect(client.exists?(sha_of_content)).to be true
             end
 
             it "uses the correct director keys when storing files" do
@@ -99,11 +99,11 @@ module CloudController
               different_content = "foobar"
               sha_of_different_content = Digest::SHA1.hexdigest(different_content)
 
-              expect(client.exists?(sha_of_different_content)).to be_false
+              expect(client.exists?(sha_of_different_content)).to be false
 
               upload_tmpfile(client, sha_of_different_content)
 
-              expect(client.exists?(sha_of_different_content)).to be_true
+              expect(client.exists?(sha_of_different_content)).to be true
               expect(client.blob(sha_of_different_content)).to be
             end
           end
@@ -119,7 +119,7 @@ module CloudController
           it "copies the top-level local files into the blobstore" do
             FileUtils.touch(File.join(local_dir, "empty_file"))
             client.cp_r_to_blobstore(local_dir)
-            expect(client.exists?(sha_of_nothing)).to be_true
+            expect(client.exists?(sha_of_nothing)).to be true
           end
 
           it "recursively copies the local files into the blobstore" do
@@ -128,7 +128,7 @@ module CloudController
             File.open(File.join(subdir, "file_with_content"), "w") { |file| file.write(content) }
 
             client.cp_r_to_blobstore(local_dir)
-            expect(client.exists?(sha_of_content)).to be_true
+            expect(client.exists?(sha_of_content)).to be true
           end
 
           context "when the file already exists in the blobstore" do
@@ -217,7 +217,7 @@ module CloudController
             end
 
             it "can download the file" do
-              expect(client.exists?(sha_of_content)).to be_true
+              expect(client.exists?(sha_of_content)).to be true
               destination = File.join(local_dir, "some_directory_to_place_file", "downloaded_file")
 
               expect { client.download_from_blobstore(sha_of_content, destination) }.to change {
@@ -241,7 +241,7 @@ module CloudController
             FileUtils.touch(path)
 
             client.cp_to_blobstore(path, "abcdef123456")
-            expect(client.exists?("abcdef123456")).to be_true
+            expect(client.exists?("abcdef123456")).to be true
             expect(client.files).to have(1).item
           end
 
@@ -275,7 +275,7 @@ module CloudController
               key = "987654321"
 
               client.cp_to_blobstore(path, key)
-              expect(client.exists?(key)).to be_false
+              expect(client.exists?(key)).to be false
             end
 
             it "does not copy files above the maximum size limit" do
@@ -284,7 +284,7 @@ module CloudController
               key = "777777777"
 
               client.cp_to_blobstore(path, key)
-              expect(client.exists?(key)).to be_false
+              expect(client.exists?(key)).to be false
             end
           end
         end
@@ -295,9 +295,9 @@ module CloudController
             FileUtils.touch(path)
 
             client.cp_to_blobstore(path, "abcdef123456")
-            expect(client.exists?("abcdef123456")).to be_true
+            expect(client.exists?("abcdef123456")).to be true
             client.delete("abcdef123456")
-            expect(client.exists?("abcdef123456")).to be_false
+            expect(client.exists?("abcdef123456")).to be false
           end
 
           it "should be ok if the file doesn't exist" do
@@ -338,7 +338,7 @@ module CloudController
 
         it "includes the directory in the partitioned key" do
           upload_tmpfile(client, "abcdef")
-          expect(client.exists?("abcdef")).to be_true
+          expect(client.exists?("abcdef")).to be true
           expect(client.blob("abcdef")).to be
           expect(client.download_uri("abcdef")).to match(%r{my-root/ab/cd/abcdef})
         end

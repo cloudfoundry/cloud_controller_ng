@@ -1,9 +1,10 @@
 RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
   match do |actual_blk|
     begin
-      @calls = []
       @matched_calls = []
-      Sequel::Model.db.stub(:_execute).with { |*args| @calls << args; true }.and_call_original
+      stub = Sequel::Model.db.stub(:_execute)
+      stub.and_call_original
+      @calls = stub.and_record_arguments
       actual_blk.call
       @matched_calls = @calls.select { |call| call[1] =~ query_regex }
       @matched_calls.size == expected_times
@@ -24,5 +25,9 @@ RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
         "\n\nAll queries:\n#{@calls.inspect}" +
         "\n\nMatched queries: #{@matched_calls.inspect}"
     end
+  end
+
+  def supports_block_expectations?
+    true
   end
 end

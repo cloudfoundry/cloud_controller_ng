@@ -35,7 +35,7 @@ module VCAP::CloudController
 
             buildpack2 = Buildpack.find(name: buildpack_name)
             expect(buildpack2).to_not be_nil
-            expect(buildpack2.enabled).to be_false
+            expect(buildpack2.enabled).to be false
             expect(buildpack2.filename).to end_with(File.basename(zipfile2))
             expect(buildpack2.key).to_not eql(buildpack1.key)
           end
@@ -48,7 +48,7 @@ module VCAP::CloudController
             job.perform
 
             buildpack = Buildpack.find(name: buildpack_name)
-            expect(buildpack.locked).to be_true
+            expect(buildpack.locked).to be true
           end
 
           it "fails to update a locked buildpack" do
@@ -70,7 +70,7 @@ module VCAP::CloudController
             job.perform
 
             buildpack = Buildpack.find(name: buildpack_name)
-            expect(buildpack.enabled).to be_false
+            expect(buildpack.enabled).to be false
           end
 
           it "updates a disabled buildpack" do
@@ -82,7 +82,7 @@ module VCAP::CloudController
             update_job.perform
 
             buildpack2 = Buildpack.find(name: buildpack_name)
-            expect(buildpack2.enabled).to be_true
+            expect(buildpack2.enabled).to be true
           end
         end
 

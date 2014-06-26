@@ -34,8 +34,8 @@ describe VCAP::CloudController::FrontController do
 
         VCAP::CloudController::User.last.tap do |u|
           expect(u.guid).to eq(user_id)
-          expect(u.admin).to be_true
-          expect(u.active).to be_true
+          expect(u.admin).to be true
+          expect(u.active).to be true
         end
       end
 
@@ -55,8 +55,8 @@ describe VCAP::CloudController::FrontController do
 
         VCAP::CloudController::User.order(:id).last.tap do |u|
           expect(u.guid).to eq(user_id)
-          expect(u.admin).to be_false
-          expect(u.active).to be_true
+          expect(u.admin).to be false
+          expect(u.active).to be true
         end
       end
 

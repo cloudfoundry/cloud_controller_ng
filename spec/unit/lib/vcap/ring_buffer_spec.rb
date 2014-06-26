@@ -8,7 +8,7 @@ module VCAP
 
     context "empty" do
       it ".empty? should be true" do
-        rb.empty?.should be_true
+        rb.empty?.should be true
       end
     end
 
@@ -20,7 +20,7 @@ module VCAP
       end
 
       it ".empty? should be false" do
-        rb.empty?.should be_false
+        rb.empty?.should be false
       end
 
       it ".size should return MAX_ENTRIES" do

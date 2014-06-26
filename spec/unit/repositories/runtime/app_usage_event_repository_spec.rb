@@ -135,7 +135,7 @@ module VCAP::CloudController
 
             started_app_count = App.where(:state => "STARTED").count
 
-            expect(AppUsageEvent.count > 1).to be_true
+            expect(AppUsageEvent.count > 1).to be true
             expect {
               repository.purge_and_reseed_started_apps!
             }.to change { AppUsageEvent.count }.to(started_app_count)

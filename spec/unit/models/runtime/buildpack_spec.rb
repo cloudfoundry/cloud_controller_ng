@@ -430,7 +430,7 @@ module VCAP::CloudController
 
     describe "custom" do
       it "is not custom" do
-        expect(subject.custom?).to be_false
+        expect(subject.custom?).to be false
       end
     end
   end

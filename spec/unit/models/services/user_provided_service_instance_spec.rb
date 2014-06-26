@@ -56,7 +56,7 @@ module VCAP::CloudController
           space: VCAP::CloudController::Space.make,
           credentials: {"foo" => "bar"},
         )
-        instance.refresh.is_gateway_service.should be_false
+        instance.refresh.is_gateway_service.should be false
       end
 
       it 'creates a CREATED service usage event' do

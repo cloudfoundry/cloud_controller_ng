@@ -43,7 +43,7 @@ module VCAP::CloudController
           expect(steno_config_hash.fetch(:default_log_level)).to eq :debug2
         end
 
-        expect(block_called).to be_true
+        expect(block_called).to be true
       end
     end
   end

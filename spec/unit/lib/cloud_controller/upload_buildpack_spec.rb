@@ -52,7 +52,7 @@ module VCAP::CloudController
         it "copies new bits to the blobstore" do
           buildpack_blobstore.should_receive(:cp_to_blobstore).with(valid_zip, expected_sha_valid_zip)
 
-          expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be_true
+          expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be true
         end
 
         it "updates the buildpack key" do
@@ -86,7 +86,7 @@ module VCAP::CloudController
           end
 
           it "returns false if both bits and filename are not changed" do
-            expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be_false
+            expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be false
           end
 
           it "does not copy the same bits to the blobstore" do
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
           it "does not allow upload if the buildpack is locked" do
             locked_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "locked_buildpack", locked: true, position: 0 })
-            expect(upload_buildpack.upload_bits(locked_buildpack, valid_zip2, filename)).to be_false
+            expect(upload_buildpack.upload_bits(locked_buildpack, valid_zip2, filename)).to be false
           end
         end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
           end
 
           it "returns true if the bits are uploaded" do
-            expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be_true
+            expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be true
           end
 
           it "does copy the bits to the blobstore" do
@@ -133,7 +133,7 @@ module VCAP::CloudController
 
           it "does not allow upload if the buildpack is locked" do
             locked_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "locked_buildpack", locked: true, position: 0 })
-            expect(upload_buildpack.upload_bits(locked_buildpack, valid_zip2, filename)).to be_false
+            expect(upload_buildpack.upload_bits(locked_buildpack, valid_zip2, filename)).to be false
           end
 
         end

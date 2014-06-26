@@ -350,8 +350,8 @@ module VCAP::CloudController
 
         it "doesn't mark the app for staging" do
           subject.stack = new_stack
-          subject.staged?.should be_false
-          subject.needs_staging?.should be_false
+          subject.staged?.should be false
+          subject.needs_staging?.should be nil
         end
       end
 
@@ -365,8 +365,8 @@ module VCAP::CloudController
 
         it "keeps app as needs staging" do
           subject.stack = new_stack
-          subject.staged?.should be_false
-          subject.needs_staging?.should be_true
+          subject.staged?.should be false
+          subject.needs_staging?.should be true
         end
       end
 
@@ -938,12 +938,12 @@ module VCAP::CloudController
 
       it "should return true if package_state is STAGED" do
         app.package_state = "STAGED"
-        app.staged?.should be_true
+        app.staged?.should be true
       end
 
       it "should return false if package_state is PENDING" do
         app.package_state = "PENDING"
-        app.staged?.should be_false
+        app.staged?.should be false
       end
     end
 
@@ -952,12 +952,12 @@ module VCAP::CloudController
 
       it "should return true if package_state is PENDING" do
         app.package_state = "PENDING"
-        app.pending?.should be_true
+        app.pending?.should be true
       end
 
       it "should return false if package_state is not PENDING" do
         app.package_state = "STARTED"
-        app.pending?.should be_false
+        app.pending?.should be false
       end
     end
 
@@ -966,12 +966,12 @@ module VCAP::CloudController
 
       it "should return true if package_state is FAILED" do
         app.package_state = "FAILED"
-        app.staging_failed?.should be_true
+        app.staging_failed?.should be true
       end
 
       it "should return false if package_state is not FAILED" do
         app.package_state = "STARTED"
-        app.staging_failed?.should be_false
+        app.staging_failed?.should be false
       end
     end
 
@@ -986,19 +986,19 @@ module VCAP::CloudController
 
         it "should return false if the package_hash is nil" do
           app.package_hash = nil
-          app.needs_staging?.should be_false
+          app.needs_staging?.should be nil
         end
 
         it "should return true if PENDING is set" do
           app.package_hash = "abc"
           app.package_state = "PENDING"
-          app.needs_staging?.should be_true
+          app.needs_staging?.should be true
         end
 
         it "should return false if STAGING is set" do
           app.package_hash = "abc"
           app.package_state = "STAGED"
-          app.needs_staging?.should be_false
+          app.needs_staging?.should be false
         end
       end
 
@@ -1031,12 +1031,12 @@ module VCAP::CloudController
 
       it "should return true if app is STARTED" do
         app.state = "STARTED"
-        app.started?.should be_true
+        app.started?.should be true
       end
 
       it "should return false if app is STOPPED" do
         app.state = "STOPPED"
-        app.started?.should be_false
+        app.started?.should be false
       end
     end
 
@@ -1045,12 +1045,12 @@ module VCAP::CloudController
 
       it "should return true if app is STOPPED" do
         app.state = "STOPPED"
-        app.stopped?.should be_true
+        app.stopped?.should be true
       end
 
       it "should return false if app is STARTED" do
         app.state = "STARTED"
-        app.stopped?.should be_false
+        app.stopped?.should be false
       end
     end
 
@@ -1245,9 +1245,9 @@ module VCAP::CloudController
         app.state = "STARTED"
         app.instances = 1
         app.package_hash = "abc"
-        app.needs_staging?.should be_true
+        app.needs_staging?.should be true
         app.droplet_hash = "def"
-        app.needs_staging?.should be_false
+        app.needs_staging?.should be false
         app.droplet_hash.should == "def"
       end
     end

@@ -40,7 +40,7 @@ module VCAP::CloudController
         post "/v2/service_bindings", req, json_headers(admin_headers)
         last_response.status.should == 201
         app_obj.refresh
-        app_obj.needs_staging?.should be_false
+        app_obj.needs_staging?.should be false
       end
 
       it " does not flag app for restaging when deleting a binding" do
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
         last_response.status.should == 204
         app_obj.refresh
-        app_obj.needs_staging?.should be_false
+        app_obj.needs_staging?.should be false
       end
     end
 

@@ -52,7 +52,7 @@ module VCAP::CloudController
 
       failed_to_recover_plaintext = errored || (decrypted_value != value_to_encrypt)
 
-      expect(failed_to_recover_plaintext).to be_true
+      expect(failed_to_recover_plaintext).to be true
     end
 
     it "uses a salt, so that every row is encrypted with a different key" do

@@ -71,7 +71,7 @@ module VCAP::Services::SSO
           it 'creates clients only for all services that specify dashboard_client' do
             expect(client_manager).to receive(:modify_transaction) do |changeset|
               expect(changeset.length).to eq 2
-              expect(changeset.all? {|change| change.is_a? Commands::CreateClientCommand}).to be_true
+              expect(changeset.all? {|change| change.is_a? Commands::CreateClientCommand}).to be true
               expect(changeset[0].client_attrs).to eq dashboard_client_attrs_1
               expect(changeset[1].client_attrs).to eq dashboard_client_attrs_2
             end
@@ -205,7 +205,7 @@ module VCAP::Services::SSO
           end
 
           it 'returns true' do
-            expect(manager.synchronize_clients_with_catalog(catalog)).to be_true
+            expect(manager.synchronize_clients_with_catalog(catalog)).to be true
           end
         end
 
@@ -326,14 +326,14 @@ module VCAP::Services::SSO
         end
 
         it 'returns true' do
-          expect(manager.synchronize_clients_with_catalog(catalog)).to be_true
+          expect(manager.synchronize_clients_with_catalog(catalog)).to be true
         end
 
         context 'and the catalog requested dashboard clients' do
           it 'adds a warning' do
             manager.synchronize_clients_with_catalog(catalog)
 
-            expect(manager.has_warnings?).to be_true
+            expect(manager.has_warnings?).to be true
             expect(manager.warnings).to include('Warning: This broker includes configuration for a dashboard client. Auto-creation of OAuth2 clients has been disabled in this Cloud Foundry instance. The broker catalog has been updated but its dashboard client configuration will be ignored.')
           end
         end
@@ -344,7 +344,7 @@ module VCAP::Services::SSO
           it 'does not add a warning' do
             manager.synchronize_clients_with_catalog(catalog)
 
-            expect(manager.has_warnings?).to be_false
+            expect(manager.has_warnings?).to be false
           end
         end
       end

@@ -66,7 +66,7 @@ describe SafeZipper do
 
         it "unzips them archive correctly without errors" do
           unzip
-          expect(File.symlink?("#{zip_destination}/what")).to be_true
+          expect(File.symlink?("#{zip_destination}/what")).to be true
         end
       end
 
@@ -85,7 +85,7 @@ describe SafeZipper do
 
         it "unzips them archive correctly without errors" do
           unzip
-          expect(File.exists?("#{zip_destination}/bar/../cat")).to be_true
+          expect(File.exists?("#{zip_destination}/bar/../cat")).to be true
         end
       end
 

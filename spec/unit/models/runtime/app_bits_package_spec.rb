@@ -43,7 +43,7 @@ describe AppBitsPackage do
     it "uploads the new app bits to the app bit cache" do
       create
       sha_of_bye_file_in_good_zip = "ee9e51458f4642f48efe956962058245ee7127b1"
-      expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
+      expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be true
     end
 
     context "when one of the files exceeds the configured maximum_size" do
@@ -51,8 +51,8 @@ describe AppBitsPackage do
         create
         sha_of_greetings_file_in_good_zip = "82693f9b3a4857415aeffccd535c375891d96f74"
         sha_of_bye_file_in_good_zip = "ee9e51458f4642f48efe956962058245ee7127b1"
-        expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
-        expect(global_app_bits_cache.exists?(sha_of_greetings_file_in_good_zip)).to be_false
+        expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be true
+        expect(global_app_bits_cache.exists?(sha_of_greetings_file_in_good_zip)).to be false
       end
     end
 
@@ -61,8 +61,8 @@ describe AppBitsPackage do
         create
         sha_of_hi_file_in_good_zip = "55ca6286e3e4f4fba5d0448333fa99fc5a404a73"
         sha_of_bye_file_in_good_zip = "ee9e51458f4642f48efe956962058245ee7127b1"
-        expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be_true
-        expect(global_app_bits_cache.exists?(sha_of_hi_file_in_good_zip)).to be_false
+        expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be true
+        expect(global_app_bits_cache.exists?(sha_of_hi_file_in_good_zip)).to be false
       end
     end
 
@@ -80,7 +80,7 @@ describe AppBitsPackage do
 
     it "uploads the package zip to the package blob store" do
       create
-      expect(package_blobstore.exists?(app.guid)).to be_true
+      expect(package_blobstore.exists?(app.guid)).to be true
     end
 
     it "sets the package sha to the app" do

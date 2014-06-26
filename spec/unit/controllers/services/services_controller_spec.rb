@@ -327,7 +327,7 @@ module VCAP::CloudController
         post "/v2/services", payload_without_bindable, json_headers(admin_headers)
         last_response.status.should eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Service.first(:guid => service_guid).bindable.should be_true
+        Service.first(:guid => service_guid).bindable.should be true
       end
 
       it 'creates the service with default tags' do

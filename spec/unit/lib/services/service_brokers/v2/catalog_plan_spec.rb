@@ -22,7 +22,7 @@ module VCAP::Services::ServiceBrokers::V2
       its(:description) { should eq 'The description of the service plan' }
       its(:metadata) { should eq({}) }
       its(:catalog_service) { should eq catalog_service }
-      its(:free) { should be_false }
+      its(:free) { should be false }
       its(:errors) { should be_empty }
 
       it 'defaults free field to true' do
@@ -30,7 +30,7 @@ module VCAP::Services::ServiceBrokers::V2
         attrs.delete('free')
         plan = CatalogPlan.new(double('broker'), attrs)
 
-        expect(plan.free).to be_true
+        expect(plan.free).to be true
       end
     end
 
@@ -105,7 +105,7 @@ module VCAP::Services::ServiceBrokers::V2
       describe '#valid?' do
         it 'is false if plan has errors' do
           attrs = build_valid_plan_attrs(metadata: ['list', 'of', 'strings'])
-          expect(CatalogPlan.new(double('broker'), attrs).valid?).to be_false
+          expect(CatalogPlan.new(double('broker'), attrs).valid?).to be false
         end
       end
     end

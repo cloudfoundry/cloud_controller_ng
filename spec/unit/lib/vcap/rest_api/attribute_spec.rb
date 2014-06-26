@@ -26,26 +26,26 @@ module VCAP::CloudController
       describe "##{meth}" do
         it "should return false when called with a non-#{desc} operation" do
           attr = NamedAttribute.new("some_attr")
-          attr.send(meth, :create).should be_false
+          attr.send(meth, :create).should be false
         end
 
         it "should return true when called with an #{desc} operation" do
           attr = NamedAttribute.new("some_attr", opt => :read)
-          attr.send(meth, :create).should be_false
-          attr.send(meth, :read).should be_true
+          attr.send(meth, :create).should be false
+          attr.send(meth, :read).should be true
         end
 
         it "should work with a Symbol passed in via #{opt}" do
           attr = NamedAttribute.new("some_attr", opt => :read)
-          attr.send(meth, :create).should be_false
-          attr.send(meth, :read).should be_true
+          attr.send(meth, :create).should be false
+          attr.send(meth, :read).should be true
         end
 
         it "should work with an Array passed in via #{opt}" do
           attr = NamedAttribute.new("some_attr", opt => [:read, :update])
-          attr.send(meth, :create).should be_false
-          attr.send(meth, :read).should be_true
-          attr.send(meth, :update).should be_true
+          attr.send(meth, :create).should be false
+          attr.send(meth, :read).should be true
+          attr.send(meth, :update).should be true
         end
       end
     end

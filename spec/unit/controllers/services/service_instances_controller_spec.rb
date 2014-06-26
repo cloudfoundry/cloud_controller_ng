@@ -532,7 +532,7 @@ module VCAP::CloudController
           it 'returns a JSON payload indicating they have permission to manage this instance' do
             get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
             expect(last_response.status).to eql(200)
-            expect(JSON.parse(last_response.body)['manage']).to be_true
+            expect(JSON.parse(last_response.body)['manage']).to be true
           end
         end
 
@@ -540,7 +540,7 @@ module VCAP::CloudController
           it 'returns a JSON payload indicating they have permission to manage this instance' do
             get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller_service_permissions.read']}))
             expect(last_response.status).to eql(200)
-            expect(JSON.parse(last_response.body)['manage']).to be_true
+            expect(JSON.parse(last_response.body)['manage']).to be true
           end
         end
 
@@ -559,7 +559,7 @@ module VCAP::CloudController
         it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
           get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
           expect(last_response.status).to eql(200)
-          expect(JSON.parse(last_response.body)['manage']).to be_false
+          expect(JSON.parse(last_response.body)['manage']).to be false
         end
       end
 

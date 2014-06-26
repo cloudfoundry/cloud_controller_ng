@@ -76,7 +76,7 @@ module VCAP::CloudController
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
           expect(buildpack.key).to eq(expected_key)
           expect(buildpack.filename).to eq(filename)
-          expect(buildpack_blobstore.exists?(expected_key)).to be_true
+          expect(buildpack_blobstore.exists?(expected_key)).to be true
         end
 
         it "gets the uploaded file from the upload handler" do
@@ -120,14 +120,14 @@ module VCAP::CloudController
 
           expected_sha = "#{test_buildpack.guid}_#{sha_valid_zip2}"
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-          expect(buildpack_blobstore.exists?(expected_sha)).to be_true
+          expect(buildpack_blobstore.exists?(expected_sha)).to be true
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", upload_body, admin_headers
           response = Yajl::Parser.parse(last_response.body)
           entity = response['entity']
           expect(entity['name']).to eq('upload_binary_buildpack')
           expect(entity['filename']).to eq(filename)
-          expect(buildpack_blobstore.exists?(expected_sha)).to be_false
+          expect(buildpack_blobstore.exists?(expected_sha)).to be false
         end
 
         it 'reports a no content if the same buildpack is uploaded again' do

@@ -61,19 +61,19 @@ module VCAP::CloudController
       end
 
       it "should return true for a size between min and max size" do
-        @resource_pool.send(:size_allowed?, @minimum_size + 1).should be_true
+        @resource_pool.send(:size_allowed?, @minimum_size + 1).should be true
       end
 
       it "should return false for a size < min size" do
-        @resource_pool.send(:size_allowed?, @minimum_size - 1).should be_false
+        @resource_pool.send(:size_allowed?, @minimum_size - 1).should be false
       end
 
       it "should return false for a size > max size" do
-        @resource_pool.send(:size_allowed?, @maximum_size + 1).should be_false
+        @resource_pool.send(:size_allowed?, @maximum_size + 1).should be false
       end
 
       it "should return false for a nil size" do
-        @resource_pool.send(:size_allowed?, nil).should be_false
+        @resource_pool.send(:size_allowed?, nil).should be nil
       end
     end
 

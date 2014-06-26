@@ -206,7 +206,7 @@ module VCAP::CloudController
             delete "/v2/tasks/#{@task.guid}", {}, headers
           }.to_not change {
             Task.count
-          }.by(-1)
+          }
         end
       end
 

@@ -402,7 +402,7 @@ module VCAP::CloudController
 
           delete_app
 
-          called.should be_true
+          called.should be true
         end
       end
 

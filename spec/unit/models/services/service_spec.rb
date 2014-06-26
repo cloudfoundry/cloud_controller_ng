@@ -283,7 +283,7 @@ module VCAP::CloudController
 
         it "does not leave the service in 'purging' state" do
           service.purge rescue nil
-          expect(service.reload.purging).to be_false
+          expect(service.reload.purging).to be false
         end
       end
     end
